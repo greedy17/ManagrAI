@@ -139,6 +139,7 @@ import Salesforce from '@/services/salesforce'
 import Hubspot from '@/services/hubspot'
 
 import PipelineLoader from '@/components/PipelineLoader'
+import { decryptData, encryptData } from '../../encryption'
 
 export default {
   name: 'Registration',
@@ -210,7 +211,10 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
-        this.$store.commit('UPDATE_USER', user)
+        const encryptedUser = encryptData(user, process.env.VUE_APP_SECRET_KEY)
+        // const encryptedKey = encryptData(key, process.env.VUE_APP_SECRET_KEY)
+        this.$store.commit('UPDATE_USER', encryptedUser)
+        // this.$store.commit('UPDATE_USERTOKEN', encryptedKey)
         this.$store.commit('UPDATE_USERTOKEN', key)
         this.generatingToken = false
         this.selectedCrm = null
@@ -291,7 +295,10 @@ export default {
       }
 
       // Update the user in the store to "log in" and navigate to integrations
-      this.$store.commit('UPDATE_USER', user)
+      const encryptedUser = encryptData(user, process.env.VUE_APP_SECRET_KEY)
+      // const encryptedKey = encryptData(user.token, process.env.VUE_APP_SECRET_KEY)
+      this.$store.commit('UPDATE_USER', encryptedUser)
+      // this.$store.commit('UPDATE_USERTOKEN', encryptedKey)
       this.$store.commit('UPDATE_USERTOKEN', user.token)
       this.$router.push({ name: 'Integrations' })
     },
@@ -308,7 +315,8 @@ export default {
       }
     },
     user() {
-      return this.$store.state.user
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser
     },
   },
   mounted() {

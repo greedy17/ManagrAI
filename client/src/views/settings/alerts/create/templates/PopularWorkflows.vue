@@ -479,6 +479,7 @@ import { ObjectField } from '@/services/crm'
 import { INPUT_TYPE_MAP } from '@/services/salesforce/models'
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
+import { decryptData } from '../../../../../encryption'
 export default {
   name: 'PopularWorkflows',
   props: ['selectField', 'largeOpps', 'config', 'isEmpty'],
@@ -927,7 +928,7 @@ export default {
       try {
         const res = await AlertTemplate.api.createAlertTemplate({
           ...this.config,
-          user: this.$store.state.user.id,
+          user: this.user.id,
           directToUsers: true,
         })
 
@@ -974,7 +975,7 @@ export default {
         try {
           const res = await AlertTemplate.api.createAlertTemplate({
             ...this.config,
-            user: this.$store.state.user.id,
+            user: this.user.id,
             directToUsers: this.directToUsers,
           })
 
@@ -1017,8 +1018,9 @@ export default {
 
   computed: {
     hasRecapChannel() {
-      return this.$store.state.user.slackAccount
-        ? this.$store.state.user.slackAccount.recapChannel
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.slackAccount
+        ? decryptedUser.slackAccount.recapChannel
         : null
     },
     filteredFields() {
@@ -1032,7 +1034,8 @@ export default {
       })
     },
     userLevel() {
-      return this.$store.state.user.userLevel
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.userLevel
     },
     userTargetsOpts() {
       if (this.user.userLevel == 'MANAGER') {
@@ -1050,10 +1053,12 @@ export default {
       }
     },
     hasSlack() {
-      return !!this.$store.state.user.slackRef
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!decryptedUser.slackRef
     },
     user() {
-      return this.$store.state.user
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser
     },
     selectedResourceType: {
       get() {

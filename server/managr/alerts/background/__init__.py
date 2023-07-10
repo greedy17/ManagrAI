@@ -14,7 +14,7 @@ from managr.utils.misc import custom_paginator
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.helpers import block_builders
-from managr.slack.helpers.exceptions import CannotSendToChannel
+from managr.slack.helpers.exceptions import CannotSendToChannel, ChannelArchived
 from managr.salesforce.routes import routes as sf_routes
 from managr.hubspot.routes import routes as hs_routes
 from managr.crm.exceptions import (
@@ -242,6 +242,7 @@ def _process_send_alert(invocation, channel, config_id):
         block_builders.context_block(f"Owned by {instance_user.full_name}"),
     ]
     if len(blocks):
+        channel_error = False
         try:
             slack_requests.send_channel_message(
                 channel_id, access_token, text=text, block_set=blocks
@@ -249,6 +250,12 @@ def _process_send_alert(invocation, channel, config_id):
             alert_instances.update(sent_at=timezone.now())
 
         except CannotSendToChannel:
+            channel_error = True
+        except ChannelArchived:
+            channel_error = True
+        except Exception as e:
+            raise (e)
+        if channel_error:
             try:
                 slack_requests.send_channel_message(
                     template.user.slack_integration.channel,
@@ -256,20 +263,15 @@ def _process_send_alert(invocation, channel, config_id):
                     text=text,
                     block_set=[
                         block_builders.simple_section(
-                            f"Cannot send workflow to one of the channels you selected, please add <@{alert_instance.template.user.organization.slack_integration.bot_user_id}> to the channel <#{channel_id}>",
+                            f"Cannot send workflow {template.title} to one of the channels you selected, please add <@{alert_instance.template.user.organization.slack_integration.bot_user_id}> to the channel <#{channel_id}> or edit your workflow delivery",
                             "mrkdwn",
                         )
                     ],
                 )
             except Exception as e:
-                logger.exception(f"{e}")
                 logger.info(
-                    f"failed to send notification to user that workflow could not be sent to channel because managr is not part of channel {alert_instance.template.user}"
+                    f"failed to send notification to user that workflow could not be sent to channel because managr is not part of channel {alert_instance.template.user} {e}"
                 )
-
-        except Exception as e:
-            raise (e)
-
     return
 
 

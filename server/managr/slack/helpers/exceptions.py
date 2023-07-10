@@ -9,51 +9,57 @@ logger = logging.getLogger("managr")
 
 
 class TokenExpired(Exception):
-    def __init(self, message="Token Expired"):
+    def __init__(self, message="Token Expired"):
         self.message = message
         super().__init__(self.message)
 
 
 class ApiRateLimitExceeded(Exception):
-    def __init(self, message="Token Expired"):
+    def __init__(self, message="Token Expired"):
         self.message = message
         super().__init__(self.message)
 
 
 class InvalidBlocksException(Exception):
-    def __init(self, message="Invalid Blocks Sent"):
+    def __init__(self, message="Invalid Blocks Sent"):
         self.message = message
         super().__init__(self.message)
 
 
 class InvalidBlocksFormatException(Exception):
-    def __init(self, message="Invalid Blocks Sent"):
+    def __init__(self, message="Invalid Blocks Sent"):
         self.message = message
         super().__init__(self.message)
 
 
 class UnHandeledBlocksException(Exception):
-    def __init(self, message="Error Generating Slack Modal"):
+    def __init__(self, message="Error Generating Slack Modal"):
         self.message = message
         super().__init__(self.message)
 
 
 class InvalidArgumentsException(Exception):
-    def __init(self, message="Error Generating Slack Modal"):
+    def __init__(self, message="Error Generating Slack Modal"):
         self.message = message
         super().__init__(self.message)
 
 
 class InvalidAccessToken(Exception):
-    def __init(self, message="Slack Token Invalid"):
+    def __init__(self, message="Slack Token Invalid"):
         self.message = message
         super().__init__(self.message)
 
 
 class CannotSendToChannel(Exception):
-    def __init(
+    def __init__(
         self, message="Unable to post in channel most likely because bot/user not in channel"
     ):
+        self.message = message
+        super().__init__(self.message)
+
+
+class ChannelArchived(Exception):
+    def __init__(self, message="Unable to post to channel because it is archived"):
         self.message = message
         super().__init__(self.message)
 
@@ -113,6 +119,8 @@ class CustomAPIException:
             raise InvalidArgumentsException(
                 f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message} blocks {blocks}"
             )
+        if "is_archived" in self.message:
+            raise ChannelArchived
         elif self.code == 200 and (
             self.param == "not_in_channel" or self.param == "channel_not_found"
         ):

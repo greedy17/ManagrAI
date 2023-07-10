@@ -30,14 +30,15 @@
                   selectLabel="Enter"
                   :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
                   :customLabel="customLabel"
-                  v-model="selectedCustomObject"
+                  v-model="selectedCustomObject" 
+                  class="custom-picklist-font"
                 >
                   <template slot="noResult">
-                    <p class="multi-slot">No results.</p>
+                    <p class="multi-slot custom-picklist-font">No results.</p>
                   </template>
 
                   <template slot="placeholder">
-                    <p class="slot-icon">
+                    <p class="slot-icon custom-picklist-font">
                       <img src="@/assets/images/search.svg" alt="" />
                       Select Custom Object
                     </p>
@@ -79,7 +80,7 @@
         </section>
       </div>
     </Modal>
-    <Modal v-if="confirmDeleteModal">
+    <!-- <Modal v-if="confirmDeleteModal">
       <div class="modal-container rel">
         <div class="flex-row-spread sticky border-bottom">
           <div class="flex-row">
@@ -96,7 +97,7 @@
           </div>
         </section>
       </div>
-    </Modal>
+    </Modal> -->
     <Modal v-if="confirmCODeleteModal">
       <div class="modal-container rel">
         <div class="flex-row-spread sticky border-bottom">
@@ -115,8 +116,72 @@
         </section>
       </div>
     </Modal>
+    <Modal
+      v-if="confirmDeleteModal"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), closeDeleteModal()
+        }
+      "
+    >
+    <!-- modal-form confirm-form -->
+      <form v-if="true /*hasSlack*/" class="invite-form crm-form form-margin-small" style="height: 25vh;">
+        <div class="header-crm">
+          <div class="flex-row-wrapper inner-crm">
+            <div class="flex-row-modal" style="margin: 0;">
+              <!-- <img src="@/assets/images/logo.png" class="logo" alt="" /> -->
+              <h3 class="invite-form__title">Are you sure?</h3>
+            </div>
+            <div class="flex-row-modal" style="margin: 0;">
+              <img
+                @click="closeDeleteModal"
+                src="@/assets/images/close.svg"
+                alt=""
+                style="
+                  filter: invert(30%);
+                  cursor: pointer;
+                  width: 20px;
+                  height: 20px;
+                  margin-right: 5px;
+                "
+              />
+            </div>
+          </div>
+        </div>
+        <div class="flex-row-modal inner-crm" style="margin: 0; justify-content: flex-start; width: 90%;">
+          <h4 class="card-text" style="margin-left: 0; margin-top: 0; margin-bottom: 0.75rem;">
+            By clicking Delete, you will be removing 
+            {{ this.activeForm ? `your ${this.activeForm.stage} form` : 'this form' }}.
+          </h4>
+        </div>
+        <div class="invite-form__actions">
+          <!-- <div style="width: 10vw;"></div> -->
+          <div class="confirm-cancel-container" style="width: 90%; margin-bottom: 0.6rem;">
+            <div class="img-border-modal cancel-button" @click="closeDeleteModal" style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem;">
+              Cancel
+            </div>
+            <button class="img-border-modal red-button" @click="deleteForm(activeForm)" style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem; margin-right: 5%;">
+              Delete
+            </button>
+          </div>
+          <!-- <div class="invite-form__inner_actions">
+            <template>
+              <PulseLoadingSpinnerButton
+                @click="onRevoke(removeApp)"
+                class="invite-button modal-button"
+                style="width: 5rem; margin-right: 5%; height: 2rem"
+                text="Confirm"
+                :loading="pulseLoading"
+                >Confirm</PulseLoadingSpinnerButton
+              >
+            </template>
+          </div> -->
+        </div>
+      </form>
+    </Modal>
 
-    <div class="alerts-header">
+    <!-- <div class="alerts-header">
       <section class="row__" style="gap: 0px">
         <h3>Field Mapping</h3>
         <div class="side-wrapper">
@@ -132,7 +197,7 @@
       </section>
       <div class="save-refresh-section">
         <button v-if="!pulseLoading" class="img-button img-border" @click="refreshForms">
-          <img height="18px" src="@/assets/images/refresh.svg" />
+          <img src="@/assets/images/refresh.svg" />
         </button>
         <PulseLoadingSpinnerButton
           v-else
@@ -144,18 +209,34 @@
         /></PulseLoadingSpinnerButton>
         <button @click="onSave" class="save">Save Form</button>
       </div>
-    </div>
+    </div> -->
     <div class="fields-container">
-      <div class="row__ border-bottom-top" style="margin: 1rem 2rem 0 2rem">
+      <div class="row__ border-bottom-top" style="margin: 1rem 1.5rem 0 2rem; padding-bottom: 0;">
         <!-- :style="user.crm === 'SALESFORCE' ? 'justify-content: space-between;' : 'justify-content: space-around;'" -->
-        <div v-for="object in resources" :key="object.value">
-          <h4
-            :class="selectedObject.label === object.label ? 'green-highlight cursor' : 'cursor'"
-            @click="clickChangeObject(object.label, object.value)"
-            style="margin-bottom: 0; padding-bottom: 0.75rem"
-          >
-            {{ object.label }}
-          </h4>
+        <div class="display-flex">
+          <div v-for="object in resources" :key="object.value" class="small-margin-right">
+            <h4
+              :class="selectedObject.label === object.label ? 'header-text green-highlight cursor' : 'header-text cursor'"
+              @click="clickChangeObject(object.label, object.value)"
+              style="margin-bottom: 0; padding-bottom: 0.75rem"
+            >
+              {{ object.label }}
+            </h4>
+          </div>
+        </div>
+        <div class="save-refresh-section">
+          <button v-if="!pulseLoading" class="img-button img-border" style="padding: 0.5rem 0.5rem;" @click="refreshForms">
+            <img src="@/assets/images/cycle.svg" class="refresh-button" style="height: 13px;" />
+          </button>
+          <PulseLoadingSpinnerButton
+            v-else
+            @click="refreshForms"
+            class="img-button"
+            text="Refresh"
+            :loading="pulseLoading"
+            ><img src="@/assets/images/cycle.svg"
+          /></PulseLoadingSpinnerButton>
+          <button @click="onSave" class="save">Save Form</button>
         </div>
       </div>
       <div class="row__" style="justify-content: space-between">
@@ -172,26 +253,26 @@
             style="margin: 0"
           >
             <div style="display: flex; flex-direction: column">
-              <div v-if="selectedObject && selectedObject.value !== 'CustomObject'" style="display: flex; justify-content: space-between; width: 55vw;">
-                <div class="row__" style="gap: 6px; margin: 1rem 0 0 0">
-                  <div>View:</div>
+              <div v-if="selectedObject && selectedObject.value !== 'CustomObject'" class="half-view-flex" style="align-items: center; margin-top: 1rem;">
+                <div class="row__" style="gap: 6px; margin-left: 0;">
+                  <div class="header-text">View:</div>
                   <Multiselect
                     @input="changeObject(selectedObject, $event, false)"
                     :options="formattedTypes"
                     openDirection="below"
-                    style="width: 20vw"
+                    style="width: 11.5vw"
                     :showLabels="false"
                     track-by="label"
                     label="label"
                     v-model="selectedType"
-                    class="multiselect-font"
+                    class="multiselect-font custom-picklist-font"
                   >
                     <template slot="noResult">
-                      <p class="multi-slot">No results.</p>
+                      <p class="multi-slot custom-picklist-font">No results.</p>
                     </template>
   
                     <template slot="placeholder">
-                      <p class="slot-icon">
+                      <p class="slot-icon custom-picklist-font">
                         <img src="@/assets/images/search.svg" alt="" />
                         {{ selectedType && selectedType.label ? selectedType.label : 'Select Type' }}
                       </p>
@@ -238,20 +319,24 @@
                       activeForm
                     "
                     @click="confirmDeleteModal = !confirmDeleteModal"
-                    class="red-button"
+                    class="img-button"
+                    style="padding: 0.5rem; margin: 0;"
                   >
-                    Delete Form
+                    <!-- Delete Form -->
+                    <!-- <img src="@/assets/images/trash.svg" class="trash-button" /> -->
+                    <img src="@/assets/images/chat-trash.svg" class="filtered-red" style="height: 14px" alt="" />
                   </button>
                 </div>
               </div>
-              <div v-else-if="selectedObject && selectedObject.value === 'CustomObject'" style="display: flex; justify-content: space-between; width: 55vw;">
+              <div v-else-if="selectedObject && selectedObject.value === 'CustomObject'" class="half-view-flex">
                 <div v-if="modalLoading">
                   <Loader :loaderText="loaderText" />
                 </div>
                 <div v-else>
                   <div
                     v-if="createdCustomObjects.length"
-                    style="display: flex; justify-content: space-between; width: 55vw; margin-top: 1rem;"
+                    style="margin-top: 1rem;"
+                    class="half-view-flex"
                   >
                     <Multiselect
                       @input="getCreatedCO"
@@ -262,13 +347,14 @@
                       :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
                       label="name"
                       v-model="selectedCustomObject"
+                      class="custom-picklist-font"
                     >
                       <template slot="noResult">
-                        <p class="multi-slot">No results.</p>
+                        <p class="multi-slot custom-picklist-font">No results.</p>
                       </template>
 
                       <template slot="placeholder">
-                        <p class="slot-icon">
+                        <p class="slot-icon custom-picklist-font">
                           <img src="@/assets/images/search.svg" alt="" />
                           Custom Object
                         </p>
@@ -287,7 +373,7 @@
                       Delete
                     </button>
                   </div>
-                  <div v-else style="display: flex; justify-content: space-between; width: 55vw; margin-top: 1rem;">
+                  <div v-else class="half-view-flex" style="margin-top: 1rem;">
                     <Multiselect
                       @input="getCustomObjectFields"
                       :options="customObjects"
@@ -298,13 +384,14 @@
                       :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
                       :customLabel="customLabel"
                       v-model="selectedCustomObject"
+                      class="custom-picklist-font"
                     >
                       <template slot="noResult">
-                        <p class="multi-slot">No results.</p>
+                        <p class="multi-slot custom-picklist-font">No results.</p>
                       </template>
 
                       <template slot="placeholder">
-                        <p class="slot-icon">
+                        <p class="slot-icon custom-picklist-font">
                           <img src="@/assets/images/search.svg" alt="" />
                           Custom Object
                         </p>
@@ -325,11 +412,9 @@
                   </div>
                 </div>
               </div>
-              <!-- <div class="small-subtitle">Select the fields you regularly update</div> -->
             </div>
           </div>
           <div class="search-bar">
-            <!-- <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" /> -->
             <input
               @input="searchFields"
               type="search"
@@ -337,11 +422,10 @@
               v-model="filterText"
             />
           </div>
-          <!-- <div class="small-subtitle">Select the fields you regularly update</div> -->
 
           <div class="field-section__fields">
             <div>
-              <p v-for="(field, i) in filteredFields" :key="field.id" :title="field.label">
+              <p v-for="(field, i) in filteredFields" :key="field.id" :title="field.label" class="light-gray-blue">
                 <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
                 <label :for="i"></label>
                 {{
@@ -356,7 +440,6 @@
         <section v-else>
           <div v-if="selectedCustomObjectName">
             <div class="search-bar">
-              <!-- <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" /> -->
               <input
                 type="search"
                 :placeholder="`Search ${selectedCustomObjectName} Fields`"
@@ -386,7 +469,6 @@
 
           <div v-else>
             <div class="search-bar">
-              <!-- <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" /> -->
               <input type="search" placeholder="Search Object Fields" />
             </div>
 
@@ -418,7 +500,6 @@
                       </p>
                     </div>
                     <div class="drag-item-right">
-                      <!-- <label for="">|</label> -->
                       <span
                         alt=""
                         id="remove"
@@ -438,463 +519,6 @@
         </div>
       </div>
     </div>
-
-    <!-- <div v-if="userCRM === 'SALESFORCE'" class="alerts-header">
-      <section class="row__ light-gray">
-        <p
-          @click="changeToOpportunity"
-          :class="
-            newResource == 'Opportunity' && newFormType !== 'STAGE_GATING' && !customObjectView
-              ? 'green'
-              : ''
-          "
-        >
-          Opportunity
-        </p>
-        <p
-          @click="changeToStage"
-          :class="
-            newResource == 'Opportunity' && newFormType == 'STAGE_GATING' && !customObjectView
-              ? 'green'
-              : ''
-          "
-        >
-          Opp - Stage related
-        </p>
-        <p
-          @click="changeToAccount"
-          :class="newResource == 'Account' && !customObjectView ? 'green' : ''"
-        >
-          Account
-        </p>
-        <p
-          @click="changeToContact"
-          :class="newResource == 'Contact' && !customObjectView ? 'green' : ''"
-        >
-          Contact
-        </p>
-        <p @click="changeToLead" :class="newResource == 'Lead' && !customObjectView ? 'green' : ''">
-          Lead
-        </p>
-        <p
-          @click="changeToProducts"
-          :class="newResource == 'OpportunityLineItem' && !customObjectView ? 'green' : ''"
-        >
-          Products
-        </p>
-        <p @click="toggleCustomObjectView" :class="customObjectView ? 'green' : ''">
-          Custom Object
-        </p>
-      </section>
-      <div class="save-refresh-section">
-        <button v-if="!pulseLoading" class="img-button img-border" @click="refreshForms">
-          <img src="@/assets/images/refresh.svg" />
-        </button>
-        <PulseLoadingSpinnerButton
-          v-else
-          @click="refreshForms"
-          class="img-button"
-          text="Refresh"
-          :loading="pulseLoading"
-          ><img src="@/assets/images/refresh.svg"
-        /></PulseLoadingSpinnerButton>
-        <button @click="onSave" class="save">Save Form</button>
-      </div>
-    </div> -->
-
-    <!-- <div v-else class="alerts-header">
-      <section class="row__ light-gray">
-        <p
-          @click="changeToDeal"
-          :class="newResource == 'Deal' && newFormType !== 'STAGE_GATING' ? 'green' : ''"
-        >
-          Deal
-        </p>
-        <p
-          @click="changeToStage"
-          :class="newResource == 'Deal' && newFormType == 'STAGE_GATING' ? 'green' : ''"
-        >
-          Deal - Stage related
-        </p>
-        <p @click="changeToCompany" :class="newResource == 'Company' ? 'green' : ''">Company</p>
-        <p @click="changeToContact" :class="newResource == 'Contact' ? 'green' : ''">Contact</p>
-      </section>
-      <div class="save-refresh-section">
-        <button v-if="!pulseLoading" class="img-button img-border" @click="refreshForms">
-          <img src="@/assets/images/refresh.svg" />
-        </button>
-        <PulseLoadingSpinnerButton
-          v-else
-          @click="refreshForms"
-          class="img-button"
-          text="Refresh"
-          :loading="pulseLoading"
-          ><img src="@/assets/images/refresh.svg"
-        /></PulseLoadingSpinnerButton>
-        <button @click="onSave" class="save">Save Form</button>
-      </div>
-    </div> -->
-
-    <!-- <section class="wrapper"> -->
-    <!-- <div v-if="newFormType !== 'STAGE_GATING' && !customObjectView" class="tab-content">
-        <section>
-          <div v-if="newResource !== 'OpportunityLineItem'" class="tab-content__div">
-            <div class="row">
-              <label :class="newFormType !== 'CREATE' ? 'gray' : ''">Create</label>
-              <ToggleCheckBox
-                style="margin-left: 0.5rem; margin-right: 0.5rem"
-                @input="switchFormType"
-                :value="newFormType == 'UPDATE'"
-                offColor="#41b883"
-                onColor="#41b883"
-              />
-              <label :class="newFormType == 'CREATE' ? 'gray' : ''">Update</label>
-            </div>
-          </div>
-          <div v-else class="tab-content__div">
-            <label class="gray">Create</label>
-          </div>
-          <div id="formSection">
-            <draggable
-              v-model="addedFields"
-              group="fields"
-              @start="drag = true"
-              @end="drag = false"
-              class="drag-section"
-            >
-              <div v-for="field in addedFields" :key="field.id">
-                <div v-if="!unshownIds.includes(field.id)">
-                  <div class="drag-item">
-                    <p id="formField" :class="unshownIds.includes(field.id) ? 'invisible' : ''">
-                      <img src="@/assets/images/drag.svg" alt="" />
-                      {{ field.label == 'Price Book Entry ID' ? 'Products' : field.label }}
-                    </p>
-                    <img
-                      src="@/assets/images/remove.svg"
-                      alt=""
-                      id="remove"
-                      :class="unshownIds.includes(field.id) ? 'invisible' : ''"
-                      @click="
-                        () => {
-                          onRemoveField(field)
-                        }
-                      "
-                    />
-                  </div>
-                </div>
-              </div>
-            </draggable>
-          </div>
-        </section>
-      </div> -->
-
-    <!-- <div v-else-if="!customObjectView" class="tab-content">
-        <section style="margin-top: -16px" class="space-between">
-          <h4 style="cursor: pointer" @click="clearStageData" v-if="selectedForm">
-            <img
-              style="margin-right: 8px; margin-top: -16px"
-              src="@/assets/images/left.svg"
-              height="13px"
-              alt=""
-            />
-            Back
-          </h4>
-
-          <div class="row__">
-            <h4 style="margin-right: 16px" v-if="selectedForm">
-              {{ selectedForm.stage + ' Form' }}
-            </h4>
-            <h4 style="margin-right: 16px" v-else>{{ currentlySelectedForm }}</h4>
-
-            <div
-              class="margin-right"
-              @click.prevent="deleteForm(activeForm)"
-              v-if="selectedForm && selectedForm.customFields.length"
-            >
-              <img src="@/assets/images/removeFill.svg" class="red-filter" alt="" />
-            </div>
-          </div>
-        </section>
-
-        <div>
-          <div class="row__">
-            <Multiselect
-              v-if="!selectedForm"
-              @input="setStage($event)"
-              :options="stages"
-              openDirection="below"
-              style="width: 40vw; margin-top: -24px"
-              selectLabel="Enter"
-              track-by="value"
-              label="label"
-              :value="currentlySelectedStage"
-            >
-              <template slot="noResult">
-                <p class="multi-slot">No results.</p>
-              </template>
-
-              <template slot="placeholder">
-                <p class="slot-icon">
-                  <img src="@/assets/images/search.svg" alt="" />
-                  {{ selectedStage ? selectedStage : 'Select stage to create/edit form' }}
-                </p>
-              </template>
-
-              <template slot="option" slot-scope="props">
-                <div>
-                  <span class="option__title">{{
-                    userCRM === 'SALESFORCE'
-                      ? removeAmp(props.option.value)
-                      : removeAmp(props.option.label)
-                  }}</span
-                  ><span
-                    v-if="currentStagesWithForms.includes(props.option.label)"
-                    class="option__small"
-                  >
-                    edit
-                  </span>
-                </div>
-              </template>
-            </Multiselect>
-          </div>
-        </div>
-
-        <div v-if="selectedForm" id="formSection">
-          <draggable
-            v-model="addedFields"
-            group="fields"
-            @start="drag = true"
-            @end="drag = false"
-            class="drag-section"
-          >
-            <div v-for="field in addedFields" :key="field.id">
-              <div v-if="!unshownIds.includes(field.id)">
-                <div class="drag-item">
-                  <p id="formField" :class="unshownIds.includes(field.id) ? 'invisible' : ''">
-                    <img src="@/assets/images/drag.svg" alt="" />
-                    {{ field.label }}
-                  </p>
-                  <img
-                    src="@/assets/images/remove.svg"
-                    alt=""
-                    id="remove"
-                    :class="unshownIds.includes(field.id) ? 'invisible' : ''"
-                    @click="
-                      () => {
-                        onRemoveField(field)
-                      }
-                    "
-                  />
-                </div>
-              </div>
-            </div>
-          </draggable>
-        </div>
-      </div> -->
-
-    <!-- <div class="tab-content" v-else>
-        <div v-if="modalLoading">
-          <Loader :loaderText="loaderText" />
-        </div>
-
-        <div v-else>
-          <div v-if="!customResource">
-            <div
-              v-if="createdCustomObjects.length"
-              style="width: 100%; display: flex; justify-content: space-between"
-            >
-              <Multiselect
-                @input="getCreatedCO"
-                :options="createdCustomObjects"
-                openDirection="below"
-                style="width: 40vw; margin-left: 1rem"
-                selectLabel="Enter"
-                :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
-                label="name"
-                :value="currentlySelectedCO"
-                v-model="selectedCustomObject"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
-                </template>
-
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.svg" alt="" />
-                    Select Custom Object
-                  </p>
-                </template>
-
-                <template slot="option" slot-scope="props">
-                  <div>
-                    <span class="option__title">{{ props.option.name }}</span>
-                  </div>
-                </template>
-              </Multiselect>
-              <button @click="toggleCustomObjectModalView" class="custom-object-button">
-                Add Custom Object
-              </button>
-            </div>
-            <Multiselect
-              v-else
-              @input="getCustomObjectFields"
-              :options="customObjects"
-              openDirection="below"
-              style="width: 40vw; margin-left: 1rem"
-              selectLabel="Enter"
-              :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
-              :customLabel="customLabel"
-              :value="currentlySelectedCO"
-              v-model="selectedCustomObject"
-            >
-              <template slot="noResult">
-                <p class="multi-slot">No results.</p>
-              </template>
-
-              <template slot="placeholder">
-                <p class="slot-icon">
-                  <img src="@/assets/images/search.svg" alt="" />
-                  Select Custom Object
-                </p>
-              </template>
-
-              <template slot="option" slot-scope="props">
-                <div>
-                  <span class="option__title">{{ removeAmp(props.option.label) }}</span
-                  ><span
-                    v-if="currentStagesWithForms.includes(props.option.label)"
-                    class="option__small"
-                  >
-                    edit
-                  </span>
-                </div>
-              </template>
-            </Multiselect>
-          </div>
-          <section v-else>
-            <div class="space-between">
-              <h4 style="cursor: pointer" @click="customResource = null">
-                <img
-                  style="margin-right: 8px; margin-top: -16px"
-                  src="@/assets/images/left.svg"
-                  height="13px"
-                  alt=""
-                />
-                Back
-              </h4>
-
-              <div class="row__">
-                <h4 style="margin-right: 16px">
-                  {{ selectedCustomObjectName + ' Form' }}
-                </h4>
-                <div class="margin-right" @click.prevent="deleteForm(newCustomForm)">
-                  <img src="@/assets/images/removeFill.svg" class="red-filter" alt="" />
-                </div>
-              </div>
-            </div>
-            <div id="formSection">
-              <draggable
-                v-model="addedFields"
-                group="fields"
-                @start="drag = true"
-                @end="drag = false"
-                class="drag-section"
-              >
-                <div v-for="field in addedFields" :key="field.id">
-                  <div v-if="!unshownIds.includes(field.id)">
-                    <div class="drag-item">
-                      <p id="formField" :class="unshownIds.includes(field.id) ? 'invisible' : ''">
-                        <img src="@/assets/images/drag.svg" alt="" />
-                        {{ field.label }}
-                      </p>
-                      <img
-                        src="@/assets/images/remove.svg"
-                        alt=""
-                        id="remove"
-                        :class="unshownIds.includes(field.id) ? 'invisible' : ''"
-                        @click="
-                          () => {
-                            onRemoveField(field)
-                          }
-                        "
-                      />
-                    </div>
-                  </div>
-                </div>
-              </draggable>
-            </div>
-          </section>
-        </div>
-      </div> -->
-    <!-- </section> -->
-
-    <!-- <div class="field-section">
-      <section v-if="!customObjectView">
-        <div class="search-bar">
-          <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
-          <input
-            @input="searchFields"
-            type="search"
-            :placeholder="`Search ${newResource} Fields`"
-            v-model="filterText"
-          />
-        </div>
-
-        <div class="field-section__fields">
-          <div>
-            <p v-for="(field, i) in filteredFields" :key="field.id">
-              <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
-              <label :for="i"></label>
-              {{ field.label == 'Price Book Entry ID' ? 'Products' : removeAmp(field.label) }}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section v-else>
-        <div v-if="selectedCustomObject || customResource">
-          <div class="search-bar">
-            <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
-            <input
-              type="search"
-              :placeholder="`Search ${selectedCustomObjectName} Fields`"
-              v-model="COfilterText"
-            />
-          </div>
-
-          <div class="field-section__fields">
-            <div>
-              <p v-if="!COfilteredFields.length && createdCustomFields">Fields still syncing...</p>
-              <p
-                v-else-if="COfilteredFields.length"
-                v-for="(field, i) in COfilteredFields"
-                :key="field.id"
-              >
-                <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
-                <label :for="i"></label>
-                {{ removeAmp(field.label) }}
-                <span v-if="field.required" class="red-text">required</span>
-              </p>
-              <p v-else>Nothing here. Try selecting an object</p>
-            </div>
-          </div>
-        </div>
-
-        <div v-else>
-          <div class="search-bar">
-            <img src="@/assets/images/search.svg" style="height: 18px; cursor: pointer" alt="" />
-            <input type="search" placeholder="Search Object Fields" />
-          </div>
-
-          <div class="field-section__fields">
-            <div>
-              <p v-if="createdCustomFields">Fields still syncing...</p>
-              <p v-else>Nothing here. Try selecting an object</p>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div> -->
   </div>
 </template>
 
@@ -915,11 +539,10 @@ import SlackOAuth from '@/services/slack'
 import { SObjectPicklist } from '@/services/salesforce'
 import { ObjectField } from '@/services/crm'
 import * as FORM_CONSTS from '@/services/slack'
-import { SObjects } from '../../services/salesforce'
-import { decryptData } from '../../encryption'
+import { SObjects } from '@/services/salesforce'
 
 export default {
-  name: 'CustomSlackForm',
+  name: 'ConfigureForms',
   components: {
     PulseLoadingSpinnerButton,
     Modal,
@@ -964,6 +587,9 @@ export default {
       type: Function,
       default: () => null,
     },
+    updateAllForms: {
+      type: Function
+    }
   },
   data() {
     return {
@@ -1421,12 +1047,10 @@ export default {
       return this.customObjectView ? 'green' : ''
     },
     user() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser
+      return this.$store.state.user
     },
     userCRM() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser.crm
+      return this.$store.state.user.crm
     },
     task() {
       return this.$store.state.customObject.task
@@ -2312,10 +1936,14 @@ export default {
           this.savingForm = false
           this.getAllForms()
           this.formChange = false
+          if (this.newCustomForm.formType === 'STAGE_GATING') {
+            this.$router.go()
+          }
         })
     },
     async getAllForms() {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
+      this.updateAllForms(this.allForms)
     },
   },
 }
@@ -2443,12 +2071,14 @@ input[type='search'] {
   padding: 4px 0;
   margin: 0;
   background: none;
+  font-size: 12px;
 }
 input[type='search']:focus {
   outline: none;
 }
 ::placeholder {
   color: $very-light-gray;
+  font-size: 12px;
 }
 .field-section {
   width: 20vw;
@@ -2492,26 +2122,9 @@ input[type='search']:focus {
 }
 .wrapper {
   // width: 100%;
-  margin: 0 auto;
+  // margin: 0 auto;
   font-size: 14px;
   letter-spacing: 0.75px;
-}
-.tab-content {
-  width: 100%;
-  height: 86vh;
-  padding: 32px 24px 16px 24px;
-  background: #fff;
-  color: $base-gray;
-  overflow: scroll;
-  border-radius: 6px;
-  margin-top: 28px;
-
-  &__div {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
 }
 .space-between {
   display: flex;
@@ -2679,7 +2292,7 @@ input[type='search']:focus {
   margin-bottom: 8px;
   border-radius: 4px;
   background-color: $white;
-  color: $base-gray;
+  // color: $base-gray;
   outline: 1px solid $soft-gray;
   font-size: 13px;
   // width: fit-content;
@@ -2703,6 +2316,7 @@ input[type='search']:focus {
   }
   p {
     font-size: 12px;
+    // filter: invert(45%);
   }
 }
 .drag-item-right {
@@ -2716,7 +2330,7 @@ input[type='search']:focus {
     padding-left: 2px;
   }
   span {
-    color: $base-gray;
+    color: #7b8580;
     font-size: 16px;
     padding: 0px 6px 4px 6px;
     border-radius: 4px;
@@ -2732,7 +2346,7 @@ input[type='search']:focus {
   flex-direction: row;
   align-items: flex-start;
   padding: 0rem;
-  margin-top: 13vh;
+  margin-top: 10vh;
   overflow: hidden;
   color: $base-gray;
 }
@@ -2752,13 +2366,21 @@ img:hover {
   cursor: pointer;
 }
 .save {
+  // @include base-button();
+  // background-color: $dark-green;
+  // color: $white;
+  // font-size: 12px;
+  // transition: all 0.3s;
   @include primary-button();
-  padding: 8px 20px;
+  margin-right: 0.1rem;
 }
+// .red-button {
+//   @include button-danger();
+//   padding: 8px 20px;
+//   margin-top: 1rem;
+// }
 .red-button {
   @include button-danger();
-  padding: 8px 20px;
-  margin-top: 1rem;
 }
 .custom-object-button {
   padding: 8px 20px;
@@ -2784,7 +2406,7 @@ img:hover {
 .row__ {
   display: flex;
   flex-direction: row;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
   gap: 24px;
   margin-left: 16px;
@@ -2844,6 +2466,14 @@ img:hover {
     font-size: 20px;
   }
 }
+.flex-row-modal {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-self: start;
+  margin: 0 5%;
+  letter-spacing: 1px;
+}
 .logo {
   margin: 0px 8px 0px 16px;
   background-color: $white-green;
@@ -2897,34 +2527,35 @@ img:hover {
   padding: 4px 6px 3px 6px;
   margin-right: 0.5rem;
 }
-// .img-border {
-//   border: 1px solid #eeeeee;
-//   padding: 4px 6px 3px 6px;
-//   border-radius: 6px;
-//   background-color: white;
-// }
+.img-border {
+  border: 1px solid #eeeeee;
+  padding: 4px 6px 3px 6px;
+  border-radius: 6px;
+  background-color: white;
+}
 .fields-container {
   border: 1px solid $soft-gray;
   background-color: white;
   border-radius: 4px;
   // box-shadow: 0 0 10px $very-light-gray;
   width: 60vw;
-  height: 80vh;
-  margin: 0rem auto;
+  height: 75vh;
+  // margin: 0rem auto;
+  margin: 0 1.5rem;
 }
 .drag-section {
   height: 48vh;
   overflow: auto;
   // outline: 1px solid #eeeeee;
   // border-radius: 6px;
-  padding: 4px;
+  padding: 14px 4px 4px;
 }
 .border-bottom-top {
   border-bottom: 1px solid $soft-gray;
   overflow: auto;
 }
 .green-highlight {
-  color: $dark-green;
+  color: $dark-green !important;
   border-bottom: 3px solid $dark-green;
 }
 .cursor {
@@ -2999,7 +2630,7 @@ img:hover {
 .side-wrapper .side-workflow:hover,
 .side-wrapper .side-workflow:hover .side-tooltip,
 .side-wrapper .side-workflow:hover .side-tooltip::before {
-  background: $grape;
+  background: $base-gray;
   color: #ffffff;
 }
 .wrapper {
@@ -3064,11 +2695,33 @@ img:hover {
 .wrapper .workflow:hover,
 .wrapper .workflow:hover .tooltip,
 .wrapper .workflow:hover .tooltip::before {
-  background: $grape;
+  background: $base-gray;
   color: #ffffff;
 }
-.multiselect-font {
-  font-size: 12px !important;
+// .multiselect-font {
+//   font-size: 12px !important;
+// }
+::v-deep .multiselect * {
+  font-size: 13px;
+  font-family: $base-font-family;
+  border-radius: 5px !important;
+}
+::v-deep .multiselect__option--highlight {
+  background-color: $off-white;
+  color: $base-gray;
+}
+::v-deep .multiselect__option--selected {
+  background-color: $soft-gray;
+}
+::v-deep .multiselect__content-wrapper {
+  border-radius: 5px;
+  margin: 0.5rem 0rem;
+  border-top: 1px solid $soft-gray;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  min-width: 250px;
+}
+::v-deep .multiselect__placeholder {
+  color: $base-gray;
 }
 .green-check {
   height: 0.6rem;
@@ -3076,5 +2729,147 @@ img:hover {
     brightness(93%) contrast(89%);
   // margin-left: 1.75rem;
   // margin-top: 0.1rem;
+}
+.custom-picklist-font {
+  font-size: 12px;
+}
+::v-deep .custom-picklist-font input::placeholder {
+  font-size: 12px;
+}
+::v-deep .custom-picklist-font span {
+  font-size: 12px;
+}
+.light-gray-blue {
+  color: $light-gray-blue;
+}
+.header-text {
+  font-size: 11px;
+  // filter: invert(45%);
+  // color: #7b8580;
+  color: $light-gray-blue;
+}
+.refresh-button {
+  height: 14px;
+  filter: invert(45%)
+}
+.trash-button {
+  height: 14px;
+  filter: invert(43%) sepia(45%) saturate(682%) hue-rotate(308deg) brightness(109%) contrast(106%);
+}
+.display-flex {
+  display: flex;
+}
+.small-margin-right {
+  margin-right: 2rem;
+}
+.invite-form {
+  @include small-modal();
+  min-width: 37vw;
+  // min-height: 64vh;
+  align-items: center;
+  justify-content: space-between;
+  color: $base-gray;
+  &__title {
+    font-weight: bold;
+    text-align: left;
+    font-size: 22px;
+  }
+  &__subtitle {
+    text-align: left;
+    font-size: 16px;
+    margin-left: 1rem;
+  }
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    // margin-top: -4rem;
+  }
+  &__inner_actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    border-top: 1px solid $soft-gray;
+  }
+  &__actions-noslack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1rem;
+  }
+}
+.crm-form {
+  height: 30vh;
+  width: 32vw;
+}
+.form-margin-small {
+  margin-top: 10rem;
+}
+.header-crm {
+  // background-color: $soft-gray;
+  width: 100%;
+  // border-bottom: 1px solid $soft-gray;
+  position: relative;
+  border-top-right-radius: 4px;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  border-top-left-radius: 4px;
+  display: flex;
+  justify-content: center;
+  // display: flex;
+  // flex-direction: row;
+  // align-items: center;
+  // justify-content: flex-start;
+
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.75px;
+    line-height: 1.2;
+    cursor: pointer;
+    color: $base-gray;
+  }
+}
+.flex-row-wrapper {
+  display: flex;
+  justify-content: space-between;
+}
+.inner-crm {
+  border-bottom: 1px solid $soft-gray;
+  width: 90%;
+  padding-bottom: 0.4rem;
+}
+.card-text {
+  font-size: 14px;
+  color: $light-gray-blue;
+  margin-top: 0.5rem;
+  // text-align: center;
+}
+.confirm-cancel-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: 94%
+}
+.img-border-modal {
+  // @include gray-text-button();
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  // padding: 4px 6px;
+  margin-right: 8px;
+  margin-top: 0.5rem;
+}
+.cancel-button {
+  @include gray-button();
+}
+.half-view-flex {
+  display: flex; 
+  justify-content: space-between; 
+  width: 55.75vw;
+}
+.filtered-red {
+  filter: invert(43%) sepia(45%) saturate(682%) hue-rotate(308deg) brightness(109%) contrast(106%);
 }
 </style>

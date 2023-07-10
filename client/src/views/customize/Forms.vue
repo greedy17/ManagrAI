@@ -24,6 +24,7 @@ import { SObjectPicklist } from '@/services/salesforce'
 import { ObjectField } from '@/services/crm'
 import { SOBJECTS_LIST } from '@/services/salesforce'
 import * as FORM_CONSTS from '@/services/slack'
+import { decryptData } from '../../encryption'
 
 export default {
   name: 'Forms',
@@ -68,7 +69,8 @@ export default {
   computed: {
     ...mapState(['user']),
     userCRM() {
-      return this.$store.state.user.crm
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.crm
     },
   },
   methods: {

@@ -139,6 +139,7 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
 import FormField from '@/components/forms/FormField'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 import User from '@/services/users'
+import { decryptData, encryptData } from '../../encryption'
 
 export default {
   name: 'OnboardingLogMeeting',
@@ -171,7 +172,8 @@ export default {
       try {
         const res = await SlackOAuth.api.updateZoomChannel(this.slackId, zoom_channel).then(() => {
           User.api.getUser(this.user.id).then((response) => {
-            this.$store.commit('UPDATE_USER', response)
+            const encrypted = encryptData(response, process.env.VUE_APP_SECRET_KEY)
+            this.$store.commit('UPDATE_USER', encrypted)
           })
         })
       } finally {
@@ -313,10 +315,12 @@ export default {
   },
   computed: {
     user() {
-      return this.$store.state.user
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser
     },
     slackId() {
-      return this.$store.state.user.slackRef.slackId
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.slackRef.slackId
     },
   },
 }

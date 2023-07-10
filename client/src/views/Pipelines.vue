@@ -2848,12 +2848,7 @@
                 label="label"
                 @select="
                   setDropdownValue({
-                    val:
-                      field.apiName === 'StageName'
-                        ? $event.value
-                        : field.apiName === 'dealstage'
-                        ? [$event.label, $event.id]
-                        : $event.id,
+                    val: field.apiName === 'StageName' ? $event.value : field.apiName === 'dealstage' ? [$event.label, $event.id] : $event.id,
                     oppId: opp.id,
                     oppIntegrationId: opp.integration_id,
                   })
@@ -3082,6 +3077,7 @@ import Filters from '@/components/Filters'
 import FilterSelection from '@/components/FilterSelection'
 import User from '@/services/users'
 import Table from '@/components/Table'
+import { decryptData, encryptData } from '../encryption'
 
 export default {
   name: 'Pipelines',
@@ -3279,14 +3275,16 @@ export default {
       return extras
     },
     hasExtraFields() {
-      const accountRef = this.$store.state.user.salesforceAccountRef
-        ? this.$store.state.user.salesforceAccountRef
-        : this.$store.state.user.hubspotAccountRef
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      const accountRef = decryptedUser.salesforceAccountRef
+        ? decryptedUser.salesforceAccountRef
+        : decryptedUser.hubspotAccountRef
       const extraFields = accountRef.extraPipelineFieldsRef[this.baseResourceType]
       return extraFields && extraFields.length ? extraFields : []
     },
     hasProducts() {
-      return this.$store.state.user.organizationRef.hasProducts
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.organizationRef.hasProducts
     },
     allPicklistOptions() {
       if (this.userCRM === 'HUBSPOT') {
@@ -3344,10 +3342,12 @@ export default {
       return this.templates.list.filter((temp) => temp.resourceType === 'Lead')
     },
     user() {
-      return this.$store.state.user
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser
     },
     userCRM() {
-      return this.$store.state.user.crm
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.crm
     },
     filteredWorkflows: {
       get: function () {
@@ -3386,16 +3386,16 @@ export default {
       }
     },
     syncDay() {
-      if (this.$store.state.user.salesforceAccountRef.lastSyncTime) {
-        return this.formatDateTime(this.$store.state.user.salesforceAccountRef.lastSyncTime)
+      if (this.user.salesforceAccountRef.lastSyncTime) {
+        return this.formatDateTime(this.user.salesforceAccountRef.lastSyncTime)
           .substring(
-            this.formatDateTime(this.$store.state.user.salesforceAccountRef.lastSyncTime).indexOf(
+            this.formatDateTime(this.user.salesforceAccountRef.lastSyncTime).indexOf(
               '/',
             ) + 1,
           )
           .substring(
             0,
-            this.formatDateTime(this.$store.state.user.salesforceAccountRef.lastSyncTime).indexOf(
+            this.formatDateTime(this.user.salesforceAccountRef.lastSyncTime).indexOf(
               '/',
             ),
           )
@@ -3885,7 +3885,8 @@ export default {
     },
     setOpps() {
       User.api.getUser(this.user.id).then((response) => {
-        this.$store.commit('UPDATE_USER', response)
+        const encrypted = encryptData(response, process.env.VUE_APP_SECRET_KEY)
+        this.$store.commit('UPDATE_USER', encrypted)
       })
     },
     closeFilters() {
@@ -5314,7 +5315,6 @@ export default {
         // updateOppForm and createOppForm should be updateForm and createForm
         // getAllForms should be called on object change
         if (this.userCRM === 'SALESFORCE') {
-          console.log('res', res)
           this.updateOppForm = res.filter(
             (obj) =>
               obj.formType === 'UPDATE' &&

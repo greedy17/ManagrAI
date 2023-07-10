@@ -8,7 +8,7 @@ from django.utils import timezone
 from managr.utils.client import HttpClient
 from managr.core.models import User
 from . import constants as zoom_model_consts
-from .exceptions import ZoomAPIException
+from .exceptions import ZoomAPIException, TokenExpired
 
 client = HttpClient().client
 logger = logging.getLogger("managr")
@@ -251,6 +251,40 @@ class ZoomAcct:
     def get_transcript(url, token):
         r = client.get(url, headers=dict(Authorization=(f"Bearer {token}")), allow_redirects=True)
         return r.content
+
+    @staticmethod
+    def check_event_id(zoom_id, date, meeting_id):
+        user = User.objects.get(zoom_account__zoom_id=zoom_id)
+        from managr.meetings.models import Meeting
+
+        meeting_to_check = Meeting.objects.get(id=meeting_id)
+        print(meeting_to_check)
+        while True:
+            try:
+                meeting_res = user.zoom_account.helper_class.get_meetings_by_date(
+                    user.zoom_account.access_token, user.zoom_account.zoom_id, date
+                )
+                print(meeting_res)
+                meetings = meeting_res["meetings"]
+                meetings_by_topic = [
+                    meeting for meeting in meetings if meeting_to_check.topic == meeting["topic"]
+                ]
+                print(meetings_by_topic)
+                if len(meetings_by_topic):
+                    zoom_res_meeting = meetings_by_topic[0]
+                    print(zoom_res_meeting)
+                    zoom_res_id = zoom_res_meeting["id"]
+                    print(zoom_res_id, meeting_to_check.id)
+                    if zoom_res_id != meeting_to_check.id:
+                        meeting_to_check.id = zoom_res_id
+                        meeting_to_check.save()
+            except TokenExpired:
+                user.zoom_account.regenerate_token()
+            except Exception as e:
+                logger.exception(e)
+                break
+            break
+        return meeting_to_check
 
     @staticmethod
     def get_meetings_by_date(token, zoom_id, date):

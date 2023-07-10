@@ -794,17 +794,17 @@ def process_transcript_to_summaries(transcript, user):
             timeout = 60.0
             tokens = 500
             while True:
-                body = core_consts.OPEN_AI_COMPLETIONS_BODY(
-                    user.email, transcript_body, tokens, top_p=0.9, temperature=0.7
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email, transcript_body, token_amount=tokens, top_p=0.9, temperature=0.7
                 )
-                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 with Variable_Client(timeout) as client:
                     try:
                         r = client.post(
                             url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
                         )
                         r = _handle_response(r)
-                        summary = r.get("choices")[0].get("text")
+                        summary = r.get("choices")[0].get("message").get("content")
 
                         summary = (
                             summary.replace(":\n\n", "").replace(".\n\n", "").replace("\n\n", "")
@@ -853,16 +853,33 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
     pm = json.loads(payload["view"]["private_metadata"])
     user = User.objects.get(id=pm.get("u"))
     state = payload["view"]["state"]["values"]
+    ts = context.get("ts", False)
     try:
-        loading_res = slack_requests.send_channel_message(
-            user.slack_integration.channel,
-            user.organization.slack_integration.access_token,
-            block_set=get_block_set(
-                "loading",
-                {"message": ":robot_face: Summarizing your call. This may take a few minutes..."},
-            ),
-        )
-        ts = loading_res["message"]["ts"]
+        if ts:
+            loading_res = slack_requests.update_channel_message(
+                user.slack_integration.channel,
+                ts,
+                user.organization.slack_integration.access_token,
+                block_set=get_block_set(
+                    "loading",
+                    {
+                        "message": ":robot_face: Summarizing your call. This may take a few minutes..."
+                    },
+                ),
+            )
+        else:
+            loading_res = slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                block_set=get_block_set(
+                    "loading",
+                    {
+                        "message": ":robot_face: Summarizing your call. This may take a few minutes..."
+                    },
+                ),
+            )
+            ts = loading_res["message"]["ts"]
+            context.update(ts=ts)
     except Exception as e:
         logger.exception(
             f"ERROR sending update channel message for chat submittion because of <{e}>"
@@ -890,7 +907,9 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
     if slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations_list:
         workflow.operations_list.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
     workflow.save()
-    meeting = workflow.meeting
+    meeting = workflow.meeting.meeting_account.helper_class.check_event_id(
+        user.zoom_account.zoom_id, str(workflow.datetime_created.date()), workflow.meeting.id
+    )
     has_error = False
     error_message = None
     try:
@@ -955,8 +974,8 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                         user,
                     )
                     tokens = 1000
-                    body = core_consts.OPEN_AI_COMPLETIONS_BODY(
-                        user.email, summary_body, tokens, top_p=0.9
+                    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                        user.email, summary_body, token_amount=tokens, top_p=0.9
                     )
                     # body = {
                     #     "model": "text-davinci-003",
@@ -970,14 +989,14 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                             logger.info("Combining Summary parts")
                         if not viable_data:
                             with Variable_Client(timeout) as client:
-                                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                                 r = client.post(
                                     url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
                                 )
                             r = _handle_response(r)
                             if not settings.IN_PROD:
                                 logger.info(f"Summary response: {r}")
-                            choice = r["choices"][0]["text"]
+                            choice = r["choices"][0].get("message").get("content")
                             data = clean_prompt_string(choice)
                             viable_data = data
                         else:
@@ -985,9 +1004,9 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                         # if not settings.IN_PROD:
                         #     print(f"DATA: {data}")
                         combined_summary = (
-                            data.pop("summary", None)
+                            data.pop("summary", "There was an error creating the summary")
                             if data.get("summary", None)
-                            else data.pop("Summary", None)
+                            else data.pop("Summary", "There was an error creating the summary")
                         )
                         owner_field = set_owner_field(resource_type, user.crm)
                         data[owner_field] = user.crm_account.crm_id
@@ -1155,7 +1174,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
     try:
         slack_res = slack_requests.update_channel_message(
             user.slack_integration.channel,
-            loading_res["message"]["ts"],
+            ts,
             user.organization.slack_integration.access_token,
             block_set=blocks,
         )

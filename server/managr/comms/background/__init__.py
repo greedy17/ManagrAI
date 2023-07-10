@@ -19,7 +19,6 @@ def emit_process_news_summary(payload, context, schedule=datetime.datetime.now()
 
 @background()
 def _process_news_summary(payload, context):
-    print(payload)
     user = User.objects.get(id=context.get("u"))
     news_res = get_news_for_company(company)
     descriptions = [article["description"] for article in news_res]
@@ -35,12 +34,10 @@ def _process_news_summary(payload, context):
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
             user.email, prompt, token_amount=token_amount, top_p=0.1
         )
-        print(body)
         with Variable_Client(timeout) as client:
             r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
         try:
             r = open_ai_exceptions._handle_response(r)
-            print(message)
             break
         except open_ai_exceptions.StopReasonLength:
             logger.exception(

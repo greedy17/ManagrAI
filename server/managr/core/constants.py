@@ -94,10 +94,10 @@ plus any budget and cost details. The summary must be in paragraph form. You mus
 )
 
 OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
-    lambda input, crm_fields, date, user: f"""'input': {input}, 'prompt': 'Consolidate and analyze the provided sales call transcript summaries. The sales rep on this call  is {user.first_name} from {user.organization.name}. You must complete the following tasks:
+    lambda input, crm_fields, user: f"""'input': {input}, 'prompt': 'Consolidate and analyze the provided sales call transcript summaries. The sales rep on this call  is {user.first_name} from {user.organization.name}. You must complete the following tasks:
 1) Fill in all the relevant data from the transcript into the appropriate CRM fields:\n CRM fields: {crm_fields}\n Leave any non-applicable fields empty, any date must be converted to year-month-day format, and do not include quotes in the values. 
-2) Next, as a separate task, you will compose a concise and impactful summary of the sales call, as if you are the salesperson summarizing key takeaways for your team. Maintain relevance and sales-focused nuances. Make sure to Include what the next steps are at the end.
-3) Output your results as a Python dictionary. Ensure the summary is included in the dictionary under the summary key.'"""
+2) Next, you will compose a concise and impactful summary of the sales call, as if you are the salesperson summarizing key takeaways for your team. Maintain relevance and sales-focused nuances. Make sure to Include what the next steps are at the end.
+3) Output your results as a Python dictionary. Ensure the summary is included in the Python dictionary as the key summary.'"""
 )
 
 OPEN_AI_CALL_ANALYSIS_PROMPT = (
@@ -139,16 +139,18 @@ def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=500, temperature=Fa
 
 
 def OPEN_AI_CHAT_COMPLETIONS_BODY(
-    user_name, prompt, token_amount=2000, temperature=False, top_p=False
+    user_name, prompt, system_role=False, token_amount=2000, temperature=False, top_p=False,
 ):
     body = {
         "model": "gpt-4",
-        "messages": [
-            {"role": "system", "content": "You are a VP of Communications"},
-            {"role": "user", "content": prompt},
-        ],
+        "messages": [{"role": "user", "content": prompt},],
         "user": user_name,
     }
+    if system_role:
+
+        first_message = [{"role": "system", "content": system_role}]
+        first_message.extend(body["messages"])
+        body["messages"] = first_message
     if token_amount:
         body["max_tokens"] = token_amount
     if temperature:
@@ -181,6 +183,7 @@ def OPEN_AI_ASK_MANAGR_PROMPT(user_id, prompt, resource_type, resource_id):
     from managr.hubspot.routes import routes as hs_routes
     from datetime import datetime
 
+    prompt = prompt.lower().replace("ask managr,", "").replace("ask managr ", "")
     CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
     user = User.objects.get(id=user_id)
     resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(id=resource_id)
@@ -211,7 +214,7 @@ def OPEN_AI_ASK_MANAGR_PROMPT(user_id, prompt, resource_type, resource_id):
 \nCRM_data: {data_from_resource}
 \nRequest: {prompt}\n
 Your response should be casual yet assertive, echoing the style of an experienced sales leader. 
-If the request is to draft an email, the tone should be friendly, no formalities, succinct sentences focused on value, and frequent paragraph breaks for readability. 
+The tone should be friendly and focused on value with succinct sentences. Output must be a regular message, not an email, unless specified. 
 Limit your response to under 1,000 characters.
 """
     return body
