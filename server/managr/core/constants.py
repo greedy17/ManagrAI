@@ -147,7 +147,10 @@ def OPEN_AI_CHAT_COMPLETIONS_BODY(
         "user": user_name,
     }
     if system_role:
-        body["messages"] = [{"role": "system", "content": system_role}].append(body["messages"])
+
+        first_message = [{"role": "system", "content": system_role}]
+        first_message.extend(body["messages"])
+        body["messages"] = first_message
     if token_amount:
         body["max_tokens"] = token_amount
     if temperature:
@@ -180,6 +183,7 @@ def OPEN_AI_ASK_MANAGR_PROMPT(user_id, prompt, resource_type, resource_id):
     from managr.hubspot.routes import routes as hs_routes
     from datetime import datetime
 
+    prompt = prompt.lower().replace("ask managr,", "").replace("ask managr ", "")
     CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
     user = User.objects.get(id=user_id)
     resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(id=resource_id)
@@ -210,7 +214,7 @@ def OPEN_AI_ASK_MANAGR_PROMPT(user_id, prompt, resource_type, resource_id):
 \nCRM_data: {data_from_resource}
 \nRequest: {prompt}\n
 Your response should be casual yet assertive, echoing the style of an experienced sales leader. 
-If the request is to draft an email, the tone should be friendly, no formalities, succinct sentences focused on value, and frequent paragraph breaks for readability. 
+The tone should be friendly and focused on value with succinct sentences. Output must be a regular message, not an email, unless specified. 
 Limit your response to under 1,000 characters.
 """
     return body

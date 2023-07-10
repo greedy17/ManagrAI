@@ -2051,12 +2051,14 @@ def _process_send_ask_managr_to_dm(payload, context):
     timeout = 60.0
     while True:
         try:
-            body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, tokens)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email, prompt, "You are an experienced sales leader", token_amount=tokens
+            )
             with Variable_Client(timeout) as client:
-                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             r = _handle_response(r)
-            text = r.get("choices")[0].get("text")
+            text = r.get("choices")[0].get("message").get("content")
             break
         except StopReasonLength:
             if tokens >= 2000:
@@ -2092,6 +2094,7 @@ def _process_send_ask_managr_to_dm(payload, context):
                 timeout += 30.0
         except Exception as e:
             logger.exception(f"Unknown error on ask managr <{e}>")
+            break
     if has_error:
         return
     blocks = [
