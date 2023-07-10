@@ -970,7 +970,6 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                             "transcript_summaries": summary_parts,
                         },
                         fields_list,
-                        workflow.datetime_created.date(),
                         user,
                     )
                     tokens = 1000
