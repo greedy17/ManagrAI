@@ -40,7 +40,11 @@ def _process_news_summary(payload, context):
             datetime.datetime.now().date(), descriptions, company
         )
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-            user.email, prompt, token_amount=token_amount, top_p=0.1
+            user.email,
+            prompt,
+            "You are a VP of Communications",
+            token_amount=token_amount,
+            top_p=0.1,
         )
         with Variable_Client(timeout) as client:
             r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)

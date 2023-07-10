@@ -94,10 +94,10 @@ plus any budget and cost details. The summary must be in paragraph form. You mus
 )
 
 OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
-    lambda input, crm_fields, date, user: f"""'input': {input}, 'prompt': 'Consolidate and analyze the provided sales call transcript summaries. The sales rep on this call  is {user.first_name} from {user.organization.name}. You must complete the following tasks:
+    lambda input, crm_fields, user: f"""'input': {input}, 'prompt': 'Consolidate and analyze the provided sales call transcript summaries. The sales rep on this call  is {user.first_name} from {user.organization.name}. You must complete the following tasks:
 1) Fill in all the relevant data from the transcript into the appropriate CRM fields:\n CRM fields: {crm_fields}\n Leave any non-applicable fields empty, any date must be converted to year-month-day format, and do not include quotes in the values. 
-2) Next, as a separate task, you will compose a concise and impactful summary of the sales call, as if you are the salesperson summarizing key takeaways for your team. Maintain relevance and sales-focused nuances. Make sure to Include what the next steps are at the end.
-3) Output your results as a Python dictionary. Ensure the summary is included in the dictionary under the summary key.'"""
+2) Next, you will compose a concise and impactful summary of the sales call, as if you are the salesperson summarizing key takeaways for your team. Maintain relevance and sales-focused nuances. Make sure to Include what the next steps are at the end.
+3) Output your results as a Python dictionary. Ensure the summary is included in the Python dictionary as the key summary.'"""
 )
 
 OPEN_AI_CALL_ANALYSIS_PROMPT = (
@@ -139,16 +139,15 @@ def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=500, temperature=Fa
 
 
 def OPEN_AI_CHAT_COMPLETIONS_BODY(
-    user_name, prompt, token_amount=2000, temperature=False, top_p=False
+    user_name, prompt, system_role=False, token_amount=2000, temperature=False, top_p=False,
 ):
     body = {
         "model": "gpt-4",
-        "messages": [
-            {"role": "system", "content": "You are a VP of Communications"},
-            {"role": "user", "content": prompt},
-        ],
+        "messages": [{"role": "user", "content": prompt},],
         "user": user_name,
     }
+    if system_role:
+        body["messages"] = [{"role": "system", "content": system_role}].append(body["messages"])
     if token_amount:
         body["max_tokens"] = token_amount
     if temperature:
