@@ -1914,17 +1914,20 @@ def _process_add_call_analysis(workflow_id, summaries):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     timeout = 60.0
     prompt = core_consts.OPEN_AI_CALL_ANALYSIS_PROMPT(summaries, workflow.datetime_created.date())
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(workflow.user.email, prompt, token_amount=500)
     has_error = False
     attempts = 1
     text = None
+    tokens = 500
     while True:
+        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+            workflow.user.email, prompt, "You are an experience VP of Sales", token_amount=tokens
+        )
         try:
             with Variable_Client(timeout) as client:
-                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             r = _handle_response(r)
-            text = r.get("choices")[0].get("text")
+            text = r.get("choices")[0].get("message").get("content")
             break
         except StopReasonLength:
             if tokens >= 2000:
@@ -2058,6 +2061,7 @@ def _process_send_ask_managr_to_dm(payload, context):
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             r = _handle_response(r)
+            print(r)
             text = r.get("choices")[0].get("message").get("content")
             break
         except StopReasonLength:
@@ -2086,7 +2090,9 @@ def _process_send_ask_managr_to_dm(payload, context):
             print(e)
             continue
         except httpx.ReadTimeout:
-            logger.exception(f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}")
+            logger.exception(
+                f"Read timeout to Open AI from ask managr, trying again. TIMEOUT AT: {timeout}"
+            )
             if timeout >= 120.0:
                 has_error = True
                 break

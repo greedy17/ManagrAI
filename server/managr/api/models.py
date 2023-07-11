@@ -85,6 +85,10 @@ class ExpiringTokenAuthentication(TokenAuthentication):
 class EmailBackend(ModelBackend):
     def authenticate(self, request, **kwargs):
         try:
+            uri = request.build_absolute_uri()
+            sso_check = request.data.get("sso")
+            if sso_check is None and "login-sso" not in uri:
+                return None
             email = request.data.get("email")
         except Exception:
             return None

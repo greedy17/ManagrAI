@@ -3275,16 +3275,19 @@ export default {
       return extras
     },
     hasExtraFields() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      const accountRef = decryptedUser.salesforceAccountRef
-        ? decryptedUser.salesforceAccountRef
-        : decryptedUser.hubspotAccountRef
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      // const accountRef = decryptedUser.salesforceAccountRef
+      //   ? decryptedUser.salesforceAccountRef
+      //   : decryptedUser.hubspotAccountRef
+      const accountRef = this.$store.state.user.salesforceAccountRef
+        ? this.$store.state.user.salesforceAccountRef
+        : this.$store.state.user.hubspotAccountRef
       const extraFields = accountRef.extraPipelineFieldsRef[this.baseResourceType]
       return extraFields && extraFields.length ? extraFields : []
     },
     hasProducts() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser.organizationRef.hasProducts
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.organizationRef.hasProducts
     },
     allPicklistOptions() {
       if (this.userCRM === 'HUBSPOT') {
@@ -3342,12 +3345,12 @@ export default {
       return this.templates.list.filter((temp) => temp.resourceType === 'Lead')
     },
     user() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user
     },
     userCRM() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser.crm
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.crm
     },
     filteredWorkflows: {
       get: function () {
@@ -3885,8 +3888,9 @@ export default {
     },
     setOpps() {
       User.api.getUser(this.user.id).then((response) => {
-        const encrypted = encryptData(response, process.env.VUE_APP_SECRET_KEY)
-        this.$store.commit('UPDATE_USER', encrypted)
+        // const encrypted = encryptData(response, process.env.VUE_APP_SECRET_KEY)
+        // this.$store.commit('UPDATE_USER', encrypted)
+        this.$store.commit('UPDATE_USER', response)
       })
     },
     closeFilters() {
