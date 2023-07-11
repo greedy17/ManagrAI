@@ -160,6 +160,7 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
             "user_ref",
             "org_ref",
             "is_completed",
+            "transcript_analysis"
         )
 
     def get_org_ref(self, instance):

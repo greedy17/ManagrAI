@@ -47,6 +47,7 @@ urlpatterns = [
     path("users/chat/submission/", core_views.submit_chat_prompt, name="submit_chat_prompt",),
     path("users/chat/ask-managr/", core_views.ask_managr, name="ask_managr",),
     path("users/chat/deal-review/", core_views.deal_review, name="deal_review",),
+    path("users/chat/chat-transcript/", core_views.process_transcript, name="rocess_transcript",),
     path("users/chat/follow-up-email/", core_views.draft_follow_up, name="draft_follow_up",),
     path("users/chat/next-steps/", core_views.chat_next_steps, name="chat_next_steps",),
     path("users/chat/summary/", core_views.get_chat_summary, name="get_chat_summary",),

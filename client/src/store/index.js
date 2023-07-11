@@ -120,11 +120,12 @@ const mutations = {
   SET_OPP: (state, payload) => {
     state.currentOpp = payload
   },
-  SET_MEETING_DATA: (state, { id, data, success, retry }) => {
+  SET_MEETING_DATA: (state, { id, data, success, retry, analysis }) => {
     let newData = {}
     newData['success'] = success
     newData['retry'] = retry
     newData['data'] = data
+    newData['analysis'] = analysis
     console.log('NEW DATA IS HERE', newData)
     state.meetingData[id] = newData
 
@@ -249,8 +250,8 @@ const actions = {
       note
     })
   },
-  setMeetingData({ commit }, { id, data, success, retry }) {
-    commit('SET_MEETING_DATA', { id, data, success, retry })
+  setMeetingData({ commit }, { id, data, success, retry, analysis }) {
+    commit('SET_MEETING_DATA', { id, data, success, retry, analysis })
   },
   removeMessage({ commit }, id) {
     commit('REMOVE_MESSAGE', id)

@@ -1,6 +1,32 @@
 <template>
   <section class="meetings">
     <Modal
+      v-if="analysisModalOpen"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), toggleAnalysisModal()
+        }
+      "
+    >
+      <div class="chat-modal-container">
+        <div class="chat-modal-header">
+          <div>
+            <h3 class="elipsis-text" style="margin-bottom: 0.25rem">
+              {{ currentMeetingName }}
+            </h3>
+            <span class="gray-text smaller">Call analysis.</span>
+          </div>
+
+          <h4 v-if="!submitting" @click="toggleAnalysisModal" style="cursor: pointer">x</h4>
+        </div>
+
+        <div>
+          <p class="small-font">{{ currentAnalysis }}</p>
+        </div>
+      </div>
+    </Modal>
+    <Modal
       v-if="chatModalOpen"
       dimmed
       @close-modal="
@@ -170,7 +196,16 @@
           <button
             @click="submitChatMeeting"
             class="green-button"
-            v-if="selectedResourceId || (usingAi && usingAi.value === 'false')"
+            v-if="usingAi && usingAi.value === 'false'"
+            :disabled="submitting"
+          >
+            Log Meeting
+          </button>
+
+          <button
+            @click="submitChatTranscript"
+            class="green-button"
+            v-if="selectedResourceId && usingAi && usingAi.value === 'true'"
             :disabled="submitting"
           >
             Log Meeting
@@ -205,10 +240,9 @@
       </div>
 
       <div class="meeting-block" v-for="(meeting, i) in meetings" :key="i">
-        <div>
+        <div class="relative">
           <p @click="test">
             {{ meeting.meeting_ref.topic }}
-            {{ meeting.meeting_ref.meeting_id }}
           </p>
 
           <small>{{ formattedStartTimes[meeting.id] }} - {{ formattedEndTimes[meeting.id] }}</small>
@@ -228,6 +262,52 @@
           <div class="row" v-if="meetingData[meeting.id] && meetingData[meeting.id].success">
             <p><img src="@/assets/images/check.svg" height="12px" alt="" /> meeting logged</p>
           </div>
+          <!-- <div class="summary">
+            <p>{{ meeting.transcript_analysis }}</p>
+          </div> -->
+          <div class="summary" v-if="meetingData[meeting.id] && meetingData[meeting.id].analysis">
+            <p>{{ meetingData[meeting.id].analysis }}</p>
+
+            <div class="row__">
+              <button
+                v-if="!meetingData[meeting.id].success"
+                class="green-chat-button no-vertical-margin"
+                @click="
+                  toggleChatModal(
+                    meetingData[meeting.id].data,
+                    meeting.resource_ref.name,
+                    meeting.resource_ref.id,
+                    meeting.resource_ref.integration_id,
+                    meeting.resource_type,
+                    meeting.id,
+                    meetingData[meeting.id].analysis,
+                  )
+                "
+              >
+                <img src="@/assets/images/wand.svg" class="invert" height="12px" alt="" />
+                Review & Submit
+              </button>
+
+              <button
+                v-else
+                disabled
+                style="margin-right: -2px; cursor: not-allowed"
+                class="main-button no-vertical-margin"
+              >
+                <img src="@/assets/images/wand.svg" height="12px" alt="" /> Generate Content
+              </button>
+
+              <button
+                @click="
+                  toggleAnalysisModal(meeting.resource_ref.name, meetingData[meeting.id].analysis)
+                "
+                class="tertiary-chat-button"
+              >
+                <img src="@/assets/images/sparkle.svg" height="12px" alt="" />
+                View analysis
+              </button>
+            </div>
+          </div>
         </div>
 
         <button
@@ -242,7 +322,10 @@
 
         <div v-else>
           <button
-            v-if="!(meetingData[meeting.id] && meetingData[meeting.id].success)"
+            v-if="
+              !(meetingData[meeting.id] && meetingData[meeting.id].success) &&
+              !meetingData[meeting.id].analysis
+            "
             class="green-chat-button"
             @click="
               toggleChatModal(
@@ -252,6 +335,7 @@
                 meeting.resource_ref.integration_id,
                 meeting.resource_type,
                 meeting.id,
+                meetingData[meeting.id].analysis,
               )
             "
           >
@@ -260,7 +344,7 @@
           </button>
 
           <button
-            v-else
+            v-else-if="!meetingData[meeting.id].analysis"
             disabled
             style="margin-right: -2px; cursor: not-allowed"
             class="main-button"
@@ -292,6 +376,7 @@ export default {
     stagesWithForms: {},
   },
   watch: {
+    currentMeeting: 'autoSelectLogType',
     usingAi(val) {
       if (val && val.value === 'false') {
         this.$store.dispatch('loadTemplates')
@@ -330,10 +415,12 @@ export default {
       prompt: null,
       updateData: {},
       currentMeetingName: null,
+      currentAnalysis: null,
       currentResourceId: null,
       currentIntegrationId: null,
       currentResourceType: null,
       currentMeetingId: null,
+      analysisModalOpen: false,
       aiOptions: [
         {
           name: 'Yes',
@@ -349,6 +436,62 @@ export default {
   methods: {
     test() {
       console.log(this.meetings)
+    },
+    toggleAnalysisModal(name, analysis) {
+      this.analysisModalOpen = !this.analysisModalOpen
+
+      if (name) {
+        this.currentMeetingName = name
+        this.$emit('set-opp', name)
+      }
+
+      if (analysis) {
+        this.currentAnalysis = analysis
+      }
+    },
+    autoSelectLogType() {
+      if (this.currentMeeting.meeting_ref.provider !== 'Zoom Meeting') {
+        this.usingAi = {
+          name: 'No',
+          value: 'false',
+        }
+      } else {
+        return
+      }
+    },
+    async submitChatTranscript() {
+      this.submitting = true
+      this.meetingModalOpen = false
+      try {
+        let res = await User.api.submitChatTranscript({
+          user_id: this.user.id,
+          resource_type: this.selectedResourceType,
+          integration_id: this.mappedOpp.integration_id,
+          meeting_id: this.currentMeeting.id,
+        })
+        if (res.status === 200) {
+          console.log(res)
+          this.$store.dispatch('setMeetingData', {
+            id: this.currentMeeting.id,
+            data: res.data,
+            success: false,
+            retry: false,
+            analysis: res.analysis,
+          })
+        } else {
+          this.$store.dispatch('setMeetingData', {
+            id: this.currentMeeting.id,
+            data: res.data,
+            success: false,
+            retry: true,
+            analysis: null,
+          })
+        }
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.submitting = false
+      }
     },
     toString(data) {
       let type = typeof data
@@ -375,8 +518,8 @@ export default {
       return newObj
     },
     submitChat() {
-      this.submitting = true
       this.chatModalOpen = false
+      this.submitting = true
       setTimeout(() => {
         this.onSubmitChat()
       }, 500)
@@ -427,7 +570,7 @@ export default {
         this.updateData[key] = val
       }
     },
-    toggleChatModal(data, name, resourceId, intId, type, currentMeetingId) {
+    toggleChatModal(data, name, resourceId, intId, type, currentMeetingId, analysis) {
       this.chatModalOpen = !this.chatModalOpen
       if (data) {
         this.updateData = data
@@ -447,6 +590,9 @@ export default {
       }
       if (currentMeetingId) {
         this.currentMeetingId = currentMeetingId
+      }
+      if (analysis) {
+        this.currentAnalysis = analysis
       }
     },
     setValue(e) {
@@ -493,6 +639,7 @@ export default {
             data: res.data,
             success: false,
             retry: true,
+            analysis: this.currentAnalysis || null,
           })
         } else {
           this.$store.dispatch('setMeetingData', {
@@ -500,6 +647,7 @@ export default {
             data: res.data,
             success: false,
             retry: false,
+            analysis: this.currentAnalysis || null,
           })
         }
       } catch (e) {
@@ -705,6 +853,23 @@ export default {
   color: $base-gray;
 }
 
+.small-font {
+  font-size: 14px;
+}
+
+.top-margin {
+  margin-top: 0.5rem;
+}
+
+.summary {
+  // border-left: 1px solid rgba(0, 0, 0, 0.2);
+  width: 100%;
+  // padding-left: 0.5rem;
+  // margin-left: -0.5rem;
+  margin-top: 0.5rem;
+  font-size: 12px;
+}
+
 .large-height {
   height: 556px !important;
 }
@@ -814,9 +979,25 @@ button {
   }
 }
 
+.tertiary-chat-button {
+  @include chat-button();
+  padding: 0.5rem 0.75rem;
+  margin-left: 1rem;
+
+  img {
+    margin-right: 0.5rem;
+    filter: invert(89%) sepia(43%) saturate(4130%) hue-rotate(323deg) brightness(90%) contrast(87%);
+  }
+}
+
 .secondary {
   color: $dark-green;
   border: 0.5px solid $dark-green;
+}
+
+.no-vertical-margin {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
 }
 
 .green-chat-button {
@@ -844,24 +1025,24 @@ button {
 
 .chat-meetings-section {
   border-top: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 0 1rem 0 1.25rem;
+  padding: 0 1rem 0.5rem 1.25rem;
   overflow-y: scroll;
   overflow-x: hidden;
   scroll-behavior: smooth;
 }
 
-.chat-meetings-section::-webkit-scrollbar {
-  width: 6px;
-  height: 0px;
-}
-.chat-meetings-section::-webkit-scrollbar-thumb {
-  background-color: transparent;
-  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
-  border-radius: 6px !important;
-}
-.chat-meetings-section:hover::-webkit-scrollbar-thumb {
-  background-color: $base-gray;
-}
+// .chat-meetings-section::-webkit-scrollbar {
+//   width: 6px;
+//   height: 0px;
+// }
+// .chat-meetings-section::-webkit-scrollbar-thumb {
+//   background-color: transparent;
+//   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+//   border-radius: 6px !important;
+// }
+// .chat-meetings-section:hover::-webkit-scrollbar-thumb {
+//   background-color: $base-gray;
+// }
 
 .meeting-block {
   // background-color: yellow;
@@ -920,9 +1101,10 @@ button {
   align-items: center;
   flex-direction: row;
   background-color: $white-green;
+  width: fit-content;
   padding: 4px;
   border-radius: 4px;
-  margin: 4px 0 0 -4px;
+  margin: 8px 0 0 -4px;
 
   p {
     font-size: 12px !important;
@@ -934,6 +1116,13 @@ button {
     filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
       contrast(82%);
   }
+}
+
+.row__ {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 1rem;
 }
 
 .meeting-modal-container {

@@ -45,6 +45,7 @@ const CHAT_EMAIL = 'users/chat/follow-up-email/'
 const CHAT_NEXT_STEPS = 'users/chat/next-steps/'
 const CHAT_SUMMARY = 'users/chat/summary/'
 const CHAT_MEETING = 'users/chat/submit-chat-meeting/'
+const CHAT_TRANSCRIPT = 'users/chat/chat-transcript/'
 
 export default class UserAPI {
   get client() {
@@ -124,6 +125,13 @@ export default class UserAPI {
   async submitChatMeeting(data) {
     return this.client
       .post(CHAT_MEETING, data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'User.chatMeeting' }))
+  }
+
+  async submitChatTranscript(data) {
+    return this.client
+      .post(CHAT_TRANSCRIPT, data)
       .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'User.chatMeeting' }))
   }
@@ -273,7 +281,7 @@ export default class UserAPI {
     try {
       const res = await this.client.post(url, data)
       return res
-    } catch(e) {
+    } catch (e) {
       console.log('Error in sendNewEmail: ', e)
     }
   }
@@ -282,7 +290,7 @@ export default class UserAPI {
     try {
       const res = await this.client.post(url, data)
       return res
-    } catch(e) {
+    } catch (e) {
       console.log('Error in sendNewEmail: ', e)
     }
   }

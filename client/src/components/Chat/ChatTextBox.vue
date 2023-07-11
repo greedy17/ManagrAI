@@ -14,7 +14,7 @@
         />
         <div class="main-text">
           <span :class="{ activeicon: templatesOpen }" style="font-size: 14px;margin-left">
-            <img class="gold-filter" src="@/assets/images/bolt.svg" height="12px" alt="" />
+            <img class="gold-filter" src="@/assets/images/sparkle.svg" height="14px" alt="" />
           </span>
 
           <div class="action">
