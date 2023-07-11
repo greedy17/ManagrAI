@@ -346,6 +346,7 @@ def clean_at_sign(string):
     letters = ["s", "r", "t", "m", "a", "d", "l", "v"]
     for letter in letters:
         string = string.replace(f"@{letter}", f"'{letter}")
+    return string
 
 
 def clean_prompt_string(prompt_string):
