@@ -116,12 +116,12 @@ export default {
       }
     },
     hasSalesforceIntegration() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return !!decryptedUser.salesforceAccount
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!this.$store.state.user.salesforceAccount
     },
     hasSlackIntegration() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return !!decryptedUser.slackRef
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!this.$store.state.user.slackRef
     },
   },
   async created() {
@@ -137,10 +137,11 @@ export default {
         key = res.key
         user = res.user
         const userAPI = User.fromAPI(user)
-        const encryptedUser = encryptData(userAPI, process.env.VUE_APP_SECRET_KEY)
+        // const encryptedUser = encryptData(userAPI, process.env.VUE_APP_SECRET_KEY)
         // const encryptedKey = encryptData(key, process.env.VUE_APP_SECRET_KEY)
         // this.$store.dispatch('updateUserToken', encryptedKey)
-        this.$store.dispatch('updateUser', encryptedUser)
+        // this.$store.dispatch('updateUser', encryptedUser)
+        this.$store.commit('UPDATE_USER', userAPI)
         this.$store.dispatch('updateUserToken', key)
       } catch (error) {
         const e = error
@@ -223,10 +224,11 @@ export default {
         })
       } finally {
         const userAPI = User.fromAPI(user)
-        const encryptedUser = encryptData(userAPI, process.env.VUE_APP_SECRET_KEY)
+        // const encryptedUser = encryptData(userAPI, process.env.VUE_APP_SECRET_KEY)
         // const encryptedKey = encryptData(key, process.env.VUE_APP_SECRET_KEY)
         // this.$store.dispatch('updateUserToken', encryptedKey)
-        this.$store.dispatch('updateUser', encryptedUser)
+        // this.$store.dispatch('updateUser', encryptedUser)
+        this.$store.commit('UPDATE_USER', userAPI)
         this.$store.dispatch('updateUserToken', key)
         // localStorage.dateTime = Date.now()
         this.$router.push({ name: 'ListTemplates' })
@@ -244,11 +246,12 @@ export default {
           let userData = response.data
           delete userData.token
           const userAPI = User.fromAPI(userData)
-          const encryptedUser = encryptData(userAPI, process.env.VUE_APP_SECRET_KEY)
+          // const encryptedUser = encryptData(userAPI, process.env.VUE_APP_SECRET_KEY)
           // const encryptedKey = encryptData(token, process.env.VUE_APP_SECRET_KEY)
           // this.$store.dispatch('updateUserToken', encryptedKey)
           this.$store.dispatch('updateUserToken', token)
-          this.$store.dispatch('updateUser', encryptedUser)
+          // this.$store.dispatch('updateUser', encryptedUser)
+          this.$store.commit('UPDATE_USER', userAPI)
           // localStorage.dateTime = Date.now()
           // if (this.$route.query.redirect) {
           //   this.$router.push(this.$route.query.redirect)
@@ -353,11 +356,12 @@ export default {
             let userData = response.data
             delete userData.token
             const userAPI = User.fromAPI(userData)
-            const encryptedUser = encryptData(userAPI, process.env.VUE_APP_SECRET_KEY)
+            // const encryptedUser = encryptData(userAPI, process.env.VUE_APP_SECRET_KEY)
             // const encryptedKey = encryptData(token, process.env.VUE_APP_SECRET_KEY)
             // this.$store.dispatch('updateUserToken', encryptedKey)
             this.$store.dispatch('updateUserToken', token)
-            this.$store.dispatch('updateUser', encryptedUser)
+            // this.$store.dispatch('updateUser', encryptedUser)
+            this.$store.commit('UPDATE_USER', userAPI)
             if (!this.hasSalesforceIntegration && !this.hasSlackIntegration) {
               this.$router.push({ name: 'Integrations' })
             } else {

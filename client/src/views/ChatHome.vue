@@ -363,8 +363,8 @@ export default {
   },
   computed: {
     user() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user
     },
     usersInTeam() {
       return this.team.list.filter(
@@ -372,12 +372,13 @@ export default {
       )
     },
     hasSlack() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return !!decryptedUser.slackRef
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!this.$store.state.user.slackRef
+      return this.$store.state.user.slackRef
     },
     numberOfAllowedUsers() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser.organizationRef.numberOfAllowedUsers
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.organizationRef.numberOfAllowedUsers
     },
     currentView() {
       return this.$store.state.currentView

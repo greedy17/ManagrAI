@@ -349,30 +349,31 @@ export default {
   },
   computed: {
     isOnboarding() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser.onboarding
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.onboarding
     },
     isPaid() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return !!decryptedUser.organizationRef.isPaid
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!this.$store.state.user.organizationRef.isPaid
+      return !!this.$store.state.user.organizationRef.isPaid
     },
     userIsLoggedIn() {
       return this.$store.getters.userIsLoggedIn
     },
     userCRM() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser.crm
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.crm
     },
     routeName() {
       return this.$route.name
     },
     isAdmin() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return this.userIsLoggedIn && decryptedUser.isAdmin
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.userIsLoggedIn && this.$store.state.user.isAdmin
     },
     isTeamLead() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return this.userIsLoggedIn && decryptedUser.isTeamLead
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.userIsLoggedIn && this.$store.state.user.isTeamLead
     },
   },
 }

@@ -370,12 +370,12 @@ export default {
   },
   computed: {
     user() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user
     },
     userCRM() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser.crm
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.crm
     },
     baseResourceType() {
       return this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity'
@@ -389,10 +389,13 @@ export default {
       return extras
     },
     hasExtraFields() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      let accountRef = decryptedUser.salesforceAccountRef
-        ? decryptedUser.salesforceAccountRef
-        : decryptedUser.hubspotAccountRef
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      // let accountRef = decryptedUser.salesforceAccountRef
+      //   ? decryptedUser.salesforceAccountRef
+      //   : decryptedUser.hubspotAccountRef
+      let accountRef = this.$store.state.user.salesforceAccountRef
+        ? this.$store.state.user.salesforceAccountRef
+        : this.$store.state.user.hubspotAccountRef
       let extraFields = accountRef.extraPipelineFieldsRef[this.baseResourceType]
       return extraFields && extraFields.length ? extraFields : []
     },

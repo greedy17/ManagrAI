@@ -12,16 +12,7 @@
         <div class="workflow__modal__header">
           <h4>
             {{ activeWorkflow.title }}
-            <!-- <span> {{ activeWorkflow.sobjectInstances.length }}</span> -->
           </h4>
-
-          <button
-            style="margin-left: 16px"
-            class="green_button"
-            @click="goToPipeline(activeWorkflow.id, activeWorkflow.resourceType)"
-          >
-            Open in Pipeline
-          </button>
         </div>
 
         <div v-if="activeWorkflow.sobjectInstances && activeWorkflow.sobjectInstances.length">
@@ -96,13 +87,9 @@
         }
       "
     >
-      <div class="workflow__modal">
+      <div class="workflow__modal" style="min-width: 20vw;">
         <div class="workflow__modal__header">
           <h4>Meetings</h4>
-
-          <button style="margin-left: 16px" class="green_button" @click="goToMeetings">
-            Open in Meetings
-          </button>
         </div>
         <div class="workflow__modal__body" v-for="meeting in meetings" :key="meeting.id">
           <div class="title">
@@ -198,83 +185,122 @@
       </div>
     </Modal>
 
-    <template v-if="!templates.refreshing && (!isOnboarding || !user.isAdmin)">
-      <!-- <transition name="fade">
-      </transition> -->
-
-      <div style="margin-top: 5.5rem" v-if="editing" class="alert_cards">
-        <!-- <div v-if="!zoomChannel" class="added-collection yellow-shadow">
-          <div class="added-collection__header">
-            <div id="gray">
-              <img src="@/assets/images/logo.png" height="28px" alt="" />
+    <Modal
+      v-if="confirmDeleteModal"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), closeDeleteModal()
+        }
+      "
+    >
+    <!-- modal-form confirm-form -->
+      <form v-if="true /*hasSlack*/" class="invite-form crm-form form-margin-small" style="height: 25vh;">
+        <div class="header-crm">
+          <div class="flex-row-wrapper inner-crm">
+            <div class="flex-row-modal" style="margin: 0;">
+              <!-- <img src="@/assets/images/logo.png" class="logo" alt="" /> -->
+              <h3 class="invite-form__title">Are you sure?</h3>
             </div>
-
-            <div>
-              <p class="gray">Meeting Template</p>
-              <h4>Log Meeting</h4>
-            </div>
-          </div>
-
-          <div class="added-collection__body">
-            <p class="gray">Recieve actionable alerts as soon as your meetings end.</p>
-            <p style="height: 32px"></p>
-          </div>
-          <div class="added-collection__footer">
-            <div class="row__">
-              <button @click="goToLogZoom" class="white_button">Activate</button>
-            </div>
-          </div>
-        </div> -->
-        <div v-if="!zoomChannel" class="card">
-          <div class="card__header lg-bg" style="padding-left: 32px; padding-right: 32px">
-            <img style="height: 40px" src="@/assets/images/logo.png" />
-          </div>
-          <div class="card__body">
-            <h4>Log Meeting</h4>
-            <small class="card-text">Recieve actionable alerts as soon as your meetings end.</small>
-            <div class="card__body__between">
-              <p></p>
-              <button @click="goToLogZoom" class="white_button">Activate</button>
+            <div class="flex-row-modal" style="margin: 0;">
+              <img
+                @click="closeDeleteModal"
+                src="@/assets/images/close.svg"
+                alt=""
+                style="
+                  filter: invert(30%);
+                  cursor: pointer;
+                  width: 20px;
+                  height: 20px;
+                  margin-right: 5px;
+                "
+              />
             </div>
           </div>
         </div>
-        <!-- <div v-if="!hasRecapChannel && userLevel !== 'REP'" class="added-collection yellow-shadow">
-          <div class="added-collection__header">
-            <div id="gray">
-              <img src="@/assets/images/logo.png" height="28px" alt="" />
+        <div class="flex-row-modal inner-crm" style="margin: 0; justify-content: flex-start; width: 90%;">
+          <h4 class="card-text" style="margin-left: 0; margin-top: 0; margin-bottom: 0.75rem;">
+            By clicking Delete, you will be removing 
+            {{ this.deleteAlert ? `${this.deleteAlert.title}` : 'this alert' }}.
+          </h4>
+        </div>
+        <div class="invite-form__actions">
+          <!-- <div style="width: 10vw;"></div> -->
+          <div class="confirm-cancel-container" style="width: 90%; margin-bottom: 0.6rem;">
+            <div class="img-border-modal cancel-button" @click="closeDeleteModal" style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem;">
+              Cancel
             </div>
+            <button class="img-border-modal red-button" @click="deleteWorkflow(deleteAlert.id)" style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem; margin-right: 5%;">
+              Delete
+            </button>
+          </div>
+          <!-- <div class="invite-form__inner_actions">
+            <template>
+              <PulseLoadingSpinnerButton
+                @click="onRevoke(removeApp)"
+                class="invite-button modal-button"
+                style="width: 5rem; margin-right: 5%; height: 2rem"
+                text="Confirm"
+                :loading="pulseLoading"
+                >Confirm</PulseLoadingSpinnerButton
+              >
+            </template>
+          </div> -->
+        </div>
+      </form>
+    </Modal>
 
+    <template v-if="!templates.refreshing && (!isOnboarding || !user.isAdmin)">
+      <!-- <transition name="fade">
+      </transition> -->
+      <!-- <div class="create-workflow-container" style="margin-top: 2rem;">
+        <button :disabled="!isPaid" class="green_button right-margin side-wrapper" @click="switchBuildCustom">
+          Create Workflow
+          <label class="side-icon side-workflow">
+            <span class="side-tooltip-single" style="top: -5px; right: 142px; width: 200px;">Upgrade your plan</span>
+            <img
+              style="filter: invert(40%)"
+              src="@/assets/images/lock.svg"
+              height="14px"
+              alt=""
+            />
+          </label>
+        </button>
+      </div> -->
+
+      <div style="margin-top: 5rem" v-if="editing" class="alert_cards">
+        <div v-if="!zoomChannel" class="card">
+          <div class="card__header" style="">
+            <img class="gray-logo" style="height: 40px" src="@/assets/images/logo.png" />
+          </div>
             <div>
-              <p class="gray">Meeting Template</p>
-              <h4>Meeting Recaps</h4>
+              <h4>Log Meeting</h4>
+              <small class="card-text">Recieve actionable alerts as soon as your meetings end.</small>
             </div>
-          </div>
-
-          <div class="added-collection__body">
-            <p class="gray">Recieve alerts that give you insight on your teams meetings.</p>
-            <p style="height: 32px"></p>
-          </div>
-          <div class="added-collection__footer">
-            <button @click="goToRecap" class="white_button">Activate</button>
-          </div>
-        </div> -->
+            <div class="separator"></div>
+            <div class="card__body__between">
+              <p></p>
+              <button @click="goToWorkflow('LogZoom')" class="white_button">Activate</button>
+            </div>
+        </div>
 
         <div :key="alert.id" v-for="alert in leaderTemplatesFirst" class="card">
-          <div class="card__header lb-bg" style="padding-left: 32px; padding-right: 32px">
+          <div class="card__header" style="">
             <img style="height: 40px" src="@/assets/images/logo.png" />
           </div>
 
-          <div class="card__body">
             <div>
-              <h4>
-                {{ alert.title }}
-              </h4>
-              <div v-if="user.id !== alert.user" class="small-text">Created by Leadership</div>
+              <div>
+                <h4>
+                  {{ alert.title }}
+                </h4>
+                <div v-if="user.id !== alert.user" class="small-text">Created by Leadership</div>
+              </div>
+              <p class="card-text" @click="test(alert)">
+                Results: {{ alert && alert.sobjectInstances ? alert.sobjectInstances.length : 0 }}
+              </p>
             </div>
-            <p class="card-text" @click="test(alert)">
-              Results: {{ alert && alert.sobjectInstances ? alert.sobjectInstances.length : 0 }}
-            </p>
-
+            <div class="separator"></div>
             <div class="card__body__between">
               <div class="row__">
                 <div class="tooltip">
@@ -304,7 +330,7 @@
                     alt=""
                   />
                 </button>
-                <button
+                <!-- <button
                   class="img-border"
                   @click="editWorkflow(alert)"
                   v-if="user.id === alert.user"
@@ -315,29 +341,42 @@
                     height="14px"
                     alt=""
                   />
+                </button> -->
+                <button
+                  class="img-border"
+                  @click="openDeleteWorkflow(alert)"
+                  v-if="user.id === alert.user"
+                >
+                  <!-- <img
+                    src="@/assets/images/trash.svg"
+                    style="filter: invert(40%)"
+                    height="14px"
+                    alt=""
+                  /> -->
+                  <img src="@/assets/images/chat-trash.svg" class="filtered-red" style="height: 14px" alt="" />
                 </button>
               </div>
-              <div v-if="hasSlackIntegration">
+              <div v-if="hasSlackIntegration" class="toggle-container">
+                <span>{{ alert.isActive ? 'On' : 'Off' }}</span>
                 <ToggleCheckBox
                   @input="onToggleAlert(alert.id, alert.isActive)"
                   v-model="alert.isActive"
                   offColor="#aaaaaa"
                   :onColor="'#41b883'"
                 />
-                <!-- templatedAlerts.includes(alert.title) ? '#41b883' : '#7fc4fb' -->
               </div>
             </div>
-          </div>
         </div>
 
         <div v-if="zoomChannel" class="card">
-          <div class="card__header lb-bg" style="padding-left: 32px; padding-right: 32px">
+          <div class="card__header" style="">
             <img style="height: 40px" src="@/assets/images/logo.png" />
           </div>
-          <div class="card__body">
-            <h4>Log Meeting</h4>
-            <p class="card-text">Meetings: {{ meetings.length }}</p>
-
+            <div>
+              <h4>Log Meeting</h4>
+              <p class="card-text">Meetings: {{ meetings.length }}</p>
+            </div>
+            <div class="separator"></div>
             <div class="card__body__between">
               <button v-if="userCRM === 'SALESFORCE'" @click="openMeetings" class="img-border">
                 <img
@@ -349,20 +388,19 @@
               </button>
               <div v-else style="width: 5px; height: 5px"></div>
 
-              <button @click="goToLogZoom" class="white_button">Change Channel</button>
-              <!-- <small>{{ currentZoomChannel }}</small> -->
+              <button @click="goToWorkflow('LogZoom')" class="white_button">Change Channel</button>
             </div>
-          </div>
         </div>
 
         <div v-if="hasRecapChannel && userLevel !== 'REP'" class="card">
-          <div class="card__header lb-bg" style="padding-left: 32px; padding-right: 32px">
+          <div class="card__header" style="">
             <img style="height: 40px" src="@/assets/images/logo.png" />
           </div>
-          <div class="card__body">
-            <h4>Meeting Recaps</h4>
-            <p class="card-text">Meetings: {{ meetings.length }}</p>
-
+            <div>
+              <h4>Meeting Recaps</h4>
+              <p class="card-text">Meetings: {{ meetings.length }}</p>
+            </div>
+            <div class="separator"></div>
             <div class="card__body__between">
               <button v-if="userCRM === 'SALESFORCE'" @click="openMeetings" class="img-border">
                 <img
@@ -374,10 +412,8 @@
               </button>
               <div v-else style="width: 5px; height: 5px"></div>
 
-              <button @click="goToRecap" class="white_button">Change Channel</button>
-              <!-- <small> {{ currentRecapChannel }}</small> -->
+              <button @click="goToWorkflow('ZoomRecap')" class="white_button">Change Channel</button>
             </div>
-          </div>
         </div>
 
         <div
@@ -386,23 +422,24 @@
           class="card"
           v-show="!templateTitles.includes(config.title)"
         >
-          <div class="card__header lg-bg" style="padding-left: 32px; padding-right: 32px">
-            <img style="height: 40px" src="@/assets/images/logo.png" />
+          <div class="card__header" style="">
+            <img class="gray-logo" style="height: 40px" src="@/assets/images/logo.png" />
           </div>
 
-          <div class="card__body">
-            <h4>{{ config.title }}</h4>
-            <small style="margin-top: 8px" class="card-text">{{ config.subtitle }}</small>
+            <div>
+              <h4>{{ config.title }}</h4>
+              <p style="margin-top: 0.25rem;" class="card-text">{{ config.subtitle }}</p>
+            </div>
+            <div class="separator"></div>
             <div
               v-if="config.title !== 'Empty Field'"
               class="card__body__between"
-              style="margin-top: 8px"
             >
               <p></p>
               <button @click="goToWorkflow(config.title)" class="white_button">Activate</button>
             </div>
 
-            <div v-else class="card__body__between" style="margin-top: 8px">
+            <div v-else class="card__body__between">
               <p></p>
               <button
                 v-if="isPaid && userLevel == 'MANAGER'"
@@ -413,34 +450,63 @@
               </button>
               <div v-else class="tooltip-left">
                 <img
-                  class="shimmer"
+                  class=""
                   style="filter: invert(40%)"
-                  src="@/assets/images/lock.svg"
+                  src="@/assets/images/chat-lock.svg"
                   height="16px"
                   alt=""
                 />
                 <small class="tooltiptext-left">Upgrade your plan</small>
               </div>
             </div>
-          </div>
         </div>
 
         <div v-if="!hasRecapChannel && userLevel !== 'REP'" class="card">
-          <div class="card__header lg-bg" style="padding-left: 32px; padding-right: 32px">
-            <img style="height: 40px" src="@/assets/images/logo.png" />
+          <div class="card__header" style="">
+            <img class="gray-logo" style="height: 40px" src="@/assets/images/logo.png" />
           </div>
 
-          <div class="card__body">
-            <h4>Meeting Recaps</h4>
-            <small class="card-text"
-              >Recieve alerts that give you insight on your teams meetings.</small
-            >
+            <div>
+              <h4>Meeting Recaps</h4>
+              <small class="card-text"
+                >Recieve alerts that give you insight on your teams meetings.</small
+              >
+            </div>
+            <div class="separator"></div>
             <div class="card__body__between">
               <p></p>
-              <button @click="goToRecap" class="white_button">Activate</button>
+              <button @click="goToWorkflow('ZoomRecap')" class="white_button">Activate</button>
             </div>
-          </div>
         </div>
+        <!-- <div class="card">
+          <div class="card__header" style="">
+            <img class="gray-logo" style="height: 40px" src="@/assets/images/logo.png" />
+          </div>
+
+            <div>
+              <h4>Create Workflow</h4>
+              <small class="card-text"
+                >Create a workflow with your own settings.</small
+              >
+            </div>
+            <div class="separator"></div>
+            <div class="card__body__between">
+              <p></p>
+              <button v-if="isPaid" :disabled="!isPaid" class="green_button right-margin" @click="switchBuildCustom">
+                Create Workflow
+              </button>
+              <div v-else class="tooltip-left">
+                <img
+                  class=""
+                  style="filter: invert(40%)"
+                  src="@/assets/images/chat-lock.svg"
+                  height="16px"
+                  alt=""
+                />
+                <small class="tooltiptext-left">Upgrade your plan</small>
+              </div>
+            </div>
+        </div> -->
       </div>
 
       <div class="alert_cards" v-if="editing"></div>
@@ -475,16 +541,26 @@ import User from '@/services/users'
 import { ObjectField } from '@/services/crm'
 
 import AlertTemplate from '@/services/alerts/'
-import allConfigs from '../configs'
-import { decryptData } from '../../../../encryption'
+import allConfigs from '@/views/settings/alerts/configs'
 
 export default {
-  name: 'AlertsTemplateList',
+  name: 'ConfigureWorkflows',
   components: {
     ToggleCheckBox,
     Onboarder,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
+  },
+  props: {
+    // templates: {
+    //   type: Object
+    // },
+    config: {
+      type: Object,
+    },
+    switchBuildCustom: {
+      type: Function,
+    }
   },
   data() {
     return {
@@ -506,9 +582,10 @@ export default {
         ModelClass: AlertTemplate,
         filters: { forPipeline: true },
       }),
+      deleteAlert: null,
       templateTitles: [],
       workflowListOpen: false,
-      deleteId: '',
+      confirmDeleteModal: false,
       deleteTitle: '',
       editing: true,
       // userConfigForm: new UserConfigForm({}),
@@ -551,6 +628,41 @@ export default {
       setTimeout(() => {
         this.commandModalOpen = false
       }, 300)
+    },
+    openDeleteWorkflow(alert) {
+      this.deleteAlert = alert
+      this.confirmDeleteModal = true
+    },
+    closeDeleteModal() {
+      this.deleteAlert = null
+      this.confirmDeleteModal = false
+    },
+    async deleteWorkflow(id) {
+      if (!id) {
+        return
+      }
+      this.deletedTitle(id)
+      try {
+        await AlertTemplate.api.deleteAlertTemplate(id)
+      } catch (e) {
+        console.log(e)
+        this.$toast('Error removing workflow', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        // this.editingWorkflow = false
+        // this.creatingTemplate = false
+        this.$router.go()
+      }
+    },
+    deletedTitle(id) {
+      let newList = []
+      newList = this.templates.list.filter((val) => val.id === id)
+      this.deleteTitle = newList[0].title
     },
     refreshWorkflows() {
       this.templates.refresh()
@@ -621,18 +733,13 @@ export default {
     openMeetings() {
       this.meetingListOpen = true
     },
-    goToMeetings() {
-      this.$router.push({ name: 'Meetings' })
-    },
-    goToPipeline(id, title) {
-      this.$router.push({ name: 'Pipelines', params: { id: id, title: title } })
-    },
     goToWorkflow(name) {
       let newName = name.replace(/\s/g, '')
       if (newName === 'LargeDeals') {
         newName = 'LargeOpportunities'
       }
-      this.$router.push({ name: newName })
+      this.$emit('create-template', newName)
+      // this.$router.push({ name: newName })
     },
     getActiveTemplateTitles() {
       this.templateTitles = this.templates.list.map((template) => template.title)
@@ -645,11 +752,6 @@ export default {
       const res = await SlackOAuth.api.channelDetails(this.zoomChannel)
       this.currentZoomChannel = res.channel.name
     },
-    deletedTitle(id) {
-      let newList = []
-      newList = this.templates.list.filter((val) => val.id === id)
-      this.deleteTitle = newList[0].title
-    },
     handleUpdate() {
       // this.loading = true
       User.api
@@ -660,12 +762,6 @@ export default {
         .catch((e) => {
           console.log(e)
         })
-    },
-    goToLogZoom() {
-      this.$router.push({ name: 'LogZoom' })
-    },
-    goToRecap() {
-      this.$router.push({ name: 'ZoomRecap' })
     },
     async onToggleAlert(id, value) {
       try {
@@ -713,25 +809,20 @@ export default {
   },
   computed: {
     isPaid() {
-      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.organizationRef.isPaid
     },
     user() {
-      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
     hasSlackIntegration() {
-      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.slackRef
     },
     hasRecapChannel() {
-      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.slackAccount
         ? this.$store.state.user.slackAccount.recapChannel
         : null
     },
     zoomChannel() {
-      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.slackAccount
         ? this.$store.state.user.slackAccount.zoomChannel
         : null
@@ -746,18 +837,15 @@ export default {
       return filtered
     },
     userCRM() {
-      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.crm
     },
     userLevel() {
-      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.userLevel
     },
     meetings() {
       return this.$store.state.meetings
     },
     isOnboarding() {
-      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.onboarding
     },
     leaderTemplatesFirst() {
@@ -842,7 +930,7 @@ export default {
   /* Position the tooltip text - */
   position: absolute;
   z-index: 1;
-  top: 1px;
+  top: -5px;
   right: 105%;
 }
 /* Show the tooltip text when you mouse over the tooltip container */
@@ -866,16 +954,27 @@ export default {
   margin-bottom: 1rem;
   border-radius: 8px;
   display: flex;
-  flex-direction: row;
-  width: 425px;
-  min-height: 144px;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 20vw;
+  min-height: 25vh;
   transition: all 0.25s;
+
+  h4 {
+    margin: 0.25rem 0;
+    padding: 0;
+  }
+  p {
+    margin-top: 0.25rem;
+    font-size: 12px;
+  }
 
   &__header {
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 4px 16px;
+    justify-content: flex-start;
+    // padding: 4px 16px;
+    padding: 4px 0;
     border-radius: 6px;
 
     img {
@@ -904,7 +1003,8 @@ export default {
       align-items: center;
       justify-content: space-between;
 
-      width: 260px;
+      // width: 260px;
+      width: 100%;
     }
   }
 }
@@ -1095,7 +1195,7 @@ button:disabled {
 }
 .alerts-template-list {
   // margin: 16px 0px;
-  height: 100vh;
+  // height: 100vh;
   padding-left: 24px;
   color: $base-gray;
   display: flex;
@@ -1112,6 +1212,14 @@ button:disabled {
   border-radius: 6px;
   margin-top: 16px;
   margin-left: -8px;
+}
+.create-workflow-container {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  button {
+    margin-right: 3rem;
+  }
 }
 
 // .added-collection:hover {
@@ -1363,5 +1471,244 @@ a {
   right: 76px;
   bottom: 16px;
   box-shadow: none !important;
+}
+.separator {
+  border-top: 1px solid $soft-gray;
+  width: 16.5vw;
+  margin-bottom: 0.5rem;
+  // margin: 0rem 0 0.1rem 0;
+}
+::v-deep .multiselect * {
+  font-size: 13px;
+  font-family: $base-font-family;
+  border-radius: 5px !important;
+}
+::v-deep .multiselect__option--highlight {
+  background-color: $off-white;
+  color: $base-gray;
+}
+::v-deep .multiselect__option--selected {
+  background-color: $soft-gray;
+}
+::v-deep .multiselect__content-wrapper {
+  border-radius: 5px;
+  margin: 0.5rem 0rem;
+  border-top: 1px solid $soft-gray;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+::v-deep .multiselect__placeholder {
+  color: $base-gray;
+}
+
+// Tooltip
+.side-wrapper {
+  display: flex;
+  flex-direction: row;
+}
+.side-wrapper .side-icon {
+  position: relative;
+  // background: #FFFFFF;
+  border-radius: 50%;
+  // padding: 12px;
+  // padding: 8px 16px;
+  // margin: 20px 12px 0px 10px;
+  width: 18px;
+  height: 18px;
+  font-size: 13px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  // outline: 1px solid $mid-gray;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.side-wrapper .side-tooltip,
+.side-wrapper .side-tooltip-single {
+  display: block;
+  width: 250px;
+  height: auto;
+  position: absolute;
+  top: -10px; // for double line
+  // top: 0; // for single line
+  right: 30px;
+  font-size: 14px;
+  background: #ffffff;
+  color: #ffffff;
+  padding: 6px 8px;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  pointer-events: none;
+  line-height: 1.5;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.side-wrapper .side-tooltip-single {
+  width: 100px;
+}
+.side-wrapper .side-tooltip::before,
+.side-wrapper .side-tooltip-single::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: #ffffff;
+  bottom: 50%;
+  right: -4%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.side-wrapper .side-tooltip-single::before {
+  bottom: 40%;
+}
+.side-wrapper:hover .side-icon .side-tooltip,
+.side-wrapper:hover .side-icon .side-tooltip-single {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.side-wrapper:hover .side-icon span,
+.side-wrapper:hover .side-icon .side-tooltip,
+.side-wrapper:hover .side-icon .side-tooltip-single {
+  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.1);
+}
+// .side-wrapper .side-workflow:hover,
+.side-wrapper:hover .side-workflow .side-tooltip,
+.side-wrapper:hover .side-workflow .side-tooltip::before,
+.side-wrapper:hover .side-workflow .side-tooltip-single,
+.side-wrapper:hover .side-workflow .side-tooltip-single::before {
+  // margin-top: 1rem;
+  background: $black;
+  color: #ffffff;
+}
+.side-icon:hover {
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  img {
+    filter: invert(90%);
+  }
+}
+.toggle-container {
+  display: flex;
+  align-items: center;
+  // margin-right: 1.25rem;
+  span {
+    font-size: 12px;
+    color: $light-gray-blue;
+    margin-right: 0.5rem;
+  }
+}
+.gray-logo {
+  filter: invert(40%);
+}
+.invite-form {
+  @include small-modal();
+  min-width: 37vw;
+  // min-height: 64vh;
+  align-items: center;
+  justify-content: space-between;
+  color: $base-gray;
+  &__title {
+    font-weight: bold;
+    text-align: left;
+    font-size: 22px;
+  }
+  &__subtitle {
+    text-align: left;
+    font-size: 16px;
+    margin-left: 1rem;
+  }
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    // margin-top: -4rem;
+  }
+  &__inner_actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    border-top: 1px solid $soft-gray;
+  }
+  &__actions-noslack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1rem;
+  }
+}
+.crm-form {
+  height: 60vh;
+  width: 32vw;
+}
+.form-margin-small {
+  margin-top: 10rem;
+}
+.header-crm {
+  // background-color: $soft-gray;
+  width: 100%;
+  // border-bottom: 1px solid $soft-gray;
+  position: relative;
+  border-top-right-radius: 4px;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  border-top-left-radius: 4px;
+  display: flex;
+  justify-content: center;
+  // display: flex;
+  // flex-direction: row;
+  // align-items: center;
+  // justify-content: flex-start;
+
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.75px;
+    line-height: 1.2;
+    cursor: pointer;
+    color: $base-gray;
+  }
+}
+.flex-row-wrapper {
+  display: flex;
+  justify-content: space-between;
+}
+.inner-crm {
+  border-bottom: 1px solid $soft-gray;
+  width: 90%;
+  padding-bottom: 0.4rem;
+  overflow-y: auto;
+}
+.flex-row-modal {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-self: start;
+  margin: 0 5%;
+  letter-spacing: 1px;
+}
+.confirm-cancel-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: 94%
+}
+.img-border-modal {
+  // @include gray-text-button();
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  // padding: 4px 6px;
+  margin-right: 8px;
+  margin-top: 0.5rem;
+}
+.cancel-button {
+  @include gray-button();
+}
+.red-button {
+  @include button-danger();
+}
+.filtered-red {
+  filter: invert(43%) sepia(45%) saturate(682%) hue-rotate(308deg) brightness(109%) contrast(106%);
 }
 </style>

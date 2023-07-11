@@ -26,7 +26,8 @@ function getHeaders() {
  *              status and redirect appropriately.
  */
 function requireUserTypeManagerOrStaff(to, from, next) {
-  const decryptedUser = decryptData(store.state.user, process.env.VUE_APP_SECRET_KEY)
+  // const decryptedUser = decryptData(store.state.user, process.env.VUE_APP_SECRET_KEY)
+  const decryptedUser = store.state.user
   if (!store.getters.userIsLoggedIn) {
     next({
       name: 'Login',
@@ -62,7 +63,8 @@ function requireAuth(to, from, next) {
  *              status and see if they are the isAdmin user redirect appropriately.
  */
 function requireIsAdminAuth(to, from, next) {
-  const decryptedUser = decryptData(store.state.user, process.env.VUE_APP_SECRET_KEY)
+  // const decryptedUser = decryptData(store.state.user, process.env.VUE_APP_SECRET_KEY)
+  const decryptedUser = store.state.user
   if (!store.getters.userIsLoggedIn) {
     next({
       name: 'Login',

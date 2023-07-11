@@ -1018,9 +1018,9 @@ export default {
 
   computed: {
     hasRecapChannel() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser.slackAccount
-        ? decryptedUser.slackAccount.recapChannel
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.slackAccount
+        ? this.$store.state.user.slackAccount.recapChannel
         : null
     },
     filteredFields() {
@@ -1034,8 +1034,8 @@ export default {
       })
     },
     userLevel() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser.userLevel
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.userLevel
     },
     userTargetsOpts() {
       if (this.user.userLevel == 'MANAGER') {
@@ -1053,12 +1053,12 @@ export default {
       }
     },
     hasSlack() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return !!decryptedUser.slackRef
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!this.$store.state.user.slackRef
     },
     user() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user
     },
     selectedResourceType: {
       get() {

@@ -184,8 +184,8 @@ import { decryptData } from '../../encryption'
     },
     computed: {
       user() {
-        const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-        return decryptedUser
+        // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+        return this.$store.state.user
       },
     },
   }

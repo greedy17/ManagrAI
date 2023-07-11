@@ -272,7 +272,8 @@ const actions = {
   },
   async loadMoreChatOpps({ state, commit }, { page = 1, text }) {
     let resourceName = ''
-    const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+    // const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+    const decryptedUser = state.user
     if (decryptedUser.crm === 'SALESFORCE') {
       resourceName = 'Opportunity'
     } else if (decryptedUser.crm === 'HUBSPOT') {
@@ -289,7 +290,8 @@ const actions = {
   },
   async loadChatOpps({ state, commit }, page = 1) {
     let resourceName = ''
-    const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+    // const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+    const decryptedUser = state.user
     if (decryptedUser.crm === 'SALESFORCE') {
       resourceName = 'Opportunity'
     } else if (decryptedUser.crm === 'HUBSPOT') {
@@ -312,7 +314,8 @@ const actions = {
   async loadAllOpps({ state, commit }, filters = []) {
     try {
       let res
-      const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+      const decryptedUser = state.user
+      // const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
       if (decryptedUser.crm === 'SALESFORCE') {
         if (!filters.length) {
           filters = [['NOT_EQUALS', 'StageName', 'Closed Won'], ['NOT_EQUALS', 'StageName', 'Closed Lost']]
@@ -333,7 +336,8 @@ const actions = {
   async loadAllAccounts({ state, commit }, filters = []) {
     try {
       let res
-      const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+      // const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+      const decryptedUser = state.user
       if (decryptedUser.crm === 'SALESFORCE') {
         res = await CRMObjects.api.getObjectsForWorkflows('Account', true, filters)
       } else {
@@ -353,7 +357,8 @@ const actions = {
     }
   },
   async loadAllLeads({ state, commit }, filters = []) {
-    const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+    // const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+    const decryptedUser = state.user
     if (decryptedUser.crm === 'SALESFORCE') {
       try {
         const res = await CRMObjects.api.getObjectsForWorkflows('Lead', true, filters)
@@ -448,12 +453,14 @@ const actions = {
     if (!state.token) {
       return null
     }
-    const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+    // const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+    const decryptedUser = state.user
     return User.api
       .getUser(decryptedUser.id)
       .then(user => {
-        const encrypted = encryptData(user, process.env.VUE_APP_SECRET_KEY)
-        commit('UPDATE_USER', encrypted)
+        // const encrypted = encryptData(user, process.env.VUE_APP_SECRET_KEY)
+        // commit('UPDATE_USER', encrypted)
+        commit('UPDATE_USER', user)
         return encrypted
       })
       .catch(() => {
@@ -475,7 +482,7 @@ const getters = {
     let decryptedUser
     // let decryptedKey
     if (state.user) {
-      decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+      // decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
     }
     if (state.token) {
       // decryptedKey = decryptData(state.token, process.env.VUE_APP_SECRET_KEY)
