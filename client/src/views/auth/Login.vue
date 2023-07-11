@@ -348,7 +348,7 @@ export default {
           }
           if (userEmail) {
             // Log in with SSO endpoint if they have an account
-            const response = await User.api.loginSSO({ email })
+            const response = await User.api.loginSSO({ email, sso: true })
             let token = response.data.token
             let userData = response.data
             delete userData.token
