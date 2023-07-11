@@ -7,6 +7,7 @@ import Status from '@/services/statuses'
 // import { apiClient, apiErrorHandler } from '@/services/api'
 import { MeetingWorkflows, SObjectPicklist, SObjects } from '@/services/salesforce/models'
 import { ObjectField, CRMObjects } from '@/services/crm'
+import { decryptData, encryptData } from '../encryption'
 
 Vue.use(Vuex)
 
@@ -126,7 +127,6 @@ const mutations = {
     newData['retry'] = retry
     newData['data'] = data
     newData['analysis'] = analysis
-    console.log('NEW DATA IS HERE', newData)
     state.meetingData[id] = newData
 
   },
@@ -273,9 +273,10 @@ const actions = {
   },
   async loadMoreChatOpps({ state, commit }, { page = 1, text }) {
     let resourceName = ''
-    if (state.user.crm === 'SALESFORCE') {
+    const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+    if (decryptedUser.crm === 'SALESFORCE') {
       resourceName = 'Opportunity'
-    } else if (state.user.crm === 'HUBSPOT') {
+    } else if (decryptedUser.crm === 'HUBSPOT') {
       resourceName = 'Deal'
     }
     let oldResults = []
@@ -289,9 +290,10 @@ const actions = {
   },
   async loadChatOpps({ state, commit }, page = 1) {
     let resourceName = ''
-    if (state.user.crm === 'SALESFORCE') {
+    const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+    if (decryptedUser.crm === 'SALESFORCE') {
       resourceName = 'Opportunity'
-    } else if (state.user.crm === 'HUBSPOT') {
+    } else if (decryptedUser.crm === 'HUBSPOT') {
       resourceName = 'Deal'
     }
     let oldResults = []
@@ -311,7 +313,8 @@ const actions = {
   async loadAllOpps({ state, commit }, filters = []) {
     try {
       let res
-      if (state.user.crm === 'SALESFORCE') {
+      const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+      if (decryptedUser.crm === 'SALESFORCE') {
         if (!filters.length) {
           filters = [['NOT_EQUALS', 'StageName', 'Closed Won'], ['NOT_EQUALS', 'StageName', 'Closed Lost']]
         }
@@ -331,7 +334,8 @@ const actions = {
   async loadAllAccounts({ state, commit }, filters = []) {
     try {
       let res
-      if (state.user.crm === 'SALESFORCE') {
+      const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+      if (decryptedUser.crm === 'SALESFORCE') {
         res = await CRMObjects.api.getObjectsForWorkflows('Account', true, filters)
       } else {
         res = await CRMObjects.api.getObjectsForWorkflows('Company', true, filters)
@@ -350,7 +354,8 @@ const actions = {
     }
   },
   async loadAllLeads({ state, commit }, filters = []) {
-    if (state.user.crm === 'SALESFORCE') {
+    const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+    if (decryptedUser.crm === 'SALESFORCE') {
       try {
         const res = await CRMObjects.api.getObjectsForWorkflows('Lead', true, filters)
         commit('SAVE_ALL_LEADS', res.results)
@@ -444,11 +449,13 @@ const actions = {
     if (!state.token) {
       return null
     }
+    const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
     return User.api
-      .getUser(state.user.id)
+      .getUser(decryptedUser.id)
       .then(user => {
-        commit('UPDATE_USER', user)
-        return user
+        const encrypted = encryptData(user, process.env.VUE_APP_SECRET_KEY)
+        commit('UPDATE_USER', encrypted)
+        return encrypted
       })
       .catch(() => {
         // do nothing for now
@@ -466,7 +473,17 @@ const plugins = [
 
 const getters = {
   userIsLoggedIn: state => {
-    return !!(state.token && state.user)
+    let decryptedUser
+    // let decryptedKey
+    if (state.user) {
+      decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+    }
+    if (state.token) {
+      // decryptedKey = decryptData(state.token, process.env.VUE_APP_SECRET_KEY)
+    }
+    // console.log('isLoggedIn', decryptedKey, decryptedUser)
+    // return !!(decryptedKey && decryptedUser)
+    return !!(state.user && state.token)
   },
 }
 

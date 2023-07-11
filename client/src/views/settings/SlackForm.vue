@@ -242,6 +242,7 @@ import SlackOAuth from '@/services/slack'
 import { SObjectField } from '@/services/salesforce'
 
 import * as FORM_CONSTS from '@/services/slack'
+import { decryptData } from '../../encryption'
 
 export default {
   name: 'SlackForm',
@@ -640,10 +641,12 @@ export default {
       ]
     },
     user() {
-      return this.$store.state.user
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser
     },
     userHasProducts() {
-      return this.$store.state.user.organizationRef.hasProducts
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.organizationRef.hasProducts
     },
   },
   created() {

@@ -174,6 +174,7 @@ import { quillEditor } from 'vue-quill-editor'
 import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
+import { decryptData } from '../encryption'
 
 export default {
   name: 'Notes',
@@ -197,13 +198,15 @@ export default {
 
   computed: {
     isPaid() {
-      return !!this.$store.state.user.organizationRef.isPaid
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!decryptedUser.organizationRef.isPaid
     },
     noteTemplates() {
       return this.$store.state.templates
     },
     user() {
-      return this.$store.state.user
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser
     },
   },
   methods: {
@@ -331,6 +334,7 @@ export default {
   },
   created() {
     this.getUsers()
+    this.$store.dispatch('loadTemplates')
   },
 }
 </script>

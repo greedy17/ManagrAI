@@ -431,6 +431,7 @@ import SlackOAuth from '@/services/slack'
 import { CRMObjects } from '@/services/crm'
 import CollectionManager from '@/services/collectionManager'
 import InlineFieldEditor from '@/components/Chat/InlineFieldEditor'
+import { decryptData } from '../../encryption'
 
 export default {
   name: 'RightBar',
@@ -1004,10 +1005,12 @@ export default {
       },
     },
     userCRM() {
-      return this.$store.state.user.crm
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser.crm
     },
     user() {
-      return this.$store.state.user
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser
     },
     picklistOptions() {
       return this.$store.state.allPicklistOptions

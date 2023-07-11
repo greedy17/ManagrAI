@@ -55,6 +55,7 @@ import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button
 import FormField from '@/components/forms/FormField'
 
 import moment from 'moment-timezone'
+import { decryptData } from '../../encryption'
 
 export default {
   name: 'ProfilePage',
@@ -116,7 +117,8 @@ export default {
   },
   computed: {
     getUser() {
-      return this.$store.state.user
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser
     },
   },
 }

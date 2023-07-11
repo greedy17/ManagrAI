@@ -336,9 +336,16 @@ def get_summary_completion(user, data):
 
 
 def clean_apostrophes(string):
-    letters = ["s", "r", "t"]
+    letters = ["s", "r", "t", "m", "a", "d", "l", "v"]
     for letter in letters:
         string = string.replace(f"'{letter}", f"@{letter}").replace(f" @{letter}", f" '{letter}")
+    return string
+
+
+def clean_at_sign(string):
+    letters = ["s", "r", "t", "m", "a", "d", "l", "v"]
+    for letter in letters:
+        string = string.replace(f"@{letter}", f"'{letter}")
     return string
 
 
@@ -357,10 +364,7 @@ def clean_prompt_string(prompt_string):
         res_obj = eval(cleaned_string)
         for key in res_obj.keys():
             if isinstance(res_obj[key], str):
-                if "@s" in res_obj[key] or "@t" in res_obj[key] or "@r" in res_obj[key]:
-                    res_obj[key] = (
-                        res_obj[key].replace("@s", "'s").replace("@t", "'t").replace("@r", "'r")
-                    )
+                res_obj[key] = clean_at_sign(res_obj[key])
         return res_obj
     except Exception as e:
         raise Exception(e)
