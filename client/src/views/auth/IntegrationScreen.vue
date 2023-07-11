@@ -505,6 +505,7 @@ import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button
 import { CollectionManager } from '@thinknimble/tn-models'
 import Modal from '@/components/InviteModal'
 import Loader from '@/components/Loader'
+import { decryptData } from '../../encryption'
 
 export default {
   name: 'Integrations',
@@ -677,49 +678,63 @@ export default {
   },
   computed: {
     isOnboarding() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.onboarding
     },
     isPaid() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.organizationRef.isPaid
     },
     hasSalesforceIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.salesforceAccount
     },
     hasHubspotIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.hubspotAccount
     },
     hasSlackIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.slackRef
     },
     hasZoomIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
     },
     hasGongIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.gongAccount && this.$store.state.user.hasGongIntegration
     },
     hasOutreachIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return (
         !!this.$store.state.user.outreachAccount && this.$store.state.user.hasOutreachIntegration
       )
     },
     hasSalesloftIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return (
         !!this.$store.state.user.salesloftAccount && this.$store.state.user.hasSalesloftIntegration
       )
     },
     orgHasSlackIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.organizationRef.slackIntegration
     },
     hasSlackIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.slackRef
     },
     hasNylasIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.nylas
     },
     userCanIntegrateSlack() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.isAdmin
     },
     userCRM() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.crm
     },
     selectedIntegrationSwitcher() {
@@ -745,6 +760,7 @@ export default {
       }
     },
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
     slackButtonMessage() {

@@ -2316,6 +2316,7 @@ import FormField from '@/components/forms/FormField'
 import Loader from '@/components/Loader'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import Invite from '../settings/_pages/_Invite'
+import { decryptData } from '../../encryption'
 // import CustomSlackForm from '@/views/settings/CustomSlackForm'
 
 export default {
@@ -2604,9 +2605,11 @@ export default {
   },
   computed: {
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
     hasSlack() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.slackRef
     },
     series() {
@@ -2645,7 +2648,6 @@ export default {
     },
     dayTrialUsers() {
       const trialUsers = this.trialUsers.filter(user => user.days_active <= this.filterByDay)
-      console.log('trialUsers.sort((a, b) => a.days_active - b.days_active)', trialUsers.sort((a, b) => a.days_active - b.days_active))
       return trialUsers.sort((a, b) => a.days_active - b.days_active)
     }
   },

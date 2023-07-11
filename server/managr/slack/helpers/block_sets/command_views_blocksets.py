@@ -493,6 +493,7 @@ def update_command_block_set(context):
     if hasattr(user, "gong_account"):
         options.append(block_builders.option("Call Recording", "CALL_RECORDING"))
     if not settings.IN_PROD:
+        options.append(block_builders.option("News Summary", "NEWS_SUMMARY"))
         options.append(block_builders.option("Reset Meetings", "RESET_MEETINGS"))
     blocks = [
         block_builders.input_block(

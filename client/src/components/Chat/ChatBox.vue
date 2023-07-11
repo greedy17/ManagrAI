@@ -284,6 +284,7 @@
 <script>
 import ChatTextBox from './ChatTextBox.vue'
 import User from '@/services/users'
+import { decryptData } from '../../encryption'
 
 export default {
   name: 'ChatBox',
@@ -490,9 +491,11 @@ export default {
   },
   computed: {
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
     userName() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.firstName
     },
     chatTitle() {

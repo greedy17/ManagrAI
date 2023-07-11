@@ -53,6 +53,7 @@
 <script>
 // import Conversation from '@/services/conversations/models'
 import User from '@/services/users'
+import { decryptData } from '../../encryption'
 
 export default {
   name: 'ChatTextBox',
@@ -299,6 +300,7 @@ export default {
   },
   computed: {
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
     currentOpp() {

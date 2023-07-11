@@ -253,6 +253,7 @@
 
 <script>
 import { SObjects } from '@/services/salesforce'
+import { decryptData } from '../encryption'
 
 export default {
   name: 'PipelineHeader',
@@ -274,6 +275,7 @@ export default {
   },
   computed: {
     userCRM() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.crm
     },
   },

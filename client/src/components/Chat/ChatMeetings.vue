@@ -277,6 +277,7 @@ import User from '@/services/users'
 import Modal from '@/components/InviteModal'
 import ChatFormField from '@/components/Chat/ChatFormField.vue'
 import { CRMObjects } from '@/services/crm'
+import { decryptData } from '../../encryption'
 
 export default {
   name: 'ChatMeetings',
@@ -598,6 +599,7 @@ export default {
   },
   computed: {
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
     meetings() {
