@@ -35,14 +35,13 @@
         text="Continue"
         :loading="loggingIn"
       />
-      <div class="seperator">
+      <!-- <div class="seperator">
         <span> OR </span>
-      </div>
-      <!-- <button id="google-signin-button" class="google-signin-button" @click="signInWithGoogle">Sign In with Google</button> -->
-      <button id="custom-google-signin-button" class="google-signin-button" @click="signInWithGoogle">
+      </div> -->
+      <!-- <button id="custom-google-signin-button" class="google-signin-button" @click="signInWithGoogle">
         <img src="@/assets/images/google.svg" />
         <span>Continue with Google</span>
-      </button>
+      </button> -->
       <!-- <button class="google-signin-button" @click="signInWithMicrosoft">
         <img src="@/assets/images/microsoft.svg" />
         <span>Continue with Microsoft</span>
@@ -168,8 +167,8 @@ export default {
     });
 
     // Attach event listener to the custom button
-    const customButton = document.getElementById('custom-google-signin-button');
-    customButton.addEventListener('click', this.signInWithGoogle);
+    // const customButton = document.getElementById('custom-google-signin-button');
+    // customButton.addEventListener('click', this.signInWithGoogle);
   },
   methods: {
     async checkAccountStatus() {
