@@ -47,6 +47,7 @@ from managr.hubspot.routes import routes as hs_routes
 from managr.salesforce.background import emit_add_update_to_sf, emit_add_call_to_sf
 from managr.hubspot.tasks import emit_add_update_to_hs, emit_add_call_to_hs
 from managr.core.exceptions import _handle_response, ServerError, StopReasonLength
+from managr.zoom.zoom_helper import exceptions as zoom_exceptions
 
 logger = logging.getLogger("managr")
 
@@ -595,13 +596,13 @@ def process_current_alert_list(user_id):
 
 @background()
 def _process_calendar_meetings(user_id, slack_int, date):
-    from managr.zoom.zoom_helper import exceptions as zoom_exceptions
-
+    print("starting calendar check")
     user = User.objects.get(id=user_id)
     if user.has_nylas_integration:
         while True:
             try:
                 processed_data = _process_calendar_details(user_id, date)
+                print(processed_data)
                 if user.has_zoom_integration:
                     if date is None:
                         user_timezone = pytz.timezone(user.timezone)
@@ -617,8 +618,10 @@ def _process_calendar_meetings(user_id, slack_int, date):
                 logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
                 processed_data = None
                 break
+        print(processed_data)
         if processed_data is not None:
             workflows = MeetingWorkflow.objects.for_user(user, date)
+            print(workflows)
             slack_interaction_check = set(
                 [
                     workflow.slack_interaction
@@ -641,9 +644,7 @@ def _process_calendar_meetings(user_id, slack_int, date):
                         meeting_data["id"] = meeting["id"]
                         id = meeting["id"]
                 workflow_check = workflows.filter(
-                    Q(meeting__meeting_id=id)
-                    | Q(meeting__meeting_id=original_id)
-                    | Q(meeting__topic=event["title"])
+                    Q(meeting__meeting_id=id) | Q(meeting__meeting_id=original_id)
                 ).first()
                 register_check = should_register_this_meetings(user_id, event)
                 if workflow_check is None and register_check:
