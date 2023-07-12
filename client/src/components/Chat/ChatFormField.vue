@@ -27,18 +27,21 @@
         field.dataType === 'Date' ||
         field.dataType === 'Datetime' ||
         field.dataType === 'Double' ||
-        field.dataType === 'Currency'
+        field.dataType === 'Currency' ||
+        field.dataType === 'Int'
       "
     >
       <label for="">{{ field.label }}</label>
+
       <input
         class="inline-input"
-        v-if="field.dataType !== 'Double' || field.dataType !== 'Currency'"
-        :value="placeholder"
-        :type="field.dataType"
+        v-if="field.dataType === 'Date' || field.dataType === 'Datetime'"
+        :value="formatDate(placeholder)"
+        type="date"
         @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
         :disabled="loader"
       />
+
       <input
         :value="placeholder"
         @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
@@ -57,9 +60,9 @@
         field.apiName !== 'dealstage'
       "
     >
-      <label for="">{{ field.label }}</label>
+      <label style="" for="">{{ field.label }}</label>
       <Multiselect
-        :options="picklistOptions[field.id]"
+        :options="picklistOptions[field.id] || field.options"
         selectLabel=""
         track-by="value"
         label="label"
@@ -88,8 +91,15 @@
       v-else-if="field.apiName === 'StageName' || field.apiName === 'dealstage'"
     >
       <label for=""> {{ field.label }}</label>
+
       <Multiselect
-        :options="picklistOptions[field.id]"
+        :options="
+          userCRM === 'SALESFORCE'
+            ? picklistOptions[field.id]
+            : field.options[0][currentOpp.secondary_data.pipeline]
+            ? field.options[0][currentOpp.secondary_data.pipeline].stages
+            : []
+        "
         selectLabel=""
         track-by="value"
         label="label"
@@ -102,7 +112,7 @@
         @select="
           setUpdateValues(
             field.apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-            $event.value,
+            field.apiName === 'dealstage' ? $event.id : $event.value,
             field.dataType === 'MultiPicklist' ? true : false,
           )
         "
@@ -292,6 +302,7 @@
 
 <script>
 import { SObjects } from '@/services/salesforce'
+import { decryptData } from '../../encryption'
 
 export default {
   name: 'ChatFormField',
@@ -337,6 +348,18 @@ export default {
     stagesWithForms: {},
   },
   methods: {
+    test(op) {
+      console.log(op)
+    },
+    formatDate(val) {
+      if (this.userCRM === 'HUBSPOT') {
+        const datetime = new Date(val)
+        const date = datetime.toISOString().split('T')[0]
+        return date
+      } else {
+        return val
+      }
+    },
     setUpdateValues(key, val, multi) {
       this.$emit('set-value', key, val, multi)
     },
@@ -347,8 +370,6 @@ export default {
       this.$refs.StageFormEnd
         ? this.$refs.StageFormEnd.scrollIntoView({ behavior: 'smooth' })
         : null
-
-      console.log('efevndefvujkn')
     },
     async getReferenceOptions(id) {
       this.loadingOptions = true
@@ -360,8 +381,6 @@ export default {
         })
 
         this.referenceOpts = res
-
-        console.log(res)
       } catch (e) {
         console.log(e)
       } finally {
@@ -372,8 +391,15 @@ export default {
     },
   },
   computed: {
+    userCRM() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.crm
+    },
     picklistOptions() {
       return this.$store.state.allPicklistOptions
+    },
+    currentOpp() {
+      return this.$store.state.currentOpp
     },
   },
   directives: {
@@ -415,7 +441,13 @@ export default {
   margin: 0.5rem 0rem;
   border-top: 1px solid $soft-gray;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  position: absolute !important;
 }
+
+::v-deep .multiselect__tags {
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+}
+
 ::v-deep .multiselect__placeholder {
   color: $base-gray;
 }
@@ -455,15 +487,17 @@ export default {
 }
 
 label {
-  font-size: 12px;
+  font-size: 12.5px;
+  display: inline-block;
+  margin-bottom: 6px;
+  font-weight: 900;
   font-family: $base-font-family;
-  margin-bottom: 8px;
 }
 
 .inline-input {
   outline: none;
   padding: 0.5rem 0.75rem;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
   border-radius: 6px;
   color: $base-gray;
   width: 100%;
@@ -480,7 +514,7 @@ label {
 }
 
 .field-container {
-  position: relative;
+  position: inherit;
   padding-top: 1rem;
   border-radius: 4px;
 }

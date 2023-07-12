@@ -174,6 +174,7 @@ import FormField from '@/components/forms/FormField'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 import { CollectionManager } from '@thinknimble/tn-models'
 import User from '@/services/users'
+import { decryptData } from '../../../../../encryption'
 
 export default {
   name: 'ZoomRecap',
@@ -369,9 +370,11 @@ export default {
   },
   computed: {
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
     slackId() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.slackRef.slackId
     },
   },

@@ -7,6 +7,7 @@ import Status from '@/services/statuses'
 // import { apiClient, apiErrorHandler } from '@/services/api'
 import { MeetingWorkflows, SObjectPicklist, SObjects } from '@/services/salesforce/models'
 import { ObjectField, CRMObjects } from '@/services/crm'
+import { decryptData, encryptData } from '../encryption'
 
 Vue.use(Vuex)
 
@@ -16,6 +17,7 @@ export const STORAGE_KEY = `managr-${STORAGE_HASH}`
 const state = {
   user: null,
   token: null,
+  googleSignIn: {},
   stages: null,
   filters: [],
   meetings: [],
@@ -33,11 +35,13 @@ const state = {
   allAccounts: [],
   allLeads: [],
   messages: [],
-  currentView: null,
+  currentView: 'home',
+  currentOpp: null,
   allPicklistOptions: null,
   apiPicklistOptions: null,
   shouldUpdatePollingData: false,
   itemsFromPollToUpdate: new Set(),
+  meetingData: {},
   customObject: {
     task: null,
     verboseName: null,
@@ -53,6 +57,9 @@ const mutations = {
   },
   UPDATE_USER: (state, payload) => {
     state.user = payload
+  },
+  UPDATE_GOOGLE_SIGN_IN: (state, payload) => {
+    state.googleSignIn = payload
   },
   UPDATE_FILTERS: (state, payload) => {
     state.filters = payload
@@ -111,6 +118,17 @@ const mutations = {
   SET_VIEW: (state, payload) => {
     state.currentView = payload
   },
+  SET_OPP: (state, payload) => {
+    state.currentOpp = payload
+  },
+  SET_MEETING_DATA: (state, { id, data, success, retry }) => {
+    let newData = {}
+    newData['success'] = success
+    newData['retry'] = retry
+    newData['data'] = data
+    state.meetingData[id] = newData
+
+  },
   EDIT_MESSAGES: (state, {
     id,
     value,
@@ -118,6 +136,7 @@ const mutations = {
     generated,
     generatedType,
     generatedId,
+    emailSent,
     note }) => {
 
     let newMsg
@@ -127,9 +146,12 @@ const mutations = {
       newMsg[0]['generatedType'] = generatedType
       newMsg[0]['generatedId'] = generatedId
       newMsg[0]['value'] = value
+      newMsg[0]['emailSent'] = emailSent
       newMsg[0]['gtMsg'] = gtMsg
+      newMsg[0].error = null
     } else {
       newMsg[0]['value'] = value
+      newMsg[0]['emailSent'] = emailSent
     }
     for (let i = 0; i < state.messages.length; i++) {
       if (state.messages[i].id === id) {
@@ -145,6 +167,7 @@ const mutations = {
     let updatedMsg = state.messages.filter(msg => msg.id === payload.id)
     updatedMsg[0].updated = true
     updatedMsg[0].data = payload.data
+    updatedMsg[0].error = null
     updatedMsg[0].value = `Successfully updated ${updatedMsg[0].resource}!`
 
     let indexToUpdate = state.messages.findIndex(obj => obj.id === payload.id);
@@ -153,6 +176,18 @@ const mutations = {
       state.messages.splice(indexToUpdate, 1, updatedMsg[0]);
     }
   },
+  MESSAGE_UPDATE_FAILED: (state, payload) => {
+    let updatedMsg = state.messages.filter(msg => msg.id === payload.id)
+    updatedMsg[0].updated = false
+    updatedMsg[0].error = payload.data
+
+    let indexToUpdate = state.messages.findIndex(obj => obj.id === payload.id);
+
+    if (indexToUpdate !== -1) {
+      state.messages.splice(indexToUpdate, 1, updatedMsg[0]);
+    }
+  },
+
   CLEAR_MESSAGES: (state) => {
     state.messages = []
     state.chatTitle = 'All Open Opportunities'
@@ -190,24 +225,32 @@ const actions = {
   setCurrentView({ commit }, view) {
     commit('SET_VIEW', view)
   },
-  editMessages({ commit }, { user,
+  setCurrentOpp({ commit }, opp) {
+    commit('SET_OPP', opp)
+  },
+  editMessages({ commit }, {
     id,
     value,
     gtMsg,
     generated,
     generatedType,
     generatedId,
+    emailSent,
     note }) {
     commit('EDIT_MESSAGES', {
-      user,
+
       id,
       value,
       gtMsg,
       generated,
       generatedType,
       generatedId,
+      emailSent,
       note
     })
+  },
+  setMeetingData({ commit }, { id, data, success, retry }) {
+    commit('SET_MEETING_DATA', { id, data, success, retry })
   },
   removeMessage({ commit }, id) {
     commit('REMOVE_MESSAGE', id)
@@ -218,6 +261,9 @@ const actions = {
   messageUpdated({ commit }, { id, data }) {
     commit('MESSAGE_UPDATED', { id, data })
   },
+  messageUpdateFailed({ commit }, { id, data }) {
+    commit('MESSAGE_UPDATE_FAILED', { id, data })
+  },
   clearMessages({ commit }) {
     commit('CLEAR_MESSAGES',)
   },
@@ -226,25 +272,29 @@ const actions = {
   },
   async loadMoreChatOpps({ state, commit }, { page = 1, text }) {
     let resourceName = ''
-    if (state.user.crm === 'SALESFORCE') {
+    // const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+    const decryptedUser = state.user
+    if (decryptedUser.crm === 'SALESFORCE') {
       resourceName = 'Opportunity'
-    } else if (state.user.crm === 'HUBSPOT') {
+    } else if (decryptedUser.crm === 'HUBSPOT') {
       resourceName = 'Deal'
     }
     let oldResults = []
     if (page > 1) {
       oldResults = state.chatOpps.results
     }
-    let res = await CRMObjects.api.getObjects(resourceName, page, true, [['CONTAINS', 'Name', text]])
+    let res = await CRMObjects.api.getObjects(resourceName, page, true, [['CONTAINS', state.user.crm === 'SALESFORCE' ? 'Name' : 'dealname', text]])
     res.results = [...oldResults, ...res.results]
     commit('SAVE_CHAT_OPPS', res)
     return res
   },
   async loadChatOpps({ state, commit }, page = 1) {
     let resourceName = ''
-    if (state.user.crm === 'SALESFORCE') {
+    // const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+    const decryptedUser = state.user
+    if (decryptedUser.crm === 'SALESFORCE') {
       resourceName = 'Opportunity'
-    } else if (state.user.crm === 'HUBSPOT') {
+    } else if (decryptedUser.crm === 'HUBSPOT') {
       resourceName = 'Deal'
     }
     let oldResults = []
@@ -264,7 +314,9 @@ const actions = {
   async loadAllOpps({ state, commit }, filters = []) {
     try {
       let res
-      if (state.user.crm === 'SALESFORCE') {
+      const decryptedUser = state.user
+      // const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+      if (decryptedUser.crm === 'SALESFORCE') {
         if (!filters.length) {
           filters = [['NOT_EQUALS', 'StageName', 'Closed Won'], ['NOT_EQUALS', 'StageName', 'Closed Lost']]
         }
@@ -284,7 +336,9 @@ const actions = {
   async loadAllAccounts({ state, commit }, filters = []) {
     try {
       let res
-      if (state.user.crm === 'SALESFORCE') {
+      // const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+      const decryptedUser = state.user
+      if (decryptedUser.crm === 'SALESFORCE') {
         res = await CRMObjects.api.getObjectsForWorkflows('Account', true, filters)
       } else {
         res = await CRMObjects.api.getObjectsForWorkflows('Company', true, filters)
@@ -302,13 +356,18 @@ const actions = {
       console.log(e)
     }
   },
-  async loadAllLeads({ commit }, filters = []) {
-    try {
-      const res = await CRMObjects.api.getObjectsForWorkflows('Lead', true, filters)
-      commit('SAVE_ALL_LEADS', res.results)
-    } catch (e) {
-      console.log(e)
+  async loadAllLeads({ state, commit }, filters = []) {
+    // const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+    const decryptedUser = state.user
+    if (decryptedUser.crm === 'SALESFORCE') {
+      try {
+        const res = await CRMObjects.api.getObjectsForWorkflows('Lead', true, filters)
+        commit('SAVE_ALL_LEADS', res.results)
+      } catch (e) {
+        console.log(e)
+      }
     }
+
   },
   async loadPricebooks({ commit }) {
     try {
@@ -380,21 +439,29 @@ const actions = {
   updateUser({ commit }, payload) {
     commit('UPDATE_USER', payload)
   },
+  updateGoogleSignIn({ commit }, payload) {
+    commit('UPDATE_GOOGLE_SIGN_IN', payload)
+  },
   updateUserToken({ commit }, payload) {
     commit('UPDATE_USERTOKEN', payload)
   },
-  logoutUser({ commit }) {
+  async logoutUser({ state, commit }) {
     commit('LOGOUT_USER')
+    await User.api.logout()
   },
   refreshCurrentUser({ state, commit }) {
     if (!state.token) {
       return null
     }
+    // const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+    const decryptedUser = state.user
     return User.api
-      .getUser(state.user.id)
+      .getUser(decryptedUser.id)
       .then(user => {
+        // const encrypted = encryptData(user, process.env.VUE_APP_SECRET_KEY)
+        // commit('UPDATE_USER', encrypted)
         commit('UPDATE_USER', user)
-        return user
+        return encrypted
       })
       .catch(() => {
         // do nothing for now
@@ -406,13 +473,23 @@ const actions = {
 const plugins = [
   createPersistedState({
     key: STORAGE_KEY,
-    // storage: window.sessionStorage
+    storage: window.sessionStorage
   }),
 ]
 
 const getters = {
   userIsLoggedIn: state => {
-    return !!(state.token && state.user)
+    let decryptedUser
+    // let decryptedKey
+    if (state.user) {
+      // decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
+    }
+    if (state.token) {
+      // decryptedKey = decryptData(state.token, process.env.VUE_APP_SECRET_KEY)
+    }
+    // console.log('isLoggedIn', decryptedKey, decryptedUser)
+    // return !!(decryptedKey && decryptedUser)
+    return !!(state.user && state.token)
   },
 }
 
@@ -421,5 +498,9 @@ export default new Vuex.Store({
   mutations,
   actions,
   getters,
-  plugins,
+  plugins: [
+    createPersistedState({
+      paths: ['user', 'token', 'messages', 'currentView', 'meetingData']
+    })
+  ],
 })

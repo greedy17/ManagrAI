@@ -19,7 +19,7 @@
   font-family: $base-font-family;
   color: $base-gray;
   font-weight: 200;
-
+  white-space: nowrap;
   transition: all 0.3s;
 
   &:hover {

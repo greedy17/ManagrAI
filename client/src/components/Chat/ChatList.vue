@@ -2,71 +2,414 @@
   <section class="lists">
     <header class="list-header">
       <p><span>List: </span> {{ currentView.title }}</p>
-    </header>
-    <section class="chat-table-section">
-      <div class="table">
-        <div class="table-row sticky-header">
-          <div style="margin-left: 1rem" class="table-cell">Name</div>
-          <div class="table-cell">Stage</div>
-          <div class="table-cell">Close Date</div>
-        </div>
-        <div v-for="(opp, i) in currentView.sobjectInstances" :key="i" class="table-row">
-          <div @click="setOpp(opp.Name)" class="table-cell ellipsis-text">
-            <p class="gray-bg pointer">
-              {{ opp.Name }}
-            </p>
-          </div>
-          <div class="table-cell">
-            <p>
-              {{ opp.StageName }}
-            </p>
-          </div>
-          <div class="table-cell">
-            <p>
-              {{ opp.CloseDate }}
-            </p>
-          </div>
-        </div>
+
+      <div style="display: flex; align-items: center">
+        <button @click="reloadWorkflow" class="small-button">
+          <img
+            :class="{ 'rotate disabled': loading }"
+            src="@/assets/images/refresh.svg"
+            height="12px"
+            alt=""
+          />
+        </button>
+
+        <button @click="toggleAddField" class="small-button">
+          <!-- <img src="@/assets/images/plusOne.svg" height="12px" alt="" /> -->
+          <span>+ / -</span>
+
+          Column
+        </button>
       </div>
+    </header>
+    <div v-show="addingField" class="add-field">
+      <header>
+        <p>{{ addRemoveText }}</p>
+
+        <p v-if="!loading" style="cursor: pointer" @click="toggleAddField">x</p>
+        <img
+          class="rotate disabled"
+          v-else
+          src="@/assets/images/refresh.svg"
+          height="11px"
+          alt=""
+        />
+      </header>
+
+      <div class="centered" v-if="!addOrRemove">
+        <p style="font-size: 12px">Add or remove columns ?</p>
+
+        <Multiselect
+          style="width: 100%"
+          v-model="addOrRemove"
+          placeholder="add / remove"
+          :options="addRemoveChoices"
+          selectedLabel=""
+          deselectLabel=""
+          selectLabel=""
+        >
+        </Multiselect>
+      </div>
+
+      <main v-else class="centered">
+        <Multiselect
+          v-if="addOrRemove === 'Add'"
+          style="width: 100%"
+          v-model="extraFieldObjs"
+          placeholder="Select the fields you want as columns"
+          label="referenceDisplayLabel"
+          openDirection="below"
+          track-by="id"
+          :options="
+            formFields.list.filter(
+              (field) => !listNames.includes(field.label) && field.crmObject === baseResourceType,
+            )
+          "
+          selectedLabel=""
+          deselectLabel=""
+          selectLabel=""
+          :multiple="true"
+          :close-on-select="false"
+        >
+          <template v-slot:noResult>
+            <p class="multi-slot">No results.</p>
+          </template>
+        </Multiselect>
+
+        <Multiselect
+          v-else
+          style="width: 100%"
+          v-model="removeExtraFieldObjs"
+          placeholder="Select columns to remove"
+          label="referenceDisplayLabel"
+          openDirection="below"
+          track-by="id"
+          :options="extraPipelineFields"
+          selectedLabel=""
+          deselectLabel=""
+          selectLabel=""
+          :multiple="true"
+          :close-on-select="false"
+        >
+          <template v-slot:noResult>
+            <p class="multi-slot">No results.</p>
+          </template>
+        </Multiselect>
+      </main>
+      <footer v-if="addOrRemove" class="list-footer" :class="{ disabled: loading }">
+        <button @click="toggleAddField">Close</button>
+
+        <button :disabled="loading" @click="addExtraFields" v-if="addOrRemove === 'Add'">
+          Save
+        </button>
+
+        <button :disabled="loading" @click="removeExtraFields" v-else>Save</button>
+      </footer>
+    </div>
+    <section v-if="!formFields.refreshing" class="chat-table-section">
+      <table class="table">
+        <thead>
+          <tr>
+            <th style="padding-left: 1rem">Name</th>
+            <th>Stage</th>
+            <th>Close Date</th>
+            <th v-for="(field, i) in extraPipelineFields" :key="i">
+              {{ field.label }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(opp, i) in currentView.sobjectInstances" :key="i">
+            <td
+              :title="user.crm === 'HUBSPOT' ? opp.dealname : opp.Name"
+              @click="setOpp(user.crm === 'HUBSPOT' ? opp.dealname : opp.Name)"
+            >
+              <span>{{ user.crm === 'HUBSPOT' ? opp.dealname : opp.Name }}</span>
+            </td>
+            <td
+              :title="
+                user.crm === 'HUBSPOT'
+                  ? stageField &&
+                    stageField.options[0][opp.pipeline].stages.filter(
+                      (stage) => stage.id === opp['dealstage'],
+                    )[0].label
+                  : opp.StageName
+              "
+            >
+              {{
+                user.crm === 'HUBSPOT'
+                  ? stageField &&
+                    stageField.options[0][opp.pipeline].stages.filter(
+                      (stage) => stage.id === opp['dealstage'],
+                    )[0].label
+                  : opp.StageName
+              }}
+            </td>
+
+            <td
+              :title="
+                user.crm === 'HUBSPOT'
+                  ? formatDateTime(opp.closedate)
+                  : formatDateTime(opp.CloseDate)
+              "
+            >
+              {{
+                user.crm === 'HUBSPOT'
+                  ? formatDateTime(opp.closedate)
+                  : formatDateTime(opp.CloseDate)
+              }}
+            </td>
+
+            <td
+              :title="fieldData(field.dataType, user.crm, field, opp)"
+              v-for="(field, i) in extraPipelineFields"
+              :key="i"
+            >
+              {{ fieldData(field.dataType, user.crm, field, opp) }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </section>
 
+    <div v-else class="loading">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+
     <div class="row">
-      <button>
+      <!-- <button class="chat-button">
         <img class="gold-filter" src="@/assets/images/sparkle.svg" height="16px" alt="" />Ask Managr
       </button>
-      <button>
-        <img class="gold-filter" src="@/assets/images/sparkle.svg" height="16px" alt="" />Run Deal
-        Review
-      </button>
-      <button>
-        <img class="gold-filter" src="@/assets/images/sparkle.svg" height="16px" alt="" />Call
-        Summary
-      </button>
+      <button class="chat-button">
+        <img class="gold-filter" src="@/assets/images/sparkle.svg" height="16px" alt="" />Run Review
+      </button> -->
     </div>
   </section>
 </template>
 
 <script>
+import { SObjects } from '@/services/salesforce'
+import { CollectionManager } from '@thinknimble/tn-models'
+import { ObjectField } from '@/services/crm'
+import AlertTemplate from '@/services/alerts/'
+import User from '@/services/users/'
+import { decryptData } from '../../encryption'
+
 export default {
   name: 'ChatList',
-  components: {},
-  props: {},
+  components: {
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+  },
+
   data() {
     return {
       message: '',
+      addOrRemove: null,
+      addRemoveText: 'List Columns',
+      extraFields: [],
+      extraFieldObjs: [],
+      removeExtraFieldObjs: [],
+      addRemoveChoices: ['Add', 'Remove'],
+      addingField: false,
+      loading: false,
+      formFields: CollectionManager.create({
+        ModelClass: ObjectField,
+        pagination: { size: 1000 },
+        filters: {
+          updateable: true,
+        },
+      }),
     }
   },
+  created() {
+    this.formFields.refresh()
+  },
   methods: {
+    test() {
+      console.log(this.user)
+    },
+    fieldData(type, crm, field, opp, owner = null, account = null) {
+      if (field.apiName === 'OwnerId' || field.apiName === 'hubspot_owner_id') {
+        return owner || '---'
+      } else if (field.apiName === 'AccountId') {
+        return account || '---'
+      } else if (field.apiName === 'dealstage') {
+        if (field.options[0][opp['secondary_data'].pipeline]) {
+          return (
+            field.options[0][opp['secondary_data'].pipeline].stages.filter(
+              (stage) => stage.id === opp['secondary_data'][field.apiName],
+            )[0].label || '---'
+          )
+        } else return '---'
+      } else if (type === 'Date') {
+        return this.fieldConditions(crm, field, opp)
+          ? this.formatDate(this.fieldConditions(crm, field, opp))
+          : '---'
+      } else if (type === 'DateTime') {
+        return this.fieldConditions(crm, field, opp)
+          ? this.formatDateTime(this.fieldConditions(crm, field, opp))
+          : '---'
+      } else if (type === 'Currency') {
+        return this.fieldConditions(crm, field, opp)
+          ? this.formatCash(this.fieldConditions(crm, field, opp))
+          : '---'
+      } else {
+        return this.fieldConditions(crm, field, opp) ? this.fieldConditions(crm, field, opp) : '---'
+      }
+    },
+    fieldConditions(crm, field, opp) {
+      return crm === 'SALESFORCE'
+        ? field.apiName.includes('__c') || field.apiName.includes('__r')
+          ? opp[field.apiName]
+          : opp[this.capitalizeFirstLetter(this.camelize(field.apiName))]
+        : opp[field.apiName]
+    },
+    capitalizeFirstLetter(string) {
+      return string.charAt(0).toUpperCase() + string.slice(1)
+    },
+    camelize(str) {
+      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
+        if (+match === 0) return ''
+        return index === 0 ? match.toLowerCase() : match.toUpperCase()
+      })
+    },
+    formatDate(input) {
+      var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
+      if (!input || !input.match(pattern)) {
+        return '-'
+      }
+      const replace = input.replace(pattern, '$2/$3/$1')
+      return this.userCRM === 'HUBSPOT' ? replace.split('T')[0] : replace
+    },
+    formatDateTime(input) {
+      var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
+      if (!input || !input.match(pattern)) {
+        return '-'
+      }
+      let newDate = input.replace(pattern, '$2/$3/$1')
+      return newDate.split('T')[0]
+    },
+    async reloadWorkflow() {
+      this.loading = true
+      try {
+        let res = await AlertTemplate.api.runAlertTemplateNow(this.currentView.id, {
+          fromWorkflow: true,
+        })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.loading = false
+        }, 1000)
+        this.$emit('refresh-list')
+      }
+    },
     setOpp(name) {
       this.$emit('set-opp', name)
+    },
+    toggleAddField() {
+      this.addingField = !this.addingField
+      this.addOrRemove = null
+    },
+    async addExtraFields() {
+      this.loading = true
+      for (let i = 0; i < this.extraFieldObjs.length; i++) {
+        this.extraFields.push(this.extraFieldObjs[i].id)
+      }
+      try {
+        const res = await SObjects.api.addExtraFields({
+          resource_type: this.baseResourceType,
+          field_ids: this.extraFields,
+        })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.toggleAddField()
+        this.extraFields = []
+        this.extraFieldObjs = []
+        this.addOrRemove = null
+        setTimeout(() => {
+          this.refreshUser()
+          this.loading = false
+        }, 1500)
+      }
+    },
+    refreshUser() {
+      User.api
+        .getUser(this.user.id)
+        .then((user) => {
+          this.$store.dispatch('updateUser', user)
+          return user
+        })
+        .catch(() => {
+          // do nothing for now
+          return null
+        })
+    },
+    async removeExtraFields() {
+      this.loading = true
+      let list = this.removeExtraFieldObjs.map((field) => field.id)
+      try {
+        const res = await SObjects.api.removeExtraField({
+          resource_type: this.baseResourceType,
+          field_ids: list,
+        })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.toggleAddField()
+        this.removeExtraFieldObjs = []
+        this.addOrRemove = null
+        setTimeout(() => {
+          this.refreshUser()
+          this.loading = false
+        }, 1500)
+      }
     },
   },
   computed: {
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
+    },
+    userCRM() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.crm
+    },
+    baseResourceType() {
+      return this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity'
     },
     currentView() {
       return this.$store.state.currentView
+    },
+    extraPipelineFields() {
+      let extras = []
+      extras = this.formFields.list.filter((field) => this.hasExtraFields.includes(field.id))
+      return extras
+    },
+    hasExtraFields() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      // let accountRef = decryptedUser.salesforceAccountRef
+      //   ? decryptedUser.salesforceAccountRef
+      //   : decryptedUser.hubspotAccountRef
+      let accountRef = this.$store.state.user.salesforceAccountRef
+        ? this.$store.state.user.salesforceAccountRef
+        : this.$store.state.user.hubspotAccountRef
+      let extraFields = accountRef.extraPipelineFieldsRef[this.baseResourceType]
+      return extraFields && extraFields.length ? extraFields : []
+    },
+    listNames() {
+      if (this.extraPipelineFields) {
+        return this.extraPipelineFields.map((field) => field.label)
+      } else {
+        return []
+      }
+    },
+    stageField() {
+      if (this.user.crm === 'HUBSPOT') {
+        return this.formFields.list.filter((field) => field.apiName === 'dealstage')[0]
+      }
     },
   },
 }
@@ -79,7 +422,79 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/mixins/inputs';
 
-button {
+::v-deep .multiselect * {
+  font-size: 13px;
+  font-family: $base-font-family;
+  border-radius: 5px !important;
+}
+::v-deep .multiselect__option--highlight {
+  background-color: $off-white;
+  color: $base-gray;
+}
+::v-deep .multiselect__option--selected {
+  background-color: $soft-gray;
+}
+
+::v-deep .multiselect__content-wrapper {
+  border-radius: 5px;
+  margin: 0.5rem 0rem;
+  border-top: 1px solid $soft-gray;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  width: 300px;
+}
+// ::v-deep .multiselect__placeholder {
+//   color: $base-gray;
+// }
+
+::v-deep .multiselect__tag {
+  background-color: $soft-gray;
+  color: $base-gray;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  // background-color: $soft-gray;
+  border-radius: 6px;
+  padding: 0.75rem 0.75rem;
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  margin: 0 5px;
+  background: rgb(97, 96, 96);
+  border-radius: 50%;
+  animation: bounce 1.2s infinite ease-in-out;
+}
+
+.dot:nth-child(2) {
+  animation-delay: -0.4s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: -0.2s;
+}
+
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.left-margin {
+  margin-left: 1rem;
+}
+
+.chat-button {
   @include chat-button();
   padding: 0.7rem 1rem;
   overflow: hidden;
@@ -89,6 +504,127 @@ button {
   img {
     margin-right: 0.5rem;
   }
+}
+
+.list-footer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  position: relative;
+  bottom: 0;
+  padding: 0;
+  margin-right: -6px;
+
+  button {
+    @include chat-button();
+    padding: 0.35rem 0.5rem;
+    font-size: 12px;
+  }
+
+  button:first-of-type {
+    margin-right: 0.5rem;
+  }
+  button:last-of-type {
+    background-color: $dark-green;
+    color: white;
+    border: none;
+  }
+}
+
+.small-button {
+  @include chat-button();
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  border-radius: 5px;
+  font-size: 12px;
+  padding: 0.35rem;
+  margin-left: 1rem;
+  font-weight: normal;
+
+  img {
+    margin: 0;
+    margin-right: 0.25rem;
+  }
+
+  span {
+    margin-right: 0.5rem;
+  }
+
+  &:disabled {
+    background-color: $off-white;
+  }
+}
+
+.save-close {
+  position: absolute;
+  right: 0.75rem;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  outline: 1px solid rgba(0, 0, 0, 0.1);
+  color: $coral;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-left: 0.5rem;
+  margin-right: 2px;
+  font-size: 13px;
+  transition: all 0.3s;
+
+  &:hover {
+    box-shadow: 0 3px 6px 0 $very-light-gray;
+    scale: 1.025;
+  }
+}
+
+.save {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  outline: 1px solid rgba(0, 0, 0, 0.1);
+  color: $dark-green;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.3s;
+
+  &:hover {
+    box-shadow: 0 3px 6px 0 $very-light-gray;
+    scale: 1.025;
+  }
+}
+
+.disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
+}
+
+.rotate {
+  animation: rotation 3s infinite linear;
 }
 
 .sticky-header {
@@ -112,8 +648,8 @@ button {
   background-color: white;
   padding: 1rem 0;
   padding-left: 1.25rem;
-  margin-top: 1rem;
   width: 100%;
+  // border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .lists {
@@ -121,15 +657,81 @@ button {
   width: 100%;
   overflow-y: scroll;
   overflow-x: hidden;
+  position: relative;
+  // background: $soft-gray;
+}
+
+.add-field {
+  position: absolute;
+  top: 4.25rem;
+  right: 0.75rem;
+  width: 320px;
+  height: 200px;
+  background-color: white;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 1px 3px 7px 0 #b8bdc2;
+  z-index: 100;
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0.75rem;
+    font-size: 14px;
+  }
+
+  footer {
+    position: inherit;
+    bottom: 1rem;
+    right: 1.25rem;
+  }
+}
+
+.centered {
+  padding: 0 0.75rem;
+  margin-top: 1rem;
 }
 
 .chat-table-section {
-  height: 45vh;
+  position: relative;
+  // border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  height: 96vh;
   overflow: scroll;
-  padding: 0 1.25rem;
-  background-color: white;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  margin: 0 0.25rem 0 0.5rem;
+  padding: 0 0 2px 0 !important;
+  // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
+
+// @media (max-height: 600px) {
+//   .chat-table-section {
+//     min-height: 56vh;
+//   }
+// }
+
+// @media (max-height: 750px) {
+//   .chat-table-section {
+//     min-height: 66vh;
+//   }
+// }
+
+// @media (min-height: 875px) {
+//   .chat-table-section {
+//     min-height: 70vh;
+//   }
+// }
+
+// @media (min-height: 1025px) {
+//   .chat-table-section {
+//     min-height: 75vh;
+//   }
+// }
+
+// @media (min-height: 1200px) {
+//   .chat-table-section {
+//     min-height: 78vh;
+//   }
+// }
 
 .chat-table-section::-webkit-scrollbar {
   width: 6px;
@@ -144,22 +746,91 @@ button {
   background-color: $base-gray;
 }
 
-.table {
-  display: grid;
+table {
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 14px;
+  position: absolute;
+  min-width: 100%;
+}
+tr {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.table-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  font-size: 14px;
+thead {
+  position: sticky;
+  color: $base-gray;
+  font-size: 12px !important;
+  top: 0;
+  z-index: 3;
+}
+
+thead tr th {
+  position: relative;
+}
+th {
+  text-align: left;
+  max-width: 120px;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  border: none !important;
+  background: $off-white !important;
+}
+td {
+  max-width: 300px;
+  min-width: 120px;
+  max-height: 90px;
+  overflow-y: scroll;
+  background-color: white;
+}
+th,
+td {
+  // position: relative;
+  padding: 1rem 1.25rem 1rem 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: normal;
+  // border-left: 1px solid rgba(0, 0, 0, 0.1);
+  // border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+td:first-of-type {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background-color: white;
+  cursor: pointer;
+  min-width: 150px;
+
+  // color: $dark-gray-blue;
+
+  span {
+    background-color: $off-white;
+    padding: 0.5rem 0.5rem 0.5rem 0.5rem !important;
+    border-radius: 5px;
+    max-width: 290px !important;
+  }
+}
+
+th:first-of-type {
+  left: 0;
+  position: sticky;
+  z-index: 4;
+  background-color: white;
 }
 
 .list-header {
+  z-index: 5;
   position: sticky;
   background-color: white;
   top: 0;
   padding: 1rem 1.25rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   p {
     font-size: 12px;
     padding: 0;
@@ -189,45 +860,10 @@ button {
   }
 }
 
-.table-cell {
-  padding: 0.25rem 0;
-}
-
 .pointer {
   cursor: pointer;
   &:hover {
     opacity: 0.5;
   }
 }
-
-// .th {
-//   display: table-cell;
-//   line-height: 1;
-//   z-index: 2;
-//   font-weight: 900;
-//   font-size: 14px;
-//   color: $base-gray;
-//   width: 300px;
-// }
-
-// .table-row {
-//   display: table-row;
-// }
-
-// .chat-table {
-//   display: table;
-// }
-
-// .cell {
-//   line-height: 1;
-//   display: table-cell;
-//   padding-bottom: 0.5rem;
-
-//   p {
-//     font-size: 14px;
-//     overflow: hidden;
-//     white-space: nowrap;
-//     width: 300px;
-//   }
-// }
 </style>

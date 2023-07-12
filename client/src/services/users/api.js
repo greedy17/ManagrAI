@@ -4,10 +4,14 @@ import store from '@/store'
 
 // API Endpoints
 const LOGIN_ENDPOINT = '/login/'
+const LOGIN_SSO_ENDPOINT = '/login-sso/'
+const LOGOUT_ENDPOINT = '/logout/'
 const REGISTRATION_ENDPOINT = '/register/'
 const NOTE_TEMPLATE_ENDPOINT = '/note-template/'
 const USERS_ENDPOINT = '/users/'
 const USERS_UPDATE = '/users/update-user-info/'
+const REVOKE_TOKEN_ENDPOINT = '/users/revoke-token/'
+const REFRESH_TOKEN_ENDPOINT = '/users/refresh-token/'
 const GET_USER_ENDPOINT = uid => `/users/${uid}/`
 const GET_USER_PHOTO_ENDPOINT = uid => `/users/${uid}/profile-photo/`
 const INVITE_ENDPOINT = '/users/invite/'
@@ -21,7 +25,10 @@ const STAFF_SOBJECTS = '/users/staff/sobjectfields/'
 const GENERATE_ACTIVATE_ENDPOINT = uid => `/users/${uid}/activate/`
 const CHECK_STATUS_ENDPOINT = '/account-status/'
 const CHECK_TASKS_ENDPOINT = '/task-status/'
+const SSO_DATA_ENDPOINT = '/sso-data/'
 const NYLAS_AUTH_EMAIL_LINK = '/users/email-auth-link/'
+const NYLAS_SEND_EMAIL = '/users/nylas/send-new-email/'
+const NYLAS_REPLY_EMAIL = '/users/nylas/reply-to-email/'
 const CREATE_MESSAGING_ACCOUNT_ENDPOINT = '/users/create-twilio-account/'
 const DELETE_MESSAGE_ACCOUNT_URI = '/users/remove-twilio-account/'
 const PASSWORD_RESET_EMAIL_ENDPOINT = `${USERS_ENDPOINT}password/reset/link/`
@@ -32,9 +39,12 @@ const PERFORMANCE_REPORT_ENDPOINT = '/users/performance-report/'
 const TRIAL_USERS_ENDPOINT = '/users/get-trial-users/'
 const FORECAST_VALUES_ENDPOINT = '/users/get-forecast-values/'
 const CHAT_SUBMISSION = 'users/chat/submission/'
+const CHAT_ASK = 'users/chat/ask-managr/'
+const CHAT_DEAL_REVIEW = 'users/chat/deal-review/'
 const CHAT_EMAIL = 'users/chat/follow-up-email/'
 const CHAT_NEXT_STEPS = 'users/chat/next-steps/'
 const CHAT_SUMMARY = 'users/chat/summary/'
+const CHAT_MEETING = 'users/chat/submit-chat-meeting/'
 
 export default class UserAPI {
   get client() {
@@ -60,10 +70,34 @@ export default class UserAPI {
   }
 
   async chatUpdate(data) {
-    return this.client
-      .post(CHAT_SUBMISSION, data)
-      .then(response => response.data)
-      .catch(apiErrorHandler({ apiName: 'User.chatUpdate' }))
+    try {
+      const res = await this.client.post(CHAT_SUBMISSION, data)
+      return res.data
+    } catch (e) {
+      console.log('Error in chatUpdate: ', e)
+      apiErrorHandler({ apiName: 'User.chatUpdate' })
+      return { value: e.response.data.value, status: e.response.status }
+    }
+  }
+
+  async askManagr(data) {
+    try {
+      const res = await this.client.post(CHAT_ASK, data)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'User.askManagr' })
+      return { value: e.response.data.value, status: e.response.status }
+    }
+  }
+
+  async dealReview(data) {
+    try {
+      const res = await this.client.post(CHAT_DEAL_REVIEW, data)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'User.dealReview' })
+      return { value: e.response.data.value, status: e.response.status }
+    }
   }
 
   async chatEmail(data) {
@@ -87,6 +121,13 @@ export default class UserAPI {
       .catch(apiErrorHandler({ apiName: 'User.chatSummary' }))
   }
 
+  async submitChatMeeting(data) {
+    return this.client
+      .post(CHAT_MEETING, data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'User.chatMeeting' }))
+  }
+
   async list({ pagination, filters }) {
     const url = USERS_ENDPOINT
     const filtersMap = {
@@ -106,6 +147,7 @@ export default class UserAPI {
         results: res.data.results.map(this.cls.fromAPI),
       }
     } catch (e) {
+      console.dir(e)
       apiErrorHandler({ apiName: 'UsersAPI.list' })
     }
   }
@@ -119,11 +161,30 @@ export default class UserAPI {
       )
     return promise
   }
+  loginSSO(d) {
+    const data = { ...d }
+    const promise = apiClient()
+      .post(LOGIN_SSO_ENDPOINT, data)
+      .catch(
+        apiErrorHandler({ apiName: 'UserAPI.ssoLogin', enable400Alert: false, enable500Alert: false }),
+      )
+    return promise
+  }
+
+  logout(d) {
+    // const data = { ...d }
+    const promise = apiClient()
+      .post(LOGOUT_ENDPOINT)
+      .catch(
+        apiErrorHandler({ apiName: 'UserAPI.login', enable400Alert: false, enable500Alert: false }),
+      )
+    return promise
+  }
 
   /* Perform logout by clearing the Vuex store. */
-  logout() {
-    store.commit('LOGOUT_USER')
-  }
+  // logout() {
+  //   store.commit('LOGOUT_USER')
+  // }
 
   /**
    * Register a new user
@@ -207,6 +268,24 @@ export default class UserAPI {
       )
     return promise
   }
+  async sendNewEmail(data) {
+    const url = NYLAS_SEND_EMAIL
+    try {
+      const res = await this.client.post(url, data)
+      return res
+    } catch(e) {
+      console.log('Error in sendNewEmail: ', e)
+    }
+  }
+  async sendReplyEmail(data) {
+    const url = NYLAS_REPLY_EMAIL
+    try {
+      const res = await this.client.post(url, data)
+      return res
+    } catch(e) {
+      console.log('Error in sendNewEmail: ', e)
+    }
+  }
   retrieveEmail(uid, token) {
     /**
      * Checks user email from id to add to form
@@ -251,13 +330,31 @@ export default class UserAPI {
     return promise
   }
 
-  getUser(userId) {
+  async getUser(userId) {
     const url = GET_USER_ENDPOINT(userId)
-    return this.client
-      .get(url)
-      .then(response => this.cls.fromAPI(response.data))
-      .catch(apiErrorHandler({ apiName: 'Get User Profile Data API error' }))
+    try {
+      const response = await this.client.get(url)
+      return this.cls.fromAPI(response.data)
+    } catch (e) {
+      console.log(e)
+      apiErrorHandler({ apiName: 'Get User Profile Data API error' })
+    }
   }
+
+  getUserByEmail(email) {
+    const url = USERS_ENDPOINT
+    return this.client
+      .get(url, { params: { email } })
+      .then(response => this.cls.fromAPI(response.data))
+      .catch(apiErrorHandler({ apiName: 'Get User by Email API error' }))
+  }
+  // getUser(userId) {
+  //   const url = GET_USER_ENDPOINT(userId)
+  //   return this.client
+  //     .get(url)
+  //     .then(response => this.cls.fromAPI(response.data))
+  //     .catch(apiErrorHandler({ apiName: 'Get User Profile Data API error' }))
+  // }
 
   getForecastValues() {
     const url = FORECAST_VALUES_ENDPOINT
@@ -284,6 +381,30 @@ export default class UserAPI {
     return promise
   }
 
+  async revokeToken(token, userId) {
+    const url = REVOKE_TOKEN_ENDPOINT
+    const data = {
+      token,
+      user_id: userId
+    }
+    try {
+      await this.client.post(url, data)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'UserAPI.revokeToken' })
+    }
+  }
+  async refreshToken(token, userId) {
+    const url = REFRESH_TOKEN_ENDPOINT
+    const data = {
+      token,
+      user_id: userId,
+    }
+    try {
+      await this.client.post(url, data)
+    } catch (e) {
+      apiErrorHandler({ apiName: 'UserAPI.revokeToken' })
+    }
+  }
   async createMessagingAccount(phoneNumber) {
     const url = CREATE_MESSAGING_ACCOUNT_ENDPOINT
     const data = {
@@ -412,6 +533,15 @@ export default class UserAPI {
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Get Tasks error' })
+    }
+  }
+  async googleInit() {
+    const url = SSO_DATA_ENDPOINT
+    try {
+      const res = await this.client.get(url)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'googleInit error' })
     }
   }
 

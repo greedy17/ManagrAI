@@ -1326,7 +1326,6 @@ export default {
       if (this.selectedCustomObject) {
         this.customResource = this.selectedCustomObjectName
         this.newResource = this.selectedCustomObjectName
-        console.log('updateCustomFields')
       }
       // if (this.customObjectModalView) {
       this.closeCustomModal()
@@ -1338,13 +1337,11 @@ export default {
     async getCustomObjects() {
       const res = await SObjects.api.getCustomObjects()
       const names = []
-      console.log('customForms', this.customForms)
       for (let i = 0; i < this.customForms.length; i++) {
         const form = this.customForms[i]
         names.push(form.customObject)
       }
       const createdCustomObjects = []
-      console.log('res', res)
       const filteredCustomObjects = res.sobjects.filter((co) => {
         if (!names.includes(co.name)) {
           return co
@@ -1361,7 +1358,6 @@ export default {
       this.selectedStage = null
     },
     async deleteForm(form) {
-      console.log('form', form)
       if (form && form.id && form.id.length) {
         const id = form.id
 
@@ -1540,7 +1536,6 @@ export default {
       )
     },
     changeObject(object, type, switchedObject = false) {
-      console.log('type', type)
       if (type.label !== 'Create' && type.label !== 'Update' && type.label !== '--- Stages ---') {
         this.setStage(type)
         return

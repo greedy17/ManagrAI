@@ -24,7 +24,7 @@
       class="cell-name-header"
     >
       <div class="sort-img-visible">
-        {{isContactOrLead ? 'Email' : 'Name'}}
+        {{ isContactOrLead ? 'Email' : 'Name' }}
         <img v-if="nameSort === 0" style="height: 0.75rem" src="@/assets/images/sort.svg" alt="" />
         <span v-if="nameSort === 2">
           <img class="light-green" src="@/assets/images/ascend.svg" style="height: 0.6rem" alt="" />
@@ -253,6 +253,7 @@
 
 <script>
 import { SObjects } from '@/services/salesforce'
+import { decryptData } from '../encryption'
 
 export default {
   name: 'PipelineHeader',
@@ -274,6 +275,7 @@ export default {
   },
   computed: {
     userCRM() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.crm
     },
   },
@@ -323,6 +325,8 @@ export default {
       for (let i = 0; i < this.extraFieldObjs.length; i++) {
         this.extraFields.push(this.extraFieldObjs[i].id)
       }
+      console.log(this.extraFields)
+      console.log(this.baseResourceType)
       try {
         const res = await SObjects.api.addExtraFields({
           field_ids: this.extraFields,
@@ -350,9 +354,9 @@ export default {
     extraPipelineFields: {},
     fieldOpts: {},
     isContactOrLead: {
-      type: Boolean
+      type: Boolean,
     },
-    baseResourceType: {}
+    baseResourceType: {},
   },
 }
 </script>

@@ -132,7 +132,7 @@
       </section>
       <div class="save-refresh-section">
         <button v-if="!pulseLoading" class="img-button img-border" @click="refreshForms">
-          <img src="@/assets/images/refresh.svg" />
+          <img height="18px" src="@/assets/images/refresh.svg" />
         </button>
         <PulseLoadingSpinnerButton
           v-else
@@ -916,6 +916,7 @@ import { SObjectPicklist } from '@/services/salesforce'
 import { ObjectField } from '@/services/crm'
 import * as FORM_CONSTS from '@/services/slack'
 import { SObjects } from '../../services/salesforce'
+import { decryptData } from '../../encryption'
 
 export default {
   name: 'CustomSlackForm',
@@ -1420,9 +1421,11 @@ export default {
       return this.customObjectView ? 'green' : ''
     },
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
     userCRM() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.crm
     },
     task() {
@@ -1699,7 +1702,6 @@ export default {
       if (this.selectedCustomObject) {
         this.customResource = this.selectedCustomObjectName
         this.newResource = this.selectedCustomObjectName
-        console.log('updateCustomFields')
       }
       // if (this.customObjectModalView) {
       this.closeCustomModal()
@@ -1711,13 +1713,11 @@ export default {
     async getCustomObjects() {
       const res = await SObjects.api.getCustomObjects()
       const names = []
-      console.log('customForms', this.customForms)
       for (let i = 0; i < this.customForms.length; i++) {
         const form = this.customForms[i]
         names.push(form.customObject)
       }
       const createdCustomObjects = []
-      console.log('res', res)
       const filteredCustomObjects = res.sobjects.filter((co) => {
         if (!names.includes(co.name)) {
           return co
@@ -1734,7 +1734,6 @@ export default {
       this.selectedStage = null
     },
     async deleteForm(form) {
-      console.log('form', form)
       if (form && form.id && form.id.length) {
         const id = form.id
 
@@ -1913,7 +1912,6 @@ export default {
       )
     },
     changeObject(object, type, switchedObject = false) {
-      console.log('type', type)
       if (type.label !== 'Create' && type.label !== 'Update' && type.label !== '--- Stages ---') {
         this.setStage(type)
         return

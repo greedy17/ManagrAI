@@ -132,6 +132,7 @@ data "template_file" "managr_app" {
     use_outreach   = title(var.app_config.use_outreach)
     use_hubspot    = title(var.app_config.use_hubspot)
     use_open_ai    = title(var.app_config.use_open_ai)
+    use_sso        = title(var.app_config.use_sso)
   }
 }
 
@@ -311,6 +312,10 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     hubspotRedirectUri   = var.app_config.hubspot_redirect_uri
 
     openAiSecret         = var.app_config.open_ai_secret
+
+    microsoftSecretKey   = var.app_config.microsoft_secret_key
+    googleClientId       = var.app_config.google_client_id
+    googleLoginUri       = var.app_config.google_login_uri
   })
 }
 

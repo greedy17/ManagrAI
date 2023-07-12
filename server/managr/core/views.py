@@ -2,24 +2,27 @@ import logging
 import requests
 import textwrap
 import json
+import uuid
 import httpx
+import time
 from django.utils import timezone
 import calendar
 from django.core import serializers
+from managr.utils.misc import get_site_url
 from dateutil.parser import parse
+from django.shortcuts import redirect
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
 from django.template.exceptions import TemplateDoesNotExist
 from django.http import HttpResponse
 from django.views import View
 from django.shortcuts import render
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.conf import settings
 from django_filters.rest_framework import DjangoFilterBackend
 from background_task.models import CompletedTask
 from datetime import datetime
 
-from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from rest_framework import (
     filters,
@@ -38,22 +41,30 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from managr.api.emails import send_html_email
+from managr.api.models import ManagrToken
 from managr.utils import sites as site_utils
-from managr.core.utils import pull_usage_data, get_user_totals
+from managr.core.utils import (
+    pull_usage_data,
+    get_user_totals,
+    clean_prompt_string,
+    swap_submitted_data_labels,
+)
 from managr.slack.helpers import requests as slack_requests, block_builders
 from .nylas.auth import get_access_token, get_account_details
 from .models import User, NylasAuthAccount, NoteTemplate
 from .serializers import (
     UserSerializer,
     UserLoginSerializer,
+    UserSSOLoginSerializer,
     UserInvitationSerializer,
     UserRegistrationSerializer,
     NoteTemplateSerializer,
 )
 from managr.organization.models import Team
 from .permissions import IsStaff
-from managr.core.background import emit_process_calendar_meetings, emit_process_submit_chat_prompt
+from managr.core.background import emit_process_calendar_meetings
 
+from nylas import APIClient
 from .nylas.emails import (
     return_file_id_from_nylas,
     download_file_from_nylas,
@@ -93,22 +104,6 @@ DAYS_TO_NUMBER = {
     "saturday": 5,
     "sunday": 6,
 }
-
-
-def swap_submitted_data_labels(data, fields):
-    api_key_data = {}
-    for label in data.keys():
-        try:
-            field_list = fields.filter(label__icontains=label)
-            field = None
-            for field_value in field_list:
-                if len(field_value.label) == len(label):
-                    field = field_value
-                    break
-            api_key_data[field.api_name] = data[label]
-        except Exception as e:
-            continue
-    return api_key_data
 
 
 def name_list_processor(resource_list, chat_response_name):
@@ -268,23 +263,7 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
     return cleaned_data
 
 
-def clean_prompt_string(prompt_string):
-    cleaned_string = (
-        prompt_string[prompt_string.index("{") : prompt_string.index("}") + 1]
-        .replace("\n\n", "")
-        .replace("\n ", "")
-        .replace("\n", "")
-        .replace("  ", "")
-        .replace("', '", '", "')
-        .replace("': '", '": "')
-    )
-    while "{  " in cleaned_string:
-        cleaned_string = cleaned_string.replace("{  ", "{ ")
-    cleaned_string = cleaned_string.replace("{ '", '{ "').replace("'}", '"}')
-    return cleaned_string
-
-
-def set_name_field(resource, crm):
+def set_name_field(resource):
     if resource in ["Opportunity", "Account"]:
         return "Name"
     elif resource == "Company":
@@ -319,7 +298,6 @@ def clean_data_for_summary(user_id, data, integration_id, resource_type):
     from managr.hubspot.routes import routes as hs_routes
     from managr.salesforce.routes import routes as sf_routes
 
-    print("DATA IS HERE,", data)
     cleaned_data = dict(data)
     CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
     user = User.objects.get(id=user_id)
@@ -362,6 +340,38 @@ def clean_data_for_summary(user_id, data, integration_id, resource_type):
             cleaned_data[field.api_name] = reference_record
     return cleaned_data
 
+def deal_review_data_builder(resource_data, api_name_list, crm, form_data, fields):
+    value_dict = {}
+    try:
+        api_name_list.remove("meeting_type")
+        api_name_list.remove("meeting_comments")
+        owner_field = "hubspot_owner_id" if crm == "HUBSPOT" else "OwnerId"
+        api_name_list.remove(owner_field)
+    except ValueError:
+        owner_field = None
+    for api_name in api_name_list:
+        field = fields.filter(api_name=api_name).first()
+        label = field.label
+        if (
+            field.data_type in ["Date", "DateTime"]
+            and crm == "HUBSPOT"
+            and resource_data[api_name] is not None
+        ):
+            converted_string = resource_data[api_name].split("T")
+            value_dict[label] = converted_string[0]
+        else:
+            value_dict[label] = resource_data[api_name]
+    modified_field = "hs_lastmodifieddate" if crm == "HUBSPOT" else "LastModifiedDate"
+    try:
+        modified_date = resource_data[modified_field].split("T")[0]
+    except Exception:
+        modified_date = None
+    if modified_date:
+        value_dict["Last Activity"] = modified_date
+    if "meeting_comments" in form_data.keys():
+        value_dict["Meeting Comments"] = form_data["meeting_comments"]
+    return value_dict    
+
 
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
@@ -379,7 +389,8 @@ def submit_chat_prompt(request):
     user = User.objects.get(id=request.data["user_id"])
     CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 
-    form_type = "CREATE" if "create" in request.data["prompt"].lower() else "UPDATE"
+    form_type = (
+        "CREATE" if ("create" in request.data["prompt"].lower() and "update" not in request.data["prompt"].lower()) else "UPDATE")
     form_template = user.team.team_forms.filter(
         form_type=form_type, resource=request.data["resource_type"]
     ).first()
@@ -397,7 +408,7 @@ def submit_chat_prompt(request):
     has_error = False
     resource_check = None
     token_amount = 500
-    timeout = 30.0
+    timeout = 60.0
     while True:
         message = None
         try:
@@ -407,11 +418,7 @@ def submit_chat_prompt(request):
             # logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: body <{body}>")
             Client = Variable_Client(timeout)
             with Client as client:
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=OPEN_AI_HEADERS,
-                )
+                r = client.post(url, data=json.dumps(body), headers=OPEN_AI_HEADERS,)
             if r.status_code == 200:
                 r = r.json()
 
@@ -420,19 +427,17 @@ def submit_chat_prompt(request):
                 stop_reason = choice["finish_reason"]
                 if stop_reason == "length":
                     if token_amount <= 2000:
-                        res = {
+                        message = {
                             "value": "Look like your prompt message is too long to process. Try removing white spaces!",
                         }
-                        return Response(data=res)
                     else:
                         token_amount += 500
                         continue
                 text = choice["text"]
-                cleaned_choice = clean_prompt_string(text)
-                data = eval(cleaned_choice)
-                name_field = set_name_field(request.data["resource_type"], user.crm)
+                data = clean_prompt_string(text)
+                name_field = set_name_field(request.data["resource_type"])
                 data = correct_data_keys(data)
-                resource_check = data[name_field].lower().split(" ")
+                resource_check = data[name_field].lower().split(" ") if data[name_field] else []
                 lowered_type = request.data["resource_type"].lower()
                 resource = None
                 if lowered_type in resource_check:
@@ -473,6 +478,7 @@ def submit_chat_prompt(request):
                             form.save()
                         else:
                             has_error = True
+                            message = "Invalid Submission"
                             break
                     else:
                         if user.crm == "SALESFORCE":
@@ -491,6 +497,7 @@ def submit_chat_prompt(request):
                     form.save_form(cleaned_data, False)
                 else:
                     has_error = True
+                    message = ""
                 break
             else:
                 if attempts >= 5:
@@ -504,7 +511,6 @@ def submit_chat_prompt(request):
                 has_error = True
                 message = "There was an error communicating with Open AI"
                 logger.exception(f"Read timeout from Open AI {e}")
-                return Response(data=message)
             else:
                 attempts += 1
                 continue
@@ -514,13 +520,12 @@ def submit_chat_prompt(request):
             message = (
                 f" Looks like we ran into an issue with your prompt, try removing things like quotes and ampersands"
                 if resource_check is None
-                else f" We could not find a {data['resource_type']} named {resource_check} because of {e}"
+                else f" We could not find a resource named {resource_check} because of {e}"
             )
-            return Response(data={"res": [message]})
 
     if has_error:
-        res = {"value": f"There was an error processing chat submission {message}"}
-        return Response(data=res)
+        res = {"value": f"There was an error processing chat submission: {message}"}
+        return Response(data=res, status=status.HTTP_400_BAD_REQUEST)
     if not has_error:
         res_text = (f"{resource.display_value} has been updated, please review",)
 
@@ -535,33 +540,173 @@ def submit_chat_prompt(request):
             "integrationId": resource.integration_id,
             "formType": form_type,
             "resourceType": request.data["resource_type"],
-        }
+        },
+        status=status.HTTP_200_OK,
     )
 
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def ask_managr(request):
+    from managr.core.exceptions import _handle_response, ServerError, StopReasonLength
+
+    user = User.objects.get(id=request.data["user_id"])
+
+    prompt = core_consts.OPEN_AI_ASK_MANAGR_PROMPT(
+        str(user.id),
+        request.data["prompt"],
+        request.data["resource_type"],
+        request.data["resource_id"]
+    )
+
+    tokens = 500
+    has_error = False
+    attempts = 1
+    timeout = 60.0
+    while True:
+        try:
+            body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, tokens)
+            with Variable_Client(timeout) as client:
+                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+            r = _handle_response(r)
+            text = r.get("choices")[0].get("text")
+            break
+        except StopReasonLength:
+            if tokens >= 2000:
+                break
+            else:
+                tokens += 500
+                continue
+        except ServerError:
+            if attempts >= 5:
+                has_error = True
+                error_message = "There was a server error with Open AI"
+                break
+            else:
+                attempts += 1
+                time.sleep(10.0)
+        except ValueError as e:
+            print(e)
+            if str(e) == "substring not found":
+                continue
+            else:
+                has_error = True
+                error_message = "Looks like we ran into an internal issue"
+                break
+        except SyntaxError as e:
+            print(e)
+            continue
+        except httpx.ReadTimeout:
+            logger.exception(f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}")
+            if timeout >= 120.0:
+                has_error = True
+                break
+            else:
+                timeout += 30.0
+        except Exception as e:
+            logger.exception(f"Unknown error on ask managr <{e}>")
+    if has_error:
+        res = {"value": f"{error_message}"}
+        return Response(data=res, status=status.HTTP_400_BAD_REQUEST)
+    
+    return Response(
+        data={
+            **r,
+            "res": text,
+            "resourceId": request.data["resource_id"],
+            "resourceType": request.data["resource_type"],
+        },
+        status=status.HTTP_200_OK,
+    )
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def deal_review(request):
+    from managr.core import constants as core_consts
+    from managr.utils.client import Client
+    from managr.crm.utils import CRM_SWITCHER
+    from ..slack.models import OrgCustomSlackFormInstance, OrgCustomSlackForm
+    from managr.core.exceptions import _handle_response
+
+    user = User.objects.get(id=request.data["user_id"])
+    prompt = request.data["prompt"],
+    resource_type = request.data["resource_type"],
+    resource_id = request.data["resource_id"]
+    resource = CRM_SWITCHER[user.crm][request.data["resource_type"]]["model"].objects.get(id=request.data["resource_id"])
+    form_template = (
+        OrgCustomSlackForm.objects.for_user(user)
+        .filter(resource=request.data["resource_type"], form_type="UPDATE")
+        .first()
+    )
+    fields = form_template.custom_fields.all()
+    form_check = OrgCustomSlackFormInstance.objects.filter(
+        user=user, resource_id=request.data["resource_id"]
+    ).first()
+    form_data = form_check.saved_data if form_check else {}
+    api_names = list(fields.values_list("api_name", flat=True))
+    deal_review_data = deal_review_data_builder(
+        resource.secondary_data, api_names, user.crm, form_data, fields
+    )
+    prompt = core_consts.OPEN_AI_DEAL_REVIEW(
+        deal_review_data, resource_type, datetime.now().date(), user.crm
+    )
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(
+        user.email, prompt, 1000, top_p=0.9, temperature=0.7
+    )
+    has_error = False
+    while True:
+        try:
+            with Client as client:
+                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+                r = _handle_response(r)
+                response_text = r.get("choices")[0].get("text")
+                break
+        except Exception as e:
+            has_error = True
+            response_text = f"There was an error generating your review: {str(e)}"
+            break
+    if has_error:
+        res = {"value": f"{response_text}"}
+        return Response(data=res, status=status.HTTP_400_BAD_REQUEST)
+        
+    return Response(
+        data={
+            **r,
+            "res": response_text,
+            "resourceId": resource_id,
+            "resourceType": resource_type,
+        },
+        status=status.HTTP_200_OK,
+    )    
 
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
 def draft_follow_up(request):
 
     user = User.objects.get(id=request.data["id"])
-    prompt = core_consts.OPEN_AI_MEETING_EMAIL_DRAFT(request.data["notes"])
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, temperature=0.2)
+    instructions = request.data["instructions"]
+    if not instructions:
+        prompt = core_consts.OPEN_AI_MEETING_EMAIL_DRAFT(request.data["notes"])
+        body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, temperature=0.2)
+    else:
+        prompt = core_consts.OPEN_AI_EMAIL_DRAFT_WITH_INSTRUCTIONS(request.data["notes"], instructions)
+        body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 1000)    
+    
     attempts = 1
+
     while True:
         try:
             with Client as client:
                 url = core_consts.OPEN_AI_COMPLETIONS_URI
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=core_consts.OPEN_AI_HEADERS,
-                )
+                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             if r.status_code == 200:
                 r = r.json()
                 text = r.get("choices")[0].get("text")
                 return Response(data={**r, "res": text})
         except Exception as e:
-            return Response(data={"res": [e]})
+            res = {"value": f"error drafting email: {e}"}
+            return Response(data=res)        
 
 
 @api_view(["post"])
@@ -576,17 +721,14 @@ def chat_next_steps(request):
         try:
             with Client as client:
                 url = core_consts.OPEN_AI_COMPLETIONS_URI
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=core_consts.OPEN_AI_HEADERS,
-                )
+                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             if r.status_code == 200:
                 r = r.json()
                 text = r.get("choices")[0].get("text")
                 return Response(data={**r, "res": text})
         except Exception as e:
-            return Response(data={"res": [e]})
+            res = {"value": f"error getting next steps: {e}"}
+            return Response(data=res)
 
 
 @api_view(["post"])
@@ -596,27 +738,180 @@ def get_chat_summary(request):
     user = User.objects.get(id=request.data["id"])
 
     cleaned_data = clean_data_for_summary(
-        str(user.id),
-        request.data["data"],
-        request.data["integrationId"],
-        request.data["resource"],
+        str(user.id), request.data["data"], request.data["integrationId"], request.data["resource"],
     )
     try:
         summary_prompt = core_consts.OPEN_AI_SUMMARY_PROMPT(cleaned_data)
         body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, summary_prompt, 500, top_p=0.1)
         url = core_consts.OPEN_AI_COMPLETIONS_URI
         with Client as client:
-            r = client.post(
-                url,
-                data=json.dumps(body),
-                headers=core_consts.OPEN_AI_HEADERS,
-            )
+            r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             if r.status_code == 200:
                 r = r.json()
                 message_string_for_recap = r["choices"][0]["text"]
                 return Response(data={**r, "res": message_string_for_recap})
     except Exception as e:
-        return Response(data={"res": [e]})
+        res = {"value": f"error getting summary: {e}"}
+        return Response(data=res)
+
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def log_chat_meeting(request):
+    from managr.salesforce.models import MeetingWorkflow
+    from managr.slack.models import OrgCustomSlackFormInstance
+    from managr.core.exceptions import _handle_response, StopReasonLength
+    from managr.salesforce.routes import routes as sf_routes
+    from managr.hubspot.routes import routes as hs_routes
+
+    CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
+
+    user = User.objects.get(id=request.data["user_id"])
+    workflow_id = request.data["workflow_id"]
+    resource_type = request.data["resource_type"]
+    workflow = MeetingWorkflow.objects.get(id=workflow_id)
+    workflow.save()
+
+    prompt = request.data["prompt"]
+    form_type = (
+        "CREATE" if ("create" in prompt.lower() and "update" not in prompt.lower()) else "UPDATE"
+    )
+    form_template = user.team.team_forms.filter(form_type=form_type, resource=resource_type).first()
+    form = OrgCustomSlackFormInstance.objects.create(
+        template=form_template, user=user, update_source="chat", chat_submission=prompt
+    )
+    fields = form_template.custom_fields.all()
+    field_list = list(fields.values_list("label", flat=True))
+    full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(field_list, prompt, datetime.now())
+    url = core_consts.OPEN_AI_COMPLETIONS_URI
+    attempts = 1
+    has_error = False
+    resource_check = None
+    token_amount = 500
+    timeout = 60.0
+    while True:
+        message = None
+        try:
+            body = core_consts.OPEN_AI_COMPLETIONS_BODY(
+                user.email, full_prompt, token_amount=token_amount, top_p=0.1
+            )
+            Client = Variable_Client(timeout)
+            with Client as client:
+                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+                r = _handle_response(r)
+                choice = r["choices"][0]
+                text = choice["text"]
+                data = clean_prompt_string(text)
+                name_field = set_name_field(resource_type, )
+                data = correct_data_keys(data)
+                resource_check = data[name_field].lower().split(" ")
+                lowered_type = resource_type.lower()
+                resource = None
+                if lowered_type in resource_check:
+                    resource_check.remove(lowered_type)
+                if form_type == "CREATE" or len(resource_check):
+                    if form_type == "UPDATE":
+                        resource = None
+                        for word in resource_check:
+                            if resource_type not in ["Contact", "Lead"]:
+                                query = (
+                                    CRM_SWITCHER[user.crm][resource_type]["model"]
+                                    .objects.for_user(user)
+                                    .filter(name__icontains=word)
+                                )
+                                if query:
+                                    if len(query) > 1:
+                                        most_matching = name_list_processor(query, resource_check)
+                                        resource = query.filter(name=most_matching).first()
+                                    else:
+                                        resource = query.first()
+                                    break
+                            else:
+                                query = (
+                                    CRM_SWITCHER[user.crm][resource_type]["model"]
+                                    .objects.for_user(user)
+                                    .filter(email__icontains=word)
+                                )
+                                if query:
+                                    if len(query) > 1:
+                                        most_matching = name_list_processor(query, resource_check)
+                                        resource = query.filter(email=most_matching).first()
+                                    else:
+                                        resource = query.first()
+                                    break
+                        if resource:
+                            form.resource_id = str(resource.id)
+                            form.save()
+                        else:
+                            has_error = True
+                            break
+                    else:
+                        if user.crm == "SALESFORCE":
+                            if resource_type in ["Opportunity", "Account"]:
+                                data["Name"] = resource_check
+                        else:
+                            if resource_type == "Deal":
+                                data["Deal Name"] = resource_check
+                        resource = None
+                    owner_field = set_owner_field(resource_type, user.crm)
+                    data[owner_field] = user.crm_account.crm_id
+                    swapped_field_data = swap_submitted_data_labels(data, fields)
+                    cleaned_data = clean_prompt_return_data(
+                        swapped_field_data, fields, user.crm, resource
+                    )
+                    form.save_form(cleaned_data, False)
+                else:
+                    has_error = True
+                break
+
+        except StopReasonLength:
+            if token_amount <= 2000:
+                message = "Look like your prompt message is too long to process. Try removing white spaces!",
+                break
+            else:
+                token_amount += 500
+                continue
+        except httpx.ReadTimeout as e:
+            timeout += 30.0
+            if timeout >= 120.0:
+                has_error = True
+                message = "There was an error communicating with Open AI"
+                logger.exception(f"Read timeout from Open AI {e}")
+                break
+            else:
+                attempts += 1
+                continue
+        except Exception as e:
+            logger.exception(f"Exception from Open AI response {e}")
+            has_error = True
+            message = (
+                f"Looks like we ran into an issue with your prompt, try removing things like quotes and ampersands"
+                if resource_check is None
+                else f"We could not find a {resource_type} named {resource_check} because of {e}"
+            )
+            break
+    if has_error:
+        if workflow_id:
+            logger.exception(
+                f"There was an error processing chat submission for workflow {workflow} {message}"
+            )
+            workflow.failed_task_description.append(
+                f"There was an error processing chat submission {message}"
+            )
+            workflow.save()
+        return Response(data={"data": message, 'failed': True})
+
+    if not has_error:
+
+        if workflow_id:
+            if not has_error:
+                form.workflow = workflow
+                form.update_source = "meeting (chat)"
+                form.save()
+                workflow.resource_type = resource_type
+                workflow.resource_id = str(resource.id)
+                workflow.save()
+    return Response(data={**r, "data": cleaned_data,})
 
 
 def field_syncs():
@@ -668,7 +963,7 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
 
         # If the serializer is valid, then the email/password combo is valid.
         # Get the user entity, from which we can get (or create) the auth token
-        user = authenticate(**serializer.validated_data)
+        user = authenticate(request, **serializer.data)
         if user is None:
             raise ValidationError(
                 {
@@ -679,14 +974,65 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
             )
         login(request, user)
         # create token if one does not exist
-        Token.objects.get_or_create(user=user)
-
+        ManagrToken.objects.get_or_create(user=user, assigned_user=user)
+        if user.access_token.is_expired:
+            user.access_token.refresh(user.access_token)
         # Build and send the response
         u = User.objects.get(pk=user.id)
         serializer = UserSerializer(u, context={"request": request})
         response_data = serializer.data
-        response_data["token"] = user.auth_token.key
+        response_data["token"] = user.access_token.key
         return Response(response_data)
+
+
+class UserSSOLoginView(generics.GenericAPIView):
+    """
+    For admin login.
+    """
+
+    authentication_classes = ()
+    serializer_class = UserSSOLoginSerializer
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request, *args, **kwargs):
+        """Validate user credentials.
+        Return serialized user and auth token.
+        """
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        # If the serializer is valid, then the email/password combo is valid.
+        # Get the user entity, from which we can get (or create) the auth token
+        user = authenticate(request, **serializer.data)
+        if user is None:
+            raise ValidationError(
+                {
+                    "non_field_errors": [
+                        ("Incorrect email and password combination. " "Please try again")
+                    ],
+                }
+            )
+        serializer.login(user, request)
+        ManagrToken.objects.get_or_create(user=user, assigned_user=user)
+        if user.access_token.is_expired:
+            user.access_token.refresh(user.access_token)
+        # Build and send the response
+        u = User.objects.get(pk=user.id)
+        serializer = UserSerializer(u, context={"request": request})
+        response_data = serializer.data
+        response_data["token"] = user.access_token.key
+        return Response(response_data)
+
+
+class UserLogoutView(generics.GenericAPIView):
+    authentication_classes = ()
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        user = self.request.user
+        url = get_site_url()
+        user.access_token.revoke()
+        logout(request)
+        return redirect(f"{url}/login")
 
 
 class UserRegistrationView(mixins.CreateModelMixin, generics.GenericAPIView):
@@ -721,7 +1067,10 @@ class UserViewSet(
 ):
 
     serializer_class = UserSerializer
-    filter_fields = ("organization",)
+    filter_fields = (
+        "organization",
+        "email",
+    )
     filter_backends = (
         DjangoFilterBackend,
         filters.SearchFilter,
@@ -850,13 +1199,13 @@ class UserViewSet(
                 user.save()
                 login(request, user)
                 # create token if one does not exist
-                Token.objects.get_or_create(user=user)
+                ManagrToken.objects.get_or_create(user=user)
 
                 # Build and send the response
                 serializer = UserSerializer(user, context={"request": request})
 
                 response_data = serializer.data
-                response_data["token"] = user.auth_token.key
+                response_data["token"] = user.access_token.key
                 return Response(response_data)
 
             else:
@@ -1017,10 +1366,7 @@ class UserViewSet(
             return Response(data={"error": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(
-        methods=["GET"],
-        permission_classes=(IsStaff,),
-        detail=False,
-        url_path="admin-tasks",
+        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin-tasks",
     )
     def admin_tasks(self, request, *args, **kwargs):
         tasks = CompletedTask.objects.all()[:100]
@@ -1028,10 +1374,7 @@ class UserViewSet(
         return Response(data={"tasks": dict_tasks})
 
     @action(
-        methods=["GET"],
-        permission_classes=(IsStaff,),
-        detail=False,
-        url_path="admin-users",
+        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin-users",
     )
     def admin_users(self, request, *args, **kwargs):
         param = request.query_params.get("org_id", None)
@@ -1063,6 +1406,60 @@ class UserViewSet(
         serialized = UserTrialSerializer(users, many=True)
         return Response(data=serialized.data, status=status.HTTP_200_OK)
 
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="revoke-token",
+    )
+    def revoke_token(self, request, *args, **kwargs):
+        token = request.data.get("token", None)
+        if not token:
+            raise ValidationError(
+                {"detail": {"key": "field_error", "message": "Token is required", "field": "token"}}
+            )
+        user_id = request.data.get("user_id", None)
+        if not user_id:
+            raise ValidationError(
+                {
+                    "detail": {
+                        "key": "field_error",
+                        "message": "user id is required",
+                        "field": "user_id",
+                    }
+                }
+            )
+        user = User.objects.filter(id=user_id)
+        token = user.access_token.revoke()
+        return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="refresh-token",
+    )
+    def refresh_token(self, request, *args, **kwargs):
+        token = request.data.get("token", None)
+        if not token:
+            raise ValidationError(
+                {"detail": {"key": "field_error", "message": "Token is required", "field": "token"}}
+            )
+        user_id = request.data.get("user_id", None)
+        if not user_id:
+            raise ValidationError(
+                {
+                    "detail": {
+                        "key": "field_error",
+                        "message": "user id is required",
+                        "field": "user_id",
+                    }
+                }
+            )
+        user = User.objects.filter(id=user_id)
+        token = user.access_token.refresh(user.access_token)
+        return Response({"detail": "User token has been successfully refreshed"})
+
 
 class ActivationLinkView(APIView):
     permission_classes = (permissions.AllowAny,)
@@ -1078,8 +1475,7 @@ class ActivationLinkView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if user and user.is_active:
             return Response(
-                data={"activation_link": user.activation_link},
-                status=status.HTTP_204_NO_CONTENT,
+                data={"activation_link": user.activation_link}, status=status.HTTP_204_NO_CONTENT,
             )
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -1087,9 +1483,7 @@ class ActivationLinkView(APIView):
 
 @api_view(["GET"])
 @permission_classes(
-    [
-        permissions.IsAuthenticated,
-    ]
+    [permissions.IsAuthenticated,]
 )
 def get_email_authorization_link(request):
     u = request.user
@@ -1103,55 +1497,6 @@ class GetFileView(View):
         user = request.user
         response = download_file_from_nylas(user=user, file_id=file_id)
         return response
-
-
-"""
-TODO 2021-01-15 William: Need to determine whether we still need this viewset.
-
-class NotificationSettingsViewSet(
-    viewsets.GenericViewSet, mixins.ListModelMixin, mixins.UpdateModelMixin
-):
-    permission_classes = (permissions.IsAuthenticated,)
-    serializer_class = NotificationOptionSerializer
-
-    def get_queryset(self):
-        return NotificationOption.objects.for_user(self.request.user)
-
-    def list(self, request, *args, **kwargs):
-        # qs = NotificationOption.objects.for_user(request.user)
-        qs = self.get_queryset()
-        resource_param = request.query_params.get("resource", None)
-        if resource_param:
-            qs = qs.filter(resource=resource_param)
-        page = self.paginate_queryset(qs)
-        if page is not None:
-            serializer = NotificationOptionSerializer(
-                qs, many=True, context={"request": request}
-            )
-            return self.get_paginated_response(serializer.data)
-        serializer = NotificationOptionSerializer(
-            qs, many=True, context={"request": request}
-        )
-        return Response()
-
-    @action(
-        methods=["PATCH"],
-        permission_classes=(permissions.IsAuthenticated,),
-        detail=False,
-        url_path="update-settings",
-    )
-    def update_settings(self, request, *args, **kwargs):
-        data = request.data
-        user = request.user
-        selections = data.get("selections", [])
-        for sel in selections:
-            selection, created = NotificationSelection.objects.get_or_create(
-                option=sel["option"], user=user
-            )
-            selection.value = sel["value"]
-            selection.save()
-        return Response()
- """
 
 
 class NylasAccountWebhook(APIView):
@@ -1204,9 +1549,7 @@ class NylasAccountWebhook(APIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [
-        permissions.IsAuthenticated,
-    ]
+    [permissions.IsAuthenticated,]
 )
 def email_auth_token(request):
     u = request.user
@@ -1274,6 +1617,9 @@ def email_auth_token(request):
                 user=request.user,
                 event_calendar_id=calendar_id,
             )
+            emit_process_calendar_meetings(
+                str(request.user.id), f"calendar-meetings-{request.user.email}-{str(uuid.uuid4())}"
+            )
         except requests.exceptions.HTTPError as e:
             if 400 in e.args:
                 raise ValidationError(
@@ -1314,6 +1660,71 @@ def revoke_access_token(request):
             return Response(status=status.HTTP_204_NO_CONTENT)
     else:
         raise ValidationError({"non_form_errors": {"no_token": "user has not authorized nylas"}})
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def send_new_email(request):
+    subject = request.data.get("subject")
+    body = request.data.get("body")
+    to = request.data.get("to")
+    # Do nothing if the user hasn't connected Nylas
+    try:
+        nylas = request.user.nylas
+    except NylasAuthAccount.DoesNotExist:
+        logger.warning(
+            "Attempted to send an email via Nylas "
+            "but the user does not have an active Nylas integration."
+        )
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    # Otherwise, init the Nylas Client
+    try:
+        nylas = APIClient(
+            settings.NYLAS_CLIENT_ID, settings.NYLAS_CLIENT_SECRET, nylas.access_token
+        )
+        draft = nylas.drafts.create()
+        draft.subject = subject
+        draft.body = body
+        draft.to = to
+        draft.send()
+        return Response(status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.exception(f"Error sending new draft to Nylas <{e}>")
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def reply_to_email(request):
+    body = request.data.get("body")
+    id = request.data.get("id")
+    # Do nothing if the user hasn't connected Nylas
+    try:
+        nylas = request.user.nylas
+    except NylasAuthAccount.DoesNotExist:
+        logger.warning(
+            "Attempted to send an email via Nylas "
+            "but the user does not have an active Nylas integration."
+        )
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    # Otherwise, init the Nylas Client
+    try:
+        nylas = APIClient(
+            settings.NYLAS_CLIENT_ID, settings.NYLAS_CLIENT_SECRET, nylas.access_token
+        )
+        thread = nylas.threads.get(id)
+        draft = thread.create_reply()
+        draft.body = body
+        draft.to = thread.from_
+        draft.cc = thread.cc
+        draft.bcc = thread.bcc
+        draft.send()
+        return Response(status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.exception(f"Error sending reply email to Nylas <{e}>")
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
 
 
 @api_view(["POST"])
@@ -1446,9 +1857,7 @@ class UserPasswordManagmentView(generics.GenericAPIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [
-        permissions.AllowAny,
-    ]
+    [permissions.AllowAny,]
 )
 def request_reset_link(request):
     """endpoint to request a password reset email (forgot password)"""
@@ -1482,9 +1891,7 @@ def request_reset_link(request):
 
 @api_view(["GET"])
 @permission_classes(
-    [
-        permissions.AllowAny,
-    ]
+    [permissions.AllowAny,]
 )
 def get_task_status(request):
     data = {}
@@ -1540,3 +1947,14 @@ class NoteTemplateViewSet(
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@permission_classes(
+    [permissions.AllowAny,]
+)
+def get_sso_data(request):
+    data = {}
+    data["client_id"] = settings.GOOGLE_CLIENT_ID
+    data["login_uri"] = settings.GOOGLE_LOGIN_URI
+    return Response(data=data)

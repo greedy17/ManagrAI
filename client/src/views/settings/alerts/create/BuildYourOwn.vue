@@ -462,6 +462,7 @@ import { ObjectField } from '@/services/crm'
 import draggable from 'vuedraggable'
 import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
+import { decryptData } from '../../../../encryption'
 export default {
   name: 'AlertsPage',
   components: {
@@ -633,7 +634,7 @@ export default {
         try {
           const res = await AlertTemplate.api.createAlertTemplate({
             ...this.alertTemplateForm.toAPI,
-            user: this.$store.state.user.id,
+            user: this.user.id,
             directToUsers: this.directToUsers,
           })
           this.$emit('close-builder')
@@ -969,8 +970,8 @@ export default {
   },
   computed: {
     hasRecapChannel() {
-      return this.$store.state.user.slackAccount
-        ? this.$store.state.user.slackAccount.recapChannel
+      return this.user.slackAccount
+        ? this.user.slackAccount.recapChannel
         : null
     },
     filteredFields() {
@@ -1005,9 +1006,12 @@ export default {
       return !!this.$store.state.user.slackRef
     },
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
     userCRM() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      console.log('this.$stote', this.$store)
       return this.$store.state.user.crm
     },
     alertFrequency: {

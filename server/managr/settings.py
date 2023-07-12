@@ -27,7 +27,6 @@ SECRET_KEY = _env_get_required("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = _env_get_required("DEBUG") == "True"
-
 if IN_DEV:
     SERVER_EMAIL = "Managr Support <support@mg.managr.ai>"
 elif IN_STAGING:
@@ -74,7 +73,6 @@ if EC2_PRIVATE_IP:
 if CURRENT_DOMAIN not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(CURRENT_DOMAIN)
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -97,6 +95,7 @@ INSTALLED_APPS = [
     "managr.hubspot",
     "managr.meetings",
     "managr.crm",
+    "managr.comms",
     # "managr.demo",
     # Django
     "django.contrib.admin",
@@ -221,11 +220,15 @@ USE_TZ = True
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_PAGINATION_CLASS": ("managr.core.pagination.PageNumberPagination"),
-    "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework.authentication.TokenAuthentication",),
+    "DEFAULT_AUTHENTICATION_CLASSES": ["managr.api.models.ExpiringTokenAuthentication",],
     "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
     "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
 }
 
+AUTHENTICATION_BACKENDS = [
+    "managr.api.models.EmailBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 #
 # Static files (CSS, JavaScript, Images)
 #
@@ -470,5 +473,15 @@ if USE_HUBSPOT:
 USE_OPEN_AI = os.environ.get("USE_OPEN_AI") == "True"
 if USE_OPEN_AI:
     OPEN_AI_SECRET = _env_get_required("OPEN_AI_SECRET")
+
+USE_SSO = os.environ.get("USE_SSO") == "True"
+if USE_SSO:
+    MICROSOFT_SECURITY_KEY = _env_get_required("MICROSOFT_SECRET_KEY")
+    GOOGLE_CLIENT_ID = _env_get_required("GOOGLE_CLIENT_ID")
+    GOOGLE_LOGIN_URI = _env_get_required("GOOGLE_LOGIN_URI")
+
+USE_NEWS_API = os.environ.get("USE_NEWS_API") == "True"
+if USE_NEWS_API:
+    NEWS_API_KEY = _env_get_required("NEWS_API_KEY")
 
 MAX_ATTEMPTS = 5

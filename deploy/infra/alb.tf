@@ -2,7 +2,6 @@ resource "aws_alb" "main" {
   name            = "managr-load-balancer"
   subnets         = aws_subnet.public.*.id
   security_groups = [aws_security_group.lb.id]
-
   tags = {
     "app" = "managr"
   }
@@ -64,6 +63,7 @@ resource "aws_alb_listener" "front_end_https" {
   port              = 443
   protocol          = "HTTPS"
   certificate_arn   = "arn:aws:acm:us-east-1:986523545926:certificate/07f76f44-4c27-4112-a768-d7ea0afd9e34"
+  ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
 
   default_action {
     target_group_arn = aws_alb_target_group.app["prod"].id
@@ -73,7 +73,7 @@ resource "aws_alb_listener" "front_end_https" {
 
 resource "tls_private_key" "managr" {
   algorithm = "RSA"
-  rsa_bits = 4096
+  rsa_bits  = 4096  # Use a 4096-bit RSA key for stronger encryption
 }
 
 resource "tls_self_signed_cert" "managr" {
@@ -92,6 +92,7 @@ resource "tls_self_signed_cert" "managr" {
     "digital_signature",
     "server_auth",
   ]
+
 }
 
 resource "aws_acm_certificate" "managr" {

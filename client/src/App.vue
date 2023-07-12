@@ -16,6 +16,7 @@ import { mapGetters, mapActions } from 'vuex'
 import VueScrollTo from 'vue-scrollto'
 
 import NavBar from '@/components/NavBar'
+import { decryptData } from './encryption'
 
 const routesWithoutNavBar = ['StoryReportDetail', 'PerformanceReportDetail', 'Home']
 
@@ -88,9 +89,11 @@ export default {
       return this.$store.getters.userIsLoggedIn
     },
     isOnboarding() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.onboarding
     },
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
   },

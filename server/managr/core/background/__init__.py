@@ -21,7 +21,11 @@ from django.db.models import Q
 from managr.alerts.models import AlertConfig, AlertInstance, AlertTemplate
 from managr.core import constants as core_consts
 from managr.core.models import User
-from managr.core.utils import get_summary_completion
+from managr.core.utils import (
+    get_summary_completion,
+    swap_submitted_data_labels,
+    clean_prompt_string,
+)
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce.adapter.models import ContactAdapter
 from managr.hubspot.adapter.models import HubspotContactAdapter
@@ -43,6 +47,7 @@ from managr.hubspot.routes import routes as hs_routes
 from managr.salesforce.background import emit_add_update_to_sf, emit_add_call_to_sf
 from managr.hubspot.tasks import emit_add_update_to_hs, emit_add_call_to_hs
 from managr.core.exceptions import _handle_response, ServerError, StopReasonLength
+from managr.zoom.zoom_helper import exceptions as zoom_exceptions
 
 logger = logging.getLogger("managr")
 
@@ -591,13 +596,13 @@ def process_current_alert_list(user_id):
 
 @background()
 def _process_calendar_meetings(user_id, slack_int, date):
-    from managr.zoom.zoom_helper import exceptions as zoom_exceptions
-
+    print("starting calendar check")
     user = User.objects.get(id=user_id)
     if user.has_nylas_integration:
         while True:
             try:
                 processed_data = _process_calendar_details(user_id, date)
+                print(processed_data)
                 if user.has_zoom_integration:
                     if date is None:
                         user_timezone = pytz.timezone(user.timezone)
@@ -613,8 +618,10 @@ def _process_calendar_meetings(user_id, slack_int, date):
                 logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
                 processed_data = None
                 break
+        print(processed_data)
         if processed_data is not None:
             workflows = MeetingWorkflow.objects.for_user(user, date)
+            print(workflows)
             slack_interaction_check = set(
                 [
                     workflow.slack_interaction
@@ -626,10 +633,8 @@ def _process_calendar_meetings(user_id, slack_int, date):
                 slack_int = list(slack_interaction_check)[0]
             for event in processed_data:
                 id = event.get("id", None)
-                meeting_data = {
-                    **event,
-                    "user": user,
-                }
+                original_id = id
+                meeting_data = {**event, "user": user, "original_id": id}
                 if user.has_zoom_integration:
                     meetings_by_topic = [
                         meeting for meeting in meetings if event["title"] == meeting["topic"]
@@ -638,7 +643,9 @@ def _process_calendar_meetings(user_id, slack_int, date):
                         meeting = meetings_by_topic[0]
                         meeting_data["id"] = meeting["id"]
                         id = meeting["id"]
-                workflow_check = workflows.filter(meeting__meeting_id=id).first()
+                workflow_check = workflows.filter(
+                    Q(meeting__meeting_id=id) | Q(meeting__meeting_id=original_id)
+                ).first()
                 register_check = should_register_this_meetings(user_id, event)
                 if workflow_check is None and register_check:
                     meeting_serializer = MeetingSerializer(data=meeting_data)
@@ -678,27 +685,28 @@ def _process_calendar_meetings(user_id, slack_int, date):
                     "You don't have any meeting for today... If that changes, click 'Sync Calendar'"
                 ),
             ]
-        try:
-            if slack_int:
-                timestamp, channel = slack_int.split("|")
-                slack_res = slack_requests.update_channel_message(
-                    channel,
-                    timestamp,
-                    user.organization.slack_integration.access_token,
-                    block_set=blocks,
-                )
-                slack_interaction = slack_int
-            else:
-                slack_res = slack_requests.send_channel_message(
-                    user.slack_integration.zoom_channel,
-                    user.organization.slack_integration.access_token,
-                    block_set=blocks,
-                )
-                slack_interaction = f"{slack_res['ts']}|{slack_res['channel']}"
-            workflows = MeetingWorkflow.objects.for_user(user, date)
-            workflows.update(slack_interaction=slack_interaction)
-        except Exception as e:
-            logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
+        if user.has_slack_integration:
+            try:
+                if slack_int:
+                    timestamp, channel = slack_int.split("|")
+                    slack_res = slack_requests.update_channel_message(
+                        channel,
+                        timestamp,
+                        user.organization.slack_integration.access_token,
+                        block_set=blocks,
+                    )
+                    slack_interaction = slack_int
+                else:
+                    slack_res = slack_requests.send_channel_message(
+                        user.slack_integration.zoom_channel,
+                        user.organization.slack_integration.access_token,
+                        block_set=blocks,
+                    )
+                    slack_interaction = f"{slack_res['ts']}|{slack_res['channel']}"
+                workflows = MeetingWorkflow.objects.for_user(user, date)
+                workflows.update(slack_interaction=slack_interaction)
+            except Exception as e:
+                logger.exception(f"Failed to send reminder message to {user.email} due to {e}")
     return
 
 
@@ -904,9 +912,7 @@ TIMEZONE_TASK_FUNCTION = {
     core_consts.NON_ZOOM_MEETINGS: emit_process_calendar_meetings,
     core_consts.CALENDAR_CHECK: emit_process_add_calendar_id,
     core_consts.WORKFLOW_CONFIG_CHECK: emit_process_workflow_config_check,
-    core_consts.MORNING_REFRESH: emit_morning_refresh_message,
     core_consts.MEETING_REMINDER: emit_process_send_meeting_reminder,
-    # core_consts.TRIAL_STATUS: emit_process_check_trial_status,
 }
 
 
@@ -1021,22 +1027,6 @@ def _process_change_team_lead(user_id):
     except Exception as e:
         logger.exception(f"Failed to change team lead for {user.team.name} due to <{e}>")
     return
-
-
-def swap_submitted_data_labels(data, fields):
-    api_key_data = {}
-    for label in data.keys():
-        try:
-            field_list = fields.filter(label__icontains=label)
-            field = None
-            for field_value in field_list:
-                if len(field_value.label) == len(label):
-                    field = field_value
-                    break
-            api_key_data[field.api_name] = data[label]
-        except Exception as e:
-            continue
-    return api_key_data
 
 
 WORD_TO_NUMBER = {
@@ -1243,22 +1233,6 @@ def set_name_field(resource, crm):
     return None
 
 
-def clean_prompt_string(prompt_string):
-    cleaned_string = (
-        prompt_string[prompt_string.index("{") : prompt_string.index("}") + 1]
-        .replace("\n\n", "")
-        .replace("\n ", "")
-        .replace("\n", "")
-        .replace("  ", "")
-        .replace("', '", '", "')
-        .replace("': '", '": "')
-    )
-    while "{  " in cleaned_string:
-        cleaned_string = cleaned_string.replace("{  ", "{ ")
-    cleaned_string = cleaned_string.replace("{ '", '{ "').replace("'}", '"}')
-    return cleaned_string
-
-
 def correct_data_keys(data):
     if "Company Name" in data.keys():
         data["Company name"] = data["Company Name"]
@@ -1326,8 +1300,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                 choice = r["choices"][0]
 
                 text = choice["text"]
-                cleaned_choice = clean_prompt_string(text)
-                data = eval(cleaned_choice)
+                data = clean_prompt_string(text)
                 name_field = set_name_field(resource_type, user.crm)
                 data = correct_data_keys(data)
                 resource_check = data[name_field].lower().split(" ")
@@ -1371,6 +1344,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                             form.save()
                         else:
                             has_error = True
+                            message = "We could not find an record type in your submission"
                             break
                     else:
                         if user.crm == "SALESFORCE":
@@ -1391,6 +1365,9 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
                     has_error = True
                 break
         except StopReasonLength:
+            logger.exception(
+                f"Retrying again due to token amount, amount currently at: {token_amount}"
+            )
             if token_amount <= 2000:
                 if workflow_id is None:
                     slack_res = slack_requests.update_channel_message(
@@ -1933,23 +1910,25 @@ def _process_send_summary_to_dm(payload, context):
 
 @background()
 def _process_add_call_analysis(workflow_id, summaries):
-    from managr.core.utils import max_token_calculator
     import httpx
 
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     timeout = 60.0
     prompt = core_consts.OPEN_AI_CALL_ANALYSIS_PROMPT(summaries, workflow.datetime_created.date())
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(workflow.user.email, prompt, token_amount=500)
     has_error = False
     attempts = 1
     text = None
+    tokens = 500
     while True:
+        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+            workflow.user.email, prompt, "You are an experience VP of Sales", token_amount=tokens
+        )
         try:
             with Variable_Client(timeout) as client:
-                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             r = _handle_response(r)
-            text = r.get("choices")[0].get("text")
+            text = r.get("choices")[0].get("message").get("content")
             break
         except StopReasonLength:
             if tokens >= 2000:
@@ -1974,19 +1953,27 @@ def _process_add_call_analysis(workflow_id, summaries):
                 error_message = ":no_entry_sign: Looks like we ran into an internal issue"
                 break
         except SyntaxError as e:
+            has_error = True
+            error_message = ":no_entry_sign: Looks like we ran into an internal issue"
             print(e)
             continue
         except httpx.ReadTimeout:
             logger.exception(f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}")
+            error_message = (
+                ":no_entry_sign: Looks like we ran into an issue communicating with Open AI"
+            )
             if timeout >= 120.0:
                 has_error = True
                 break
             else:
                 timeout += 30.0
         except Exception as e:
+            has_error = True
             logger.exception(f"Unknown error on call analysis for {str(workflow.id)} <{e}>")
+            error_message = f"Unknown error on call analysis: {e}"
     if has_error:
-        print("ERROR")
+        workflow.transcript_analysis = error_message
+        workflow.save()
         return
     else:
         workflow.transcript_analysis = text
@@ -2068,12 +2055,15 @@ def _process_send_ask_managr_to_dm(payload, context):
     timeout = 60.0
     while True:
         try:
-            body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, tokens)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email, prompt, "You are an experienced sales leader", token_amount=tokens
+            )
             with Variable_Client(timeout) as client:
-                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             r = _handle_response(r)
-            text = r.get("choices")[0].get("text")
+            print(r)
+            text = r.get("choices")[0].get("message").get("content")
             break
         except StopReasonLength:
             if tokens >= 2000:
@@ -2101,7 +2091,9 @@ def _process_send_ask_managr_to_dm(payload, context):
             print(e)
             continue
         except httpx.ReadTimeout:
-            logger.exception(f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}")
+            logger.exception(
+                f"Read timeout to Open AI from ask managr, trying again. TIMEOUT AT: {timeout}"
+            )
             if timeout >= 120.0:
                 has_error = True
                 break
@@ -2109,6 +2101,7 @@ def _process_send_ask_managr_to_dm(payload, context):
                 timeout += 30.0
         except Exception as e:
             logger.exception(f"Unknown error on ask managr <{e}>")
+            break
     if has_error:
         return
     blocks = [

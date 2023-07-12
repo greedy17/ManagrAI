@@ -1,8 +1,5 @@
 from django.conf import settings
 
-from managr.utils.misc import get_site_url
-
-
 USE_NYLAS = settings.USE_NYLAS
 NYLAS_CLIENT_ID = settings.NYLAS_CLIENT_ID if USE_NYLAS else None
 NYLAS_CLIENT_SECRET = settings.NYLAS_CLIENT_SECRET if USE_NYLAS else None
@@ -23,6 +20,7 @@ if settings.USE_OPEN_AI:
         "Authorization": f"Bearer {OPEN_AI_SECRET}",
     }
 OPEN_AI_COMPLETIONS_URI = "https://api.openai.com/v1/completions"
+OPEN_AI_CHAT_COMPLETIONS_URI = "https://api.openai.com/v1/chat/completions"
 OPEN_AI_EDIT_URI = "https://api.openai.com/v1/edits"
 
 OPEN_AI_SUMMARY_PROMPT = (
@@ -89,34 +87,32 @@ OPEN_AI_DEAL_REVIEW = (
 )
 
 OPEN_AI_TRANSCRIPT_PROMPT = (
-    lambda transcript: f"""'input': {transcript},'prompt': 'AI, summarize this 5 minute portion of a sales call transcript between rep and prospect. 
-    Include key details such as products & features discussed, customer questions, objections, customer pain points, competitors mentioned, timeline, decision-making process, next steps and amount. 
-    Keep in mind that this is just one of many portions of the call transcript. Output must be one paragraph and 500 (min) to 800 (max) characters in length. 
-    Output must also be in this format: Summary: <summary>'
-    """
+    lambda transcript: f"""'input': {transcript},'prompt': 'Analyze and summarize this section of a sales call transcript. 
+Keep summary within 500-800 characters, capturing key sales-related details such as: identified pain, value proposition, 
+product specifics, decision maker, decision process and criteria, internal champion, competitors, next steps, decision timeline, 
+plus any budget and cost details. The summary must be in paragraph form. You must use this format: \nSummary: <summary>'"""
 )
 
 OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
-    lambda input, crm_fields, date: f"""'input': {input}, 'prompt': 'Today is {date}. Based on the transcript summaries provided above, you must follow the instructions below: 
-1) Create one comprehensive summary of the call. The summary should only include information that would be relevant to a salesperson. Highlight key details (if they were discussed) such as: products & features, customer pain points, competitors, timeline to close, decision-making process, next steps and budget. The summary output should be one paragraph, not exceeding 2000 characters. Tone of the summary should be conversational, as if written by a sales rep.\n
-2) Then, you must fill in the CRM fields below based on this call transcript. Identify and extract accurate data for each applicable CRM field. For any fields not applicable, leave them empty.\n
-3) The output must be a python dictionary, the date format needs to be: year-month-day. The summary must be added to the dictionary using a key called summary.\nCRM fields: {crm_fields}'"""
+    lambda input, crm_fields, user: f"""'input': {input}, 'prompt': 'Consolidate and analyze the provided sales call transcript summaries. The sales rep on this call  is {user.first_name} from {user.organization.name}. You must complete the following tasks:
+1) Fill in all the relevant data from the transcript into the appropriate CRM fields:\n CRM fields: {crm_fields}\n Leave any non-applicable fields empty, any date must be converted to year-month-day format, and do not include quotes in the values. 
+2) Next, you will compose a concise and impactful summary of the sales call, as if you are the salesperson summarizing key takeaways for your team. Maintain relevance and sales-focused nuances. Make sure to Include what the next steps are at the end.
+3) The output of fields and summary must be a single Python dictionary. Ensure the summary is included in the Python dictionary as the key summary.'"""
 )
 
 OPEN_AI_CALL_ANALYSIS_PROMPT = (
     lambda summaries, date: f"""
-    Below are short summaries, summarizing parts of a sales call transcript from {date}. 
-    These summaries are in chronological order. Your are an experienced VP of Sales, follow the instructions below:\n
-    1. During the call, identify specific moments where the prospect exhibits high engagement\n
-    2. During the call, identify specific moments where the prospect exhibits disinterest\n
-    3. During the call, identify specific moments where the prospect has questions or concerns\n
-    4. Provide a sentiment analysis overview using a score and keep the explanation under 150 characters.\n
-    Response needs to be in this format:\n
-    High Engagement:\n
-    Disinterest:\n
-    Questions or Concerns:\n
-    Sentiment:\n
-    Summaries: {summaries}"""
+As an experienced VP of Sales, analyze the call transcript summaries from {date} and provide insights. 
+Identify high engagement instances and moments of disinterest. Note any expressed concerns or questions. 
+Estimate deal closure probability and predict a closing date, if applicable. Output tone should be direct, concise, and conversational. 
+Do not reference the summaries in the output. Structure your output as follows:\n
+High Engagement:\n
+Disinterest:\n
+Questions or Concerns:\n
+Sentiment:\n
+Likelihood to Close:\n
+Expected Closing Date:\n
+Summaries: {summaries}"""
 )
 
 OPEN_AI_EMAIL_DRAFT_WITH_INSTRUCTIONS = (
@@ -133,6 +129,28 @@ def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=500, temperature=Fa
         "prompt": prompt,
         "user": user_name,
     }
+    if token_amount:
+        body["max_tokens"] = token_amount
+    if temperature:
+        body["temperature"] = temperature
+    if top_p:
+        body["top_p"] = top_p
+    return body
+
+
+def OPEN_AI_CHAT_COMPLETIONS_BODY(
+    user_name, prompt, system_role=False, token_amount=2000, temperature=False, top_p=False,
+):
+    body = {
+        "model": "gpt-4",
+        "messages": [{"role": "user", "content": prompt},],
+        "user": user_name,
+    }
+    if system_role:
+
+        first_message = [{"role": "system", "content": system_role}]
+        first_message.extend(body["messages"])
+        body["messages"] = first_message
     if token_amount:
         body["max_tokens"] = token_amount
     if temperature:
@@ -165,6 +183,7 @@ def OPEN_AI_ASK_MANAGR_PROMPT(user_id, prompt, resource_type, resource_id):
     from managr.hubspot.routes import routes as hs_routes
     from datetime import datetime
 
+    prompt = prompt.lower().replace("ask managr,", "").replace("ask managr ", "")
     CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
     user = User.objects.get(id=user_id)
     resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(id=resource_id)
@@ -191,19 +210,24 @@ def OPEN_AI_ASK_MANAGR_PROMPT(user_id, prompt, resource_type, resource_id):
             data_from_resource["summary"] = workflow_check.transcript_summary
         if workflow_check.transcript_analysis:
             data_from_resource["analysis"] = workflow_check.transcript_analysis
-    body = f"""Today's date is {today}. Analyze this CRM data:\n
-    CRM data: {data_from_resource}\n
-    Based on your analysis of the CRM data, answer the following question / complete this requested task: {prompt}:\n
-The sales represetative asking this question or request is {user.first_name} and works for {user.organization.name}.\n
+    body = f"""Today's date is {today}. Respond to {user.first_name}’s request using relevant CRM data provided.
+\nCRM_data: {data_from_resource}
+\nRequest: {prompt}\n
+Your response should be casual yet assertive, echoing the style of an experienced sales leader. 
+The tone should be friendly and focused on value with succinct sentences. Output must be a regular message, not an email, unless specified. 
+Limit your response to under 1,000 characters.
 """
     return body
 
 
 # OAuth permission scopes to request from Nylas
-SCOPE_EMAIL_CALENDAR = "calendar"
+SCOPE_CALENDAR = "calendar"
+# SCOPE_EMAIL = "email"
 
-
-ALL_SCOPES = [SCOPE_EMAIL_CALENDAR]
+ALL_SCOPES = [
+    SCOPE_CALENDAR,
+    # SCOPE_EMAIL,
+]
 ALL_SCOPES_STR = ", ".join(ALL_SCOPES)
 
 
@@ -263,7 +287,6 @@ NOTIFICATION_CLASS_CHOICES = (
     (NOTIFICATION_CLASS_EMAIL, "EMAIL",),
     (NOTIFICATION_CLASS_SLACK, "SLACK",),
 )
-
 
 NOTIFICATION_RESOURCE_ACCOUNT = "ACCOUNT"
 NOTIFICATION_RESOURCE_ORGANIZATION = "ORGANIZATION"
@@ -374,7 +397,7 @@ TIMEZONE_TASK_TIMES = {
     NON_ZOOM_MEETINGS: {"HOUR": 7, "MINUTE": 30},
     CALENDAR_CHECK: {"HOUR": 5, "MINUTE": 30},
     MEETING_REMINDER: {"HOUR": 17, "MINUTE": 30},
-    TRIAL_STATUS: {"HOUR": 5, "MINUTE": 30},
+    # TRIAL_STATUS: {"HOUR": 5, "MINUTE": 30},
 }
 
 

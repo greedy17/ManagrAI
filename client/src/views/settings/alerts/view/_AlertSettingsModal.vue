@@ -205,6 +205,7 @@ import User from '@/services/users'
 import SlackOAuth, { SlackListResponse } from '@/services/slack'
 import { AlertConfigForm, AlertConfig } from '@/services/alerts/'
 import { CollectionManager } from '@thinknimble/tn-models'
+import { decryptData } from '../../../../encryption'
 
 export default {
   /**
@@ -453,6 +454,7 @@ export default {
       }
     },
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
     weeklyOrMonthly() {

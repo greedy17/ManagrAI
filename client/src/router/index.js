@@ -27,6 +27,11 @@ export default new Router({
       component: () => import('@/views/auth/Login')
     },
     {
+      path: '/loginsignup',
+      name: 'LoginOrSignup',
+      component: () => import('@/views/auth/LoginOrSignup')
+    },
+    {
       path: '/admin-registration',
       name: 'AdminRegistration',
       component: () => import('@/views/auth/AdminRegistration')
@@ -35,6 +40,21 @@ export default new Router({
       path: '/register',
       name: 'Register',
       component: () => import('@/views/auth/LeadershipCode')
+    },
+    {
+      path: '/register-selection',
+      name: 'RegisterSelection',
+      component: () => import('@/views/auth/RegisterSelection')
+    },
+    {
+      path: '/google-register',
+      name: 'GoogleRegister',
+      component: () => import('@/views/auth/GoogleRegister')
+    },
+    {
+      path: '/auth/callback',
+      name: 'AuthCallback',
+      component: () => import('@/views/auth/AuthCallback'),
     },
     {
       path: '/activation/:userId/:magicToken',

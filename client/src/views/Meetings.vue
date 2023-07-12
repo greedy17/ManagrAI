@@ -311,6 +311,7 @@ import Zoom from '@/services/zoom/account'
 import MeetingWorkflow from '@/components/MeetingWorkflow'
 import UpdateForm from '@/components/updateForm/'
 import User from '@/services/users'
+import { decryptData } from '../encryption'
 
 export default {
   name: 'Meetings',
@@ -424,15 +425,20 @@ export default {
   },
   computed: {
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
     userCRM() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.crm
     },
     hasZoomIntegration() {
-      return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      // return !!decryptedUser.zoomAccount && this.$store.state.user.hasZoomIntegration
+      return this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
     },
     hasProducts() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.organizationRef.hasProducts
     },
     meetings() {

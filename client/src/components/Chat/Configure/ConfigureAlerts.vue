@@ -378,6 +378,7 @@ import DealRotting from '@/views/settings/alerts/create/templates/DealRotting.vu
 import UpdateForecast from '@/views/settings/alerts/create/templates/UpdateForecast.vue'
 import LogZoom from '@/views/settings/alerts/create/templates/LogZoom.vue'
 import ZoomRecap from '@/views/settings/alerts/create/templates/ZoomRecap.vue'
+import { decryptData } from '../../../encryption'
 
 export default {
   name: 'ConfigureAlerts',
@@ -559,12 +560,9 @@ export default {
         })
     },
     async deleteWorkflow(id) {
-      console.log('hit upper')
       this.deletedTitle(id)
       try {
-        console.log(1)
         await AlertTemplate.api.deleteAlertTemplate(id)
-        console.log(2)
         this.$router.go()
       } catch (e) {
         this.$toast('Error removing workflow', {
@@ -619,9 +617,11 @@ export default {
   },
   computed: {
     isPaid() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.organizationRef.isPaid
     },
     isOnboarding() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.onboarding
     },
     // hasZoomChannel() {
@@ -633,9 +633,11 @@ export default {
     //   return this.$store.state.user.slackAccount
     // },
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
     userCRM() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.crm
     },
   },

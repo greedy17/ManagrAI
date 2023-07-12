@@ -17,7 +17,14 @@
         </div>
         <div style="margin-bottom: 4px" class="even-row">
           <h4 style="cursor: not-allowed" v-if="!addingNote">Total: {{ notes.length }}</h4>
-          <h4 class="new-note" style="background-color: #41b883;" @click="addingNote = !addingNote" v-if="!addingNote">New Note</h4>
+          <h4
+            class="new-note"
+            style="background-color: #41b883"
+            @click="addingNote = !addingNote"
+            v-if="!addingNote"
+          >
+            New Note
+          </h4>
           <div class="row-section" v-else>
             <h4
               @click="addingNote = !addingNote"
@@ -173,7 +180,6 @@
               <div v-else-if="field.apiName === 'dealstage' /* || field.apiName === 'StageName'*/">
                 <div v-if="savedPipeline">
                   <label class="label">{{ field.referenceDisplayLabel }}</label>
-
                   <Multiselect
                     v-model="currentVals[field.apiName]"
                     :options="
@@ -1123,11 +1129,7 @@
           </div>
           <img
             src="@/assets/images/close.svg"
-            style="height: 1.5rem;
-              margin-top: -1.5rem;
-              cursor: pointer;
-              filter: invert(45%);
-            "
+            style="height: 1.5rem; margin-top: -1.5rem; cursor: pointer; filter: invert(45%)"
             @click="resetEdit"
             alt=""
           />
@@ -2048,23 +2050,23 @@
                 alt=""
               /><img v-else src="@/assets/images/rightArrow.svg" class="invert" alt="" />
             </p> -->
-              <button
-                @click="
-                  allObjects(
-                    'loadAllOpps',
-                    userCRM === 'SALESFORCE' ? 'All Opportunities' : 'All Deals',
-                    'allOpps',
-                    userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
-                    'Opportunity',
-                  )
-                "
-                class="list-button"
-              >
-                All {{ this.userCRM === 'SALESFORCE' ? 'Opportunities' : 'Deals' }}
-                <span class="green">
-                  {{ allOpps && allOpps.length ? allOpps.length : 0 }}
-                </span>
-              </button>
+            <button
+              @click="
+                allObjects(
+                  'loadAllOpps',
+                  userCRM === 'SALESFORCE' ? 'All Opportunities' : 'All Deals',
+                  'allOpps',
+                  userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal',
+                  'Opportunity',
+                )
+              "
+              class="list-button"
+            >
+              All {{ this.userCRM === 'SALESFORCE' ? 'Opportunities' : 'Deals' }}
+              <span class="green">
+                {{ allOpps && allOpps.length ? allOpps.length : 0 }}
+              </span>
+            </button>
             <button
               @click="goToWorkflow(template.id, userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal')"
               class="list-button"
@@ -2079,23 +2081,23 @@
             <div class="list-section__title flex-row-spread">
               <p>{{ userCRM == 'SALESFORCE' ? 'Account' : 'Company' }}</p>
             </div>
-              <button
-                @click="
-                  allObjects(
-                    'loadAllAccounts',
-                    userCRM === 'SALESFORCE' ? 'All Accounts' : 'All Companies',
-                    'allAccounts',
-                    userCRM === 'SALESFORCE' ? 'Account' : 'Company',
-                    'Account',
-                  )
-                "
-                class="list-button"
-              >
-                All {{ this.userCRM === 'SALESFORCE' ? 'Accounts' : 'Companies' }}
-                <span class="green">
-                  {{ allAccounts && allAccounts.length ? allAccounts.length : 0 }}
-                </span>
-              </button>
+            <button
+              @click="
+                allObjects(
+                  'loadAllAccounts',
+                  userCRM === 'SALESFORCE' ? 'All Accounts' : 'All Companies',
+                  'allAccounts',
+                  userCRM === 'SALESFORCE' ? 'Account' : 'Company',
+                  'Account',
+                )
+              "
+              class="list-button"
+            >
+              All {{ this.userCRM === 'SALESFORCE' ? 'Accounts' : 'Companies' }}
+              <span class="green">
+                {{ allAccounts && allAccounts.length ? allAccounts.length : 0 }}
+              </span>
+            </button>
             <button
               @click="goToWorkflow(template.id, userCRM === 'SALESFORCE' ? 'Account' : 'Company')"
               class="list-button"
@@ -2110,17 +2112,17 @@
             <div class="list-section__title flex-row-spread">
               <p>Contact</p>
             </div>
-              <button
-                @click="
-                  allObjects('loadAllContacts', 'All Contacts', 'allContacts', 'Contact', 'Contact')
-                "
-                class="list-button"
-              >
-                All Contacts
-                <span class="green">
-                  {{ allContacts && allContacts.length ? allContacts.length : 0 }}
-                </span>
-              </button>
+            <button
+              @click="
+                allObjects('loadAllContacts', 'All Contacts', 'allContacts', 'Contact', 'Contact')
+              "
+              class="list-button"
+            >
+              All Contacts
+              <span class="green">
+                {{ allContacts && allContacts.length ? allContacts.length : 0 }}
+              </span>
+            </button>
             <button
               @click="goToWorkflow(template.id, 'Contact')"
               class="list-button"
@@ -2135,16 +2137,16 @@
             <div v-if="userCRM === 'SALESFORCE'" class="list-section__title flex-row-spread">
               <p>Lead</p>
             </div>
-              <button
-                v-if="userCRM === 'SALESFORCE'"
-                @click="allObjects('loadAllLeads', 'All Leads', 'allLeads', 'Lead', 'Lead')"
-                class="list-button"
-              >
-                All Leads
-                <span class="green">
-                  {{ allLeads && allLeads.length ? allLeads.length : 0 }}
-                </span>
-              </button>
+            <button
+              v-if="userCRM === 'SALESFORCE'"
+              @click="allObjects('loadAllLeads', 'All Leads', 'allLeads', 'Lead', 'Lead')"
+              class="list-button"
+            >
+              All Leads
+              <span class="green">
+                {{ allLeads && allLeads.length ? allLeads.length : 0 }}
+              </span>
+            </button>
             <button
               @click="goToWorkflow(template.id, 'Lead')"
               class="list-button"
@@ -2846,12 +2848,8 @@
                 label="label"
                 @select="
                   setDropdownValue({
-                    val:
-                      field.apiName === 'StageName'
-                        ? $event.value
-                        : field.apiName === 'dealstage' ? [$event.label, $event.id] 
-                        : $event.id, 
-                    oppId: opp.id, 
+                    val: field.apiName === 'StageName' ? $event.value : field.apiName === 'dealstage' ? [$event.label, $event.id] : $event.id,
+                    oppId: opp.id,
                     oppIntegrationId: opp.integration_id,
                   })
                 "
@@ -3079,6 +3077,7 @@ import Filters from '@/components/Filters'
 import FilterSelection from '@/components/FilterSelection'
 import User from '@/services/users'
 import Table from '@/components/Table'
+import { decryptData, encryptData } from '../encryption'
 
 export default {
   name: 'Pipelines',
@@ -3276,6 +3275,10 @@ export default {
       return extras
     },
     hasExtraFields() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      // const accountRef = decryptedUser.salesforceAccountRef
+      //   ? decryptedUser.salesforceAccountRef
+      //   : decryptedUser.hubspotAccountRef
       const accountRef = this.$store.state.user.salesforceAccountRef
         ? this.$store.state.user.salesforceAccountRef
         : this.$store.state.user.hubspotAccountRef
@@ -3283,6 +3286,7 @@ export default {
       return extraFields && extraFields.length ? extraFields : []
     },
     hasProducts() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.organizationRef.hasProducts
     },
     allPicklistOptions() {
@@ -3325,21 +3329,27 @@ export default {
       return this.$store.state.allLeads
     },
     templateOpps() {
-      return this.templates.list.filter(temp => temp.resourceType === (this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'))
+      return this.templates.list.filter(
+        (temp) => temp.resourceType === (this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'),
+      )
     },
     templateAccs() {
-      return this.templates.list.filter(temp => temp.resourceType === (this.userCRM === 'SALESFORCE' ? 'Account' : 'Company'))
+      return this.templates.list.filter(
+        (temp) => temp.resourceType === (this.userCRM === 'SALESFORCE' ? 'Account' : 'Company'),
+      )
     },
     templateContacts() {
-      return this.templates.list.filter(temp => temp.resourceType === 'Contact')
+      return this.templates.list.filter((temp) => temp.resourceType === 'Contact')
     },
     templateLeads() {
-      return this.templates.list.filter(temp => temp.resourceType === 'Lead')
+      return this.templates.list.filter((temp) => temp.resourceType === 'Lead')
     },
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
     userCRM() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.crm
     },
     filteredWorkflows: {
@@ -3379,16 +3389,16 @@ export default {
       }
     },
     syncDay() {
-      if (this.$store.state.user.salesforceAccountRef.lastSyncTime) {
-        return this.formatDateTime(this.$store.state.user.salesforceAccountRef.lastSyncTime)
+      if (this.user.salesforceAccountRef.lastSyncTime) {
+        return this.formatDateTime(this.user.salesforceAccountRef.lastSyncTime)
           .substring(
-            this.formatDateTime(this.$store.state.user.salesforceAccountRef.lastSyncTime).indexOf(
+            this.formatDateTime(this.user.salesforceAccountRef.lastSyncTime).indexOf(
               '/',
             ) + 1,
           )
           .substring(
             0,
-            this.formatDateTime(this.$store.state.user.salesforceAccountRef.lastSyncTime).indexOf(
+            this.formatDateTime(this.user.salesforceAccountRef.lastSyncTime).indexOf(
               '/',
             ),
           )
@@ -3424,7 +3434,10 @@ export default {
           this.objectName = 'allOpps'
           this.resourceName = this.userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'
           this.baseResourceType = 'Opportunity'
-        } else if (this.$route.params.title === 'Account' || this.$route.params.title === 'Company') {
+        } else if (
+          this.$route.params.title === 'Account' ||
+          this.$route.params.title === 'Company'
+        ) {
           this.loadObject = 'loadAllAccounts'
           this.currentList = this.userCRM === 'SALESFORCE' ? 'All Accounts' : 'All Companies'
           this.objectName = 'allAccounts'
@@ -3457,6 +3470,7 @@ export default {
     if (this.userCRM === 'SALESFORCE') {
       this.getRecords()
     }
+    this.$store.dispatch('loadAllPicklists')
     this.templates.refresh()
   },
   beforeMount() {
@@ -3563,9 +3577,13 @@ export default {
     },
     noClosedWorkflow(template) {
       if (template.resourceType === 'Deal') {
-        return template.sobjectInstances.filter(instance => instance.dealstage !== 'closedlost' && instance.dealstage !== 'closedwon').length
+        return template.sobjectInstances.filter(
+          (instance) => instance.dealstage !== 'closedlost' && instance.dealstage !== 'closedwon',
+        ).length
       } else if (template.resourceType === 'Opportunity') {
-        return template.sobjectInstances.filter(instance => instance.stage !== 'ClosedLost' && instance.stage !== 'ClosedWon').length
+        return template.sobjectInstances.filter(
+          (instance) => instance.stage !== 'ClosedLost' && instance.stage !== 'ClosedWon',
+        ).length
       } else {
         return template.sobjectInstances.length
       }
@@ -3665,26 +3683,22 @@ export default {
         }
       } else {
         if (this.userCRM === 'SALESFORCE') {
-        if (this.resourceName === 'Opportunity') {
-          this.$store.dispatch(this.loadObject, [
-            ...this.filters,
-          ])
-        } else if (this.resourceName === 'Account') {
-          this.$store.dispatch(this.loadObject)
+          if (this.resourceName === 'Opportunity') {
+            this.$store.dispatch(this.loadObject, [...this.filters])
+          } else if (this.resourceName === 'Account') {
+            this.$store.dispatch(this.loadObject)
+          } else {
+            this.$store.dispatch(this.loadObject)
+          }
         } else {
-          this.$store.dispatch(this.loadObject)
+          if (this.resourceName === 'Deal') {
+            this.$store.dispatch(this.loadObject, [...this.filters])
+          } else if (this.resourceName === 'Company') {
+            this.$store.dispatch(this.loadObject)
+          } else {
+            this.$store.dispatch(this.loadObject)
+          }
         }
-      } else {
-        if (this.resourceName === 'Deal') {
-          this.$store.dispatch(this.loadObject, [
-            ...this.filters,
-          ])
-        } else if (this.resourceName === 'Company') {
-          this.$store.dispatch(this.loadObject)
-        } else {
-          this.$store.dispatch(this.loadObject)
-        }
-      }
       }
     },
     changeCurrentRow(i, cell) {
@@ -3874,6 +3888,8 @@ export default {
     },
     setOpps() {
       User.api.getUser(this.user.id).then((response) => {
+        // const encrypted = encryptData(response, process.env.VUE_APP_SECRET_KEY)
+        // this.$store.commit('UPDATE_USER', encrypted)
         this.$store.commit('UPDATE_USER', response)
       })
     },
@@ -5160,7 +5176,7 @@ export default {
           const objectNames = ['Opportunity', 'Deal', 'Account', 'Company', 'Contact', 'Lead']
           if (objectNames.includes(this.$route.params.id)) {
             this.goToPipeline()
-          } else  {
+          } else {
             this.$toast('Error gathering workflow!', {
               timeout: 2000,
               position: 'top-left',
@@ -5199,11 +5215,11 @@ export default {
         this.showList = false
         if (this.storedFilters.length) {
           this.storedFilters[3].reversed
-          ? this.sortOppsReverse(
-            this.storedFilters[0],
-            this.storedFilters[1],
-            this.storedFilters[2],
-            )
+            ? this.sortOppsReverse(
+                this.storedFilters[0],
+                this.storedFilters[1],
+                this.storedFilters[2],
+              )
             : this.sortOpps(this.storedFilters[0], this.storedFilters[1], this.storedFilters[2])
         }
       }
@@ -5303,32 +5319,65 @@ export default {
         // updateOppForm and createOppForm should be updateForm and createForm
         // getAllForms should be called on object change
         if (this.userCRM === 'SALESFORCE') {
-          console.log('res', res)
           this.updateOppForm = res.filter(
-            (obj) => obj.formType === 'UPDATE' && obj.resource === (this.$route.params && this.$route.params.title ? this.$route.params.title : this.resourceName),
+            (obj) =>
+              obj.formType === 'UPDATE' &&
+              obj.resource ===
+                (this.$route.params && this.$route.params.title
+                  ? this.$route.params.title
+                  : this.resourceName),
           )
           this.createOppForm = res
-            .filter((obj) => obj.formType === 'CREATE' && obj.resource === (this.$route.params && this.$route.params.title ? this.$route.params.title : this.resourceName))[0]
+            .filter(
+              (obj) =>
+                obj.formType === 'CREATE' &&
+                obj.resource ===
+                  (this.$route.params && this.$route.params.title
+                    ? this.$route.params.title
+                    : this.resourceName),
+            )[0]
             .fieldsRef.filter(
               (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
             )
           stageGateForms = res.filter(
-            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === (this.$route.params && this.$route.params.title ? this.$route.params.title : this.resourceName),
+            (obj) =>
+              obj.formType === 'STAGE_GATING' &&
+              obj.resource ===
+                (this.$route.params && this.$route.params.title
+                  ? this.$route.params.title
+                  : this.resourceName),
           )
           this.createProductForm = res.filter(
             (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',
           )[0].fieldsRef
         } else if (this.userCRM === 'HUBSPOT') {
           this.updateOppForm = res.filter(
-            (obj) => obj.formType === 'UPDATE' && obj.resource === (this.$route.params && this.$route.params.title ? this.$route.params.title : this.resourceName),
+            (obj) =>
+              obj.formType === 'UPDATE' &&
+              obj.resource ===
+                (this.$route.params && this.$route.params.title
+                  ? this.$route.params.title
+                  : this.resourceName),
           )
           this.createOppForm = res
-            .filter((obj) => obj.formType === 'CREATE' && obj.resource === (this.$route.params && this.$route.params.title ? this.$route.params.title : this.resourceName))[0]
+            .filter(
+              (obj) =>
+                obj.formType === 'CREATE' &&
+                obj.resource ===
+                  (this.$route.params && this.$route.params.title
+                    ? this.$route.params.title
+                    : this.resourceName),
+            )[0]
             .fieldsRef.filter(
               (field) => field.apiName !== 'meeting_type' && field.apiName !== 'meeting_comments',
             )
           stageGateForms = res.filter(
-            (obj) => obj.formType === 'STAGE_GATING' && obj.resource === (this.$route.params && this.$route.params.title ? this.$route.params.title : this.resourceName),
+            (obj) =>
+              obj.formType === 'STAGE_GATING' &&
+              obj.resource ===
+                (this.$route.params && this.$route.params.title
+                  ? this.$route.params.title
+                  : this.resourceName),
           )
           // this.createProductForm = res.filter(
           //   (obj) => obj.formType === 'CREATE' && obj.resource === 'OpportunityLineItem',

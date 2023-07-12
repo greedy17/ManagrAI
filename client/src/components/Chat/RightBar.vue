@@ -10,7 +10,7 @@
         Pipeline
       </div>
       <div
-        @click="switchMainView('email')"
+        style="cursor: not-allowed"
         :class="{ activeswitch: mainView === 'email' }"
         class="switch-item"
       >
@@ -25,7 +25,7 @@
           <div class="elipsis-text">
             <span class="icon-bg">
               <img
-                @click="selectedOpp = null"
+                @click="deselectOpp"
                 src="@/assets/images/back.svg"
                 height="16px;width:16px"
                 alt=""
@@ -46,6 +46,14 @@
             />
 
             <font-awesome-icon
+              v-if="userCRM === 'HUBSPOT'"
+              style="height: 20px; width: 20px; color: #ff7a59"
+              icon="fa-brands fa-hubspot"
+              @click="openInCrm(selectedOpp.integration_id)"
+            />
+
+            <font-awesome-icon
+              v-else
               style="height: 24px; width: 24px; color: #0d9dda"
               icon="fa-brands fa-salesforce"
               @click="openInCrm(selectedOpp.integration_id)"
@@ -79,7 +87,12 @@
           <div class="input">
             <img style="cursor: text" src="@/assets/images/search.svg" height="16px" alt="" />
 
-            <input class="search-input" v-model="searchText" :placeholder="`Search by name`" />
+            <input
+              @keydown.enter="loadFromEnter"
+              class="search-input"
+              v-model="searchText"
+              :placeholder="`Search by name`"
+            />
             <img
               v-show="searchText"
               @click="clearText"
@@ -222,7 +235,7 @@
                     class="save-close"
                   >
                     <div @click="addFilter()" class="save">
-                      <span v-if="!inlineLoader">&#x2713;</span>
+                      <span>&#x2713;</span>
                     </div>
                     <div @click="clearFilter" class="close">
                       <span>x</span>
@@ -237,7 +250,7 @@
     </header>
     <div class="switcher" v-if="selectedOpp">
       <div @click="switchView('crm')" :class="{ activeswitch: view === 'crm' }" class="switch-item">
-        <img src="@/assets/images/crmlist.svg" height="16px" alt="" />
+        <img src="@/assets/images/crmlist.svg" height="12px" alt="" />
         Details
       </div>
       <div
@@ -267,7 +280,18 @@
         <div class="absolute-img">
           <img src="@/assets/images/settings.svg" height="18px" alt="" />
         </div>
-        <div>
+        <div
+          style="
+            border: 1px solid #eeeeee;
+            background-color: white;
+            padding-left: 1rem;
+            width: 99.75%;
+            margin-left: 0.5px;
+            border-radius: 5px;
+            height: 100%;
+            overflow-y: scroll;
+          "
+        >
           <div v-for="field in oppFields" :key="field.id" style="margin-bottom: 1rem">
             <p style="font-size: 12px" class="gray-text">
               {{ field.label }}
@@ -278,19 +302,37 @@
               v-if="!editing || activeField !== field.id"
               class="field"
             >
+              <!-- {{ field.dataType }} -->
               {{
-                selectedOpp['secondary_data'][field.apiName]
-                  ? selectedOpp['secondary_data'][field.apiName]
-                  : '-'
+                field.apiName === 'dealstage'
+                  ? field.options[0][selectedOpp['secondary_data'].pipeline].stages.filter(
+                      (stage) => stage.id === selectedOpp['secondary_data'][field.apiName],
+                    )[0].label
+                  : field.dataType === 'Datetime'
+                  ? formatDateTime(selectedOpp['secondary_data'][field.apiName])
+                  : field.dataType === 'Date'
+                  ? formatDateTime(selectedOpp['secondary_data'][field.apiName])
+                  : field.label === 'Owner' || field.label === 'Deal owner'
+                  ? selectedOpp.owner_ref.full_name
+                  : selectedOpp['secondary_data'][field.apiName] || '-'
               }}
             </div>
             <div style="padding-right: 0.5rem" v-else>
               <InlineFieldEditor
-                :inlinePlaceholder="selectedOpp['secondary_data'][field.apiName]"
+                :inlinePlaceholder="
+                  field.apiName === 'dealstage'
+                    ? field.options[0][selectedOpp['secondary_data'].pipeline].stages.filter(
+                        (stage) => stage.id === selectedOpp['secondary_data'][field.apiName],
+                      )[0].label
+                    : field.label === 'Owner' || field.label === 'Deal owner'
+                    ? selectedOpp.owner_ref.full_name
+                    : selectedOpp['secondary_data'][field.apiName]
+                "
                 :dataType="field.dataType"
                 :apiName="field.apiName"
                 :integrationId="selectedOpp.integrationId"
                 :resourceId="selectedOpp.id"
+                :resource="selectedOpp"
                 :resourceType="userCRM === 'SALESFORCE' ? 'Opportunity' : 'Deal'"
                 :field="field"
                 :showing="editing"
@@ -301,9 +343,15 @@
           </div>
         </div>
       </div>
-      <div v-show="view === 'notes'" class="selected-opp-section">
+      <div
+        v-for="(notes, month) in sortedNotes"
+        :key="month"
+        v-show="view === 'notes'"
+        class="selected-opp-section"
+      >
         <h4 style="margin-top: 0; background-color: white" class="selected-opp">
-          June 2023 <img src="@/assets/images/dropdown.svg" height="14px" alt="" />
+          {{ month }}
+          <!-- <img src="@/assets/images/dropdown.svg" height="14px" alt="" /> -->
         </h4>
         <section v-if="notes.length">
           <div v-for="note in notes" :key="note.id">
@@ -347,12 +395,19 @@
 
     <div class="opp-scroll-container" v-else>
       <div
+        @mouseenter="setTooltip(opp.id)"
+        @mouseleave="removeTooltip"
         v-for="opp in opportunities"
         class="opp-container"
         @click="changeSelectedOpp(opp)"
         :key="opp.id"
       >
-        <p style="margin: 0">{{ opp.name }}</p>
+        <p style="margin: 0">
+          {{ opp.name }}
+        </p>
+        <div :class="{ 'showing-tooltip': showTooltip && hoverId === opp.id }" class="tooltip">
+          {{ opp.name }}
+        </div>
       </div>
       <div style="margin-bottom: 0.25rem" class="space-between">
         <button
@@ -376,17 +431,18 @@ import SlackOAuth from '@/services/slack'
 import { CRMObjects } from '@/services/crm'
 import CollectionManager from '@/services/collectionManager'
 import InlineFieldEditor from '@/components/Chat/InlineFieldEditor'
-import Tooltip from './Tooltip.vue'
+import { decryptData } from '../../encryption'
 
 export default {
   name: 'RightBar',
   components: {
-    Tooltip,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     InlineFieldEditor,
   },
   data() {
     return {
+      hoverId: null,
+      showTooltip: false,
       view: 'crm',
       mainView: 'pipeline',
       stageValidationFields: {},
@@ -394,6 +450,7 @@ export default {
       loadingNotes: false,
       loadingMore: false,
       notes: [],
+      sortedNotes: [],
       editing: false,
       activeField: null,
       oppsLoading: false,
@@ -478,7 +535,7 @@ export default {
           name: 'Name',
           dataType: 'text',
           icon: 'fa-signature',
-          apiName: 'Name',
+          apiName: `${this.userCRM === 'SALESFORCE' ? 'Name' : 'dealname'}`,
           operator: null,
           value: null,
           operatorLabel: null,
@@ -487,7 +544,7 @@ export default {
           name: 'Stage',
           dataType: 'text',
           icon: 'fa-stairs',
-          apiName: 'StageName',
+          apiName: `${this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage'}`,
           operator: null,
           value: null,
           operatorLabel: null,
@@ -496,7 +553,7 @@ export default {
           name: 'Close date',
           dataType: 'date',
           icon: 'fa-calendar-plus',
-          apiName: 'CloseDate',
+          apiName: `${this.userCRM === 'SALESFORCE' ? 'CloseDate' : 'closedate'}`,
           operator: null,
           value: null,
           operatorLabel: null,
@@ -505,7 +562,7 @@ export default {
           name: 'Amount',
           dataType: 'number',
           icon: 'fa-sack-dollar',
-          apiName: 'Amount',
+          apiName: `${this.userCRM === 'SALESFORCE' ? 'Amount' : 'amount'}`,
           operator: null,
           value: null,
           operatorLabel: null,
@@ -553,8 +610,61 @@ export default {
     selectedOpp: 'getNotes',
   },
   methods: {
-    test(log) {
-      console.log('log', log)
+    test() {
+      console.log('log', this.user)
+    },
+    deselectOpp() {
+      this.selectedOpp = null
+      this.$store.dispatch('setCurrentOpp', null)
+    },
+    setSortedNotes() {
+      const sortedObjects = this.notes.sort((a, b) => {
+        const dateA = new Date(a.submission_date)
+        const dateB = new Date(b.submission_date)
+        return dateB - dateA // Sort in descending order
+      })
+
+      const sections = {}
+
+      sortedObjects.forEach((obj) => {
+        const date = new Date(obj.submission_date)
+        const month = `${date.toLocaleString('default', { month: 'long' })} ${date.getFullYear()}`
+
+        if (!sections[month]) {
+          sections[month] = []
+        }
+
+        sections[month].push(obj)
+      })
+      this.sortedNotes = sections
+      // return sections;
+    },
+    setTooltip(id) {
+      this.hoverId = id
+
+      setTimeout(() => {
+        this.showTooltip = true
+      }, 2000)
+    },
+    removeTooltip() {
+      this.showTooltip = false
+      this.hoverId = null
+    },
+    formatDate(input) {
+      var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
+      if (!input || !input.match(pattern)) {
+        return '-'
+      }
+      const replace = input.replace(pattern, '$2/$3/$1')
+      return this.userCRM === 'HUBSPOT' ? replace.split('T')[0] : replace
+    },
+    formatDateTime(input) {
+      var pattern = /(\d{4})\-(\d{2})\-(\d{2})/
+      if (!input || !input.match(pattern)) {
+        return '-'
+      }
+      let newDate = input.replace(pattern, '$2/$3/$1')
+      return newDate.split('T')[0]
     },
     switchView(view) {
       if (view !== this.view) {
@@ -567,6 +677,8 @@ export default {
       }
     },
     async getNotes() {
+      this.sortedNotes = []
+      this.notes = []
       if (this.selectedOpp) {
         this.loadingNotes = true
         try {
@@ -584,6 +696,9 @@ export default {
         } catch (e) {
           console.log(e)
         } finally {
+          if (this.notes.length) {
+            this.setSortedNotes()
+          }
           setTimeout(() => {
             this.loadingNotes = false
           }, 300)
@@ -633,11 +748,13 @@ export default {
       } finally {
         setTimeout(() => {
           this.oppsLoading = false
+          this.$emit('refresh-list')
         }, 1000)
       }
     },
     async addFilter() {
       let filter = []
+
       filter = [
         this.selectedFilter.operator,
         this.selectedFilter.apiName,
@@ -679,33 +796,46 @@ export default {
     },
     openInCrm(id) {
       let url
-      url =
-        this.user.crm === 'SALESFORCE'
-          ? `${this.user.salesforceAccountRef.instanceUrl}/lightning/r/Opportunity/${id}/view`
-          : ''
+
+      if (this.user.crm === 'HUBSPOT') {
+        url = `https://app.hubspot.com/contacts/${this.user.hubspotAccountRef.hubspotAppId}/record/0-3/${id}`
+      } else {
+        url =
+          this.user.crm === 'SALESFORCE'
+            ? `${this.user.salesforceAccountRef.instanceUrl}/lightning/r/Opportunity/${id}/view`
+            : ''
+      }
+
       window.open(url, '_blank')
     },
     clearText() {
       this.searchText = ''
     },
     changeSelectedOpp(opp, name) {
+      this.hoverId = null
+      this.loadMorePage = 0
       if (opp) {
         this.selectedOpp = opp
+        this.$store.dispatch('setCurrentOpp', opp)
       } else if (name) {
         let opp
         opp = this.opportunities.filter((opp) => opp.name === name)[0]
         if (opp) {
           this.selectedOpp = opp
+          this.$store.dispatch('setCurrentOpp', opp)
         } else {
           this.selectedOpp = null
           this.searchText = name
+          this.loadMoreOpps()
+
+          setTimeout(() => {
+            let opp
+            opp = this.opportunities.filter((opp) => opp.name === this.searchText)[0]
+            this.selectedOpp = opp
+            this.$store.dispatch('setCurrentOpp', opp)
+          }, 300)
         }
       }
-    },
-    async switchFiltering() {
-      // this.$store.dispatch('changeFilters', [['EQUALS', 'Name', 'Marriot']])
-      // await this.$store.dispatch('loadChatOpps', this.page)
-      this.filtering = !this.filtering
     },
     async setOppForms() {
       let stageGateForms
@@ -717,10 +847,7 @@ export default {
           obj.formType === 'UPDATE' && (obj.resource === 'Opportunity' || obj.resource === 'Deal'),
       )
 
-      let allFields = this.updateOppForm[0].fieldsRef.filter(
-        (field) =>
-          field.apiName !== 'Name' && field.apiName !== 'dealname' && field.apiName !== 'name',
-      )
+      let allFields = this.updateOppForm[0].fieldsRef
 
       this.oppFields = this.updateOppForm[0].fieldsRef.filter(
         (field) =>
@@ -804,6 +931,26 @@ export default {
         return `${hours}:${minutes} AM`
       }
     },
+    async loadFromEnter() {
+      if (this.searchText) {
+        this.loadMorePage += 1
+        this.loadingMore = true
+        try {
+          let res = await this.$store.dispatch('loadMoreChatOpps', {
+            page: this.loadMorePage,
+            text: this.searchText,
+          })
+        } catch (e) {
+          console.log(e)
+          this.page = 0
+          this.loadMorePage = 0
+        } finally {
+          setTimeout(() => {
+            this.loadingMore = false
+          }, 300)
+        }
+      }
+    },
     async loadMoreOpps() {
       if (this.searchText) {
         this.loadMorePage += 1
@@ -813,7 +960,6 @@ export default {
             page: this.loadMorePage,
             text: this.searchText,
           })
-          console.log(res)
         } catch (e) {
           console.log(e)
           this.page = 0
@@ -859,21 +1005,23 @@ export default {
       },
     },
     userCRM() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.crm
     },
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
     picklistOptions() {
       return this.$store.state.allPicklistOptions
     },
   },
-  async created() {
+  created() {
     if (this.userCRM === 'HUBSPOT') {
       this.resourceName = 'Deal'
     }
-    this.$store.dispatch('changeFilters', [])
-    await this.$store.dispatch('loadChatOpps')
+    this.$store.dispatch('loadChatOpps')
+    this.$store.dispatch('loadAllPicklists')
     this.setOppForms()
   },
 }
@@ -938,7 +1086,7 @@ export default {
   position: absolute;
   top: 1rem;
   right: 2px;
-  background-color: white;
+  // background-color: white;
 }
 
 .shimmer {
@@ -1205,9 +1353,9 @@ header {
 
 .bordered {
   width: 100%;
-  background-color: white;
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;
-  padding: 0 0 0.5rem 1rem !important;
+  background-color: $off-white;
+  // border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  padding: 2px !important;
   border-radius: 5px;
   margin-top: 0.5rem;
 }
@@ -1223,6 +1371,11 @@ header {
   h4 {
     margin: 0rem;
   }
+}
+
+.selected-opp-section:first-of-type {
+  height: 98.5%;
+  width: 101%;
 }
 
 .selected-opp-section:last-of-type {
@@ -1372,54 +1525,6 @@ img {
 
 .invert {
   filter: invert(40%);
-}
-
-.tooltip {
-  position: relative;
-  display: inline-block;
-}
-
-.tooltip .tooltiptext {
-  visibility: hidden;
-  width: 120px;
-  background-color: $dark-green;
-  color: white;
-  text-align: center;
-  padding: 0.5rem 0.25rem;
-  border-radius: 4px;
-
-  /* Position the tooltip text - see examples below! */
-  position: absolute;
-  z-index: 1;
-  top: 100%;
-  left: 50%;
-  margin-left: -90px; /* Use half of the width to center the tooltip */
-  margin-top: 4px;
-
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
-}
-
-.tooltip:hover .tooltiptext {
-  visibility: visible;
-  opacity: 1;
-}
-
-.tooltip:hover {
-  img {
-    filter: invert(54%) sepia(76%) saturate(330%) hue-rotate(101deg) brightness(98%) contrast(89%);
-  }
-}
-
-.tooltip .tooltiptext::after {
-  content: ' ';
-  position: absolute;
-  bottom: 100%; /* At the top of the tooltip */
-  left: 75%;
-  margin-left: -5px;
-  border-width: 5px;
-  border-style: solid;
-  border-color: transparent transparent $dark-green transparent;
 }
 
 //  ALL THE FILTER STYLES BELOW , WILL BE MOING THESE TO THE COMPONENT WHEN IT'S READY
@@ -1701,5 +1806,63 @@ img {
   padding: 0.75rem 0.5rem;
   border-radius: 5px;
   border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.tooltip {
+  display: block;
+  width: fit-content;
+  height: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 14px;
+  background: $base-gray;
+  color: white;
+  padding: 0.5rem;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  pointer-events: none;
+  line-height: 1.5;
+  z-index: 20;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    p {
+      margin: 0;
+      padding: 0;
+      margin-top: 0.25rem;
+    }
+
+    p:last-of-type {
+      cursor: pointer;
+      margin-top: -4px;
+    }
+  }
+}
+
+.tooltip::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: $base-gray;
+  bottom: -3px;
+  left: 50%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.showing-tooltip {
+  top: -40px;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.1);
 }
 </style>

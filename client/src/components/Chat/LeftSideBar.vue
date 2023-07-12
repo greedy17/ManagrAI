@@ -1,37 +1,49 @@
 <template>
   <div ref="leftsidebar" class="sidebar" :class="{ open: isOpen }">
-    <section style="position: relative">
+    <section>
       <header class="right-bar-header">
         <!-- <button @mouseenter="soonThreadText" @mouseleave="newThreadText" class="primary-button">
           <span style="font-size: 14px; margin-right: 1rem">🚀</span>
           <span> {{ threadButtonText }}</span>
         </button> -->
-        <div class="logo-header">
+        <div v-if="!leftbarClosed" class="logo-header">
           <img src="@/assets/images/logo.png" height="26px" alt="" />
         </div>
 
-        <img class="img-spacing pointer" src="@/assets/images/collapse.svg" height="16px" alt="" />
+        <img
+          :class="{ collapsed: leftbarClosed }"
+          @click="toggleLeftbar"
+          class="img-spacing pointer"
+          src="@/assets/images/collapse.svg"
+          height="16px"
+          alt=""
+        />
       </header>
 
       <div class="body">
         <section class="left-section">
-          <p class="section-title">Today</p>
+          <p v-if="!leftbarClosed" class="section-title">Today</p>
+          <div v-else style="height: 40px"></div>
 
-          <div>
+          <div :class="{ 'pad-l': leftbarClosed }" class="pad-l-r">
             <div
               @click="changeView('home')"
               :class="{ 'active-view': currentView === 'home' }"
               class="menu-item"
             >
               <img src="@/assets/images/comment.svg" height="14px" alt="" />
-              <p>Home</p>
+              <p v-if="!leftbarClosed">Home</p>
 
               <!-- <div class="counter empty"><p>0</p></div> -->
             </div>
 
-            <div class="menu-item">
+            <div
+              @click="changeView('meetings')"
+              :class="{ 'active-view': currentView === 'meetings' }"
+              class="menu-item"
+            >
               <img src="@/assets/images/calendar.svg" height="14px" alt="" />
-              <p>Meetings</p>
+              <p v-if="!leftbarClosed">Meetings</p>
 
               <!-- <div class="counter empty"><p>0</p></div> -->
             </div>
@@ -39,7 +51,7 @@
         </section>
 
         <section class="left-section">
-          <p class="section-title">List views</p>
+          <p v-if="!leftbarClosed" class="section-title">List views</p>
 
           <div class="flexed-start" v-if="templates.refreshing">
             <div class="loading">
@@ -49,18 +61,29 @@
             </div>
           </div>
 
-          <div v-else-if="templates.list.length">
+          <div
+            class="pad-l-r"
+            :class="{ 'pad-l': leftbarClosed }"
+            style="position: relative"
+            v-else-if="templates.list.length"
+          >
             <div
-              :class="{ 'active-view': currentView.title === alert.title }"
+              :class="{
+                'active-view': currentView.title === alert.title,
+                inactive: !(alert.sobjectInstances && alert.sobjectInstances.length),
+              }"
               v-for="(alert, i) in templates.list"
               :key="i"
               class="menu-item"
-              @click="changeView(alert.title, alert)"
+              @click="changeView(alert.title, alert, alert.sobjectInstances.length)"
             >
               <img src="@/assets/images/hashtag.svg" height="12px" alt="" />
-              <p>{{ alert.title }}</p>
+              <p v-if="!leftbarClosed">{{ alert.title }}</p>
 
-              <div v-if="alert.sobjectInstances && alert.sobjectInstances.length" class="counter">
+              <div
+                v-if="alert.sobjectInstances && alert.sobjectInstances.length && !leftbarClosed"
+                class="counter"
+              >
                 <p>
                   {{ alert.sobjectInstances.length }}
                 </p>
@@ -71,7 +94,7 @@
           <div v-else>
             <div class="menu-item">
               <img src="@/assets/images/listed.svg" height="14px" alt="" />
-              <p>Activate lists</p>
+              <p style="color: #9596b4">No active lists</p>
             </div>
           </div>
         </section>
@@ -80,15 +103,15 @@
       <footer>
         <div @click="handleConfigureOpen" class="menu-item">
           <img style="margin-left: -3px" src="@/assets/images/settings.svg" height="18px" alt="" />
-          <p>Settings</p>
+          <p v-if="!leftbarClosed">Settings</p>
         </div>
         <div @click="toggleTooltip" class="menu-item">
           <img src="@/assets/images/help.png" height="14px" alt="" />
-          <p>Support</p>
+          <p v-if="!leftbarClosed">Support</p>
         </div>
         <div class="menu-item" @click="handleProfileOpen">
           <img src="@/assets/images/profile.svg" height="14px" alt="" />
-          <p>Profile</p>
+          <p v-if="!leftbarClosed">Profile</p>
         </div>
 
         <div :class="{ 'showing-tooltip': showTooltip }" class="tooltip">
@@ -102,6 +125,18 @@
       </footer>
     </section>
 
+    <!-- <section v-else>
+      <div>
+        <img
+          @click="toggleLeftbar"
+          class="img-spacing pointer collapsed"
+          src="@/assets/images/collapse.svg"
+          height="16px"
+          alt=""
+        />
+      </div>
+    </section> -->
+
     <div @click="toggleSidebar" v-if="isOpen" class="close">
       <font-awesome-icon
         style="height: 30px; width: 30px; color: white"
@@ -114,6 +149,7 @@
 <script>
 import { CollectionManager } from '@thinknimble/tn-models'
 import AlertTemplate from '@/services/alerts/'
+import User from '@/services/users'
 
 export default {
   name: 'LeftSideBar',
@@ -123,6 +159,7 @@ export default {
   },
   data() {
     return {
+      leftbarClosed: false,
       showTooltip: false,
       isOpen: false,
       threadButtonText: 'Start New Thread',
@@ -139,12 +176,21 @@ export default {
     // console.log(this.templates)
   },
   methods: {
-    changeView(view, alert) {
-      this.view = view
-      if (alert) {
-        this.$store.dispatch('setCurrentView', alert)
-      } else {
-        this.$store.dispatch('setCurrentView', 'home')
+    refreshList() {
+      this.templates.refresh()
+    },
+    changeView(view, alert, length) {
+      if (length || view === 'home' || view === 'meetings') {
+        this.view = view
+        if (view === 'meetings') {
+          this.$store.dispatch('loadMeetings')
+        }
+        if (alert) {
+          this.$store.dispatch('setCurrentView', alert)
+        } else {
+          this.$store.dispatch('setCurrentView', view)
+          // localStorage.clear()
+        }
       }
     },
     toggleSidebar() {
@@ -156,15 +202,9 @@ export default {
         this.$emit('hide-background')
       }
     },
-
     toggleLeftbar() {
-      this.barOpen = !this.barOpen
-
-      if (this.barOpen) {
-        console.log(this.barOpen)
-      } else {
-        console.log(this.barOpen)
-      }
+      this.leftbarClosed = !this.leftbarClosed
+      this.$emit('toggle-Left-bar')
     },
     toggleTooltip() {
       this.showTooltip = !this.showTooltip
@@ -174,6 +214,14 @@ export default {
     },
     newThreadText() {
       this.threadButtonText = 'Start New Thread'
+    },
+    async sendNewEmailTest() {
+      const data = {
+        to: [{name: 'Big Boy Bryan', email: 'bryan@mymanagr.com'}],
+        subject: 'Mike, My Managur 100',
+        body: `Hey Mike,<br><br>In the depths of a vast and troubled sea,<br>Where confusion reigns and darkness be,<br>I navigate the currents, lost and unsure,<br>Seeking clarity, yearning for a cure.<br><br>Oh, dear boss, hear my heartfelt plea,<br>For within this tempest, I long to break free.<br>I'm swimming in waves of uncertainty's tide,<br>Yet, still, I strive to keep my dreams alive.<br><br>In this churning abyss, I find no light,<br>Yet, I refuse to surrender without a fight.<br>With every stroke, I battle the unknown,<br>Aiming to carve a path uniquely my own.<br><br>The waters are deep, my vision unclear,<br>But I hold onto hope, suppressing my fear.<br>For though I'm surrounded by shadows and doubt,<br>I'm determined to rise, and find my way out.<br><br>Through the trials and tribulations I endure,<br>I promise, dear boss, to give nothing but pure,<br>Effort and dedication, a relentless drive,<br>To keep pushing forward, to truly thrive.<br><br>Though my path may be foggy, my steps unsure,<br>I'll keep striving, knowing I'm not obscure.<br>For in this sea of confusion and night,<br>I'll find strength within and shine with my might.<br><br>So, dear boss, please understand my plight,<br>That I'm doing my best, despite the fight.<br>In this vast ocean, I'm a swimmer indeed,<br>Working hard to succeed, planting a hopeful seed.<br><br>Through the waves of confusion and darkness, I go,<br>With every stroke, my determination does grow.<br>Trust in my resilience, for I'll never rest,<br>Until I conquer this sea and emerge at my best.<br><br>Poem written by ChatGPT.`
+      }
+      const res = await User.api.sendNewEmail(data)
     },
   },
   computed: {
@@ -192,38 +240,46 @@ export default {
 @import '@/styles/mixins/utils';
 @import '@/styles/mixins/inputs';
 
-.leftbarClosed {
-  left: -280px;
-  position: absolute;
-}
-
 .sidebar {
-  position: fixed;
-  background-color: white;
+  background-color: $off-white;
   border-right: 1px solid rgba(0, 0, 0, 0.1);
   top: 0;
   left: 0;
   height: 100%;
-  width: 280px;
+  width: 100%;
   overflow: auto;
-  transition: all 0.3s ease;
   font-size: 14px;
 
   &.open {
     left: 0;
   }
+}
 
-  section {
-    // padding: 1rem 1rem 0 1rem;
+.pad-l-r {
+  padding: 0 0.5rem;
+}
+
+.pad-l {
+  padding: 0 0.25rem;
+
+  div {
+    margin-bottom: 0.5rem;
   }
 }
 
-// .inactive {
-//   color: $light-gray-blue;
-//   img {
-//     filter: invert(65%) sepia(3%) saturate(2244%) hue-rotate(200deg) brightness(93%) contrast(88%);
-//   }
-// }
+.collapsed {
+  margin-left: 1.25rem;
+  margin-top: 1.25rem !important;
+}
+
+.inactive {
+  opacity: 0.3;
+  cursor: not-allowed !important;
+
+  &:hover {
+    opacity: 0.3 !important;
+  }
+}
 
 .absolute-img {
   position: absolute;
@@ -243,6 +299,7 @@ export default {
 
 .active-view {
   background-color: $dark-green;
+  border-radius: 5px;
   color: white;
   img {
     filter: invert(90%);
@@ -304,7 +361,8 @@ export default {
 
 @media (max-width: 1000px) {
   .sidebar {
-    left: -280px;
+    position: absolute;
+    left: -260px;
 
     &.open {
       left: 0;
@@ -320,6 +378,7 @@ export default {
 
 .body {
   min-height: 66vh;
+  // padding: 0 1rem;
   overflow-y: scroll;
   overflow-x: hidden;
   text-overflow: ellipsis;
@@ -358,11 +417,11 @@ export default {
 footer {
   position: fixed;
   bottom: 0;
-  width: 280px;
+  width: 260px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 1rem 0 0.5rem 0;
+  padding: 1rem 0 0.5rem 0.5rem;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
@@ -393,8 +452,8 @@ footer {
   align-items: center;
   flex-direction: row;
   font-size: 14px;
-  padding: 0.75rem 0;
-  padding-left: 1.25rem;
+  padding: 0.625rem 0;
+  padding-left: 1rem;
   cursor: pointer;
   position: relative;
 
@@ -403,7 +462,7 @@ footer {
     text-overflow: ellipsis;
     overflow: hidden;
     margin: 0;
-    width: 150px;
+    width: 144px;
   }
 
   &:hover {
@@ -436,20 +495,38 @@ img {
 }
 
 .close {
-  position: inherit;
+  position: absolute;
   top: 0;
-  left: 280px;
+  left: 260px;
   top: 1.5rem;
   display: none;
   cursor: pointer;
 }
 
+.closedBar {
+  position: absolute;
+  left: 250px;
+  z-index: 100;
+  left: 100px;
+  z-index: 10;
+  left: 260px;
+  top: 2px;
+  padding-top: 0.5rem;
+
+  img {
+    z-index: 200;
+    position: fixed;
+    left: 0.25rem;
+  }
+}
+
 .tooltip {
   display: block;
-  width: 228px;
+  width: 230px;
   height: auto;
   position: absolute;
   top: 0;
+  left: 1rem;
   font-size: 14px;
   background: $base-gray;
   color: white;
@@ -501,18 +578,34 @@ img {
 }
 
 .left-section {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   padding: 1rem 0;
   padding-bottom: 0;
 }
 
 .left-section:last-of-type {
   border: none;
+  overflow-y: scroll;
+  overflow-x: none;
+  scroll-behavior: smooth;
+
+  height: 100%;
+}
+
+.left-section:last-of-type::-webkit-scrollbar {
+  width: 6px;
+  height: 0px;
+}
+.left-section:last-of-type::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px !important;
+}
+.left-section:last-of-type:hover::-webkit-scrollbar-thumb {
+  background-color: $base-gray;
 }
 
 .section-title {
   color: $light-gray-blue;
-
   padding-left: 1.25rem;
 }
 

@@ -84,6 +84,7 @@ import AlertOperandRow from '@/views/settings/alerts/create/_AlertOperandRow'
  * Services
  */
 import { AlertOperandForm, AlertGroupForm } from '@/services/alerts/'
+import { decryptData } from '../../../../encryption'
 
 export default {
   /**
@@ -163,7 +164,8 @@ export default {
   },
   computed: {
     userCRM() {
-      return this.$store.state.user.crm
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user
     },
     selectedCondition: {
       get() {

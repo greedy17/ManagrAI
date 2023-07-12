@@ -25,8 +25,8 @@
       <div class="chat-modal-container">
         <div class="chat-modal-header">
           <div>
-            <h3 class="elipsis-text" style="margin-bottom: 0.25rem">
-              Update {{ chatData.resource }}
+            <h3 @click="test" class="elipsis-text" style="margin-bottom: 0.25rem">
+              {{ chatData.resource }}
             </h3>
             <span class="gray-text smaller"
               >Your CRM fields have been auto-filled. Pleae review and click submit.</span
@@ -50,7 +50,7 @@
           :key="i"
         >
           <ChatFormField
-            :placeholder="chatData.data[field.apiName]"
+            :placeholder="toString(chatData.data[field.apiName])"
             :field="field"
             :resourceId="chatData.resourceId"
             :integrationId="chatData.integrationId"
@@ -160,7 +160,7 @@
             Create New Team
           </button> -->
 
-          <button class="chat-button">
+          <!-- <button class="chat-button">
             <font-awesome-icon
               v-if="team.list.length >= numberOfAllowedUsers"
               icon="fa-solid fa-user-plus"
@@ -169,7 +169,7 @@
             <font-awesome-icon v-else class="white-icon" icon="fa-solid fa-user-plus" />
 
             Add user
-          </button>
+          </button> -->
         </div>
       </div>
     </Modal>
@@ -177,25 +177,39 @@
     <div @click="toggleSidebar" class="hamburger">
       <font-awesome-icon style="height: 22px; width: 22px" icon="fa-solid fa-bars" />
     </div>
-    <aside id="left-sidebar">
+    <aside :class="{ closed: leftBarClosed }" id="left-sidebar">
       <LeftSideBar
         ref="sidebarRef"
         @show-background="toggleBackgroundOn"
         @hide-background="toggleBackgroundOff"
-        :handleProfileOpen="handleProfileOpen" 
+        @toggle-Left-bar="toggleLeftBar"
+        :handleProfileOpen="handleProfileOpen"
         :handleConfigureOpen="handleConfigureOpen"
       />
     </aside>
 
     <main v-if="currentView === 'home'" id="main">
-      <ChatBox @toggle-chat-modal="toggleChatModal" />
+      <ChatBox @set-opp="setOpp" @toggle-chat-modal="toggleChatModal" @remove-opp="removeOpp" />
+    </main>
+    <main v-else-if="currentView === 'meetings'" id="main">
+      <ChatMeetings
+        @set-opp="setOpp"
+        :formFields="formFields"
+        :stageFields="stageFields"
+        :stagesWithForms="stagesWithForms"
+      />
     </main>
     <main id="main" v-else>
-      <ChatList @set-opp="setOpp" />
+      <ChatList @set-opp="setOpp" :formFields="formFields" @refresh-list="refreshLists" />
     </main>
 
     <aside id="right-sidebar">
-      <RightBar ref="rightSideBar" @set-fields="setFormFields" @set-stages="setStageFields" />
+      <RightBar
+        ref="rightSideBar"
+        @set-fields="setFormFields"
+        @set-stages="setStageFields"
+        @refresh-list="refreshLists"
+      />
     </aside>
   </div>
 </template>
@@ -209,8 +223,10 @@ import Modal from '@/components/InviteModal'
 import ChatFormField from '../components/Chat/ChatFormField.vue'
 import CollectionManager from '@/services/collectionManager'
 import ChatList from '../components/Chat/ChatList.vue'
+import ChatMeetings from '../components/Chat/ChatMeetings.vue'
 import User from '@/services/users'
 import { CRMObjects } from '@/services/crm'
+import { decryptData } from '../encryption'
 
 export default {
   name: 'Home',
@@ -222,6 +238,7 @@ export default {
     Modal,
     ChatFormField,
     ChatList,
+    ChatMeetings,
   },
   data() {
     return {
@@ -236,6 +253,8 @@ export default {
       formFields: [],
       stageFields: [],
       barOpen: true,
+      leftBarClosed: false,
+      stagesWithForms: null,
     }
   },
   created() {
@@ -243,6 +262,21 @@ export default {
   },
   watch: {},
   methods: {
+    toString(data) {
+      let type = typeof data
+      if (type === 'number') {
+        let newData = data.toString()
+        return newData
+      } else {
+        return data
+      }
+    },
+    toggleLeftBar() {
+      this.leftBarClosed = !this.leftBarClosed
+    },
+    refreshLists() {
+      this.$refs.sidebarRef.refreshList()
+    },
     setOpp(name) {
       this.$refs.rightSideBar.changeSelectedOpp(null, name)
     },
@@ -288,18 +322,20 @@ export default {
           stage_name: null,
         })
         this.$store.dispatch('messageUpdated', { id: this.chatData.id, data: this.chatData.data })
-      } catch (e) {
-        console.log(e)
-      } finally {
         this.$refs.rightSideBar.reloadOpps()
+      } catch (e) {
+        this.$store.dispatch('messageUpdateFailed', { id: this.chatData.id, data: e.data.error })
+      } finally {
         setTimeout(() => {
           this.toggleChatModal()
-          this.submitting = false
         }, 1000)
+        setTimeout(() => {
+          this.submitting = false
+        }, 2000)
       }
     },
-    test(log) {
-      console.log('log', log)
+    test() {
+      console.log(this.chatData.data)
     },
     toggleSidebar() {
       this.$refs.sidebarRef.toggleSidebar()
@@ -342,21 +378,27 @@ export default {
     handleInvite() {
       console.log('handled')
     },
+    removeOpp() {
+      this.$refs.rightSideBar.deselectOpp()
+    },
   },
   computed: {
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
     usersInTeam() {
-      console.log('this.team', this.team)
       return this.team.list.filter(
         (member) => member.team === this.user.team, //&& member.id !== this.user.id
       )
     },
     hasSlack() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.slackRef
+      return this.$store.state.user.slackRef
     },
     numberOfAllowedUsers() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.organizationRef.numberOfAllowedUsers
     },
     currentView() {
@@ -380,6 +422,10 @@ body {
   width: 100vw;
   background-color: $off-white;
 }
+.closed {
+  width: 60px !important;
+  transform: all;
+}
 
 .chat-display {
   display: flex;
@@ -392,6 +438,7 @@ body {
   color: $chat-font-color;
   letter-spacing: 0.4px;
   line-height: 1.5;
+  position: relative;
 }
 
 .hamburger {
@@ -402,10 +449,12 @@ body {
   top: 1rem;
   left: 1.5rem;
   cursor: pointer;
+  z-index: 10;
 }
 
 #left-sidebar {
-  width: 280px;
+  width: 260px;
+  transition: transform 0.3s ease;
 }
 
 #main {
@@ -655,7 +704,7 @@ body {
   }
 }
 .full-width {
-  width: 300px !important;
+  width: 260px !important;
 }
 .profile-level-p {
   width: 60px;

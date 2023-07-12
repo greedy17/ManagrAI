@@ -28,7 +28,7 @@
               @blur="registrationForm.field.fullName.validate()"
               :errors="registrationForm.field.fullName.errors"
               v-model="registrationForm.field.fullName.value"
-              placeholder=""
+              placeholder="Enter Full Name"
               id="name"
             />
           </span>
@@ -41,6 +41,7 @@
               v-model="registrationForm.field.email.value"
               type="email"
               id="email"
+              placeholder="Enter Email"
             />
           </span>
 
@@ -53,6 +54,7 @@
               :errors="registrationForm.field.password.errors"
               v-model="registrationForm.field.password.value"
               type="password"
+              placeholder="Must be 9 characters or longer"
             />
             <div class="column" v-for="(message, i) in errorMessages" :key="i">
               <small class="error">{{ message }}</small>
@@ -68,6 +70,7 @@
               :errors="registrationForm.field.confirmPassword.errors"
               v-model="registrationForm.field.confirmPassword.value"
               type="password"
+              placeholder="Must be 9 characters or longer"
             />
           </span>
 
@@ -77,7 +80,7 @@
               @blur="registrationForm.field.organizationName.validate()"
               :errors="registrationForm.field.organizationName.errors"
               v-model="registrationForm.field.organizationName.value"
-              placeholder=""
+              placeholder="Enter Company Name"
               id="company"
             />
           </span>
@@ -90,7 +93,7 @@
               v-model="userRole"
               :options="userRoles"
               openDirection="above"
-              style="width: 26vw; padding: 0"
+              style="width: 26vw; padding: 0; margin-top: 6px;"
               selectLabel="Enter"
               label="name"
               id="role"
@@ -136,6 +139,7 @@ import Salesforce from '@/services/salesforce'
 import Hubspot from '@/services/hubspot'
 
 import PipelineLoader from '@/components/PipelineLoader'
+import { decryptData, encryptData } from '../../encryption'
 
 export default {
   name: 'Registration',
@@ -207,7 +211,11 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
+        // const encryptedKey = encryptData(key, process.env.VUE_APP_SECRET_KEY)
+        // const encryptedUser = encryptData(user, process.env.VUE_APP_SECRET_KEY)
+        // this.$store.commit('UPDATE_USER', encryptedUser)
         this.$store.commit('UPDATE_USER', user)
+        // this.$store.commit('UPDATE_USERTOKEN', encryptedKey)
         this.$store.commit('UPDATE_USERTOKEN', key)
         this.generatingToken = false
         this.selectedCrm = null
@@ -257,6 +265,17 @@ export default {
         })
         return
       }
+      const splitEmail = this.registrationForm.field.email.value.split('@')
+      if (splitEmail[splitEmail.length-1] === 'gmail.com') {
+        this.$toast('Please use a company email.', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        return
+      }
 
       this.submitting = true
 
@@ -277,7 +296,11 @@ export default {
       }
 
       // Update the user in the store to "log in" and navigate to integrations
+      // const encryptedUser = encryptData(user, process.env.VUE_APP_SECRET_KEY)
+      // const encryptedKey = encryptData(user.token, process.env.VUE_APP_SECRET_KEY)
+      // this.$store.commit('UPDATE_USER', encryptedUser)
       this.$store.commit('UPDATE_USER', user)
+      // this.$store.commit('UPDATE_USERTOKEN', encryptedKey)
       this.$store.commit('UPDATE_USERTOKEN', user.token)
       this.$router.push({ name: 'Home' })
     },
@@ -294,6 +317,7 @@ export default {
       }
     },
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
   },
@@ -450,6 +474,11 @@ input {
   color: $base-gray;
   letter-spacing: 0.5px;
   font-family: #{$base-font-family};
+  margin-top: 6px;
+}
+input::placeholder {
+  color: $very-light-gray;
+  font-size: 12px;
 }
 input:focus {
   outline: none;

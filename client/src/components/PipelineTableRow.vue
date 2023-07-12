@@ -150,6 +150,7 @@
 <script>
 import PipelineField from '@/components/PipelineField'
 import User from '@/services/users'
+import { decryptData } from '../encryption'
 
 export default {
   name: 'PipelineTableRow',
@@ -405,6 +406,7 @@ export default {
   },
   computed: {
     userCRM() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.crm
     },
   },
