@@ -414,13 +414,17 @@
               </div>
             </div>
           </div>
-          <div class="search-bar">
-            <input
-              @input="searchFields"
-              type="search"
-              :placeholder="`Search`"
-              v-model="filterText"
-            />
+          <div class="search-bar-container">
+            <h5>Choose CRM fields:</h5>
+            <div class="search-bar">
+              <img class="search" src="@/assets/images/search.svg" />
+              <input
+                @input="searchFields"
+                type="search"
+                :placeholder="`Search`"
+                v-model="filterText"
+              />
+            </div>
           </div>
 
           <div class="field-section__fields">
@@ -480,8 +484,9 @@
             </div>
           </div>
         </section>
-        <div style="height: 52vh; margin-right: 1rem; margin-top: 5rem; width: 30vw">
-          <div style="margin-left: 1rem">
+        <div class="selected-container">
+          <h5>Selected CRM Fields:</h5>
+          <div class="selected" style="margin-left: 1rem">
             <draggable
               v-model="addedFields"
               group="fields"
@@ -2050,22 +2055,39 @@ input[type='checkbox'] + label::before {
   border-radius: 4px;
   margin-right: 0.5em;
 }
+.search-bar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid $soft-gray;
+  h5 {
+    margin: 0;
+    color: $light-gray-blue;
+  }
+}
+.search {
+  height: 16px;
+  margin-right: 0.5rem;
+  filter: invert(20%);
+}
 .search-bar {
   // background-color: white;
-  border-bottom: 1px solid $very-light-gray;
+  border: 1px solid $very-light-gray;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 0;
-  // border-radius: 8px;
-  margin-top: 16px;
+  padding: 3px 6px;
+  border-radius: 8px;
+  // margin-top: 16px;
 }
 [type='search']::-webkit-search-cancel-button {
   -webkit-appearance: none;
   appearance: none;
 }
 input[type='search'] {
-  width: 25vw;
+  width: 8vw;
   letter-spacing: 0.75px;
   border: none;
   padding: 4px 0;
@@ -2079,6 +2101,20 @@ input[type='search']:focus {
 ::placeholder {
   color: $very-light-gray;
   font-size: 12px;
+}
+.selected-container {
+  height: 52vh; 
+  margin-right: 1rem; 
+  // margin-top: 3rem; 
+  width: 30vw;
+  h5 {
+    margin-left: 1rem;
+    color: $light-gray-blue;
+  }
+}
+.selected {
+  margin-left: 1rem;
+  border-top: 1px solid $soft-gray;
 }
 .field-section {
   width: 20vw;
