@@ -437,7 +437,7 @@
               track-by="label"
               :customLabel="customLabelView"
               v-model="selectedType"
-              class="multiselect-font custom-picklist-font"
+              class="multiselect-align custom-picklist-font"
             >
               <template slot="noResult">
                 <p class="multi-slot custom-picklist-font">No results.</p>
@@ -480,7 +480,7 @@
                     appear as you move to the Stage.</span
                   > -->
                   <span class="tooltip">
-                    Managr will only read and edit the fields that you select below. Here are the ones we would recommend: Name, Stage, Forecast, Close Date, Next Step, Next Step Date, and sales process fields like MEDDICC, BANT, etc
+                    Select the fields you'd like to interact with. We recommend: Name, Stage, Forecast, Close Date, Next Step, Next Step Date, along with MEDDICC / BANT fields.
                   </span>
                   <span>?</span>
                 </label>
@@ -2166,6 +2166,12 @@ input[type='checkbox'] + label::before {
     color: $light-gray-blue;
   }
 }
+.multiselect-align {
+  // display: flex;
+  // flex-direction: column;
+  // justify-content: center;
+  // margin-top: 0.5rem;
+}
 .search {
   height: 16px;
   margin-right: 0.5rem;
@@ -2186,7 +2192,7 @@ input[type='checkbox'] + label::before {
   appearance: none;
 }
 input[type='search'] {
-  width: 8vw;
+  width: 6.5vw;
   letter-spacing: 0.75px;
   border: none;
   padding: 4px 0;
@@ -2792,7 +2798,7 @@ img:hover {
 }
 .wrapper .tooltip {
   display: block;
-  width: 250px;
+  width: 325px;
   height: auto;
   position: absolute;
   top: 0;
@@ -2819,7 +2825,7 @@ img:hover {
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 .wrapper .icon:hover .tooltip {
-  top: -155px;
+  top: -125px;
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -2858,6 +2864,19 @@ img:hover {
 }
 ::v-deep .multiselect__placeholder {
   color: $base-gray;
+}
+::v-deep .multiselect__single {
+  margin-bottom: 0;
+}
+::v-deep .multiselect__tags {
+  min-height: 32px;
+  padding-top: 4px;
+}
+::v-deep .multiselect__select {
+  height: 32px;
+}
+::v-deep .multiselect {
+  min-height: 0;
 }
 .green-check {
   height: 0.6rem;
