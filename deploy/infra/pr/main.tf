@@ -133,6 +133,7 @@ data "template_file" "managr_app" {
     use_hubspot    = title(var.app_config.use_hubspot)
     use_open_ai    = title(var.app_config.use_open_ai)
     use_sso        = title(var.app_config.use_sso)
+    use_news_api   = title(var.app_config.use_news_api)
   }
 }
 
@@ -316,6 +317,9 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     microsoftSecretKey   = var.app_config.microsoft_secret_key
     googleClientId       = var.app_config.google_client_id
     googleLoginUri       = var.app_config.google_login_uri
+
+    newApiKey            = var.app_config.news_api_key
+
   })
 }
 

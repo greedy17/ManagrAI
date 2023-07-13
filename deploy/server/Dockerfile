@@ -117,7 +117,9 @@ ENV SECRET_KEY='secret123' \
   USE_SSO=False\
   MICROSOFT_SECRET_KEY='' \
   GOOGLE_CLIENT_ID='' \
-  GOOGLE_LOGIN_URI='' 
+  GOOGLE_LOGIN_URI='' \
+  USE_NEWS_API='' \
+  NEWS_API_KEY
 
 
 # Set the name of the working directory inside the docker container
