@@ -256,14 +256,26 @@
               <div v-if="selectedObject && selectedObject.value !== 'CustomObject'" class="half-view-flex" style="align-items: center; margin-top: 1rem;">
                 <div class="row__" style="gap: 6px; margin-left: 0;">
                   <div class="header-text">View:</div>
-                  <Multiselect
+                  <div class="gray-background">
+                    <div class="toggle-update-create-container" :class="selectedType.value === 'UPDATE' ? 'active' : ''" @click="changeSelectedType({ value: 'UPDATE', label: 'Update' })">
+                      <p>Update</p>
+                    </div>
+                    <div class="toggle-update-create-container" :class="selectedType.value === 'CREATE' ? 'active' : ''" @click="changeSelectedType({ value: 'CREATE', label: 'Create' })">
+                      <p>Create</p>
+                    </div>
+                    <div class="toggle-update-create-container" :class="(selectedType.value !== 'UPDATE' && selectedType.value !== 'CREATE') ? 'active' : ''" v-if="selectedObject.value === 'Opportunity' || selectedObject.value === 'Deal'" @click="changeSelectedType({ value: 'STAGE', label: 'Stage' })">
+                      <p>Stages</p>
+                    </div>
+                  </div>
+                  <!-- <Multiselect
+                    v-if="formattedTypes.length"
                     @input="changeObject(selectedObject, $event, false)"
                     :options="formattedTypes"
                     openDirection="below"
                     style="width: 11.5vw"
                     :showLabels="false"
                     track-by="label"
-                    label="label"
+                    :customLabel="customLabelView"
                     v-model="selectedType"
                     class="multiselect-font custom-picklist-font"
                   >
@@ -274,7 +286,7 @@
                     <template slot="placeholder">
                       <p class="slot-icon custom-picklist-font">
                         <img src="@/assets/images/search.svg" alt="" />
-                        {{ selectedType && selectedType.label ? selectedType.label : 'Select Type' }}
+                        {{ selectedType && selectedType.label && selectedType.value !== 'UPDATE' && selectedType.value !== 'CREATE' ? selectedType.label : 'Select Type' }}
                       </p>
                     </template>
   
@@ -294,8 +306,8 @@
                         </span>
                       </div>
                     </template>
-                  </Multiselect>
-                  <div class="wrapper">
+                  </Multiselect> -->
+                  <!-- <div class="wrapper">
                     <label
                       v-if="newResource === 'Deal' || newResource === 'Opportunity'"
                       class="icon workflow"
@@ -308,7 +320,7 @@
                       >
                       <span>?</span>
                     </label>
-                  </div>
+                  </div> -->
                 </div>
                 <div style="display: flex; align-items: center;">
                   <button
@@ -415,7 +427,65 @@
             </div>
           </div>
           <div class="search-bar-container">
-            <h5>Choose CRM fields:</h5>
+            <Multiselect
+              v-if="formattedTypes.length && (selectedType.value !== 'CREATE' && selectedType.value !== 'UPDATE')"
+              @input="changeObject(selectedObject, $event, false)"
+              :options="formattedTypes"
+              openDirection="below"
+              style="width: 11.5vw"
+              :showLabels="false"
+              track-by="label"
+              :customLabel="customLabelView"
+              v-model="selectedType"
+              class="multiselect-font custom-picklist-font"
+            >
+              <template slot="noResult">
+                <p class="multi-slot custom-picklist-font">No results.</p>
+              </template>
+  
+              <template slot="placeholder">
+                <p class="slot-icon custom-picklist-font">
+                  <img src="@/assets/images/search.svg" alt="" />
+                  {{ selectedType && selectedType.label && selectedType.value !== 'UPDATE' && selectedType.value !== 'CREATE' && selectedType.value !== 'STAGE' ? selectedType.label : 'Select Type' }}
+                </p>
+              </template>
+  
+              <template slot="option" slot-scope="props">
+                <div>
+                  <span class="option__title">{{ removeAmp(props.option.label) }}</span
+                  ><span
+                    v-if="currentStagesWithForms.includes(props.option.label)"
+                    class="option__small"
+                  >
+                    <img
+                      class="green-check"
+                      style=""
+                      src="@/assets/images/configCheck.svg"
+                      alt=""
+                    />
+                  </span>
+                </div>
+              </template>
+            </Multiselect>
+            <div v-else class="choose-fields-container">
+              <h5>Choose CRM fields:</h5>
+              <div class="wrapper">
+                <label
+                  class="icon workflow"
+                  style="margin-top: 0"
+                >
+                  <!-- <span class="tooltip"
+                    >You can also add {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} to
+                    Stages. These {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} will
+                    appear as you move to the Stage.</span
+                  > -->
+                  <span class="tooltip">
+                    Managr will only read and edit the fields that you select below. Here are the ones we would recommend: Name, Stage, Forecast, Close Date, Next Step, Next Step Date, and sales process fields like MEDDICC, BANT, etc
+                  </span>
+                  <span>?</span>
+                </label>
+              </div>
+            </div>
             <div class="search-bar">
               <img class="search" src="@/assets/images/search.svg" />
               <input
@@ -652,12 +722,12 @@ export default {
       selectedType: { value: 'UPDATE', label: 'Update' },
       resources: [],
       types: [
-        { value: 'UPDATE', label: 'Update' },
-        { value: 'CREATE', label: 'Create' },
+        // { value: 'UPDATE', label: 'Update' },
+        // { value: 'CREATE', label: 'Create' },
       ],
       formattedTypes: [
-        { value: 'UPDATE', label: 'Update' },
-        { value: 'CREATE', label: 'Create' },
+        // { value: 'UPDATE', label: 'Update' },
+        // { value: 'CREATE', label: 'Create' },
       ],
       oppTypes: [
         { value: 'UPDATE', label: 'Update' },
@@ -880,6 +950,7 @@ export default {
                 crmObject: val,
                 ...fieldParam,
               }
+              console.log('beforeRefresh 1', this.formFields.filters)
               this.formFields.refresh()
               if (this.formType == 'UPDATE') {
                 // this.onSave()
@@ -908,6 +979,7 @@ export default {
                 crmObject: val,
                 ...fieldParam,
               }
+              console.log('beforeRefresh 2', this.formFields.filters)
               this.formFields.refresh()
               if (this.formType == 'UPDATE') {
                 // this.onSave()
@@ -937,6 +1009,7 @@ export default {
                 crmObject: this.resource,
                 ...fieldParam,
               }
+              console.log('beforeRefresh 3', this.formFields.filters)
               this.formFields.refresh()
             } catch (e) {
               console.log(e)
@@ -963,6 +1036,7 @@ export default {
                 crmObject: this.newResource,
                 ...fieldParam,
               }
+              console.log('beforeRefresh 4', this.formFields.filters)
               this.formFields.refresh()
             } catch (e) {
               console.log(e)
@@ -981,6 +1055,7 @@ export default {
       return this.allForms.filter((form) => form.customObject)
     },
     filteredFields() {
+      console.log('this.formFields', this.formFields.list)
       return this.formFields.list.filter((field) => !this.addedFieldNames.includes(field.apiName))
     },
     COfilteredFields() {
@@ -1161,11 +1236,24 @@ export default {
       console.log(e)
     }
     this.getStageForms()
-    this.formattedTypes = [...this.types, { label: '--- Stages ---' }, ...this.stages]
+    this.formattedTypes = [...this.types, ...this.stages]
+    this.formattedTypes = this.formattedTypes.filter(f => f.value !== 'STAGE')
   },
   methods: {
     test(log) {
       console.log('log', log)
+    },
+    changeSelectedType(type) {
+      if (type.value === 'STAGE') {
+        if (this.formattedTypes[0]) {
+          this.selectedType = this.formattedTypes[0]
+        } else {
+          this.selectedType = { value: 'UPDATE', label: 'Update' }
+        }
+      } else {
+        this.selectedType = type
+      }
+      this.changeObject(this.selectedObject, type)
     },
     customLabel(prop) {
       const label = prop.customObject ? `${prop.customObject}` : `${prop.label}`
@@ -1182,17 +1270,20 @@ export default {
       this.selectedObject = { label, value }
       this.changeObject(this.selectedObject, this.selectedType)
       if (this.selectedObject.value === 'Opportunity' || this.selectedObject.value === 'Deal') {
-        this.formattedTypes = [...this.types, { label: '--- Stages ---' }, ...this.stages]
+        this.formattedTypes = [...this.types, ...this.stages]
+        this.formattedTypes = this.formattedTypes.filter(f => f.value !== 'STAGE')
       } else if (this.selectedObject.label === 'Products') {
-        this.formattedTypes = [{ value: 'CREATE', label: 'Create' }]
+        this.formattedTypes = [
+          // { value: 'CREATE', label: 'Create' }
+        ]
       } else {
         this.formattedTypes = [
-          { value: 'UPDATE', label: 'Update' },
-          { value: 'CREATE', label: 'Create' },
+          // { value: 'UPDATE', label: 'Update' },
+          // { value: 'CREATE', label: 'Create' },
         ]
       }
       if (this.selectedType.label !== 'Create' && this.selectedType.label !== 'Update') {
-        this.selectedType = this.formattedTypes[0]
+        this.selectedType = this.formattedTypes[1]
       }
       this.selectedCustomObject = null
     },
@@ -1250,6 +1341,7 @@ export default {
         })
         this.customFields.refresh()
       }
+      console.log('beforeRefresh 5', this.formFields.filters)
       this.formFields.refresh()
       // if (this.selectedCustomObject) {
       //   this.selectedCustomObject = null
@@ -1337,6 +1429,7 @@ export default {
       // }
     },
     watcherCustomResource() {
+      console.log('beforeRefresh 6', this.formFields.filters)
       this.formFields.refresh()
     },
     async getCustomObjects() {
@@ -1541,7 +1634,7 @@ export default {
       )
     },
     changeObject(object, type, switchedObject = false) {
-      if (type.label !== 'Create' && type.label !== 'Update' && type.label !== '--- Stages ---') {
+      if (type.label !== 'Create' && type.label !== 'Update') { //&& type.label !== '--- Stages ---') {
         this.setStage(type)
         return
       } else {
@@ -1574,6 +1667,7 @@ export default {
         this.selectedType = { value: 'CREATE', label: 'Create' }
         this.changeResource(object.value, this.selectedType.value)
       } else {
+        console.log('hit here')
         this.changeResource(object.value, type.value)
       }
     },
@@ -1585,6 +1679,11 @@ export default {
       this.newFormType = ''
       this.newCustomForm = null
       this.storedField = null
+    },
+    customLabelView(prop) {
+      if (prop.value !== 'UPDATE' && prop.value !== 'CREATE' && prop.value !== 'STAGE') {
+        return prop.label
+      }
     },
     changeResource(resource, formType) {
       this.customObjectView = false
@@ -2109,6 +2208,7 @@ input[type='search']:focus {
   width: 30vw;
   h5 {
     margin-left: 1rem;
+    margin-bottom: 1.3rem;
     color: $light-gray-blue;
   }
 }
@@ -2384,7 +2484,7 @@ input[type='search']:focus {
   padding: 0rem;
   margin-top: 10vh;
   overflow: hidden;
-  color: $base-gray;
+  // color: $base-gray;
 }
 .slot-icon {
   display: flex;
@@ -2584,7 +2684,7 @@ img:hover {
   overflow: auto;
   // outline: 1px solid #eeeeee;
   // border-radius: 6px;
-  padding: 14px 4px 4px;
+  padding: 18px 4px 4px;
 }
 .border-bottom-top {
   border-bottom: 1px solid $soft-gray;
@@ -2719,7 +2819,7 @@ img:hover {
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 .wrapper .icon:hover .tooltip {
-  top: -85px;
+  top: -155px;
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -2907,5 +3007,36 @@ img:hover {
 }
 .filtered-red {
   filter: invert(43%) sepia(45%) saturate(682%) hue-rotate(308deg) brightness(109%) contrast(106%);
+}
+.gray-background {
+  display: flex;
+  align-items: center;
+  background-color: $soft-gray;
+  height: 4vh;
+  border-radius: 8px;
+}
+.toggle-update-create-container {
+  border: 1px solid $soft-gray;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 5vw;
+  height: 3vh;
+  border-radius: 8px;
+  margin: 0 0.25rem;
+  p {
+    margin: 0;
+    color: $light-gray-blue;
+    font-size: 12px;
+    // text-align: center;
+  }
+}
+.active {
+  background-color: $white;
+  border-radius: 8px;
+}
+.choose-fields-container {
+  display: flex;
 }
 </style>
