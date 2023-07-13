@@ -950,7 +950,6 @@ export default {
                 crmObject: val,
                 ...fieldParam,
               }
-              console.log('beforeRefresh 1', this.formFields.filters)
               this.formFields.refresh()
               if (this.formType == 'UPDATE') {
                 // this.onSave()
@@ -979,7 +978,6 @@ export default {
                 crmObject: val,
                 ...fieldParam,
               }
-              console.log('beforeRefresh 2', this.formFields.filters)
               this.formFields.refresh()
               if (this.formType == 'UPDATE') {
                 // this.onSave()
@@ -1009,7 +1007,6 @@ export default {
                 crmObject: this.resource,
                 ...fieldParam,
               }
-              console.log('beforeRefresh 3', this.formFields.filters)
               this.formFields.refresh()
             } catch (e) {
               console.log(e)
@@ -1036,7 +1033,6 @@ export default {
                 crmObject: this.newResource,
                 ...fieldParam,
               }
-              console.log('beforeRefresh 4', this.formFields.filters)
               this.formFields.refresh()
             } catch (e) {
               console.log(e)
@@ -1055,7 +1051,6 @@ export default {
       return this.allForms.filter((form) => form.customObject)
     },
     filteredFields() {
-      console.log('this.formFields', this.formFields.list)
       return this.formFields.list.filter((field) => !this.addedFieldNames.includes(field.apiName))
     },
     COfilteredFields() {
@@ -1253,7 +1248,7 @@ export default {
       } else {
         this.selectedType = type
       }
-      this.changeObject(this.selectedObject, type)
+      this.changeObject(this.selectedObject, this.selectedType)
     },
     customLabel(prop) {
       const label = prop.customObject ? `${prop.customObject}` : `${prop.label}`
@@ -1295,8 +1290,6 @@ export default {
       } else if (this.newFormType == 'UPDATE') {
         fieldParam['updateable'] = true
       }
-
-      console.log('this')
 
       this.formFields = CollectionManager.create({
         ModelClass: ObjectField,
@@ -1341,7 +1334,6 @@ export default {
         })
         this.customFields.refresh()
       }
-      console.log('beforeRefresh 5', this.formFields.filters)
       this.formFields.refresh()
       // if (this.selectedCustomObject) {
       //   this.selectedCustomObject = null
@@ -1429,7 +1421,6 @@ export default {
       // }
     },
     watcherCustomResource() {
-      console.log('beforeRefresh 6', this.formFields.filters)
       this.formFields.refresh()
     },
     async getCustomObjects() {
@@ -1635,6 +1626,7 @@ export default {
     },
     changeObject(object, type, switchedObject = false) {
       if (type.label !== 'Create' && type.label !== 'Update') { //&& type.label !== '--- Stages ---') {
+        console.log('before setStage', type)
         this.setStage(type)
         return
       } else {
@@ -1667,7 +1659,6 @@ export default {
         this.selectedType = { value: 'CREATE', label: 'Create' }
         this.changeResource(object.value, this.selectedType.value)
       } else {
-        console.log('hit here')
         this.changeResource(object.value, type.value)
       }
     },
