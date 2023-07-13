@@ -8,7 +8,6 @@ from managr.hubspot import constants as hs_consts
 from managr.gong.models import GongCall
 from managr.core.models import User
 from managr.opportunity.models import Opportunity, Lead
-from managr.hubspot.models import Deal, Company, HubspotContact
 from managr.organization.models import (
     Organization,
     Account,
@@ -20,7 +19,7 @@ from managr.outreach.models import Sequence
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import process_action_id, NO_OP, processor
 from managr.crm.exceptions import TokenExpired, InvalidFieldError
-from managr.salesloft.models import Cadence, People
+from managr.salesloft.models import Cadence
 from managr.crm.models import BaseOpportunity, BaseAccount, BaseContact
 
 logger = logging.getLogger("managr")
@@ -433,6 +432,7 @@ def RESOURCE_OPTIONS(resource, options):
 
 @processor(required_context=["u", "resource_type"])
 def process_get_crm_resource_options(payload, context):
+    print("here")
     add_opts = json.loads(context.get("add_opts", json.dumps([])))
     user = User.objects.get(pk=context["u"])
     value = payload["value"]
@@ -515,6 +515,7 @@ def handle_block_suggestion(payload):
         slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION: process_get_crm_resource_options,
         slack_const.MEETING__PROCESS_TRANSCRIPT_TASK: process_get_crm_resource_options,
         slack_const.PROCESS_SELECTED_GENERATIVE_ACTION: process_get_crm_resource_options,
+        slack_const.PROCESS_SEND_RESOURCE_MESSAGE: process_get_crm_resource_options,
     }
     action_query_string = payload["action_id"]
     processed_string = process_action_id(action_query_string)

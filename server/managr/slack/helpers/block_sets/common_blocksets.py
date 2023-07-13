@@ -606,3 +606,19 @@ def initial_alert_message(context):
         ),
     ]
     return blocks
+
+
+@block_set()
+def resource_action_blockset(context):
+    user = User.objects.get(id=context.get("u"))
+    resource_type = context.get("resource_type")
+    options = [
+        block_builders.option("Log Meeting", "LOG_MEETING"),
+        block_builders.option(f"Update {resource_type}", "UPDATE_FORM"),
+        block_builders.option("Add Notes", "ADD_NOTES"),
+        block_builders.option("Ask Managr", "ASK_MANAGR"),
+        block_builders.option(f"{resource_type} Review", "REVIEW"),
+    ]
+    blocks = [block_builders.static_select("What would you like to do?", options)]
+    return blocks
+

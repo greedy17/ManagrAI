@@ -488,8 +488,6 @@ def process_show_meeting_resource(payload, context):
 
 @processor(required_context=["w"])
 def process_show_meeting_chat_modal(payload, context):
-    from managr.core.models import NoteTemplate
-
     workflow = MeetingWorkflow.objects.get(id=context.get("w"))
     user_id = context.get("u")
     user = User.objects.get(id=user_id)
@@ -4196,6 +4194,124 @@ def process_send_call_analysis_to_dm(payload, context):
     return
 
 
+def process_send_resource_message(payload, context):
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    state = payload["view"]["state"]["values"]
+    resource_id = state["selected_object"][list(state["selected_object"].keys())[0]][
+        "selected_option"
+    ]["value"]
+    context.update(resource_id=resource_id)
+    resource = CRM_SWITCHER[user.crm][context.get("resource_type")]["model"].objects.get(
+        integration_id=resource_id
+    )
+    blocks = [
+        block_builders.section_with_button_block(
+            "Select Action",
+            "ACTIONS",
+            f"*{context.get('resource_type')}* _{resource.display_value}_",
+            block_id="RESOURCE_ACTION_BLOCK",
+            action_id=action_with_params(
+                slack_const.PROCESS_OPEN_ACTIONS_MODAL,
+                [
+                    f"resource_id={str(resource.id)}",
+                    f"resource_type={context.get('resource_type')}",
+                ],
+            ),
+        )
+    ]
+    try:
+        res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+        ts = res["ts"]
+        context.update(ts=ts)
+    except Exception as e:
+        logger.exception(e)
+    return
+
+
+def process_send_resource_message(payload, context):
+    user_slack_id = payload.get("user", {}).get("id", None)
+    user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
+    state = payload["view"]["state"]["values"]
+    resource_id = state["selected_object"][list(state["selected_object"].keys())[0]][
+        "selected_option"
+    ]["value"]
+    context.update(resource_id=resource_id)
+    resource = CRM_SWITCHER[user.crm][context.get("resource_type")]["model"].objects.get(
+        integration_id=resource_id
+    )
+    blocks = [
+        block_builders.section_with_button_block(
+            "Select Action",
+            "ACTIONS",
+            f"*{context.get('resource_type')}* _{resource.display_value}_",
+            block_id="RESOURCE_ACTION_BLOCK",
+            action_id=action_with_params(
+                slack_const.PROCESS_OPEN_ACTIONS_MODAL,
+                [
+                    f"resource_id={str(resource.id)}",
+                    f"resource_type={context.get('resource_type')}",
+                    f"u={str(user.id)}",
+                ],
+            ),
+        )
+    ]
+    try:
+        res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+        ts = res["ts"]
+        context.update(ts=ts)
+    except Exception as e:
+        logger.exception(e)
+    return
+
+
+def process_open_actions_modal(payload, context):
+    print(context)
+    user = User.objects.get(id=context.get("u"))
+    access_token = user.organization.slack_integration.access_token
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    trigger_id = payload["trigger_id"]
+
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.MEETING___SUBMIT_CHAT_PROMPT,
+            "title": {"type": "plain_text", "text": f"Choose Action"},
+            "submit": {"type": "plain_text", "text": "Submit"},
+            "blocks": get_block_set("resource_action_blockset", context=context),
+            "private_metadata": json.dumps(context),
+        },
+    }
+    try:
+        res = slack_requests.generic_request(url, data, access_token=access_token)
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    return
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -4273,6 +4389,8 @@ def handle_block_actions(payload):
         slack_const.SEND_CALL_ANALYSIS_TO_DM: process_send_call_analysis_to_dm,
         slack_const.PROCESS_SELECTED_GENERATIVE_ACTION: process_selected_generative_action,
         slack_const.CHOOSE_RESET_MEETING_DAY: choose_reset_meeting_day,
+        slack_const.PROCESS_SEND_RESOURCE_MESSAGE: process_send_resource_message,
+        slack_const.PROCESS_OPEN_ACTIONS_MODAL: process_open_actions_modal,
     }
 
     action_query_string = payload["actions"][0]["action_id"]
