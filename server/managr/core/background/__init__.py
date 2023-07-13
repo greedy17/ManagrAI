@@ -248,8 +248,8 @@ def check_for_time(tz, hour, minute):
     min = 00 if minute >= 30 else 30
     hr = hour - 1 if minute < 30 else hour
     return current < current.replace(
-        hour=hour, minute=minute, second=0, microsecond=0
-    ) and current > current.replace(hour=hr, minute=min, second=0, microsecond=0)
+        hour=hour, minute=0, second=0, microsecond=0
+    ) and current > current.replace(hour=hr, minute=0, second=0, microsecond=0)
 
 
 def check_for_uncompleted_meetings(user_id, org_level=False):
@@ -599,11 +599,15 @@ def _process_calendar_meetings(user_id, slack_int, date):
     print("starting calendar check")
     user = User.objects.get(id=user_id)
     if user.has_nylas_integration:
-        while True:
-            try:
-                processed_data = _process_calendar_details(user_id, date)
-                print(processed_data)
-                if user.has_zoom_integration:
+        try:
+            processed_data = _process_calendar_details(user_id, date)
+            print(processed_data)
+        except Exception:
+            logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
+            processed_data = None
+        if user.has_zoom_integration:
+            while True:
+                try:
                     if date is None:
                         user_timezone = pytz.timezone(user.timezone)
                         todays_date = pytz.utc.localize(datetime.today()).astimezone(user_timezone)
@@ -611,14 +615,14 @@ def _process_calendar_meetings(user_id, slack_int, date):
                     meetings = user.zoom_account.helper_class.get_meetings_by_date(
                         user.zoom_account.access_token, user.zoom_account.zoom_id, date
                     )["meetings"]
+                    print("MEETINGS:", meetings)
                     break
-            except zoom_exceptions.TokenExpired:
-                user.zoom_account.regenerate_token()
-            except Exception as e:
-                logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
-                processed_data = None
-                break
-        print(processed_data)
+                except zoom_exceptions.TokenExpired:
+                    user.zoom_account.regenerate_token()
+                except Exception as e:
+                    logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
+                    meetings = []
+                    break
         if processed_data is not None:
             workflows = MeetingWorkflow.objects.for_user(user, date)
             print(workflows)
