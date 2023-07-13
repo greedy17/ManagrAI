@@ -54,6 +54,7 @@ from .nylas.auth import get_access_token, get_account_details
 from .models import User, NylasAuthAccount, NoteTemplate
 from .serializers import (
     UserSerializer,
+    UserClientSerializer,
     UserLoginSerializer,
     UserSSOLoginSerializer,
     UserInvitationSerializer,
@@ -340,6 +341,7 @@ def clean_data_for_summary(user_id, data, integration_id, resource_type):
             cleaned_data[field.api_name] = reference_record
     return cleaned_data
 
+
 def deal_review_data_builder(resource_data, api_name_list, crm, form_data, fields):
     value_dict = {}
     try:
@@ -370,7 +372,7 @@ def deal_review_data_builder(resource_data, api_name_list, crm, form_data, field
         value_dict["Last Activity"] = modified_date
     if "meeting_comments" in form_data.keys():
         value_dict["Meeting Comments"] = form_data["meeting_comments"]
-    return value_dict    
+    return value_dict
 
 
 @api_view(["post"])
@@ -390,7 +392,13 @@ def submit_chat_prompt(request):
     CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 
     form_type = (
-        "CREATE" if ("create" in request.data["prompt"].lower() and "update" not in request.data["prompt"].lower()) else "UPDATE")
+        "CREATE"
+        if (
+            "create" in request.data["prompt"].lower()
+            and "update" not in request.data["prompt"].lower()
+        )
+        else "UPDATE"
+    )
     form_template = user.team.team_forms.filter(
         form_type=form_type, resource=request.data["resource_type"]
     ).first()
@@ -544,6 +552,7 @@ def submit_chat_prompt(request):
         status=status.HTTP_200_OK,
     )
 
+
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
 def ask_managr(request):
@@ -555,7 +564,7 @@ def ask_managr(request):
         str(user.id),
         request.data["prompt"],
         request.data["resource_type"],
-        request.data["resource_id"]
+        request.data["resource_id"],
     )
 
     tokens = 500
@@ -608,7 +617,7 @@ def ask_managr(request):
     if has_error:
         res = {"value": f"{error_message}"}
         return Response(data=res, status=status.HTTP_400_BAD_REQUEST)
-    
+
     return Response(
         data={
             **r,
@@ -618,6 +627,7 @@ def ask_managr(request):
         },
         status=status.HTTP_200_OK,
     )
+
 
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
@@ -629,10 +639,12 @@ def deal_review(request):
     from managr.core.exceptions import _handle_response
 
     user = User.objects.get(id=request.data["user_id"])
-    prompt = request.data["prompt"],
-    resource_type = request.data["resource_type"],
+    prompt = (request.data["prompt"],)
+    resource_type = (request.data["resource_type"],)
     resource_id = request.data["resource_id"]
-    resource = CRM_SWITCHER[user.crm][request.data["resource_type"]]["model"].objects.get(id=request.data["resource_id"])
+    resource = CRM_SWITCHER[user.crm][request.data["resource_type"]]["model"].objects.get(
+        id=request.data["resource_id"]
+    )
     form_template = (
         OrgCustomSlackForm.objects.for_user(user)
         .filter(resource=request.data["resource_type"], form_type="UPDATE")
@@ -669,16 +681,12 @@ def deal_review(request):
     if has_error:
         res = {"value": f"{response_text}"}
         return Response(data=res, status=status.HTTP_400_BAD_REQUEST)
-        
+
     return Response(
-        data={
-            **r,
-            "res": response_text,
-            "resourceId": resource_id,
-            "resourceType": resource_type,
-        },
+        data={**r, "res": response_text, "resourceId": resource_id, "resourceType": resource_type,},
         status=status.HTTP_200_OK,
-    )    
+    )
+
 
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
@@ -690,9 +698,11 @@ def draft_follow_up(request):
         prompt = core_consts.OPEN_AI_MEETING_EMAIL_DRAFT(request.data["notes"])
         body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, temperature=0.2)
     else:
-        prompt = core_consts.OPEN_AI_EMAIL_DRAFT_WITH_INSTRUCTIONS(request.data["notes"], instructions)
-        body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 1000)    
-    
+        prompt = core_consts.OPEN_AI_EMAIL_DRAFT_WITH_INSTRUCTIONS(
+            request.data["notes"], instructions
+        )
+        body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 1000)
+
     attempts = 1
 
     while True:
@@ -706,7 +716,7 @@ def draft_follow_up(request):
                 return Response(data={**r, "res": text})
         except Exception as e:
             res = {"value": f"error drafting email: {e}"}
-            return Response(data=res)        
+            return Response(data=res)
 
 
 @api_view(["post"])
@@ -802,7 +812,7 @@ def log_chat_meeting(request):
                 choice = r["choices"][0]
                 text = choice["text"]
                 data = clean_prompt_string(text)
-                name_field = set_name_field(resource_type, )
+                name_field = set_name_field(resource_type,)
                 data = correct_data_keys(data)
                 resource_check = data[name_field].lower().split(" ")
                 lowered_type = resource_type.lower()
@@ -866,7 +876,9 @@ def log_chat_meeting(request):
 
         except StopReasonLength:
             if token_amount <= 2000:
-                message = "Look like your prompt message is too long to process. Try removing white spaces!",
+                message = (
+                    "Look like your prompt message is too long to process. Try removing white spaces!",
+                )
                 break
             else:
                 token_amount += 500
@@ -899,7 +911,7 @@ def log_chat_meeting(request):
                 f"There was an error processing chat submission {message}"
             )
             workflow.save()
-        return Response(data={"data": message, 'failed': True})
+        return Response(data={"data": message, "failed": True})
 
     if not has_error:
 
@@ -979,7 +991,7 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
             user.access_token.refresh(user.access_token)
         # Build and send the response
         u = User.objects.get(pk=user.id)
-        serializer = UserSerializer(u, context={"request": request})
+        serializer = UserClientSerializer(u, context={"request": request})
         response_data = serializer.data
         response_data["token"] = user.access_token.key
         return Response(response_data)
@@ -1017,7 +1029,7 @@ class UserSSOLoginView(generics.GenericAPIView):
             user.access_token.refresh(user.access_token)
         # Build and send the response
         u = User.objects.get(pk=user.id)
-        serializer = UserSerializer(u, context={"request": request})
+        serializer = UserClientSerializer(u, context={"request": request})
         response_data = serializer.data
         response_data["token"] = user.access_token.key
         return Response(response_data)
@@ -1066,7 +1078,7 @@ class UserViewSet(
     mixins.UpdateModelMixin,
 ):
 
-    serializer_class = UserSerializer
+    serializer_class = UserClientSerializer
     filter_fields = (
         "organization",
         "email",
@@ -1094,7 +1106,7 @@ class UserViewSet(
         self.perform_update(serializer)
         user = serializer.instance
 
-        serializer = UserSerializer(user, context={"request": request})
+        serializer = UserClientSerializer(user, context={"request": request})
         response_data = serializer.data
 
         return Response(response_data)
@@ -1202,7 +1214,7 @@ class UserViewSet(
                 ManagrToken.objects.get_or_create(user=user)
 
                 # Build and send the response
-                serializer = UserSerializer(user, context={"request": request})
+                serializer = UserClientSerializer(user, context={"request": request})
 
                 response_data = serializer.data
                 response_data["token"] = user.access_token.key

@@ -14,13 +14,7 @@ from managr.slack.serializers import (
 )
 from managr.zoom.serializers import ZoomAuthSerializer
 from managr.hubspot.serializers import HubspotAuthAccountSerializer
-from .models import User, NylasAuthAccount, MeetingPrepInstance, UserForecast, NoteTemplate
-
-
-class UserForecastSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserForecast
-        fields = ("user", "state")
+from .models import User, NylasAuthAccount, MeetingPrepInstance, NoteTemplate
 
 
 class NylasAuthAccountSerializer(serializers.ModelSerializer):
@@ -40,6 +34,39 @@ class UserRefSerializer(serializers.ModelSerializer):
         )
 
 
+class UserClientSerializer(serializers.ModelSerializer):
+    organization_ref = OrganizationSerializer(many=False, source="organization", read_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "email",
+            "full_name",
+            "first_name",
+            "last_name",
+            "organization",
+            "organization_ref",
+            "is_active",
+            "is_admin",
+            "is_superuser",
+            "user_level",
+            "role",
+            "has_nylas_integration",
+            "has_hubspot_integration",
+            "has_salesloft_integration",
+            "has_gong_integration",
+            "has_outreach_integration",
+            "has_zoom_integration",
+            "has_salesforce_integration",
+            "timezone",
+            "onboarding",
+            "team",
+            "is_team_lead",
+            "crm",
+        )
+
+
 class UserSerializer(serializers.ModelSerializer):
     """UserSerializer to update user fields, only managers with admin access and
     superusers can update email"""
@@ -54,7 +81,6 @@ class UserSerializer(serializers.ModelSerializer):
     )
     zoom_ref = ZoomAuthSerializer(source="zoom_account", read_only=True)
     activated_template_ref = serializers.SerializerMethodField("get_alert_template_refs")
-    forecast = UserForecastSerializer(many=False, source="current_forecast", read_only=True)
     activation_link_ref = serializers.SerializerMethodField("get_activation_link")
 
     class Meta:
@@ -102,7 +128,6 @@ class UserSerializer(serializers.ModelSerializer):
             "timezone",
             "activated_template_ref",
             "onboarding",
-            "forecast",
             "team",
             "is_team_lead",
             "crm",
@@ -197,7 +222,7 @@ class UserLoginSerializer(serializers.ModelSerializer):
         """
         login(request, user, backend="django.contrib.auth.backends.ModelBackend")
         auth_token, _ = ManagrToken.objects.get_or_create(user=user)
-        serializer = UserSerializer(user, context={"request": request})
+        serializer = UserClientSerializer(user, context={"request": request})
         response_data = serializer.data
         response_data["token"] = auth_token.key
         return response_data
