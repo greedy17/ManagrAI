@@ -6,7 +6,7 @@ from .models import User
 from background_task.models import CompletedTask
 from managr.hubspot import constants as hs_consts
 from managr.salesforce import constants as sf_consts
-from .models import User, UserActivity, UserForecast, NoteTemplate
+from .models import User, UserActivity, UserForecast, NoteTemplate, Conversation
 from managr.organization.models import Team
 from managr.api.models import ManagrToken
 
@@ -53,6 +53,7 @@ def create_user_related_models(sender, instance, created, **kwargs):
             subject="Default Template",
             body="<p>Pain:</p><p><br></p><p>Value:</p><p><br></p><p>Timeline:</p><p><br></p><p>Budget</p>",
         )
+        Conversation.objects.create(user=instance,title=f"default-{instance.email}")
 
 
 @receiver(post_save, sender=User)

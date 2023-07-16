@@ -11,11 +11,11 @@
       </div>
       <div
         style="cursor: not-allowed"
-        :class="{ activeswitch: mainView === 'email' }"
+        :class="{ activeswitch: mainView === 'calendar' }"
         class="switch-item"
       >
-        <font-awesome-icon icon="fa-regular fa-envelope" />
-        Email
+        <font-awesome-icon icon="fa-regular fa-calendar" />
+        Meetings
       </div>
     </div>
     <header>
@@ -394,20 +394,20 @@
     </div>
 
     <div class="opp-scroll-container" v-else>
+      <!-- @mouseenter="setTooltip(opp.id)"
+        @mouseleave="removeTooltip" -->
       <div
-        @mouseenter="setTooltip(opp.id)"
-        @mouseleave="removeTooltip"
         v-for="opp in opportunities"
         class="opp-container"
         @click="changeSelectedOpp(opp)"
         :key="opp.id"
       >
-        <p style="margin: 0">
+        <p :title="opp.name" style="margin: 0">
           {{ opp.name }}
         </p>
-        <div :class="{ 'showing-tooltip': showTooltip && hoverId === opp.id }" class="tooltip">
+        <!-- <div :class="{ 'showing-tooltip': showTooltip && hoverId === opp.id }" class="tooltip">
           {{ opp.name }}
-        </div>
+        </div> -->
       </div>
       <div style="margin-bottom: 0.25rem" class="space-between">
         <button

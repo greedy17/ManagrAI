@@ -51,7 +51,7 @@ from managr.core.utils import (
 )
 from managr.slack.helpers import requests as slack_requests, block_builders
 from .nylas.auth import get_access_token, get_account_details
-from .models import User, NylasAuthAccount, NoteTemplate
+from .models import User, NylasAuthAccount, NoteTemplate, Message, Conversation
 from .serializers import (
     UserSerializer,
     UserLoginSerializer,
@@ -59,6 +59,7 @@ from .serializers import (
     UserInvitationSerializer,
     UserRegistrationSerializer,
     NoteTemplateSerializer,
+    ConversationSerializer
 )
 from managr.organization.models import Team
 from .permissions import IsStaff
@@ -565,7 +566,10 @@ def ask_managr(request):
     timeout = 60.0
     while True:
         try:
-            body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, tokens)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email, prompt, "You are an experienced sales leader", token_amount=tokens
+            )
+            # body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, tokens)
             with Variable_Client(timeout) as client:
                 url = core_consts.OPEN_AI_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
@@ -2285,4 +2289,67 @@ def process_transcript(request):
         return Response(data={'data':cleaned_data, 'analysis':combined_summary, 'status':status.HTTP_200_OK})
     else:
         return Response(data=error_message, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def delete_all_messages(request):
+    Message.objects.all().delete()
+    return Response(status=status.HTTP_200_OK)
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def edit_message(request):
+    message = Message.objects.get(id=request.data['message_id'])
+    keys_to_exclude = ['conversation_id', 'message_id']
+    all_keys = [key for key, value in request.data.items() if not isinstance(value, dict)]
+    keys = [key for key in all_keys if key not in keys_to_exclude]
+    try:  
+        for field in keys:
+            setattr(message, field, request.data[field])       
+    except Exception as e:
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR,data=e)
+    message.save()    
+    return Response(status=status.HTTP_200_OK)
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def add_message(request):
+    conversation = Conversation.objects.get(id=request.data['conversation_id'])
+
+    default_values = {
+        'value': '',
+        'form_id': '',
+        'form_type': '',
+        'user_type': '',
+        'resource': '',
+        'resource_id': '',
+        'resource_type': '',
+        'integration_id': '',
+        'generated_title': '',
+        'generated_type':'',
+        'generated': False,
+        'updated': False,
+        'failed': False,
+        'error': None,
+        'data': '{}',
+    }
+
+    message_data = {field: request.data.get(field, default_values[field]) for field in default_values}
+
+    Message.objects.create(
+        conversation=conversation,
+        **message_data
+    )
+
+    return Response(status=status.HTTP_200_OK)
+
+
+class ConversationViewSet(viewsets.ModelViewSet):
+    serializer_class = ConversationSerializer
+
+    def get_queryset(self):
+        user = User.objects.get(id=self.request.query_params.get('user_id'))
+        queryset = Conversation.objects.filter(user=user)
+
+        return queryset

@@ -65,6 +65,7 @@ export default {
     scrollToBottom: {
       type: Function,
     },
+    conversation: {},
   },
   data() {
     return {
@@ -73,6 +74,7 @@ export default {
       templatesOpen: false,
       showReviewMessage: false,
       chatRes: null,
+      chatmsg: null,
       actions: [
         {
           name: 'Update CRM',
@@ -99,171 +101,202 @@ export default {
       this.$emit('remove-opp')
     },
     async sendMessage() {
-      if (this.message.toLowerCase().includes('ask managr')) {
-        let chatmsg = this.message
-        this.$emit('set-message', { user: 'user', value: chatmsg })
-        this.$emit('message-loading', true)
-        this.message = ''
-
-        try {
-          setTimeout(() => {
-            this.$refs.chatTextArea.dispatchEvent(new Event('textarea-clear'))
-          }, 100)
-
-          let res = await User.api.askManagr({
-            user_id: this.user.id,
-            prompt: chatmsg,
-            resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
-            resource_id: this.$store.state.currentOpp.id,
+      this.chatmsg = this.message
+      try {
+        await User.api
+          .addMessage({
+            value: this.message,
+            user_type: 'user',
+            conversation_id: this.conversation.id,
+            data: {},
+          })
+          .then((response) => {
+            this.message = ''
+            this.$emit('message-loading', true)
+            setTimeout(() => {
+              this.$refs.chatTextArea.dispatchEvent(new Event('textarea-clear'))
+            }, 100)
+            this.$emit('get-conversations')
           })
 
-          this.chatRes = res
+        if (this.chatmsg.toLowerCase().includes('ask managr')) {
+          this.askManagr()
+        } else if (this.chatmsg.toLowerCase().includes('run review')) {
+          this.dealReview()
+        } else if (this.chatmsg.length > 3) {
+          this.chatUpdate()
+        }
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async askManagr() {
+      try {
+        let res = await User.api.askManagr({
+          user_id: this.user.id,
+          prompt: this.chatmsg,
+          resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
+          resource_id: this.$store.state.currentOpp.id,
+        })
 
-          if (this.chatRes.status >= 400 && this.chatRes.status < 500) {
-            const id = Math.ceil(Math.random() * 100000)
-            this.$emit('set-message', {
-              user: 'bot',
-              id: id,
+        this.chatRes = res
+
+        if (this.chatRes.status >= 400 && this.chatRes.status < 500) {
+          await User.api
+            .addMessage({
               value: this.chatRes.value,
+              user_type: 'bot',
+              conversation_id: this.conversation.id,
               failed: true,
+              data: {},
             })
-          } else if (this.chatRes.status === 500) {
-            const id = Math.ceil(Math.random() * 100000)
-            this.$emit('set-message', {
-              user: 'bot',
-              id: id,
+            .then((response) => {
+              this.$emit('get-conversations')
+            })
+        } else if (this.chatRes.status === 500) {
+          await User.api
+            .addMessage({
               value: 'Timeout error, try again',
+              user_type: 'bot',
+              conversation_id: this.conversation.id,
               failed: true,
+              data: {},
             })
-          } else {
-            this.$emit('set-message', {
-              user: 'bot',
-              id: this.chatRes['id'],
+            .then((response) => {
+              this.$emit('get-conversations')
+            })
+        } else {
+          await User.api
+            .addMessage({
               value: this.chatRes['res'],
-              // data: this.chatRes['data'],
+              user_type: 'bot',
+              conversation_id: this.conversation.id,
+              failed: false,
+              data: {},
               resourceId: this.chatRes['resourceId'],
               resourceType: this.chatRes['resourceType'],
               updated: false,
-              title: 'Ask Managr',
+              generated_title: 'Ask Managr',
             })
-          }
-        } catch (e) {
-          console.log(e)
-        } finally {
-          this.$emit('message-loading', false)
-          this.scrollToBottom()
+            .then((response) => {
+              this.$emit('get-conversations')
+            })
         }
-      } else if (this.message.toLowerCase().includes('run review')) {
-        let chatmsg = this.message
-        this.$emit('set-message', { user: 'user', value: chatmsg })
-        this.$emit('message-loading', true)
-        this.message = ''
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.$emit('message-loading', false)
+        this.scrollToBottom()
+      }
+    },
 
-        try {
-          setTimeout(() => {
-            this.$refs.chatTextArea.dispatchEvent(new Event('textarea-clear'))
-          }, 100)
+    async dealReview() {
+      try {
+        let res = await User.api.dealReview({
+          user_id: this.user.id,
+          prompt: this.chatmsg,
+          resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
+          resource_id: this.$store.state.currentOpp.id,
+        })
 
-          let res = await User.api.dealReview({
-            user_id: this.user.id,
-            prompt: chatmsg,
-            resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
-            resource_id: this.$store.state.currentOpp.id,
+        this.chatRes = res
+
+        if (this.chatRes.status >= 400 && this.chatRes.status < 500) {
+          this.$emit('set-message', {
+            user: 'bot',
+            id: id,
+            value: this.chatRes.value,
+            failed: true,
           })
-
-          this.chatRes = res
-
-          if (this.chatRes.status >= 400 && this.chatRes.status < 500) {
-            const id = Math.ceil(Math.random() * 100000)
-            this.$emit('set-message', {
-              user: 'bot',
-              id: id,
-              value: this.chatRes.value,
-              failed: true,
-            })
-          } else if (this.chatRes.status === 500) {
-            const id = Math.ceil(Math.random() * 100000)
-            this.$emit('set-message', {
-              user: 'bot',
-              id: id,
-              value: 'Timeout error, try again',
-              failed: true,
-            })
-          } else {
-            this.$emit('set-message', {
-              user: 'bot',
-              id: this.chatRes['id'],
-              value: this.chatRes['res'],
-              // data: this.chatRes['data'],
-              resourceId: this.chatRes['resourceId'],
-              resourceType: this.chatRes['resourceType'],
-              updated: false,
-              title: 'Deal Review',
-            })
-          }
-        } catch (e) {
-          console.log(e)
-        } finally {
-          this.$emit('message-loading', false)
-          this.scrollToBottom()
+        } else if (this.chatRes.status === 500) {
+          this.$emit('set-message', {
+            user: 'bot',
+            id: id,
+            value: 'Timeout error, try again',
+            failed: true,
+          })
+        } else {
+          this.$emit('set-message', {
+            user: 'bot',
+            id: this.chatRes['id'],
+            value: this.chatRes['res'],
+            // data: this.chatRes['data'],
+            resourceId: this.chatRes['resourceId'],
+            resourceType: this.chatRes['resourceType'],
+            updated: false,
+            title: 'Deal Review',
+          })
         }
-      } else if (this.message.length > 3) {
-        let chatmsg = this.message
-        this.$emit('set-message', { user: 'user', value: chatmsg })
-        this.$emit('message-loading', true)
-        this.message = ''
-        try {
-          setTimeout(() => {
-            this.$refs.chatTextArea.dispatchEvent(new Event('textarea-clear'))
-          }, 100)
-          let res = await User.api.chatUpdate({
-            user_id: this.user.id,
-            prompt: chatmsg,
-            resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
-          })
-          this.chatRes = res
-          if (this.chatRes.status >= 400 && this.chatRes.status < 500) {
-            const id = Math.ceil(Math.random() * 100000)
-            this.$emit('set-message', {
-              user: 'bot',
-              id: id,
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.$emit('message-loading', false)
+        this.scrollToBottom()
+      }
+    },
+
+    async chatUpdate() {
+      try {
+        let res = await User.api.chatUpdate({
+          user_id: this.user.id,
+          prompt: this.chatmsg,
+          resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
+        })
+        this.chatRes = res
+        if (this.chatRes.status >= 400 && this.chatRes.status < 500) {
+          await User.api
+            .addMessage({
               value: this.chatRes.value,
+              user_type: 'bot',
+              conversation_id: this.conversation.id,
               failed: true,
+              data: {},
             })
-          } else if (this.chatRes.status === 500) {
-            const id = Math.ceil(Math.random() * 100000)
-            this.$emit('set-message', {
-              user: 'bot',
-              id: id,
+            .then((response) => {
+              this.$emit('get-conversations')
+            })
+        } else if (this.chatRes.status === 500) {
+          await User.api
+            .addMessage({
               value: 'Timeout error, try again',
+              user_type: 'bot',
+              conversation_id: this.conversation.id,
               failed: true,
+              data: {},
             })
-          } else {
-            this.$emit('set-message', {
-              user: 'bot',
-              id: this.chatRes['id'],
+            .then((response) => {
+              this.$emit('get-conversations')
+            })
+        } else {
+          await User.api
+            .addMessage({
+              user_type: 'bot',
+              conversation_id: this.conversation.id,
+              failed: false,
               value: this.chatRes['res'][0],
               resource: this.chatRes['resource'][0],
-              formId: this.chatRes['form'],
+              form_id: this.chatRes['form'],
               data: this.chatRes['data'],
-              resourceId: this.chatRes['resourceId'],
-              formType: this.chatRes['formType'],
-              integrationId: this.chatRes['integrationId'],
-              resourceType: this.chatRes['resourceType'],
+              resource_id: this.chatRes['resourceId'],
+              form_type: this.chatRes['formType'],
+              integration_id: this.chatRes['integrationId'],
+              resource_type: this.chatRes['resourceType'],
               updated: false,
             })
-          }
-          this.$emit('set-title', this.chatRes['resource'][0] || 'Uh-oh')
-        } catch (e) {
-          console.log(e)
-        } finally {
-          this.$emit('message-loading', false)
-          this.scrollToBottom()
+            .then((response) => {
+              this.$emit('get-conversations')
+            })
         }
+        this.$emit('set-title', this.chatRes['resource'][0] || 'Uh-oh')
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.$emit('message-loading', false)
+        this.scrollToBottom()
       }
     },
     addNewLine() {
-      this.message += '\n'
+      this.message += '\n \n \n \n'
     },
     addTemplate(val) {
       if (this.currentOpp) {

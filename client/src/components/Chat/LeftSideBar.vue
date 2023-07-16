@@ -2,72 +2,35 @@
   <div ref="leftsidebar" class="sidebar" :class="{ open: isOpen }">
     <section>
       <header class="right-bar-header">
-        <!-- <button @mouseenter="soonThreadText" @mouseleave="newThreadText" class="primary-button">
-          <span style="font-size: 14px; margin-right: 1rem">🚀</span>
-          <span> {{ threadButtonText }}</span>
-        </button> -->
-        <div v-if="!leftbarClosed" class="logo-header">
+        <div class="logo-header">
           <img src="@/assets/images/logo.png" height="26px" alt="" />
         </div>
-
-        <img
-          :class="{ collapsed: leftbarClosed }"
-          @click="toggleLeftbar"
-          class="img-spacing pointer"
-          src="@/assets/images/collapse.svg"
-          height="16px"
-          alt=""
-        />
       </header>
 
       <div class="body">
         <section class="left-section">
-          <p v-if="!leftbarClosed" class="section-title">Today</p>
-          <div v-else style="height: 40px"></div>
-
-          <div :class="{ 'pad-l': leftbarClosed }" class="pad-l-r">
+          <div :class="{ 'pad-l': !leftbarClosed }" class="pad-l-r">
             <div
               @click="changeView('home')"
               :class="{ 'active-view': currentView === 'home' }"
               class="menu-item"
             >
               <img src="@/assets/images/comment.svg" height="14px" alt="" />
-              <p v-if="!leftbarClosed">Home</p>
-
-              <!-- <div class="counter empty"><p>0</p></div> -->
-            </div>
-
-            <div
-              @click="changeView('meetings')"
-              :class="{ 'active-view': currentView === 'meetings' }"
-              class="menu-item"
-            >
-              <img src="@/assets/images/calendar.svg" height="14px" alt="" />
-              <p v-if="!leftbarClosed">Meetings</p>
-
-              <!-- <div class="counter empty"><p>0</p></div> -->
             </div>
           </div>
         </section>
 
         <section class="left-section">
-          <p v-if="!leftbarClosed" class="section-title">List views</p>
-
-          <div class="flexed-start" v-if="templates.refreshing">
-            <div class="loading">
-              <div class="dot"></div>
-              <div class="dot"></div>
-              <div class="dot"></div>
-            </div>
-          </div>
-
-          <div
-            class="pad-l-r"
-            :class="{ 'pad-l': leftbarClosed }"
-            style="position: relative"
-            v-else-if="templates.list.length"
-          >
+          <div :class="{ 'pad-l': !leftbarClosed }" class="pad-l-r">
             <div
+              @click="changeView('pipeline')"
+              :class="{ 'active-view pad-right': currentView !== 'home' }"
+              class="menu-item"
+            >
+              <img src="@/assets/images/pipeline.svg" height="14px" alt="" />
+            </div>
+
+            <!-- <div
               :class="{
                 'active-view': currentView.title === alert.title,
                 inactive: !(alert.sobjectInstances && alert.sobjectInstances.length),
@@ -77,44 +40,28 @@
               class="menu-item"
               @click="changeView(alert.title, alert, alert.sobjectInstances.length)"
             >
-              <img src="@/assets/images/hashtag.svg" height="12px" alt="" />
-              <p v-if="!leftbarClosed">{{ alert.title }}</p>
+              <div class="right-margin"></div>
+              <p>{{ alert.title }}</p>
 
-              <div
-                v-if="alert.sobjectInstances && alert.sobjectInstances.length && !leftbarClosed"
-                class="counter"
-              >
+              <div v-if="alert.sobjectInstances && alert.sobjectInstances.length" class="counter">
                 <p>
                   {{ alert.sobjectInstances.length }}
                 </p>
               </div>
-            </div>
-          </div>
-
-          <div v-else>
-            <div class="menu-item">
-              <img src="@/assets/images/listed.svg" height="14px" alt="" />
-              <p style="color: #9596b4">No active lists</p>
-            </div>
+            </div> -->
           </div>
         </section>
       </div>
 
       <footer>
-        <!-- <div @click="sendNewEmailTest" class="menu-item">
-          <p>Test</p>
-        </div> -->
         <div class="menu-item">
           <img style="margin-left: -3px" src="@/assets/images/settings.svg" height="18px" alt="" />
-          <p v-if="!leftbarClosed">Settings</p>
         </div>
         <div @click="toggleTooltip" class="menu-item">
           <img src="@/assets/images/help.png" height="14px" alt="" />
-          <p v-if="!leftbarClosed">Support</p>
         </div>
         <div class="menu-item" @click="handleProfileOpen">
           <img src="@/assets/images/profile.svg" height="14px" alt="" />
-          <p v-if="!leftbarClosed">Profile</p>
         </div>
 
         <div :class="{ 'showing-tooltip': showTooltip }" class="tooltip">
@@ -127,18 +74,6 @@
         </div>
       </footer>
     </section>
-
-    <!-- <section v-else>
-      <div>
-        <img
-          @click="toggleLeftbar"
-          class="img-spacing pointer collapsed"
-          src="@/assets/images/collapse.svg"
-          height="16px"
-          alt=""
-        />
-      </div>
-    </section> -->
 
     <div @click="toggleSidebar" v-if="isOpen" class="close">
       <font-awesome-icon
@@ -153,6 +88,7 @@
 import { CollectionManager } from '@thinknimble/tn-models'
 import AlertTemplate from '@/services/alerts/'
 import User from '@/services/users'
+import { decryptData } from '../../encryption'
 
 export default {
   name: 'LeftSideBar',
@@ -161,7 +97,7 @@ export default {
   },
   data() {
     return {
-      leftbarClosed: false,
+      leftbarClosed: true,
       showTooltip: false,
       isOpen: false,
       threadButtonText: 'Start New Thread',
@@ -175,14 +111,13 @@ export default {
   },
   mounted() {
     this.templates.refresh()
-    // console.log(this.templates)
   },
   methods: {
     refreshList() {
       this.templates.refresh()
     },
     changeView(view, alert, length) {
-      if (length || view === 'home' || view === 'meetings') {
+      if (length || view === 'home' || view === 'pipeline') {
         this.view = view
         if (view === 'meetings') {
           this.$store.dispatch('loadMeetings')
@@ -191,7 +126,6 @@ export default {
           this.$store.dispatch('setCurrentView', alert)
         } else {
           this.$store.dispatch('setCurrentView', view)
-          // localStorage.clear()
         }
       }
     },
@@ -219,9 +153,9 @@ export default {
     },
     async sendNewEmailTest() {
       const data = {
-        to: [{name: 'Big Boy Bryan', email: 'bryan@mymanagr.com'}],
+        to: [{ name: 'Big Boy Bryan', email: 'bryan@mymanagr.com' }],
         subject: 'Mike, My Managur 100',
-        body: `Hey Mike,<br><br>In the depths of a vast and troubled sea,<br>Where confusion reigns and darkness be,<br>I navigate the currents, lost and unsure,<br>Seeking clarity, yearning for a cure.<br><br>Oh, dear boss, hear my heartfelt plea,<br>For within this tempest, I long to break free.<br>I'm swimming in waves of uncertainty's tide,<br>Yet, still, I strive to keep my dreams alive.<br><br>In this churning abyss, I find no light,<br>Yet, I refuse to surrender without a fight.<br>With every stroke, I battle the unknown,<br>Aiming to carve a path uniquely my own.<br><br>The waters are deep, my vision unclear,<br>But I hold onto hope, suppressing my fear.<br>For though I'm surrounded by shadows and doubt,<br>I'm determined to rise, and find my way out.<br><br>Through the trials and tribulations I endure,<br>I promise, dear boss, to give nothing but pure,<br>Effort and dedication, a relentless drive,<br>To keep pushing forward, to truly thrive.<br><br>Though my path may be foggy, my steps unsure,<br>I'll keep striving, knowing I'm not obscure.<br>For in this sea of confusion and night,<br>I'll find strength within and shine with my might.<br><br>So, dear boss, please understand my plight,<br>That I'm doing my best, despite the fight.<br>In this vast ocean, I'm a swimmer indeed,<br>Working hard to succeed, planting a hopeful seed.<br><br>Through the waves of confusion and darkness, I go,<br>With every stroke, my determination does grow.<br>Trust in my resilience, for I'll never rest,<br>Until I conquer this sea and emerge at my best.<br><br>Poem written by ChatGPT.`
+        body: `Hey Mike,<br><br>In the depths of a vast and troubled sea,<br>Where confusion reigns and darkness be,<br>I navigate the currents, lost and unsure,<br>Seeking clarity, yearning for a cure.<br><br>Oh, dear boss, hear my heartfelt plea,<br>For within this tempest, I long to break free.<br>I'm swimming in waves of uncertainty's tide,<br>Yet, still, I strive to keep my dreams alive.<br><br>In this churning abyss, I find no light,<br>Yet, I refuse to surrender without a fight.<br>With every stroke, I battle the unknown,<br>Aiming to carve a path uniquely my own.<br><br>The waters are deep, my vision unclear,<br>But I hold onto hope, suppressing my fear.<br>For though I'm surrounded by shadows and doubt,<br>I'm determined to rise, and find my way out.<br><br>Through the trials and tribulations I endure,<br>I promise, dear boss, to give nothing but pure,<br>Effort and dedication, a relentless drive,<br>To keep pushing forward, to truly thrive.<br><br>Though my path may be foggy, my steps unsure,<br>I'll keep striving, knowing I'm not obscure.<br>For in this sea of confusion and night,<br>I'll find strength within and shine with my might.<br><br>So, dear boss, please understand my plight,<br>That I'm doing my best, despite the fight.<br>In this vast ocean, I'm a swimmer indeed,<br>Working hard to succeed, planting a hopeful seed.<br><br>Through the waves of confusion and darkness, I go,<br>With every stroke, my determination does grow.<br>Trust in my resilience, for I'll never rest,<br>Until I conquer this sea and emerge at my best.<br><br>Poem written by ChatGPT.`,
       }
       const res = await User.api.sendNewEmail(data)
     },
@@ -229,6 +163,10 @@ export default {
   computed: {
     currentView() {
       return this.$store.state.currentView
+    },
+    user() {
+      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return decryptedUser
     },
   },
   created() {},
@@ -255,6 +193,10 @@ export default {
   &.open {
     left: 0;
   }
+}
+
+.right-margin {
+  margin-right: 1.75rem;
 }
 
 .pad-l-r {
@@ -379,8 +321,8 @@ export default {
 }
 
 .body {
+  margin-top: 1rem;
   min-height: 66vh;
-  // padding: 0 1rem;
   overflow-y: scroll;
   overflow-x: hidden;
   text-overflow: ellipsis;
@@ -585,12 +527,11 @@ img {
 }
 
 .left-section:last-of-type {
-  border: none;
-  overflow-y: scroll;
-  overflow-x: none;
-  scroll-behavior: smooth;
-
-  height: 100%;
+  // border: none;
+  // overflow-y: scroll;
+  // overflow-x: none;
+  // scroll-behavior: smooth;
+  // height: 100%;
 }
 
 .left-section:last-of-type::-webkit-scrollbar {

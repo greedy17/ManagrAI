@@ -12,7 +12,7 @@
       <div class="chat-modal-container">
         <div class="chat-modal-header">
           <div>
-            <h3 @click="test" class="elipsis-text" style="margin-bottom: 0.25rem">
+            <h3 class="elipsis-text" style="margin-bottom: 0.25rem">
               {{ chatData.resource }}
             </h3>
             <span class="gray-text smaller"
@@ -37,11 +37,11 @@
           :key="i"
         >
           <ChatFormField
-            :placeholder="toString(chatData.data[field.apiName])"
+            :placeholder="toString(formData[field.apiName])"
             :field="field"
-            :resourceId="chatData.resourceId"
-            :integrationId="chatData.integrationId"
-            :chatData="chatData.data"
+            :resourceId="chatData.resource_id"
+            :integrationId="chatData.integration_id"
+            :chatData="formData"
             @set-value="setUpdateValues"
             :stageFields="stageFields"
             :stagesWithForms="stagesWithForms"
@@ -175,7 +175,12 @@
     </aside>
 
     <main v-if="currentView === 'home'" id="main">
-      <ChatBox @set-opp="setOpp" @toggle-chat-modal="toggleChatModal" @remove-opp="removeOpp" />
+      <ChatBox
+        ref="chatBox"
+        @set-opp="setOpp"
+        @toggle-chat-modal="toggleChatModal"
+        @remove-opp="removeOpp"
+      />
     </main>
     <main v-else-if="currentView === 'meetings'" id="main">
       <ChatMeetings
@@ -238,6 +243,7 @@ export default {
       barOpen: true,
       leftBarClosed: false,
       stagesWithForms: null,
+      formData: null,
     }
   },
   created() {
@@ -271,11 +277,11 @@ export default {
     },
     setUpdateValues(key, val, multi) {
       if (multi) {
-        this.chatData.data[key] = this.chatData.data[key]
-          ? this.chatData.data[key] + ';' + val
+        this.formData[key] = this.formData[key]
+          ? this.formData[key] + ';' + val
           : val.split(/&#39;/g)[0]
       } else {
-        this.chatData.data[key] = val
+        this.formData[key] = val
       }
     },
     removeEmptyValues(obj) {
@@ -293,21 +299,47 @@ export default {
     async onSubmitChat() {
       this.submitting = true
       try {
-        const res = await CRMObjects.api.updateResource({
-          form_data: this.chatData.data,
-          resource_type: this.chatData.resourceType,
-          form_type: this.chatData.formType,
-          resource_id: this.chatData.resourceId,
-          integration_ids: [this.chatData.integrationId],
-          chat_form_id: [this.chatData.formId],
-          from_workflow: false,
-          workflow_title: 'None',
-          stage_name: null,
-        })
-        this.$store.dispatch('messageUpdated', { id: this.chatData.id, data: this.chatData.data })
-        this.$refs.rightSideBar.reloadOpps()
+        const res = await CRMObjects.api
+          .updateResource({
+            form_data: this.formData,
+            resource_type: this.chatData.resource_type,
+            form_type: this.chatData.form_type,
+            resource_id: this.chatData.resource_id,
+            integration_ids: [this.chatData.integration_id],
+            chat_form_id: [this.chatData.form_id],
+            from_workflow: false,
+            workflow_title: 'None',
+            stage_name: null,
+          })
+          .then((response) => {
+            User.api
+              .editMessage({
+                message_id: this.chatData.id,
+                value: `Successfully updated ${this.chatData.resource}!`,
+                user_type: 'bot',
+                conversation_id: this.chatData.conversation,
+                failed: false,
+                updated: true,
+                data: this.formData,
+              })
+              .then((response) => {
+                this.$refs.chatBox.getConversations()
+                this.$refs.rightSideBar.reloadOpps()
+              })
+          })
       } catch (e) {
-        this.$store.dispatch('messageUpdateFailed', { id: this.chatData.id, data: e.data.error })
+        console.log(e)
+        User.api
+          .addMessage({
+            value: e.data.error,
+            user_type: 'bot',
+            conversation_id: this.conversation.id,
+            failed: true,
+            data: {},
+          })
+          .then((response) => {
+            this.$refs.chatBox.getConversations()
+          })
       } finally {
         setTimeout(() => {
           this.toggleChatModal()
@@ -343,6 +375,11 @@ export default {
     toggleChatModal(data) {
       this.chatModalOpen = !this.chatModalOpen
       if (data) {
+        let jsonString = data.data
+        jsonString = jsonString.replace(/'/g, '"')
+        jsonString = jsonString.replace(/\bNone\b/g, 'null')
+        const obj = JSON.parse(jsonString)
+        this.formData = obj
         this.chatData = data
       }
     },
@@ -431,7 +468,7 @@ body {
 }
 
 #left-sidebar {
-  width: 260px;
+  width: 60px;
   transition: transform 0.3s ease;
 }
 

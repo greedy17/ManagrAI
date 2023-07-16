@@ -44,6 +44,9 @@ urlpatterns = [
         core_views.ActivationLinkView.as_view(),
         name="get_activation_link",
     ),
+    path("users/chat/add-message/", core_views.add_message, name="add_message",),
+    path("users/chat/edit-message/", core_views.edit_message, name="edit_message",),
+    path("users/chat/delete-messages/", core_views.delete_all_messages, name="delete_mmessages",),
     path("users/chat/submission/", core_views.submit_chat_prompt, name="submit_chat_prompt",),
     path("users/chat/ask-managr/", core_views.ask_managr, name="ask_managr",),
     path("users/chat/deal-review/", core_views.deal_review, name="deal_review",),
@@ -214,7 +217,7 @@ urlpatterns = [
     path("auto/trigger-alerts", auto_views.init_trigger_alerts, name="trigger-alerts",),
 ]
 
-
+router.register("users/conversations", core_views.ConversationViewSet, "conversations"),
 router.register("users/invite", core_views.UserInvitationView, "invite-user")
 router.register("users", core_views.UserViewSet, "users")
 router.register("note-template", core_views.NoteTemplateViewSet, "note-template")
