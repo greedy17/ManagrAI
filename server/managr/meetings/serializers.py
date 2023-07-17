@@ -23,12 +23,12 @@ class MeetingZoomSerializer(serializers.ModelSerializer):
         user = data.pop("user")
         model_data = {
             "user": user,
-            "meeting_id": data["meeting_uuid"],
+            "meeting_id": data["meeting_id"],
             "topic": data["topic"],
             "start_time": data["start_time"],
             "end_time": data["end_time"],
-            "provider": data["source"],
-            "meta_data": dict(data),
+            "provider": data["provider"],
+            "meta_data": data["meta_data"],
         }
         return super().to_internal_value(model_data)
 

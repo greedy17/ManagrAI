@@ -77,5 +77,7 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "ask_managr_blockset": command_views_blocksets.ask_managr_blockset,
         "reset_meeting_block_set": command_views_blocksets.reset_meeting_block_set,
         "resource_action_blockset": common_blocksets.resource_action_blockset,
+        "transcript_message_blockset": common_blocksets.use_transcript_message,
+        "update_form_blockset": common_blocksets.update_form_blockset,
     }
     return switcher.get(set_name)(context, *args, **kwargs)

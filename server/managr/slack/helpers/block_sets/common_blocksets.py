@@ -619,6 +619,104 @@ def resource_action_blockset(context):
         block_builders.option("Ask Managr", "ASK_MANAGR"),
         block_builders.option(f"{resource_type} Review", "REVIEW"),
     ]
-    blocks = [block_builders.static_select("What would you like to do?", options)]
+    blocks = [
+        block_builders.static_select(
+            "What would you like to do?",
+            options,
+            action_id=action_with_params(
+                slack_const.PROCESS_RESOURCE_SELECTED_ACTION, params=[f"u={str(user.id)}"]
+            ),
+        ),
+    ]
     return blocks
 
+
+@block_set()
+def use_transcript_message(context):
+    transcript_option = context.pop("transcript_option", "Yes")
+    meeting_date = context.get("meeting_date", str(datetime.today().date()))
+    blocks = [
+        block_builders.static_select(
+            "Use AI to summarize & autofill CRM?",
+            [block_builders.option("Yes", "YES"), block_builders.option("No", "NO")],
+            initial_option=block_builders.option(transcript_option, transcript_option.upper()),
+            block_id="YES_NO",
+        ),
+        block_builders.datepicker(
+            meeting_date,
+            action_id=action_with_params(
+                slack_const.CHOOSE_MEETING_OPTIONS, [f"u={context.get('u')}"]
+            ),
+            block_id="MEETING_DATE",
+            label="Meeting Date",
+        ),
+        block_builders.external_select(
+            "Select Meeting",
+            action_id=action_with_params(
+                slack_const.PROCESS_GET_MEETING_OPTIONS,
+                [f"u={context.get('u')}", f"meeting_date={meeting_date}"],
+            ),
+            block_id="MEETING_OPTIONS",
+        ),
+    ]
+    return blocks
+
+
+def update_form_blockset(context):
+    from managr.crm.utils import CRM_SWITCHER
+    from managr.slack.helpers.utils import block_finder
+    from managr.crm.models import ObjectField
+
+    user = User.objects.get(id=context.get("u"))
+    resource_id = context.get("resource_id")
+    resource_type = context.get("resource_type")
+    resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(id=resource_id)
+    template = user.team.team_forms.all().filter(form_type="UPDATE", resource=resource_type).first()
+    form = OrgCustomSlackFormInstance.objects.create(
+        template=template, user=user, resource_id=resource_id
+    )
+    blocks = form.generate_form()
+    try:
+        stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
+        index, block = block_finder(stage_name, blocks)
+    except ValueError:
+        # did not find the block
+        block = None
+        pass
+    if user.crm == "HUBSPOT" and resource_type == "Deal":
+        try:
+            pipeline_index, pipeline_block = block_finder("pipeline", blocks)
+        except ValueError:
+            # did not find the block
+            pipeline_index = False
+            pipeline_block = None
+            pass
+        if pipeline_block is None:
+            pipeline_field = ObjectField.objects.filter(
+                crm_object="Deal", api_name="pipeline", user=user
+            ).first()
+            if pipeline_field:
+                pipeline_block = pipeline_field.to_slack_field(None, user, "Deal")
+        pipeline_block = {
+            **pipeline_block,
+            "accessory": {
+                **pipeline_block["accessory"],
+                "action_id": f"{slack_const.COMMAND_FORMS__PIPELINE_SELECTED}?u={str(user.id)}&f={str(form.id)}&field={str(pipeline_field.id)}",
+            },
+        }
+        if block:
+            if pipeline_index:
+                del blocks[index]
+            else:
+                blocks[index] = pipeline_block
+    else:
+        if block:
+            block = {
+                **block,
+                "accessory": {
+                    **block["accessory"],
+                    "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={str(form.id)}",
+                },
+            }
+            blocks = [*blocks[:index], block, *blocks[index + 1 :]]
+    return [*blocks]

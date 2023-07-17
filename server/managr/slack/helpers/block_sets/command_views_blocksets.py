@@ -519,7 +519,6 @@ def update_command_block_set(context):
             placeholder="Type to search",
         ),
     ]
-    print(blocks)
     return blocks
 
 
@@ -737,4 +736,3 @@ def reset_meeting_block_set(context, *args, **kwargs):
             ),
         )
     return blocks
-

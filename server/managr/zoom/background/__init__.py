@@ -849,11 +849,14 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
     from managr.core import constants as core_consts
     from managr.core.exceptions import _handle_response
     from managr.core.background import emit_process_add_call_analysis
+    from managr.meetings.serializers import MeetingZoomSerializer
 
     pm = json.loads(payload["view"]["private_metadata"])
     user = User.objects.get(id=pm.get("u"))
-    state = payload["view"]["state"]["values"]
     ts = context.get("ts", False)
+    resource = CRM_SWITCHER[user.crm][context.get("resource_type")]["model"].objects.get(
+        id=context.get("resource_id")
+    )
     try:
         if ts:
             loading_res = slack_requests.update_channel_message(
@@ -884,37 +887,53 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
         logger.exception(
             f"ERROR sending update channel message for chat submittion because of <{e}>"
         )
-    selected_options = state["selected_object"]
-    resource_type = context.get("resource_type")
-    resource_list = [
-        key for key in selected_options.keys() if "MEETING__PROCESS_TRANSCRIPT_TASK" in key
-    ]
-    value_key = "None"
-    if len(resource_list):
-        value_key = resource_list[0]
-    selected_option = selected_options[value_key]["selected_option"]["value"]
-    workflow = MeetingWorkflow.objects.get(id=pm.get("w"))
-    resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(
-        integration_id=selected_option
+    state = payload["view"]["state"]["values"]
+    key = list(state["MEETING_OPTIONS"].keys())[0]
+    meeting_id = state["MEETING_OPTIONS"][key].get("selected_option").get("value")
+    meeting_res = user.zoom_account.helper_class.get_meeting_by_id(
+        meeting_id, user.zoom_account.access_token
     )
+    end_time = datetime.strptime(meeting_res["start_time"], "%Y-%m-%dT%H:%M:%S%z")
+    end_time = end_time + timezone.timedelta(minutes=meeting_res["duration"])
+    meeting_data = {
+        "meeting_id": meeting_res["id"],
+        "topic": meeting_res["topic"],
+        "start_time": meeting_res["start_time"],
+        "end_time": end_time,
+        "user": user.id,
+        "provider": "Zoom Meeting",
+        "meta_data": json.dumps(meeting_res),
+    }
+    try:
+        meeting = MeetingZoomSerializer(data=meeting_data)
+        meeting.is_valid(True)
+        meeting.save()
+        workflow = MeetingWorkflow.objects.create(
+            operation_type="MEETING_REVIEW",
+            meeting=meeting.instance,
+            user=user,
+            resource_id=pm["resource_id"],
+            resource_type=pm["resource_type"],
+        )
+        pm.update(w=str(workflow.id))
+    except Exception as e:
+        logger.info(e)
+    resource_type = workflow.resource_type
     form_template = user.team.team_forms.get(form_type="UPDATE", resource=resource_type)
     fields = form_template.custom_fields.all()
     fields_list = list(fields.values_list("label", flat=True))
-    workflow.resource_id = str(resource.id)
-    workflow.resource_type = resource_type
     if slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations:
         workflow.operations.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
     if slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations_list:
         workflow.operations_list.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
     workflow.save()
-    meeting = workflow.meeting.meeting_account.helper_class.check_event_id(
-        user.zoom_account.zoom_id, str(workflow.datetime_created.date()), workflow.meeting.id
-    )
+
     has_error = False
     error_message = None
     try:
         if not settings.IN_PROD:
             logger.info("Retreiving meeting data...")
+        meeting = workflow.meeting
         meeting_data = meeting.meeting_account.helper_class.get_meeting_data(
             meeting.meeting_id, meeting.meeting_account.access_token
         )
@@ -1164,6 +1183,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                 f"Your {'Salesforce' if user.crm == 'SALESFORCE' else 'HubSpot'} {'fields' if user.crm == 'SALESFORCE' else 'properties'} have been updated, please review."
             ),
         ]
+
     else:
         blocks = [
             block_builders.header_block("AI Generated Call Summary"),

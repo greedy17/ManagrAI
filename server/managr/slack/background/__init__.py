@@ -104,6 +104,10 @@ def emit_process_chat_action(payload, context):
     return _process_chat_action(payload, context)
 
 
+def emit_process_zoom_meeting_message(payload, context):
+    return _process_zoom_meeting_message(payload, context)
+
+
 @background(schedule=0)
 @log_all_exceptions
 def _process_send_paginated_alerts(payload, context):
@@ -1141,3 +1145,69 @@ def _process_chat_action(payload, context):
             )
     return
 
+
+@background(schedule=0)
+@slack_api_exceptions(rethrow=0)
+def _process_zoom_meeting_message(payload, context):
+    from managr.salesforce.models import MeetingWorkflow
+    from managr.meetings.serializers import MeetingZoomSerializer
+
+    pm = json.loads(payload["view"]["private_metadata"])
+    state = payload["view"]["state"]["values"]
+    user = User.objects.get(id=pm.get("u"))
+    key = list(state["MEETING_OPTIONS"].keys())[0]
+    meeting_id = state["MEETING_OPTIONS"][key].get("selected_option").get("value")
+    meeting_res = user.zoom_account.helper_class.get_meeting_by_id(
+        meeting_id, user.zoom_account.access_token
+    )
+    end_time = datetime.strptime(meeting_res["start_time"], "%Y-%m-%dT%H:%M:%S%z")
+    end_time = end_time + timezone.timedelta(minutes=meeting_res["duration"])
+    meeting_data = {
+        "meeting_id": meeting_res["id"],
+        "topic": meeting_res["topic"],
+        "start_time": meeting_res["start_time"],
+        "end_time": end_time,
+        "user": user.id,
+        "provider": "Zoom Meeting",
+        "meta_data": json.dumps(meeting_res),
+    }
+    try:
+        meeting = MeetingZoomSerializer(data=meeting_data)
+        meeting.is_valid(True)
+        meeting.save()
+        workflow = MeetingWorkflow.objects.create(
+            operation_type="MEETING_REVIEW",
+            meeting=meeting.instance,
+            user=user,
+            resource_id=pm["resource_id"],
+            resource_type=pm["resource_type"],
+        )
+        workflow.add_form(
+            pm["resource_type"], slack_const.FORM_TYPE_UPDATE, resource_id=pm["resource_id"]
+        )
+        pm.update(w=str(workflow.id))
+        blocks = [
+            block_builders.section_with_button_block(
+                "Log Meeting",
+                "LOG_MEETING",
+                workflow.meeting.topic,
+                action_id=action_with_params(
+                    slack_const.ZOOM_MEETING__INIT_REVIEW,
+                    [f"w={str(workflow.id)}", f"u={str(user.id)}", f"ts={pm.get('ts')}"],
+                ),
+            ),
+        ]
+        try:
+            slack_res = slack_requests.update_channel_message(
+                user.slack_integration.channel,
+                context.get("ts"),
+                user.organization.slack_integration.access_token,
+                block_set=blocks,
+            )
+        except Exception as e:
+            logger.exception(
+                f"ERROR sending update channel message for chat submission because of <{e}>"
+            )
+    except Exception as e:
+        logger.info(e)
+    return
