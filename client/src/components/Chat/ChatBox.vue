@@ -277,6 +277,8 @@
       @remove-opp="removeOpp"
       :messages="messages"
       :scrollToBottom="scrollToBottom"
+      :actions="actions"
+      :currentOpp="currentOpp"
     />
   </section>
 </template>
@@ -300,6 +302,18 @@ export default {
       generatingId: null,
       addingInstructions: false,
       instructionText: null,
+      actions: [
+        {
+          name: 'Update CRM',
+          value: 'Update',
+        },
+        // { name: 'Create Record', value: 'Create Opportunity' },
+        { name: 'Ask Managr', value: 'Ask managr... ' },
+        { name: 'Deal Review', value: 'Run Review' },
+        // { name: 'Deal Updates', value: 'Get Summary for Opportunity' },
+        // { name: 'Call Summary', value: 'Get call summary for Opportunity' },
+        // { name: 'Call Analysis', value: 'Get call analysis for Opportunity' },
+      ]
     }
   },
   watch: {
@@ -500,6 +514,9 @@ export default {
     },
     messages() {
       return this.$store.state.messages
+    },
+    currentOpp() {
+      return this.$store.state.currentOpp
     },
   },
   created() {

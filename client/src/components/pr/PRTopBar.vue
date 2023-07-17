@@ -23,23 +23,28 @@
       </Multiselect>
     </div>
     <div class="display-flex">
-      <div>
-        Today
+      <div class="button">
+        <img class="icon-img" src="@/assets/images/calendar.svg" />
+        <span>Today</span>
       </div>
-      <div>
-        Media Type
+      <div class="button">
+        <img class="icon-img" src="@/assets/images/comment.svg" />
+        <span>Media Type</span>
       </div>
-      <div>
-        Hamburger
+      <div class="button">
+        <img class="icon-img no-img-margin" src="@/assets/images/filter-round.svg" />
       </div>
-      <div>
-        Refresh
+      <div class="button refresh-margin">
+        <img class="icon-img" src="@/assets/images/refresh-pr.svg" />
+        <span>Refresh</span>
       </div>
-      <div>
-        Edit Search
+      <div class="button">
+        <img class="icon-img" src="@/assets/images/edit-round.svg" />
+        <span>Edit Search</span>
       </div>
-      <div>
-        New Search
+      <div class="dark-button">
+        <img class="icon-img" src="@/assets/images/sparkles-round.svg" />
+        <span>New Search</span>
       </div>
     </div>
   </div>
@@ -75,8 +80,45 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
+  @import '@/styles/variables';
+  @import '@/styles/buttons';
+  
+  ::v-deep .multiselect * {
+  font-size: 13px;
+  font-family: $base-font-family;
+  border-radius: 5px !important;
+}
+::v-deep .multiselect__option--highlight {
+  background-color: $off-white;
+  color: $base-gray;
+}
+::v-deep .multiselect__option--selected {
+  background-color: $soft-gray;
+}
+
+::v-deep .multiselect__content-wrapper {
+  border-radius: 5px;
+  margin: 0.5rem 0rem;
+  border-top: 1px solid $soft-gray;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  position: absolute !important;
+}
+
+::v-deep .multiselect__tags {
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+}
+
+::v-deep .multiselect__placeholder {
+  color: $base-gray;
+}
   .top-bar {
     display: flex;
+    justify-content: space-between;
+    width: 93vw;
+    background-color: $white;
+    border-radius: 8px;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
   }
   .display-flex {
     display: flex;
@@ -93,8 +135,28 @@ export default {
       filter: invert(70%);
     }
   }
-
   .search-picklist {
     width: 20vw;
+  }
+  .button {
+    @include gray-text-button();
+    margin-left: 1rem;
+  }
+  .dark-button {
+    @include dark-blue-button();
+    margin-left: 1rem;
+    img {
+      filter: invert(81%) sepia(38%) saturate(738%) hue-rotate(349deg) brightness(95%) contrast(88%);
+    }
+  }
+  .icon-img {
+    height: 12px;
+    margin-right: 0.5rem;
+  }
+  .refresh-margin {
+    margin-left: 4rem;
+  }
+  .no-img-margin {
+    margin: 0;
   }
 </style>
