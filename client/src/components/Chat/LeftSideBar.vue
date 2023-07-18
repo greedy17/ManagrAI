@@ -54,7 +54,7 @@
       </div>
 
       <footer>
-        <div class="menu-item">
+        <div @click="handleConfigureOpen" class="menu-item">
           <img style="margin-left: -3px" src="@/assets/images/settings.svg" height="18px" alt="" />
         </div>
         <div @click="toggleTooltip" class="menu-item">
@@ -94,6 +94,7 @@ export default {
   name: 'LeftSideBar',
   props: {
     handleProfileOpen: { type: Function },
+    handleConfigureOpen: { type: Function },
   },
   data() {
     return {

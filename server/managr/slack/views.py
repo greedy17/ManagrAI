@@ -195,7 +195,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
 
             integration = serializer.instance
 
-            text = f"<!here> your organization has connected Managr to your Slack workspace.\nYou can now configure your account by going to the integrations portal here {site_utils.get_site_url()}/settings/integrations"
+            text = f"<!here> your organization has connected Managr to your Slack workspace.\nYou can now configure your account by going to the integrations portal here {site_utils.get_site_url()}/chat"
 
             channel = integration.incoming_webhook.get("channel_id", None)
             slack_requests.generic_request(
@@ -1149,10 +1149,10 @@ def redirect_from_slack(request):
         if not code:
             err = {"error": "there was an error"}
             err = urlencode(err)
-            return redirect("http://localhost:8080/settings/integrations")
-        return redirect(f"http://localhost:8080/settings/integrations?{q}")
+            return redirect("http://localhost:8080/chat")
+        return redirect(f"http://localhost:8080/chat?{q}")
     else:
-        return redirect("http://localhost:8080/settings/integrations")
+        return redirect("http://localhost:8080/chat")
 
 
 @api_view(["post"])

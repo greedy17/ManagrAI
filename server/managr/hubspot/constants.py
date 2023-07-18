@@ -38,11 +38,11 @@ if settings.USE_HUBSPOT:
     AUTHENTICATION_URI = "https://api.hubapi.com/oauth/v1/token"
 
     if settings.IN_DEV:
-        HUBSPOT_FRONTEND_REDIRECT = "http://localhost:8080/settings/integrations"
+        HUBSPOT_FRONTEND_REDIRECT = "http://localhost:8080/chat"
     elif settings.IN_STAGING:
-        HUBSPOT_FRONTEND_REDIRECT = "https://staging.managr.ai/settings/integrations"
+        HUBSPOT_FRONTEND_REDIRECT = "https://staging.managr.ai/chat"
     else:
-        HUBSPOT_FRONTEND_REDIRECT = "https://app.managr.ai/settings/integrations"
+        HUBSPOT_FRONTEND_REDIRECT = "https://app.managr.ai/chat"
     SCOPES = [
         "crm.objects.contacts.read",
         "crm.objects.contacts.write",

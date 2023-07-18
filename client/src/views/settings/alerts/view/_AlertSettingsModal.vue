@@ -19,7 +19,7 @@
     <div class="alerts-page__settings">
       <div style="margin-bottom: 16px" class="alerts-page__settings__day">
         <p>Select day:</p>
-        <div style="margin-top: -1.75rem" v-if="weeklyOrMonthly == 'WEEKLY'">
+        <div style="margin-top: -1rem" v-if="weeklyOrMonthly == 'WEEKLY'">
           <FormField>
             <template v-slot:input>
               <Multiselect
@@ -28,7 +28,7 @@
                 v-model="selectedDay"
                 :options="weeklyOpts"
                 openDirection="below"
-                style="width: 16vw; margin-top: 1rem"
+                style="width: 16vw; margin-top: 1rem; margin-right: 0.5rem;"
                 selectLabel="Enter"
                 track-by="value"
                 label="key"
@@ -60,7 +60,7 @@
       </div>
       <div style="margin-bottom: 16px" class="alerts-page__settings__target-users">
         <p>Select Users:</p>
-        <FormField style="margin-top: -1.75rem" :errors="form.field.alertTargets.errors">
+        <FormField style="margin-top: -1rem" :errors="form.field.alertTargets.errors">
           <template v-slot:input>
             <Multiselect
               placeholder="Select Users"
@@ -68,10 +68,10 @@
               v-model="selectedUsers"
               :options="userTargetsOpts"
               openDirection="below"
-              style="width: 16vw; margin-top: 1rem"
+              style="width: 16vw; margin-top: 1rem; margin-right: 0.5rem;"
               selectLabel="Enter"
               track-by="id"
-              label="fullName"
+              :custom-label="selectUsersCustomLabel"
               :multiple="true"
             >
               <template slot="noResult">
@@ -143,7 +143,7 @@
                 @input="setRecipient($event)"
                 :options="userChannelOpts.channels"
                 openDirection="below"
-                style="width: 16vw; margin-top: 0.5rem"
+                style="width: 16vw; margin-top: 0.5rem; margin-right: 0.5rem;"
                 selectLabel="Enter"
                 track-by="id"
                 label="name"
@@ -289,6 +289,9 @@ export default {
         }
       }
       this.isSaving = false
+    },
+    selectUsersCustomLabel(prop) {
+      return prop.fullName.trim() ? prop.fullName : prop.email
     },
     setDay(n) {
       this.form.field.recurrenceDay.value = 0

@@ -1,5 +1,5 @@
 <template>
-  <div class="edit-panel">
+  <div class="edit-panel" :style="fromConfig ? 'padding-top: 0' : ''">
     <Modal v-if="modalOpen" dimmed>
       <div class="modal-container rel">
         <div class="flex-row-spread sticky border-bottom">
@@ -102,8 +102,25 @@
         </div>
       </div>
     </Modal>
+    <div v-if="fromConfig" class="alerts-header-inner">
+      <div class="alerts-header-inner-width">
+        <button @click="closeBuilder" class="back-button">
+          <img src="@/assets/images/left.svg" alt="" />
+          Back
+        </button>
+  
+        <h3>{{ alert.title }}</h3>
+  
+        <div style="display: flex;">
+          <button @click="deleteItem(alert.id)" class="delete">Delete</button>
+          <button @click="updateItem" style="margin-left: 8px" class="green_button right-margin">
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
     <div class="title">
-      <h4 class="title__head">General</h4>
+      <h4 class="title__head">1. Name your workflow</h4>
 
       <section v-if="!templateNames.includes(alert.title)" class="title__body">
         <div style="display: flex; justify-content: center">
@@ -122,6 +139,51 @@
         <h2 style="color: #4d4e4c; font-size: 16px">{{ alert.title }}</h2>
       </section>
     </div>
+
+    <!-- <div class="title">
+      <h4 class="title__head">Delivery</h4>
+
+      <section class="title__body">
+        <p>Edit your delivery options</p>
+      </section>
+
+      <div class="week-row">
+        <span v-for="(day, i) in weeklyOpts" :key="i">
+          <input
+            type="checkbox"
+            @input="setDay(Number($event.target.value), alert.configsRef[0])"
+            :id="day.value"
+            :value="day.value"
+          />
+          <label
+            :for="day.value"
+            :class="
+              alert.configsRef[0].recurrenceDays.includes(Number(day.value)) ? 'active-option' : ''
+            "
+            >{{ day.key.charAt(0) }}</label
+          >
+        </span>
+      </div>
+
+      <p class="row" :key="index" v-for="(config, index) in alert.configsRef">
+        <span class="remove__group" style="margin-right: 8px">
+          <img
+            class="remove-color"
+            @click="onDeleteConfig(config.id, index)"
+            src="@/assets/images/remove.svg"
+            style="height: 22px"
+            alt=""
+          />
+        </span>
+
+        {{ 'Option ' + (index + 1) + ': ' }}
+        {{ getReadableConfig(config) }}
+      </p>
+
+      <div style="margin-left: 12px" class="plus_button">
+        <button @click="onShowSettingsModal">+</button>
+      </div>
+    </div> -->
 
     <div class="title">
       <h4 class="title__head">Conditions</h4>
@@ -163,8 +225,47 @@
             {{ getReadableOperandRow(operand) }}
           </p>
 
-          <div v-if="group.operandsRef.length < 3" style="margin-left: 12px" class="plus_button">
-            <button @click="onShowOperandModal(index)">+</button>
+          <div style="display: flex;">
+            <div v-if="group.operandsRef.length < 3" class="plus_button">
+              <button v-if="!showOperand" style="margin-left: 12px" @click="onShowOperandModal(index)">+</button>
+              <span v-else class="remove__group" style="margin-right: 8px;" @click="onHideOperandModal">
+                <img class="remove-color" src="@/assets/images/remove.svg" style="16px" alt="" />
+              </span>
+            </div>
+            <div v-if="showOperand">
+              <div class="show-operand-container rel">
+                <!-- <div class="flex-row-spread sticky border-bottom">
+                  <div class="flex-row">
+                    <img
+                      src="@/assets/images/logo.png"
+                      style="margin-right: 8px; margin-left: 4px"
+                      class="logo"
+                      height="26px"
+                      alt=""
+                    />
+                    <h4>Add condition</h4>
+                  </div>
+                  <div class="flex-row">
+                    <img
+                      @click="resetModal"
+                      src="@/assets/images/close.svg"
+                      height="24px"
+                      alt=""
+                      style="margin-right: 16px; filter: invert(30%); cursor: pointer"
+                    />
+                  </div>
+                </div> -->
+  
+                <div class="" style="display: flex; align-items: center;">
+                  <AlertOperandRow :resourceType="alert.resourceType" :form.sync="currentForm" />
+                  <div class="">
+                    <button @click="onSaveOperand()" class="green_button" style="margin-left: 0.5rem;" :disabled="!currentForm.isValid">
+                      Add Condition
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -174,30 +275,39 @@
       </div>
     </div>
 
-    <div class="title">
-      <h4 class="title__head">Delivery</h4>
+    <div v-if="showGroup">
+      <div class="show-operand-container rel">
+        <!-- <div class="flex-row-spread sticky border-bottom">
+          <div class="flex-row">
+            <img
+              src="@/assets/images/logo.png"
+              style="margin-right: 8px; margin-left: 4px"
+              class="logo"
+              height="26px"
+              alt=""
+            />
+            <h4>Add Group</h4>
+          </div>
+          <div class="flex-row">
+            <img
+              @click="resetGroupModal"
+              src="@/assets/images/close.svg"
+              height="24px"
+              alt=""
+              style="margin-right: 16px; filter: invert(30%); cursor: pointer"
+            />
+          </div>
+        </div> -->
 
-      <section class="title__body">
-        <p>Edit your delivery options</p>
-      </section>
+        <div class="">
+          <AlertGroup :resourceType="alert.resourceType" :form.sync="groupForm" />
 
-      <p class="row" :key="index" v-for="(config, index) in alert.configsRef">
-        <span class="remove__group" style="margin-right: 8px">
-          <img
-            class="remove-color"
-            @click="onDeleteConfig(config.id, index)"
-            src="@/assets/images/remove.svg"
-            style="height: 22px"
-            alt=""
-          />
-        </span>
-
-        {{ 'Option ' + (index + 1) + ': ' }}
-        {{ getReadableConfig(config) }}
-      </p>
-
-      <div style="margin-left: 12px" class="plus_button">
-        <button @click="onShowSettingsModal">+</button>
+          <div class="">
+            <button @click="onSaveGroup()" class="green_button" :disabled="!groupForm.isValid">
+              Add Group
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -337,6 +447,7 @@ import AlertTemplate, {
 import { stringRenderer } from '@/services/utils'
 import { ObjectField } from '@/services/crm'
 import { ALERT_DATA_TYPE_MAP, STRING } from '@/services/salesforce/models'
+import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 
 export default {
   name: 'AlertsEditPanel',
@@ -346,6 +457,7 @@ export default {
     Modal,
     AlertGroup,
     AlertOperandRow,
+    PulseLoadingSpinnerButton,
     draggable,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
@@ -353,6 +465,12 @@ export default {
     alert: {
       type: AlertTemplate,
       required: true,
+    },
+    fromConfig: {
+      type: Boolean,
+    },
+    closeBuilder: {
+      type: Function,
     },
   },
   data() {
@@ -369,6 +487,9 @@ export default {
       messageTemplateForm: new AlertMessageTemplateForm(),
       savedChanges: false,
       savingInTab: false,
+      savingTemplate: false,
+      showOperand: false,
+      showGroup: false,
       // valuePromise: null,
       slackMessage: [],
       formattedSlackMessage: [],
@@ -418,6 +539,15 @@ export default {
         { label: 'True', value: 'true' },
         { label: 'False', value: 'false' },
       ],
+      weeklyOpts: [
+        { key: 'Monday', value: '0' },
+        { key: 'Tuesday', value: '1' },
+        { key: 'Wednesday', value: '2' },
+        { key: 'Thursday', value: '3' },
+        { key: 'Friday', value: '4' },
+        { key: 'Saturday', value: '5' },
+        { key: 'Sunday', value: '6' },
+      ],
     }
   },
 
@@ -435,15 +565,58 @@ export default {
     stateRecordTypes() {
       return this.$store.state.recordTypes
     },
+    hasSlack() {
+      return !!this.$store.state.user.slackRef
+    },
   },
   methods: {
     test(log) {
       console.log('log', log)
     },
+    setDay(n, form) {
+      const recurrenceDays = form.recurrenceDays
+      let index
+      for (let i = 0; i < recurrenceDays.length; i++) {
+        const day = recurrenceDays[i]
+        if (day === n) {
+          index = i
+          break;
+        }
+      }
+      if (index !== undefined) {
+        // if it exists in the array, remove
+        form.recurrenceDays = recurrenceDays.filter((day, i) => i !== index)
+      } else {
+        // if it doesn't exist, add
+        form.recurrenceDays.push(n)
+      }
+      // this.setDaysBool = !!form.field.recurrenceDays.value.length
+    },
     resetDeliveryModal() {
       this.deliveryModalOpen = !this.deliveryModalOpen
       this.deliveryForm = null
       this.groupIndex = null
+    },
+    verifySubmit() {
+      if (this.largeOpps) {
+        return (false
+          // this.config.newGroups[0].newOperands[0].operandIdentifier &&
+          // this.config.newGroups[0].newOperands[0].operandValue &&
+          // this.config.newConfigs[0].alertTargets.length &&
+          // this.selectUsersBool &&
+          // this.selectFieldBool &&
+          // this.largeOppsBool
+        )
+      } else {
+        return (false
+          // (this.config.newConfigs[0].recurrenceDays.length ||
+          //   this.config.newGroups[0].newOperands[0].operandIdentifier) &&
+          // this.config.newConfigs[0].alertTargets.length &&
+          // this.selectUsersBool &&
+          // (this.setDaysBool || this.selectFieldBool) &&
+          // this.config.messageTemplate.body.length
+        )
+      }
     },
     updateWorkflow() {
       this.updateTemplate()
@@ -474,6 +647,12 @@ export default {
           this.savingInTab = false
         }
       }
+    },
+    deleteItem(id) {
+      this.$emit('delete-item', id)
+    },
+    updateItem() {
+      this.$emit('update-item')
     },
     resetGroupModal() {
       this.groupModalOpen = !this.groupModalOpen
@@ -510,6 +689,7 @@ export default {
           this.modalOpen = false
           this.groupIndex = null
           this.currentForm = null
+          this.showOperand = false
         }
       }
     },
@@ -520,7 +700,18 @@ export default {
         groupId: this.alert.groupsRef[groupIndex].id,
       })
       this.currentForm = newForm
-      this.modalOpen = true
+      // this.modalOpen = true
+      this.showOperand = true
+    },
+    onHideOperandModal() {
+      this.groupIndex = null
+      // let newForm = new AlertOperandForm({
+      //   operandOrder: this.alert.groupsRef[groupIndex].operandsRef.length,
+      //   groupId: this.alert.groupsRef[groupIndex].id,
+      // })
+      this.currentForm = null
+      // this.modalOpen = true
+      this.showOperand = false
     },
     async onSaveGroup() {
       this.groupForm.validate()
@@ -551,7 +742,8 @@ export default {
         alertTemplateId: this.alert.id,
       })
       this.groupForm = newForm
-      this.groupModalOpen = true
+      // this.groupModalOpen = true
+      this.showGroup = true
     },
     onShowSettingsModal() {
       let newForm = new AlertConfigForm({
@@ -791,6 +983,7 @@ export default {
     // for this version only allowing edit of certain fields or delete of array items
     this.fields.refresh()
     if (this.alert) {
+      console.log('alert', this.alert)
       this.templateTitleField.value = this.alert.title
       // work here
       this.messageTemplateForm.field.body.value = this.alert.messageTemplateRef.body
@@ -875,11 +1068,12 @@ export default {
 }
 .title {
   background-color: white;
-  box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
-  border: 1px solid $soft-gray;
+  // box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
+  // border: 1px solid $soft-gray;
   color: $base-gray;
   border-radius: 6px;
-  width: 50vw;
+  width: 62vw;
+  // width: 50vw;
   // min-height: 25vh;
   letter-spacing: 0.75px;
   padding: 0px 0px 32px 0px;
@@ -1139,5 +1333,132 @@ input[type='search']:focus {
 }
 .margin-top {
   margin-top: 2rem;
+}
+.alerts-header-inner {
+  // position: fixed;
+  z-index: 10;
+  // top: 0;
+  // left: 60px;
+  background-color: $white;
+  // width: 96vw;
+  position: sticky;
+  top: 0;
+  width: 100%;
+  border-bottom: 1px solid $soft-gray;
+  padding: 8px 32px 0px 8px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  // gap: 24px;
+
+  h3 {
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.75px;
+    line-height: 1.2;
+    color: $light-gray-blue;
+  }
+}
+.alerts-header-inner-width {
+  width: 80%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.back-button {
+  color: $light-gray-blue;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  letter-spacing: 0.75px;
+
+  img {
+    margin-right: 0.5rem;
+    margin-left: 0.5rem;
+    height: 12px;
+    filter: invert(70%);
+  }
+}
+.purple__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.3rem;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  color: white;
+  background-color: $dark-green;
+  cursor: pointer;
+  min-width: 10rem;
+  font-size: 14px;
+}
+.disabled__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.3rem;
+  font-weight: bold;
+  line-height: 1.14;
+  text-indent: none;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  background-color: $soft-gray;
+  color: $gray;
+  cursor: not-allowed;
+
+  font-size: 14px;
+}
+.delete {
+  @include white-button-danger();
+  font-size: 12px;
+  padding: 8px 16px;
+  border: 1px solid $soft-gray;
+}
+.week-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center !important;
+  width: 25vw;
+  overflow-x: scroll;
+  margin-top: 16px;
+
+  span {
+    transition: all 0.2s;
+  }
+  label {
+    cursor: pointer;
+    color: $light-gray-blue;
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 26px;
+    width: 26px;
+    border-radius: 100%;
+    border: 1px solid $soft-gray;
+    transition: all 0.2s;
+  }
+  input {
+    display: none;
+  }
+
+  span:hover {
+    transform: scale(1.15);
+    color: $base-gray;
+  }
+}
+.active-option {
+  color: $base-gray !important;
+  border: 1px solid $base-gray !important;
+}
+.show-operand-container {
+  // height: 20vh;
 }
 </style>

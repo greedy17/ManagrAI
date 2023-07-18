@@ -1,5 +1,51 @@
 <template>
-  <div class="alerts-page">
+  <div class="alerts-page" :style="closeBuilder ? 'padding-top: 0' : ''">
+    <div v-if="closeBuilder" class="alerts-header-inner">
+      <button @click="closeBuilder" class="back-button">
+        <img src="@/assets/images/left.svg" height="14px" alt="" />
+        Back
+      </button>
+
+      <h3>{{ 'Create Workflow' }}</h3>
+
+      <button
+        @click="saveItem"
+        :disabled="!canSave"
+        class="green_button right-margin"
+        :class="canSave ? '' : ''"
+      >
+        Create Workflow
+      </button>
+
+      <!-- <div v-if="hasSlack">
+        <PulseLoadingSpinnerButton
+          :loading="savingTemplate"
+          :class="!canSave || savingTemplate ? 'disabled__button' : 'purple__button'"
+          text="Create Workflow"
+          @click.stop="onSave"
+          :disabled="!canSave || savingTemplate"
+        />
+      </div> -->
+
+      <!-- <div v-else>
+        <button
+          v-if="largeOpps"
+          :disabled="!selectFieldBool || !largeOppsBool"
+          @click="noSlackSave"
+          :class="!selectFieldBool || !largeOppsBool ? 'disabled__button' : 'purple__button '"
+        >
+          Activate without Slack
+        </button>
+        <button
+          v-else
+          @click="noSlackSave"
+          :disabled="selectField ? !selectFieldBool : null"
+          :class="selectField && !selectFieldBool ? 'disabled__button' : 'purple__button '"
+        >
+          Activate without Slack
+        </button>
+      </div> -->
+    </div>
     <section v-if="!oldAlert">
       <div class="title">
         <h4 class="title__head">General</h4>
@@ -519,10 +565,36 @@ export default {
   },
   props: {
     oldAlert: {},
+    closeBuilder: {},
+    canSave: {},
   },
   methods: {
     test(log) {
       console.log('log', log)
+    },
+    verifySubmit() {
+      if (this.largeOpps) {
+        return (
+          this.config.newGroups[0].newOperands[0].operandIdentifier &&
+          this.config.newGroups[0].newOperands[0].operandValue &&
+          this.config.newConfigs[0].alertTargets.length &&
+          this.selectUsersBool &&
+          this.selectFieldBool &&
+          this.largeOppsBool
+        )
+      } else {
+        return (
+          (this.config.newConfigs[0].recurrenceDays.length ||
+            this.config.newGroups[0].newOperands[0].operandIdentifier) &&
+          this.config.newConfigs[0].alertTargets.length &&
+          this.selectUsersBool &&
+          (this.setDaysBool || this.selectFieldBool) &&
+          this.config.messageTemplate.body.length
+        )
+      }
+    },
+    saveItem() {
+      this.$emit('save-item')
     },
     searchFields() {
       this.fields = CollectionManager.create({
@@ -930,6 +1002,9 @@ export default {
     alertIsValid() {
       return this.alertTemplateForm.isValid
     },
+    hasSlack() {
+      return !!this.$store.state.user.slackRef
+    },
     user() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
@@ -1147,7 +1222,7 @@ input::placeholder {
   width: 1ex;
   height: 0.3ex;
   background: rgba(0, 0, 0, 0);
-  top: 0.9ex;
+  top: 1.1ex;
   left: 0.4ex;
   border: 2px solid $dark-green;
   border-top: none;
@@ -1432,5 +1507,81 @@ input[type='search']:focus {
       }
     }
   }
+}
+.alerts-header-inner {
+  // position: fixed;
+  z-index: 10;
+  // top: 0;
+  // left: 60px;
+  background-color: $white;
+  // width: 96vw;
+  position: sticky;
+  top: 0;
+  width: 100%;
+  border-bottom: 1px solid $soft-gray;
+  padding: 8px 32px 0px 8px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  // gap: 24px;
+
+  h3 {
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.75px;
+    line-height: 1.2;
+    color: $light-gray-blue;
+  }
+}
+.back-button {
+  color: $base-gray;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  letter-spacing: 0.75px;
+
+  img {
+    margin-right: 8px;
+  }
+}
+.purple__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.3rem;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  color: white;
+  background-color: $dark-green;
+  cursor: pointer;
+  min-width: 10rem;
+  font-size: 14px;
+}
+.disabled__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.3rem;
+  font-weight: bold;
+  line-height: 1.14;
+  text-indent: none;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  background-color: $soft-gray;
+  color: $gray;
+  cursor: not-allowed;
+
+  font-size: 14px;
+}
+.green_button {
+  @include primary-button();
+  padding: 8px 12px;
+  font-size: 12px;
 }
 </style>

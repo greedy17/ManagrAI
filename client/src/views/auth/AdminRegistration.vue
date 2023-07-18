@@ -219,7 +219,7 @@ export default {
         this.$store.commit('UPDATE_USERTOKEN', key)
         this.generatingToken = false
         this.selectedCrm = null
-        this.$router.push({ name: 'Integrations' })
+        this.$router.push({ name: 'Home' })
       }
     }
   },
@@ -302,7 +302,7 @@ export default {
       this.$store.commit('UPDATE_USER', user)
       // this.$store.commit('UPDATE_USERTOKEN', encryptedKey)
       this.$store.commit('UPDATE_USERTOKEN', user.token)
-      this.$router.push({ name: 'Integrations' })
+      this.$router.push({ name: 'Home' })
     },
   },
   computed: {

@@ -1,6 +1,19 @@
 <template>
   <div :class="{ background: showBackground }" id="chat">
     <Modal
+      v-if="configureModalOpen"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), handleCancel()
+        }
+      "
+    >
+      <div class="configure-modal-container">
+        <ConfigureModal />
+      </div>
+    </Modal>
+    <Modal
       v-if="chatModalOpen"
       dimmed
       @close-modal="
@@ -171,6 +184,7 @@
         @hide-background="toggleBackgroundOff"
         @toggle-Left-bar="toggleLeftBar"
         :handleProfileOpen="handleProfileOpen"
+        :handleConfigureOpen="handleConfigureOpen"
       />
     </aside>
 
@@ -209,6 +223,7 @@
 import ChatBox from '../components/Chat/ChatBox.vue'
 import RightBar from '../components/Chat/RightBar.vue'
 import LeftSideBar from '../components/Chat/LeftSideBar.vue'
+import ConfigureModal from '../components/Chat/Configure/ConfigureModal.vue'
 import Modal from '@/components/InviteModal'
 import ChatFormField from '../components/Chat/ChatFormField.vue'
 import CollectionManager from '@/services/collectionManager'
@@ -224,6 +239,7 @@ export default {
     ChatBox,
     RightBar,
     LeftSideBar,
+    ConfigureModal,
     Modal,
     ChatFormField,
     ChatList,
@@ -233,6 +249,7 @@ export default {
     return {
       showBackground: false,
       profileModalOpen: false,
+      configureModalOpen: false,
       submitting: false,
       profileOrTeam: 'profile',
       team: CollectionManager.create({ ModelClass: User }),
@@ -364,8 +381,12 @@ export default {
     handleProfileOpen() {
       this.profileModalOpen = true
     },
+    handleConfigureOpen() {
+      this.configureModalOpen = true
+    },
     handleCancel() {
       this.profileModalOpen = false
+      this.configureModalOpen = false
     },
     logOut() {
       this.$store.dispatch('logoutUser')
@@ -554,6 +575,19 @@ body {
   flex-direction: column;
   width: 475px;
   height: 600px;
+  padding: 0 0.5rem 0 1rem;
+  background-color: white;
+  border-radius: 6px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.configure-modal-container {
+  display: flex;
+  flex-direction: column;
+  width: 80vw;
+  height: 90vh;
   padding: 0 0.5rem 0 1rem;
   background-color: white;
   border-radius: 6px;
