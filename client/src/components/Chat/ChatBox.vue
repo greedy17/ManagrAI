@@ -13,14 +13,18 @@
           <div class="images">
             <span v-if="message.failed" style="font-size: 24px"> 🚫 </span>
             <span
-              v-else-if="message.user_type === 'bot' && !message.updated"
+              v-else-if="
+                message.user_type === 'bot' && !message.updated && !message.generated_title
+              "
               style="font-size: 24px"
             >
               🤖
             </span>
             <span
               style="margin-left: -4px"
-              v-else-if="message.user_type === 'bot' && message.updated"
+              v-else-if="
+                message.user_type === 'bot' && (message.updated || message.generated_title)
+              "
             >
               <img class="green-filter" src="@/assets/images/logo.png" height="30px" alt="" />
             </span>
@@ -30,16 +34,26 @@
 
           <div class="text-container">
             <div style="position: relative">
+              <!-- :class="{
+                  marg:
+                    message.generated_title !== 'Deal Review' &&
+                    message.generated_title !== 'AI Generated Next Steps' &&
+                    message.generated_title !== 'AI Generated Summary',
+                }" -->
               <div
                 class="type-header"
-                :class="{ marg: message.generated_title === 'AI Generated Summary' }"
                 v-if="message.user_type === 'bot' && message.generated_title"
+                :class="{
+                  marg:
+                    message.generated_title === 'Ask Managr' ||
+                    message.generated_title === 'AI Generated Next Steps',
+                }"
               >
-                <h4 style="margin: 0">
+                <h4 style="margin-top: 0">
                   {{ message.generated_title }}
                 </h4>
-                <small v-if="message.data">
-                  {{ message.data.Name || '' }}
+                <small v-if="message.resource">
+                  {{ message.resource }}
                 </small>
               </div>
 
@@ -215,7 +229,7 @@
                 >
 
                 <div style="border-radius: 6px; padding: 0.25rem 0.25rem" class="row">
-                  <p>Processing your submission</p>
+                  <!-- <p>Processing your submission</p> -->
                   <div class="loading">
                     <div class="dot"></div>
                     <div class="dot"></div>
@@ -237,7 +251,7 @@
         >
 
         <div style="border-radius: 6px; padding: 0.25rem 0.75rem" class="row">
-          <p>Processing your submission</p>
+          <!-- <p>Processing your submission</p> -->
           <div class="loading">
             <div class="dot"></div>
             <div class="dot"></div>
@@ -297,6 +311,7 @@ export default {
       try {
         let res = await User.api.getConversations({ user_id: this.user.id })
         this.conversation = res.results[0]
+        console.log(this.conversation)
       } catch (e) {
         console.log(e)
       }
@@ -334,39 +349,42 @@ export default {
       let newNotes = this.jsonNotes(note, 'meeting_comments')
       this.generating = true
       try {
-        let res = await User.api
+        await User.api
           .chatEmail({
             id: this.user.id,
             notes: newNotes,
             instructions: instructions,
           })
           .then((response) => {
-            User.api
-              .editMessage({
-                message_id: editId,
-                value: response['res'],
-                user_type: 'bot',
-                conversation_id: this.conversation.id,
-                failed: false,
-                updated: true,
-              })
-              .then((response) => {
-                this.getConversations()
-              })
+            if (response.status === 500) {
+              User.api
+                .editMessage({
+                  message_id: editId,
+                  error: response.data.value,
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: true,
+                })
+                .then((response) => {
+                  this.$refs.chatBox.getConversations()
+                })
+            } else {
+              User.api
+                .editMessage({
+                  message_id: editId,
+                  value: response['res'],
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: false,
+                  updated: true,
+                })
+                .then((response) => {
+                  this.getConversations()
+                })
+            }
           })
       } catch (e) {
         console.log(e)
-        User.api
-          .addMessage({
-            value: res.data.error,
-            user_type: 'bot',
-            conversation_id: this.conversation.id,
-            failed: true,
-            data: {},
-          })
-          .then((response) => {
-            this.$refs.chatBox.getConversations()
-          })
       } finally {
         this.instructionText = null
         this.generating = false
@@ -382,30 +400,34 @@ export default {
             notes: note,
           })
           .then((response) => {
-            User.api
-              .editMessage({
-                message_id: editId,
-                value: response['res'],
-                user_type: 'bot',
-                failed: false,
-                updated: true,
-              })
-              .then((response) => {
-                this.getConversations()
-              })
+            if (response.status === 500) {
+              User.api
+                .editMessage({
+                  error: response.data.value,
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: true,
+                  message_id: editId,
+                })
+                .then((response) => {
+                  this.$refs.chatBox.getConversations()
+                })
+            } else {
+              User.api
+                .editMessage({
+                  message_id: editId,
+                  value: response['res'],
+                  user_type: 'bot',
+                  failed: false,
+                  updated: true,
+                })
+                .then((response) => {
+                  this.getConversations()
+                })
+            }
           })
       } catch (e) {
-        User.api
-          .addMessage({
-            value: e.data.error,
-            user_type: 'bot',
-            conversation_id: this.conversation.id,
-            failed: true,
-            data: {},
-          })
-          .then((response) => {
-            this.getConversations()
-          })
+        console.log(e)
       } finally {
         this.generating = false
       }
@@ -422,30 +444,34 @@ export default {
             resource: sumObj.resource,
           })
           .then((response) => {
-            User.api
-              .editMessage({
-                message_id: editId,
-                value: response['res'],
-                user_type: 'bot',
-                failed: false,
-                updated: true,
-              })
-              .then((response) => {
-                this.getConversations()
-              })
+            if (response.status === 500) {
+              User.api
+                .editMessage({
+                  message_id: editId,
+                  error: response.data.value,
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: true,
+                })
+                .then((response) => {
+                  this.$refs.chatBox.getConversations()
+                })
+            } else {
+              User.api
+                .editMessage({
+                  message_id: editId,
+                  value: response['res'],
+                  user_type: 'bot',
+                  failed: false,
+                  updated: true,
+                })
+                .then((response) => {
+                  this.getConversations()
+                })
+            }
           })
       } catch (e) {
-        User.api
-          .addMessage({
-            value: e.data.error,
-            user_type: 'bot',
-            conversation_id: this.conversation.id,
-            failed: true,
-            data: {},
-          })
-          .then((response) => {
-            this.getConversations()
-          })
+        console.log(e)
       } finally {
         this.generating = false
       }
@@ -461,33 +487,36 @@ export default {
             instructions: null,
           })
           .then((response) => {
-            User.api
-              .editMessage({
-                message_id: id,
-                value: response['res'],
-                user_type: 'bot',
-                failed: false,
-                generated_title: 'AI Generated Email',
-                generated: true,
-                generated_type: 'email',
-              })
-              .then((response) => {
-                this.getConversations()
-              })
+            if (response.status === 500) {
+              User.api
+                .editMessage({
+                  message_id: editId,
+                  error: response.data.value,
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: true,
+                })
+                .then((response) => {
+                  this.$refs.chatBox.getConversations()
+                })
+            } else {
+              User.api
+                .editMessage({
+                  message_id: id,
+                  value: response['res'],
+                  user_type: 'bot',
+                  failed: false,
+                  generated_title: 'AI Generated Email',
+                  generated: true,
+                  generated_type: 'email',
+                })
+                .then((response) => {
+                  this.getConversations()
+                })
+            }
           })
       } catch (e) {
         console.log(e)
-        User.api
-          .addMessage({
-            value: e,
-            user_type: 'bot',
-            conversation_id: this.conversation.id,
-            failed: true,
-            data: {},
-          })
-          .then((response) => {
-            this.getConversations()
-          })
       } finally {
         this.generating = false
       }
@@ -502,32 +531,36 @@ export default {
             notes: newNotes,
           })
           .then((response) => {
-            User.api
-              .editMessage({
-                message_id: id,
-                value: response['res'],
-                user_type: 'bot',
-                failed: false,
-                generated_title: 'AI Generated Next Steps',
-                generated: true,
-                generated_type: 'next',
-              })
-              .then((response) => {
-                this.getConversations()
-              })
+            if (response.status === 500) {
+              User.api
+                .editMessage({
+                  message_id: editId,
+                  error: response.data.value,
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: true,
+                })
+                .then((response) => {
+                  this.$refs.chatBox.getConversations()
+                })
+            } else {
+              User.api
+                .editMessage({
+                  message_id: id,
+                  value: response['res'],
+                  user_type: 'bot',
+                  failed: false,
+                  generated_title: 'AI Generated Next Steps',
+                  generated: true,
+                  generated_type: 'next',
+                })
+                .then((response) => {
+                  this.getConversations()
+                })
+            }
           })
       } catch (e) {
-        User.api
-          .addMessage({
-            value: e.data.error,
-            user_type: 'bot',
-            conversation_id: this.conversation.id,
-            failed: true,
-            data: {},
-          })
-          .then((response) => {
-            this.getConversations()
-          })
+        console.log(e)
       } finally {
         this.generating = false
       }
@@ -545,33 +578,36 @@ export default {
             resource: resource,
           })
           .then((response) => {
-            User.api
-              .editMessage({
-                message_id: msg_id,
-                value: response['res'],
-                user_type: 'bot',
-                failed: false,
-                generated_title: 'AI Generated Summary',
-                generated: true,
-                generated_type: 'summary',
-              })
-              .then((response) => {
-                this.getConversations()
-              })
+            if (response.status === 500) {
+              User.api
+                .editMessage({
+                  message_id: editId,
+                  error: response.data.value,
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: true,
+                })
+                .then((response) => {
+                  this.$refs.chatBox.getConversations()
+                })
+            } else {
+              User.api
+                .editMessage({
+                  message_id: msg_id,
+                  value: response['res'],
+                  user_type: 'bot',
+                  failed: false,
+                  generated_title: 'AI Generated Summary',
+                  generated: true,
+                  generated_type: 'summary',
+                })
+                .then((response) => {
+                  this.getConversations()
+                })
+            }
           })
       } catch (e) {
         console.log(e)
-        // User.api
-        //   .addMessage({
-        //     value: e.data,
-        //     user_type: 'bot',
-        //     conversation_id: this.conversation.id,
-        //     failed: true,
-        //     data: {},
-        //   })
-        //   .then((response) => {
-        //     this.getConversations()
-        //   })
       } finally {
         this.generating = false
       }
@@ -619,12 +655,12 @@ export default {
   },
   computed: {
     user() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user
     },
     userName() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser.firstName
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.firstName
     },
     chatTitle() {
       return this.$store.state.chatTitle
@@ -697,7 +733,9 @@ export default {
     font-size: 13px;
   }
   small {
+    display: inline-block;
     color: $light-gray-blue;
+    margin-bottom: 8px;
   }
 }
 
@@ -932,7 +970,7 @@ export default {
   align-items: center;
   // background-color: $soft-gray;
   border-radius: 6px;
-  padding: 0.75rem 0.75rem;
+  padding: 1.5rem 0.75rem;
 }
 
 .dot {

@@ -11,7 +11,22 @@
           </div>
         </div>
 
-        <select
+        <Multiselect
+          v-else
+          style="width: 200px"
+          v-model="activeList"
+          :placeholder="currentView.title || 'Select list'"
+          :options="templates.list"
+          selectedLabel=""
+          deselectLabel=""
+          selectLabel=""
+          track-by="id"
+          label="title"
+          @select="selectList($event)"
+          :loading="templates.refreshing"
+        >
+        </Multiselect>
+        <!-- <select
           v-else
           @input="selectList($event.target.selectedOptions[0]._value)"
           class="dropdown__content"
@@ -22,26 +37,13 @@
           <option class="select-items" v-for="(list, i) in templates.list" :key="i" :value="list">
             {{ list.title }}
           </option>
-        </select>
-        <p class="counter" v-if="currentView !== 'pipeline' && !templates.refreshing">
-          {{ currentView.sobjectInstances.length }}
-        </p>
-        <!-- <Multiselect
-          style="height: 28px !important; padding: 0"
-          v-model="activeList"
-          placeholder="Active lists"
-          :options="templates.list"
-          selectedLabel=""
-          deselectLabel=""
-          selectLabel=""
-          track-by="name"
-          label="title"
-          :loading="templates.refreshing"
-        >
-        </Multiselect> -->
+        </select> -->
       </div>
 
       <div style="display: flex; align-items: center">
+        <p class="counter" v-if="currentView !== 'pipeline' && !templates.refreshing">
+          {{ currentView.sobjectInstances.length }}
+        </p>
         <button @click="reloadWorkflow" class="small-button">
           <img
             :class="{ 'rotate disabled': loading }"
@@ -102,7 +104,6 @@
               (field) => !listNames.includes(field.label) && field.crmObject === baseResourceType,
             )
           "
-          :loading="formfields.refreshing"
           selectedLabel=""
           deselectLabel=""
           selectLabel=""
@@ -272,7 +273,7 @@ export default {
   },
   methods: {
     test() {
-      console.log(this.currentView)
+      console.log(this.templates.list)
     },
     selectList(alert) {
       this.$store.dispatch('setCurrentView', alert)
@@ -418,12 +419,12 @@ export default {
   },
   computed: {
     user() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user
     },
     userCRM() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser.crm
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.crm
     },
     baseResourceType() {
       return this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity'
@@ -437,10 +438,13 @@ export default {
       return extras
     },
     hasExtraFields() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      let accountRef = decryptedUser.salesforceAccountRef
-        ? decryptedUser.salesforceAccountRef
-        : decryptedUser.hubspotAccountRef
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      // let accountRef = decryptedUser.salesforceAccountRef
+      //   ? decryptedUser.salesforceAccountRef
+      //   : decryptedUser.hubspotAccountRef
+      let accountRef = this.$store.state.user.salesforceAccountRef
+        ? this.$store.state.user.salesforceAccountRef
+        : this.$store.state.user.hubspotAccountRef
       let extraFields = accountRef.extraPipelineFieldsRef[this.baseResourceType]
       return extraFields && extraFields.length ? extraFields : []
     },
@@ -487,12 +491,19 @@ export default {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   width: 300px;
 }
-// ::v-deep .multiselect__placeholder {
-//   color: $base-gray;
-// }
+
+::v-deep .multiselect__single {
+  white-space: nowrap;
+}
+
 ::v-deep .multiselect__tag {
   background-color: $soft-gray;
   color: $base-gray;
+  height: 32px;
+}
+
+::v-deep .multiselect__tags {
+  height: 32px;
 }
 
 .dropdown__content {
@@ -787,37 +798,6 @@ export default {
   padding: 0 0 2px 0 !important;
   // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
-
-// @media (max-height: 600px) {
-//   .chat-table-section {
-//     min-height: 56vh;
-//   }
-// }
-
-// @media (max-height: 750px) {
-//   .chat-table-section {
-//     min-height: 66vh;
-//   }
-// }
-
-// @media (min-height: 875px) {
-//   .chat-table-section {
-//     min-height: 70vh;
-//   }
-// }
-
-// @media (min-height: 1025px) {
-//   .chat-table-section {
-//     min-height: 75vh;
-//   }
-// }
-
-// @media (min-height: 1200px) {
-//   .chat-table-section {
-//     min-height: 78vh;
-//   }
-// }
-
 .chat-table-section::-webkit-scrollbar {
   width: 6px;
   height: 0px;

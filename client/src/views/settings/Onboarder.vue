@@ -897,8 +897,9 @@ export default {
       try {
         const res = await SlackOAuth.api.updateZoomChannel(this.slackId, zoom_channel).then(() => {
           User.api.getUser(this.user.id).then((response) => {
-            const encrypted = encryptData(response, process.env.VUE_APP_SECRET_KEY)
-            this.$store.commit('UPDATE_USER', encrypted)
+            // const encrypted = encryptData(response, process.env.VUE_APP_SECRET_KEY)
+            // this.$store.commit('UPDATE_USER', encrypted)
+            this.$store.commit('UPDATE_USER', response)
           })
         })
       } catch (e) {
@@ -925,8 +926,9 @@ export default {
           .updateRecapChannel(this.slackId, recap_channel, [this.user.id])
           .then(() => {
             User.api.getUser(this.user.id).then((response) => {
-              const encrypted = encryptData(response, process.env.VUE_APP_SECRET_KEY)
-              this.$store.commit('UPDATE_USER', encrypted)
+              // const encrypted = encryptData(response, process.env.VUE_APP_SECRET_KEY)
+              // this.$store.commit('UPDATE_USER', encrypted)
+              this.$store.commit('UPDATE_USER', response)
             })
           })
       } finally {
@@ -967,8 +969,9 @@ export default {
             })
             .then(() => {
               User.api.getUser(this.user.id).then((response) => {
-                const encrypted = encryptData(response, process.env.VUE_APP_SECRET_KEY)
-                this.$store.commit('UPDATE_USER', encrypted)
+                // const encrypted = encryptData(response, process.env.VUE_APP_SECRET_KEY)
+                // this.$store.commit('UPDATE_USER', encrypted)
+                this.$store.commit('UPDATE_USER', response)
               })
             })
         } catch (e) {
@@ -1097,8 +1100,8 @@ export default {
   },
   computed: {
     slackId() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser.slackRef.slackId
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.slackRef.slackId
     },
     updateForm() {
       return this.allForms
@@ -1118,32 +1121,32 @@ export default {
       return filtered
     },
     userCRM() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser.crm
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.crm
     },
     hasHubspotIntegration() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return !!decryptedUser.hubspotAccount
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!this.$store.state.user.hubspotAccount
     },
     hasSalesforceIntegration() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return !!decryptedUser.salesforceAccount
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!this.$store.state.user.salesforceAccount
     },
     orgHasSlackIntegration() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return !!decryptedUser.organizationRef.slackIntegration
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!this.$store.state.user.organizationRef.slackIntegration
     },
     hasSlackIntegration() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return !!decryptedUser.slackRef
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!this.$store.state.user.slackRef
     },
     hasNylasIntegration() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return !!decryptedUser.nylas
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!this.$store.state.user.nylas
     },
     userCanIntegrateSlack() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser.isAdmin
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.isAdmin
     },
     selectedIntegrationSwitcher() {
       switch (this.selectedIntegration) {
@@ -1162,13 +1165,13 @@ export default {
       }
     },
     user() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user
     },
     hasZoomChannel() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser.slackAccount
-        ? decryptedUser.slackAccount.zoomChannel
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.slackAccount
+        ? $this.$store.state.user.slackAccount.zoomChannel
         : null
     },
     hasRecapChannel() {

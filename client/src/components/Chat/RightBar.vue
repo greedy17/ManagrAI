@@ -10,8 +10,8 @@
         Pipeline
       </div>
       <div
-        style="cursor: not-allowed"
-        :class="{ activeswitch: mainView === 'calendar' }"
+        @click="switchMainView('meetings')"
+        :class="{ activeswitch: mainView === 'meetings' }"
         class="switch-item"
       >
         <font-awesome-icon icon="fa-regular fa-calendar" />
@@ -63,27 +63,7 @@
       </section>
 
       <section v-else>
-        <!-- <div class="flexed-row-spread">
-          <p style="margin-bottom: 0.25rem; color: #9596b4">
-            All Open {{ user.crm === 'SALESFORCE' ? 'Opportunities' : 'Deals' }} ({{
-              displayedOpps.count
-            }})
-          </p>
-
-          <div class="flexed-row">
-            <img class="coming-soon" src="@/assets/images/shuffle.svg" height="14px" alt="" />
-
-            <img
-              :class="{ 'rotate opaque not-allowed': oppsLoading }"
-              @click="reloadOpps"
-              src="@/assets/images/refresh.svg"
-              height="18px"
-              alt=""
-            />
-          </div>
-        </div> -->
-
-        <div style="margin-top: 0.5rem" class="flexed-row-spread">
+        <div v-if="mainView === 'pipeline'" style="margin-top: 0.5rem" class="flexed-row-spread">
           <div class="input">
             <img style="cursor: text" src="@/assets/images/search.svg" height="16px" alt="" />
 
@@ -104,7 +84,7 @@
           </div>
 
           <span @click="toggleShowFilters" class="icon-button">
-            <img src="@/assets/images/filterlist.svg" height="20px" alt="" />
+            <img src="@/assets/images/filterlist.svg" height="18px" alt="" />
             <small
               v-if="activeFilters.length"
               :class="{ 'pop-transition': isPopping }"
@@ -188,6 +168,9 @@
 
                 <div v-if="selectedFilter.operator">
                   <input
+                    v-if="
+                      selectedFilter.name !== 'Stage' || selectedFilter.operatorLabel === 'contains'
+                    "
                     class="filter-input"
                     :placeholder="`${selectedFilter.name} ${selectedFilter.operatorLabel}`"
                     :type="`${selectedFilter.dataType}`"
@@ -195,29 +178,25 @@
                     autofocus
                   />
 
-                  <!-- <Multiselect
-                  :options="picklistOptions[field.id]"
-                  :placeholder="inlinePlaceholder || '-'"
-                  selectLabel=""
-                  track-by="value"
-                  label="label"
-                  :multiple="dataType === 'MultiPicklist' ? true : false"
-                  v-model="selectedOption"
-                  :disabled="inlineLoader"
-                  selectedLabel=""
-                  deselectLabel=""
-                  @select="
-                    setUpdateValues(
-                      apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                      $event.value,
-                      dataType === 'MultiPicklist' ? true : false,
-                    )
-                  "
-                >
-                  <template slot="noResult">
-                    <p class="multi-slot">No results.</p>
-                  </template>
-                </Multiselect> -->
+                  <Multiselect
+                    style="margin-top: 1rem"
+                    v-else
+                    :options="
+                      this.user.crm === 'SALESFORCE' ? picklistOptions[stageField.id] : allStages
+                    "
+                    :placeholder="`${selectedFilter.name} ${selectedFilter.operatorLabel}`"
+                    selectLabel=""
+                    track-by="id"
+                    label="label"
+                    v-model="filtervalue"
+                    selectedLabel=""
+                    deselectLabel=""
+                    @select="addFilterValue($event.id)"
+                  >
+                    <template slot="noResult">
+                      <p class="multi-slot">No results.</p>
+                    </template>
+                  </Multiselect>
                 </div>
 
                 <div
@@ -246,9 +225,30 @@
             </section>
           </div>
         </div>
+
+        <div v-else style="margin-top: 0.5rem" class="flexed-row-spread__">
+          <p><span> Today's Meetings: </span>{{ date }}</p>
+
+          <button :disabled="loading" @click="refreshCalEvents" class="icon-button">
+            <img
+              v-if="!loading"
+              class="dampen"
+              src="@/assets/images/meeting.svg"
+              height="14px"
+              alt=""
+            />
+            <img
+              v-else
+              class="rotate opaque not-allowed"
+              src="@/assets/images/refresh.svg"
+              height="14px"
+              alt=""
+            />
+          </button>
+        </div>
       </section>
     </header>
-    <div class="switcher" v-if="selectedOpp">
+    <div class="switcher" v-if="selectedOpp && !loading">
       <div @click="switchView('crm')" :class="{ activeswitch: view === 'crm' }" class="switch-item">
         <img src="@/assets/images/crmlist.svg" height="12px" alt="" />
         Details
@@ -267,19 +267,8 @@
       </div>
     </div>
 
-    <!-- <div v-if="selectedOpp && view === 'crm'" class="section-header">
-      <h4>
-        {{ user.crm === 'SALESFORCE' ? 'Salesforce Fields' : 'Hubspot properties' }}
-      </h4>
-
-      <img src="@/assets/images/settings.svg" height="18px" alt="" />
-    </div> -->
-
-    <div class="selected-opp-container" v-if="selectedOpp">
+    <div class="selected-opp-container" v-if="selectedOpp && !loading">
       <div v-show="view === 'crm'" class="selected-opp-section bordered">
-        <div class="absolute-img">
-          <img src="@/assets/images/settings.svg" height="18px" alt="" />
-        </div>
         <div
           style="
             border: 1px solid #eeeeee;
@@ -393,7 +382,10 @@
       </div>
     </div>
 
-    <div class="opp-scroll-container" v-else>
+    <div
+      class="opp-scroll-container"
+      v-else-if="!selectedOpp && this.mainView === 'pipeline' && !loading"
+    >
       <!-- @mouseenter="setTooltip(opp.id)"
         @mouseleave="removeTooltip" -->
       <div
@@ -423,11 +415,30 @@
         <p v-else>End of list</p>
       </div>
     </div>
+
+    <div class="opp-scroll-container" v-else-if="this.mainView === 'meetings' && !loading">
+      <div class="opp-container text-cursor" v-for="(meeting, i) in meetings" :key="i">
+        <p>
+          {{ meeting.meeting_ref.topic }}
+        </p>
+
+        <small>{{ formattedStartTimes[meeting.id] }} - {{ formattedEndTimes[meeting.id] }}</small>
+      </div>
+    </div>
+
+    <div v-else-if="loading">
+      <div class="loading">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
   </section>
 </template>
   
 <script>
 import SlackOAuth from '@/services/slack'
+import User from '@/services/users'
 import { CRMObjects } from '@/services/crm'
 import CollectionManager from '@/services/collectionManager'
 import InlineFieldEditor from '@/components/Chat/InlineFieldEditor'
@@ -453,6 +464,7 @@ export default {
       sortedNotes: [],
       editing: false,
       activeField: null,
+      loading: false,
       oppsLoading: false,
       isPopping: false,
       filtersOpen: false,
@@ -462,6 +474,9 @@ export default {
       updateOppForm: [],
       oppFields: [],
       resourceName: 'Opportunity',
+      stageField: null,
+      filtervalue: null,
+      allStages: [],
       objects: CollectionManager.create({
         ModelClass: CRMObjects,
         pagination: { size: 20 },
@@ -497,7 +512,10 @@ export default {
           { label: 'does not equal', value: 'NOT_EQUALS' },
         ],
         Owner: [{ label: 'contains', value: 'CONTAINS' }],
-        Stage: [{ label: 'contains', value: 'CONTAINS' }],
+        Stage: [
+          { label: 'is', value: 'EQUALS' },
+          { label: 'contains', value: 'CONTAINS' },
+        ],
         Name: [
           { label: 'contains', value: 'CONTAINS' },
           { label: 'does not equal', value: 'NOT_EQUALS' },
@@ -613,6 +631,9 @@ export default {
     test() {
       console.log('log', this.user)
     },
+    addFilterValue(val) {
+      this.selectedFilter.value = val
+    },
     deselectOpp() {
       this.selectedOpp = null
       this.$store.dispatch('setCurrentOpp', null)
@@ -671,7 +692,38 @@ export default {
         this.view = view
       }
     },
+    async getMeetingList() {
+      this.loading = true
+      try {
+        await this.$store.dispatch('loadMeetings')
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.loading = false
+        }, 2000)
+      }
+    },
+    async refreshCalEvents() {
+      this.loading = true
+      try {
+        let res = await User.api.refreshCalendarEvents()
+      } catch (e) {
+        console.log('Error in refreshCalEvents: ', e)
+      } finally {
+        setTimeout(() => {
+          this.refreshUser()
+        }, 4000)
+        setTimeout(() => {
+          this.loading = false
+          this.$store.dispatch('loadMeetings')
+        }, 5000)
+      }
+    },
     switchMainView(view) {
+      if (view === 'meetings' && !this.meetings.length) {
+        this.getMeetingList()
+      }
       if (view !== this.mainView) {
         this.mainView = view
       }
@@ -849,13 +901,29 @@ export default {
 
       let allFields = this.updateOppForm[0].fieldsRef
 
+      let stageField = this.updateOppForm[0].fieldsRef.filter(
+        (field) => field.apiName === 'Stage' || field.apiName === 'dealstage',
+      )
+      this.stageField = stageField[0]
+
+      if (this.userCRM === 'HUBSPOT') {
+        let stages = this.stageField.options[0]
+        const mappedStages = Object.keys(stages).map((key) => {
+          const originalValue = stages[key]
+          return originalValue.stages
+        })
+        const allStages = mappedStages.reduce((acc, curr) => acc.concat(curr), [])
+        this.allStages = allStages
+        console.log(this.allStages)
+      }
+
       this.oppFields = this.updateOppForm[0].fieldsRef.filter(
         (field) =>
           field.apiName !== 'meeting_type' &&
           field.apiName !== 'meeting_comments' &&
-          field.apiName !== 'Name' &&
-          field.apiName !== 'dealname' &&
-          field.apiName !== 'name' &&
+          // field.apiName !== 'Name' &&
+          // field.apiName !== 'dealname' &&
+          // field.apiName !== 'name' &&
           (this.resourceName === 'Contact' || this.resourceName === 'Lead'
             ? field.apiName !== 'email'
             : true) &&
@@ -992,6 +1060,44 @@ export default {
         )
       } else return []
     },
+    date() {
+      let today = new Date()
+      let month = String(today.getMonth() + 1).padStart(2, '0')
+      let day = String(today.getDate()).padStart(2, '0')
+      let year = today.getFullYear()
+      let formattedDate = `${month}/${day}/${year}`
+
+      return formattedDate
+    },
+    meetings() {
+      return this.$store.state.meetings
+    },
+    formattedStartTimes() {
+      return this.meetings.reduce((formatted, meeting) => {
+        const date = new Date(meeting.meeting_ref['start_time'])
+        const hours = date.getHours()
+        const minutes = date.getMinutes()
+        const period = hours >= 12 ? 'pm' : 'am'
+        const formattedTime = `${((hours + 11) % 12) + 1}:${minutes
+          .toString()
+          .padStart(2, '0')}${period}`
+        formatted[meeting.id] = formattedTime
+        return formatted || null
+      }, {})
+    },
+    formattedEndTimes() {
+      return this.meetings.reduce((formatted, meeting) => {
+        const date = new Date(meeting.meeting_ref['end_time'])
+        const hours = date.getHours()
+        const minutes = date.getMinutes()
+        const period = hours >= 12 ? 'pm' : 'am'
+        const formattedTime = `${((hours + 11) % 12) + 1}:${minutes
+          .toString()
+          .padStart(2, '0')}${period}`
+        formatted[meeting.id] = formattedTime
+        return formatted || null
+      }, {})
+    },
     activeFilters() {
       return this.$store.state.filters
     },
@@ -1005,12 +1111,12 @@ export default {
       },
     },
     userCRM() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser.crm
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.crm
     },
     user() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user
     },
     picklistOptions() {
       return this.$store.state.allPicklistOptions
@@ -1041,6 +1147,66 @@ export default {
 @keyframes shimmer {
   100% {
     -webkit-mask-position: left;
+  }
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 6px;
+  padding: 0.75rem 0.75rem;
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  margin: 0 5px;
+  background: rgb(97, 96, 96);
+  border-radius: 50%;
+  animation: bounce 1.2s infinite ease-in-out;
+}
+
+.dot:nth-child(2) {
+  animation-delay: -0.4s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: -0.2s;
+}
+
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.small-button {
+  @include chat-button();
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  border-radius: 5px;
+  font-size: 12px;
+  padding: 0.35rem;
+  margin-left: 1rem;
+  font-weight: normal;
+
+  img {
+    margin: 0;
+  }
+
+  &:disabled {
+    background-color: $off-white;
   }
 }
 
@@ -1172,6 +1338,9 @@ export default {
   font-family: $base-font-family;
   font-size: 14px;
 }
+.text-cursor {
+  cursor: text !important;
+}
 .opp-container {
   background-color: white;
   position: relative;
@@ -1284,6 +1453,22 @@ header {
   }
 }
 
+.flexed-row-spread__ {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  padding: 0 4px;
+
+  h4,
+  p {
+    font-family: $base-font-family;
+    font-size: 12px;
+    letter-spacing: 0.4px;
+  }
+}
+
 .space-between {
   display: flex;
   align-items: flex-end;
@@ -1355,7 +1540,7 @@ header {
   width: 100%;
   background-color: $off-white;
   // border: 1px solid rgba(0, 0, 0, 0.1) !important;
-  padding: 2px !important;
+  padding: 2px 1px 2p 2px !important;
   border-radius: 5px;
   margin-top: 0.5rem;
 }

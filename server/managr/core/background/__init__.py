@@ -47,6 +47,7 @@ from managr.hubspot.routes import routes as hs_routes
 from managr.salesforce.background import emit_add_update_to_sf, emit_add_call_to_sf
 from managr.hubspot.tasks import emit_add_update_to_hs, emit_add_call_to_hs
 from managr.core.exceptions import _handle_response, ServerError, StopReasonLength
+from managr.zoom.zoom_helper import exceptions as zoom_exceptions
 
 logger = logging.getLogger("managr")
 
@@ -247,8 +248,8 @@ def check_for_time(tz, hour, minute):
     min = 00 if minute >= 30 else 30
     hr = hour - 1 if minute < 30 else hour
     return current < current.replace(
-        hour=hour, minute=minute, second=0, microsecond=0
-    ) and current > current.replace(hour=hr, minute=min, second=0, microsecond=0)
+        hour=hour, minute=0, second=0, microsecond=0
+    ) and current > current.replace(hour=hr, minute=0, second=0, microsecond=0)
 
 
 def check_for_uncompleted_meetings(user_id, org_level=False):
@@ -595,14 +596,18 @@ def process_current_alert_list(user_id):
 
 @background()
 def _process_calendar_meetings(user_id, slack_int, date):
-    from managr.zoom.zoom_helper import exceptions as zoom_exceptions
-
+    print("starting calendar check")
     user = User.objects.get(id=user_id)
     if user.has_nylas_integration:
-        while True:
-            try:
-                processed_data = _process_calendar_details(user_id, date)
-                if user.has_zoom_integration:
+        try:
+            processed_data = _process_calendar_details(user_id, date)
+            print(processed_data)
+        except Exception:
+            logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
+            processed_data = None
+        if user.has_zoom_integration:
+            while True:
+                try:
                     if date is None:
                         user_timezone = pytz.timezone(user.timezone)
                         todays_date = pytz.utc.localize(datetime.today()).astimezone(user_timezone)
@@ -610,15 +615,17 @@ def _process_calendar_meetings(user_id, slack_int, date):
                     meetings = user.zoom_account.helper_class.get_meetings_by_date(
                         user.zoom_account.access_token, user.zoom_account.zoom_id, date
                     )["meetings"]
+                    print("MEETINGS:", meetings)
                     break
-            except zoom_exceptions.TokenExpired:
-                user.zoom_account.regenerate_token()
-            except Exception as e:
-                logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
-                processed_data = None
-                break
+                except zoom_exceptions.TokenExpired:
+                    user.zoom_account.regenerate_token()
+                except Exception as e:
+                    logger.exception(f"Pulling calendar data error for {user.email} <ERROR: {e}>")
+                    meetings = []
+                    break
         if processed_data is not None:
             workflows = MeetingWorkflow.objects.for_user(user, date)
+            print(workflows)
             slack_interaction_check = set(
                 [
                     workflow.slack_interaction
@@ -641,9 +648,7 @@ def _process_calendar_meetings(user_id, slack_int, date):
                         meeting_data["id"] = meeting["id"]
                         id = meeting["id"]
                 workflow_check = workflows.filter(
-                    Q(meeting__meeting_id=id)
-                    | Q(meeting__meeting_id=original_id)
-                    | Q(meeting__topic=event["title"])
+                    Q(meeting__meeting_id=id) | Q(meeting__meeting_id=original_id)
                 ).first()
                 register_check = should_register_this_meetings(user_id, event)
                 if workflow_check is None and register_check:
@@ -1914,17 +1919,20 @@ def _process_add_call_analysis(workflow_id, summaries):
     workflow = MeetingWorkflow.objects.get(id=workflow_id)
     timeout = 60.0
     prompt = core_consts.OPEN_AI_CALL_ANALYSIS_PROMPT(summaries, workflow.datetime_created.date())
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(workflow.user.email, prompt, token_amount=500)
     has_error = False
     attempts = 1
     text = None
+    tokens = 500
     while True:
+        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+            workflow.user.email, prompt, "You are an experience VP of Sales", token_amount=tokens
+        )
         try:
             with Variable_Client(timeout) as client:
-                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             r = _handle_response(r)
-            text = r.get("choices")[0].get("text")
+            text = r.get("choices")[0].get("message").get("content")
             break
         except StopReasonLength:
             if tokens >= 2000:
@@ -2058,6 +2066,7 @@ def _process_send_ask_managr_to_dm(payload, context):
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             r = _handle_response(r)
+            print(r)
             text = r.get("choices")[0].get("message").get("content")
             break
         except StopReasonLength:
@@ -2086,7 +2095,9 @@ def _process_send_ask_managr_to_dm(payload, context):
             print(e)
             continue
         except httpx.ReadTimeout:
-            logger.exception(f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}")
+            logger.exception(
+                f"Read timeout to Open AI from ask managr, trying again. TIMEOUT AT: {timeout}"
+            )
             if timeout >= 120.0:
                 has_error = True
                 break

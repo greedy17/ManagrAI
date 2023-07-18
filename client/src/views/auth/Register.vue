@@ -251,9 +251,10 @@ export default {
         this.submitting = false
       }
       // Update the user in the store to "log in" and navigate to integrations
-      const encryptedUser = encryptData(user, process.env.VUE_APP_SECRET_KEY)
+      // const encryptedUser = encryptData(user, process.env.VUE_APP_SECRET_KEY)
       // const encryptedKey = encryptData(user.token, process.env.VUE_APP_SECRET_KEY)
-      this.$store.commit('UPDATE_USER', encryptedUser)
+      // this.$store.commit('UPDATE_USER', encryptedUser)
+      this.$store.commit('UPDATE_USER', user)
       // this.$store.commit('UPDATE_USERTOKEN', encryptedKey)
       this.$store.commit('UPDATE_USERTOKEN', user.token)
       this.$router.push({ name: 'Integrations' })

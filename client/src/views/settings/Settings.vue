@@ -15,12 +15,12 @@ export default {
   computed: {
     isStaff() {
       // used to check superuser if is staff then they currently do not have an org
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser.isStaff
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.isStaff
     },
     organization() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser.organizationRef && decryptedUser.organizationRef.name
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.organizationRef && this.$store.state.user.organizationRef.name
     },
   },
 }

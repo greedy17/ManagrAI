@@ -76,14 +76,14 @@ export default {
       chatRes: null,
       chatmsg: null,
       actions: [
+        { name: 'Log Meeting', value: 'Log Meeting' },
         {
-          name: 'Update CRM',
+          name: 'Add Notes',
           value: 'Update',
         },
         // { name: 'Create Record', value: 'Create Opportunity' },
-        { name: 'Ask Managr', value: 'Ask managr... ' },
-        { name: 'Deal Review', value: 'Run Review' },
-        // { name: 'Deal Updates', value: 'Get Summary for Opportunity' },
+        { name: 'Ask Managr', value: 'Ask managr ' },
+        { name: 'Deal Inspection', value: 'Run Review' },
         // { name: 'Call Summary', value: 'Get call summary for Opportunity' },
         // { name: 'Call Analysis', value: 'Get call analysis for Opportunity' },
       ],
@@ -101,196 +101,220 @@ export default {
       this.$emit('remove-opp')
     },
     async sendMessage() {
-      this.chatmsg = this.message
-      try {
-        await User.api
-          .addMessage({
-            value: this.message,
-            user_type: 'user',
-            conversation_id: this.conversation.id,
-            data: {},
-          })
-          .then((response) => {
-            this.message = ''
-            this.$emit('message-loading', true)
-            setTimeout(() => {
-              this.$refs.chatTextArea.dispatchEvent(new Event('textarea-clear'))
-            }, 100)
-            this.$emit('get-conversations')
-          })
-
-        if (this.chatmsg.toLowerCase().includes('ask managr')) {
-          this.askManagr()
-        } else if (this.chatmsg.toLowerCase().includes('run review')) {
-          this.dealReview()
-        } else if (this.chatmsg.length > 3) {
-          this.chatUpdate()
+      if (this.$store.state.currentOpp) {
+        this.chatmsg = this.message
+        try {
+          await User.api
+            .addMessage({
+              value: this.message,
+              user_type: 'user',
+              conversation_id: this.conversation.id,
+              data: {},
+            })
+            .then((response) => {
+              this.message = ''
+              this.$emit('message-loading', true)
+              setTimeout(() => {
+                this.$refs.chatTextArea.dispatchEvent(new Event('textarea-clear'))
+              }, 100)
+              this.scrollToBottom()
+              this.$emit('get-conversations')
+            })
+          if (this.chatmsg.toLowerCase().includes('ask managr')) {
+            this.askManagr()
+          } else if (this.chatmsg.toLowerCase().includes('run review')) {
+            this.dealReview()
+          } else if (this.chatmsg.length > 3) {
+            this.chatUpdate()
+          }
+        } catch (e) {
+          console.log(e)
         }
-      } catch (e) {
-        console.log(e)
+      } else {
+        this.toggleMessage()
       }
     },
     async askManagr() {
       try {
-        let res = await User.api.askManagr({
-          user_id: this.user.id,
-          prompt: this.chatmsg,
-          resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
-          resource_id: this.$store.state.currentOpp.id,
-        })
-
-        this.chatRes = res
-
-        if (this.chatRes.status >= 400 && this.chatRes.status < 500) {
-          await User.api
-            .addMessage({
-              value: this.chatRes.value,
-              user_type: 'bot',
-              conversation_id: this.conversation.id,
-              failed: true,
-              data: {},
-            })
-            .then((response) => {
-              this.$emit('get-conversations')
-            })
-        } else if (this.chatRes.status === 500) {
-          await User.api
-            .addMessage({
-              value: 'Timeout error, try again',
-              user_type: 'bot',
-              conversation_id: this.conversation.id,
-              failed: true,
-              data: {},
-            })
-            .then((response) => {
-              this.$emit('get-conversations')
-            })
-        } else {
-          await User.api
-            .addMessage({
-              value: this.chatRes['res'],
-              user_type: 'bot',
-              conversation_id: this.conversation.id,
-              failed: false,
-              data: {},
-              resourceId: this.chatRes['resourceId'],
-              resourceType: this.chatRes['resourceType'],
-              updated: false,
-              generated_title: 'Ask Managr',
-            })
-            .then((response) => {
-              this.$emit('get-conversations')
-            })
-        }
+        let res = await User.api
+          .askManagr({
+            user_id: this.user.id,
+            prompt: this.chatmsg,
+            resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
+            resource_id: this.$store.state.currentOpp.id,
+          })
+          .then((response) => {
+            if (response.status >= 400 && response.status < 500) {
+              User.api
+                .addMessage({
+                  error: response.data.value,
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: true,
+                  data: {},
+                })
+                .then((response) => {
+                  this.$emit('get-conversations')
+                })
+            } else if (response.status === 500) {
+              User.api
+                .addMessage({
+                  error: 'Timeout error, try again',
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: true,
+                  data: {},
+                })
+                .then((response) => {
+                  this.$emit('get-conversations')
+                })
+            } else {
+              User.api
+                .addMessage({
+                  value: response['res'],
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: false,
+                  data: {},
+                  resource_id: response['resourceId'],
+                  resource_type: response['resourceType'],
+                  updated: false,
+                  generated_title: 'Ask Managr',
+                })
+                .then((response) => {
+                  this.$emit('get-conversations')
+                })
+            }
+          })
       } catch (e) {
         console.log(e)
+        this.$emit('message-loading', false)
       } finally {
         this.$emit('message-loading', false)
         this.scrollToBottom()
       }
     },
-
     async dealReview() {
       try {
-        let res = await User.api.dealReview({
-          user_id: this.user.id,
-          prompt: this.chatmsg,
-          resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
-          resource_id: this.$store.state.currentOpp.id,
-        })
-
-        this.chatRes = res
-
-        if (this.chatRes.status >= 400 && this.chatRes.status < 500) {
-          this.$emit('set-message', {
-            user: 'bot',
-            id: id,
-            value: this.chatRes.value,
-            failed: true,
+        let res = await User.api
+          .dealReview({
+            user_id: this.user.id,
+            prompt: this.chatmsg,
+            resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
+            resource_id: this.$store.state.currentOpp.id,
           })
-        } else if (this.chatRes.status === 500) {
-          this.$emit('set-message', {
-            user: 'bot',
-            id: id,
-            value: 'Timeout error, try again',
-            failed: true,
+          .then((response) => {
+            if (response.status >= 400 && response.status < 500) {
+              User.api
+                .addMessage({
+                  error: response.data.value,
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: true,
+                  data: {},
+                })
+                .then((response) => {
+                  this.$emit('get-conversations')
+                })
+            } else if (response.status === 500) {
+              User.api
+                .addMessage({
+                  error: 'Timeout error, try again',
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: true,
+                  data: {},
+                })
+                .then((response) => {
+                  this.$emit('get-conversations')
+                })
+            } else {
+              User.api
+                .addMessage({
+                  value: response['res'],
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: false,
+                  data: {},
+                  resource_id: response['resourceId'],
+                  resource_type: response['resourceType'],
+                  updated: false,
+                  generated_title: 'Deal Review',
+                })
+                .then((response) => {
+                  this.$emit('get-conversations')
+                })
+            }
           })
-        } else {
-          this.$emit('set-message', {
-            user: 'bot',
-            id: this.chatRes['id'],
-            value: this.chatRes['res'],
-            // data: this.chatRes['data'],
-            resourceId: this.chatRes['resourceId'],
-            resourceType: this.chatRes['resourceType'],
-            updated: false,
-            title: 'Deal Review',
-          })
-        }
       } catch (e) {
         console.log(e)
+        this.$emit('message-loading', false)
       } finally {
         this.$emit('message-loading', false)
         this.scrollToBottom()
       }
     },
-
     async chatUpdate() {
       try {
-        let res = await User.api.chatUpdate({
-          user_id: this.user.id,
-          prompt: this.chatmsg,
-          resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
-        })
-        this.chatRes = res
-        if (this.chatRes.status >= 400 && this.chatRes.status < 500) {
-          await User.api
-            .addMessage({
-              value: this.chatRes.value,
-              user_type: 'bot',
-              conversation_id: this.conversation.id,
-              failed: true,
-              data: {},
-            })
-            .then((response) => {
-              this.$emit('get-conversations')
-            })
-        } else if (this.chatRes.status === 500) {
-          await User.api
-            .addMessage({
-              value: 'Timeout error, try again',
-              user_type: 'bot',
-              conversation_id: this.conversation.id,
-              failed: true,
-              data: {},
-            })
-            .then((response) => {
-              this.$emit('get-conversations')
-            })
-        } else {
-          await User.api
-            .addMessage({
-              user_type: 'bot',
-              conversation_id: this.conversation.id,
-              failed: false,
-              value: this.chatRes['res'][0],
-              resource: this.chatRes['resource'][0],
-              form_id: this.chatRes['form'],
-              data: this.chatRes['data'],
-              resource_id: this.chatRes['resourceId'],
-              form_type: this.chatRes['formType'],
-              integration_id: this.chatRes['integrationId'],
-              resource_type: this.chatRes['resourceType'],
-              updated: false,
-            })
-            .then((response) => {
-              this.$emit('get-conversations')
-            })
-        }
-        this.$emit('set-title', this.chatRes['resource'][0] || 'Uh-oh')
+        let res = await User.api
+          .chatUpdate({
+            user_id: this.user.id,
+            prompt: this.chatmsg,
+            resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
+          })
+          .then((response) => {
+            this.chatRes = response
+            if (response.status >= 400 && response.status < 500) {
+              console.log(response)
+              User.api
+                .addMessage({
+                  error: response.data.value,
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: true,
+                  data: {},
+                })
+                .then((response) => {
+                  this.$emit('get-conversations')
+                })
+            } else if (response.status === 500) {
+              User.api
+                .addMessage({
+                  error: 'Timeout error, try again',
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: true,
+                  data: {},
+                })
+                .then((response) => {
+                  this.$emit('get-conversations')
+                })
+            } else {
+              User.api
+                .addMessage({
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: false,
+                  value: response['res'][0],
+                  resource: response['resource'][0],
+                  form_id: response['form'],
+                  data: response['data'],
+                  resource_id: response['resourceId'],
+                  form_type: response['formType'],
+                  integration_id: response['integrationId'],
+                  resource_type: response['resourceType'],
+                  updated: false,
+                })
+                .then((response) => {
+                  this.$emit('get-conversations')
+                })
+            }
+          })
       } catch (e) {
         console.log(e)
+        this.$emit('message-loading', false)
       } finally {
+        this.$emit('set-title', this.chatRes['resource'][0] || 'Uh-oh')
         this.$emit('message-loading', false)
         this.scrollToBottom()
       }
@@ -320,21 +344,14 @@ export default {
         this.showMessage = false
       }, 1200)
     },
-    toggleDealMessage() {
-      this.showReviewMessage = true
-      this.showMessage = false
-      setTimeout(() => {
-        this.showReviewMessage = false
-      }, 1200)
-    },
     toggleTemplates() {
       this.templatesOpen = !this.templatesOpen
     },
   },
   computed: {
     user() {
-      const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return decryptedUser
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user
     },
     currentOpp() {
       return this.$store.state.currentOpp

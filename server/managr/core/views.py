@@ -571,10 +571,10 @@ def ask_managr(request):
             )
             # body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, tokens)
             with Variable_Client(timeout) as client:
-                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             r = _handle_response(r)
-            text = r.get("choices")[0].get("text")
+            text = r.get("choices")[0].get("message").get("content")
             break
         except StopReasonLength:
             if tokens >= 2000:
@@ -613,7 +613,6 @@ def ask_managr(request):
     if has_error:
         res = {"value": f"{error_message}"}
         return Response(data=res, status=status.HTTP_400_BAD_REQUEST)
-    
     return Response(
         data={
             **r,
@@ -673,8 +672,7 @@ def deal_review(request):
             break
     if has_error:
         res = {"value": f"{response_text}"}
-        return Response(data=res, status=status.HTTP_400_BAD_REQUEST)
-        
+        return Response(data=res, status=status.HTTP_400_BAD_REQUEST)  
     return Response(
         data={
             **r,
@@ -708,10 +706,10 @@ def draft_follow_up(request):
             if r.status_code == 200:
                 r = r.json()
                 text = r.get("choices")[0].get("text")
-                return Response(data={**r, "res": text})
+                return Response(data={**r, "res": text},status=status.HTTP_200_OK)
         except Exception as e:
             res = {"value": f"error drafting email: {e}"}
-            return Response(data=res)        
+            return Response(data=res,status=status.HTTP_500_INTERNAL_SERVER_ERROR)        
 
 
 @api_view(["post"])
@@ -730,10 +728,10 @@ def chat_next_steps(request):
             if r.status_code == 200:
                 r = r.json()
                 text = r.get("choices")[0].get("text")
-                return Response(data={**r, "res": text})
+                return Response(data={**r, "res": text},status=status.HTTP_200_OK)
         except Exception as e:
             res = {"value": f"error getting next steps: {e}"}
-            return Response(data=res)
+            return Response(data=res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["post"])
@@ -754,10 +752,10 @@ def get_chat_summary(request):
             if r.status_code == 200:
                 r = r.json()
                 message_string_for_recap = r["choices"][0]["text"]
-                return Response(data={**r, "res": message_string_for_recap})
+                return Response(data={**r, "res": message_string_for_recap},status=status.HTTP_200_OK)
     except Exception as e:
         res = {"value": f"error getting summary: {e}"}
-        return Response(data=res)
+        return Response(data=res,status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["post"])
