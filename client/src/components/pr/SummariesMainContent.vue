@@ -321,7 +321,7 @@
         </div>
       </div>
       <div class="card-container">
-        <div v-for="article in filteredArticles" :key="article.id" class="card">
+        <div v-for="article in filteredArticles" :key="article.id" class="card" @click="selectArticle(article)">
           <div class="display-flex">
             <div class="">
               <div class="card-top-left">
@@ -411,7 +411,8 @@ export default {
           coverPhoto: `https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/New_York_City_%28New_York%2C_USA%29%2C_Empire_State_Building_--_2012_--_6448.jpg/1200px-New_York_City_%28New_York%2C_USA%29%2C_Empire_State_Building_--_2012_--_6448.jpg`,
           time: '5 mins ago',
           author: 'Eric Peters',
-          link: 'https://www.nyan.cat/'
+          link: 'https://www.nyan.cat/',
+          data: {},
         },
         {
           icon: 'https://www.vectorlogo.zone/logos/marketwatch/marketwatch-icon.svg',
@@ -421,7 +422,8 @@ export default {
           coverPhoto: `https://empire-s3-production.bobvila.com/articles/wp-content/uploads/2023/01/iStock-1372085619-hidden-costs-of-owning-an-electric-car-vehicle-charging-by-solar-panels.jpg`,
           time: '10 mins ago',
           author: 'Susan Miller',
-          link: 'https://www.nyan.cat/'
+          link: 'https://www.nyan.cat/',
+          data: {},
         },
         {
           icon: 'https://www.vectorlogo.zone/logos/marketwatch/marketwatch-icon.svg',
@@ -431,11 +433,15 @@ export default {
           coverPhoto: `https://hips.hearstapps.com/hmg-prod/images/2022-tesla-model-s-mmp-3-1628540852.png?crop=0.891996891996892xw:1xh;center,top&resize=1200:*`,
           time: '1 hr ago',
           author: 'Rachel Myers',
-          link: 'https://www.nyan.cat/'
+          link: 'https://www.nyan.cat/',
+          data: {},
         },
       ]
       this.articles = res
       this.filteredArticles = res
+    },
+    selectArticle(article) {
+      this.$store.dispatch('updateSelectedArticle', article)
     },
     goToArticle(link) {
       window.location.href = link
@@ -474,9 +480,9 @@ export default {
     display: flex;
     background-color: $white;
     border-radius: 8px;
-    margin-top: 1rem;
+    margin: 1rem 0.5rem 0.5rem 0;
     padding: 1rem;
-    min-height: 90vh;
+    min-height: 88vh;
     color: $dark-black-blue;
   }
   .display-flex {
@@ -495,10 +501,10 @@ export default {
     padding-left: 1rem;
   }
   .left-content {
-    width: 25vw;
+    width: 29vw;
   }
   .right-content {
-    width: 35vw;
+    width: 38vw;
   }
   .card-container {
     border-left: 1px solid $soft-gray;
@@ -540,6 +546,7 @@ export default {
     border-bottom: 1px solid $soft-gray;
     height: 65vh;
     overflow-y: auto;
+    padding: 0 1rem;
   }
   .summary-buttons-container {
     display: flex;
@@ -702,6 +709,8 @@ export default {
   }
   .highlight-point {
     font-size: 14px;
+    // word-spacing: 1.15px;
+    line-height: 1.5;
   }
   .small-title-text {
     font-size: 14px;
@@ -879,22 +888,22 @@ export default {
   padding: 0.75rem 0.75rem;
 }
 
-.dot {
-  width: 4px;
-  height: 4px;
-  margin: 0 5px;
-  background: rgb(97, 96, 96);
-  border-radius: 50%;
-  animation: bounce 1.2s infinite ease-in-out;
-}
+// .dot {
+//   width: 4px;
+//   height: 4px;
+//   margin: 0 5px;
+//   background: rgb(97, 96, 96);
+//   border-radius: 50%;
+//   animation: bounce 1.2s infinite ease-in-out;
+// }
 
-.dot:nth-child(2) {
-  animation-delay: -0.4s;
-}
+// .dot:nth-child(2) {
+//   animation-delay: -0.4s;
+// }
 
-.dot:nth-child(3) {
-  animation-delay: -0.2s;
-}
+// .dot:nth-child(3) {
+//   animation-delay: -0.2s;
+// }
 
 .col-start {
   display: flex;

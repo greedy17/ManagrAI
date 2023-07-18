@@ -21,7 +21,7 @@ export default {
   },
   data() {
     return {
-
+      
     }
   },
   watch: {
@@ -31,7 +31,7 @@ export default {
 
   },
   methods: {
-
+    
   },
   computed: {
     

@@ -85,9 +85,9 @@
             :to="{ name: 'PRSummaries' }"
           >
             <label class="side-icon side-workflow" style="margin: 8px 0 0 0">
-              <span class="side-tooltip-single" style="top: -5px; width: 80px">PRapp</span>
+              <span class="side-tooltip-single" style="top: -5px; width: 80px">Summaries</span>
               <img
-                src="@/assets/images/workflows.svg"
+                src="@/assets/images/search-alt.svg"
                 class="nav-img"
                 height="16px"
                 alt=""
@@ -103,7 +103,7 @@
             <label class="side-icon side-workflow" style="margin: 8px 0 0 0">
               <span class="side-tooltip-single" style="top: -5px; width: 80px">Clip Report</span>
               <img
-                src="@/assets/images/workflows.svg"
+                src="@/assets/images/file-excel.svg"
                 class="nav-img"
                 height="16px"
                 alt=""
@@ -119,7 +119,7 @@
             <label class="side-icon side-workflow" style="margin: 8px 0 0 0">
               <span class="side-tooltip-single" style="top: -5px; width: 80px">Customize</span>
               <img
-                src="@/assets/images/workflows.svg"
+                src="@/assets/images/magic-wand.svg"
                 class="nav-img"
                 height="16px"
                 alt=""
