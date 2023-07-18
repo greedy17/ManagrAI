@@ -548,7 +548,6 @@ class SlackFormsViewSet(
     serializer_class = OrgCustomSlackFormSerializer
 
     def get_queryset(self):
-        print('\nself.request.user\n', self.request.user, '\n')
         return OrgCustomSlackForm.objects.for_user(self.request.user)
 
     def create(self, request, *args, **kwargs):
@@ -1300,20 +1299,30 @@ def launch_action(request):
     user = slack.user
     access_token = user.organization.slack_integration.access_token
     trigger_id = request.data.get("trigger_id")
-    context = {"u": str(user.id), "trigger_id": trigger_id}
+    options = (
+        ["Contact", "Opportunity", "Account", "Lead"]
+        if user.crm == "SALESFORCE"
+        else ["Contact", "Deal", "Company"]
+    )
+    options = "%".join(options)
+    context = {
+        "u": str(user.id),
+        "trigger_id": trigger_id,
+        "options": options,
+        "action_id": slack_const.PROCESS_SEND_RESOURCE_MESSAGE,
+    }
     data = {
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
-            "callback_id": slack_const.PROCESS_CHAT_ACTION,
-            "title": {"type": "plain_text", "text": "Take Action"},
-            "blocks": get_block_set("actions_block_set", context=context),
-            "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
+            "title": {"type": "plain_text", "text": "Choose Record Type"},
+            "blocks": get_block_set("pick_resource_modal_block_set", context=context),
             "private_metadata": json.dumps(context),
+            "external_id": f"pick_resource_modal_block_set.{str(uuid.uuid4())}",
         },
     }
     slack_requests.generic_request(url, data, access_token=access_token)
-    return Response()
+    return {"response_action": "clear"}
 
 
 @api_view(["post"])
