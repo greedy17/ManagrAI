@@ -33,6 +33,7 @@ from managr.slack.background import (
     emit_process_paginated_engagement_details,
     emit_process_paginate_deal_reviews,
     emit_process_alert_send_deal_review,
+    emit_process_send_deal_review,
 )
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User
@@ -4260,9 +4261,8 @@ RESOURCE_ACTION_SWITCHER = {
         slack_const.MEETING__SUBMIT_TRANSCRIPT_PROMPT_MODAL,
     ),
     "UPDATE_FORM": ("update_form_blockset", slack_const.COMMAND_FORMS__SUBMIT_FORM),
-    "ADD_NOTES": "",
-    "ASK_MANAGR": "",
-    "REVIEW": "",
+    "ADD_NOTES": ("chat_prompt_blockset", slack_const.COMMAND_FORMS__SUBMIT_CHAT),
+    "ASK_MANAGR": ("ask_managr_blockset", slack_const.PROCESS_ASK_MANAGR),
 }
 
 
@@ -4270,20 +4270,30 @@ def process_resource_selected_action(payload, context):
     pm = json.loads(payload["view"]["private_metadata"])
     user = User.objects.get(id=pm.get("u"))
     option = payload["actions"][0]["selected_option"]["value"]
-    block_set = RESOURCE_ACTION_SWITCHER[option][0]
-    callback_id = RESOURCE_ACTION_SWITCHER[option][1]
     data = {
         "view_id": payload["view"]["id"],
-        "view": {
-            "type": "modal",
-            "title": {"type": "plain_text", "text": "Actions"},
-            "callback_id": callback_id,
-            "blocks": get_block_set(block_set, context=pm),
-            "submit": {"type": "plain_text", "text": "Submit"},
-            "private_metadata": json.dumps(pm),
-            "external_id": f"{block_set}.{str(uuid.uuid4())}",
-        },
+        "view": {"type": "modal", "title": {"type": "plain_text", "text": "Actions"},},
     }
+    if option == "REVIEW":
+        pm.pop("ts")
+        blocks = [
+            block_builders.simple_section(
+                "Your deal review is processing and will be dm'd to you soon!"
+            )
+        ]
+        emit_process_send_deal_review(payload, pm)
+    else:
+        block_set = RESOURCE_ACTION_SWITCHER[option][0]
+        callback_id = RESOURCE_ACTION_SWITCHER[option][1]
+        blocks = get_block_set(block_set, context=pm)
+        data["view"]["callback_id"] = callback_id
+        data["view"]["submit"] = {"type": "plain_text", "text": "Submit"}
+        data["view"]["external_id"] = f"{block_set}.{str(uuid.uuid4())}"
+        if option == "UPDATE_FORM":
+            form = OrgCustomSlackFormInstance.objects.for_user(user).first()
+            pm.update(f=str(form.id))
+    data["view"]["blocks"] = blocks
+    data["view"]["private_metadata"] = json.dumps(pm)
     try:
         res = slack_requests.generic_request(
             slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
@@ -4323,7 +4333,6 @@ def process_choose_meeting_options(payload, context):
         )
     except Exception as e:
         return logger.exception(f"Failed to update action for user {user.email} because of {e}")
-    return
     return
 
 

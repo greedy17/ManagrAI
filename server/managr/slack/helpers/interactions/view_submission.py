@@ -2801,21 +2801,12 @@ def process_news_summary(payload, context):
 
 def process_submit_ask_managr(payload, context):
     user = User.objects.get(id=context.get("u"))
-    resource_list = (
-        ["Opportunity", "Account", "Contact", "Lead"]
-        if user.crm == "SALESFORCE"
-        else ["Deal", "Company", "Contact"]
-    )
     state = payload["view"]["state"]["values"]
     prompt = state["CHAT_PROMPT"]["plain_input"]["value"]
-    resource_type = (
-        list(state["selected_object_type"].values())[0].get("selected_option").get("value")
-    )
-    resource_id = list(state["selected_object"].values())[0].get("selected_option").get("value")
+    resource_type = context.get("resource_type")
+    resource_id = context.get("resource_id")
     resource_check = (
-        CRM_SWITCHER[user.crm][resource_type]["model"]
-        .objects.filter(integration_id=resource_id)
-        .first()
+        CRM_SWITCHER[user.crm][resource_type]["model"].objects.filter(id=resource_id).first()
     )
     block_set = [
         *get_block_set("loading", {"message": f":robot_face: Processing your submission..."},),

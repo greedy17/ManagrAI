@@ -720,3 +720,33 @@ def update_form_blockset(context):
             }
             blocks = [*blocks[:index], block, *blocks[index + 1 :]]
     return [*blocks]
+
+
+def chat_prompt_blockset(context):
+    from managr.core.models import NoteTemplate
+
+    user = User.objects.get(id=context.get("u"))
+    templates_query = NoteTemplate.objects.for_user(user)
+    template_options = (
+        [template.as_slack_option for template in templates_query]
+        if len(templates_query)
+        else [block_builders.option("You have no templates", "NONE")]
+    )
+    crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
+    blocks = [
+        block_builders.input_block(
+            f"Update {crm} using conversational AI",
+            placeholder=f"Update {'Opportunity' if user.crm == 'SALESFORCE' else 'Deal'} Pied Piper...",
+            block_id="CHAT_PROMPT",
+            multiline=True,
+            optional=False,
+        ),
+        block_builders.context_block("Powered by ChatGPT © :robot_face:"),
+        block_builders.static_select(
+            "Select Template",
+            template_options,
+            f"{slack_const.PROCESS_INSERT_CHAT_TEMPLATE}?u={context.get('u')}",
+            block_id="SELECT_TEMPLATE",
+        ),
+    ]
+    return blocks
