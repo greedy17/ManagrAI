@@ -1322,7 +1322,7 @@ def launch_action(request):
         },
     }
     slack_requests.generic_request(url, data, access_token=access_token)
-    return {"response_action": "clear"}
+    return Response()
 
 
 @api_view(["post"])
