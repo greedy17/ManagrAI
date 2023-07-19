@@ -95,6 +95,7 @@ INSTALLED_APPS = [
     "managr.hubspot",
     "managr.meetings",
     "managr.crm",
+    "managr.comms",
     # "managr.demo",
     # Django
     "django.contrib.admin",
@@ -478,5 +479,9 @@ if USE_SSO:
     MICROSOFT_SECURITY_KEY = _env_get_required("MICROSOFT_SECRET_KEY")
     GOOGLE_CLIENT_ID = _env_get_required("GOOGLE_CLIENT_ID")
     GOOGLE_LOGIN_URI = _env_get_required("GOOGLE_LOGIN_URI")
+
+USE_NEWS_API = os.environ.get("USE_NEWS_API") == "True"
+if USE_NEWS_API:
+    NEWS_API_KEY = _env_get_required("NEWS_API_KEY")
 
 MAX_ATTEMPTS = 5

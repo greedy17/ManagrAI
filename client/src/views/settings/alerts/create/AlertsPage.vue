@@ -647,6 +647,7 @@ import { UserOnboardingForm } from '@/services/users/forms'
 
 import { AlertTemplateForm } from '@/services/alerts/'
 import User from '@/services/users'
+import { decryptData } from '../../../../encryption'
 
 export default {
   name: 'AlertsPage',
@@ -702,34 +703,44 @@ export default {
   },
   computed: {
     isPaid() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.organizationRef.isPaid
     },
     hasSalesforceIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.salesforceAccount
     },
     hasSlackIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.slackRef
     },
     recapChannel() {
-      return this.$store.state.user.slackAccount
-        ? this.$store.state.user.slackAccount.recapChannel
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      const user = this.$store.state.user
+      return user.slackAccount
+        ? user.slackAccount.recapChannel
         : false
     },
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
     userLevel() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.userLevel
     },
     isAdmin() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.isAdmin
     },
     hasZoomChannel() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.slackAccount
         ? this.$store.state.user.slackAccount.zoomChannel
         : null
     },
     isOnboarding() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.onboarding
     },
     selectedResourceType: {

@@ -1,4 +1,5 @@
 import store from '@/store'
+import { decryptData } from '../encryption'
 
 export default {
   getHeaders,
@@ -25,12 +26,14 @@ function getHeaders() {
  *              status and redirect appropriately.
  */
 function requireUserTypeManagerOrStaff(to, from, next) {
+  // const decryptedUser = decryptData(store.state.user, process.env.VUE_APP_SECRET_KEY)
+  const decryptedUser = store.state.user
   if (!store.getters.userIsLoggedIn) {
     next({
       name: 'Login',
       query: { redirect: to.fullPath },
     })
-  } else if (!store.state.user.isStaff && !store.state.user.isManager) {
+  } else if (!decryptedUser.isStaff && !decryptedUser.isManager) {
     next({
       name: 'EmailIntegration',
     })
@@ -60,12 +63,14 @@ function requireAuth(to, from, next) {
  *              status and see if they are the isAdmin user redirect appropriately.
  */
 function requireIsAdminAuth(to, from, next) {
+  // const decryptedUser = decryptData(store.state.user, process.env.VUE_APP_SECRET_KEY)
+  const decryptedUser = store.state.user
   if (!store.getters.userIsLoggedIn) {
     next({
       name: 'Login',
       query: { redirect: to.fullPath },
     })
-  } else if (!store.state.user.isAdmin) {
+  } else if (!decryptedUser.isAdmin) {
     next({
       name: 'ListTemplates',
       query: { redirect: to.fullPath },

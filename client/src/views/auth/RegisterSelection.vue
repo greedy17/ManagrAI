@@ -6,21 +6,24 @@
             <div class="center">
               <img src="@/assets/images/logo.png" height="66px" alt="" />
               <h1 class="logo-title">Welcome to Managr</h1>
-              <small class="gray-blue" style="margin: 0px 0px 16px 8px"
+              <!-- <small class="gray-blue" style="margin: 0px 0px 16px 8px"
                 >Register with Google to continue</small
+              > -->
+              <small class="gray-blue" style="margin: 0px 0px 16px 8px"
+                >Register with Email to continue</small
               >
             </div>
-            <button id="custom-google-signin-button" class="google-signin-button" @click="signInWithGoogle">
+            <!-- <button id="custom-google-signin-button" class="google-signin-button" @click="signInWithGoogle">
               <img src="@/assets/images/google.svg" />
               <span>Continue with Google</span>
-            </button>
+            </button> -->
             <!-- <button class="google-signin-button" @click="signInWithMicrosoft">
               <img src="@/assets/images/microsoft.svg" />
               <span>Continue with Microsoft</span>
             </button> -->
-            <div class="seperator">
+            <!-- <div class="seperator">
               <span> OR </span>
-            </div>
+            </div> -->
             <button
               class="register-button-hs"
               @click="goToRegister"
@@ -69,6 +72,7 @@
   import User from '@/services/users'
 
   import { PublicClientApplication } from '@azure/msal-browser'
+import { decryptData } from '../../encryption'
 
   export default {
     name: 'RegisterSelection',
@@ -97,8 +101,8 @@
       });
 
       // Attach event listener to the custom button
-      const customButton = document.getElementById('custom-google-signin-button');
-      customButton.addEventListener('click', this.signInWithGoogle);
+      // const customButton = document.getElementById('custom-google-signin-button');
+      // customButton.addEventListener('click', this.signInWithGoogle);
     },
     methods: {
       goToRegister() {
@@ -185,6 +189,7 @@
     },
     computed: {
       user() {
+        // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
         return this.$store.state.user
       },
       isPR() {

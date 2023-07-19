@@ -476,6 +476,7 @@ import { ObjectField } from '@/services/crm'
 
 import AlertTemplate from '@/services/alerts/'
 import allConfigs from '../configs'
+import { decryptData } from '../../../../encryption'
 
 export default {
   name: 'AlertsTemplateList',
@@ -712,20 +713,25 @@ export default {
   },
   computed: {
     isPaid() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.organizationRef.isPaid
     },
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
     hasSlackIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.slackRef
     },
     hasRecapChannel() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.slackAccount
         ? this.$store.state.user.slackAccount.recapChannel
         : null
     },
     zoomChannel() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.slackAccount
         ? this.$store.state.user.slackAccount.zoomChannel
         : null
@@ -740,15 +746,18 @@ export default {
       return filtered
     },
     userCRM() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.crm
     },
     userLevel() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.userLevel
     },
     meetings() {
       return this.$store.state.meetings
     },
     isOnboarding() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.onboarding
     },
     leaderTemplatesFirst() {

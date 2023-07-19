@@ -279,6 +279,7 @@ class HubspotAuthAccountAdapter:
                     time.sleep(10)
         saved_response = res
         page = 1
+        attempts = 1
         while True:
             has_next_page = res.get("paging", {}).get("next", {}).get("after", None)
             if has_next_page and page <= 5:
@@ -296,6 +297,12 @@ class HubspotAuthAccountAdapter:
                             *res["results"],
                         ]
                         page += 1
+                except ApiRateLimitExceeded:
+                    if attempts >= 3:
+                        break
+                    else:
+                        attempts += 1
+                        time.sleep(10.0)
                 except Exception as e:
                     logger.exception(
                         f"Exception calling hubspot api during next page list resources for {self.internal_user.email}: {e}"

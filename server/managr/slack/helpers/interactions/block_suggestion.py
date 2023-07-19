@@ -8,7 +8,6 @@ from managr.hubspot import constants as hs_consts
 from managr.gong.models import GongCall
 from managr.core.models import User
 from managr.opportunity.models import Opportunity, Lead
-from managr.hubspot.models import Deal, Company, HubspotContact
 from managr.organization.models import (
     Organization,
     Account,
@@ -20,7 +19,7 @@ from managr.outreach.models import Sequence
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import process_action_id, NO_OP, processor
 from managr.crm.exceptions import TokenExpired, InvalidFieldError
-from managr.salesloft.models import Cadence, People
+from managr.salesloft.models import Cadence
 from managr.crm.models import BaseOpportunity, BaseAccount, BaseContact
 
 logger = logging.getLogger("managr")
@@ -483,6 +482,32 @@ def process_get_crm_resource_options(payload, context):
     return options
 
 
+def process_get_meeting_options(payload, context):
+    from managr.zoom.zoom_helper.exceptions import TokenExpired
+
+    date = context.get("meeting_date")
+    user = User.objects.get(id=context.get("u"))
+    while True:
+        try:
+            options_res = user.zoom_account.helper_class.get_meetings_by_date(
+                user.zoom_account.access_token, user.zoom_account.zoom_id, date
+            )
+            meetings = options_res["meetings"]
+            break
+        except TokenExpired:
+            user.zoom_account.regenerate_token()
+        except Exception as e:
+            logger.exception(
+                f"Exception when pulling zoom meetings for {user.email} because of {e}"
+            )
+            meetings = []
+    return {
+        "options": [
+            block_builders.option(meeting["topic"], str(meeting["id"])) for meeting in meetings
+        ]
+    }
+
+
 def handle_block_suggestion(payload):
     """
     This takes place when a select_field requires data from Managr
@@ -515,6 +540,8 @@ def handle_block_suggestion(payload):
         slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION: process_get_crm_resource_options,
         slack_const.MEETING__PROCESS_TRANSCRIPT_TASK: process_get_crm_resource_options,
         slack_const.PROCESS_SELECTED_GENERATIVE_ACTION: process_get_crm_resource_options,
+        slack_const.PROCESS_SEND_RESOURCE_MESSAGE: process_get_crm_resource_options,
+        slack_const.PROCESS_GET_MEETING_OPTIONS: process_get_meeting_options,
     }
     action_query_string = payload["action_id"]
     processed_string = process_action_id(action_query_string)

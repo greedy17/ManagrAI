@@ -46,9 +46,7 @@ export default class OrganizationAPI {
   }
   async orgDeactivate(data) {
     try {
-      console.log('hit2')
       const res = await this.client.get(ORGANIZATIONS_DEACTIVATE, { params: { org_id: data } })
-      console.log('res', res)
       return res.data
     } catch(e) {
       console.log('error in orgDeactivate', e)

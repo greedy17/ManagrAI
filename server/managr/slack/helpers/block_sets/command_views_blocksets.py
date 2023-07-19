@@ -493,6 +493,7 @@ def update_command_block_set(context):
     if hasattr(user, "gong_account"):
         options.append(block_builders.option("Call Recording", "CALL_RECORDING"))
     if not settings.IN_PROD:
+        options.append(block_builders.option("News Summary", "NEWS_SUMMARY"))
         options.append(block_builders.option("Reset Meetings", "RESET_MEETINGS"))
     blocks = [
         block_builders.input_block(
@@ -600,53 +601,18 @@ def pick_resource_modal_block_set(context, *args, **kwargs):
     return blocks
 
 
-@block_set(required_context=["u"])
+@block_set()
 def ask_managr_blockset(context, *args, **kwargs):
     """Shows a modal to update a resource"""
-    resource_type = context.get("resource_type", None)
-    resource_id = context.get("resource_id", None)
-    user_id = context.get("u")
-    options = [
-        block_builders.option(resource, resource.capitalize())
-        for resource in context.get("options").split("%")
+    blocks = [
+        block_builders.input_block(
+            "Type your request here",
+            placeholder=f"What's the next steps?",
+            block_id="CHAT_PROMPT",
+            multiline=True,
+            optional=False,
+        ),
     ]
-    blocks = []
-    blocks.append(
-        block_builders.static_select(
-            "Related to type",
-            options,
-            action_id=f"{slack_const.PROCESS_SELECT_RESOURCE}?u={user_id}&options={context.get('options')}&action_id={context.get('action_id')}",
-            block_id="selected_object_type",
-            initial_option=block_builders.option(resource_type, resource_type)
-            if resource_type
-            else None,
-        )
-    )
-    if (not resource_id and resource_type) or (resource_id and resource_type):
-        blocks.append(
-            block_builders.external_select(
-                f"*Search for an {context.get('resource_type')}*",
-                action_id=f"{context.get('action_id')}?u={user_id}&resource_type={resource_type}",
-                block_id="selected_object",
-                placeholder="Type to search",
-                initial_option=block_builders.option(resource_id, resource_id)
-                if resource_id
-                else None,
-            ),
-        )
-    if resource_id and resource_type:
-        blocks.extend(
-            [
-                block_builders.input_block(
-                    f"What would you like to ask?",
-                    placeholder=f"Type or select an action template",
-                    block_id="CHAT_PROMPT",
-                    multiline=True,
-                    optional=False,
-                ),
-                block_builders.context_block("Powered by ChatGPT © :robot_face:"),
-            ]
-        )
     return blocks
 
 
@@ -735,4 +701,3 @@ def reset_meeting_block_set(context, *args, **kwargs):
             ),
         )
     return blocks
-

@@ -211,6 +211,7 @@ import ChatList from '../components/Chat/ChatList.vue'
 import ChatMeetings from '../components/Chat/ChatMeetings.vue'
 import User from '@/services/users'
 import { CRMObjects } from '@/services/crm'
+import { decryptData } from '../encryption'
 
 export default {
   name: 'Home',
@@ -362,18 +363,21 @@ export default {
   },
   computed: {
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
     usersInTeam() {
-      console.log('this.team', this.team)
       return this.team.list.filter(
         (member) => member.team === this.user.team, //&& member.id !== this.user.id
       )
     },
     hasSlack() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.slackRef
+      return this.$store.state.user.slackRef
     },
     numberOfAllowedUsers() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.organizationRef.numberOfAllowedUsers
     },
     currentView() {

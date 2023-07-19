@@ -539,6 +539,7 @@ import OnboardingForms from '@/components/OnboardingForms'
 import allConfigs from '@/views/settings/alerts/completeConfigs'
 import { UserOnboardingForm } from '@/services/users/forms'
 import { mapActions } from 'vuex'
+import { decryptData, encryptData } from '../../encryption'
 
 export default {
   name: 'Onboarder',
@@ -896,6 +897,8 @@ export default {
       try {
         const res = await SlackOAuth.api.updateZoomChannel(this.slackId, zoom_channel).then(() => {
           User.api.getUser(this.user.id).then((response) => {
+            // const encrypted = encryptData(response, process.env.VUE_APP_SECRET_KEY)
+            // this.$store.commit('UPDATE_USER', encrypted)
             this.$store.commit('UPDATE_USER', response)
           })
         })
@@ -923,6 +926,8 @@ export default {
           .updateRecapChannel(this.slackId, recap_channel, [this.user.id])
           .then(() => {
             User.api.getUser(this.user.id).then((response) => {
+              // const encrypted = encryptData(response, process.env.VUE_APP_SECRET_KEY)
+              // this.$store.commit('UPDATE_USER', encrypted)
               this.$store.commit('UPDATE_USER', response)
             })
           })
@@ -953,7 +958,7 @@ export default {
 
     onSaveAllWorkflows() {
       this.submitting = true
-      let userId = this.$store.state.user.id
+      let userId = this.user.id
       this.selectedWorkflows.forEach(async function (item, i) {
         try {
           const res = await AlertTemplate.api
@@ -964,6 +969,8 @@ export default {
             })
             .then(() => {
               User.api.getUser(this.user.id).then((response) => {
+                // const encrypted = encryptData(response, process.env.VUE_APP_SECRET_KEY)
+                // this.$store.commit('UPDATE_USER', encrypted)
                 this.$store.commit('UPDATE_USER', response)
               })
             })
@@ -1093,6 +1100,7 @@ export default {
   },
   computed: {
     slackId() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.slackRef.slackId
     },
     updateForm() {
@@ -1113,24 +1121,31 @@ export default {
       return filtered
     },
     userCRM() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.crm
     },
     hasHubspotIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.hubspotAccount
     },
     hasSalesforceIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.salesforceAccount
     },
     orgHasSlackIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.organizationRef.slackIntegration
     },
     hasSlackIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.slackRef
     },
     hasNylasIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.nylas
     },
     userCanIntegrateSlack() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.isAdmin
     },
     selectedIntegrationSwitcher() {
@@ -1150,11 +1165,13 @@ export default {
       }
     },
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
     hasZoomChannel() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.slackAccount
-        ? this.$store.state.user.slackAccount.zoomChannel
+        ? $this.$store.state.user.slackAccount.zoomChannel
         : null
     },
     hasRecapChannel() {

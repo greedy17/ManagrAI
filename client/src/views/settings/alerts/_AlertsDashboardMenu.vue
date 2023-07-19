@@ -59,6 +59,7 @@ import BuildYourOwn from '@/views/settings/alerts/create/BuildYourOwn'
 import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
 import User from '@/services/users'
 import AlertsHeader from '@/components/AlertsHeader'
+import { decryptData } from '../../../encryption'
 
 export default {
   name: 'AlertsDashboardMenu',
@@ -184,20 +185,16 @@ export default {
   },
   computed: {
     isPaid() {
+      console.log('this.$store', this.$store.state.user)
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.organizationRef.isPaid
     },
     isOnboarding() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.onboarding
     },
-    // hasZoomChannel() {
-    //   if (this.hasSlack) {
-    //     return this.$store.state.user.slackAccount.zoomChannel
-    //   }
-    // },
-    // hasSlack() {
-    //   return this.$store.state.user.slackAccount
-    // },
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
   },

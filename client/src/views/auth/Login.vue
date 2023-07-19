@@ -35,14 +35,13 @@
         text="Continue"
         :loading="loggingIn"
       />
-      <div class="seperator">
+      <!-- <div class="seperator">
         <span> OR </span>
-      </div>
-      <!-- <button id="google-signin-button" class="google-signin-button" @click="signInWithGoogle">Sign In with Google</button> -->
-      <button id="custom-google-signin-button" class="google-signin-button" @click="signInWithGoogle">
+      </div> -->
+      <!-- <button id="custom-google-signin-button" class="google-signin-button" @click="signInWithGoogle">
         <img src="@/assets/images/google.svg" />
         <span>Continue with Google</span>
-      </button>
+      </button> -->
       <!-- <button class="google-signin-button" @click="signInWithMicrosoft">
         <img src="@/assets/images/microsoft.svg" />
         <span>Continue with Microsoft</span>
@@ -87,6 +86,7 @@ import { PublicClientApplication, EventType } from '@azure/msal-browser'
  */
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import PulseLoadingSpinner from '@thinknimble/pulse-loading-spinner'
+import { decryptData, encryptData } from '../../encryption'
 /**
  * internal Components
  */
@@ -118,9 +118,11 @@ export default {
       return this.$store.state.user.role === 'PR'
     },
     hasSalesforceIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.salesforceAccount
     },
     hasSlackIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.slackRef
     },
   },
@@ -136,8 +138,13 @@ export default {
         let res = await modelClass.api.sso(this.$route.query.code)
         key = res.key
         user = res.user
+        const userAPI = User.fromAPI(user)
+        // const encryptedUser = encryptData(userAPI, process.env.VUE_APP_SECRET_KEY)
+        // const encryptedKey = encryptData(key, process.env.VUE_APP_SECRET_KEY)
+        // this.$store.dispatch('updateUserToken', encryptedKey)
+        // this.$store.dispatch('updateUser', encryptedUser)
+        this.$store.commit('UPDATE_USER', userAPI)
         this.$store.dispatch('updateUserToken', key)
-        this.$store.dispatch('updateUser', User.fromAPI(user))
       } catch (error) {
         const e = error
         this.$toast(`This method's for user's who signed up via ${this.selectedCrm}. Try again.`, {
@@ -163,8 +170,8 @@ export default {
     });
 
     // Attach event listener to the custom button
-    const customButton = document.getElementById('custom-google-signin-button');
-    customButton.addEventListener('click', this.signInWithGoogle);
+    // const customButton = document.getElementById('custom-google-signin-button');
+    // customButton.addEventListener('click', this.signInWithGoogle);
   },
   methods: {
     async checkAccountStatus() {
@@ -218,8 +225,13 @@ export default {
           bodyClassName: ['custom'],
         })
       } finally {
+        const userAPI = User.fromAPI(user)
+        // const encryptedUser = encryptData(userAPI, process.env.VUE_APP_SECRET_KEY)
+        // const encryptedKey = encryptData(key, process.env.VUE_APP_SECRET_KEY)
+        // this.$store.dispatch('updateUserToken', encryptedKey)
+        // this.$store.dispatch('updateUser', encryptedUser)
+        this.$store.commit('UPDATE_USER', userAPI)
         this.$store.dispatch('updateUserToken', key)
-        this.$store.dispatch('updateUser', User.fromAPI(user))
         // localStorage.dateTime = Date.now()
         this.$router.push({ name: 'ListTemplates' })
         this.loggingIn = false
@@ -235,8 +247,13 @@ export default {
           let token = response.data.token
           let userData = response.data
           delete userData.token
+          const userAPI = User.fromAPI(userData)
+          // const encryptedUser = encryptData(userAPI, process.env.VUE_APP_SECRET_KEY)
+          // const encryptedKey = encryptData(token, process.env.VUE_APP_SECRET_KEY)
+          // this.$store.dispatch('updateUserToken', encryptedKey)
           this.$store.dispatch('updateUserToken', token)
-          this.$store.dispatch('updateUser', User.fromAPI(userData))
+          // this.$store.dispatch('updateUser', encryptedUser)
+          this.$store.commit('UPDATE_USER', userAPI)
           // localStorage.dateTime = Date.now()
           // if (this.$route.query.redirect) {
           //   this.$router.push(this.$route.query.redirect)
@@ -338,10 +355,14 @@ export default {
           }
           if (userEmail) {
             // Log in with SSO endpoint if they have an account
-            const response = await User.api.loginSSO({ email })
+            const response = await User.api.loginSSO({ email, sso: true })
             let token = response.data.token
             let userData = response.data
             delete userData.token
+            // const userAPI = User.fromAPI(userData)
+            // const encryptedUser = encryptData(userAPI, process.env.VUE_APP_SECRET_KEY)
+            // const encryptedKey = encryptData(token, process.env.VUE_APP_SECRET_KEY)
+            // this.$store.dispatch('updateUserToken', encryptedKey)
             this.$store.dispatch('updateUserToken', token)
             this.$store.dispatch('updateUser', User.fromAPI(userData))
             if (this.isPR) {

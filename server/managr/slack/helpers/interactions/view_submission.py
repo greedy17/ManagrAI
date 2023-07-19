@@ -56,10 +56,17 @@ from managr.salesforce.background import (
 )
 
 from managr.slack.helpers.block_sets import get_block_set
-from managr.slack.background import emit_process_submit_resource_data, emit_process_chat_action
+from managr.slack.background import (
+    emit_process_submit_resource_data,
+    emit_process_chat_action,
+    emit_process_zoom_meeting_message,
+)
 from managr.salesloft.models import People
 from managr.salesloft.background import emit_add_cadence_membership
-from managr.zoom.background import emit_process_schedule_zoom_meeting
+from managr.zoom.background import (
+    emit_process_schedule_zoom_meeting,
+    emit_process_get_transcript_and_update_crm,
+)
 from managr.slack.tasks import emit_update_slack_message
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
@@ -172,7 +179,7 @@ def process_zoom_meeting_data(payload, context):
         workflow.operations = []
         workflow.save()
     private_metadata = json.loads(payload["view"]["private_metadata"])
-    ts = context.get("ts", None)
+    ts = private_metadata.get("ts", None)
     user = workflow.user
     slack_access_token = user.organization.slack_integration.access_token
     view = payload["view"]
@@ -257,18 +264,18 @@ def process_zoom_meeting_data(payload, context):
     workflow.begin_tasks()
     # if len(user.slack_integration.realtime_alert_configs):
     #     _send_instant_alert(current_form_ids)
-    emit_process_calendar_meetings(
-        str(user.id),
-        f"calendar-meetings-{user.email}-{str(uuid.uuid4())}",
-        workflow.slack_interaction,
-        date=str(workflow.datetime_created.date()),
-    )
+    # emit_process_calendar_meetings(
+    #     str(user.id),
+    #     f"calendar-meetings-{user.email}-{str(uuid.uuid4())}",
+    #     workflow.slack_interaction,
+    #     date=str(workflow.datetime_created.date()),
+    # )
 
     emit_meeting_workflow_tracker(str(workflow.id))
     if ts is not None:
         blocks = [
             block_builders.simple_section(
-                f":white_check_mark: Got it! Check your meeting channel - _{workflow.meeting.topic}_",
+                f":white_check_mark: Got it! Meeting successfully logged! - _{workflow.meeting.topic}_",
                 "mrkdwn",
             )
         ]
@@ -727,118 +734,6 @@ def process_zoom_meeting_attach_resource(payload, context):
         return logger.exception(
             f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
         )
-    return
-
-
-@processor()
-def process_update_meeting_contact(payload, context):
-    state = payload["view"]["state"]["values"]
-    type = context.get("type", None)
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    meeting = workflow.meeting
-    contact = dict(
-        *filter(
-            lambda contact: contact["_tracking_id"] == context.get("tracking_id"),
-            meeting.participants,
-        )
-    )
-    form = (
-        workflow.forms.get(id=contact["_form"])
-        if workflow.meeting
-        else OrgCustomSlackFormInstance.objects.get(id=contact.get("_form"))
-    )
-    form.save_form(state)
-    user_id = workflow.user.id if type else workflow.user_id
-    # reconstruct the current data with the updated data
-    adapter_class = crm_routes[workflow.user.crm]["Contact"]
-    adapter = adapter_class.from_api(
-        {**contact.get("secondary_data", {}), **form.saved_data}, str(user_id)
-    )
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    trigger_id = payload["trigger_id"]
-    view_id = context.get(str("current_view_id"))
-    new_contact = {
-        **contact,
-        **adapter.as_dict,
-        "id": contact.get("id", None),
-        "__has_changes": True,
-    }
-    if type:
-        part_index = None
-        for index, participant in enumerate(workflow.participants):
-            if participant["_tracking_id"] == new_contact["_tracking_id"]:
-                part_index = index
-                break
-        workflow.participants = [
-            *workflow.participants[:part_index],
-            new_contact,
-            *workflow.participants[part_index + 1 :],
-        ]
-        workflow.save()
-        user = User.objects.get(id=user_id)
-        org = user.organization
-        access_token = org.slack_integration.access_token
-        show_meeting_context = {"w": context.get("w"), "type": workflow.resource_type}
-        # return {"response_action": "clear"}
-    else:
-        # replace the contact in the participants list
-        part_index = None
-        for index, participant in enumerate(meeting.participants):
-            if participant["_tracking_id"] == new_contact["_tracking_id"]:
-                part_index = index
-                break
-        meeting.participants = [
-            *meeting.participants[:part_index],
-            new_contact,
-            *meeting.participants[part_index + 1 :],
-        ]
-        meeting.save()
-        workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-        org = workflow.user.organization
-        access_token = org.slack_integration.access_token
-        show_meeting_context = {
-            "w": context.get("w"),
-            "original_message_channel": context.get("original_message_channel"),
-            "original_message_timestamp": context.get("original_message_timestamp"),
-        }
-        if check_contact_last_name(workflow.id):
-            update_res = slack_requests.update_channel_message(
-                context.get("original_message_channel"),
-                context.get("original_message_timestamp"),
-                access_token,
-                block_set=get_block_set("initial_meeting_interaction", {"w": context.get("w")}),
-            )
-    blocks = get_block_set("show_meeting_contacts", show_meeting_context,)
-    # replace the contact in the participants list
-    data = {
-        "trigger_id": trigger_id,
-        "view_id": view_id,
-        "view": {
-            "type": "modal",
-            "callback_id": slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
-            "title": {"type": "plain_text", "text": "Contacts"},
-            "blocks": blocks,
-        },
-    }
-    try:
-        res = slack_requests.generic_request(url, data, access_token=access_token)
-    except InvalidBlocksException as e:
-        return logger.exception(
-            f"Failed To load update meeting contact modal for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except InvalidBlocksFormatException as e:
-        return logger.exception(
-            f"Failed To load update meeting contact modal for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except UnHandeledBlocksException as e:
-        return logger.exception(
-            f"Failed To load update meeting contact modal for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except InvalidAccessToken as e:
-        return logger.exception(
-            f"Failed To load update meeting contact modal for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-
     return
 
 
@@ -2773,23 +2668,33 @@ def process_chat_action_submit(payload, context):
     return {"response_action": "clear"}
 
 
+def process_news_summary(payload, context):
+    from managr.comms.tasks import emit_process_news_summary
+
+    user = User.objects.get(id=context.get("u"))
+    try:
+        res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=get_block_set(
+                "loading", {"message": ":robot_face: Processing your news summary..."}
+            ),
+        )
+    except Exception as e:
+        logger.exception(f"Failed to send DM to {user.email} because of <{e}>")
+    context.update(ts=res["ts"])
+    emit_process_news_summary(payload, context)
+    return {"response_action": "clear"}
+
+
 def process_submit_ask_managr(payload, context):
     user = User.objects.get(id=context.get("u"))
-    resource_list = (
-        ["Opportunity", "Account", "Contact", "Lead"]
-        if user.crm == "SALESFORCE"
-        else ["Deal", "Company", "Contact"]
-    )
     state = payload["view"]["state"]["values"]
     prompt = state["CHAT_PROMPT"]["plain_input"]["value"]
-    resource_type = (
-        list(state["selected_object_type"].values())[0].get("selected_option").get("value")
-    )
-    resource_id = list(state["selected_object"].values())[0].get("selected_option").get("value")
+    resource_type = context.get("resource_type")
+    resource_id = context.get("resource_id")
     resource_check = (
-        CRM_SWITCHER[user.crm][resource_type]["model"]
-        .objects.filter(integration_id=resource_id)
-        .first()
+        CRM_SWITCHER[user.crm][resource_type]["model"].objects.filter(id=resource_id).first()
     )
     block_set = [
         *get_block_set("loading", {"message": f":robot_face: Processing your submission..."},),
@@ -2840,6 +2745,32 @@ def process_reset_selected_meeting_days(payload, context):
     return
 
 
+@processor()
+def process_submit_transcript_prompt_modal(payload, context):
+    pm = json.loads(payload["view"]["private_metadata"])
+    user = User.objects.get(id=pm.get("u"))
+    state = payload["view"]["state"]["values"]
+    yes_no_key = list(state["YES_NO"].keys())[0]
+    yes_no_check = state["YES_NO"][yes_no_key]["selected_option"]["value"]
+    blocks = get_block_set("loading", {"message": "Fetching your meeting data..."})
+    try:
+        slack_res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+    except Exception as e:
+        logger.exception(
+            f"ERROR sending update channel message for chat submission because of <{e}>"
+        )
+    context.update(ts=slack_res["ts"])
+    if yes_no_check == "NO":
+        emit_process_zoom_meeting_message(payload, context)
+    else:
+        emit_process_get_transcript_and_update_crm(payload, context)
+    return
+
+
 def handle_view_submission(payload):
     """
     This takes place when a modal's Submit button is clicked.
@@ -2876,6 +2807,8 @@ def handle_view_submission(payload):
         slack_const.PROCESS_CHAT_ACTION: process_chat_action_submit,
         slack_const.PROCESS_ASK_MANAGR: process_submit_ask_managr,
         slack_const.RESET_SELECTED_MEETING_DAYS: process_reset_selected_meeting_days,
+        slack_const.PROCESS_NEWS_SUMMARY: process_news_summary,
+        slack_const.MEETING__SUBMIT_TRANSCRIPT_PROMPT_MODAL: process_submit_transcript_prompt_modal,
     }
     callback_id = payload["view"]["callback_id"]
     view_context = json.loads(payload["view"]["private_metadata"])

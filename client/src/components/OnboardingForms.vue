@@ -100,6 +100,7 @@ import draggable from 'vuedraggable'
 import SlackOAuth from '@/services/slack'
 import { ObjectField } from '@/services/crm'
 import User from '@/services/users'
+import { decryptData, encryptData } from '../encryption'
 
 export default {
   name: 'OnboardingForms',
@@ -312,24 +313,32 @@ export default {
       ]
     },
     user() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
     userCRM() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.crm
     },
     orgHasSlackIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.organizationRef.slackIntegration
+      return this.$store.state.user.organizationRef.slackIntegration
     },
     hasSlackIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.slackRef
     },
     hasNylasIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.nylas
     },
     userCanIntegrateSlack() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.isAdmin
     },
     hasZoomChannel() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.slackAccount
         ? this.$store.state.user.slackAccount.zoomChannel
         : null
@@ -469,6 +478,8 @@ export default {
         .then((res) => {
           // this.$emit('update:selectedForm', res)
           User.api.getUser(this.user.id).then((response) => {
+            // const encrypted = encryptData(response, process.env.VUE_APP_SECRET_KEY)
+            // this.$store.commit('UPDATE_USER', encrypted)
             this.$store.commit('UPDATE_USER', response)
           })
 
