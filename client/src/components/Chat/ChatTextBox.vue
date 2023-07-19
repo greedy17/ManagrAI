@@ -36,6 +36,11 @@
                 <p>Select an {{ user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal' }} first!</p>
               </div>
             </Transition>
+            <Transition name="slide-fade">
+              <div v-if="showMeetingMessage" class="templates">
+                <p>Select a meeting first!</p>
+              </div>
+            </Transition>
           </div>
           <font-awesome-icon
             :class="{ invert: !message }"
@@ -72,7 +77,7 @@ export default {
       message: '',
       showMessage: false,
       templatesOpen: false,
-      showReviewMessage: false,
+      showMeetingMessage: false,
       chatRes: null,
       chatmsg: null,
       actions: [
@@ -323,25 +328,42 @@ export default {
       this.message += '\n \n \n \n'
     },
     addTemplate(val) {
-      if (this.currentOpp) {
-        if (val.toLowerCase().includes('update')) {
-          if (this.currentOpp) {
-            this.message = `Update ${this.currentOpp.name} ...`
-          } else {
-            this.toggleMessage()
-          }
+      if (!val.toLowerCase().includes('log meeting')) {
+        this.$emit('set-view', 'pipeline')
+      }
+      if (val.toLowerCase().includes('update')) {
+        if (this.currentOpp) {
+          this.message = `Update ${this.currentOpp.name} ...`
         } else {
-          this.message = val
+          this.toggleMessage()
+        }
+      } else if (val.toLowerCase().includes('log meeting')) {
+        if (this.currentMeeting) {
+          this.message = `Log ${this.currentMeeting.topic}`
+        } else {
+          this.$emit('set-view', 'meetings')
+          this.toggleMeetingMessage()
         }
       } else {
-        this.toggleMessage()
+        if (this.currentOpp) {
+          this.message = val
+        } else {
+          this.toggleMessage()
+        }
       }
     },
     toggleMessage() {
       this.showMessage = true
-      this.showReviewMessage = false
+      this.showMeetingMessage = false
       setTimeout(() => {
         this.showMessage = false
+      }, 1200)
+    },
+    toggleMeetingMessage() {
+      this.showMeetingMessage = true
+      this.showMessage = false
+      setTimeout(() => {
+        this.showMeetingMessage = false
       }, 1200)
     },
     toggleTemplates() {
@@ -355,6 +377,9 @@ export default {
     },
     currentOpp() {
       return this.$store.state.currentOpp
+    },
+    currentMeeting() {
+      return this.$store.state.currentMeeting
     },
   },
   directives: {

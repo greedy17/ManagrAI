@@ -269,6 +269,7 @@
       @set-message="setMessage"
       @set-title="setTitle"
       @remove-opp="removeOpp"
+      @set-view="setView"
       @get-conversations="getConversations"
       :messages="messages"
       :scrollToBottom="scrollToBottom"
@@ -307,11 +308,13 @@ export default {
     removeOpp() {
       this.$emit('remove-opp')
     },
+    setView(val) {
+      this.$emit('set-view', val)
+    },
     async getConversations() {
       try {
         let res = await User.api.getConversations({ user_id: this.user.id })
         this.conversation = res.results[0]
-        console.log(this.conversation)
       } catch (e) {
         console.log(e)
       }

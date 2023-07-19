@@ -1,6 +1,6 @@
 <template>
   <section class="right-container">
-    <div style="margin-top: -0.5rem" v-if="!selectedOpp" class="switcher">
+    <div style="margin-top: -0.5rem" v-if="!selectedOpp && !currentMeeting" class="switcher">
       <div
         @click="switchMainView('pipeline')"
         :class="{ activeswitch: mainView === 'pipeline' }"
@@ -19,13 +19,13 @@
       </div>
     </div>
     <header>
-      <section v-if="selectedOpp">
+      <section v-if="selectedOpp || currentMeeting">
         <div class="flexed-row-s"></div>
-        <span style="margin-top: -4px" class="flexed-row-spread header-bg">
+        <span v-if="selectedOpp" style="margin-top: -4px" class="flexed-row-spread header-bg">
           <div class="elipsis-text">
             <span class="icon-bg">
               <img
-                @click="deselectOpp"
+                @click="deselectAll"
                 src="@/assets/images/back.svg"
                 height="16px;width:16px"
                 alt=""
@@ -58,6 +58,26 @@
               icon="fa-brands fa-salesforce"
               @click="openInCrm(selectedOpp.integration_id)"
             />
+          </div>
+        </span>
+
+        <span v-else style="margin-top: -4px" class="flexed-row-spread header-bg">
+          <div class="elipsis-text">
+            <span class="icon-bg">
+              <img
+                @click="deselectAll"
+                src="@/assets/images/back.svg"
+                height="16px;width:16px"
+                alt=""
+              />
+            </span>
+            <p>
+              {{ currentMeeting.topic }}
+            </p>
+          </div>
+
+          <div style="margin-left: -8px" class="flexed-row">
+            <small class="gray-text">{{ formatDate(currentMeeting.start_time) }}</small>
           </div>
         </span>
       </section>
@@ -227,9 +247,8 @@
         </div>
 
         <div v-else style="margin-top: 0.5rem" class="flexed-row-spread__">
-          <p><span> Today's Meetings: </span>{{ date }}</p>
-
-          <button :disabled="loading" @click="refreshCalEvents" class="icon-button">
+          <input class="inline-input" v-model="meetingDate" type="date" />
+          <button :disabled="loading" @click="getZoomMeetings" class="icon-button">
             <img
               v-if="!loading"
               class="dampen"
@@ -267,20 +286,17 @@
       </div>
     </div>
 
-    <div class="selected-opp-container" v-if="selectedOpp && !loading">
+    <div class="selected-opp-container" v-if="currentMeeting && !loading">
+      <div class="selected-opp-section bordered">
+        <div style="width: 99%" class="opp-section">
+          <ChatMeetingLogger :meeting="currentMeeting" />
+        </div>
+      </div>
+    </div>
+
+    <div class="selected-opp-container" v-else-if="selectedOpp && !loading">
       <div v-show="view === 'crm'" class="selected-opp-section bordered">
-        <div
-          style="
-            border: 1px solid #eeeeee;
-            background-color: white;
-            padding-left: 1rem;
-            width: 99.75%;
-            margin-left: 0.5px;
-            border-radius: 5px;
-            height: 100%;
-            overflow-y: scroll;
-          "
-        >
+        <div class="opp-section">
           <div v-for="field in oppFields" :key="field.id" style="margin-bottom: 1rem">
             <p style="font-size: 12px" class="gray-text">
               {{ field.label }}
@@ -417,12 +433,16 @@
     </div>
 
     <div class="opp-scroll-container" v-else-if="this.mainView === 'meetings' && !loading">
-      <div class="opp-container text-cursor" v-for="(meeting, i) in meetings" :key="i">
-        <p>
-          {{ meeting.meeting_ref.topic }}
+      <div
+        @click="changeSelectedMeeting(meeting)"
+        class="opp-container"
+        v-for="(meeting, i) in meetings"
+        :key="i"
+      >
+        <p class="no-margin">
+          {{ meeting.topic }}
         </p>
-
-        <small>{{ formattedStartTimes[meeting.id] }} - {{ formattedEndTimes[meeting.id] }}</small>
+        <small>{{ formatDate(meeting.start_time) }} </small>
       </div>
     </div>
 
@@ -442,6 +462,8 @@ import User from '@/services/users'
 import { CRMObjects } from '@/services/crm'
 import CollectionManager from '@/services/collectionManager'
 import InlineFieldEditor from '@/components/Chat/InlineFieldEditor'
+import ChatMeetingLogger from '@/components/Chat/ChatMeetingLogger'
+import Zoom from '@/services/zoom/account'
 import { decryptData } from '../../encryption'
 
 export default {
@@ -449,6 +471,7 @@ export default {
   components: {
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     InlineFieldEditor,
+    ChatMeetingLogger,
   },
   data() {
     return {
@@ -477,6 +500,8 @@ export default {
       stageField: null,
       filtervalue: null,
       allStages: [],
+      meetings: [],
+      meetingDate: this.getCurrentDate(),
       objects: CollectionManager.create({
         ModelClass: CRMObjects,
         pagination: { size: 20 },
@@ -624,19 +649,42 @@ export default {
         this.loadMorePage = 0
       }
     },
+    meetingDate: 'getZoomMeetings',
     // : 'selectOperator',
     selectedOpp: 'getNotes',
   },
   methods: {
     test() {
-      console.log('log', this.user)
+      console.log('log', this.currentMeeting)
+    },
+    formatDate(inputDate) {
+      const dateObj = new Date(inputDate)
+      const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0')
+      const day = String(dateObj.getUTCDate()).padStart(2, '0')
+      const year = dateObj.getUTCFullYear()
+      return `${month}/${day}/${year}`
+    },
+    getCurrentDate() {
+      const now = new Date()
+      const year = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
     },
     addFilterValue(val) {
       this.selectedFilter.value = val
     },
+    deselectAll() {
+      this.selectedOpp = null
+      this.$store.dispatch('setCurrentOpp', null)
+      this.$store.dispatch('setCurrentMeeting', null)
+    },
     deselectOpp() {
       this.selectedOpp = null
       this.$store.dispatch('setCurrentOpp', null)
+    },
+    deselectMeeting() {
+      this.$store.dispatch('setCurrentMeeting', null)
     },
     setSortedNotes() {
       const sortedObjects = this.notes.sort((a, b) => {
@@ -692,37 +740,58 @@ export default {
         this.view = view
       }
     },
-    async getMeetingList() {
+    async getZoomMeetings() {
       this.loading = true
       try {
-        await this.$store.dispatch('loadMeetings')
+        let res = await Zoom.api.getZoomMeetings({
+          user_id: this.user.id,
+          date: this.meetingDate,
+        })
+        this.meetings = res.data
       } catch (e) {
-        console.log(e)
+        console.log('ERROR GETTING MEETINGS:', e)
       } finally {
         setTimeout(() => {
           this.loading = false
-        }, 2000)
+        }, 1000)
       }
     },
-    async refreshCalEvents() {
-      this.loading = true
-      try {
-        let res = await User.api.refreshCalendarEvents()
-      } catch (e) {
-        console.log('Error in refreshCalEvents: ', e)
-      } finally {
-        setTimeout(() => {
-          this.refreshUser()
-        }, 4000)
-        setTimeout(() => {
-          this.loading = false
-          this.$store.dispatch('loadMeetings')
-        }, 5000)
-      }
-    },
+    // async getMeetingList() {
+    //   this.loading = true
+    //   try {
+    //     await this.$store.dispatch('loadMeetings')
+    //   } catch (e) {
+    //     console.log(e)
+    //   } finally {
+    //     setTimeout(() => {
+    //       this.loading = false
+    //     }, 2000)
+    //   }
+    // },
+    // async refreshCalEvents() {
+    //   this.loading = true
+    //   try {
+    //     let res = await User.api.refreshCalendarEvents()
+    //   } catch (e) {
+    //     console.log('Error in refreshCalEvents: ', e)
+    //   } finally {
+    //     setTimeout(() => {
+    //       this.refreshUser()
+    //     }, 4000)
+    //     setTimeout(() => {
+    //       this.loading = false
+    //       this.$store.dispatch('loadMeetings')
+    //     }, 5000)
+    //   }
+    // },
     switchMainView(view) {
       if (view === 'meetings' && !this.meetings.length) {
-        this.getMeetingList()
+        this.getZoomMeetings()
+        this.deselectOpp()
+      } else if (view === 'meetings') {
+        this.deselectOpp()
+      } else if (view !== 'meetings') {
+        this.deselectMeeting()
       }
       if (view !== this.mainView) {
         this.mainView = view
@@ -863,9 +932,14 @@ export default {
     clearText() {
       this.searchText = ''
     },
+    changeSelectedMeeting(meeting) {
+      this.$store.dispatch('setCurrentMeeting', meeting)
+      console.log(this.currentMeeting)
+    },
     changeSelectedOpp(opp, name) {
       this.hoverId = null
       this.loadMorePage = 0
+      this.$store.dispatch('setCurrentMeeting', null)
       if (opp) {
         this.selectedOpp = opp
         this.$store.dispatch('setCurrentOpp', opp)
@@ -1053,6 +1127,9 @@ export default {
     },
   },
   computed: {
+    currentMeeting() {
+      return this.$store.state.currentMeeting
+    },
     opportunities() {
       if (this.displayedOpps.results) {
         return this.displayedOpps.results.filter((opp) =>
@@ -1069,22 +1146,9 @@ export default {
 
       return formattedDate
     },
-    meetings() {
-      return this.$store.state.meetings
-    },
-    formattedStartTimes() {
-      return this.meetings.reduce((formatted, meeting) => {
-        const date = new Date(meeting.meeting_ref['start_time'])
-        const hours = date.getHours()
-        const minutes = date.getMinutes()
-        const period = hours >= 12 ? 'pm' : 'am'
-        const formattedTime = `${((hours + 11) % 12) + 1}:${minutes
-          .toString()
-          .padStart(2, '0')}${period}`
-        formatted[meeting.id] = formattedTime
-        return formatted || null
-      }, {})
-    },
+    // meetings() {
+    //   return this.$store.state.meetings
+    // },
     formattedEndTimes() {
       return this.meetings.reduce((formatted, meeting) => {
         const date = new Date(meeting.meeting_ref['end_time'])
@@ -1341,6 +1405,16 @@ export default {
 .text-cursor {
   cursor: text !important;
 }
+.opp-section {
+  border: 1px solid #eeeeee;
+  background-color: white;
+  padding-left: 1rem;
+  width: 99.75%;
+  margin-left: 0.5px;
+  border-radius: 5px;
+  height: 100%;
+  overflow-y: scroll;
+}
 .opp-container {
   background-color: white;
   position: relative;
@@ -1372,6 +1446,12 @@ export default {
   display: flex;
   flex-direction: row;
   align-items: center;
+
+  span {
+    img {
+      padding-top: 4px;
+    }
+  }
 }
 
 .expand-absolute {
@@ -1479,6 +1559,10 @@ header {
     margin: 0 0 0.25rem 0.5rem;
     color: $light-gray-blue;
   }
+}
+
+.selected {
+  border: 1px solid red;
 }
 
 .selected-opp {
@@ -1630,6 +1714,10 @@ header {
 
 ::placeholder {
   color: #afafaf;
+}
+
+.right-mar-s {
+  margin-right: 4px;
 }
 
 .gray-text {
@@ -2049,5 +2137,23 @@ img {
   visibility: visible;
   pointer-events: auto;
   text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.1);
+}
+
+.inline-input {
+  outline: none;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 6px;
+  color: $base-gray;
+  width: 50%;
+  font-family: $base-font-family;
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0.4px;
+  resize: none;
+}
+
+.pointer {
+  cursor: pointer;
 }
 </style>

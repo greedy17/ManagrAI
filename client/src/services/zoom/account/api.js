@@ -4,6 +4,8 @@ import axios from 'axios'
 import CSRF from '@/services/csrf'
 import API_BASE from '@/services/api/base'
 
+const GET_ZOOM_MEETINGS = 'zoom/get-meetings'
+
 export default class ZoomAPI extends ModelAPI {
   static ENDPOINT = 'users/zoom/'
   static FILTERS_MAP = {
@@ -46,6 +48,15 @@ export default class ZoomAPI extends ModelAPI {
   async createMeeting() {
     try {
       const res = await this.client.post('zoom/api/meetings')
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Creating Meeting' })(e)
+    }
+  }
+
+  async getZoomMeetings(data) {
+    try {
+      const res = await this.client.post(GET_ZOOM_MEETINGS, data)
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Creating Meeting' })(e)

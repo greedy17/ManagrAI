@@ -162,6 +162,7 @@ urlpatterns = [
         outreach_views.revoke_outreach_access_token,
         name="revoke-outreach-access_token",
     ),
+    path("zoom/get-meetings", zoom_views.get_meetings, name="get_meetings",),
     path("zoom/webhooks/deauthorize", zoom_views.zoom_deauth_webhook, name="zoom_deauth",),
     path("zoom/webhooks/meetings", zoom_views.zoom_meetings_webhook, name="get_zoom_auth_link",),
     path(

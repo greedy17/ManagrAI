@@ -36,6 +36,7 @@ const state = {
   allLeads: [],
   messages: [],
   currentView: 'home',
+  currentMeeting: null,
   currentOpp: null,
   allPicklistOptions: null,
   apiPicklistOptions: null,
@@ -117,6 +118,9 @@ const mutations = {
   },
   SET_VIEW: (state, payload) => {
     state.currentView = payload
+  },
+  SET_MEETING: (state, payload) => {
+    state.currentMeeting = payload
   },
   SET_OPP: (state, payload) => {
     state.currentOpp = payload
@@ -225,6 +229,9 @@ const actions = {
   },
   setCurrentView({ commit }, view) {
     commit('SET_VIEW', view)
+  },
+  setCurrentMeeting({ commit }, meeting) {
+    commit('SET_MEETING', meeting)
   },
   setCurrentOpp({ commit }, opp) {
     commit('SET_OPP', opp)

@@ -192,6 +192,7 @@
       <ChatBox
         ref="chatBox"
         @set-opp="setOpp"
+        @set-view="setView"
         @toggle-chat-modal="toggleChatModal"
         @remove-opp="removeOpp"
       />
@@ -285,6 +286,9 @@ export default {
     },
     setOpp(name) {
       this.$refs.rightSideBar.changeSelectedOpp(null, name)
+    },
+    setView(name) {
+      this.$refs.rightSideBar.switchMainView(name)
     },
     toggleLeftbarOn() {
       this.barOpen = true
