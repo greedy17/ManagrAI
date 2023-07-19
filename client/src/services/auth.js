@@ -86,8 +86,14 @@ function homepageRedirect(to, from, next) {
       name: 'LoginOrSignup',
     })
   } else {
-    next({
-      name: 'ListTemplates',
-    })
+    if (store.state.user.role === 'PR') {
+      next({
+        name: 'PRSummaries',
+      })
+    } else {
+      next({
+        name: 'Home',
+      })
+    }
   }
 }

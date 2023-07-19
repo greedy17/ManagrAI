@@ -138,21 +138,25 @@ class User(AbstractUser, TimeStampModel):
     email = models.EmailField(unique=True)
 
     # User role options
-    LEADERSHIP = "LEADERSHIP"
-    FRONTLINE_MANAGER = "FRONTLINE_MANAGER"
-    ACCOUNT_EXEC = "ACCOUNT_EXEC"
-    ACCOUNT_MANAGER = "ACCOUNT MANAGER"
-    OPERATIONS = "OPERATIONS"
-    ENABLEMENT = "ENABLEMENT"
-    SDR = "SDR"
+    # LEADERSHIP = "LEADERSHIP"
+    # FRONTLINE_MANAGER = "FRONTLINE_MANAGER"
+    # ACCOUNT_EXEC = "ACCOUNT_EXEC"
+    # ACCOUNT_MANAGER = "ACCOUNT MANAGER"
+    # OPERATIONS = "OPERATIONS"
+    # ENABLEMENT = "ENABLEMENT"
+    # SDR = "SDR"
+    SALES = "SALES"
+    PR = "PR"
     ROLE_CHOICES = [
-        (LEADERSHIP, "Leadership",),
-        (FRONTLINE_MANAGER, "Frontline Manager",),
-        (ACCOUNT_EXEC, "Account Executive",),
-        (ACCOUNT_MANAGER, "Account Manager",),
-        (OPERATIONS, "OPERATIONS",),
-        (ENABLEMENT, "Enablement",),
-        (SDR, "SDR",),
+        (SALES, "Sales",),
+        (PR, "PR",),
+        # (LEADERSHIP, "Leadership",),
+        # (FRONTLINE_MANAGER, "Frontline Manager",),
+        # (ACCOUNT_EXEC, "Account Executive",),
+        # (ACCOUNT_MANAGER, "Account Manager",),
+        # (OPERATIONS, "OPERATIONS",),
+        # (ENABLEMENT, "Enablement",),
+        # (SDR, "SDR",),
     ]
     role = models.CharField(max_length=32, choices=ROLE_CHOICES, blank=True)
 

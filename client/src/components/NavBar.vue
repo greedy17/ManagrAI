@@ -78,7 +78,7 @@
           </div>
         </router-link>
 
-        <div v-if="!isOnboarding || !isAdmin" style="height: 100%" class="align-left">
+        <div style="height: 100%" class="align-left">
           <router-link
             class="side-wrapper"
             active-class="active"
@@ -419,7 +419,7 @@ export default {
       return this.$store.state.user.onboarding
     },
     isPR() {
-      return true
+      return this.$store.state.user.role === 'PR'
     },
     isPaid() {
       return !!this.$store.state.user.organizationRef.isPaid

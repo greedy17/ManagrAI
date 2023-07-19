@@ -252,7 +252,16 @@ export default {
       // Update the user in the store to "log in" and navigate to integrations
       this.$store.commit('UPDATE_USER', user)
       this.$store.commit('UPDATE_USERTOKEN', user.token)
-      this.$router.push({ name: 'Integrations' })
+      if (this.isPR) {
+        this.$router.push({ name: 'PRSummaries' })
+      } else {
+        this.$router.push({ name: 'Integrations' })
+      }
+    },
+  },
+  computed: {
+    isPR() {
+      return this.$store.state.user.role === 'PR'
     },
   },
   mounted() {

@@ -85,7 +85,7 @@
             />
           </span>
 
-          <span class="col">
+          <!-- <span class="col">
             <label for="role">Role</label>
             <Multiselect
               placeholder="Select your role"
@@ -102,7 +102,7 @@
                 <p>No results.</p>
               </template>
             </Multiselect>
-          </span>
+          </span> -->
 
           <div class="form-card__footer">
             <div>
@@ -160,7 +160,7 @@ export default {
       userTime: moment.tz.guess(),
       changeZone: false,
       validatedForm: false,
-      userRole: null,
+      userRole: { key: 'SALES', name: 'Sales' },
       selectedZone: null,
       errorMessages: [],
       selectedCrm: null,
@@ -214,7 +214,11 @@ export default {
         this.$store.commit('UPDATE_USERTOKEN', key)
         this.generatingToken = false
         this.selectedCrm = null
-        this.$router.push({ name: 'Integrations' })
+        if (this.isPR) {
+          this.$router.push({ name: 'PRSummaries' })
+        } else {
+          this.$router.push({ name: 'Integrations' })
+        }
       }
     }
   },
@@ -293,7 +297,11 @@ export default {
       // Update the user in the store to "log in" and navigate to integrations
       this.$store.commit('UPDATE_USER', user)
       this.$store.commit('UPDATE_USERTOKEN', user.token)
-      this.$router.push({ name: 'Integrations' })
+      if (this.isPR) {
+        this.$router.push({ name: 'PRSummaries' })
+      } else {
+        this.$router.push({ name: 'Integrations' })
+      }
     },
   },
   computed: {
@@ -309,6 +317,9 @@ export default {
     },
     user() {
       return this.$store.state.user
+    },
+    isPR() {
+      return this.$store.state.user.role === 'PR'
     },
   },
   mounted() {

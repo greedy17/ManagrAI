@@ -163,7 +163,9 @@
               delete userData.token
               this.$store.dispatch('updateUserToken', token)
               this.$store.dispatch('updateUser', User.fromAPI(userData))
-              if (!this.hasSalesforceIntegration && !this.hasSlackIntegration) {
+              if (this.isPR) {
+                this.$router.push({ name: 'PRSummaries' })
+              } else if (!this.hasSalesforceIntegration && !this.hasSlackIntegration) {
                 this.$router.push({ name: 'Integrations' })
               } else {
                 this.$router.push({ name: 'ListTemplates' })
@@ -184,6 +186,9 @@
     computed: {
       user() {
         return this.$store.state.user
+      },
+      isPR() {
+        return this.$store.state.user.role === 'PR'
       },
     },
   }
