@@ -2514,11 +2514,6 @@ def process_get_summary(payload, context):
 @processor(required_context=["u"])
 def process_submit_chat_prompt(payload, context):
     user = User.objects.get(id=context.get("u"))
-    resource_list = (
-        ["Opportunity", "Account", "Contact", "Lead"]
-        if user.crm == "SALESFORCE"
-        else ["Deal", "Company", "Contact"]
-    )
     state = payload["view"]["state"]
     task_selection = [
         value.get("selected_option")
@@ -2529,13 +2524,7 @@ def process_submit_chat_prompt(payload, context):
     )
     context.update(task_type=task_type)
     prompt = state["values"]["CHAT_PROMPT"]["plain_input"]["value"]
-    resource_check = "Opportunity" if user.crm == "SALESFORCE" else "Deal"
-    lowercase_prompt = prompt.lower()
-    for resource in resource_list:
-        lowered_resource = resource.lower()
-        if lowered_resource in lowercase_prompt:
-            resource_check = resource
-            break
+
     block_set = [
         *get_block_set("loading", {"message": f":robot_face: Processing your submission..."},),
     ]
@@ -2554,29 +2543,15 @@ def process_submit_chat_prompt(payload, context):
                 date=str(workflow.datetime_created.date()),
             )
             emit_meeting_workflow_tracker(str(workflow.id))
-
         res = slack_requests.send_channel_message(
             user.slack_integration.channel,
             user.organization.slack_integration.access_token,
             block_set=block_set,
         )
-        context.update(channel=res["channel"], ts=res["ts"])
-        if resource_check:
-            emit_process_submit_chat_prompt(
-                context.get("u"), prompt, resource_check, context,
-            )
-        else:
-            res = slack_requests.update_channel_message(
-                res["channel"],
-                res["ts"],
-                user.organization.slack_integration.access_token,
-                block_set=[
-                    block_builders.simple_section(
-                        f":no_entry_sign: Invalid submission: Please include an object type like {'Opportunity' if user.crm == 'SALESFORCE' else 'Deal'} and try again.\n '{prompt}'",
-                        "mrkdwn",
-                    )
-                ],
-            )
+        context.update(ts=res["ts"])
+        emit_process_submit_chat_prompt(
+            context.get("u"), prompt, context,
+        )
     except Exception as e:
         logger.exception(f"Failed submit chat data {e}")
         return {"response_action": "clear"}
@@ -2780,7 +2755,6 @@ def handle_view_submission(payload):
         slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT: process_zoom_meeting_data,
         slack_const.ZOOM_MEETING__EDIT_CONTACT: process_edit_meeting_contact,
         slack_const.ZOOM_MEETING__PROCESS_STAGE_NEXT_PAGE: process_stage_next_page,
-        slack_const.ZOOM_MEETING__UPDATE_PARTICIPANT_DATA: process_update_meeting_contact,
         slack_const.ZOOM_MEETING__SAVE_CONTACTS: process_save_contact_data,
         slack_const.COMMAND_FORMS__SUBMIT_FORM: process_submit_resource_data,
         slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE: process_next_page_slack_commands_form,
