@@ -20,7 +20,6 @@ def get_block_set(set_name, context={}, *args, **kwargs):
     switcher = {
         "create_task_modal": task_blocksets.create_task_modal_block_set,
         "create_event_modal": task_blocksets.create_event_modal_block_set,
-        "initial_meeting_interaction": meeting_review_block_sets.initial_meeting_interaction_block_set,
         "meeting_review_modal": meeting_review_block_sets.meeting_review_modal_block_set,
         "attach_resource_interaction": meeting_review_block_sets.attach_resource_interaction_block_set,
         "create_or_search_modal": meeting_review_block_sets.create_or_search_modal_block_set,
@@ -63,7 +62,6 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "initial_inline_blockset": command_views_blocksets.initial_inline_blockset,
         "choose_opportunity": command_views_blocksets.choose_opportunity_block_set,
         "send_recap_block_set": meeting_review_block_sets.send_recap_block_set,
-        "calendar_reminders_blockset": common_blocksets.calendar_reminders_blockset,
         "actions_block_set": command_views_blocksets.actions_block_set,
         "update_command_block_set": command_views_blocksets.update_command_block_set,
         "current_product_blockset": common_blocksets.current_product_block_set,
