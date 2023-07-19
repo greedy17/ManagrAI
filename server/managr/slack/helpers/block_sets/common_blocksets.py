@@ -735,18 +735,11 @@ def chat_prompt_blockset(context):
     crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
     blocks = [
         block_builders.input_block(
-            f"Update {crm} using conversational AI",
-            placeholder=f"Update {'Opportunity' if user.crm == 'SALESFORCE' else 'Deal'} Pied Piper...",
+            f"Log Notes to CRM using conversation AI",
             block_id="CHAT_PROMPT",
             multiline=True,
             optional=False,
         ),
         block_builders.context_block("Powered by ChatGPT © :robot_face:"),
-        block_builders.static_select(
-            "Select Template",
-            template_options,
-            f"{slack_const.PROCESS_INSERT_CHAT_TEMPLATE}?u={context.get('u')}",
-            block_id="SELECT_TEMPLATE",
-        ),
     ]
     return blocks

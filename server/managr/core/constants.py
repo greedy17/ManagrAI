@@ -183,7 +183,6 @@ def OPEN_AI_ASK_MANAGR_PROMPT(user_id, prompt, resource_type, resource_id):
     from managr.hubspot.routes import routes as hs_routes
     from datetime import datetime
 
-    prompt = prompt.lower().replace("ask managr,", "").replace("ask managr ", "")
     CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
     user = User.objects.get(id=user_id)
     resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(id=resource_id)

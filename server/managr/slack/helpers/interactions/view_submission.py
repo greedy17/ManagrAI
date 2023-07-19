@@ -275,7 +275,7 @@ def process_zoom_meeting_data(payload, context):
     if ts is not None:
         blocks = [
             block_builders.simple_section(
-                f":white_check_mark: Got it! Check your meeting channel - _{workflow.meeting.topic}_",
+                f":white_check_mark: Got it! Meeting successfully logged! - _{workflow.meeting.topic}_",
                 "mrkdwn",
             )
         ]
