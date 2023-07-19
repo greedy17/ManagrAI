@@ -221,6 +221,7 @@ export default {
         }
       }
     }
+    this.selectRole(this.userRole)
   },
   methods: {
     test() {
