@@ -220,6 +220,11 @@ Limit your response to under 1,000 characters.
     return body
 
 
+OPEN_AI_NEWS_BOOLEAN_CONVERSION = (
+    lambda prompt: f"""Convert the prompt below into a boolean query to be used for News API. Take extra precautions to get accurate hits, weeding out all irrelevant mentions.\n{prompt}"""
+)
+
+
 # OAuth permission scopes to request from Nylas
 SCOPE_CALENDAR = "calendar"
 # SCOPE_EMAIL = "email"
