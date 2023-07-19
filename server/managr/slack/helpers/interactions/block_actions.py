@@ -4342,7 +4342,6 @@ def handle_block_actions(payload):
     such as clicking a button.
     """
     switcher = {
-        slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS: process_show_meeting_contacts,
         slack_const.ZOOM_MEETING__EDIT_CONTACT: process_edit_meeting_contact,
         slack_const.ZOOM_MEETING__REMOVE_CONTACT: process_remove_contact_from_meeting,
         slack_const.ZOOM_MEETING__CREATE_OR_SEARCH: process_create_or_search_selected,
