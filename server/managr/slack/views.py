@@ -1315,7 +1315,7 @@ def launch_action(request):
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
-            "title": {"type": "plain_text", "text": "Choose Record Type"},
+            "title": {"type": "plain_text", "text": "Choose Record"},
             "blocks": get_block_set("pick_resource_modal_block_set", context=context),
             "private_metadata": json.dumps(context),
             "external_id": f"pick_resource_modal_block_set.{str(uuid.uuid4())}",

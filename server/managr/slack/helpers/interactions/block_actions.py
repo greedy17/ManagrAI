@@ -4229,7 +4229,7 @@ def process_send_resource_message(payload, context):
         context.update(ts=ts)
     except Exception as e:
         logger.exception(e)
-    return
+    return {"response_action": "clear"}
 
 
 def process_open_actions_modal(payload, context):
