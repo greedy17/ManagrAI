@@ -275,7 +275,7 @@ def process_zoom_meeting_data(payload, context):
     if ts is not None:
         blocks = [
             block_builders.simple_section(
-                f":white_check_mark: Got it! Check your meeting channel - _{workflow.meeting.topic}_",
+                f":white_check_mark: Got it! Meeting successfully logged! - _{workflow.meeting.topic}_",
                 "mrkdwn",
             )
         ]
@@ -734,118 +734,6 @@ def process_zoom_meeting_attach_resource(payload, context):
         return logger.exception(
             f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
         )
-    return
-
-
-@processor()
-def process_update_meeting_contact(payload, context):
-    state = payload["view"]["state"]["values"]
-    type = context.get("type", None)
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    meeting = workflow.meeting
-    contact = dict(
-        *filter(
-            lambda contact: contact["_tracking_id"] == context.get("tracking_id"),
-            meeting.participants,
-        )
-    )
-    form = (
-        workflow.forms.get(id=contact["_form"])
-        if workflow.meeting
-        else OrgCustomSlackFormInstance.objects.get(id=contact.get("_form"))
-    )
-    form.save_form(state)
-    user_id = workflow.user.id if type else workflow.user_id
-    # reconstruct the current data with the updated data
-    adapter_class = crm_routes[workflow.user.crm]["Contact"]
-    adapter = adapter_class.from_api(
-        {**contact.get("secondary_data", {}), **form.saved_data}, str(user_id)
-    )
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    trigger_id = payload["trigger_id"]
-    view_id = context.get(str("current_view_id"))
-    new_contact = {
-        **contact,
-        **adapter.as_dict,
-        "id": contact.get("id", None),
-        "__has_changes": True,
-    }
-    if type:
-        part_index = None
-        for index, participant in enumerate(workflow.participants):
-            if participant["_tracking_id"] == new_contact["_tracking_id"]:
-                part_index = index
-                break
-        workflow.participants = [
-            *workflow.participants[:part_index],
-            new_contact,
-            *workflow.participants[part_index + 1 :],
-        ]
-        workflow.save()
-        user = User.objects.get(id=user_id)
-        org = user.organization
-        access_token = org.slack_integration.access_token
-        show_meeting_context = {"w": context.get("w"), "type": workflow.resource_type}
-        # return {"response_action": "clear"}
-    else:
-        # replace the contact in the participants list
-        part_index = None
-        for index, participant in enumerate(meeting.participants):
-            if participant["_tracking_id"] == new_contact["_tracking_id"]:
-                part_index = index
-                break
-        meeting.participants = [
-            *meeting.participants[:part_index],
-            new_contact,
-            *meeting.participants[part_index + 1 :],
-        ]
-        meeting.save()
-        workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-        org = workflow.user.organization
-        access_token = org.slack_integration.access_token
-        show_meeting_context = {
-            "w": context.get("w"),
-            "original_message_channel": context.get("original_message_channel"),
-            "original_message_timestamp": context.get("original_message_timestamp"),
-        }
-        if check_contact_last_name(workflow.id):
-            update_res = slack_requests.update_channel_message(
-                context.get("original_message_channel"),
-                context.get("original_message_timestamp"),
-                access_token,
-                block_set=get_block_set("initial_meeting_interaction", {"w": context.get("w")}),
-            )
-    blocks = get_block_set("show_meeting_contacts", show_meeting_context,)
-    # replace the contact in the participants list
-    data = {
-        "trigger_id": trigger_id,
-        "view_id": view_id,
-        "view": {
-            "type": "modal",
-            "callback_id": slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
-            "title": {"type": "plain_text", "text": "Contacts"},
-            "blocks": blocks,
-        },
-    }
-    try:
-        res = slack_requests.generic_request(url, data, access_token=access_token)
-    except InvalidBlocksException as e:
-        return logger.exception(
-            f"Failed To load update meeting contact modal for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except InvalidBlocksFormatException as e:
-        return logger.exception(
-            f"Failed To load update meeting contact modal for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except UnHandeledBlocksException as e:
-        return logger.exception(
-            f"Failed To load update meeting contact modal for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except InvalidAccessToken as e:
-        return logger.exception(
-            f"Failed To load update meeting contact modal for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-
     return
 
 

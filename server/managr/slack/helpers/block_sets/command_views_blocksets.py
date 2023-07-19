@@ -604,11 +604,10 @@ def pick_resource_modal_block_set(context, *args, **kwargs):
 @block_set()
 def ask_managr_blockset(context, *args, **kwargs):
     """Shows a modal to update a resource"""
-    user = User.objects.get(id=context.get("u"))
     blocks = [
         block_builders.input_block(
-            "What would you like to ask?",
-            placeholder=f"Ask Managr what's the next step for {'Opportunity' if user.crm == 'SALESFORCE' else 'Deal'} Pied Piper",
+            "Type your request here",
+            placeholder=f"What's the next steps?",
             block_id="CHAT_PROMPT",
             multiline=True,
             optional=False,
