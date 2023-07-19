@@ -248,6 +248,14 @@ class ZoomAcct:
         return ZoomAcct._handle_response(r)
 
     @staticmethod
+    def get_meeting_by_id(meeting_id, token):
+        r = client.get(
+            f"{zoom_model_consts.ZOOM_API_ENDPOINT}/meetings/{meeting_id}",
+            headers=dict(Authorization=(f"Bearer {token}")),
+        )
+        return ZoomAcct._handle_response(r)
+
+    @staticmethod
     def get_transcript(url, token):
         r = client.get(url, headers=dict(Authorization=(f"Bearer {token}")), allow_redirects=True)
         return r.content

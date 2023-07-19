@@ -1454,6 +1454,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
         ]
         if workflow_id:
             params.append(f"w={workflow_id}")
+            params.append(f"ts={context.get('ts')}")
         blocks = [
             block_builders.section_with_button_block(
                 f"Review & Update {'Salesforce' if user.crm == 'SALESFORCE' else 'HubSpot'}",

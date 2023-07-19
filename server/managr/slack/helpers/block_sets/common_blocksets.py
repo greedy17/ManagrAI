@@ -391,88 +391,6 @@ def workflow_reminder_block_set(context):
 
 
 @block_set()
-def calendar_reminders_blockset(context):
-    meeting = MeetingPrepInstance.objects.get(id=context.get("prep_id"))
-    user = User.objects.get(id=context.get("u"))
-    data = meeting.event_data
-    title = data["title"]
-    unix_start_time = data["times"]["start_time"]
-    utc_time = datetime.utcfromtimestamp(int(unix_start_time))
-    tz = pytz.timezone(user.timezone)
-    local_start = utc_time.astimezone(tz).strftime("%I:%M")
-
-    am_or_pm = utc_time.astimezone(tz).strftime("%p")
-    start_time = local_start + " " + am_or_pm
-    type = meeting.resource_type if meeting.resource_type is not None else "prep"
-    if type == "Opportunity":
-        resource = Opportunity.objects.get(id=meeting.resource_id)
-    elif type == "Account":
-        resource = Account.objects.get(id=meeting.resource_id)
-    elif type == "Lead":
-        resource = Lead.objects.get(id=meeting.resource_id)
-    else:
-        resource = None
-    text = f"{title}\n Starts at {start_time}\n Attendees: " + str(len(meeting.participants))
-    if type != "prep":
-        text += f"\n *{type} {resource.name}*"
-    blocks = [
-        block_builders.section_with_button_block(
-            "View Attendees",
-            section_text=text,
-            button_value=context.get("prep_id"),
-            action_id=action_with_params(
-                slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS,
-                params=[f"w={str(meeting.id)}", f"type={type}",],
-            ),
-        ),
-    ]
-    action_blocks = []
-    if type and type != "prep":
-        action_blocks.append(
-            block_builders.simple_button_block(
-                f"Update {type} + Notes",
-                meeting.resource_id,
-                action_id=f"{slack_const.CHECK_IS_OWNER_FOR_UPDATE_MODAL}?u={str(user.id)}&resource={type}&current_page={context.get('current_page',1)}&type=prep&prep_id={str(meeting.id)}",
-                style="primary",
-            )
-        )
-        action_blocks.append(
-            block_builders.simple_button_block(
-                f"Change {type}",
-                f"type%{str(meeting.id)}",
-                action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-            )
-        )
-        action_blocks.append(
-            block_builders.simple_button_block(
-                "View Notes",
-                "get_notes",
-                action_id=action_with_params(
-                    slack_const.GET_NOTES,
-                    params=[
-                        f"u={str(user.id)}",
-                        f"resource_id={str(meeting.resource_id)}",
-                        f"resource_type={type}",
-                        "type=prep",
-                    ],
-                ),
-            )
-        )
-
-    else:
-        action_blocks.append(
-            block_builders.simple_button_block(
-                "Link to CRM Record",
-                f"type%{str(meeting.id)}",
-                action_id=slack_const.ZOOM_MEETING__CREATE_OR_SEARCH,
-                style="primary",
-            )
-        ),
-    blocks.append(block_builders.actions_block(action_blocks, block_id=f"type%{str(meeting.id)}",))
-    return blocks
-
-
-@block_set()
 def meeting_reminder_block_set(context):
     user = User.objects.get(id=context.get("u"))
     not_completed = context.get("not_completed")
@@ -604,5 +522,142 @@ def initial_alert_message(context):
                 ),
             ]
         ),
+    ]
+    return blocks
+
+
+@block_set()
+def resource_action_blockset(context):
+    user = User.objects.get(id=context.get("u"))
+    resource_type = context.get("resource_type")
+    options = [
+        block_builders.option("Log Meeting", "LOG_MEETING"),
+        block_builders.option(f"Update {resource_type}", "UPDATE_FORM"),
+        block_builders.option("Add Notes", "ADD_NOTES"),
+        block_builders.option("Ask Managr", "ASK_MANAGR"),
+        block_builders.option(f"{resource_type} Review", "REVIEW"),
+    ]
+    blocks = [
+        block_builders.static_select(
+            "What would you like to do?",
+            options,
+            action_id=action_with_params(
+                slack_const.PROCESS_RESOURCE_SELECTED_ACTION, params=[f"u={str(user.id)}"]
+            ),
+        ),
+    ]
+    return blocks
+
+
+@block_set()
+def use_transcript_message(context):
+    transcript_option = context.pop("transcript_option", "Yes")
+    meeting_date = context.get("meeting_date", str(datetime.today().date()))
+    blocks = [
+        block_builders.static_select(
+            "Use AI to summarize & autofill CRM?",
+            [block_builders.option("Yes", "YES"), block_builders.option("No", "NO")],
+            initial_option=block_builders.option(transcript_option, transcript_option.upper()),
+            block_id="YES_NO",
+        ),
+        block_builders.datepicker(
+            meeting_date,
+            action_id=action_with_params(
+                slack_const.CHOOSE_MEETING_OPTIONS, [f"u={context.get('u')}"]
+            ),
+            block_id="MEETING_DATE",
+            label="Meeting Date",
+        ),
+        block_builders.external_select(
+            "Select Meeting",
+            action_id=action_with_params(
+                slack_const.PROCESS_GET_MEETING_OPTIONS,
+                [f"u={context.get('u')}", f"meeting_date={meeting_date}"],
+            ),
+            block_id="MEETING_OPTIONS",
+        ),
+    ]
+    return blocks
+
+
+def update_form_blockset(context):
+    from managr.crm.utils import CRM_SWITCHER
+    from managr.slack.helpers.utils import block_finder
+    from managr.crm.models import ObjectField
+
+    user = User.objects.get(id=context.get("u"))
+    resource_id = context.get("resource_id")
+    resource_type = context.get("resource_type")
+    resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(id=resource_id)
+    template = user.team.team_forms.all().filter(form_type="UPDATE", resource=resource_type).first()
+    form = OrgCustomSlackFormInstance.objects.create(
+        template=template, user=user, resource_id=resource_id
+    )
+    blocks = form.generate_form()
+    try:
+        stage_name = "StageName" if user.crm == "SALESFORCE" else "dealstage"
+        index, block = block_finder(stage_name, blocks)
+    except ValueError:
+        # did not find the block
+        block = None
+        pass
+    if user.crm == "HUBSPOT" and resource_type == "Deal":
+        try:
+            pipeline_index, pipeline_block = block_finder("pipeline", blocks)
+        except ValueError:
+            # did not find the block
+            pipeline_index = False
+            pipeline_block = None
+            pass
+        if pipeline_block is None:
+            pipeline_field = ObjectField.objects.filter(
+                crm_object="Deal", api_name="pipeline", user=user
+            ).first()
+            if pipeline_field:
+                pipeline_block = pipeline_field.to_slack_field(None, user, "Deal")
+        pipeline_block = {
+            **pipeline_block,
+            "accessory": {
+                **pipeline_block["accessory"],
+                "action_id": f"{slack_const.COMMAND_FORMS__PIPELINE_SELECTED}?u={str(user.id)}&f={str(form.id)}&field={str(pipeline_field.id)}",
+            },
+        }
+        if block:
+            if pipeline_index:
+                del blocks[index]
+            else:
+                blocks[index] = pipeline_block
+    else:
+        if block:
+            block = {
+                **block,
+                "accessory": {
+                    **block["accessory"],
+                    "action_id": f"{slack_const.COMMAND_FORMS__STAGE_SELECTED}?u={str(user.id)}&f={str(form.id)}",
+                },
+            }
+            blocks = [*blocks[:index], block, *blocks[index + 1 :]]
+    return [*blocks]
+
+
+def chat_prompt_blockset(context):
+    from managr.core.models import NoteTemplate
+
+    user = User.objects.get(id=context.get("u"))
+    templates_query = NoteTemplate.objects.for_user(user)
+    template_options = (
+        [template.as_slack_option for template in templates_query]
+        if len(templates_query)
+        else [block_builders.option("You have no templates", "NONE")]
+    )
+    crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
+    blocks = [
+        block_builders.input_block(
+            f"Log Notes to CRM using conversation AI",
+            block_id="CHAT_PROMPT",
+            multiline=True,
+            optional=False,
+        ),
+        block_builders.context_block("Powered by ChatGPT © :robot_face:"),
     ]
     return blocks

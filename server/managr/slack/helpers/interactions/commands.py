@@ -570,7 +570,9 @@ def news_summary(context):
     view_id = context.get("view_id", None)
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     blocks = [
-        block_builders.input_block("Enter a company name", optional=False, block_id="COMPANY_INPUT")
+        block_builders.input_block(
+            "Enter a company name", optional=False, block_id="COMPANY_INPUT", multiline=True
+        )
     ]
     data = {
         "view": {
