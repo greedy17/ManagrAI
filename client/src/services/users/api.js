@@ -45,6 +45,11 @@ const CHAT_EMAIL = 'users/chat/follow-up-email/'
 const CHAT_NEXT_STEPS = 'users/chat/next-steps/'
 const CHAT_SUMMARY = 'users/chat/summary/'
 const CHAT_MEETING = 'users/chat/submit-chat-meeting/'
+const CHAT_TRANSCRIPT = 'users/chat/chat-transcript/'
+const ADD_MESSAGE = 'users/chat/add-message/'
+const EDIT_MESSAGE = 'users/chat/edit-message/'
+const DELETE_MESSAGES = 'users/chat/delete-messages/'
+const CONVERSATIONS = 'users/conversations/'
 
 export default class UserAPI {
   get client() {
@@ -69,6 +74,44 @@ export default class UserAPI {
     return new UserAPI(cls)
   }
 
+  async getConversations(user_id) {
+    try {
+      const response = await this.client.get(CONVERSATIONS, { params: user_id })
+      return response.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'UsersAPI.getAllOrgUsers' })
+    }
+  }
+  async addMessage(data) {
+    try {
+      const res = await this.client.post(ADD_MESSAGE, data)
+      return res.data
+    } catch (e) {
+      console.log('Error adding message: ', e)
+      apiErrorHandler({ apiName: 'User.addMessage' })
+      return { value: e.response.data.value, status: e.response.status }
+    }
+  }
+  async editMessage(data) {
+    try {
+      const res = await this.client.post(EDIT_MESSAGE, data)
+      return res.data
+    } catch (e) {
+      console.log('Error editing message: ', e)
+      apiErrorHandler({ apiName: 'User.editMessage' })
+      return { value: e.response.data.value, status: e.response.status }
+    }
+  }
+  async deleteMessages() {
+    try {
+      const res = await this.client.post(DELETE_MESSAGES)
+      return res.data
+    } catch (e) {
+      console.log('Error deleting message: ', e)
+      apiErrorHandler({ apiName: 'User.deleteMessage' })
+      return { value: e.response.data.value, status: e.response.status }
+    }
+  }
   async chatUpdate(data) {
     try {
       const res = await this.client.post(CHAT_SUBMISSION, data)
@@ -124,6 +167,13 @@ export default class UserAPI {
   async submitChatMeeting(data) {
     return this.client
       .post(CHAT_MEETING, data)
+      .then(response => response.data)
+      .catch(apiErrorHandler({ apiName: 'User.chatMeeting' }))
+  }
+
+  async submitChatTranscript(data) {
+    return this.client
+      .post(CHAT_TRANSCRIPT, data)
       .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'User.chatMeeting' }))
   }
@@ -273,7 +323,7 @@ export default class UserAPI {
     try {
       const res = await this.client.post(url, data)
       return res
-    } catch(e) {
+    } catch (e) {
       console.log('Error in sendNewEmail: ', e)
     }
   }
@@ -282,7 +332,7 @@ export default class UserAPI {
     try {
       const res = await this.client.post(url, data)
       return res
-    } catch(e) {
+    } catch (e) {
       console.log('Error in sendNewEmail: ', e)
     }
   }
@@ -467,7 +517,7 @@ export default class UserAPI {
   }
 
   async callCommand(keyword) {
-    const url = `${USERS_ENDPOINT}staff/commands/`
+    const url = `${USERS_ENDPOINT}staff / commands / `
     const data = {
       command: keyword
     }

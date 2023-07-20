@@ -1,8 +1,35 @@
 <template>
-  <div class="logZoomPage">
-    <div class="alerts-header">
+  <div class="logZoomPage" :style="noRenderHeader ? 'margin-top: 0rem;' : ''">
+    <div v-if="!noRenderHeader" class="alerts-header">
       <button @click="$router.push({ name: 'ListTemplates' })" class="back-button">
         <img class="invert" src="@/assets/images/left.svg" alt="" height="12px" />
+        Back
+      </button>
+
+      <h3>Meeting Recaps</h3>
+
+      <button
+        class="green__button"
+        v-if="!create"
+        :disabled="!((channelCreated || recapChannel) && userIds.length > 0)"
+        @click="handleRecapUpdate(recapChannel)"
+      >
+        Activate Channel
+      </button>
+
+      <button
+        v-else
+        class="green__button"
+        @click="handleRecapUpdate(createdZoomChannel)"
+        :disabled="!((channelCreated || recapChannel) && userIds.length > 0)"
+      >
+        Activate Channel
+      </button>
+    </div>
+
+    <div v-else class="alerts-header-inner">
+      <button @click="closeBuilder" class="back-button">
+        <img src="@/assets/images/left.svg" height="14px" alt="" />
         Back
       </button>
 
@@ -39,7 +66,7 @@
             style="width: 20vw"
             selectLabel="Enter"
             track-by="id"
-            label="fullName"
+            :custom-label="selectUsersCustomLabel"
             :multiple="true"
             :closeOnSelect="false"
           >
@@ -156,6 +183,20 @@ export default {
     FormField,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
+  props: {
+    noRenderHeader: {
+      type: Boolean
+    },
+    closeBuilder: {
+      type: Function,
+    },
+    canSave: { 
+      type: Function
+    },
+    saveWorkflow: { 
+      type: Function 
+    },
+  },
   data() {
     return {
       dropdownLoading: false,
@@ -218,6 +259,9 @@ export default {
       setTimeout(() => {
         this.dropdownLoading = false
       }, 500)
+    },
+    selectUsersCustomLabel(prop) {
+      return prop.fullName.trim() ? prop.fullName : prop.email
     },
     async createChannel(name) {
       const res = await SlackOAuth.api.createChannel(name)
@@ -520,5 +564,31 @@ img {
 }
 .invert {
   filter: invert(30%);
+}
+.alerts-header-inner {
+  // position: fixed;
+  z-index: 10;
+  // top: 0;
+  // left: 60px;
+  background-color: $white;
+  // width: 96vw;
+  position: sticky;
+  top: 0;
+  width: 100%;
+  border-bottom: 1px solid $soft-gray;
+  padding: 8px 32px 0px 8px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  // gap: 24px;
+
+  h3 {
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.75px;
+    line-height: 1.2;
+    color: $light-gray-blue;
+  }
 }
 </style>
