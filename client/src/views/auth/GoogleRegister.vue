@@ -215,7 +215,11 @@ export default {
         this.$store.commit('UPDATE_USERTOKEN', key)
         this.generatingToken = false
         this.selectedCrm = null
-        this.$router.push({ name: 'Integrations' })
+        if (this.isPR) {
+          this.$router.push({ name: 'PRSummaries' })
+        } else {
+          this.$router.push({ name: 'Integrations' })
+        }
       }
     }
   },
@@ -287,7 +291,11 @@ export default {
       this.$store.commit('UPDATE_USER', user)
       // this.$store.commit('UPDATE_USERTOKEN', encryptedKey)
       this.$store.commit('UPDATE_USERTOKEN', user.token)
-      this.$router.push({ name: 'Integrations' })
+      if (this.isPR) {
+        this.$router.push({ name: 'PRSummaries' })
+      } else {
+        this.$router.push({ name: 'Integrations' })
+      }
     },
   },
   computed: {
@@ -304,6 +312,9 @@ export default {
     user() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
+    },
+    isPR() {
+      return this.$store.state.user.role === 'PR'
     },
   },
   mounted() {

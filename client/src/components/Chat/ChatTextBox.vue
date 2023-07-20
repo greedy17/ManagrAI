@@ -27,7 +27,7 @@
             >
               {{ action.name }}
             </p>
-            <p class="action__p current" v-if="currentOpp">
+            <p class="action__p current" v-if="currentOpp && currentOpp !== true">
               {{ currentOpp.name }}
               <span class="remove" @click="clearMessage">x</span>
             </p>
@@ -65,6 +65,10 @@ export default {
     scrollToBottom: {
       type: Function,
     },
+    actions: {
+      type: Array,
+    },
+    currentOpp: {},
   },
   data() {
     return {
@@ -73,18 +77,6 @@ export default {
       templatesOpen: false,
       showReviewMessage: false,
       chatRes: null,
-      actions: [
-        {
-          name: 'Update CRM',
-          value: 'Update',
-        },
-        // { name: 'Create Record', value: 'Create Opportunity' },
-        { name: 'Ask Managr', value: 'Ask managr... ' },
-        { name: 'Deal Review', value: 'Run Review' },
-        // { name: 'Deal Updates', value: 'Get Summary for Opportunity' },
-        // { name: 'Call Summary', value: 'Get call summary for Opportunity' },
-        // { name: 'Call Analysis', value: 'Get call analysis for Opportunity' },
-      ],
     }
   },
 
@@ -303,9 +295,9 @@ export default {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
     },
-    currentOpp() {
-      return this.$store.state.currentOpp
-    },
+    // currentOpp() {
+    //   return this.$store.state.currentOpp
+    // },
   },
   directives: {
     autoresize: {
