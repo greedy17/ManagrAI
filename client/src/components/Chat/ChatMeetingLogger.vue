@@ -74,7 +74,10 @@
       </div>
     </Modal> -->
 
-    <div v-if="!hasMeetingWorkflow" :class="{ disabled: submitting }">
+    <div
+      v-if="!hasMeetingWorkflow || !(selectedMeetingWorkflow && selectedMeetingWorkflow.forms)"
+      :class="{ disabled: submitting }"
+    >
       <div class="margin-top-s">
         <p>Related to type:</p>
 
@@ -140,8 +143,9 @@
       </div>
     </div>
 
-    <div v-else-if="selectedMeetingWorkflow">
-      <div v-if="meetingData[meeting.id] || !selectedMeetingWorkflow.is_completed">
+    <div v-else-if="selectedMeetingWorkflow && selectedMeetingWorkflow.forms">
+      <div v-if="!selectedMeetingWorkflow.is_completed">
+        {{ selectedMeetingWorkflow.forms }}
         <div :class="{ disabled: submitting }" v-for="(field, i) in formFields" :key="i">
           <ChatMeetingFormField
             :placeholder="toString(updateData[field.apiName])"
@@ -223,7 +227,6 @@ export default {
     stagesWithForms: {},
   },
   watch: {
-    currentMeeting: 'autoSelectLogType',
     usingAi(val) {
       if (val && val.value === 'false') {
         this.submitChatMeeting()
@@ -307,16 +310,7 @@ export default {
         this.currentAnalysis = analysis
       }
     },
-    autoSelectLogType() {
-      if (this.currentMeeting.meeting_ref.provider !== 'Zoom Meeting') {
-        this.usingAi = {
-          name: 'No',
-          value: 'false',
-        }
-      } else {
-        return
-      }
-    },
+
     async submitChatTranscript() {
       this.submitting = true
       this.processing = true
@@ -331,10 +325,8 @@ export default {
             meeting_id: this.meeting.id,
           })
           .then((response) => {
-            console.log(response)
             if (response.status === 200) {
               this.updateData = response.data
-              this.$store.dispatch('setMeetingData', { id: this.meeting.id, data: response.data })
               this.$emit('reload-workflows')
             } else {
               this.errorText = response.data
@@ -350,7 +342,6 @@ export default {
       } finally {
         this.submitting = false
         this.processing = false
-        // this.reviewTranscript = true
       }
     },
     toString(data) {
@@ -395,42 +386,11 @@ export default {
             form_data: this.updateData,
           })
           .then((response) => {
-            if (this.meetingData[this.meeting.id]) {
-              this.$store.dispatch('editMeeting', { id: this.meeting.id, updated: true })
-            }
             this.$emit('reload-workflows')
           })
-        // await CRMObjects.api.updateResource({
-        //   form_data: this.updateData,
-        //   resource_type: this.selectedMeetingWorkflow.resource_type,
-        //   form_type: 'UPDATE',
-        //   resource_id: this.selectedMeetingWorkflow.resource_ref.id,
-        //   integration_ids: [this.selectedMeetingWorkflow.resource_ref.integration_id],
-        //   chat_form_id: ['000ae5577320htkdytchkcjxtehsrxjcf'],
-        //   from_workflow: false,
-        //   workflow_title: 'None',
-        //   stage_name: null,
-        // })
-        // console.log(res)
-        // if (res.success) {
-        //   this.$store.dispatch('setMeetingData', {
-        //     id: this.currentMeetingId,
-        //     data: res.data,
-        //     success: true,
-        //     retry: false,
-        //   })
-        // } else {
-        //   this.$store.dispatch('setMeetingData', {
-        //     id: this.currentMeetingId,
-        //     data: res.data,
-        //     success: false,
-        //     retry: true,
-        //   })
-        // }
       } catch (e) {
         console.log(e)
       } finally {
-        // this.$refs.rightSideBar.reloadOpps()
         setTimeout(() => {
           this.submitting = false
         }, 1000)
@@ -511,23 +471,6 @@ export default {
           .then((response) => {
             this.$emit('reload-workflows')
           })
-        // if (res.failed) {
-        //   this.$store.dispatch('setMeetingData', {
-        //     id: this.currentMeeting.id,
-        //     data: res.data,
-        //     success: false,
-        //     retry: true,
-        //     analysis: this.currentAnalysis || null,
-        //   })
-        // } else {
-        //   this.$store.dispatch('setMeetingData', {
-        //     id: this.currentMeeting.id,
-        //     data: res.data,
-        //     success: false,
-        //     retry: false,
-        //     analysis: this.currentAnalysis || null,
-        //   })
-        // }
       } catch (e) {
         console.log(e)
       } finally {
@@ -619,11 +562,15 @@ export default {
   },
   mounted() {
     if (this.hasMeetingWorkflow) {
-      if (this.meetingData[this.meeting.id]) {
-        this.selectedMeetingWorkflow = this.workflows.filter(
-          (workflow) => workflow.meeting_ref.meeting_id === this.meeting.id.toString(),
-        )[0]
-        this.updateData = this.meetingData[this.meeting.id].data
+      this.selectedMeetingWorkflow = this.workflows.filter(
+        (workflow) => workflow.meeting_ref.meeting_id === this.meeting.id.toString(),
+      )[0]
+
+      if (
+        this.selectedMeetingWorkflow.forms[0] &&
+        this.selectedMeetingWorkflow.forms[0].saved_data
+      ) {
+        this.updateData = this.selectedMeetingWorkflow.forms[0].saved_data
       } else {
         const keys = Object.keys(this.selectedMeetingWorkflow.resource_ref['secondary_data'])
         const filteredKeys = keys.filter((key) => this.formFieldNames.includes(key))
@@ -658,9 +605,6 @@ export default {
     },
     formFieldNames() {
       return this.formFields.map((field) => field.apiName)
-    },
-    meetingData() {
-      return this.$store.meetingData
     },
     date() {
       let today = new Date()

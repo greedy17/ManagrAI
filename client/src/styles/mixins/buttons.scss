@@ -97,10 +97,13 @@
 @mixin secondary-button() {
   @include base-button();
   background-color: $silver;
-  color: $main-font-gray;
+  color: $base-gray;
+  font-size: 12px;
   &:hover {
-    box-shadow: 1px 1px 5px -1px $dark-green, -1px -1px 5px -1px $dark-green;
-    fill: $dark-green;
+    // box-shadow: 1px 1px 5px -1px $dark-green, -1px -1px 5px -1px $dark-green;
+    // fill: $dark-green;
+    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
+    scale: 1.025;
   }
 }
 

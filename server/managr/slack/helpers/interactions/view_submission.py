@@ -278,7 +278,7 @@ def process_zoom_meeting_data(payload, context):
             res = slack_requests.send_channel_message(
                 user.slack_integration.channel, block_set=blocks, access_token=slack_access_token,
             )
-            workflow.slack_interaction = f"{res['ts']}|{user.slack_interaction.channel}"
+            workflow.slack_interaction = f"{res['ts']}|{user.slack_integration.channel}"
             workflow.save()
         except Exception as e:
             return logger.exception(
@@ -2724,7 +2724,17 @@ def process_submit_transcript_prompt_modal(payload, context):
     state = payload["view"]["state"]["values"]
     yes_no_key = list(state["YES_NO"].keys())[0]
     yes_no_check = state["YES_NO"][yes_no_key]["selected_option"]["value"]
-    blocks = get_block_set("loading", {"message": "Fetching your meeting data..."})
+    meeting_key = list(state["MEETING_OPTIONS"].keys())[0]
+    meeting_check = state["MEETING_OPTIONS"][meeting_key].get("selected_option", False)
+    blocks = (
+        get_block_set("loading", {"message": "Fetching your meeting data..."})
+        if meeting_check
+        else [
+            block_builders.simple_section(
+                ":warning: You need to select a meeting from meeting options"
+            )
+        ]
+    )
     try:
         slack_res = slack_requests.send_channel_message(
             user.slack_integration.channel,
@@ -2735,11 +2745,12 @@ def process_submit_transcript_prompt_modal(payload, context):
         logger.exception(
             f"ERROR sending update channel message for chat submission because of <{e}>"
         )
-    context.update(ts=slack_res["ts"])
-    if yes_no_check == "NO":
-        emit_process_zoom_meeting_message(payload, context)
-    else:
-        emit_process_get_transcript_and_update_crm(payload, context)
+    if meeting_check:
+        context.update(ts=slack_res["ts"])
+        if yes_no_check == "NO":
+            emit_process_zoom_meeting_message(payload, context)
+        else:
+            emit_process_get_transcript_and_update_crm(payload, context)
     return
 
 
