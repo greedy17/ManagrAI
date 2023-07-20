@@ -27,7 +27,7 @@
             >
               {{ action.name }}
             </p>
-            <p class="action__p current" v-if="currentOpp">
+            <p class="action__p current" v-if="currentOpp && currentOpp !== true">
               {{ currentOpp.name }}
               <span class="remove" @click="clearMessage">x</span>
             </p>

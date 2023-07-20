@@ -671,6 +671,9 @@ export default {
     messages() {
       return this.$store.state.messages
     },
+    currentOpp() {
+      return this.$store.state.currentOpp
+    },
   },
   created() {
     this.getConversations()

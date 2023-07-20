@@ -152,6 +152,31 @@
   }
 }
 
+
+@mixin dark-blue-button() {
+  @include base-button();
+  background-color: $dark-black-blue;
+  border: 1px solid $dark-black-blue;
+  color: $white;
+  font-size: 12px;
+  transition: all 0.3s;
+  &:hover {
+    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
+    scale: 1.025;
+  }
+
+  &:disabled {
+    box-shadow: none;
+    border: none;
+    scale: 1;
+    background-color: $soft-gray;
+    color: $gray;
+    &:hover {
+      background-color: $soft-gray;
+    }
+  }
+}
+
 @mixin white-button() {
   @include base-button();
   background-color: $white;

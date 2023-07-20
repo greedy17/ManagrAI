@@ -223,7 +223,7 @@ export default {
         return
       }
       const splitEmail = this.registrationForm.field.email.value.split('@')
-      if (splitEmail[splitEmail.length-1] === 'gmail.com') {
+      if (splitEmail[splitEmail.length - 1] === 'gmail.com') {
         this.$toast('Please use a company email.', {
           timeout: 2000,
           position: 'top-left',
@@ -257,7 +257,16 @@ export default {
       this.$store.commit('UPDATE_USER', user)
       // this.$store.commit('UPDATE_USERTOKEN', encryptedKey)
       this.$store.commit('UPDATE_USERTOKEN', user.token)
-      this.$router.push({ name: 'Home' })
+      if (this.isPR) {
+        this.$router.push({ name: 'PRSummaries' })
+      } else {
+        this.$router.push({ name: 'Integrations' })
+      }
+    },
+  },
+  computed: {
+    isPR() {
+      return this.$store.state.user.role === 'PR'
     },
   },
   mounted() {

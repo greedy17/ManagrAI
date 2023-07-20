@@ -78,5 +78,6 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "transcript_message_blockset": common_blocksets.use_transcript_message,
         "update_form_blockset": common_blocksets.update_form_blockset,
         "chat_prompt_blockset": common_blocksets.chat_prompt_blockset,
+        "meeting_blockset": meeting_review_block_sets.meeting_blockset,
     }
     return switcher.get(set_name)(context, *args, **kwargs)

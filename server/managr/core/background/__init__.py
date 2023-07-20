@@ -136,8 +136,8 @@ def emit_process_check_trial_status(user_id, verbose_name):
     return _process_check_trial_status(user_id, verbose_name=verbose_name)
 
 
-def emit_process_submit_chat_prompt(user_id, prompt, resource_type, context):
-    return _process_submit_chat_prompt(user_id, prompt, resource_type, context)
+def emit_process_submit_chat_prompt(user_id, prompt, context):
+    return _process_submit_chat_prompt(user_id, prompt, context)
 
 
 def emit_process_submit_chat_note(user_id, prompt, resource_type, context):
@@ -1264,7 +1264,7 @@ def name_list_processor(resource_list, chat_response_name):
 
 
 @background()
-def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
+def _process_submit_chat_prompt(user_id, prompt, context):
     from managr.crm import exceptions as crm_exceptions
 
     user = User.objects.get(id=user_id)
@@ -1272,6 +1272,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     if workflow_id:
         workflow = MeetingWorkflow.objects.get(id=workflow_id)
         workflow.save()
+    resource_type = context.get("resource_type")
     form_type = (
         "CREATE" if ("create" in prompt.lower() and "update" not in prompt.lower()) else "UPDATE"
     )
@@ -1283,9 +1284,13 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
     field_list = list(fields.values_list("label", flat=True))
     full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(field_list, prompt, datetime.now())
     url = core_consts.OPEN_AI_COMPLETIONS_URI
+    resource = (
+        CRM_SWITCHER[user.crm][context.get("resource_type")]["model"]
+        .objects.filter(id=context.get("resource_id"))
+        .first()
+    )
     attempts = 1
     has_error = False
-    resource_check = None
     blocks = []
     token_amount = 500
     timeout = 60.0
@@ -1305,59 +1310,10 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
 
                 text = choice["text"]
                 data = clean_prompt_string(text)
-                name_field = set_name_field(resource_type, user.crm)
                 data = correct_data_keys(data)
-                resource_check = data[name_field].lower().split(" ")
-                lowered_type = resource_type.lower()
-                resource = None
-                if lowered_type in resource_check:
-                    resource_check.remove(lowered_type)
-                if form_type == "CREATE" or len(resource_check):
-                    if form_type == "UPDATE":
-                        resource = None
-                        for word in resource_check:
-                            if resource_type not in ["Contact", "Lead"]:
-                                query = (
-                                    CRM_SWITCHER[user.crm][resource_type]["model"]
-                                    .objects.for_user(user)
-                                    .filter(name__icontains=word)
-                                )
-                                if query:
-                                    if len(query) > 1:
-                                        most_matching = name_list_processor(query, resource_check)
-                                        resource = query.filter(name=most_matching).first()
-                                    else:
-                                        resource = query.first()
-                                    break
-                            else:
-                                query = (
-                                    CRM_SWITCHER[user.crm][resource_type]["model"]
-                                    .objects.for_user(user)
-                                    .filter(email__icontains=word)
-                                )
-                                if query:
-                                    if len(query) > 1:
-                                        most_matching = name_list_processor(query, resource_check)
-                                        resource = query.filter(email=most_matching).first()
-                                    else:
-                                        resource = query.first()
-                                    break
-                        if resource:
-                            # logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: resource <{resource}>")
-                            form.resource_id = str(resource.id)
-                            form.save()
-                        else:
-                            has_error = True
-                            message = "We could not find an record type in your submission"
-                            break
-                    else:
-                        if user.crm == "SALESFORCE":
-                            if resource_type in ["Opportunity", "Account"]:
-                                data["Name"] = resource_check
-                        else:
-                            if resource_type == "Deal":
-                                data["Deal Name"] = resource_check
-                        resource = None
+                if resource:
+                    form.resource_id = str(resource.id)
+                    form.save()
                     owner_field = set_owner_field(resource_type, user.crm)
                     data[owner_field] = user.crm_account.crm_id
                     swapped_field_data = swap_submitted_data_labels(data, fields)
@@ -1375,7 +1331,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
             if token_amount <= 2000:
                 if workflow_id is None:
                     slack_res = slack_requests.update_channel_message(
-                        context.get("channel"),
+                        user.slack_integration.channel,
                         context.get("ts"),
                         user.organization.slack_integration.access_token,
                         block_set=[
@@ -1406,13 +1362,9 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
         except Exception as e:
             logger.exception(f"Exception from Open AI response {e}")
             has_error = True
-            message = (
-                f":no_entry_sign: Looks like we ran into an issue with your prompt, try removing things like quotes and ampersands"
-                if resource_check is None
-                else f":no_entry_sign: We could not find a {resource_type} named {resource_check} because of {e}"
-            )
+            message = ":no_entry_sign: Looks like we ran into an issue with your prompt, try removing things like quotes and ampersands"
             slack_res = slack_requests.update_channel_message(
-                context.get("channel"),
+                user.slack_integration.channel,
                 context.get("ts"),
                 user.organization.slack_integration.access_token,
                 block_set=[
@@ -1450,6 +1402,8 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
         params = [
             f"u={str(user.id)}",
             f"f={str(form.id)}",
+            f"resource_type={resource_type}",
+            f"resource_id={str(resource.id)}",
             "type=chat",
         ]
         if workflow_id:
@@ -1477,7 +1431,7 @@ def _process_submit_chat_prompt(user_id, prompt, resource_type, context):
 
     try:
         slack_res = slack_requests.update_channel_message(
-            context.get("channel"),
+            user.slack_integration.channel,
             context.get("ts"),
             user.organization.slack_integration.access_token,
             block_set=blocks,
