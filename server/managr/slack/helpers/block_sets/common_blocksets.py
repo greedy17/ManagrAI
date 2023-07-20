@@ -530,15 +530,20 @@ def initial_alert_message(context):
 def resource_action_blockset(context):
     user = User.objects.get(id=context.get("u"))
     resource_type = context.get("resource_type")
-    options = [
-        block_builders.option("Log Meeting", "LOG_MEETING"),
-        block_builders.option(f"Update {resource_type}", "UPDATE_FORM"),
-        block_builders.option("Add Notes", "ADD_NOTES"),
-        block_builders.option("Ask Managr", "ASK_MANAGR"),
-        block_builders.option(f"{resource_type} Review", "REVIEW"),
-    ]
+    options = []
+    if user.has_zoom_integration:
+        options.append(block_builders.option("Log Meeting", "LOG_MEETING"))
+    options.extend(
+        [
+            block_builders.option(f"Update {resource_type}", "UPDATE_FORM"),
+            block_builders.option("Add Notes", "ADD_NOTES"),
+            block_builders.option("Ask Managr", "ASK_MANAGR"),
+            block_builders.option(f"{resource_type} Review", "REVIEW"),
+        ]
+    )
     if not settings.IN_PROD:
         options.append(block_builders.option("New Summary", "NEWS_SUMMARY"))
+
     blocks = [
         block_builders.static_select(
             "What would you like to do?",

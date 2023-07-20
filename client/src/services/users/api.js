@@ -517,7 +517,7 @@ export default class UserAPI {
   }
 
   async callCommand(keyword) {
-    const url = `${USERS_ENDPOINT}staff / commands / `
+    const url = `${USERS_ENDPOINT}staff/commands/`
     const data = {
       command: keyword
     }
