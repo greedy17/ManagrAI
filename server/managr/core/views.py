@@ -799,6 +799,7 @@ def log_chat_meeting(request):
     except Exception as e:
         return Response(data={"data": e},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     serializer = MeetingWorkflowSerializer(instance=workflow)
+    print('DATA IS HERE',serializer.data)
     data = {"success": True, "workflow": serializer.data}
     return Response(data=data)
 

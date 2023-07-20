@@ -1,6 +1,35 @@
 <template>
   <section class="lists">
-    <header @click="test" class="list-header">
+    <Modal
+      @close-modal="
+        () => {
+          $emit('cancel'), toggleEditAlert()
+        }
+      "
+      v-if="editingAlert"
+      dimmed
+    >
+      <div class="edit-modal">
+        <header>
+          <p>{{ currentView.title }}</p>
+
+          <p v-if="!loading" style="cursor: pointer" @click="toggleEditAlert">x</p>
+          <img
+            class="rotate disabled"
+            v-else
+            src="@/assets/images/refresh.svg"
+            height="11px"
+            alt=""
+          />
+        </header>
+
+        <main>
+          <AlertsEditPanel :alert="currentView" />
+        </main>
+      </div>
+    </Modal>
+
+    <header class="list-header">
       <!-- <p @click="test()"><span>List: </span> {{ currentView.title }}</p> -->
       <div class="row__">
         <div class="flexed-start" v-if="templates.refreshing">
@@ -11,21 +40,25 @@
           </div>
         </div>
 
-        <Multiselect
-          v-else
-          style="width: 200px"
-          v-model="activeList"
-          :placeholder="currentView.title || 'Select list'"
-          :options="templates.list"
-          selectedLabel=""
-          deselectLabel=""
-          selectLabel=""
-          track-by="id"
-          label="title"
-          @select="selectList($event)"
-          :loading="templates.refreshing"
-        >
-        </Multiselect>
+        <div class="row__" v-else>
+          <Multiselect
+            style="width: 200px"
+            v-model="activeList"
+            :placeholder="currentView.title || 'Select list'"
+            :options="templates.list"
+            selectedLabel=""
+            deselectLabel=""
+            selectLabel=""
+            track-by="id"
+            label="title"
+            @select="selectList($event)"
+            :loading="templates.refreshing"
+          >
+          </Multiselect>
+          <p class="counter" v-if="currentView !== 'pipeline' && !templates.refreshing">
+            {{ currentView.sobjectInstances.length }}
+          </p>
+        </div>
         <!-- <select
           v-else
           @input="selectList($event.target.selectedOptions[0]._value)"
@@ -41,9 +74,12 @@
       </div>
 
       <div style="display: flex; align-items: center">
-        <p class="counter" v-if="currentView !== 'pipeline' && !templates.refreshing">
-          {{ currentView.sobjectInstances.length }}
-        </p>
+        <button @click="toggleEditAlert" class="small-button">
+          <img src="@/assets/images/edit.svg" height="12px" alt="" />
+        </button>
+        <button @click="handleConfigureOpen" class="small-button">
+          <img src="@/assets/images/plusOne.svg" height="12px" alt="" />
+        </button>
         <button @click="reloadWorkflow" class="small-button">
           <img
             :class="{ 'rotate disabled': loading }"
@@ -61,6 +97,32 @@
         </button>
       </div>
     </header>
+
+    <!-- <div v-show="editingAlert" class="add-field">
+      <header>
+        <p>{{ currentView.title }}</p>
+
+        <p v-if="!loading" style="cursor: pointer" @click="toggleEditAlert">x</p>
+        <img
+          class="rotate disabled"
+          v-else
+          src="@/assets/images/refresh.svg"
+          height="11px"
+          alt=""
+        />
+      </header>
+
+      <main class="centered">
+        <AlertsEditPanel :alert="currentView" />
+      </main>
+
+      <footer class="list-footer" :class="{ disabled: loading }">
+        <button @click="toggleEditAlert">Close</button>
+
+        <button :disabled="loading">Save</button>
+      </footer>
+    </div> -->
+
     <div v-show="addingField" class="add-field">
       <header>
         <p>{{ addRemoveText }}</p>
@@ -231,15 +293,19 @@
 <script>
 import { SObjects } from '@/services/salesforce'
 import { CollectionManager } from '@thinknimble/tn-models'
+import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
 import { ObjectField } from '@/services/crm'
 import AlertTemplate from '@/services/alerts/'
 import User from '@/services/users/'
+import Modal from '@/components/InviteModal'
 import { decryptData } from '../../encryption'
 
 export default {
   name: 'ChatList',
   components: {
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+    AlertsEditPanel,
+    Modal,
   },
 
   data() {
@@ -252,6 +318,7 @@ export default {
       removeExtraFieldObjs: [],
       addRemoveChoices: ['Add', 'Remove'],
       addingField: false,
+      editingAlert: false,
       loading: false,
       activeList: null,
       formFields: CollectionManager.create({
@@ -274,6 +341,9 @@ export default {
   methods: {
     test() {
       console.log(this.templates.list)
+    },
+    handleConfigureOpen() {
+      this.$emit('handleConfigureOpen', 'workflows')
     },
     selectList(alert) {
       this.$store.dispatch('setCurrentView', alert)
@@ -360,6 +430,9 @@ export default {
     toggleAddField() {
       this.addingField = !this.addingField
       this.addOrRemove = null
+    },
+    toggleEditAlert() {
+      this.editingAlert = !this.editingAlert
     },
     async addExtraFields() {
       this.loading = true
@@ -504,6 +577,26 @@ export default {
 
 ::v-deep .multiselect__tags {
   height: 32px;
+}
+
+.edit-modal {
+  display: flex;
+  flex-direction: column;
+  width: 520px;
+  height: 610px;
+  padding: 0 0.5rem 0 1rem;
+  background-color: white;
+  border-radius: 6px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    font-size: 16px;
+  }
 }
 
 .dropdown__content {

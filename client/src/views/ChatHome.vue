@@ -10,7 +10,7 @@
       "
     >
       <div class="configure-modal-container">
-        <ConfigureModal />
+        <ConfigureModal ref="configModal" />
       </div>
     </Modal>
     <Modal
@@ -206,7 +206,12 @@
       />
     </main> -->
     <main id="main" v-else>
-      <ChatList @set-opp="setOpp" :formFields="formFields" @refresh-list="refreshLists" />
+      <ChatList
+        @set-opp="setOpp"
+        @handleConfigureOpen="handleConfigureOpen"
+        :formFields="formFields"
+        @refresh-list="refreshLists"
+      />
     </main>
 
     <aside id="right-sidebar">
@@ -388,8 +393,12 @@ export default {
     handleProfileOpen() {
       this.profileModalOpen = true
     },
-    handleConfigureOpen() {
+    handleConfigureOpen(name) {
       this.configureModalOpen = true
+
+      setTimeout(() => {
+        this.$refs.configModal.changeConfigPage(name)
+      }, 300)
     },
     handleCancel() {
       this.profileModalOpen = false

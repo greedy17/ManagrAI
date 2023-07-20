@@ -11,7 +11,7 @@
               height="26px"
               alt=""
             />
-            <h4>Add condition</h4>
+            <h4>Add</h4>
           </div>
           <div class="flex-row">
             <img
@@ -26,9 +26,9 @@
 
         <div class="margin-top">
           <AlertOperandRow :resourceType="alert.resourceType" :form.sync="currentForm" />
-          <div class="bottom">
+          <div>
             <button @click="onSaveOperand()" class="green_button" :disabled="!currentForm.isValid">
-              Add Condition
+              Add
             </button>
           </div>
         </div>
@@ -108,10 +108,10 @@
           <img src="@/assets/images/left.svg" alt="" />
           Back
         </button>
-  
+
         <h3>{{ alert.title }}</h3>
-  
-        <div style="display: flex;">
+
+        <div style="display: flex">
           <button @click="deleteItem(alert.id)" class="delete">Delete</button>
           <button @click="updateItem" style="margin-left: 8px" class="green_button right-margin">
             Save
@@ -119,8 +119,8 @@
         </div>
       </div>
     </div>
-    <div class="title">
-      <h4 class="title__head">1. Name your workflow</h4>
+    <!-- <div class="title">
+      <h4 class="title__head">Workflow title</h4>
 
       <section v-if="!templateNames.includes(alert.title)" class="title__body">
         <div style="display: flex; justify-content: center">
@@ -136,9 +136,9 @@
 
       <section class="title__body" v-else>
         <p>Cant edit templated alert titles</p>
-        <h2 style="color: #4d4e4c; font-size: 16px">{{ alert.title }}</h2>
+        <p style="color: #4d4e4c; font-size: 16px">{{ alert.title }}</p>
       </section>
-    </div>
+    </div> -->
 
     <!-- <div class="title">
       <h4 class="title__head">Delivery</h4>
@@ -186,7 +186,7 @@
     </div> -->
 
     <div class="title">
-      <h4 class="title__head">Conditions</h4>
+      <p class="title__head">Conditions</p>
 
       <section class="title__body">
         <p>Edit your workflow conditions</p>
@@ -221,14 +221,25 @@
             <span class="remove__group" style="margin-right: 8px">
               <img class="remove-color" src="@/assets/images/remove.svg" style="16px" alt="" />
             </span>
-            {{ 'Condition ' + (i + 1) + ': ' }}
+            <!-- {{ 'Condition ' + (i + 1) + ': ' }} -->
             {{ getReadableOperandRow(operand) }}
           </p>
 
-          <div style="display: flex;">
+          <div style="display: flex">
             <div v-if="group.operandsRef.length < 3" class="plus_button">
-              <button v-if="!showOperand" style="margin-left: 12px" @click="onShowOperandModal(index)">+</button>
-              <span v-else class="remove__group" style="margin-right: 8px;" @click="onHideOperandModal">
+              <button
+                v-if="!showOperand"
+                style="margin-left: 8px"
+                @click="onShowOperandModal(index)"
+              >
+                +
+              </button>
+              <span
+                v-else
+                class="remove__group"
+                style="margin-right: 4px"
+                @click="onHideOperandModal"
+              >
                 <img class="remove-color" src="@/assets/images/remove.svg" style="16px" alt="" />
               </span>
             </div>
@@ -255,12 +266,17 @@
                     />
                   </div>
                 </div> -->
-  
-                <div class="" style="display: flex; align-items: center;">
+
+                <div class="" style="display: flex; align-items: center; margin-left: -0.5rem">
                   <AlertOperandRow :resourceType="alert.resourceType" :form.sync="currentForm" />
                   <div class="">
-                    <button @click="onSaveOperand()" class="green_button" style="margin-left: 0.5rem;" :disabled="!currentForm.isValid">
-                      Add Condition
+                    <button
+                      style="margin-left: 0.5rem"
+                      @click="onSaveOperand()"
+                      class="green_button"
+                      :disabled="!currentForm.isValid"
+                    >
+                      Add
                     </button>
                   </div>
                 </div>
@@ -271,7 +287,7 @@
       </div>
 
       <div class="flex-end" v-if="alert.groupsRef.length < 3">
-        <button class="condition-button" @click="onShowGroupModal()">Add Group</button>
+        <button class="condition-button" @click="onShowGroupModal()">Add group</button>
       </div>
     </div>
 
@@ -299,11 +315,16 @@
           </div>
         </div> -->
 
-        <div class="">
+        <div style="margin-left: 2.25rem" class="">
           <AlertGroup :resourceType="alert.resourceType" :form.sync="groupForm" />
 
-          <div class="">
-            <button @click="onSaveGroup()" class="green_button" :disabled="!groupForm.isValid">
+          <div style="width: 100%" class="flex-end">
+            <button
+              style="margin-top: 0.5rem"
+              @click="onSaveGroup()"
+              class="green_button"
+              :disabled="!groupForm.isValid"
+            >
               Add Group
             </button>
           </div>
@@ -311,7 +332,7 @@
       </div>
     </div>
 
-    <div style="margin-bottom: 8px; display: flex" class="title">
+    <!-- <div style="margin-bottom: 8px; display: flex" class="title">
       <div style="">
         <h4 class="title__head">Slack Message</h4>
         <section class="title__body">
@@ -351,7 +372,7 @@
                         {{ message.title }}
                       </div>
                     </div>
-                    <!-- <div style="font-size: .6rem;">{ {{message.val}} }</div> -->
+                 
                   </div>
                   <div @click="removeMessage(i, message)">
                     <img src="@/assets/images/remove.svg" style="height: 1.2rem" />
@@ -382,7 +403,7 @@
         </div>
       </div>
       <div style="margin-right: 8px; height: fit-content" class="start">
-        <section style="max-width: 19vw;">
+        <section style="max-width: 19vw">
           <div class="search-bar">
             <img src="@/assets/images/search.svg" style="height: 18px" alt="" />
             <input
@@ -410,7 +431,7 @@
           </div>
         </section>
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -463,7 +484,7 @@ export default {
   },
   props: {
     alert: {
-      type: AlertTemplate,
+      // type: AlertTemplate,
       required: true,
     },
     fromConfig: {
@@ -580,7 +601,7 @@ export default {
         const day = recurrenceDays[i]
         if (day === n) {
           index = i
-          break;
+          break
         }
       }
       if (index !== undefined) {
@@ -599,23 +620,21 @@ export default {
     },
     verifySubmit() {
       if (this.largeOpps) {
-        return (false
-          // this.config.newGroups[0].newOperands[0].operandIdentifier &&
-          // this.config.newGroups[0].newOperands[0].operandValue &&
-          // this.config.newConfigs[0].alertTargets.length &&
-          // this.selectUsersBool &&
-          // this.selectFieldBool &&
-          // this.largeOppsBool
-        )
+        return false
+        // this.config.newGroups[0].newOperands[0].operandIdentifier &&
+        // this.config.newGroups[0].newOperands[0].operandValue &&
+        // this.config.newConfigs[0].alertTargets.length &&
+        // this.selectUsersBool &&
+        // this.selectFieldBool &&
+        // this.largeOppsBool
       } else {
-        return (false
-          // (this.config.newConfigs[0].recurrenceDays.length ||
-          //   this.config.newGroups[0].newOperands[0].operandIdentifier) &&
-          // this.config.newConfigs[0].alertTargets.length &&
-          // this.selectUsersBool &&
-          // (this.setDaysBool || this.selectFieldBool) &&
-          // this.config.messageTemplate.body.length
-        )
+        return false
+        // (this.config.newConfigs[0].recurrenceDays.length ||
+        //   this.config.newGroups[0].newOperands[0].operandIdentifier) &&
+        // this.config.newConfigs[0].alertTargets.length &&
+        // this.selectUsersBool &&
+        // (this.setDaysBool || this.selectFieldBool) &&
+        // this.config.messageTemplate.body.length
       }
     },
     updateWorkflow() {
@@ -683,7 +702,7 @@ export default {
           this.alert.groupsRef[this.groupIndex].operands = [
             ...this.alert.groupsRef[this.groupIndex].operandsRef.map((op) => op.id),
           ]
-        } catch(e) {
+        } catch (e) {
           console.log('Error in onSaveOperand: ', e)
         } finally {
           this.modalOpen = false
@@ -727,7 +746,7 @@ export default {
           })
           this.alert.groupsRef = [...this.alert.groupsRef, res]
           this.alert.groups = [...this.alert.groupsRef.map((op) => op.id)]
-        } catch(e) {
+        } catch (e) {
           console.log('Error in onSaveGroup', e)
         } finally {
           this.groupModalOpen = false
@@ -773,6 +792,7 @@ export default {
       return option ? option.label : value
     },
     getReadableOperandRow(rowData) {
+      console.log(rowData)
       let operandOperator = rowData.operandOperator
       let value = rowData.operandValue
       let valuePromise = ''
@@ -780,7 +800,7 @@ export default {
         valuePromise = this.getRecordNames(value)
       }
       let operandOpts = [...this.intOpts, ...this.booleanValueOpts, ...this.strOpts]
-      let valueLabel = value
+      let valueLabel = this.convertVal(value)
       let operandOperatorLabel = operandOpts.find((opt) => opt.value == operandOperator)
         ? operandOpts.find((opt) => opt.value == operandOperator).label
         : operandOperator
@@ -792,11 +812,14 @@ export default {
           valueLabel = `${value} days after run date`
         }
       }
-      const operandString = `${rowData.operandIdentifier}     ${operandOperatorLabel}     ${
-        valuePromise ? valuePromise : valueLabel
-      } `
+      const operandString = `${
+        rowData.operandIdentifier
+      }   is  ${operandOperatorLabel.toLowerCase()} ${valuePromise ? valuePromise : valueLabel} `
       // this.valuePromise = null
       return operandString
+    },
+    convertVal(val) {
+      return val.replace('_', ' ').toLowerCase()
     },
     addSuffix(num) {
       if ((num > 3 && num < 21) || (num > 23 && num < 31)) {
@@ -983,23 +1006,8 @@ export default {
     // for this version only allowing edit of certain fields or delete of array items
     this.fields.refresh()
     if (this.alert) {
-      console.log('alert', this.alert)
       this.templateTitleField.value = this.alert.title
-      // work here
-      this.messageTemplateForm.field.body.value = this.alert.messageTemplateRef.body
     }
-    if (this.messageTemplateForm.field.body.value) {
-      this.slackMessage = this.messageTemplateForm.field.body.value.split('\n\n')
-    }
-    const slackFormat = []
-    for (let i = 0; i < this.slackMessage.length; i++) {
-      const titleAndVal = this.slackMessage[i].split('\n')
-      const titleFormatted = titleAndVal[0].slice(8, titleAndVal[0].length - 10)
-      const valFormatted = titleAndVal[1].slice(3, titleAndVal[1].length - 2)
-      // valFormatted is needed for addedFieldNames, since it is more precise than just the title for filtering
-      slackFormat.push({ title: titleFormatted, val: valFormatted })
-    }
-    this.formattedSlackMessage = slackFormat
   },
 }
 </script>
@@ -1049,7 +1057,7 @@ export default {
 .bottom {
   position: absolute;
   right: 1rem;
-  bottom: 1rem;
+  bottom: 0.5rem;
 }
 @keyframes bounce {
   0% {
@@ -1062,9 +1070,8 @@ export default {
 .edit-panel {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-start;
-  padding: 16px 0px;
 }
 .title {
   background-color: white;
@@ -1072,14 +1079,12 @@ export default {
   // border: 1px solid $soft-gray;
   color: $base-gray;
   border-radius: 6px;
-  width: 62vw;
+  width: 100%;
   // width: 50vw;
   // min-height: 25vh;
   letter-spacing: 0.75px;
-  padding: 0px 0px 32px 0px;
-  margin-top: 16px;
   &__head {
-    padding: 8px 12px;
+    padding: 0 12px;
     background-color: white;
     margin-bottom: 0;
     // color: $very-light-gray;
@@ -1107,7 +1112,7 @@ export default {
   background-color: $off-white;
   border-radius: 4px;
   cursor: pointer;
-  padding: 3px 6px;
+  padding: 3px 0px;
   margin-left: 8px;
   display: flex;
   align-items: center;
@@ -1129,8 +1134,7 @@ export default {
     @include white-button();
     border-radius: 100%;
     font-size: 18px;
-    padding: 0rem .3rem;
-    
+    padding: 0rem 0.25rem;
   }
 }
 .plus_button button:hover {
@@ -1273,7 +1277,7 @@ input[type='search']:focus {
 .modal-container-large {
   @include base-modal();
   overflow-x: hidden;
-  width: 58vw;
+  width: 100%;
   // min-height: 50vh;
   height: 62vh;
   align-items: center;
