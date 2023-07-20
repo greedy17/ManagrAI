@@ -16,7 +16,7 @@ from django.contrib.auth import login
 from django.contrib.postgres.fields import JSONField, ArrayField
 from managr.utils import sites as site_utils
 from managr.utils.misc import datetime_appended_filepath, phrase_to_snake_case
-from managr.utils.client import HttpClient
+from managr.utils.client import HttpClient, Client
 from managr.core import constants as core_consts
 from managr.organization import constants as org_consts
 from managr.slack.helpers import block_builders
@@ -523,9 +523,11 @@ class NylasAuthAccount(TimeStampModel):
         if self.event_calendar_id:
             query["calendar_id"] = self.event_calendar_id
         params = urlencode(query)
-        events = requests.get(
-            f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EVENT_POST}?{params}", headers=headers,
-        )
+        with Client as client:
+            events = client.get(
+                f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.EVENT_POST}?{params}",
+                headers=headers,
+            )
         return self._handle_response(events)
 
 
