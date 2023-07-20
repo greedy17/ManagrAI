@@ -2,6 +2,7 @@ import { apiClient, apiErrorHandler } from '@/services/api'
 import { ModelAPI, ApiFilter } from '@thinknimble/tn-models'
 
 const ZOOM_MEETING_ENDPOINT = 'zoom/schedule-zoom-meeting/'
+const GET_ZOOM_MEETINGS = 'zoom/get-meetings/'
 
 export default class ZoomMeetingAPI extends ModelAPI {
   static ENDPOINT = 'users/zoom/'
@@ -46,6 +47,14 @@ export default class ZoomMeetingAPI extends ModelAPI {
   //       }),
   //     )
   // }
+  async getZoomMeetings(data) {
+    try {
+      const res = await this.client.post(GET_ZOOM_MEETINGS, data)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Retrieving Zoom meetings' })(e)
+    }
+  }
 
   async createZoomMeeting(data) {
     try {

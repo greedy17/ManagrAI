@@ -430,3 +430,27 @@ def schedule_zoom_meeting(request):
         logger.exception(f"Scheduling Zoom Meeting Error {e}")
         return Response(data={"error": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
     return Response(status=status.HTTP_200_OK)
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def get_meetings(request):
+    from managr.zoom.zoom_helper.exceptions import TokenExpired
+    date = request.data['date']
+    user = User.objects.get(id=request.data['user_id'])
+    while True:
+        try:
+            options_res = user.zoom_account.helper_class.get_meetings_by_date(
+                user.zoom_account.access_token, user.zoom_account.zoom_id, date
+            )
+            meetings = options_res["meetings"]
+            break
+        except TokenExpired:
+            user.zoom_account.regenerate_token()
+        except Exception as e:
+            logger.exception(
+                f"Exception when pulling zoom meetings for {user.email} because of {e}"
+            )
+            error = f"Error pulling zoom meetings: {e}"
+            meetings = []
+            return Response(error=error, status=status.HTTP_400_BAD_REQUEST)
+    return Response(data={'data':meetings}, status=status.HTTP_200_OK)

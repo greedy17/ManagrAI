@@ -4,6 +4,7 @@ import json
 import logging
 from datetime import datetime
 from urllib.error import HTTPError
+from django.db.models.fields.related import ForeignKey
 import requests
 
 from rest_framework.authtoken.models import Token
@@ -129,7 +130,36 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
     class Meta:
         ordering = ("id",)
 
+class CustomJSONField(models.TextField):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('default', '{}')
+        super().__init__(*args, **kwargs)
+        
+class Message(TimeStampModel):
+    user_type = models.CharField(max_length=100)
+    value = models.TextField()
+    resource_id = models.CharField(max_length=100)
+    resource_type = models.CharField(max_length=100)
+    updated = models.BooleanField(blank=False, null=False, default=False)
+    failed = models.BooleanField(blank=False, null=False, default=False)
+    generated = models.BooleanField(blank=False, null=False, default=False)
+    data = CustomJSONField()
+    generated_title = models.CharField(max_length=100)
+    generated_type = models.CharField(max_length=100)
+    form_id = models.CharField(max_length=100)
+    error = models.TextField(null=True)
+    resource = models.CharField(max_length=100, null=True)
+    integration_id = models.CharField(max_length=100, null=True)
+    form_type = models.CharField(max_length=100, null=True)
+    conversation = ForeignKey("core.Conversation", on_delete=models.CASCADE, related_name="messages")
+    class Meta:
+        ordering = ["datetime_created"]
 
+class Conversation(TimeStampModel):
+    user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="conversations")
+    title = models.CharField(max_length=255, blank=True,)
+    members = ArrayField(models.CharField(max_length=1000), default=list, blank=True)
+    
 class User(AbstractUser, TimeStampModel):
     # Override the Django-provided username field and replace with email
     USERNAME_FIELD = "email"

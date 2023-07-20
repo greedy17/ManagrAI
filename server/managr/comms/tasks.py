@@ -1,8 +1,9 @@
 import logging
-from urllib.parse import urlencode
 import json
 import httpx
 import datetime
+from django.conf import settings
+from urllib.parse import urlencode
 from background_task import background
 from managr.utils.client import Variable_Client
 from .utils import get_news_for_company, send_clips
@@ -98,6 +99,13 @@ def _process_news_summary(payload, context):
             block_builders.divider_block(),
             block_builders.simple_section(message, "mrkdwn"),
         ]
+        if not settings.IN_PROD:
+            blocks.extend(
+                [
+                    block_builders.divider_block(),
+                    block_builders.context_block(f"*AI-generated search:* {query_input}", "mrkdwn"),
+                ]
+            )
         slack_res = slack_requests.update_channel_message(
             user.slack_integration.channel,
             context.get("ts"),

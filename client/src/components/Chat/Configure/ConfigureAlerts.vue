@@ -619,7 +619,6 @@ export default {
     isPaid() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.organizationRef.isPaid
-      return !!this.$store.state.user.organizationRef.isPaid
     },
     isOnboarding() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
