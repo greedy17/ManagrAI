@@ -42,13 +42,20 @@
               </div>
             </Transition>
           </div>
-          <font-awesome-icon
+          <img
+            :class="{ invert: !message }"
+            @click="sendMessage"
+            src="@/assets/images/paper-plane.svg"
+            height="14px"
+            alt=""
+          />
+          <!-- <font-awesome-icon
             :class="{ invert: !message }"
             class="gray"
             style="height: 14px; cursor: pointer"
             icon="fa-regular fa-paper-plane"
             @click="sendMessage"
-          />
+          /> -->
         </div>
       </div>
     </div>

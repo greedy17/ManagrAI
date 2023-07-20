@@ -2174,15 +2174,14 @@ def process_transcript(request):
     if slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations_list:
         workflow.operations_list.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
     workflow.save()
-    meeting = workflow.meeting
 
     has_error = False
     error_message = None
     retry = 0
     try:
         if not settings.IN_PROD:
-            logger.info("Retreiving meeting data...")   
-        meeting = workflow.meeting    
+            logger.info("Retreiving meeting data...")
+        meeting = workflow.meeting
         meeting_data = meeting.meeting_account.helper_class.get_meeting_data(
             meeting.meeting_id, meeting.meeting_account.access_token
         )
@@ -2215,7 +2214,7 @@ def process_transcript(request):
                 )
                 transcript = transcript.decode("utf-8")
                 summary_parts = process_transcript_to_summaries(transcript, user)
-            if len(summary_parts):                
+            if len(summary_parts):              
                 timeout = 90.0
                 tokens = 1500
                 # try:
