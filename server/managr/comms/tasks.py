@@ -103,9 +103,7 @@ def _process_news_summary(payload, context):
             blocks.extend(
                 [
                     block_builders.divider_block(),
-                    block_builders.context_block(
-                        f"*AI Generated Search Terms:* {query_input}", "mrkdwn"
-                    ),
+                    block_builders.context_block(f"*AI-generated search:* {query_input}", "mrkdwn"),
                 ]
             )
         slack_res = slack_requests.update_channel_message(
