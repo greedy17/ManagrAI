@@ -14,7 +14,7 @@ from managr.slack.helpers.utils import action_with_params
 logger = logging.getLogger("managr")
 
 
-def open_chat(context):
+def open_chat(payload, context):
     user = User.objects.get(id=context.get("u"))
     crm = "Salesforce" if user.crm == "SALESFORCE" else "HubSpot"
     if user.slack_integration:
@@ -62,7 +62,7 @@ def open_chat(context):
         slack_requests.generic_request(url, data, access_token=access_token)
 
 
-def update_resource(context):
+def update_resource(payload, context):
     # list of accepted commands for this fake endpoint
     user = User.objects.get(id=context.get("u"))
     if user.slack_integration:
@@ -105,7 +105,7 @@ def update_resource(context):
         slack_requests.generic_request(url, data, access_token=access_token)
 
 
-def create_resource(context):
+def create_resource(payload, context):
     # list of accepted commands for this fake endpoint
     user = User.objects.get(id=context.get("u"))
     options = (
@@ -157,7 +157,7 @@ def create_resource(context):
         slack_requests.generic_request(url, data, access_token=access_token)
 
 
-def convert_lead(context):
+def convert_lead(payload, context):
     user = User.objects.get(id=context.get("u"))
     if user.slack_integration:
         slack = (
@@ -195,7 +195,7 @@ def convert_lead(context):
         slack_requests.generic_request(url, data, access_token=access_token)
 
 
-def create_task(context):
+def create_task(payload, context):
     # list of accepted commands for this fake endpoint
     user = User.objects.get(id=context.get("u"))
     if user.slack_integration:
@@ -231,7 +231,7 @@ def create_task(context):
         slack_requests.generic_request(url, data, access_token=access_token)
 
 
-def log_new_activity(context):
+def log_new_activity(payload, context):
     # list of accepted commands for this fake endpoint
     user = User.objects.get(id=context.get("u"))
     if user.slack_integration:
@@ -276,7 +276,7 @@ def log_new_activity(context):
         slack_requests.generic_request(url, data, access_token=access_token)
 
 
-def list_tasks(context):
+def list_tasks(payload, context):
     ## helper to make datetime longform
     def to_date_string(date):
         if not date:
@@ -323,7 +323,7 @@ def list_tasks(context):
         logger.exception(f"Actions exception: {e}")
 
 
-def get_notes_command(context):
+def get_notes_command(payload, context):
     user = User.objects.get(id=context.get("u"))
     if user.slack_integration:
         slack = UserSlackIntegration.objects.filter(
@@ -368,7 +368,7 @@ def get_notes_command(context):
     return slack_requests.generic_request(url, data, access_token=access_token)
 
 
-def schedule_meeting(context):
+def schedule_meeting(payload, context):
     user = User.objects.get(id=context.get("u"))
     if user.slack_integration:
         slack = UserSlackIntegration.objects.filter(
@@ -401,7 +401,7 @@ def schedule_meeting(context):
     return
 
 
-def add_to_sequence(context):
+def add_to_sequence(payload, context):
     user = User.objects.get(id=context.get("u"))
     if user.slack_integration:
         slack = UserSlackIntegration.objects.filter(
@@ -446,7 +446,7 @@ def add_to_sequence(context):
     slack_requests.generic_request(url, data, access_token=access_token)
 
 
-def add_to_cadence(context):
+def add_to_cadence(payload, context):
     user = User.objects.get(id=context.get("u"))
     if user.slack_integration:
         slack = UserSlackIntegration.objects.filter(
@@ -491,7 +491,7 @@ def add_to_cadence(context):
     slack_requests.generic_request(url, data, access_token=access_token)
 
 
-def call_recording(context):
+def call_recording(payload, context):
     user = User.objects.get(id=context.get("u"))
     if user.slack_integration:
         slack = UserSlackIntegration.objects.filter(
@@ -530,7 +530,7 @@ def call_recording(context):
     slack_requests.generic_request(url, data, access_token=access_token)
 
 
-def reset_meetings(context):
+def reset_meetings(payload, context):
     user = User.objects.get(id=context.get("u"))
     if user.slack_integration:
         slack = UserSlackIntegration.objects.filter(
@@ -557,7 +557,7 @@ def reset_meetings(context):
     slack_requests.generic_request(url, data, access_token=access_token)
 
 
-def news_summary(context):
+def news_summary(payload, context):
     user = User.objects.get(id=context.get("u"))
     if user.slack_integration:
         slack = UserSlackIntegration.objects.filter(
@@ -567,11 +567,11 @@ def news_summary(context):
             return
     access_token = user.organization.slack_integration.access_token
 
-    view_id = context.get("view_id", None)
+    view_id = payload["view"]["id"]
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     blocks = [
         block_builders.input_block(
-            "Enter a company name", optional=False, block_id="COMPANY_INPUT", multiline=True
+            "Enter your new search", optional=False, block_id="COMPANY_INPUT", multiline=True
         )
     ]
     data = {
@@ -589,7 +589,42 @@ def news_summary(context):
     slack_requests.generic_request(url, data, access_token=access_token)
 
 
-def get_action(action_name, context={}, *args, **kwargs):
+def deal_review(payload, context):
+    from managr.slack.background import emit_process_send_deal_review
+
+    print(payload)
+    print(context)
+    user = User.objects.get(id=context.get("u"))
+    if user.slack_integration:
+        slack = UserSlackIntegration.objects.filter(
+            slack_id=user.slack_integration.slack_id
+        ).first()
+        if not slack:
+            return
+    access_token = user.organization.slack_integration.access_token
+
+    view_id = payload["view"]["id"]
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    blocks = [
+        block_builders.simple_section(
+            "Your deal review is processing and will be dm'd to you soon!"
+        )
+    ]
+    data = {
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "Actions"},
+            "blocks": blocks,
+            "private_metadata": json.dumps(context),
+        },
+    }
+    if view_id:
+        data["view_id"] = view_id
+    emit_process_send_deal_review(payload, context)
+    slack_requests.generic_request(url, data, access_token=access_token)
+
+
+def get_action(action_name, payload={}, context={}, *args, **kwargs):
 
     switcher = {
         "OPEN_CHAT": open_chat,
@@ -605,6 +640,7 @@ def get_action(action_name, context={}, *args, **kwargs):
         "CALL_RECORDING": call_recording,
         "RESET_MEETINGS": reset_meetings,
         "NEWS_SUMMARY": news_summary,
+        "REVIEW": deal_review,
     }
-    return switcher.get(action_name)(context, *args, **kwargs)
+    return switcher.get(action_name)(payload, context, *args, **kwargs)
 

@@ -1181,6 +1181,7 @@ def _process_zoom_meeting_message(payload, context):
             user=user,
             resource_id=pm["resource_id"],
             resource_type=pm["resource_type"],
+            slack_interaction=f"{pm.get('ts')}|{user.slack_integration.channel}",
         )
         workflow.add_form(
             pm["resource_type"], slack_const.FORM_TYPE_UPDATE, resource_id=pm["resource_id"]

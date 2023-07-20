@@ -503,7 +503,9 @@ def process_get_meeting_options(payload, context):
             meetings = []
     return {
         "options": [
-            block_builders.option(meeting["topic"], str(meeting["id"])) for meeting in meetings
+            block_builders.option(meeting["topic"], str(meeting["id"]))
+            for meeting in meetings
+            if meeting["host_id"] == user.zoom_account.zoom_id
         ]
     }
 

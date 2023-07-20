@@ -40,6 +40,7 @@ def _process_news_summary(payload, context):
                 break
         except Exception as e:
             logger.exception(e)
+            break
     query = urlencode({"q": query_input})
     news_res = get_news_for_company(query)
     articles = news_res["articles"]
@@ -93,7 +94,7 @@ def _process_news_summary(payload, context):
             break
     try:
         blocks = [
-            block_builders.header_block(f"Summary for {company}"),
+            block_builders.simple_section(f"*Summary for {company}*", "mrkdwn"),
             block_builders.divider_block(),
             block_builders.simple_section(message, "mrkdwn"),
         ]
