@@ -12,6 +12,7 @@ from .models import (
     SObjectValidation,
 )
 from managr.core.models import User
+from managr.slack.models import OrgCustomSlackFormInstance
 
 
 class SalesforceAuthSerializer(serializers.ModelSerializer):
@@ -140,8 +141,15 @@ class MeetingUserSerializer(serializers.ModelSerializer):
         fields = ("id", "first_name", "last_name", "email")
 
 
+class FormSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrgCustomSlackFormInstance
+        fields = '__all__'
+
+
 class MeetingWorkflowSerializer(serializers.ModelSerializer):
     org_ref = serializers.SerializerMethodField("get_org_ref")
+    forms = FormSerializer(many=True)
     meeting_ref = MeetingFrontendSerializer(many=False, source="meeting", read_only=True)
     resource_ref = serializers.SerializerMethodField("get_resource_ref")
     is_completed = serializers.SerializerMethodField("get_completed_status")
@@ -160,7 +168,8 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
             "user_ref",
             "org_ref",
             "is_completed",
-            "transcript_analysis"
+            "transcript_analysis",
+            "forms"
         )
 
     def get_org_ref(self, instance):

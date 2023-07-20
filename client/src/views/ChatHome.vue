@@ -160,16 +160,7 @@
             Create New Team
           </button> -->
 
-          <!-- <button class="chat-button">
-            <font-awesome-icon
-              v-if="team.list.length >= numberOfAllowedUsers"
-              icon="fa-solid fa-user-plus"
-            />
-
-            <font-awesome-icon v-else class="white-icon" icon="fa-solid fa-user-plus" />
-
-            Add user
-          </button> -->
+          <button class="chat-button">Add</button>
         </div>
       </div>
     </Modal>

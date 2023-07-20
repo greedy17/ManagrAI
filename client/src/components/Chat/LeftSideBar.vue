@@ -64,14 +64,14 @@
           <img src="@/assets/images/profile.svg" height="14px" alt="" />
         </div>
 
-        <div :class="{ 'showing-tooltip': showTooltip }" class="tooltip">
+        <!-- <div :class="{ 'showing-tooltip': showTooltip }" class="tooltip">
           <header>
             <p>Need help ?</p>
 
             <p @click="toggleTooltip">x</p>
           </header>
           <p>Email: cx@mymanagr.com</p>
-        </div>
+        </div> -->
       </footer>
     </section>
 

@@ -625,10 +625,6 @@ export default {
         )[0]
         this.updateData = this.meetingData[this.meeting.id].data
       } else {
-        this.selectedMeetingWorkflow = this.workflows.filter(
-          (workflow) => workflow.meeting_ref.meeting_id === this.meeting.id.toString(),
-        )[0]
-
         const keys = Object.keys(this.selectedMeetingWorkflow.resource_ref['secondary_data'])
         const filteredKeys = keys.filter((key) => this.formFieldNames.includes(key))
         let filteredObject = {}
