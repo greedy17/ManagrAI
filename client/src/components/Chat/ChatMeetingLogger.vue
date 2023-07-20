@@ -74,9 +74,52 @@
       </div>
     </Modal> -->
 
-    <div :class="{ disabled: submitting }">
-      <div v-if="!usingAi">
-        <p>Use AI to summarize the call and autofill CRM fields ?</p>
+    <div v-if="!hasMeetingWorkflow" :class="{ disabled: submitting }">
+      <div class="margin-top-s">
+        <p>Related to type:</p>
+
+        <Multiselect
+          v-model="selectedResourceType"
+          selectLabel=""
+          deselectLabel=""
+          :options="resources"
+          :loading="dropdownLoading"
+          style="width: 96%"
+        >
+        </Multiselect>
+      </div>
+
+      <div class="margin-top">
+        <p>Search for a {{ selectedResourceType }}:</p>
+
+        <Multiselect
+          style="width: 96%"
+          v-model="mappedOpp"
+          @select="selectOpp($event)"
+          @search-change="setSearchVal($event)"
+          :placeholder="`Search for ${selectedResourceType || ''}`"
+          selectLabel=""
+          deselectLabel=""
+          label="name"
+          :customLabel="({ name, email }) => (name ? name : email)"
+          track-by="id"
+          :options="
+            selectedResourceType === 'Opportunity' || selectedResourceType === 'Deal'
+              ? allOpps
+              : selectedList
+          "
+          :loading="dropdownLoading || listLoading"
+          :disabled="!selectedResourceType"
+        >
+          <template slot="noResult">
+            <p class="multi-slot">No results. Try loading more</p>
+            <button @click="loadMoreOpps(mappedOpp)" class="multi-slot__more">Load more</button>
+          </template>
+        </Multiselect>
+      </div>
+
+      <div class="margin-top">
+        <p>Use AI to summarize & auto-fill CRM?</p>
 
         <Multiselect
           v-model="usingAi"
@@ -87,86 +130,60 @@
           style="width: 96%"
           :options="aiOptions"
           :loading="dropdownLoading"
+          :disabled="!mappedOpp"
         >
         </Multiselect>
       </div>
 
-      <div v-else>
-        <div v-if="usingAi.value === 'true'">
-          <div>
-            <p>Related to type</p>
-
-            <Multiselect
-              v-model="selectedResourceType"
-              selectLabel=""
-              deselectLabel=""
-              :options="resources"
-              :loading="dropdownLoading"
-              style="width: 96%"
-            >
-            </Multiselect>
-          </div>
-
-          <div v-if="selectedResourceType">
-            <p>Search for a {{ selectedResourceType }}</p>
-
-            <Multiselect
-              style="width: 96%"
-              v-model="mappedOpp"
-              @select="selectOpp($event)"
-              @search-change="setSearchVal($event)"
-              :placeholder="`Search for ${selectedResourceType}`"
-              selectLabel=""
-              deselectLabel=""
-              label="name"
-              :customLabel="({ name, email }) => (name ? name : email)"
-              track-by="id"
-              :options="
-                selectedResourceType === 'Opportunity' || selectedResourceType === 'Deal'
-                  ? allOpps
-                  : selectedList
-              "
-              :loading="dropdownLoading || listLoading"
-            >
-              <template slot="noResult">
-                <p class="multi-slot">No results. Try loading more</p>
-                <button @click="loadMoreOpps(mappedOpp)" class="multi-slot__more">Load more</button>
-              </template>
-            </Multiselect>
-          </div>
-        </div>
-
-        <div v-else>
-          <p>Log your meeting using converstional AI:</p>
-          <div
-            @input="setValue($event)"
-            class="inline-input"
-            v-html="noteValue"
-            contenteditable="true"
-          ></div>
-
-          <p>Use note template:</p>
-          <Multiselect
-            style="width: 96%"
-            v-model="selectedTemplate"
-            selectLabel=""
-            deselectLabel=""
-            label="subject"
-            track-by="body"
-            :options="noteTemplates"
-            :loading="dropdownLoading"
-          >
-          </Multiselect>
-        </div>
+      <div v-if="errorText" class="margin-top">
+        <p class="error">{{ errorText }}/p></p>
       </div>
     </div>
 
-    <div class="meeting-modal-footer">
-      <button v-if="usingAi" :disabled="submitting" @click="deselectAI">Back</button>
+    <div v-else-if="selectedMeetingWorkflow">
+      <div v-if="meetingData[meeting.id] || !selectedMeetingWorkflow.is_completed">
+        <div :class="{ disabled: submitting }" v-for="(field, i) in formFields" :key="i">
+          <ChatMeetingFormField
+            :placeholder="toString(updateData[field.apiName])"
+            :field="field"
+            :chatData="updateData"
+            @set-value="setUpdateValues"
+            :stageFields="stageFields"
+            :stagesWithForms="stagesWithForms"
+          />
+        </div>
+        <div class="meeting-modal-footer">
+          <button @click="onSubmitChat" class="green-button" :disabled="submitting">
+            Log Meeting
+          </button>
+        </div>
+      </div>
+
+      <div v-else>
+        <div @click="test">
+          <p class="logged">
+            <img src="@/assets/images/check.svg" height="12px" alt="" /> meeting logged
+          </p>
+        </div>
+
+        <pre class="message-text" v-html="selectedMeetingWorkflow.transcript_analysis"></pre>
+      </div>
+    </div>
+
+    <div v-if="!hasMeetingWorkflow">
+      <div class="meeting-modal-footer">
+        <p v-if="processing" class="row__">
+          <img class="rotate" src="@/assets/images/loading.svg" height="14px" alt="" /> Processing,
+          this could take a few minutes...
+        </p>
+      </div>
+    </div>
+
+    <!-- <div class="meeting-modal-footer">
       <button
         @click="submitChatMeeting"
         class="green-button"
-        v-if="usingAi && usingAi.value === 'false'"
+        v-if="selectedResourceId && usingAi && usingAi.value === 'false'"
         :disabled="submitting"
       >
         Log Meeting
@@ -180,32 +197,38 @@
       >
         Log Meeting
       </button>
-    </div>
+    </div> -->
   </section>
 </template>
 
 <script>
 import User from '@/services/users'
 import Modal from '@/components/InviteModal'
-import ChatFormField from '@/components/Chat/ChatFormField.vue'
-import { CRMObjects } from '@/services/crm'
-import { decryptData } from '../../encryption'
+import ChatMeetingFormField from '@/components/Chat/ChatMeetingFormField.vue'
+import SlackOAuth from '@/services/slack'
+import { MeetingWorkflows } from '@/services/salesforce'
 
 export default {
   name: 'ChatMeetingLogger',
   components: {
     Modal,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
-    ChatFormField,
+    ChatMeetingFormField,
   },
   props: {
     meeting: {},
+    workflows: {},
+    formFields: {},
+    stageFields: {},
+    stagesWithForms: {},
   },
   watch: {
     currentMeeting: 'autoSelectLogType',
     usingAi(val) {
       if (val && val.value === 'false') {
-        this.$store.dispatch('loadTemplates')
+        this.submitChatMeeting()
+      } else if (val && val.value === 'true') {
+        this.submitChatTranscript()
       }
     },
     selectedResourceType: 'changeList',
@@ -222,10 +245,15 @@ export default {
   },
   data() {
     return {
+      textLoading: null,
       listLoading: false,
       loading: false,
       chatModalOpen: false,
+      processing: false,
+      stageGateId: [],
+      errorText: null,
       meetingModalOpen: false,
+      reviewTranscript: false,
       submitting: false,
       currentMeeting: null,
       mappedOpp: null,
@@ -235,6 +263,7 @@ export default {
       usingAi: null,
       selectedResourceId: null,
       selectedResourceType: null,
+      selectedMeetingWorkflow: null,
       selectedList: [],
       noteValue: null,
       selectedTemplate: null,
@@ -260,6 +289,9 @@ export default {
     }
   },
   methods: {
+    test() {
+      console.log(this.meetingData)
+    },
     deselectAI() {
       this.usingAi = null
     },
@@ -287,37 +319,38 @@ export default {
     },
     async submitChatTranscript() {
       this.submitting = true
+      this.processing = true
       this.meetingModalOpen = false
       try {
-        let res = await User.api.submitChatTranscript({
-          user_id: this.user.id,
-          resource_type: this.selectedResourceType,
-          integration_id: this.mappedOpp.integration_id,
-          meeting_id: this.meeting.id,
-        })
-        console.log(res)
-        // if (res.status === 200) {
-        //   console.log(res)
-        //   this.$store.dispatch('setMeetingData', {
-        //     id: this.currentMeeting.id,
-        //     data: res.data,
-        //     success: false,
-        //     retry: false,
-        //     analysis: res.analysis,
-        //   })
-        // } else {
-        //   this.$store.dispatch('setMeetingData', {
-        //     id: this.currentMeeting.id,
-        //     data: res.data,
-        //     success: false,
-        //     retry: true,
-        //     analysis: null,
-        //   })
-        // }
+        let res = await User.api
+          .submitChatTranscript({
+            user_id: this.user.id,
+            resource_type: this.selectedResourceType,
+            resource_id: this.mappedOpp.id,
+            integration_id: this.mappedOpp.integration_id,
+            meeting_id: this.meeting.id,
+          })
+          .then((response) => {
+            console.log(response)
+            if (response.status === 200) {
+              this.updateData = response.data
+              this.$store.dispatch('setMeetingData', { id: this.meeting.id, data: response.data })
+              this.$emit('reload-workflows')
+            } else {
+              this.errorText = response.data
+              console.log(this.errorText)
+              this.selectedResourceType = null
+              this.mappedOpp = null
+              this.usingAi = null
+            }
+          })
       } catch (e) {
         console.log(e)
+        this.$emit('reload-workflows')
       } finally {
         this.submitting = false
+        this.processing = false
+        // this.reviewTranscript = true
       }
     },
     toString(data) {
@@ -344,41 +377,56 @@ export default {
 
       return newObj
     },
-    submitChat() {
-      this.chatModalOpen = false
-      this.submitting = true
-      setTimeout(() => {
-        this.onSubmitChat()
-      }, 500)
-    },
+    // submitChat() {
+    //   this.chatModalOpen = false
+    //   this.submitting = true
+    //   setTimeout(() => {
+    //     this.onSubmitChat()
+    //   }, 500)
+    // },
+
     async onSubmitChat() {
+      this.submitting = true
       try {
-        const res = await CRMObjects.api.updateResource({
-          form_data: this.updateData,
-          resource_type: this.currentResourceType,
-          form_type: 'UPDATE',
-          resource_id: this.currentResourceId,
-          integration_ids: [this.currentIntegrationId],
-          chat_form_id: ['000ae5577320'],
-          from_workflow: false,
-          workflow_title: 'None',
-          stage_name: null,
-        })
-        if (res.success) {
-          this.$store.dispatch('setMeetingData', {
-            id: this.currentMeetingId,
-            data: res.data,
-            success: true,
-            retry: false,
+        await MeetingWorkflows.api
+          .updateWorkflow({
+            workflow_id: this.selectedMeetingWorkflow.id,
+            stage_form_id: this.stageGateId,
+            form_data: this.updateData,
           })
-        } else {
-          this.$store.dispatch('setMeetingData', {
-            id: this.currentMeetingId,
-            data: res.data,
-            success: false,
-            retry: true,
+          .then((response) => {
+            if (this.meetingData[this.meeting.id]) {
+              this.$store.dispatch('editMeeting', { id: this.meeting.id, updated: true })
+            }
+            this.$emit('reload-workflows')
           })
-        }
+        // await CRMObjects.api.updateResource({
+        //   form_data: this.updateData,
+        //   resource_type: this.selectedMeetingWorkflow.resource_type,
+        //   form_type: 'UPDATE',
+        //   resource_id: this.selectedMeetingWorkflow.resource_ref.id,
+        //   integration_ids: [this.selectedMeetingWorkflow.resource_ref.integration_id],
+        //   chat_form_id: ['000ae5577320htkdytchkcjxtehsrxjcf'],
+        //   from_workflow: false,
+        //   workflow_title: 'None',
+        //   stage_name: null,
+        // })
+        // console.log(res)
+        // if (res.success) {
+        //   this.$store.dispatch('setMeetingData', {
+        //     id: this.currentMeetingId,
+        //     data: res.data,
+        //     success: true,
+        //     retry: false,
+        //   })
+        // } else {
+        //   this.$store.dispatch('setMeetingData', {
+        //     id: this.currentMeetingId,
+        //     data: res.data,
+        //     success: false,
+        //     retry: true,
+        //   })
+        // }
       } catch (e) {
         console.log(e)
       } finally {
@@ -397,31 +445,31 @@ export default {
         this.updateData[key] = val
       }
     },
-    toggleChatModal(data, name, resourceId, intId, type, currentMeetingId, analysis) {
-      this.chatModalOpen = !this.chatModalOpen
-      if (data) {
-        this.updateData = data
-      }
-      if (name) {
-        this.currentMeetingName = name
-        this.$emit('set-opp', name)
-      }
-      if (resourceId) {
-        this.currentResourceId = resourceId
-      }
-      if (intId) {
-        this.currentIntegrationId = intId
-      }
-      if (type) {
-        this.currentResourceType = type
-      }
-      if (currentMeetingId) {
-        this.currentMeetingId = currentMeetingId
-      }
-      if (analysis) {
-        this.currentAnalysis = analysis
-      }
-    },
+    // toggleChatModal(data, name, resourceId, intId, type, currentMeetingId, analysis) {
+    //   this.chatModalOpen = !this.chatModalOpen
+    //   if (data) {
+    //     this.updateData = data
+    //   }
+    //   if (name) {
+    //     this.currentMeetingName = name
+    //     this.$emit('set-opp', name)
+    //   }
+    //   if (resourceId) {
+    //     this.currentResourceId = resourceId
+    //   }
+    //   if (intId) {
+    //     this.currentIntegrationId = intId
+    //   }
+    //   if (type) {
+    //     this.currentResourceType = type
+    //   }
+    //   if (currentMeetingId) {
+    //     this.currentMeetingId = currentMeetingId
+    //   }
+    //   if (analysis) {
+    //     this.currentAnalysis = analysis
+    //   }
+    // },
     setValue(e) {
       this.prompt = e.target.textContent
     },
@@ -452,38 +500,38 @@ export default {
     },
     async submitChatMeeting() {
       this.submitting = true
-      this.meetingModalOpen = false
       try {
-        let res = await User.api.submitChatMeeting({
-          user_id: this.user.id,
-          prompt: this.prompt,
-          workflow_id: this.currentMeeting.id,
-          resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
-        })
-        if (res.failed) {
-          this.$store.dispatch('setMeetingData', {
-            id: this.currentMeeting.id,
-            data: res.data,
-            success: false,
-            retry: true,
-            analysis: this.currentAnalysis || null,
+        let res = await User.api
+          .submitChatMeeting({
+            user_id: this.user.id,
+            meeting_id: this.meeting.id,
+            resource_id: this.mappedOpp.id,
+            resource_type: this.selectedResourceType,
           })
-        } else {
-          this.$store.dispatch('setMeetingData', {
-            id: this.currentMeeting.id,
-            data: res.data,
-            success: false,
-            retry: false,
-            analysis: this.currentAnalysis || null,
+          .then((response) => {
+            this.$emit('reload-workflows')
           })
-        }
+        // if (res.failed) {
+        //   this.$store.dispatch('setMeetingData', {
+        //     id: this.currentMeeting.id,
+        //     data: res.data,
+        //     success: false,
+        //     retry: true,
+        //     analysis: this.currentAnalysis || null,
+        //   })
+        // } else {
+        //   this.$store.dispatch('setMeetingData', {
+        //     id: this.currentMeeting.id,
+        //     data: res.data,
+        //     success: false,
+        //     retry: false,
+        //     analysis: this.currentAnalysis || null,
+        //   })
+        // }
       } catch (e) {
         console.log(e)
       } finally {
         this.submitting = false
-        setTimeout(() => {
-          this.$store.dispatch('loadMeetings')
-        })
       }
     },
     async loadMoreOpps() {
@@ -569,10 +617,34 @@ export default {
       this.noteValue = this.selectedTemplate.body
     },
   },
-  created() {
-    this.getMeetingList()
+  mounted() {
+    if (this.hasMeetingWorkflow) {
+      if (this.meetingData[this.meeting.id]) {
+        this.selectedMeetingWorkflow = this.workflows.filter(
+          (workflow) => workflow.meeting_ref.meeting_id === this.meeting.id.toString(),
+        )[0]
+        this.updateData = this.meetingData[this.meeting.id].data
+      } else {
+        this.selectedMeetingWorkflow = this.workflows.filter(
+          (workflow) => workflow.meeting_ref.meeting_id === this.meeting.id.toString(),
+        )[0]
+
+        const keys = Object.keys(this.selectedMeetingWorkflow.resource_ref['secondary_data'])
+        const filteredKeys = keys.filter((key) => this.formFieldNames.includes(key))
+        let filteredObject = {}
+        filteredKeys.forEach((key) => {
+          filteredObject[key] = this.selectedMeetingWorkflow.resource_ref['secondary_data'][key]
+        })
+        this.updateData = filteredObject
+      }
+    }
   },
   computed: {
+    hasMeetingWorkflow() {
+      let newWfList = this.workflows.map((wf) => wf.meeting_ref.meeting_id)
+      let stringId = this.meeting.id.toString()
+      return newWfList.includes(stringId)
+    },
     user() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
@@ -587,6 +659,12 @@ export default {
     },
     defaultResource() {
       return this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity'
+    },
+    formFieldNames() {
+      return this.formFields.map((field) => field.apiName)
+    },
+    meetingData() {
+      return this.$store.meetingData
     },
     date() {
       let today = new Date()
@@ -675,10 +753,30 @@ export default {
   max-height: 250px !important;
   position: fixed;
   z-index: 1000;
-  width: 374px;
+  width: 275px;
 }
 ::v-deep .multiselect__placeholder {
   color: $base-gray;
+}
+
+.logged {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  background-color: $white-green;
+  width: fit-content;
+  font-size: 12px;
+  color: $dark-green;
+  padding: 4px;
+  border-radius: 5px;
+  margin-top: 1rem;
+
+  img {
+    margin-right: 0.25rem;
+    margin-bottom: -2px;
+    filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
+      contrast(82%);
+  }
 }
 
 .small-font {
@@ -924,6 +1022,7 @@ button {
   cursor: not-allowed;
   // opacity: 0.3;
 }
+
 .row {
   display: flex;
   align-items: center;
@@ -950,7 +1049,18 @@ button {
   display: flex;
   flex-direction: row;
   align-items: center;
-  margin-top: 1rem;
+
+  img {
+    margin-right: 0.25rem;
+  }
+}
+
+.margin-top {
+  margin-top: 2rem;
+}
+
+.margin-top-s {
+  margin-top: 1.5rem;
 }
 
 .meeting-modal-container {
@@ -989,16 +1099,31 @@ button {
   border: none !important;
 }
 
+.error {
+  color: $coral;
+  font-size: 12px;
+}
+
 .meeting-modal-footer {
+  p {
+    margin-right: auto;
+    margin-left: 0.75rem;
+    font-size: 12px;
+  }
   position: absolute;
-  width: 100%;
+  background-color: white;
+  border: 1px solid $soft-gray;
+  border-radius: 4px;
+  border-right: none;
+  border-top: none;
+  left: 0;
+  padding: 1.5rem 1rem 0 0;
+  width: 99%;
   bottom: 0;
-  right: 1rem;
   margin-top: auto;
   display: flex;
   justify-content: flex-end;
   // border-top: 1px solid $soft-gray;
-  margin-top: 1rem;
 
   button {
     @include chat-button();
@@ -1068,5 +1193,12 @@ button {
     color: white;
     border: none;
   }
+}
+.message-text {
+  font-family: $base-font-family;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  padding: 0 0.75rem 0 0;
+  margin: 0;
 }
 </style>

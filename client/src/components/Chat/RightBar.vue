@@ -289,7 +289,15 @@
     <div class="selected-opp-container" v-if="currentMeeting && !loading">
       <div class="selected-opp-section bordered">
         <div style="width: 99%" class="opp-section">
-          <ChatMeetingLogger :meeting="currentMeeting" />
+          <ChatMeetingLogger
+            :meeting="currentMeeting"
+            :workflows="meetingWorkflows"
+            :formFields="formFields"
+            :stageFields="stageFields"
+            :stagesWithForms="stagesWithForms"
+            @reload-workflows="reloadWorkflows"
+            :key="logkey"
+          />
         </div>
       </div>
     </div>
@@ -464,6 +472,7 @@ import CollectionManager from '@/services/collectionManager'
 import InlineFieldEditor from '@/components/Chat/InlineFieldEditor'
 import ChatMeetingLogger from '@/components/Chat/ChatMeetingLogger'
 import Zoom from '@/services/zoom/account'
+import { MeetingWorkflows } from '@/services/salesforce/models'
 import { decryptData } from '../../encryption'
 
 export default {
@@ -475,6 +484,7 @@ export default {
   },
   data() {
     return {
+      logkey: 0,
       hoverId: null,
       showTooltip: false,
       view: 'crm',
@@ -622,6 +632,11 @@ export default {
       ],
     }
   },
+  props: {
+    formFields: {},
+    stageFields: {},
+    stagesWithForms: {},
+  },
   watch: {
     activeFilters(newValue, oldValue) {
       if (newValue !== oldValue) {
@@ -655,7 +670,7 @@ export default {
   },
   methods: {
     test() {
-      console.log('log', this.currentMeeting)
+      console.log('log', this.meetingWorkflows)
     },
     formatDate(inputDate) {
       const dateObj = new Date(inputDate)
@@ -756,18 +771,29 @@ export default {
         }, 1000)
       }
     },
-    // async getMeetingList() {
-    //   this.loading = true
-    //   try {
-    //     await this.$store.dispatch('loadMeetings')
-    //   } catch (e) {
-    //     console.log(e)
-    //   } finally {
-    //     setTimeout(() => {
-    //       this.loading = false
-    //     }, 2000)
-    //   }
-    // },
+    async reloadWorkflows() {
+      try {
+        const res = await MeetingWorkflows.api.getMeetingList()
+        this.meetingWorkflows = res.results
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.logkey += 1
+      }
+    },
+    async getMeetingWorkflows() {
+      this.loading = true
+      try {
+        const res = await MeetingWorkflows.api.getMeetingList()
+        this.meetingWorkflows = res.results
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.loading = false
+        }, 2000)
+      }
+    },
     // async refreshCalEvents() {
     //   this.loading = true
     //   try {
@@ -934,7 +960,6 @@ export default {
     },
     changeSelectedMeeting(meeting) {
       this.$store.dispatch('setCurrentMeeting', meeting)
-      console.log(this.currentMeeting)
     },
     changeSelectedOpp(opp, name) {
       this.hoverId = null
@@ -963,6 +988,12 @@ export default {
         }
       }
     },
+    removeDuplicatesByKey(arr, key) {
+      const uniqueObjects = arr.filter(
+        (item, index, self) => index === self.findIndex((obj) => obj[key] === item[key]),
+      )
+      return uniqueObjects
+    },
     async setOppForms() {
       let stageGateForms
       let stagesWithForms
@@ -988,7 +1019,8 @@ export default {
         })
         const allStages = mappedStages.reduce((acc, curr) => acc.concat(curr), [])
         this.allStages = allStages
-        console.log(this.allStages)
+        this.allStages = this.removeDuplicatesByKey(this.allStages, 'id')
+        // console.log(this.allStages)
       }
 
       this.oppFields = this.updateOppForm[0].fieldsRef.filter(
@@ -1193,6 +1225,7 @@ export default {
     this.$store.dispatch('loadChatOpps')
     this.$store.dispatch('loadAllPicklists')
     this.setOppForms()
+    this.getMeetingWorkflows()
   },
 }
 </script>

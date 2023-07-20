@@ -197,14 +197,14 @@
         @remove-opp="removeOpp"
       />
     </main>
-    <main v-else-if="currentView === 'meetings'" id="main">
+    <!-- <main v-else-if="currentView === 'meetings'" id="main">
       <ChatMeetings
         @set-opp="setOpp"
         :formFields="formFields"
         :stageFields="stageFields"
         :stagesWithForms="stagesWithForms"
       />
-    </main>
+    </main> -->
     <main id="main" v-else>
       <ChatList @set-opp="setOpp" :formFields="formFields" @refresh-list="refreshLists" />
     </main>
@@ -215,6 +215,9 @@
         @set-fields="setFormFields"
         @set-stages="setStageFields"
         @refresh-list="refreshLists"
+        :formFields="formFields"
+        :stageFields="stageFields"
+        :stagesWithForms="stagesWithForms"
       />
     </aside>
   </div>
