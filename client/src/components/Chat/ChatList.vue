@@ -409,6 +409,17 @@ export default {
       let newDate = input.replace(pattern, '$2/$3/$1')
       return newDate.split('T')[0]
     },
+    formatCash(money) {
+      let cash = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+      })
+      if (money) {
+        return cash.format(money)
+      }
+      return '-'
+    },
     async reloadWorkflow() {
       this.loading = true
       try {

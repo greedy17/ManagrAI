@@ -247,7 +247,11 @@
         </div>
 
         <div v-else style="margin-top: 0.5rem" class="flexed-row-spread__">
-          <input class="inline-input" v-model="meetingDate" type="date" />
+          <div>
+            <p class="gray-text neg-mar-small">Select a date:</p>
+            <input class="inline-input" v-model="meetingDate" type="date" />
+          </div>
+
           <button :disabled="loading" @click="getZoomMeetings" class="icon-button">
             <img
               v-if="!loading"
@@ -441,6 +445,7 @@
     </div>
 
     <div class="opp-scroll-container" v-else-if="this.mainView === 'meetings' && !loading">
+      <p class="gray-text small-text">Select a meeting:</p>
       <div
         @click="changeSelectedMeeting(meeting)"
         class="opp-container"
@@ -1573,7 +1578,7 @@ header {
   align-items: center;
   justify-content: space-between;
   position: relative;
-  padding: 0 4px;
+  padding: 0 4px 0 0;
 
   h4,
   p {
@@ -1756,6 +1761,18 @@ header {
 
 .gray-text {
   color: $light-gray-blue;
+}
+.small-text {
+  font-size: 12px;
+  margin-bottom: 0;
+}
+.zero-margin {
+  padding: 0;
+  margin: 0;
+}
+.neg-mar {
+  margin-top: -0.25rem;
+  font-size: 12px;
 }
 .left-margin {
   margin-left: 0.5rem;
@@ -2153,6 +2170,10 @@ img {
   }
 }
 
+.neg-mar-small {
+  margin-top: -4px;
+}
+
 .tooltip::before {
   position: absolute;
   content: '';
@@ -2179,7 +2200,8 @@ img {
   border: 1px solid rgba(0, 0, 0, 0.15) !important;
   border-radius: 6px;
   color: $base-gray;
-  width: 50%;
+  width: 100%;
+  margin-top: 4px;
   font-family: $base-font-family;
   font-size: 12px;
   line-height: 1.5;
