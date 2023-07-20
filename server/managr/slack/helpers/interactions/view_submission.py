@@ -278,7 +278,7 @@ def process_zoom_meeting_data(payload, context):
             res = slack_requests.send_channel_message(
                 user.slack_integration.channel, block_set=blocks, access_token=slack_access_token,
             )
-            workflow.slack_interaction = f"{res['ts']}|{user.slack_interaction.channel}"
+            workflow.slack_interaction = f"{res['ts']}|{user.slack_integration.channel}"
             workflow.save()
         except Exception as e:
             return logger.exception(
