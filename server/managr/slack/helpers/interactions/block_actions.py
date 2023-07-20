@@ -33,7 +33,6 @@ from managr.slack.background import (
     emit_process_paginated_engagement_details,
     emit_process_paginate_deal_reviews,
     emit_process_alert_send_deal_review,
-    emit_process_send_deal_review,
 )
 from managr.salesforce.models import MeetingWorkflow
 from managr.core.models import User
@@ -4220,6 +4219,18 @@ def process_send_resource_message(payload, context):
         )
     ]
     try:
+        slack_requests.generic_request(
+            slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE,
+            data={
+                "view_id": payload["view"]["id"],
+                "view": {
+                    "type": "modal",
+                    "title": {"type": "plain_text", "text": "Actions"},
+                    "blocks": [block_builders.simple_section("Got it! Check your DM")],
+                },
+            },
+            access_token=user.organization.slack_integration.access_token,
+        )
         res = slack_requests.send_channel_message(
             user.slack_integration.channel,
             user.organization.slack_integration.access_token,
@@ -4274,14 +4285,10 @@ def process_resource_selected_action(payload, context):
         "view_id": payload["view"]["id"],
         "view": {"type": "modal", "title": {"type": "plain_text", "text": "Actions"},},
     }
-    if option == "REVIEW":
+    if option in ["REVIEW", "NEWS_SUMMARY"]:
         pm.pop("ts")
-        blocks = [
-            block_builders.simple_section(
-                "Your deal review is processing and will be dm'd to you soon!"
-            )
-        ]
-        emit_process_send_deal_review(payload, pm)
+        get_action(option, payload, pm)
+        return
     else:
         block_set = RESOURCE_ACTION_SWITCHER[option][0]
         callback_id = RESOURCE_ACTION_SWITCHER[option][1]
@@ -4342,7 +4349,6 @@ def handle_block_actions(payload):
     such as clicking a button.
     """
     switcher = {
-        slack_const.ZOOM_MEETING__VIEW_MEETING_CONTACTS: process_show_meeting_contacts,
         slack_const.ZOOM_MEETING__EDIT_CONTACT: process_edit_meeting_contact,
         slack_const.ZOOM_MEETING__REMOVE_CONTACT: process_remove_contact_from_meeting,
         slack_const.ZOOM_MEETING__CREATE_OR_SEARCH: process_create_or_search_selected,
