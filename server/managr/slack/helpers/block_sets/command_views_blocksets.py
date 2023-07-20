@@ -567,9 +567,11 @@ def command_select_resource_interaction(context):
 @block_set(required_context=["u"])
 def pick_resource_modal_block_set(context, *args, **kwargs):
     """Shows a modal to update a resource"""
-    resource_type = context.get("resource_type", None)
-    resource_id = context.get("resource_id", None)
     user_id = context.get("u")
+    user = User.objects.get(id=user_id)
+    default_resource = "Opportunity" if user.crm == "SALESFORCE" else "Deal"
+    resource_type = context.get("resource_type", default_resource)
+    resource_id = context.get("resource_id", None)
     options = [
         block_builders.option(resource, resource.capitalize())
         for resource in context.get("options").split("%")
@@ -589,7 +591,7 @@ def pick_resource_modal_block_set(context, *args, **kwargs):
     if (not resource_id and resource_type) or (resource_id and resource_type):
         blocks.append(
             block_builders.external_select(
-                f"*Search for an {context.get('resource_type')}*",
+                f"*Search for an {resource_type}*",
                 action_id=f"{context.get('action_id')}?u={user_id}&resource_type={resource_type}",
                 block_id="selected_object",
                 placeholder="Type to search",
