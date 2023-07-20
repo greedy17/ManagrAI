@@ -749,7 +749,7 @@ def process_transcript_to_summaries(transcript, user):
     from managr.utils.client import Variable_Client
 
     summary_parts = []
-    current_minute = 5
+    current_minute = 10
     start_index = 0
     current_hour = 0
     split_transcript = []
@@ -757,22 +757,23 @@ def process_transcript_to_summaries(transcript, user):
         if current_minute == 60:
             current_minute = 0
             current_hour += 1
-        check_time = (
-            f"0{current_hour}:0{str(current_minute)}:"
-            if (current_minute == 5 or current_minute == 0)
-            else f"0{current_hour}:{str(current_minute)}:"
-        )
+        # check_time = (
+        #     f"0{current_hour}:0{str(current_minute)}:"
+        #     if (current_minute == 5 or current_minute == 0)
+        #     else f"0{current_hour}:{str(current_minute)}:"
+        # )
+        check_time = f"0{current_hour}:{str(current_minute)}:"
         end_index = transcript.find(check_time)
         if end_index == -1 and len(split_transcript):
             split_transcript.append(transcript[start_index:])
             break
         elif end_index == -1 and not len(split_transcript):
-            current_minute += 5
+            current_minute += 10
             continue
         else:
             split_transcript.append(transcript[start_index:end_index])
             start_index = end_index
-            current_minute += 5
+            current_minute += 10
     if not len(summary_parts):
         for index, transcript_part in enumerate(split_transcript):
             if not settings.IN_PROD:
@@ -926,6 +927,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
         workflow.operations.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
     if slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations_list:
         workflow.operations_list.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
+    workflow.slack_interaction = f"{ts}|{user.slack_integration.channel}"
     workflow.save()
 
     has_error = False

@@ -912,6 +912,80 @@ def convert_lead_block_set(context):
     return blocks
 
 
+def meeting_blockset(context):
+    u = User.objects.get(id=context.get("u"))
+    user_timezone = u.timezone
+    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
+    meeting = workflow.meeting
+    title = meeting.topic
+    start_time = meeting.start_time
+    end_time = meeting.end_time
+    formatted_start = (
+        datetime.strftime(start_time.astimezone(pytz.timezone(user_timezone)), "%I:%M %p")
+        if start_time
+        else start_time
+    )
+    formatted_end = (
+        datetime.strftime(end_time.astimezone(pytz.timezone(user_timezone)), "%I:%M %p")
+        if end_time
+        else end_time
+    )
+    section_text = f"*{title}*\n{formatted_start} - {formatted_end}"
+    if len(workflow.failed_task_description):
+        message = ""
+        f_index = 0 if u.crm == "SALESFORCE" else 1
+        for i, m in enumerate(workflow.failed_task_description):
+            m_split = m.split(".")
+            if i == len(workflow.failed_task_description) - 1:
+                message += f"{m_split[f_index]}"
+            else:
+                message += f"{m_split[f_index]},"
+        block = block_builders.section_with_button_block(
+            "Return to Form",
+            "RETURN_TO_FORM",
+            section_text=f":no_entry_sign: Uh-oh we hit an error:\n{message}\n{title}",
+            block_id=str(workflow.id),
+            action_id=action_with_params(
+                slack_const.ZOOM_MEETING__INIT_REVIEW,
+                params=[f"u={str(workflow.user.id)}", f"w={str(workflow.id)}", "type=meeting",],
+            ),
+        )
+    elif (
+        slack_const.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations
+        and len(workflow.operations)
+        and workflow.progress < 100
+    ):
+        crm = "Salesforce" if u.crm == "SALESFORCE" else "HubSpot"
+        block = block_builders.simple_section(
+            f":rocket: Sending data to {crm}...\n{title}", "mrkdwn"
+        )
+    elif workflow.progress == 100:
+        section_text = f":white_check_mark: *Meeting Logged*\n{title}"
+        form_ids = [str(id) for id in list(workflow.forms.all().values_list("id", flat=True))]
+        block = block_builders.section_with_button_block(
+            "Generate Content",
+            "GENERATIVE ACTION",
+            section_text=section_text,
+            block_id=str(workflow.id),
+            action_id=action_with_params(
+                slack_const.OPEN_GENERATIVE_ACTION_MODAL,
+                params=[
+                    f"u={str(workflow.user.id)}",
+                    f"form_ids={'.'.join(form_ids)}",
+                    "type=meeting",
+                    f"workflow_id={str(workflow.id)}",
+                ],
+            ),
+        )
+
+    else:
+        block = block_builders.simple_section(
+            f":white_check_mark: Got it! Meeting successfully logged! - _{workflow.meeting.topic}_",
+            "mrkdwn",
+        )
+    return [block]
+
+
 @block_set(required_context=["u"])
 def paginated_meeting_blockset(context):
     u = User.objects.get(id=context.get("u"))
