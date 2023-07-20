@@ -14,12 +14,22 @@ export default new Router({
     {
       path: '/',
       beforeEnter: Auth.homepageRedirect,
-      component: () => import('@/views/settings/Settings')
+      component: () => import('@/views/ChatHome')
     },
     {
       path: '/ChatHomek4HXI23PAruGCD2',
       name: 'Home',
       component: () => import('@/views/ChatHome')
+    },
+    {
+      path: '/summaries',
+      name: 'PRSummaries',
+      component: () => import('@/views/PRSummaries')
+    },
+    {
+      path: '/clip-report',
+      name: 'PRClipReport',
+      component: () => import('@/views/PRClipReport')
     },
     {
       path: '/login',

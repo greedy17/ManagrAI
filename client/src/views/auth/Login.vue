@@ -114,6 +114,9 @@ export default {
           return null
       }
     },
+    isPR() {
+      return this.$store.state.user.role === 'PR'
+    },
     hasSalesforceIntegration() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.salesforceAccount
@@ -255,7 +258,9 @@ export default {
           // if (this.$route.query.redirect) {
           //   this.$router.push(this.$route.query.redirect)
           // }
-          if (!this.hasSalesforceIntegration && !this.hasSlackIntegration) {
+          if (this.isPR) {
+            this.$router.push({ name: 'PRSummaries' })
+          } else if (!this.hasSalesforceIntegration && !this.hasSlackIntegration) {
             this.$router.push({ name: 'Integrations' })
           } else {
             this.$router.push({ name: 'ListTemplates' })
@@ -354,14 +359,15 @@ export default {
             let token = response.data.token
             let userData = response.data
             delete userData.token
-            const userAPI = User.fromAPI(userData)
+            // const userAPI = User.fromAPI(userData)
             // const encryptedUser = encryptData(userAPI, process.env.VUE_APP_SECRET_KEY)
             // const encryptedKey = encryptData(token, process.env.VUE_APP_SECRET_KEY)
             // this.$store.dispatch('updateUserToken', encryptedKey)
             this.$store.dispatch('updateUserToken', token)
-            // this.$store.dispatch('updateUser', encryptedUser)
-            this.$store.commit('UPDATE_USER', userAPI)
-            if (!this.hasSalesforceIntegration && !this.hasSlackIntegration) {
+            this.$store.dispatch('updateUser', User.fromAPI(userData))
+            if (this.isPR) {
+              this.$router.push({ name: 'PRSummaries' })
+            } else if (!this.hasSalesforceIntegration && !this.hasSlackIntegration) {
               this.$router.push({ name: 'Integrations' })
             } else {
               this.$router.push({ name: 'ListTemplates' })

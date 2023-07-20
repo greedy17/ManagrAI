@@ -26,10 +26,26 @@ def _process_news_summary(payload, context):
     state = payload["view"]["state"]["values"]
     user = User.objects.get(id=context.get("u"))
     company = state["COMPANY_INPUT"]["plain_input"]["value"]
-    query = urlencode({"q": company})
+    while True:
+        try:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = core_consts.OPEN_AI_NEWS_BOOLEAN_CONVERSION(company)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email, prompt, token_amount=500, top_p=0.1,
+            )
+            with Variable_Client() as client:
+                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+                r = open_ai_exceptions._handle_response(r)
+                query_input = r.get("choices")[0].get("message").get("content")
+                break
+        except Exception as e:
+            logger.exception(e)
+            break
+    query = urlencode({"q": query_input})
     news_res = get_news_for_company(query)
     articles = news_res["articles"]
     send_clips(user, news_res, company)
+
     descriptions = [article["description"] for article in articles]
     attempts = 1
     token_amount = 500
@@ -78,7 +94,7 @@ def _process_news_summary(payload, context):
             break
     try:
         blocks = [
-            block_builders.header_block(f"Summary for {company}"),
+            block_builders.simple_section(f"*Summary for {company}*", "mrkdwn"),
             block_builders.divider_block(),
             block_builders.simple_section(message, "mrkdwn"),
         ]

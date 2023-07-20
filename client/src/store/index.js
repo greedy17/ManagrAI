@@ -48,6 +48,7 @@ const state = {
     checker: null,
   },
   recordTypes: [],
+  selectedArticle: null,
   chatTitle: 'All Open Opportunities'
 }
 
@@ -63,6 +64,9 @@ const mutations = {
   },
   UPDATE_FILTERS: (state, payload) => {
     state.filters = payload
+  },
+  UPDATE_SELECTED_ARTICLE: (state, payload) => {
+    state.selectedArticle = payload
   },
   UPDATE_USERTOKEN: (state, payload) => {
     state.token = payload
@@ -441,6 +445,9 @@ const actions = {
   },
   updateGoogleSignIn({ commit }, payload) {
     commit('UPDATE_GOOGLE_SIGN_IN', payload)
+  },
+  updateSelectedArticle({ commit }, payload) {
+    commit('UPDATE_SELECTED_ARTICLE', payload)
   },
   updateUserToken({ commit }, payload) {
     commit('UPDATE_USERTOKEN', payload)
