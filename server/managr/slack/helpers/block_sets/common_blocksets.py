@@ -562,10 +562,10 @@ def use_transcript_message(context):
                 slack_const.CHOOSE_MEETING_OPTIONS, [f"u={context.get('u')}"]
             ),
             block_id="MEETING_DATE",
-            label="Meeting Date",
+            label="Meeting date",
         ),
         block_builders.external_select(
-            "Select Meeting (only meetings you own will appear here)",
+            "Select your meeting",
             action_id=action_with_params(
                 slack_const.PROCESS_GET_MEETING_OPTIONS,
                 [f"u={context.get('u')}", f"meeting_date={meeting_date}"],
