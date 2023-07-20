@@ -195,7 +195,7 @@ class SlackViewSet(viewsets.GenericViewSet,):
 
             integration = serializer.instance
 
-            text = f"<!here> your organization has connected Managr to your Slack workspace.\nYou can now configure your account by going to the integrations portal here {site_utils.get_site_url()}/settings/integrations"
+            text = f"<!here> your organization has connected Managr to your Slack workspace.\nYou can now configure your account by going to the integrations portal here {site_utils.get_site_url()}/chat"
 
             channel = integration.incoming_webhook.get("channel_id", None)
             slack_requests.generic_request(
@@ -652,84 +652,6 @@ class SlackFormsViewSet(
         return Response(status=status.HTTP_200_OK)
 
 
-# @api_view(["post"])
-# @authentication_classes((slack_auth.SlackWebhookAuthentication,))
-# @permission_classes([permissions.AllowAny])
-# @slack_api_exceptions(
-#     return_opt=Response(data={"response_type": "ephemeral", "text": "Oh-Ohh an error occured",}),
-# )
-# def update_resource(request):
-#     # list of accepted commands for this fake endpoint
-#     slack_id = request.data.get("user_id", None)
-#     if slack_id:
-#         slack = (
-#             UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
-#         )
-#         if not slack:
-#             return Response(
-#                 data={
-#                     "response_type": "ephemeral",
-#                     "text": "Sorry I cant find your managr account",
-#                 }
-#             )
-#     user = slack.user
-#     allowed_commands = (
-#         ["opportunity", "account", "lead", "contact"]
-#         if user.crm == "SALESFORCE"
-#         else ["deal", "company", "contact"]
-#     )
-
-#     text = request.data.get("text", "")
-#     if len(text):
-#         command_params = text.split(" ")
-#     else:
-#         command_params = ["opportunity"] if user.crm == "SALESFORCE" else ["deal"]
-#     resource_type = None
-
-#     if len(command_params):
-#         if command_params[0] not in allowed_commands:
-#             return Response(
-#                 data={
-#                     "response_type": "ephemeral",
-#                     "text": "Sorry I don't know that : {},only allowed{}".format(
-#                         command_params[0], allowed_commands
-#                     ),
-#                 }
-#             )
-#         resource_type = command_params[0][0].upper() + command_params[0][1:]
-
-#         blocks = get_block_set(
-#             "update_modal_block_set",
-#             {"resource_type": resource_type, "u": str(user.id), "type": "command"},
-#         )
-#         access_token = user.organization.slack_integration.access_token
-
-#         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-#         trigger_id = request.data.get("trigger_id")
-
-#         private_metadata = {
-#             "original_message_channel": request.data.get("channel_id"),
-#             "type": "command",
-#         }
-
-#         data = {
-#             "trigger_id": trigger_id,
-#             "view": {
-#                 "type": "modal",
-#                 "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
-#                 "title": {"type": "plain_text", "text": f"Update {resource_type}"},
-#                 "blocks": blocks,
-#                 # "submit": {"type": "plain_text", "text": "Update", "emoji": True},
-#                 "private_metadata": json.dumps(private_metadata),
-#                 "external_id": f"update_modal_block_set.{str(uuid.uuid4())}",
-#             },
-#         }
-#         # logger.info(f"BLOCKS FROM UPDATE --{data}")
-#         slack_requests.generic_request(url, data, access_token=access_token)
-
-#         return Response()
-
-
 @api_view(["post"])
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
@@ -737,7 +659,8 @@ class SlackFormsViewSet(
     return_opt=Response(data={"response_type": "ephemeral", "text": "Oh-Ohh an error occured",}),
 )
 def update_resource(request):
-    slack_id = request.data.get("user_id")
+    # list of accepted commands for this fake endpoint
+    slack_id = request.data.get("user_id", None)
     if slack_id:
         slack = (
             UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
@@ -749,24 +672,101 @@ def update_resource(request):
                     "text": "Sorry I cant find your managr account",
                 }
             )
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     user = slack.user
-    access_token = user.organization.slack_integration.access_token
-    trigger_id = request.data.get("trigger_id")
-    context = {"u": str(user.id), "trigger_id": trigger_id}
-    data = {
-        "trigger_id": trigger_id,
-        "view": {
-            "type": "modal",
-            "callback_id": slack_const.COMMAND_FORMS__SUBMIT_CHAT,
-            "title": {"type": "plain_text", "text": "Update CRM"},
-            "blocks": get_block_set("update_command_block_set", context=context),
-            "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
-            "private_metadata": json.dumps(context),
-        },
-    }
-    slack_requests.generic_request(url, data, access_token=access_token)
-    return Response()
+    allowed_commands = (
+        ["opportunity", "account", "lead", "contact"]
+        if user.crm == "SALESFORCE"
+        else ["deal", "company", "contact"]
+    )
+
+    text = request.data.get("text", "")
+    if len(text):
+        command_params = text.split(" ")
+    else:
+        command_params = ["opportunity"] if user.crm == "SALESFORCE" else ["deal"]
+    resource_type = None
+
+    if len(command_params):
+        if command_params[0] not in allowed_commands:
+            return Response(
+                data={
+                    "response_type": "ephemeral",
+                    "text": "Sorry I don't know that : {},only allowed{}".format(
+                        command_params[0], allowed_commands
+                    ),
+                }
+            )
+        resource_type = command_params[0][0].upper() + command_params[0][1:]
+
+        blocks = get_block_set(
+            "update_modal_block_set",
+            {"resource_type": resource_type, "u": str(user.id), "type": "command"},
+        )
+        access_token = user.organization.slack_integration.access_token
+
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+        trigger_id = request.data.get("trigger_id")
+
+        private_metadata = {
+            "original_message_channel": request.data.get("channel_id"),
+            "type": "command",
+        }
+
+        data = {
+            "trigger_id": trigger_id,
+            "view": {
+                "type": "modal",
+                "callback_id": slack_const.COMMAND_FORMS__SUBMIT_FORM,
+                "title": {"type": "plain_text", "text": f"Update {resource_type}"},
+                "blocks": blocks,
+                # "submit": {"type": "plain_text", "text": "Update", "emoji": True},
+                "private_metadata": json.dumps(private_metadata),
+                "external_id": f"update_modal_block_set.{str(uuid.uuid4())}",
+            },
+        }
+        # logger.info(f"BLOCKS FROM UPDATE --{data}")
+        slack_requests.generic_request(url, data, access_token=access_token)
+
+        return Response()
+
+
+# @api_view(["post"])
+# @authentication_classes((slack_auth.SlackWebhookAuthentication,))
+# @permission_classes([permissions.AllowAny])
+# @slack_api_exceptions(
+#     return_opt=Response(data={"response_type": "ephemeral", "text": "Oh-Ohh an error occured",}),
+# )
+# def update_resource(request):
+#     slack_id = request.data.get("user_id")
+#     if slack_id:
+#         slack = (
+#             UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
+#         )
+#         if not slack:
+#             return Response(
+#                 data={
+#                     "response_type": "ephemeral",
+#                     "text": "Sorry I cant find your managr account",
+#                 }
+#             )
+#     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+#     user = slack.user
+#     access_token = user.organization.slack_integration.access_token
+#     trigger_id = request.data.get("trigger_id")
+#     context = {"u": str(user.id), "trigger_id": trigger_id}
+#     data = {
+#         "trigger_id": trigger_id,
+#         "view": {
+#             "type": "modal",
+#             "callback_id": slack_const.COMMAND_FORMS__SUBMIT_CHAT,
+#             "title": {"type": "plain_text", "text": "Update CRM"},
+#             "blocks": get_block_set("update_command_block_set", context=context),
+#             "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
+#             "private_metadata": json.dumps(context),
+#         },
+#     }
+#     slack_requests.generic_request(url, data, access_token=access_token)
+#     return Response()
 
 
 @api_view(["post"])
@@ -1148,10 +1148,10 @@ def redirect_from_slack(request):
         if not code:
             err = {"error": "there was an error"}
             err = urlencode(err)
-            return redirect("http://localhost:8080/settings/integrations")
-        return redirect(f"http://localhost:8080/settings/integrations?{q}")
+            return redirect("http://localhost:8080/chat")
+        return redirect(f"http://localhost:8080/chat?{q}")
     else:
-        return redirect("http://localhost:8080/settings/integrations")
+        return redirect("http://localhost:8080/chat")
 
 
 @api_view(["post"])

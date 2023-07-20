@@ -1,6 +1,19 @@
 <template>
   <div :class="{ background: showBackground }" id="chat">
     <Modal
+      v-if="configureModalOpen"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), handleCancel()
+        }
+      "
+    >
+      <div class="configure-modal-container">
+        <ConfigureModal ref="configModal" />
+      </div>
+    </Modal>
+    <Modal
       v-if="chatModalOpen"
       dimmed
       @close-modal="
@@ -12,7 +25,7 @@
       <div class="chat-modal-container">
         <div class="chat-modal-header">
           <div>
-            <h3 @click="test" class="elipsis-text" style="margin-bottom: 0.25rem">
+            <h3 class="elipsis-text" style="margin-bottom: 0.25rem">
               {{ chatData.resource }}
             </h3>
             <span class="gray-text smaller"
@@ -37,11 +50,11 @@
           :key="i"
         >
           <ChatFormField
-            :placeholder="toString(chatData.data[field.apiName])"
+            :placeholder="toString(formData[field.apiName])"
             :field="field"
-            :resourceId="chatData.resourceId"
-            :integrationId="chatData.integrationId"
-            :chatData="chatData.data"
+            :resourceId="chatData.resource_id"
+            :integrationId="chatData.integration_id"
+            :chatData="formData"
             @set-value="setUpdateValues"
             :stageFields="stageFields"
             :stagesWithForms="stagesWithForms"
@@ -147,16 +160,7 @@
             Create New Team
           </button> -->
 
-          <!-- <button class="chat-button">
-            <font-awesome-icon
-              v-if="team.list.length >= numberOfAllowedUsers"
-              icon="fa-solid fa-user-plus"
-            />
-
-            <font-awesome-icon v-else class="white-icon" icon="fa-solid fa-user-plus" />
-
-            Add user
-          </button> -->
+          <button class="chat-button">Add</button>
         </div>
       </div>
     </Modal>
@@ -171,22 +175,34 @@
         @hide-background="toggleBackgroundOff"
         @toggle-Left-bar="toggleLeftBar"
         :handleProfileOpen="handleProfileOpen"
+        :handleConfigureOpen="handleConfigureOpen"
       />
     </aside>
 
     <main v-if="currentView === 'home'" id="main">
-      <ChatBox @set-opp="setOpp" @toggle-chat-modal="toggleChatModal" @remove-opp="removeOpp" />
+      <ChatBox
+        ref="chatBox"
+        @set-opp="setOpp"
+        @set-view="setView"
+        @toggle-chat-modal="toggleChatModal"
+        @remove-opp="removeOpp"
+      />
     </main>
-    <main v-else-if="currentView === 'meetings'" id="main">
+    <!-- <main v-else-if="currentView === 'meetings'" id="main">
       <ChatMeetings
         @set-opp="setOpp"
         :formFields="formFields"
         :stageFields="stageFields"
         :stagesWithForms="stagesWithForms"
       />
-    </main>
+    </main> -->
     <main id="main" v-else>
-      <ChatList @set-opp="setOpp" :formFields="formFields" @refresh-list="refreshLists" />
+      <ChatList
+        @set-opp="setOpp"
+        @handleConfigureOpen="handleConfigureOpen"
+        :formFields="formFields"
+        @refresh-list="refreshLists"
+      />
     </main>
 
     <aside id="right-sidebar">
@@ -195,6 +211,9 @@
         @set-fields="setFormFields"
         @set-stages="setStageFields"
         @refresh-list="refreshLists"
+        :formFields="formFields"
+        :stageFields="stageFields"
+        :stagesWithForms="stagesWithForms"
       />
     </aside>
   </div>
@@ -204,6 +223,7 @@
 import ChatBox from '../components/Chat/ChatBox.vue'
 import RightBar from '../components/Chat/RightBar.vue'
 import LeftSideBar from '../components/Chat/LeftSideBar.vue'
+import ConfigureModal from '../components/Chat/Configure/ConfigureModal.vue'
 import Modal from '@/components/InviteModal'
 import ChatFormField from '../components/Chat/ChatFormField.vue'
 import CollectionManager from '@/services/collectionManager'
@@ -219,6 +239,7 @@ export default {
     ChatBox,
     RightBar,
     LeftSideBar,
+    ConfigureModal,
     Modal,
     ChatFormField,
     ChatList,
@@ -228,6 +249,7 @@ export default {
     return {
       showBackground: false,
       profileModalOpen: false,
+      configureModalOpen: false,
       submitting: false,
       profileOrTeam: 'profile',
       team: CollectionManager.create({ ModelClass: User }),
@@ -238,6 +260,7 @@ export default {
       barOpen: true,
       leftBarClosed: false,
       stagesWithForms: null,
+      formData: null,
     }
   },
   created() {
@@ -263,6 +286,9 @@ export default {
     setOpp(name) {
       this.$refs.rightSideBar.changeSelectedOpp(null, name)
     },
+    setView(name) {
+      this.$refs.rightSideBar.switchMainView(name)
+    },
     toggleLeftbarOn() {
       this.barOpen = true
     },
@@ -271,11 +297,11 @@ export default {
     },
     setUpdateValues(key, val, multi) {
       if (multi) {
-        this.chatData.data[key] = this.chatData.data[key]
-          ? this.chatData.data[key] + ';' + val
+        this.formData[key] = this.formData[key]
+          ? this.formData[key] + ';' + val
           : val.split(/&#39;/g)[0]
       } else {
-        this.chatData.data[key] = val
+        this.formData[key] = val
       }
     },
     removeEmptyValues(obj) {
@@ -293,21 +319,47 @@ export default {
     async onSubmitChat() {
       this.submitting = true
       try {
-        const res = await CRMObjects.api.updateResource({
-          form_data: this.chatData.data,
-          resource_type: this.chatData.resourceType,
-          form_type: this.chatData.formType,
-          resource_id: this.chatData.resourceId,
-          integration_ids: [this.chatData.integrationId],
-          chat_form_id: [this.chatData.formId],
-          from_workflow: false,
-          workflow_title: 'None',
-          stage_name: null,
-        })
-        this.$store.dispatch('messageUpdated', { id: this.chatData.id, data: this.chatData.data })
-        this.$refs.rightSideBar.reloadOpps()
+        const res = await CRMObjects.api
+          .updateResource({
+            form_data: this.formData,
+            resource_type: this.chatData.resource_type,
+            form_type: this.chatData.form_type,
+            resource_id: this.chatData.resource_id,
+            integration_ids: [this.chatData.integration_id],
+            chat_form_id: [this.chatData.form_id],
+            from_workflow: false,
+            workflow_title: 'None',
+            stage_name: null,
+          })
+          .then((response) => {
+            User.api
+              .editMessage({
+                message_id: this.chatData.id,
+                value: `Successfully updated ${this.chatData.resource}!`,
+                user_type: 'bot',
+                conversation_id: this.chatData.conversation,
+                failed: false,
+                updated: true,
+                data: this.formData,
+              })
+              .then((response) => {
+                this.$refs.chatBox.getConversations()
+                this.$refs.rightSideBar.reloadOpps()
+              })
+          })
       } catch (e) {
-        this.$store.dispatch('messageUpdateFailed', { id: this.chatData.id, data: e.data.error })
+        console.log(e)
+        User.api
+          .addMessage({
+            value: e.data.error,
+            user_type: 'bot',
+            conversation_id: this.conversation.id,
+            failed: true,
+            data: {},
+          })
+          .then((response) => {
+            this.$refs.chatBox.getConversations()
+          })
       } finally {
         setTimeout(() => {
           this.toggleChatModal()
@@ -332,8 +384,16 @@ export default {
     handleProfileOpen() {
       this.profileModalOpen = true
     },
+    handleConfigureOpen(name) {
+      this.configureModalOpen = true
+
+      setTimeout(() => {
+        this.$refs.configModal.changeConfigPage(name)
+      }, 300)
+    },
     handleCancel() {
       this.profileModalOpen = false
+      this.configureModalOpen = false
     },
     logOut() {
       this.$store.dispatch('logoutUser')
@@ -343,6 +403,11 @@ export default {
     toggleChatModal(data) {
       this.chatModalOpen = !this.chatModalOpen
       if (data) {
+        let jsonString = data.data
+        jsonString = jsonString.replace(/'/g, '"')
+        jsonString = jsonString.replace(/\bNone\b/g, 'null')
+        jsonString = JSON.parse(jsonString)
+        this.formData = jsonString
         this.chatData = data
       }
     },
@@ -432,7 +497,7 @@ body {
 }
 
 #left-sidebar {
-  width: 260px;
+  width: 60px;
   transition: transform 0.3s ease;
 }
 
@@ -517,6 +582,19 @@ body {
   flex-direction: column;
   width: 475px;
   height: 600px;
+  padding: 0 0.5rem 0 1rem;
+  background-color: white;
+  border-radius: 6px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.configure-modal-container {
+  display: flex;
+  flex-direction: column;
+  width: 80vw;
+  height: 90vh;
   padding: 0 0.5rem 0 1rem;
   background-color: white;
   border-radius: 6px;

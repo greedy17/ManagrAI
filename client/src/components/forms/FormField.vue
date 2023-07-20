@@ -8,13 +8,7 @@
     <!-- v-bind="$attrs" loads attributes from parent -->
     <!-- v-on="$listeners" loads listeners from parent -->
     <slot name="input">
-      <InputField
-        style="width: 23vw !important"
-        :id="$attrs.id"
-        v-bind="$attrs"
-        v-on="$listeners"
-        :type="inputType"
-      />
+      <InputField :id="$attrs.id" v-bind="$attrs" v-on="$listeners" :type="inputType" />
     </slot>
     <div v-show="errors.length" class="tn-input__errors">
       <span :key="`${error.code}-${i}`" v-for="(error, i) in errors">{{ error.message }}</span>

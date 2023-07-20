@@ -43,8 +43,8 @@ def send_clips(user, news_res, company):
     for index, message in enumerate(news_list):
         try:
             article_blocks = [
-                block_builders.header_block(
-                    f"Articles used for summary {company} {index + 1}/{len(news_list)}"
+                block_builders.simple_section(
+                    f"Articles used for summary {company} {index + 1}/{len(news_list)}", "mrkdwn"
                 ),
                 block_builders.divider_block(),
                 block_builders.simple_section(message, "mrkdwn"),

@@ -256,14 +256,26 @@
               <div v-if="selectedObject && selectedObject.value !== 'CustomObject'" class="half-view-flex" style="align-items: center; margin-top: 1rem;">
                 <div class="row__" style="gap: 6px; margin-left: 0;">
                   <div class="header-text">View:</div>
-                  <Multiselect
+                  <div class="gray-background">
+                    <div class="toggle-update-create-container" :class="selectedType.value === 'UPDATE' ? 'active' : ''" @click="changeSelectedType({ value: 'UPDATE', label: 'Update' })">
+                      <p>Update</p>
+                    </div>
+                    <div class="toggle-update-create-container" :class="selectedType.value === 'CREATE' ? 'active' : ''" @click="changeSelectedType({ value: 'CREATE', label: 'Create' })">
+                      <p>Create</p>
+                    </div>
+                    <div class="toggle-update-create-container" :class="(selectedType.value !== 'UPDATE' && selectedType.value !== 'CREATE') ? 'active' : ''" v-if="selectedObject.value === 'Opportunity' || selectedObject.value === 'Deal'" @click="changeSelectedType({ value: 'STAGE', label: 'Stage' })">
+                      <p>Stages</p>
+                    </div>
+                  </div>
+                  <!-- <Multiselect
+                    v-if="formattedTypes.length"
                     @input="changeObject(selectedObject, $event, false)"
                     :options="formattedTypes"
                     openDirection="below"
                     style="width: 11.5vw"
                     :showLabels="false"
                     track-by="label"
-                    label="label"
+                    :customLabel="customLabelView"
                     v-model="selectedType"
                     class="multiselect-font custom-picklist-font"
                   >
@@ -274,7 +286,7 @@
                     <template slot="placeholder">
                       <p class="slot-icon custom-picklist-font">
                         <img src="@/assets/images/search.svg" alt="" />
-                        {{ selectedType && selectedType.label ? selectedType.label : 'Select Type' }}
+                        {{ selectedType && selectedType.label && selectedType.value !== 'UPDATE' && selectedType.value !== 'CREATE' ? selectedType.label : 'Select Type' }}
                       </p>
                     </template>
   
@@ -294,8 +306,8 @@
                         </span>
                       </div>
                     </template>
-                  </Multiselect>
-                  <div class="wrapper">
+                  </Multiselect> -->
+                  <!-- <div class="wrapper">
                     <label
                       v-if="newResource === 'Deal' || newResource === 'Opportunity'"
                       class="icon workflow"
@@ -308,7 +320,7 @@
                       >
                       <span>?</span>
                     </label>
-                  </div>
+                  </div> -->
                 </div>
                 <div style="display: flex; align-items: center;">
                   <button
@@ -414,13 +426,75 @@
               </div>
             </div>
           </div>
-          <div class="search-bar">
-            <input
-              @input="searchFields"
-              type="search"
-              :placeholder="`Search`"
-              v-model="filterText"
-            />
+          <div class="search-bar-container">
+            <Multiselect
+              v-if="formattedTypes.length && (selectedType.value !== 'CREATE' && selectedType.value !== 'UPDATE')"
+              @input="changeObject(selectedObject, $event, false)"
+              :options="formattedTypes"
+              openDirection="below"
+              style="width: 11.5vw"
+              :showLabels="false"
+              track-by="label"
+              :customLabel="customLabelView"
+              v-model="selectedType"
+              class="multiselect-align custom-picklist-font"
+            >
+              <template slot="noResult">
+                <p class="multi-slot custom-picklist-font">No results.</p>
+              </template>
+  
+              <template slot="placeholder">
+                <p class="slot-icon custom-picklist-font">
+                  <img src="@/assets/images/search.svg" alt="" />
+                  {{ selectedType && selectedType.label && selectedType.value !== 'UPDATE' && selectedType.value !== 'CREATE' && selectedType.value !== 'STAGE' ? selectedType.label : 'Select Type' }}
+                </p>
+              </template>
+  
+              <template slot="option" slot-scope="props">
+                <div>
+                  <span class="option__title">{{ removeAmp(props.option.label) }}</span
+                  ><span
+                    v-if="currentStagesWithForms.includes(props.option.label)"
+                    class="option__small"
+                  >
+                    <img
+                      class="green-check"
+                      style=""
+                      src="@/assets/images/configCheck.svg"
+                      alt=""
+                    />
+                  </span>
+                </div>
+              </template>
+            </Multiselect>
+            <div v-else class="choose-fields-container">
+              <h5>Choose CRM fields:</h5>
+              <div class="wrapper">
+                <label
+                  class="icon workflow"
+                  style="margin-top: 0"
+                >
+                  <!-- <span class="tooltip"
+                    >You can also add {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} to
+                    Stages. These {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} will
+                    appear as you move to the Stage.</span
+                  > -->
+                  <span class="tooltip">
+                    Select the fields you'd like to interact with. We recommend: Name, Stage, Forecast, Close Date, Next Step, Next Step Date, along with MEDDICC / BANT fields.
+                  </span>
+                  <span>?</span>
+                </label>
+              </div>
+            </div>
+            <div class="search-bar">
+              <img class="search" src="@/assets/images/search.svg" />
+              <input
+                @input="searchFields"
+                type="search"
+                :placeholder="`Search`"
+                v-model="filterText"
+              />
+            </div>
           </div>
 
           <div class="field-section__fields">
@@ -480,8 +554,9 @@
             </div>
           </div>
         </section>
-        <div style="height: 52vh; margin-right: 1rem; margin-top: 5rem; width: 30vw">
-          <div style="margin-left: 1rem">
+        <div class="selected-container">
+          <h5>Selected CRM Fields:</h5>
+          <div class="selected" style="margin-left: 1rem">
             <draggable
               v-model="addedFields"
               group="fields"
@@ -647,12 +722,12 @@ export default {
       selectedType: { value: 'UPDATE', label: 'Update' },
       resources: [],
       types: [
-        { value: 'UPDATE', label: 'Update' },
-        { value: 'CREATE', label: 'Create' },
+        // { value: 'UPDATE', label: 'Update' },
+        // { value: 'CREATE', label: 'Create' },
       ],
       formattedTypes: [
-        { value: 'UPDATE', label: 'Update' },
-        { value: 'CREATE', label: 'Create' },
+        // { value: 'UPDATE', label: 'Update' },
+        // { value: 'CREATE', label: 'Create' },
       ],
       oppTypes: [
         { value: 'UPDATE', label: 'Update' },
@@ -1156,11 +1231,24 @@ export default {
       console.log(e)
     }
     this.getStageForms()
-    this.formattedTypes = [...this.types, { label: '--- Stages ---' }, ...this.stages]
+    this.formattedTypes = [...this.types, ...this.stages]
+    this.formattedTypes = this.formattedTypes.filter(f => f.value !== 'STAGE')
   },
   methods: {
     test(log) {
       console.log('log', log)
+    },
+    changeSelectedType(type) {
+      if (type.value === 'STAGE') {
+        if (this.formattedTypes[0]) {
+          this.selectedType = this.formattedTypes[0]
+        } else {
+          this.selectedType = { value: 'UPDATE', label: 'Update' }
+        }
+      } else {
+        this.selectedType = type
+      }
+      this.changeObject(this.selectedObject, this.selectedType)
     },
     customLabel(prop) {
       const label = prop.customObject ? `${prop.customObject}` : `${prop.label}`
@@ -1177,17 +1265,20 @@ export default {
       this.selectedObject = { label, value }
       this.changeObject(this.selectedObject, this.selectedType)
       if (this.selectedObject.value === 'Opportunity' || this.selectedObject.value === 'Deal') {
-        this.formattedTypes = [...this.types, { label: '--- Stages ---' }, ...this.stages]
+        this.formattedTypes = [...this.types, ...this.stages]
+        this.formattedTypes = this.formattedTypes.filter(f => f.value !== 'STAGE')
       } else if (this.selectedObject.label === 'Products') {
-        this.formattedTypes = [{ value: 'CREATE', label: 'Create' }]
+        this.formattedTypes = [
+          // { value: 'CREATE', label: 'Create' }
+        ]
       } else {
         this.formattedTypes = [
-          { value: 'UPDATE', label: 'Update' },
-          { value: 'CREATE', label: 'Create' },
+          // { value: 'UPDATE', label: 'Update' },
+          // { value: 'CREATE', label: 'Create' },
         ]
       }
       if (this.selectedType.label !== 'Create' && this.selectedType.label !== 'Update') {
-        this.selectedType = this.formattedTypes[0]
+        this.selectedType = this.formattedTypes[1]
       }
       this.selectedCustomObject = null
     },
@@ -1199,8 +1290,6 @@ export default {
       } else if (this.newFormType == 'UPDATE') {
         fieldParam['updateable'] = true
       }
-
-      console.log('this')
 
       this.formFields = CollectionManager.create({
         ModelClass: ObjectField,
@@ -1536,7 +1625,8 @@ export default {
       )
     },
     changeObject(object, type, switchedObject = false) {
-      if (type.label !== 'Create' && type.label !== 'Update' && type.label !== '--- Stages ---') {
+      if (type.label !== 'Create' && type.label !== 'Update') { //&& type.label !== '--- Stages ---') {
+        console.log('before setStage', type)
         this.setStage(type)
         return
       } else {
@@ -1580,6 +1670,11 @@ export default {
       this.newFormType = ''
       this.newCustomForm = null
       this.storedField = null
+    },
+    customLabelView(prop) {
+      if (prop.value !== 'UPDATE' && prop.value !== 'CREATE' && prop.value !== 'STAGE') {
+        return prop.label
+      }
     },
     changeResource(resource, formType) {
       this.customObjectView = false
@@ -2050,22 +2145,45 @@ input[type='checkbox'] + label::before {
   border-radius: 4px;
   margin-right: 0.5em;
 }
+.search-bar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid $soft-gray;
+  h5 {
+    margin: 0;
+    color: $light-gray-blue;
+  }
+}
+.multiselect-align {
+  // display: flex;
+  // flex-direction: column;
+  // justify-content: center;
+  // margin-top: 0.5rem;
+}
+.search {
+  height: 16px;
+  margin-right: 0.5rem;
+  filter: invert(20%);
+}
 .search-bar {
   // background-color: white;
-  border-bottom: 1px solid $very-light-gray;
+  border: 1px solid $very-light-gray;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 0;
-  // border-radius: 8px;
-  margin-top: 16px;
+  padding: 3px 6px;
+  border-radius: 8px;
+  // margin-top: 16px;
 }
 [type='search']::-webkit-search-cancel-button {
   -webkit-appearance: none;
   appearance: none;
 }
 input[type='search'] {
-  width: 25vw;
+  width: 6.5vw;
   letter-spacing: 0.75px;
   border: none;
   padding: 4px 0;
@@ -2079,6 +2197,21 @@ input[type='search']:focus {
 ::placeholder {
   color: $very-light-gray;
   font-size: 12px;
+}
+.selected-container {
+  height: 52vh; 
+  margin-right: 1rem; 
+  // margin-top: 3rem; 
+  width: 30vw;
+  h5 {
+    margin-left: 1rem;
+    margin-bottom: 1.3rem;
+    color: $light-gray-blue;
+  }
+}
+.selected {
+  margin-left: 1rem;
+  border-top: 1px solid $soft-gray;
 }
 .field-section {
   width: 20vw;
@@ -2348,7 +2481,7 @@ input[type='search']:focus {
   padding: 0rem;
   margin-top: 10vh;
   overflow: hidden;
-  color: $base-gray;
+  // color: $base-gray;
 }
 .slot-icon {
   display: flex;
@@ -2548,7 +2681,7 @@ img:hover {
   overflow: auto;
   // outline: 1px solid #eeeeee;
   // border-radius: 6px;
-  padding: 14px 4px 4px;
+  padding: 18px 4px 4px;
 }
 .border-bottom-top {
   border-bottom: 1px solid $soft-gray;
@@ -2656,7 +2789,7 @@ img:hover {
 }
 .wrapper .tooltip {
   display: block;
-  width: 250px;
+  width: 325px;
   height: auto;
   position: absolute;
   top: 0;
@@ -2683,7 +2816,7 @@ img:hover {
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 .wrapper .icon:hover .tooltip {
-  top: -85px;
+  top: -125px;
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -2722,6 +2855,19 @@ img:hover {
 }
 ::v-deep .multiselect__placeholder {
   color: $base-gray;
+}
+::v-deep .multiselect__single {
+  margin-bottom: 0;
+}
+::v-deep .multiselect__tags {
+  min-height: 32px;
+  padding-top: 4px;
+}
+::v-deep .multiselect__select {
+  height: 32px;
+}
+::v-deep .multiselect {
+  min-height: 0;
 }
 .green-check {
   height: 0.6rem;
@@ -2871,5 +3017,36 @@ img:hover {
 }
 .filtered-red {
   filter: invert(43%) sepia(45%) saturate(682%) hue-rotate(308deg) brightness(109%) contrast(106%);
+}
+.gray-background {
+  display: flex;
+  align-items: center;
+  background-color: $soft-gray;
+  height: 4vh;
+  border-radius: 8px;
+}
+.toggle-update-create-container {
+  border: 1px solid $soft-gray;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 5vw;
+  height: 3vh;
+  border-radius: 8px;
+  margin: 0 0.25rem;
+  p {
+    margin: 0;
+    color: $light-gray-blue;
+    font-size: 12px;
+    // text-align: center;
+  }
+}
+.active {
+  background-color: $white;
+  border-radius: 8px;
+}
+.choose-fields-container {
+  display: flex;
 }
 </style>

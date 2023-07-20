@@ -85,7 +85,7 @@ export default {
         if (key === 'nylas' && obj) {
           count++
         }
-        if (key === 'slackRef' && Object.keys(obj).length) {
+        if (key === 'slackRef' && obj && Object.keys(obj) && Object.keys(obj).length) {
           count++
         }
       }
@@ -95,7 +95,8 @@ export default {
       return this.templates.list.length
     },
     noteTemplates() {
-      return this.$store.state.templates
+      return this.$store.state.templates && this.$store.state.templates.length ? this.$store.state.templates : []
+      // return this.$store.state.templates
     },
   }
 }

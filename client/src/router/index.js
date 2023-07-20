@@ -17,7 +17,7 @@ export default new Router({
       component: () => import('@/views/ChatHome')
     },
     {
-      path: '/ChatHomek4HXI23PAruGCD2',
+      path: '/chat',
       name: 'Home',
       component: () => import('@/views/ChatHome')
     },
@@ -85,7 +85,7 @@ export default new Router({
       path: '/resetpassword/:userId/:token',
       name: 'ResetPassword',
       component: () => import('@/views/auth/ResetPassword'),
-    },
+  },
     {
       path: '/invite-users/:id?',
       props: true,

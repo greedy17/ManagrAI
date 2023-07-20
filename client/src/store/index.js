@@ -36,6 +36,7 @@ const state = {
   allLeads: [],
   messages: [],
   currentView: 'home',
+  currentMeeting: null,
   currentOpp: null,
   allPicklistOptions: null,
   apiPicklistOptions: null,
@@ -122,16 +123,23 @@ const mutations = {
   SET_VIEW: (state, payload) => {
     state.currentView = payload
   },
+  SET_MEETING: (state, payload) => {
+    state.currentMeeting = payload
+  },
   SET_OPP: (state, payload) => {
     state.currentOpp = payload
   },
-  SET_MEETING_DATA: (state, { id, data, success, retry }) => {
+  SET_MEETING_DATA: (state, { id, data }) => {
     let newData = {}
-    newData['success'] = success
-    newData['retry'] = retry
     newData['data'] = data
     state.meetingData[id] = newData
-
+  },
+  EDIT_MEETING: (state, { id, updated }) => {
+    console.log(id, updated, '222222')
+    let newData
+    newData = state.meetingData[id]
+    newData['updated'] = updated
+    state.meetingData[id] = newData
   },
   EDIT_MESSAGES: (state, {
     id,
@@ -221,6 +229,7 @@ const actions = {
   async loadMeetings({ commit }) {
     try {
       const res = await MeetingWorkflows.api.getMeetingList()
+      console.log(res)
       commit('SAVE_MEETINGS', res.results)
     } catch (e) {
       console.log(e)
@@ -229,8 +238,15 @@ const actions = {
   setCurrentView({ commit }, view) {
     commit('SET_VIEW', view)
   },
+  setCurrentMeeting({ commit }, meeting) {
+    commit('SET_MEETING', meeting)
+  },
   setCurrentOpp({ commit }, opp) {
     commit('SET_OPP', opp)
+  },
+  editMeeting({ commit }, { id, updated }) {
+    console.log(id, updated, '1111')
+    commit('EDIT_MEETING', { id, updated })
   },
   editMessages({ commit }, {
     id,
@@ -253,8 +269,9 @@ const actions = {
       note
     })
   },
-  setMeetingData({ commit }, { id, data, success, retry }) {
-    commit('SET_MEETING_DATA', { id, data, success, retry })
+  setMeetingData({ commit }, { id, data }) {
+    console.log(id, data)
+    commit('SET_MEETING_DATA', { id, data })
   },
   removeMessage({ commit }, id) {
     commit('REMOVE_MESSAGE', id)
@@ -507,7 +524,7 @@ export default new Vuex.Store({
   getters,
   plugins: [
     createPersistedState({
-      paths: ['user', 'token', 'messages', 'currentView', 'meetingData']
+      paths: ['user', 'token', 'chatTitle', 'currentView', 'meetingData']
     })
   ],
 })

@@ -274,19 +274,19 @@ def home_modal_block_set(context):
     slack = user.slack_integration
     integration_blocks = [
         block_builders.simple_section(
-            f"{':white_check_mark:' if user.has_slack_integration else ':x:'} *<{get_site_url()}/settings/integrations|Slack>* is used to interact with you regarding your sales process",
+            f"{':white_check_mark:' if user.has_slack_integration else ':x:'} *<{get_site_url()}/chat|Slack>* is used to interact with you regarding your sales process",
             text_type="mrkdwn",
         ),
         block_builders.simple_section(
-            f"{':white_check_mark:' if user.has_zoom_integration else ':x:'} *<{get_site_url()}/settings/integrations|Zoom>* is used to track your meetings to notify you so you can take action",
+            f"{':white_check_mark:' if user.has_zoom_integration else ':x:'} *<{get_site_url()}/chat|Zoom>* is used to track your meetings to notify you so you can take action",
             text_type="mrkdwn",
         ),
         block_builders.simple_section(
-            f"{':white_check_mark:' if user.has_salesforce_integration else ':x:'} *<{get_site_url()}/settings/integrations|Salesforce>* is the backbone of your integration we use this to keep track of your sales process",
+            f"{':white_check_mark:' if user.has_salesforce_integration else ':x:'} *<{get_site_url()}/chat|Salesforce>* is the backbone of your integration we use this to keep track of your sales process",
             text_type="mrkdwn",
         ),
         block_builders.simple_section(
-            f"{':white_check_mark:' if user.has_nylas_integration else ':x:'} *<{get_site_url()}/settings/integrations|Calendar>* will help us gather additional metadata about your meetings",
+            f"{':white_check_mark:' if user.has_nylas_integration else ':x:'} *<{get_site_url()}/chat|Calendar>* will help us gather additional metadata about your meetings",
             text_type="mrkdwn",
         ),
     ]
@@ -562,10 +562,10 @@ def use_transcript_message(context):
                 slack_const.CHOOSE_MEETING_OPTIONS, [f"u={context.get('u')}"]
             ),
             block_id="MEETING_DATE",
-            label="Meeting Date",
+            label="Meeting date",
         ),
         block_builders.external_select(
-            "Select Meeting (only meetings you own will appear here)",
+            "Select your meeting",
             action_id=action_with_params(
                 slack_const.PROCESS_GET_MEETING_OPTIONS,
                 [f"u={context.get('u')}", f"meeting_date={meeting_date}"],
