@@ -260,6 +260,8 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
                         cleaned_data[key] = None
         except ValueError:
             continue
+        except KeyError:
+            continue
     cleaned_data["meeting_comments"] = notes
     cleaned_data["meeting_type"] = subject
     # logger.info(f"CLEAN PROMPT DEBUGGER: {cleaned_data}")
