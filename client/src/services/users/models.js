@@ -52,7 +52,6 @@ export default class User extends Model {
   static hasOutreachIntegration = new fields.Field({ readOnly: true })
   static activatedTemplateRef = new fields.Field()
   static onboarding = new fields.BooleanField()
-  static forecast = new fields.Field()
   static activationLinkRef = new fields.Field()
   static team = new fields.Field()
   static isTeamLead = new fields.Field({ readOnly: true })
