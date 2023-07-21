@@ -241,8 +241,18 @@ class ZoomAcct:
 
     @staticmethod
     def get_meeting_data(meeting_id, token):
+        print(meeting_id)
         r = client.get(
             f"{zoom_model_consts.ZOOM_API_ENDPOINT}/meetings/{meeting_id}/recordings",
+            headers=dict(Authorization=(f"Bearer {token}")),
+        )
+        print(r.json())
+        return ZoomAcct._handle_response(r)
+
+    @staticmethod
+    def get_meeting_by_id(meeting_id, token):
+        r = client.get(
+            f"{zoom_model_consts.ZOOM_API_ENDPOINT}/meetings/{meeting_id}",
             headers=dict(Authorization=(f"Bearer {token}")),
         )
         return ZoomAcct._handle_response(r)
@@ -289,4 +299,3 @@ class ZoomAcct:
             headers=dict(Authorization=(f"Bearer {token}")),
         )
         return ZoomAcct._handle_response(r)
-

@@ -1,23 +1,23 @@
 <template>
   <div class="alert-operand-row">
-    <div class="toggle__switch" v-if="form.field.operandOrder.value != 0">
-      <label :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</label>
-      <ToggleCheckBox
+    <!-- <div class="toggle__switch" v-if="form.field.operandOrder.value != 0"> -->
+    <!-- <label :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</label> -->
+    <!-- <ToggleCheckBox
         v-if="userCRM !== 'HUBSPOT'"
         @input="toggleSelectedCondition"
         :value="selectedCondition !== 'AND'"
         offColor="#41b883"
         onColor="#41b883"
-      />
-      <label v-if="userCRM !== 'HUBSPOT'" :class="this.selectedCondition !== 'OR' ? 'inactive' : ''"
+      /> -->
+    <!-- <label v-if="userCRM !== 'HUBSPOT'" :class="this.selectedCondition !== 'OR' ? 'inactive' : ''"
         >OR</label
-      >
-      <!-- <small @click="toggleSelectedCondition" class="andOr">
+      > -->
+    <!-- <small @click="toggleSelectedCondition" class="andOr">
         <span :class="this.selectedCondition !== 'AND' ? 'inactive' : ''">AND</span>
         <span class="space-s">|</span>
         <span :class="this.selectedCondition !== 'OR' ? 'inactive' : ''">OR</span></small
       > -->
-    </div>
+    <!-- </div> -->
 
     <div class="alert-operand-row__options">
       <div>
@@ -28,7 +28,7 @@
               v-model="identity"
               :options="objectFields.list"
               openDirection="below"
-              style="width: 15vw"
+              style="width: 120px !important; margin-right: 0.5rem"
               selectLabel="Enter"
               track-by="apiName"
               label="referenceDisplayLabel"
@@ -62,7 +62,7 @@
               v-model="selectedOperator"
               :options="operatorOpts"
               openDirection="below"
-              style="width: 15vw"
+              style="width: 120px !important; margin-right: 0.5rem"
               selectLabel="Enter"
               label="label"
             >
@@ -95,7 +95,7 @@
                 v-model="selectedOperand"
                 :options="picklistOpts"
                 openDirection="below"
-                style="width: 15vw"
+                style="width: 120px !important; margin-right: 0.5rem"
                 selectLabel="Enter"
                 label="label"
               >
@@ -122,7 +122,7 @@
                   v-model="selectedOperand"
                   :options="valueOpts"
                   openDirection="below"
-                  style="width: 15vw"
+                  style="width: 120px !important; margin-right: 0.5rem"
                   selectLabel="Enter"
                   label="label"
                 >
@@ -158,7 +158,7 @@
                       v-model="selectedOperator"
                       :options="operatorOpts"
                       openDirection="below"
-                      style="width: 15vw; margin-right: 12px"
+                      style="width: 120px !important; margin-right: 0.5rem"
                       selectLabel="Enter"
                       label="label"
                     >
@@ -560,7 +560,7 @@ export default {
 @import '@/styles/buttons';
 
 ::v-deep .input-content {
-  width: 15vw;
+  width: 120px !important;
   border: 1px solid #e8e8e8 !important;
   border-radius: 0.3rem;
   background-color: white;
@@ -570,7 +570,7 @@ export default {
 }
 
 ::v-deep .input-form {
-  width: 15vw;
+  width: 120px !important;
 }
 ::v-deep .input-form__active {
   border: none;

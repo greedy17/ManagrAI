@@ -442,7 +442,7 @@ const UPCOMING_NEXT_STEP_HUBSPOT = {
 
 const LARGE_OPPORTUNITIES = {
     title: "Large Opportunities",
-    subtitle: "Opportunities that exceed a certain amount",
+    subtitle: "Opportunities that exceed an amount",
     user: null,
     isActive: true,
     crm: 'SALESFORCE',

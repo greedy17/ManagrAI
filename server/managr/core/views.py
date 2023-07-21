@@ -51,7 +51,7 @@ from managr.core.utils import (
 )
 from managr.slack.helpers import requests as slack_requests, block_builders
 from .nylas.auth import get_access_token, get_account_details
-from .models import User, NylasAuthAccount, NoteTemplate
+from .models import User, NylasAuthAccount, NoteTemplate, Message, Conversation
 from .serializers import (
     UserSerializer,
     UserLoginSerializer,
@@ -59,6 +59,7 @@ from .serializers import (
     UserInvitationSerializer,
     UserRegistrationSerializer,
     NoteTemplateSerializer,
+    ConversationSerializer
 )
 from managr.organization.models import Team
 from .permissions import IsStaff
@@ -74,6 +75,7 @@ from managr.salesforce.cron import (
     queue_users_sf_fields,
 )
 from managr.hubspot.cron import queue_users_hs_fields, queue_users_hs_resource
+from managr.slack.models import OrgCustomSlackFormInstance
 from .nylas.models import NylasAccountStatusList
 from managr.utils.client import Client, Variable_Client
 from ..core import constants as core_consts
@@ -564,12 +566,15 @@ def ask_managr(request):
     timeout = 60.0
     while True:
         try:
-            body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, tokens)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email, prompt, "You are an experienced sales leader", token_amount=tokens
+            )
+            # body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, tokens)
             with Variable_Client(timeout) as client:
-                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             r = _handle_response(r)
-            text = r.get("choices")[0].get("text")
+            text = r.get("choices")[0].get("message").get("content")
             break
         except StopReasonLength:
             if tokens >= 2000:
@@ -608,7 +613,6 @@ def ask_managr(request):
     if has_error:
         res = {"value": f"{error_message}"}
         return Response(data=res, status=status.HTTP_400_BAD_REQUEST)
-    
     return Response(
         data={
             **r,
@@ -668,8 +672,7 @@ def deal_review(request):
             break
     if has_error:
         res = {"value": f"{response_text}"}
-        return Response(data=res, status=status.HTTP_400_BAD_REQUEST)
-        
+        return Response(data=res, status=status.HTTP_400_BAD_REQUEST)  
     return Response(
         data={
             **r,
@@ -703,10 +706,10 @@ def draft_follow_up(request):
             if r.status_code == 200:
                 r = r.json()
                 text = r.get("choices")[0].get("text")
-                return Response(data={**r, "res": text})
+                return Response(data={**r, "res": text},status=status.HTTP_200_OK)
         except Exception as e:
             res = {"value": f"error drafting email: {e}"}
-            return Response(data=res)        
+            return Response(data=res,status=status.HTTP_500_INTERNAL_SERVER_ERROR)        
 
 
 @api_view(["post"])
@@ -725,10 +728,10 @@ def chat_next_steps(request):
             if r.status_code == 200:
                 r = r.json()
                 text = r.get("choices")[0].get("text")
-                return Response(data={**r, "res": text})
+                return Response(data={**r, "res": text},status=status.HTTP_200_OK)
         except Exception as e:
             res = {"value": f"error getting next steps: {e}"}
-            return Response(data=res)
+            return Response(data=res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["post"])
@@ -749,169 +752,214 @@ def get_chat_summary(request):
             if r.status_code == 200:
                 r = r.json()
                 message_string_for_recap = r["choices"][0]["text"]
-                return Response(data={**r, "res": message_string_for_recap})
+                return Response(data={**r, "res": message_string_for_recap},status=status.HTTP_200_OK)
     except Exception as e:
         res = {"value": f"error getting summary: {e}"}
-        return Response(data=res)
-
+        return Response(data=res,status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
 def log_chat_meeting(request):
     from managr.salesforce.models import MeetingWorkflow
-    from managr.slack.models import OrgCustomSlackFormInstance
-    from managr.core.exceptions import _handle_response, StopReasonLength
-    from managr.salesforce.routes import routes as sf_routes
-    from managr.hubspot.routes import routes as hs_routes
-
-    CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
-
+    from managr.salesforce.serializers import MeetingWorkflowSerializer
+    from managr.meetings.serializers import MeetingZoomSerializer
+    from managr.slack import constants as slack_const
+  
     user = User.objects.get(id=request.data["user_id"])
-    workflow_id = request.data["workflow_id"]
-    resource_type = request.data["resource_type"]
-    workflow = MeetingWorkflow.objects.get(id=workflow_id)
-    workflow.save()
-
-    prompt = request.data["prompt"]
-    form_type = (
-        "CREATE" if ("create" in prompt.lower() and "update" not in prompt.lower()) else "UPDATE"
+    meeting_id = request.data["meeting_id"]
+    meeting_res = user.zoom_account.helper_class.get_meeting_by_id(
+        meeting_id, user.zoom_account.access_token
     )
-    form_template = user.team.team_forms.filter(form_type=form_type, resource=resource_type).first()
-    form = OrgCustomSlackFormInstance.objects.create(
-        template=form_template, user=user, update_source="chat", chat_submission=prompt
-    )
-    fields = form_template.custom_fields.all()
-    field_list = list(fields.values_list("label", flat=True))
-    full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(field_list, prompt, datetime.now())
-    url = core_consts.OPEN_AI_COMPLETIONS_URI
-    attempts = 1
-    has_error = False
-    resource_check = None
-    token_amount = 500
-    timeout = 60.0
-    while True:
-        message = None
-        try:
-            body = core_consts.OPEN_AI_COMPLETIONS_BODY(
-                user.email, full_prompt, token_amount=token_amount, top_p=0.1
-            )
-            Client = Variable_Client(timeout)
-            with Client as client:
-                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
-                r = _handle_response(r)
-                choice = r["choices"][0]
-                text = choice["text"]
-                data = clean_prompt_string(text)
-                name_field = set_name_field(resource_type, )
-                data = correct_data_keys(data)
-                resource_check = data[name_field].lower().split(" ")
-                lowered_type = resource_type.lower()
-                resource = None
-                if lowered_type in resource_check:
-                    resource_check.remove(lowered_type)
-                if form_type == "CREATE" or len(resource_check):
-                    if form_type == "UPDATE":
-                        resource = None
-                        for word in resource_check:
-                            if resource_type not in ["Contact", "Lead"]:
-                                query = (
-                                    CRM_SWITCHER[user.crm][resource_type]["model"]
-                                    .objects.for_user(user)
-                                    .filter(name__icontains=word)
-                                )
-                                if query:
-                                    if len(query) > 1:
-                                        most_matching = name_list_processor(query, resource_check)
-                                        resource = query.filter(name=most_matching).first()
-                                    else:
-                                        resource = query.first()
-                                    break
-                            else:
-                                query = (
-                                    CRM_SWITCHER[user.crm][resource_type]["model"]
-                                    .objects.for_user(user)
-                                    .filter(email__icontains=word)
-                                )
-                                if query:
-                                    if len(query) > 1:
-                                        most_matching = name_list_processor(query, resource_check)
-                                        resource = query.filter(email=most_matching).first()
-                                    else:
-                                        resource = query.first()
-                                    break
-                        if resource:
-                            form.resource_id = str(resource.id)
-                            form.save()
-                        else:
-                            has_error = True
-                            break
-                    else:
-                        if user.crm == "SALESFORCE":
-                            if resource_type in ["Opportunity", "Account"]:
-                                data["Name"] = resource_check
-                        else:
-                            if resource_type == "Deal":
-                                data["Deal Name"] = resource_check
-                        resource = None
-                    owner_field = set_owner_field(resource_type, user.crm)
-                    data[owner_field] = user.crm_account.crm_id
-                    swapped_field_data = swap_submitted_data_labels(data, fields)
-                    cleaned_data = clean_prompt_return_data(
-                        swapped_field_data, fields, user.crm, resource
-                    )
-                    form.save_form(cleaned_data, False)
-                else:
-                    has_error = True
-                break
+    end_time = datetime.strptime(meeting_res["start_time"], "%Y-%m-%dT%H:%M:%S%z")
+    end_time = end_time + timezone.timedelta(minutes=meeting_res["duration"])
+    meeting_data = {
+        "meeting_id": meeting_res["id"],
+        "topic": meeting_res["topic"],
+        "start_time": meeting_res["start_time"],
+        "end_time": end_time,
+        "user": user.id,
+        "provider": "Zoom Meeting",
+        "meta_data": json.dumps(meeting_res),
+    }
+    try:
+        meeting = MeetingZoomSerializer(data=meeting_data)
+        meeting.is_valid(True)
+        meeting.save()
+        workflow = MeetingWorkflow.objects.create(
+            operation_type="MEETING_REVIEW",
+            meeting=meeting.instance,
+            user=user,
+            resource_id=request.data["resource_id"],
+            resource_type=request.data["resource_type"],
+        )
+        workflow.add_form(
+            request.data["resource_type"], slack_const.FORM_TYPE_UPDATE, resource_id=request.data["resource_id"]
+        )
+        workflow.save()
+    except Exception as e:
+        return Response(data={"data": e},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    serializer = MeetingWorkflowSerializer(instance=workflow)
+    print('DATA IS HERE',serializer.data)
+    data = {"success": True, "workflow": serializer.data}
+    return Response(data=data)
 
-        except StopReasonLength:
-            if token_amount <= 2000:
-                message = "Look like your prompt message is too long to process. Try removing white spaces!",
-                break
-            else:
-                token_amount += 500
-                continue
-        except httpx.ReadTimeout as e:
-            timeout += 30.0
-            if timeout >= 120.0:
-                has_error = True
-                message = "There was an error communicating with Open AI"
-                logger.exception(f"Read timeout from Open AI {e}")
-                break
-            else:
-                attempts += 1
-                continue
-        except Exception as e:
-            logger.exception(f"Exception from Open AI response {e}")
-            has_error = True
-            message = (
-                f"Looks like we ran into an issue with your prompt, try removing things like quotes and ampersands"
-                if resource_check is None
-                else f"We could not find a {resource_type} named {resource_check} because of {e}"
-            )
-            break
-    if has_error:
-        if workflow_id:
-            logger.exception(
-                f"There was an error processing chat submission for workflow {workflow} {message}"
-            )
-            workflow.failed_task_description.append(
-                f"There was an error processing chat submission {message}"
-            )
-            workflow.save()
-        return Response(data={"data": message, 'failed': True})
+# @api_view(["post"])
+# @permission_classes([permissions.IsAuthenticated])
+# def log_chat_meeting(request):
+#     from managr.salesforce.models import MeetingWorkflow
+#     from managr.meetings.serializers import MeetingZoomSerializer
+#     from managr.core.exceptions import _handle_response, StopReasonLength
+#     from managr.salesforce.routes import routes as sf_routes
+#     from managr.hubspot.routes import routes as hs_routes
 
-    if not has_error:
+#     CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 
-        if workflow_id:
-            if not has_error:
-                form.workflow = workflow
-                form.update_source = "meeting (chat)"
-                form.save()
-                workflow.resource_type = resource_type
-                workflow.resource_id = str(resource.id)
-                workflow.save()
-    return Response(data={**r, "data": cleaned_data,})
+#     user = User.objects.get(id=request.data["user_id"])
+#     workflow_id = request.data["workflow_id"]
+#     resource_type = request.data["resource_type"]
+#     workflow = MeetingWorkflow.objects.get(id=workflow_id)
+#     workflow.save()
+
+#     prompt = request.data["prompt"]
+#     form_type = (
+#         "CREATE" if ("create" in prompt.lower() and "update" not in prompt.lower()) else "UPDATE"
+#     )
+#     form_template = user.team.team_forms.filter(form_type=form_type, resource=resource_type).first()
+#     form = OrgCustomSlackFormInstance.objects.create(
+#         template=form_template, user=user, update_source="chat", chat_submission=prompt
+#     )
+#     fields = form_template.custom_fields.all()
+#     field_list = list(fields.values_list("label", flat=True))
+#     full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(field_list, prompt, datetime.now())
+#     url = core_consts.OPEN_AI_COMPLETIONS_URI
+#     attempts = 1
+#     has_error = False
+#     resource_check = None
+#     token_amount = 500
+#     timeout = 60.0
+#     while True:
+#         message = None
+#         try:
+#             body = core_consts.OPEN_AI_COMPLETIONS_BODY(
+#                 user.email, full_prompt, token_amount=token_amount, top_p=0.1
+#             )
+#             Client = Variable_Client(timeout)
+#             with Client as client:
+#                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+#                 r = _handle_response(r)
+#                 choice = r["choices"][0]
+#                 text = choice["text"]
+#                 data = clean_prompt_string(text)
+#                 name_field = set_name_field(resource_type, )
+#                 data = correct_data_keys(data)
+#                 resource_check = data[name_field].lower().split(" ")
+#                 lowered_type = resource_type.lower()
+#                 resource = None
+#                 if lowered_type in resource_check:
+#                     resource_check.remove(lowered_type)
+#                 if form_type == "CREATE" or len(resource_check):
+#                     if form_type == "UPDATE":
+#                         resource = None
+#                         for word in resource_check:
+#                             if resource_type not in ["Contact", "Lead"]:
+#                                 query = (
+#                                     CRM_SWITCHER[user.crm][resource_type]["model"]
+#                                     .objects.for_user(user)
+#                                     .filter(name__icontains=word)
+#                                 )
+#                                 if query:
+#                                     if len(query) > 1:
+#                                         most_matching = name_list_processor(query, resource_check)
+#                                         resource = query.filter(name=most_matching).first()
+#                                     else:
+#                                         resource = query.first()
+#                                     break
+#                             else:
+#                                 query = (
+#                                     CRM_SWITCHER[user.crm][resource_type]["model"]
+#                                     .objects.for_user(user)
+#                                     .filter(email__icontains=word)
+#                                 )
+#                                 if query:
+#                                     if len(query) > 1:
+#                                         most_matching = name_list_processor(query, resource_check)
+#                                         resource = query.filter(email=most_matching).first()
+#                                     else:
+#                                         resource = query.first()
+#                                     break
+#                         if resource:
+#                             form.resource_id = str(resource.id)
+#                             form.save()
+#                         else:
+#                             has_error = True
+#                             break
+#                     else:
+#                         if user.crm == "SALESFORCE":
+#                             if resource_type in ["Opportunity", "Account"]:
+#                                 data["Name"] = resource_check
+#                         else:
+#                             if resource_type == "Deal":
+#                                 data["Deal Name"] = resource_check
+#                         resource = None
+#                     owner_field = set_owner_field(resource_type, user.crm)
+#                     data[owner_field] = user.crm_account.crm_id
+#                     swapped_field_data = swap_submitted_data_labels(data, fields)
+#                     cleaned_data = clean_prompt_return_data(
+#                         swapped_field_data, fields, user.crm, resource
+#                     )
+#                     form.save_form(cleaned_data, False)
+#                 else:
+#                     has_error = True
+#                 break
+
+#         except StopReasonLength:
+#             if token_amount <= 2000:
+#                 message = "Look like your prompt message is too long to process. Try removing white spaces!",
+#                 break
+#             else:
+#                 token_amount += 500
+#                 continue
+#         except httpx.ReadTimeout as e:
+#             timeout += 30.0
+#             if timeout >= 120.0:
+#                 has_error = True
+#                 message = "There was an error communicating with Open AI"
+#                 logger.exception(f"Read timeout from Open AI {e}")
+#                 break
+#             else:
+#                 attempts += 1
+#                 continue
+#         except Exception as e:
+#             logger.exception(f"Exception from Open AI response {e}")
+#             has_error = True
+#             message = (
+#                 f"Looks like we ran into an issue with your prompt, try removing things like quotes and ampersands"
+#                 if resource_check is None
+#                 else f"We could not find a {resource_type} named {resource_check} because of {e}"
+#             )
+#             break
+#     if has_error:
+#         if workflow_id:
+#             logger.exception(
+#                 f"There was an error processing chat submission for workflow {workflow} {message}"
+#             )
+#             workflow.failed_task_description.append(
+#                 f"There was an error processing chat submission {message}"
+#             )
+#             workflow.save()
+#         return Response(data={"data": message, 'failed': True})
+
+#     if not has_error:
+
+#         if workflow_id:
+#             if not has_error:
+#                 form.workflow = workflow
+#                 form.update_source = "meeting (chat)"
+#                 form.save()
+#                 workflow.resource_type = resource_type
+#                 workflow.resource_id = str(resource.id)
+#                 workflow.save()
+#     return Response(data={**r, "data": cleaned_data,})
 
 
 def field_syncs():
@@ -1955,6 +2003,432 @@ class NoteTemplateViewSet(
 )
 def get_sso_data(request):
     data = {}
+    print('settings: ', settings)
     data["client_id"] = settings.GOOGLE_CLIENT_ID
     data["login_uri"] = settings.GOOGLE_LOGIN_URI
     return Response(data=data)
+
+
+def process_transcript_to_summaries(transcript, user):
+    from managr.core.exceptions import _handle_response
+    from managr.core import constants as core_consts
+    from managr.utils.client import Variable_Client
+    from managr.core.exceptions import StopReasonLength, ServerError
+
+    summary_parts = []
+    current_minute = 5
+    start_index = 0
+    current_hour = 0
+    split_transcript = []
+    while True:
+        if current_minute == 60:
+            current_minute = 0
+            current_hour += 1
+        check_time = (
+            f"0{current_hour}:0{str(current_minute)}:"
+            if (current_minute == 5 or current_minute == 0)
+            else f"0{current_hour}:{str(current_minute)}:"
+        )
+        end_index = transcript.find(check_time)
+        if end_index == -1 and len(split_transcript):
+            split_transcript.append(transcript[start_index:])
+            break
+        elif end_index == -1 and not len(split_transcript):
+            current_minute += 5
+            continue
+        else:
+            split_transcript.append(transcript[start_index:end_index])
+            start_index = end_index
+            current_minute += 5
+    if not len(summary_parts):
+        for index, transcript_part in enumerate(split_transcript):
+            if not settings.IN_PROD:
+                print(index)
+
+            transcript_body = core_consts.OPEN_AI_TRANSCRIPT_PROMPT(
+                {"date": datetime.today(), "transcript": transcript_part,}
+            )
+            transcript_body = (
+                transcript_body.replace("\r\n", "")
+                .replace("\n", "")
+                .replace("    ", "")
+                .replace(" --> ", "-")
+            )
+            # if not settings.IN_PROD:
+            #     token_check = max_token_calculator(transcript_body)
+            #     print(f"MAX TOKEN CHECK: {len(transcript_body)}, {token_check}")
+            attempts = 1
+            timeout = 60.0
+            tokens = 500
+            while True:
+                body = core_consts.OPEN_AI_COMPLETIONS_BODY(
+                    user.email, transcript_body, tokens, top_p=0.9, temperature=0.7
+                )
+                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                with Variable_Client(timeout) as client:
+                    try:
+                        r = client.post(
+                            url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
+                        )
+                        r = _handle_response(r)
+                        summary = r.get("choices")[0].get("text")
+
+                        summary = (
+                            summary.replace(":\n\n", "").replace(".\n\n", "").replace("\n\n", "")
+                        )
+                        summary_split = summary.split("Summary:")
+                        summary_parts.append(summary_split[1])
+                        break
+                    except StopReasonLength:
+                        if tokens >= 2000:
+                            break
+                        else:
+                            tokens += 500
+                            continue
+                    except IndexError:
+                        continue
+                    except ServerError:
+                        if attempts >= 5:
+                            return []
+                        else:
+                            attempts += 1
+                            time.sleep(10.0)
+                    except httpx.ReadTimeout:
+                        logger.exception(
+                            f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}"
+                        )
+                        if timeout >= 120.0:
+                            break
+                        else:
+                            timeout += 30.0
+                    except Exception as e:
+                        logger.exception(f"PROCESS TRANSCRIPT SUMMARIES EXCEPTION {e}")
+                        break
+    return summary_parts
+
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def process_transcript(request):
+    from managr.core.models import User
+    from managr.salesforce.models import MeetingWorkflow
+    from managr.meetings.serializers import MeetingZoomSerializer
+    from managr.crm.utils import CRM_SWITCHER
+    from managr.utils.client import Variable_Client
+    from managr.core import constants as core_consts
+    from managr.core.exceptions import _handle_response
+    from managr.core.background import emit_process_add_call_analysis
+    from managr.slack import constants as slack_consts
+    from managr.zoom.zoom_helper.exceptions import RecordingNotFound
+    from managr.core.exceptions import StopReasonLength, ServerError
+
+    user = User.objects.get(id=request.data["user_id"])
+    summary_parts = []
+    viable_data = []
+    meeting_id = request.data["meeting_id"] 
+    resource_type = request.data["resource_type"]
+    integration_id = request.data["integration_id"]
+
+    resource = CRM_SWITCHER[user.crm][request.data["resource_type"]]["model"].objects.get(
+        id=request.data["resource_id"]
+    )
+
+    meeting_id = request.data["meeting_id"]
+    meeting_res = user.zoom_account.helper_class.get_meeting_by_id(
+        meeting_id, user.zoom_account.access_token
+    )
+    end_time = datetime.strptime(meeting_res["start_time"], "%Y-%m-%dT%H:%M:%S%z")
+    end_time = end_time + timezone.timedelta(minutes=meeting_res["duration"])
+    meeting_data = {
+        "meeting_id": meeting_res["id"],
+        "topic": meeting_res["topic"],
+        "start_time": meeting_res["start_time"],
+        "end_time": end_time,
+        "user": user.id,
+        "provider": "Zoom Meeting",
+        "meta_data": json.dumps(meeting_res),
+    }
+    try:
+        meeting = MeetingZoomSerializer(data=meeting_data)
+        meeting.is_valid(True)
+        meeting.save()
+        workflow = MeetingWorkflow.objects.create(
+            operation_type="MEETING_REVIEW",
+            meeting=meeting.instance,
+            user=user,
+            resource_id=request.data["resource_id"],
+            resource_type=request.data["resource_type"],
+        )
+        workflow.save()
+    except Exception as e:
+        logger.info(e)
+
+    resource = CRM_SWITCHER[user.crm][request.data["resource_type"]]["model"].objects.get(
+        integration_id=integration_id
+    )
+    form_template = user.team.team_forms.get(form_type="UPDATE", resource=resource_type)
+    fields = form_template.custom_fields.all()
+    fields_list = list(fields.values_list("label", flat=True))
+    if slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations:
+        workflow.operations.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
+    if slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations_list:
+        workflow.operations_list.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
+    workflow.save()
+
+    has_error = False
+    error_message = None
+    retry = 0
+    try:
+        if not settings.IN_PROD:
+            logger.info("Retreiving meeting data...")
+        meeting = workflow.meeting
+        meeting_data = meeting.meeting_account.helper_class.get_meeting_data(
+            meeting.meeting_id, meeting.meeting_account.access_token
+        )
+        if not settings.IN_PROD:
+            logger.info(f"Done! {meeting_data}")
+        # try:
+        #     update_res = slack_requests.update_channel_message(
+        #         user.slack_integration.channel,
+        #         ts,
+        #         user.organization.slack_integration.access_token,
+        #         block_set=get_block_set(
+        #             "loading",
+        #             {"message": f":telephone_receiver: Transcript found for {meeting.topic}"},
+        #         ),
+        #     )
+        # except Exception as e:
+        #     logger.exception(f"Could not update channel message because of {e} ts {ts}")
+        recordings = meeting_data["recording_files"]
+        filtered_recordings = [
+            recording
+            for recording in recordings
+            if recording["recording_type"] == "audio_transcript"
+        ]
+        if len(filtered_recordings):
+            if not len(summary_parts):
+                recording_obj = filtered_recordings[0]
+                download_url = recording_obj["download_url"]
+                transcript = meeting.meeting_account.helper_class.get_transcript(
+                    download_url, meeting.meeting_account.access_token
+                )
+                transcript = transcript.decode("utf-8")
+                summary_parts = process_transcript_to_summaries(transcript, user)
+            if len(summary_parts):              
+                timeout = 90.0
+                tokens = 1500
+                # try:
+                #     update_res = slack_requests.update_channel_message(
+                #         user.slack_integration.channel,
+                #         ts,
+                #         user.organization.slack_integration.access_token,
+                #         block_set=get_block_set(
+                #             "loading",
+                #             {"message": f":robot_face: Processing transcript for {meeting.topic}"},
+                #         ),
+                #     )
+                # except Exception as e:
+                #     logger.exception(f"Could not update channel message because of {e} ts {ts}")
+                attempts = 1
+                while True:
+                    summary_body = core_consts.OPEN_AI_TRANSCRIPT_UPDATE_PROMPT(
+                        {
+                            "date": workflow.datetime_created.date(),
+                            "transcript_summaries": summary_parts,
+                        },
+                        fields_list,
+                        user,
+                    )
+                    tokens = 1000
+                    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                        user.email, summary_body, token_amount=tokens, top_p=0.9
+                    )
+                    try:
+                        if not settings.IN_PROD:
+                            logger.info("Combining Summary parts")
+                        if not viable_data:
+                            with Variable_Client(timeout) as client:
+                                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                                r = client.post(
+                                    url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
+                                )
+                            r = _handle_response(r)
+                            if not settings.IN_PROD:
+                                logger.info(f"Summary response: {r}")
+                            choice = r["choices"][0].get("message").get("content")
+                            data = clean_prompt_string(choice)
+                            viable_data = data
+                        else:
+                            data = viable_data
+                        # if not settings.IN_PROD:
+                        #     print(f"DATA: {data}")
+                        combined_summary = (
+                            data.pop("summary", "There was an error creating the summary")
+                            if data.get("summary", None)
+                            else data.pop("Summary", "There was an error creating the summary")
+                        )
+                        owner_field = set_owner_field(resource_type, user.crm)
+                        data[owner_field] = user.crm_account.crm_id
+                        swapped_field_data = swap_submitted_data_labels(data, fields)
+                        cleaned_data = clean_prompt_return_data(
+                            swapped_field_data, fields, user.crm, resource
+                        )
+
+                        workflow.transcript_summary = combined_summary
+                        workflow.save()
+                        break
+                    except StopReasonLength:
+                        logger.exception(
+                            f"Retrying for stop reason length, token amount at: {tokens}"
+                        )
+                        if tokens >= 2000:
+                            error_message = "There was an error processing your transcript, try again"
+                            break
+                        else:
+                            tokens += 500
+                            continue
+                    except ServerError as e:
+                        logger.exception(f"Server error from Open AI: {e}")
+                        if attempts >= 5:
+                            has_error = True
+                            error_message = "There was a server error with Open AI"
+                            break
+                        else:
+                            attempts += 1
+                            time.sleep(10.0)
+                    except ValueError as e:
+                        print(e)
+                        if str(e) == "substring not found":
+                            continue
+                        else:
+                            has_error = True
+                            error_message = (
+                                "Looks like we ran into an internal issue"
+                            )
+                            break
+                    except SyntaxError as e:
+                        print(e)
+                        continue
+                    except httpx.ReadTimeout:
+                        logger.exception(
+                            f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}"
+                        )
+                        if timeout >= 120.0:
+                            has_error = True
+                            error_message = "OpenAI servers are busy. No action needed, we'll try again in a few minutes..."
+                            schedule = datetime.now() + timezone.timedelta(minutes=5)
+                            process_transcript_to_summaries(
+                                transcript, user
+                            )
+                            break
+                        else:
+                            timeout += 30.0
+                    except Exception as e:
+                        logger.exception(f"Exception combining summaries: <{e}>")
+            else:
+                has_error = True
+                error_message = "Unknown error"
+        else:
+            has_error = True
+            error_message = "We could not find a transcript for this meeting"
+    except RecordingNotFound:
+        has_error = True
+        retry + 1
+        error_message = (
+            f"Looks like you're transcript is not done processing, we'll try again in a bit!"
+            if retry <= 3
+            else "We could not find a recording for this meeting"
+        )
+        if retry < 3:
+            process_transcript_to_summaries(
+                transcript, user
+            )
+    except Exception as e:
+        logger.exception(e)
+        has_error = True
+        error_message = (
+            f"We encountered an unknow error processing your transcript: {str(e)}"
+        )
+    
+    if not has_error:
+        form_check = workflow.forms.all().filter(template=form_template).first()
+        if form_check:
+            new_form = form_check
+            form_check.save_form(cleaned_data, False)
+        else:
+            new_form = OrgCustomSlackFormInstance.objects.create(
+                user=user,
+                template=form_template,
+                resource_id=str(resource.id),
+                update_source="transcript",
+                workflow=workflow,
+            )
+            new_form.save_form(cleaned_data, False)
+        emit_process_add_call_analysis(str(workflow.id), summary_parts)
+        return Response(data={'data':cleaned_data, 'analysis':combined_summary, 'status':status.HTTP_200_OK})
+    else:
+        return Response(data=error_message, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def delete_all_messages(request):
+    Message.objects.all().delete()
+    return Response(status=status.HTTP_200_OK)
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def edit_message(request):
+    message = Message.objects.get(id=request.data['message_id'])
+    keys_to_exclude = ['conversation_id', 'message_id']
+    all_keys = [key for key, value in request.data.items() if not isinstance(value, dict)]
+    keys = [key for key in all_keys if key not in keys_to_exclude]
+    try:  
+        for field in keys:
+            setattr(message, field, request.data[field])       
+    except Exception as e:
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR,data=e)
+    message.save()    
+    return Response(status=status.HTTP_200_OK)
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def add_message(request):
+    conversation = Conversation.objects.get(id=request.data['conversation_id'])
+
+    default_values = {
+        'value': '',
+        'form_id': '',
+        'form_type': '',
+        'user_type': '',
+        'resource': '',
+        'resource_id': '',
+        'resource_type': '',
+        'integration_id': '',
+        'generated_title': '',
+        'generated_type':'',
+        'generated': False,
+        'updated': False,
+        'failed': False,
+        'error': None,
+        'data': '{}',
+    }
+
+    message_data = {field: request.data.get(field, default_values[field]) for field in default_values}
+
+    Message.objects.create(
+        conversation=conversation,
+        **message_data
+    )
+
+    return Response(status=status.HTTP_200_OK)
+
+
+class ConversationViewSet(viewsets.ModelViewSet):
+    serializer_class = ConversationSerializer
+
+    def get_queryset(self):
+        user = User.objects.get(id=self.request.query_params.get('user_id'))
+        queryset = Conversation.objects.filter(user=user)
+
+        return queryset

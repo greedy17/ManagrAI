@@ -14,7 +14,7 @@ from managr.slack.serializers import (
 )
 from managr.zoom.serializers import ZoomAuthSerializer
 from managr.hubspot.serializers import HubspotAuthAccountSerializer
-from .models import User, NylasAuthAccount, MeetingPrepInstance, UserForecast, NoteTemplate
+from .models import User, NylasAuthAccount, MeetingPrepInstance, UserForecast, NoteTemplate, Message, Conversation
 
 
 class UserForecastSerializer(serializers.ModelSerializer):
@@ -39,6 +39,18 @@ class UserRefSerializer(serializers.ModelSerializer):
             "last_name",
         )
 
+
+class MessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Message
+        fields = '__all__'
+
+class ConversationSerializer(serializers.ModelSerializer):
+    messages = MessageSerializer(many=True)
+
+    class Meta:
+        model = Conversation
+        fields = '__all__'  
 
 class UserSerializer(serializers.ModelSerializer):
     """UserSerializer to update user fields, only managers with admin access and

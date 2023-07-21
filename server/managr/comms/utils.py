@@ -13,6 +13,7 @@ def get_news_for_company(company):
     news_url = comms_consts.NEW_API_URI + "/" + comms_consts.NEW_API_EVERYTHING_URI(company)
     with Variable_Client() as client:
         new_res = client.get(news_url, headers=comms_consts.NEWS_API_HEADERS)
+        print(new_res.json())
         return _handle_news_response(new_res)
 
 
@@ -43,8 +44,8 @@ def send_clips(user, news_res, company):
     for index, message in enumerate(news_list):
         try:
             article_blocks = [
-                block_builders.header_block(
-                    f"Articles used for summary {company} {index + 1}/{len(news_list)}"
+                block_builders.simple_section(
+                    f"Articles used for summary {company} {index + 1}/{len(news_list)}", "mrkdwn"
                 ),
                 block_builders.divider_block(),
                 block_builders.simple_section(message, "mrkdwn"),

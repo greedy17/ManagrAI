@@ -1,8 +1,13 @@
 <template>
   <PopularWorkflows
-    :config="userCRM === 'HUBSPOT' ? allConfigs.LARGE_DEALS_HUBSPOT : allConfigs.LARGE_OPPORTUNITIES"
+    :closePopularModal="closePopularModal"
+    :config="config"
     :largeOpps="true"
     :selectField="true"
+    :noRenderHeader="noRenderHeader"
+    :closeBuilder="closeBuilder"
+    :canSave="canSave" 
+    :saveWorkflow="saveWorkflow"
   />
 </template>
 
@@ -17,6 +22,26 @@ import { decryptData } from '../../../../../encryption'
 
 export default {
   name: 'LargeOpportunities',
+  props: {
+    noRenderHeader: {
+      type: Boolean
+    },
+    closeBuilder: {
+      type: Function
+    },
+    canSave: { 
+      type: Function
+    },
+    saveWorkflow: { 
+      type: Function 
+    },
+    config: {
+      type: Object
+    },
+    closePopularModal: {
+      type: Function
+    },
+  },
   components: {
     PopularWorkflows,
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
