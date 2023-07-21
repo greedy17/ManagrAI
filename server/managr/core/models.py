@@ -130,11 +130,13 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
     class Meta:
         ordering = ("id",)
 
+
 class CustomJSONField(models.TextField):
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault('default', '{}')
+        kwargs.setdefault("default", "{}")
         super().__init__(*args, **kwargs)
-        
+
+
 class Message(TimeStampModel):
     user_type = models.CharField(max_length=100)
     value = models.TextField()
@@ -151,15 +153,20 @@ class Message(TimeStampModel):
     resource = models.CharField(max_length=100, null=True)
     integration_id = models.CharField(max_length=100, null=True)
     form_type = models.CharField(max_length=100, null=True)
-    conversation = ForeignKey("core.Conversation", on_delete=models.CASCADE, related_name="messages")
+    conversation = ForeignKey(
+        "core.Conversation", on_delete=models.CASCADE, related_name="messages"
+    )
+
     class Meta:
         ordering = ["datetime_created"]
+
 
 class Conversation(TimeStampModel):
     user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="conversations")
     title = models.CharField(max_length=255, blank=True,)
     members = ArrayField(models.CharField(max_length=1000), default=list, blank=True)
-    
+
+
 class User(AbstractUser, TimeStampModel):
     # Override the Django-provided username field and replace with email
     USERNAME_FIELD = "email"
@@ -192,7 +199,7 @@ class User(AbstractUser, TimeStampModel):
 
     is_active = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
-    onboarding = models.BooleanField(default=True)
+    onboarding = models.BooleanField(default=False)
     organization = models.ForeignKey(
         "organization.Organization",
         related_name="users",

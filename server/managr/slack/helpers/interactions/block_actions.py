@@ -4343,6 +4343,45 @@ def process_choose_meeting_options(payload, context):
     return
 
 
+def process_show_regenerate_news_summary_form(payload, context):
+    slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
+    user = slack_account.user
+    access_token = user.organization.slack_integration.access_token
+    blocks = payload["message"]["blocks"]
+    trigger_id = payload["trigger_id"]
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    try:
+        index, block = block_finder("NEWS_SUMMARY", blocks)
+    except ValueError:
+        # did not find the block
+        block = None
+        pass
+    news_prompt = block["text"]["text"].split("*Summary for ")
+    entered_prompt = news_prompt[1].replace("*", "")
+    blocks = [
+        block_builders.input_block(
+            "Enter your new search",
+            optional=False,
+            block_id="COMPANY_INPUT",
+            multiline=True,
+            initial_value=entered_prompt,
+        )
+    ]
+    context.update(ts=payload["message"]["ts"], u=str(user.id))
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.PROCESS_NEWS_SUMMARY,
+            "title": {"type": "plain_text", "text": "New Summary"},
+            "blocks": blocks,
+            "submit": {"type": "plain_text", "text": "Submit",},
+            "private_metadata": json.dumps(context),
+        },
+    }
+    slack_requests.generic_request(url, data, access_token=access_token)
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -4423,6 +4462,7 @@ def handle_block_actions(payload):
         slack_const.PROCESS_OPEN_ACTIONS_MODAL: process_open_actions_modal,
         slack_const.PROCESS_RESOURCE_SELECTED_ACTION: process_resource_selected_action,
         slack_const.CHOOSE_MEETING_OPTIONS: process_choose_meeting_options,
+        slack_const.PROCESS_SHOW_REGENERATE_NEWS_SUMMARY_FORM: process_show_regenerate_news_summary_form,
     }
 
     action_query_string = payload["actions"][0]["action_id"]
