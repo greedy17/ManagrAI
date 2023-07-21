@@ -60,6 +60,22 @@ export default {
   async created() {
     if (this.userIsLoggedIn) {
       this.refreshCurrentUser()
+      if (this.user.role === 'PR' && this.$store.state.selectedArticle === null) {
+        // change this to be the actual first article
+        const article = {
+          id: 1,
+          icon: 'https://www.vectorlogo.zone/logos/marketwatch/marketwatch-icon.svg',
+          source: 'MarketWatch',
+          title: 'EV stocks see green after Tesla, Rivian, Nio report upbeat deliveries data',
+          preview: `Electric-vehicle maker stocks got a broad boost Monday, after upbeat delivery and production data from a host of companies in the U.S. and...`,
+          coverPhoto: `https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/New_York_City_%28New_York%2C_USA%29%2C_Empire_State_Building_--_2012_--_6448.jpg/1200px-New_York_City_%28New_York%2C_USA%29%2C_Empire_State_Building_--_2012_--_6448.jpg`,
+          time: '5 mins ago',
+          author: 'Eric Peters',
+          link: 'https://www.nyan.cat/',
+          data: {},
+        }
+        this.$store.dispatch('updateSelectedArticle', article)
+      }
       // this.$store.dispatch('loadMeetings')
       // this.$store.dispatch('loadAllOpps')
       // this.$store.dispatch('loadAllAccounts')

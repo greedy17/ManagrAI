@@ -1,8 +1,9 @@
 import logging
-from urllib.parse import urlencode
 import json
 import httpx
 import datetime
+from django.conf import settings
+from urllib.parse import urlencode
 from background_task import background
 from managr.utils.client import Variable_Client
 from .utils import get_news_for_company, send_clips
@@ -12,6 +13,7 @@ from managr.core.models import User
 from managr.core import exceptions as open_ai_exceptions
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import block_builders
+from managr.slack import constants as slack_const
 
 
 logger = logging.getLogger("managr")
@@ -26,10 +28,26 @@ def _process_news_summary(payload, context):
     state = payload["view"]["state"]["values"]
     user = User.objects.get(id=context.get("u"))
     company = state["COMPANY_INPUT"]["plain_input"]["value"]
-    query = urlencode({"q": company})
+    while True:
+        try:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = core_consts.OPEN_AI_NEWS_BOOLEAN_CONVERSION(company)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email, prompt, token_amount=500, top_p=0.1,
+            )
+            with Variable_Client() as client:
+                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+                r = open_ai_exceptions._handle_response(r)
+                query_input = r.get("choices")[0].get("message").get("content")
+                break
+        except Exception as e:
+            logger.exception(e)
+            break
+    query = urlencode({"q": query_input})
     news_res = get_news_for_company(query)
     articles = news_res["articles"]
     send_clips(user, news_res, company)
+
     descriptions = [article["description"] for article in articles]
     attempts = 1
     token_amount = 500
@@ -78,10 +96,28 @@ def _process_news_summary(payload, context):
             break
     try:
         blocks = [
-            block_builders.header_block(f"Summary for {company}"),
+            block_builders.simple_section(
+                f"*Summary for {company}*", "mrkdwn", block_id="NEWS_SUMMARY"
+            ),
             block_builders.divider_block(),
             block_builders.simple_section(message, "mrkdwn"),
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "Regenerate",
+                        "REGENERATE",
+                        action_id=slack_const.PROCESS_SHOW_REGENERATE_NEWS_SUMMARY_FORM,
+                    )
+                ]
+            ),
         ]
+        if not settings.IN_PROD:
+            blocks.extend(
+                [
+                    block_builders.divider_block(),
+                    block_builders.context_block(f"*AI-generated search:* {query_input}", "mrkdwn"),
+                ]
+            )
         slack_res = slack_requests.update_channel_message(
             user.slack_integration.channel,
             context.get("ts"),

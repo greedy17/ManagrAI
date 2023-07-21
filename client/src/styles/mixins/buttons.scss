@@ -48,9 +48,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.4rem 1rem;
+  padding: 0.5rem 1rem;
   border-radius: 0.3rem;
-  font-weight: bold;
+  // font-weight: bold;
   line-height: 1.14;
   text-indent: none;
   border-style: none;
@@ -82,6 +82,7 @@
     scale: 1;
     background-color: $soft-gray;
     color: $gray;
+    // color: black;
     &:hover {
       background-color: $soft-gray;
     }
@@ -96,10 +97,13 @@
 @mixin secondary-button() {
   @include base-button();
   background-color: $silver;
-  color: $main-font-gray;
+  color: $base-gray;
+  font-size: 12px;
   &:hover {
-    box-shadow: 1px 1px 5px -1px $dark-green, -1px -1px 5px -1px $dark-green;
-    fill: $dark-green;
+    // box-shadow: 1px 1px 5px -1px $dark-green, -1px -1px 5px -1px $dark-green;
+    // fill: $dark-green;
+    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
+    scale: 1.025;
   }
 }
 
@@ -108,6 +112,55 @@
   background-color: $white;
   border: 1px solid $soft-gray;
   color: $base-gray;
+  font-size: 12px;
+  transition: all 0.3s;
+  &:hover {
+    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
+    scale: 1.025;
+  }
+
+  &:disabled {
+    box-shadow: none;
+    border: none;
+    scale: 1;
+    background-color: $soft-gray;
+    color: $gray;
+    &:hover {
+      background-color: $soft-gray;
+    }
+  }
+}
+
+@mixin gray-button() {
+  @include base-button();
+  background-color: $soft-gray;
+  border: 1px solid $soft-gray;
+  color: $base-gray;
+  font-size: 12px;
+  transition: all 0.3s;
+  &:hover {
+    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
+    scale: 1.025;
+  }
+
+  &:disabled {
+    box-shadow: none;
+    border: none;
+    scale: 1;
+    background-color: $soft-gray;
+    color: $gray;
+    &:hover {
+      background-color: $soft-gray;
+    }
+  }
+}
+
+
+@mixin dark-blue-button() {
+  @include base-button();
+  background-color: $dark-black-blue;
+  border: 1px solid $dark-black-blue;
+  color: $white;
   font-size: 12px;
   transition: all 0.3s;
   &:hover {

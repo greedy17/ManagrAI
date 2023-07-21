@@ -1,6 +1,6 @@
 <template>
   <section class="right-container">
-    <div style="margin-top: -0.5rem" v-if="!selectedOpp" class="switcher">
+    <div style="margin-top: -0.5rem" v-if="!selectedOpp && !currentMeeting" class="switcher">
       <div
         @click="switchMainView('pipeline')"
         :class="{ activeswitch: mainView === 'pipeline' }"
@@ -10,22 +10,22 @@
         Pipeline
       </div>
       <div
-        style="cursor: not-allowed"
-        :class="{ activeswitch: mainView === 'email' }"
+        @click="switchMainView('meetings')"
+        :class="{ activeswitch: mainView === 'meetings' }"
         class="switch-item"
       >
-        <font-awesome-icon icon="fa-regular fa-envelope" />
-        Email
+        <font-awesome-icon icon="fa-regular fa-calendar" />
+        Meetings
       </div>
     </div>
     <header>
-      <section v-if="selectedOpp">
+      <section v-if="selectedOpp || currentMeeting">
         <div class="flexed-row-s"></div>
-        <span style="margin-top: -4px" class="flexed-row-spread header-bg">
+        <span v-if="selectedOpp" style="margin-top: -4px" class="flexed-row-spread header-bg">
           <div class="elipsis-text">
             <span class="icon-bg">
               <img
-                @click="deselectOpp"
+                @click="deselectAll"
                 src="@/assets/images/back.svg"
                 height="16px;width:16px"
                 alt=""
@@ -60,30 +60,30 @@
             />
           </div>
         </span>
+
+        <span v-else style="margin-top: -4px" class="flexed-row-spread header-bg">
+          <div class="elipsis-text">
+            <span class="icon-bg">
+              <img
+                @click="deselectAll"
+                src="@/assets/images/back.svg"
+                height="16px;width:16px"
+                alt=""
+              />
+            </span>
+            <p>
+              {{ currentMeeting.topic }}
+            </p>
+          </div>
+
+          <div style="margin-left: -8px" class="flexed-row">
+            <small class="gray-text">{{ formatDate(currentMeeting.start_time) }}</small>
+          </div>
+        </span>
       </section>
 
       <section v-else>
-        <!-- <div class="flexed-row-spread">
-          <p style="margin-bottom: 0.25rem; color: #9596b4">
-            All Open {{ user.crm === 'SALESFORCE' ? 'Opportunities' : 'Deals' }} ({{
-              displayedOpps.count
-            }})
-          </p>
-
-          <div class="flexed-row">
-            <img class="coming-soon" src="@/assets/images/shuffle.svg" height="14px" alt="" />
-
-            <img
-              :class="{ 'rotate opaque not-allowed': oppsLoading }"
-              @click="reloadOpps"
-              src="@/assets/images/refresh.svg"
-              height="18px"
-              alt=""
-            />
-          </div>
-        </div> -->
-
-        <div style="margin-top: 0.5rem" class="flexed-row-spread">
+        <div v-if="mainView === 'pipeline'" style="margin-top: 0.5rem" class="flexed-row-spread">
           <div class="input">
             <img style="cursor: text" src="@/assets/images/search.svg" height="16px" alt="" />
 
@@ -104,7 +104,7 @@
           </div>
 
           <span @click="toggleShowFilters" class="icon-button">
-            <img src="@/assets/images/filterlist.svg" height="20px" alt="" />
+            <img src="@/assets/images/filterlist.svg" height="18px" alt="" />
             <small
               v-if="activeFilters.length"
               :class="{ 'pop-transition': isPopping }"
@@ -188,6 +188,9 @@
 
                 <div v-if="selectedFilter.operator">
                   <input
+                    v-if="
+                      selectedFilter.name !== 'Stage' || selectedFilter.operatorLabel === 'contains'
+                    "
                     class="filter-input"
                     :placeholder="`${selectedFilter.name} ${selectedFilter.operatorLabel}`"
                     :type="`${selectedFilter.dataType}`"
@@ -195,29 +198,25 @@
                     autofocus
                   />
 
-                  <!-- <Multiselect
-                  :options="picklistOptions[field.id]"
-                  :placeholder="inlinePlaceholder || '-'"
-                  selectLabel=""
-                  track-by="value"
-                  label="label"
-                  :multiple="dataType === 'MultiPicklist' ? true : false"
-                  v-model="selectedOption"
-                  :disabled="inlineLoader"
-                  selectedLabel=""
-                  deselectLabel=""
-                  @select="
-                    setUpdateValues(
-                      apiName === 'ForecastCategory' ? 'ForecastCategoryName' : field.apiName,
-                      $event.value,
-                      dataType === 'MultiPicklist' ? true : false,
-                    )
-                  "
-                >
-                  <template slot="noResult">
-                    <p class="multi-slot">No results.</p>
-                  </template>
-                </Multiselect> -->
+                  <Multiselect
+                    style="margin-top: 1rem"
+                    v-else
+                    :options="
+                      this.user.crm === 'SALESFORCE' ? picklistOptions[stageField.id] : allStages
+                    "
+                    :placeholder="`${selectedFilter.name} ${selectedFilter.operatorLabel}`"
+                    selectLabel=""
+                    track-by="id"
+                    label="label"
+                    v-model="filtervalue"
+                    selectedLabel=""
+                    deselectLabel=""
+                    @select="addFilterValue($event.id)"
+                  >
+                    <template slot="noResult">
+                      <p class="multi-slot">No results.</p>
+                    </template>
+                  </Multiselect>
                 </div>
 
                 <div
@@ -246,9 +245,33 @@
             </section>
           </div>
         </div>
+
+        <div v-else style="margin-top: 0.5rem" class="flexed-row-spread__">
+          <div>
+            <p class="gray-text neg-mar-small">Select a date:</p>
+            <input class="inline-input" v-model="meetingDate" type="date" />
+          </div>
+
+          <button :disabled="loading" @click="getZoomMeetings" class="icon-button">
+            <img
+              v-if="!loading"
+              class="dampen"
+              src="@/assets/images/meeting.svg"
+              height="14px"
+              alt=""
+            />
+            <img
+              v-else
+              class="rotate opaque not-allowed"
+              src="@/assets/images/refresh.svg"
+              height="14px"
+              alt=""
+            />
+          </button>
+        </div>
       </section>
     </header>
-    <div class="switcher" v-if="selectedOpp">
+    <div class="switcher" v-if="selectedOpp && !loading">
       <div @click="switchView('crm')" :class="{ activeswitch: view === 'crm' }" class="switch-item">
         <img src="@/assets/images/crmlist.svg" height="12px" alt="" />
         Details
@@ -267,31 +290,25 @@
       </div>
     </div>
 
-    <!-- <div v-if="selectedOpp && view === 'crm'" class="section-header">
-      <h4>
-        {{ user.crm === 'SALESFORCE' ? 'Salesforce Fields' : 'Hubspot properties' }}
-      </h4>
-
-      <img src="@/assets/images/settings.svg" height="18px" alt="" />
-    </div> -->
-
-    <div class="selected-opp-container" v-if="selectedOpp">
-      <div v-show="view === 'crm'" class="selected-opp-section bordered">
-        <div class="absolute-img">
-          <img src="@/assets/images/settings.svg" height="18px" alt="" />
+    <div class="selected-opp-container" v-if="currentMeeting && !loading">
+      <div class="selected-opp-section bordered">
+        <div style="width: 99%" class="opp-section">
+          <ChatMeetingLogger
+            :meeting="currentMeeting"
+            :workflows="meetingWorkflows"
+            :formFields="formFields"
+            :stageFields="stageFields"
+            :stagesWithForms="stagesWithForms"
+            @reload-workflows="reloadWorkflows"
+            :key="logkey"
+          />
         </div>
-        <div
-          style="
-            border: 1px solid #eeeeee;
-            background-color: white;
-            padding-left: 1rem;
-            width: 99.75%;
-            margin-left: 0.5px;
-            border-radius: 5px;
-            height: 100%;
-            overflow-y: scroll;
-          "
-        >
+      </div>
+    </div>
+
+    <div class="selected-opp-container" v-else-if="selectedOpp && !loading">
+      <div v-show="view === 'crm'" class="selected-opp-section bordered">
+        <div class="opp-section">
           <div v-for="field in oppFields" :key="field.id" style="margin-bottom: 1rem">
             <p style="font-size: 12px" class="gray-text">
               {{ field.label }}
@@ -393,21 +410,24 @@
       </div>
     </div>
 
-    <div class="opp-scroll-container" v-else>
+    <div
+      class="opp-scroll-container"
+      v-else-if="!selectedOpp && this.mainView === 'pipeline' && !loading"
+    >
+      <!-- @mouseenter="setTooltip(opp.id)"
+        @mouseleave="removeTooltip" -->
       <div
-        @mouseenter="setTooltip(opp.id)"
-        @mouseleave="removeTooltip"
         v-for="opp in opportunities"
         class="opp-container"
         @click="changeSelectedOpp(opp)"
         :key="opp.id"
       >
-        <p style="margin: 0">
+        <p :title="opp.name" style="margin: 0">
           {{ opp.name }}
         </p>
-        <div :class="{ 'showing-tooltip': showTooltip && hoverId === opp.id }" class="tooltip">
+        <!-- <div :class="{ 'showing-tooltip': showTooltip && hoverId === opp.id }" class="tooltip">
           {{ opp.name }}
-        </div>
+        </div> -->
       </div>
       <div style="margin-bottom: 0.25rem" class="space-between">
         <button
@@ -423,14 +443,41 @@
         <p v-else>End of list</p>
       </div>
     </div>
+
+    <div class="opp-scroll-container" v-else-if="this.mainView === 'meetings' && !loading">
+      <p class="gray-text small-text">Select a meeting:</p>
+      <div
+        @click="changeSelectedMeeting(meeting)"
+        class="opp-container"
+        v-for="(meeting, i) in meetings"
+        :key="i"
+      >
+        <p class="no-margin">
+          {{ meeting.topic }}
+        </p>
+        <small>{{ formatDate(meeting.start_time) }} </small>
+      </div>
+    </div>
+
+    <div v-else-if="loading">
+      <div class="loading">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
   </section>
 </template>
   
 <script>
 import SlackOAuth from '@/services/slack'
+import User from '@/services/users'
 import { CRMObjects } from '@/services/crm'
 import CollectionManager from '@/services/collectionManager'
 import InlineFieldEditor from '@/components/Chat/InlineFieldEditor'
+import ChatMeetingLogger from '@/components/Chat/ChatMeetingLogger'
+import Zoom from '@/services/zoom/account'
+import { MeetingWorkflows } from '@/services/salesforce/models'
 import { decryptData } from '../../encryption'
 
 export default {
@@ -438,9 +485,11 @@ export default {
   components: {
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     InlineFieldEditor,
+    ChatMeetingLogger,
   },
   data() {
     return {
+      logkey: 0,
       hoverId: null,
       showTooltip: false,
       view: 'crm',
@@ -453,6 +502,7 @@ export default {
       sortedNotes: [],
       editing: false,
       activeField: null,
+      loading: false,
       oppsLoading: false,
       isPopping: false,
       filtersOpen: false,
@@ -462,6 +512,11 @@ export default {
       updateOppForm: [],
       oppFields: [],
       resourceName: 'Opportunity',
+      stageField: null,
+      filtervalue: null,
+      allStages: [],
+      meetings: [],
+      meetingDate: this.getCurrentDate(),
       objects: CollectionManager.create({
         ModelClass: CRMObjects,
         pagination: { size: 20 },
@@ -497,7 +552,10 @@ export default {
           { label: 'does not equal', value: 'NOT_EQUALS' },
         ],
         Owner: [{ label: 'contains', value: 'CONTAINS' }],
-        Stage: [{ label: 'contains', value: 'CONTAINS' }],
+        Stage: [
+          { label: 'is', value: 'EQUALS' },
+          { label: 'contains', value: 'CONTAINS' },
+        ],
         Name: [
           { label: 'contains', value: 'CONTAINS' },
           { label: 'does not equal', value: 'NOT_EQUALS' },
@@ -579,6 +637,11 @@ export default {
       ],
     }
   },
+  props: {
+    formFields: {},
+    stageFields: {},
+    stagesWithForms: {},
+  },
   watch: {
     activeFilters(newValue, oldValue) {
       if (newValue !== oldValue) {
@@ -606,16 +669,42 @@ export default {
         this.loadMorePage = 0
       }
     },
+    meetingDate: 'getZoomMeetings',
     // : 'selectOperator',
     selectedOpp: 'getNotes',
   },
   methods: {
     test() {
-      console.log('log', this.user)
+      console.log('log', this.meetingWorkflows)
+    },
+    formatDate(inputDate) {
+      const dateObj = new Date(inputDate)
+      const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0')
+      const day = String(dateObj.getUTCDate()).padStart(2, '0')
+      const year = dateObj.getUTCFullYear()
+      return `${month}/${day}/${year}`
+    },
+    getCurrentDate() {
+      const now = new Date()
+      const year = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    },
+    addFilterValue(val) {
+      this.selectedFilter.value = val
+    },
+    deselectAll() {
+      this.selectedOpp = null
+      this.$store.dispatch('setCurrentOpp', null)
+      this.$store.dispatch('setCurrentMeeting', null)
     },
     deselectOpp() {
       this.selectedOpp = null
       this.$store.dispatch('setCurrentOpp', null)
+    },
+    deselectMeeting() {
+      this.$store.dispatch('setCurrentMeeting', null)
     },
     setSortedNotes() {
       const sortedObjects = this.notes.sort((a, b) => {
@@ -671,7 +760,71 @@ export default {
         this.view = view
       }
     },
+    async getZoomMeetings() {
+      this.loading = true
+      try {
+        let res = await Zoom.api.getZoomMeetings({
+          user_id: this.user.id,
+          date: this.meetingDate,
+        })
+        this.meetings = res.data
+      } catch (e) {
+        console.log('ERROR GETTING MEETINGS:', e)
+      } finally {
+        setTimeout(() => {
+          this.loading = false
+        }, 1000)
+      }
+    },
+    async reloadWorkflows() {
+      try {
+        const res = await MeetingWorkflows.api.getMeetingList()
+        this.meetingWorkflows = res.results
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.logkey += 1
+      }
+    },
+    async getMeetingWorkflows() {
+      this.loading = true
+      try {
+        const res = await MeetingWorkflows.api.getMeetingList()
+        this.meetingWorkflows = res.results
+        console.log(res)
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.loading = false
+        }, 2000)
+      }
+    },
+    // async refreshCalEvents() {
+    //   this.loading = true
+    //   try {
+    //     let res = await User.api.refreshCalendarEvents()
+    //   } catch (e) {
+    //     console.log('Error in refreshCalEvents: ', e)
+    //   } finally {
+    //     setTimeout(() => {
+    //       this.refreshUser()
+    //     }, 4000)
+    //     setTimeout(() => {
+    //       this.loading = false
+    //       this.$store.dispatch('loadMeetings')
+    //     }, 5000)
+    //   }
+    // },
     switchMainView(view) {
+      if (view === 'meetings' && !this.meetings.length) {
+        this.getZoomMeetings()
+        this.deselectOpp()
+      } else if (view === 'meetings') {
+        this.deselectOpp()
+      } else if (view !== 'meetings') {
+        this.deselectMeeting()
+      }
       if (view !== this.mainView) {
         this.mainView = view
       }
@@ -811,9 +964,13 @@ export default {
     clearText() {
       this.searchText = ''
     },
+    changeSelectedMeeting(meeting) {
+      this.$store.dispatch('setCurrentMeeting', meeting)
+    },
     changeSelectedOpp(opp, name) {
       this.hoverId = null
       this.loadMorePage = 0
+      this.$store.dispatch('setCurrentMeeting', null)
       if (opp) {
         this.selectedOpp = opp
         this.$store.dispatch('setCurrentOpp', opp)
@@ -837,6 +994,12 @@ export default {
         }
       }
     },
+    removeDuplicatesByKey(arr, key) {
+      const uniqueObjects = arr.filter(
+        (item, index, self) => index === self.findIndex((obj) => obj[key] === item[key]),
+      )
+      return uniqueObjects
+    },
     async setOppForms() {
       let stageGateForms
       let stagesWithForms
@@ -849,13 +1012,30 @@ export default {
 
       let allFields = this.updateOppForm[0].fieldsRef
 
+      let stageField = this.updateOppForm[0].fieldsRef.filter(
+        (field) => field.apiName === 'Stage' || field.apiName === 'dealstage',
+      )
+      this.stageField = stageField[0]
+
+      if (this.userCRM === 'HUBSPOT') {
+        let stages = this.stageField.options[0]
+        const mappedStages = Object.keys(stages).map((key) => {
+          const originalValue = stages[key]
+          return originalValue.stages
+        })
+        const allStages = mappedStages.reduce((acc, curr) => acc.concat(curr), [])
+        this.allStages = allStages
+        this.allStages = this.removeDuplicatesByKey(this.allStages, 'id')
+        // console.log(this.allStages)
+      }
+
       this.oppFields = this.updateOppForm[0].fieldsRef.filter(
         (field) =>
           field.apiName !== 'meeting_type' &&
           field.apiName !== 'meeting_comments' &&
-          field.apiName !== 'Name' &&
-          field.apiName !== 'dealname' &&
-          field.apiName !== 'name' &&
+          // field.apiName !== 'Name' &&
+          // field.apiName !== 'dealname' &&
+          // field.apiName !== 'name' &&
           (this.resourceName === 'Contact' || this.resourceName === 'Lead'
             ? field.apiName !== 'email'
             : true) &&
@@ -985,12 +1165,40 @@ export default {
     },
   },
   computed: {
+    currentMeeting() {
+      return this.$store.state.currentMeeting
+    },
     opportunities() {
       if (this.displayedOpps.results) {
         return this.displayedOpps.results.filter((opp) =>
           opp.name.toLowerCase().includes(this.searchText.toLowerCase()),
         )
       } else return []
+    },
+    date() {
+      let today = new Date()
+      let month = String(today.getMonth() + 1).padStart(2, '0')
+      let day = String(today.getDate()).padStart(2, '0')
+      let year = today.getFullYear()
+      let formattedDate = `${month}/${day}/${year}`
+
+      return formattedDate
+    },
+    // meetings() {
+    //   return this.$store.state.meetings
+    // },
+    formattedEndTimes() {
+      return this.meetings.reduce((formatted, meeting) => {
+        const date = new Date(meeting.meeting_ref['end_time'])
+        const hours = date.getHours()
+        const minutes = date.getMinutes()
+        const period = hours >= 12 ? 'pm' : 'am'
+        const formattedTime = `${((hours + 11) % 12) + 1}:${minutes
+          .toString()
+          .padStart(2, '0')}${period}`
+        formatted[meeting.id] = formattedTime
+        return formatted || null
+      }, {})
     },
     activeFilters() {
       return this.$store.state.filters
@@ -1023,6 +1231,7 @@ export default {
     this.$store.dispatch('loadChatOpps')
     this.$store.dispatch('loadAllPicklists')
     this.setOppForms()
+    this.getMeetingWorkflows()
   },
 }
 </script>
@@ -1041,6 +1250,66 @@ export default {
 @keyframes shimmer {
   100% {
     -webkit-mask-position: left;
+  }
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 6px;
+  padding: 0.75rem 0.75rem;
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  margin: 0 5px;
+  background: rgb(97, 96, 96);
+  border-radius: 50%;
+  animation: bounce 1.2s infinite ease-in-out;
+}
+
+.dot:nth-child(2) {
+  animation-delay: -0.4s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: -0.2s;
+}
+
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.small-button {
+  @include chat-button();
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  border-radius: 5px;
+  font-size: 12px;
+  padding: 0.35rem;
+  margin-left: 1rem;
+  font-weight: normal;
+
+  img {
+    margin: 0;
+  }
+
+  &:disabled {
+    background-color: $off-white;
   }
 }
 
@@ -1172,6 +1441,19 @@ export default {
   font-family: $base-font-family;
   font-size: 14px;
 }
+.text-cursor {
+  cursor: text !important;
+}
+.opp-section {
+  border: 1px solid #eeeeee;
+  background-color: white;
+  padding-left: 1rem;
+  width: 99.75%;
+  margin-left: 0.5px;
+  border-radius: 5px;
+  height: 100%;
+  overflow-y: scroll;
+}
 .opp-container {
   background-color: white;
   position: relative;
@@ -1203,6 +1485,12 @@ export default {
   display: flex;
   flex-direction: row;
   align-items: center;
+
+  span {
+    img {
+      padding-top: 4px;
+    }
+  }
 }
 
 .expand-absolute {
@@ -1284,6 +1572,22 @@ header {
   }
 }
 
+.flexed-row-spread__ {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  padding: 0 4px 0 0;
+
+  h4,
+  p {
+    font-family: $base-font-family;
+    font-size: 12px;
+    letter-spacing: 0.4px;
+  }
+}
+
 .space-between {
   display: flex;
   align-items: flex-end;
@@ -1294,6 +1598,10 @@ header {
     margin: 0 0 0.25rem 0.5rem;
     color: $light-gray-blue;
   }
+}
+
+.selected {
+  border: 1px solid red;
 }
 
 .selected-opp {
@@ -1355,7 +1663,7 @@ header {
   width: 100%;
   background-color: $off-white;
   // border: 1px solid rgba(0, 0, 0, 0.1) !important;
-  padding: 2px !important;
+  padding: 2px 1px 2p 2px !important;
   border-radius: 5px;
   margin-top: 0.5rem;
 }
@@ -1447,8 +1755,24 @@ header {
   color: #afafaf;
 }
 
+.right-mar-s {
+  margin-right: 4px;
+}
+
 .gray-text {
   color: $light-gray-blue;
+}
+.small-text {
+  font-size: 12px;
+  margin-bottom: 0;
+}
+.zero-margin {
+  padding: 0;
+  margin: 0;
+}
+.neg-mar {
+  margin-top: -0.25rem;
+  font-size: 12px;
 }
 .left-margin {
   margin-left: 0.5rem;
@@ -1846,6 +2170,10 @@ img {
   }
 }
 
+.neg-mar-small {
+  margin-top: -4px;
+}
+
 .tooltip::before {
   position: absolute;
   content: '';
@@ -1864,5 +2192,24 @@ img {
   visibility: visible;
   pointer-events: auto;
   text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.1);
+}
+
+.inline-input {
+  outline: none;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 6px;
+  color: $base-gray;
+  width: 100%;
+  margin-top: 4px;
+  font-family: $base-font-family;
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0.4px;
+  resize: none;
+}
+
+.pointer {
+  cursor: pointer;
 }
 </style>

@@ -2,33 +2,30 @@
   <section class="chat-container">
     <header class="title-header">
       <p style="margin-right: auto"><span>Latest: </span>{{ chatTitle }}</p>
-      <!-- <div class="row pointer">
-        <img style="margin-right:.5rem" src="@/assets/images/cloud.svg" height="18px" alt="" />
-        sync
-      </div>
-
-      <div class="row pointer" @click="clearMessages">
-        <img style="margin-right:.5rem" class="dampen" src="@/assets/images/cross-circle.svg" height="15px" alt="" />
-        clear
-      </div> -->
-      <!-- <button class="small-button">
-        <img class="dampen" src="@/assets/images/cloud.svg" height="16px" alt="" />
-        sync
-      </button> -->
-      <button @click="clearMessages" class="small-button">
+      <button @click="deleteMessages" class="small-button">
         <img class="dampen" src="@/assets/images/cross-circle.svg" height="12px" alt="" />
         Clear chat
       </button>
     </header>
-    <div class="margin-top" ref="chatWindow">
-      <div v-for="(message, i) in messages" :key="i" class="col-start">
+    <div v-if="conversation" class="margin-top" ref="chatWindow">
+      <div v-for="(message, i) in conversation.messages" :key="i" class="col-start">
         <div class="message-container">
           <div class="images">
             <span v-if="message.failed" style="font-size: 24px"> 🚫 </span>
-            <span v-else-if="message.user === 'bot' && !message.updated" style="font-size: 24px">
+            <span
+              v-else-if="
+                message.user_type === 'bot' && !message.updated && !message.generated_title
+              "
+              style="font-size: 24px"
+            >
               🤖
             </span>
-            <span style="margin-left: -4px" v-else-if="message.user === 'bot' && message.updated">
+            <span
+              style="margin-left: -4px"
+              v-else-if="
+                message.user_type === 'bot' && (message.updated || message.generated_title)
+              "
+            >
               <img class="green-filter" src="@/assets/images/logo.png" height="30px" alt="" />
             </span>
 
@@ -37,26 +34,36 @@
 
           <div class="text-container">
             <div style="position: relative">
+              <!-- :class="{
+                  marg:
+                    message.generated_title !== 'Deal Review' &&
+                    message.generated_title !== 'AI Generated Next Steps' &&
+                    message.generated_title !== 'AI Generated Summary',
+                }" -->
               <div
                 class="type-header"
-                :class="{ marg: message.gtMsg === 'AI Generated Summary' }"
-                v-if="message.user === 'bot' && message.gtMsg"
+                v-if="message.user_type === 'bot' && message.generated_title"
+                :class="{
+                  marg:
+                    message.generated_title === 'Ask Managr' ||
+                    message.generated_title === 'AI Generated Next Steps',
+                }"
               >
-                <h4 style="margin: 0">
-                  {{ message.gtMsg }}
+                <h4 style="margin-top: 0">
+                  {{ message.generated_title }}
                 </h4>
-                <small>
-                  {{ message.data.Name }}
+                <small v-if="message.resource">
+                  {{ message.resource }}
                 </small>
               </div>
 
-              <div
-                :class="{ 'type-header': message.title === 'Deal Review' }"
+              <!-- <div
+                :class="{ 'type-header': message.generated_title === 'Deal Review' }"
                 style="font-weight: bold; font-size: 14px"
-                v-else-if="message.user === 'bot' && message.title"
+                v-else-if="message.user_type === 'bot' && message.generated_title"
               >
                 {{ message.title }}
-              </div>
+              </div> -->
 
               <pre v-html="message.value" class="message-text"></pre>
             </div>
@@ -76,7 +83,7 @@
               </div>
 
               <div v-else style="margin-top: 1.5rem">
-                <div class="column" v-if="message.generatedType === 'email' && addingInstructions">
+                <div class="column" v-if="message.generated_type === 'email' && addingInstructions">
                   <div class="space-between">
                     <small>Provide any additional instructions below:</small>
 
@@ -96,16 +103,11 @@
                   v-if="!addingInstructions"
                   style="margin-bottom: 0.25rem"
                   @click="
-                    regenerate(
-                      message.generatedType,
-                      message.data['meeting_comments'],
-                      message.id,
-                      {
-                        data: message.data,
-                        integration: message.integrationId,
-                        resource: message.resourceType,
-                      },
-                    )
+                    regenerate(message.generated_type, message.data, message.id, {
+                      data: message.data,
+                      integration: message.integration_id,
+                      resource: message.resource_type,
+                    })
                   "
                   class="content-button padding-small"
                 >
@@ -122,9 +124,7 @@
                 <button
                   v-else
                   style="margin-bottom: 0.25rem"
-                  @click="
-                    regenerateEmail(instructionText, message.data['meeting_comments'], message.id)
-                  "
+                  @click="regenerateEmail(instructionText, message.data, message.id)"
                   class="content-button padding-small"
                 >
                   <img
@@ -146,7 +146,7 @@
         </div>
 
         <div
-          v-if="message.user === 'bot' && message.formId && !message.updated"
+          v-if="message.user_type === 'bot' && message.form_id && !message.updated"
           class="generate-container"
           style="margin-left: -0.5rem"
         >
@@ -163,7 +163,7 @@
         </div>
 
         <div
-          v-else-if="message.user === 'bot' && message.formId && message.updated"
+          v-else-if="message.user_type === 'bot' && message.form_id && message.updated"
           class="generate-container"
         >
           <div v-if="!message.generated">
@@ -183,18 +183,12 @@
                 class="row"
                 v-if="!generating"
               >
-                <button
-                  @click="generateEmail(message.data['meeting_comments'], message.id)"
-                  class="content-button"
-                >
+                <button @click="generateEmail(message.data, message.id)" class="content-button">
                   <font-awesome-icon icon="fa-regular fa-envelope" />Draft follow-up email
 
                   {{ message.note }}
                 </button>
-                <button
-                  @click="nextSteps(message.data['meeting_comments'], message.id)"
-                  class="content-button"
-                >
+                <button @click="nextSteps(message.data, message.id)" class="content-button">
                   <font-awesome-icon style="height: 10px" icon="fa-solid fa-angles-right" />
                   Suggest next steps
                 </button>
@@ -202,8 +196,8 @@
                   @click="
                     getSummary(
                       message.data,
-                      message.integrationId,
-                      message.resourceType,
+                      message.integration_id,
+                      message.resource_type,
                       message.id,
                     )
                   "
@@ -235,7 +229,7 @@
                 >
 
                 <div style="border-radius: 6px; padding: 0.25rem 0.25rem" class="row">
-                  <p>Processing your submission</p>
+                  <!-- <p>Processing your submission</p> -->
                   <div class="loading">
                     <div class="dot"></div>
                     <div class="dot"></div>
@@ -257,7 +251,7 @@
         >
 
         <div style="border-radius: 6px; padding: 0.25rem 0.75rem" class="row">
-          <p>Processing your submission</p>
+          <!-- <p>Processing your submission</p> -->
           <div class="loading">
             <div class="dot"></div>
             <div class="dot"></div>
@@ -275,8 +269,11 @@
       @set-message="setMessage"
       @set-title="setTitle"
       @remove-opp="removeOpp"
+      @set-view="setView"
+      @get-conversations="getConversations"
       :messages="messages"
       :scrollToBottom="scrollToBottom"
+      :conversation="conversation"
     />
   </section>
 </template>
@@ -301,6 +298,7 @@ export default {
       generatingId: null,
       addingInstructions: false,
       instructionText: null,
+      conversation: null,
     }
   },
   watch: {
@@ -310,12 +308,24 @@ export default {
     removeOpp() {
       this.$emit('remove-opp')
     },
+    setView(val) {
+      this.$emit('set-view', val)
+    },
+    async getConversations() {
+      try {
+        let res = await User.api.getConversations({ user_id: this.user.id })
+        this.conversation = res.results[0]
+      } catch (e) {
+        console.log(e)
+      }
+    },
     regenerate(type, data, editId, sumObj) {
       this.generatingId = editId
       if (type === 'email') {
         this.addingInstructions = true
       } else if (type === 'next') {
-        this.regenerateNext(data, editId)
+        let newNotes = this.jsonNotes(data, 'meeting_comments')
+        this.regenerateNext(newNotes, editId)
       } else {
         this.regenerateSummary(editId, sumObj)
       }
@@ -324,25 +334,60 @@ export default {
       this.addingInstructions = false
       this.instructionText = null
     },
-    clearMessages() {
-      this.$store.dispatch('clearMessages')
+    async deleteMessages() {
+      if (this.conversation.messages.length) {
+        this.messageLoading = true
+        try {
+          await User.api.deleteMessages().then((response) => {
+            this.getConversations()
+          })
+        } catch (e) {
+          console.log()
+        } finally {
+          this.messageLoading = false
+        }
+      }
     },
     async regenerateEmail(instructions, note, editId) {
+      let newNotes = this.jsonNotes(note, 'meeting_comments')
       this.generating = true
       try {
-        let res = await User.api.chatEmail({
-          id: this.user.id,
-          notes: note,
-          instructions: instructions,
-        })
-        this.generativeRes = res
-        this.$store.dispatch('editMessages', {
-          id: editId,
-          value: this.generativeRes['res'],
-        })
+        await User.api
+          .chatEmail({
+            id: this.user.id,
+            notes: newNotes,
+            instructions: instructions,
+          })
+          .then((response) => {
+            if (response.status === 500) {
+              User.api
+                .editMessage({
+                  message_id: editId,
+                  error: response.data.value,
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: true,
+                })
+                .then((response) => {
+                  this.$refs.chatBox.getConversations()
+                })
+            } else {
+              User.api
+                .editMessage({
+                  message_id: editId,
+                  value: response['res'],
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: false,
+                  updated: true,
+                })
+                .then((response) => {
+                  this.getConversations()
+                })
+            }
+          })
       } catch (e) {
         console.log(e)
-        this.$store.dispatch('messageUpdateFailed', { id: editId, data: e.data.error })
       } finally {
         this.instructionText = null
         this.generating = false
@@ -352,122 +397,244 @@ export default {
     async regenerateNext(note, editId) {
       this.generating = true
       try {
-        let res = await User.api.chatNextSteps({
-          id: this.user.id,
-          notes: note,
-        })
-        this.generativeRes = res
-        this.$store.dispatch('editMessages', {
-          id: editId,
-          value: this.generativeRes['res'],
-        })
+        let res = await User.api
+          .chatNextSteps({
+            id: this.user.id,
+            notes: note,
+          })
+          .then((response) => {
+            if (response.status === 500) {
+              User.api
+                .editMessage({
+                  error: response.data.value,
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: true,
+                  message_id: editId,
+                })
+                .then((response) => {
+                  this.$refs.chatBox.getConversations()
+                })
+            } else {
+              User.api
+                .editMessage({
+                  message_id: editId,
+                  value: response['res'],
+                  user_type: 'bot',
+                  failed: false,
+                  updated: true,
+                })
+                .then((response) => {
+                  this.getConversations()
+                })
+            }
+          })
       } catch (e) {
         console.log(e)
-        this.$store.dispatch('messageUpdateFailed', { id: editId, data: e.data.error })
       } finally {
         this.generating = false
       }
     },
     async regenerateSummary(editId, sumObj) {
+      let jsonData = this.jsonData(sumObj.data)
       this.generating = true
       try {
-        let res = await User.api.getSummary({
-          id: this.user.id,
-          data: sumObj.data,
-          integrationId: sumObj.integration,
-          resource: sumObj.resource,
-        })
-        this.generativeRes = res
-        this.$store.dispatch('editMessages', {
-          id: editId,
-          value: this.generativeRes['res'],
-        })
+        let res = await User.api
+          .getSummary({
+            id: this.user.id,
+            data: jsonData,
+            integrationId: sumObj.integration,
+            resource: sumObj.resource,
+          })
+          .then((response) => {
+            if (response.status === 500) {
+              User.api
+                .editMessage({
+                  message_id: editId,
+                  error: response.data.value,
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: true,
+                })
+                .then((response) => {
+                  this.$refs.chatBox.getConversations()
+                })
+            } else {
+              User.api
+                .editMessage({
+                  message_id: editId,
+                  value: response['res'],
+                  user_type: 'bot',
+                  failed: false,
+                  updated: true,
+                })
+                .then((response) => {
+                  this.getConversations()
+                })
+            }
+          })
       } catch (e) {
         console.log(e)
-        this.$store.dispatch('messageUpdateFailed', { id: editId, data: e.data.error })
       } finally {
         this.generating = false
       }
     },
     async generateEmail(note, id) {
+      let newNotes = this.jsonNotes(note, 'meeting_comments')
       this.generating = true
       try {
-        let res = await User.api.chatEmail({
-          id: this.user.id,
-          notes: note,
-          instructions: null,
-        })
-        this.generativeRes = res
-        this.$store.dispatch('editMessages', {
-          user: 'bot',
-          id: id,
-          value: this.generativeRes['res'],
-          gtMsg: 'AI Generated Email',
-          generated: true,
-          generatedType: 'email',
-        })
+        let res = await User.api
+          .chatEmail({
+            id: this.user.id,
+            notes: newNotes,
+            instructions: null,
+          })
+          .then((response) => {
+            if (response.status === 500) {
+              User.api
+                .editMessage({
+                  message_id: editId,
+                  error: response.data.value,
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: true,
+                })
+                .then((response) => {
+                  this.$refs.chatBox.getConversations()
+                })
+            } else {
+              User.api
+                .editMessage({
+                  message_id: id,
+                  value: response['res'],
+                  user_type: 'bot',
+                  failed: false,
+                  generated_title: 'AI Generated Email',
+                  generated: true,
+                  generated_type: 'email',
+                })
+                .then((response) => {
+                  this.getConversations()
+                })
+            }
+          })
       } catch (e) {
         console.log(e)
-        this.$store.dispatch('messageUpdateFailed', { id: id, data: e.data.error })
       } finally {
         this.generating = false
       }
     },
     async nextSteps(note, id) {
+      let newNotes = this.jsonNotes(note, 'meeting_comments')
       this.generating = true
       try {
-        let res = await User.api.chatNextSteps({
-          id: this.user.id,
-          notes: note,
-        })
-        this.generativeRes = res
-        this.$store.dispatch('editMessages', {
-          user: 'bot',
-          id: id,
-          value: this.generativeRes['res'],
-          gtMsg: 'AI Generated Next Steps',
-          generated: true,
-          generatedType: 'next',
-        })
+        let res = await User.api
+          .chatNextSteps({
+            id: this.user.id,
+            notes: newNotes,
+          })
+          .then((response) => {
+            if (response.status === 500) {
+              User.api
+                .editMessage({
+                  message_id: editId,
+                  error: response.data.value,
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: true,
+                })
+                .then((response) => {
+                  this.$refs.chatBox.getConversations()
+                })
+            } else {
+              User.api
+                .editMessage({
+                  message_id: id,
+                  value: response['res'],
+                  user_type: 'bot',
+                  failed: false,
+                  generated_title: 'AI Generated Next Steps',
+                  generated: true,
+                  generated_type: 'next',
+                })
+                .then((response) => {
+                  this.getConversations()
+                })
+            }
+          })
       } catch (e) {
         console.log(e)
-        this.$store.dispatch('messageUpdateFailed', { id: id, data: e.data.error })
       } finally {
         this.generating = false
       }
     },
 
-    async getSummary(data, id, resource, msgId) {
+    async getSummary(data, integration_id, resource, msg_id) {
+      let jsonData = this.jsonData(data)
       this.generating = true
       try {
-        let res = await User.api.getSummary({
-          id: this.user.id,
-          data: data,
-          integrationId: id,
-          resource: resource,
-        })
-        this.generativeRes = res
-        this.$store.dispatch('editMessages', {
-          user: 'bot',
-          id: msgId,
-          value: this.generativeRes['res'],
-          gtMsg: 'AI Generated Summary',
-          generated: true,
-          generatedType: 'summary',
-        })
+        let res = await User.api
+          .getSummary({
+            id: this.user.id,
+            data: jsonData,
+            integrationId: integration_id,
+            resource: resource,
+          })
+          .then((response) => {
+            if (response.status === 500) {
+              User.api
+                .editMessage({
+                  message_id: editId,
+                  error: response.data.value,
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: true,
+                })
+                .then((response) => {
+                  this.$refs.chatBox.getConversations()
+                })
+            } else {
+              User.api
+                .editMessage({
+                  message_id: msg_id,
+                  value: response['res'],
+                  user_type: 'bot',
+                  failed: false,
+                  generated_title: 'AI Generated Summary',
+                  generated: true,
+                  generated_type: 'summary',
+                })
+                .then((response) => {
+                  this.getConversations()
+                })
+            }
+          })
       } catch (e) {
         console.log(e)
-        this.$store.dispatch('messageUpdateFailed', { id: id, data: e.data.error })
       } finally {
         this.generating = false
       }
+    },
+    jsonNotes(data, name) {
+      let jsonString = data
+      jsonString = jsonString.replace(/'/g, '"')
+      jsonString = jsonString.replace(/\bNone\b/g, 'null')
+      const obj = JSON.parse(jsonString)
+      return obj[name]
+    },
+    jsonData(data, name) {
+      let jsonString = data
+      jsonString = jsonString.replace(/'/g, '"')
+      jsonString = jsonString.replace(/\bNone\b/g, 'null')
+      const obj = JSON.parse(jsonString)
+      return obj
     },
     toggleSelectContentOption(i) {
       if (i) {
         this.selectedIndex = i
       }
       this.selectingContent = !this.selectingContent
-      this.scrollToBottom()
+      // this.scrollToBottom()
     },
     scrollToBottom() {
       setTimeout(() => {
@@ -504,8 +671,12 @@ export default {
     messages() {
       return this.$store.state.messages
     },
+    currentOpp() {
+      return this.$store.state.currentOpp
+    },
   },
   created() {
+    this.getConversations()
     this.scrollToBottom()
   },
   directives: {
@@ -568,7 +739,9 @@ export default {
     font-size: 13px;
   }
   small {
+    display: inline-block;
     color: $light-gray-blue;
+    margin-bottom: 8px;
   }
 }
 
@@ -803,7 +976,7 @@ export default {
   align-items: center;
   // background-color: $soft-gray;
   border-radius: 6px;
-  padding: 0.75rem 0.75rem;
+  padding: 1.5rem 0.75rem;
 }
 
 .dot {

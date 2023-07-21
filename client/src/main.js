@@ -40,7 +40,7 @@ import VueApexCharts from 'vue-apexcharts'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faBars, faCircleUser, faRocket, faCog, faHeadphones, faUser, faSquareXmark, faShuffle, faRotate, faFilter, faSquareCaretLeft, faBolt, faAt, faUserGroup, faUserPlus, faCalendarPlus, faStairs, faSackDollar, faSignature, faLayerGroup, faAnglesRight, } from '@fortawesome/free-solid-svg-icons'
-import { faEnvelope, faFileLines, faPaperPlane, faSquarePlus } from '@fortawesome/free-regular-svg-icons'
+import { faEnvelope, faFileLines, faPaperPlane, faSquarePlus, faCalendar } from '@fortawesome/free-regular-svg-icons'
 import { faSalesforce, faHubspot } from '@fortawesome/free-brands-svg-icons'
 
 
@@ -68,7 +68,7 @@ Vue.use(VueGoogleMaps, {
 })
 Vue.use(VueApexCharts)
 
-library.add(faBars, faSquarePlus, faPaperPlane, faCircleUser, faRocket, faCog, faHeadphones, faUser, faSquareXmark, faShuffle, faRotate, faFilter, faSquareCaretLeft, faSalesforce, faBolt, faAt, faUserGroup, faUserPlus, faCalendarPlus, faStairs, faSackDollar, faSignature, faLayerGroup, faEnvelope, faFileLines, faAnglesRight, faHubspot)
+library.add(faBars, faSquarePlus, faPaperPlane, faCircleUser, faRocket, faCog, faHeadphones, faUser, faSquareXmark, faShuffle, faRotate, faFilter, faSquareCaretLeft, faSalesforce, faBolt, faAt, faUserGroup, faUserPlus, faCalendarPlus, faCalendar, faStairs, faSackDollar, faSignature, faLayerGroup, faEnvelope, faFileLines, faAnglesRight, faHubspot)
 
 Vue.component('apexchart', VueApexCharts)
 Vue.component('drag', Drag);

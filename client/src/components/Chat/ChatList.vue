@@ -1,9 +1,85 @@
 <template>
   <section class="lists">
+    <Modal
+      @close-modal="
+        () => {
+          $emit('cancel'), toggleEditAlert()
+        }
+      "
+      v-if="editingAlert"
+      dimmed
+    >
+      <div class="edit-modal">
+        <header>
+          <p>{{ currentView.title }}</p>
+
+          <p v-if="!loading" style="cursor: pointer" @click="toggleEditAlert">x</p>
+          <img
+            class="rotate disabled"
+            v-else
+            src="@/assets/images/refresh.svg"
+            height="11px"
+            alt=""
+          />
+        </header>
+
+        <main>
+          <AlertsEditPanel :alert="currentView" />
+        </main>
+      </div>
+    </Modal>
+
     <header class="list-header">
-      <p><span>List: </span> {{ currentView.title }}</p>
+      <!-- <p @click="test()"><span>List: </span> {{ currentView.title }}</p> -->
+      <div class="row__">
+        <div class="flexed-start" v-if="templates.refreshing">
+          <div class="loading">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+
+        <div class="row__" v-else>
+          <Multiselect
+            style="width: 200px"
+            v-model="activeList"
+            :placeholder="currentView.title || 'Select list'"
+            :options="templates.list"
+            selectedLabel=""
+            deselectLabel=""
+            selectLabel=""
+            track-by="id"
+            label="title"
+            @select="selectList($event)"
+            :loading="templates.refreshing"
+          >
+          </Multiselect>
+          <p class="counter" v-if="currentView !== 'pipeline' && !templates.refreshing">
+            {{ currentView.sobjectInstances.length }}
+          </p>
+        </div>
+        <!-- <select
+          v-else
+          @input="selectList($event.target.selectedOptions[0]._value)"
+          class="dropdown__content"
+          name="listOptions"
+          id=""
+        >
+          <option disabled selected value="">Select list</option>
+          <option class="select-items" v-for="(list, i) in templates.list" :key="i" :value="list">
+            {{ list.title }}
+          </option>
+        </select> -->
+      </div>
 
       <div style="display: flex; align-items: center">
+        <button @click="toggleEditAlert" class="small-button">
+          <img src="@/assets/images/edit.svg" height="12px" alt="" />
+        </button>
+        <button @click="handleConfigureOpen" class="small-button">
+          <img src="@/assets/images/plusOne.svg" height="12px" alt="" />
+        </button>
         <button @click="reloadWorkflow" class="small-button">
           <img
             :class="{ 'rotate disabled': loading }"
@@ -21,6 +97,32 @@
         </button>
       </div>
     </header>
+
+    <!-- <div v-show="editingAlert" class="add-field">
+      <header>
+        <p>{{ currentView.title }}</p>
+
+        <p v-if="!loading" style="cursor: pointer" @click="toggleEditAlert">x</p>
+        <img
+          class="rotate disabled"
+          v-else
+          src="@/assets/images/refresh.svg"
+          height="11px"
+          alt=""
+        />
+      </header>
+
+      <main class="centered">
+        <AlertsEditPanel :alert="currentView" />
+      </main>
+
+      <footer class="list-footer" :class="{ disabled: loading }">
+        <button @click="toggleEditAlert">Close</button>
+
+        <button :disabled="loading">Save</button>
+      </footer>
+    </div> -->
+
     <div v-show="addingField" class="add-field">
       <header>
         <p>{{ addRemoveText }}</p>
@@ -191,15 +293,19 @@
 <script>
 import { SObjects } from '@/services/salesforce'
 import { CollectionManager } from '@thinknimble/tn-models'
+import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
 import { ObjectField } from '@/services/crm'
 import AlertTemplate from '@/services/alerts/'
 import User from '@/services/users/'
+import Modal from '@/components/InviteModal'
 import { decryptData } from '../../encryption'
 
 export default {
   name: 'ChatList',
   components: {
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+    AlertsEditPanel,
+    Modal,
   },
 
   data() {
@@ -212,7 +318,9 @@ export default {
       removeExtraFieldObjs: [],
       addRemoveChoices: ['Add', 'Remove'],
       addingField: false,
+      editingAlert: false,
       loading: false,
+      activeList: null,
       formFields: CollectionManager.create({
         ModelClass: ObjectField,
         pagination: { size: 1000 },
@@ -220,14 +328,25 @@ export default {
           updateable: true,
         },
       }),
+      templates: CollectionManager.create({
+        ModelClass: AlertTemplate,
+        filters: { forPipeline: true },
+      }),
     }
   },
   created() {
     this.formFields.refresh()
+    this.templates.refresh()
   },
   methods: {
     test() {
-      console.log(this.user)
+      console.log(this.templates.list)
+    },
+    handleConfigureOpen() {
+      this.$emit('handleConfigureOpen', 'workflows')
+    },
+    selectList(alert) {
+      this.$store.dispatch('setCurrentView', alert)
     },
     fieldData(type, crm, field, opp, owner = null, account = null) {
       if (field.apiName === 'OwnerId' || field.apiName === 'hubspot_owner_id') {
@@ -290,6 +409,17 @@ export default {
       let newDate = input.replace(pattern, '$2/$3/$1')
       return newDate.split('T')[0]
     },
+    formatCash(money) {
+      let cash = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+      })
+      if (money) {
+        return cash.format(money)
+      }
+      return '-'
+    },
     async reloadWorkflow() {
       this.loading = true
       try {
@@ -311,6 +441,9 @@ export default {
     toggleAddField() {
       this.addingField = !this.addingField
       this.addOrRemove = null
+    },
+    toggleEditAlert() {
+      this.editingAlert = !this.editingAlert
     },
     async addExtraFields() {
       this.loading = true
@@ -442,20 +575,81 @@ export default {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   width: 300px;
 }
-// ::v-deep .multiselect__placeholder {
-//   color: $base-gray;
-// }
+
+::v-deep .multiselect__single {
+  white-space: nowrap;
+}
 
 ::v-deep .multiselect__tag {
   background-color: $soft-gray;
   color: $base-gray;
+  height: 32px;
+}
+
+::v-deep .multiselect__tags {
+  height: 32px;
+}
+
+.edit-modal {
+  display: flex;
+  flex-direction: column;
+  width: 520px;
+  height: 610px;
+  padding: 0 0.5rem 0 1rem;
+  background-color: white;
+  border-radius: 6px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    font-size: 16px;
+  }
+}
+
+.dropdown__content {
+  border: none;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  appearance: none;
+  background: white
+    url("data:image/svg+xml;utf8,<svg viewBox='0 0 140 140' width='10' height='12' xmlns='http://www.w3.org/2000/svg'><g><path stroke-width='5' d='m121.3,34.6c-1.6-1.6-4.2-1.6-5.8,0l-51,51.1-51.1-51.1c-1.6-1.6-4.2-1.6-5.8,0-1.6,1.6-1.6,4.2 0,5.8l53.9,53.9c0.8,0.8 1.8,1.2 2.9,1.2 1,0 2.1-0.4 2.9-1.2l53.9-53.9c1.7-1.6 1.7-4.2 0.1-5.8z' stroke='black' fill='black'/></g></svg>")
+    no-repeat;
+  background-position: right 5px top 50%;
+  font-family: 'Lato', sans-serif;
+  height: 29px;
+  font-size: 12px;
+  font-family: $base-font-family;
+  color: $chat-font-color;
+  letter-spacing: 0.4px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  padding: 0.35rem 1.2rem 0.35rem 0.5rem;
+  cursor: pointer;
+  outline: none;
+  margin: 0;
+}
+
+.counter {
+  margin-left: 1rem !important;
+  background-color: $white-green;
+  color: $dark-green;
+  padding: 0.125rem 0.5rem !important;
+  border-radius: 4px;
+
+  p {
+    font-size: 12px;
+    width: fit-content;
+  }
 }
 
 .loading {
   display: flex;
   justify-content: center;
   align-items: center;
-  // background-color: $soft-gray;
   border-radius: 6px;
   padding: 0.75rem 0.75rem;
 }
@@ -641,6 +835,12 @@ export default {
   filter: invert(89%) sepia(43%) saturate(4130%) hue-rotate(323deg) brightness(90%) contrast(87%);
 }
 
+.row__ {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
 .row {
   display: flex;
   flex-direction: row;
@@ -702,37 +902,6 @@ export default {
   padding: 0 0 2px 0 !important;
   // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
-
-// @media (max-height: 600px) {
-//   .chat-table-section {
-//     min-height: 56vh;
-//   }
-// }
-
-// @media (max-height: 750px) {
-//   .chat-table-section {
-//     min-height: 66vh;
-//   }
-// }
-
-// @media (min-height: 875px) {
-//   .chat-table-section {
-//     min-height: 70vh;
-//   }
-// }
-
-// @media (min-height: 1025px) {
-//   .chat-table-section {
-//     min-height: 75vh;
-//   }
-// }
-
-// @media (min-height: 1200px) {
-//   .chat-table-section {
-//     min-height: 78vh;
-//   }
-// }
-
 .chat-table-section::-webkit-scrollbar {
   width: 6px;
   height: 0px;

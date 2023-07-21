@@ -419,11 +419,10 @@
         </div> -->
       </div>
 
-      <div class="card">
+      <!-- <div class="card">
         <div class="card__header " style="">
           <img src="@/assets/images/gmail.svg" style="margin-right: 16px; height: 40px" />
           <img src="@/assets/images/outlookMail.png" style="height: 40px" />
-          <!-- <img v-if="!isPaid" src="@/assets/images/chat-lock.svg" class="filtered-gray" style="height: 20px;" /> -->
         </div>
         <div class="card__body">
           <div style="display: flex;">
@@ -441,15 +440,10 @@
             </button>
             <button v-else :disabled="true" class="long-button" style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem; padding: 0.5rem;" @click="isPaid ? connectApp('EMAIL') : showErrorSuccessModal('premium', 'This feature is available in the Business Plan')">
               Coming soon... 
-              <!-- <img 
-                src="@/assets/images/angle-small-right.svg" 
-                class="green-filter"
-                style="margin-top: 1px; margin-left: 0.5rem; height: 16px; font-weight: bold;"
-              /> -->
             </button>
           </div>
         </div>
-      </div>
+      </div> -->
 
       <!-- <div class="card">
         <div class="card__header lg-bg">
@@ -856,10 +850,10 @@ export default {
         await this.$store.dispatch('refreshCurrentUser')
         this.generatingToken = false
         this.selectedIntegration = null
-        this.$router.replace({
-          name: 'Integrations',
-          params: {},
-        })
+        // this.$router.replace({
+        //   name: 'Integrations',
+        //   params: {},
+        // })
       }
     }
   },

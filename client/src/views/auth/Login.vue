@@ -31,7 +31,7 @@
         :disabled="loggingIn || !loginForm.isValid"
         @click="handleLoginAttempt"
         class="login-button"
-        style="font-size: 14px; width: 23vw;"
+        style="font-size: 14px; width: 23vw"
         text="Continue"
         :loading="loggingIn"
       />
@@ -48,7 +48,9 @@
       </button> -->
       <div class="row">
         <p class="pad-right">New to Managr?</p>
-        <router-link class="register-link" :to="{ name: 'RegisterSelection' }">Register </router-link>
+        <router-link class="register-link" :to="{ name: 'RegisterSelection' }"
+          >Register
+        </router-link>
       </div>
       <div class="row">
         <p class="pad-right">Forgot password?</p>
@@ -114,6 +116,9 @@ export default {
           return null
       }
     },
+    isPR() {
+      return this.$store.state.user.role === 'PR'
+    },
     hasSalesforceIntegration() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.salesforceAccount
@@ -164,7 +169,7 @@ export default {
       client_id: googleInitData.client_id,
       callback: this.onGoogleSignIn,
       login_uri: googleInitData.login_uri,
-    });
+    })
 
     // Attach event listener to the custom button
     // const customButton = document.getElementById('custom-google-signin-button');
@@ -255,10 +260,12 @@ export default {
           // if (this.$route.query.redirect) {
           //   this.$router.push(this.$route.query.redirect)
           // }
-          if (!this.hasSalesforceIntegration && !this.hasSlackIntegration) {
+          if (this.isPR) {
+            this.$router.push({ name: 'PRSummaries' })
+          } else if (!this.hasSalesforceIntegration && !this.hasSlackIntegration) {
             this.$router.push({ name: 'Integrations' })
           } else {
-            this.$router.push({ name: 'ListTemplates' })
+            this.$router.push({ name: 'Home' })
           }
         } catch (error) {
           const e = error
@@ -287,9 +294,9 @@ export default {
       }
     },
     async verifyIdToken(idToken) {
-      const response = await fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + idToken);
-      const tokenInfo = await response.json();
-      return tokenInfo;
+      const response = await fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + idToken)
+      const tokenInfo = await response.json()
+      return tokenInfo
     },
     async signInWithMicrosoft() {
       const config = {
@@ -309,21 +316,21 @@ export default {
       const authRequest = {
         scopes: ['user.read'],
         prompt: 'select_account',
-      };
+      }
 
       // myMSALObj.loginRedirect({
       //   scopes: ['user.read'],
       // })
-      
+
       try {
         const res = await myMSALObj.loginPopup(authRequest)
-      } catch (e){
+      } catch (e) {
         console.log('Error during sign-in:', e)
       }
     },
     signInWithGoogle() {
       // Trigger the Google Sign-In flow
-      window.google.accounts.id.prompt();
+      window.google.accounts.id.prompt()
     },
     async onGoogleSignIn(response) {
       // Handle the Google Sign-In response
@@ -331,7 +338,7 @@ export default {
         const idToken = response.credential
         const verifiedToken = await this.verifyIdToken(idToken)
 
-        const { email } = verifiedToken;
+        const { email } = verifiedToken
 
         if (verifiedToken) {
           // Use the token for authentication or further processing
@@ -345,7 +352,7 @@ export default {
           try {
             const emailRes = await User.api.checkStatus(email)
             userEmail = true
-          } catch(e) {
+          } catch (e) {
             userEmail = false
           }
           if (userEmail) {
@@ -354,14 +361,15 @@ export default {
             let token = response.data.token
             let userData = response.data
             delete userData.token
-            const userAPI = User.fromAPI(userData)
+            // const userAPI = User.fromAPI(userData)
             // const encryptedUser = encryptData(userAPI, process.env.VUE_APP_SECRET_KEY)
             // const encryptedKey = encryptData(token, process.env.VUE_APP_SECRET_KEY)
             // this.$store.dispatch('updateUserToken', encryptedKey)
             this.$store.dispatch('updateUserToken', token)
-            // this.$store.dispatch('updateUser', encryptedUser)
-            this.$store.commit('UPDATE_USER', userAPI)
-            if (!this.hasSalesforceIntegration && !this.hasSlackIntegration) {
+            this.$store.dispatch('updateUser', User.fromAPI(userData))
+            if (this.isPR) {
+              this.$router.push({ name: 'PRSummaries' })
+            } else if (!this.hasSalesforceIntegration && !this.hasSlackIntegration) {
               this.$router.push({ name: 'Integrations' })
             } else {
               this.$router.push({ name: 'ListTemplates' })
@@ -371,11 +379,11 @@ export default {
             this.$router.push({ name: 'GoogleRegister' })
           }
         } else {
-          console.error('ID token not found in credential:', response.credential);
+          console.error('ID token not found in credential:', response.credential)
         }
       } else {
         // Sign-In was unsuccessful
-        console.error('Google Sign-In failed:', response.error);
+        console.error('Google Sign-In failed:', response.error)
       }
     },
   },
@@ -607,7 +615,7 @@ label {
 }
 
 .register-link {
-    text-decoration: none;
-    color: $dark-green;
-  }
+  text-decoration: none;
+  color: $dark-green;
+}
 </style>

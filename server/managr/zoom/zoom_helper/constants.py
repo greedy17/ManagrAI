@@ -27,11 +27,11 @@ if settings.USE_ZOOM:
     if settings.IN_DEV:
         MEETING_WEBHOOK = "https://thinknimble.ngrok.io/api/zoom/webhooks/meetings/"
         TOKEN_REDIRECT_URI = "https://thinknimble.ngrok.io/api/zoom/webhooks/auth/"
-        ZOOM_FRONTEND_REDIRECT = "http://localhost:8080/settings/integrations"
+        ZOOM_FRONTEND_REDIRECT = "http://localhost:8080/chat"
     else:
         MEETING_WEBHOOK = f"{uri}api/zoom/webhooks/meetings/"
         TOKEN_REDIRECT_URI = f"{uri}api/zoom/webhooks/auth/"
-        ZOOM_FRONTEND_REDIRECT = f"{uri}/settings/integrations"
+        ZOOM_FRONTEND_REDIRECT = f"{uri}/chat"
 
     AUTHORIZATION_QUERY_PARAMS = {
         "response_type": "code",
