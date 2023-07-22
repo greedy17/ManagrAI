@@ -319,7 +319,6 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     googleLoginUri       = var.app_config.google_login_uri
 
     newApiKey            = var.app_config.news_api_key
-
   })
 }
 
