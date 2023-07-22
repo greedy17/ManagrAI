@@ -112,7 +112,7 @@
             </label>
           </router-link>
           <div
-            class="side-wrapper"
+            class="side-wrapper margin-customize"
             active-class="active"
             @click="test('Customize')"
           >
@@ -831,5 +831,8 @@ a:hover {
       transform: scale(1.025);
     }
   }
+}
+.margin-customize {
+  margin: 0.5rem 0 0 0.8rem;
 }
 </style>

@@ -2643,18 +2643,30 @@ def process_chat_action_submit(payload, context):
 def process_news_summary(payload, context):
     from managr.comms.tasks import emit_process_news_summary
 
+    ts = context.get("ts", False)
     user = User.objects.get(id=context.get("u"))
     try:
-        res = slack_requests.send_channel_message(
-            user.slack_integration.channel,
-            user.organization.slack_integration.access_token,
-            block_set=get_block_set(
-                "loading", {"message": ":robot_face: Processing your news summary..."}
-            ),
-        )
+        if ts:
+            res = slack_requests.update_channel_message(
+                user.slack_integration.channel,
+                ts,
+                user.organization.slack_integration.access_token,
+                block_set=get_block_set(
+                    "loading", {"message": ":robot_face: Processing your news summary..."}
+                ),
+            )
+        else:
+            res = slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                block_set=get_block_set(
+                    "loading", {"message": ":robot_face: Processing your news summary..."}
+                ),
+            )
+            context.update(ts=res["ts"])
     except Exception as e:
         logger.exception(f"Failed to send DM to {user.email} because of <{e}>")
-    context.update(ts=res["ts"])
+
     emit_process_news_summary(payload, context)
     return {"response_action": "clear"}
 

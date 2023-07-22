@@ -38,15 +38,43 @@
               <div class="highlight-point">{{ summary.overview }}</div>
             </div>
           </div>
-          <div class="summary-buttons-container">
-            <button class="summary-button"><img src="@/assets/images/sparkles-round.svg" />Regenerate</button>
-            <button class="summary-button dark-button"><img src="@/assets/images/sparkles-round.svg" />New Summary</button>
+          <div v-if="regenSummary">
+            <div class="provide-instructions">
+              <span>Provide Instructions:</span>
+              <img class="back-arrow" src="@/assets/images/arrow-small-left.svg" @click="changeRegen"/>
+            </div>
+            <div class="chat-border">
+            <div class="input-container">
+              <input v-model="message" placeholder="Provide Instructions..." />
+              <font-awesome-icon
+                :class="{ invert: !message.length }"
+                class="gray"
+                style="height: 14px; cursor: pointer"
+                icon="fa-regular fa-paper-plane"
+                @click="regenerateSummary"
+              />
+            </div>
+          </div>
+          </div>
+          <div v-else-if="newSummary">
+            <div class="provide-instructions">
+              <span>Selected: {{ selectedArticles.length }}</span>
+              <img class="back-arrow" src="@/assets/images/arrow-small-left.svg" @click="changeNew"/>
+            </div>
+            <div>
+              <div v-if="!selectedArticles.length" class="summarize-disabled">Select the clips you'd like to summarize</div>
+              <div v-else class="summarize" @click="saveSelectedArticles">Summarize</div>
+            </div>
+          </div>
+          <div v-else class="summary-buttons-container">
+            <button @click="changeRegen" class="summary-button"><img src="@/assets/images/sparkles-round.svg" />Regenerate</button>
+            <button @click="changeNew" class="summary-button dark-button"><img src="@/assets/images/sparkles-round.svg" />New Summary</button>
           </div>
         </div>
       </div>
       <div v-else-if="summaryChat === 'CHAT'" class="chat-container">
-        <div class="margin-top" ref="chatWindow">
-          <div v-for="(message, i) in messages" :key="i" class="col-start">
+        <div class="margin-top chat-window" ref="chatWindow">
+          <!-- <div v-for="(message, i) in messages" :key="i" class="col-start">
             <div class="message-container">
               <div class="images">
                 <span v-if="message.failed" style="font-size: 24px"> 🚫 </span>
@@ -92,7 +120,6 @@
                     style="border-radius: 6px; padding: 0.2rem 0 0.25rem 0"
                     class="row"
                   >
-                    <!-- <p class="gray-text">Regenerating response</p> -->
                     <div class="loading">
                       <div class="dot"></div>
                       <div class="dot"></div>
@@ -160,7 +187,7 @@
                         alt=""
                       />
                       Regenerate
-                    </button> -->
+                    </button>
 
                     <p v-if="message.error" style="margin-top: 0.5rem" class="red-text">
                       {{ message.error }}
@@ -273,9 +300,9 @@
                 <p class="red-text" v-if="message.error">{{ message.error }}</p>
               </div>
             </div>
-          </div>
+          </div> -->
 
-          <div style="margin-left: 1rem" v-show="messageLoading" class="loader-container">
+          <!-- <div style="margin-left: 1rem" v-show="messageLoading" class="loader-container">
             <span
               style="font-size: 20px; margin-right: 0.5rem; padding-top: 0.75rem; margin-left: 0.25rem"
               >🚀</span
@@ -289,17 +316,34 @@
                 <div class="dot"></div>
               </div>
             </div>
-          </div>
+          </div> -->
 
-          <!-- <div>{{ user.salesforceAccountRef }}</div> -->
         </div>
-        <ChatTextBox 
+        <!-- <ChatTextBox 
           class="bottom"
           :messages="messages"
           :scrollToBottom="scrollToBottom"
           :actions="actions"
           :currentOpp="true"
-        />
+        /> -->
+        <div class="bottom">
+          <div class="chat-button-container">
+            <div class="chat-button">Summarize</div>
+            <div class="chat-button">Generate</div>
+            <div class="chat-button">Ask Question</div>
+          </div>
+          <div class="chat-border">
+            <div class="input-container">
+              <input v-model="message" placeholder="What would you like to do..." />
+              <font-awesome-icon
+                :class="{ invert: !message }"
+                class="gray"
+                style="height: 14px; cursor: pointer"
+                icon="fa-regular fa-paper-plane"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="right-content">
@@ -321,31 +365,39 @@
         </div>
       </div>
       <div class="card-container">
-        <div v-for="article in filteredArticles" :key="article.id" class="card" @click="selectArticle(article)">
-          <div class="display-flex">
-            <div class="">
-              <div class="card-top-left">
-                <img :src="article.icon" />
-                <span>{{ article.source }}</span>
+        <div v-for="article in filteredArticles" :key="article.id" class="">
+          <div class="card" @click="selectArticle(article)">
+            <div class="display-flex">
+              <div class="">
+                <div class="card-top-left">
+                  <img :src="article.icon" />
+                  <span>{{ article.source }}</span>
+                </div>
+                <h3 class="article-title" @click="goToArticle(article.link)">{{ article.title }}</h3>
+                <h4 class="article-preview">{{ article.preview }}</h4>
               </div>
-              <h3 class="article-title" @click="goToArticle(article.link)">{{ article.title }}</h3>
-              <h4 class="article-preview">{{ article.preview }}</h4>
+              <div @click="goToArticle(article.link)">
+                <img :src="article.coverPhoto" class="cover-photo" />
+              </div>
             </div>
-            <div @click="goToArticle(article.link)">
-              <img :src="article.coverPhoto" class="cover-photo" />
-            </div>
-          </div>
-          <div class="card-footer">
-            <div class="author-time">
-              <span>{{ article.time }}</span>
-              <span class="divier-dot">.</span>
-              <span>{{ article.author }}</span>
-            </div>
-            <div class="footer-icon-container">
-              <img src="@/assets/images/sparkles-nofill-round.svg" class="footer-icon" />
-              <img src="@/assets/images/tags.svg" class="footer-icon" />
-              <img src="@/assets/images/search-round.svg" class="footer-icon" />
-              <img src="@/assets/images/arrow-small-right.svg" class="right-arrow-footer" />
+            <div class="card-footer">
+              <div class="author-time">
+                <span>{{ article.time }}</span>
+                <span class="divier-dot">.</span>
+                <span>{{ article.author }}</span>
+              </div>
+              <div class="footer-icon-container">
+                <div v-if="newSummary" class="">
+                  <input 
+                    type="checkbox"
+                    @click="addRemoveSelectedArticles(article)"
+                  />
+                </div>
+                <img src="@/assets/images/sparkles-nofill-round.svg" class="footer-icon" />
+                <img src="@/assets/images/tags.svg" class="footer-icon" />
+                <img src="@/assets/images/search-round.svg" class="footer-icon" />
+                <img src="@/assets/images/arrow-small-right.svg" class="right-arrow-footer" />
+              </div>
             </div>
           </div>
         </div>
@@ -355,10 +407,12 @@
 </template>
 <script>
 import ChatTextBox from '../Chat/ChatTextBox.vue'
+import Input from '../forms/inputs/Input.vue'
 export default {
   name: 'SummariesMainContent',
   components: {
-    ChatTextBox
+    ChatTextBox,
+    Input
 
   },
   data() {
@@ -367,6 +421,10 @@ export default {
       articles: [],
       summaryChat: 'SUMMARY',
       filterText: '',
+      message: '',
+      regenSummary: false,
+      newSummary: false,
+      selectedArticles: [],
       actions: [
         {
           name: 'Summarize',
@@ -401,9 +459,22 @@ export default {
       }
       this.summary = res
     },
+    regenerateSummary() {
+      const res = {
+        overview: `Today's news highlights the success and growth of Tesla in Q2. The company achieved record deliveries in China, driven by tax credits and wider adoption.`,
+        highlights: [
+          'Telsa and BYD achieved record-high deliveries of their China-made cehicles in Q2',
+          `Tesla's Q2 deliveries rose 83% compared to the previous year, driven by tax credits and broader adoption.`,
+          `Tesla reported strong Q2 results.`,
+        ]
+      }
+      this.summary = res
+      this.changeRegen()
+    },
     getArticles() {
       const res = [
         {
+          id: 1,
           icon: 'https://www.vectorlogo.zone/logos/marketwatch/marketwatch-icon.svg',
           source: 'MarketWatch',
           title: 'EV stocks see green after Tesla, Rivian, Nio report upbeat deliveries data',
@@ -415,6 +486,7 @@ export default {
           data: {},
         },
         {
+          id: 2,
           icon: 'https://www.vectorlogo.zone/logos/marketwatch/marketwatch-icon.svg',
           source: 'Automotive News',
           title: 'Tesla deliveries in China surge as supply-chain concerns ease.',
@@ -426,6 +498,7 @@ export default {
           data: {},
         },
         {
+          id: 3,
           icon: 'https://www.vectorlogo.zone/logos/marketwatch/marketwatch-icon.svg',
           source: 'MotorTrend',
           title: '2025 Tesla Model S: What you should know',
@@ -443,8 +516,27 @@ export default {
     selectArticle(article) {
       this.$store.dispatch('updateSelectedArticle', article)
     },
+    saveSelectedArticles() {
+      this.generateSummary()
+      this.selectedArticles = []
+      this.changeNew()
+    },
+    addRemoveSelectedArticles(article) {
+      const existingArticle = this.selectedArticles.filter(ar => ar.id === article.id)[0]
+      if (existingArticle) {
+        this.selectedArticles = this.selectedArticles.filter(ar => ar.id !== article.id)
+      } else {
+        this.selectedArticles.push(article)
+      }
+    },
     goToArticle(link) {
       window.location.href = link
+    },
+    changeRegen() {
+      this.regenSummary = !this.regenSummary
+    },
+    changeNew() {
+      this.newSummary = !this.newSummary
     },
     searchTitles() {
       this.filteredArticles = this.articles.filter(article => article.title.includes(this.filterText))
@@ -724,8 +816,11 @@ export default {
   }
   .chat-container {
     width: 100%;
-    height: 70vh;
+    height: 75vh;
     overflow-y: auto;
+  }
+  .chat-window {
+    min-height: 63vh;
   }
   .message-text {
   font-family: $base-font-family;
@@ -1035,4 +1130,65 @@ export default {
 //   animation: typing 1.5s steps(30, end) forwards, blinking 1s infinite;
 //   border-right: 1px solid;
 // }
+.chat-button-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+.chat-button {
+  @include secondary-button();
+  // width: 6rem;
+  padding: 0.5rem 1.2rem;
+  margin: 0 0.5rem;
+}
+.chat-border {
+  background-color: $silver;
+  padding: 0.25rem;
+  border-radius: 4px;
+}
+.input-container {
+  background-color: $white;
+  padding: 0.5rem;
+  border-radius: 4px;
+  box-shadow: 0 0 3px $very-light-gray;
+  input {
+    border: none;
+    outline: none;
+    width: 95%;
+  }
+}
+.provide-instructions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 1rem 0;
+  font-size: 14px;
+}
+.back-arrow {
+  height: 20px;
+  cursor: pointer;
+}
+.gray {
+  color: rgb(82, 80, 80);
+}
+.summarize {
+  @include gray-text-button();
+}
+.summarize-disabled {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 1rem;
+  border-radius: 0.3rem;
+  font-weight: bold;
+  line-height: 1.14;
+  text-indent: none;
+  border-style: none;
+  letter-spacing: 0.03rem;
+  background-color: $soft-gray;
+  border: 1px solid $soft-gray;
+  color: $base-gray;
+  font-size: 12px;
+  transition: all 0.3s;
+}
 </style>

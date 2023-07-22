@@ -13,6 +13,7 @@ from managr.core.models import User
 from managr.core import exceptions as open_ai_exceptions
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import block_builders
+from managr.slack import constants as slack_const
 
 
 logger = logging.getLogger("managr")
@@ -95,9 +96,20 @@ def _process_news_summary(payload, context):
             break
     try:
         blocks = [
-            block_builders.simple_section(f"*Summary for {company}*", "mrkdwn"),
+            block_builders.simple_section(
+                f"*Summary for {company}*", "mrkdwn", block_id="NEWS_SUMMARY"
+            ),
             block_builders.divider_block(),
             block_builders.simple_section(message, "mrkdwn"),
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "Regenerate",
+                        "REGENERATE",
+                        action_id=slack_const.PROCESS_SHOW_REGENERATE_NEWS_SUMMARY_FORM,
+                    )
+                ]
+            ),
         ]
         if not settings.IN_PROD:
             blocks.extend(

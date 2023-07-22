@@ -33,7 +33,8 @@
       { "name": "USE_OUTREACH", "value": "${use_outreach}" },
       { "name": "USE_HUBSPOT", "value": "${use_hubspot}" },
       { "name": "USE_OPEN_AI", "value": "${use_open_ai}" },
-      { "name": "USE_SSO", "value": "${use_sso}" }
+      { "name": "USE_SSO", "value": "${use_sso}" },
+      { "name": "USE_NEWS_API", "value": "${use_news_api}" }
     ],
     "secrets": [
       {
@@ -276,6 +277,10 @@
       {
         "name": "GOOGLE_LOGIN_URI",
         "valueFrom": "${config_secret_arn}:googleLoginUri::"
+      },
+      {
+        "name": "NEWS_API_KEY",
+        "valueFrom": "${config_secret_arn}:newsApiKey::"
       }
     ],
     "logConfiguration": {

@@ -132,3 +132,24 @@ resource "aws_lb_listener_rule" "rule_https_default" {
     }
   }
 }
+
+resource "aws_lb_listener_rule" "rule_http_redirect" {
+  listener_arn = aws_alb_listener.front_end.arn
+  priority        = 100
+
+  action {
+    type          = "redirect"
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+
+  condition {
+    http_header {
+      http_header_name  = "X-Forwarded-Proto"
+      values            = ["http"]
+    }
+  }
+}
