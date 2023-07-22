@@ -2118,7 +2118,8 @@ def process_transcript(request):
     from managr.core import constants as core_consts
     from managr.core.exceptions import _handle_response
     from managr.core.background import emit_process_add_call_analysis
-    from managr.slack import constants as slack_consts
+    from managr.slack import constants as slack_const
+    from managr.salesforce import constants as sf_consts
     from managr.zoom.zoom_helper.exceptions import RecordingNotFound
     from managr.core.exceptions import StopReasonLength, ServerError
 
@@ -2169,11 +2170,25 @@ def process_transcript(request):
     form_template = user.team.team_forms.get(form_type="UPDATE", resource=resource_type)
     fields = form_template.custom_fields.all()
     fields_list = list(fields.values_list("label", flat=True))
-    if slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations:
-        workflow.operations.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
-    if slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations_list:
-        workflow.operations_list.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
-    workflow.save()
+    
+    # if len(workflow.failed_task_description):
+    #     workflow.build_retry_list()
+    # else:
+    #     if slack_const.MEETING__PROCESS_TRANSCRIPT_TASK in workflow.operations:
+    #         workflow.operations = []
+    #     main_operation = (   
+    #     f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}"
+    #     )
+    #     ops = [
+    #         main_operation,
+    #     ]
+    #     if len(workflow.operations_list):
+    #         workflow.operations_list = [*workflow.operations_list, *ops]
+    #     else:
+    #         workflow.operations_list = ops
+    #     workflow.operations_list = ops
+    # workflow.save()
+    # workflow.begin_tasks()
 
     has_error = False
     error_message = None
@@ -2214,7 +2229,7 @@ def process_transcript(request):
                 )
                 transcript = transcript.decode("utf-8")
                 summary_parts = process_transcript_to_summaries(transcript, user)
-            if len(summary_parts):              
+            if len(summary_parts):         
                 timeout = 90.0
                 tokens = 1500
                 # try:
