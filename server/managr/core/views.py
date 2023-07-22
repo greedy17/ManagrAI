@@ -799,7 +799,6 @@ def log_chat_meeting(request):
     except Exception as e:
         return Response(data={"data": e},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     serializer = MeetingWorkflowSerializer(instance=workflow)
-    print('DATA IS HERE',serializer.data)
     data = {"success": True, "workflow": serializer.data}
     return Response(data=data)
 
@@ -2330,11 +2329,11 @@ def process_transcript(request):
                         )
                         if timeout >= 120.0:
                             has_error = True
-                            error_message = "OpenAI servers are busy. No action needed, we'll try again in a few minutes..."
-                            schedule = datetime.now() + timezone.timedelta(minutes=5)
-                            process_transcript_to_summaries(
-                                transcript, user
-                            )
+                            error_message = "OpenAI servers are busy. Try again in a few minutes."
+                            # schedule = datetime.now() + timezone.timedelta(minutes=5)
+                            # process_transcript_to_summaries(
+                            #     transcript, user
+                            # )
                             break
                         else:
                             timeout += 30.0
@@ -2382,7 +2381,7 @@ def process_transcript(request):
         emit_process_add_call_analysis(str(workflow.id), summary_parts)
         return Response(data={'data':cleaned_data, 'analysis':combined_summary, 'status':status.HTTP_200_OK})
     else:
-        return Response(data=error_message, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(data={'data':error_message, 'status': status.HTTP_500_INTERNAL_SERVER_ERROR})
 
 
 @api_view(["post"])

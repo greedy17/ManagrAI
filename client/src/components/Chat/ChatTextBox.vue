@@ -506,7 +506,6 @@ export default {
       }, 1500)
     },
     toggleTemplates() {
-      console.log('here i am')
       this.templatesOpen = !this.templatesOpen
     },
   },

@@ -1,7 +1,9 @@
 <template>
   <section class="meetings">
     <div
-      v-if="!hasMeetingWorkflow || !(selectedMeetingWorkflow && selectedMeetingWorkflow.forms)"
+      v-if="
+        !hasMeetingWorkflow || (selectedMeetingWorkflow && !selectedMeetingWorkflow.forms.length)
+      "
       :class="{ disabled: submitting }"
     >
       <div class="margin-top-s">
@@ -65,55 +67,90 @@
       </div>
 
       <div v-if="errorText" class="margin-top">
-        <p class="error">{{ errorText }}/p></p>
+        <p class="error">{{ errorText }}</p>
       </div>
     </div>
 
-    <div v-else-if="selectedMeetingWorkflow && selectedMeetingWorkflow.forms">
-      <div
-        v-if="
-          !selectedMeetingWorkflow.is_completed ||
-          !(selectedMeetingWorkflow.forms[0] && selectedMeetingWorkflow.forms[0].is_submitted)
-        "
-      >
-        <div :class="{ disabled: submitting }" v-for="(field, i) in formFields" :key="i">
-          <ChatMeetingFormField
-            :placeholder="toString(updateData[field.apiName])"
-            :field="field"
-            :chatData="updateData"
-            @set-value="setUpdateValues"
-            :stageFields="stageFields"
-            :stagesWithForms="stagesWithForms"
-            :hubspotStages="
-              user.crm === 'HUBSPOT'
-                ? selectedMeetingWorkflow.resource_ref.secondary_data.pipeline
-                : []
-            "
-          />
+    <div v-else-if="selectedMeetingWorkflow && selectedMeetingWorkflow.forms.length">
+      <div v-if="selectedMeetingWorkflow.forms[0].update_source === 'transcript'">
+        <div
+          v-if="
+            !selectedMeetingWorkflow.is_completed ||
+            !(selectedMeetingWorkflow.forms[0] && selectedMeetingWorkflow.forms[0].is_submitted)
+          "
+        >
+          <div :class="{ disabled: submitting }" v-for="(field, i) in formFields" :key="i">
+            <ChatMeetingFormField
+              :placeholder="toString(updateData[field.apiName])"
+              :field="field"
+              :chatData="updateData"
+              @set-value="setUpdateValues"
+              :stageFields="stageFields"
+              :stagesWithForms="stagesWithForms"
+              :hubspotStages="
+                user.crm === 'HUBSPOT'
+                  ? selectedMeetingWorkflow.resource_ref.secondary_data.pipeline
+                  : []
+              "
+            />
+          </div>
+          <div class="meeting-modal-footer">
+            <button @click="onSubmitChat" class="green-button" :disabled="submitting">
+              Log Meeting
+            </button>
+          </div>
         </div>
-        <div class="meeting-modal-footer">
-          <button @click="onSubmitChat" class="green-button" :disabled="submitting">
-            Log Meeting
-          </button>
+
+        <div v-else>
+          <div @click="test">
+            <p class="logged">
+              <img src="@/assets/images/check.svg" height="12px" alt="" /> meeting logged
+            </p>
+          </div>
+
+          <pre class="message-text" v-html="selectedMeetingWorkflow.transcript_analysis"></pre>
         </div>
       </div>
 
       <div v-else>
-        <div @click="test">
-          <p class="logged">
-            <img src="@/assets/images/check.svg" height="12px" alt="" /> meeting logged
-          </p>
+        <div v-if="!selectedMeetingWorkflow.is_completed">
+          <div :class="{ disabled: submitting }" v-for="(field, i) in formFields" :key="i">
+            <ChatMeetingFormField
+              :placeholder="toString(updateData[field.apiName])"
+              :field="field"
+              :chatData="updateData"
+              @set-value="setUpdateValues"
+              :stageFields="stageFields"
+              :stagesWithForms="stagesWithForms"
+              :hubspotStages="
+                user.crm === 'HUBSPOT'
+                  ? selectedMeetingWorkflow.resource_ref.secondary_data.pipeline
+                  : []
+              "
+            />
+          </div>
+          <div class="meeting-modal-footer">
+            <button @click="onSubmitChat" class="green-button" :disabled="submitting">
+              Log Meeting
+            </button>
+          </div>
         </div>
 
-        <pre class="message-text" v-html="selectedMeetingWorkflow.transcript_analysis"></pre>
+        <div v-else>
+          <div @click="test">
+            <p class="logged">
+              <img src="@/assets/images/check.svg" height="12px" alt="" /> meeting logged
+            </p>
+          </div>
+        </div>
       </div>
     </div>
 
     <div v-if="!hasMeetingWorkflow">
       <div class="meeting-modal-footer">
         <p v-if="processing" class="row__">
-          <img class="rotate" src="@/assets/images/loading.svg" height="14px" alt="" /> Processing,
-          this could take a few minutes...
+          <img class="rotate" src="@/assets/images/loading.svg" height="14px" alt="" /> Processing
+          transcript, this could take a few minutes...
         </p>
       </div>
     </div>
@@ -251,7 +288,7 @@ export default {
       this.processing = true
       this.meetingModalOpen = false
       try {
-        let res = await User.api
+        await User.api
           .submitChatTranscript({
             user_id: this.user.id,
             resource_type: this.selectedResourceType,
@@ -261,12 +298,9 @@ export default {
           })
           .then((response) => {
             if (response.status === 200) {
-              //   this.updateData = response.data
-              this.$emit('reload-meetings')
+              this.$emit('reload-workflows')
             } else {
-              console.log(response)
               this.errorText = response.data
-              console.log(this.errorText)
               this.selectedResourceType = null
               this.mappedOpp = null
               this.usingAi = null
@@ -274,7 +308,11 @@ export default {
           })
       } catch (e) {
         console.log(e)
-        this.$emit('reload-meetings')
+        this.errorText =
+          'No transcript found for this meeting. Try again later or continue without using AI.'
+        this.selectedResourceType = null
+        this.mappedOpp = null
+        this.usingAi = null
       } finally {
         this.submitting = false
         this.processing = false
@@ -315,15 +353,16 @@ export default {
             form_data: this.updateData,
           })
           .then((response) => {
-            this.$emit('reload-meetings')
+            setTimeout(() => {
+              this.$emit('reload-workflows')
+            }, 2000)
           })
       } catch (e) {
         console.log(e)
       } finally {
-        // this.$emit('reload-meetings')
         setTimeout(() => {
           this.submitting = false
-        }, 1000)
+        }, 3000)
       }
     },
     setUpdateValues(key, val, multi) {
@@ -374,7 +413,7 @@ export default {
             resource_type: this.selectedResourceType,
           })
           .then((response) => {
-            this.$emit('reload-meetings')
+            this.$emit('reload-workflows')
           })
       } catch (e) {
         console.log(e)
@@ -475,6 +514,7 @@ export default {
         this.selectedMeetingWorkflow.forms[0].saved_data &&
         Object.values(this.selectedMeetingWorkflow.forms[0].saved_data).length > 0
       ) {
+        console.log(this.selectedMeetingWorkflow)
         this.updateData = this.selectedMeetingWorkflow.forms[0].saved_data
       } else {
         console.log(this.selectedMeetingWorkflow)

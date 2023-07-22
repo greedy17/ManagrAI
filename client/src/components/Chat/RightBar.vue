@@ -784,14 +784,14 @@ export default {
     },
     async reloadWorkflows() {
       try {
-        const res = await MeetingWorkflows.api.getMeetingList().then((response) => {
+        await MeetingWorkflows.api.getMeetingList().then((response) => {
           this.meetingWorkflows = response.results
           this.logkey += 1
         })
       } catch (e) {
         console.log(e)
       } finally {
-        this.logkey += 1
+        this.$store.dispatch('refreshCurrentUser')
       }
     },
     async reloadMeetings() {
@@ -802,6 +802,7 @@ export default {
             date: this.meetingDate,
           })
           .then((response) => {
+            this.logkey += 1
             this.meetings = response.data
           })
       } catch (e) {
