@@ -800,9 +800,10 @@ export default {
     handleConfigureOpen(name) {
       this.configureModalOpen = true
 
-      setTimeout(() => {
-        this.$refs.configModal.changeConfigPage(name)
-      }, 300)
+      // setTimeout(() => {
+      //   console.log('name', name)
+      //   this.$refs.configModal.changeConfigPage(name)
+      // }, 300)
     },
     handleCancel() {
       this.profileModalOpen = false

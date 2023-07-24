@@ -94,7 +94,6 @@ export default {
         this.currentResource = this.OPPORTUNITY
       }
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
-      console.log('allForms', this.allForms)
       this.allFields = await this.listFields()
       await this.listPicklists({
         salesforceObject: this.currentResource,
