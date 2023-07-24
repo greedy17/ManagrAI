@@ -56,7 +56,7 @@
           >
           </Multiselect>
           <p class="counter" v-if="currentView !== 'pipeline' && !templates.refreshing">
-            {{ currentView.sobjectInstances.length }}
+            Results: {{ currentView.sobjectInstances.length }}
           </p>
         </div>
         <!-- <select

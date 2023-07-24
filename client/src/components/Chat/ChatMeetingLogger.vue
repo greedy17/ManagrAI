@@ -397,14 +397,14 @@ export default {
           .then((response) => {
             setTimeout(() => {
               this.$emit('reload-workflows')
-            }, 2000)
+            }, 10000)
           })
       } catch (e) {
         console.log(e)
       } finally {
         setTimeout(() => {
           this.submitting = false
-        }, 3000)
+        }, 11000)
       }
     },
     setUpdateValues(key, val, multi) {

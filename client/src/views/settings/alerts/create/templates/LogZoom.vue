@@ -274,7 +274,8 @@ export default {
           })
         })
       } finally {
-        this.$router.push({ name: 'ListTemplates' })
+        // this.$router.push({ name: 'ListTemplates' })
+        this.$emit('close-modal')
         this.$toast('Zoom channel saved!', {
           timeout: 2000,
           position: 'top-left',
@@ -675,7 +676,7 @@ input {
     display: flex;
     // justify-content: flex-end;
     // width: 100%;
-    width: 36.5vw;
+    width: 34.5vw;
     position: absolute;
     bottom: 35%;
     // margin-top: -4rem;
