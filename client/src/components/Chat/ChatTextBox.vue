@@ -18,12 +18,18 @@
           </div>
           <Transition name="slide-fade">
             <div v-if="showMessage" class="templates">
-              <p>Select a record first!</p>
+              <p>
+                first, select a record from the list
+                <img class="inverted" src="@/assets/images/arrow-right.svg" height="10px" alt="" />
+              </p>
             </div>
           </Transition>
           <Transition name="slide-fade">
             <div v-if="showMeetingMessage" class="templates-green">
-              <p>Log your meeting from the meetings sections.</p>
+              <p>
+                Log your meeting from the meetings sections
+                <img class="inverted" src="@/assets/images/arrow-right.svg" height="10px" alt="" />
+              </p>
             </div>
           </Transition>
 
@@ -393,6 +399,7 @@ export default {
 
       if (val.value.toLowerCase().includes('update')) {
         if (this.currentOpp) {
+          this.$emit('set-open-form', false)
           this.actionSelected = true
           this.textBoxType = 'Update'
           this.placeholder = `Add your notes for ${this.currentOpp.name}...`
@@ -464,18 +471,17 @@ export default {
       this.showMeetingMessage = false
       setTimeout(() => {
         this.showMessage = false
-      }, 1200)
+      }, 1750)
     },
     toggleMeetingMessage() {
       this.showMeetingMessage = true
       this.showMessage = false
       setTimeout(() => {
         this.showMeetingMessage = false
-      }, 1500)
+      }, 1750)
     },
     toggleTemplates() {
       this.templatesOpen = !this.templatesOpen
-      console.log(this.currentOpp)
     },
   },
   computed: {
@@ -547,7 +553,7 @@ export default {
   width: 194px;
   position: absolute;
   bottom: 0;
-  left: -2px;
+  left: 1rem;
   font-size: 12px;
   background: white;
   padding: 0.25rem 0.5rem;
@@ -1048,5 +1054,10 @@ export default {
 
 .action-item:first-of-type {
   margin-top: 12px !important;
+}
+
+.inverted {
+  filter: invert(99%);
+  margin-left: 4px;
 }
 </style>

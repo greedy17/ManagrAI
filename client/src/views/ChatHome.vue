@@ -31,9 +31,7 @@
             <span v-if="!formOpen" class="gray-text smaller"
               >Your CRM fields have been auto-filled. Pleae review and click submit.</span
             >
-            <span v-else>
-              {{ currentOpp.name }}
-            </span>
+            <span class="gray-text smaller" v-else> Update {{ currentOpp.name }} </span>
           </div>
 
           <h4 v-if="!submitting" @click="toggleChatModal" style="cursor: pointer">x</h4>
@@ -185,6 +183,7 @@
         ref="chatBox"
         @set-opp="setOpp"
         @set-view="setView"
+        @set-open-form="setOpenForm"
         @toggle-chat-modal="toggleChatModal"
         @remove-opp="removeOpp"
       />
@@ -269,6 +268,11 @@ export default {
   },
   watch: {},
   methods: {
+    setOpenForm() {
+      console.log('here')
+      this.formOpen = false
+      console.log(this.formOpen)
+    },
     toString(data) {
       let type = typeof data
       if (type === 'number') {
@@ -323,30 +327,38 @@ export default {
         const res = await CRMObjects.api
           .updateResource({
             form_data: this.formData,
-            resource_type: this.chatData.resource_type,
-            form_type: this.chatData.form_type,
-            resource_id: this.chatData.resource_id,
-            integration_ids: [this.chatData.integration_id],
-            chat_form_id: [this.chatData.form_id],
+            resource_type: this.formOpen
+              ? this.user.crm === 'HUBSPOT'
+                ? 'Deal'
+                : 'Opportunity'
+              : this.chatData.resource_type,
+            form_type: this.formOpen ? 'UPDATE' : this.chatData.form_type,
+            resource_id: this.formOpen ? this.currentOpp.id : this.chatData.resource_id,
+            integration_ids: [
+              this.formOpen ? this.currentOpp.integration_id : this.chatData.integration_id,
+            ],
+            chat_form_id: [this.formOpen ? null : this.chatData.form_id],
             from_workflow: false,
             workflow_title: 'None',
             stage_name: null,
           })
           .then((response) => {
-            User.api
-              .editMessage({
-                message_id: this.chatData.id,
-                value: `Successfully updated ${this.chatData.resource}!`,
-                user_type: 'bot',
-                conversation_id: this.chatData.conversation,
-                failed: false,
-                updated: true,
-                data: this.formData,
-              })
-              .then((response) => {
-                this.$refs.chatBox.getConversations()
-                this.$refs.rightSideBar.reloadOpps()
-              })
+            if (!this.formOpen) {
+              User.api
+                .editMessage({
+                  message_id: this.chatData.id,
+                  value: `Successfully updated ${this.chatData.resource}!`,
+                  user_type: 'bot',
+                  conversation_id: this.chatData.conversation,
+                  failed: false,
+                  updated: true,
+                  data: this.formData,
+                })
+                .then((response) => {
+                  this.$refs.chatBox.getConversations()
+                  this.$refs.rightSideBar.reloadOpps()
+                })
+            }
           })
       } catch (e) {
         console.log(e)
@@ -364,6 +376,7 @@ export default {
       } finally {
         setTimeout(() => {
           this.toggleChatModal()
+          this.formOpen = false
         }, 1000)
         setTimeout(() => {
           this.submitting = false

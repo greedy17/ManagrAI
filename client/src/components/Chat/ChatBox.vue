@@ -273,6 +273,7 @@
       @get-conversations="getConversations"
       @scroll="scrollToBottom"
       @open-form="emitFormOpen"
+      @set-open-form="setOpenForm"
       :messages="messages"
       :conversation="conversation"
     />
@@ -306,6 +307,9 @@ export default {
     messages: 'scrollToBottom',
   },
   methods: {
+    setOpenForm(val) {
+      this.$emit('set-open-form', val)
+    },
     removeOpp() {
       this.$emit('remove-opp')
     },
