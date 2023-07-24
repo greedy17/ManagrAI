@@ -271,8 +271,8 @@
       @remove-opp="removeOpp"
       @set-view="setView"
       @get-conversations="getConversations"
+      @scroll="scrollToBottom"
       :messages="messages"
-      :scrollToBottom="scrollToBottom"
       :conversation="conversation"
     />
   </section>
@@ -640,7 +640,7 @@ export default {
       setTimeout(() => {
         const chatWindow = this.$refs.chatWindow
         chatWindow.scrollTop = chatWindow.scrollHeight
-      }, 0)
+      }, 200)
     },
     setLoader(val) {
       this.messageLoading = val

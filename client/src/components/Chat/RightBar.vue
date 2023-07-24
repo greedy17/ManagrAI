@@ -300,6 +300,7 @@
             :stageFields="stageFields"
             :stagesWithForms="stagesWithForms"
             @reload-workflows="reloadWorkflows"
+            @reload-meetings="reloadMeetings"
             :key="logkey"
           />
         </div>
@@ -446,7 +447,12 @@
 
     <div class="opp-scroll-container" v-else-if="this.mainView === 'meetings' && !loading">
       <p class="gray-text small-text">Select a meeting:</p>
+      <div class="empty-container" v-if="!meetings.length">
+        <p>No Zoom meetings found... refresh or select a different day</p>
+      </div>
+
       <div
+        v-else
         @click="changeSelectedMeeting(meeting)"
         class="opp-container"
         v-for="(meeting, i) in meetings"
@@ -778,12 +784,32 @@ export default {
     },
     async reloadWorkflows() {
       try {
-        const res = await MeetingWorkflows.api.getMeetingList()
-        this.meetingWorkflows = res.results
+        await MeetingWorkflows.api.getMeetingList().then((response) => {
+          this.meetingWorkflows = response.results
+          this.logkey += 1
+        })
       } catch (e) {
         console.log(e)
       } finally {
-        this.logkey += 1
+        this.$store.dispatch('refreshCurrentUser')
+      }
+    },
+    async reloadMeetings() {
+      try {
+        await Zoom.api
+          .getZoomMeetings({
+            user_id: this.user.id,
+            date: this.meetingDate,
+          })
+          .then((response) => {
+            this.logkey += 1
+            this.meetings = response.data
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.reloadWorkflows()
+        // this.logkey += 1
       }
     },
     async getMeetingWorkflows() {
@@ -791,7 +817,6 @@ export default {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
         this.meetingWorkflows = res.results
-        console.log(res)
       } catch (e) {
         console.log(e)
       } finally {
@@ -1276,6 +1301,14 @@ export default {
 
 .dot:nth-child(3) {
   animation-delay: -0.2s;
+}
+
+.empty-container {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-size: 12px;
+  border-radius: 5px;
+  margin-top: 4px;
+  padding: 2px 8px;
 }
 
 @keyframes bounce {

@@ -755,7 +755,6 @@ class MeetingWorkflow(SFSyncOperation):
     def begin_tasks(self, attempts=1):
         new_operations_list = []
         for op in self.operations_list:
-            print('OP IS HERE',op)
             # split the operation to get opp and params
             operation_name, param = op.split(".")
             operation = self.operations_map.get(operation_name)

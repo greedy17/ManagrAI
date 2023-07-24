@@ -366,7 +366,7 @@ footer {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 1rem 0 0.5rem 0.5rem;
+  padding: 2rem 0 0.5rem 0.5rem;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 

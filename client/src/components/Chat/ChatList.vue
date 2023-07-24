@@ -338,6 +338,12 @@ export default {
     this.formFields.refresh()
     this.templates.refresh()
   },
+  mounted() {
+    setTimeout(() => {
+      this.activeList = this.templates.list[0]
+      this.selectList(this.templates.list[0])
+    }, 3000)
+  },
   methods: {
     test() {
       console.log(this.templates.list)
@@ -740,7 +746,7 @@ export default {
 
   img {
     margin: 0;
-    margin-right: 0.25rem;
+    // margin-right: 0.25rem;
   }
 
   span {

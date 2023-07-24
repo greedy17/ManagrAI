@@ -1,18 +1,74 @@
 <template>
   <section class="input-section">
     <div class="input-container">
-      <div>
+      <div class="input-row">
+        <div class="main-text">
+          <p class="current" v-if="currentOpp && currentOpp !== true">
+            {{ currentOpp.name }}
+            <span class="remove" @click="clearMessage">x</span>
+          </p>
+          <button v-if="!textBoxType" @click="openActions" class="action-button">
+            <img src="@/assets/images/sparkle.svg" height="14px" alt="" />Select Action
+          </button>
+
+          <div v-else class="current-action">
+            <img :src="require(`@/assets/images/${currentAction.img}.svg`)" height="12px" alt="" />
+            {{ currentAction.name }}
+            <span @click="clearAction" class="remove-action">x</span>
+          </div>
+          <Transition name="slide-fade">
+            <div v-if="showMessage" class="templates">
+              <p>Select a record first!</p>
+            </div>
+          </Transition>
+          <Transition name="slide-fade">
+            <div v-if="showMeetingMessage" class="templates-green">
+              <p>Log your meeting from the meetings sections.</p>
+            </div>
+          </Transition>
+
+          <div class="action-templates" v-if="templatesOpen">
+            <div class="header">
+              <h5 class="action-title">
+                <img src="@/assets/images/sparkle.svg" height="12px" alt="" />Actions
+              </h5>
+
+              <div @click="toggleTemplates">
+                <p>X</p>
+              </div>
+            </div>
+            <!-- :class="{ 'current-actions': currentOpp && textBoxType === action.value }" -->
+            <p
+              class="action-item"
+              @click="addTemplate(action)"
+              v-for="(action, i) in actions"
+              :key="i"
+            >
+              <img :src="require(`@/assets/images/${action.img}.svg`)" height="12px" alt="" />
+              {{ action.name }}
+            </p>
+          </div>
+        </div>
         <textarea
           @keydown.enter.exact.prevent="sendMessage"
           class="area-input"
           rows="1"
-          placeholder="What would you like to do..."
+          :placeholder="placeholder"
           v-model="message"
+          :disabled="!actionSelected || !currentOpp"
           v-autoresize
           autofocus
           ref="chatTextArea"
         />
-        <div class="main-text">
+
+        <img
+          :class="{ invert: !message }"
+          src="@/assets/images/paper-plane.svg"
+          height="14px"
+          alt=""
+        />
+
+        <!-- <div class="main-text">
           <span :class="{ activeicon: templatesOpen }" style="font-size: 14px;margin-left">
             <img class="gold-filter" src="@/assets/images/sparkle.svg" height="14px" alt="" />
           </span>
@@ -20,7 +76,7 @@
           <div class="action">
             <p
               class="action__p"
-              :class="{ 'current-actions': currentOpp && message.includes(action.value) }"
+              :class="{ 'current-actions': currentOpp && textBoxType === action.value }"
               @click="addTemplate(action.value)"
               v-for="(action, i) in actions"
               :key="i"
@@ -37,8 +93,8 @@
               </div>
             </Transition>
             <Transition name="slide-fade">
-              <div v-if="showMeetingMessage" class="templates">
-                <p>Select a meeting first!</p>
+              <div v-if="showMeetingMessage" class="templates-green">
+                <p>Log your meeting from the meetings sections.</p>
               </div>
             </Transition>
           </div>
@@ -49,14 +105,7 @@
             height="14px"
             alt=""
           />
-          <!-- <font-awesome-icon
-            :class="{ invert: !message }"
-            class="gray"
-            style="height: 14px; cursor: pointer"
-            icon="fa-regular fa-paper-plane"
-            @click="sendMessage"
-          /> -->
-        </div>
+        </div> -->
       </div>
     </div>
   </section>
@@ -74,9 +123,6 @@ export default {
     messages: {
       type: Array,
     },
-    scrollToBottom: {
-      type: Function,
-    },
     conversation: {},
   },
   data() {
@@ -87,22 +133,62 @@ export default {
       showMeetingMessage: false,
       chatRes: null,
       chatmsg: null,
+      actionSelected: false,
+      textBoxType: '',
+      placeholder: '',
+      currentAction: null,
       actions: [
-        { name: 'Log Meeting', value: 'Log Meeting' },
+        { name: 'Log Meeting', value: 'Log Meeting', img: 'calendar' },
         {
           name: 'Add Notes',
           value: 'Update',
+          img: 'notebook',
         },
         // { name: 'Create Record', value: 'Create Opportunity' },
-        { name: 'Ask Managr', value: 'Ask managr ' },
-        { name: 'Deal Inspection', value: 'Run Review' },
+        { name: 'Ask Managr', value: 'Ask Managr', img: 'comment' },
+        { name: 'Inspect Deal', value: 'Run Review', img: 'money' },
         // { name: 'Call Summary', value: 'Get call summary for Opportunity' },
         // { name: 'Call Analysis', value: 'Get call analysis for Opportunity' },
       ],
     }
   },
-
+  mounted() {
+    this.setPlaceholder()
+  },
+  watch: {
+    currentOpp: 'setPlaceholder',
+  },
   methods: {
+    scrollToBottom() {
+      this.$emit('scroll')
+    },
+    clearAction() {
+      this.actionSelected = false
+      this.textBoxType = null
+      this.setPlaceholder()
+      this.message = ''
+      this.currentAction = null
+    },
+    openActions() {
+      if (!this.currentOpp) {
+        this.toggleMessage()
+        this.$emit('set-view', 'pipeline')
+      } else {
+        this.toggleTemplates()
+      }
+    },
+    setPlaceholder() {
+      if (!this.currentOpp) {
+        this.templatesOpen = false
+        this.actionSelected = false
+        this.textBoxType = null
+        this.message = ''
+        this.currentAction = null
+        this.placeholder = 'Select a record...'
+      } else if (this.currentOpp && !this.actionSelected) {
+        this.placeholder = 'Select an action...'
+      }
+    },
     testBox() {
       this.message = ''
       setTimeout(() => {
@@ -110,10 +196,14 @@ export default {
       }, 100)
     },
     clearMessage() {
+      this.actionSelected = false
+      this.textBoxType = null
+      this.placeholder = null
+      this.message = ''
       this.$emit('remove-opp')
     },
     async sendMessage() {
-      if (this.$store.state.currentOpp) {
+      if (this.currentOpp && this.message) {
         this.chatmsg = this.message
         try {
           await User.api
@@ -124,26 +214,22 @@ export default {
               data: {},
             })
             .then((response) => {
+              this.$emit('get-conversations')
               this.message = ''
               this.$emit('message-loading', true)
               setTimeout(() => {
                 this.$refs.chatTextArea.dispatchEvent(new Event('textarea-clear'))
               }, 100)
               this.scrollToBottom()
-              this.$emit('get-conversations')
             })
-          if (this.chatmsg.toLowerCase().includes('ask managr')) {
+          if (this.textBoxType === 'Ask Managr') {
             this.askManagr()
-          } else if (this.chatmsg.toLowerCase().includes('run review')) {
-            this.dealReview()
-          } else if (this.chatmsg.length > 3) {
+          } else if (this.textBoxType === 'Update') {
             this.chatUpdate()
           }
         } catch (e) {
           console.log(e)
         }
-      } else {
-        this.toggleMessage()
       }
     },
     async askManagr() {
@@ -151,7 +237,7 @@ export default {
         let res = await User.api
           .askManagr({
             user_id: this.user.id,
-            prompt: this.chatmsg,
+            prompt: `Ask Managr ${this.chatmsg}`,
             resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
             resource_id: this.$store.state.currentOpp.id,
           })
@@ -206,14 +292,15 @@ export default {
         this.scrollToBottom()
       }
     },
-    async dealReview() {
+    async dealReview(msg) {
+      this.$emit('message-loading', true)
       try {
         let res = await User.api
           .dealReview({
             user_id: this.user.id,
-            prompt: this.chatmsg,
+            prompt: msg,
             resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
-            resource_id: this.$store.state.currentOpp.id,
+            resource_id: this.currentOpp.id,
           })
           .then((response) => {
             if (response.status >= 400 && response.status < 500) {
@@ -262,6 +349,7 @@ export default {
         console.log(e)
         this.$emit('message-loading', false)
       } finally {
+        this.clearMessage()
         this.$emit('message-loading', false)
         this.scrollToBottom()
       }
@@ -271,7 +359,7 @@ export default {
         let res = await User.api
           .chatUpdate({
             user_id: this.user.id,
-            prompt: this.chatmsg,
+            prompt: `Update ${this.currentOpp.name} ${this.chatmsg}`,
             resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
           })
           .then((response) => {
@@ -334,29 +422,73 @@ export default {
     addNewLine() {
       this.message += '\n \n \n \n'
     },
+
     addTemplate(val) {
-      if (!val.toLowerCase().includes('log meeting')) {
-        this.$emit('set-view', 'pipeline')
-      }
-      if (val.toLowerCase().includes('update')) {
+      this.currentAction = val
+      this.textBoxType = null
+      this.placeholder = null
+      this.message = ''
+      this.templatesOpen = false
+
+      if (val.value.toLowerCase().includes('update')) {
         if (this.currentOpp) {
-          this.message = `Update ${this.currentOpp.name} ...`
+          this.actionSelected = true
+          this.textBoxType = 'Update'
+          this.placeholder = `Add your notes for ${this.currentOpp.name}...`
+          this.$nextTick(() => {
+            this.$refs.chatTextArea.focus()
+          })
         } else {
           this.toggleMessage()
         }
-      } else if (val.toLowerCase().includes('log meeting')) {
+      } else if (val.value.toLowerCase().includes('log meeting')) {
         if (this.currentMeeting) {
-          this.message = `Log ${this.currentMeeting.topic}`
         } else {
           this.$emit('set-view', 'meetings')
           this.toggleMeetingMessage()
         }
-      } else {
+      } else if (val.value.toLowerCase().includes('ask managr')) {
         if (this.currentOpp) {
-          this.message = val
+          this.actionSelected = true
+          this.textBoxType = 'Ask Managr'
+          this.placeholder = `Ask Managr anything about ${this.currentOpp.name}...`
+          this.$nextTick(() => {
+            this.$refs.chatTextArea.focus()
+          })
         } else {
           this.toggleMessage()
         }
+      } else if (val.value.toLowerCase().includes('run review')) {
+        if (this.currentOpp) {
+          this.textBoxType = 'Run Review'
+          this.placeholder = `Running review for ${this.currentOpp.name}...`
+          this.actionSelected = false
+          this.dealMessage()
+        } else {
+          this.toggleMessage()
+        }
+      } else if (!val.value.toLowerCase().includes('log meeting')) {
+        this.$emit('set-view', 'pipeline')
+        this.actionSelected = true
+      }
+    },
+    async dealMessage() {
+      try {
+        await User.api
+          .addMessage({
+            value: `Run review for ${this.currentOpp.name}`,
+            user_type: 'user',
+            conversation_id: this.conversation.id,
+            data: {},
+          })
+          .then((response) => {
+            this.$emit('get-conversations')
+            this.scrollToBottom()
+            this.dealReview(`Run review for ${this.currentOpp.name}`)
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
       }
     },
     toggleMessage() {
@@ -371,7 +503,7 @@ export default {
       this.showMessage = false
       setTimeout(() => {
         this.showMeetingMessage = false
-      }, 1200)
+      }, 1500)
     },
     toggleTemplates() {
       this.templatesOpen = !this.templatesOpen
@@ -440,22 +572,47 @@ export default {
   }
 }
 
+.action-templates {
+  // animation: shake 0.3s 1;
+  display: block;
+  width: 178px;
+  position: absolute;
+  bottom: 0.75rem;
+  left: 1rem;
+  font-size: 12px;
+  background: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+  box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+  line-height: 1.5;
+  z-index: 2000;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+
+  p {
+    margin-top: 8px;
+    padding: 0;
+  }
+}
+
+.action-templates::before {
+  position: absolute;
+  height: 8px;
+  width: 8px;
+  background: $dark-green;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.input-row {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  align-items: center;
+}
+
 .current-actions {
   border: 1px solid $dark-green !important;
   color: $dark-green !important;
-}
-
-.current {
-  max-width: 200px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  background-color: $dark-green !important;
-  color: white !important;
-  border: 1px solid $dark-green !important;
-  cursor: text !important;
-  padding-right: 1.2rem !important;
-  position: relative;
 }
 
 .input-section {
@@ -481,46 +638,63 @@ export default {
   background-color: rgba(0, 0, 0, 0.4);
   z-index: 4;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px 4px;
   border-radius: 3px;
   position: absolute;
   right: 0;
-  bottom: 1px;
+  bottom: 0;
 }
 
 .main-text {
   display: flex;
-  align-items: center;
-  padding: 0.5rem 0 0.25rem 0;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  padding-right: 1.25rem;
   margin: 0;
 }
 
-.action {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  width: 100%;
+.current {
+  width: 137px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  background-color: $dark-black-blue;
+  color: white !important;
+  border: 1px solid $dark-black-blue;
+  cursor: text !important;
+  padding: 6px 1.2rem !important;
+  border-radius: 5px;
   position: relative;
-  &__p {
-    padding: 0.25rem 0.5rem;
-    margin: 0 0.5rem;
-    color: $light-gray-blue;
-    cursor: pointer;
-    border-radius: 4px;
-    font-size: 12px;
-    background-color: white;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    white-space: nowrap;
-    max-width: 150px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
 }
+
+// .action {
+//   display: flex;
+//   flex-direction: row;
+//   align-items: center;
+//   width: 100%;
+//   position: relative;
+//   &__p {
+//     padding: 0.25rem 0.5rem;
+//     margin: 0 0.5rem;
+//     color: $light-gray-blue;
+//     cursor: pointer;
+//     border-radius: 4px;
+//     font-size: 12px;
+//     background-color: white;
+//     border: 1px solid rgba(0, 0, 0, 0.1);
+//     white-space: nowrap;
+//     // max-width: 150px;
+//     overflow: hidden;
+//     text-overflow: ellipsis;
+//   }
+// }
 
 .input-container {
   flex-wrap: nowrap;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 1rem 1.2rem 0.75rem 1.2rem;
+  padding: 0.75rem 1.2rem 0.75rem 1.2rem;
   border-radius: 6px;
   width: 100%;
   background-color: $offer-white;
@@ -544,6 +718,10 @@ export default {
   text-align: left;
   overflow: auto;
   scroll-behavior: smooth;
+}
+
+.area-input:disabled {
+  cursor: not-allowed;
 }
 
 .area-input::-webkit-scrollbar {
@@ -578,7 +756,6 @@ export default {
 .template-header {
   display: flex;
   align-items: center;
-  // background-color: $soft-gray;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   padding: 0 1rem;
@@ -728,14 +905,50 @@ export default {
   text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.1);
 }
 
+.templates-green {
+  // animation: shake 0.3s 1;
+  display: block;
+  width: fit-content;
+  height: 40px;
+  position: absolute;
+  top: -1.75rem;
+  left: 40%;
+  font-size: 12px;
+  background: $dark-black-blue;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  line-height: 1.5;
+  z-index: 20;
+
+  p {
+    margin-top: 8px;
+    padding: 0;
+  }
+}
+
+.templates-green::before {
+  position: absolute;
+  // content: '';
+  height: 8px;
+  width: 8px;
+  background: $dark-green;
+  // bottom: -3px;
+  // left: 10%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
 .templates {
   // animation: shake 0.3s 1;
   display: block;
   width: fit-content;
   height: 40px;
   position: absolute;
-  top: -3.25rem;
-  left: 0.5rem;
+  top: -1.25rem;
+  left: 2.1rem;
   font-size: 12px;
   background: $coral;
   color: white;
@@ -762,5 +975,109 @@ export default {
   left: 10%;
   transform: translate(-50%) rotate(45deg);
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.current-action {
+  @include chat-button();
+  color: $dark-black-blue;
+  padding-top: 7px;
+  padding-bottom: 7px;
+  width: 137px;
+  position: relative;
+  cursor: text;
+  img {
+    margin-right: 0.5rem;
+    filter: invert(25%) sepia(10%) saturate(1618%) hue-rotate(162deg) brightness(91%) contrast(91%);
+  }
+
+  &:hover {
+    scale: 1;
+    box-shadow: none;
+  }
+}
+
+.remove-action {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: $dark-black-blue;
+  z-index: 4;
+  cursor: pointer;
+  height: 99.5%;
+  padding: 6px 4px;
+  border-radius: 3px;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+}
+
+.action-button {
+  @include chat-button();
+  color: $dark-black-blue;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  img {
+    margin-right: 0.5rem;
+    filter: invert(25%) sepia(10%) saturate(1618%) hue-rotate(162deg) brightness(91%) contrast(91%);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 0 0.25rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  width: 100%;
+
+  p {
+    color: $light-gray-blue;
+    font-size: 11px;
+    padding: 2px 2px 0px 2px;
+    cursor: pointer;
+  }
+}
+
+.action-title {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  margin: 0;
+  padding: 0;
+  img {
+    margin-right: 0.75rem;
+  }
+}
+
+.action-item {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  font-size: 13px;
+  padding: 2px 0 !important;
+  padding-left: 1rem;
+  cursor: pointer;
+  position: relative;
+  width: 100%;
+  img {
+    margin: 0 0.75rem 0 0.25rem;
+  }
+
+  p {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    width: 100%;
+    margin: 0;
+  }
+
+  &:hover {
+    opacity: 0.65;
+  }
+}
+
+.action-item:first-of-type {
+  margin-top: 12px !important;
 }
 </style>
