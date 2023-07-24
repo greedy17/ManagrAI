@@ -392,12 +392,13 @@ def _process_update_resource_from_meeting(workflow_id, *args):
                 hs.regenerate_token()
                 attempts += 1
         except Exception as e:
-            if len(user.slack_integration.recap_receivers):
-                _send_recap(update_form_ids, None, True)
+            # if len(user.slack_integration.recap_receivers):
+            #     _send_recap(update_form_ids, None, True)
+            print("ERROR", e)
             raise e
     value_update = workflow.resource.update_database_values(data)
-    if user.has_slack_integration and len(user.slack_integration.recap_receivers):
-        _send_recap(update_form_ids, None, True)
+    # if user.has_slack_integration and len(user.slack_integration.recap_receivers):
+    #     _send_recap(update_form_ids, None, True)
     return res
 
 
