@@ -67,45 +67,6 @@
           height="14px"
           alt=""
         />
-
-        <!-- <div class="main-text">
-          <span :class="{ activeicon: templatesOpen }" style="font-size: 14px;margin-left">
-            <img class="gold-filter" src="@/assets/images/sparkle.svg" height="14px" alt="" />
-          </span>
-
-          <div class="action">
-            <p
-              class="action__p"
-              :class="{ 'current-actions': currentOpp && textBoxType === action.value }"
-              @click="addTemplate(action.value)"
-              v-for="(action, i) in actions"
-              :key="i"
-            >
-              {{ action.name }}
-            </p>
-            <p class="action__p current" v-if="currentOpp && currentOpp !== true">
-              {{ currentOpp.name }}
-              <span class="remove" @click="clearMessage">x</span>
-            </p>
-            <Transition name="slide-fade">
-              <div v-if="showMessage" class="templates">
-                <p>Select an {{ user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal' }} first!</p>
-              </div>
-            </Transition>
-            <Transition name="slide-fade">
-              <div v-if="showMeetingMessage" class="templates-green">
-                <p>Log your meeting from the meetings sections.</p>
-              </div>
-            </Transition>
-          </div>
-          <img
-            :class="{ invert: !message }"
-            @click="sendMessage"
-            src="@/assets/images/paper-plane.svg"
-            height="14px"
-            alt=""
-          />
-        </div> -->
       </div>
     </div>
   </section>
@@ -139,12 +100,12 @@ export default {
       currentAction: null,
       actions: [
         { name: 'Log Meeting', value: 'Log Meeting', img: 'calendar' },
+        { name: 'Update', value: 'Open Form', img: 'edit-note' },
         {
           name: 'Add Notes',
           value: 'Update',
           img: 'notebook',
         },
-        // { name: 'Create Record', value: 'Create Opportunity' },
         { name: 'Ask Managr', value: 'Ask Managr', img: 'comment' },
         { name: 'Inspect Deal', value: 'Run Review', img: 'money' },
         // { name: 'Call Summary', value: 'Get call summary for Opportunity' },
@@ -467,6 +428,13 @@ export default {
         } else {
           this.toggleMessage()
         }
+      } else if (val.value.toLowerCase().includes('open form')) {
+        if (this.currentOpp) {
+          console.log('MADE IT TO STEP ONE')
+          this.$emit('open-form', this.currentOpp.secondary_data, true)
+          this.actionSelected = false
+          this.textBoxType = 'Open Form'
+        }
       } else if (!val.value.toLowerCase().includes('log meeting')) {
         this.$emit('set-view', 'pipeline')
         this.actionSelected = true
@@ -507,6 +475,7 @@ export default {
     },
     toggleTemplates() {
       this.templatesOpen = !this.templatesOpen
+      console.log(this.currentOpp)
     },
   },
   computed: {
@@ -575,10 +544,10 @@ export default {
 .action-templates {
   // animation: shake 0.3s 1;
   display: block;
-  width: 178px;
+  width: 194px;
   position: absolute;
-  bottom: 0.75rem;
-  left: 1rem;
+  bottom: 0;
+  left: -2px;
   font-size: 12px;
   background: white;
   padding: 0.25rem 0.5rem;

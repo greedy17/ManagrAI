@@ -26,11 +26,14 @@
         <div class="chat-modal-header">
           <div>
             <h3 class="elipsis-text" style="margin-bottom: 0.25rem">
-              {{ chatData.resource }}
+              {{ formOpen ? currentOpp.name : chatData.resource }}
             </h3>
-            <span class="gray-text smaller"
+            <span v-if="!formOpen" class="gray-text smaller"
               >Your CRM fields have been auto-filled. Pleae review and click submit.</span
             >
+            <span v-else>
+              {{ currentOpp.name }}
+            </span>
           </div>
 
           <h4 v-if="!submitting" @click="toggleChatModal" style="cursor: pointer">x</h4>
@@ -52,8 +55,6 @@
           <ChatFormField
             :placeholder="toString(formData[field.apiName])"
             :field="field"
-            :resourceId="chatData.resource_id"
-            :integrationId="chatData.integration_id"
             :chatData="formData"
             @set-value="setUpdateValues"
             :stageFields="stageFields"
@@ -204,7 +205,6 @@
         @refresh-list="refreshLists"
       />
     </main>
-
     <aside id="right-sidebar">
       <RightBar
         ref="rightSideBar"
@@ -261,6 +261,7 @@ export default {
       leftBarClosed: false,
       stagesWithForms: null,
       formData: null,
+      formOpen: false,
     }
   },
   created() {
@@ -400,15 +401,22 @@ export default {
       this.$router.push({ name: 'Login' })
       // localStorage.isLoggedOut = true
     },
-    toggleChatModal(data) {
+    toggleChatModal(data, formOpen) {
       this.chatModalOpen = !this.chatModalOpen
-      if (data) {
+      if (data && !formOpen) {
         let jsonString = data.data
         jsonString = jsonString.replace(/'/g, '"')
         jsonString = jsonString.replace(/\bNone\b/g, 'null')
         jsonString = JSON.parse(jsonString)
         this.formData = jsonString
         this.chatData = data
+      } else if (data && formOpen) {
+        //  let jsonString = data.data
+        // jsonString = jsonString.replace(/'/g, '"')
+        // jsonString = jsonString.replace(/\bNone\b/g, 'null')
+        // jsonString = JSON.parse(jsonString)
+        this.formData = data
+        this.formOpen = formOpen
       }
     },
     setFormFields(fields) {
@@ -447,6 +455,9 @@ export default {
     },
     currentView() {
       return this.$store.state.currentView
+    },
+    currentOpp() {
+      return this.$store.state.currentOpp
     },
   },
 }

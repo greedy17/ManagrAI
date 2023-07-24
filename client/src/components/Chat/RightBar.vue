@@ -233,11 +233,11 @@
                     v-if="selectedFilter.name && selectedFilter.operator && selectedFilter.value"
                     class="save-close"
                   >
-                    <div @click="addFilter()" class="save">
-                      <span>&#x2713;</span>
+                    <div @click="addFilter" class="save">
+                      <span>save</span>
                     </div>
                     <div @click="clearFilter" class="close">
-                      <span>x</span>
+                      <span>cancel</span>
                     </div>
                   </div>
                 </div>
@@ -2123,13 +2123,13 @@ img {
   background: white;
   outline: 1px solid rgba(0, 0, 0, 0.1);
   color: $coral;
-  width: 20px;
+  width: 40px;
   height: 20px;
   border-radius: 3px;
   cursor: pointer;
   margin-left: 0.5rem;
   margin-right: 2px;
-  font-size: 13px;
+  font-size: 11px;
   transition: all 0.3s;
 
   &:hover {
@@ -2145,7 +2145,7 @@ img {
   background: white;
   outline: 1px solid rgba(0, 0, 0, 0.1);
   color: $dark-green;
-  width: 20px;
+  width: 36px;
   height: 20px;
   border-radius: 3px;
   cursor: pointer;
