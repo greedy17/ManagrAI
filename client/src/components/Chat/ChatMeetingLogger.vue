@@ -977,6 +977,9 @@ button {
 }
 
 .opp-row {
+  position: sticky;
+  top: 0;
+  background-color: white;
   display: flex;
   flex-direction: row;
   align-items: center;
