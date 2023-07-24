@@ -71,7 +71,7 @@
                   v-model="selectedLevel"
                   :options="userTypes"
                   openDirection="below"
-                  style="width: 33vw"
+                  style="width: 33vw; margin-bottom: 1rem;"
                   selectLabel="Enter"
                   label="key"
                 >
@@ -88,7 +88,7 @@
               </template>
             </FormField>
           </div>
-          <div v-if="user.organizationRef.isPaid && user.isAdmin" style="display: flex; align-items: flex-start; flex-direction: column">
+          <div v-if="user.isAdmin" style="display: flex; align-items: flex-start; flex-direction: column">
             <FormField>
               <template v-slot:input>
                 <Multiselect
@@ -97,7 +97,7 @@
                   v-model="selectedTeam"
                   :options="allTeams"
                   openDirection="below"
-                  style="width: 33vw"
+                  style="width: 33vw; margin-bottom: 1rem;"
                   selectLabel="Enter"
                   :customLabel="customTeamLabel"
                 >
@@ -114,7 +114,7 @@
               </template>
             </FormField>
           </div>
-          <div v-if="user.organizationRef.isPaid && user.isAdmin" style="display: flex; align-items: flex-start; flex-direction: column">
+          <div v-if="user.isAdmin" style="display: flex; align-items: flex-start; flex-direction: column">
             <div style="display: flex; height: 1rem; margin-bottom: 2rem; margin-left: 0.25rem;">
               <p style="margin: 0;">Make Team Lead</p>
               <input v-model="selectedTeamLead" :disabled="!selectedTeam || user.team === selectedTeam.id" type="checkbox" style="height: 1rem; align-self: center; width: 2rem; margin-top: 0.5rem;" />
@@ -671,7 +671,7 @@ export default {
         })
         return
       }
-      if (this.user.organizationRef.isPaid && this.user.isAdmin && !this.selectedTeam) {
+      if (this.user.isAdmin && !this.selectedTeam) {
         this.loading = false
         this.$toast('Please select a team', {
           timeout: 2000,
