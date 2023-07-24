@@ -38,7 +38,7 @@
                   v-model="selectedMember"
                   :options="slackMembers.members"
                   openDirection="below"
-                  style="width: 33vw"
+                  style="width: 33vw; margin-bottom: 1rem;"
                   selectLabel="Enter"
                   track-by="id"
                   label="realName"
