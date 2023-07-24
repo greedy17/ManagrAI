@@ -441,7 +441,7 @@
         </div>
         <div class="invite-form__actions">
           <!-- <div style="width: 10vw;"></div> -->
-          <div class="confirm-cancel-container" style="width: 90%; margin-bottom: 0.6rem;">
+          <div class="confirm-cancel-container" style="">
             <div class="img-border-modal cancel-button" @click="closePopularModal" style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 1rem;">
               Cancel
             </div>
@@ -1761,7 +1761,7 @@ input[type='search']:focus {
     display: flex;
     // justify-content: flex-end;
     // width: 100%;
-    width: 36.5vw;
+    width: 33vw;
     position: absolute;
     bottom: 35%;
     // margin-top: -4rem;
@@ -1784,7 +1784,8 @@ input[type='search']:focus {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  width: 94%;
+  // width: 94%;
+  width: 100%;
   border-top: 1px solid $soft-gray;
   background-color: $white;
 }

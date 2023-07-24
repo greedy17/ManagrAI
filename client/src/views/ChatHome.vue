@@ -870,7 +870,7 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
 @import '@/styles/cards';
