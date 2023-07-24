@@ -178,7 +178,7 @@
           </div>
         </div>
         <div
-          v-if="!selectField || isEmpty"
+          v-if="hasSlack && (!selectField || isEmpty)"
           class="section"
           :errors="form.field.recurrenceDay.errors"
         >
@@ -294,7 +294,6 @@
             <FormField :errors="form.field.alertTargets.errors">
               <template v-slot:input>
                 <Multiselect
-                  :disabled="!hasSlack"
                   placeholder="Select Users"
                   @input="mapIds"
                   v-model="selectedUsers"
@@ -313,7 +312,8 @@
                   <template slot="placeholder">
                     <p class="slot-icon">
                       <img src="@/assets/images/search.svg" alt="" />
-                      {{ hasSlack ? 'Select Users' : 'Connect slack' }}
+                      <!-- {{ hasSlack ? 'Select Users' : 'Connect slack' }} -->
+                      Select Users
                     </p>
                   </template>
                 </Multiselect>
@@ -563,13 +563,12 @@
           </div>
         </div> -->
       </div>
-      <div v-if="!hasSlack && !selectField" class="overlay">
+      <!-- <div v-if="!hasSlack && !selectField" class="overlay">
         <p class="text">
-          <!-- <img src="@/assets/images/slackLogo.png" height="10px" class="margin-right-s" alt="" /> -->
           <span class="link" @click="goToConnect"> Connect Slack</span>
           in order to recieve notifications.
         </p>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
@@ -659,6 +658,8 @@ export default {
   async created() {
     if (this.user.slackRef) {
       await this.listUserChannels()
+    } else {
+      this.setDay(0)
     }
     if (this.user.userLevel == 'MANAGER') {
       await this.users.refresh()

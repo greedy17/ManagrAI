@@ -638,7 +638,9 @@ export default {
     },
     scrollToBottom() {
       setTimeout(() => {
+        console.log('refs', this.$refs)
         const chatWindow = this.$refs.chatWindow
+        console.log('chatWindow', chatWindow)
         chatWindow.scrollTop = chatWindow.scrollHeight
       }, 0)
     },

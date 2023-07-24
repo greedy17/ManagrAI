@@ -269,7 +269,7 @@
       </div> -->
 
       <div style="margin-top: 5rem" v-if="editing" class="alert_cards">
-        <div v-if="!zoomChannel" class="card">
+        <div v-if="!zoomChannel && hasSlackIntegration" class="card">
           <div class="card__header" style="">
             <img class="gray-logo" style="height: 40px" src="@/assets/images/logo.png" />
           </div>
@@ -392,7 +392,7 @@
             </div>
         </div>
 
-        <div v-if="hasRecapChannel && userLevel !== 'REP'" class="card">
+        <div v-if="hasRecapChannel && userLevel !== 'REP' && hasSlackIntegration" class="card">
           <div class="card__header" style="">
             <img style="height: 40px" src="@/assets/images/logo.png" />
           </div>
@@ -436,13 +436,13 @@
               class="card__body__between"
             >
               <p></p>
-              <button @click="goToWorkflow(config.title)" class="white_button">Activate</button>
+              <button @click="repCheck(config)" class="white_button">Activate</button>
             </div>
 
             <div v-else class="card__body__between">
               <p></p>
               <button
-                @click="goToWorkflow(config.title)"
+                @click="repCheck(config)"
                 class="white_button"
               >
                 Activate
@@ -460,7 +460,7 @@
             </div>
         </div>
 
-        <div v-if="!hasRecapChannel && userLevel !== 'REP'" class="card">
+        <div v-if="!hasRecapChannel && userLevel !== 'REP' && hasSlackIntegration" class="card">
           <div class="card__header" style="">
             <img class="gray-logo" style="height: 40px" src="@/assets/images/logo.png" />
           </div>
@@ -621,6 +621,87 @@ export default {
   methods: {
     test(log) {
       console.log('log', log)
+    },
+    repCheck(config) {
+      if (this.hasSlackIntegration) {
+        this.goToWorkflow(config.title)
+        return
+      }
+      if (
+        (config.title === 'Large Opportunities' ||
+        config.title === 'Large Deals' ||
+        config.title === 'Empty Field' ||
+        config.title === 'Upcoming Next Step') 
+        || this.user.userLevel === 'MANAGR'
+      ) {
+        this.goToWorkflow(config.title)
+        // if (this.user.userLevel === 'MANAGER') {
+        //   this.goToWorkflow(config.title)
+        // } else  {
+        //   // Make function to automatically save workflow
+        //   // this.goToWorkflow(config.title)
+        //   this.saveRepWorkflow(config)
+        // }
+      } else {
+        // this.goToWorkflow(config.title)
+        this.saveRepWorkflow(config)
+      }
+    },
+    async saveRepWorkflow(config) {
+      const newConfigs = config.newConfigs[0]
+      // const operandIden = config.newGroups[0].newOperands[0].operandIdentifier
+      if (
+        newConfigs.alertTargets.length
+      ) {
+        try {
+          const res = await AlertTemplate.api.createAlertTemplate({
+            ...config,
+            user: this.user.id,
+            directToUsers: true, // this.directToUsers,
+          })
+
+          if (res.status === 400 && res.data.message) {
+            this.$toast(res.data.message, {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+            return
+          }
+
+          this.handleUpdate()
+
+          this.$toast('Workflow saved Successfully', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          this.$router.go()
+        } catch (e) {
+          console.log('e', e)
+          this.$toast(`Something went wrong. Please try again.`, {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }
+      }
+    },
+    handleUpdate() {
+      return User.api
+        .update(this.user.id)
+        .then((response) => {
+          this.$store.dispatch('updateUser', User.fromAPI(response.data))
+        })
+        .catch((e) => {
+          console.log(e)
+        })
     },
     closeCommandModal() {
       this.templates.refresh()

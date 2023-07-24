@@ -525,6 +525,9 @@ export default {
       console.log(e)
     }
     this.team.refresh()
+    if (this.$route.fullPath !== '/chat') {
+      this.handleConfigureOpen()
+    }
   },
   watch: {},
   methods: {
