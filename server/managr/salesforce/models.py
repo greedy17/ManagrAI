@@ -840,9 +840,7 @@ class MeetingWorkflow(SFSyncOperation):
             from managr.slack.helpers.block_sets import get_block_set
             from managr.slack.helpers import requests as slack_requests
 
-            blocks = get_block_set(
-                "meeting_blockset", {"u": str(self.user.id), "w": str(self.workflow.id)}
-            )
+            blocks = get_block_set("meeting_blockset", {"u": str(self.user.id), "w": str(self.id)})
             ts, channel = self.slack_interaction.split("|")
             try:
                 res = slack_requests.update_channel_message(
