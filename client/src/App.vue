@@ -71,7 +71,7 @@ export default {
           coverPhoto: `https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/New_York_City_%28New_York%2C_USA%29%2C_Empire_State_Building_--_2012_--_6448.jpg/1200px-New_York_City_%28New_York%2C_USA%29%2C_Empire_State_Building_--_2012_--_6448.jpg`,
           time: '5 mins ago',
           author: 'Eric Peters',
-          link: 'https://www.nyan.cat/',
+          link: 'https://www.teslarati.com/tesla-cybertruck-orders-1-9-million-as-musk-off-the-hook-demand/',
           data: {},
         }
         this.$store.dispatch('updateSelectedArticle', article)
