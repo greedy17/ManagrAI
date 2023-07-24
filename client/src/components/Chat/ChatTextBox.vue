@@ -19,15 +19,15 @@
           <Transition name="slide-fade">
             <div v-if="showMessage" class="templates">
               <p>
-                first, select a record from the list
+                Select a record from the list
                 <img class="inverted" src="@/assets/images/arrow-right.svg" height="10px" alt="" />
               </p>
             </div>
           </Transition>
           <Transition name="slide-fade">
-            <div v-if="showMeetingMessage" class="templates-green">
+            <div v-if="showMeetingMessage" class="templates">
               <p>
-                Log your meeting from the meetings sections
+                Select a meeting from the list
                 <img class="inverted" src="@/assets/images/arrow-right.svg" height="10px" alt="" />
               </p>
             </div>

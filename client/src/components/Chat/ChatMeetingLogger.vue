@@ -7,7 +7,7 @@
       :class="{ disabled: submitting }"
     >
       <div class="margin-top-s">
-        <p>Related to type:</p>
+        <p @click="test">Related to type:</p>
 
         <Multiselect
           v-model="selectedResourceType"
@@ -102,10 +102,14 @@
         </div>
 
         <div v-else>
-          <div @click="test">
+          <div class="opp-row">
             <p class="logged">
               <img src="@/assets/images/check.svg" height="12px" alt="" /> meeting logged
             </p>
+
+            <button @click="viewOpp" class="view-opp-button">
+              View {{ selectedMeetingWorkflow.resource_ref.name }}
+            </button>
           </div>
 
           <pre class="message-text" v-html="selectedMeetingWorkflow.transcript_analysis"></pre>
@@ -137,10 +141,13 @@
         </div>
 
         <div v-else>
-          <div @click="test">
+          <div class="opp-row">
             <p class="logged">
               <img src="@/assets/images/check.svg" height="12px" alt="" /> meeting logged
             </p>
+            <button @click="viewOpp" class="view-opp-button">
+              View {{ selectedMeetingWorkflow.resource_ref.name }}
+            </button>
           </div>
         </div>
       </div>
@@ -197,6 +204,7 @@ export default {
     formFields: {},
     stageFields: {},
     stagesWithForms: {},
+    meetingOpp: {},
   },
   watch: {
     usingAi(val) {
@@ -265,7 +273,11 @@ export default {
   },
   methods: {
     test() {
-      console.log(this.meetingData)
+      console.log(this.currentOpp)
+    },
+    viewOpp() {
+      console.log(this.selectedMeetingWorkflow.resource_ref)
+      this.$emit('select-opp', this.selectedMeetingWorkflow.resource_ref)
     },
     deselectAI() {
       this.usingAi = null
@@ -495,6 +507,7 @@ export default {
       }
     },
     selectOpp(val) {
+      console.log(val)
       this.selectedResourceId = val.id
       if (this.selectedResourceType === 'Deal' || this.selectedResourceType === 'Opportunity') {
         this.$emit('set-opp', val.name)
@@ -525,6 +538,20 @@ export default {
           filteredObject[key] = this.selectedMeetingWorkflow.resource_ref.secondary_data[key]
         })
         this.updateData = filteredObject
+      }
+    }
+
+    if (this.meetingOpp) {
+      console.log('HERE', this.meetingOpp)
+      this.selectedResourceId = this.meetingOpp.id
+      this.mappedOpp = this.meetingOpp
+      if (this.user.crm === 'HUBSPOT') {
+        this.selectedResourceType = 'Deal'
+      } else {
+        this.selectedResourceType = 'Opportunity'
+      }
+      if (this.selectedResourceType === 'Deal' || this.selectedResourceType === 'Opportunity') {
+        this.$emit('set-opp', this.meetingOpp.name)
       }
     }
   },
@@ -607,6 +634,9 @@ export default {
     meetingData() {
       return this.$store.state.meetingData
     },
+    currentOpp() {
+      return this.$store.state.currentOpp
+    },
   },
 }
 </script>
@@ -653,7 +683,7 @@ export default {
   width: fit-content;
   font-size: 12px;
   color: $dark-green;
-  padding: 4px;
+  padding: 6px 8px;
   border-radius: 5px;
   margin-top: 1rem;
 
@@ -929,6 +959,29 @@ button {
     filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
       contrast(82%);
   }
+}
+
+.view-opp-button {
+  @include chat-button();
+  border-radius: 5px;
+  padding: 6px 8px;
+  display: block;
+  overflow: hidden;
+  width: 220px;
+  margin-right: 0.75rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  background-color: $dark-green;
+  border: 1px solid $dark-green;
+  color: white;
+}
+
+.opp-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between;
 }
 
 .row__ {

@@ -292,6 +292,9 @@ export default {
       this.$refs.rightSideBar.changeSelectedOpp(null, name)
     },
     setView(name) {
+      if (name === 'meetings' && this.currentOpp) {
+        this.$refs.rightSideBar.setMeetingOpp(this.currentOpp)
+      }
       this.$refs.rightSideBar.switchMainView(name)
     },
     toggleLeftbarOn() {

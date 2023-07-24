@@ -410,12 +410,13 @@ export default {
   background: $dark-green;
   outline: 1px solid $dark-green;
   color: white;
-  width: 44px;
+  width: 60px;
   height: 24px;
   border-radius: 3px;
   cursor: pointer;
   font-size: 11px;
   transition: all 0.3s;
+  margin-right: 4px;
 
   &:hover {
     box-shadow: 0 3px 6px 0 $very-light-gray;
