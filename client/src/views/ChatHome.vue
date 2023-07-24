@@ -739,7 +739,6 @@ export default {
       // check form data for this request
       try {
         this.userInviteForm.field.team.value = this.user.team
-        console.log('this.userInviteForm.value', this.userInviteForm.value)
         const res = await User.api.invite(this.userInviteForm.value)
         this.activationLink = res.data.activation_link_ref
         this.$toast('Invite link created successfully', {
@@ -1426,5 +1425,15 @@ body {
   margin: 1rem 0;
   width: 15vw;
   font-size: 16px;
+}
+.form_field {
+  input {
+    width: 16vw;
+    padding: 8px 16px;
+    outline: none;
+    border: 1px solid $soft-gray;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+  }
 }
 </style>
