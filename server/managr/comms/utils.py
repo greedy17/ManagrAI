@@ -13,7 +13,6 @@ def get_news_for_company(company):
     news_url = comms_consts.NEW_API_URI + "/" + comms_consts.NEW_API_EVERYTHING_URI(company)
     with Variable_Client() as client:
         new_res = client.get(news_url, headers=comms_consts.NEWS_API_HEADERS)
-        print(new_res.json())
         return _handle_news_response(new_res)
 
 

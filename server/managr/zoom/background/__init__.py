@@ -728,6 +728,8 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
             continue
         except KeyError:
             continue
+        except Exception:
+            continue
     cleaned_data["meeting_comments"] = notes
     cleaned_data["meeting_type"] = subject
     return cleaned_data
