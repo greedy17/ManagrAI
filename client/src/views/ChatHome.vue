@@ -43,7 +43,7 @@
                   v-model="selectedMember"
                   :options="slackMembers.members"
                   openDirection="below"
-                  style="width: 33vw"
+                  style="width: 33vw; margin-bottom: 1rem"
                   selectLabel="Enter"
                   track-by="id"
                   label="realName"
@@ -76,7 +76,7 @@
                   v-model="selectedLevel"
                   :options="userTypes"
                   openDirection="below"
-                  style="width: 33vw"
+                  style="width: 33vw; margin-bottom: 1rem"
                   selectLabel="Enter"
                   label="key"
                 >
@@ -94,7 +94,7 @@
             </FormField>
           </div>
           <div
-            v-if="user.organizationRef.isPaid && user.isAdmin"
+            v-if="user.isAdmin"
             style="display: flex; align-items: flex-start; flex-direction: column"
           >
             <FormField>
@@ -105,7 +105,7 @@
                   v-model="selectedTeam"
                   :options="allTeams"
                   openDirection="below"
-                  style="width: 33vw"
+                  style="width: 33vw; margin-bottom: 1rem"
                   selectLabel="Enter"
                   :customLabel="customTeamLabel"
                 >
@@ -123,7 +123,7 @@
             </FormField>
           </div>
           <div
-            v-if="user.organizationRef.isPaid && user.isAdmin"
+            v-if="user.isAdmin"
             style="display: flex; align-items: flex-start; flex-direction: column"
           >
             <div style="display: flex; height: 1rem; margin-bottom: 2rem; margin-left: 0.25rem">
@@ -694,7 +694,7 @@ export default {
         })
         return
       }
-      if (this.user.organizationRef.isPaid && this.user.isAdmin && !this.selectedTeam) {
+      if (this.user.isAdmin && !this.selectedTeam) {
         this.loading = false
         this.$toast('Please select a team', {
           timeout: 2000,
@@ -1445,5 +1445,15 @@ body {
   margin: 1rem 0;
   width: 15vw;
   font-size: 16px;
+}
+.form_field {
+  input {
+    width: 16vw;
+    padding: 8px 16px;
+    outline: none;
+    border: 1px solid $soft-gray;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+  }
 }
 </style>
