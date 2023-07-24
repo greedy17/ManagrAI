@@ -168,6 +168,7 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
             "user_ref",
             "org_ref",
             "is_completed",
+            "transcript_summary",
             "transcript_analysis",
             "forms"
         )

@@ -73,10 +73,31 @@
 
     <div v-else-if="selectedMeetingWorkflow && selectedMeetingWorkflow.forms.length">
       <div v-if="selectedMeetingWorkflow.forms[0].update_source === 'transcript'">
+        <!-- selectedMeetingWorkflow.is_completed && -->
         <div
           v-if="
-            !selectedMeetingWorkflow.is_completed ||
-            !(selectedMeetingWorkflow.forms[0] && selectedMeetingWorkflow.forms[0].is_submitted)
+            !(selectedMeetingWorkflow.forms[0] && selectedMeetingWorkflow.forms[0].is_submitted) &&
+            !updatingMeeting
+          "
+        >
+          <div class="opp-row">
+            <p class="logged">Summary</p>
+            <button @click="toggleUpdateMeeting" class="view-opp-button">
+              Review & Update {{ this.user.crm === 'HUBSPOT' ? 'HubSpot' : 'Salesforce' }}
+            </button>
+          </div>
+
+          {{ selectedMeetingWorkflow.transcript_summary }}
+          <div>
+            <p class="logged-blue">Analysis</p>
+            <pre class="message-text" v-html="selectedMeetingWorkflow.transcript_analysis"></pre>
+          </div>
+        </div>
+
+        <div
+          v-else-if="
+            !(selectedMeetingWorkflow.forms[0] && selectedMeetingWorkflow.forms[0].is_submitted) &&
+            updatingMeeting
           "
         >
           <div :class="{ disabled: submitting }" v-for="(field, i) in formFields" :key="i">
@@ -95,6 +116,7 @@
             />
           </div>
           <div class="meeting-modal-footer">
+            <button @click="toggleUpdateMeeting">Cancel</button>
             <button @click="onSubmitChat" class="green-button" :disabled="submitting">
               Log Meeting
             </button>
@@ -112,7 +134,11 @@
             </button>
           </div>
 
-          <pre class="message-text" v-html="selectedMeetingWorkflow.transcript_analysis"></pre>
+          <p>{{ selectedMeetingWorkflow.transcript_summary }}</p>
+          <div>
+            <p class="logged-blue">Analysis</p>
+            <pre class="message-text" v-html="selectedMeetingWorkflow.transcript_analysis"></pre>
+          </div>
         </div>
       </div>
 
@@ -228,6 +254,7 @@ export default {
   },
   data() {
     return {
+      updatingMeeting: false,
       textLoading: null,
       listLoading: false,
       loading: false,
@@ -274,6 +301,9 @@ export default {
   methods: {
     test() {
       console.log(this.currentOpp)
+    },
+    toggleUpdateMeeting() {
+      this.updatingMeeting = !this.updatingMeeting
     },
     viewOpp() {
       console.log(this.selectedMeetingWorkflow.resource_ref)
@@ -683,6 +713,26 @@ export default {
   width: fit-content;
   font-size: 12px;
   color: $dark-green;
+  padding: 6px 8px;
+  border-radius: 5px;
+  margin-top: 1rem;
+
+  img {
+    margin-right: 0.25rem;
+    margin-bottom: -2px;
+    filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
+      contrast(82%);
+  }
+}
+
+.logged-blue {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  background-color: $white-blue;
+  width: fit-content;
+  font-size: 12px;
+  color: $dark-black-blue;
   padding: 6px 8px;
   border-radius: 5px;
   margin-top: 1rem;
