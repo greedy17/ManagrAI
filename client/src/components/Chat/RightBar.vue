@@ -233,12 +233,12 @@
                     v-if="selectedFilter.name && selectedFilter.operator && selectedFilter.value"
                     class="save-close"
                   >
-                    <div @click="addFilter()" class="save">
-                      <span>&#x2713;</span>
+                    <div @click="addFilter" class="save">
+                      <span>save</span>
                     </div>
-                    <div @click="clearFilter" class="close">
-                      <span>x</span>
-                    </div>
+                    <!-- <div @click="clearFilter" class="close">
+                      <span>cancel</span>
+                    </div> -->
                   </div>
                 </div>
               </div>
@@ -301,6 +301,8 @@
             :stagesWithForms="stagesWithForms"
             @reload-workflows="reloadWorkflows"
             @reload-meetings="reloadMeetings"
+            @select-opp="selectOpp"
+            :meetingOpp="meetingOpp"
             :key="logkey"
           />
         </div>
@@ -522,6 +524,7 @@ export default {
       filtervalue: null,
       allStages: [],
       meetings: [],
+      meetingOpp: null,
       meetingDate: this.getCurrentDate(),
       objects: CollectionManager.create({
         ModelClass: CRMObjects,
@@ -841,6 +844,10 @@ export default {
     //     }, 5000)
     //   }
     // },
+    selectOpp(opp) {
+      this.changeSelectedOpp(opp)
+      this.deselectMeeting()
+    },
     switchMainView(view) {
       if (view === 'meetings' && !this.meetings.length) {
         this.getZoomMeetings()
@@ -853,6 +860,9 @@ export default {
       if (view !== this.mainView) {
         this.mainView = view
       }
+    },
+    setMeetingOpp(opp) {
+      this.meetingOpp = opp
     },
     async getNotes() {
       this.sortedNotes = []
@@ -2123,13 +2133,13 @@ img {
   background: white;
   outline: 1px solid rgba(0, 0, 0, 0.1);
   color: $coral;
-  width: 20px;
+  width: 40px;
   height: 20px;
   border-radius: 3px;
   cursor: pointer;
   margin-left: 0.5rem;
   margin-right: 2px;
-  font-size: 13px;
+  font-size: 11px;
   transition: all 0.3s;
 
   &:hover {
@@ -2142,10 +2152,10 @@ img {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
-  outline: 1px solid rgba(0, 0, 0, 0.1);
-  color: $dark-green;
-  width: 20px;
+  background: $dark-green;
+  outline: 1px solid $dark-green;
+  color: white;
+  width: 36px;
   height: 20px;
   border-radius: 3px;
   cursor: pointer;

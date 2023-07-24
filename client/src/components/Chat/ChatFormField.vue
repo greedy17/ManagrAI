@@ -322,7 +322,10 @@ export default {
   },
   watch: {
     newStage(val) {
-      if (this.stagesWithForms.includes(val.value)) {
+      if (
+        this.stagesWithForms &&
+        (this.stagesWithForms.includes(val.value) || this.stagesWithForms.includes(val.id))
+      ) {
         this.showStageForm = true
         this.selectedStage = val.value
         setTimeout(() => {

@@ -347,7 +347,7 @@
       <div class="card">
         <div class="card__header " style="justify-content: space-between;">
           <img style="height: 40px" src="@/assets/images/zoom.png" />
-          <img v-if="!isPaid" src="@/assets/images/chat-lock.svg" class="filtered-gray" style="height: 20px;" />
+          <!-- <img v-if="!isPaid" src="@/assets/images/chat-lock.svg" class="filtered-gray" style="height: 20px;" /> -->
         </div>
 
         <div class="card__body">
@@ -364,7 +364,7 @@
             <button v-if="hasZoomIntegration" class="long-button coral" style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem; padding-top: 0.4rem; padding-bottom: 0.4rem;" @click="setRemoveApp('ZOOM')">
               Disconnect
             </button>
-            <button v-else class="long-button" style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem;" @click="isPaid ? connectApp('ZOOM') : showErrorSuccessModal('premium', 'This feature is available in the Business Plan')">
+            <button v-else class="long-button" style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem;" @click="connectApp('ZOOM')">
               Connect 
               <img 
                 src="@/assets/images/angle-small-right.svg" 

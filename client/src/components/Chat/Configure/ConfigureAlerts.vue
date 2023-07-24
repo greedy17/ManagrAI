@@ -175,6 +175,7 @@
               :saveWorkflow="saveWorkflow" 
               :noRenderHeader="true" 
               :closeBuilder="closeBuilder" 
+              @close-modal="closePopularModal"
             />
           </div>
           <div class="outer-height" v-if="templateName === 'ZoomRecap'">
@@ -1016,12 +1017,6 @@ a:hover span {
   justify-self: start;
   margin: 0 5%;
   letter-spacing: 1px;
-}
-.confirm-cancel-container {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  width: 94%
 }
 .img-border-modal {
   // @include gray-text-button();

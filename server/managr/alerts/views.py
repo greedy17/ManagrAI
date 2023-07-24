@@ -116,7 +116,7 @@ def alert_config_creator(data, user):
             if len(all_configs) > 1:
                 all_configs = remove_duplicate_alert_configs(all_configs)
             new_configs = all_configs if len(all_configs) else None
-        if user.slack_integration.recap_channel is None:
+        if getattr(user, 'slack_integration', None) and user.slack_integration.recap_channel is None:
             if "SELF" in new_configs[0]["alert_targets"]:
                 user.slack_integration.change_recap_channel(new_configs[0]["recipients"][0])
     else:
