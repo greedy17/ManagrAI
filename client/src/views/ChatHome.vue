@@ -9,7 +9,12 @@
         }
       "
     >
-      <form v-if="hasSlack" class="invite-form form-height-small" @submit.prevent="handleInvite" style="margin-top: 7.5rem; height: 50vh">
+      <form
+        v-if="hasSlack"
+        class="invite-form form-height-small"
+        @submit.prevent="handleInvite"
+        style="margin-top: 7.5rem; height: 50vh"
+      >
         <div class="header">
           <div class="flex-row">
             <img src="@/assets/images/logo.png" class="logo" alt="" />
@@ -21,7 +26,7 @@
               src="@/assets/images/close.svg"
               height="24px"
               alt=""
-              style="filter: invert(30%); cursor: pointer;"
+              style="filter: invert(30%); cursor: pointer"
             />
           </div>
         </div>
@@ -88,7 +93,10 @@
               </template>
             </FormField>
           </div>
-          <div v-if="user.organizationRef.isPaid && user.isAdmin" style="display: flex; align-items: flex-start; flex-direction: column">
+          <div
+            v-if="user.organizationRef.isPaid && user.isAdmin"
+            style="display: flex; align-items: flex-start; flex-direction: column"
+          >
             <FormField>
               <template v-slot:input>
                 <Multiselect
@@ -114,10 +122,18 @@
               </template>
             </FormField>
           </div>
-          <div v-if="user.organizationRef.isPaid && user.isAdmin" style="display: flex; align-items: flex-start; flex-direction: column">
-            <div style="display: flex; height: 1rem; margin-bottom: 2rem; margin-left: 0.25rem;">
-              <p style="margin: 0;">Make Team Lead</p>
-              <input v-model="selectedTeamLead" :disabled="!selectedTeam || user.team === selectedTeam.id" type="checkbox" style="height: 1rem; align-self: center; width: 2rem; margin-top: 0.5rem;" />
+          <div
+            v-if="user.organizationRef.isPaid && user.isAdmin"
+            style="display: flex; align-items: flex-start; flex-direction: column"
+          >
+            <div style="display: flex; height: 1rem; margin-bottom: 2rem; margin-left: 0.25rem">
+              <p style="margin: 0">Make Team Lead</p>
+              <input
+                v-model="selectedTeamLead"
+                :disabled="!selectedTeam || user.team === selectedTeam.id"
+                type="checkbox"
+                style="height: 1rem; align-self: center; width: 2rem; margin-top: 0.5rem"
+              />
             </div>
           </div>
         </div>
@@ -127,7 +143,7 @@
               <PulseLoadingSpinnerButton
                 @click="handleInvite"
                 class="invite-button"
-                style="width: 5rem; margin-right: 5%; height: 2rem; margin-top: 2rem;"
+                style="width: 5rem; margin-right: 5%; height: 2rem; margin-top: 2rem"
                 text="Invite"
                 :loading="loading"
                 >Invite</PulseLoadingSpinnerButton
@@ -200,7 +216,9 @@
                   style="margin-left: 0.5rem"
                   alt="" /></small
             ></span>
-            <div v-if="!activationLink" class="cancel-button" @click="handleInviteCancel">Cancel</div>
+            <div v-if="!activationLink" class="cancel-button" @click="handleInviteCancel">
+              Cancel
+            </div>
             <small v-else class="copyText">Copy above link and send to user</small>
           </template>
         </div>
@@ -513,11 +531,11 @@ export default {
       const allTeams = await Organization.api.listTeams(this.user.id)
       this.allTeams = allTeams.results
       if (this.user.isAdmin) {
-        const userTeam = this.allTeams.filter(team => team.id === this.user.team)
+        const userTeam = this.allTeams.filter((team) => team.id === this.user.team)
         this.selectedTeam = userTeam[0] ? userTeam[0] : null
       } else {
         const orgUsers = await User.api.getAllOrgUsers(this.user.organization)
-        let admin = orgUsers.filter(user => user.is_admin)[0]
+        let admin = orgUsers.filter((user) => user.is_admin)[0]
         this.selectedTeam = admin ? admin.team : null
       }
       await this.listUsers()
@@ -551,6 +569,11 @@ export default {
     refreshLists() {
       this.$refs.sidebarRef.refreshList()
     },
+    async noSlackRefresh() {
+      this.team.refresh()
+      // this.inviteOpen = false
+      // this.profileModalOpen = true
+    },
     async refresh() {
       this.team.refresh()
       this.inviteOpen = false
@@ -558,7 +581,7 @@ export default {
     },
     customTeamLabel(props) {
       if (this.user.team === props.id) {
-        return "Your Team"
+        return 'Your Team'
       } else {
         return props.name
       }
@@ -739,7 +762,6 @@ export default {
       // check form data for this request
       try {
         this.userInviteForm.field.team.value = this.user.team
-        console.log('this.userInviteForm.value', this.userInviteForm.value)
         const res = await User.api.invite(this.userInviteForm.value)
         this.activationLink = res.data.activation_link_ref
         this.$toast('Invite link created successfully', {
@@ -749,7 +771,7 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-        await this.refresh()
+        await this.noSlackRefresh()
         this.resetData()
       } catch (e) {
         this.$toast('Error sending invite', {
@@ -761,9 +783,6 @@ export default {
         })
       } finally {
         this.loading = false
-
-        // this.inviteOpen = !this.inviteOpen
-        // this.profileModalOpen = true
       }
     },
     mapMember() {
