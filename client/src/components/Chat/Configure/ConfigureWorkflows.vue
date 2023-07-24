@@ -442,13 +442,12 @@
             <div v-else class="card__body__between">
               <p></p>
               <button
-                v-if="isPaid && userLevel == 'MANAGER'"
                 @click="goToWorkflow(config.title)"
                 class="white_button"
               >
                 Activate
               </button>
-              <div v-else class="tooltip-left">
+              <!-- <div v-else class="tooltip-left">
                 <img
                   class=""
                   style="filter: invert(40%)"
@@ -457,7 +456,7 @@
                   alt=""
                 />
                 <small class="tooltiptext-left">Upgrade your plan</small>
-              </div>
+              </div> -->
             </div>
         </div>
 
