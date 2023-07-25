@@ -38,7 +38,7 @@
               <!-- <div>
                 By signing up, I agree to the
                 <a href="https://managr.ai/terms-of-service" target="_blank">Terms</a> and
-                <a href="https://managr.ai/privacy-policy" target="_blank">Policies</a>.
+                <a href="https://managr.ai/privacy-policy" target="_blank">Privacy</a>.
               </div> -->
               <!-- <div class="links">
                 <p style="color: #4d4e4c">

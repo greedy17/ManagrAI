@@ -421,7 +421,7 @@
       <!-- @mouseenter="setTooltip(opp.id)"
         @mouseleave="removeTooltip" -->
       <div v-if="userCRM && !(displayedOpps.results && displayedOpps.results.length)" class="no-results">
-        <p>Sync in progress... Reload in a minute</p>
+        <p>Sync in progress... Reload in a few minutes</p>
         <span @click="refreshFields()" class="button">Reload</span>
       </div>
       <div

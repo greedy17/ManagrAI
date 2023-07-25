@@ -266,9 +266,9 @@
           <h3>
             <img src="@/assets/images/dot.svg" class="green-filter" />
             Salesforce
-            <span class="required" v-if="!hasSalesforceIntegration">
+            <!-- <span class="required" v-if="!hasSalesforceIntegration">
               <img src="@/assets/images/required.svg" height="14px" alt=""
-            /></span>
+            /></span> -->
           </h3>
           <p class="card-text" style="font-weight: bold">CRM Connected</p>
           <div class="sep-button-container">
