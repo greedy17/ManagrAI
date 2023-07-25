@@ -187,7 +187,13 @@
 
     <div v-if="!hasMeetingWorkflow">
       <div class="meeting-modal-footer">
-        <!-- <button v-if="selectedResourceId && usingAi" :disabled="submitting">Cancel</button> -->
+        <button
+          @click="deselectMeeting"
+          v-if="selectedResourceId && usingAi"
+          :disabled="submitting"
+        >
+          Cancel
+        </button>
 
         <button
           @click="submitChatMeeting"
@@ -322,6 +328,9 @@ export default {
   methods: {
     test() {
       console.log(this.currentOpp)
+    },
+    deselectMeeting() {
+      this.$emit('deselect-meeting')
     },
     toggleUpdateMeeting() {
       this.updatingMeeting = !this.updatingMeeting
@@ -593,11 +602,6 @@ export default {
       }
     }
 
-    this.usingAi = {
-      name: 'Yes',
-      value: 'true',
-    }
-
     if (this.meetingOpp) {
       console.log('HERE', this.meetingOpp)
       this.selectedResourceId = this.meetingOpp.id
@@ -610,6 +614,11 @@ export default {
       if (this.selectedResourceType === 'Deal' || this.selectedResourceType === 'Opportunity') {
         this.$emit('set-opp', this.meetingOpp.name)
       }
+    }
+
+    this.usingAi = {
+      name: 'Yes',
+      value: 'true',
     }
   },
   computed: {

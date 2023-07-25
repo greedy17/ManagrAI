@@ -302,6 +302,7 @@
             @reload-workflows="reloadWorkflows"
             @reload-meetings="reloadMeetings"
             @select-opp="selectOpp"
+            @deselect-meeting="deselectMeeting"
             :meetingOpp="meetingOpp"
             :key="logkey"
           />
