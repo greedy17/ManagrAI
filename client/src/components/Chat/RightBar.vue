@@ -689,7 +689,7 @@ export default {
   },
   methods: {
     test() {
-      console.log('log', this.meetingWorkflows)
+      console.log('log', this.opportunities)
     },
     openSettings() {
       this.$emit('open-settings')
