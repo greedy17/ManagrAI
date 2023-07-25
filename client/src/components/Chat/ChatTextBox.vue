@@ -339,6 +339,7 @@ export default {
             user_id: this.user.id,
             prompt: `Update ${this.currentOpp.name} ${this.chatmsg}`,
             resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
+            resource_id: this.currentOpp.id,
           })
           .then((response) => {
             this.chatRes = response

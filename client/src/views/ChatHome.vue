@@ -285,7 +285,7 @@
           <ChatFormField
             :placeholder="toString(formData[field.apiName])"
             :field="field"
-            :chatData="formData"
+            :chatData="formOpen ? formData : chatData"
             @set-value="setUpdateValues"
             :stageFields="stageFields"
             :stagesWithForms="stagesWithForms"
