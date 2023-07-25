@@ -10,7 +10,7 @@
       "
     >
       <form
-        v-if="hasSlack"
+        v-if="hasSlack || (this.isAdmin && this.orgHasSlackIntegration)"
         class="invite-form form-height-small"
         @submit.prevent="handleInvite"
         style="margin-top: 7.5rem; height: 50vh"
@@ -527,7 +527,7 @@ export default {
       userLevel: User.types.REP,
       organization: this.user.organization,
     })
-    if (!!this.$store.state.user.organizationRef.slackIntegration) {
+    if ((this.isAdmin && this.orgHasSlackIntegration) || this.hasSlack) {
       try {
         const allTeams = await Organization.api.listTeams(this.user.id)
         this.allTeams = allTeams.results
@@ -544,10 +544,6 @@ export default {
         console.log(e)
       }
       this.team.refresh()
-    }
-
-    if (this.$route.fullPath !== '/chat') {
-      this.handleConfigureOpen()
     }
   },
   watch: {},
@@ -906,7 +902,6 @@ export default {
     hasSlack() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.slackRef
-      return this.$store.state.user.slackRef
     },
     numberOfAllowedUsers() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
@@ -917,6 +912,14 @@ export default {
     },
     currentOpp() {
       return this.$store.state.currentOpp
+    },
+    orgHasSlackIntegration() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!this.$store.state.user.organizationRef.slackIntegration
+    },
+    isAdmin() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.isAdmin
     },
   },
 }
