@@ -149,6 +149,9 @@ variable "app_config" {
     microsoft_secret_key   = string
     google_client_id       = string
     google_login_uri       = string
+
+    use_news_api            = bool
+    news_api_key           = string
   })
 }
 

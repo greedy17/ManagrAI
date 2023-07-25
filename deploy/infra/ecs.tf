@@ -88,6 +88,7 @@ data "template_file" "managr_app" {
     use_hubspot    = title(each.value.use_hubspot)
     use_open_ai    = title(each.value.use_open_ai)
     use_sso        = title(each.value.use_sso)
+    use_news_api   = title(each.value.use_news_api)
   }
 }
 
@@ -139,6 +140,7 @@ data "template_file" "managr_app_scheduled_tasks" {
     use_hubspot    = title(each.value.env.use_hubspot)
     use_open_ai    = title(each.value.env.use_open_ai)
     use_sso        = title(each.value.env.use_sso)
+    use_news_api   = title(each.value.env.use_news_api)
   }
 }
 
@@ -330,5 +332,7 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     microsoftSecretKey   = each.value.microsoft_secret_key
     googleClientId       = each.value.google_client_id
     googleLoginUri       = each.value.google_login_uri
+
+    newsApiKey           = each.value.news_api_key
   })
 }

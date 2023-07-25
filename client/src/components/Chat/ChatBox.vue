@@ -271,8 +271,10 @@
       @remove-opp="removeOpp"
       @set-view="setView"
       @get-conversations="getConversations"
+      @scroll="scrollToBottom"
+      @open-form="emitFormOpen"
+      @set-open-form="setOpenForm"
       :messages="messages"
-      :scrollToBottom="scrollToBottom"
       :conversation="conversation"
     />
   </section>
@@ -305,11 +307,18 @@ export default {
     messages: 'scrollToBottom',
   },
   methods: {
+    setOpenForm(val) {
+      this.$emit('set-open-form', val)
+    },
     removeOpp() {
       this.$emit('remove-opp')
     },
     setView(val) {
       this.$emit('set-view', val)
+    },
+    emitFormOpen(data, open) {
+      console.log('HERE', data, open)
+      this.$emit('toggle-chat-modal', data, open)
     },
     async getConversations() {
       try {
@@ -640,7 +649,7 @@ export default {
       setTimeout(() => {
         const chatWindow = this.$refs.chatWindow
         chatWindow.scrollTop = chatWindow.scrollHeight
-      }, 0)
+      }, 200)
     },
     setLoader(val) {
       this.messageLoading = val

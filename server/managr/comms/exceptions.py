@@ -17,7 +17,6 @@ class NewsApiException:
         self.error_class_name = e.__class__.__name__
         self.status_code = e.args[0]["status_code"]
         self.param = e.args[0]["error_param"]
-        self.message = e.args[0]["error_message"]
         self.fn_name = fn_name
         self.retry_attempts = 0
         self.raise_error()
@@ -56,7 +55,6 @@ def _handle_response(response, fn_name=None):
         kwargs = {
             "status_code": status_code,
             "error_param": error_param,
-            "error_message": error_param["message"],
         }
         NewsApiException(HTTPError(kwargs), fn_name)
     return data

@@ -755,7 +755,6 @@ class MeetingWorkflow(SFSyncOperation):
     def begin_tasks(self, attempts=1):
         new_operations_list = []
         for op in self.operations_list:
-            print('OP IS HERE',op)
             # split the operation to get opp and params
             operation_name, param = op.split(".")
             operation = self.operations_map.get(operation_name)
@@ -837,30 +836,21 @@ class MeetingWorkflow(SFSyncOperation):
 
     def save(self, *args, **kwargs):
         """sets the loading to done"""
-        # date = str(self.datetime_created.date()) if self.datetime_created else str(datetime.today())
-        if self.progress < 0 and self.slack_interaction:
-            # from managr.core.background import emit_process_calendar_meetings
-            # import uuid
+        if self.progress > 0 and self.slack_interaction:
             from managr.slack.helpers.block_sets import get_block_set
             from managr.slack.helpers import requests as slack_requests
 
             blocks = get_block_set("meeting_blockset", {"u": str(self.user.id), "w": str(self.id)})
+            ts, channel = self.slack_interaction.split("|")
             try:
-                res = slack_requests.send_channel_message(
-                    self.user.slack_integration.channel,
+                res = slack_requests.update_channel_message(
+                    channel,
+                    ts,
                     block_set=blocks,
-                    access_token=self.user.organization.slack_access_token,
+                    access_token=self.user.organization.slack_integration.access_token,
                 )
             except Exception as e:
-                return logger.exception(
-                    f"Failed To Show Loading Screen for user  {str(self.user.id)} email {self.user.email} {e}"
-                )
-            # emit_process_calendar_meetings(
-            #     str(self.user.id),
-            #     f"calendar-meetings-{self.user.email}-{str(uuid.uuid4())}",
-            #     self.slack_interaction,
-            #     date=date,
-            # )
+                return logger.exception(f"Error updating meeting message for {self.user.email} {e}")
         return super(MeetingWorkflow, self).save(*args, **kwargs)
 
 

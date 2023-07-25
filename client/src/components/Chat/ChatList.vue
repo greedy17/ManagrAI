@@ -56,7 +56,7 @@
           >
           </Multiselect>
           <p class="counter" v-if="currentView !== 'pipeline' && !templates.refreshing">
-            {{ currentView.sobjectInstances.length }}
+            Results: {{ currentView.sobjectInstances.length }}
           </p>
         </div>
         <!-- <select
@@ -337,6 +337,12 @@ export default {
   created() {
     this.formFields.refresh()
     this.templates.refresh()
+  },
+  mounted() {
+    setTimeout(() => {
+      this.activeList = this.templates.list[0]
+      this.selectList(this.templates.list[0])
+    }, 1500)
   },
   methods: {
     test() {
@@ -740,7 +746,7 @@ export default {
 
   img {
     margin: 0;
-    margin-right: 0.25rem;
+    // margin-right: 0.25rem;
   }
 
   span {

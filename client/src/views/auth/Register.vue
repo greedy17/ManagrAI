@@ -260,7 +260,7 @@ export default {
       if (this.isPR) {
         this.$router.push({ name: 'PRSummaries' })
       } else {
-        this.$router.push({ name: 'Integrations' })
+        this.$router.push({ name: 'Home' })
       }
     },
   },

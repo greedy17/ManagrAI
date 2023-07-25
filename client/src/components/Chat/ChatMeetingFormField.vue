@@ -96,8 +96,8 @@
         :options="
           userCRM === 'SALESFORCE'
             ? picklistOptions[field.id]
-            : field.options[0][currentOpp.secondary_data.pipeline]
-            ? field.options[0][currentOpp.secondary_data.pipeline].stages
+            : field.options[0][hubspotStages]
+            ? field.options[0][hubspotStages].stages
             : []
         "
         selectLabel=""
@@ -346,6 +346,7 @@ export default {
     chatData: {},
     stageFields: {},
     stagesWithForms: {},
+    hubspotStages: {},
   },
   methods: {
     test(op) {

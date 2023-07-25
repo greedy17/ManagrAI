@@ -54,12 +54,13 @@ from .nylas.auth import get_access_token, get_account_details
 from .models import User, NylasAuthAccount, NoteTemplate, Message, Conversation
 from .serializers import (
     UserSerializer,
+    UserClientSerializer,
     UserLoginSerializer,
     UserSSOLoginSerializer,
     UserInvitationSerializer,
     UserRegistrationSerializer,
     NoteTemplateSerializer,
-    ConversationSerializer
+    ConversationSerializer,
 )
 from managr.organization.models import Team
 from .permissions import IsStaff
@@ -259,6 +260,8 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
                         cleaned_data[key] = None
         except ValueError:
             continue
+        except KeyError:
+            continue
     cleaned_data["meeting_comments"] = notes
     cleaned_data["meeting_type"] = subject
     # logger.info(f"CLEAN PROMPT DEBUGGER: {cleaned_data}")
@@ -342,6 +345,7 @@ def clean_data_for_summary(user_id, data, integration_id, resource_type):
             cleaned_data[field.api_name] = reference_record
     return cleaned_data
 
+
 def deal_review_data_builder(resource_data, api_name_list, crm, form_data, fields):
     value_dict = {}
     try:
@@ -372,7 +376,7 @@ def deal_review_data_builder(resource_data, api_name_list, crm, form_data, field
         value_dict["Last Activity"] = modified_date
     if "meeting_comments" in form_data.keys():
         value_dict["Meeting Comments"] = form_data["meeting_comments"]
-    return value_dict    
+    return value_dict
 
 
 @api_view(["post"])
@@ -392,7 +396,13 @@ def submit_chat_prompt(request):
     CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 
     form_type = (
-        "CREATE" if ("create" in request.data["prompt"].lower() and "update" not in request.data["prompt"].lower()) else "UPDATE")
+        "CREATE"
+        if (
+            "create" in request.data["prompt"].lower()
+            and "update" not in request.data["prompt"].lower()
+        )
+        else "UPDATE"
+    )
     form_template = user.team.team_forms.filter(
         form_type=form_type, resource=request.data["resource_type"]
     ).first()
@@ -546,6 +556,7 @@ def submit_chat_prompt(request):
         status=status.HTTP_200_OK,
     )
 
+
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
 def ask_managr(request):
@@ -557,7 +568,7 @@ def ask_managr(request):
         str(user.id),
         request.data["prompt"],
         request.data["resource_type"],
-        request.data["resource_id"]
+        request.data["resource_id"],
     )
 
     tokens = 500
@@ -623,6 +634,7 @@ def ask_managr(request):
         status=status.HTTP_200_OK,
     )
 
+
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
 def deal_review(request):
@@ -633,10 +645,12 @@ def deal_review(request):
     from managr.core.exceptions import _handle_response
 
     user = User.objects.get(id=request.data["user_id"])
-    prompt = request.data["prompt"],
-    resource_type = request.data["resource_type"],
+    prompt = (request.data["prompt"],)
+    resource_type = (request.data["resource_type"],)
     resource_id = request.data["resource_id"]
-    resource = CRM_SWITCHER[user.crm][request.data["resource_type"]]["model"].objects.get(id=request.data["resource_id"])
+    resource = CRM_SWITCHER[user.crm][request.data["resource_type"]]["model"].objects.get(
+        id=request.data["resource_id"]
+    )
     form_template = (
         OrgCustomSlackForm.objects.for_user(user)
         .filter(resource=request.data["resource_type"], form_type="UPDATE")
@@ -672,16 +686,12 @@ def deal_review(request):
             break
     if has_error:
         res = {"value": f"{response_text}"}
-        return Response(data=res, status=status.HTTP_400_BAD_REQUEST)  
+        return Response(data=res, status=status.HTTP_400_BAD_REQUEST)
     return Response(
-        data={
-            **r,
-            "res": response_text,
-            "resourceId": resource_id,
-            "resourceType": resource_type,
-        },
+        data={**r, "res": response_text, "resourceId": resource_id, "resourceType": resource_type,},
         status=status.HTTP_200_OK,
-    )    
+    )
+
 
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
@@ -693,9 +703,11 @@ def draft_follow_up(request):
         prompt = core_consts.OPEN_AI_MEETING_EMAIL_DRAFT(request.data["notes"])
         body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, temperature=0.2)
     else:
-        prompt = core_consts.OPEN_AI_EMAIL_DRAFT_WITH_INSTRUCTIONS(request.data["notes"], instructions)
-        body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 1000)    
-    
+        prompt = core_consts.OPEN_AI_EMAIL_DRAFT_WITH_INSTRUCTIONS(
+            request.data["notes"], instructions
+        )
+        body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 1000)
+
     attempts = 1
 
     while True:
@@ -706,10 +718,10 @@ def draft_follow_up(request):
             if r.status_code == 200:
                 r = r.json()
                 text = r.get("choices")[0].get("text")
-                return Response(data={**r, "res": text},status=status.HTTP_200_OK)
+                return Response(data={**r, "res": text}, status=status.HTTP_200_OK)
         except Exception as e:
             res = {"value": f"error drafting email: {e}"}
-            return Response(data=res,status=status.HTTP_500_INTERNAL_SERVER_ERROR)        
+            return Response(data=res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["post"])
@@ -728,7 +740,7 @@ def chat_next_steps(request):
             if r.status_code == 200:
                 r = r.json()
                 text = r.get("choices")[0].get("text")
-                return Response(data={**r, "res": text},status=status.HTTP_200_OK)
+                return Response(data={**r, "res": text}, status=status.HTTP_200_OK)
         except Exception as e:
             res = {"value": f"error getting next steps: {e}"}
             return Response(data=res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -752,10 +764,13 @@ def get_chat_summary(request):
             if r.status_code == 200:
                 r = r.json()
                 message_string_for_recap = r["choices"][0]["text"]
-                return Response(data={**r, "res": message_string_for_recap},status=status.HTTP_200_OK)
+                return Response(
+                    data={**r, "res": message_string_for_recap}, status=status.HTTP_200_OK
+                )
     except Exception as e:
         res = {"value": f"error getting summary: {e}"}
-        return Response(data=res,status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(data=res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
@@ -764,7 +779,7 @@ def log_chat_meeting(request):
     from managr.salesforce.serializers import MeetingWorkflowSerializer
     from managr.meetings.serializers import MeetingZoomSerializer
     from managr.slack import constants as slack_const
-  
+
     user = User.objects.get(id=request.data["user_id"])
     meeting_id = request.data["meeting_id"]
     meeting_res = user.zoom_account.helper_class.get_meeting_by_id(
@@ -793,15 +808,17 @@ def log_chat_meeting(request):
             resource_type=request.data["resource_type"],
         )
         workflow.add_form(
-            request.data["resource_type"], slack_const.FORM_TYPE_UPDATE, resource_id=request.data["resource_id"]
+            request.data["resource_type"],
+            slack_const.FORM_TYPE_UPDATE,
+            resource_id=request.data["resource_id"],
         )
         workflow.save()
     except Exception as e:
-        return Response(data={"data": e},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(data={"data": e}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     serializer = MeetingWorkflowSerializer(instance=workflow)
-    print('DATA IS HERE',serializer.data)
     data = {"success": True, "workflow": serializer.data}
     return Response(data=data)
+
 
 # @api_view(["post"])
 # @permission_classes([permissions.IsAuthenticated])
@@ -1027,7 +1044,7 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
             user.access_token.refresh(user.access_token)
         # Build and send the response
         u = User.objects.get(pk=user.id)
-        serializer = UserSerializer(u, context={"request": request})
+        serializer = UserClientSerializer(u, context={"request": request})
         response_data = serializer.data
         response_data["token"] = user.access_token.key
         return Response(response_data)
@@ -1065,7 +1082,7 @@ class UserSSOLoginView(generics.GenericAPIView):
             user.access_token.refresh(user.access_token)
         # Build and send the response
         u = User.objects.get(pk=user.id)
-        serializer = UserSerializer(u, context={"request": request})
+        serializer = UserClientSerializer(u, context={"request": request})
         response_data = serializer.data
         response_data["token"] = user.access_token.key
         return Response(response_data)
@@ -1114,7 +1131,7 @@ class UserViewSet(
     mixins.UpdateModelMixin,
 ):
 
-    serializer_class = UserSerializer
+    serializer_class = UserClientSerializer
     filter_fields = (
         "organization",
         "email",
@@ -1142,7 +1159,7 @@ class UserViewSet(
         self.perform_update(serializer)
         user = serializer.instance
 
-        serializer = UserSerializer(user, context={"request": request})
+        serializer = UserClientSerializer(user, context={"request": request})
         response_data = serializer.data
 
         return Response(response_data)
@@ -1250,7 +1267,7 @@ class UserViewSet(
                 ManagrToken.objects.get_or_create(user=user)
 
                 # Build and send the response
-                serializer = UserSerializer(user, context={"request": request})
+                serializer = UserClientSerializer(user, context={"request": request})
 
                 response_data = serializer.data
                 response_data["token"] = user.access_token.key
@@ -1804,13 +1821,13 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
         if len(u.organization.users.all()) >= u.organization.number_of_allowed_users:
             return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         slack_id = request.data.get("slack_id", False)
-
         make_team_lead = request.data.pop("team_lead")
         if make_team_lead:
             request.data["make_team_lead"] = True
         team = Team.objects.get(id=request.data.pop("team"))
         request.data["team"] = team.id
         serializer = self.serializer_class(data=request.data, context={"request": request})
+        # Bug 07/24/2023: 'invalid': 'Invalid data. Expected a dictionary, but got {datatype}.'
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         user = serializer.instance
@@ -2003,7 +2020,7 @@ class NoteTemplateViewSet(
 )
 def get_sso_data(request):
     data = {}
-    print('settings: ', settings)
+    print("settings: ", settings)
     data["client_id"] = settings.GOOGLE_CLIENT_ID
     data["login_uri"] = settings.GOOGLE_LOGIN_URI
     return Response(data=data)
@@ -2118,14 +2135,15 @@ def process_transcript(request):
     from managr.core import constants as core_consts
     from managr.core.exceptions import _handle_response
     from managr.core.background import emit_process_add_call_analysis
-    from managr.slack import constants as slack_consts
+    from managr.slack import constants as slack_const
+    from managr.salesforce import constants as sf_consts
     from managr.zoom.zoom_helper.exceptions import RecordingNotFound
     from managr.core.exceptions import StopReasonLength, ServerError
 
     user = User.objects.get(id=request.data["user_id"])
     summary_parts = []
     viable_data = []
-    meeting_id = request.data["meeting_id"] 
+    meeting_id = request.data["meeting_id"]
     resource_type = request.data["resource_type"]
     integration_id = request.data["integration_id"]
 
@@ -2169,11 +2187,25 @@ def process_transcript(request):
     form_template = user.team.team_forms.get(form_type="UPDATE", resource=resource_type)
     fields = form_template.custom_fields.all()
     fields_list = list(fields.values_list("label", flat=True))
-    if slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations:
-        workflow.operations.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
-    if slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK not in workflow.operations_list:
-        workflow.operations_list.append(slack_consts.MEETING__PROCESS_TRANSCRIPT_TASK)
-    workflow.save()
+    
+    # if len(workflow.failed_task_description):
+    #     workflow.build_retry_list()
+    # else:
+    #     if slack_const.MEETING__PROCESS_TRANSCRIPT_TASK in workflow.operations:
+    #         workflow.operations = []
+    #     main_operation = (   
+    #     f"{sf_consts.MEETING_REVIEW__UPDATE_RESOURCE}.{str(workflow.id)}"
+    #     )
+    #     ops = [
+    #         main_operation,
+    #     ]
+    #     if len(workflow.operations_list):
+    #         workflow.operations_list = [*workflow.operations_list, *ops]
+    #     else:
+    #         workflow.operations_list = ops
+    #     workflow.operations_list = ops
+    # workflow.save()
+    # workflow.begin_tasks()
 
     has_error = False
     error_message = None
@@ -2214,7 +2246,7 @@ def process_transcript(request):
                 )
                 transcript = transcript.decode("utf-8")
                 summary_parts = process_transcript_to_summaries(transcript, user)
-            if len(summary_parts):              
+            if len(summary_parts):         
                 timeout = 90.0
                 tokens = 1500
                 # try:
@@ -2282,7 +2314,9 @@ def process_transcript(request):
                             f"Retrying for stop reason length, token amount at: {tokens}"
                         )
                         if tokens >= 2000:
-                            error_message = "There was an error processing your transcript, try again"
+                            error_message = (
+                                "There was an error processing your transcript, try again"
+                            )
                             break
                         else:
                             tokens += 500
@@ -2302,9 +2336,7 @@ def process_transcript(request):
                             continue
                         else:
                             has_error = True
-                            error_message = (
-                                "Looks like we ran into an internal issue"
-                            )
+                            error_message = "Looks like we ran into an internal issue"
                             break
                     except SyntaxError as e:
                         print(e)
@@ -2315,11 +2347,11 @@ def process_transcript(request):
                         )
                         if timeout >= 120.0:
                             has_error = True
-                            error_message = "OpenAI servers are busy. No action needed, we'll try again in a few minutes..."
-                            schedule = datetime.now() + timezone.timedelta(minutes=5)
-                            process_transcript_to_summaries(
-                                transcript, user
-                            )
+                            error_message = "OpenAI servers are busy. Try again in a few minutes."
+                            # schedule = datetime.now() + timezone.timedelta(minutes=5)
+                            # process_transcript_to_summaries(
+                            #     transcript, user
+                            # )
                             break
                         else:
                             timeout += 30.0
@@ -2340,16 +2372,12 @@ def process_transcript(request):
             else "We could not find a recording for this meeting"
         )
         if retry < 3:
-            process_transcript_to_summaries(
-                transcript, user
-            )
+            process_transcript_to_summaries(transcript, user)
     except Exception as e:
         logger.exception(e)
         has_error = True
-        error_message = (
-            f"We encountered an unknow error processing your transcript: {str(e)}"
-        )
-    
+        error_message = f"We encountered an unknow error processing your transcript: {str(e)}"
+
     if not has_error:
         form_check = workflow.forms.all().filter(template=form_template).first()
         if form_check:
@@ -2365,9 +2393,11 @@ def process_transcript(request):
             )
             new_form.save_form(cleaned_data, False)
         emit_process_add_call_analysis(str(workflow.id), summary_parts)
-        return Response(data={'data':cleaned_data, 'analysis':combined_summary, 'status':status.HTTP_200_OK})
+        return Response(
+            data={"data": cleaned_data, "analysis": combined_summary, "status": status.HTTP_200_OK}
+        )
     else:
-        return Response(data=error_message, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(data={'data':error_message, 'status': status.HTTP_500_INTERNAL_SERVER_ERROR})
 
 
 @api_view(["post"])
@@ -2376,50 +2406,51 @@ def delete_all_messages(request):
     Message.objects.all().delete()
     return Response(status=status.HTTP_200_OK)
 
+
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
 def edit_message(request):
-    message = Message.objects.get(id=request.data['message_id'])
-    keys_to_exclude = ['conversation_id', 'message_id']
+    message = Message.objects.get(id=request.data["message_id"])
+    keys_to_exclude = ["conversation_id", "message_id"]
     all_keys = [key for key, value in request.data.items() if not isinstance(value, dict)]
     keys = [key for key in all_keys if key not in keys_to_exclude]
-    try:  
+    try:
         for field in keys:
-            setattr(message, field, request.data[field])       
+            setattr(message, field, request.data[field])
     except Exception as e:
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR,data=e)
-    message.save()    
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=e)
+    message.save()
     return Response(status=status.HTTP_200_OK)
+
 
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
 def add_message(request):
-    conversation = Conversation.objects.get(id=request.data['conversation_id'])
+    conversation = Conversation.objects.get(id=request.data["conversation_id"])
 
     default_values = {
-        'value': '',
-        'form_id': '',
-        'form_type': '',
-        'user_type': '',
-        'resource': '',
-        'resource_id': '',
-        'resource_type': '',
-        'integration_id': '',
-        'generated_title': '',
-        'generated_type':'',
-        'generated': False,
-        'updated': False,
-        'failed': False,
-        'error': None,
-        'data': '{}',
+        "value": "",
+        "form_id": "",
+        "form_type": "",
+        "user_type": "",
+        "resource": "",
+        "resource_id": "",
+        "resource_type": "",
+        "integration_id": "",
+        "generated_title": "",
+        "generated_type": "",
+        "generated": False,
+        "updated": False,
+        "failed": False,
+        "error": None,
+        "data": "{}",
     }
 
-    message_data = {field: request.data.get(field, default_values[field]) for field in default_values}
+    message_data = {
+        field: request.data.get(field, default_values[field]) for field in default_values
+    }
 
-    Message.objects.create(
-        conversation=conversation,
-        **message_data
-    )
+    Message.objects.create(conversation=conversation, **message_data)
 
     return Response(status=status.HTTP_200_OK)
 
@@ -2428,7 +2459,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
     serializer_class = ConversationSerializer
 
     def get_queryset(self):
-        user = User.objects.get(id=self.request.query_params.get('user_id'))
+        user = User.objects.get(id=self.request.query_params.get("user_id"))
         queryset = Conversation.objects.filter(user=user)
 
         return queryset

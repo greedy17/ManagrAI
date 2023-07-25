@@ -233,12 +233,12 @@
                     v-if="selectedFilter.name && selectedFilter.operator && selectedFilter.value"
                     class="save-close"
                   >
-                    <div @click="addFilter()" class="save">
-                      <span>&#x2713;</span>
+                    <div @click="addFilter" class="save">
+                      <span>save</span>
                     </div>
-                    <div @click="clearFilter" class="close">
-                      <span>x</span>
-                    </div>
+                    <!-- <div @click="clearFilter" class="close">
+                      <span>cancel</span>
+                    </div> -->
                   </div>
                 </div>
               </div>
@@ -300,6 +300,9 @@
             :stageFields="stageFields"
             :stagesWithForms="stagesWithForms"
             @reload-workflows="reloadWorkflows"
+            @reload-meetings="reloadMeetings"
+            @select-opp="selectOpp"
+            :meetingOpp="meetingOpp"
             :key="logkey"
           />
         </div>
@@ -446,7 +449,12 @@
 
     <div class="opp-scroll-container" v-else-if="this.mainView === 'meetings' && !loading">
       <p class="gray-text small-text">Select a meeting:</p>
+      <div class="empty-container" v-if="!meetings.length">
+        <p>No Zoom meetings found... refresh or select a different day</p>
+      </div>
+
       <div
+        v-else
         @click="changeSelectedMeeting(meeting)"
         class="opp-container"
         v-for="(meeting, i) in meetings"
@@ -516,6 +524,7 @@ export default {
       filtervalue: null,
       allStages: [],
       meetings: [],
+      meetingOpp: null,
       meetingDate: this.getCurrentDate(),
       objects: CollectionManager.create({
         ModelClass: CRMObjects,
@@ -778,12 +787,32 @@ export default {
     },
     async reloadWorkflows() {
       try {
-        const res = await MeetingWorkflows.api.getMeetingList()
-        this.meetingWorkflows = res.results
+        await MeetingWorkflows.api.getMeetingList().then((response) => {
+          this.meetingWorkflows = response.results
+          this.logkey += 1
+        })
       } catch (e) {
         console.log(e)
       } finally {
-        this.logkey += 1
+        this.$store.dispatch('refreshCurrentUser')
+      }
+    },
+    async reloadMeetings() {
+      try {
+        await Zoom.api
+          .getZoomMeetings({
+            user_id: this.user.id,
+            date: this.meetingDate,
+          })
+          .then((response) => {
+            this.logkey += 1
+            this.meetings = response.data
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.reloadWorkflows()
+        // this.logkey += 1
       }
     },
     async getMeetingWorkflows() {
@@ -791,7 +820,6 @@ export default {
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
         this.meetingWorkflows = res.results
-        console.log(res)
       } catch (e) {
         console.log(e)
       } finally {
@@ -816,6 +844,10 @@ export default {
     //     }, 5000)
     //   }
     // },
+    selectOpp(opp) {
+      this.changeSelectedOpp(opp)
+      this.deselectMeeting()
+    },
     switchMainView(view) {
       if (view === 'meetings' && !this.meetings.length) {
         this.getZoomMeetings()
@@ -828,6 +860,9 @@ export default {
       if (view !== this.mainView) {
         this.mainView = view
       }
+    },
+    setMeetingOpp(opp) {
+      this.meetingOpp = opp
     },
     async getNotes() {
       this.sortedNotes = []
@@ -1276,6 +1311,14 @@ export default {
 
 .dot:nth-child(3) {
   animation-delay: -0.2s;
+}
+
+.empty-container {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-size: 12px;
+  border-radius: 5px;
+  margin-top: 4px;
+  padding: 2px 8px;
 }
 
 @keyframes bounce {
@@ -2090,13 +2133,13 @@ img {
   background: white;
   outline: 1px solid rgba(0, 0, 0, 0.1);
   color: $coral;
-  width: 20px;
+  width: 40px;
   height: 20px;
   border-radius: 3px;
   cursor: pointer;
   margin-left: 0.5rem;
   margin-right: 2px;
-  font-size: 13px;
+  font-size: 11px;
   transition: all 0.3s;
 
   &:hover {
@@ -2109,10 +2152,10 @@ img {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
-  outline: 1px solid rgba(0, 0, 0, 0.1);
-  color: $dark-green;
-  width: 20px;
+  background: $dark-green;
+  outline: 1px solid $dark-green;
+  color: white;
+  width: 36px;
   height: 20px;
   border-radius: 3px;
   cursor: pointer;
