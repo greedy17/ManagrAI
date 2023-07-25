@@ -10,7 +10,7 @@
       "
     >
       <form
-        v-if="hasSlack"
+        v-if="hasSlack || (this.isAdmin && this.orgHasSlackIntegration)"
         class="invite-form form-height-small"
         @submit.prevent="handleInvite"
         style="margin-top: 7.5rem; height: 50vh"
