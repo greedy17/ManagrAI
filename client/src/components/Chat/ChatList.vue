@@ -61,7 +61,8 @@
             </p>
           </div>
           <div v-else>
-            <div class="create-list-button" @click="openChangeConfig('workflows')">Create List</div>
+            <div v-if="userCRM && !(displayedOpps.results && displayedOpps.results.length)" class="create-list-button create-disabled">Create List</div>
+            <div v-else class="create-list-button" @click="openChangeConfig('workflows')">Create List</div>
           </div>
         </div>
         <!-- <select
@@ -523,6 +524,15 @@ export default {
     userCRM() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.crm
+    },
+    displayedOpps: {
+      get() {
+        return this.$store.state.chatOpps
+      },
+
+      set(value) {
+        this.displayedOpps = value
+      },
     },
     baseResourceType() {
       return this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity'
@@ -1051,5 +1061,20 @@ th:first-of-type {
 }
 .create-list-button {
   @include gray-text-button();
+}
+.create-disabled {
+  @include base-button();
+  border: 1px solid $soft-gray;
+  font-size: 12px;
+  transition: all 0.3s;
+  box-shadow: none;
+  border: none;
+  scale: 1;
+  background-color: $soft-gray;
+  color: $gray;
+}
+.create-disabled:hover {
+  box-shadow: none;
+  scale: 1;
 }
 </style>
