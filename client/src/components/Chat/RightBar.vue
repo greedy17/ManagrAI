@@ -449,8 +449,12 @@
 
     <div class="opp-scroll-container" v-else-if="this.mainView === 'meetings' && !loading">
       <p class="gray-text small-text">Select a meeting:</p>
-      <div class="empty-container" v-if="!meetings.length">
+      <div class="empty-container" v-if="!meetings.length && hasZoomIntegration">
         <p>No Zoom meetings found... refresh or select a different day</p>
+      </div>
+
+      <div class="empty-container" v-else-if="!hasZoomIntegration">
+        <p><span @click="openSettings" class="link">Connect Zoom</span> in order to log meetings</p>
       </div>
 
       <div
@@ -686,6 +690,9 @@ export default {
     test() {
       console.log('log', this.meetingWorkflows)
     },
+    openSettings() {
+      this.$emit('open-settings')
+    },
     formatDate(inputDate) {
       const dateObj = new Date(inputDate)
       const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0')
@@ -849,7 +856,7 @@ export default {
       this.deselectMeeting()
     },
     switchMainView(view) {
-      if (view === 'meetings' && !this.meetings.length) {
+      if (view === 'meetings' && !this.meetings.length && this.hasZoomIntegration) {
         this.getZoomMeetings()
         this.deselectOpp()
       } else if (view === 'meetings') {
@@ -1200,6 +1207,9 @@ export default {
     },
   },
   computed: {
+    hasZoomIntegration() {
+      return !!this.$store.state.user.hasZoomIntegration
+    },
     currentMeeting() {
       return this.$store.state.currentMeeting
     },
@@ -1286,6 +1296,14 @@ export default {
   100% {
     -webkit-mask-position: left;
   }
+}
+
+.link {
+  text-decoration: underline;
+  text-decoration-color: $dark-black-blue;
+  color: $dark-black-blue;
+  display: inline-block;
+  cursor: pointer;
 }
 
 .loading {

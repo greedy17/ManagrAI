@@ -438,6 +438,7 @@
         @set-fields="setFormFields"
         @set-stages="setStageFields"
         @refresh-list="refreshLists"
+        @open-settings="handleConfigureOpen"
         :formFields="formFields"
         :stageFields="stageFields"
         :stagesWithForms="stagesWithForms"
@@ -544,6 +545,10 @@ export default {
         console.log(e)
       }
       this.team.refresh()
+    }
+
+    if (this.$route.query.code) {
+      this.handleConfigureOpen()
     }
   },
   watch: {},

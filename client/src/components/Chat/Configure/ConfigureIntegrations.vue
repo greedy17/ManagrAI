@@ -986,10 +986,10 @@ export default {
         await this.$store.dispatch('refreshCurrentUser')
         this.generatingToken = false
         this.selectedIntegration = null
-        // this.$router.replace({
-        //   name: 'Integrations',
-        //   params: {},
-        // })
+        this.$router.replace({
+          name: 'Home',
+          params: {},
+        })
       }
     }
   },
@@ -1010,7 +1010,7 @@ export default {
       return !!this.$store.state.user.slackRef
     },
     hasZoomIntegration() {
-      return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
+      return !!this.$store.state.user.hasZoomIntegration
     },
     hasEmailIntegration() {
       return false
