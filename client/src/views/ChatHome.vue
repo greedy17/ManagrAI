@@ -238,10 +238,10 @@
       "
     >
       <div class="configure-modal-container">
-        <ConfigureModal 
-          :configPage="configPage" 
+        <ConfigureModal
+          :configPage="configPage"
           @change-config-page="changeConfigPage"
-          ref="configModal" 
+          ref="configModal"
         />
       </div>
     </Modal>

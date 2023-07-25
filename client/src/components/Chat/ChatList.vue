@@ -347,7 +347,7 @@ export default {
     setTimeout(() => {
       this.activeList = this.templates.list[0]
       this.selectList(this.templates.list[0])
-    }, 1500)
+    }, 1000)
   },
   methods: {
     test() {
