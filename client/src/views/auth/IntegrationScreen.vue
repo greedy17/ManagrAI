@@ -55,12 +55,12 @@
         </div>
       </form>
     </Modal>
-    <div class="welcome">
+    <div class="welcome" v-if="!redirectLoading">
       <!-- <img src="@/assets/images/logo.png" height="16px" alt="" /> -->
       <p class="inactive">Connect Managr to your favorite Apps</p>
     </div>
 
-    <div class="integrations__cards">
+    <div class="integrations__cards" v-if="!redirectLoading">
       <div class="card" v-if="userCRM === 'SALESFORCE'">
         <div class="card__header vlb-bg" style="padding-left: 32px; padding-right: 32px">
           <img style="height: 30px; width: auto" src="@/assets/images/salesforce.png" />
@@ -533,6 +533,7 @@ export default {
       confirmModal: false,
       pulseLoading: false,
       selectedCRM: null,
+      redirectLoading: true,
       // selectedMessenger: null,
       selectedIntegration: null,
     }
@@ -629,6 +630,11 @@ export default {
     },
   },
   async created() {
+    // this.redirectLoading = true
+    this.$router.push({ name: 'Home' }).then(() => {
+      this.redirectLoading = false
+    })
+    console.log('redirectLoading', this.redirectLoading)
     // if there is a code assume an integration has begun
     if (this.$route.query.code) {
       this.generatingToken = true

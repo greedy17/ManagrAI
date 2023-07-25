@@ -418,7 +418,7 @@
         </div>
       </div>
 
-      <div class="card">
+      <!-- <div class="card">
         <div class="card__header">
           <img src="@/assets/images/gmailCal.png" style="margin-right: 16px; height: 40px" />
           <img src="@/assets/images/outlookMail.png" style="height: 40px" />
@@ -464,7 +464,7 @@
             </button>
           </div>
         </div>
-      </div>
+      </div> -->
 
       <div class="card">
         <div class="card__header" style="justify-content: space-between">

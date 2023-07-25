@@ -145,6 +145,17 @@ export default {
       }
     },
     setPlaceholder() {
+      // console.log('bools', this.userCRM, !this.displayedOpps.results.length)
+      // console.log('bools', this.$store.state.chatOpps)
+      // if (this.userCRM && !(this.displayedOpps.results && this.displayedOpps.results.length)) {
+      //   this.templatesOpen = false
+      //   this.actionSelected = false
+      //   this.textBoxType = null
+      //   this.message = ''
+      //   this.currentAction = null
+      //   this.placeholder = 'Sync in progress...'
+      // }
+      // else 
       if (!this.currentOpp) {
         this.templatesOpen = false
         this.actionSelected = false
@@ -488,6 +499,19 @@ export default {
     user() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
+    },
+    displayedOpps: {
+      get() {
+        return this.$store.state.chatOpps
+      },
+
+      set(value) {
+        this.displayedOpps = value
+      },
+    },
+    userCRM() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.crm
     },
     currentOpp() {
       return this.$store.state.currentOpp

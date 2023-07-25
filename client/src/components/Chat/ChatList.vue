@@ -40,24 +40,29 @@
           </div>
         </div>
 
-        <div class="row__" v-else>
-          <Multiselect
-            style="width: 200px"
-            v-model="activeList"
-            :placeholder="currentView.title || 'Select list'"
-            :options="templates.list"
-            selectedLabel=""
-            deselectLabel=""
-            selectLabel=""
-            track-by="id"
-            label="title"
-            @select="selectList($event)"
-            :loading="templates.refreshing"
-          >
-          </Multiselect>
-          <p class="counter" v-if="currentView !== 'pipeline' && !templates.refreshing">
-            Results: {{ currentView.sobjectInstances.length }}
-          </p>
+        <div class="" v-else>
+          <div class="row__" v-if="templates.list.length">
+            <Multiselect
+              style="width: 200px"
+              v-model="activeList"
+              :placeholder="currentView.title || 'Select list'"
+              :options="templates.list"
+              selectedLabel=""
+              deselectLabel=""
+              selectLabel=""
+              track-by="id"
+              label="title"
+              @select="selectList($event)"
+              :loading="templates.refreshing"
+            >
+            </Multiselect>
+            <p class="counter" v-if="currentView !== 'pipeline' && !templates.refreshing">
+              Results: {{ currentView.sobjectInstances.length }}
+            </p>
+          </div>
+          <div v-else>
+            <div class="create-list-button" @click="openChangeConfig('workflows')">Create List</div>
+          </div>
         </div>
         <!-- <select
           v-else
@@ -350,6 +355,9 @@ export default {
     },
     handleConfigureOpen() {
       this.$emit('handleConfigureOpen', 'workflows')
+    },
+    openChangeConfig(page) {
+      this.$emit('open-change-config', page)
     },
     selectList(alert) {
       this.$store.dispatch('setCurrentView', alert)
@@ -1040,5 +1048,8 @@ th:first-of-type {
   &:hover {
     opacity: 0.5;
   }
+}
+.create-list-button {
+  @include gray-text-button();
 }
 </style>

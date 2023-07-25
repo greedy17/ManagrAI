@@ -238,7 +238,11 @@
       "
     >
       <div class="configure-modal-container">
-        <ConfigureModal ref="configModal" />
+        <ConfigureModal 
+          :configPage="configPage" 
+          @change-config-page="changeConfigPage"
+          ref="configModal" 
+        />
       </div>
     </Modal>
     <Modal
@@ -430,6 +434,7 @@
         @handleConfigureOpen="handleConfigureOpen"
         :formFields="formFields"
         @refresh-list="refreshLists"
+        @open-change-config="openChangeConfig"
       />
     </main>
     <aside id="right-sidebar">
@@ -488,6 +493,7 @@ export default {
       showBackground: false,
       profileModalOpen: false,
       configureModalOpen: false,
+      configPage: 'integrations',
       submitting: false,
       profileOrTeam: 'profile',
       team: CollectionManager.create({ ModelClass: User }),
@@ -554,9 +560,14 @@ export default {
   watch: {},
   methods: {
     setOpenForm() {
-      console.log('here')
       this.formOpen = false
-      console.log(this.formOpen)
+    },
+    openChangeConfig(page) {
+      this.configPage = page
+      this.configureModalOpen = true
+    },
+    changeConfigPage(page) {
+      this.configPage = page
     },
     toString(data) {
       let type = typeof data

@@ -420,7 +420,12 @@
     >
       <!-- @mouseenter="setTooltip(opp.id)"
         @mouseleave="removeTooltip" -->
+      <div v-if="userCRM && !(displayedOpps.results && displayedOpps.results.length)" class="no-results">
+        <p>Sync in progress... Reload in a minute</p>
+        <span @click="refreshFields()" class="button">Reload</span>
+      </div>
       <div
+        v-else
         v-for="opp in opportunities"
         class="opp-container"
         @click="changeSelectedOpp(opp)"
@@ -433,7 +438,7 @@
           {{ opp.name }}
         </div> -->
       </div>
-      <div style="margin-bottom: 0.25rem" class="space-between">
+      <div v-if="userCRM && (displayedOpps.results && displayedOpps.results.length)" style="margin-bottom: 0.25rem" class="space-between">
         <button
           :disabled="loadingMore"
           class="chat-button no-border gray-scale"
@@ -1173,6 +1178,10 @@ export default {
           }, 300)
         }
       }
+    },
+    async refreshFields() {
+      console.log('refreshFields')
+      await this.$store.dispatch('loadChatOpps', 1)
     },
     async loadMoreOpps() {
       if (this.searchText) {
@@ -2273,5 +2282,15 @@ img {
 
 .pointer {
   cursor: pointer;
+}
+.no-results {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.button {
+  @include gray-text-button();
+  width: 60%;
 }
 </style>

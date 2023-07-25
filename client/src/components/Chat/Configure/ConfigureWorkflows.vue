@@ -269,7 +269,7 @@
       </div> -->
 
       <div style="margin-top: 5rem" v-if="editing" class="alert_cards">
-        <div v-if="!zoomChannel && hasSlackIntegration" class="card">
+        <!-- <div v-if="!zoomChannel && hasSlackIntegration" class="card">
           <div class="card__header" style="">
             <img class="gray-logo" style="height: 40px" src="@/assets/images/logo.png" />
           </div>
@@ -282,7 +282,7 @@
               <p></p>
               <button @click="goToWorkflow('LogZoom')" class="white_button">Activate</button>
             </div>
-        </div>
+        </div> -->
 
         <div :key="alert.id" v-for="alert in leaderTemplatesFirst" class="card">
           <div class="card__header" style="">
@@ -368,7 +368,7 @@
             </div>
         </div>
 
-        <div v-if="zoomChannel" class="card">
+        <!-- <div v-if="zoomChannel" class="card">
           <div class="card__header" style="">
             <img style="height: 40px" src="@/assets/images/logo.png" />
           </div>
@@ -390,7 +390,7 @@
 
               <button @click="goToWorkflow('LogZoom')" class="white_button">Change Channel</button>
             </div>
-        </div>
+        </div> -->
 
         <div v-if="hasRecapChannel && userLevel !== 'REP' && hasSlackIntegration" class="card">
           <div class="card__header" style="">
@@ -623,6 +623,7 @@ export default {
       console.log('log', log)
     },
     repCheck(config) {
+      console.log('this.hasSlackIntegration', this.hasSlackIntegration)
       if (this.hasSlackIntegration) {
         this.goToWorkflow(config.title)
         return
