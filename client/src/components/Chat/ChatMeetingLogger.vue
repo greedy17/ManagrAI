@@ -16,6 +16,7 @@
           :options="resources"
           :loading="dropdownLoading"
           style="width: 96%"
+          :disabled="submitting"
         >
         </Multiselect>
       </div>
@@ -40,7 +41,7 @@
               : selectedList
           "
           :loading="dropdownLoading || listLoading"
-          :disabled="!selectedResourceType"
+          :disabled="!selectedResourceType || submitting"
         >
           <template slot="noResult">
             <p class="multi-slot">No results. Try loading more</p>
@@ -61,7 +62,7 @@
           style="width: 96%"
           :options="aiOptions"
           :loading="dropdownLoading"
-          :disabled="!mappedOpp"
+          :disabled="!mappedOpp || submitting"
         >
         </Multiselect>
       </div>
@@ -69,6 +70,11 @@
       <div v-if="errorText" class="margin-top">
         <p class="error">{{ errorText }}</p>
       </div>
+
+      <p v-if="processing" class="row__ gray-text smaller">
+        <img class="rotate" src="@/assets/images/loading.svg" height="14px" alt="" /> Processing
+        transcript, this could take a few minutes...
+      </p>
     </div>
 
     <div v-else-if="selectedMeetingWorkflow && selectedMeetingWorkflow.forms.length">
@@ -181,10 +187,25 @@
 
     <div v-if="!hasMeetingWorkflow">
       <div class="meeting-modal-footer">
-        <p v-if="processing" class="row__">
-          <img class="rotate" src="@/assets/images/loading.svg" height="14px" alt="" /> Processing
-          transcript, this could take a few minutes...
-        </p>
+        <!-- <button v-if="selectedResourceId && usingAi" :disabled="submitting">Cancel</button> -->
+
+        <button
+          @click="submitChatMeeting"
+          class="green-button"
+          v-if="selectedResourceId && usingAi && usingAi.value === 'false'"
+          :disabled="submitting"
+        >
+          Submit
+        </button>
+
+        <button
+          @click="submitChatTranscript"
+          class="green-button"
+          v-if="selectedResourceId && usingAi && usingAi.value === 'true'"
+          :disabled="submitting"
+        >
+          Submit
+        </button>
       </div>
     </div>
 
@@ -233,13 +254,13 @@ export default {
     meetingOpp: {},
   },
   watch: {
-    usingAi(val) {
-      if (val && val.value === 'false') {
-        this.submitChatMeeting()
-      } else if (val && val.value === 'true') {
-        this.submitChatTranscript()
-      }
-    },
+    // usingAi(val) {
+    //   if (val && val.value === 'false') {
+    //     this.submitChatMeeting()
+    //   } else if (val && val.value === 'true') {
+    //     this.submitChatTranscript()
+    //   }
+    // },
     selectedResourceType: 'changeList',
     searchValue(newVal, oldVal) {
       if (newVal !== oldVal && newVal !== '') {
@@ -306,7 +327,6 @@ export default {
       this.updatingMeeting = !this.updatingMeeting
     },
     viewOpp() {
-      console.log(this.selectedMeetingWorkflow.resource_ref)
       this.$emit('select-opp', this.selectedMeetingWorkflow.resource_ref)
     },
     deselectAI() {
@@ -340,7 +360,9 @@ export default {
           })
           .then((response) => {
             if (response.status === 200) {
-              this.$emit('reload-workflows')
+              setTimeout(() => {
+                this.$emit('reload-workflows')
+              }, 1500)
             } else {
               this.errorText = response.data
               this.selectedResourceType = null
@@ -569,6 +591,11 @@ export default {
         })
         this.updateData = filteredObject
       }
+    }
+
+    this.usingAi = {
+      name: 'Yes',
+      value: 'true',
     }
 
     if (this.meetingOpp) {
