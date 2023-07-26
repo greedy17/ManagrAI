@@ -12,7 +12,7 @@
       <label for="">{{ field.label }}</label>
       <textarea
         @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-        :disabled="loader"
+        :disabled="loader || disableField"
         class="inline-input"
         :value="placeholder"
         :name="field.apiName"
@@ -39,13 +39,13 @@
         :value="formatDate(placeholder)"
         type="date"
         @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-        :disabled="loader"
+        :disabled="loader || disableField"
       />
 
       <input
         :value="placeholder"
         @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-        :disabled="loader"
+        :disabled="loader || disableField"
         class="inline-input"
         v-else
         type="number"
@@ -68,7 +68,7 @@
         label="label"
         :multiple="field.dataType === 'MultiPicklist' ? true : false"
         :placeholder="placeholder || 'select option'"
-        :disabled="loader"
+        :disabled="loader || disableField"
         selectedLabel=""
         deselectLabel=""
         v-model="stageOption[field.apiName]"
@@ -105,7 +105,7 @@
         label="label"
         :multiple="field.dataType === 'MultiPicklist' ? true : false"
         :placeholder="placeholder || 'select option'"
-        :disabled="loader"
+        :disabled="loader || disableField"
         selectedLabel=""
         deselectLabel=""
         v-model="newStage"
@@ -129,7 +129,7 @@
         :options="booleans"
         selectLabel=""
         :placeholder="placeholder || 'select option'"
-        :disabled="loader"
+        :disabled="loader || disableField"
         selectedLabel=""
         deselectLabel=""
         v-model="stageOption[field.apiName]"
@@ -156,7 +156,7 @@
         track-by="id"
         label="name"
         :placeholder="placeholder || 'select option'"
-        :disabled="loader || loadingOptions"
+        :disabled="loader || disableField || loadingOptions"
         :loading="loadingOptions"
         v-model="stageOption[field.apiName]"
         @select="setUpdateValues(field.apiName, $event.id, false)"
@@ -188,7 +188,7 @@
           <label for="">{{ field.label }}</label>
           <textarea
             @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-            :disabled="loader"
+            :disabled="loader || disableField"
             class="inline-input"
             :name="field.apiName"
             v-autoresize
@@ -211,11 +211,11 @@
             v-if="field.dataType !== 'Double' || field.dataType !== 'Currency'"
             :type="field.dataType"
             @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-            :disabled="loader"
+            :disabled="loader || disableField"
           />
           <input
             @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
-            :disabled="loader"
+            :disabled="loader || disableField"
             class="inline-input"
             v-else
             type="number"
@@ -233,7 +233,7 @@
             track-by="value"
             label="label"
             :multiple="field.dataType === 'MultiPicklist' ? true : false"
-            :disabled="loader"
+            :disabled="loader || disableField"
             selectedLabel=""
             deselectLabel=""
             v-model="stageOption[field.apiName]"
@@ -256,7 +256,7 @@
           <Multiselect
             :options="booleans"
             selectLabel=""
-            :disabled="loader"
+            :disabled="loader || disableField"
             selectedLabel=""
             deselectLabel=""
             v-model="stageOption[field.apiName]"
@@ -282,7 +282,7 @@
             selectLabel=""
             track-by="id"
             label="name"
-            :disabled="loader || loadingOptions"
+            :disabled="loader || disableField || loadingOptions"
             :loading="loadingOptions"
             v-model="stageOption[field.apiName]"
             @select="setUpdateValues(field.apiName, $event.id, false)"
@@ -347,6 +347,7 @@ export default {
     stageFields: {},
     stagesWithForms: {},
     hubspotStages: {},
+    disableField: {},
   },
   methods: {
     test(op) {

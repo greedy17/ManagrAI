@@ -85,7 +85,7 @@ export default new Router({
       path: '/resetpassword/:userId/:token',
       name: 'ResetPassword',
       component: () => import('@/views/auth/ResetPassword'),
-  },
+    },
     {
       path: '/invite-users/:id?',
       props: true,

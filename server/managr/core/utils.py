@@ -397,3 +397,38 @@ def swap_submitted_data_labels(data, fields):
             except Exception as e:
                 continue
     return api_key_data
+
+
+def ask_managr_data_collector(user_id, resource_type, resource_id):
+    from managr.core.models import User
+    from managr.salesforce.models import MeetingWorkflow
+    from managr.slack.models import OrgCustomSlackFormInstance, OrgCustomSlackForm
+    from managr.salesforce.routes import routes as sf_routes
+    from managr.hubspot.routes import routes as hs_routes
+
+    CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
+    user = User.objects.get(id=user_id)
+    resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(id=resource_id)
+    workflow_check = MeetingWorkflow.objects.filter(user=user, resource_id=resource_id).first()
+    form_check = OrgCustomSlackFormInstance.objects.filter(
+        user=user_id, resource_id=resource_id
+    ).first()
+    if form_check and form_check.saved_data:
+        data_from_resource = form_check.saved_data
+    else:
+        template = (
+            OrgCustomSlackForm.objects.for_user(user)
+            .filter(resource=resource_type, form_type="UPDATE")
+            .first()
+        )
+        api_names = template.list_field_api_names()
+        data_from_resource = {}
+        for name in api_names:
+            data_from_resource[name] = resource.secondary_data[name]
+
+    if workflow_check:
+        if workflow_check.transcript_summary:
+            data_from_resource["summary"] = workflow_check.transcript_summary
+        if workflow_check.transcript_analysis:
+            data_from_resource["analysis"] = workflow_check.transcript_analysis
+    return data_from_resource

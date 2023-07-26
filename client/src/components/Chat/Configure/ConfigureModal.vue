@@ -62,7 +62,9 @@ import allConfigs from '@/views/settings/alerts/configs'
 export default {
   name: 'ConfigureModal',
   props: {
-
+    configPage: {
+      type: String,
+    },
   },
   components: {
     ConfigureLeftBar,
@@ -77,7 +79,6 @@ export default {
     return {
       ...FORM_CONSTS,
       allConfigs,
-      configPage: 'integrations',
       currentResource: '',
       formFields: CollectionManager.create({ ModelClass: ObjectField }),
       stages: [],
@@ -109,7 +110,7 @@ export default {
   },
   methods: {
     changeConfigPage(page) {
-      this.configPage = page
+      this.$emit('change-config-page', page)
     },
     async listPicklists(query_params = {}) {
       try {
