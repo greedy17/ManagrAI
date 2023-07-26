@@ -151,6 +151,7 @@ fargateStagingDeployment_UpdateTask: &fargateStagingDeployment_UpdateTask
   services:
     - docker
   script:
+    - export AWS_DEFAULT_REGION=us-east-1
     - TASK_FAMILY="managr-app-task-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-processalltasks-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-processsyncqueues-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
