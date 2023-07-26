@@ -113,6 +113,8 @@ fargateStagingDeployment_BuildImages: &fargateStagingDeployment_BuildImages
   name: Build Docker Images for Staging
   image: atlassian/default-image:2
   deployment: Staging
+  services:
+    - docker
   caches:
     - docker
   script:
@@ -129,6 +131,8 @@ fargateStagingDeployment_Deploy: &fargateStagingDeployment_Deploy
   name: Deploy Staging to AWS Fargate
   image: atlassian/default-image:2
   deployment: Staging
+  services:
+    - docker
   script:
     - export AWS_DEFAULT_REGION=us-east-1
     - pipe: atlassian/aws-ecs-deploy:1.6.2
@@ -144,6 +148,8 @@ fargateStagingDeployment_UpdateTask: &fargateStagingDeployment_UpdateTask
   name: Update Fargate Task Definition for Staging
   image: atlassian/default-image:2
   deployment: Staging
+  services:
+    - docker
   script:
     - TASK_FAMILY="managr-app-task-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-processalltasks-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
