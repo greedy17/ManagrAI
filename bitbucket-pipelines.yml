@@ -109,6 +109,15 @@ cleanupDockerResources: &cleanupDockerResources
 #     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcedata-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 #     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcefields-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 
+installStep: &installStep
+  name: Install jq and the AWS CLI
+  script:
+    - apt-get update && apt-get install -y jq
+    - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    - unzip awscliv2.zip
+    - ./aws/install
+
+
 fargateStagingDeployment_BuildImages: &fargateStagingDeployment_BuildImages
   name: Build Images for Staging
   image: atlassian/default-image:2
@@ -118,12 +127,6 @@ fargateStagingDeployment_BuildImages: &fargateStagingDeployment_BuildImages
   caches:
     - docker
   script:
-    # Install jq and the AWS CLI
-    - apt-get update && apt-get install -y jq
-    - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-    - unzip awscliv2.zip
-    - ./aws/install
-  
     # Build Docker images
     - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN --build-arg "VUE_APP_DD_ENV=fargate:staging" -t $MANAGR_SERVER_IMAGE_NAME .
     - docker build -f deploy/tasks/Dockerfile -t $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME .
@@ -271,6 +274,7 @@ pipelines:
       - parallel:
           - step: *djangoTests
           - step: *e2eTests
+      - step: *installStep
       - step: *fargateStagingDeployment_BuildImages
         size: 4x
       # - step: *fargateStagingDeployment_UpdateTask
