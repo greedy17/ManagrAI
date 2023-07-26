@@ -385,6 +385,7 @@
             Slack Connected
           </p>
           <p v-else class="card-text">Interact with Managr through Slack</p>
+          <div></div>
           <div class="sep-button-container">
             <div class="separator"></div>
             <button

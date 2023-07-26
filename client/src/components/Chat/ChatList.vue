@@ -45,7 +45,7 @@
             <Multiselect
               style="width: 200px"
               v-model="activeList"
-              :placeholder="currentView.title || 'Select list'"
+              :placeholder="currentView ? currentView.title : 'Select list'"
               :options="templates.list"
               selectedLabel=""
               deselectLabel=""
@@ -57,12 +57,19 @@
             >
             </Multiselect>
             <p class="counter" v-if="currentView !== 'pipeline' && !templates.refreshing">
-              Results: {{ currentView.sobjectInstances.length }}
+              Results: {{ currentView ? currentView.sobjectInstances.length : '' }}
             </p>
           </div>
           <div v-else>
-            <div v-if="userCRM && !(displayedOpps.results && displayedOpps.results.length)" class="create-list-button create-disabled">Create List</div>
-            <div v-else class="create-list-button" @click="openChangeConfig('workflows')">Create List</div>
+            <div
+              v-if="userCRM && !(displayedOpps.results && displayedOpps.results.length)"
+              class="create-list-button create-disabled"
+            >
+              Create List
+            </div>
+            <div v-else class="create-list-button" @click="openChangeConfig('workflows')">
+              Create List
+            </div>
           </div>
         </div>
         <!-- <select
@@ -225,7 +232,7 @@
             </th>
           </tr>
         </thead>
-        <tbody>
+        <tbody v-if="currentView">
           <tr v-for="(opp, i) in currentView.sobjectInstances" :key="i">
             <td
               :title="user.crm === 'HUBSPOT' ? opp.dealname : opp.Name"
@@ -313,7 +320,6 @@ export default {
     AlertsEditPanel,
     Modal,
   },
-
   data() {
     return {
       message: '',
@@ -327,6 +333,7 @@ export default {
       editingAlert: false,
       loading: false,
       activeList: null,
+      listCount: 0,
       formFields: CollectionManager.create({
         ModelClass: ObjectField,
         pagination: { size: 1000 },
@@ -345,14 +352,19 @@ export default {
     this.templates.refresh()
   },
   mounted() {
-    setTimeout(() => {
-      this.activeList = this.templates.list[0]
-      this.selectList(this.templates.list[0])
-    }, 1000)
+    this.setList()
   },
   methods: {
     test() {
       console.log(this.templates.list)
+    },
+    setList() {
+      setTimeout(() => {
+        if (this.templates.list) {
+          this.activeList = this.templates.list[0]
+          this.selectList(this.templates.list[0])
+        }
+      }, 2000)
     },
     handleConfigureOpen() {
       this.$emit('handleConfigureOpen', 'workflows')
