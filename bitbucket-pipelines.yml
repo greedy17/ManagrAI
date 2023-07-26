@@ -112,7 +112,6 @@ cleanupDockerResources: &cleanupDockerResources
 fargateStagingDeployment_BuildImages: &fargateStagingDeployment_BuildImages
   name: Build Docker Images for Staging
   image: atlassian/default-image:2
-  deployment: Staging
   services:
     - docker
   caches:
@@ -130,7 +129,6 @@ fargateStagingDeployment_BuildImages: &fargateStagingDeployment_BuildImages
 fargateStagingDeployment_Deploy: &fargateStagingDeployment_Deploy
   name: Deploy Staging to AWS Fargate
   image: atlassian/default-image:2
-  deployment: Staging
   services:
     - docker
   script:
@@ -147,7 +145,6 @@ fargateStagingDeployment_Deploy: &fargateStagingDeployment_Deploy
 fargateStagingDeployment_UpdateTask: &fargateStagingDeployment_UpdateTask
   name: Update Fargate Task Definition for Staging
   image: atlassian/default-image:2
-  deployment: Staging
   services:
     - docker
   script:
