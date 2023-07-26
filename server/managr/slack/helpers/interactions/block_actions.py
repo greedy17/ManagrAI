@@ -42,6 +42,7 @@ from managr.core.background import (
     emit_process_send_next_steps,
     emit_process_send_call_analysis_to_dm,
     emit_process_send_regenerate_email_message,
+    emit_process_send_regenerated_ask_managr,
 )
 from managr.core.utils import get_summary_completion
 from managr.salesforce.background import (
@@ -3880,6 +3881,7 @@ REGENERATE_ACTION_SWITCHER = {
     "DRAFT_EMAIL": emit_process_send_regenerate_email_message,
     "SEND_SUMMARY": process_send_recap_modal,
     "NEXT_STEPS": emit_process_send_next_steps,
+    "ASK_MANAGR": emit_process_send_regenerated_ask_managr,
 }
 
 
@@ -3889,15 +3891,44 @@ def process_regenerate_action(payload, context):
     channel_id = payload["channel"]["id"]
     ts = payload["message"]["ts"]
     context.update(channel_id=channel_id, ts=ts)
-    blocks = payload["message"]["blocks"][:2]
-    loading_block = get_block_set("loading", {"message": ":robot_face: Regenerating content..."})
-    blocks.extend(loading_block)
+    regen = True if context.get("regen", "NO") == "YES" else False
+    blocks = payload["message"]["blocks"][:2] if regen else payload["message"]["blocks"][:4]
+    params = [f"{param}={context.get(param)}" for param in context.keys()]
+    if regen:
+        loading_block = get_block_set(
+            "loading", {"message": ":robot_face: Regenerating content..."}
+        )
+        blocks.extend(loading_block)
+    else:
+        params.append("regen=YES")
+        blocks.extend(
+            [
+                block_builders.input_block(
+                    "Provide additional instructions below:",
+                    block_id="REGENERATE_INSTRUCTIONS",
+                    multiline=True,
+                ),
+                block_builders.actions_block(
+                    [
+                        block_builders.simple_button_block(
+                            "Regenerate",
+                            action,
+                            action_id=action_with_params(
+                                slack_const.PROCESS_REGENERATE_ACTION, params=params,
+                            ),
+                        )
+                    ]
+                ),
+                block_builders.context_block("This version will not be saved."),
+            ]
+        )
     try:
         res = slack_requests.update_channel_message(
-            channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks
+            channel_id, ts, user.organization.slack_integration.access_token, block_set=blocks,
         )
-        action_func = REGENERATE_ACTION_SWITCHER[action]
-        action_func(payload, context)
+        if regen:
+            action_func = REGENERATE_ACTION_SWITCHER[action]
+            action_func(payload, context)
     except Exception as e:
         logger.exception(e)
     return

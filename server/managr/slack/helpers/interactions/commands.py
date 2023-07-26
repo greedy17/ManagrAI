@@ -592,8 +592,6 @@ def news_summary(payload, context):
 def deal_review(payload, context):
     from managr.slack.background import emit_process_send_deal_review
 
-    print(payload)
-    print(context)
     user = User.objects.get(id=context.get("u"))
     if user.slack_integration:
         slack = UserSlackIntegration.objects.filter(
