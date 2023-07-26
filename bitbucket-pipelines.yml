@@ -122,6 +122,7 @@ fargateStagingDeployment_BuildImages: &fargateStagingDeployment_BuildImages
     - unzip awscliv2.zip
     - ./aws/install
     - export MANAGR_SERVER_IMAGE_TAG="staging-${BITBUCKET_COMMIT}"
+    - echo "MANAGR_SERVER_IMAGE_TAG=$MANAGR_SERVER_IMAGE_TAG" >> $BITBUCKET_ENV_FILE
     - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN --build-arg "VUE_APP_DD_ENV=fargate:staging" -t "$MANAGR_SERVER_IMAGE_NAME:$MANAGR_SERVER_IMAGE_TAG" .
     - docker build -f deploy/tasks/Dockerfile -t "$MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME:$MANAGR_SERVER_IMAGE_TAG" .
     - docker build -f deploy/nginx/Dockerfile -t "$MANAGR_SERVER_NGINX_IMAGE_NAME:$MANAGR_SERVER_IMAGE_TAG" deploy/nginx/
