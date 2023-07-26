@@ -49,9 +49,7 @@
                     message.generated_title === 'AI Generated Next Steps',
                 }"
               >
-                <h4 style="margin-top: 0">
-                  {{ message.generated_title }}
-                </h4>
+                <h4 style="margin-top: 0">{{ message.generated_title }}</h4>
                 <small v-if="message.resource">
                   {{ message.resource }}
                 </small>
@@ -140,6 +138,75 @@
                 <p v-if="message.error" style="margin-top: 0.5rem" class="red-text">
                   {{ message.error }}
                 </p>
+              </div>
+            </div>
+            <div
+              v-else-if="
+                !message.generated &&
+                message.generated_title &&
+                message.generated_title === 'Ask Managr'
+              "
+            >
+              <div
+                v-if="generating && generatingId === message.id"
+                style="border-radius: 6px; padding: 0.2rem 0 0.25rem 0"
+                class="row"
+              >
+                <div class="loading">
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                </div>
+              </div>
+
+              <div v-else style="margin-top: 1.5rem">
+                <div class="column" v-if="addingAskInstructions">
+                  <div class="space-between">
+                    <small>Provide any additional instructions below:</small>
+
+                    <p @click="closeInstructions">x</p>
+                  </div>
+
+                  <textarea
+                    v-model="askInstructons"
+                    class="inline-input"
+                    v-autoresize
+                    autofocus="true"
+                    rows="1"
+                  />
+                </div>
+
+                <button
+                  v-if="!addingAskInstructions"
+                  style="margin-bottom: 0.25rem"
+                  @click="toggleInstructions"
+                  class="content-button padding-small"
+                >
+                  <img
+                    style="margin-right: 0.6rem"
+                    class="gold-filter"
+                    src="@/assets/images/sparkle.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  Regenerate
+                </button>
+
+                <button
+                  v-else
+                  style="margin-bottom: 0.25rem"
+                  @click="regenerateAskManagr(message)"
+                  class="content-button padding-small"
+                >
+                  <img
+                    style="margin-right: 0.6rem"
+                    class="gold-filter"
+                    src="@/assets/images/sparkle.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  Regenerate
+                </button>
               </div>
             </div>
           </div>
@@ -299,6 +366,8 @@ export default {
       generativeRes: null,
       generatingId: null,
       addingInstructions: false,
+      addingAskInstructions: false,
+      askInstructons: null,
       instructionText: null,
       conversation: null,
     }
@@ -307,6 +376,66 @@ export default {
     messages: 'scrollToBottom',
   },
   methods: {
+    async regenerateAskManagr(msg) {
+      this.generating = true
+      this.generatingId = msg.id
+      this.addingAskInstructions = false
+      try {
+        let res = await User.api
+          .askManagr({
+            user_id: this.user.id,
+            prompt: msg.value,
+            resource_type: msg.resource_type,
+            resource_id: msg.resource_id,
+            instructions: this.askInstructons,
+          })
+          .then((response) => {
+            if (response.status >= 400 && response.status < 500) {
+              User.api
+                .addMessage({
+                  error: response.data.value,
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: true,
+                  data: {},
+                })
+                .then((response) => {
+                  this.$emit('get-conversations')
+                })
+            } else if (response.status === 500) {
+              User.api
+                .addMessage({
+                  error: 'Timeout error, try again',
+                  user_type: 'bot',
+                  conversation_id: this.conversation.id,
+                  failed: true,
+                  data: {},
+                })
+                .then((response) => {
+                  this.$emit('get-conversations')
+                })
+            } else {
+              User.api
+                .editMessage({
+                  message_id: msg.id,
+                  value: response['res'],
+                  conversation_id: this.conversation.id,
+                })
+                .then((response) => {
+                  this.getConversations()
+                })
+            }
+          })
+      } catch (e) {
+        console.log(e)
+        this.generating = false
+      } finally {
+        this.askInstructons = ''
+        this.generatingId = null
+        this.generating = false
+        this.scrollToBottom()
+      }
+    },
     setOpenForm(val) {
       this.$emit('set-open-form', val)
     },
@@ -318,6 +447,9 @@ export default {
     },
     emitFormOpen(data, open) {
       this.$emit('toggle-chat-modal', data, open)
+    },
+    toggleInstructions() {
+      this.addingAskInstructions = !this.addingAskInstructions
     },
     async getConversations() {
       try {
@@ -340,6 +472,7 @@ export default {
     },
     closeInstructions() {
       this.addingInstructions = false
+      this.addingAskInstructions = false
       this.instructionText = null
     },
     async deleteMessages() {

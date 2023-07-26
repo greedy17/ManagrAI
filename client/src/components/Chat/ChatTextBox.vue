@@ -103,6 +103,7 @@ export default {
       actionSelected: false,
       textBoxType: '',
       placeholder: '',
+      askInstructons: '',
       currentAction: null,
       actions: [
         { name: 'Log Meeting', value: 'Log Meeting', img: 'calendar' },
@@ -119,9 +120,7 @@ export default {
       ],
     }
   },
-  mounted() {
-    
-  },
+  mounted() {},
   created() {
     this.setPlaceholder()
   },
@@ -156,8 +155,7 @@ export default {
         this.message = ''
         this.currentAction = null
         this.placeholder = 'Sync in progress...'
-      }
-      else if (!this.currentOpp) {
+      } else if (!this.currentOpp) {
         this.templatesOpen = false
         this.actionSelected = false
         this.textBoxType = null
@@ -219,6 +217,7 @@ export default {
             prompt: `Ask Managr ${this.chatmsg}`,
             resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
             resource_id: this.$store.state.currentOpp.id,
+            instructions: this.askInstructons,
           })
           .then((response) => {
             if (response.status >= 400 && response.status < 500) {
@@ -267,6 +266,7 @@ export default {
         console.log(e)
         this.$emit('message-loading', false)
       } finally {
+        this.askInstructons = ''
         this.$emit('message-loading', false)
         this.scrollToBottom()
       }

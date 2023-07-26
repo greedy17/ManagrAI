@@ -48,6 +48,7 @@ from managr.core.utils import (
     get_user_totals,
     clean_prompt_string,
     swap_submitted_data_labels,
+    ask_managr_data_collector,
 )
 from managr.slack.helpers import requests as slack_requests, block_builders
 from .nylas.auth import get_access_token, get_account_details
@@ -510,16 +511,29 @@ def submit_chat_prompt(request):
 @permission_classes([permissions.IsAuthenticated])
 def ask_managr(request):
     from managr.core.exceptions import _handle_response, ServerError, StopReasonLength
+    from managr.salesforce.routes import routes as sf_routes
+    from managr.hubspot.routes import routes as hs_routes
 
+    # CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
+    instructions_check = request.data["instructions"]
     user = User.objects.get(id=request.data["user_id"])
-
-    prompt = core_consts.OPEN_AI_ASK_MANAGR_PROMPT(
-        str(user.id),
-        request.data["prompt"],
-        request.data["resource_type"],
-        request.data["resource_id"],
+    data = ask_managr_data_collector(
+        str(user.id), request.data["resource_type"], request.data["resource_id"],
     )
-
+    # resource = CRM_SWITCHER[user.crm][request.data["resource_type"]]["model"].objects.get(
+    #     id=request.data["resource_id"]
+    # )
+    if instructions_check:
+        prompt = core_consts.OPEN_AI_ASK_MANAGR_WITH_INSTRUCTIONS(
+        request.data["prompt"],
+        instructions_check,
+        data
+    )
+    else:
+        prompt = core_consts.OPEN_AI_ASK_MANAGR_PROMPT(
+        user, datetime.today(), request.data["prompt"], data
+    )
+    
     tokens = 500
     has_error = False
     attempts = 1
