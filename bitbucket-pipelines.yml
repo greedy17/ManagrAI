@@ -340,5 +340,5 @@ definitions:
         POSTGRES_USER: managr
         POSTGRES_PASSWORD: manager
     docker:
-      memory: 2048
+      memory: 4096
       size: 4x
