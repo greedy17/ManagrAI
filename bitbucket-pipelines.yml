@@ -135,6 +135,7 @@ fargateStagingDeployment_Deploy: &fargateStagingDeployment_Deploy
   services:
     - docker
   script:
+    - export AWS_DEFAULT_REGION=us-east-1
     - TASK_FAMILY="managr-app-task-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 
     - pipe: atlassian/aws-ecs-deploy:1.6.2
