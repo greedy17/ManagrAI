@@ -313,22 +313,14 @@ pipelines:
       - parallel:
           - step: *djangoTests
           - step: *e2eTests
-      #- parallel:
-          #- step: *herokuStagingDeployment
-      #- step: *fargateDemoDeployment
       - step: *fargateStagingDeployment
-          #- step: *fargateStagingDeployment
-          # - step: *fargatePRTeardown
+        size: 4x
     master:
       - parallel:
           - step: *djangoTests
           - step: *e2eTests
-      #- parallel:
-          #- step: *herokuStagingDeployment
-      #- step: *fargateDemoDeployment
       - step: *fargateProdDeployment
-          #- step: *fargateStagingDeployment
-          # - step: *fargatePRTeardown
+        size: 4x
     demo:
       - parallel:
           - step: *djangoTests
@@ -349,4 +341,4 @@ definitions:
         POSTGRES_PASSWORD: manager
     docker:
       memory: 2048
-      size: 2x
+      size: 4x
