@@ -110,22 +110,24 @@ cleanupDockerResources: &cleanupDockerResources
 #     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcefields-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 
 fargateStagingDeployment_BuildImages: &fargateStagingDeployment_BuildImages
-  name: Build Docker Images for Staging
+  name: Deploy Staging to AWS Fargate
   image: atlassian/default-image:2
+  deployment: Staging
   services:
     - docker
   caches:
     - docker
   script:
+    # Install jq and the AWS CLI
     - apt-get update && apt-get install -y jq
     - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
     - unzip awscliv2.zip
     - ./aws/install
-    - export MANAGR_SERVER_IMAGE_TAG="staging-${BITBUCKET_COMMIT}"
-    - echo "MANAGR_SERVER_IMAGE_TAG=$MANAGR_SERVER_IMAGE_TAG" >> $BITBUCKET_ENV_FILE
-    - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN --build-arg "VUE_APP_DD_ENV=fargate:staging" -t "$MANAGR_SERVER_IMAGE_NAME:$MANAGR_SERVER_IMAGE_TAG" .
-    - docker build -f deploy/tasks/Dockerfile -t "$MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME:$MANAGR_SERVER_IMAGE_TAG" .
-    - docker build -f deploy/nginx/Dockerfile -t "$MANAGR_SERVER_NGINX_IMAGE_NAME:$MANAGR_SERVER_IMAGE_TAG" deploy/nginx/
+  
+    # Build Docker images
+    - docker build -f deploy/server/Dockerfile --build-arg NPM_PRIVATE_TOKEN --build-arg "VUE_APP_DD_ENV=fargate:staging" -t $MANAGR_SERVER_IMAGE_NAME .
+    - docker build -f deploy/tasks/Dockerfile -t $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME .
+    - docker build -f deploy/nginx/Dockerfile -t $MANAGR_SERVER_NGINX_IMAGE_NAME deploy/nginx/
 
 fargateStagingDeployment_Deploy: &fargateStagingDeployment_Deploy
   name: Deploy Staging to AWS Fargate
