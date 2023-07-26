@@ -631,12 +631,19 @@ export default {
   },
   async created() {
     // this.redirectLoading = true
-    this.$router.push({ name: 'Home' }).then(() => {
-      this.redirectLoading = false
-    })
-    console.log('redirectLoading', this.redirectLoading)
-    // if there is a code assume an integration has begun
-    if (this.$route.query.code) {
+    // // if there is a code assume an integration has begun
+    if (!this.$route.query.code) {
+      this.$router.push({ name: 'Home' }).then(() => {
+        this.redirectLoading = false
+      })
+    } else {
+      this.$router.push({
+        name: 'Home',
+        query: {
+          code: this.$route.query.code,
+          state: this.$route.query.state,
+        },
+      })
       this.generatingToken = true
       this.selectedIntegration = this.$route.query.state // state is the current integration name
 

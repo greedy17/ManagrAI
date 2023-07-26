@@ -425,7 +425,15 @@
         class="no-results"
       >
         <p>Sync in progress... Reload in a few minutes</p>
-        <span @click="refreshFields()" class="button">Reload</span>
+        <span @click="refreshFields()" class="button">
+          <img
+            v-if="reloading"
+            class="rotate opaque not-allowed"
+            src="@/assets/images/refresh.svg"
+            height="14px"
+            alt=""
+          />Reload</span
+        >
       </div>
       <div
         v-else
@@ -542,6 +550,7 @@ export default {
       allStages: [],
       meetings: [],
       meetingOpp: null,
+      reloading: false,
       meetingDate: this.getCurrentDate(),
       objects: CollectionManager.create({
         ModelClass: CRMObjects,
@@ -1187,8 +1196,12 @@ export default {
       }
     },
     async refreshFields() {
-      console.log('refreshFields')
+      this.reloading = true
       await this.$store.dispatch('loadChatOpps', 1)
+
+      setTimeout(() => {
+        this.reloading = false
+      }, 2000)
     },
     async loadMoreOpps() {
       if (this.searchText) {
