@@ -7,22 +7,15 @@ from datetime import datetime
 from django.db import models
 from django.utils import timezone
 from managr.utils.client import Client
-
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
 from django.db.models.constraints import UniqueConstraint
-
 from background_task.models import CompletedTask
 
 from managr.core.models import TimeStampModel, IntegrationModel
 from managr.slack.helpers import block_builders
 from managr.slack import constants as slack_consts
-from managr.slack.helpers.exceptions import (
-    UnHandeledBlocksException,
-    InvalidBlocksFormatException,
-    InvalidBlocksException,
-    InvalidAccessToken,
-)
+
 from .adapter.models import SalesforceAuthAccountAdapter, OpportunityAdapter
 from .adapter.exceptions import (
     TokenExpired,

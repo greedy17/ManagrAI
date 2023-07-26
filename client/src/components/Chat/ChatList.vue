@@ -619,11 +619,11 @@ export default {
 ::v-deep .multiselect__tag {
   background-color: $soft-gray;
   color: $base-gray;
-  height: 32px;
+  // height: 32px;
 }
 
 ::v-deep .multiselect__tags {
-  height: 32px;
+  // height: 32px;
 }
 
 .edit-modal {
@@ -902,7 +902,7 @@ export default {
   top: 4.25rem;
   right: 0.75rem;
   width: 320px;
-  height: 200px;
+  min-height: 200px;
   background-color: white;
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -917,9 +917,12 @@ export default {
   }
 
   footer {
-    position: inherit;
-    bottom: 1rem;
-    right: 1.25rem;
+    display: flex;
+    justify-content: flex-end;
+    margin: 0.5rem 1rem 0.5rem 0;
+    // position: inherit;
+    // bottom: 1rem;
+    // right: 1.25rem;
   }
 }
 
@@ -1072,7 +1075,8 @@ th:first-of-type {
   }
 }
 .create-list-button {
-  @include gray-text-button();
+  // @include gray-text-button();
+  @include primary-button();
 }
 .create-disabled {
   @include base-button();
