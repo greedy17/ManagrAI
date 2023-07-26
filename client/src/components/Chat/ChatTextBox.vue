@@ -120,10 +120,14 @@ export default {
     }
   },
   mounted() {
+    
+  },
+  created() {
     this.setPlaceholder()
   },
   watch: {
     currentOpp: 'setPlaceholder',
+    displayedOpps: 'setPlaceholder',
   },
   methods: {
     scrollToBottom() {
@@ -145,18 +149,15 @@ export default {
       }
     },
     setPlaceholder() {
-      // console.log('bools', this.userCRM, !this.displayedOpps.results.length)
-      // console.log('bools', this.$store.state.chatOpps)
-      // if (this.userCRM && !(this.displayedOpps.results && this.displayedOpps.results.length)) {
-      //   this.templatesOpen = false
-      //   this.actionSelected = false
-      //   this.textBoxType = null
-      //   this.message = ''
-      //   this.currentAction = null
-      //   this.placeholder = 'Sync in progress...'
-      // }
-      // else 
-      if (!this.currentOpp) {
+      if (this.userCRM && !(this.displayedOpps.results && this.displayedOpps.results.length)) {
+        this.templatesOpen = false
+        this.actionSelected = false
+        this.textBoxType = null
+        this.message = ''
+        this.currentAction = null
+        this.placeholder = 'Sync in progress...'
+      }
+      else if (!this.currentOpp) {
         this.templatesOpen = false
         this.actionSelected = false
         this.textBoxType = null

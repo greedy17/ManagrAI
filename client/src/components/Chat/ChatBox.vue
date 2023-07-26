@@ -317,7 +317,6 @@ export default {
       this.$emit('set-view', val)
     },
     emitFormOpen(data, open) {
-      console.log('HERE', data, open)
       this.$emit('toggle-chat-modal', data, open)
     },
     async getConversations() {

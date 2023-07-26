@@ -1211,7 +1211,8 @@ class UserViewSet(
                     )
                     user.team = user_team
                 user.save()
-                login(request, user)
+                login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+                # login(request, user)
                 # create token if one does not exist
                 ManagrToken.objects.get_or_create(user=user)
 

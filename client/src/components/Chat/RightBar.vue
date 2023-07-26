@@ -420,8 +420,11 @@
     >
       <!-- @mouseenter="setTooltip(opp.id)"
         @mouseleave="removeTooltip" -->
-      <div v-if="userCRM && !(displayedOpps.results && displayedOpps.results.length)" class="no-results">
-        <p>Sync in progress... Reload in a minute</p>
+      <div
+        v-if="userCRM && !(displayedOpps.results && displayedOpps.results.length)"
+        class="no-results"
+      >
+        <p>Sync in progress... Reload in a few minutes</p>
         <span @click="refreshFields()" class="button">Reload</span>
       </div>
       <div
@@ -438,7 +441,11 @@
           {{ opp.name }}
         </div> -->
       </div>
-      <div v-if="userCRM && (displayedOpps.results && displayedOpps.results.length)" style="margin-bottom: 0.25rem" class="space-between">
+      <div
+        v-if="userCRM && displayedOpps.results && displayedOpps.results.length"
+        style="margin-bottom: 0.25rem"
+        class="space-between"
+      >
         <button
           :disabled="loadingMore"
           class="chat-button no-border gray-scale"
@@ -1283,10 +1290,12 @@ export default {
     if (this.userCRM === 'HUBSPOT') {
       this.resourceName = 'Deal'
     }
-    this.$store.dispatch('loadChatOpps')
-    this.$store.dispatch('loadAllPicklists')
-    this.setOppForms()
-    this.getMeetingWorkflows()
+    if (this.userCRM) {
+      this.$store.dispatch('loadChatOpps')
+      this.$store.dispatch('loadAllPicklists')
+      this.getMeetingWorkflows()
+      this.setOppForms()
+    }
   },
 }
 </script>
