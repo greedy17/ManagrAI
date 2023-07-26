@@ -155,6 +155,13 @@ fargateStagingDeployment: &fargateStagingDeployment
 
 # Part 2: Update Fargate Task Definition and Deploy
 fargateStagingDeploymentAndDeploy: &fargateStagingDeploymentAndDeploy
+  name: Deploy Staging to AWS Fargate
+  image: atlassian/default-image:2
+  deployment: Staging
+  services:
+    - docker
+  caches:
+    - docker
   script:
     # Dynamically update Fargate task definition
     - TASK_FAMILY="managr-app-task-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
