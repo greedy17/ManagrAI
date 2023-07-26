@@ -135,7 +135,8 @@ fargateStagingDeployment_Deploy: &fargateStagingDeployment_Deploy
   services:
     - docker
   script:
-    - export AWS_DEFAULT_REGION=us-east-1
+    - TASK_FAMILY="managr-app-task-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+
     - pipe: atlassian/aws-ecs-deploy:1.6.2
       variables:
         CLUSTER_NAME: $AWS_ECS_CLUSTER_NAME
@@ -144,6 +145,15 @@ fargateStagingDeployment_Deploy: &fargateStagingDeployment_Deploy
         FORCE_NEW_DEPLOYMENT: 'true' # Optional
         WAIT: 'true' # Optional 
         # DEBUG: 'true' # Optional
+
+    - export AWS_DEFAULT_REGION=us-east-1
+    - TASK_FAMILY="managr-app-task-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-processalltasks-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-processsyncqueues-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-runalerts-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-clearsfstaledata-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcedata-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
+    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcefields-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 
 fargateStagingDeployment_UpdateTask: &fargateStagingDeployment_UpdateTask
   name: Update Fargate Task Definition for Staging
@@ -239,7 +249,7 @@ pipelines:
           - step: *e2eTests
       - step: *fargateStagingDeployment_BuildImages
         size: 4x
-      - step: *fargateStagingDeployment_UpdateTask
+      # - step: *fargateStagingDeployment_UpdateTask
       - step: *fargateStagingDeployment_Deploy
     master:
       - parallel:
