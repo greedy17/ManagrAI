@@ -317,7 +317,6 @@ pipelines:
           #- step: *herokuStagingDeployment
       #- step: *fargateDemoDeployment
       - step: *fargateStagingDeployment
-      - step: *fargateStagingDeploymentAndDeploy
           #- step: *fargateStagingDeployment
           # - step: *fargatePRTeardown
     master:
