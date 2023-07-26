@@ -110,7 +110,7 @@ cleanupDockerResources: &cleanupDockerResources
 #     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcefields-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 
 fargateStagingDeployment_BuildImages: &fargateStagingDeployment_BuildImages
-  name: Deploy Staging to AWS Fargate
+  name: Build Images for Staging
   image: atlassian/default-image:2
   deployment: Staging
   services:
@@ -135,7 +135,22 @@ fargateStagingDeployment_Deploy: &fargateStagingDeployment_Deploy
   services:
     - docker
   script:
-    - export AWS_DEFAULT_REGION=us-east-1
+    # Push to ECR
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_IMAGE_NAME
+        TAGS: 'staging-${BITBUCKET_COMMIT} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_SCHEDULED_TASKS_IMAGE_NAME
+        TAGS: 'staging-${BITBUCKET_COMMIT} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
+    - pipe: atlassian/aws-ecr-push-image:1.3.0
+      variables:
+        IMAGE_NAME: $MANAGR_SERVER_NGINX_IMAGE_NAME
+        TAGS: 'staging-${BITBUCKET_COMMIT} latest' # Optional
+        # DEBUG: "<boolean>" # Optional
     - TASK_FAMILY="managr-app-task-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 
     - pipe: atlassian/aws-ecs-deploy:1.6.2
