@@ -115,8 +115,8 @@ fargatePRTeardown: &fargatePRTeardown
     - terraform init -backend-config="key=pr-$BITBUCKET_PR_ID-tfstate"
     - terraform destroy -auto-approve
 
-# Part 1: Build and Push Docker Images
 fargateStagingDeployment: &fargateStagingDeployment
+  name: Deploy Staging to AWS Fargate
   image: atlassian/default-image:2
   deployment: Staging
   services:
@@ -151,18 +151,7 @@ fargateStagingDeployment: &fargateStagingDeployment
         IMAGE_NAME: $MANAGR_SERVER_NGINX_IMAGE_NAME
         TAGS: 'staging-${BITBUCKET_COMMIT} latest' # Optional
         # DEBUG: "<boolean>" # Optional
-        
 
-# Part 2: Update Fargate Task Definition and Deploy
-fargateStagingDeploymentAndDeploy: &fargateStagingDeploymentAndDeploy
-  name: Deploy Staging to AWS Fargate
-  image: atlassian/default-image:2
-  deployment: Staging
-  services:
-    - docker
-  caches:
-    - docker
-  script:
     # Dynamically update Fargate task definition
     - TASK_FAMILY="managr-app-task-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 
