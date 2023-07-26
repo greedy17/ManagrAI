@@ -392,7 +392,7 @@
             </div>
         </div> -->
 
-        <div v-if="hasRecapChannel && userLevel !== 'REP' && hasSlackIntegration" class="card">
+        <!-- <div v-if="hasRecapChannel && userLevel !== 'REP' && hasSlackIntegration" class="card">
           <div class="card__header" style="">
             <img style="height: 40px" src="@/assets/images/logo.png" />
           </div>
@@ -414,7 +414,7 @@
 
               <button @click="goToWorkflow('ZoomRecap')" class="white_button">Change Channel</button>
             </div>
-        </div>
+        </div> -->
 
         <div
           v-for="config in filteredConfigs"
@@ -460,7 +460,7 @@
             </div>
         </div>
 
-        <div v-if="!hasRecapChannel && userLevel !== 'REP' && hasSlackIntegration" class="card">
+        <!-- <div v-if="!hasRecapChannel && userLevel !== 'REP' && hasSlackIntegration" class="card">
           <div class="card__header" style="">
             <img class="gray-logo" style="height: 40px" src="@/assets/images/logo.png" />
           </div>
@@ -476,7 +476,7 @@
               <p></p>
               <button @click="goToWorkflow('ZoomRecap')" class="white_button">Activate</button>
             </div>
-        </div>
+        </div> -->
         <!-- <div class="card">
           <div class="card__header" style="">
             <img class="gray-logo" style="height: 40px" src="@/assets/images/logo.png" />

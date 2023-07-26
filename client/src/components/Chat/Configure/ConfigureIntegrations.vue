@@ -987,10 +987,10 @@ export default {
         await this.$store.dispatch('refreshCurrentUser')
         this.generatingToken = false
         this.selectedIntegration = null
-        // this.$router.replace({
-        //   name: 'Home',
-        //   params: {},
-        // })
+        this.$router.replace({
+          name: 'Home',
+          params: {},
+        })
       }
     }
   },
