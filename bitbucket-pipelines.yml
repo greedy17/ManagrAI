@@ -240,11 +240,6 @@ pipelines:
           - step: *e2eTests
       - step: *fargateProdDeployment
         size: 4x
-    demo:
-      - parallel:
-          - step: *djangoTests
-          - step: *e2eTests
-      - step: *fargateDemoDeployment
 
 definitions:
   caches:
