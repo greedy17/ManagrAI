@@ -109,9 +109,10 @@
 
           <div class="form-card__footer">
             <div>
-              By signing up, I agree to the
-              <a href="https://managr.ai/terms-of-service" target="_blank">Terms</a> and
-              <a href="https://managr.ai/privacy-policy" target="_blank">Policies</a>.
+              By signing up, I agree to Managr's
+              <a href="https://managr.ai/terms-of-service" target="_blank">Terms & Conditions.</a> 
+              <!-- and -->
+              <!-- <a href="https://managr.ai/privacy-policy" target="_blank"></a>. -->
             </div>
 
             <button

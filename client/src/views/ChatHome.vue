@@ -238,7 +238,11 @@
       "
     >
       <div class="configure-modal-container">
-        <ConfigureModal ref="configModal" />
+        <ConfigureModal
+          :configPage="configPage"
+          @change-config-page="changeConfigPage"
+          ref="configModal"
+        />
       </div>
     </Modal>
     <Modal
@@ -281,7 +285,7 @@
           <ChatFormField
             :placeholder="toString(formData[field.apiName])"
             :field="field"
-            :chatData="formData"
+            :chatData="formOpen ? formData : chatData"
             @set-value="setUpdateValues"
             :stageFields="stageFields"
             :stagesWithForms="stagesWithForms"
@@ -430,6 +434,7 @@
         @handleConfigureOpen="handleConfigureOpen"
         :formFields="formFields"
         @refresh-list="refreshLists"
+        @open-change-config="openChangeConfig"
       />
     </main>
     <aside id="right-sidebar">
@@ -438,6 +443,7 @@
         @set-fields="setFormFields"
         @set-stages="setStageFields"
         @refresh-list="refreshLists"
+        @open-settings="handleConfigureOpen"
         :formFields="formFields"
         :stageFields="stageFields"
         :stagesWithForms="stagesWithForms"
@@ -487,6 +493,7 @@ export default {
       showBackground: false,
       profileModalOpen: false,
       configureModalOpen: false,
+      configPage: 'integrations',
       submitting: false,
       profileOrTeam: 'profile',
       team: CollectionManager.create({ ModelClass: User }),
@@ -545,13 +552,22 @@ export default {
       }
       this.team.refresh()
     }
+
+    if (this.$route.query.code) {
+      this.handleConfigureOpen()
+    }
   },
   watch: {},
   methods: {
     setOpenForm() {
-      console.log('here')
       this.formOpen = false
-      console.log(this.formOpen)
+    },
+    openChangeConfig(page) {
+      this.configPage = page
+      this.configureModalOpen = true
+    },
+    changeConfigPage(page) {
+      this.configPage = page
     },
     toString(data) {
       let type = typeof data

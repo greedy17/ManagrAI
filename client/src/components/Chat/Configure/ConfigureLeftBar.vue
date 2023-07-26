@@ -4,22 +4,95 @@
       <div class="img-container">
         <img src="@/assets/images/logo.png" height="35px" />
       </div>
-        <!-- <div class="configure-text">Configure</div> -->
-      <div style="margin-top: 1.6rem;">
-        <div class="base-select" :class="configPage === 'integrations' ? 'left-active' : 'pointer'" @click="changeConfigPage('integrations')">
-          <p><img src='@/assets/images/settings-sliders.svg' :class="configPage === 'integrations' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Integrations</p> <span class="config-number">{{ integrationsLength }}</span>
+      <!-- <div class="configure-text">Configure</div> -->
+      <div style="margin-top: 1.6rem">
+        <div
+          class="base-select"
+          :class="configPage === 'integrations' ? 'left-active' : 'pointer'"
+          @click="changeConfigPage('integrations')"
+        >
+          <p>
+            <img
+              src="@/assets/images/settings-sliders.svg"
+              :class="configPage === 'integrations' ? 'left-active-icon' : ''"
+              style="height: 12px; margin-right: 0.5rem"
+            />Integrations
+          </p>
+          <span class="config-number">{{ integrationsLength }}</span>
         </div>
-        <div class="base-select" :class="configPage === 'forms' ? 'left-active' : 'pointer'" @click="changeConfigPage('forms')">
-          <p><img src='@/assets/images/rectangle-list.svg' :class="configPage === 'forms' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />CRM Fields</p> <span class="config-number">{{ forms.length }}</span>
+        <div
+          v-if="userCRM"
+          class="base-select"
+          :class="configPage === 'forms' ? 'left-active' : 'pointer'"
+          @click="changeConfigPage('forms')"
+        >
+          <p>
+            <img
+              src="@/assets/images/rectangle-list.svg"
+              :class="configPage === 'forms' ? 'left-active-icon' : ''"
+              style="height: 12px; margin-right: 0.5rem"
+            />CRM Fields
+          </p>
+          <span class="config-number">{{ forms.length }}</span>
         </div>
-        <div class="base-select" :class="configPage === 'workflows' ? 'left-active' : 'pointer'" @click="changeConfigPage('workflows')">
-          <p><img src='@/assets/images/workflows-chat.svg' :class="configPage === 'workflows' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Lists</p> <span class="config-number">{{ activeTemplatesLength }}</span>
+        <div
+          v-if="userCRM"
+          class="base-select"
+          :class="configPage === 'workflows' ? 'left-active' : 'pointer'"
+          @click="
+            userCRM && !(displayedOpps.results && displayedOpps.results.length)
+              ? () => null
+              : changeConfigPage('workflows')
+          "
+        >
+          <p
+            :class="
+              userCRM && !(displayedOpps.results && displayedOpps.results.length) ? 'inactive' : ''
+            "
+          >
+            <img
+              src="@/assets/images/workflows-chat.svg"
+              :class="configPage === 'workflows' ? 'left-active-icon' : ''"
+              style="height: 12px; margin-right: 0.5rem"
+            />Lists
+          </p>
+          <span class="config-number">{{ activeTemplatesLength }}</span>
         </div>
-        <div class="base-select" :class="configPage === 'notes' ? 'left-active' : 'pointer'" @click="changeConfigPage('notes')">
-          <p><img src='@/assets/images/chat-notes.svg' :class="configPage === 'notes' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Templates</p> <span class="config-number">{{ noteTemplates.length }}</span>
+        <div
+          class="base-select"
+          :class="configPage === 'notes' ? 'left-active' : 'pointer'"
+          @click="changeConfigPage('notes')"
+        >
+          <p>
+            <img
+              src="@/assets/images/chat-notes.svg"
+              :class="configPage === 'notes' ? 'left-active-icon' : ''"
+              style="height: 12px; margin-right: 0.5rem"
+            />Templates
+          </p>
+          <span class="config-number">{{ noteTemplates.length }}</span>
         </div>
-        <div class="base-select" :class="configPage === 'sync' ? 'left-active' : 'pointer'" @click="changeConfigPage('sync')">
-          <p><img src='@/assets/images/cycle.svg' :class="configPage === 'sync' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Sync</p>
+        <div
+          v-if="userCRM"
+          class="base-select"
+          :class="configPage === 'sync' ? 'left-active' : 'pointer'"
+          @click="
+            userCRM && !(displayedOpps.results && displayedOpps.results.length)
+              ? () => null
+              : changeConfigPage('sync')
+          "
+        >
+          <p
+            :class="
+              userCRM && !(displayedOpps.results && displayedOpps.results.length) ? 'inactive' : ''
+            "
+          >
+            <img
+              src="@/assets/images/cycle.svg"
+              :class="configPage === 'sync' ? 'left-active-icon' : ''"
+              style="height: 12px; margin-right: 0.5rem"
+            />Sync
+          </p>
         </div>
         <!-- <div class="base-select" :class="configPage === 'profile' ? 'left-active' : 'pointer'" @click="changeConfigPage('profile')">
           <p><img src='@/assets/images/user.svg' :class="configPage === 'profile' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Profile</p>
@@ -31,7 +104,9 @@
         <p><img src="@/assets/images/play-alt.svg" :class="configPage === 'demo' ? 'left-active-icon' : ''" style="height: 12px; margin-right: 0.5rem;" />Demo Center</p>
       </div> -->
       <div class="base-select pointer" @click="logOut">
-        <p><img src="@/assets/images/logout.svg" style="height: 12px; margin-right: 0.5rem;" />Log out</p>
+        <p>
+          <img src="@/assets/images/logout.svg" style="height: 12px; margin-right: 0.5rem" />Log out
+        </p>
       </div>
     </div>
   </div>
@@ -48,11 +123,11 @@ export default {
       type: Function,
     },
     configPage: {
-      type: String
+      type: String,
     },
     forms: {
-      type: Array
-    }
+      type: Array,
+    },
   },
   data() {
     return {
@@ -63,7 +138,7 @@ export default {
     }
   },
   created() {
-    this.templates.refresh();
+    this.templates.refresh()
   },
   methods: {
     logOut() {
@@ -95,10 +170,24 @@ export default {
       return this.templates.list.length
     },
     noteTemplates() {
-      return this.$store.state.templates && this.$store.state.templates.length ? this.$store.state.templates : []
+      return this.$store.state.templates && this.$store.state.templates.length
+        ? this.$store.state.templates
+        : []
       // return this.$store.state.templates
     },
-  }
+    userCRM() {
+      return this.$store.state.user.crm
+    },
+    displayedOpps: {
+      get() {
+        return this.$store.state.chatOpps
+      },
+
+      set(value) {
+        this.displayedOpps = value
+      },
+    },
+  },
 }
 </script>
 
@@ -187,5 +276,9 @@ export default {
 .left-active-icon {
   filter: invert(90%) !important;
   z-index: 4;
+}
+.inactive {
+  color: $light-gray-blue;
+  cursor: not-allowed;
 }
 </style>

@@ -26,6 +26,7 @@
       v-else-if="
         field.dataType === 'Date' ||
         field.dataType === 'Datetime' ||
+        field.dataType === 'DateTime' ||
         field.dataType === 'Double' ||
         field.dataType === 'Currency' ||
         field.dataType === 'Int'
@@ -35,7 +36,11 @@
 
       <input
         class="inline-input"
-        v-if="field.dataType === 'Date' || field.dataType === 'Datetime'"
+        v-if="
+          field.dataType === 'Date' ||
+          field.dataType === 'Datetime' ||
+          field.dataType === 'DateTime'
+        "
         :value="formatDate(placeholder)"
         type="date"
         @input=";(value = $event.target.value), setUpdateValues(field.apiName, value)"
@@ -170,7 +175,9 @@
       </Multiselect>
     </div>
 
-    <div class="field-container" v-else>Can't update {{ field.dataType }} fields... yet</div>
+    <div class="field-container" v-else>
+      <small>Can't update {{ field.dataType }} fields... yet</small>
+    </div>
     <div ref="StageFormEnd" class="stage-container" v-if="showStageForm">
       <p class="stage-title row">
         <img src="@/assets/images/warning.svg" class="filter-blue" height="16px" alt="" />

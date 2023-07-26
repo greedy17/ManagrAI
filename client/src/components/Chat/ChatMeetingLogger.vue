@@ -16,6 +16,7 @@
           :options="resources"
           :loading="dropdownLoading"
           style="width: 96%"
+          :disabled="submitting"
         >
         </Multiselect>
       </div>
@@ -40,7 +41,7 @@
               : selectedList
           "
           :loading="dropdownLoading || listLoading"
-          :disabled="!selectedResourceType"
+          :disabled="!selectedResourceType || submitting"
         >
           <template slot="noResult">
             <p class="multi-slot">No results. Try loading more</p>
@@ -49,26 +50,30 @@
         </Multiselect>
       </div>
 
-      <div class="margin-top">
+      <div style="margin-top: 1.25rem">
         <p>Use AI to summarize & auto-fill CRM?</p>
 
         <Multiselect
+          style="width: 96%"
           v-model="usingAi"
           selectLabel=""
           deselectLabel=""
           label="name"
           track-by="value"
-          style="width: 96%"
           :options="aiOptions"
           :loading="dropdownLoading"
-          :disabled="!mappedOpp"
+          :disabled="!mappedOpp || submitting"
         >
         </Multiselect>
       </div>
-
       <div v-if="errorText" class="margin-top">
         <p class="error">{{ errorText }}</p>
       </div>
+
+      <p v-if="processing" class="row__ gray-text smaller">
+        <img class="rotate" src="@/assets/images/loading.svg" height="14px" alt="" /> Processing
+        transcript, this could take a few minutes...
+      </p>
     </div>
 
     <div v-else-if="selectedMeetingWorkflow && selectedMeetingWorkflow.forms.length">
@@ -100,8 +105,9 @@
             updatingMeeting
           "
         >
-          <div :class="{ disabled: submitting }" v-for="(field, i) in formFields" :key="i">
+          <div v-for="(field, i) in formFields" :key="i">
             <ChatMeetingFormField
+              :disableField="submitting"
               :placeholder="toString(updateData[field.apiName])"
               :field="field"
               :chatData="updateData"
@@ -118,6 +124,14 @@
           <div class="meeting-modal-footer">
             <button @click="toggleUpdateMeeting">Cancel</button>
             <button @click="onSubmitChat" class="green-button" :disabled="submitting">
+              <img
+                v-if="submitting"
+                class="rotate"
+                src="@/assets/images/loading.svg"
+                height="14px"
+                style="margin-right: 4px"
+                alt=""
+              />
               Log Meeting
             </button>
           </div>
@@ -144,8 +158,9 @@
 
       <div v-else>
         <div v-if="!selectedMeetingWorkflow.is_completed">
-          <div :class="{ disabled: submitting }" v-for="(field, i) in formFields" :key="i">
+          <div v-for="(field, i) in formFields" :key="i">
             <ChatMeetingFormField
+              :disableField="submitting"
               :placeholder="toString(updateData[field.apiName])"
               :field="field"
               :chatData="updateData"
@@ -161,6 +176,14 @@
           </div>
           <div class="meeting-modal-footer">
             <button @click="onSubmitChat" class="green-button" :disabled="submitting">
+              <img
+                v-if="submitting"
+                class="rotate"
+                src="@/assets/images/loading.svg"
+                height="14px"
+                style="margin-right: 4px"
+                alt=""
+              />
               Log Meeting
             </button>
           </div>
@@ -181,10 +204,47 @@
 
     <div v-if="!hasMeetingWorkflow">
       <div class="meeting-modal-footer">
-        <p v-if="processing" class="row__">
-          <img class="rotate" src="@/assets/images/loading.svg" height="14px" alt="" /> Processing
-          transcript, this could take a few minutes...
-        </p>
+        <button
+          @click="deselectMeeting"
+          v-if="selectedResourceId && usingAi"
+          :disabled="submitting"
+        >
+          Cancel
+        </button>
+
+        <button
+          @click="submitChatMeeting"
+          class="green-button"
+          v-if="selectedResourceId && usingAi && usingAi.value === 'false'"
+          :disabled="submitting"
+        >
+          <img
+            v-if="submitting"
+            class="rotate"
+            src="@/assets/images/loading.svg"
+            height="14px"
+            style="margin-right: 4px"
+            alt=""
+          />
+          Submit
+        </button>
+
+        <button
+          @click="submitChatTranscript"
+          class="green-button"
+          v-if="selectedResourceId && usingAi && usingAi.value === 'true'"
+          :disabled="submitting"
+        >
+          <img
+            v-if="submitting"
+            class="rotate"
+            src="@/assets/images/loading.svg"
+            height="14px"
+            style="margin-right: 4px"
+            alt=""
+          />
+          Submit
+        </button>
       </div>
     </div>
 
@@ -233,13 +293,13 @@ export default {
     meetingOpp: {},
   },
   watch: {
-    usingAi(val) {
-      if (val && val.value === 'false') {
-        this.submitChatMeeting()
-      } else if (val && val.value === 'true') {
-        this.submitChatTranscript()
-      }
-    },
+    // usingAi(val) {
+    //   if (val && val.value === 'false') {
+    //     this.submitChatMeeting()
+    //   } else if (val && val.value === 'true') {
+    //     this.submitChatTranscript()
+    //   }
+    // },
     selectedResourceType: 'changeList',
     searchValue(newVal, oldVal) {
       if (newVal !== oldVal && newVal !== '') {
@@ -302,11 +362,13 @@ export default {
     test() {
       console.log(this.currentOpp)
     },
+    deselectMeeting() {
+      this.$emit('deselect-meeting')
+    },
     toggleUpdateMeeting() {
       this.updatingMeeting = !this.updatingMeeting
     },
     viewOpp() {
-      console.log(this.selectedMeetingWorkflow.resource_ref)
       this.$emit('select-opp', this.selectedMeetingWorkflow.resource_ref)
     },
     deselectAI() {
@@ -340,7 +402,9 @@ export default {
           })
           .then((response) => {
             if (response.status === 200) {
-              this.$emit('reload-workflows')
+              setTimeout(() => {
+                this.$emit('reload-workflows')
+              }, 1500)
             } else {
               this.errorText = response.data
               this.selectedResourceType = null
@@ -572,7 +636,6 @@ export default {
     }
 
     if (this.meetingOpp) {
-      console.log('HERE', this.meetingOpp)
       this.selectedResourceId = this.meetingOpp.id
       this.mappedOpp = this.meetingOpp
       if (this.user.crm === 'HUBSPOT') {
@@ -583,6 +646,11 @@ export default {
       if (this.selectedResourceType === 'Deal' || this.selectedResourceType === 'Opportunity') {
         this.$emit('set-opp', this.meetingOpp.name)
       }
+    }
+
+    this.usingAi = {
+      name: 'Yes',
+      value: 'true',
     }
   },
   computed: {
@@ -676,7 +744,6 @@ export default {
 @import '@/styles/buttons';
 @import '@/styles/cards';
 @import '@/styles/mixins/utils';
-@import '@/styles/mixins/inputs';
 
 ::v-deep .multiselect * {
   font-size: 13px;
@@ -1048,7 +1115,7 @@ button {
 }
 
 .margin-top {
-  margin-top: 2rem;
+  margin-top: 1.5rem;
 }
 
 .margin-top-s {

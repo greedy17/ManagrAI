@@ -266,9 +266,9 @@
           <h3>
             <img src="@/assets/images/dot.svg" class="green-filter" />
             Salesforce
-            <span class="required" v-if="!hasSalesforceIntegration">
+            <!-- <span class="required" v-if="!hasSalesforceIntegration">
               <img src="@/assets/images/required.svg" height="14px" alt=""
-            /></span>
+            /></span> -->
           </h3>
           <p class="card-text" style="font-weight: bold">CRM Connected</p>
           <div class="sep-button-container">
@@ -385,6 +385,7 @@
             Slack Connected
           </p>
           <p v-else class="card-text">Interact with Managr through Slack</p>
+          <div></div>
           <div class="sep-button-container">
             <div class="separator"></div>
             <button
@@ -418,7 +419,7 @@
         </div>
       </div>
 
-      <div class="card">
+      <!-- <div class="card">
         <div class="card__header">
           <img src="@/assets/images/gmailCal.png" style="margin-right: 16px; height: 40px" />
           <img src="@/assets/images/outlookMail.png" style="height: 40px" />
@@ -464,7 +465,7 @@
             </button>
           </div>
         </div>
-      </div>
+      </div> -->
 
       <div class="card">
         <div class="card__header" style="justify-content: space-between">
@@ -987,7 +988,7 @@ export default {
         this.generatingToken = false
         this.selectedIntegration = null
         // this.$router.replace({
-        //   name: 'Integrations',
+        //   name: 'Home',
         //   params: {},
         // })
       }
@@ -1010,7 +1011,7 @@ export default {
       return !!this.$store.state.user.slackRef
     },
     hasZoomIntegration() {
-      return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
+      return !!this.$store.state.user.hasZoomIntegration
     },
     hasEmailIntegration() {
       return false

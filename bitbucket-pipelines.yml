@@ -349,3 +349,4 @@ definitions:
         POSTGRES_PASSWORD: manager
     docker:
       memory: 2048
+      size: 2x

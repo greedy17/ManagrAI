@@ -120,10 +120,14 @@ export default {
     }
   },
   mounted() {
+    
+  },
+  created() {
     this.setPlaceholder()
   },
   watch: {
     currentOpp: 'setPlaceholder',
+    displayedOpps: 'setPlaceholder',
   },
   methods: {
     scrollToBottom() {
@@ -145,7 +149,15 @@ export default {
       }
     },
     setPlaceholder() {
-      if (!this.currentOpp) {
+      if (this.userCRM && !(this.displayedOpps.results && this.displayedOpps.results.length)) {
+        this.templatesOpen = false
+        this.actionSelected = false
+        this.textBoxType = null
+        this.message = ''
+        this.currentAction = null
+        this.placeholder = 'Sync in progress...'
+      }
+      else if (!this.currentOpp) {
         this.templatesOpen = false
         this.actionSelected = false
         this.textBoxType = null
@@ -328,6 +340,7 @@ export default {
             user_id: this.user.id,
             prompt: `Update ${this.currentOpp.name} ${this.chatmsg}`,
             resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
+            resource_id: this.currentOpp.id,
           })
           .then((response) => {
             this.chatRes = response
@@ -488,6 +501,19 @@ export default {
     user() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
+    },
+    displayedOpps: {
+      get() {
+        return this.$store.state.chatOpps
+      },
+
+      set(value) {
+        this.displayedOpps = value
+      },
+    },
+    userCRM() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.crm
     },
     currentOpp() {
       return this.$store.state.currentOpp

@@ -302,6 +302,7 @@
             @reload-workflows="reloadWorkflows"
             @reload-meetings="reloadMeetings"
             @select-opp="selectOpp"
+            @deselect-meeting="deselectMeeting"
             :meetingOpp="meetingOpp"
             :key="logkey"
           />
@@ -420,6 +421,22 @@
       <!-- @mouseenter="setTooltip(opp.id)"
         @mouseleave="removeTooltip" -->
       <div
+        v-if="userCRM && !(displayedOpps.results && displayedOpps.results.length)"
+        class="no-results"
+      >
+        <p>Sync in progress... Reload in a few minutes</p>
+        <span @click="refreshFields()" class="button">
+          <img
+            v-if="reloading"
+            class="rotate opaque not-allowed"
+            src="@/assets/images/refresh.svg"
+            height="14px"
+            alt=""
+          />Reload</span
+        >
+      </div>
+      <div
+        v-else
         v-for="opp in opportunities"
         class="opp-container"
         @click="changeSelectedOpp(opp)"
@@ -432,7 +449,11 @@
           {{ opp.name }}
         </div> -->
       </div>
-      <div style="margin-bottom: 0.25rem" class="space-between">
+      <div
+        v-if="userCRM && displayedOpps.results && displayedOpps.results.length"
+        style="margin-bottom: 0.25rem"
+        class="space-between"
+      >
         <button
           :disabled="loadingMore"
           class="chat-button no-border gray-scale"
@@ -449,8 +470,12 @@
 
     <div class="opp-scroll-container" v-else-if="this.mainView === 'meetings' && !loading">
       <p class="gray-text small-text">Select a meeting:</p>
-      <div class="empty-container" v-if="!meetings.length">
+      <div class="empty-container" v-if="!meetings.length && hasZoomIntegration">
         <p>No Zoom meetings found... refresh or select a different day</p>
+      </div>
+
+      <div class="empty-container" v-else-if="!hasZoomIntegration">
+        <p><span @click="openSettings" class="link">Connect Zoom</span> in order to log meetings</p>
       </div>
 
       <div
@@ -525,6 +550,7 @@ export default {
       allStages: [],
       meetings: [],
       meetingOpp: null,
+      reloading: false,
       meetingDate: this.getCurrentDate(),
       objects: CollectionManager.create({
         ModelClass: CRMObjects,
@@ -684,7 +710,10 @@ export default {
   },
   methods: {
     test() {
-      console.log('log', this.meetingWorkflows)
+      console.log('log', this.opportunities)
+    },
+    openSettings() {
+      this.$emit('open-settings')
     },
     formatDate(inputDate) {
       const dateObj = new Date(inputDate)
@@ -849,7 +878,7 @@ export default {
       this.deselectMeeting()
     },
     switchMainView(view) {
-      if (view === 'meetings' && !this.meetings.length) {
+      if (view === 'meetings' && !this.meetings.length && this.hasZoomIntegration) {
         this.getZoomMeetings()
         this.deselectOpp()
       } else if (view === 'meetings') {
@@ -1166,6 +1195,14 @@ export default {
         }
       }
     },
+    async refreshFields() {
+      this.reloading = true
+      await this.$store.dispatch('loadChatOpps', 1)
+
+      setTimeout(() => {
+        this.reloading = false
+      }, 2000)
+    },
     async loadMoreOpps() {
       if (this.searchText) {
         this.loadMorePage += 1
@@ -1200,6 +1237,9 @@ export default {
     },
   },
   computed: {
+    hasZoomIntegration() {
+      return !!this.$store.state.user.hasZoomIntegration
+    },
     currentMeeting() {
       return this.$store.state.currentMeeting
     },
@@ -1263,10 +1303,12 @@ export default {
     if (this.userCRM === 'HUBSPOT') {
       this.resourceName = 'Deal'
     }
-    this.$store.dispatch('loadChatOpps')
-    this.$store.dispatch('loadAllPicklists')
-    this.setOppForms()
-    this.getMeetingWorkflows()
+    if (this.userCRM) {
+      this.$store.dispatch('loadChatOpps')
+      this.$store.dispatch('loadAllPicklists')
+      this.getMeetingWorkflows()
+      this.setOppForms()
+    }
   },
 }
 </script>
@@ -1286,6 +1328,14 @@ export default {
   100% {
     -webkit-mask-position: left;
   }
+}
+
+.link {
+  text-decoration: underline;
+  text-decoration-color: $dark-black-blue;
+  color: $dark-black-blue;
+  display: inline-block;
+  cursor: pointer;
 }
 
 .loading {
@@ -2254,5 +2304,15 @@ img {
 
 .pointer {
   cursor: pointer;
+}
+.no-results {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.button {
+  @include gray-text-button();
+  width: 60%;
 }
 </style>

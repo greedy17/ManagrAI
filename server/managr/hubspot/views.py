@@ -37,7 +37,9 @@ def get_hubspot_auth_link(request):
 @permission_classes([permissions.IsAuthenticated])
 def get_hubspot_authentication(request):
     code = request.data.get("code", None)
+    print('CODE HERE',code)
     user = request.user
+    print('USER HERE', user)
     if not code:
         raise ValidationError()
     res = HubspotAuthAccountAdapter.create_account(code, request.user.id)
