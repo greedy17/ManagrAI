@@ -1388,9 +1388,11 @@ export default {
     async refreshForms() {
       this.pulseLoading = true
       const res = await SlackOAuth.api.refreshForms()
+      this.searchFields()
       setTimeout(() => {
+        this.formFields.refresh()
         this.pulseLoading = false
-        this.$router.go()
+        // this.$router.go()
       }, 300)
     },
     checkAndClearInterval() {
