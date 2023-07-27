@@ -223,24 +223,6 @@
           </router-link>
   
           <router-link
-            v-if="userCRM"
-            class="side-wrapper"
-            exact-active-class="active"
-            :to="{ name: 'Notes' }"
-          >
-            <label class="side-icon side-workflow" style="margin: 8px 0 0 0">
-              <span class="side-tooltip-single" style="top: -5px; width: 120px">Note Templates</span>
-              <img
-                src="@/assets/images/notebook.svg"
-                class="nav-img"
-                height="16px"
-                alt=""
-                style="margin-top: 0"
-              />
-            </label>
-          </router-link>
-  
-          <router-link
             class="side-wrapper"
             exact-active-class="active"
             :to="{ name: 'Integrations' }"

@@ -511,9 +511,6 @@
       <div class="alert_cards" v-if="editing"></div>
     </template>
 
-    <div v-else-if="isOnboarding && user.isAdmin">
-      <Onboarder @refresh-workflows="refreshWorkflows" />
-    </div>
 
     <div class="center-loader" v-else>
       <Loader style="margin-top: 44vh" loaderText="Gathering your workflows" />
@@ -534,7 +531,6 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
  */
 import { CollectionManager } from '@thinknimble/tn-models'
 import SlackOAuth from '@/services/slack'
-import Onboarder from '@/views/settings/Onboarder'
 // import { UserConfigForm } from '@/services/users/forms'
 import User from '@/services/users'
 import { ObjectField } from '@/services/crm'
@@ -546,7 +542,6 @@ export default {
   name: 'ConfigureWorkflows',
   components: {
     ToggleCheckBox,
-    Onboarder,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
   },
