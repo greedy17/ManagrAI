@@ -1007,9 +1007,6 @@ export default {
     hasHubspotIntegration() {
       return !!this.$store.state.user.hubspotAccount
     },
-    hasSlackIntegration() {
-      return !!this.$store.state.user.slackRef
-    },
     hasZoomIntegration() {
       return !!this.$store.state.user.hasZoomIntegration
     },

@@ -71,13 +71,11 @@
                 alt=""
               />
             </span>
-            <p>
-              {{ currentMeeting.topic }}
-            </p>
+            <p>{{ currentMeeting.topic }}</p>
           </div>
 
           <div style="margin-left: -8px" class="flexed-row">
-            <small class="gray-text">{{ formatDate(currentMeeting.start_time) }}</small>
+            <small class="gray-text">{{ formatDateTime(currentMeeting.start_time) }}</small>
           </div>
         </span>
       </section>
@@ -144,7 +142,7 @@
             <section v-if="!selectedFilter">
               <div
                 @click="selectFilter(filter)"
-                v-for="filter in filters"
+                v-for="filter in userCRM === 'HUBSPOT' ? filters : SalesforceFilters"
                 :key="filter.name"
                 class="icon-row"
               >
@@ -421,7 +419,7 @@
       <!-- @mouseenter="setTooltip(opp.id)"
         @mouseleave="removeTooltip" -->
       <div
-        v-if="userCRM && !(displayedOpps.results && displayedOpps.results.length)"
+        v-if="userCRM && !(displayedOpps.results && displayedOpps.results.length) && !activeFilters"
         class="no-results"
       >
         <p>Sync in progress... Reload in a few minutes</p>
@@ -488,7 +486,7 @@
         <p class="no-margin">
           {{ meeting.topic }}
         </p>
-        <small>{{ formatDate(meeting.start_time) }} </small>
+        <small>{{ formatDateTime(meeting.start_time) }} </small>
       </div>
     </div>
 
@@ -614,6 +612,62 @@ export default {
         ],
       },
       selectedFilter: null,
+      SalesforceFilters: [
+        {
+          name: 'Owner',
+          dataType: 'text',
+          icon: 'fa-user',
+          apiName: 'Owner',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+        {
+          name: 'Name',
+          dataType: 'text',
+          icon: 'fa-signature',
+          apiName: 'Name',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+        {
+          name: 'Stage',
+          dataType: 'text',
+          icon: 'fa-stairs',
+          apiName: 'StageName',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+        {
+          name: 'Close date',
+          dataType: 'date',
+          icon: 'fa-calendar-plus',
+          apiName: 'CloseDate',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+        {
+          name: 'Amount',
+          dataType: 'number',
+          icon: 'fa-sack-dollar',
+          apiName: 'Amount',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+        {
+          name: 'Last activity date',
+          dataType: 'date',
+          icon: 'fa-calendar-plus',
+          apiName: 'LastActivityDate',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+      ],
       filters: [
         {
           name: 'Owner',
@@ -628,7 +682,7 @@ export default {
           name: 'Name',
           dataType: 'text',
           icon: 'fa-signature',
-          apiName: `${this.userCRM === 'SALESFORCE' ? 'Name' : 'dealname'}`,
+          apiName: 'dealname',
           operator: null,
           value: null,
           operatorLabel: null,
@@ -637,7 +691,7 @@ export default {
           name: 'Stage',
           dataType: 'text',
           icon: 'fa-stairs',
-          apiName: `${this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage'}`,
+          apiName: 'dealstage',
           operator: null,
           value: null,
           operatorLabel: null,
@@ -646,7 +700,7 @@ export default {
           name: 'Close date',
           dataType: 'date',
           icon: 'fa-calendar-plus',
-          apiName: `${this.userCRM === 'SALESFORCE' ? 'CloseDate' : 'closedate'}`,
+          apiName: 'closedate',
           operator: null,
           value: null,
           operatorLabel: null,
@@ -655,7 +709,7 @@ export default {
           name: 'Amount',
           dataType: 'number',
           icon: 'fa-sack-dollar',
-          apiName: `${this.userCRM === 'SALESFORCE' ? 'Amount' : 'amount'}`,
+          apiName: 'amount',
           operator: null,
           value: null,
           operatorLabel: null,
@@ -977,6 +1031,7 @@ export default {
         this.selectedFilter.apiName,
         this.selectedFilter.value,
       ]
+      console.log(filter)
       try {
         this.$store.dispatch('changeFilters', [...this.$store.state.filters, [...filter]])
         await this.$store.dispatch('loadChatOpps', 1)
@@ -1077,7 +1132,7 @@ export default {
       let allFields = this.updateOppForm[0].fieldsRef
 
       let stageField = this.updateOppForm[0].fieldsRef.filter(
-        (field) => field.apiName === 'Stage' || field.apiName === 'dealstage',
+        (field) => field.apiName === 'StageName' || field.apiName === 'dealstage',
       )
       this.stageField = stageField[0]
 
@@ -1636,10 +1691,6 @@ header {
   p {
     color: $light-gray-blue;
   }
-}
-
-.pointer {
-  cursor: pointer;
 }
 
 .flex-row-between {

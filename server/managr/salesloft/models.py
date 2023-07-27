@@ -1,29 +1,16 @@
-import jwt
-import pytz
-import math
 import logging
 import json
 import dateutil.parser
-
-from datetime import datetime
 from django.db import models
 from django.utils import timezone
 from urllib.parse import urlencode
 from requests.exceptions import HTTPError
-
-from django.contrib.postgres.fields import JSONField, ArrayField
 from django.core.exceptions import ObjectDoesNotExist
-
 from managr.core.models import TimeStampModel, User
 from managr.utils.client import HttpClient
 from .exceptions import SalesloftAPIException, TokenExpired
 from managr.organization.models import Organization
-
-from managr.salesforce.adapter.models import ActivityAdapter
-
-from managr.core import constants as core_consts
 from . import constants as salesloft_consts
-
 from managr.slack.helpers import block_builders
 
 logger = logging.getLogger("managr")

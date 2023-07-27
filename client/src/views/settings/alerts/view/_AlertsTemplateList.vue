@@ -530,12 +530,12 @@ export default {
       this.getHSStages()
     }
 
-    if (!this.userCRM) {
-      this.$router.replace({
-        name: 'Integrations',
-        params: {},
-      })
-    }
+    // if (!this.userCRM) {
+    //   this.$router.replace({
+    //     name: 'Integrations',
+    //     params: {},
+    //   })
+    // }
   },
   beforeUpdate() {
     if (this.templates.list.length) {

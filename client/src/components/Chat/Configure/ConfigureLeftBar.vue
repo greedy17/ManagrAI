@@ -230,15 +230,14 @@ export default {
     align-items: center;
   }
 }
+.base-select:hover {
+
+}
 .pointer {
   // color: $light-gray-blue;
   img {
     // filter: invert(45%);
   }
-}
-.pointer:hover {
-  // background-color: $white-green;
-  opacity: 60%;
 }
 .cursor-color {
   color: $light-gray-blue;

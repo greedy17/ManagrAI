@@ -1,12 +1,10 @@
 from rest_framework import serializers
 
-from managr.salesforce.serializers import SObjectFieldSerializer
 from .models import (
     OrgCustomSlackFormInstance,
     OrganizationSlackIntegration,
     OrgCustomSlackForm,
     UserSlackIntegration,
-    FormField,
     CustomFormField,
 )
 
