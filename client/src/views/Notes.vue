@@ -269,7 +269,7 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-        this.$router.go()
+        // this.$router.go()
       } catch (e) {
         console.log(e)
         this.$toast('Error creating template', {
@@ -300,7 +300,7 @@ export default {
           bodyClassName: ['custom'],
         })
       } finally {
-        this.$router.go()
+        // this.$router.go()
       }
     },
     selectTemplate(template) {
@@ -317,7 +317,7 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-        this.$router.go()
+        // this.$router.go()
       } catch (e) {
         this.$toast('Error removing template', {
           timeout: 2000,

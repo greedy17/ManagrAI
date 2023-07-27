@@ -87,7 +87,7 @@
         }
       "
     >
-      <div class="workflow__modal" style="min-width: 20vw;">
+      <div class="workflow__modal" style="min-width: 20vw">
         <div class="workflow__modal__header">
           <h4>Meetings</h4>
         </div>
@@ -194,15 +194,19 @@
         }
       "
     >
-    <!-- modal-form confirm-form -->
-      <form v-if="true /*hasSlack*/" class="invite-form crm-form form-margin-small" style="height: 25vh;">
+      <!-- modal-form confirm-form -->
+      <form
+        v-if="true /*hasSlack*/"
+        class="invite-form crm-form form-margin-small"
+        style="height: 25vh"
+      >
         <div class="header-crm">
           <div class="flex-row-wrapper inner-crm">
-            <div class="flex-row-modal" style="margin: 0;">
+            <div class="flex-row-modal" style="margin: 0">
               <!-- <img src="@/assets/images/logo.png" class="logo" alt="" /> -->
               <h3 class="invite-form__title">Are you sure?</h3>
             </div>
-            <div class="flex-row-modal" style="margin: 0;">
+            <div class="flex-row-modal" style="margin: 0">
               <img
                 @click="closeDeleteModal"
                 src="@/assets/images/close.svg"
@@ -218,19 +222,30 @@
             </div>
           </div>
         </div>
-        <div class="flex-row-modal inner-crm" style="margin: 0; justify-content: flex-start; width: 90%;">
-          <h4 class="card-text" style="margin-left: 0; margin-top: 0; margin-bottom: 0.75rem;">
-            By clicking Delete, you will be removing 
+        <div
+          class="flex-row-modal inner-crm"
+          style="margin: 0; justify-content: flex-start; width: 90%"
+        >
+          <h4 class="card-text" style="margin-left: 0; margin-top: 0; margin-bottom: 0.75rem">
+            By clicking Delete, you will be removing
             {{ this.deleteAlert ? `${this.deleteAlert.title}` : 'this alert' }}.
           </h4>
         </div>
         <div class="invite-form__actions">
           <!-- <div style="width: 10vw;"></div> -->
-          <div class="confirm-cancel-container" style="width: 90%; margin-bottom: 0.6rem;">
-            <div class="img-border-modal cancel-button" @click="closeDeleteModal" style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem;">
+          <div class="confirm-cancel-container" style="width: 90%; margin-bottom: 0.6rem">
+            <div
+              class="img-border-modal cancel-button"
+              @click="closeDeleteModal"
+              style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem"
+            >
               Cancel
             </div>
-            <button class="img-border-modal red-button" @click="deleteWorkflow(deleteAlert.id)" style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem; margin-right: 5%;">
+            <button
+              class="img-border-modal red-button"
+              @click="deleteWorkflow(deleteAlert.id)"
+              style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem; margin-right: 5%"
+            >
               Delete
             </button>
           </div>
@@ -250,7 +265,7 @@
       </form>
     </Modal>
 
-    <template v-if="!templates.refreshing && (!isOnboarding || !user.isAdmin)">
+    <template v-if="!templates.refreshing">
       <!-- <transition name="fade">
       </transition> -->
       <!-- <div class="create-workflow-container" style="margin-top: 2rem;">
@@ -289,48 +304,48 @@
             <img style="height: 40px" src="@/assets/images/logo.png" />
           </div>
 
+          <div>
             <div>
-              <div>
-                <h4>
-                  {{ alert.title }}
-                </h4>
-                <div v-if="user.id !== alert.user" class="small-text">Created by Leadership</div>
-              </div>
-              <p class="card-text" @click="test(alert)">
-                Results: {{ alert && alert.sobjectInstances ? alert.sobjectInstances.length : 0 }}
-              </p>
+              <h4>
+                {{ alert.title }}
+              </h4>
+              <div v-if="user.id !== alert.user" class="small-text">Created by Leadership</div>
             </div>
-            <div class="separator"></div>
-            <div class="card__body__between">
-              <div class="row__">
-                <div class="tooltip">
-                  <button
-                    style="margin-right: 8px"
-                    :disabled="clicked.includes(alert.id) || !hasSlackIntegration"
-                    @click.stop="
-                      onRunAlertTemplateNow(alert.id, user.id !== alert.user ? true : false)
-                    "
-                    class="img-border"
-                  >
-                    <img src="@/assets/images/slackLogo.png" height="14px" alt="" />
-                  </button>
-                  <span class="tooltiptext">Send to Slack</span>
-                </div>
-
+            <p class="card-text" @click="test(alert)">
+              Results: {{ alert && alert.sobjectInstances ? alert.sobjectInstances.length : 0 }}
+            </p>
+          </div>
+          <div class="separator"></div>
+          <div class="card__body__between">
+            <div class="row__">
+              <div class="tooltip">
                 <button
-                  v-if="userCRM"
-                  @click="openList(alert)"
                   style="margin-right: 8px"
+                  :disabled="clicked.includes(alert.id) || !hasSlackIntegration"
+                  @click.stop="
+                    onRunAlertTemplateNow(alert.id, user.id !== alert.user ? true : false)
+                  "
                   class="img-border"
                 >
-                  <img
-                    src="@/assets/images/listed.svg"
-                    style="filter: invert(40%)"
-                    height="14px"
-                    alt=""
-                  />
+                  <img src="@/assets/images/slackLogo.png" height="14px" alt="" />
                 </button>
-                <!-- <button
+                <span class="tooltiptext">Send to Slack</span>
+              </div>
+
+              <button
+                v-if="userCRM"
+                @click="openList(alert)"
+                style="margin-right: 8px"
+                class="img-border"
+              >
+                <img
+                  src="@/assets/images/listed.svg"
+                  style="filter: invert(40%)"
+                  height="14px"
+                  alt=""
+                />
+              </button>
+              <!-- <button
                   class="img-border"
                   @click="editWorkflow(alert)"
                   v-if="user.id === alert.user"
@@ -342,30 +357,35 @@
                     alt=""
                   />
                 </button> -->
-                <button
-                  class="img-border"
-                  @click="openDeleteWorkflow(alert)"
-                  v-if="user.id === alert.user"
-                >
-                  <!-- <img
+              <button
+                class="img-border"
+                @click="openDeleteWorkflow(alert)"
+                v-if="user.id === alert.user"
+              >
+                <!-- <img
                     src="@/assets/images/trash.svg"
                     style="filter: invert(40%)"
                     height="14px"
                     alt=""
                   /> -->
-                  <img src="@/assets/images/chat-trash.svg" class="filtered-red" style="height: 14px" alt="" />
-                </button>
-              </div>
-              <div v-if="hasSlackIntegration" class="toggle-container">
-                <span>{{ alert.isActive ? 'On' : 'Off' }}</span>
-                <ToggleCheckBox
-                  @input="onToggleAlert(alert.id, alert.isActive)"
-                  v-model="alert.isActive"
-                  offColor="#aaaaaa"
-                  :onColor="'#41b883'"
+                <img
+                  src="@/assets/images/chat-trash.svg"
+                  class="filtered-red"
+                  style="height: 14px"
+                  alt=""
                 />
-              </div>
+              </button>
             </div>
+            <div v-if="hasSlackIntegration" class="toggle-container">
+              <span>{{ alert.isActive ? 'On' : 'Off' }}</span>
+              <ToggleCheckBox
+                @input="onToggleAlert(alert.id, alert.isActive)"
+                v-model="alert.isActive"
+                offColor="#aaaaaa"
+                :onColor="'#41b883'"
+              />
+            </div>
+          </div>
         </div>
 
         <!-- <div v-if="zoomChannel" class="card">
@@ -426,28 +446,20 @@
             <img class="gray-logo" style="height: 40px" src="@/assets/images/logo.png" />
           </div>
 
-            <div>
-              <h4>{{ config.title }}</h4>
-              <p style="margin-top: 0.25rem;" class="card-text">{{ config.subtitle }}</p>
-            </div>
-            <div class="separator"></div>
-            <div
-              v-if="config.title !== 'Empty Field'"
-              class="card__body__between"
-            >
-              <p></p>
-              <button @click="repCheck(config)" class="white_button">Activate</button>
-            </div>
+          <div>
+            <h4>{{ config.title }}</h4>
+            <p style="margin-top: 0.25rem" class="card-text">{{ config.subtitle }}</p>
+          </div>
+          <div class="separator"></div>
+          <div v-if="config.title !== 'Empty Field'" class="card__body__between">
+            <p></p>
+            <button @click="repCheck(config)" class="white_button">Activate</button>
+          </div>
 
-            <div v-else class="card__body__between">
-              <p></p>
-              <button
-                @click="repCheck(config)"
-                class="white_button"
-              >
-                Activate
-              </button>
-              <!-- <div v-else class="tooltip-left">
+          <div v-else class="card__body__between">
+            <p></p>
+            <button @click="repCheck(config)" class="white_button">Activate</button>
+            <!-- <div v-else class="tooltip-left">
                 <img
                   class=""
                   style="filter: invert(40%)"
@@ -457,7 +469,7 @@
                 />
                 <small class="tooltiptext-left">Upgrade your plan</small>
               </div> -->
-            </div>
+          </div>
         </div>
 
         <!-- <div v-if="!hasRecapChannel && userLevel !== 'REP' && hasSlackIntegration" class="card">
@@ -511,9 +523,9 @@
       <div class="alert_cards" v-if="editing"></div>
     </template>
 
-    <div v-else-if="isOnboarding && user.isAdmin">
+    <!-- <div v-else-if="isOnboarding && user.isAdmin">
       <Onboarder @refresh-workflows="refreshWorkflows" />
-    </div>
+    </div> -->
 
     <div class="center-loader" v-else>
       <Loader style="margin-top: 44vh" loaderText="Gathering your workflows" />
@@ -559,7 +571,7 @@ export default {
     },
     switchBuildCustom: {
       type: Function,
-    }
+    },
   },
   data() {
     return {
@@ -606,12 +618,12 @@ export default {
       this.getHSStages()
     }
 
-    if (!this.userCRM) {
-      this.$router.replace({
-        name: 'Integrations',
-        params: {},
-      })
-    }
+    // if (!this.userCRM) {
+    //   this.$router.replace({
+    //     name: 'Integrations',
+    //     params: {},
+    //   })
+    // }
   },
   beforeUpdate() {
     if (this.templates.list.length) {
@@ -622,6 +634,9 @@ export default {
     test(log) {
       console.log('log', log)
     },
+    refreshTemplates() {
+      this.templates.refresh()
+    },
     repCheck(config) {
       console.log('this.hasSlackIntegration', this.hasSlackIntegration)
       if (this.hasSlackIntegration) {
@@ -629,11 +644,11 @@ export default {
         return
       }
       if (
-        (config.title === 'Large Opportunities' ||
+        config.title === 'Large Opportunities' ||
         config.title === 'Large Deals' ||
         config.title === 'Empty Field' ||
-        config.title === 'Upcoming Next Step') 
-        || this.user.userLevel === 'MANAGR'
+        config.title === 'Upcoming Next Step' ||
+        this.user.userLevel === 'MANAGR'
       ) {
         this.goToWorkflow(config.title)
         // if (this.user.userLevel === 'MANAGER') {
@@ -650,38 +665,18 @@ export default {
     },
     async saveRepWorkflow(config) {
       const newConfigs = config.newConfigs[0]
-      // const operandIden = config.newGroups[0].newOperands[0].operandIdentifier
-      if (
-        newConfigs.alertTargets.length
-      ) {
+      if (newConfigs.alertTargets.length) {
         try {
-          const res = await AlertTemplate.api.createAlertTemplate({
-            ...config,
-            user: this.user.id,
-            directToUsers: true, // this.directToUsers,
-          })
-
-          if (res.status === 400 && res.data.message) {
-            this.$toast(res.data.message, {
-              timeout: 2000,
-              position: 'top-left',
-              type: 'error',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
+          const res = await AlertTemplate.api
+            .createAlertTemplate({
+              ...config,
+              user: this.user.id,
+              directToUsers: true,
             })
-            return
-          }
-
-          this.handleUpdate()
-
-          this.$toast('Workflow saved Successfully', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-          this.$router.go()
+            .then((response) => {
+              this.templates.refresh()
+              this.handleUpdate()
+            })
         } catch (e) {
           console.log('e', e)
           this.$toast(`Something went wrong. Please try again.`, {
@@ -719,10 +714,6 @@ export default {
       this.confirmDeleteModal = false
     },
     async deleteWorkflow(id) {
-      if (!id) {
-        return
-      }
-      this.deletedTitle(id)
       try {
         await AlertTemplate.api.deleteAlertTemplate(id)
       } catch (e) {
@@ -734,10 +725,6 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-      } finally {
-        // this.editingWorkflow = false
-        // this.creatingTemplate = false
-        this.$router.go()
       }
     },
     deletedTitle(id) {
@@ -1772,7 +1759,7 @@ a {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  width: 94%
+  width: 94%;
 }
 .img-border-modal {
   // @include gray-text-button();

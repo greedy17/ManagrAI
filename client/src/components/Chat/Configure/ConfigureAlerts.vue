@@ -9,17 +9,19 @@
       "
       dimmed
     >
-      <div v-if="true /*hasSlack*/" class="invite-form crm-form form-margin-small" style="justify-content: flex-start;">
+      <div
+        v-if="true /*hasSlack*/"
+        class="invite-form crm-form form-margin-small"
+        style="justify-content: flex-start"
+      >
         <div class="header-crm">
           <div class="flex-row-wrapper inner-crm">
-            <div class="flex-row-modal" style="margin: 0;">
-              <!-- <img src="@/assets/images/logo.png" class="logo" alt="" /> -->
+            <div class="flex-row-modal" style="margin: 0">
               <h3 class="invite-form__title">
-                <!-- {{formatTemplateName(templateName)}} -->
-                {{templateName === 'LogZoom' ? formatTemplateName(templateName) : 'Build List'}}
+                {{ templateName === 'LogZoom' ? formatTemplateName(templateName) : 'Build List' }}
               </h3>
             </div>
-            <div class="flex-row-modal" style="margin: 0;">
+            <div class="flex-row-modal" style="margin: 0">
               <img
                 @click="closePopularModal"
                 src="@/assets/images/close.svg"
@@ -35,156 +37,190 @@
             </div>
           </div>
         </div>
-        <div class="flex-row-modal inner-crm" style="margin: 0; justify-content: flex-start; width: 90%; height: 45vh; overflow-y: auto; border: none;">
+        <div
+          class="flex-row-modal inner-crm"
+          style="
+            margin: 0;
+            justify-content: flex-start;
+            width: 90%;
+            height: 45vh;
+            overflow-y: auto;
+            border: none;
+          "
+        >
           <div class="outer-height" v-if="templateName === 'CloseDatePassed'">
-            <CloseDatePassed 
+            <CloseDatePassed
               :config="
-                userCRM === 'HUBSPOT' ? allConfigs.CLOSE_DATE_PASSED_HUBSPOT : allConfigs.CLOSE_DATE_PASSED
+                userCRM === 'HUBSPOT'
+                  ? allConfigs.CLOSE_DATE_PASSED_HUBSPOT
+                  : allConfigs.CLOSE_DATE_PASSED
               "
-              :canSave="canSaveWorkflow" 
+              :canSave="canSaveWorkflow"
               :closePopularModal="closePopularModal"
-              :saveWorkflow="saveWorkflow" 
-              :noRenderHeader="true" 
-              :closeBuilder="closeBuilder" 
+              :saveWorkflow="saveWorkflow"
+              :noRenderHeader="true"
+              :closeBuilder="closeBuilder"
+              @refresh-configs="refreshConfigs"
             />
           </div>
           <div class="outer-height" v-if="templateName === 'UpcomingNextStep'">
-            <NextStepDate 
+            <NextStepDate
               :config="
-                userCRM === 'HUBSPOT' ? allConfigs.UPCOMING_NEXT_STEP_HUBSPOT : allConfigs.UPCOMING_NEXT_STEP
+                userCRM === 'HUBSPOT'
+                  ? allConfigs.UPCOMING_NEXT_STEP_HUBSPOT
+                  : allConfigs.UPCOMING_NEXT_STEP
               "
-              :canSave="canSaveWorkflow" 
+              :canSave="canSaveWorkflow"
               :closePopularModal="closePopularModal"
-              :saveWorkflow="saveWorkflow" 
-              :noRenderHeader="true" 
-              :closeBuilder="closeBuilder" 
+              :saveWorkflow="saveWorkflow"
+              :noRenderHeader="true"
+              :closeBuilder="closeBuilder"
+              @refresh-configs="refreshConfigs"
             />
           </div>
           <div class="outer-height" v-if="templateName === 'LargeOpportunities'">
-            <LargeOpps 
+            <LargeOpps
               :config="
-                userCRM === 'HUBSPOT' ? allConfigs.LARGE_DEALS_HUBSPOT : allConfigs.LARGE_OPPORTUNITIES
+                userCRM === 'HUBSPOT'
+                  ? allConfigs.LARGE_DEALS_HUBSPOT
+                  : allConfigs.LARGE_OPPORTUNITIES
               "
-              :canSave="canSaveWorkflow" 
+              :canSave="canSaveWorkflow"
               :closePopularModal="closePopularModal"
-              :saveWorkflow="saveWorkflow" 
-              :noRenderHeader="true" 
-              :closeBuilder="closeBuilder" 
+              :saveWorkflow="saveWorkflow"
+              :noRenderHeader="true"
+              :closeBuilder="closeBuilder"
+              @refresh-configs="refreshConfigs"
             />
           </div>
           <div class="outer-height" v-if="templateName === 'EmptyField'">
-            <EmptyField 
+            <EmptyField
               :config="
                 userCRM === 'HUBSPOT' ? allConfigs.EMPTY_FIELD_HUBSPOT : allConfigs.EMPTY_FIELD
               "
-              :canSave="canSaveWorkflow" 
+              :canSave="canSaveWorkflow"
               :closePopularModal="closePopularModal"
-              :saveWorkflow="saveWorkflow" 
-              :noRenderHeader="true" 
-              :closeBuilder="closeBuilder" 
+              :saveWorkflow="saveWorkflow"
+              :noRenderHeader="true"
+              :closeBuilder="closeBuilder"
+              @refresh-configs="refreshConfigs"
             />
           </div>
           <div class="outer-height" v-if="templateName === 'ClosingThisMonth'">
-            <ClosingThisMonth 
+            <ClosingThisMonth
               :config="
-                userCRM == 'HUBSPOT' ? allConfigs.CLOSING_THIS_MONTH_HUBSPOT : allConfigs.CLOSING_THIS_MONTH
+                userCRM == 'HUBSPOT'
+                  ? allConfigs.CLOSING_THIS_MONTH_HUBSPOT
+                  : allConfigs.CLOSING_THIS_MONTH
               "
-              :canSave="canSaveWorkflow" 
+              :canSave="canSaveWorkflow"
               :closePopularModal="closePopularModal"
-              :saveWorkflow="saveWorkflow" 
-              :noRenderHeader="true" 
-              :closeBuilder="closeBuilder" 
+              :saveWorkflow="saveWorkflow"
+              :noRenderHeader="true"
+              :closeBuilder="closeBuilder"
+              @refresh-configs="refreshConfigs"
             />
           </div>
           <div class="outer-height" v-if="templateName === 'ClosingNextMonth'">
-            <ClosingNextMonth 
+            <ClosingNextMonth
               :config="
-                userCRM == 'HUBSPOT' ? allConfigs.CLOSING_NEXT_MONTH_HUBSPOT : allConfigs.CLOSING_NEXT_MONTH
+                userCRM == 'HUBSPOT'
+                  ? allConfigs.CLOSING_NEXT_MONTH_HUBSPOT
+                  : allConfigs.CLOSING_NEXT_MONTH
               "
-              :canSave="canSaveWorkflow" 
+              :canSave="canSaveWorkflow"
               :closePopularModal="closePopularModal"
-              :saveWorkflow="saveWorkflow" 
-              :noRenderHeader="true" 
-              :closeBuilder="closeBuilder" 
+              :saveWorkflow="saveWorkflow"
+              :noRenderHeader="true"
+              :closeBuilder="closeBuilder"
+              @refresh-configs="refreshConfigs"
             />
           </div>
           <div class="outer-height" v-if="templateName === 'ClosingThisQuarter'">
-            <ClosingThisQuarter 
-              :config="
-                allConfigs.CLOSING_THIS_QUARTER
-              "
-              :canSave="canSaveWorkflow" 
+            <ClosingThisQuarter
+              :config="allConfigs.CLOSING_THIS_QUARTER"
+              :canSave="canSaveWorkflow"
               :closePopularModal="closePopularModal"
-              :saveWorkflow="saveWorkflow" 
-              :noRenderHeader="true" 
-              :closeBuilder="closeBuilder" 
+              :saveWorkflow="saveWorkflow"
+              :noRenderHeader="true"
+              :closeBuilder="closeBuilder"
+              @refresh-configs="refreshConfigs"
             />
           </div>
           <div class="outer-height" v-if="templateName === 'TeamPipeline'">
-            <TeamPipeline 
+            <TeamPipeline
               :config="
                 userCRM === 'HUBSPOT' ? allConfigs.TEAM_PIPELINE_HUBSPOT : allConfigs.TEAM_PIPELINE
               "
-              :canSave="canSaveWorkflow" 
+              :canSave="canSaveWorkflow"
               :closePopularModal="closePopularModal"
-              :saveWorkflow="saveWorkflow" 
-              :noRenderHeader="true" 
-              :closeBuilder="closeBuilder" 
+              :saveWorkflow="saveWorkflow"
+              :noRenderHeader="true"
+              :closeBuilder="closeBuilder"
+              @refresh-configs="refreshConfigs"
             />
           </div>
           <div class="outer-height" v-if="templateName === 'CloseDateApproaching'">
-            <CloseDateApproaching 
+            <CloseDateApproaching
               :config="
-                userCRM === 'HUBSPOT' ? allConfigs.CLOSE_DATE_APPROACHING_HUBSPOT : allConfigs.CLOSE_DATE_APPROACHING
+                userCRM === 'HUBSPOT'
+                  ? allConfigs.CLOSE_DATE_APPROACHING_HUBSPOT
+                  : allConfigs.CLOSE_DATE_APPROACHING
               "
-              :canSave="canSaveWorkflow" 
+              :canSave="canSaveWorkflow"
               :closePopularModal="closePopularModal"
-              :saveWorkflow="saveWorkflow" 
-              :noRenderHeader="true" 
-              :closeBuilder="closeBuilder" 
+              :saveWorkflow="saveWorkflow"
+              :noRenderHeader="true"
+              :closeBuilder="closeBuilder"
+              @refresh-configs="refreshConfigs"
             />
           </div>
           <div class="outer-height" v-if="templateName === 'DealReview'">
-            <DealRotting 
+            <DealRotting
               :config="
                 userCRM === 'HUBSPOT' ? allConfigs.DEAL_REVIEW_HUBSPOT : allConfigs.DEAL_REVIEW
               "
-              :canSave="canSaveWorkflow" 
+              :canSave="canSaveWorkflow"
               :closePopularModal="closePopularModal"
-              :saveWorkflow="saveWorkflow" 
-              :noRenderHeader="true" 
-              :closeBuilder="closeBuilder" 
+              :saveWorkflow="saveWorkflow"
+              :noRenderHeader="true"
+              :closeBuilder="closeBuilder"
+              @refresh-configs="refreshConfigs"
             />
           </div>
           <div class="outer-height" v-if="templateName === '30DayPipeline'">
-            <UpdateForecast 
+            <UpdateForecast
               :config="
-                userCRM === 'HUBSPOT' ? allConfigs.THIRTY_DAY_PIPELINE_HUBSPOT : allConfigs.THIRTY_DAY_PIPELINE
+                userCRM === 'HUBSPOT'
+                  ? allConfigs.THIRTY_DAY_PIPELINE_HUBSPOT
+                  : allConfigs.THIRTY_DAY_PIPELINE
               "
-              :canSave="canSaveWorkflow" 
+              :canSave="canSaveWorkflow"
               :closePopularModal="closePopularModal"
-              :saveWorkflow="saveWorkflow" 
-              :noRenderHeader="true" 
-              :closeBuilder="closeBuilder" 
+              :saveWorkflow="saveWorkflow"
+              :noRenderHeader="true"
+              :closeBuilder="closeBuilder"
+              @refresh-configs="refreshConfigs"
             />
           </div>
           <div class="outer-height" v-if="templateName === 'LogZoom'">
-            <LogZoom 
-              :canSave="canSaveWorkflow" 
+            <LogZoom
+              :canSave="canSaveWorkflow"
               :closePopularModal="closePopularModal"
-              :saveWorkflow="saveWorkflow" 
-              :noRenderHeader="true" 
-              :closeBuilder="closeBuilder" 
+              :saveWorkflow="saveWorkflow"
+              :noRenderHeader="true"
+              :closeBuilder="closeBuilder"
               @close-modal="closePopularModal"
+              @refresh-configs="refreshConfigs"
             />
           </div>
           <div class="outer-height" v-if="templateName === 'ZoomRecap'">
-            <ZoomRecap 
-              :canSave="canSaveWorkflow" 
+            <ZoomRecap
+              :canSave="canSaveWorkflow"
               :closePopularModal="closePopularModal"
-              :saveWorkflow="saveWorkflow" 
-              :noRenderHeader="true" 
-              :closeBuilder="closeBuilder" 
+              :saveWorkflow="saveWorkflow"
+              :noRenderHeader="true"
+              :closeBuilder="closeBuilder"
             />
           </div>
         </div>
@@ -267,11 +303,11 @@
     </div> -->
 
     <div style="margin-top: 0rem" v-if="buildingCustom && !editingWorkflow && !creatingTemplate">
-      <BuildYourOwn 
-        :closeBuilder="closeBuilder" 
+      <BuildYourOwn
+        :closeBuilder="closeBuilder"
         :canSave="canSave"
-        ref="workflowBuilder" 
-        @can-save="setCanSave" 
+        ref="workflowBuilder"
+        @can-save="setCanSave"
         @save-item="saveWorkflow"
         @update-item="updateWorkflow"
         @delete-item="deleteWorkflow"
@@ -279,11 +315,11 @@
     </div>
 
     <div style="margin-top: 0rem" v-if="editingWorkflow && !buildingCustom && !creatingTemplate">
-      <AlertsEditPanel 
-        :closeBuilder="closeBuilder" 
-        :fromConfig="true" 
-        :alert="currentAlert" 
-        ref="editAlertsPanel" 
+      <AlertsEditPanel
+        :closeBuilder="closeBuilder"
+        :fromConfig="true"
+        :alert="currentAlert"
+        ref="editAlertsPanel"
         @save-item="saveWorkflow"
         @update-item="updateWorkflow"
         @delete-item="deleteWorkflow"
@@ -352,6 +388,7 @@
       :templates="templates"
       :config="config"
       :switchBuildCustom="switchBuildCustom"
+      ref="workflowConfigure"
     ></ConfigureWorkflows>
   </div>
 </template>
@@ -407,13 +444,12 @@ export default {
   props: {
     config: {
       type: Object,
-    }
+    },
   },
   data() {
     return {
       allConfigs,
       templates: CollectionManager.create({ ModelClass: AlertTemplate }),
-      // userOnboardingForm: new UserOnboardingForm({}),
       buildingCustom: false,
       canSave: false,
       editingWorkflow: false,
@@ -426,30 +462,15 @@ export default {
   },
 
   methods: {
+    refreshConfigs() {
+      this.closePopularModal()
+      this.$refs.workflowConfigure.refreshTemplates()
+    },
     closeBuilder() {
       this.buildingCustom = false
       this.editingWorkflow = false
       this.creatingTemplate = false
     },
-    // onboardComplete() {
-    //   this.userOnboardingForm.field.onboarding.value = false
-    //   User.api
-    //     .update(this.user.id, this.userOnboardingForm.value)
-    //     .then((response) => {
-    //       this.$store.dispatch('updateUser', User.fromAPI(response.data))
-    //       this.$router.push({ name: 'ListTemplates' })
-    //       this.$toast('Onboarding Complete!', {
-    //         timeout: 2000,
-    //         position: 'top-left',
-    //         type: 'success',
-    //         toastClassName: 'custom',
-    //         bodyClassName: ['custom'],
-    //       })
-    //     })
-    //     .catch((e) => {
-    //       console.log(e)
-    //     })
-    // },
     updateWorkflow() {
       this.$refs.editAlertsPanel.updateWorkflow()
       this.buildingCustom = false
@@ -463,9 +484,6 @@ export default {
         bodyClassName: ['custom'],
       })
     },
-    // deleteWorkflow(id) {
-    //   this.$emit('delete-workflow')
-    // },
     switchBuildCustom() {
       this.buildingCustom = !this.buildingCustom
     },
@@ -563,8 +581,9 @@ export default {
     async deleteWorkflow(id) {
       this.deletedTitle(id)
       try {
-        await AlertTemplate.api.deleteAlertTemplate(id)
-        this.$router.go()
+        await AlertTemplate.api.deleteAlertTemplate(id).then((response) => {
+          this.templates.refresh()
+        })
       } catch (e) {
         this.$toast('Error removing workflow', {
           timeout: 2000,
@@ -603,7 +622,7 @@ export default {
       this.templateName = alert
     },
     closePopularModal() {
-      this.popularWorkflowModal = false 
+      this.popularWorkflowModal = false
       this.creatingTemplate = false
     },
     saveWorkflow() {

@@ -141,7 +141,7 @@ export default {
       this.deletedTitle(id)
       try {
         await AlertTemplate.api.deleteAlertTemplate(id)
-        this.$router.go()
+        // this.$router.go()
       } catch (e) {
         this.$toast('Error removing workflow', {
           timeout: 2000,
