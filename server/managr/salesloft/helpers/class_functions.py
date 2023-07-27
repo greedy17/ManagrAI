@@ -1,14 +1,23 @@
-import jwt
-import pytz
-import math
 import logging
-import json
-import dateutil.parser
-
-from ..models import Cadence, CadenceAdapter, People, PeopleAdapter, SLAccount, SLAccountAdapter, SalesloftAccountAdapter,SalesloftAccount
-from ..serializers import CadenceSerializer, PeopleSerializer, SLAccountSerializer, SalesloftAccountSerializer
+from ..models import (
+    Cadence,
+    CadenceAdapter,
+    People,
+    PeopleAdapter,
+    SLAccount,
+    SLAccountAdapter,
+    SalesloftAccountAdapter,
+    SalesloftAccount,
+)
+from ..serializers import (
+    CadenceSerializer,
+    PeopleSerializer,
+    SLAccountSerializer,
+    SalesloftAccountSerializer,
+)
 
 logger = logging.getLogger("managr")
+
 
 def process_account(account, auth_account_id):
     user_res = SalesloftAccountAdapter.create_account(account, auth_account_id)
@@ -25,6 +34,7 @@ def process_account(account, auth_account_id):
         user_serializer.is_valid(raise_exception=True)
         user_serializer.save()
         return {"success": True}
+
 
 def sync_current_account_page(data, auth_account_id):
     failed = 0
