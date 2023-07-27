@@ -3,41 +3,6 @@ from . import models
 from django.forms import ModelForm, Textarea
 
 # Register your models here.
-
-
-class CustomZoomMeetingForm(ModelForm):
-    class Meta:
-        model = models.ZoomMeeting
-        fields = (
-            "zoom_account",
-            "account_id",
-            "operator",
-            "meeting_id",
-            "meeting_uuid",
-            "host_id",
-            "topic",
-            "type",
-            "start_time",
-            "end_time",
-            "duration",
-            "participants",
-            "participants_count",
-            "total_minutes",
-            "original_duration",
-        )
-
-
-class CustomZoomMeeting(admin.ModelAdmin):
-    form = CustomZoomMeetingForm
-    list_filter = ("zoom_account__user",)
-    list_display = (
-        "datetime_created",
-        "meeting_uuid",
-        "host_id",
-        "zoom_account",
-    )
-
-
 class CustomZoomAuthAccount(admin.ModelAdmin):
     model = models.ZoomAuthAccount
 
@@ -48,4 +13,3 @@ class CustomZoomAuthAccount(admin.ModelAdmin):
 
 
 admin.site.register(models.ZoomAuthAccount, CustomZoomAuthAccount)
-admin.site.register(models.ZoomMeeting, CustomZoomMeeting)
