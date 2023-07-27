@@ -109,14 +109,6 @@ cleanupDockerResources: &cleanupDockerResources
 #     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcedata-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 #     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcefields-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 
-installStep: &installStep
-  name: Install jq and the AWS CLI
-  script:
-    - apt-get update && apt-get install -y jq
-    - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-    - unzip awscliv2.zip
-    - ./aws/install
-
 
 fargateStagingDeployment_BuildImages: &fargateStagingDeployment_BuildImages
   name: Build Images for Staging
@@ -164,6 +156,10 @@ fargateStagingDeployment_Deploy: &fargateStagingDeployment_Deploy
   services:
     - docker
   script:
+    - apt-get update && apt-get install -y jq
+    - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    - unzip awscliv2.zip
+    - ./aws/install
     - source variables.txt
     - TASK_FAMILY="managr-app-task-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 
@@ -183,24 +179,6 @@ fargateStagingDeployment_Deploy: &fargateStagingDeployment_Deploy
     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-clearsfstaledata-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcedata-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcefields-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
-
-fargateStagingDeployment_UpdateTask: &fargateStagingDeployment_UpdateTask
-  name: Update Fargate Task Definition for Staging
-  image: atlassian/default-image:2
-  services:
-    - docker
-  script:
-    - export AWS_DEFAULT_REGION=us-east-1
-    - TASK_FAMILY="managr-app-task-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
-    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-processalltasks-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
-    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-processsyncqueues-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
-    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-runalerts-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
-    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-clearsfstaledata-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
-    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcedata-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
-    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcefields-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
-
-
-
 
 fargateProdDeployment: &fargateProdDeployment
   name: Deploy Prod to AWS Fargate
@@ -276,7 +254,6 @@ pipelines:
       - parallel:
           - step: *djangoTests
           - step: *e2eTests
-      - step: *installStep
       - step: *fargateStagingDeployment_BuildImages
         size: 4x
       # - step: *fargateStagingDeployment_UpdateTask
@@ -287,7 +264,6 @@ pipelines:
       - parallel:
           - step: *djangoTests
           - step: *e2eTests
-      - step: *installStep
       - step: *fargateProdDeployment
         size: 8x
 
