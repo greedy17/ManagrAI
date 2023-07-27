@@ -658,7 +658,6 @@ export default {
             integration_ids: [
               this.formOpen ? this.currentOpp.integration_id : this.chatData.integration_id,
             ],
-            chat_form_id: [this.formOpen ? null : this.chatData.form_id],
             from_workflow: false,
             workflow_title: 'None',
             stage_name: null,

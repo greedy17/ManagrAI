@@ -223,7 +223,8 @@ export default {
             if (response.status >= 400 && response.status < 500) {
               User.api
                 .addMessage({
-                  error: response.data.value,
+                  value: response.value,
+                  error: response.value,
                   user_type: 'bot',
                   conversation_id: this.conversation.id,
                   failed: true,
@@ -285,7 +286,8 @@ export default {
             if (response.status >= 400 && response.status < 500) {
               User.api
                 .addMessage({
-                  error: response.data.value,
+                  value: response.value,
+                  error: response.value,
                   user_type: 'bot',
                   conversation_id: this.conversation.id,
                   failed: true,
@@ -297,6 +299,7 @@ export default {
             } else if (response.status === 500) {
               User.api
                 .addMessage({
+                  value: 'Timeout error, try again',
                   error: 'Timeout error, try again',
                   user_type: 'bot',
                   conversation_id: this.conversation.id,
@@ -348,7 +351,8 @@ export default {
               console.log(response)
               User.api
                 .addMessage({
-                  error: response.data.value,
+                  value: response.value,
+                  error: response.value,
                   user_type: 'bot',
                   conversation_id: this.conversation.id,
                   failed: true,
@@ -360,6 +364,7 @@ export default {
             } else if (response.status === 500) {
               User.api
                 .addMessage({
+                  value: 'Timeout error, try again',
                   error: 'Timeout error, try again',
                   user_type: 'bot',
                   conversation_id: this.conversation.id,
@@ -394,7 +399,12 @@ export default {
         console.log(e)
         this.$emit('message-loading', false)
       } finally {
-        this.$emit('set-title', this.chatRes['resource'][0] || 'Uh-oh')
+        if (this.chatRes['resource']) {
+          this.$emit('set-title', this.chatRes['resource'][0])
+        } else {
+          this.$emit('set-title', 'Uh-oh')
+        }
+
         this.$emit('message-loading', false)
         this.scrollToBottom()
       }

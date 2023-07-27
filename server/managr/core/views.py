@@ -479,18 +479,22 @@ def submit_chat_prompt(request):
                 attempts += 1
                 continue
         except Exception as e:
+            print('I AM HERE:')
             logger.exception(f"Exception from Open AI response {e}")
             has_error = True
             message = (
                 " Looks like we ran into an issue with your prompt, try removing things like quotes and ampersands"
             )
-
+            res = {"value": f"There was an error processing chat submission: {message}"}
+            break
     if has_error:
-        res = {"value": f"There was an error processing chat submission: {message}"}
+        res = {"value": f"Error: {message}"}
         return Response(data=res, status=status.HTTP_400_BAD_REQUEST)
     if not has_error:
         res_text = (f"{resource.display_value} has been updated, please review",)
-    updated_data = json.dumps(cleaned_data)
+
+    if cleaned_data:
+        updated_data = json.dumps(cleaned_data)
     return Response(
         data={
             **r,
