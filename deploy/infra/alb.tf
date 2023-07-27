@@ -69,6 +69,9 @@ resource "aws_alb_listener" "front_end_https" {
     target_group_arn = aws_alb_target_group.app["prod"].id
     type             = "forward"
   }
+  timeout {
+    idle_timeout = 30  # Set the request timeout to 30 seconds
+  }
 }
 
 resource "tls_private_key" "managr" {
