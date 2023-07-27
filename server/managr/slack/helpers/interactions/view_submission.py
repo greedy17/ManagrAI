@@ -13,7 +13,6 @@ from managr.crm.exceptions import (
 )
 from managr.alerts.models import AlertInstance, AlertConfig
 from managr.organization.models import Contact, OpportunityLineItem, PricebookEntry
-from managr.crm.routes import adapter_routes as crm_routes
 from managr.core.background import (
     emit_create_calendar_event,
     emit_process_calendar_meetings,
@@ -36,11 +35,9 @@ from managr.slack.helpers.utils import (
     NO_OP,
     processor,
     block_finder,
-    check_contact_last_name,
     send_loading_screen,
 )
 from managr.crm.models import BaseOpportunity
-from managr.hubspot.routes import routes as hs_routes
 from managr.salesforce.routes import routes as model_routes
 from managr.salesforce.background import (
     _process_create_new_resource,

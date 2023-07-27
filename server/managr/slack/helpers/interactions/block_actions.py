@@ -485,46 +485,6 @@ def process_show_meeting_resource(payload, context):
 
 
 @processor(required_context=["w"])
-def process_show_meeting_chat_modal(payload, context):
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    user_id = context.get("u")
-    user = User.objects.get(id=user_id)
-    access_token = user.organization.slack_integration.access_token
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-    trigger_id = payload["trigger_id"]
-    data = {
-        "trigger_id": trigger_id,
-        "view": {
-            "type": "modal",
-            "callback_id": slack_const.MEETING___SUBMIT_CHAT_PROMPT,
-            "title": {"type": "plain_text", "text": f"Log Meeting"},
-            "submit": {"type": "plain_text", "text": "Submit"},
-            "blocks": get_block_set("chat_meeting_blockset", context=context),
-            "private_metadata": json.dumps(context),
-        },
-    }
-    try:
-        res = slack_requests.generic_request(url, data, access_token=access_token)
-    except InvalidBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except InvalidBlocksFormatException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except UnHandeledBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except InvalidAccessToken as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    return
-
-
-@processor(required_context=["w"])
 def process_meeting_selected_resource(payload, context):
     """opens a modal with the options to search or create"""
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
@@ -4431,7 +4391,6 @@ def handle_block_actions(payload):
         slack_const.ZOOM_MEETING__MEETING_DETAILS: process_meeting_details,
         slack_const.MEETING_REVIEW_SYNC_CALENDAR: process_sync_calendar,
         slack_const.MEETING_ATTACH_RESOURCE_MODAL: process_show_meeting_resource,
-        slack_const.MEETING__PROCESS_SHOW_CHAT_MODEL: process_show_meeting_chat_modal,
         slack_const.COMMAND_FORMS__GET_LOCAL_RESOURCE_OPTIONS: process_show_update_resource_form,
         slack_const.GET_CRM_RESOURCE_OPTIONS: process_show_update_resource_form,
         slack_const.PROCESS_SHOW_ALERT_UPDATE_RESOURCE_FORM: process_show_alert_update_resource_form,

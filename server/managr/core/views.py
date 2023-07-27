@@ -1842,8 +1842,11 @@ def process_transcript_to_summaries(transcript, user):
 def process_transcript(request):
     from managr.zoom.background import _process_frontend_transcript
 
-    task = _process_frontend_transcript(request)
-    return Response(data={"task_hash": task.task_hash}, status=status.HTTP_200_OK)
+    user = request.user
+    task = _process_frontend_transcript(
+        request, verbose_name=f"transcript-{user.email}-{uuid.uuid4()}"
+    )
+    return Response(data={"verbose_name": task.verbose_name}, status=status.HTTP_200_OK)
 
 
 @api_view(["post"])
