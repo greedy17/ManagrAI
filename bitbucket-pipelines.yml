@@ -278,7 +278,7 @@ pipelines:
           - step: *e2eTests
       - step: *installStep
       - step: *fargateStagingDeployment_BuildImages
-        size: 4x
+        size: 8x
       # - step: *fargateStagingDeployment_UpdateTask
       - step: *fargateStagingDeployment_Deploy
     master:
