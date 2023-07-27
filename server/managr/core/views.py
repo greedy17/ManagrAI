@@ -76,7 +76,6 @@ from managr.salesforce.cron import (
     queue_users_sf_fields,
 )
 from managr.hubspot.cron import queue_users_hs_fields, queue_users_hs_resource
-from managr.slack.models import OrgCustomSlackFormInstance
 from .nylas.models import NylasAccountStatusList
 from managr.utils.client import Client, Variable_Client
 from ..core import constants as core_consts
@@ -128,61 +127,9 @@ def name_list_processor(resource_list, chat_response_name):
     return most_matching
 
 
-def convert_date_string(date_string, value):
-    if value is None:
-        value = datetime.now().date()
-    else:
-        value = value.split("T")[0]
-    split_date_string = date_string.lower().split(" ")
-    time_key = None
-    number_key = 1
-    if any("push" in s for s in split_date_string) or any("move" in s for s in split_date_string):
-        for key in split_date_string:
-            if key in TIME_TO_NUMBER.keys():
-                time_key = TIME_TO_NUMBER[key]
-            if key in WORD_TO_NUMBER:
-                number_key = WORD_TO_NUMBER[key]
-    elif any(key in split_date_string for key in DAYS_TO_NUMBER.keys()):
-        for key in split_date_string:
-            if key in DAYS_TO_NUMBER.keys():
-                current = datetime.now()
-                start = current - timezone.timedelta(days=current.weekday())
-                day_value = start + timezone.timedelta(days=DAYS_TO_NUMBER[key])
-                if any("next" in s for s in split_date_string):
-                    day_value = day_value + timezone.timedelta(days=7)
-                return day_value
-    elif any("end" in s for s in split_date_string):
-        if any("week" in s for s in split_date_string):
-            current = datetime.strptime(value, "%Y-%m-%d")
-            start = current - timezone.timedelta(days=current.weekday())
-            return start + timezone.timedelta(days=4)
-        elif any("month" in s for s in split_date_string):
-            current = datetime.strptime(value, "%Y-%m-%d")
-            last_of_month = calendar.monthrange(current.year, current.month)[1]
-            return current.replace(day=last_of_month)
-    elif any("week" in s for s in split_date_string):
-        current = datetime.strptime(value, "%Y-%m-%d")
-        return current + timezone.timedelta(days=7)
-    if "back" in date_string:
-        new_value = datetime.strptime(value, "%Y-%m-%d") - timezone.timedelta(
-            days=(time_key * number_key)
-        )
-    else:
-        if time_key:
-            new_value = datetime.strptime(value, "%Y-%m-%d") + timezone.timedelta(
-                days=(time_key * number_key)
-            )
-        else:
-            try:
-                date_parsed = parse(date_string)
-                new_value = date_parsed
-            except Exception as e:
-                print(e)
-                new_value = value
-    return new_value
-
-
 def clean_prompt_return_data(data, fields, crm, resource=None):
+    from managr.core.utils import convert_date_string
+
     cleaned_data = dict(data)
     notes = cleaned_data.pop("meeting_comments", None)
     subject = cleaned_data.pop("meeting_type", None)
@@ -266,30 +213,6 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
     cleaned_data["meeting_type"] = subject
     # logger.info(f"CLEAN PROMPT DEBUGGER: {cleaned_data}")
     return cleaned_data
-
-
-def set_name_field(resource):
-    if resource in ["Opportunity", "Account"]:
-        return "Name"
-    elif resource == "Company":
-        return "Company name"
-    elif resource == "Deal":
-        return "Deal Name"
-    elif resource == "Contact":
-        return "Email"
-    return None
-
-
-def set_owner_field(resource, crm):
-    if resource in ["Opportunity", "Account", "Contact"] and crm == "SALESFORCE":
-        return "Owner ID"
-    elif resource == "Company":
-        return "Company owner"
-    elif resource == "Contact" and crm == "HUBSPOT":
-        return "Contact owner"
-    elif resource == "Deal":
-        return "Deal owner"
-    return None
 
 
 def correct_data_keys(data):
@@ -392,6 +315,7 @@ def submit_chat_prompt(request):
     from managr.salesforce.routes import routes as sf_routes
     from managr.hubspot.routes import routes as hs_routes
     from managr.core.exceptions import _handle_response, StopReasonLength
+    from managr.crm.utils import set_owner_field
 
     user = User.objects.get(id=request.data["user_id"])
     CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
@@ -765,165 +689,6 @@ def log_chat_meeting(request):
     serializer = MeetingWorkflowSerializer(instance=workflow)
     data = {"success": True, "workflow": serializer.data}
     return Response(data=data)
-
-
-# @api_view(["post"])
-# @permission_classes([permissions.IsAuthenticated])
-# def log_chat_meeting(request):
-#     from managr.salesforce.models import MeetingWorkflow
-#     from managr.meetings.serializers import MeetingZoomSerializer
-#     from managr.core.exceptions import _handle_response, StopReasonLength
-#     from managr.salesforce.routes import routes as sf_routes
-#     from managr.hubspot.routes import routes as hs_routes
-
-#     CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
-
-#     user = User.objects.get(id=request.data["user_id"])
-#     workflow_id = request.data["workflow_id"]
-#     resource_type = request.data["resource_type"]
-#     workflow = MeetingWorkflow.objects.get(id=workflow_id)
-#     workflow.save()
-
-#     prompt = request.data["prompt"]
-#     form_type = (
-#         "CREATE" if ("create" in prompt.lower() and "update" not in prompt.lower()) else "UPDATE"
-#     )
-#     form_template = user.team.team_forms.filter(form_type=form_type, resource=resource_type).first()
-#     form = OrgCustomSlackFormInstance.objects.create(
-#         template=form_template, user=user, update_source="chat", chat_submission=prompt
-#     )
-#     fields = form_template.custom_fields.all()
-#     field_list = list(fields.values_list("label", flat=True))
-#     full_prompt = core_consts.OPEN_AI_UPDATE_PROMPT(field_list, prompt, datetime.now())
-#     url = core_consts.OPEN_AI_COMPLETIONS_URI
-#     attempts = 1
-#     has_error = False
-#     resource_check = None
-#     token_amount = 500
-#     timeout = 60.0
-#     while True:
-#         message = None
-#         try:
-#             body = core_consts.OPEN_AI_COMPLETIONS_BODY(
-#                 user.email, full_prompt, token_amount=token_amount, top_p=0.1
-#             )
-#             Client = Variable_Client(timeout)
-#             with Client as client:
-#                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
-#                 r = _handle_response(r)
-#                 choice = r["choices"][0]
-#                 text = choice["text"]
-#                 data = clean_prompt_string(text)
-#                 name_field = set_name_field(resource_type, )
-#                 data = correct_data_keys(data)
-#                 resource_check = data[name_field].lower().split(" ")
-#                 lowered_type = resource_type.lower()
-#                 resource = None
-#                 if lowered_type in resource_check:
-#                     resource_check.remove(lowered_type)
-#                 if form_type == "CREATE" or len(resource_check):
-#                     if form_type == "UPDATE":
-#                         resource = None
-#                         for word in resource_check:
-#                             if resource_type not in ["Contact", "Lead"]:
-#                                 query = (
-#                                     CRM_SWITCHER[user.crm][resource_type]["model"]
-#                                     .objects.for_user(user)
-#                                     .filter(name__icontains=word)
-#                                 )
-#                                 if query:
-#                                     if len(query) > 1:
-#                                         most_matching = name_list_processor(query, resource_check)
-#                                         resource = query.filter(name=most_matching).first()
-#                                     else:
-#                                         resource = query.first()
-#                                     break
-#                             else:
-#                                 query = (
-#                                     CRM_SWITCHER[user.crm][resource_type]["model"]
-#                                     .objects.for_user(user)
-#                                     .filter(email__icontains=word)
-#                                 )
-#                                 if query:
-#                                     if len(query) > 1:
-#                                         most_matching = name_list_processor(query, resource_check)
-#                                         resource = query.filter(email=most_matching).first()
-#                                     else:
-#                                         resource = query.first()
-#                                     break
-#                         if resource:
-#                             form.resource_id = str(resource.id)
-#                             form.save()
-#                         else:
-#                             has_error = True
-#                             break
-#                     else:
-#                         if user.crm == "SALESFORCE":
-#                             if resource_type in ["Opportunity", "Account"]:
-#                                 data["Name"] = resource_check
-#                         else:
-#                             if resource_type == "Deal":
-#                                 data["Deal Name"] = resource_check
-#                         resource = None
-#                     owner_field = set_owner_field(resource_type, user.crm)
-#                     data[owner_field] = user.crm_account.crm_id
-#                     swapped_field_data = swap_submitted_data_labels(data, fields)
-#                     cleaned_data = clean_prompt_return_data(
-#                         swapped_field_data, fields, user.crm, resource
-#                     )
-#                     form.save_form(cleaned_data, False)
-#                 else:
-#                     has_error = True
-#                 break
-
-#         except StopReasonLength:
-#             if token_amount <= 2000:
-#                 message = "Look like your prompt message is too long to process. Try removing white spaces!",
-#                 break
-#             else:
-#                 token_amount += 500
-#                 continue
-#         except httpx.ReadTimeout as e:
-#             timeout += 30.0
-#             if timeout >= 120.0:
-#                 has_error = True
-#                 message = "There was an error communicating with Open AI"
-#                 logger.exception(f"Read timeout from Open AI {e}")
-#                 break
-#             else:
-#                 attempts += 1
-#                 continue
-#         except Exception as e:
-#             logger.exception(f"Exception from Open AI response {e}")
-#             has_error = True
-#             message = (
-#                 f"Looks like we ran into an issue with your prompt, try removing things like quotes and ampersands"
-#                 if resource_check is None
-#                 else f"We could not find a {resource_type} named {resource_check} because of {e}"
-#             )
-#             break
-#     if has_error:
-#         if workflow_id:
-#             logger.exception(
-#                 f"There was an error processing chat submission for workflow {workflow} {message}"
-#             )
-#             workflow.failed_task_description.append(
-#                 f"There was an error processing chat submission {message}"
-#             )
-#             workflow.save()
-#         return Response(data={"data": message, 'failed': True})
-
-#     if not has_error:
-
-#         if workflow_id:
-#             if not has_error:
-#                 form.workflow = workflow
-#                 form.update_source = "meeting (chat)"
-#                 form.save()
-#                 workflow.resource_type = resource_type
-#                 workflow.resource_id = str(resource.id)
-#                 workflow.save()
-#     return Response(data={**r, "data": cleaned_data,})
 
 
 def field_syncs():

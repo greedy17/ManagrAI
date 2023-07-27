@@ -877,23 +877,12 @@ def deal_review_data_builder(resource_data, api_name_list, crm, form_data, field
     return value_dict
 
 
-def set_name_field(resource):
-    if resource in ["Opportunity", "Account"]:
-        return f"{resource} Name"
-    elif resource == "Company":
-        return "Company name"
-    elif resource == "Deal":
-        return "Deal Name"
-    elif resource == "Contact":
-        return "Email"
-    return None
-
-
 @background(schedule=0)
 @slack_api_exceptions(rethrow=0)
 def _process_alert_send_deal_review(payload, context):
     from managr.core import constants as core_consts
     from managr.utils.client import Client
+    from managr.crm.utils import set_name_field
 
     user_slack_id = payload.get("user", {}).get("id", None)
     user = User.objects.filter(slack_integration__slack_id=user_slack_id).first()
