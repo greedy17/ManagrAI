@@ -5,6 +5,7 @@ resource "aws_alb" "main" {
   tags = {
     "app" = "managr"
   }
+  enable_http2 = true
 }
 
 resource "random_string" "alb_prefix" {
