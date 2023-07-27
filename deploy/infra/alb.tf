@@ -22,7 +22,6 @@ resource "aws_alb_target_group" "app" {
   protocol    = "HTTP"
   vpc_id      = aws_vpc.main.id
   target_type = "ip"
-
   health_check {
     healthy_threshold   = "3"
     interval            = "30"
@@ -33,7 +32,8 @@ resource "aws_alb_target_group" "app" {
     unhealthy_threshold = "2"
   }
 
-  deregistration_delay = 0
+
+  deregistration_delay = 30
 
   tags = {
     "app" = "managr"
@@ -69,9 +69,6 @@ resource "aws_alb_listener" "front_end_https" {
   default_action {
     target_group_arn = aws_alb_target_group.app["prod"].id
     type             = "forward"
-  }
-  timeout {
-    idle_timeout = 30  # Set the request timeout to 30 seconds
   }
 }
 
