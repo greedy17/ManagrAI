@@ -1693,10 +1693,6 @@ header {
   }
 }
 
-.pointer {
-  cursor: pointer;
-}
-
 .flex-row-between {
   display: flex;
   flex-direction: row;

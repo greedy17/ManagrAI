@@ -241,6 +241,7 @@
         <ConfigureModal
           :configPage="configPage"
           @change-config-page="changeConfigPage"
+          @close-config="handleCancel"
           ref="configModal"
         />
       </div>
