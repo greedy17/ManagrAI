@@ -268,25 +268,6 @@
         </div>
       </div> -->
     </Modal>
-    <!-- <AlertsHeader
-      v-if="!isOnboarding"
-      page="workflows"
-      title="Workflows"
-      :saving="false"
-      :currentAlert="currentAlert"
-      :creating="buildingCustom"
-      :editing="editingWorkflow"
-      :canSave="canSave"
-      :isPaid="isPaid"
-      :deleteId="currentAlert ? currentAlert.id : ''"
-      :subtitle="currentAlert ? currentAlert.title : ''"
-      :buttonText="'Create Workflow'"
-      @cancel="closeBuilder"
-      @save-item="saveWorkflow"
-      @update-item="updateWorkflow"
-      @delete-item="deleteWorkflow"
-      @button-action="switchBuildCustom"
-    /> -->
 
     <!-- <div class="onboarding-header" v-else>
       <div>
@@ -400,7 +381,6 @@ import AlertTemplate from '@/services/alerts/'
 import BuildYourOwn from '@/views/settings/alerts/create/BuildYourOwn'
 import AlertsEditPanel from '@/views/settings/alerts/view/_AlertsEditPanel'
 import User from '@/services/users'
-import AlertsHeader from '@/components/AlertsHeader'
 import ConfigureWorkflows from './ConfigureWorkflows.vue'
 import allConfigs from '@/views/settings/alerts/configs'
 import LargeOpps from '@/views/settings/alerts/create/templates/LargeOpps.vue'
@@ -424,7 +404,6 @@ export default {
     CollectionManager,
     BuildYourOwn,
     AlertsEditPanel,
-    AlertsHeader,
     ConfigureWorkflows,
     LargeOpps,
     CloseDatePassed,

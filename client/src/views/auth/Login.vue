@@ -511,6 +511,9 @@ label {
   border: 1px solid #e8e8e8;
   border-radius: 4px;
 }
+::v-deep .input-form {
+  width: 23vw;
+}
 ::v-deep .input-form__active {
   border: none;
 }

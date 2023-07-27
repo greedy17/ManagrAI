@@ -1989,13 +1989,6 @@
         </template>
         <template v-else-if="page === 'SlackForm'">
           <div>
-            <!-- <CustomSlackForm
-              :formType="selectedSlackForms.formType"
-              :customForm="selectedSlackForms"
-              :resource="selectedSlackForms.resource"
-              :fromAdmin="true"
-              :goBackAdmin="goBack"
-            /> -->
             <button class="green_button back" @click="goBack">Back</button>
             <div class="invite-list__container">
               <Multiselect
@@ -2317,12 +2310,10 @@ import Loader from '@/components/Loader'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import Invite from '../settings/_pages/_Invite'
 import { decryptData } from '../../encryption'
-// import CustomSlackForm from '@/views/settings/CustomSlackForm'
 
 export default {
   name: 'Staff',
   components: {
-    // CustomSlackForm,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     PipelineLoader: () => import(/* webpackPrefetch: true */ '@/components/PipelineLoader'),
