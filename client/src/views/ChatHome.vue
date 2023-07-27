@@ -876,8 +876,6 @@ export default {
       this.chatModalOpen = !this.chatModalOpen
       if (data && !formOpen) {
         let jsonString = data.data
-        jsonString = jsonString.replace(/'/g, '"')
-        jsonString = jsonString.replace(/\bNone\b/g, 'null')
         jsonString = JSON.parse(jsonString)
         this.formData = jsonString
         this.chatData = data

@@ -490,12 +490,12 @@ def submit_chat_prompt(request):
         return Response(data=res, status=status.HTTP_400_BAD_REQUEST)
     if not has_error:
         res_text = (f"{resource.display_value} has been updated, please review",)
-
+    updated_data = json.dumps(cleaned_data)
     return Response(
         data={
             **r,
             "form": form.id,
-            "data": cleaned_data,
+            "data": updated_data,
             "resource": {resource.display_value},
             "res": res_text,
             "resourceId": resource.id,
