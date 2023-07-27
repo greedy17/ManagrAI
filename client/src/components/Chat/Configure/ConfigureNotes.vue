@@ -207,27 +207,6 @@
         </div>
       </form>
     </Modal>
-
-    <!-- <AlertsHeader
-      page="notes"
-      :pulseLoading="false"
-      title="Templates"
-      :titlesLength="noteTemplates.length"
-      :creating="creating"
-      :editing="editing"
-      :canSave="!!noteSubject && !!noteBody"
-      :isPaid="isPaid"
-      :templates="noteTemplates"
-      :deleteId="selectedTemplate ? selectedTemplate.id : ''"
-      :subtitle="selectedTemplate ? selectedTemplate.title : ''"
-      buttonText="Create Template"
-      @cancel="cancel"
-      @save-item="createTemplate"
-      @update-item="updateTemplate"
-      @delete-item="removeTemplate"
-      @button-action="createNote"
-    /> -->
-
     
     <div class="integrations__cards">
       <div :key="i" v-for="(note, i) in noteTemplates">
@@ -408,7 +387,6 @@
 <script>
 import User from '@/services/users'
 import PipelineLoader from '@/components/PipelineLoader'
-import AlertsHeader from '@/components/AlertsHeader'
 import { SObjects } from '@/services/salesforce'
 import { quillEditor } from 'vue-quill-editor'
 import 'quill/dist/quill.core.css'
@@ -420,7 +398,6 @@ export default {
   components: {
     quillEditor,
     PipelineLoader,
-    AlertsHeader,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
   },
   data() {

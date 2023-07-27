@@ -546,7 +546,6 @@ import ToggleCheckBox from '@thinknimble/togglecheckbox'
  */
 import { CollectionManager } from '@thinknimble/tn-models'
 import SlackOAuth from '@/services/slack'
-import Onboarder from '@/views/settings/Onboarder'
 // import { UserConfigForm } from '@/services/users/forms'
 import User from '@/services/users'
 import { ObjectField } from '@/services/crm'
@@ -558,7 +557,6 @@ export default {
   name: 'ConfigureWorkflows',
   components: {
     ToggleCheckBox,
-    Onboarder,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
   },

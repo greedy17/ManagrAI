@@ -450,7 +450,6 @@ export default {
         }
       } else if (val.value.toLowerCase().includes('open form')) {
         if (this.currentOpp) {
-          console.log('MADE IT TO STEP ONE')
           this.$emit('open-form', this.currentOpp.secondary_data, true)
           this.actionSelected = false
           this.textBoxType = 'Open Form'

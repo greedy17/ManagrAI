@@ -407,13 +407,10 @@
 </template>
 <script>
 import ChatTextBox from '../Chat/ChatTextBox.vue'
-import Input from '../forms/inputs/Input.vue'
 export default {
   name: 'SummariesMainContent',
   components: {
     ChatTextBox,
-    Input
-
   },
   data() {
     return {
