@@ -79,11 +79,7 @@
         </router-link>
 
         <div style="height: 100%" class="align-left">
-          <router-link
-            class="side-wrapper"
-            active-class="active"
-            :to="{ name: 'PRSummaries' }"
-          >
+          <router-link class="side-wrapper" active-class="active" :to="{ name: 'PRSummaries' }">
             <label class="side-icon side-workflow" style="margin: 8px 0 0 0">
               <span class="side-tooltip-single" style="top: -5px; width: 80px">Summaries</span>
               <img
@@ -95,11 +91,7 @@
               />
             </label>
           </router-link>
-          <router-link
-            class="side-wrapper"
-            active-class="active"
-            :to="{ name: 'PRClipReport' }"
-          >
+          <router-link class="side-wrapper" active-class="active" :to="{ name: 'PRClipReport' }">
             <label class="side-icon side-workflow" style="margin: 8px 0 0 0">
               <span class="side-tooltip-single" style="top: -5px; width: 80px">Clip Report</span>
               <img
@@ -128,13 +120,13 @@
             </label>
           </div>
         </div>
-        <router-link :to="{ name: 'Login' }" style="margin-top: auto;">
-            <div style="margin-left: 5px">
-              <img @click="logOut" src="@/assets/images/logout.svg" alt="" height="16px" />
-            </div>
-          </router-link>
+        <router-link :to="{ name: 'Login' }" style="margin-top: auto">
+          <div style="margin-left: 5px">
+            <img @click="logOut" src="@/assets/images/logout.svg" alt="" height="16px" />
+          </div>
+        </router-link>
       </nav>
-      <nav id="nav" v-else>
+      <!-- <nav id="nav" v-else>
         <router-link v-if="userCRM" :to="{ name: 'ListTemplates' }">
           <div class="logo">
             <img style="height: 40px" src="@/assets/images/logo.png" />
@@ -280,9 +272,7 @@
   
           <div @mouseenter="openModal()" style="margin-left: 2px" class="side-wrapper">
             <label class="side-icon side-workflow" style="">
-              <!-- <span style="margin-top: 8px" class="side-tooltip">
-                <div>Chatbot 💬</div>
-              </span> -->
+             
               <img
                 src="@/assets/images/chat.svg"
                 class="side-img"
@@ -345,7 +335,7 @@
             </div>
           </router-link>
         </div>
-      </nav>
+      </nav> -->
     </div>
   </div>
 </template>
