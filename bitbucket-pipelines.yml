@@ -278,9 +278,11 @@ pipelines:
           - step: *e2eTests
       - step: *installStep
       - step: *fargateStagingDeployment_BuildImages
-        size: 8x
+        size: 4x
       # - step: *fargateStagingDeployment_UpdateTask
       - step: *fargateStagingDeployment_Deploy
+        size: 4x
+
     master:
       - parallel:
           - step: *djangoTests
@@ -302,4 +304,4 @@ definitions:
         POSTGRES_USER: managr
         POSTGRES_PASSWORD: manager
     docker:
-      memory: 2048
+      memory: 4096
