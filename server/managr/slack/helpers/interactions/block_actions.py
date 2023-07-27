@@ -14,7 +14,6 @@ from managr.slack.helpers.utils import (
     processor,
     block_finder,
     generate_call_block,
-    check_contact_last_name,
     action_with_params,
     send_loading_screen,
     USER_APP_OPTIONS,
@@ -176,138 +175,6 @@ def process_meeting_review(payload, context):
     workflow.save()
 
 
-@processor(required_context=["w"], action=slack_const.VIEWS_OPEN)
-def process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_OPEN):
-    view_id = payload["view"]["id"] if action == slack_const.VIEWS_UPDATE else None
-    view_type = "open" if action == slack_const.VIEWS_OPEN else "push"
-    type = context.get("type", None)
-    trigger_id = payload["trigger_id"]
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    org = workflow.user.organization
-    access_token = org.slack_integration.access_token
-    refresh = context.get("tracking_id", None)
-    if refresh is None:
-        loading_view_data = send_loading_screen(
-            access_token,
-            "Gathering attendee info...",
-            view_type,
-            str(workflow.user.id),
-            trigger_id,
-            view_id,
-        )
-    private_metadata = {
-        "original_message_channel": payload["channel"]["id"]
-        if "channel" in payload
-        else context.get("original_message_channel"),
-        "original_message_timestamp": payload["message"]["ts"]
-        if "message" in payload
-        else context.get("original_message_channel"),
-    }
-    private_metadata.update(context)
-    blocks = get_block_set("show_meeting_contacts", private_metadata)
-    view_id = loading_view_data["view"]["id"] if refresh is None else payload["view"]["id"]
-    data = {
-        "view_id": view_id,
-        "view": {
-            "type": "modal",
-            "title": {"type": "plain_text", "text": "Contacts"},
-            "blocks": blocks,
-            "private_metadata": json.dumps(private_metadata),
-        },
-    }
-    try:
-        res = slack_requests.generic_request(
-            slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE, data, access_token=access_token
-        )
-    except InvalidBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except InvalidBlocksFormatException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except UnHandeledBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except InvalidAccessToken as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except Exception as e:
-        return logger.exception(f"Failed to send message for {e}")
-    if not type:
-        workflow.slack_view = res.get("view").get("id")
-        workflow.save()
-
-
-@processor()
-def process_edit_meeting_contact(payload, context):
-    trigger_id = payload["trigger_id"]
-    view = payload["view"]
-    view_id = view["id"]
-    type = context.get("type", None)
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    org = workflow.user.organization
-    access_token = org.slack_integration.access_token
-    loading_view_data = send_loading_screen(
-        access_token,
-        "Gathering current attendee values...",
-        "push",
-        str(workflow.user.id),
-        trigger_id,
-        view_id,
-    )
-    edit_block_context = {
-        "w": context.get("w"),
-        "tracking_id": context.get("tracking_id"),
-        "current_view_id": view_id,
-    }
-    private_metadata = {
-        "w": context.get("w"),
-        "tracking_id": context.get("tracking_id"),
-        "current_view_id": view_id,
-        "original_message_channel": context.get("original_message_channel"),
-        "original_message_timestamp": context.get("original_message_timestamp"),
-    }
-    if type:
-        edit_block_context.update({"type": type})
-        private_metadata.update({"type": type})
-    data = {
-        "view_id": loading_view_data["view"]["id"],
-        "view": {
-            "type": "modal",
-            "title": {"type": "plain_text", "text": "Edit Contact"},
-            "submit": {"type": "plain_text", "text": "Save"},
-            "blocks": get_block_set("edit_meeting_contacts", edit_block_context),
-            "callback_id": slack_const.ZOOM_MEETING__UPDATE_PARTICIPANT_DATA,
-            "private_metadata": json.dumps(private_metadata),
-        },
-    }
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
-    try:
-        res = slack_requests.generic_request(url, data, access_token=access_token)
-    except InvalidBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except InvalidBlocksFormatException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except UnHandeledBlocksException as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    except InvalidAccessToken as e:
-        return logger.exception(
-            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
-        )
-    # workflow.slack_view = res["view"]["id"]
-    # workflow.save()
-
-
 @processor(required_context=[])
 def process_stage_selected(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
@@ -416,31 +283,6 @@ def process_stage_selected(payload, context):
         )
     workflow.slack_view = res.get("view").get("id")
     workflow.save()
-
-
-@processor(required_context=["w", "tracking_id"])
-def process_remove_contact_from_meeting(payload, context):
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    meeting = workflow.meeting
-    org = workflow.user.organization
-    access_token = org.slack_integration.access_token
-    for i, part in enumerate(meeting.participants):
-        if part["_tracking_id"] == context.get("tracking_id"):
-            # remove its form if it exists
-            if part["_form"] not in [None, ""]:
-                workflow.forms.filter(id=part["_form"]).delete()
-            del meeting.participants[i]
-            break
-    meeting.save()
-    if check_contact_last_name(workflow.id):
-        update_res = slack_requests.update_channel_message(
-            context.get("original_message_channel"),
-            context.get("original_message_timestamp"),
-            access_token,
-            block_set=get_block_set("initial_meeting_interaction", {"w": context.get("w")}),
-        )
-
-    return process_show_meeting_contacts(payload, context, action=slack_const.VIEWS_UPDATE)
 
 
 @processor(required_context=["w"])
@@ -4379,8 +4221,6 @@ def handle_block_actions(payload):
     such as clicking a button.
     """
     switcher = {
-        slack_const.ZOOM_MEETING__EDIT_CONTACT: process_edit_meeting_contact,
-        slack_const.ZOOM_MEETING__REMOVE_CONTACT: process_remove_contact_from_meeting,
         slack_const.ZOOM_MEETING__CREATE_OR_SEARCH: process_create_or_search_selected,
         slack_const.ZOOM_MEETING__SELECTED_RESOURCE: process_meeting_selected_resource,
         slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION: process_meeting_selected_resource_option,
