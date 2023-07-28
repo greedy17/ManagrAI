@@ -154,6 +154,7 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
     resource_ref = serializers.SerializerMethodField("get_resource_ref")
     is_completed = serializers.SerializerMethodField("get_completed_status")
     user_ref = MeetingUserSerializer(source="user")
+    progress_ref = serializers.SerializerMethodField("get_progress_ref")
 
     class Meta:
         model = MeetingWorkflow
@@ -171,12 +172,20 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
             "transcript_summary",
             "transcript_analysis",
             "forms",
+            "progress_ref",
+            "failed_task_description",
         )
 
     def get_org_ref(self, instance):
         from managr.core.serializers import OrganizationSerializer
 
         return OrganizationSerializer(instance=instance.user.organization).data
+
+    def get_progress_ref(self, instance):
+        if len(self.operations):
+            return int(((self.completed_count + self.failed_count) / self.total_count) * 100)
+
+        return 0
 
     def get_completed_status(self, instance):
         form = instance.forms.filter(template__form_type="UPDATE").first()

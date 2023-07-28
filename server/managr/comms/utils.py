@@ -30,13 +30,15 @@ def article_list_seperator(articles_list):
             new_list.append(article_list_seperator(second_half))
         else:
             new_list.append(",".join(second_half))
+    else:
+        return [",".join(articles_list)]
     return new_list
 
 
 def send_clips(user, news_res, company):
     articles = news_res["articles"]
     articles_list = [
-        f"Published: {article['publishedAt']}\nTitle: {article['title']} \n Clip: {article['description']}\n\n"
+        f"Published: {article['publishedAt'][:10]}\nTitle: {article['title']} \n Source: {article['source']['name']}\n\n"
         for article in articles
     ]
     news_list = article_list_seperator(articles_list)
