@@ -166,13 +166,12 @@
           "
           style="margin-left: 1rem; width: 23.5vw"
         >
-          <div
-            v-if="selectedObject"
-            class="row__"
-            style="margin: 0"
-          >
+          <div v-if="selectedObject" class="row__" style="margin: 0">
             <div style="display: flex; flex-direction: column">
-              <div v-if="selectedObject && selectedObject.value !== 'CustomObject'" style="display: flex; justify-content: space-between; width: 55vw;">
+              <div
+                v-if="selectedObject && selectedObject.value !== 'CustomObject'"
+                style="display: flex; justify-content: space-between; width: 55vw"
+              >
                 <div class="row__" style="gap: 6px; margin: 1rem 0 0 0">
                   <div>View:</div>
                   <Multiselect
@@ -189,14 +188,16 @@
                     <template slot="noResult">
                       <p class="multi-slot">No results.</p>
                     </template>
-  
+
                     <template slot="placeholder">
                       <p class="slot-icon">
                         <img src="@/assets/images/search.svg" alt="" />
-                        {{ selectedType && selectedType.label ? selectedType.label : 'Select Type' }}
+                        {{
+                          selectedType && selectedType.label ? selectedType.label : 'Select Type'
+                        }}
                       </p>
                     </template>
-  
+
                     <template slot="option" slot-scope="props">
                       <div>
                         <span class="option__title">{{ removeAmp(props.option.label) }}</span
@@ -221,15 +222,16 @@
                       style="margin-top: 0"
                     >
                       <span class="tooltip"
-                        >You can also add {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} to
-                        Stages. These {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} will
-                        appear as you move to the Stage.</span
+                        >You can also add
+                        {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} to Stages. These
+                        {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} will appear as you
+                        move to the Stage.</span
                       >
                       <span>?</span>
                     </label>
                   </div>
                 </div>
-                <div style="display: flex; align-items: center;">
+                <div style="display: flex; align-items: center">
                   <button
                     v-if="
                       selectedType.value !== 'CREATE' &&
@@ -244,14 +246,22 @@
                   </button>
                 </div>
               </div>
-              <div v-else-if="selectedObject && selectedObject.value === 'CustomObject'" style="display: flex; justify-content: space-between; width: 55vw;">
+              <div
+                v-else-if="selectedObject && selectedObject.value === 'CustomObject'"
+                style="display: flex; justify-content: space-between; width: 55vw"
+              >
                 <div v-if="modalLoading">
                   <Loader :loaderText="loaderText" />
                 </div>
                 <div v-else>
                   <div
                     v-if="createdCustomObjects.length"
-                    style="display: flex; justify-content: space-between; width: 55vw; margin-top: 1rem;"
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      width: 55vw;
+                      margin-top: 1rem;
+                    "
                   >
                     <Multiselect
                       @input="getCreatedCO"
@@ -280,14 +290,31 @@
                         </div>
                       </template>
                     </Multiselect>
-                    <button v-if="!selectedCustomObject" @click="toggleCustomObjectModalView" class="custom-object-button">
+                    <button
+                      v-if="!selectedCustomObject"
+                      @click="toggleCustomObjectModalView"
+                      class="custom-object-button"
+                    >
                       Add Custom Object
                     </button>
-                    <button v-else @click="confirmCODeleteModal = !confirmCODeleteModal" class="red-button" style="margin-top: 0">
+                    <button
+                      v-else
+                      @click="confirmCODeleteModal = !confirmCODeleteModal"
+                      class="red-button"
+                      style="margin-top: 0"
+                    >
                       Delete
                     </button>
                   </div>
-                  <div v-else style="display: flex; justify-content: space-between; width: 55vw; margin-top: 1rem;">
+                  <div
+                    v-else
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      width: 55vw;
+                      margin-top: 1rem;
+                    "
+                  >
                     <Multiselect
                       @input="getCustomObjectFields"
                       :options="customObjects"
@@ -1388,13 +1415,21 @@ export default {
       ]
     },
     opportunityClassLogic() {
-      return this.newResource == 'Opportunity' && this.newFormType !== 'STAGE_GATING' && !this.customObjectView ? 'green' : ''
+      return this.newResource == 'Opportunity' &&
+        this.newFormType !== 'STAGE_GATING' &&
+        !this.customObjectView
+        ? 'green'
+        : ''
     },
     dealClassLogic() {
       return this.newResource == 'Deal' && this.newFormType !== 'STAGE_GATING' ? 'green' : ''
     },
     oppStageClassLogic() {
-      return this.newResource == 'Opportunity' && this.newFormType == 'STAGE_GATING' && !this.customObjectView ? 'green' : ''
+      return this.newResource == 'Opportunity' &&
+        this.newFormType == 'STAGE_GATING' &&
+        !this.customObjectView
+        ? 'green'
+        : ''
     },
     dealStageClassLogic() {
       return this.newResource == 'Deal' && this.newFormType == 'STAGE_GATING' ? 'green' : ''
@@ -1449,7 +1484,7 @@ export default {
           { value: 'OpportunityLineItem', label: 'Products' },
         ]
         if (this.user.organizationRef.isPaid) {
-          this.resources.push({value: 'CustomObject', label: 'Custom Object'})
+          this.resources.push({ value: 'CustomObject', label: 'Custom Object' })
         }
       } else {
         this.resources = [
@@ -1593,7 +1628,7 @@ export default {
       const res = await SlackOAuth.api.refreshForms()
       setTimeout(() => {
         this.pulseLoading = false
-        this.$router.go()
+        // this.$router.go()
       }, 300)
     },
     checkAndClearInterval() {
@@ -1766,9 +1801,9 @@ export default {
           }
         })
         this.allForms = [...forms]
-        if (this.storedField) {
-          this.$router.go()
-        }
+        // if (this.storedField) {
+        //   this.$router.go()
+        // }
       }
     },
     closeModal() {

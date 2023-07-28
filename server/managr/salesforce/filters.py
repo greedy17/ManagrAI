@@ -1,8 +1,5 @@
 import django_filters
 from django_filters.rest_framework import FilterSet
-from django_filters import OrderingFilter
-from django.db.models import IntegerField, F
-from django.db.models.functions import Cast
 from . import models as sf_models
 
 sobject_comparison = {

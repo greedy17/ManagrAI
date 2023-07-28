@@ -1,21 +1,11 @@
 import logging
 import kronos
 import math
-
 from datetime import datetime
 from django.conf import settings
-from django.template.loader import render_to_string
 from django.utils import timezone
-from django.db.models import Q, F, Func, IntegerField, DateField, Sum
+from django.db.models import Func, IntegerField, DateField, Sum
 from django.db.models.functions import Cast
-
-
-from background_task.models import CompletedTask
-
-from rest_framework.response import Response
-
-from managr.api.emails import send_html_email
-from managr.salesforce import constants as sf_consts
 from managr.salesforce.background import (
     emit_gen_next_sync,
     emit_gen_next_object_field_sync,
@@ -25,27 +15,7 @@ from managr.salesforce.models import SFObjectFieldsOperation, SFResourceSync, Sa
 from managr.core.models import User
 
 from managr.slack import constants as slack_const
-from managr.slack.helpers import auth as slack_auth
 from managr.slack.helpers import requests as slack_requests
-from managr.slack.helpers import interactions as slack_interactions
-from managr.slack.helpers import block_builders
-from managr.slack.helpers.block_sets import get_block_set
-from managr.slack.models import UserSlackIntegration
-from managr.api.decorators import log_all_exceptions, sf_api_exceptions_wf
-from managr.slack.helpers.exceptions import (
-    UnHandeledBlocksException,
-    InvalidBlocksFormatException,
-    InvalidBlocksException,
-    InvalidAccessToken,
-)
-from managr.crm.exceptions import (
-    TokenExpired,
-    FieldValidationError,
-    RequiredFieldError,
-    SFQueryOffsetError,
-    SFNotFoundError,
-    InvalidRefreshToken,
-)
 
 logger = logging.getLogger("managr")
 

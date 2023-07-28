@@ -48,6 +48,7 @@ from managr.core.utils import (
     get_user_totals,
     clean_prompt_string,
     swap_submitted_data_labels,
+    ask_managr_data_collector,
 )
 from managr.slack.helpers import requests as slack_requests, block_builders
 from .nylas.auth import get_access_token, get_account_details
@@ -402,21 +403,27 @@ def submit_chat_prompt(request):
                 attempts += 1
                 continue
         except Exception as e:
+            print('I AM HERE:')
             logger.exception(f"Exception from Open AI response {e}")
             has_error = True
-            message = " Looks like we ran into an issue with your prompt, try removing things like quotes and ampersands"
-
+            message = (
+                " Looks like we ran into an issue with your prompt, try removing things like quotes and ampersands"
+            )
+            res = {"value": f"There was an error processing chat submission: {message}"}
+            break
     if has_error:
-        res = {"value": f"There was an error processing chat submission: {message}"}
+        res = {"value": f"Error: {message}"}
         return Response(data=res, status=status.HTTP_400_BAD_REQUEST)
     if not has_error:
         res_text = (f"{resource.display_value} has been updated, please review",)
 
+    if cleaned_data:
+        updated_data = json.dumps(cleaned_data)
     return Response(
         data={
             **r,
             "form": form.id,
-            "data": cleaned_data,
+            "data": updated_data,
             "resource": {resource.display_value},
             "res": res_text,
             "resourceId": resource.id,
@@ -432,16 +439,29 @@ def submit_chat_prompt(request):
 @permission_classes([permissions.IsAuthenticated])
 def ask_managr(request):
     from managr.core.exceptions import _handle_response, ServerError, StopReasonLength
+    from managr.salesforce.routes import routes as sf_routes
+    from managr.hubspot.routes import routes as hs_routes
 
+    # CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
+    instructions_check = request.data["instructions"]
     user = User.objects.get(id=request.data["user_id"])
-
-    prompt = core_consts.OPEN_AI_ASK_MANAGR_PROMPT(
-        str(user.id),
-        request.data["prompt"],
-        request.data["resource_type"],
-        request.data["resource_id"],
+    data = ask_managr_data_collector(
+        str(user.id), request.data["resource_type"], request.data["resource_id"],
     )
-
+    # resource = CRM_SWITCHER[user.crm][request.data["resource_type"]]["model"].objects.get(
+    #     id=request.data["resource_id"]
+    # )
+    if instructions_check:
+        prompt = core_consts.OPEN_AI_ASK_MANAGR_WITH_INSTRUCTIONS(
+        request.data["prompt"],
+        instructions_check,
+        data
+    )
+    else:
+        prompt = core_consts.OPEN_AI_ASK_MANAGR_PROMPT(
+        user, datetime.today(), request.data["prompt"], data
+    )
+    
     tokens = 500
     has_error = False
     attempts = 1

@@ -679,7 +679,6 @@ import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button
 import { CollectionManager } from '@thinknimble/tn-models'
 
 import Modal from '@/components/InviteModal'
-import AlertsHeader from '@/components/AlertsHeader.vue'
 
 import ActionChoice from '@/services/action-choices'
 import draggable from 'vuedraggable'
@@ -699,7 +698,6 @@ export default {
     Modal,
     draggable,
     ToggleCheckBox,
-    AlertsHeader,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
@@ -1388,9 +1386,10 @@ export default {
     async refreshForms() {
       this.pulseLoading = true
       const res = await SlackOAuth.api.refreshForms()
+      this.searchFields()
       setTimeout(() => {
+        this.formFields.refresh()
         this.pulseLoading = false
-        this.$router.go()
       }, 300)
     },
     checkAndClearInterval() {
@@ -1459,12 +1458,6 @@ export default {
         }
         setTimeout(() => {
           this.$store.dispatch('setCustomObject', this.selectedCustomObjectName)
-          // setTimeout(() => {
-          //   this.loaderText = 'Reloading page, please be patient...'
-          //   setTimeout(() => {
-          //     this.$router.go()
-          //   }, 1000)
-          // }, 2000)
           this.searchFields()
         }, 400)
       } catch (e) {
@@ -1533,11 +1526,9 @@ export default {
     async deleteForm(form) {
       if (form && form.id && form.id.length) {
         const id = form.id
-
         SlackOAuth.api
           .delete(id)
-          .then(async (res) => {
-            this.$router.go()
+          .then((res) => {
             this.$toast('Form removed', {
               timeout: 2000,
               position: 'top-left',
@@ -1563,9 +1554,6 @@ export default {
           }
         })
         this.allForms = [...forms]
-        if (this.storedField) {
-          this.$router.go()
-        }
       }
     },
     closeModal() {
@@ -1954,7 +1942,6 @@ export default {
               ),
           },
         )
-        // this.$router.go()
       }, 400)
     },
     getActionChoices() {
@@ -2092,41 +2079,36 @@ export default {
       ) {
         this.changeCustomObjectName()
       }
-      SlackOAuth.api
-        .postOrgCustomForm({
-          ...this.newCustomForm,
-          fields: fields,
-          removedFields: this.removedFields,
-          fields_ref: fields_ref,
-          custom_object: this.newCustomForm.customObject ? this.newCustomForm.customObject : '',
-        })
-        .then((res) => {
-          // this.$emit('update:selectedForm', res)
 
-          this.newCustomForm = res
-
-          this.$toast('Form saved', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
+      try {
+        await SlackOAuth.api
+          .postOrgCustomForm({
+            ...this.newCustomForm,
+            fields: fields,
+            removedFields: this.removedFields,
+            fields_ref: fields_ref,
+            custom_object: this.newCustomForm.customObject ? this.newCustomForm.customObject : '',
           })
-          this.removedFields = []
-          // setTimeout(() => {
-          //   this.removedFields = []
-          //   // this.$router.go()
-          // }, 300)
-          this.addedFields = fields_ref
-        })
-        .finally(() => {
-          this.savingForm = false
-          this.getAllForms()
-          this.formChange = false
-          if (this.newCustomForm.formType === 'STAGE_GATING') {
-            this.$router.go()
-          }
-        })
+          .then((res) => {
+            // this.$emit('update:selectedForm', res)
+
+            this.newCustomForm = res
+
+            this.$toast('Form saved', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+            this.removedFields = []
+            this.addedFields = fields_ref
+          })
+      } finally {
+        this.savingForm = false
+        this.getAllForms()
+        this.formChange = false
+      }
     },
     async getAllForms() {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()

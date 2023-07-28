@@ -1263,7 +1263,7 @@ def _process_send_regenerated_email_draft(payload, context):
         data_collector = {**data_collector, **form.saved_data}
     try:
         previous_blocks = payload["message"]["blocks"]
-        index, block = block_finder("EMAIL_TEXT", previous_blocks)
+        index, block = block_finder("PROMPT_BLOCK", previous_blocks)
     except ValueError:
         # did not find the block
         block = None
@@ -1290,7 +1290,7 @@ def _process_send_regenerated_email_draft(payload, context):
         block_builders.header_block("AI Generated Email"),
         block_builders.context_block(f"{forms.first().resource_object.display_value}"),
         block_builders.divider_block(),
-        block_builders.simple_section(text, "mrkdwn", block_id="EMAIL_TEXT"),
+        block_builders.simple_section(text, "mrkdwn", block_id="PROMPT_BLOCK"),
         block_builders.divider_block(),
         block_builders.actions_block(
             [

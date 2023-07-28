@@ -644,49 +644,6 @@ export default {
           state: this.$route.query.state,
         },
       })
-      this.generatingToken = true
-      this.selectedIntegration = this.$route.query.state // state is the current integration name
-
-      try {
-        const modelClass = this.selectedIntegrationSwitcher
-        if (this.selectedIntegration == 'SALESLOFT') {
-          await modelClass.api.authenticate(
-            this.$route.query.code,
-            this.$route.query.context,
-            this.$route.query.scope,
-          )
-        } else if (this.selectedIntegration != 'SLACK' && this.selectedIntegration != 'SALESLOFT') {
-          await modelClass.api.authenticate(this.$route.query.code)
-        } else {
-          // auto sends a channel message, will also send a private dm
-          await SlackOAuth.api.generateAccessToken(this.$route.query.code)
-        }
-      } catch (e) {
-        let { response } = e
-        if (response && response.status >= 400 && response.status < 500 && response.status != 401) {
-          let { data } = response
-          if (data.timezone) {
-            this.$toast(
-              'We could not retrieve your timezone from zoom, to fix this please login to the zoom.us portal through a browser and return to managr to reintegrate',
-              {
-                timeout: 2000,
-                position: 'top-left',
-                type: 'success',
-                toastClassName: 'custom',
-                bodyClassName: ['custom'],
-              },
-            )
-          }
-        }
-      } finally {
-        await this.$store.dispatch('refreshCurrentUser')
-        this.generatingToken = false
-        this.selectedIntegration = null
-        this.$router.replace({
-          name: 'Integrations',
-          params: {},
-        })
-      }
     }
   },
   computed: {

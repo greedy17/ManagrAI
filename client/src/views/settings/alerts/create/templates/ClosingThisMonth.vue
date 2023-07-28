@@ -1,10 +1,11 @@
 <template>
   <PopularWorkflows
+    @refresh-configs="refreshConfigs"
     :closePopularModal="closePopularModal"
     :config="config"
     :noRenderHeader="noRenderHeader"
     :closeBuilder="closeBuilder"
-    :canSave="canSave" 
+    :canSave="canSave"
     :saveWorkflow="saveWorkflow"
   />
 </template>
@@ -26,22 +27,22 @@ export default {
   },
   props: {
     noRenderHeader: {
-      type: Boolean
+      type: Boolean,
     },
     closeBuilder: {
-      type: Function
+      type: Function,
     },
-    canSave: { 
-      type: Function
+    canSave: {
+      type: Function,
     },
-    saveWorkflow: { 
-      type: Function 
+    saveWorkflow: {
+      type: Function,
     },
     config: {
-      type: Object
+      type: Object,
     },
     closePopularModal: {
-      type: Function
+      type: Function,
     },
   },
   data() {
@@ -53,6 +54,11 @@ export default {
     userCRM() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.crm
+    },
+  },
+  methods: {
+    refreshConfigs() {
+      this.$emit('refresh-configs')
     },
   },
   mounted() {

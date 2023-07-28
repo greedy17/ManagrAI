@@ -248,6 +248,18 @@ export default {
       let user
       try {
         user = await User.api.activate(this.userId, this.token, this.registrationForm)
+        if (user.status === 400) {
+          for (let key in user.data) {
+            this.$toast(user.data[key][0], {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+          }
+          return
+        }
       } catch (error) {
         this.$toast('There was a problem creating your account.', {
           timeout: 2000,

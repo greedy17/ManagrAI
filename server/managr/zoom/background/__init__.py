@@ -158,7 +158,6 @@ def sync_contacts(contacts, user_id):
             logger.exception(f"Error saving contact in zoom flow: {e}")
             continue
         serializer.save()
-        # if contact.secondary_data["associatedcompanyid"]
         if user.crm == "HUBSPOT":
             if (
                 isinstance(item.secondary_data["num_associated_deals"], str)
