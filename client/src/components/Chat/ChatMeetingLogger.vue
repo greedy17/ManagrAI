@@ -1,5 +1,5 @@
 <template>
-  <section class="meetings">
+  <section @click="checkTask" class="meetings">
     <div
       v-if="
         !hasMeetingWorkflow || (selectedMeetingWorkflow && !selectedMeetingWorkflow.forms.length)
@@ -7,7 +7,7 @@
       :class="{ disabled: submitting }"
     >
       <div class="margin-top-s">
-        <p @click="test">Related to type:</p>
+        <p>Related to type:</p>
 
         <Multiselect
           v-model="selectedResourceType"
@@ -360,7 +360,7 @@ export default {
   },
   methods: {
     test() {
-      console.log(this.currentOpp)
+      console.log('here', this.selectedMeetingWorkflow)
     },
     deselectMeeting() {
       this.$emit('deselect-meeting')
@@ -386,7 +386,19 @@ export default {
         this.currentAnalysis = analysis
       }
     },
-
+    async checkTask(v) {
+      try {
+        await User.api
+          .checkTasks({
+            verbose_name: v ? v : this.currentTask,
+          })
+          .then((response) => {
+            console.log('STATUS RESPOSNE', response)
+          })
+      } catch (e) {
+        console.log(e)
+      }
+    },
     async submitChatTranscript() {
       this.submitting = true
       this.processing = true
@@ -401,16 +413,18 @@ export default {
             meeting_id: this.meeting.id,
           })
           .then((response) => {
-            if (response.status === 200) {
-              setTimeout(() => {
-                this.$emit('reload-workflows')
-              }, 1500)
-            } else {
-              this.errorText = response.data
-              this.selectedResourceType = null
-              this.mappedOpp = null
-              this.usingAi = null
-            }
+            this.$store.dispatch('updateTask', response.verbose_name)
+            this.checkTask(response.verbose_name)
+            // if (response.status === 200) {
+            //   setTimeout(() => {
+            //     this.$emit('reload-workflows')
+            //   }, 1500)
+            // } else {
+            //   this.errorText = response.data
+            //   this.selectedResourceType = null
+            //   this.mappedOpp = null
+            //   this.usingAi = null
+            // }
           })
       } catch (e) {
         console.log(e)
@@ -654,6 +668,9 @@ export default {
     }
   },
   computed: {
+    currentTask() {
+      return this.$store.state.currentTask
+    },
     hasMeetingWorkflow() {
       let newWfList = this.workflows.map((wf) => wf.meeting_ref.meeting_id)
       let stringId = this.meeting.id.toString()

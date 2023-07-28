@@ -171,6 +171,7 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
             "transcript_summary",
             "transcript_analysis",
             "forms",
+            "progress"
         )
 
     def get_org_ref(self, instance):
