@@ -37,45 +37,11 @@
         </button>
       </div>
     </div>
-    <!-- <div v-else class="alerts-header-inner">
-      <button @click="closeBuilder" class="back-button">
-        <img src="@/assets/images/left.svg" height="14px" alt="" />
-        Back
-      </button>
 
-      <h3>{{ config.title }}</h3>
-
-      <div v-if="hasSlack">
-        <PulseLoadingSpinnerButton
-          :loading="savingTemplate"
-          :class="!verifySubmit() || savingTemplate ? 'disabled__button' : 'purple__button'"
-          text="Activate Template"
-          @click.stop="onSave"
-          :disabled="!verifySubmit() || savingTemplate"
-        />
-      </div>
-
-      <div v-else>
-        <button
-          v-if="largeOpps"
-          :disabled="!selectFieldBool || !largeOppsBool"
-          @click="noSlackSave"
-          :class="!selectFieldBool || !largeOppsBool ? 'disabled__button' : 'purple__button '"
-        >
-          Activate without Slack
-        </button>
-        <button
-          v-else
-          @click="noSlackSave"
-          :disabled="selectField ? !selectFieldBool : null"
-          :class="selectField && !selectFieldBool ? 'disabled__button' : 'purple__button '"
-        >
-          Activate without Slack
-        </button>
-      </div>
-    </div> -->
     <div class="">
-      <h4 class="card-text" :style="largeOpps ? 'margin-bottom: 0.75rem;' : ''">{{ config.title }}</h4>
+      <h4 class="card-text" :style="largeOpps ? 'margin-bottom: 0.75rem;' : ''">
+        {{ config.title }}
+      </h4>
       <div
         class="forecast__collection"
         :key="i"
@@ -86,14 +52,14 @@
             :key="index"
             v-for="(alertGroup, index) in alertTemplateForm.field.alertGroups.groups"
           >
-            <div style="padding-left: 12px; margin-top: 0;" class="section" v-if="largeOpps">
+            <div style="padding-left: 12px; margin-top: 0" class="section" v-if="largeOpps">
               <h4 class="section__header">Select your "Amount" Field</h4>
 
-              <div style="padding-bottom: 0.5rem;">
+              <div style="padding-bottom: 0.5rem">
                 <div :key="i" v-for="(alertOperand, i) in alertGroup.field.alertOperands.groups">
                   <div :class="i > 0 ? 'visible' : ''">
                     <div>
-                      <div style="margin-left: 0.5rem;">
+                      <div style="margin-left: 0.5rem">
                         <FormField>
                           <template v-slot:input>
                             <Multiselect
@@ -130,14 +96,14 @@
                 </div>
               </div>
             </div>
-            <div v-else style="padding-left: 12px;" class="section">
+            <div v-else style="padding-left: 12px" class="section">
               <h4 class="section__header">Select Field</h4>
               <Multiselect
                 placeholder="Select Field"
                 v-model="identity"
                 :options="objectFields.list"
                 openDirection="below"
-                style="width: 20vw; margin-top: 0.75rem; padding-bottom: 1rem;"
+                style="width: 20vw; margin-top: 0.75rem; padding-bottom: 1rem"
                 selectLabel="Enter"
                 track-by="apiName"
                 label="referenceDisplayLabel"
@@ -158,11 +124,11 @@
                 </template>
               </Multiselect>
             </div>
-            <div v-if="largeOpps" class="section" style="padding-left: 12px; margin-bottom: 0;">
+            <div v-if="largeOpps" class="section" style="padding-left: 12px; margin-bottom: 0">
               <div :key="j" v-for="(alertOperand, j) in alertGroup.field.alertOperands.groups">
                 <h4 class="section__header">"Amount" is greater than:</h4>
                 <template>
-                  <div style="margin-left: 0.5rem; padding-bottom: 0.5rem;">
+                  <div style="margin-left: 0.5rem; padding-bottom: 0.5rem">
                     <FormField
                       :errors="alertOperand.field.operandValue.errors"
                       v-model="largeOppValue"
@@ -185,29 +151,12 @@
           <h4 class="section__head">Select Delivery Day</h4>
 
           <section class="section__body">
-            <!-- <div class="row__">
-              <label :class="config.newConfigs[0].recurrenceFrequency == 'WEEKLY' ? 'base' : ''"
-                >Weekly</label
-              >
-              <ToggleCheckBox
-                v-if="hasSlack"
-                @input="
-                  config.newConfigs[0].recurrenceFrequency == 'WEEKLY'
-                    ? (config.newConfigs[0].recurrenceFrequency = 'MONTHLY')
-                    : (config.newConfigs[0].recurrenceFrequency = 'WEEKLY')
-                "
-                :value="config.newConfigs[0].recurrenceFrequency !== 'WEEKLY'"
-                offColor="#41b883"
-                onColor="#41b883"
-                style="margin-left: 8px; margin-right: 8px"
-              />
-              <label :class="config.newConfigs[0].recurrenceFrequency == 'MONTHLY' ? 'base' : ''"
-                >Monthly</label
-              >
-            </div> -->
-
             <div class="switcher">
-              <div @click="switchWeekMonthView('WEEKLY')" :class="config.newConfigs[0].recurrenceFrequency == 'WEEKLY' ? 'activeSwitch' : ''" class="switch-item">
+              <div
+                @click="switchWeekMonthView('WEEKLY')"
+                :class="config.newConfigs[0].recurrenceFrequency == 'WEEKLY' ? 'activeSwitch' : ''"
+                class="switch-item"
+              >
                 <!-- <img src="@/assets/images/crmlist.svg" height="16px" alt="" /> -->
                 Weekly
               </div>
@@ -219,13 +168,12 @@
                 <!-- <img src="@/assets/images/note.svg" height="12px" alt="" /> -->
                 Monthly
               </div>
-              <!-- <div style="cursor: not-allowed" class="switch-item">
-                <img src="@/assets/images/callsummary.svg" height="14px" alt="" />
-                Summaries
-              </div> -->
             </div>
 
-            <div v-if="config.newConfigs[0].recurrenceFrequency == 'WEEKLY'" style="display: flex; justify-content: center;">
+            <div
+              v-if="config.newConfigs[0].recurrenceFrequency == 'WEEKLY'"
+              style="display: flex; justify-content: center"
+            >
               <div class="week-row">
                 <span v-for="(day, i) in weeklyOpts" :key="i">
                   <input
@@ -246,37 +194,10 @@
                 </span>
               </div>
             </div>
-            <!-- <div v-if="config.newConfigs[0].recurrenceFrequency == 'WEEKLY'">
-              <FormField>
-                <template v-slot:input>
-                  <Multiselect
-                    :disabled="!hasSlack"
-                    placeholder="Select Day"
-                    @input="setDay($event)"
-                    v-model="selectedDays"
-                    :options="weeklyOpts"
-                    openDirection="below"
-                    style="width: 20vw"
-                    selectLabel="Enter"
-                    track-by="value"
-                    label="key"
-                    :multiple="true"
-                    :closeOnSelect="false"
-                  >
-                    <template slot="noResult">
-                      <p class="multi-slot">No results.</p>
-                    </template>
-                    <template slot="placeholder">
-                      <p class="slot-icon">
-                        <img src="@/assets/images/search.svg" alt="" />
-                        {{ hasSlack ? 'Select Days' : 'Connect slack' }}
-                      </p>
-                    </template>
-                  </Multiselect>
-                </template>
-              </FormField>
-            </div> -->
-            <div v-if="config.newConfigs[0].recurrenceFrequency == 'MONTHLY'" style="display: flex; justify-content: center;">
+            <div
+              v-if="config.newConfigs[0].recurrenceFrequency == 'MONTHLY'"
+              style="display: flex; justify-content: center"
+            >
               <FormField
                 id="delivery"
                 placeholder="Day of month"
@@ -326,20 +247,12 @@
           <h4 class="section__head">Select Delivery Method</h4>
 
           <div class="section__body">
-            <!-- <div v-if="!channelName" class="row__">
-              <label :class="!create ? 'base' : ''">Select #channel</label>
-              <ToggleCheckBox
-                style="margin-left: 8px; margin-right: 8px"
-                @input="changeCreate"
-                :value="create"
-                offColor="#41b883"
-                onColor="#41b883"
-              />
-              <label :class="create ? 'base' : ''">Create #channel</label>
-            </div> -->
-
             <div class="switcher">
-              <div @click="switchChannelView('SELECT')" :class="!create ? 'activeSwitch' : ''" class="switch-item">
+              <div
+                @click="switchChannelView('SELECT')"
+                :class="!create ? 'activeSwitch' : ''"
+                class="switch-item"
+              >
                 <!-- <img src="@/assets/images/crmlist.svg" height="16px" alt="" /> -->
                 Select #channel
               </div>
@@ -351,16 +264,8 @@
                 <!-- <img src="@/assets/images/note.svg" height="12px" alt="" /> -->
                 Create #channel
               </div>
-              <!-- <div style="cursor: not-allowed" class="switch-item">
-                <img src="@/assets/images/callsummary.svg" height="14px" alt="" />
-                Summaries
-              </div> -->
             </div>
 
-            <!-- <label v-else for="channel"
-              >Alert will send to
-              <span>{{ channelName }}</span>
-            </label> -->
             <div
               style="
                 display: flex;
@@ -390,7 +295,10 @@
                 <button v-else class="disabled__button">Create Channel</button>
               </div>
             </div>
-            <div style="margin-top: 0.5rem; display: flex; flex-direction: column; align-items: center;" v-else>
+            <div
+              style="margin-top: 0.5rem; display: flex; flex-direction: column; align-items: center"
+              v-else
+            >
               <template>
                 <Multiselect
                   v-if="!directToUsers"
@@ -399,7 +307,7 @@
                   @input="setRecipient"
                   :options="userChannelOpts.channels"
                   openDirection="below"
-                  style="width: 20vw; margin-top: 1rem;"
+                  style="width: 20vw; margin-top: 1rem"
                   selectLabel="Enter"
                   track-by="id"
                   label="name"
@@ -434,7 +342,7 @@
 
               <div v-else class="sendAll custom-checkbox">
                 <input type="checkbox" id="allUsers" v-model="directToUsers" />
-                <label for="allUsers" style="margin-bottom: 0.75rem;">Send to primary channel</label>
+                <label for="allUsers" style="margin-bottom: 0.75rem">Send to primary channel</label>
               </div>
             </div>
           </div>
@@ -442,17 +350,20 @@
         <div class="invite-form__actions">
           <!-- <div style="width: 10vw;"></div> -->
           <div class="confirm-cancel-container" style="">
-            <div class="img-border-modal cancel-button" @click="closePopularModal" style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 1rem;">
+            <div
+              class="img-border-modal cancel-button"
+              @click="closePopularModal"
+              style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 1rem"
+            >
               Cancel
             </div>
-            <!-- <PulseLoadingSpinnerButton
-              :loading="savingTemplate"
-              :class="!verifySubmit() || savingTemplate ? 'disabled__button' : 'purple__button'"
-              text="Save"
-              @click.stop="onSave"
+
+            <button
+              class="img-border-modal save"
               :disabled="!verifySubmit() || savingTemplate"
-            /> -->
-            <button class="img-border-modal save" :disabled="!verifySubmit() || savingTemplate" @click="onSave" style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 1rem;">
+              @click="onSave"
+              style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 1rem"
+            >
               Save
             </button>
           </div>
@@ -589,7 +500,17 @@ import SlackOAuth, { SlackListResponse } from '@/services/slack'
 import { decryptData } from '../../../../../encryption'
 export default {
   name: 'PopularWorkflows',
-  props: ['selectField', 'largeOpps', 'config', 'isEmpty', 'noRenderHeader', 'closeBuilder', 'canSave', 'saveWorkflow', 'closePopularModal'],
+  props: [
+    'selectField',
+    'largeOpps',
+    'config',
+    'isEmpty',
+    'noRenderHeader',
+    'closeBuilder',
+    'canSave',
+    'saveWorkflow',
+    'closePopularModal',
+  ],
   components: {
     ToggleCheckBox,
     FormField,
@@ -772,7 +693,10 @@ export default {
       !this.hasRecapChannel ? (this.directToUsers = false) : (this.directToUsers = true)
     },
     monthlyDaysBool() {
-      if (this.config.newConfigs[0].recurrenceDay && this.config.newConfigs[0].recurrenceDay != '0') {
+      if (
+        this.config.newConfigs[0].recurrenceDay &&
+        this.config.newConfigs[0].recurrenceDay != '0'
+      ) {
         this.setDaysBool = true
       } else {
         this.setDaysBool = false
@@ -867,16 +791,18 @@ export default {
     },
     verifySubmit() {
       if (this.largeOpps) {
-        if (this.config.newGroups[0].newOperands[0].operandIdentifier &&
+        if (
+          this.config.newGroups[0].newOperands[0].operandIdentifier &&
           this.config.newGroups[0].newOperands[0].operandValue &&
           this.config.newConfigs[0].alertTargets.length &&
           this.selectUsersBool &&
           this.selectFieldBool &&
-          this.largeOppsBool) {
-            this.canSave(true)
-          } else {
-            this.canSave(false)
-          }
+          this.largeOppsBool
+        ) {
+          this.canSave(true)
+        } else {
+          this.canSave(false)
+        }
         return (
           this.config.newGroups[0].newOperands[0].operandIdentifier &&
           this.config.newGroups[0].newOperands[0].operandValue &&
@@ -890,15 +816,15 @@ export default {
           (this.config.newConfigs[0].recurrenceDays.length ||
             this.config.newConfigs[0].recurrenceDay ||
             this.config.newGroups[0].newOperands[0].operandIdentifier) &&
-            this.config.newConfigs[0].alertTargets.length &&
-            this.selectUsersBool &&
-            (this.setDaysBool || this.selectFieldBool) &&
-            this.config.messageTemplate.body.length
-          ) {
-            this.canSave(true)
-          } else {
-            this.canSave(false)
-          }
+          this.config.newConfigs[0].alertTargets.length &&
+          this.selectUsersBool &&
+          (this.setDaysBool || this.selectFieldBool) &&
+          this.config.messageTemplate.body.length
+        ) {
+          this.canSave(true)
+        } else {
+          this.canSave(false)
+        }
         return (
           (this.config.newConfigs[0].recurrenceDays.length ||
             this.config.newConfigs[0].recurrenceDay ||
@@ -1095,14 +1021,14 @@ export default {
 
         this.handleUpdate()
 
-        this.$toast('Workflow saved successfully', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-        this.$router.push({ name: 'CreateNew' })
+        // this.$toast('Workflow saved successfully', {
+        //   timeout: 2000,
+        //   position: 'top-left',
+        //   type: 'success',
+        //   toastClassName: 'custom',
+        //   bodyClassName: ['custom'],
+        // })
+        // this.$router.push({ name: 'CreateNew' })
       } catch (e) {
         this.$toast('One or more of your users do not have slack connected', {
           timeout: 2000,
@@ -1134,33 +1060,15 @@ export default {
         (this.setDaysBool || this.selectFieldBool)
       ) {
         try {
-          const res = await AlertTemplate.api.createAlertTemplate({
-            ...this.config,
-            user: this.user.id,
-            directToUsers: this.directToUsers,
-          })
-
-          if (res.status === 400 && res.data.message) {
-            this.$toast(res.data.message, {
-              timeout: 2000,
-              position: 'top-left',
-              type: 'error',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
+          const res = await AlertTemplate.api
+            .createAlertTemplate({
+              ...this.config,
+              user: this.user.id,
+              directToUsers: this.directToUsers,
             })
-            return
-          }
-
-          this.handleUpdate()
-
-          this.$toast('Workflow saved Successfully', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-          this.$router.go()
+            .then((response) => {
+              this.$emit('refresh-configs')
+            })
         } catch (e) {
           console.log('e', e)
           this.$toast(`${e}`, {
@@ -1550,7 +1458,7 @@ export default {
   border: 1px solid $soft-gray;
   margin-top: 1rem;
   width: 20vw;
-  padding: 0.5rem
+  padding: 0.5rem;
 }
 input[type='text']:focus {
   outline: none;

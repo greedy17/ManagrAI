@@ -5,6 +5,7 @@ resource "aws_alb" "main" {
   tags = {
     "app" = "managr"
   }
+  enable_http2 = true
 }
 
 resource "random_string" "alb_prefix" {
@@ -21,7 +22,6 @@ resource "aws_alb_target_group" "app" {
   protocol    = "HTTP"
   vpc_id      = aws_vpc.main.id
   target_type = "ip"
-
   health_check {
     healthy_threshold   = "3"
     interval            = "30"
@@ -32,7 +32,8 @@ resource "aws_alb_target_group" "app" {
     unhealthy_threshold = "2"
   }
 
-  deregistration_delay = 0
+
+  deregistration_delay = 30
 
   tags = {
     "app" = "managr"

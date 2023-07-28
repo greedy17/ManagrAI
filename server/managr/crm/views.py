@@ -198,15 +198,14 @@ class CRMObjectViewSet(
         from managr.core.models import User
 
         data = self.request.data
-        logger.info(f"UPDATE START ---- {data}")
         user = User.objects.get(id=self.request.user.id)
         integration_ids = data.get("integration_ids")
+        from_meeting = data.get("from_meeting", "YES")
         form_data = data.get("form_data")
         form_type = data.get("form_type")
         resource_type = data.get("resource_type")
         resource_id = data.get("resource_id", None)
         stage_name = data.get("stage_name", None)
-        chat_form_id = data.get("chat_form_id", None)
         instance_data = {
             "user": user,
             "resource_type": resource_type,
@@ -231,8 +230,8 @@ class CRMObjectViewSet(
             while True:
                 crm = user.crm_account
 
-                if "meeting_comments" in all_form_data.keys() and not chat_form_id:
-                    if all_form_data.get("meeting_comments", None) is not None:
+                if "meeting_comments" in all_form_data.keys() and from_meeting == "NO":
+                    if all_form_data.get("meeting_comments", False):
                         ADD_UPDATE_TO_CRM_FUNCTION(user.crm)(str(main_form.id))
                     data = {
                         "success": True,
@@ -245,6 +244,8 @@ class CRMObjectViewSet(
                         )
                     else:
                         resource = main_form.resource_object.update(all_form_data)
+                        if all_form_data.get("meeting_comments", None) is not None:
+                            ADD_UPDATE_TO_CRM_FUNCTION(user.crm)(str(main_form.id))
                     data = {
                         "success": True,
                     }

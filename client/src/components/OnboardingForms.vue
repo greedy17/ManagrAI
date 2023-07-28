@@ -396,7 +396,6 @@ export default {
       const res = await SlackOAuth.api.refreshForms()
       setTimeout(() => {
         this.pulseLoading = false
-        this.$router.go()
       }, 300)
     },
 

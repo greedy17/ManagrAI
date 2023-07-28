@@ -15,8 +15,6 @@ from managr.api.decorators import log_all_exceptions, sf_api_exceptions_wf
 
 from managr.core.models import User
 from managr.organization.models import (
-    Account,
-    Contact,
     Organization,
     PricebookEntry,
 )
@@ -43,7 +41,6 @@ from ..models import (
 from managr.crm.models import ObjectField
 from managr.crm.serializers import ObjectFieldSerializer
 from ..serializers import (
-    SObjectFieldSerializer,
     SObjectValidationSerializer,
     SObjectPicklistSerializer,
 )

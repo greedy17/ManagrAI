@@ -241,6 +241,7 @@
         <ConfigureModal
           :configPage="configPage"
           @change-config-page="changeConfigPage"
+          @close-config="handleCancel"
           ref="configModal"
         />
       </div>
@@ -658,7 +659,6 @@ export default {
             integration_ids: [
               this.formOpen ? this.currentOpp.integration_id : this.chatData.integration_id,
             ],
-            chat_form_id: [this.formOpen ? null : this.chatData.form_id],
             from_workflow: false,
             workflow_title: 'None',
             stage_name: null,
@@ -876,8 +876,6 @@ export default {
       this.chatModalOpen = !this.chatModalOpen
       if (data && !formOpen) {
         let jsonString = data.data
-        jsonString = jsonString.replace(/'/g, '"')
-        jsonString = jsonString.replace(/\bNone\b/g, 'null')
         jsonString = JSON.parse(jsonString)
         this.formData = jsonString
         this.chatData = data

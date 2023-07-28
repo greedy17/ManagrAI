@@ -103,6 +103,7 @@ export default {
       actionSelected: false,
       textBoxType: '',
       placeholder: '',
+      askInstructons: '',
       currentAction: null,
       actions: [
         { name: 'Log Meeting', value: 'Log Meeting', img: 'calendar' },
@@ -119,9 +120,7 @@ export default {
       ],
     }
   },
-  mounted() {
-    
-  },
+  mounted() {},
   created() {
     this.setPlaceholder()
   },
@@ -156,8 +155,7 @@ export default {
         this.message = ''
         this.currentAction = null
         this.placeholder = 'Sync in progress...'
-      }
-      else if (!this.currentOpp) {
+      } else if (!this.currentOpp) {
         this.templatesOpen = false
         this.actionSelected = false
         this.textBoxType = null
@@ -219,12 +217,14 @@ export default {
             prompt: `Ask Managr ${this.chatmsg}`,
             resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
             resource_id: this.$store.state.currentOpp.id,
+            instructions: this.askInstructons,
           })
           .then((response) => {
             if (response.status >= 400 && response.status < 500) {
               User.api
                 .addMessage({
-                  error: response.data.value,
+                  value: response.value,
+                  error: response.value,
                   user_type: 'bot',
                   conversation_id: this.conversation.id,
                   failed: true,
@@ -267,6 +267,7 @@ export default {
         console.log(e)
         this.$emit('message-loading', false)
       } finally {
+        this.askInstructons = ''
         this.$emit('message-loading', false)
         this.scrollToBottom()
       }
@@ -285,7 +286,8 @@ export default {
             if (response.status >= 400 && response.status < 500) {
               User.api
                 .addMessage({
-                  error: response.data.value,
+                  value: response.value,
+                  error: response.value,
                   user_type: 'bot',
                   conversation_id: this.conversation.id,
                   failed: true,
@@ -297,6 +299,7 @@ export default {
             } else if (response.status === 500) {
               User.api
                 .addMessage({
+                  value: 'Timeout error, try again',
                   error: 'Timeout error, try again',
                   user_type: 'bot',
                   conversation_id: this.conversation.id,
@@ -348,7 +351,8 @@ export default {
               console.log(response)
               User.api
                 .addMessage({
-                  error: response.data.value,
+                  value: response.value,
+                  error: response.value,
                   user_type: 'bot',
                   conversation_id: this.conversation.id,
                   failed: true,
@@ -360,6 +364,7 @@ export default {
             } else if (response.status === 500) {
               User.api
                 .addMessage({
+                  value: 'Timeout error, try again',
                   error: 'Timeout error, try again',
                   user_type: 'bot',
                   conversation_id: this.conversation.id,
@@ -394,7 +399,12 @@ export default {
         console.log(e)
         this.$emit('message-loading', false)
       } finally {
-        this.$emit('set-title', this.chatRes['resource'][0] || 'Uh-oh')
+        if (this.chatRes['resource']) {
+          this.$emit('set-title', this.chatRes['resource'][0])
+        } else {
+          this.$emit('set-title', 'Uh-oh')
+        }
+
         this.$emit('message-loading', false)
         this.scrollToBottom()
       }
@@ -450,7 +460,6 @@ export default {
         }
       } else if (val.value.toLowerCase().includes('open form')) {
         if (this.currentOpp) {
-          console.log('MADE IT TO STEP ONE')
           this.$emit('open-form', this.currentOpp.secondary_data, true)
           this.actionSelected = false
           this.textBoxType = 'Open Form'
