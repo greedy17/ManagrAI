@@ -1513,15 +1513,17 @@ def _process_send_email_draft(payload, context):
             continue
 
     prompt = core_consts.OPEN_AI_MEETING_EMAIL_DRAFT(data_collector)
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, temperature=0.2)
+    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+        user.email, prompt, token_amount=500, temperature=0.2
+    )
     attempts = 1
     while True:
         try:
             with Client as client:
-                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
                 r = _handle_response(r)
-                text = r.get("choices")[0].get("text")
+                text = r.get("choices")[0].get("message").get("content")
             break
         except Exception as e:
             logger.exception(e)
@@ -1589,15 +1591,15 @@ def _process_send_regenerated_email_draft(payload, context):
     prompt = core_consts.OPEN_AI_EMAIL_DRAFT_WITH_INSTRUCTIONS(
         block["text"]["text"], instructions_check
     )
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 1000)
+    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(user.email, prompt, token_amount=1000)
     attempts = 1
     while True:
         try:
             with Client as client:
-                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
                 r = _handle_response(r)
-                text = r.get("choices")[0].get("text")
+                text = r.get("choices")[0].get("message").get("content")
             break
         except Exception as e:
             logger.exception(e)
