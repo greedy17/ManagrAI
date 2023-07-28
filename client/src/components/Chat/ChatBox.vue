@@ -758,15 +758,12 @@ export default {
     },
     jsonNotes(data, name) {
       let jsonString = data
-      jsonString = jsonString.replace(/'/g, '"')
-      jsonString = jsonString.replace(/\bNone\b/g, 'null')
+
       const obj = JSON.parse(jsonString)
       return obj[name]
     },
-    jsonData(data, name) {
+    jsonData(data) {
       let jsonString = data
-      jsonString = jsonString.replace(/'/g, '"')
-      jsonString = jsonString.replace(/\bNone\b/g, 'null')
       const obj = JSON.parse(jsonString)
       return obj
     },
