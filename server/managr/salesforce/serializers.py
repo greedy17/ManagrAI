@@ -182,7 +182,10 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
         return OrganizationSerializer(instance=instance.user.organization).data
 
     def get_progress_ref(self, instance):
-        return instance.progress
+        if len(self.operations):
+            return int(((self.completed_count + self.failed_count) / self.total_count) * 100)
+
+        return 0
 
     def get_completed_status(self, instance):
         form = instance.forms.filter(template__form_type="UPDATE").first()
