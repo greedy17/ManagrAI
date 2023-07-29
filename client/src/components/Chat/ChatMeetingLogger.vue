@@ -1,10 +1,10 @@
 <template>
-  <section @click="checkTask" class="meetings">
+  <section @click="test" class="meetings">
     <div
       v-if="
         !hasMeetingWorkflow || (selectedMeetingWorkflow && !selectedMeetingWorkflow.forms.length)
       "
-      :class="{ disabled: submitting }"
+      :class="{ disabled: submitting || currentTask }"
     >
       <div class="margin-top-s">
         <p>Related to type:</p>
@@ -16,7 +16,7 @@
           :options="resources"
           :loading="dropdownLoading"
           style="width: 96%"
-          :disabled="submitting"
+          :disabled="submitting || currentTask"
         >
         </Multiselect>
       </div>
@@ -41,7 +41,7 @@
               : selectedList
           "
           :loading="dropdownLoading || listLoading"
-          :disabled="!selectedResourceType || submitting"
+          :disabled="!selectedResourceType || submitting || currentTask"
         >
           <template slot="noResult">
             <p class="multi-slot">No results. Try loading more</p>
@@ -62,7 +62,7 @@
           track-by="value"
           :options="aiOptions"
           :loading="dropdownLoading"
-          :disabled="!mappedOpp || submitting"
+          :disabled="!mappedOpp || submitting || currentTask"
         >
         </Multiselect>
       </div>
@@ -70,7 +70,7 @@
         <p class="error">{{ errorText }}</p>
       </div>
 
-      <p v-if="processing" class="row__ gray-text smaller">
+      <p v-if="processing || currentTask" class="row__ gray-text smaller">
         <img class="rotate" src="@/assets/images/loading.svg" height="14px" alt="" /> Processing
         transcript, this could take a few minutes...
       </p>
@@ -202,11 +202,16 @@
       </div>
     </div>
 
-    <div v-if="!hasMeetingWorkflow">
+    <div
+      v-if="
+        !hasMeetingWorkflow ||
+        (hasMeetingWorkflow && selectedMeetingWorkflow && !selectedMeetingWorkflow.forms.length)
+      "
+    >
       <div class="meeting-modal-footer">
         <button
           @click="deselectMeeting"
-          v-if="selectedResourceId && usingAi"
+          v-if="selectedResourceId && usingAi && !currentTask"
           :disabled="submitting"
         >
           Cancel
@@ -215,7 +220,7 @@
         <button
           @click="submitChatMeeting"
           class="green-button"
-          v-if="selectedResourceId && usingAi && usingAi.value === 'false'"
+          v-if="selectedResourceId && usingAi && usingAi.value === 'false' && !currentTask"
           :disabled="submitting"
         >
           <img
@@ -232,7 +237,7 @@
         <button
           @click="submitChatTranscript"
           class="green-button"
-          v-if="selectedResourceId && usingAi && usingAi.value === 'true'"
+          v-if="selectedResourceId && usingAi && usingAi.value === 'true' && !currentTask"
           :disabled="submitting"
         >
           <img
@@ -244,6 +249,18 @@
             alt=""
           />
           Submit
+        </button>
+
+        <button @click="checkTask" class="green-button" v-if="currentTask">
+          <img
+            v-if="checkingTask"
+            class="rotate"
+            src="@/assets/images/loading.svg"
+            height="14px"
+            style="margin-right: 4px"
+            alt=""
+          />
+          Check Status
         </button>
       </div>
     </div>
@@ -314,6 +331,7 @@ export default {
   },
   data() {
     return {
+      checkingTask: false,
       updatingMeeting: false,
       textLoading: null,
       listLoading: false,
@@ -360,7 +378,7 @@ export default {
   },
   methods: {
     test() {
-      console.log('here', this.selectedMeetingWorkflow)
+      console.log(this.currentMeetingName)
     },
     deselectMeeting() {
       this.$emit('deselect-meeting')
@@ -386,17 +404,27 @@ export default {
         this.currentAnalysis = analysis
       }
     },
-    async checkTask(v) {
+    async checkTask() {
+      console.log(this.currentTask)
+      this.checkingTask = true
       try {
         await User.api
           .checkTasks({
-            verbose_name: v ? v : this.currentTask,
+            verbose_name: this.currentTask,
           })
           .then((response) => {
             console.log('STATUS RESPOSNE', response)
+            if (response.completed) {
+              this.$emit('reload-workflows')
+              this.$store.dispatch('updateTask', null)
+            }
           })
       } catch (e) {
         console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.checkingTask = false
+        }, 1000)
       }
     },
     async submitChatTranscript() {
@@ -414,7 +442,6 @@ export default {
           })
           .then((response) => {
             this.$store.dispatch('updateTask', response.verbose_name)
-            this.checkTask(response.verbose_name)
             // if (response.status === 200) {
             //   setTimeout(() => {
             //     this.$emit('reload-workflows')
@@ -464,6 +491,7 @@ export default {
     },
 
     async onSubmitChat() {
+      console.log(this.updateData)
       this.submitting = true
       try {
         await MeetingWorkflows.api

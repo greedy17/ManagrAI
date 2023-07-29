@@ -182,8 +182,8 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
         return OrganizationSerializer(instance=instance.user.organization).data
 
     def get_progress_ref(self, instance):
-        if len(self.operations):
-            return int(((self.completed_count + self.failed_count) / self.total_count) * 100)
+        if len(instance.operations):
+            return int(((instance.completed_count + instance.failed_count) / instance.total_count) * 100)
 
         return 0
 

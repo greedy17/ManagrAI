@@ -1693,7 +1693,9 @@ def request_reset_link(request):
 )
 def get_task_status(request):
     data = {}
-    verbose_name = request.GET.get("verbose_name", None)
+    verbose_string = request.GET.get('verbose_name', None)
+    response_data = json.loads(verbose_string)
+    verbose_name = response_data.get('verbose_name')
     if verbose_name:
         try:
             task = CompletedTask.objects.get(verbose_name=verbose_name)
