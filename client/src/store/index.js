@@ -35,6 +35,7 @@ const state = {
   allAccounts: [],
   allLeads: [],
   messages: [],
+  crmForms: [],
   currentView: 'home',
   currentMeeting: null,
   currentOpp: null,
@@ -106,6 +107,9 @@ const mutations = {
   },
   SAVE_ALL_ACCOUNTS(state, allAccounts) {
     state.allAccounts = allAccounts
+  },
+  SAVE_CRM_FORMS(state, crmForms) {
+    state.crmForms = crmForms
   },
   SAVE_MEETINGS(state, meetings) {
     state.meetings = meetings

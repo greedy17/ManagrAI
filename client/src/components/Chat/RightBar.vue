@@ -282,7 +282,11 @@
         <img src="@/assets/images/note.svg" height="12px" alt="" />
         Notes
       </div>
-      <div style="cursor: not-allowed" class="switch-item">
+      <div 
+        @click="switchView('summary')"
+        :class="{ activeswitch: view === 'summary' }"
+        class="switch-item"
+      >
         <img src="@/assets/images/callsummary.svg" height="14px" alt="" />
         Summaries
       </div>
@@ -363,6 +367,15 @@
           </div>
         </div>
       </div>
+      <div v-if="!Object.keys(sortedNotes).length" v-show="view === 'notes'">
+        <section>
+          <div class="note-section">
+            <p style="margin-top: 0.5rem; margin-bottom: 0; background-color: white" class="selected-opp gray-text">
+              Nothing here yet...
+            </p>
+          </div>
+        </section>
+      </div>
       <div
         v-for="(notes, month) in sortedNotes"
         :key="month"
@@ -410,6 +423,57 @@
             <p class="gray-text">Nothing here yet...</p>
           </div>
         </section>
+      </div>
+      <div
+        v-show="view === 'summary'"
+        class="selected-opp-section"
+      >
+        <div v-if="!selectedSummaries.length" class="note-section">
+          <p style="margin-top: 0.5rem; margin-bottom: 0; background-color: white" class="selected-opp gray-text">
+            No summaries
+            <!-- <img src="@/assets/images/dropdown.svg" height="14px" alt="" /> -->
+          </p>
+        </div>
+        <section v-else>
+          <div v-for="summary in selectedSummaries" :key="summary.id">
+            <div class="note-section">
+              <small class="gray-text left-margin right-absolute">{{
+                `${getMonth(summary.meeting_ref.start_time)} ${getDate(summary.meeting_ref.start_time)}, ${getYear(
+                  summary.meeting_ref.start_time,
+                )}`
+              }}</small>
+              <!-- <div class="row text-ellipsis">
+                <p
+                  :class="{ 'gray-text strike': !!note.saved_data__StageName }"
+                  style="margin-right: 0.25rem"
+                >
+                  {{ note.previous_data__StageName }}
+                </p>
+
+                <img
+                  v-if="note.saved_data__StageName"
+                  src="@/assets/images/transition.svg"
+                  height="12px"
+                  alt=""
+                />
+
+                <p style="margin: 0.25rem 0">{{ note.saved_data__StageName }}</p>
+              </div> -->
+              <div>
+                <p class="logged">Summary</p>
+                <pre v-html="summary.transcript_summary.trim()" class="transcript" />
+                <p class="logged-blue">Analysis</p>
+                <pre v-html="summary.transcript_analysis.trim()" class="transcript" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- <section v-else>
+          <div class="note-section">
+            <p class="gray-text">Nothing here yet...</p>
+          </div>
+        </section> -->
       </div>
     </div>
 
@@ -548,6 +612,7 @@ export default {
       filtervalue: null,
       allStages: [],
       meetings: [],
+      selectedSummaries: [],
       meetingOpp: null,
       reloading: false,
       meetingDate: this.getCurrentDate(),
@@ -764,8 +829,8 @@ export default {
     selectedOpp: 'getNotes',
   },
   methods: {
-    test() {
-      console.log('log', this.opportunities)
+    test(log) {
+      console.log('log', log)
     },
     openSettings() {
       this.$emit('open-settings')
@@ -1093,6 +1158,14 @@ export default {
       this.$store.dispatch('setCurrentMeeting', null)
       if (opp) {
         this.selectedOpp = opp
+        // this.summary = 
+        const summaries = []
+        for (let i = 0; i < this.meetingWorkflows.length; i++) {
+          if (this.meetingWorkflows[i].resource_id === opp.id) {
+            summaries.push(this.meetingWorkflows[i])
+          }
+        }
+        this.selectedSummaries = summaries
         this.$store.dispatch('setCurrentOpp', opp)
       } else if (name) {
         let opp
@@ -1113,6 +1186,8 @@ export default {
           }, 300)
         }
       }
+      console.log('this.selectedOpp', this.selectedOpp)
+      console.log('meeting workflows', this.meetingWorkflows)
     },
     removeDuplicatesByKey(arr, key) {
       const uniqueObjects = arr.filter(
@@ -1124,6 +1199,7 @@ export default {
       let stageGateForms
       let stagesWithForms
       const formsRes = await SlackOAuth.api.getOrgCustomForm()
+      this.$store.commit('SAVE_CRM_FORMS', formsRes)
 
       this.updateOppForm = formsRes.filter(
         (obj) =>
@@ -2366,5 +2442,51 @@ img {
 .button {
   @include gray-text-button();
   width: 60%;
+}
+.transcript {
+  margin: 1rem 0 0.25rem;
+  font-family: $base-font-family;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  padding: 0;
+}
+.logged {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  background-color: $white-green;
+  width: fit-content;
+  font-size: 12px;
+  color: $dark-green;
+  padding: 6px 8px;
+  border-radius: 5px;
+  margin-top: 1rem;
+
+  img {
+    margin-right: 0.25rem;
+    margin-bottom: -2px;
+    filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
+      contrast(82%);
+  }
+}
+
+.logged-blue {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  background-color: $white-blue;
+  width: fit-content;
+  font-size: 12px;
+  color: $dark-black-blue;
+  padding: 6px 8px;
+  border-radius: 5px;
+  margin-top: 1rem;
+
+  img {
+    margin-right: 0.25rem;
+    margin-bottom: -2px;
+    filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
+      contrast(82%);
+  }
 }
 </style>
