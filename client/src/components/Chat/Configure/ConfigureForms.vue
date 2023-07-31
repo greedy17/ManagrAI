@@ -2082,26 +2082,26 @@ export default {
         this.changeCustomObjectName()
       }
 
-          const filteredForm = this.allForms.filter(form => form.resource === res.resource && form.formType === res.formType)[0]
-
-          if (filteredForm) {
-            const withoutNewForm = this.allForms.filter(form => !(form.resource === res.resource && form.formType === res.formType))
-            this.$store.commit('SAVE_CRM_FORMS', [...withoutNewForm, res])
-          } else {
-            this.$store.commit('SAVE_CRM_FORMS', [...this.allForms, res])
-          }
-
-          this.newCustomForm = res
-
-          this.$toast('Form saved', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
+      try {
+        await SlackOAuth.api
+          .postOrgCustomForm({
+            ...this.newCustomForm,
+            fields: fields,
+            removedFields: this.removedFields,
+            fields_ref: fields_ref,
+            custom_object: this.newCustomForm.customObject ? this.newCustomForm.customObject : '',
           })
           .then((res) => {
             // this.$emit('update:selectedForm', res)
+
+            const filteredForm = this.allForms.filter(form => form.resource === res.resource && form.formType === res.formType)[0]
+
+            if (filteredForm) {
+              const withoutNewForm = this.allForms.filter(form => !(form.resource === res.resource && form.formType === res.formType))
+              this.$store.commit('SAVE_CRM_FORMS', [...withoutNewForm, res])
+            } else {
+              this.$store.commit('SAVE_CRM_FORMS', [...this.allForms, res])
+            }
 
             this.newCustomForm = res
 
