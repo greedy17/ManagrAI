@@ -302,6 +302,7 @@
             @select-opp="selectOpp"
             @deselect-meeting="deselectMeeting"
             :meetingOpp="meetingOpp"
+            :meetingName="currentMeeting.topic"
             :key="logkey"
           />
         </div>

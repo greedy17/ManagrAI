@@ -252,7 +252,7 @@ export default class UserAPI {
     try {
       const response = await this.client.post(REGISTRATION_ENDPOINT, this.cls.toAPI(data))
       returnedData = this.cls.fromAPI(response.data)
-    } catch(e) {
+    } catch (e) {
       console.log('error in register', e)
       returnedData = e.response
     } finally {

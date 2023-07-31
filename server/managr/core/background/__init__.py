@@ -6,9 +6,6 @@ import uuid
 import requests
 import json
 import httpx
-from django.utils import timezone
-from dateutil.parser import parse
-import calendar
 from datetime import datetime
 from copy import copy
 import re
@@ -26,6 +23,7 @@ from managr.core.utils import (
     swap_submitted_data_labels,
     clean_prompt_string,
     ask_managr_data_collector,
+    convert_date_string,
 )
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce.adapter.models import ContactAdapter
@@ -352,218 +350,6 @@ def CONTACT_FILTERS(crm, emails):
     else:
         email_string = "','".join(emails)
         return [f"AND Email IN ('{email_string}')"]
-
-
-def meeting_prep(processed_data, user_id):
-    user = User.objects.get(id=user_id)
-    ignore_emails = user.organization.ignore_emails
-    # Getting all participants from meetings and all their emails
-    all_participants = processed_data.get("participants")
-    all_emails = []
-    for participant in all_participants:
-        participants_email = participant.get("email")
-        all_emails.append(participants_email)
-
-    # all emails are now in participant_emails
-    # Gather Meeting Participants from Zoom and Calendar
-    # Gather unique emails from the Zoom Meeting participants
-    participants = []
-    user = User.objects.get(id=user_id)
-    org_email_domain = get_domain(user.email)
-    remove_users_with_these_domains_regex = r"(@[\w.]+calendar.google.com)|({})".format(
-        org_email_domain
-    )
-    for email in ignore_emails:
-        remove_users_with_these_domains_regex = (
-            remove_users_with_these_domains_regex + r"|({})".format(email)
-        )
-    # re.search(remove_users_with_these_domains_regex, p.get("email", ""))
-    # first check if we care about this meeting before going forward
-    should_register_this_meeting = [
-        p
-        for p in all_participants
-        if not re.search(remove_users_with_these_domains_regex, p.get("email", ""))
-    ]
-    if not len(should_register_this_meeting):
-        return
-    memo = {}
-    for p in all_participants:
-        if p.get("email", "") not in ["", None, *memo.keys()] and not re.search(
-            remove_users_with_these_domains_regex, p.get("email", "")
-        ):
-            memo[p.get("email")] = len(participants)
-            participants.append(p)
-    # If the user has their calendar connected through Nylas, find a
-    # matching meeting and gather unique participant emails.
-    # calendar_participants = calendar_participants_from_zoom_meeting(meeting, user)
-    # Combine the sets of participants. Filter out empty emails, meeting owner, and any
-    # emails with domains that match the owner, which are teammates of the owner.
-    for p in all_participants:
-        if not re.search(remove_users_with_these_domains_regex, p.get("email", "")) and p.get(
-            "email", ""
-        ) not in ["", None]:
-            if p.get("email", "") in memo.keys():
-                index = memo[p.get("email")]
-                participants[index]["name"] = p.get("name", "")
-            else:
-                memo[p.get("email")] = len(participants)
-                participants.append(p)
-
-    contact_forms = []
-    if len(participants):
-        # Reduce to set of unique participant emails
-        participant_emails = set([p.get("user_email") for p in participants])
-        attempts = 1
-        while True:
-            try:
-                crm_contacts = user.crm_account.adapter_class.list_resource_data(
-                    "Contact", filter=CONTACT_FILTERS(user.crm, list(participant_emails)),
-                )
-                break
-            except CRMTokenExpired:
-                if attempts >= 5:
-                    break
-                else:
-                    sleep = 1 * 2 ** attempts + random.uniform(0, 1)
-                    time.sleep(sleep)
-                    user.crm_account.regenerate_token()
-                    attempts += 1
-        sync_contacts(crm_contacts, str(user.id))
-    meeting_contacts = []
-    # find existing contacts
-    existing_contacts = BaseContact.objects.filter(
-        email__in=participant_emails, owner__organization__id=user.organization.id
-    ).exclude(email=user.email)
-    meeting_resource_data = dict(resource_id="", resource_type="")
-    opportunity = BaseOpportunity.objects.filter(
-        contacts__email__in=participant_emails, owner__id=user.id
-    ).first()
-    if opportunity:
-        meeting_resource_data["resource_id"] = str(opportunity.id)
-        meeting_resource_data["resource_type"] = (
-            "Opportunity" if user.crm == "SALESFORCE" else "Deal"
-        )
-        existing_contacts = existing_contacts.filter(opportunities__in=[str(opportunity.id)])
-    else:
-        account = BaseAccount.objects.filter(
-            contacts__email__in=participant_emails, owner__id=user.id,
-        ).first()
-        if account:
-            meeting_resource_data["resource_id"] = str(account.id)
-            meeting_resource_data["resource_type"] = (
-                "Account" if user.crm == "SALESFORCE" else "Company"
-            )
-            existing_contacts = existing_contacts.filter(account=account.id)
-        else:
-            lead = Lead.objects.filter(email__in=participant_emails, owner__id=user.id).first()
-            if lead:
-                meeting_resource_data["resource_id"] = str(lead.id)
-                meeting_resource_data["resource_type"] = "Lead"
-
-    # convert all contacts to model representation and remove from array
-    for contact in existing_contacts:
-        formatted_contact = contact.adapter_class.as_dict
-        # create a form for each contact to save to workflow
-        meeting_contacts.append(formatted_contact)
-        for index, participant in enumerate(participants):
-            if participant["email"] == contact.email or participant["email"] == User.email:
-                del participants[index]
-    contact_adapter = ContactAdapter if user.crm == "SALESFORCE" else HubspotContactAdapter
-    new_contacts = list(
-        filter(
-            lambda x: len(x.get("secondary_data", dict())) or x.get("email"),
-            list(
-                map(
-                    lambda participant: {
-                        **contact_adapter(
-                            **dict(
-                                email=participant["email"],
-                                # these will only get stored if lastname and firstname are accessible from sf
-                                external_owner=user.crm_account.crm_id,
-                                secondary_data={
-                                    f"{'FirstName' if user.crm == 'SALESFORCE' else 'FirstName'}": _split_first_name(
-                                        participant["name"]
-                                    ),
-                                    f"{'LastName' if user.crm == 'SALESFORCE' else 'firstname'}": _split_last_name(
-                                        participant["name"]
-                                    ),
-                                    f"{'Email' if user.crm == 'SALESFORCE' else 'email'}": participant[
-                                        "email"
-                                    ],
-                                },
-                            )
-                        ).as_dict,
-                    },
-                    participants,
-                ),
-            ),
-        )
-    )
-
-    meeting_contacts = [
-        *new_contacts,
-        *meeting_contacts,
-    ]
-
-    for contact in meeting_contacts:
-        contact["_tracking_id"] = str(uuid.uuid4())
-        form_type = (
-            slack_consts.FORM_TYPE_UPDATE
-            if contact["id"] not in ["", None]
-            else slack_consts.FORM_TYPE_CREATE
-        )
-        template = OrgCustomSlackForm.objects.filter(
-            form_type=form_type, resource=slack_consts.FORM_RESOURCE_CONTACT, team=user.team
-        ).first()
-        if not template:
-            logger.exception(
-                f"Unable to find Contact Form template for user {str(user_id)}, email {user.email} cannot create initial form for meeting review"
-            )
-            contact["_form"] = None
-        else:
-            # create instance
-            form = OrgCustomSlackFormInstance.objects.create(
-                user=user,
-                template=template,
-                resource_id="" if contact.get("id") in ["", None] else contact.get("id"),
-            )
-            contact_forms.append(form)
-            contact["_form"] = str(form.id)
-    processed_data.pop("participants")
-    meeting_data = {
-        **processed_data,
-        "user": user,
-    }
-    meeting_serializer = MeetingSerializer(data=meeting_data)
-    meeting_serializer.is_valid(raise_exception=True)
-    meeting_serializer.save()
-    resource_check = meeting_resource_data.get("resource_id", None)
-    meeting = Meeting.objects.filter(user=user).first()
-    meeting.participants = meeting_contacts
-    meeting.save()
-    # Conditional Check for Zoom meeting or Non-Zoom Meeting
-    meeting_workflow = MeetingWorkflow.objects.create(
-        operation_type="MEETING_REVIEW",
-        meeting=meeting,
-        user=user,
-        resource_id=meeting_resource_data["resource_id"],
-        resource_type=meeting_resource_data["resource_type"],
-    )
-    meeting_workflow.forms.set(contact_forms)
-    if resource_check:
-        meeting_workflow.add_form(
-            meeting_resource_data["resource_type"], slack_consts.FORM_TYPE_UPDATE,
-        )
-    if user.has_slack_integration:
-        if not user.has_zoom_integration or (
-            user.has_zoom_integration and "Zoom" not in meeting.provider
-        ):
-            meeting_end_time = meeting.end_time.strftime("%m/%d/%Y, %H:%M:%S")
-            workflow_id = str(meeting_workflow.id)
-            user_id = str(user.id)
-            user_tz = str(user.timezone)
-            emit_process_calendar_meeting_message(workflow_id, user_id, user_tz, meeting_end_time)
-    return
 
 
 def process_current_alert_list(user_id):
@@ -1038,86 +824,6 @@ def _process_change_team_lead(user_id):
     return
 
 
-WORD_TO_NUMBER = {
-    "a": 1,
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-}
-
-TIME_TO_NUMBER = {"week": 7, "weeks": 7, "month": 30, "months": 30, "year": 365, "tomorrow": 1}
-DAYS_TO_NUMBER = {
-    "monday": 0,
-    "tuesday": 1,
-    "wednesday": 2,
-    "thursday": 3,
-    "friday": 4,
-    "saturday": 5,
-    "sunday": 6,
-}
-
-
-def convert_date_string(date_string, value):
-    if value is None:
-        value = datetime.now().date()
-    else:
-        value = value.split("T")[0]
-    split_date_string = date_string.lower().split(" ")
-    time_key = None
-    number_key = 1
-    if any("push" in s for s in split_date_string) or any("move" in s for s in split_date_string):
-        for key in split_date_string:
-            if key in TIME_TO_NUMBER.keys():
-                time_key = TIME_TO_NUMBER[key]
-            if key in WORD_TO_NUMBER:
-                number_key = WORD_TO_NUMBER[key]
-    elif any(key in split_date_string for key in DAYS_TO_NUMBER.keys()):
-        for key in split_date_string:
-            if key in DAYS_TO_NUMBER.keys():
-                current = datetime.now()
-                start = current - timezone.timedelta(days=current.weekday())
-                day_value = start + timezone.timedelta(days=DAYS_TO_NUMBER[key])
-                if any("next" in s for s in split_date_string):
-                    day_value = day_value + timezone.timedelta(days=7)
-                return day_value
-    elif any("end" in s for s in split_date_string):
-        if any("week" in s for s in split_date_string):
-            current = datetime.strptime(value, "%Y-%m-%d")
-            start = current - timezone.timedelta(days=current.weekday())
-            return start + timezone.timedelta(days=4)
-        elif any("month" in s for s in split_date_string):
-            current = datetime.strptime(value, "%Y-%m-%d")
-            last_of_month = calendar.monthrange(current.year, current.month)[1]
-            return current.replace(day=last_of_month)
-    elif any("week" in s for s in split_date_string):
-        current = datetime.strptime(value, "%Y-%m-%d")
-        return current + timezone.timedelta(days=7)
-    if "back" in date_string:
-        new_value = datetime.strptime(value, "%Y-%m-%d") - timezone.timedelta(
-            days=(time_key * number_key)
-        )
-    else:
-        if time_key:
-            new_value = datetime.strptime(value, "%Y-%m-%d") + timezone.timedelta(
-                days=(time_key * number_key)
-            )
-        else:
-            try:
-                date_parsed = parse(date_string)
-                new_value = date_parsed
-            except Exception as e:
-                print(e)
-                new_value = value
-    return new_value
-
-
 def background_create_resource(crm):
     from managr.salesforce.background import _process_create_new_resource
     from managr.hubspot.tasks import _process_create_new_hs_resource
@@ -1218,30 +924,6 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
     cleaned_data["meeting_type"] = subject
     # logger.info(f"CLEAN PROMPT DEBUGGER: {cleaned_data}")
     return cleaned_data
-
-
-def set_owner_field(resource, crm):
-    if resource in ["Opportunity", "Account", "Contact"] and crm == "SALESFORCE":
-        return "Owner ID"
-    elif resource == "Company":
-        return "Company owner"
-    elif resource == "Contact" and crm == "HUBSPOT":
-        return "Contact owner"
-    elif resource == "Deal":
-        return "Deal owner"
-    return None
-
-
-def set_name_field(resource, crm):
-    if resource in ["Opportunity", "Account"]:
-        return "Name"
-    elif resource == "Company":
-        return "Company name"
-    elif resource == "Deal":
-        return "Deal Name"
-    elif resource == "Contact":
-        return "Email"
-    return None
 
 
 def correct_data_keys(data):
@@ -1513,15 +1195,17 @@ def _process_send_email_draft(payload, context):
             continue
 
     prompt = core_consts.OPEN_AI_MEETING_EMAIL_DRAFT(data_collector)
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, temperature=0.2)
+    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+        user.email, prompt, token_amount=500, temperature=0.2
+    )
     attempts = 1
     while True:
         try:
             with Client as client:
-                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
                 r = _handle_response(r)
-                text = r.get("choices")[0].get("text")
+                text = r.get("choices")[0].get("message").get("content")
             break
         except Exception as e:
             logger.exception(e)
@@ -1589,15 +1273,15 @@ def _process_send_regenerated_email_draft(payload, context):
     prompt = core_consts.OPEN_AI_EMAIL_DRAFT_WITH_INSTRUCTIONS(
         block["text"]["text"], instructions_check
     )
-    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 1000)
+    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(user.email, prompt, token_amount=1000)
     attempts = 1
     while True:
         try:
             with Client as client:
-                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
                 r = _handle_response(r)
-                text = r.get("choices")[0].get("text")
+                text = r.get("choices")[0].get("message").get("content")
             break
         except Exception as e:
             logger.exception(e)
