@@ -143,16 +143,6 @@ def error_modal_block_set(context):
 
 
 @block_set()
-def coming_soon_modal_block_set(context):
-    blocks = [
-        block_builders.simple_section(
-            ":clock1: *This feature is in the works* :exclamation:", "mrkdwn"
-        )
-    ]
-    return blocks
-
-
-@block_set()
 def error_message_block_set(context):
     message = context.get("message", ":no_entry: Ugh-Ohhhh.. We've hit a snag!")
     return [block_builders.simple_section(message, "mrkdwn")]
@@ -301,7 +291,6 @@ def home_modal_block_set(context):
         *tasks_list_block_set(context),
         block_builders.divider_block(),
         block_builders.simple_section("*Alerts*", "mrkdwn"),
-        *coming_soon_modal_block_set({}),
         block_builders.divider_block(),
     ]
     view = {"type": "home", "blocks": blocks}

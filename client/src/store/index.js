@@ -50,7 +50,9 @@ const state = {
   },
   recordTypes: [],
   selectedArticle: null,
-  chatTitle: 'All Open Opportunities'
+  chatTitle: 'All Open Opportunities',
+  currentTask: null,
+  meetingBeingProcessed: ''
 }
 
 const mutations = {
@@ -77,6 +79,12 @@ const mutations = {
   },
   UPDATE_CHAT_TITLE: (state, payload) => {
     state.chatTitle = payload
+  },
+  UPDATE_TASK: (state, payload) => {
+    state.currentTask = payload
+  },
+  UPDATE_MEETING_NAME: (state, payload) => {
+    state.meetingBeingProcessed = payload
   },
   // Log out the user by resetting the state to defaults
   LOGOUT_USER(state) {
@@ -217,6 +225,12 @@ const actions = {
   },
   updateChatTitle({ commit }, title) {
     commit('UPDATE_CHAT_TITLE', title)
+  },
+  updateTask({ commit }, task) {
+    commit('UPDATE_TASK', task)
+  },
+  setProcessedMeeting({ commit }, meetingName) {
+    commit('UPDATE_MEETING_NAME', meetingName)
   },
   async loadTemplates({ commit }) {
     try {
@@ -524,7 +538,7 @@ export default new Vuex.Store({
   getters,
   plugins: [
     createPersistedState({
-      paths: ['user', 'token', 'chatTitle', 'currentView',]
+      paths: ['user', 'token', 'chatTitle', 'currentView', 'currentTask', 'meetingBeingProcessed']
     })
   ],
 })

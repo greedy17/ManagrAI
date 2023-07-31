@@ -18,25 +18,27 @@ def get_news_for_company(company):
 
 def article_list_seperator(articles_list):
     new_list = []
-    if len(",".join(articles_list)) > 3000:
+    if len(" ".join(articles_list)) > 3000:
         half_index = math.floor(len(articles_list) / 2)
         first_half = articles_list[:half_index]
         second_half = articles_list[half_index:]
-        if len(",".join(first_half)) > 3000:
-            new_list.append(article_list_seperator(first_half))
+        if len(" ".join(first_half)) > 3000:
+            new_list.extend(article_list_seperator(first_half))
         else:
-            new_list.append(",".join(first_half))
-        if len(",".join(second_half)) > 3000:
-            new_list.append(article_list_seperator(second_half))
+            new_list.append(" ".join(first_half))
+        if len(" ".join(second_half)) > 3000:
+            new_list.extend(article_list_seperator(second_half))
         else:
-            new_list.append(",".join(second_half))
+            new_list.append(" ".join(second_half))
+    else:
+        return [" ".join(articles_list)]
     return new_list
 
 
 def send_clips(user, news_res, company):
     articles = news_res["articles"]
     articles_list = [
-        f"Published: {article['publishedAt']}\nTitle: {article['title']} \n Clip: {article['description']}\n\n"
+        f"*Source:* <{article['url']}|{article['source']['name']}>\n*Headline:* {article['title']}\n*Description:* {article['description']}\n*Author*: {article['author']}\n*Date:* {article['publishedAt'][:10]}\n\n"
         for article in articles
     ]
     news_list = article_list_seperator(articles_list)

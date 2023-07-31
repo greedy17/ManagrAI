@@ -11,7 +11,7 @@ from django.conf import settings
 
 from background_task import background
 from managr.core.calendars import calendar_participants_from_zoom_meeting
-from managr.core.utils import clean_prompt_string, swap_submitted_data_labels
+from managr.core.utils import clean_prompt_string, swap_submitted_data_labels, convert_date_string
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.exceptions import (
     UnHandeledBlocksException,
@@ -34,8 +34,12 @@ from .. import constants as zoom_consts
 from ..zoom_helper.exceptions import TokenExpired, AccountSubscriptionLevel, RecordingNotFound
 from managr.crm.exceptions import TokenExpired as CRMTokenExpired
 from ..models import ZoomAuthAccount
-from ..zoom_helper.models import ZoomAcct
 from managr.core.exceptions import StopReasonLength, ServerError
+from managr.crm.utils import CRM_SWITCHER, set_owner_field
+from managr.utils.client import Variable_Client
+from managr.core import constants as core_consts
+from managr.core.exceptions import _handle_response
+from managr.meetings.serializers import MeetingZoomSerializer
 
 logger = logging.getLogger("managr")
 
@@ -557,90 +561,6 @@ def _process_schedule_zoom_meeting(user, zoom_data):
         logger.warning(f"Zoom schedule error: {e}")
 
 
-WORD_TO_NUMBER = {
-    "a": 1,
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-}
-
-TIME_TO_NUMBER = {"week": 7, "weeks": 7, "month": 30, "months": 30, "year": 365, "tomorrow": 1}
-DAYS_TO_NUMBER = {
-    "monday": 0,
-    "tuesday": 1,
-    "wednesday": 2,
-    "thursday": 3,
-    "friday": 4,
-    "saturday": 5,
-    "sunday": 6,
-}
-
-
-def convert_date_string(date_string, value):
-    from django.utils import timezone
-    import calendar
-    from dateutil.parser import parse
-
-    if value is None:
-        value = datetime.now()
-    else:
-        value = value.split("T")[0]
-    split_date_string = date_string.lower().split(" ")
-    time_key = None
-    number_key = 1
-    if any("push" in s for s in split_date_string) or any("move" in s for s in split_date_string):
-        for key in split_date_string:
-            if key in TIME_TO_NUMBER.keys():
-                time_key = TIME_TO_NUMBER[key]
-            if key in WORD_TO_NUMBER:
-                number_key = WORD_TO_NUMBER[key]
-    elif any(key in split_date_string for key in DAYS_TO_NUMBER.keys()):
-        for key in split_date_string:
-            if key in DAYS_TO_NUMBER.keys():
-                current = datetime.now()
-                start = current - timezone.timedelta(days=current.weekday())
-                day_value = start + timezone.timedelta(days=DAYS_TO_NUMBER[key])
-                if any("next" in s for s in split_date_string):
-                    day_value = day_value + timezone.timedelta(days=7)
-                return day_value
-    elif any("end" in s for s in split_date_string):
-        if any("week" in s for s in split_date_string):
-            current = datetime.strptime(value, "%Y-%m-%d")
-            start = current - timezone.timedelta(days=current.weekday())
-            return start + timezone.timedelta(days=4)
-        elif any("month" in s for s in split_date_string):
-            current = datetime.strptime(value, "%Y-%m-%d")
-            last_of_month = calendar.monthrange(current.year, current.month)[1]
-            return current.replace(day=last_of_month)
-    elif any("week" in s for s in split_date_string):
-        current = datetime.strptime(value, "%Y-%m-%d")
-        return current + timezone.timedelta(days=7)
-    if "back" in date_string:
-        new_value = datetime.strptime(value, "%Y-%m-%d") - timezone.timedelta(
-            days=(time_key * number_key)
-        )
-    else:
-        if time_key:
-            new_value = datetime.strptime(value, "%Y-%m-%d") + timezone.timedelta(
-                days=(time_key * number_key)
-            )
-        else:
-            try:
-                date_parsed = parse(date_string)
-                new_value = date_parsed
-            except Exception as e:
-                print(e)
-                new_value = value
-    return new_value
-
-
 def clean_prompt_return_data(data, fields, crm, resource=None):
     cleaned_data = dict(data)
     notes = cleaned_data.pop("meeting_comments", None)
@@ -732,18 +652,6 @@ def clean_prompt_return_data(data, fields, crm, resource=None):
     cleaned_data["meeting_comments"] = notes
     cleaned_data["meeting_type"] = subject
     return cleaned_data
-
-
-def set_owner_field(resource, crm):
-    if resource in ["Opportunity", "Account", "Contact"] and crm == "SALESFORCE":
-        return "Owner ID"
-    elif resource == "Company":
-        return "Company owner"
-    elif resource == "Contact" and crm == "HUBSPOT":
-        return "Contact owner"
-    elif resource == "Deal":
-        return "Deal owner"
-    return None
 
 
 def process_transcript_to_summaries(transcript, user):
@@ -848,12 +756,7 @@ def process_transcript_to_summaries(transcript, user):
 def _process_get_transcript_and_update_crm(payload, context, summary_parts, viable_data):
     from managr.core.models import User
     from managr.salesforce.models import MeetingWorkflow
-    from managr.crm.utils import CRM_SWITCHER
-    from managr.utils.client import Variable_Client
-    from managr.core import constants as core_consts
-    from managr.core.exceptions import _handle_response
     from managr.core.background import emit_process_add_call_analysis
-    from managr.meetings.serializers import MeetingZoomSerializer
 
     pm = json.loads(payload["view"]["private_metadata"])
     user = User.objects.get(id=pm.get("u"))
@@ -1208,3 +1111,210 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
         )
     return
 
+
+@background()
+def _process_frontend_transcript(request_data):
+    from managr.core.background import emit_process_add_call_analysis
+    from managr.core.models import User
+
+    user = User.objects.get(id=request_data["user_id"])
+    summary_parts = []
+    viable_data = []
+    meeting_id = request_data["meeting_id"]
+    resource_type = request_data["resource_type"]
+    integration_id = request_data["integration_id"]
+
+    resource = CRM_SWITCHER[user.crm][request_data["resource_type"]]["model"].objects.get(
+        id=request_data["resource_id"]
+    )
+
+    meeting_id = request_data["meeting_id"]
+    meeting_res = user.zoom_account.helper_class.get_meeting_by_id(
+        meeting_id, user.zoom_account.access_token
+    )
+    end_time = datetime.strptime(meeting_res["start_time"], "%Y-%m-%dT%H:%M:%S%z")
+    end_time = end_time + timezone.timedelta(minutes=meeting_res["duration"])
+    meeting_data = {
+        "meeting_id": meeting_res["id"],
+        "topic": meeting_res["topic"],
+        "start_time": meeting_res["start_time"],
+        "end_time": end_time,
+        "user": user.id,
+        "provider": "Zoom Meeting",
+        "meta_data": json.dumps(meeting_res),
+    }
+    try:
+        meeting = MeetingZoomSerializer(data=meeting_data)
+        meeting.is_valid(True)
+        meeting.save()
+        workflow = MeetingWorkflow.objects.create(
+            operation_type="MEETING_REVIEW",
+            meeting=meeting.instance,
+            user=user,
+            resource_id=request_data["resource_id"],
+            resource_type=request_data["resource_type"],
+        )
+        workflow.save()
+    except Exception as e:
+        logger.info(e)
+
+    resource = CRM_SWITCHER[user.crm][request_data["resource_type"]]["model"].objects.get(
+        integration_id=integration_id
+    )
+    form_template = user.team.team_forms.get(form_type="UPDATE", resource=resource_type)
+    fields = form_template.custom_fields.all()
+    fields_list = list(fields.values_list("label", flat=True))
+    has_error = False
+    error_message = None
+    try:
+        if not settings.IN_PROD:
+            logger.info("Retreiving meeting data...")
+        meeting = workflow.meeting
+        meeting_data = meeting.meeting_account.helper_class.get_meeting_data(
+            meeting.meeting_id, meeting.meeting_account.access_token
+        )
+        if not settings.IN_PROD:
+            logger.info(f"Done! {meeting_data}")
+
+        recordings = meeting_data["recording_files"]
+        filtered_recordings = [
+            recording
+            for recording in recordings
+            if recording["recording_type"] == "audio_transcript"
+        ]
+        if len(filtered_recordings):
+            if not len(summary_parts):
+                recording_obj = filtered_recordings[0]
+                download_url = recording_obj["download_url"]
+                transcript = meeting.meeting_account.helper_class.get_transcript(
+                    download_url, meeting.meeting_account.access_token
+                )
+                transcript = transcript.decode("utf-8")
+                summary_parts = process_transcript_to_summaries(transcript, user)
+            if len(summary_parts):
+                timeout = 90.0
+                tokens = 1500
+                attempts = 1
+                while True:
+                    summary_body = core_consts.OPEN_AI_TRANSCRIPT_UPDATE_PROMPT(
+                        {
+                            "date": workflow.datetime_created.date(),
+                            "transcript_summaries": summary_parts,
+                        },
+                        fields_list,
+                        user,
+                    )
+                    tokens = 1000
+                    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                        user.email, summary_body, token_amount=tokens, top_p=0.9
+                    )
+                    try:
+                        if not settings.IN_PROD:
+                            logger.info("Combining Summary parts")
+                        if not viable_data:
+                            with Variable_Client(timeout) as client:
+                                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                                r = client.post(
+                                    url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
+                                )
+                            r = _handle_response(r)
+                            if not settings.IN_PROD:
+                                logger.info(f"Summary response: {r}")
+                            choice = r["choices"][0].get("message").get("content")
+                            data = clean_prompt_string(choice)
+                            viable_data = data
+                        else:
+                            data = viable_data
+                        # if not settings.IN_PROD:
+                        #     print(f"DATA: {data}")
+                        combined_summary = (
+                            data.pop("summary", "There was an error creating the summary")
+                            if data.get("summary", None)
+                            else data.pop("Summary", "There was an error creating the summary")
+                        )
+                        owner_field = set_owner_field(resource_type, user.crm)
+                        data[owner_field] = user.crm_account.crm_id
+                        swapped_field_data = swap_submitted_data_labels(data, fields)
+                        cleaned_data = clean_prompt_return_data(
+                            swapped_field_data, fields, user.crm, resource
+                        )
+
+                        workflow.transcript_summary = combined_summary
+                        workflow.save()
+                        break
+                    except StopReasonLength:
+                        logger.exception(
+                            f"Retrying for stop reason length, token amount at: {tokens}"
+                        )
+                        if tokens >= 2000:
+                            error_message = (
+                                "There was an error processing your transcript, try again"
+                            )
+                            break
+                        else:
+                            tokens += 500
+                            continue
+                    except ServerError as e:
+                        logger.exception(f"Server error from Open AI: {e}")
+                        if attempts >= 5:
+                            has_error = True
+                            error_message = "There was a server error with Open AI"
+                            break
+                        else:
+                            attempts += 1
+                            time.sleep(10.0)
+                    except ValueError as e:
+                        print(e)
+                        if str(e) == "substring not found":
+                            continue
+                        else:
+                            has_error = True
+                            error_message = "Looks like we ran into an internal issue"
+                            break
+                    except SyntaxError as e:
+                        print(e)
+                        continue
+                    except httpx.ReadTimeout:
+                        logger.exception(
+                            f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}"
+                        )
+                        if timeout >= 120.0:
+                            has_error = True
+                            error_message = "OpenAI servers are busy. Try again in a few minutes."
+
+                            break
+                        else:
+                            timeout += 30.0
+                    except Exception as e:
+                        logger.exception(f"Exception combining summaries: <{e}>")
+            else:
+                has_error = True
+                error_message = "Unknown error"
+        else:
+            has_error = True
+            error_message = "We could not find a transcript for this meeting"
+    except RecordingNotFound:
+        has_error = True
+
+        error_message = f"Looks like you're transcript is not done processing, try again in a bit!"
+    except Exception as e:
+        logger.exception(e)
+        has_error = True
+        error_message = f"We encountered an unknow error processing your transcript: {str(e)}"
+
+    if not has_error:
+        form_check = workflow.forms.all().filter(template=form_template).first()
+        if form_check:
+            new_form = form_check
+            form_check.save_form(cleaned_data, False)
+        else:
+            new_form = OrgCustomSlackFormInstance.objects.create(
+                user=user,
+                template=form_template,
+                resource_id=str(resource.id),
+                update_source="transcript",
+                workflow=workflow,
+            )
+            new_form.save_form(cleaned_data, False)
+        emit_process_add_call_analysis(str(workflow.id), summary_parts)
+    return
