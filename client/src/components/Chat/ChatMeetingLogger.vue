@@ -7,7 +7,7 @@
       :class="{ disabled: submitting }"
     >
       <div class="margin-top-s">
-        <p>Related to type:</p>
+        <p @click="test">Related to type:</p>
 
         <Multiselect
           v-model="selectedResourceType"
@@ -16,6 +16,7 @@
           :options="resources"
           :loading="dropdownLoading"
           style="width: 96%"
+          :disabled="submitting"
         >
         </Multiselect>
       </div>
@@ -40,7 +41,7 @@
               : selectedList
           "
           :loading="dropdownLoading || listLoading"
-          :disabled="!selectedResourceType"
+          :disabled="!selectedResourceType || submitting"
         >
           <template slot="noResult">
             <p class="multi-slot">No results. Try loading more</p>
@@ -49,38 +50,64 @@
         </Multiselect>
       </div>
 
-      <div class="margin-top">
+      <div style="margin-top: 1.25rem">
         <p>Use AI to summarize & auto-fill CRM?</p>
 
         <Multiselect
+          style="width: 96%"
           v-model="usingAi"
           selectLabel=""
           deselectLabel=""
           label="name"
           track-by="value"
-          style="width: 96%"
           :options="aiOptions"
           :loading="dropdownLoading"
-          :disabled="!mappedOpp"
+          :disabled="!mappedOpp || submitting"
         >
         </Multiselect>
       </div>
-
       <div v-if="errorText" class="margin-top">
         <p class="error">{{ errorText }}</p>
       </div>
+
+      <p v-if="processing" class="row__ gray-text smaller">
+        <img class="rotate" src="@/assets/images/loading.svg" height="14px" alt="" /> Processing
+        transcript, this could take a few minutes...
+      </p>
     </div>
 
     <div v-else-if="selectedMeetingWorkflow && selectedMeetingWorkflow.forms.length">
       <div v-if="selectedMeetingWorkflow.forms[0].update_source === 'transcript'">
+        <!-- selectedMeetingWorkflow.is_completed && -->
         <div
           v-if="
-            !selectedMeetingWorkflow.is_completed ||
-            !(selectedMeetingWorkflow.forms[0] && selectedMeetingWorkflow.forms[0].is_submitted)
+            !(selectedMeetingWorkflow.forms[0] && selectedMeetingWorkflow.forms[0].is_submitted) &&
+            !updatingMeeting
           "
         >
-          <div :class="{ disabled: submitting }" v-for="(field, i) in formFields" :key="i">
+          <div class="opp-row">
+            <p class="logged">Summary</p>
+            <button @click="toggleUpdateMeeting" class="view-opp-button">
+              Review & Update {{ this.user.crm === 'HUBSPOT' ? 'HubSpot' : 'Salesforce' }}
+            </button>
+          </div>
+
+          {{ selectedMeetingWorkflow.transcript_summary }}
+          <div>
+            <p class="logged-blue">Analysis</p>
+            <pre class="message-text" v-html="selectedMeetingWorkflow.transcript_analysis"></pre>
+          </div>
+        </div>
+
+        <div
+          v-else-if="
+            !(selectedMeetingWorkflow.forms[0] && selectedMeetingWorkflow.forms[0].is_submitted) &&
+            updatingMeeting
+          "
+        >
+          <div v-for="(field, i) in formFields" :key="i">
             <ChatMeetingFormField
+              :disableField="submitting"
               :placeholder="toString(updateData[field.apiName])"
               :field="field"
               :chatData="updateData"
@@ -95,27 +122,45 @@
             />
           </div>
           <div class="meeting-modal-footer">
+            <button @click="toggleUpdateMeeting">Cancel</button>
             <button @click="onSubmitChat" class="green-button" :disabled="submitting">
+              <img
+                v-if="submitting"
+                class="rotate"
+                src="@/assets/images/loading.svg"
+                height="14px"
+                style="margin-right: 4px"
+                alt=""
+              />
               Log Meeting
             </button>
           </div>
         </div>
 
         <div v-else>
-          <div @click="test">
+          <div class="opp-row">
             <p class="logged">
               <img src="@/assets/images/check.svg" height="12px" alt="" /> meeting logged
             </p>
+
+            <button @click="viewOpp" class="view-opp-button">
+              View {{ selectedMeetingWorkflow.resource_ref.name }}
+            </button>
           </div>
 
-          <pre class="message-text" v-html="selectedMeetingWorkflow.transcript_analysis"></pre>
+          <p>{{ selectedMeetingWorkflow.transcript_summary }}</p>
+          <div>
+            <p class="logged-blue">Analysis</p>
+            <pre class="message-text" v-html="selectedMeetingWorkflow.transcript_analysis"></pre>
+          </div>
         </div>
       </div>
 
       <div v-else>
         <div v-if="!selectedMeetingWorkflow.is_completed">
-          <div :class="{ disabled: submitting }" v-for="(field, i) in formFields" :key="i">
+          <div v-for="(field, i) in formFields" :key="i">
             <ChatMeetingFormField
+              :disableField="submitting"
               :placeholder="toString(updateData[field.apiName])"
               :field="field"
               :chatData="updateData"
@@ -131,16 +176,27 @@
           </div>
           <div class="meeting-modal-footer">
             <button @click="onSubmitChat" class="green-button" :disabled="submitting">
+              <img
+                v-if="submitting"
+                class="rotate"
+                src="@/assets/images/loading.svg"
+                height="14px"
+                style="margin-right: 4px"
+                alt=""
+              />
               Log Meeting
             </button>
           </div>
         </div>
 
         <div v-else>
-          <div @click="test">
+          <div class="opp-row">
             <p class="logged">
               <img src="@/assets/images/check.svg" height="12px" alt="" /> meeting logged
             </p>
+            <button @click="viewOpp" class="view-opp-button">
+              View {{ selectedMeetingWorkflow.resource_ref.name }}
+            </button>
           </div>
         </div>
       </div>
@@ -148,10 +204,47 @@
 
     <div v-if="!hasMeetingWorkflow">
       <div class="meeting-modal-footer">
-        <p v-if="processing" class="row__">
-          <img class="rotate" src="@/assets/images/loading.svg" height="14px" alt="" /> Processing
-          transcript, this could take a few minutes...
-        </p>
+        <button
+          @click="deselectMeeting"
+          v-if="selectedResourceId && usingAi"
+          :disabled="submitting"
+        >
+          Cancel
+        </button>
+
+        <button
+          @click="submitChatMeeting"
+          class="green-button"
+          v-if="selectedResourceId && usingAi && usingAi.value === 'false'"
+          :disabled="submitting"
+        >
+          <img
+            v-if="submitting"
+            class="rotate"
+            src="@/assets/images/loading.svg"
+            height="14px"
+            style="margin-right: 4px"
+            alt=""
+          />
+          Submit
+        </button>
+
+        <button
+          @click="submitChatTranscript"
+          class="green-button"
+          v-if="selectedResourceId && usingAi && usingAi.value === 'true'"
+          :disabled="submitting"
+        >
+          <img
+            v-if="submitting"
+            class="rotate"
+            src="@/assets/images/loading.svg"
+            height="14px"
+            style="margin-right: 4px"
+            alt=""
+          />
+          Submit
+        </button>
       </div>
     </div>
 
@@ -197,15 +290,16 @@ export default {
     formFields: {},
     stageFields: {},
     stagesWithForms: {},
+    meetingOpp: {},
   },
   watch: {
-    usingAi(val) {
-      if (val && val.value === 'false') {
-        this.submitChatMeeting()
-      } else if (val && val.value === 'true') {
-        this.submitChatTranscript()
-      }
-    },
+    // usingAi(val) {
+    //   if (val && val.value === 'false') {
+    //     this.submitChatMeeting()
+    //   } else if (val && val.value === 'true') {
+    //     this.submitChatTranscript()
+    //   }
+    // },
     selectedResourceType: 'changeList',
     searchValue(newVal, oldVal) {
       if (newVal !== oldVal && newVal !== '') {
@@ -220,6 +314,7 @@ export default {
   },
   data() {
     return {
+      updatingMeeting: false,
       textLoading: null,
       listLoading: false,
       loading: false,
@@ -265,7 +360,16 @@ export default {
   },
   methods: {
     test() {
-      console.log(this.meetingData)
+      console.log(this.currentOpp)
+    },
+    deselectMeeting() {
+      this.$emit('deselect-meeting')
+    },
+    toggleUpdateMeeting() {
+      this.updatingMeeting = !this.updatingMeeting
+    },
+    viewOpp() {
+      this.$emit('select-opp', this.selectedMeetingWorkflow.resource_ref)
     },
     deselectAI() {
       this.usingAi = null
@@ -298,7 +402,9 @@ export default {
           })
           .then((response) => {
             if (response.status === 200) {
-              this.$emit('reload-workflows')
+              setTimeout(() => {
+                this.$emit('reload-workflows')
+              }, 1500)
             } else {
               this.errorText = response.data
               this.selectedResourceType = null
@@ -355,14 +461,14 @@ export default {
           .then((response) => {
             setTimeout(() => {
               this.$emit('reload-workflows')
-            }, 2000)
+            }, 10000)
           })
       } catch (e) {
         console.log(e)
       } finally {
         setTimeout(() => {
           this.submitting = false
-        }, 3000)
+        }, 11000)
       }
     },
     setUpdateValues(key, val, multi) {
@@ -495,6 +601,7 @@ export default {
       }
     },
     selectOpp(val) {
+      console.log(val)
       this.selectedResourceId = val.id
       if (this.selectedResourceType === 'Deal' || this.selectedResourceType === 'Opportunity') {
         this.$emit('set-opp', val.name)
@@ -526,6 +633,24 @@ export default {
         })
         this.updateData = filteredObject
       }
+    }
+
+    if (this.meetingOpp) {
+      this.selectedResourceId = this.meetingOpp.id
+      this.mappedOpp = this.meetingOpp
+      if (this.user.crm === 'HUBSPOT') {
+        this.selectedResourceType = 'Deal'
+      } else {
+        this.selectedResourceType = 'Opportunity'
+      }
+      if (this.selectedResourceType === 'Deal' || this.selectedResourceType === 'Opportunity') {
+        this.$emit('set-opp', this.meetingOpp.name)
+      }
+    }
+
+    this.usingAi = {
+      name: 'Yes',
+      value: 'true',
     }
   },
   computed: {
@@ -607,6 +732,9 @@ export default {
     meetingData() {
       return this.$store.state.meetingData
     },
+    currentOpp() {
+      return this.$store.state.currentOpp
+    },
   },
 }
 </script>
@@ -616,7 +744,6 @@ export default {
 @import '@/styles/buttons';
 @import '@/styles/cards';
 @import '@/styles/mixins/utils';
-@import '@/styles/mixins/inputs';
 
 ::v-deep .multiselect * {
   font-size: 13px;
@@ -653,7 +780,27 @@ export default {
   width: fit-content;
   font-size: 12px;
   color: $dark-green;
-  padding: 4px;
+  padding: 6px 8px;
+  border-radius: 5px;
+  margin-top: 1rem;
+
+  img {
+    margin-right: 0.25rem;
+    margin-bottom: -2px;
+    filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
+      contrast(82%);
+  }
+}
+
+.logged-blue {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  background-color: $white-blue;
+  width: fit-content;
+  font-size: 12px;
+  color: $dark-black-blue;
+  padding: 6px 8px;
   border-radius: 5px;
   margin-top: 1rem;
 
@@ -931,6 +1078,32 @@ button {
   }
 }
 
+.view-opp-button {
+  @include chat-button();
+  border-radius: 5px;
+  padding: 6px 8px;
+  display: block;
+  overflow: hidden;
+  width: 220px;
+  margin-right: 0.75rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  background-color: $dark-green;
+  border: 1px solid $dark-green;
+  color: white;
+}
+
+.opp-row {
+  position: sticky;
+  top: 0;
+  background-color: white;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between;
+}
+
 .row__ {
   display: flex;
   flex-direction: row;
@@ -942,7 +1115,7 @@ button {
 }
 
 .margin-top {
-  margin-top: 2rem;
+  margin-top: 1.5rem;
 }
 
 .margin-top-s {

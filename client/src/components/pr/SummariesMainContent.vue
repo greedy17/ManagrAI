@@ -407,13 +407,10 @@
 </template>
 <script>
 import ChatTextBox from '../Chat/ChatTextBox.vue'
-import Input from '../forms/inputs/Input.vue'
 export default {
   name: 'SummariesMainContent',
   components: {
     ChatTextBox,
-    Input
-
   },
   data() {
     return {
@@ -482,7 +479,7 @@ export default {
           coverPhoto: `https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/New_York_City_%28New_York%2C_USA%29%2C_Empire_State_Building_--_2012_--_6448.jpg/1200px-New_York_City_%28New_York%2C_USA%29%2C_Empire_State_Building_--_2012_--_6448.jpg`,
           time: '5 mins ago',
           author: 'Eric Peters',
-          link: 'https://www.nyan.cat/',
+          link: 'https://www.teslarati.com/tesla-cybertruck-orders-1-9-million-as-musk-off-the-hook-demand/',
           data: {},
         },
         {
@@ -494,7 +491,7 @@ export default {
           coverPhoto: `https://empire-s3-production.bobvila.com/articles/wp-content/uploads/2023/01/iStock-1372085619-hidden-costs-of-owning-an-electric-car-vehicle-charging-by-solar-panels.jpg`,
           time: '10 mins ago',
           author: 'Susan Miller',
-          link: 'https://www.nyan.cat/',
+          link: 'https://www.teslarati.com/tesla-cybertruck-orders-1-9-million-as-musk-off-the-hook-demand/',
           data: {},
         },
         {
@@ -506,7 +503,7 @@ export default {
           coverPhoto: `https://hips.hearstapps.com/hmg-prod/images/2022-tesla-model-s-mmp-3-1628540852.png?crop=0.891996891996892xw:1xh;center,top&resize=1200:*`,
           time: '1 hr ago',
           author: 'Rachel Myers',
-          link: 'https://www.nyan.cat/',
+          link: 'https://www.teslarati.com/tesla-cybertruck-orders-1-9-million-as-musk-off-the-hook-demand/',
           data: {},
         },
       ]

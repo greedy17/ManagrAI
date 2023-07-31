@@ -17,7 +17,7 @@
 
       <div :class="{ disabled: inlineLoader }" class="save-close">
         <div @click="inlineUpdate" class="save">
-          <span v-if="!inlineLoader">&#x2713;</span>
+          <span v-if="!inlineLoader">save</span>
           <img
             class="rotate disabled"
             v-else
@@ -26,9 +26,9 @@
             alt=""
           />
         </div>
-        <div :class="{ disabled: inlineLoader }" @click="closeInline" class="close">
-          <span>x</span>
-        </div>
+        <!-- <div :class="{ disabled: inlineLoader }" @click="closeInline" class="close">
+          <span>close</span>
+        </div> -->
       </div>
     </div>
 
@@ -61,7 +61,7 @@
 
       <div :class="{ disabled: inlineLoader }" class="save-close">
         <div @click="inlineUpdate" class="save">
-          <span v-if="!inlineLoader">&#x2713;</span>
+          <span v-if="!inlineLoader">save</span>
           <img
             class="rotate disabled"
             v-else
@@ -70,9 +70,9 @@
             alt=""
           />
         </div>
-        <div :class="{ disabled: inlineLoader }" @click="closeInline" class="close">
-          <span>x</span>
-        </div>
+        <!-- <div :class="{ disabled: inlineLoader }" @click="closeInline" class="close">
+          <span>close</span>
+        </div> -->
       </div>
     </div>
 
@@ -112,7 +112,7 @@
 
       <div :class="{ disabled: inlineLoader }" class="save-close">
         <div @click="inlineUpdate" class="save">
-          <span v-if="!inlineLoader">&#x2713;</span>
+          <span v-if="!inlineLoader">save</span>
           <img
             class="rotate disabled"
             v-else
@@ -121,9 +121,9 @@
             alt=""
           />
         </div>
-        <div :class="{ disabled: inlineLoader }" @click="closeInline" class="close">
-          <span>x</span>
-        </div>
+        <!-- <div :class="{ disabled: inlineLoader }" @click="closeInline" class="close">
+          <span>close</span>
+        </div> -->
       </div>
     </div>
 
@@ -147,7 +147,7 @@
 
       <div :class="{ disabled: inlineLoader }" class="save-close">
         <div @click="inlineUpdate" class="save">
-          <span v-if="!inlineLoader">&#x2713;</span>
+          <span v-if="!inlineLoader">save</span>
           <img
             class="rotate disabled"
             v-else
@@ -156,9 +156,9 @@
             alt=""
           />
         </div>
-        <div :class="{ disabled: inlineLoader }" @click="closeInline" class="close">
-          <span>x</span>
-        </div>
+        <!-- <div :class="{ disabled: inlineLoader }" @click="closeInline" class="close">
+          <span>close</span>
+        </div> -->
       </div>
     </div>
 
@@ -184,7 +184,7 @@
 
       <div :class="{ disabled: inlineLoader }" class="save-close">
         <div @click="inlineUpdate" class="save">
-          <span v-if="!inlineLoader">&#x2713;</span>
+          <span v-if="!inlineLoader">save</span>
           <img
             class="rotate disabled"
             v-else
@@ -193,9 +193,9 @@
             alt=""
           />
         </div>
-        <div :class="{ disabled: inlineLoader }" @click="closeInline" class="close">
-          <span>x</span>
-        </div>
+        <!-- <div :class="{ disabled: inlineLoader }" @click="closeInline" class="close">
+          <span>close</span>
+        </div> -->
       </div>
     </div>
 
@@ -388,13 +388,13 @@ export default {
   background: white;
   outline: 1px solid rgba(0, 0, 0, 0.1);
   color: $coral;
-  width: 20px;
+  width: 36px;
   height: 20px;
   border-radius: 3px;
   cursor: pointer;
   margin-left: 0.5rem;
   margin-right: 2px;
-  font-size: 13px;
+  font-size: 11px;
   transition: all 0.3s;
 
   &:hover {
@@ -407,15 +407,16 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
-  outline: 1px solid rgba(0, 0, 0, 0.1);
-  color: $dark-green;
-  width: 20px;
-  height: 20px;
+  background: $dark-green;
+  outline: 1px solid $dark-green;
+  color: white;
+  width: 60px;
+  height: 24px;
   border-radius: 3px;
   cursor: pointer;
   font-size: 11px;
   transition: all 0.3s;
+  margin-right: 4px;
 
   &:hover {
     box-shadow: 0 3px 6px 0 $very-light-gray;

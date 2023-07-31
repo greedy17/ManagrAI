@@ -50,6 +50,12 @@ class UserRefSerializer(serializers.ModelSerializer):
 
 class UserClientSerializer(serializers.ModelSerializer):
     organization_ref = OrganizationSerializer(many=False, source="organization", read_only=True)
+    salesforce_account_ref = SalesforceAuthSerializer(source="salesforce_account", read_only=True)
+    hubspot_account_ref = HubspotAuthAccountSerializer(source="hubspot_account", read_only=True)
+    slack_ref = UserSlackIntegrationSerializer(source="slack_integration", read_only=True)
+    slack_account = UserFrontEndSlackIntegrationSerializer(
+        source="slack_integration", read_only=True
+    )
 
     class Meta:
         model = User
@@ -73,6 +79,10 @@ class UserClientSerializer(serializers.ModelSerializer):
             "has_outreach_integration",
             "has_zoom_integration",
             "has_salesforce_integration",
+            "salesforce_account_ref",
+            "slack_ref",
+            "slack_account",
+            "hubspot_account_ref",
             "timezone",
             "onboarding",
             "team",

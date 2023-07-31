@@ -18,12 +18,18 @@
           </div>
           <Transition name="slide-fade">
             <div v-if="showMessage" class="templates">
-              <p>Select a record first!</p>
+              <p>
+                Select a record from the list
+                <img class="inverted" src="@/assets/images/arrow-right.svg" height="10px" alt="" />
+              </p>
             </div>
           </Transition>
           <Transition name="slide-fade">
-            <div v-if="showMeetingMessage" class="templates-green">
-              <p>Log your meeting from the meetings sections.</p>
+            <div v-if="showMeetingMessage" class="templates">
+              <p>
+                Select a meeting from the list
+                <img class="inverted" src="@/assets/images/arrow-right.svg" height="10px" alt="" />
+              </p>
             </div>
           </Transition>
 
@@ -67,45 +73,6 @@
           height="14px"
           alt=""
         />
-
-        <!-- <div class="main-text">
-          <span :class="{ activeicon: templatesOpen }" style="font-size: 14px;margin-left">
-            <img class="gold-filter" src="@/assets/images/sparkle.svg" height="14px" alt="" />
-          </span>
-
-          <div class="action">
-            <p
-              class="action__p"
-              :class="{ 'current-actions': currentOpp && textBoxType === action.value }"
-              @click="addTemplate(action.value)"
-              v-for="(action, i) in actions"
-              :key="i"
-            >
-              {{ action.name }}
-            </p>
-            <p class="action__p current" v-if="currentOpp && currentOpp !== true">
-              {{ currentOpp.name }}
-              <span class="remove" @click="clearMessage">x</span>
-            </p>
-            <Transition name="slide-fade">
-              <div v-if="showMessage" class="templates">
-                <p>Select an {{ user.crm === 'SALESFORCE' ? 'Opportunity' : 'Deal' }} first!</p>
-              </div>
-            </Transition>
-            <Transition name="slide-fade">
-              <div v-if="showMeetingMessage" class="templates-green">
-                <p>Log your meeting from the meetings sections.</p>
-              </div>
-            </Transition>
-          </div>
-          <img
-            :class="{ invert: !message }"
-            @click="sendMessage"
-            src="@/assets/images/paper-plane.svg"
-            height="14px"
-            alt=""
-          />
-        </div> -->
       </div>
     </div>
   </section>
@@ -136,15 +103,16 @@ export default {
       actionSelected: false,
       textBoxType: '',
       placeholder: '',
+      askInstructons: '',
       currentAction: null,
       actions: [
         { name: 'Log Meeting', value: 'Log Meeting', img: 'calendar' },
+        { name: 'Update', value: 'Open Form', img: 'edit-note' },
         {
           name: 'Add Notes',
           value: 'Update',
           img: 'notebook',
         },
-        // { name: 'Create Record', value: 'Create Opportunity' },
         { name: 'Ask Managr', value: 'Ask Managr', img: 'comment' },
         { name: 'Inspect Deal', value: 'Run Review', img: 'money' },
         // { name: 'Call Summary', value: 'Get call summary for Opportunity' },
@@ -152,11 +120,13 @@ export default {
       ],
     }
   },
-  mounted() {
+  mounted() {},
+  created() {
     this.setPlaceholder()
   },
   watch: {
     currentOpp: 'setPlaceholder',
+    displayedOpps: 'setPlaceholder',
   },
   methods: {
     scrollToBottom() {
@@ -178,7 +148,14 @@ export default {
       }
     },
     setPlaceholder() {
-      if (!this.currentOpp) {
+      if (this.userCRM && !(this.displayedOpps.results && this.displayedOpps.results.length)) {
+        this.templatesOpen = false
+        this.actionSelected = false
+        this.textBoxType = null
+        this.message = ''
+        this.currentAction = null
+        this.placeholder = 'Sync in progress...'
+      } else if (!this.currentOpp) {
         this.templatesOpen = false
         this.actionSelected = false
         this.textBoxType = null
@@ -240,12 +217,14 @@ export default {
             prompt: `Ask Managr ${this.chatmsg}`,
             resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
             resource_id: this.$store.state.currentOpp.id,
+            instructions: this.askInstructons,
           })
           .then((response) => {
             if (response.status >= 400 && response.status < 500) {
               User.api
                 .addMessage({
-                  error: response.data.value,
+                  value: response.value,
+                  error: response.value,
                   user_type: 'bot',
                   conversation_id: this.conversation.id,
                   failed: true,
@@ -288,6 +267,7 @@ export default {
         console.log(e)
         this.$emit('message-loading', false)
       } finally {
+        this.askInstructons = ''
         this.$emit('message-loading', false)
         this.scrollToBottom()
       }
@@ -306,7 +286,8 @@ export default {
             if (response.status >= 400 && response.status < 500) {
               User.api
                 .addMessage({
-                  error: response.data.value,
+                  value: response.value,
+                  error: response.value,
                   user_type: 'bot',
                   conversation_id: this.conversation.id,
                   failed: true,
@@ -318,6 +299,7 @@ export default {
             } else if (response.status === 500) {
               User.api
                 .addMessage({
+                  value: 'Timeout error, try again',
                   error: 'Timeout error, try again',
                   user_type: 'bot',
                   conversation_id: this.conversation.id,
@@ -361,6 +343,7 @@ export default {
             user_id: this.user.id,
             prompt: `Update ${this.currentOpp.name} ${this.chatmsg}`,
             resource_type: this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity',
+            resource_id: this.currentOpp.id,
           })
           .then((response) => {
             this.chatRes = response
@@ -368,7 +351,8 @@ export default {
               console.log(response)
               User.api
                 .addMessage({
-                  error: response.data.value,
+                  value: response.value,
+                  error: response.value,
                   user_type: 'bot',
                   conversation_id: this.conversation.id,
                   failed: true,
@@ -380,6 +364,7 @@ export default {
             } else if (response.status === 500) {
               User.api
                 .addMessage({
+                  value: 'Timeout error, try again',
                   error: 'Timeout error, try again',
                   user_type: 'bot',
                   conversation_id: this.conversation.id,
@@ -414,7 +399,12 @@ export default {
         console.log(e)
         this.$emit('message-loading', false)
       } finally {
-        this.$emit('set-title', this.chatRes['resource'][0] || 'Uh-oh')
+        if (this.chatRes['resource']) {
+          this.$emit('set-title', this.chatRes['resource'][0])
+        } else {
+          this.$emit('set-title', 'Uh-oh')
+        }
+
         this.$emit('message-loading', false)
         this.scrollToBottom()
       }
@@ -432,6 +422,7 @@ export default {
 
       if (val.value.toLowerCase().includes('update')) {
         if (this.currentOpp) {
+          this.$emit('set-open-form', false)
           this.actionSelected = true
           this.textBoxType = 'Update'
           this.placeholder = `Add your notes for ${this.currentOpp.name}...`
@@ -467,6 +458,12 @@ export default {
         } else {
           this.toggleMessage()
         }
+      } else if (val.value.toLowerCase().includes('open form')) {
+        if (this.currentOpp) {
+          this.$emit('open-form', this.currentOpp.secondary_data, true)
+          this.actionSelected = false
+          this.textBoxType = 'Open Form'
+        }
       } else if (!val.value.toLowerCase().includes('log meeting')) {
         this.$emit('set-view', 'pipeline')
         this.actionSelected = true
@@ -496,14 +493,14 @@ export default {
       this.showMeetingMessage = false
       setTimeout(() => {
         this.showMessage = false
-      }, 1200)
+      }, 1750)
     },
     toggleMeetingMessage() {
       this.showMeetingMessage = true
       this.showMessage = false
       setTimeout(() => {
         this.showMeetingMessage = false
-      }, 1500)
+      }, 1750)
     },
     toggleTemplates() {
       this.templatesOpen = !this.templatesOpen
@@ -513,6 +510,19 @@ export default {
     user() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
+    },
+    displayedOpps: {
+      get() {
+        return this.$store.state.chatOpps
+      },
+
+      set(value) {
+        this.displayedOpps = value
+      },
+    },
+    userCRM() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return this.$store.state.user.crm
     },
     currentOpp() {
       return this.$store.state.currentOpp
@@ -575,9 +585,9 @@ export default {
 .action-templates {
   // animation: shake 0.3s 1;
   display: block;
-  width: 178px;
+  width: 194px;
   position: absolute;
-  bottom: 0.75rem;
+  bottom: 0;
   left: 1rem;
   font-size: 12px;
   background: white;
@@ -1079,5 +1089,10 @@ export default {
 
 .action-item:first-of-type {
   margin-top: 12px !important;
+}
+
+.inverted {
+  filter: invert(99%);
+  margin-left: 4px;
 }
 </style>

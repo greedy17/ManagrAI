@@ -106,9 +106,10 @@
 
           <div class="form-card__footer">
             <div>
-              By signing up, I agree to the
-              <a href="https://managr.ai/terms-of-service" target="_blank">Terms</a> and
-              <a href="https://managr.ai/privacy-policy" target="_blank">Policies</a>.
+              By signing up, I agree to Managr's
+              <a href="https://managr.ai/terms-of-service" target="_blank">Terms & Conditions.</a> 
+              <!-- and -->
+              <!-- <a href="https://managr.ai/privacy-policy" target="_blank"></a>. -->
             </div>
 
             <button
@@ -222,7 +223,7 @@ export default {
         if (this.isPR) {
           this.$router.push({ name: 'PRSummaries' })
         } else {
-          this.$router.push({ name: 'Integrations' })
+          this.$router.push({ name: 'Home' })
         }
       }
     }
@@ -260,6 +261,18 @@ export default {
     async onSubmit() {
       this.registrationForm.validate()
 
+      console.log('this.registrationForm', this.registrationForm)
+      if (this.registrationForm.field.password.value !== this.registrationForm.field.confirmPassword.value) {
+        this.$toast('Please make sure password match.', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        return
+      }
+
       if (!this.registrationForm.isValid) {
         this.$toast('Please complete all fields.', {
           timeout: 2000,
@@ -287,6 +300,18 @@ export default {
       let user
       try {
         user = await User.api.register(this.registrationForm)
+        if (user.status === 400) {
+          for (let key in user.data) {
+            this.$toast(user.data[key][0], {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+          }
+          return
+        }
       } catch (error) {
         this.$toast('There was a problem creating your account.', {
           timeout: 2000,
@@ -304,13 +329,14 @@ export default {
       // const encryptedUser = encryptData(user, process.env.VUE_APP_SECRET_KEY)
       // const encryptedKey = encryptData(user.token, process.env.VUE_APP_SECRET_KEY)
       // this.$store.commit('UPDATE_USER', encryptedUser)
-      this.$store.commit('UPDATE_USER', user)
       // this.$store.commit('UPDATE_USERTOKEN', encryptedKey)
+
+      this.$store.commit('UPDATE_USER', user)
       this.$store.commit('UPDATE_USERTOKEN', user.token)
       if (this.isPR) {
         this.$router.push({ name: 'PRSummaries' })
       } else {
-        this.$router.push({ name: 'Integrations' })
+        this.$router.push({ name: 'Home' })
       }
     },
   },

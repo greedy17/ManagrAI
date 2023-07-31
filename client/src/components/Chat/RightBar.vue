@@ -71,13 +71,11 @@
                 alt=""
               />
             </span>
-            <p>
-              {{ currentMeeting.topic }}
-            </p>
+            <p>{{ currentMeeting.topic }}</p>
           </div>
 
           <div style="margin-left: -8px" class="flexed-row">
-            <small class="gray-text">{{ formatDate(currentMeeting.start_time) }}</small>
+            <small class="gray-text">{{ formatDateTime(currentMeeting.start_time) }}</small>
           </div>
         </span>
       </section>
@@ -144,7 +142,7 @@
             <section v-if="!selectedFilter">
               <div
                 @click="selectFilter(filter)"
-                v-for="filter in filters"
+                v-for="filter in userCRM === 'HUBSPOT' ? filters : SalesforceFilters"
                 :key="filter.name"
                 class="icon-row"
               >
@@ -233,12 +231,12 @@
                     v-if="selectedFilter.name && selectedFilter.operator && selectedFilter.value"
                     class="save-close"
                   >
-                    <div @click="addFilter()" class="save">
-                      <span>&#x2713;</span>
+                    <div @click="addFilter" class="save">
+                      <span>save</span>
                     </div>
-                    <div @click="clearFilter" class="close">
-                      <span>x</span>
-                    </div>
+                    <!-- <div @click="clearFilter" class="close">
+                      <span>cancel</span>
+                    </div> -->
                   </div>
                 </div>
               </div>
@@ -301,6 +299,9 @@
             :stagesWithForms="stagesWithForms"
             @reload-workflows="reloadWorkflows"
             @reload-meetings="reloadMeetings"
+            @select-opp="selectOpp"
+            @deselect-meeting="deselectMeeting"
+            :meetingOpp="meetingOpp"
             :key="logkey"
           />
         </div>
@@ -418,6 +419,22 @@
       <!-- @mouseenter="setTooltip(opp.id)"
         @mouseleave="removeTooltip" -->
       <div
+        v-if="userCRM && !(displayedOpps.results && displayedOpps.results.length) && !activeFilters"
+        class="no-results"
+      >
+        <p>Sync in progress... Reload in a few minutes</p>
+        <span @click="refreshFields()" class="button">
+          <img
+            v-if="reloading"
+            class="rotate opaque not-allowed"
+            src="@/assets/images/refresh.svg"
+            height="14px"
+            alt=""
+          />Reload</span
+        >
+      </div>
+      <div
+        v-else
         v-for="opp in opportunities"
         class="opp-container"
         @click="changeSelectedOpp(opp)"
@@ -430,7 +447,11 @@
           {{ opp.name }}
         </div> -->
       </div>
-      <div style="margin-bottom: 0.25rem" class="space-between">
+      <div
+        v-if="userCRM && displayedOpps.results && displayedOpps.results.length"
+        style="margin-bottom: 0.25rem"
+        class="space-between"
+      >
         <button
           :disabled="loadingMore"
           class="chat-button no-border gray-scale"
@@ -447,8 +468,12 @@
 
     <div class="opp-scroll-container" v-else-if="this.mainView === 'meetings' && !loading">
       <p class="gray-text small-text">Select a meeting:</p>
-      <div class="empty-container" v-if="!meetings.length">
+      <div class="empty-container" v-if="!meetings.length && hasZoomIntegration">
         <p>No Zoom meetings found... refresh or select a different day</p>
+      </div>
+
+      <div class="empty-container" v-else-if="!hasZoomIntegration">
+        <p><span @click="openSettings" class="link">Connect Zoom</span> in order to log meetings</p>
       </div>
 
       <div
@@ -461,7 +486,7 @@
         <p class="no-margin">
           {{ meeting.topic }}
         </p>
-        <small>{{ formatDate(meeting.start_time) }} </small>
+        <small>{{ formatDateTime(meeting.start_time) }} </small>
       </div>
     </div>
 
@@ -522,6 +547,8 @@ export default {
       filtervalue: null,
       allStages: [],
       meetings: [],
+      meetingOpp: null,
+      reloading: false,
       meetingDate: this.getCurrentDate(),
       objects: CollectionManager.create({
         ModelClass: CRMObjects,
@@ -585,6 +612,62 @@ export default {
         ],
       },
       selectedFilter: null,
+      SalesforceFilters: [
+        {
+          name: 'Owner',
+          dataType: 'text',
+          icon: 'fa-user',
+          apiName: 'Owner',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+        {
+          name: 'Name',
+          dataType: 'text',
+          icon: 'fa-signature',
+          apiName: 'Name',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+        {
+          name: 'Stage',
+          dataType: 'text',
+          icon: 'fa-stairs',
+          apiName: 'StageName',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+        {
+          name: 'Close date',
+          dataType: 'date',
+          icon: 'fa-calendar-plus',
+          apiName: 'CloseDate',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+        {
+          name: 'Amount',
+          dataType: 'number',
+          icon: 'fa-sack-dollar',
+          apiName: 'Amount',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+        {
+          name: 'Last activity date',
+          dataType: 'date',
+          icon: 'fa-calendar-plus',
+          apiName: 'LastActivityDate',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+      ],
       filters: [
         {
           name: 'Owner',
@@ -599,7 +682,7 @@ export default {
           name: 'Name',
           dataType: 'text',
           icon: 'fa-signature',
-          apiName: `${this.userCRM === 'SALESFORCE' ? 'Name' : 'dealname'}`,
+          apiName: 'dealname',
           operator: null,
           value: null,
           operatorLabel: null,
@@ -608,7 +691,7 @@ export default {
           name: 'Stage',
           dataType: 'text',
           icon: 'fa-stairs',
-          apiName: `${this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage'}`,
+          apiName: 'dealstage',
           operator: null,
           value: null,
           operatorLabel: null,
@@ -617,7 +700,7 @@ export default {
           name: 'Close date',
           dataType: 'date',
           icon: 'fa-calendar-plus',
-          apiName: `${this.userCRM === 'SALESFORCE' ? 'CloseDate' : 'closedate'}`,
+          apiName: 'closedate',
           operator: null,
           value: null,
           operatorLabel: null,
@@ -626,7 +709,7 @@ export default {
           name: 'Amount',
           dataType: 'number',
           icon: 'fa-sack-dollar',
-          apiName: `${this.userCRM === 'SALESFORCE' ? 'Amount' : 'amount'}`,
+          apiName: 'amount',
           operator: null,
           value: null,
           operatorLabel: null,
@@ -681,7 +764,10 @@ export default {
   },
   methods: {
     test() {
-      console.log('log', this.meetingWorkflows)
+      console.log('log', this.opportunities)
+    },
+    openSettings() {
+      this.$emit('open-settings')
     },
     formatDate(inputDate) {
       const dateObj = new Date(inputDate)
@@ -841,8 +927,12 @@ export default {
     //     }, 5000)
     //   }
     // },
+    selectOpp(opp) {
+      this.changeSelectedOpp(opp)
+      this.deselectMeeting()
+    },
     switchMainView(view) {
-      if (view === 'meetings' && !this.meetings.length) {
+      if (view === 'meetings' && !this.meetings.length && this.hasZoomIntegration) {
         this.getZoomMeetings()
         this.deselectOpp()
       } else if (view === 'meetings') {
@@ -853,6 +943,9 @@ export default {
       if (view !== this.mainView) {
         this.mainView = view
       }
+    },
+    setMeetingOpp(opp) {
+      this.meetingOpp = opp
     },
     async getNotes() {
       this.sortedNotes = []
@@ -938,6 +1031,7 @@ export default {
         this.selectedFilter.apiName,
         this.selectedFilter.value,
       ]
+      console.log(filter)
       try {
         this.$store.dispatch('changeFilters', [...this.$store.state.filters, [...filter]])
         await this.$store.dispatch('loadChatOpps', 1)
@@ -1041,7 +1135,7 @@ export default {
       let allFields = this.updateOppForm[0].fieldsRef
 
       let stageField = this.updateOppForm[0].fieldsRef.filter(
-        (field) => field.apiName === 'Stage' || field.apiName === 'dealstage',
+        (field) => field.apiName === 'StageName' || field.apiName === 'dealstage',
       )
       this.stageField = stageField[0]
 
@@ -1159,6 +1253,14 @@ export default {
         }
       }
     },
+    async refreshFields() {
+      this.reloading = true
+      await this.$store.dispatch('loadChatOpps', 1)
+
+      setTimeout(() => {
+        this.reloading = false
+      }, 2000)
+    },
     async loadMoreOpps() {
       if (this.searchText) {
         this.loadMorePage += 1
@@ -1193,6 +1295,9 @@ export default {
     },
   },
   computed: {
+    hasZoomIntegration() {
+      return !!this.$store.state.user.hasZoomIntegration
+    },
     currentMeeting() {
       return this.$store.state.currentMeeting
     },
@@ -1256,10 +1361,12 @@ export default {
     if (this.userCRM === 'HUBSPOT') {
       this.resourceName = 'Deal'
     }
-    this.$store.dispatch('loadChatOpps')
-    this.$store.dispatch('loadAllPicklists')
-    this.setOppForms()
-    this.getMeetingWorkflows()
+    if (this.userCRM) {
+      this.$store.dispatch('loadChatOpps')
+      this.$store.dispatch('loadAllPicklists')
+      this.getMeetingWorkflows()
+      this.setOppForms()
+    }
   },
 }
 </script>
@@ -1279,6 +1386,14 @@ export default {
   100% {
     -webkit-mask-position: left;
   }
+}
+
+.link {
+  text-decoration: underline;
+  text-decoration-color: $dark-black-blue;
+  color: $dark-black-blue;
+  display: inline-block;
+  cursor: pointer;
 }
 
 .loading {
@@ -1579,10 +1694,6 @@ header {
   p {
     color: $light-gray-blue;
   }
-}
-
-.pointer {
-  cursor: pointer;
 }
 
 .flex-row-between {
@@ -2126,13 +2237,13 @@ img {
   background: white;
   outline: 1px solid rgba(0, 0, 0, 0.1);
   color: $coral;
-  width: 20px;
+  width: 40px;
   height: 20px;
   border-radius: 3px;
   cursor: pointer;
   margin-left: 0.5rem;
   margin-right: 2px;
-  font-size: 13px;
+  font-size: 11px;
   transition: all 0.3s;
 
   &:hover {
@@ -2145,10 +2256,10 @@ img {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
-  outline: 1px solid rgba(0, 0, 0, 0.1);
-  color: $dark-green;
-  width: 20px;
+  background: $dark-green;
+  outline: 1px solid $dark-green;
+  color: white;
+  width: 36px;
   height: 20px;
   border-radius: 3px;
   cursor: pointer;
@@ -2247,5 +2358,15 @@ img {
 
 .pointer {
   cursor: pointer;
+}
+.no-results {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.button {
+  @include gray-text-button();
+  width: 60%;
 }
 </style>

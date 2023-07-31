@@ -48,7 +48,7 @@
               </span>
 
               <span>
-                <label for="password">Set a Pasword</label>
+                <label for="password">Set a Password</label>
                 <input
                   @blur="showVals(registrationForm.field.password)"
                   @input="registrationForm.field.password.validate()"
@@ -92,19 +92,29 @@
 
               <div class="form-card__footer">
                 <div>
-                  By signing up, I agree to the
-                  <a href="https://managr.ai/terms-of-service" target="_blank">Terms</a> and
-                  <a href="https://managr.ai/privacy-policy" target="_blank">Policies</a>.
+                  By signing up, I agree to Managr's
+                  <a href="https://managr.ai/terms-of-service" target="_blank">Terms & Conditions.</a> 
+                  <!-- and -->
+                  <!-- <a href="https://managr.ai/privacy-policy" target="_blank"></a>. -->
                 </div>
 
-                <Button
+                <!-- <Button
                   :disabled="!validatedForm"
                   :class="{ disabled: !validatedForm }"
                   class="registration__button"
                   type="submit"
                   @click="onSubmit"
                   text="Sign Up"
-                />
+                /> -->
+                <button
+                  :disabled="!validatedForm"
+                  :class="{ disabled: !validatedForm }"
+                  class="registration__button"
+                  type="submit"
+                  @click="onSubmit"
+                >
+                  Sign Up
+                </button>
               </div>
             </div>
 
@@ -238,6 +248,18 @@ export default {
       let user
       try {
         user = await User.api.activate(this.userId, this.token, this.registrationForm)
+        if (user.status === 400) {
+          for (let key in user.data) {
+            this.$toast(user.data[key][0], {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+          }
+          return
+        }
       } catch (error) {
         this.$toast('There was a problem creating your account.', {
           timeout: 2000,
@@ -260,7 +282,7 @@ export default {
       if (this.isPR) {
         this.$router.push({ name: 'PRSummaries' })
       } else {
-        this.$router.push({ name: 'Integrations' })
+        this.$router.push({ name: 'Home' })
       }
     },
   },

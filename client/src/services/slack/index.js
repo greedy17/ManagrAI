@@ -96,7 +96,7 @@ export default class SlackOAuth {
     USER: 'USER',
   }
   static redirectURI =
-    window.location.protocol + '//' + window.location.host + '/chat'
+    window.location.protocol + '//' + window.location.host + '/settings/integrations'
 }
 
 const MEETING_REVIEW = 'MEETING_REVIEW'

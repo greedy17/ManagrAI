@@ -40,24 +40,37 @@
           </div>
         </div>
 
-        <div class="row__" v-else>
-          <Multiselect
-            style="width: 200px"
-            v-model="activeList"
-            :placeholder="currentView.title || 'Select list'"
-            :options="templates.list"
-            selectedLabel=""
-            deselectLabel=""
-            selectLabel=""
-            track-by="id"
-            label="title"
-            @select="selectList($event)"
-            :loading="templates.refreshing"
-          >
-          </Multiselect>
-          <p class="counter" v-if="currentView !== 'pipeline' && !templates.refreshing">
-            {{ currentView.sobjectInstances.length }}
-          </p>
+        <div class="" v-else>
+          <div class="row__" v-if="templates.list.length">
+            <Multiselect
+              style="width: 200px"
+              v-model="activeList"
+              :placeholder="currentView ? currentView.title : 'Select list'"
+              :options="templates.list"
+              selectedLabel=""
+              deselectLabel=""
+              selectLabel=""
+              track-by="id"
+              label="title"
+              @select="selectList($event)"
+              :loading="templates.refreshing"
+            >
+            </Multiselect>
+            <p class="counter" v-if="currentView !== 'pipeline' && !templates.refreshing">
+              Results: {{ currentView ? currentView.sobjectInstances.length : '' }}
+            </p>
+          </div>
+          <div v-else>
+            <div
+              v-if="userCRM && !(displayedOpps.results && displayedOpps.results.length)"
+              class="create-list-button create-disabled"
+            >
+              Create List
+            </div>
+            <div v-else class="create-list-button" @click="openChangeConfig('workflows')">
+              Create List
+            </div>
+          </div>
         </div>
         <!-- <select
           v-else
@@ -219,7 +232,7 @@
             </th>
           </tr>
         </thead>
-        <tbody>
+        <tbody v-if="currentView">
           <tr v-for="(opp, i) in currentView.sobjectInstances" :key="i">
             <td
               :title="user.crm === 'HUBSPOT' ? opp.dealname : opp.Name"
@@ -307,7 +320,6 @@ export default {
     AlertsEditPanel,
     Modal,
   },
-
   data() {
     return {
       message: '',
@@ -321,6 +333,7 @@ export default {
       editingAlert: false,
       loading: false,
       activeList: null,
+      listCount: 0,
       formFields: CollectionManager.create({
         ModelClass: ObjectField,
         pagination: { size: 1000 },
@@ -339,17 +352,25 @@ export default {
     this.templates.refresh()
   },
   mounted() {
-    setTimeout(() => {
-      this.activeList = this.templates.list[0]
-      this.selectList(this.templates.list[0])
-    }, 3000)
+    this.setList()
   },
   methods: {
     test() {
       console.log(this.templates.list)
     },
+    setList() {
+      setTimeout(() => {
+        if (this.templates.list) {
+          this.activeList = this.templates.list[0]
+          this.selectList(this.templates.list[0])
+        }
+      }, 2000)
+    },
     handleConfigureOpen() {
       this.$emit('handleConfigureOpen', 'workflows')
+    },
+    openChangeConfig(page) {
+      this.$emit('open-change-config', page)
     },
     selectList(alert) {
       this.$store.dispatch('setCurrentView', alert)
@@ -516,6 +537,15 @@ export default {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.crm
     },
+    displayedOpps: {
+      get() {
+        return this.$store.state.chatOpps
+      },
+
+      set(value) {
+        this.displayedOpps = value
+      },
+    },
     baseResourceType() {
       return this.user.crm === 'HUBSPOT' ? 'Deal' : 'Opportunity'
     },
@@ -589,11 +619,11 @@ export default {
 ::v-deep .multiselect__tag {
   background-color: $soft-gray;
   color: $base-gray;
-  height: 32px;
+  // height: 32px;
 }
 
 ::v-deep .multiselect__tags {
-  height: 32px;
+  // height: 32px;
 }
 
 .edit-modal {
@@ -872,7 +902,7 @@ export default {
   top: 4.25rem;
   right: 0.75rem;
   width: 320px;
-  height: 200px;
+  min-height: 200px;
   background-color: white;
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -887,9 +917,12 @@ export default {
   }
 
   footer {
-    position: inherit;
-    bottom: 1rem;
-    right: 1.25rem;
+    display: flex;
+    justify-content: flex-end;
+    margin: 0.5rem 1rem 0.5rem 0;
+    // position: inherit;
+    // bottom: 1rem;
+    // right: 1.25rem;
   }
 }
 
@@ -1040,5 +1073,24 @@ th:first-of-type {
   &:hover {
     opacity: 0.5;
   }
+}
+.create-list-button {
+  // @include gray-text-button();
+  @include primary-button();
+}
+.create-disabled {
+  @include base-button();
+  border: 1px solid $soft-gray;
+  font-size: 12px;
+  transition: all 0.3s;
+  box-shadow: none;
+  border: none;
+  scale: 1;
+  background-color: $soft-gray;
+  color: $gray;
+}
+.create-disabled:hover {
+  box-shadow: none;
+  scale: 1;
 }
 </style>

@@ -43,15 +43,15 @@ OPEN_AI_UPDATE_PROMPT = (
 )
 
 OPEN_AI_MEETING_EMAIL_DRAFT = (
-    lambda meeting_comments: f"""You are a salesperson who just had a meeting with a prospect or customer. Your job is to now send a follow-up email. You must follow these instructions:
-    1) Use the meeting comments below to craft the email.
+    lambda crm_data: f"""You are a salesperson who just had a meeting with a prospect or customer. Your job is to now send a follow-up email. You must follow these instructions:
+    1) Use the dictionary of crm fields and values below to craft the email.
     2) writing style must be this (unless otherwise specified in the meeting comments):
     A casual and friendly tone, using informal salutations and contractions.
     Concise and to-the-point sentences that focus on the value proposition.
     Frequent paragraph breaks to enhance readability.
     Use of a question. Limit to one question, at the end, a clear call-to-action (no P.S. at the end)
     3) The email cannot be more than 1000 characters.\n
-    Meeting Comments: {meeting_comments}"""
+    CRM Data: {crm_data}"""
 )
 
 OPEN_AI_NEXT_STEPS = (
@@ -122,6 +122,14 @@ Email: {email}\n
 Instructions: {instructions}"""
 )
 
+OPEN_AI_ASK_MANAGR_WITH_INSTRUCTIONS = (
+    lambda text, instructions, crm_data: f"""
+Below is an AI generated response. Adjust and rewrite the response per instructions below, using the provided CRM data:\n
+Response: {text}\n
+CRM Data\n
+Instructions: {instructions}"""
+)
+
 
 def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=500, temperature=False, top_p=False):
     body = {
@@ -175,42 +183,10 @@ def OPEN_AI_EDIT_BODY(user_name, input, instructions, data, temperature=False, t
     return body
 
 
-def OPEN_AI_ASK_MANAGR_PROMPT(user_id, prompt, resource_type, resource_id):
-    from managr.core.models import User
-    from managr.salesforce.models import MeetingWorkflow
-    from managr.slack.models import OrgCustomSlackFormInstance, OrgCustomSlackForm
-    from managr.salesforce.routes import routes as sf_routes
-    from managr.hubspot.routes import routes as hs_routes
-    from datetime import datetime
+def OPEN_AI_ASK_MANAGR_PROMPT(user, date, prompt, data):
 
-    CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
-    user = User.objects.get(id=user_id)
-    resource = CRM_SWITCHER[user.crm][resource_type]["model"].objects.get(id=resource_id)
-    workflow_check = MeetingWorkflow.objects.filter(user=user, resource_id=resource_id).first()
-    form_check = OrgCustomSlackFormInstance.objects.filter(
-        user=user_id, resource_id=resource_id
-    ).first()
-    today = datetime.today()
-    if form_check and form_check.saved_data:
-        data_from_resource = form_check.saved_data
-    else:
-        template = (
-            OrgCustomSlackForm.objects.for_user(user)
-            .filter(resource=resource_type, form_type="UPDATE")
-            .first()
-        )
-        api_names = template.list_field_api_names()
-        data_from_resource = {}
-        for name in api_names:
-            data_from_resource[name] = resource.secondary_data[name]
-
-    if workflow_check:
-        if workflow_check.transcript_summary:
-            data_from_resource["summary"] = workflow_check.transcript_summary
-        if workflow_check.transcript_analysis:
-            data_from_resource["analysis"] = workflow_check.transcript_analysis
-    body = f"""Today's date is {today}. Respond to {user.first_name}’s request using relevant CRM data provided.
-\nCRM_data: {data_from_resource}
+    body = f"""Today's date is {date}. Respond to {user.first_name}’s request using relevant CRM data provided.
+\nCRM_data: {data}
 \nRequest: {prompt}\n
 Your response should be casual yet assertive, echoing the style of an experienced sales leader. 
 The tone should be friendly and focused on value with succinct sentences. Output must be a regular message, not an email, unless specified. 

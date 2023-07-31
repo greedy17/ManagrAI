@@ -1,25 +1,12 @@
 import jwt
-import pytz
-import math
 import logging
-
 from datetime import datetime
 from django.db import models
 from django.utils import timezone
-
 from django.contrib.postgres.fields import JSONField, ArrayField
-
 from background_task.models import Task
-
-from managr.zoom.utils import score_meeting
 from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel
-from managr.organization.models import ActionChoice
-from managr.organization.models import Stage
-from managr.opportunity import constants as opp_consts
-from managr.salesforce.adapter.models import ActivityAdapter
-
-
 from . import constants as zoom_consts
 from .zoom_helper.models import ZoomAcct
 

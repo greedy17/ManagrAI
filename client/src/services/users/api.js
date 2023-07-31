@@ -246,20 +246,18 @@ export default class UserAPI {
    * @param {UserRegistrationForm} registerForm - A form containing first name, last name, email,
    *                                              password, and organization name.
    */
-  register(registerForm) {
+  async register(registerForm) {
     const data = registerForm.toAPI()
-
-    return this.client
-      .post(REGISTRATION_ENDPOINT, this.cls.toAPI(data))
-      .then(response => response.data)
-      .then(data => this.cls.fromAPI(data))
-      .catch(
-        apiErrorHandler({
-          apiName: 'Register User',
-          enable400Alert: true,
-          enable500Alert: true,
-        }),
-      )
+    let returnedData
+    try {
+      const response = await this.client.post(REGISTRATION_ENDPOINT, this.cls.toAPI(data))
+      returnedData = this.cls.fromAPI(response.data)
+    } catch(e) {
+      console.log('error in register', e)
+      returnedData = e.response
+    } finally {
+      return returnedData
+    }
   }
 
   invite(userDetails) {

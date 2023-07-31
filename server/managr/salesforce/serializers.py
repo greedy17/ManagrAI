@@ -41,7 +41,7 @@ class SalesforceAuthSerializer(serializers.ModelSerializer):
             "custom_objects",
         )
 
-    def get_extra_pipeline_fields(self,instance):
+    def get_extra_pipeline_fields(self, instance):
         extra_fields_obj = {}
         for field in instance.extra_pipeline_fields:
             field_split = field.split(",")
@@ -144,7 +144,7 @@ class MeetingUserSerializer(serializers.ModelSerializer):
 class FormSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrgCustomSlackFormInstance
-        fields = '__all__'
+        fields = "__all__"
 
 
 class MeetingWorkflowSerializer(serializers.ModelSerializer):
@@ -168,8 +168,9 @@ class MeetingWorkflowSerializer(serializers.ModelSerializer):
             "user_ref",
             "org_ref",
             "is_completed",
+            "transcript_summary",
             "transcript_analysis",
-            "forms"
+            "forms",
         )
 
     def get_org_ref(self, instance):

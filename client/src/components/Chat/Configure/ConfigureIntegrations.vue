@@ -9,15 +9,15 @@
         }
       "
     >
-    <!-- connectModal -->
-      <div class="invite-form crm-form form-margin-small" style="min-width: 0;">
+      <!-- connectModal -->
+      <div class="invite-form crm-form form-margin-small" style="min-width: 0">
         <div class="header-crm">
           <div class="flex-row-wrapper inner-crm">
-            <div class="flex-row" style="margin: 0;">
+            <div class="flex-row" style="margin: 0">
               <!-- <img src="@/assets/images/logo.png" class="logo" alt="" /> -->
-              <h3 class="invite-form__title" style="margin-bottom: 0.6rem;">Connect CRM</h3>
+              <h3 class="invite-form__title" style="margin-bottom: 0.6rem">Connect CRM</h3>
             </div>
-            <div class="flex-row" style="margin: 0;">
+            <div class="flex-row" style="margin: 0">
               <img
                 @click="handleConfirmCancel"
                 src="@/assets/images/close.svg"
@@ -34,14 +34,16 @@
             </div>
           </div>
         </div>
-        <p class="card-text" style="width: 90%; font-size: 11px;">Choose your CRM from the options below.</p>
+        <p class="card-text" style="width: 90%; font-size: 11px">
+          Choose your CRM from the options below.
+        </p>
         <div class="flex-row inner-crm">
           <Multiselect
             placeholder="Select CRM"
             v-model="selectedCRM"
             :options="crmList"
             openDirection="below"
-            style="width: 34vw; margin-bottom: 1rem;"
+            style="width: 34vw; margin-bottom: 1rem"
             class="custom-picklist-font"
             selectLabel="Enter"
             label="label"
@@ -58,10 +60,19 @@
           </Multiselect>
         </div>
         <div class="confirm-cancel-container" style="">
-          <div class="img-border cancel-button" @click="handleConfirmCancel" style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem;">
+          <div
+            class="img-border cancel-button"
+            @click="handleConfirmCancel"
+            style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem"
+          >
             Cancel
           </div>
-          <button class="img-border green-button" :disabled="!selectedCRM" @click="onGetAuthLink(selectedCRM ? selectedCRM.value : null)" style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem;">
+          <button
+            class="img-border green-button"
+            :disabled="!selectedCRM"
+            @click="onGetAuthLink(selectedCRM ? selectedCRM.value : null)"
+            style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem"
+          >
             Confirm
           </button>
         </div>
@@ -76,15 +87,19 @@
         }
       "
     >
-    <!-- modal-form confirm-form -->
-      <form v-if="true /*hasSlack*/" class="invite-form crm-form form-margin-small" style="height: 25vh;">
+      <!-- modal-form confirm-form -->
+      <form
+        v-if="true /*hasSlack*/"
+        class="invite-form crm-form form-margin-small"
+        style="height: 25vh"
+      >
         <div class="header-crm">
           <div class="flex-row-wrapper inner-crm">
-            <div class="flex-row" style="margin: 0;">
+            <div class="flex-row" style="margin: 0">
               <!-- <img src="@/assets/images/logo.png" class="logo" alt="" /> -->
               <h3 class="invite-form__title">Are you sure?</h3>
             </div>
-            <div class="flex-row" style="margin: 0;">
+            <div class="flex-row" style="margin: 0">
               <img
                 @click="handleConfirmCancel"
                 src="@/assets/images/close.svg"
@@ -100,19 +115,27 @@
             </div>
           </div>
         </div>
-        <div class="flex-row inner-crm" style="margin: 0; justify-content: flex-start; width: 90%;">
-          <h4 class="card-text" style="margin-left: 0; margin-top: 0; margin-bottom: 0.75rem;">
-            By clicking Disconnect, you will be removing 
+        <div class="flex-row inner-crm" style="margin: 0; justify-content: flex-start; width: 90%">
+          <h4 class="card-text" style="margin-left: 0; margin-top: 0; margin-bottom: 0.75rem">
+            By clicking Disconnect, you will be removing
             {{ this.removeAppFormatted ? this.removeAppFormatted : 'this app' }}.
           </h4>
         </div>
         <div class="invite-form__actions">
           <!-- <div style="width: 10vw;"></div> -->
-          <div class="confirm-cancel-container" style="width: 90%; margin-bottom: 0.6rem;">
-            <div class="img-border cancel-button" @click="handleConfirmCancel" style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem;">
+          <div class="confirm-cancel-container" style="width: 90%; margin-bottom: 0.6rem">
+            <div
+              class="img-border cancel-button"
+              @click="handleConfirmCancel"
+              style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem"
+            >
               Cancel
             </div>
-            <button class="img-border red-button" @click="onRevoke(removeApp)" style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem; margin-right: 5%;">
+            <button
+              class="img-border red-button"
+              @click="onRevoke(removeApp)"
+              style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem; margin-right: 5%"
+            >
               Disconnect
             </button>
           </div>
@@ -140,13 +163,13 @@
         }
       "
     >
-      <form class="invite-form crm-form form-margin-small" style="height: 30vh; min-width: 0;">
+      <form class="invite-form crm-form form-margin-small" style="height: 30vh; min-width: 0">
         <div class="header-crm" style="width: 107%">
-          <div class="flex-row-wrapper inner-crm" style="border: none;">
-            <div class="flex-row" style="margin: 0;">
+          <div class="flex-row-wrapper inner-crm" style="border: none">
+            <div class="flex-row" style="margin: 0">
               <!-- <h3 class="invite-form__title">Are you sure?</h3> -->
             </div>
-            <div class="flex-row" style="margin: 0;">
+            <div class="flex-row" style="margin: 0">
               <img
                 @click="handleErrSuccCancel"
                 src="@/assets/images/close.svg"
@@ -163,18 +186,52 @@
             </div>
           </div>
         </div>
-        <div class="flex-row" style="flex-direction: column; margin: 0; width: 96%; height: 13vh; justify-content: space-between;">
-          <img v-if="errorOrSuccess === 'premium'" src="@/assets/images/chat-lock.svg" class="filtered-gray" style="height: 40px;" />
-          <img v-else-if="errorOrSuccess === 'error'" src="@/assets/images/rounded_exclamation.svg" class="filtered-red" style="height: 40px;" />
-          <img v-else src="@/assets/images/rounded_check.svg" class="green-filter" style="height: 40px;" />
-          <h4 class="card-text" style="margin-left: 0; margin-top: 0; margin-bottom: 0.75rem; text-align: center;">
-            {{errSuccMessage}}
+        <div
+          class="flex-row"
+          style="
+            flex-direction: column;
+            margin: 0;
+            width: 96%;
+            height: 13vh;
+            justify-content: space-between;
+          "
+        >
+          <img
+            v-if="errorOrSuccess === 'premium'"
+            src="@/assets/images/chat-lock.svg"
+            class="filtered-gray"
+            style="height: 40px"
+          />
+          <img
+            v-else-if="errorOrSuccess === 'error'"
+            src="@/assets/images/rounded_exclamation.svg"
+            class="filtered-red"
+            style="height: 40px"
+          />
+          <img
+            v-else
+            src="@/assets/images/rounded_check.svg"
+            class="green-filter"
+            style="height: 40px"
+          />
+          <h4
+            class="card-text"
+            style="margin-left: 0; margin-top: 0; margin-bottom: 0.75rem; text-align: center"
+          >
+            {{ errSuccMessage }}
           </h4>
         </div>
-        <div class="invite-form__actions" style="justify-content: center;">
+        <div class="invite-form__actions" style="justify-content: center">
           <!-- <div style="width: 10vw;"></div> -->
-          <div class="confirm-cancel-container" style="justify-content: center; width: 96%; margin-bottom: 1rem;">
-            <div class="img-border cancel-button" @click="handleErrSuccCancel" style="font-size: 13px; margin-top: 0rem; margin-right: 0;">
+          <div
+            class="confirm-cancel-container"
+            style="justify-content: center; width: 96%; margin-bottom: 1rem"
+          >
+            <div
+              class="img-border cancel-button"
+              @click="handleErrSuccCancel"
+              style="font-size: 13px; margin-top: 0rem; margin-right: 0"
+            >
               Close this window
             </div>
           </div>
@@ -201,7 +258,7 @@
       <div class="card" v-if="userCRM === 'SALESFORCE'">
         <div class="card__header">
           <div class="card-img-border">
-            <img style="height: 40px;" src="@/assets/images/salesforce.png" />
+            <img style="height: 40px" src="@/assets/images/salesforce.png" />
           </div>
         </div>
 
@@ -209,14 +266,24 @@
           <h3>
             <img src="@/assets/images/dot.svg" class="green-filter" />
             Salesforce
-            <span class="required" v-if="!hasSalesforceIntegration">
+            <!-- <span class="required" v-if="!hasSalesforceIntegration">
               <img src="@/assets/images/required.svg" height="14px" alt=""
-            /></span>
+            /></span> -->
           </h3>
-          <p class="card-text" style="font-weight: bold;">CRM Connected</p>
+          <p class="card-text" style="font-weight: bold">CRM Connected</p>
           <div class="sep-button-container">
             <div class="separator"></div>
-            <button class="coral long-button" style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem; padding-top: 0.4rem; padding-bottom: 0.4rem;" @click="setRemoveApp('SALESFORCE')">
+            <button
+              class="coral long-button"
+              style="
+                margin-right: 0;
+                margin-top: 1rem;
+                margin-bottom: 0.5rem;
+                padding-top: 0.4rem;
+                padding-bottom: 0.4rem;
+              "
+              @click="setRemoveApp('SALESFORCE')"
+            >
               Disconnect
             </button>
           </div>
@@ -234,10 +301,20 @@
             <img src="@/assets/images/dot.svg" class="green-filter" />
             Hubspot
           </h3>
-          <p class="card-text" style="font-weight: bold;">CRM Connected</p>
+          <p class="card-text" style="font-weight: bold">CRM Connected</p>
           <div class="sep-button-container">
             <div class="separator"></div>
-            <button class="long-button coral" style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem; padding-top: 0.4rem; padding-bottom: 0.4rem;" @click="setRemoveApp('HUBSPOT')">
+            <button
+              class="long-button coral"
+              style="
+                margin-right: 0;
+                margin-top: 1rem;
+                margin-bottom: 0.5rem;
+                padding-top: 0.4rem;
+                padding-bottom: 0.4rem;
+              "
+              @click="setRemoveApp('HUBSPOT')"
+            >
               Disconnect
             </button>
           </div>
@@ -269,12 +346,16 @@
             <p class="card-text">Connect your CRM (required)</p>
             <div class="sep-button-container">
               <div class="separator"></div>
-              <button class="long-button" style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem;" @click="connectApp('CRM')">
-                Connect 
-                <img 
-                  src="@/assets/images/angle-small-right.svg" 
+              <button
+                class="long-button"
+                style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem"
+                @click="connectApp('CRM')"
+              >
+                Connect
+                <img
+                  src="@/assets/images/angle-small-right.svg"
                   class="green-filter"
-                  style="margin-top: 1px; margin-left: 0.5rem; height: 16px; font-weight: bold;"
+                  style="margin-top: 1px; margin-left: 0.5rem; height: 16px; font-weight: bold"
                 />
               </button>
             </div>
@@ -289,30 +370,56 @@
         <div class="card__body">
           <div style="display: flex">
             <h3 class="card__title">
-              <img v-if="hasSlackIntegration" src="@/assets/images/dot.svg" class="green-filter" />
+              <img
+                v-if="hasSlackIntegration || (orgHasSlackIntegration && userCanIntegrateSlack)"
+                src="@/assets/images/dot.svg"
+                class="green-filter"
+              />
               Slack
             </h3>
           </div>
-          <p v-if="hasSlackIntegration" class="card-text">Slack Connected</p>
+          <p
+            v-if="hasSlackIntegration || (orgHasSlackIntegration && userCanIntegrateSlack)"
+            class="card-text"
+          >
+            Slack Connected
+          </p>
           <p v-else class="card-text">Interact with Managr through Slack</p>
+          <div></div>
           <div class="sep-button-container">
             <div class="separator"></div>
-            <button v-if="hasSlackIntegration" class="long-button coral" style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem; padding-top: 0.4rem; padding-bottom: 0.4rem;" @click="setRemoveApp('SLACK')">
+            <button
+              v-if="hasSlackIntegration || (orgHasSlackIntegration && userCanIntegrateSlack)"
+              class="long-button coral"
+              style="
+                margin-right: 0;
+                margin-top: 1rem;
+                margin-bottom: 0.5rem;
+                padding-top: 0.4rem;
+                padding-bottom: 0.4rem;
+              "
+              @click="setRemoveApp('SLACK')"
+            >
               Disconnect
             </button>
-            <button v-else class="long-button" style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem;" @click="connectApp('SLACK')">
-              Connect 
-              <img 
-                src="@/assets/images/angle-small-right.svg" 
+            <button
+              v-else
+              class="long-button"
+              style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem"
+              @click="connectApp('SLACK')"
+            >
+              Connect
+              <img
+                src="@/assets/images/angle-small-right.svg"
                 class="green-filter"
-                style="margin-top: 1px; margin-left: 0.5rem; height: 16px; font-weight: bold;"
+                style="margin-top: 1px; margin-left: 0.5rem; height: 16px; font-weight: bold"
               />
             </button>
           </div>
         </div>
       </div>
 
-      <div class="card">
+      <!-- <div class="card">
         <div class="card__header">
           <img src="@/assets/images/gmailCal.png" style="margin-right: 16px; height: 40px" />
           <img src="@/assets/images/outlookMail.png" style="height: 40px" />
@@ -329,29 +436,45 @@
           <p v-else class="card-text">Accesses your upcoming meetings</p>
           <div class="sep-button-container">
             <div class="separator"></div>
-            <button v-if="hasNylasIntegration" class="long-button coral" style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem; padding-top: 0.4rem; padding-bottom: 0.4rem;" @click="setRemoveApp('NYLAS')">
+            <button
+              v-if="hasNylasIntegration"
+              class="long-button coral"
+              style="
+                margin-right: 0;
+                margin-top: 1rem;
+                margin-bottom: 0.5rem;
+                padding-top: 0.4rem;
+                padding-bottom: 0.4rem;
+              "
+              @click="setRemoveApp('NYLAS')"
+            >
               Disconnect
             </button>
-            <button v-else class="long-button" style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem;" @click="connectApp('NYLAS')">
-              Connect 
-              <img 
-                src="@/assets/images/angle-small-right.svg" 
+            <button
+              v-else
+              class="long-button"
+              style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem"
+              @click="connectApp('NYLAS')"
+            >
+              Connect
+              <img
+                src="@/assets/images/angle-small-right.svg"
                 class="green-filter"
-                style="margin-top: 1px; margin-left: 0.5rem; height: 16px; font-weight: bold;"
+                style="margin-top: 1px; margin-left: 0.5rem; height: 16px; font-weight: bold"
               />
             </button>
           </div>
         </div>
-      </div>
+      </div> -->
 
       <div class="card">
-        <div class="card__header " style="justify-content: space-between;">
+        <div class="card__header" style="justify-content: space-between">
           <img style="height: 40px" src="@/assets/images/zoom.png" />
-          <img v-if="!isPaid" src="@/assets/images/chat-lock.svg" class="filtered-gray" style="height: 20px;" />
+          <!-- <img v-if="!isPaid" src="@/assets/images/chat-lock.svg" class="filtered-gray" style="height: 20px;" /> -->
         </div>
 
         <div class="card__body">
-          <div style="display: flex;">
+          <div style="display: flex">
             <h3 class="card__title">
               <img v-if="hasZoomIntegration" src="@/assets/images/dot.svg" class="green-filter" />
               Zoom
@@ -361,15 +484,31 @@
           <p v-else class="card-text">Activate AI-note taking & call summaries</p>
           <div class="sep-button-container">
             <div class="separator"></div>
-            <button v-if="hasZoomIntegration" class="long-button coral" style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem; padding-top: 0.4rem; padding-bottom: 0.4rem;" @click="setRemoveApp('ZOOM')">
+            <button
+              v-if="hasZoomIntegration"
+              class="long-button coral"
+              style="
+                margin-right: 0;
+                margin-top: 1rem;
+                margin-bottom: 0.5rem;
+                padding-top: 0.4rem;
+                padding-bottom: 0.4rem;
+              "
+              @click="setRemoveApp('ZOOM')"
+            >
               Disconnect
             </button>
-            <button v-else class="long-button" style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem;" @click="isPaid ? connectApp('ZOOM') : showErrorSuccessModal('premium', 'This feature is available in the Business Plan')">
-              Connect 
-              <img 
-                src="@/assets/images/angle-small-right.svg" 
+            <button
+              v-else
+              class="long-button"
+              style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem"
+              @click="connectApp('ZOOM')"
+            >
+              Connect
+              <img
+                src="@/assets/images/angle-small-right.svg"
                 class="green-filter"
-                style="margin-top: 1px; margin-left: 0.5rem; height: 16px; font-weight: bold;"
+                style="margin-top: 1px; margin-left: 0.5rem; height: 16px; font-weight: bold"
               />
             </button>
           </div>
@@ -653,9 +792,7 @@ import User from '@/services/users'
 
 export default {
   name: 'ConfigureIntegrations',
-  props: {
-
-  },
+  props: {},
   components: {
     PulseLoadingSpinnerButton,
     CollectionManager,
@@ -850,10 +987,10 @@ export default {
         await this.$store.dispatch('refreshCurrentUser')
         this.generatingToken = false
         this.selectedIntegration = null
-        // this.$router.replace({
-        //   name: 'Integrations',
-        //   params: {},
-        // })
+        this.$router.replace({
+          name: 'Home',
+          params: {},
+        })
       }
     }
   },
@@ -870,11 +1007,8 @@ export default {
     hasHubspotIntegration() {
       return !!this.$store.state.user.hubspotAccount
     },
-    hasSlackIntegration() {
-      return !!this.$store.state.user.slackRef
-    },
     hasZoomIntegration() {
-      return !!this.$store.state.user.zoomAccount && this.$store.state.user.hasZoomIntegration
+      return !!this.$store.state.user.hasZoomIntegration
     },
     hasEmailIntegration() {
       return false
@@ -1073,7 +1207,7 @@ a {
 //   border: 2px solid #72FFC1;
 //   background-color: #72FFC1;
 //   border-radius: 8px;
-  
+
 // }
 .card {
   background-color: $white;
@@ -1478,7 +1612,7 @@ a {
   filter: invert(43%) sepia(45%) saturate(682%) hue-rotate(308deg) brightness(109%) contrast(106%);
 }
 .filtered-gray {
-  filter: invert(45%)
+  filter: invert(45%);
 }
 .green-filter {
   filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
@@ -1512,7 +1646,7 @@ a {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  width: 94%
+  width: 94%;
 }
 .green-button {
   @include primary-button();
@@ -1559,5 +1693,4 @@ a {
 .padding-button {
   padding: 0.8rem 1.2rem;
 }
-
 </style>

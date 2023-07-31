@@ -25,6 +25,7 @@ from managr.core.utils import (
     get_summary_completion,
     swap_submitted_data_labels,
     clean_prompt_string,
+    ask_managr_data_collector,
 )
 from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce.adapter.models import ContactAdapter
@@ -154,6 +155,10 @@ def emit_process_send_regenerate_email_message(payload, context):
 
 def emit_process_send_regenerated_email_draft(payload, context):
     return _process_send_regenerated_email_draft(payload, context)
+
+
+def emit_process_send_regenerated_ask_managr(payload, context):
+    return _process_send_regenerated_ask_managr(payload, context)
 
 
 def emit_process_send_next_steps(payload, context):
@@ -1500,11 +1505,10 @@ def _process_send_email_draft(payload, context):
     user = User.objects.get(id=context.get("u"))
     form_ids = context.get("form_ids").split(",")
     forms = OrgCustomSlackFormInstance.objects.filter(id__in=form_ids)
-    data_collector = []
+    data_collector = {}
     for form in forms:
         try:
-            data = form.saved_data["meeting_comments"]
-            data_collector.append(data)
+            data_collector = {**form.saved_data, **data_collector}
         except Exception:
             continue
 
@@ -1525,10 +1529,10 @@ def _process_send_email_draft(payload, context):
             break
 
     blocks = [
-        block_builders.header_block("AI Generated Email"),
+        block_builders.header_block("AI Generated Email", "HEADER_BLOCK"),
         block_builders.context_block(f"{forms.first().resource_object.display_value}"),
         block_builders.divider_block(),
-        block_builders.simple_section(text, "mrkdwn", block_id="EMAIL_TEXT"),
+        block_builders.simple_section(text, "mrkdwn", block_id="PROMPT_BLOCK"),
         block_builders.divider_block(),
         block_builders.actions_block(
             [
@@ -1577,7 +1581,7 @@ def _process_send_regenerated_email_draft(payload, context):
         data_collector = {**data_collector, **form.saved_data}
     try:
         previous_blocks = payload["message"]["blocks"]
-        index, block = block_finder("EMAIL_TEXT", previous_blocks)
+        index, block = block_finder("PROMPT_BLOCK", previous_blocks)
     except ValueError:
         # did not find the block
         block = None
@@ -1604,7 +1608,7 @@ def _process_send_regenerated_email_draft(payload, context):
         block_builders.header_block("AI Generated Email"),
         block_builders.context_block(f"{forms.first().resource_object.display_value}"),
         block_builders.divider_block(),
-        block_builders.simple_section(text, "mrkdwn", block_id="EMAIL_TEXT"),
+        block_builders.simple_section(text, "mrkdwn", block_id="PROMPT_BLOCK"),
         block_builders.divider_block(),
         block_builders.actions_block(
             [
@@ -1617,6 +1621,122 @@ def _process_send_regenerated_email_draft(payload, context):
                             f"u={str(user.id)}",
                             f"form_ids={context.get('form_ids')}",
                             f"workflow_id={str(context.get('workflow_id'))}",
+                        ],
+                    ),
+                )
+            ]
+        ),
+        block_builders.context_block("This version will not be saved."),
+    ]
+    try:
+        slack_res = slack_requests.update_channel_message(
+            user.slack_integration.channel,
+            context.get("ts"),
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+    except Exception as e:
+        logger.exception(
+            f"ERROR sending update channel message for chat submittion because of <{e}>"
+        )
+    return
+
+
+@background()
+def _process_send_regenerated_ask_managr(payload, context):
+    from managr.slack.helpers.utils import block_finder
+
+    instructions_check = payload["state"]["values"]["REGENERATE_INSTRUCTIONS"]["plain_input"][
+        "value"
+    ]
+    user = User.objects.get(id=context.get("u"))
+    data = ask_managr_data_collector(
+        str(user.id), context.get("resource_type"), context.get("resource_id"),
+    )
+    resource = CRM_SWITCHER[user.crm][context.get("resource_type")]["model"].objects.get(
+        id=context.get("resource_id")
+    )
+    try:
+        previous_blocks = payload["message"]["blocks"]
+        index, block = block_finder("PROMPT_TEXT", previous_blocks)
+    except ValueError:
+        # did not find the block
+        block = None
+        pass
+    prompt = core_consts.OPEN_AI_ASK_MANAGR_WITH_INSTRUCTIONS(
+        block["text"]["text"], instructions_check, data
+    )
+    body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 1000)
+    tokens = 500
+    has_error = False
+    attempts = 1
+    timeout = 60.0
+    while True:
+        try:
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email, prompt, "You are an experienced sales leader", token_amount=tokens
+            )
+            with Variable_Client(timeout) as client:
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+            r = _handle_response(r)
+            text = r.get("choices")[0].get("message").get("content")
+            break
+        except StopReasonLength:
+            if tokens >= 2000:
+                break
+            else:
+                tokens += 500
+                continue
+        except ServerError:
+            if attempts >= 5:
+                has_error = True
+                text = ":no_entry_sign: There was a server error with Open AI"
+                break
+            else:
+                attempts += 1
+                time.sleep(10.0)
+        except ValueError as e:
+            print(e)
+            if str(e) == "substring not found":
+                continue
+            else:
+                has_error = True
+                text = ":no_entry_sign: Looks like we ran into an internal issue"
+                break
+        except SyntaxError as e:
+            print(e)
+            continue
+        except httpx.ReadTimeout:
+            logger.exception(
+                f"Read timeout to Open AI from ask managr, trying again. TIMEOUT AT: {timeout}"
+            )
+            if timeout >= 120.0:
+                has_error = True
+                break
+            else:
+                timeout += 30.0
+        except Exception as e:
+            logger.exception(f"Unknown error on ask managr <{e}>")
+            break
+
+    blocks = [
+        block_builders.header_block("Ask Managr"),
+        block_builders.context_block(f"{resource.display_value}"),
+        block_builders.divider_block(),
+        block_builders.simple_section(text, "mrkdwn", block_id="PROMPT_TEXT"),
+        block_builders.divider_block(),
+        block_builders.actions_block(
+            [
+                block_builders.simple_button_block(
+                    "Regenerate",
+                    "ASK_MANAGR",
+                    action_id=action_with_params(
+                        slack_consts.PROCESS_REGENERATE_ACTION,
+                        params=[
+                            f"u={str(user.id)}",
+                            f"resource_id={context.get('resource_id')}",
+                            f"resource_type={context.get('resource_type')}",
                         ],
                     ),
                 )
@@ -1658,16 +1778,16 @@ def _process_send_regenerate_email_message(payload, context):
     previous_blocks = payload["message"]["blocks"]
 
     try:
-        index, block = block_finder("EMAIL_TEXT", previous_blocks)
+        index, block = block_finder("PROMPT_BLOCK", previous_blocks)
     except ValueError:
         # did not find the block
         block = None
         pass
     blocks = [
-        block_builders.header_block("AI Generated Email"),
+        block_builders.header_block("AI Generated Email", "HEADER_BLOCK"),
         block_builders.context_block(f"{forms.first().resource_object.display_value}"),
         block_builders.divider_block(),
-        block_builders.simple_section(block["text"]["text"], "mrkdwn", block_id="EMAIL_TEXT"),
+        block_builders.simple_section(block["text"]["text"], "mrkdwn", block_id="PROMPT_BLOCK"),
         block_builders.divider_block(),
         block_builders.input_block(
             "Provide additional instructions below:",
@@ -1834,7 +1954,7 @@ def _process_send_summary_to_dm(payload, context):
     for form in submitted_forms:
         new_data = {**new_data, **form.saved_data}
     blocks = [
-        block_builders.header_block("AI Generated Summary"),
+        block_builders.header_block("AI Generated Summary", "HEADER_BLOCK"),
         block_builders.context_block(f"{main_form.resource_object.display_value}"),
         block_builders.divider_block(),
     ]
@@ -1846,7 +1966,7 @@ def _process_send_summary_to_dm(payload, context):
     )
     completions_prompt = get_summary_completion(user, cleaned_data)
     message_string_for_recap = completions_prompt["choices"][0]["text"]
-    blocks.append(block_builders.simple_section(message_string_for_recap, "mrkdwn"))
+    blocks.append(block_builders.simple_section(message_string_for_recap, "mrkdwn", "PROMPT_BLOCK"))
     blocks.append(block_builders.context_block("Powered by ChatGPT © :robot_face:"))
     try:
         if context.get("ts", None):
@@ -2003,12 +2123,11 @@ def _process_send_call_summary_to_dm(payload, context):
 @background
 def _process_send_ask_managr_to_dm(payload, context):
     user = User.objects.get(id=context.get("u"))
-
+    data = ask_managr_data_collector(
+        str(user.id), context.get("resource_type"), context.get("resource_id"),
+    )
     prompt = core_consts.OPEN_AI_ASK_MANAGR_PROMPT(
-        str(user.id),
-        context.get("prompt"),
-        context.get("resource_type"),
-        context.get("resource_id"),
+        user, datetime.today(), context.get("prompt"), data
     )
     tokens = 500
     has_error = False
@@ -2023,7 +2142,6 @@ def _process_send_ask_managr_to_dm(payload, context):
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             r = _handle_response(r)
-            print(r)
             text = r.get("choices")[0].get("message").get("content")
             break
         except StopReasonLength:
@@ -2068,7 +2186,24 @@ def _process_send_ask_managr_to_dm(payload, context):
     blocks = [
         block_builders.header_block("Ask Managr"),
         block_builders.divider_block(),
-        block_builders.simple_section(text, "mrkdwn"),
+        block_builders.simple_section(text, "mrkdwn", "PROMPT_TEXT"),
+        block_builders.divider_block(),
+        block_builders.actions_block(
+            [
+                block_builders.simple_button_block(
+                    "Regenerate",
+                    "ASK_MANAGR",
+                    action_id=action_with_params(
+                        slack_consts.PROCESS_REGENERATE_ACTION,
+                        params=[
+                            f"u={str(user.id)}",
+                            f"resource_id={context.get('resource_id')}",
+                            f"resource_type={context.get('resource_type')}",
+                        ],
+                    ),
+                )
+            ]
+        ),
     ]
     try:
         slack_res = slack_requests.update_channel_message(

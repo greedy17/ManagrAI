@@ -55,12 +55,12 @@
         </div>
       </form>
     </Modal>
-    <div class="welcome">
+    <div class="welcome" v-if="!redirectLoading">
       <!-- <img src="@/assets/images/logo.png" height="16px" alt="" /> -->
       <p class="inactive">Connect Managr to your favorite Apps</p>
     </div>
 
-    <div class="integrations__cards">
+    <div class="integrations__cards" v-if="!redirectLoading">
       <div class="card" v-if="userCRM === 'SALESFORCE'">
         <div class="card__header vlb-bg" style="padding-left: 32px; padding-right: 32px">
           <img style="height: 30px; width: auto" src="@/assets/images/salesforce.png" />
@@ -533,6 +533,7 @@ export default {
       confirmModal: false,
       pulseLoading: false,
       selectedCRM: null,
+      redirectLoading: true,
       // selectedMessenger: null,
       selectedIntegration: null,
     }
@@ -629,51 +630,20 @@ export default {
     },
   },
   async created() {
-    // if there is a code assume an integration has begun
-    if (this.$route.query.code) {
-      this.generatingToken = true
-      this.selectedIntegration = this.$route.query.state // state is the current integration name
-
-      try {
-        const modelClass = this.selectedIntegrationSwitcher
-        if (this.selectedIntegration == 'SALESLOFT') {
-          await modelClass.api.authenticate(
-            this.$route.query.code,
-            this.$route.query.context,
-            this.$route.query.scope,
-          )
-        } else if (this.selectedIntegration != 'SLACK' && this.selectedIntegration != 'SALESLOFT') {
-          await modelClass.api.authenticate(this.$route.query.code)
-        } else {
-          // auto sends a channel message, will also send a private dm
-          await SlackOAuth.api.generateAccessToken(this.$route.query.code)
-        }
-      } catch (e) {
-        let { response } = e
-        if (response && response.status >= 400 && response.status < 500 && response.status != 401) {
-          let { data } = response
-          if (data.timezone) {
-            this.$toast(
-              'We could not retrieve your timezone from zoom, to fix this please login to the zoom.us portal through a browser and return to managr to reintegrate',
-              {
-                timeout: 2000,
-                position: 'top-left',
-                type: 'success',
-                toastClassName: 'custom',
-                bodyClassName: ['custom'],
-              },
-            )
-          }
-        }
-      } finally {
-        await this.$store.dispatch('refreshCurrentUser')
-        this.generatingToken = false
-        this.selectedIntegration = null
-        this.$router.replace({
-          name: 'Integrations',
-          params: {},
-        })
-      }
+    // this.redirectLoading = true
+    // // if there is a code assume an integration has begun
+    if (!this.$route.query.code) {
+      this.$router.push({ name: 'Home' }).then(() => {
+        this.redirectLoading = false
+      })
+    } else {
+      this.$router.push({
+        name: 'Home',
+        query: {
+          code: this.$route.query.code,
+          state: this.$route.query.state,
+        },
+      })
     }
   },
   computed: {

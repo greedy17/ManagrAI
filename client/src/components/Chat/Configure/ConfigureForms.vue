@@ -30,7 +30,7 @@
                   selectLabel="Enter"
                   :track-by="userCRM === 'HUBSPOT' ? 'label' : 'name'"
                   :customLabel="customLabel"
-                  v-model="selectedCustomObject" 
+                  v-model="selectedCustomObject"
                   class="custom-picklist-font"
                 >
                   <template slot="noResult">
@@ -125,15 +125,19 @@
         }
       "
     >
-    <!-- modal-form confirm-form -->
-      <form v-if="true /*hasSlack*/" class="invite-form crm-form form-margin-small" style="height: 25vh;">
+      <!-- modal-form confirm-form -->
+      <form
+        v-if="true /*hasSlack*/"
+        class="invite-form crm-form form-margin-small"
+        style="height: 25vh"
+      >
         <div class="header-crm">
           <div class="flex-row-wrapper inner-crm">
-            <div class="flex-row-modal" style="margin: 0;">
+            <div class="flex-row-modal" style="margin: 0">
               <!-- <img src="@/assets/images/logo.png" class="logo" alt="" /> -->
               <h3 class="invite-form__title">Are you sure?</h3>
             </div>
-            <div class="flex-row-modal" style="margin: 0;">
+            <div class="flex-row-modal" style="margin: 0">
               <img
                 @click="closeDeleteModal"
                 src="@/assets/images/close.svg"
@@ -149,19 +153,30 @@
             </div>
           </div>
         </div>
-        <div class="flex-row-modal inner-crm" style="margin: 0; justify-content: flex-start; width: 90%;">
-          <h4 class="card-text" style="margin-left: 0; margin-top: 0; margin-bottom: 0.75rem;">
-            By clicking Delete, you will be removing 
+        <div
+          class="flex-row-modal inner-crm"
+          style="margin: 0; justify-content: flex-start; width: 90%"
+        >
+          <h4 class="card-text" style="margin-left: 0; margin-top: 0; margin-bottom: 0.75rem">
+            By clicking Delete, you will be removing
             {{ this.activeForm ? `your ${this.activeForm.stage} form` : 'this form' }}.
           </h4>
         </div>
         <div class="invite-form__actions">
           <!-- <div style="width: 10vw;"></div> -->
-          <div class="confirm-cancel-container" style="width: 90%; margin-bottom: 0.6rem;">
-            <div class="img-border-modal cancel-button" @click="closeDeleteModal" style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem;">
+          <div class="confirm-cancel-container" style="width: 90%; margin-bottom: 0.6rem">
+            <div
+              class="img-border-modal cancel-button"
+              @click="closeDeleteModal"
+              style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem"
+            >
               Cancel
             </div>
-            <button class="img-border-modal red-button" @click="deleteForm(activeForm)" style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem; margin-right: 5%;">
+            <button
+              class="img-border-modal red-button"
+              @click="deleteForm(activeForm)"
+              style="font-size: 13px; margin-bottom: 0.5rem; margin-top: 0rem; margin-right: 5%"
+            >
               Delete
             </button>
           </div>
@@ -211,12 +226,16 @@
       </div>
     </div> -->
     <div class="fields-container">
-      <div class="row__ border-bottom-top" style="margin: 1rem 1.5rem 0 2rem; padding-bottom: 0;">
+      <div class="row__ border-bottom-top" style="margin: 1rem 1.5rem 0 2rem; padding-bottom: 0">
         <!-- :style="user.crm === 'SALESFORCE' ? 'justify-content: space-between;' : 'justify-content: space-around;'" -->
         <div class="display-flex">
           <div v-for="object in resources" :key="object.value" class="small-margin-right">
             <h4
-              :class="selectedObject.label === object.label ? 'header-text green-highlight cursor' : 'header-text cursor'"
+              :class="
+                selectedObject.label === object.label
+                  ? 'header-text green-highlight cursor'
+                  : 'header-text cursor'
+              "
               @click="clickChangeObject(object.label, object.value)"
               style="margin-bottom: 0; padding-bottom: 0.75rem"
             >
@@ -225,8 +244,13 @@
           </div>
         </div>
         <div class="save-refresh-section">
-          <button v-if="!pulseLoading" class="img-button img-border" style="padding: 0.5rem 0.5rem;" @click="refreshForms">
-            <img src="@/assets/images/cycle.svg" class="refresh-button" style="height: 13px;" />
+          <button
+            v-if="!pulseLoading"
+            class="img-button img-border"
+            style="padding: 0.5rem 0.5rem"
+            @click="refreshForms"
+          >
+            <img src="@/assets/images/cycle.svg" class="refresh-button" style="height: 13px" />
           </button>
           <PulseLoadingSpinnerButton
             v-else
@@ -247,23 +271,42 @@
           "
           style="margin-left: 1rem; width: 23.5vw"
         >
-          <div
-            v-if="selectedObject"
-            class="row__"
-            style="margin: 0"
-          >
+          <div v-if="selectedObject" class="row__" style="margin: 0">
             <div style="display: flex; flex-direction: column">
-              <div v-if="selectedObject && selectedObject.value !== 'CustomObject'" class="half-view-flex" style="align-items: center; margin-top: 1rem;">
-                <div class="row__" style="gap: 6px; margin-left: 0;">
+              <div
+                v-if="selectedObject && selectedObject.value !== 'CustomObject'"
+                class="half-view-flex"
+                style="align-items: center; margin-top: 1rem"
+              >
+                <div class="row__" style="gap: 6px; margin-left: 0">
                   <div class="header-text">View:</div>
                   <div class="gray-background">
-                    <div class="toggle-update-create-container" :class="selectedType.value === 'UPDATE' ? 'active' : ''" @click="changeSelectedType({ value: 'UPDATE', label: 'Update' })">
+                    <div
+                      class="toggle-update-create-container"
+                      :class="selectedType.value === 'UPDATE' ? 'active' : ''"
+                      @click="changeSelectedType({ value: 'UPDATE', label: 'Update' })"
+                    >
                       <p>Update</p>
                     </div>
-                    <div class="toggle-update-create-container" :class="selectedType.value === 'CREATE' ? 'active' : ''" @click="changeSelectedType({ value: 'CREATE', label: 'Create' })">
+                    <div
+                      class="toggle-update-create-container"
+                      :class="selectedType.value === 'CREATE' ? 'active' : ''"
+                      @click="changeSelectedType({ value: 'CREATE', label: 'Create' })"
+                    >
                       <p>Create</p>
                     </div>
-                    <div class="toggle-update-create-container" :class="(selectedType.value !== 'UPDATE' && selectedType.value !== 'CREATE') ? 'active' : ''" v-if="selectedObject.value === 'Opportunity' || selectedObject.value === 'Deal'" @click="changeSelectedType({ value: 'STAGE', label: 'Stage' })">
+                    <div
+                      class="toggle-update-create-container"
+                      :class="
+                        selectedType.value !== 'UPDATE' && selectedType.value !== 'CREATE'
+                          ? 'active'
+                          : ''
+                      "
+                      v-if="
+                        selectedObject.value === 'Opportunity' || selectedObject.value === 'Deal'
+                      "
+                      @click="changeSelectedType({ value: 'STAGE', label: 'Stage' })"
+                    >
                       <p>Stages</p>
                     </div>
                   </div>
@@ -322,7 +365,7 @@
                     </label>
                   </div> -->
                 </div>
-                <div style="display: flex; align-items: center;">
+                <div style="display: flex; align-items: center">
                   <button
                     v-if="
                       selectedType.value !== 'CREATE' &&
@@ -332,22 +375,30 @@
                     "
                     @click="confirmDeleteModal = !confirmDeleteModal"
                     class="img-button"
-                    style="padding: 0.5rem; margin: 0;"
+                    style="padding: 0.5rem; margin: 0"
                   >
                     <!-- Delete Form -->
                     <!-- <img src="@/assets/images/trash.svg" class="trash-button" /> -->
-                    <img src="@/assets/images/chat-trash.svg" class="filtered-red" style="height: 14px" alt="" />
+                    <img
+                      src="@/assets/images/chat-trash.svg"
+                      class="filtered-red"
+                      style="height: 14px"
+                      alt=""
+                    />
                   </button>
                 </div>
               </div>
-              <div v-else-if="selectedObject && selectedObject.value === 'CustomObject'" class="half-view-flex">
+              <div
+                v-else-if="selectedObject && selectedObject.value === 'CustomObject'"
+                class="half-view-flex"
+              >
                 <div v-if="modalLoading">
                   <Loader :loaderText="loaderText" />
                 </div>
                 <div v-else>
                   <div
                     v-if="createdCustomObjects.length"
-                    style="margin-top: 1rem;"
+                    style="margin-top: 1rem"
                     class="half-view-flex"
                   >
                     <Multiselect
@@ -378,14 +429,23 @@
                         </div>
                       </template>
                     </Multiselect>
-                    <button v-if="!selectedCustomObject" @click="toggleCustomObjectModalView" class="custom-object-button">
+                    <button
+                      v-if="!selectedCustomObject"
+                      @click="toggleCustomObjectModalView"
+                      class="custom-object-button"
+                    >
                       Add Custom Object
                     </button>
-                    <button v-else @click="confirmCODeleteModal = !confirmCODeleteModal" class="red-button" style="margin-top: 0">
+                    <button
+                      v-else
+                      @click="confirmCODeleteModal = !confirmCODeleteModal"
+                      class="red-button"
+                      style="margin-top: 0"
+                    >
                       Delete
                     </button>
                   </div>
-                  <div v-else class="half-view-flex" style="margin-top: 1rem;">
+                  <div v-else class="half-view-flex" style="margin-top: 1rem">
                     <Multiselect
                       @input="getCustomObjectFields"
                       :options="customObjects"
@@ -428,7 +488,11 @@
           </div>
           <div class="search-bar-container">
             <Multiselect
-              v-if="formattedTypes.length && (selectedType.value !== 'CREATE' && selectedType.value !== 'UPDATE')"
+              v-if="
+                formattedTypes.length &&
+                selectedType.value !== 'CREATE' &&
+                selectedType.value !== 'UPDATE'
+              "
               @input="changeObject(selectedObject, $event, false)"
               :options="formattedTypes"
               openDirection="below"
@@ -442,14 +506,22 @@
               <template slot="noResult">
                 <p class="multi-slot custom-picklist-font">No results.</p>
               </template>
-  
+
               <template slot="placeholder">
                 <p class="slot-icon custom-picklist-font">
                   <img src="@/assets/images/search.svg" alt="" />
-                  {{ selectedType && selectedType.label && selectedType.value !== 'UPDATE' && selectedType.value !== 'CREATE' && selectedType.value !== 'STAGE' ? selectedType.label : 'Select Type' }}
+                  {{
+                    selectedType &&
+                    selectedType.label &&
+                    selectedType.value !== 'UPDATE' &&
+                    selectedType.value !== 'CREATE' &&
+                    selectedType.value !== 'STAGE'
+                      ? selectedType.label
+                      : 'Select Type'
+                  }}
                 </p>
               </template>
-  
+
               <template slot="option" slot-scope="props">
                 <div>
                   <span class="option__title">{{ removeAmp(props.option.label) }}</span
@@ -470,10 +542,7 @@
             <div v-else class="choose-fields-container">
               <h5>Choose CRM fields:</h5>
               <div class="wrapper">
-                <label
-                  class="icon workflow"
-                  style="margin-top: 0"
-                >
+                <label class="icon workflow" style="margin-top: 0">
                   <!-- <span class="tooltip"
                     >You can also add {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} to
                     Stages. These {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} will
@@ -502,7 +571,12 @@
 
           <div class="field-section__fields">
             <div>
-              <p v-for="(field, i) in filteredFields" :key="field.id" :title="field.label" class="light-gray-blue">
+              <p
+                v-for="(field, i) in filteredFields"
+                :key="field.id"
+                :title="field.label"
+                class="light-gray-blue"
+              >
                 <input @click="onAddField(field)" type="checkbox" :id="i" :value="field" />
                 <label :for="i"></label>
                 {{
@@ -606,7 +680,6 @@ import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button
 import { CollectionManager } from '@thinknimble/tn-models'
 
 import Modal from '@/components/InviteModal'
-import AlertsHeader from '@/components/AlertsHeader.vue'
 
 import ActionChoice from '@/services/action-choices'
 import draggable from 'vuedraggable'
@@ -626,7 +699,6 @@ export default {
     Modal,
     draggable,
     ToggleCheckBox,
-    AlertsHeader,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
@@ -666,8 +738,8 @@ export default {
       default: () => null,
     },
     updateAllForms: {
-      type: Function
-    }
+      type: Function,
+    },
   },
   data() {
     return {
@@ -1092,13 +1164,21 @@ export default {
       ]
     },
     opportunityClassLogic() {
-      return this.newResource == 'Opportunity' && this.newFormType !== 'STAGE_GATING' && !this.customObjectView ? 'green' : ''
+      return this.newResource == 'Opportunity' &&
+        this.newFormType !== 'STAGE_GATING' &&
+        !this.customObjectView
+        ? 'green'
+        : ''
     },
     dealClassLogic() {
       return this.newResource == 'Deal' && this.newFormType !== 'STAGE_GATING' ? 'green' : ''
     },
     oppStageClassLogic() {
-      return this.newResource == 'Opportunity' && this.newFormType == 'STAGE_GATING' && !this.customObjectView ? 'green' : ''
+      return this.newResource == 'Opportunity' &&
+        this.newFormType == 'STAGE_GATING' &&
+        !this.customObjectView
+        ? 'green'
+        : ''
     },
     dealStageClassLogic() {
       return this.newResource == 'Deal' && this.newFormType == 'STAGE_GATING' ? 'green' : ''
@@ -1151,9 +1231,9 @@ export default {
           { value: 'Lead', label: 'Lead' },
           { value: 'OpportunityLineItem', label: 'Products' },
         ]
-        if (this.user.organizationRef.isPaid) {
-          this.resources.push({value: 'CustomObject', label: 'Custom Object'})
-        }
+        // if (this.user.organizationRef.isPaid) {
+        this.resources.push({ value: 'CustomObject', label: 'Custom Object' })
+        // }
       } else {
         this.resources = [
           { value: 'Deal', label: 'Deal' },
@@ -1236,7 +1316,7 @@ export default {
     }
     this.getStageForms()
     this.formattedTypes = [...this.types, ...this.stages]
-    this.formattedTypes = this.formattedTypes.filter(f => f.value !== 'STAGE')
+    this.formattedTypes = this.formattedTypes.filter((f) => f.value !== 'STAGE')
   },
   methods: {
     test(log) {
@@ -1270,7 +1350,7 @@ export default {
       this.changeObject(this.selectedObject, this.selectedType)
       if (this.selectedObject.value === 'Opportunity' || this.selectedObject.value === 'Deal') {
         this.formattedTypes = [...this.types, ...this.stages]
-        this.formattedTypes = this.formattedTypes.filter(f => f.value !== 'STAGE')
+        this.formattedTypes = this.formattedTypes.filter((f) => f.value !== 'STAGE')
       } else if (this.selectedObject.label === 'Products') {
         this.formattedTypes = [
           // { value: 'CREATE', label: 'Create' }
@@ -1308,9 +1388,10 @@ export default {
     async refreshForms() {
       this.pulseLoading = true
       const res = await SlackOAuth.api.refreshForms()
+      this.searchFields()
       setTimeout(() => {
+        this.formFields.refresh()
         this.pulseLoading = false
-        this.$router.go()
       }, 300)
     },
     checkAndClearInterval() {
@@ -1379,12 +1460,6 @@ export default {
         }
         setTimeout(() => {
           this.$store.dispatch('setCustomObject', this.selectedCustomObjectName)
-          // setTimeout(() => {
-          //   this.loaderText = 'Reloading page, please be patient...'
-          //   setTimeout(() => {
-          //     this.$router.go()
-          //   }, 1000)
-          // }, 2000)
           this.searchFields()
         }, 400)
       } catch (e) {
@@ -1453,11 +1528,9 @@ export default {
     async deleteForm(form) {
       if (form && form.id && form.id.length) {
         const id = form.id
-
         SlackOAuth.api
           .delete(id)
-          .then(async (res) => {
-            this.$router.go()
+          .then((res) => {
             this.$toast('Form removed', {
               timeout: 2000,
               position: 'top-left',
@@ -1483,9 +1556,6 @@ export default {
           }
         })
         this.allForms = [...forms]
-        if (this.storedField) {
-          this.$router.go()
-        }
       }
     },
     closeModal() {
@@ -1510,6 +1580,7 @@ export default {
       this.confirmCODeleteModal = false
     },
     setNewForm() {
+      // this.removeForms()
       this.addForm(this.selectedStage)
     },
     async selectForm(resource, formType, stage = '') {
@@ -1534,6 +1605,13 @@ export default {
         },
       })
     },
+    removeForms() {
+      // console.log('allForms', this.allForms)
+      const stageForms = this.allForms.filter((form) => form.stage.trim().length)
+      console.log('stageForms', stageForms)
+      this.allForms = stageForms.filter((form) => form.state === 'STAGE' || form.fieldsRef.length)
+      // console.log('allForms')
+    },
     setStage(n) {
       if (!n) return
       if (this.userCRM === 'SALESFORCE') {
@@ -1552,6 +1630,7 @@ export default {
     },
     addForm(stage) {
       /** Method for Creating a new stage-gating form, this is only available for Opportunities at this time */
+      console.log('addForm')
       if (this.currentStagesWithForms.includes(stage)) {
         this.activeForm = this.formStages.find((form) => form.stage == stage)
       }
@@ -1594,7 +1673,7 @@ export default {
           this.stages = dealStage && dealStage.length ? dealStage : []
         } else if (this.userCRM === 'SALESFORCE') {
           res = await SObjectPicklist.api.listPicklists(query_params)
-          let values = res[0]['values']
+          // let values = res[0]['values']
           // values.map(val => val.label = 'Stage: ' + val.label)
           this.stages = res.length ? res[0]['values'] : []
         }
@@ -1629,8 +1708,8 @@ export default {
       )
     },
     changeObject(object, type, switchedObject = false) {
-      if (type.label !== 'Create' && type.label !== 'Update') { //&& type.label !== '--- Stages ---') {
-        console.log('before setStage', type)
+      if (type.label !== 'Create' && type.label !== 'Update') {
+        //&& type.label !== '--- Stages ---') {
         this.setStage(type)
         return
       } else {
@@ -1865,7 +1944,6 @@ export default {
               ),
           },
         )
-        // this.$router.go()
       }, 400)
     },
     getActionChoices() {
@@ -1953,7 +2031,6 @@ export default {
       let currentFormFields = this.addedFields.map((field) => {
         return field.id
       })
-
       if (this.newFormType == 'UPDATE' && this.newResource !== 'OpportunityLineItem') {
         if (
           currentFormFields.includes('6407b7a1-a877-44e2-979d-1effafec5035') == false &&
@@ -2004,16 +2081,6 @@ export default {
       ) {
         this.changeCustomObjectName()
       }
-      SlackOAuth.api
-        .postOrgCustomForm({
-          ...this.newCustomForm,
-          fields: fields,
-          removedFields: this.removedFields,
-          fields_ref: fields_ref,
-          custom_object: this.newCustomForm.customObject ? this.newCustomForm.customObject : '',
-        })
-        .then((res) => {
-          // this.$emit('update:selectedForm', res)
 
           const filteredForm = this.allForms.filter(form => form.resource === res.resource && form.formType === res.formType)[0]
 
@@ -2033,21 +2100,26 @@ export default {
             toastClassName: 'custom',
             bodyClassName: ['custom'],
           })
-          this.removedFields = []
-          // setTimeout(() => {
-          //   this.removedFields = []
-          //   // this.$router.go()
-          // }, 300)
-          this.addedFields = fields_ref
-        })
-        .finally(() => {
-          this.savingForm = false
-          this.getAllForms()
-          this.formChange = false
-          if (this.newCustomForm.formType === 'STAGE_GATING') {
-            this.$router.go()
-          }
-        })
+          .then((res) => {
+            // this.$emit('update:selectedForm', res)
+
+            this.newCustomForm = res
+
+            this.$toast('Form saved', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+            this.removedFields = []
+            this.addedFields = fields_ref
+          })
+      } finally {
+        this.savingForm = false
+        this.getAllForms()
+        this.formChange = false
+      }
     },
     async getAllForms() {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
@@ -2213,9 +2285,9 @@ input[type='search']:focus {
   font-size: 12px;
 }
 .selected-container {
-  height: 52vh; 
-  margin-right: 1rem; 
-  // margin-top: 3rem; 
+  height: 52vh;
+  margin-right: 1rem;
+  // margin-top: 3rem;
   width: 30vw;
   h5 {
     margin-left: 1rem;
@@ -2910,7 +2982,7 @@ img:hover {
 }
 .refresh-button {
   height: 14px;
-  filter: invert(45%)
+  filter: invert(45%);
 }
 .trash-button {
   height: 14px;
@@ -3010,7 +3082,7 @@ img:hover {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  width: 94%
+  width: 94%;
 }
 .img-border-modal {
   // @include gray-text-button();
@@ -3025,8 +3097,8 @@ img:hover {
   @include gray-button();
 }
 .half-view-flex {
-  display: flex; 
-  justify-content: space-between; 
+  display: flex;
+  justify-content: space-between;
   width: 55.75vw;
 }
 .filtered-red {

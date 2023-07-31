@@ -262,8 +262,6 @@ export default {
           // }
           if (this.isPR) {
             this.$router.push({ name: 'PRSummaries' })
-          } else if (!this.hasSalesforceIntegration && !this.hasSlackIntegration) {
-            this.$router.push({ name: 'Integrations' })
           } else {
             this.$router.push({ name: 'Home' })
           }
@@ -369,10 +367,8 @@ export default {
             this.$store.dispatch('updateUser', User.fromAPI(userData))
             if (this.isPR) {
               this.$router.push({ name: 'PRSummaries' })
-            } else if (!this.hasSalesforceIntegration && !this.hasSlackIntegration) {
-              this.$router.push({ name: 'Integrations' })
             } else {
-              this.$router.push({ name: 'ListTemplates' })
+              this.$router.push({ name: 'Home' })
             }
           } else {
             // Else, send them to screen for them to get a password and org
@@ -514,6 +510,9 @@ label {
 ::v-deep .input-content {
   border: 1px solid #e8e8e8;
   border-radius: 4px;
+}
+::v-deep .input-form {
+  width: 23vw;
 }
 ::v-deep .input-form__active {
   border: none;

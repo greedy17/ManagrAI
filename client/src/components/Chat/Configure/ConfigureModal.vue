@@ -40,6 +40,7 @@
           <h2>Error loading page. Please try again later.</h2>
         </div>
       </div>
+      <div class="close-config" @click="closeConfig">X</div>
     </div>
   </div>
 </template>
@@ -62,7 +63,9 @@ import allConfigs from '@/views/settings/alerts/configs'
 export default {
   name: 'ConfigureModal',
   props: {
-
+    configPage: {
+      type: String,
+    },
   },
   components: {
     ConfigureLeftBar,
@@ -77,7 +80,6 @@ export default {
     return {
       ...FORM_CONSTS,
       allConfigs,
-      configPage: 'integrations',
       currentResource: '',
       formFields: CollectionManager.create({ ModelClass: ObjectField }),
       stages: [],
@@ -110,7 +112,10 @@ export default {
   },
   methods: {
     changeConfigPage(page) {
-      this.configPage = page
+      this.$emit('change-config-page', page)
+    },
+    closeConfig() {
+      this.$emit('close-config')
     },
     async listPicklists(query_params = {}) {
       try {
@@ -199,5 +204,11 @@ export default {
 .main-content {
   width: 85%;
   overflow-y: auto;
+}
+.close-config {
+  position: absolute;
+  top: 2vh;
+  right: 2vw;
+  cursor: pointer;
 }
 </style>
