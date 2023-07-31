@@ -51,7 +51,7 @@
                 <div class="message-text-button" @click="openConfigChange('integrations')">Connect CRM</div> -->
                 <p class="message-text-p">Syncing with your CRM. Please wait a few minutes...</p>
                 <div style="margin-bottom: 1.5rem" class="center">
-                  <div style="width: 28vw; margin-top: 1rem" class="progress">
+                  <div style="width: 23.5vw; margin-top: 1rem" class="progress">
                     <div class="color"></div>
                   </div>
 
@@ -1217,14 +1217,14 @@ export default {
   position: relative;
   height: 24px;
   width: 100%;
-  border: 3px solid $soft-gray;
+  border: 2px solid $soft-gray;
   border-radius: 15px;
 }
 .progress .color {
   position: absolute;
   background-color: $dark-green;
   width: 0px;
-  height: 16px;
+  height: 18px;
   top: 1px;
   border-radius: 15px;
   animation: progres 120s linear;

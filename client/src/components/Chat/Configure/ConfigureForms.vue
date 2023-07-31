@@ -272,7 +272,7 @@
           style="margin-left: 1rem; width: 23.5vw"
         >
           <div v-if="selectedObject" class="row__" style="margin: 0">
-            <div style="display: flex; flex-direction: column">
+            <div class="upper-container">
               <div
                 v-if="selectedObject && selectedObject.value !== 'CustomObject'"
                 class="half-view-flex"
@@ -309,6 +309,28 @@
                     >
                       <p>Stages</p>
                     </div>
+                  </div>
+                  <div 
+                    class="wrapper"
+                    v-if="
+                      (selectedObject.value === 'Opportunity' || selectedObject.value === 'Deal') &&
+                      selectedType.value === 'UPDATE' || selectedType.value === 'CREATE'
+                    "
+                  >
+                    <label class="icon workflow" style="margin-top: 0">
+                      <!-- <span class="tooltip"
+                        >You can also add {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} to
+                        Stages. These {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} will
+                        appear as you move to the Stage.</span
+                      > -->
+                      <span class="tooltip">
+                        <!-- Select the fields you'd like to interact with.  -->
+                        We recommend: Name, Stage,
+                        Forecast, Close Date, Next Step, Next Step Date, along with MEDDICC / BANT
+                        fields.
+                      </span>
+                      <span>?</span>
+                    </label>
                   </div>
                   <!-- <Multiselect
                     v-if="formattedTypes.length"
@@ -540,23 +562,7 @@
               </template>
             </Multiselect>
             <div v-else class="choose-fields-container">
-              <h5>Choose CRM fields:</h5>
-              <div class="wrapper">
-                <label class="icon workflow" style="margin-top: 0">
-                  <!-- <span class="tooltip"
-                    >You can also add {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} to
-                    Stages. These {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} will
-                    appear as you move to the Stage.</span
-                  > -->
-                  <span class="tooltip">
-                    <!-- Select the fields you'd like to interact with.  -->
-                    We recommend: Name, Stage,
-                    Forecast, Close Date, Next Step, Next Step Date, along with MEDDICC / BANT
-                    fields.
-                  </span>
-                  <span>?</span>
-                </label>
-              </div>
+              <h5>Select fields:</h5>
             </div>
             <div class="search-bar">
               <img class="search" src="@/assets/images/search.svg" />
@@ -632,7 +638,7 @@
           </div>
         </section>
         <div class="selected-container">
-          <h5>Selected CRM Fields:</h5>
+          <h5>Selected Fields:</h5>
           <div class="selected" style="margin-left: 1rem">
             <draggable
               v-model="addedFields"
@@ -2235,7 +2241,7 @@ input[type='checkbox'] + label::before {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 16px;
+  margin-top: 2rem;
   padding-bottom: 16px;
   border-bottom: 1px solid $soft-gray;
   h5 {
@@ -2269,7 +2275,7 @@ input[type='checkbox'] + label::before {
   appearance: none;
 }
 input[type='search'] {
-  width: 6.5vw;
+  width: 12vw;
   letter-spacing: 0.75px;
   border: none;
   padding: 4px 0;
@@ -2285,12 +2291,13 @@ input[type='search']:focus {
   font-size: 12px;
 }
 .selected-container {
-  height: 52vh;
+  height: 48vh;
   margin-right: 1rem;
   // margin-top: 3rem;
   width: 30vw;
   h5 {
     margin-left: 1rem;
+    margin-top: 2.1rem;
     margin-bottom: 1.3rem;
     color: $light-gray-blue;
   }
@@ -2328,7 +2335,7 @@ input[type='search']:focus {
       padding: 4px 0px;
       // margin-top: 16px;
       // height: 76vh;
-      height: 52vh;
+      height: 48vh;
       overflow: scroll;
       section {
         span {
@@ -2902,7 +2909,7 @@ img:hover {
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 .wrapper .icon:hover .tooltip {
-  top: -125px;
+  top: -82px;
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -2954,6 +2961,12 @@ img:hover {
 }
 ::v-deep .multiselect {
   min-height: 0;
+}
+.upper-container {
+  display: flex; 
+  flex-direction: column;
+  border-bottom: 1px solid $soft-gray;
+  padding-bottom: 1rem;
 }
 .green-check {
   height: 0.6rem;
