@@ -35,7 +35,7 @@
           </div>
         </div>
         <div>
-          <p class="modal-card-text" style="width: 90%; font-size: 11px">
+          <p class="modal-card-text">
             Choose your CRM from the options below.
           </p>
           <div class="flex-row inner-crm">
@@ -1328,10 +1328,11 @@ a {
   // text-align: center;
 }
 .modal-card-text {
-  font-size: 16px;
+  font-size: 14px;
   color: $light-gray-blue;
   margin-top: 0.5rem;
-  margin-left: 1.25rem;
+  margin-left: 5%;
+  width: 90%;
 }
 // .privacy {
 //   color: $base-gray;
@@ -1448,7 +1449,7 @@ a {
   z-index: 30;
 }
 .crm-form {
-  height: 32vh;
+  height: 34vh;
   width: 32vw;
 }
 .form-margin-small {
