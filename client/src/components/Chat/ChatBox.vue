@@ -32,36 +32,25 @@
             <div class="avatar" v-else>{{ userName[0] }}</div>
           </div>
 
-          <div class="text-container">
-            <div style="position: relative">
-              <!-- :class="{
-                  marg:
-                    message.generated_title !== 'Deal Review' &&
-                    message.generated_title !== 'AI Generated Next Steps' &&
-                    message.generated_title !== 'AI Generated Summary',
-                }" -->
-              <div
-                class="type-header"
-                v-if="message.user_type === 'bot' && message.generated_title"
-                :class="{
+          <!-- :class="{
                   marg:
                     message.generated_title === 'Ask Managr' ||
-                    message.generated_title === 'AI Generated Next Steps',
-                }"
-              >
-                <h4 style="margin-top: 0">{{ message.generated_title }}</h4>
-                <small v-if="message.resource">
-                  {{ message.resource }}
-                </small>
-              </div>
+                    message.generated_title === 'AI Generated Email',
+                }" -->
 
-              <!-- <div
-                :class="{ 'type-header': message.generated_title === 'Deal Review' }"
-                style="font-weight: bold; font-size: 14px"
-                v-else-if="message.user_type === 'bot' && message.generated_title"
+          <div class="text-container">
+            <div style="position: relative">
+              <div
+                class="type-header marg"
+                v-if="message.user_type === 'bot' && message.generated_title"
               >
-                {{ message.title }}
-              </div> -->
+                <h4 style="margin-top: 0">
+                  {{ message.generated_title }}
+                  <small style="display: block" v-if="message.resource">
+                    {{ message.resource }}
+                  </small>
+                </h4>
+              </div>
 
               <pre v-html="message.value" class="message-text"></pre>
             </div>

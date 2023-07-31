@@ -592,23 +592,23 @@ def draft_follow_up(request):
     instructions = request.data["instructions"]
     if not instructions:
         prompt = core_consts.OPEN_AI_MEETING_EMAIL_DRAFT(request.data["notes"])
-        body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 500, temperature=0.2)
+        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(user.email, prompt, token_amount=500, top_p=0.9)
     else:
         prompt = core_consts.OPEN_AI_EMAIL_DRAFT_WITH_INSTRUCTIONS(
             request.data["notes"], instructions
         )
-        body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, 1000)
+        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(user.email, prompt, token_amount=500, top_p=0.9)
 
     attempts = 1
 
     while True:
         try:
             with Client as client:
-                url = core_consts.OPEN_AI_COMPLETIONS_URI
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             if r.status_code == 200:
                 r = r.json()
-                text = r.get("choices")[0].get("text")
+                text = r.get("choices")[0].get("message").get("content")
                 return Response(data={**r, "res": text}, status=status.HTTP_200_OK)
         except Exception as e:
             res = {"value": f"error drafting email: {e}"}
@@ -1693,7 +1693,9 @@ def request_reset_link(request):
 )
 def get_task_status(request):
     data = {}
-    verbose_name = request.GET.get("verbose_name", None)
+    verbose_string = request.GET.get('verbose_name', None)
+    response_data = json.loads(verbose_string)
+    verbose_name = response_data.get('verbose_name')
     if verbose_name:
         try:
             task = CompletedTask.objects.get(verbose_name=verbose_name)
@@ -1862,9 +1864,17 @@ def process_transcript_to_summaries(transcript, user):
 def process_transcript(request):
     from managr.zoom.background import _process_frontend_transcript
 
+    request_data = {
+        'user_id': request.data["user_id"],
+        'meeting_id': request.data["meeting_id"],
+        'resource_type': request.data["resource_type"],
+        'integration_id': request.data["integration_id"],
+        'resource_id': request.data["resource_id"],
+    }
+
     user = request.user
     task = _process_frontend_transcript(
-        request, verbose_name=f"transcript-{user.email}-{uuid.uuid4()}"
+        request_data, verbose_name=f"transcript-{user.email}-{uuid.uuid4()}"
     )
     return Response(data={"verbose_name": task.verbose_name}, status=status.HTTP_200_OK)
 

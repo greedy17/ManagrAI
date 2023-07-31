@@ -1113,22 +1113,22 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
 
 
 @background()
-def _process_frontend_transcript(request):
+def _process_frontend_transcript(request_data):
     from managr.core.background import emit_process_add_call_analysis
     from managr.core.models import User
 
-    user = User.objects.get(id=request.data["user_id"])
+    user = User.objects.get(id=request_data["user_id"])
     summary_parts = []
     viable_data = []
-    meeting_id = request.data["meeting_id"]
-    resource_type = request.data["resource_type"]
-    integration_id = request.data["integration_id"]
+    meeting_id = request_data["meeting_id"]
+    resource_type = request_data["resource_type"]
+    integration_id = request_data["integration_id"]
 
-    resource = CRM_SWITCHER[user.crm][request.data["resource_type"]]["model"].objects.get(
-        id=request.data["resource_id"]
+    resource = CRM_SWITCHER[user.crm][request_data["resource_type"]]["model"].objects.get(
+        id=request_data["resource_id"]
     )
 
-    meeting_id = request.data["meeting_id"]
+    meeting_id = request_data["meeting_id"]
     meeting_res = user.zoom_account.helper_class.get_meeting_by_id(
         meeting_id, user.zoom_account.access_token
     )
@@ -1151,14 +1151,14 @@ def _process_frontend_transcript(request):
             operation_type="MEETING_REVIEW",
             meeting=meeting.instance,
             user=user,
-            resource_id=request.data["resource_id"],
-            resource_type=request.data["resource_type"],
+            resource_id=request_data["resource_id"],
+            resource_type=request_data["resource_type"],
         )
         workflow.save()
     except Exception as e:
         logger.info(e)
 
-    resource = CRM_SWITCHER[user.crm][request.data["resource_type"]]["model"].objects.get(
+    resource = CRM_SWITCHER[user.crm][request_data["resource_type"]]["model"].objects.get(
         integration_id=integration_id
     )
     form_template = user.team.team_forms.get(form_type="UPDATE", resource=resource_type)
@@ -1166,7 +1166,6 @@ def _process_frontend_transcript(request):
     fields_list = list(fields.values_list("label", flat=True))
     has_error = False
     error_message = None
-    retry = 0
     try:
         if not settings.IN_PROD:
             logger.info("Retreiving meeting data...")
