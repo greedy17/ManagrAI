@@ -21,6 +21,7 @@
     "vue-drag-drop": "^1.1.4",
     "vue-multiselect": "^2.1.6",
     "vue-sanitize": "^0.2.2",
-    "vuedraggable": "^2.24.3"
+    "vuedraggable": "^2.24.3",
+    "vue-sse": "^2.5.2"
   }
 }
