@@ -461,9 +461,9 @@
               </div> -->
               <div>
                 <p class="logged">Summary</p>
-                <pre v-html="summary.transcript_summary.trim()" class="transcript" />
+                <pre :v-html="summary && summary.transcript_summary && typeof summary.transcript_summary === 'string' ? summary.transcript_summary.trim() : summary.transcript_summary" class="transcript" />
                 <p class="logged-blue">Analysis</p>
-                <pre v-html="summary.transcript_analysis.trim()" class="transcript" />
+                <pre :v-html="summary && summary.transcript_analysis && typeof summary.transcript_analysis === 'string' ? summary.transcript_analysis.trim() : summary.transcript_analysis" class="transcript" />
               </div>
             </div>
           </div>
@@ -483,8 +483,9 @@
     >
       <!-- @mouseenter="setTooltip(opp.id)"
         @mouseleave="removeTooltip" -->
+      <!-- <div @click="test({userCRM, displayedOpps, activeFilters})">Test</div> -->
       <div
-        v-if="userCRM && !(displayedOpps.results && displayedOpps.results.length) && !activeFilters"
+        v-if="userCRM && !(displayedOpps.results && displayedOpps.results.length)"
         class="no-results"
       >
         <p>Sync in progress... Reload in a few minutes</p>
