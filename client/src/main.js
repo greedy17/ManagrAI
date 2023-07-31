@@ -18,6 +18,7 @@ import 'babel-polyfill'
 
 import Vue from 'vue'
 import Vuex from 'vuex'
+import VueSSE from 'vue-sse';
 // import AlertAlert from '@/services/alertAlert'
 import * as VueGoogleMaps from 'vue2-google-maps'
 import App from './App'
@@ -67,6 +68,7 @@ Vue.use(VueGoogleMaps, {
   },
 })
 Vue.use(VueApexCharts)
+Vue.use(VueSSE);
 
 library.add(faBars, faSquarePlus, faPaperPlane, faCircleUser, faRocket, faCog, faHeadphones, faUser, faSquareXmark, faShuffle, faRotate, faFilter, faSquareCaretLeft, faSalesforce, faBolt, faAt, faUserGroup, faUserPlus, faCalendarPlus, faCalendar, faStairs, faSackDollar, faSignature, faLayerGroup, faEnvelope, faFileLines, faAnglesRight, faHubspot)
 
