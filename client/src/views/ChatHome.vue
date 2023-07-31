@@ -412,8 +412,22 @@
     </aside>
 
     <main v-if="currentView === 'home'" id="main">
+      <!-- if userCRM and fieldsLength -->
       <ChatBox
+        v-if="userCRM && fieldsLength"
         ref="chatBox"
+        @set-opp="setOpp"
+        @set-view="setView"
+        @set-open-form="setOpenForm"
+        @toggle-chat-modal="toggleChatModal"
+        @remove-opp="removeOpp"
+      />
+      <ChatBoxOnboarding 
+        v-else
+        ref="chatBox"
+        :userCRM="userCRM"
+        :formsLength="formsLength"
+        @open-config-change="openChangeConfig"
         @set-opp="setOpp"
         @set-view="setView"
         @set-open-form="setOpenForm"
@@ -455,6 +469,7 @@
 
 <script>
 import ChatBox from '../components/Chat/ChatBox.vue'
+import ChatBoxOnboarding from '../components/Chat/ChatBoxOnboarding.vue'
 import RightBar from '../components/Chat/RightBar.vue'
 import LeftSideBar from '../components/Chat/LeftSideBar.vue'
 import ConfigureModal from '../components/Chat/Configure/ConfigureModal.vue'
@@ -477,6 +492,7 @@ export default {
   name: 'Home',
   components: {
     ChatBox,
+    ChatBoxOnboarding,
     RightBar,
     LeftSideBar,
     ConfigureModal,
@@ -548,11 +564,13 @@ export default {
           this.selectedTeam = admin ? admin.team : null
         }
         await this.listUsers()
+        const allForms = await SlackOAuth.api.getOrgCustomForm()
+        this.$store.commit('SAVE_CRM_FORMS', allForms)
       } catch (e) {
         console.log(e)
       }
-      this.team.refresh()
     }
+    this.team.refresh()
 
     if (this.$route.query.code) {
       this.handleConfigureOpen()
@@ -907,6 +925,23 @@ export default {
     user() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
+    },
+    userCRM() {
+      return this.$store.state.user.crm
+    },
+    formsLength() {
+      return !!this.$store.state.crmForms.length
+    },
+    fieldsLength() {
+      const forms = this.$store.state.crmForms
+      for (let i = 0; i < forms.length; i++) {
+        const form = forms[i]
+        const filteredFields = form.fieldsRef.filter(field => !(field.apiName === 'meeting_type' || field.apiName === 'meeting_comments'))
+        if (filteredFields.length) {
+          return true
+        }
+      }
+      return false
     },
     usersInTeam() {
       return this.team.list.filter(

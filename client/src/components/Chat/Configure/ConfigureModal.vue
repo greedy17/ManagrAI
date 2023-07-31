@@ -96,6 +96,7 @@ export default {
         this.currentResource = this.OPPORTUNITY
       }
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
+      this.$store.commit('SAVE_CRM_FORMS', this.allForms)
       this.allFields = await this.listFields()
       await this.listPicklists({
         salesforceObject: this.currentResource,
