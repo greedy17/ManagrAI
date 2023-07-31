@@ -36,7 +36,6 @@ from managr.core.models import User
 from managr.slack import constants as slack_const
 from managr.api.emails import send_html_email
 from managr.slack.helpers import requests as slack_requests
-from managr.slack.models import OrgCustomSlackForm
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.models import OrgCustomSlackFormInstance
 from managr.salesforce.utils import process_text_field_format

@@ -196,7 +196,13 @@ Limit your response to under 1,000 characters.
 
 
 OPEN_AI_NEWS_BOOLEAN_CONVERSION = (
-    lambda prompt: f"""Convert the prompt below into a boolean query to be used for News API. Take extra precautions to get accurate hits, weeding out all irrelevant mentions.\n{prompt}"""
+    lambda prompt: f"""Convert the Search Term below into a boolean query to be used for News API. 
+    Follow these steps in order to create the best possible search:
+    1: Do not make it a title search unless specifically instructed via the prompt.
+    2: Do not use acronyms in your search unless specifically asked to.
+    3: If the search term is a broad category such as "sports", ensure you include or exclude relevant subtopics (e.g., "football", "baseball", "basketball", "coaches", etc.), based on the nature of the query.
+    4: When there are multiple variations or homonyms of a search term, use the boolean 'NOT' to filter out irrelevant results (e.g., use (Carter's NOT "Jimmy Carter's") if the search is aimed at Carter's brand, not the former president).
+    Search Term: {prompt}"""
 )
 
 
