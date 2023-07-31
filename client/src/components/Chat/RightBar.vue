@@ -1018,6 +1018,8 @@ export default {
           }, 300)
         }
       }
+      console.log('this.selectedOpp', this.selectedOpp)
+      console.log('meeting workflows', this.meetingWorkflows)
     },
     removeDuplicatesByKey(arr, key) {
       const uniqueObjects = arr.filter(
@@ -1029,6 +1031,7 @@ export default {
       let stageGateForms
       let stagesWithForms
       const formsRes = await SlackOAuth.api.getOrgCustomForm()
+      this.$store.commit('SAVE_CRM_FORMS', formsRes)
 
       this.updateOppForm = formsRes.filter(
         (obj) =>

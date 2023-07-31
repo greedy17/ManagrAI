@@ -180,10 +180,24 @@
     </aside>
 
     <main v-if="currentView === 'home'" id="main">
+      <!-- if userCRM and fieldsLength -->
       <ChatBox
+        v-if="userCRM && fieldsLength"
         ref="chatBox"
         @set-opp="setOpp"
         @set-view="setView"
+        @toggle-chat-modal="toggleChatModal"
+        @remove-opp="removeOpp"
+      />
+      <ChatBoxOnboarding 
+        v-else
+        ref="chatBox"
+        :userCRM="userCRM"
+        :formsLength="formsLength"
+        @open-config-change="openChangeConfig"
+        @set-opp="setOpp"
+        @set-view="setView"
+        @set-open-form="setOpenForm"
         @toggle-chat-modal="toggleChatModal"
         @remove-opp="removeOpp"
       />
@@ -221,6 +235,7 @@
 
 <script>
 import ChatBox from '../components/Chat/ChatBox.vue'
+import ChatBoxOnboarding from '../components/Chat/ChatBoxOnboarding.vue'
 import RightBar from '../components/Chat/RightBar.vue'
 import LeftSideBar from '../components/Chat/LeftSideBar.vue'
 import ConfigureModal from '../components/Chat/Configure/ConfigureModal.vue'
@@ -232,11 +247,19 @@ import ChatMeetings from '../components/Chat/ChatMeetings.vue'
 import User from '@/services/users'
 import { CRMObjects } from '@/services/crm'
 import { decryptData } from '../encryption'
+import { UserInviteForm } from '@/services/users/forms'
+import Invite from '@/views/settings/_pages/_Invite'
+import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
+import FormField from '@/components/forms/FormField'
+import SlackOAuth, { SlackUserList } from '@/services/slack'
+import Organization from '@/services/organizations'
+import ChatBoxOnboardingVue from '../components/Chat/ChatBoxOnboarding.vue'
 
 export default {
   name: 'Home',
   components: {
     ChatBox,
+    ChatBoxOnboarding,
     RightBar,
     LeftSideBar,
     ConfigureModal,
@@ -263,8 +286,37 @@ export default {
       formData: null,
     }
   },
-  created() {
+  async created() {
+    this.team = CollectionManager.create({ ModelClass: User })
+    this.userInviteForm = new UserInviteForm({
+      role: User.roleChoices[0].key,
+      userLevel: User.types.REP,
+      organization: this.user.organization,
+    })
+    if ((this.isAdmin && this.orgHasSlackIntegration) || this.hasSlack) {
+      try {
+        const allTeams = await Organization.api.listTeams(this.user.id)
+        this.allTeams = allTeams.results
+        if (this.user.isAdmin) {
+          const userTeam = this.allTeams.filter((team) => team.id === this.user.team)
+          this.selectedTeam = userTeam[0] ? userTeam[0] : null
+        } else {
+          const orgUsers = await User.api.getAllOrgUsers(this.user.organization)
+          let admin = orgUsers.filter((user) => user.is_admin)[0]
+          this.selectedTeam = admin ? admin.team : null
+        }
+        await this.listUsers()
+        const allForms = await SlackOAuth.api.getOrgCustomForm()
+        this.$store.commit('SAVE_CRM_FORMS', allForms)
+      } catch (e) {
+        console.log(e)
+      }
+    }
     this.team.refresh()
+
+    if (this.$route.query.code) {
+      this.handleConfigureOpen()
+    }
   },
   watch: {},
   methods: {
@@ -430,6 +482,23 @@ export default {
     user() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
+    },
+    userCRM() {
+      return this.$store.state.user.crm
+    },
+    formsLength() {
+      return !!this.$store.state.crmForms.length
+    },
+    fieldsLength() {
+      const forms = this.$store.state.crmForms
+      for (let i = 0; i < forms.length; i++) {
+        const form = forms[i]
+        const filteredFields = form.fieldsRef.filter(field => !(field.apiName === 'meeting_type' || field.apiName === 'meeting_comments'))
+        if (filteredFields.length) {
+          return true
+        }
+      }
+      return false
     },
     usersInTeam() {
       return this.team.list.filter(

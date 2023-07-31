@@ -172,10 +172,14 @@ export default class UserAPI {
   }
 
   async submitChatTranscript(data) {
-    return this.client
-      .post(CHAT_TRANSCRIPT, data)
-      .then(response => response.data)
-      .catch(apiErrorHandler({ apiName: 'User.chatMeeting' }))
+    try {
+      const response = await this.client.post(CHAT_TRANSCRIPT, data)
+      console.log('response', response)
+      return response.data
+    } catch (e) {
+      console.log('error in submitChatTranscript', e)
+      apiErrorHandler({ apiName: 'User.chatMeeting' })
+    }
   }
 
   async list({ pagination, filters }) {

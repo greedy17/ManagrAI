@@ -157,7 +157,7 @@
           v-if="addOrRemove === 'Add'"
           style="width: 100%"
           v-model="extraFieldObjs"
-          placeholder="Select the fields you want as columns"
+          placeholder="Select fields"
           label="referenceDisplayLabel"
           openDirection="below"
           track-by="id"

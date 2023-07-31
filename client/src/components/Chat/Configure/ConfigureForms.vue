@@ -480,7 +480,10 @@
                     appear as you move to the Stage.</span
                   > -->
                   <span class="tooltip">
-                    Select the fields you'd like to interact with. We recommend: Name, Stage, Forecast, Close Date, Next Step, Next Step Date, along with MEDDICC / BANT fields.
+                    <!-- Select the fields you'd like to interact with.  -->
+                    We recommend: Name, Stage,
+                    Forecast, Close Date, Next Step, Next Step Date, along with MEDDICC / BANT
+                    fields.
                   </span>
                   <span>?</span>
                 </label>
@@ -1138,6 +1141,7 @@ export default {
     try {
       this.getActionChoices()
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
+      this.$store.commit('SAVE_CRM_FORMS', this.allForms)
       let object = this.userCRM === 'SALESFORCE' ? this.OPPORTUNITY : this.DEAL
       if (this.userCRM === 'SALESFORCE') {
         this.resources = [
@@ -2011,6 +2015,15 @@ export default {
         .then((res) => {
           // this.$emit('update:selectedForm', res)
 
+          const filteredForm = this.allForms.filter(form => form.resource === res.resource && form.formType === res.formType)[0]
+
+          if (filteredForm) {
+            const withoutNewForm = this.allForms.filter(form => !(form.resource === res.resource && form.formType === res.formType))
+            this.$store.commit('SAVE_CRM_FORMS', [...withoutNewForm, res])
+          } else {
+            this.$store.commit('SAVE_CRM_FORMS', [...this.allForms, res])
+          }
+
           this.newCustomForm = res
 
           this.$toast('Form saved', {
@@ -2038,6 +2051,7 @@ export default {
     },
     async getAllForms() {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
+      this.$store.commit('SAVE_CRM_FORMS', this.allForms)
       this.updateAllForms(this.allForms)
     },
   },
