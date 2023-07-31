@@ -90,6 +90,9 @@ const mutations = {
   LOGOUT_USER(state) {
     state.token = null
     state.user = null
+    state.currentTask = null
+    state.currentView = null
+    state.meetingBeingProcessed = null
     state.stages = []
   },
   SAVE_ALL_OPPS(state, allOpps) {
@@ -538,7 +541,7 @@ export default new Vuex.Store({
   getters,
   plugins: [
     createPersistedState({
-      paths: ['user', 'token', 'chatTitle', 'currentView',]
+      paths: ['user', 'token', 'chatTitle', 'currentView', 'currentTask', 'meetingBeingProcessed']
     })
   ],
 })
