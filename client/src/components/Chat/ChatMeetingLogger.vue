@@ -41,7 +41,7 @@
               : selectedList
           "
           :loading="dropdownLoading || listLoading"
-          :disabled="(!mappedOpp || submitting || currentTask) && !errorText"
+          :disabled="(!selectedResourceType || submitting || currentTask) && !errorText"
         >
           <template slot="noResult">
             <p class="multi-slot">No results. Try loading more</p>

@@ -91,7 +91,7 @@ const mutations = {
     state.token = null
     state.user = null
     state.currentTask = null
-    state.currentView = null
+    state.currentView = 'home'
     state.meetingBeingProcessed = null
     state.stages = []
   },
