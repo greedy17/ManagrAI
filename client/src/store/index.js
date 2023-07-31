@@ -91,6 +91,9 @@ const mutations = {
   LOGOUT_USER(state) {
     state.token = null
     state.user = null
+    state.currentTask = null
+    state.currentView = 'home'
+    state.meetingBeingProcessed = null
     state.stages = []
   },
   SAVE_ALL_OPPS(state, allOpps) {

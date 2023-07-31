@@ -7,7 +7,20 @@
         Clear chat
       </button>
     </header>
-    <div v-if="conversation" class="margin-top" ref="chatWindow">
+    <div class="margin-top" ref="chatWindow" v-if="loadingConvos">
+      <div class="col-start">
+        <div class="message-container">
+          <div style="border-radius: 6px; padding: 0.2rem 0 0.25rem 0" class="row">
+            <div class="loading">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div v-else-if="conversation && !loadingConvos" class="margin-top">
       <div v-for="(message, i) in conversation.messages" :key="i" class="col-start">
         <div class="message-container">
           <div class="images">
@@ -315,8 +328,6 @@
           </div>
         </div>
       </div>
-
-      <!-- <div>{{ user.salesforceAccountRef }}</div> -->
     </div>
 
     <ChatTextBox
@@ -348,6 +359,7 @@ export default {
   },
   data() {
     return {
+      loadingConvos: false,
       selectingContent: false,
       messageLoading: false,
       generating: false,
@@ -441,11 +453,14 @@ export default {
       this.addingAskInstructions = !this.addingAskInstructions
     },
     async getConversations() {
+      this.loadingConvos = true
       try {
         let res = await User.api.getConversations({ user_id: this.user.id })
         this.conversation = res.results[0]
       } catch (e) {
         console.log(e)
+      } finally {
+        this.loadingConvos = false
       }
     },
     regenerate(type, data, editId, sumObj) {

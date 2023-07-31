@@ -11,18 +11,10 @@
       <div class="col-start">
         <div class="message-container">
           <div class="images">
-            <span
-              style="margin-left: -4px"
-              v-if="toggleReady"
-            >
+            <span style="margin-left: -4px" v-if="toggleReady">
               <img class="green-filter" src="@/assets/images/logo.png" height="30px" alt="" />
             </span>
-            <span
-              style="font-size: 24px"
-              v-else
-            >
-              🤖
-            </span>
+            <span style="font-size: 24px" v-else> 🤖 </span>
           </div>
           <div class="text-container">
             <div style="position: relative">
@@ -44,7 +36,9 @@
                 <!-- <p class="message-text-p">CRM successfully connected!</p>
                 <div class="message-text-button" @click="openConfigChange('forms')">Add Form</div> -->
                 <p class="message-text-p">Please connect your CRM to get started.</p>
-                <div class="message-text-button" @click="openConfigChange('integrations')">Connect</div>
+                <div class="message-text-button" @click="openConfigChange('integrations')">
+                  Connect
+                </div>
               </div>
               <div v-else-if="!formsLength && !toggleReady" class="message-text-onboarding">
                 <!-- <p class="message-text-p">Please connect your CRM.</p>
@@ -71,7 +65,9 @@
               </div> -->
               <div v-else class="message-text-onboarding">
                 <p class="message-text-p">Sync complete!</p>
-                <div class="message-text-button" @click="openConfigChange('forms')">Continue to field mapping</div>
+                <div class="message-text-button" @click="openConfigChange('forms')">
+                  Continue to field mapping
+                </div>
               </div>
             </div>
           </div>
@@ -760,8 +756,8 @@ export default {
     },
   },
   created() {
-    this.getConversations()
-    this.scrollToBottom()
+    // this.getConversations()
+    // this.scrollToBottom()
     if (this.userCRM && !this.formsLength) {
       this.startTimer()
     }

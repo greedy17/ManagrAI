@@ -282,7 +282,7 @@
         <img src="@/assets/images/note.svg" height="12px" alt="" />
         Notes
       </div>
-      <div 
+      <div
         @click="switchView('summary')"
         :class="{ activeswitch: view === 'summary' }"
         class="switch-item"
@@ -370,7 +370,10 @@
       <div v-if="!Object.keys(sortedNotes).length" v-show="view === 'notes'">
         <section>
           <div class="note-section">
-            <p style="margin-top: 0.5rem; margin-bottom: 0; background-color: white" class="selected-opp gray-text">
+            <p
+              style="margin-top: 0.5rem; margin-bottom: 0; background-color: white"
+              class="selected-opp gray-text"
+            >
               Nothing here yet...
             </p>
           </div>
@@ -424,12 +427,12 @@
           </div>
         </section>
       </div>
-      <div
-        v-show="view === 'summary'"
-        class="selected-opp-section"
-      >
+      <div v-show="view === 'summary'" class="selected-opp-section">
         <div v-if="!selectedSummaries.length" class="note-section">
-          <p style="margin-top: 0.5rem; margin-bottom: 0; background-color: white" class="selected-opp gray-text">
+          <p
+            style="margin-top: 0.5rem; margin-bottom: 0; background-color: white"
+            class="selected-opp gray-text"
+          >
             No summaries
             <!-- <img src="@/assets/images/dropdown.svg" height="14px" alt="" /> -->
           </p>
@@ -438,9 +441,9 @@
           <div v-for="summary in selectedSummaries" :key="summary.id">
             <div class="note-section">
               <small class="gray-text left-margin right-absolute">{{
-                `${getMonth(summary.meeting_ref.start_time)} ${getDate(summary.meeting_ref.start_time)}, ${getYear(
+                `${getMonth(summary.meeting_ref.start_time)} ${getDate(
                   summary.meeting_ref.start_time,
-                )}`
+                )}, ${getYear(summary.meeting_ref.start_time)}`
               }}</small>
               <!-- <div class="row text-ellipsis">
                 <p
@@ -461,9 +464,27 @@
               </div> -->
               <div>
                 <p class="logged">Summary</p>
-                <pre v-html="summary.transcript_summary.trim()" class="transcript" />
+                <pre
+                  :v-html="
+                    summary &&
+                    summary.transcript_summary &&
+                    typeof summary.transcript_summary === 'string'
+                      ? summary.transcript_summary.trim()
+                      : summary.transcript_summary
+                  "
+                  class="transcript"
+                />
                 <p class="logged-blue">Analysis</p>
-                <pre v-html="summary.transcript_analysis.trim()" class="transcript" />
+                <pre
+                  :v-html="
+                    summary &&
+                    summary.transcript_analysis &&
+                    typeof summary.transcript_analysis === 'string'
+                      ? summary.transcript_analysis.trim()
+                      : summary.transcript_analysis
+                  "
+                  class="transcript"
+                />
               </div>
             </div>
           </div>
@@ -483,8 +504,9 @@
     >
       <!-- @mouseenter="setTooltip(opp.id)"
         @mouseleave="removeTooltip" -->
+      <!-- <div @click="test({userCRM, displayedOpps, activeFilters})">Test</div> -->
       <div
-        v-if="userCRM && !(displayedOpps.results && displayedOpps.results.length) && !activeFilters"
+        v-if="userCRM && !(displayedOpps.results && displayedOpps.results.length)"
         class="no-results"
       >
         <p>Sync in progress... Reload in a few minutes</p>
@@ -1158,7 +1180,7 @@ export default {
       this.$store.dispatch('setCurrentMeeting', null)
       if (opp) {
         this.selectedOpp = opp
-        // this.summary = 
+        // this.summary =
         const summaries = []
         for (let i = 0; i < this.meetingWorkflows.length; i++) {
           if (this.meetingWorkflows[i].resource_id === opp.id) {
@@ -1186,8 +1208,6 @@ export default {
           }, 300)
         }
       }
-      console.log('this.selectedOpp', this.selectedOpp)
-      console.log('meeting workflows', this.meetingWorkflows)
     },
     removeDuplicatesByKey(arr, key) {
       const uniqueObjects = arr.filter(

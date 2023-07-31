@@ -422,8 +422,8 @@
         @toggle-chat-modal="toggleChatModal"
         @remove-opp="removeOpp"
       />
-      <ChatBoxOnboarding 
-        v-else
+      <ChatBoxOnboarding
+        v-else-if="!userCRM && !fieldsLength"
         ref="chatBox"
         :userCRM="userCRM"
         :formsLength="formsLength"
@@ -936,7 +936,9 @@ export default {
       const forms = this.$store.state.crmForms
       for (let i = 0; i < forms.length; i++) {
         const form = forms[i]
-        const filteredFields = form.fieldsRef.filter(field => !(field.apiName === 'meeting_type' || field.apiName === 'meeting_comments'))
+        const filteredFields = form.fieldsRef.filter(
+          (field) => !(field.apiName === 'meeting_type' || field.apiName === 'meeting_comments'),
+        )
         if (filteredFields.length) {
           return true
         }
