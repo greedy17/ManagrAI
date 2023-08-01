@@ -531,7 +531,7 @@ def resource_action_blockset(context):
         ]
     )
     if not settings.IN_PROD:
-        options.append(block_builders.option("New Summary", "NEWS_SUMMARY"))
+        options.append(block_builders.option("News Summary", "NEWS_SUMMARY"))
 
     blocks = [
         block_builders.static_select(

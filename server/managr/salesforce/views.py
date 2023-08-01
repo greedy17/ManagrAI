@@ -1043,7 +1043,12 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
 
     def get_queryset(self):
-        return MeetingWorkflow.objects.for_user(self.request.user).order_by("meeting__start_time")
+        if self.request.data.get("date", False):
+            return MeetingWorkflow.objects.for_user(
+                self.request.user, date=self.request.data.get("date")
+            ).order_by("meeting__start_time")
+        else:
+            return MeetingWorkflow.objects.filter(user=self.request.user)
 
     @action(
         methods=["post"],
