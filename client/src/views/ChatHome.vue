@@ -130,7 +130,7 @@
               <p style="margin: 0">Make Team Lead</p>
               <input
                 v-model="selectedTeamLead"
-                :disabled="!selectedTeam || user.team === selectedTeam.id"
+                :disabled="!selectedTeam"
                 type="checkbox"
                 style="height: 1rem; align-self: center; width: 2rem; margin-top: 0.5rem"
               />
@@ -423,8 +423,7 @@
         @remove-opp="removeOpp"
       />
       <ChatBoxOnboarding
-        v-else-if="!userCRM && !fieldsLength"
-        ref="chatBox"
+        v-else
         :userCRM="userCRM"
         :formsLength="formsLength"
         @open-config-change="openChangeConfig"
@@ -696,7 +695,16 @@ export default {
                 .then((response) => {
                   this.$refs.chatBox.getConversations()
                   this.$refs.rightSideBar.reloadOpps()
+                  this.$refs.chatBox.clearSelectedAction()
                 })
+            } else {
+              if (response.success) {
+                this.$refs.rightSideBar.updateBanner(true)
+                this.$refs.chatBox.clearSelectedAction()
+              } else {
+                this.$refs.rightSideBar.updateBanner(false)
+                this.$refs.chatBox.clearSelectedAction()
+              }
             }
           })
       } catch (e) {
@@ -775,7 +783,15 @@ export default {
         this.resetData()
       } catch (e) {
         let err = e.response.data
-        if (err.email) {
+        if (e.response.status === 426) {
+          this.$toast('Max users reached. Please upgrade', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } else if (err.email) {
           this.$toast('Email error', {
             timeout: 2000,
             position: 'top-left',
