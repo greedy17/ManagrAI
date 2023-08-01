@@ -423,7 +423,7 @@
         @remove-opp="removeOpp"
       />
       <ChatBoxOnboarding
-        v-else-if="!userCRM && !fieldsLength"
+        v-else-if="!userCRM && !fieldsLength || !formsLength"
         ref="chatBox"
         :userCRM="userCRM"
         :formsLength="formsLength"
