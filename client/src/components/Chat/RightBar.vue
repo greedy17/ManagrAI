@@ -390,7 +390,7 @@
           {{ month }}
           <!-- <img src="@/assets/images/dropdown.svg" height="14px" alt="" /> -->
         </h4>
-        <section @click="test" v-if="notes.length">
+        <section v-if="notes.length">
           <div v-for="note in notes" :key="note.id">
             <div style="width: 100%" class="note-section">
               <small class="gray-text left-margin right-absolute">{{
@@ -988,7 +988,6 @@ export default {
       this.loading = true
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
-        console.log('res', res)
         this.meetingWorkflows = res.results
       } catch (e) {
         console.log(e)
@@ -1118,7 +1117,6 @@ export default {
         this.selectedFilter.apiName,
         this.selectedFilter.value,
       ]
-      console.log(filter)
       try {
         this.$store.dispatch('changeFilters', [...this.$store.state.filters, [...filter]])
         await this.$store.dispatch('loadChatOpps', 1)
