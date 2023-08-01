@@ -481,7 +481,7 @@
                     summary.transcript_summary &&
                     typeof summary.transcript_summary === 'string'
                       ? summary.transcript_summary.trim()
-                      : summary.transcript_summary
+                      : (summary.transcript_summary ? summary.transcript_summary : '---')
                   "
                   class="transcript"
                 />
@@ -492,7 +492,7 @@
                     summary.transcript_analysis &&
                     typeof summary.transcript_analysis === 'string'
                       ? summary.transcript_analysis.trim()
-                      : summary.transcript_analysis
+                      : (summary.transcript_analysis ? summary.transcript_analysis : '---')
                   "
                   class="transcript"
                 />
