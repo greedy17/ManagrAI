@@ -783,7 +783,16 @@ export default {
         this.resetData()
       } catch (e) {
         let err = e.response.data
-        if (err.email) {
+        if (e.response.status === 426) {
+          this.$toast('Max users reached. Please upgrade', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }
+        else if (err.email) {
           this.$toast('Email error', {
             timeout: 2000,
             position: 'top-left',
