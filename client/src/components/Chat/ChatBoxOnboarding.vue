@@ -7,62 +7,92 @@
         Clear chat
       </button>
     </header>
-    <div class="margin-top" ref="chatWindow" v-if="loadingConvos">
+    <div class="margin-top" ref="chatWindow">
       <div class="col-start">
         <div class="message-container">
-          <div style="border-radius: 6px; padding: 0.2rem 0 0.25rem 0" class="row">
-            <div class="loading">
-              <div class="dot"></div>
-              <div class="dot"></div>
-              <div class="dot"></div>
+          <div class="images">
+            <span style="margin-left: -4px" v-if="toggleReady">
+              <img class="green-filter" src="@/assets/images/logo.png" height="30px" alt="" />
+            </span>
+            <span style="font-size: 24px" v-else> 🤖 </span>
+          </div>
+          <div class="text-container">
+            <div style="position: relative">
+              <!-- <div
+                class="type-header"
+                :class="{
+                  marg: false
+                    // message.generated_title === 'Ask Managr' ||
+                    // message.generated_title === 'AI Generated Next Steps',
+                }"
+              >
+                <h4 style="margin-top: 0">
+                  {{ userCRM ? `Create Form` : `Connect CRM` }}
+                </h4>
+              </div> -->
+
+              <!-- v-html="userCRM ? formsMessage : crmMessage" -->
+              <div v-if="!userCRM" class="message-text-onboarding">
+                <!-- <p class="message-text-p">CRM successfully connected!</p>
+                <div class="message-text-button" @click="openConfigChange('forms')">Add Form</div> -->
+                <p class="message-text-p">Please connect your CRM to get started.</p>
+                <div class="message-text-button" @click="openConfigChange('integrations')">
+                  Connect
+                </div>
+              </div>
+              <div v-else-if="!formsLength && !toggleReady" class="message-text-onboarding">
+                <!-- <p class="message-text-p">Please connect your CRM.</p>
+                <div class="message-text-button" @click="openConfigChange('integrations')">Connect CRM</div> -->
+                <p class="message-text-p">Syncing with your CRM. Please wait a few minutes...</p>
+                <div style="margin-bottom: 1.5rem" class="center">
+                  <div style="width: 23.5vw; margin-top: 1rem" class="progress">
+                    <div class="color"></div>
+                  </div>
+
+                  <div class="row-between">
+                    <!-- <div class="slide-effect">
+                      <div :key="statusText" class="slideUp">{{ statusText }}</div>
+                    </div> -->
+
+                    <small style="margin: 0; padding: 0">{{ currentTime }}%</small>
+                  </div>
+                </div>
+                <!-- <div class="message-text-button" @click="refreshPage">Refresh</div> -->
+              </div>
+              <!-- <div v-else-if="!formsLength">
+                <p class="message-text-p">Sync complete!</p>
+                <div class="message-text-button" @click="refreshPage">Refresh</div>
+              </div> -->
+              <div v-else class="message-text-onboarding">
+                <p class="message-text-p">Sync complete!</p>
+                <div class="message-text-button" @click="openConfigChange('forms')">
+                  Continue to field mapping
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    <div v-else-if="conversation && !loadingConvos" class="margin-top">
-      <div v-for="(message, i) in conversation.messages" :key="i" class="col-start">
+      <!-- <div v-for="(message, i) in conversation.messages" :key="i" class="col-start">
         <div class="message-container">
-          <div class="images">
-            <span v-if="message.failed" style="font-size: 24px"> 🚫 </span>
-            <span
-              v-else-if="
-                message.user_type === 'bot' && !message.updated && !message.generated_title
-              "
-              style="font-size: 24px"
-            >
-              🤖
-            </span>
-            <span
-              style="margin-left: -4px"
-              v-else-if="
-                message.user_type === 'bot' && (message.updated || message.generated_title)
-              "
-            >
-              <img class="green-filter" src="@/assets/images/logo.png" height="30px" alt="" />
-            </span>
-
-            <div class="avatar" v-else>{{ userName[0] }}</div>
-          </div>
-
-          <!-- :class="{
-                  marg:
-                    message.generated_title === 'Ask Managr' ||
-                    message.generated_title === 'AI Generated Email',
-                }" -->
 
           <div class="text-container">
             <div style="position: relative">
               <div
-                class="type-header marg"
+                class="type-header"
                 v-if="message.user_type === 'bot' && message.generated_title"
+                :class="{
+                  marg:
+                    message.generated_title === 'Ask Managr' ||
+                    message.generated_title === 'AI Generated Next Steps',
+                }"
               >
                 <h4 style="margin-top: 0">
                   {{ message.generated_title }}
-                  <small style="display: block" v-if="message.resource">
-                    {{ message.resource }}
-                  </small>
                 </h4>
+                <small v-if="message.resource">
+                  {{ message.resource }}
+                </small>
               </div>
 
               <pre v-html="message.value" class="message-text"></pre>
@@ -74,7 +104,6 @@
                 style="border-radius: 6px; padding: 0.2rem 0 0.25rem 0"
                 class="row"
               >
-                <!-- <p class="gray-text">Regenerating response</p> -->
                 <div class="loading">
                   <div class="dot"></div>
                   <div class="dot"></div>
@@ -140,75 +169,6 @@
                 <p v-if="message.error" style="margin-top: 0.5rem" class="red-text">
                   {{ message.error }}
                 </p>
-              </div>
-            </div>
-            <div
-              v-else-if="
-                !message.generated &&
-                message.generated_title &&
-                message.generated_title === 'Ask Managr'
-              "
-            >
-              <div
-                v-if="generating && generatingId === message.id"
-                style="border-radius: 6px; padding: 0.2rem 0 0.25rem 0"
-                class="row"
-              >
-                <div class="loading">
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                </div>
-              </div>
-
-              <div v-else style="margin-top: 1.5rem">
-                <div class="column" v-if="addingAskInstructions">
-                  <div class="space-between">
-                    <small>Provide any additional instructions below:</small>
-
-                    <p @click="closeInstructions">x</p>
-                  </div>
-
-                  <textarea
-                    v-model="askInstructons"
-                    class="inline-input"
-                    v-autoresize
-                    autofocus="true"
-                    rows="1"
-                  />
-                </div>
-
-                <button
-                  v-if="!addingAskInstructions"
-                  style="margin-bottom: 0.25rem"
-                  @click="toggleInstructions"
-                  class="content-button padding-small"
-                >
-                  <img
-                    style="margin-right: 0.6rem"
-                    class="gold-filter"
-                    src="@/assets/images/sparkle.svg"
-                    height="14px"
-                    alt=""
-                  />
-                  Regenerate
-                </button>
-
-                <button
-                  v-else
-                  style="margin-bottom: 0.25rem"
-                  @click="regenerateAskManagr(message)"
-                  class="content-button padding-small"
-                >
-                  <img
-                    style="margin-right: 0.6rem"
-                    class="gold-filter"
-                    src="@/assets/images/sparkle.svg"
-                    height="14px"
-                    alt=""
-                  />
-                  Regenerate
-                </button>
               </div>
             </div>
           </div>
@@ -298,7 +258,6 @@
                 >
 
                 <div style="border-radius: 6px; padding: 0.25rem 0.25rem" class="row">
-                  <!-- <p>Processing your submission</p> -->
                   <div class="loading">
                     <div class="dot"></div>
                     <div class="dot"></div>
@@ -311,7 +270,7 @@
             <p class="red-text" v-if="message.error">{{ message.error }}</p>
           </div>
         </div>
-      </div>
+      </div> -->
 
       <div style="margin-left: 1rem" v-show="messageLoading" class="loader-container">
         <span
@@ -328,6 +287,8 @@
           </div>
         </div>
       </div>
+
+      <!-- <div>{{ user.salesforceAccountRef }}</div> -->
     </div>
 
     <ChatTextBox
@@ -350,6 +311,7 @@
 <script>
 import ChatTextBox from './ChatTextBox.vue'
 import User from '@/services/users'
+import SlackOAuth from '@/services/slack'
 import { decryptData } from '../../encryption'
 
 export default {
@@ -357,9 +319,16 @@ export default {
   components: {
     ChatTextBox,
   },
+  props: {
+    userCRM: {
+      type: String,
+    },
+    formsLength: {
+      type: Boolean,
+    },
+  },
   data() {
     return {
-      loadingConvos: false,
       selectingContent: false,
       messageLoading: false,
       generating: false,
@@ -367,75 +336,48 @@ export default {
       generativeRes: null,
       generatingId: null,
       addingInstructions: false,
-      addingAskInstructions: false,
-      askInstructons: null,
       instructionText: null,
       conversation: null,
+      statusText: 'Syncing...',
+      currentTime: 0,
+      interval: null,
+      toggleReady: false,
     }
   },
   watch: {
     messages: 'scrollToBottom',
+    currentTime: 'watchTime',
+    formsLength: 'watchFormsLength',
   },
   methods: {
-    async regenerateAskManagr(msg) {
-      this.generating = true
-      this.generatingId = msg.id
-      this.addingAskInstructions = false
-      try {
-        let res = await User.api
-          .askManagr({
-            user_id: this.user.id,
-            prompt: msg.value,
-            resource_type: msg.resource_type,
-            resource_id: msg.resource_id,
-            instructions: this.askInstructons,
-          })
-          .then((response) => {
-            if (response.status >= 400 && response.status < 500) {
-              User.api
-                .addMessage({
-                  error: response.data.value,
-                  user_type: 'bot',
-                  conversation_id: this.conversation.id,
-                  failed: true,
-                  data: {},
-                })
-                .then((response) => {
-                  this.$emit('get-conversations')
-                })
-            } else if (response.status === 500) {
-              User.api
-                .addMessage({
-                  error: 'Timeout error, try again',
-                  user_type: 'bot',
-                  conversation_id: this.conversation.id,
-                  failed: true,
-                  data: {},
-                })
-                .then((response) => {
-                  this.$emit('get-conversations')
-                })
-            } else {
-              User.api
-                .editMessage({
-                  message_id: msg.id,
-                  value: response['res'],
-                  conversation_id: this.conversation.id,
-                })
-                .then((response) => {
-                  this.getConversations()
-                })
-            }
-          })
-      } catch (e) {
-        console.log(e)
-        this.generating = false
-      } finally {
-        this.askInstructons = ''
-        this.generatingId = null
-        this.generating = false
-        this.scrollToBottom()
+    refreshPage() {
+      this.$router.go()
+    },
+    watchFormsLength() {
+      if (this.formsLength) {
+        this.toggleReady = true
       }
+    },
+    async getAllForms() {
+      const allForms = await SlackOAuth.api.getOrgCustomForm()
+      this.$store.commit('SAVE_CRM_FORMS', allForms)
+    },
+    watchTime() {
+      if (this.currentTime >= 100) {
+        clearInterval(this.interval)
+        this.getAllForms()
+        this.toggleReady = true
+      }
+    },
+    startTimer() {
+      this.interval = setInterval(() => {
+        if (this.currentTime < 100) {
+          this.currentTime += 1
+        }
+      }, 1200)
+    },
+    openConfigChange(page) {
+      this.$emit('open-config-change', page)
     },
     setOpenForm(val) {
       this.$emit('set-open-form', val)
@@ -449,18 +391,12 @@ export default {
     emitFormOpen(data, open) {
       this.$emit('toggle-chat-modal', data, open)
     },
-    toggleInstructions() {
-      this.addingAskInstructions = !this.addingAskInstructions
-    },
     async getConversations() {
-      this.loadingConvos = true
       try {
         let res = await User.api.getConversations({ user_id: this.user.id })
         this.conversation = res.results[0]
       } catch (e) {
         console.log(e)
-      } finally {
-        this.loadingConvos = false
       }
     },
     regenerate(type, data, editId, sumObj) {
@@ -476,7 +412,6 @@ export default {
     },
     closeInstructions() {
       this.addingInstructions = false
-      this.addingAskInstructions = false
       this.instructionText = null
     },
     async deleteMessages() {
@@ -762,12 +697,15 @@ export default {
     },
     jsonNotes(data, name) {
       let jsonString = data
-
+      jsonString = jsonString.replace(/'/g, '"')
+      jsonString = jsonString.replace(/\bNone\b/g, 'null')
       const obj = JSON.parse(jsonString)
       return obj[name]
     },
-    jsonData(data) {
+    jsonData(data, name) {
       let jsonString = data
+      jsonString = jsonString.replace(/'/g, '"')
+      jsonString = jsonString.replace(/\bNone\b/g, 'null')
       const obj = JSON.parse(jsonString)
       return obj
     },
@@ -818,8 +756,14 @@ export default {
     },
   },
   created() {
-    this.getConversations()
-    this.scrollToBottom()
+    // this.getConversations()
+    // this.scrollToBottom()
+    if (this.userCRM && !this.formsLength) {
+      this.startTimer()
+    }
+    if (this.userCRM && this.formsLength) {
+      this.toggleReady = true
+    }
   },
   directives: {
     autoresize: {
@@ -891,8 +835,6 @@ export default {
   font-family: $base-font-family;
   word-wrap: break-word;
   white-space: pre-wrap;
-  padding: 0;
-  margin: 0;
 }
 
 .gray-blue-scale {
@@ -975,8 +917,10 @@ export default {
   padding: 0 1.5rem;
 
   p {
-    padding: 0;
-    margin: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
   }
 
   &:hover {
@@ -1240,6 +1184,88 @@ export default {
 .pointer {
   cursor: pointer;
 }
+.underline {
+  text-decoration: underline;
+}
+
+.message-text-onboarding {
+  // display: flex;
+}
+.message-text-p {
+  // margin-right: 0.5rem;
+}
+
+.message-text-button {
+  @include primary-button();
+  margin-top: 0.5rem;
+  width: 11.5rem;
+}
+
+.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+}
+.progress {
+  position: relative;
+  height: 24px;
+  width: 100%;
+  border: 2px solid $soft-gray;
+  border-radius: 15px;
+}
+.progress .color {
+  position: absolute;
+  background-color: $dark-green;
+  width: 0px;
+  height: 18px;
+  top: 1px;
+  border-radius: 15px;
+  animation: progres 120s linear;
+}
+@keyframes progres {
+  0% {
+    width: 0%;
+  }
+  25% {
+    width: 25%;
+  }
+  50% {
+    width: 50%;
+  }
+  75% {
+    width: 75%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+.text,
+.slideDown,
+.slideUp {
+  position: relative;
+  font-size: 13px;
+  margin-left: -4px;
+  opacity: 0;
+}
+.slideUp {
+  top: 40px;
+  left: 10px;
+  animation: slideUp ease 0.35s forwards 0.7s;
+}
+
+@keyframes slideUp {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-40px);
+    opacity: 1;
+  }
+}
+
 // @keyframes typing {
 //   from {
 //     width: 0;

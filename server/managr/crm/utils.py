@@ -6,6 +6,30 @@ from django.db.models import Q
 CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 
 
+def set_owner_field(resource, crm):
+    if resource in ["Opportunity", "Account", "Contact"] and crm == "SALESFORCE":
+        return "Owner ID"
+    elif resource == "Company":
+        return "Company owner"
+    elif resource == "Contact" and crm == "HUBSPOT":
+        return "Contact owner"
+    elif resource == "Deal":
+        return "Deal owner"
+    return None
+
+
+def set_name_field(resource, crm):
+    if resource in ["Opportunity", "Account"]:
+        return "Name"
+    elif resource == "Company":
+        return "Company name"
+    elif resource == "Deal":
+        return "Deal Name"
+    elif resource == "Contact":
+        return "Email"
+    return None
+
+
 def process_text_field_format(user_id, resource, saved_data):
     from managr.core.models import User
     from managr.crm.models import ObjectField

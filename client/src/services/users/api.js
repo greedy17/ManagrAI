@@ -172,10 +172,14 @@ export default class UserAPI {
   }
 
   async submitChatTranscript(data) {
-    return this.client
-      .post(CHAT_TRANSCRIPT, data)
-      .then(response => response.data)
-      .catch(apiErrorHandler({ apiName: 'User.chatMeeting' }))
+    try {
+      const response = await this.client.post(CHAT_TRANSCRIPT, data)
+      console.log('response', response)
+      return response.data
+    } catch (e) {
+      console.log('error in submitChatTranscript', e)
+      apiErrorHandler({ apiName: 'User.chatMeeting' })
+    }
   }
 
   async list({ pagination, filters }) {
@@ -248,7 +252,7 @@ export default class UserAPI {
     try {
       const response = await this.client.post(REGISTRATION_ENDPOINT, this.cls.toAPI(data))
       returnedData = this.cls.fromAPI(response.data)
-    } catch(e) {
+    } catch (e) {
       console.log('error in register', e)
       returnedData = e.response
     } finally {

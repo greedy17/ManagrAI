@@ -246,7 +246,7 @@
 
         <div v-else style="margin-top: 0.5rem" class="flexed-row-spread__">
           <div>
-            <p class="gray-text neg-mar-small">Select a date:</p>
+            <!-- <p class="gray-text neg-mar-small">Select a date:</p> -->
             <input class="inline-input" v-model="meetingDate" type="date" />
           </div>
 
@@ -282,7 +282,11 @@
         <img src="@/assets/images/note.svg" height="12px" alt="" />
         Notes
       </div>
-      <div style="cursor: not-allowed" class="switch-item">
+      <div
+        @click="switchView('summary')"
+        :class="{ activeswitch: view === 'summary' }"
+        class="switch-item"
+      >
         <img src="@/assets/images/callsummary.svg" height="14px" alt="" />
         Summaries
       </div>
@@ -302,6 +306,7 @@
             @select-opp="selectOpp"
             @deselect-meeting="deselectMeeting"
             :meetingOpp="meetingOpp"
+            :meetingName="currentMeeting.topic"
             :key="logkey"
           />
         </div>
@@ -362,11 +367,24 @@
           </div>
         </div>
       </div>
+      <div v-if="!Object.keys(sortedNotes).length" v-show="view === 'notes'">
+        <section>
+          <div class="note-section">
+            <p
+              style="margin-top: 0.5rem; margin-bottom: 0; background-color: white"
+              class="selected-opp gray-text"
+            >
+              Nothing here yet...
+            </p>
+          </div>
+        </section>
+      </div>
       <div
         v-for="(notes, month) in sortedNotes"
         :key="month"
         v-show="view === 'notes'"
         class="selected-opp-section"
+        style="height: fit-content"
       >
         <h4 style="margin-top: 0; background-color: white" class="selected-opp">
           {{ month }}
@@ -374,7 +392,7 @@
         </h4>
         <section v-if="notes.length">
           <div v-for="note in notes" :key="note.id">
-            <div class="note-section">
+            <div style="width: 100%" class="note-section">
               <small class="gray-text left-margin right-absolute">{{
                 `${getMonth(note.submission_date)} ${getDate(note.submission_date)}, ${getYear(
                   note.submission_date,
@@ -410,6 +428,75 @@
           </div>
         </section>
       </div>
+      <div v-show="view === 'summary'" class="selected-opp-section">
+        <div v-if="!selectedSummaries.length" class="note-section">
+          <p
+            style="margin-top: 0.5rem; margin-bottom: 0; background-color: white"
+            class="selected-opp gray-text"
+          >
+            No summaries
+            <!-- <img src="@/assets/images/dropdown.svg" height="14px" alt="" /> -->
+          </p>
+        </div>
+        <section v-else>
+          <div v-for="summary in selectedSummaries" :key="summary.id">
+            <div class="note-section">
+              <small class="gray-text left-margin right-absolute">{{
+                `${getMonth(summary.meeting_ref.start_time)} ${getDate(
+                  summary.meeting_ref.start_time,
+                )}, ${getYear(summary.meeting_ref.start_time)}`
+              }}</small>
+              <!-- <div class="row text-ellipsis">
+                <p
+                  :class="{ 'gray-text strike': !!note.saved_data__StageName }"
+                  style="margin-right: 0.25rem"
+                >
+                  {{ note.previous_data__StageName }}
+                </p>
+
+                <img
+                  v-if="note.saved_data__StageName"
+                  src="@/assets/images/transition.svg"
+                  height="12px"
+                  alt=""
+                />
+
+                <p style="margin: 0.25rem 0">{{ note.saved_data__StageName }}</p>
+              </div> -->
+              <div>
+                <p class="logged">Summary</p>
+                <pre
+                  v-html="
+                    summary &&
+                    summary.transcript_summary &&
+                    typeof summary.transcript_summary === 'string'
+                      ? summary.transcript_summary.trim()
+                      : summary.transcript_summary
+                  "
+                  class="transcript"
+                />
+                <p class="logged-blue">Analysis</p>
+                <pre
+                  v-html="
+                    summary &&
+                    summary.transcript_analysis &&
+                    typeof summary.transcript_analysis === 'string'
+                      ? summary.transcript_analysis.trim()
+                      : summary.transcript_analysis
+                  "
+                  class="transcript"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- <section v-else>
+          <div class="note-section">
+            <p class="gray-text">Nothing here yet...</p>
+          </div>
+        </section> -->
+      </div>
     </div>
 
     <div
@@ -418,8 +505,9 @@
     >
       <!-- @mouseenter="setTooltip(opp.id)"
         @mouseleave="removeTooltip" -->
+      <!-- <div @click="test({userCRM, displayedOpps, activeFilters})">Test</div> -->
       <div
-        v-if="userCRM && !(displayedOpps.results && displayedOpps.results.length) && !activeFilters"
+        v-if="userCRM && !(displayedOpps.results && displayedOpps.results.length)"
         class="no-results"
       >
         <p>Sync in progress... Reload in a few minutes</p>
@@ -467,22 +555,18 @@
     </div>
 
     <div class="opp-scroll-container" v-else-if="this.mainView === 'meetings' && !loading">
-      <p class="gray-text small-text">Select a meeting:</p>
+      <!-- <p class="gray-text small-text">Meetings:</p> -->
       <div class="empty-container" v-if="!meetings.length && hasZoomIntegration">
         <p>No Zoom meetings found... refresh or select a different day</p>
       </div>
 
       <div class="empty-container" v-else-if="!hasZoomIntegration">
-        <p><span @click="openSettings" class="link">Connect Zoom</span> in order to log meetings</p>
+        <p>
+          <span @click="openSettings" class="link">Connect Zoom</span> in order to view meetings
+        </p>
       </div>
 
-      <div
-        v-else
-        @click="changeSelectedMeeting(meeting)"
-        class="opp-container"
-        v-for="(meeting, i) in meetings"
-        :key="i"
-      >
+      <div v-else class="opp-container no-cursor" v-for="(meeting, i) in meetings" :key="i">
         <p class="no-margin">
           {{ meeting.topic }}
         </p>
@@ -547,6 +631,8 @@ export default {
       filtervalue: null,
       allStages: [],
       meetings: [],
+      selectedSummaries: [],
+      meetingWorkflows: [],
       meetingOpp: null,
       reloading: false,
       meetingDate: this.getCurrentDate(),
@@ -763,8 +849,8 @@ export default {
     selectedOpp: 'getNotes',
   },
   methods: {
-    test() {
-      console.log('log', this.opportunities)
+    test(log) {
+      console.log('log', log)
     },
     openSettings() {
       this.$emit('open-settings')
@@ -1031,7 +1117,6 @@ export default {
         this.selectedFilter.apiName,
         this.selectedFilter.value,
       ]
-      console.log(filter)
       try {
         this.$store.dispatch('changeFilters', [...this.$store.state.filters, [...filter]])
         await this.$store.dispatch('loadChatOpps', 1)
@@ -1092,6 +1177,14 @@ export default {
       this.$store.dispatch('setCurrentMeeting', null)
       if (opp) {
         this.selectedOpp = opp
+        // this.summary =
+        const summaries = []
+        for (let i = 0; i < this.meetingWorkflows.length; i++) {
+          if (this.meetingWorkflows[i].resource_id === opp.id) {
+            summaries.push(this.meetingWorkflows[i])
+          }
+        }
+        this.selectedSummaries = summaries
         this.$store.dispatch('setCurrentOpp', opp)
       } else if (name) {
         let opp
@@ -1123,6 +1216,7 @@ export default {
       let stageGateForms
       let stagesWithForms
       const formsRes = await SlackOAuth.api.getOrgCustomForm()
+      this.$store.commit('SAVE_CRM_FORMS', formsRes)
 
       this.updateOppForm = formsRes.filter(
         (obj) =>
@@ -2365,5 +2459,54 @@ img {
 .button {
   @include gray-text-button();
   width: 60%;
+}
+.transcript {
+  margin: 1rem 0 0.25rem;
+  font-family: $base-font-family;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  padding: 0;
+}
+.logged {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  background-color: $white-green;
+  width: fit-content;
+  font-size: 12px;
+  color: $dark-green;
+  padding: 6px 8px;
+  border-radius: 5px;
+  margin-top: 1rem;
+
+  img {
+    margin-right: 0.25rem;
+    margin-bottom: -2px;
+    filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
+      contrast(82%);
+  }
+}
+
+.logged-blue {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  background-color: $white-blue;
+  width: fit-content;
+  font-size: 12px;
+  color: $dark-black-blue;
+  padding: 6px 8px;
+  border-radius: 5px;
+  margin-top: 1rem;
+
+  img {
+    margin-right: 0.25rem;
+    margin-bottom: -2px;
+    filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
+      contrast(82%);
+  }
+}
+.no-cursor {
+  cursor: text;
 }
 </style>
