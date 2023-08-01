@@ -331,6 +331,7 @@
     </div>
 
     <ChatTextBox
+      ref="chatTextBox"
       class="bottom"
       @message-loading="setLoader"
       @set-message="setMessage"
@@ -377,6 +378,9 @@ export default {
     messages: 'scrollToBottom',
   },
   methods: {
+    clearSelectedAction() {
+      this.$refs.chatTextBox.clearAction()
+    },
     async regenerateAskManagr(msg) {
       this.generating = true
       this.generatingId = msg.id

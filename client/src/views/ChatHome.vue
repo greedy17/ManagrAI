@@ -423,8 +423,7 @@
         @remove-opp="removeOpp"
       />
       <ChatBoxOnboarding
-        v-else-if="!userCRM && !fieldsLength || !formsLength"
-        ref="chatBox"
+        v-else
         :userCRM="userCRM"
         :formsLength="formsLength"
         @open-config-change="openChangeConfig"
@@ -696,7 +695,16 @@ export default {
                 .then((response) => {
                   this.$refs.chatBox.getConversations()
                   this.$refs.rightSideBar.reloadOpps()
+                  this.$refs.chatBox.clearSelectedAction()
                 })
+            } else {
+              if (response.success) {
+                this.$refs.rightSideBar.updateBanner(true)
+                this.$refs.chatBox.clearSelectedAction()
+              } else {
+                this.$refs.rightSideBar.updateBanner(false)
+                this.$refs.chatBox.clearSelectedAction()
+              }
             }
           })
       } catch (e) {
