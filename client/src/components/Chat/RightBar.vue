@@ -314,6 +314,16 @@
     </div>
 
     <div class="selected-opp-container" v-else-if="selectedOpp && !loading">
+      <div class="center" v-if="showUpdateBanner">
+        <Transition name="slide-fade">
+          <div v-if="showUpdateBanner" :class="{ greenbg: updateSuccess }" class="templates">
+            <p>
+              {{ updateSuccessFail }}
+            </p>
+          </div>
+        </Transition>
+      </div>
+
       <div v-show="view === 'crm'" class="selected-opp-section bordered">
         <div class="opp-section">
           <div v-for="field in oppFields" :key="field.id" style="margin-bottom: 1rem">
@@ -471,7 +481,7 @@
                     summary.transcript_summary &&
                     typeof summary.transcript_summary === 'string'
                       ? summary.transcript_summary.trim()
-                      : summary.transcript_summary
+                      : (summary.transcript_summary ? summary.transcript_summary : '---')
                   "
                   class="transcript"
                 />
@@ -482,7 +492,7 @@
                     summary.transcript_analysis &&
                     typeof summary.transcript_analysis === 'string'
                       ? summary.transcript_analysis.trim()
-                      : summary.transcript_analysis
+                      : (summary.transcript_analysis ? summary.transcript_analysis : '---')
                   "
                   class="transcript"
                 />
@@ -604,6 +614,9 @@ export default {
   },
   data() {
     return {
+      showUpdateBanner: false,
+      updateSuccessFail: '',
+      updateSuccess: true,
       logkey: 0,
       hoverId: null,
       showTooltip: false,
@@ -849,6 +862,20 @@ export default {
     selectedOpp: 'getNotes',
   },
   methods: {
+    updateBanner(bool) {
+      this.updateSuccess = bool
+      if (bool === true) {
+        this.updateSuccessFail = 'Update successful!'
+      } else {
+        this.updateSuccessFail = 'Update Failed, Be sure to fill out required fields.'
+      }
+      setTimeout(() => {
+        this.showUpdateBanner = true
+      }, 500)
+      setTimeout(() => {
+        this.showUpdateBanner = false
+      }, 3000)
+    },
     test(log) {
       console.log('log', log)
     },
@@ -1477,6 +1504,53 @@ export default {
   100% {
     -webkit-mask-position: left;
   }
+}
+
+.templates {
+  // animation: shake 0.3s 1;
+  display: block;
+  width: fit-content;
+  height: 40px;
+  position: absolute;
+  top: 0;
+  font-size: 12px;
+  background: $coral;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  line-height: 1.5;
+  z-index: 2000;
+
+  p {
+    margin-top: 8px;
+    padding: 0;
+  }
+}
+
+.templates::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: $coral;
+  bottom: -3px;
+  left: 10%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.center {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.greenbg::before,
+.greenbg {
+  background: $dark-green;
 }
 
 .link {

@@ -93,7 +93,25 @@ export default {
       const res = await CRMObjects.api.resourceSync()
       setTimeout(() => {
         this.pulseLoadingForms = false
+        console.log('res', res)
         this.$store.dispatch('refreshCurrentUser')
+        if (res.success) {
+          this.$toast('Sync complete', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } else {
+          this.$toast('Could not sync your CRM', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }
       }, 300)
     },
     // async manualSync() {
