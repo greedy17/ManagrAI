@@ -466,7 +466,7 @@
               <div>
                 <p class="logged">Summary</p>
                 <pre
-                  :v-html="
+                  v-html="
                     summary &&
                     summary.transcript_summary &&
                     typeof summary.transcript_summary === 'string'
@@ -477,7 +477,7 @@
                 />
                 <p class="logged-blue">Analysis</p>
                 <pre
-                  :v-html="
+                  v-html="
                     summary &&
                     summary.transcript_analysis &&
                     typeof summary.transcript_analysis === 'string'
@@ -632,6 +632,7 @@ export default {
       allStages: [],
       meetings: [],
       selectedSummaries: [],
+      meetingWorkflows: [],
       meetingOpp: null,
       reloading: false,
       meetingDate: this.getCurrentDate(),
@@ -848,8 +849,8 @@ export default {
     selectedOpp: 'getNotes',
   },
   methods: {
-    test() {
-      console.log(this.sortedNotes)
+    test(log) {
+      console.log('log', log)
     },
     openSettings() {
       this.$emit('open-settings')
@@ -987,6 +988,7 @@ export default {
       this.loading = true
       try {
         const res = await MeetingWorkflows.api.getMeetingList()
+        console.log('res', res)
         this.meetingWorkflows = res.results
       } catch (e) {
         console.log(e)
