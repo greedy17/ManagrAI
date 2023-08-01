@@ -130,7 +130,7 @@
               <p style="margin: 0">Make Team Lead</p>
               <input
                 v-model="selectedTeamLead"
-                :disabled="!selectedTeam || user.team === selectedTeam.id"
+                :disabled="!selectedTeam"
                 type="checkbox"
                 style="height: 1rem; align-self: center; width: 2rem; margin-top: 0.5rem"
               />
@@ -791,8 +791,7 @@ export default {
             toastClassName: 'custom',
             bodyClassName: ['custom'],
           })
-        }
-        else if (err.email) {
+        } else if (err.email) {
           this.$toast('Email error', {
             timeout: 2000,
             position: 'top-left',
