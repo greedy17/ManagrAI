@@ -390,7 +390,7 @@
           {{ month }}
           <!-- <img src="@/assets/images/dropdown.svg" height="14px" alt="" /> -->
         </h4>
-        <section @click="test" v-if="notes.length">
+        <section v-if="notes.length">
           <div v-for="note in notes" :key="note.id">
             <div style="width: 100%" class="note-section">
               <small class="gray-text left-margin right-absolute">{{
@@ -466,7 +466,7 @@
               <div>
                 <p class="logged">Summary</p>
                 <pre
-                  :v-html="
+                  v-html="
                     summary &&
                     summary.transcript_summary &&
                     typeof summary.transcript_summary === 'string'
@@ -477,7 +477,7 @@
                 />
                 <p class="logged-blue">Analysis</p>
                 <pre
-                  :v-html="
+                  v-html="
                     summary &&
                     summary.transcript_analysis &&
                     typeof summary.transcript_analysis === 'string'
@@ -632,6 +632,7 @@ export default {
       allStages: [],
       meetings: [],
       selectedSummaries: [],
+      meetingWorkflows: [],
       meetingOpp: null,
       reloading: false,
       meetingDate: this.getCurrentDate(),
@@ -848,8 +849,8 @@ export default {
     selectedOpp: 'getNotes',
   },
   methods: {
-    test() {
-      console.log(this.sortedNotes)
+    test(log) {
+      console.log('log', log)
     },
     openSettings() {
       this.$emit('open-settings')
@@ -1116,7 +1117,6 @@ export default {
         this.selectedFilter.apiName,
         this.selectedFilter.value,
       ]
-      console.log(filter)
       try {
         this.$store.dispatch('changeFilters', [...this.$store.state.filters, [...filter]])
         await this.$store.dispatch('loadChatOpps', 1)
