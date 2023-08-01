@@ -578,7 +578,7 @@ def news_summary(payload, context):
         "view": {
             "type": "modal",
             "callback_id": slack_const.PROCESS_NEWS_SUMMARY,
-            "title": {"type": "plain_text", "text": "New Summary"},
+            "title": {"type": "plain_text", "text": "News Summary"},
             "blocks": blocks,
             "submit": {"type": "plain_text", "text": "Submit",},
             "private_metadata": json.dumps(context),
