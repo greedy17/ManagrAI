@@ -106,7 +106,7 @@ export default {
       askInstructons: '',
       currentAction: null,
       actions: [
-        { name: 'Log Meeting', value: 'Log Meeting', img: 'calendar' },
+        // { name: 'Log Meeting', value: 'Log Meeting', img: 'calendar' },
         { name: 'Update', value: 'Open Form', img: 'edit-note' },
         {
           name: 'Add Notes',

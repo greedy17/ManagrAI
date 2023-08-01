@@ -246,7 +246,7 @@
 
         <div v-else style="margin-top: 0.5rem" class="flexed-row-spread__">
           <div>
-            <p class="gray-text neg-mar-small">Select a date:</p>
+            <!-- <p class="gray-text neg-mar-small">Select a date:</p> -->
             <input class="inline-input" v-model="meetingDate" type="date" />
           </div>
 
@@ -384,14 +384,15 @@
         :key="month"
         v-show="view === 'notes'"
         class="selected-opp-section"
+        style="height: fit-content"
       >
         <h4 style="margin-top: 0; background-color: white" class="selected-opp">
           {{ month }}
           <!-- <img src="@/assets/images/dropdown.svg" height="14px" alt="" /> -->
         </h4>
-        <section v-if="notes.length">
+        <section @click="test" v-if="notes.length">
           <div v-for="note in notes" :key="note.id">
-            <div class="note-section">
+            <div style="width: 100%" class="note-section">
               <small class="gray-text left-margin right-absolute">{{
                 `${getMonth(note.submission_date)} ${getDate(note.submission_date)}, ${getYear(
                   note.submission_date,
@@ -554,22 +555,18 @@
     </div>
 
     <div class="opp-scroll-container" v-else-if="this.mainView === 'meetings' && !loading">
-      <p class="gray-text small-text">Select a meeting:</p>
+      <!-- <p class="gray-text small-text">Meetings:</p> -->
       <div class="empty-container" v-if="!meetings.length && hasZoomIntegration">
         <p>No Zoom meetings found... refresh or select a different day</p>
       </div>
 
       <div class="empty-container" v-else-if="!hasZoomIntegration">
-        <p><span @click="openSettings" class="link">Connect Zoom</span> in order to log meetings</p>
+        <p>
+          <span @click="openSettings" class="link">Connect Zoom</span> in order to view meetings
+        </p>
       </div>
 
-      <div
-        v-else
-        @click="changeSelectedMeeting(meeting)"
-        class="opp-container"
-        v-for="(meeting, i) in meetings"
-        :key="i"
-      >
+      <div v-else class="opp-container no-cursor" v-for="(meeting, i) in meetings" :key="i">
         <p class="no-margin">
           {{ meeting.topic }}
         </p>
@@ -851,8 +848,8 @@ export default {
     selectedOpp: 'getNotes',
   },
   methods: {
-    test(log) {
-      console.log('log', log)
+    test() {
+      console.log(this.sortedNotes)
     },
     openSettings() {
       this.$emit('open-settings')
@@ -2508,5 +2505,8 @@ img {
     filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
       contrast(82%);
   }
+}
+.no-cursor {
+  cursor: text;
 }
 </style>
