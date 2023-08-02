@@ -392,7 +392,7 @@
             Create New Team
           </button> -->
 
-          <button class="chat-button" @click="handleInviteOpen">Add</button>
+          <button class="chat-button" style="margin-right: 0.5rem;" @click="handleInviteOpen">Add</button>
           <button v-if="user.isAdmin || user.userLevel === 'MANAGER'" class="chat-button" @click="handleNewTeam">
             Create New Team
           </button>
@@ -462,11 +462,12 @@
           <div style="display: flex; align-items: flex-start; flex-direction: column">
             <FormField>
               <template v-slot:input>
+                <!-- teamUsers.filter((u) => u.id !== user.id) -->
                 <Multiselect
                   placeholder="Team Lead"
                   v-model="teamLead"
                   :options="
-                    teamUsers.filter((u) => u.id !== user.id)
+                    teamUsers
                   "
                   openDirection="below"
                   style="width: 33vw"
@@ -659,7 +660,12 @@ export default {
   },
   async created() {
     this.team = CollectionManager.create({ ModelClass: User })
-    this.teamUsers = await this.getAllOrgUsers(this.user.organizationRef.id)
+    if (this.user.isAdmin) {
+      this.teamUsers = await this.getAllOrgUsers(this.user.organization)
+    } else {
+      this.teamUsers = [this.user]
+    }
+    console.log('teamUsers', this.teamUsers)
     this.userInviteForm = new UserInviteForm({
       role: User.roleChoices[0].key,
       userLevel: User.types.REP,
