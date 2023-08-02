@@ -517,11 +517,11 @@
         @mouseleave="removeTooltip" -->
       <!-- <div @click="test({userCRM, displayedOpps, activeFilters})">Test</div> -->
       <div
-        v-if="userCRM && !(displayedOpps.results && displayedOpps.results.length)"
+        v-if="formsLength && !(displayedOpps.results && displayedOpps.results.length)"
         class="no-results"
       >
-        <p>Sync in progress... Reload in a few minutes</p>
-        <span @click="refreshFields()" class="button">
+        <p>Still building your pipeline, check back in a few minutes...</p>
+        <!-- <span @click="refreshFields()" class="button">
           <img
             v-if="reloading"
             class="rotate opaque not-allowed"
@@ -529,7 +529,7 @@
             height="14px"
             alt=""
           />Reload</span
-        >
+        > -->
       </div>
       <div
         v-else
@@ -829,6 +829,7 @@ export default {
     formFields: {},
     stageFields: {},
     stagesWithForms: {},
+    formsLength: {},
   },
   watch: {
     activeFilters(newValue, oldValue) {
@@ -862,12 +863,16 @@ export default {
     selectedOpp: 'getNotes',
   },
   methods: {
-    updateBanner(bool) {
+    updateBanner(bool, error) {
       this.updateSuccess = bool
       if (bool === true) {
         this.updateSuccessFail = 'Update successful!'
       } else {
-        this.updateSuccessFail = 'Update Failed, Be sure to fill out required fields.'
+        if (error) {
+          this.updateSuccessFail = error
+        } else {
+          this.updateSuccessFail = 'Update Failed, Be sure to fill out required fields.'
+        }
       }
       setTimeout(() => {
         this.showUpdateBanner = true
