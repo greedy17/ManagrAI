@@ -220,11 +220,12 @@ export default {
         this.$store.commit('UPDATE_USERTOKEN', key)
         this.generatingToken = false
         this.selectedCrm = null
-        if (this.isPR) {
-          this.$router.push({ name: 'PRSummaries' })
-        } else {
-          this.$router.push({ name: 'Home' })
-        }
+        this.$router.push({ name: 'Login' })
+        // if (this.isPR) {
+        //   this.$router.push({ name: 'PRSummaries' })
+        // } else {
+        //   this.$router.push({ name: 'Home' })
+        // }
       }
     }
     this.selectRole(this.userRole)
@@ -333,11 +334,12 @@ export default {
 
       this.$store.commit('UPDATE_USER', user)
       this.$store.commit('UPDATE_USERTOKEN', user.token)
-      if (this.isPR) {
-        this.$router.push({ name: 'PRSummaries' })
-      } else {
-        this.$router.push({ name: 'Home' })
-      }
+      this.$router.push({ name: 'Login' })
+      // if (this.isPR) {
+      //   this.$router.push({ name: 'PRSummaries' })
+      // } else {
+      //   this.$router.push({ name: 'Home' })
+      // }
     },
   },
   computed: {
