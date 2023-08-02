@@ -520,7 +520,7 @@
         v-if="userCRM && !(displayedOpps.results && displayedOpps.results.length)"
         class="no-results"
       >
-        <p>Sync in progress... Reload in a few minutes</p>
+        <!-- <p>Sync in progress... this may take a few minutes</p>
         <span @click="refreshFields()" class="button">
           <img
             v-if="reloading"
@@ -529,7 +529,7 @@
             height="14px"
             alt=""
           />Reload</span
-        >
+        > -->
       </div>
       <div
         v-else
@@ -862,12 +862,16 @@ export default {
     selectedOpp: 'getNotes',
   },
   methods: {
-    updateBanner(bool) {
+    updateBanner(bool, error) {
       this.updateSuccess = bool
       if (bool === true) {
         this.updateSuccessFail = 'Update successful!'
       } else {
-        this.updateSuccessFail = 'Update Failed, Be sure to fill out required fields.'
+        if (error) {
+          this.updateSuccessFail = error
+        } else {
+          this.updateSuccessFail = 'Update Failed, Be sure to fill out required fields.'
+        }
       }
       setTimeout(() => {
         this.showUpdateBanner = true

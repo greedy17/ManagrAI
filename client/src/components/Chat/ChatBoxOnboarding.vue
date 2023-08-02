@@ -40,7 +40,10 @@
                   Connect
                 </div>
               </div>
-              <div v-else-if="!formsLength && !toggleReady" class="message-text-onboarding">
+              <div
+                v-else-if="userCRM && !formsLength && !toggleReady"
+                class="message-text-onboarding"
+              >
                 <!-- <p class="message-text-p">Please connect your CRM.</p>
                 <div class="message-text-button" @click="openConfigChange('integrations')">Connect CRM</div> -->
                 <p class="message-text-p">Syncing with your CRM. Please wait a few minutes...</p>
