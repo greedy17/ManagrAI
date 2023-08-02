@@ -21,7 +21,7 @@
           <span class="config-number">{{ integrationsLength }}</span>
         </div>
         <div
-          v-if="userCRM"
+          v-if="userCRM && (user.userLevel === 'MANAGER' || user.isAdmin || !user.organizationRef.isPaid)"
           class="base-select"
           :class="configPage === 'forms' ? 'left-active' : 'pointer'"
           @click="changeConfigPage('forms')"
@@ -174,6 +174,9 @@ export default {
         ? this.$store.state.templates
         : []
       // return this.$store.state.templates
+    },
+    user() {
+      return this.$store.state.user
     },
     userCRM() {
       return this.$store.state.user.crm

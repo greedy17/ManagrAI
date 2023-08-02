@@ -293,6 +293,7 @@ export default class UserAPI {
       const response = await this.client.get(ALL_USERS_ENDPOINT, { params: { org_id } })
       return response.data
     } catch (e) {
+      console.log('error in getAllOrgUsers', e.response)
       apiErrorHandler({ apiName: 'UsersAPI.getAllOrgUsers' })
     }
   }

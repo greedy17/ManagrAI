@@ -40,7 +40,10 @@
                   Connect
                 </div>
               </div>
-              <div v-else-if="!formsLength && !toggleReady" class="message-text-onboarding">
+              <div
+                v-else-if="userCRM && !formsLength && !toggleReady"
+                class="message-text-onboarding"
+              >
                 <!-- <p class="message-text-p">Please connect your CRM.</p>
                 <div class="message-text-button" @click="openConfigChange('integrations')">Connect CRM</div> -->
                 <p class="message-text-p">Syncing with your CRM. Please wait a few minutes...</p>
@@ -65,8 +68,11 @@
               </div> -->
               <div v-else class="message-text-onboarding">
                 <p class="message-text-p">Sync complete!</p>
-                <div class="message-text-button" @click="openConfigChange('forms')">
+                <div v-if="user.userLevel === 'MANAGER' || user.isAdmin || !user.organizationRef.isPaid" class="message-text-button" @click="openConfigChange('forms')">
                   Continue to field mapping
+                </div>
+                <div v-else>
+                  Your admin has not yet completed the CRM field mapping process. Please contact them.
                 </div>
               </div>
             </div>
@@ -374,7 +380,7 @@ export default {
         if (this.currentTime < 100) {
           this.currentTime += 1
         }
-      }, 1200)
+      }, 1500)
     },
     openConfigChange(page) {
       this.$emit('open-config-change', page)

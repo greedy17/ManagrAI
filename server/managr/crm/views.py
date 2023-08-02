@@ -294,6 +294,7 @@ class CRMObjectViewSet(
                     logger.info(f"UPDATE ERROR {e}")
                     data = {"success": False, "error": f"UPDATE ERROR {e}"}
                     break
+            print('DATA IS HERE : ',data)    
             if data["success"]:
                 if user.has_slack_integration and len(
                     user.slack_integration.realtime_alert_configs
