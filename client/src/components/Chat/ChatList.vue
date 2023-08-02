@@ -224,10 +224,57 @@
       <table class="table">
         <thead>
           <tr>
-            <th style="padding-left: 1rem">Name</th>
-            <th>Stage</th>
-            <th>Close Date</th>
-            <th v-for="(field, i) in extraPipelineFields" :key="i">
+            <th
+              style="padding-left: 1rem"
+              @click="reversed ? sortOpps(
+                'String',
+                userCRM === 'SALESFORCE' ? 'Name' : 'dealname',
+                userCRM === 'SALESFORCE' ? 'name' : 'dealname',
+              ) 
+              : 
+              sortOppsReverse(
+                'String',
+                userCRM === 'SALESFORCE' ? 'Name' : 'dealname',
+                userCRM === 'SALESFORCE' ? 'name' : 'dealname',
+              )"
+            >
+              Name
+            </th>
+            <th
+              @click="reversed ? sortOpps(
+                'String',
+                userCRM === 'SALESFORCE' ? 'Stage' : 'dealstage',
+                userCRM === 'SALESFORCE' ? 'stage' : 'dealstage',
+              ) 
+              : 
+              sortOppsReverse(
+                'String',
+                userCRM === 'SALESFORCE' ? 'Stage' : 'dealstage',
+                userCRM === 'SALESFORCE' ? 'stage' : 'dealstage',
+              )"
+            >
+              Stage
+            </th>
+            <th
+              @click="reversed ? sortOpps(
+                'String',
+                userCRM === 'SALESFORCE' ? 'CloseDate' : 'closedate',
+                userCRM === 'SALESFORCE' ? 'closedate' : 'closedate',
+              ) 
+              : 
+              sortOppsReverse(
+                'String',
+                userCRM === 'SALESFORCE' ? 'CloseDate' : 'closedate',
+                userCRM === 'SALESFORCE' ? 'closedate' : 'closedate',
+              )"
+            >
+              Close Date
+            </th>
+            <th 
+              v-for="(field, i) in extraPipelineFields" 
+              :key="i" 
+              @click="reversed ? sortOpps(field.dataType, field.label, field.apiName) : sortOppsReverse(field.dataType, field.label, field.apiName)"
+            >
               {{ field.label }}
             </th>
           </tr>
@@ -333,6 +380,8 @@ export default {
       editingAlert: false,
       loading: false,
       activeList: null,
+      reversed: true,
+      storedFilters: [],
       listCount: 0,
       formFields: CollectionManager.create({
         ModelClass: ObjectField,
@@ -375,16 +424,160 @@ export default {
     selectList(alert) {
       this.$store.dispatch('setCurrentView', alert)
     },
+    capitalizeFirstLetter(string) {
+      return string.charAt(0).toUpperCase() + string.slice(1)
+    },
+    camelize(str) {
+      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
+        if (+match === 0) return ''
+        return index === 0 ? match.toLowerCase() : match.toUpperCase()
+      })
+    },
+    sortOpps(dT, field, apiName) {
+      let newField
+      if (this.userCRM === 'SALESFORCE') {
+        newField = this.capitalizeFirstLetter(this.camelize(field))
+      } else {
+        newField = field
+      }
+      const userCRM = this.userCRM
+      let sortedWorkflow
+      if (this.currentView && this.currentView.sobjectInstances.length) {
+        if (field === 'Stage' || field === 'Deal Stage') {
+          sortedWorkflow = this.currentView.sobjectInstances.sort(function (a, b) {
+            const nameA =
+              userCRM === 'SALESFORCE'
+                ? a['StageName']
+                : a['dealstage']
+            const nameB =
+              userCRM === 'SALESFORCE'
+                ? b['StageName']
+                : b['dealstage']
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
+        } else if (field === 'Last Activity') {
+          sortedWorkflow = this.currentView.sobjectInstances.sort(function (a, b) {
+            const nameA = a[`${newField}` + 'Date']
+            const nameB = b[`${newField}` + 'Date']
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
+        } else if (dT === 'TextArea' && !apiName.includes('__c')) {
+          sortedWorkflow = this.currentView.sobjectInstances.sort(function (a, b) {
+            const nameA = a[`${newField}`]
+            const nameB = b[`${newField}`]
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
+        } else if (apiName.includes('__c') && dT !== 'TextArea') {
+          sortedWorkflow = this.currentView.sobjectInstances.sort(function (a, b) {
+            const nameA = a[`${apiName}`]
+            const nameB = b[`${apiName}`]
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
+        } else if (apiName.includes('__c') && dT === 'TextArea') {
+          sortedWorkflow = this.currentView.sobjectInstances.sort(function (a, b) {
+            const nameA = a[`${apiName}`]
+            const nameB = b[`${apiName}`]
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
+        } else if (this.userCRM === 'HUBSPOT') {
+          this.currentView.sobjectInstances.sort(function (a, b) {
+            const nameA = a[`${apiName}`]
+            const nameB = b[`${apiName}`]
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
+        } else {
+          sortedWorkflow = this.currentView.sobjectInstances.sort(function (a, b) {
+            const nameA = a[`${newField}`]
+            const nameB = b[`${newField}`]
+            return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
+          })
+        }
+        this.activeList.sobjectInstances = sortedWorkflow
+        this.selectList(this.activeList)
+      }
+
+      let custom = false
+      this.reversed = false
+      this.storedFilters = [dT, field, apiName, { reversed: false }, custom]
+    },
+    sortOppsReverse(dT, field, apiName) {
+      let newField
+      if (this.userCRM === 'SALESFORCE') {
+        newField = this.capitalizeFirstLetter(this.camelize(field))
+      } else {
+        newField = field
+      }
+
+      const userCRM = this.userCRM
+      let sortedWorkflow
+      if (this.currentView && this.currentView.sobjectInstances.length) {
+        if (field === 'Stage' || field === 'Deal Stage') {
+          sortedWorkflow = this.currentView.sobjectInstances.sort(function (a, b) {
+            const nameA =
+              userCRM === 'SALESFORCE'
+                ? a['StageName']
+                : a['dealstage']
+            const nameB =
+              userCRM === 'SALESFORCE'
+                ? b['StageName']
+                : b['dealstage']
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        } else if (field === 'Last Activity') {
+          sortedWorkflow = this.currentView.sobjectInstances.sort(function (a, b) {
+            const nameA = a[`${newField}` + 'Date']
+            const nameB = b[`${newField}` + 'Date']
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        } else if (dT === 'TextArea' && !apiName.includes('__c')) {
+          sortedWorkflow = this.currentView.sobjectInstances.sort(function (a, b) {
+            const nameA = a[`${newField}`]
+            const nameB = b[`${newField}`]
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        } else if (apiName.includes('__c') && dT !== 'TextArea') {
+          sortedWorkflow = this.currentView.sobjectInstances.sort(function (a, b) {
+            const nameA = a[`${apiName}`]
+            const nameB = b[`${apiName}`]
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        } else if (apiName.includes('__c') && dT === 'TextArea') {
+          sortedWorkflow = this.currentView.sobjectInstances.sort(function (a, b) {
+            const nameA = a[`${apiName}`]
+            const nameB = b[`${apiName}`]
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        } else if (this.userCRM === 'HUBSPOT') {
+          this.currentView.sobjectInstances.sort(function (a, b) {
+            const nameA = a[`${apiName}`]
+            const nameB = b[`${apiName}`]
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        } else {
+          sortedWorkflow = this.currentView.sobjectInstances.sort(function (a, b) {
+            const nameA = a[`${newField}`]
+            const nameB = b[`${newField}`]
+            return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
+          })
+        }
+        this.activeList.sobjectInstances = sortedWorkflow
+        this.selectList(this.activeList)
+      } 
+
+      let custom = false
+      this.reversed = true
+      this.storedFilters = [dT, field, apiName, { reversed: true }, custom]
+    },
     fieldData(type, crm, field, opp, owner = null, account = null) {
       if (field.apiName === 'OwnerId' || field.apiName === 'hubspot_owner_id') {
         return owner || '---'
       } else if (field.apiName === 'AccountId') {
         return account || '---'
       } else if (field.apiName === 'dealstage') {
-        if (field.options[0][opp['secondary_data'].pipeline]) {
+        if (field.options[0][opp.pipeline]) {
           return (
-            field.options[0][opp['secondary_data'].pipeline].stages.filter(
-              (stage) => stage.id === opp['secondary_data'][field.apiName],
+            field.options[0][opp.pipeline].stages.filter(
+              (stage) => stage.id === opp[field.apiName],
             )[0].label || '---'
           )
         } else return '---'
