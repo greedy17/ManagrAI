@@ -4200,12 +4200,16 @@ def process_show_regenerate_news_summary_form(payload, context):
             initial_value=entered_prompt,
         ),
         block_builders.input_block(
-            "Customize your summary output", block_id="OUTPUT_INSTRUCTIONS", multiline=True
+            "What would you like included in your summary?",
+            block_id="OUTPUT_INSTRUCTIONS",
+            multiline=True,
         ),
         block_builders.actions_block(
             [
                 block_builders.simple_button_block(
-                    "Use Template", "USE_TEMPLATE", action_id=slack_const.ADD_NEWS_SUMMARY_TEMPLATE
+                    "Use a template",
+                    "USE_TEMPLATE",
+                    action_id=slack_const.ADD_NEWS_SUMMARY_TEMPLATE,
                 )
             ],
             block_id="USE_TEMPLATE_BLOCK",
