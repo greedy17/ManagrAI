@@ -698,11 +698,12 @@ export default {
                   this.$refs.chatBox.clearSelectedAction()
                 })
             } else {
+              console.log(response)
               if (response.success) {
                 this.$refs.rightSideBar.updateBanner(true)
                 this.$refs.chatBox.clearSelectedAction()
               } else {
-                this.$refs.rightSideBar.updateBanner(false)
+                this.$refs.rightSideBar.updateBanner(false, response.error)
                 this.$refs.chatBox.clearSelectedAction()
               }
             }
