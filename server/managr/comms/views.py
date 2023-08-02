@@ -1,4 +1,6 @@
 import json
+import datetime
+import httpx
 import logging
 from rest_framework import (
     mixins,
@@ -34,7 +36,7 @@ class PRSearchViewSet(
     authentication_classes = [ExpiringTokenAuthentication]
 
     @action(
-        methods=["post"],
+        methods=["get"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
         url_path="clips",
@@ -69,3 +71,69 @@ class PRSearchViewSet(
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": articles})
 
         return Response(data={"articles": articles})
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="summary",
+    )
+    def get_summary(self, request, *args, **kwargs):
+        clips = request.data.get("clips")
+        search = request.data.get("search")
+        instructions = request.data.get("instructions")
+        user = request.user
+        has_error = False
+        attempts = 1
+        token_amount = 500
+        timeout = 60.0
+        while True:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_NEWS_CLIPS_SUMMARY(
+                datetime.datetime.now().date(), clips, search, instructions
+            )
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email,
+                prompt,
+                "You are a VP of Communications",
+                token_amount=token_amount,
+                top_p=0.1,
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+            try:
+                r = open_ai_exceptions._handle_response(r)
+                message = r.get("choices")[0].get("message").get("content")
+
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount <= 2000:
+                    has_error = True
+
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 500
+                    continue
+            except httpx.ReadTimeout as e:
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+        if has_error:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
+
+        return Response(data={"summary": message})
