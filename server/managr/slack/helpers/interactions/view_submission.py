@@ -2608,6 +2608,7 @@ def process_news_summary(payload, context):
 
     emit_process_news_summary(payload, context)
     return {"response_action": "clear"}
+    return
 
 
 def process_submit_ask_managr(payload, context):

@@ -28,6 +28,10 @@ def _process_news_summary(payload, context):
     state = payload["view"]["state"]["values"]
     user = User.objects.get(id=context.get("u"))
     company = state["COMPANY_INPUT"]["plain_input"]["value"]
+    try:
+        instructions = state["OUTPUT_INSTRUCTIONS"]["plain_input"]["value"]
+    except KeyError:
+        instructions = False
     while True:
         try:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
@@ -55,7 +59,7 @@ def _process_news_summary(payload, context):
     while True:
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
         prompt = comms_consts.OPEN_AI_NEWS_CLIPS_SUMMARY(
-            datetime.datetime.now().date(), descriptions, company
+            datetime.datetime.now().date(), descriptions, company, instructions
         )
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
             user.email,

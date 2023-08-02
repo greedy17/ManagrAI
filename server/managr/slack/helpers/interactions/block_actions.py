@@ -4198,7 +4198,18 @@ def process_show_regenerate_news_summary_form(payload, context):
             block_id="COMPANY_INPUT",
             multiline=True,
             initial_value=entered_prompt,
-        )
+        ),
+        block_builders.input_block(
+            "Customize your summary output", block_id="OUTPUT_INSTRUCTIONS", multiline=True
+        ),
+        block_builders.actions_block(
+            [
+                block_builders.simple_button_block(
+                    "Use Template", "USE_TEMPLATE", action_id=slack_const.ADD_NEWS_SUMMARY_TEMPLATE
+                )
+            ],
+            block_id="USE_TEMPLATE_BLOCK",
+        ),
     ]
     context.update(ts=payload["message"]["ts"], u=str(user.id))
     data = {
@@ -4213,6 +4224,33 @@ def process_show_regenerate_news_summary_form(payload, context):
         },
     }
     slack_requests.generic_request(url, data, access_token=access_token)
+
+
+def process_add_news_summary_template(payload, context):
+    print(payload)
+    slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
+    user = slack_account.user
+    access_token = user.organization.slack_integration.access_token
+    blocks = payload["view"]["blocks"]
+    blocks[1]["element"][
+        "initial_value"
+    ] = "1. Executive Summary. Provide up to 5 bullet points summarizing the clips \n2. Determine the sentiment along with a brief explanation.\n3. Identify key messages.\n4. Make a suggestion based on this coverage."
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+
+    context.update(u=str(user.id))
+    data = {
+        "view_id": payload["view"]["id"],
+        "view": {
+            "type": "modal",
+            "callback_id": slack_const.PROCESS_NEWS_SUMMARY,
+            "title": {"type": "plain_text", "text": "News Summary"},
+            "blocks": blocks,
+            "submit": {"type": "plain_text", "text": "Submit",},
+            "private_metadata": json.dumps(context),
+        },
+    }
+    slack_requests.generic_request(url, data, access_token=access_token)
+    return
 
 
 def handle_block_actions(payload):
@@ -4293,6 +4331,7 @@ def handle_block_actions(payload):
         slack_const.PROCESS_RESOURCE_SELECTED_ACTION: process_resource_selected_action,
         slack_const.CHOOSE_MEETING_OPTIONS: process_choose_meeting_options,
         slack_const.PROCESS_SHOW_REGENERATE_NEWS_SUMMARY_FORM: process_show_regenerate_news_summary_form,
+        slack_const.ADD_NEWS_SUMMARY_TEMPLATE: process_add_news_summary_template,
     }
 
     action_query_string = payload["actions"][0]["action_id"]
