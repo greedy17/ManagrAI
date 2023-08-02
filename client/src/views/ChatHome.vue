@@ -393,7 +393,7 @@
           </button> -->
 
           <button class="chat-button" @click="handleInviteOpen">Add</button>
-          <button class="chat-button" @click="handleNewTeam">
+          <button v-if="user.isAdmin || user.userLevel === 'MANAGER'" class="chat-button" @click="handleNewTeam">
             Create New Team
           </button>
         </div>
