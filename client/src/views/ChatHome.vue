@@ -569,6 +569,7 @@
         :formFields="formFields"
         :stageFields="stageFields"
         :stagesWithForms="stagesWithForms"
+        :formsLength="formsLength"
       />
     </aside>
   </div>

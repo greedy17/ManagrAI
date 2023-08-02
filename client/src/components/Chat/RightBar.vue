@@ -517,11 +517,11 @@
         @mouseleave="removeTooltip" -->
       <!-- <div @click="test({userCRM, displayedOpps, activeFilters})">Test</div> -->
       <div
-        v-if="userCRM && !(displayedOpps.results && displayedOpps.results.length)"
+        v-if="formsLength && !(displayedOpps.results && displayedOpps.results.length)"
         class="no-results"
       >
-        <!-- <p>Sync in progress... this may take a few minutes</p>
-        <span @click="refreshFields()" class="button">
+        <p>Still building your pipeline, check back in a few minutes...</p>
+        <!-- <span @click="refreshFields()" class="button">
           <img
             v-if="reloading"
             class="rotate opaque not-allowed"
@@ -829,6 +829,7 @@ export default {
     formFields: {},
     stageFields: {},
     stagesWithForms: {},
+    formsLength: {},
   },
   watch: {
     activeFilters(newValue, oldValue) {
