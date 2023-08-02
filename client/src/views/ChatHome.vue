@@ -393,8 +393,116 @@
           </button> -->
 
           <button class="chat-button" @click="handleInviteOpen">Add</button>
+          <button class="chat-button" @click="handleNewTeam">
+            Create New Team
+          </button>
         </div>
       </div>
+    </Modal>
+    <!-- Create Team -->
+    <Modal
+      v-if="newTeam"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), handleNewTeam()
+        }
+      "
+    >
+      <form v-if="true /*hasSlack*/" class="invite-form" style="margin-top: 7.5rem">
+        <div class="header">
+          <div class="flex-row" style="justify-content: space-between; width: 100%">
+            <div class="flex-row">
+              <img src="@/assets/images/logo.png" class="logo" alt="" />
+              <h3 class="invite-form__title">Create a Team</h3>
+            </div>
+            <img
+              src="@/assets/images/close.svg"
+              style="height: 1.25rem; margin-top: 0rem; cursor: pointer; margin-right: 1rem;"
+              @click="handleNewTeam"
+              alt=""
+            />
+          </div>
+          <!-- <div class="flex-row">
+            <img
+              @click="handleCancel"
+              src="@/assets/images/close.svg"
+              height="24px"
+              alt=""
+              style="filter: invert(30%); cursor: pointer"
+            />
+          </div> -->
+        </div>
+
+        <div
+          style="
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            margin-top: -3rem;
+            margin-bottom: 1rem;
+          "
+        >
+          <div style="display: flex; align-items: flex-start; flex-direction: column">
+            <FormField>
+              <template v-slot:input>
+                <input
+                  placeholder="Team Name"
+                  v-model="teamName"
+                  style="width: 33vw"
+                  class="template-input modal-input"
+                  type="text"
+                  name=""
+                  id=""
+                  :disabled="false /*savingTemplate*/"
+                />
+              </template>
+            </FormField>
+          </div>
+          <div style="display: flex; align-items: flex-start; flex-direction: column">
+            <FormField>
+              <template v-slot:input>
+                <Multiselect
+                  placeholder="Team Lead"
+                  v-model="teamLead"
+                  :options="
+                    teamUsers.filter((u) => u.id !== user.id)
+                  "
+                  openDirection="below"
+                  style="width: 33vw"
+                  selectLabel="Enter"
+                  label="email"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      Select Team Lead
+                    </p>
+                  </template>
+                </Multiselect>
+              </template>
+            </FormField>
+          </div>
+        </div>
+        <div class="invite-form__actions">
+          <!-- <div style="width: 10vw;"></div> -->
+          <div class="invite-form__inner_actions">
+            <template>
+              <PulseLoadingSpinnerButton
+                @click="createTeamSubmit"
+                class="invite-button modal-button"
+                style="width: 5rem; margin-right: 5%; height: 1.75rem"
+                text="Save"
+                :loading="pulseLoading"
+                >Save</PulseLoadingSpinnerButton
+              >
+            </template>
+          </div>
+        </div>
+      </form>
     </Modal>
 
     <div @click="toggleSidebar" class="hamburger">
@@ -512,6 +620,10 @@ export default {
       configPage: 'integrations',
       submitting: false,
       profileOrTeam: 'profile',
+      teamName: '',
+      teamLead: null,
+      pulseLoading: false,
+      teamUsers: [],
       team: CollectionManager.create({ ModelClass: User }),
       chatModalOpen: false,
       chatData: null,
@@ -523,6 +635,7 @@ export default {
       formData: null,
       formOpen: false,
       inviteOpen: false,
+      newTeam: false,
       selectedTeam: null,
       selectedTeamLead: false,
       loading: false,
@@ -545,6 +658,7 @@ export default {
   },
   async created() {
     this.team = CollectionManager.create({ ModelClass: User })
+    this.teamUsers = await this.getAllOrgUsers(this.user.organizationRef.id)
     this.userInviteForm = new UserInviteForm({
       role: User.roleChoices[0].key,
       userLevel: User.types.REP,
@@ -580,6 +694,10 @@ export default {
     setOpenForm() {
       this.formOpen = false
     },
+    async getAllOrgUsers(orgId) {
+      const res = await User.api.getAllOrgUsers(orgId)
+      return res
+    },
     openChangeConfig(page) {
       this.configPage = page
       this.configureModalOpen = true
@@ -600,6 +718,65 @@ export default {
       this.inviteOpen = true
       this.profileModalOpen = false
       // this.selectingOption = false
+    },
+    async createTeamSubmit() {
+      this.pulseLoading = true
+      if (!this.teamLead || !this.teamName) {
+        setTimeout(() => {
+          this.$toast('Please submit all info', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          this.pulseLoading = false
+          return
+        }, 200)
+      } else {
+        try {
+          const data = {
+            name: this.teamName,
+            organization: this.user.organizationRef.id,
+            team_lead: this.teamLead.id,
+          }
+          const teamRes = await Organization.api.createNewTeam(data)
+          const addTeamData = {
+            users: [this.teamLead.id],
+            team_id: teamRes.id,
+          }
+          await Organization.api.addTeamMember(addTeamData)
+          setTimeout(() => {
+            this.$router.go()
+          }, 1400)
+          // this.orgUsers = await this.getAllOrgUsers(this.selected_org.id)
+          // this.team = this.orgUsers
+          // this.getStaffOrgs()
+          // setTimeout(() => {
+          //   this.handleCancel()
+          //   this.teamName = ''
+          //   this.teamLead = ''
+          //   this.$toast('Sucessfully submitted', {
+          //     timeout: 2000,
+          //     position: 'top-left',
+          //     type: 'success',
+          //     toastClassName: 'custom',
+          //     bodyClassName: ['custom'],
+          //   })
+          //   this.pulseLoading = false
+          // }, 1400)
+        } catch (e) {
+          console.log(e)
+          this.$toast('Error Creating Team', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          this.pulseLoading = false;
+        }
+      }
     },
     toggleLeftBar() {
       this.leftBarClosed = !this.leftBarClosed
@@ -901,6 +1078,10 @@ export default {
     handleInviteCancel() {
       this.profileModalOpen = true
       this.inviteOpen = false
+    },
+    handleNewTeam() {
+      this.newTeam = !this.newTeam
+      this.profileModalOpen = !this.profileModalOpen
     },
     logOut() {
       this.$store.dispatch('logoutUser')
@@ -1556,5 +1737,40 @@ body {
     border-radius: 4px;
     margin-top: 0.5rem;
   }
+}
+.template-input {
+  border: 1px solid #ccc;
+  border-bottom: none;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  padding-left: 1rem;
+  height: 44px;
+  width: 40vw;
+  font-family: inherit;
+  margin-bottom: 1rem;
+}
+.template-input:focus {
+  outline: none;
+}
+.modal-input {
+  width: 15vw;
+  height: 2.5rem;
+  border-radius: 5px;
+  border: 1px solid #e8e8e8;
+}
+.modal-input:focus {
+  outline: none;
+}
+.modal-input::placeholder {
+  // color: #35495e;
+  color: $very-light-gray;
+}
+.modal-button {
+  @include primary-button();
+  box-shadow: none;
+  margin-top: 1.5rem;
+  height: 2.5rem;
+  width: 19rem;
+  font-size: 14px;
 }
 </style>
