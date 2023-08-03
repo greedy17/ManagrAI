@@ -466,7 +466,8 @@ export default {
       let sortedWorkflow
       if (this.currentView && this.currentView.sobjectInstances && this.currentView.sobjectInstances.length) {
         this.selectedFilter = field
-        if (field === 'Stage' || field === 'Deal Stage') {
+        console.log('selectedFilter', this.selectedFilter)
+        if (field === 'Stage' || field === 'dealstage') {
           sortedWorkflow = this.currentView.sobjectInstances.sort(function (a, b) {
             const nameA =
               userCRM === 'SALESFORCE'
@@ -503,7 +504,9 @@ export default {
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (this.userCRM === 'HUBSPOT') {
-          this.currentView.sobjectInstances.sort(function (a, b) {
+          console.log('this.currentView.sobjectInstances', this.currentView.sobjectInstances)
+          console.log('apiName', apiName)
+          sortedWorkflow = this.currentView.sobjectInstances.sort(function (a, b) {
             const nameA = a[`${apiName}`]
             const nameB = b[`${apiName}`]
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
@@ -515,6 +518,7 @@ export default {
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         }
+        console.log('sortedWorkflow', sortedWorkflow)
         this.activeList.sobjectInstances = sortedWorkflow
         this.$store.dispatch('setCurrentView', this.activeList)
       }
@@ -535,7 +539,7 @@ export default {
       let sortedWorkflow
       if (this.currentView && this.currentView.sobjectInstances && this.currentView.sobjectInstances.length) {
         this.selectedFilter = field
-        if (field === 'Stage' || field === 'Deal Stage') {
+        if (field === 'Stage' || field === 'dealstage') {
           sortedWorkflow = this.currentView.sobjectInstances.sort(function (a, b) {
             const nameA =
               userCRM === 'SALESFORCE'
@@ -572,7 +576,7 @@ export default {
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
           })
         } else if (this.userCRM === 'HUBSPOT') {
-          this.currentView.sobjectInstances.sort(function (a, b) {
+          sortedWorkflow = this.currentView.sobjectInstances.sort(function (a, b) {
             const nameA = a[`${apiName}`]
             const nameB = b[`${apiName}`]
             return (nameA === null) - (nameB === null) || -(nameA > nameB) || +(nameA < nameB)
