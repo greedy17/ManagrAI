@@ -6,7 +6,7 @@ from django.conf import settings
 from urllib.parse import urlencode
 from background_task import background
 from managr.utils.client import Variable_Client
-from .utils import get_news_for_company, send_clips
+from .utils import get_news_for_company, article_list_seperator
 from . import constants as comms_consts
 from managr.core import constants as core_consts
 from managr.core.models import User
@@ -14,6 +14,7 @@ from managr.core import exceptions as open_ai_exceptions
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import block_builders
 from managr.slack import constants as slack_const
+from managr.slack.models import UserSlackIntegration
 
 
 logger = logging.getLogger("managr")
@@ -21,6 +22,10 @@ logger = logging.getLogger("managr")
 
 def emit_process_news_summary(payload, context, schedule=datetime.datetime.now()):
     return _process_news_summary(payload, context, schedule=schedule)
+
+
+def emit_process_send_clips(payload, context):
+    return _process_send_clips(payload, context)
 
 
 @background()
@@ -50,8 +55,6 @@ def _process_news_summary(payload, context):
     query = urlencode({"q": query_input})
     news_res = get_news_for_company(query)
     articles = news_res["articles"]
-    send_clips(user, news_res, company)
-
     descriptions = [article["description"] for article in articles]
     attempts = 1
     token_amount = 500
@@ -111,7 +114,10 @@ def _process_news_summary(payload, context):
                         "Regenerate",
                         "REGENERATE",
                         action_id=slack_const.PROCESS_SHOW_REGENERATE_NEWS_SUMMARY_FORM,
-                    )
+                    ),
+                    block_builders.simple_button_block(
+                        "Show Clips", "SHOW_CLIPS", action_id=slack_const.PROCESS_SEND_CLIPS
+                    ),
                 ]
             ),
         ]
@@ -132,4 +138,42 @@ def _process_news_summary(payload, context):
         logger.exception(
             f"ERROR sending update channel message for chat submission because of <{e}>"
         )
+    return
+
+
+@background()
+def _process_send_clips(payload, context):
+    slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
+    user = slack_account.user
+    access_token = user.organization.slack_integration.access_token
+    blocks = payload["message"]["blocks"]
+    title_text = blocks[0]["text"]["text"].split("for ")[1]
+    context_text = blocks[len(blocks) - 1]["elements"][0]["text"].split("search:* ")
+    boolean_text = context_text[1]
+    news_res = get_news_for_company(f"q={boolean_text}")
+    articles = news_res["articles"]
+    articles_list = [
+        f"*Source:* <{article['url']}|{article['source']['name']}>\n*Headline:* {article['title']}\n*Description:* {article['description']}\n*Author*: {article['author']}\n*Date:* {article['publishedAt'][:10]}\n\n"
+        for article in articles
+    ]
+    news_list = article_list_seperator(articles_list)
+    for index, message in enumerate(news_list):
+        try:
+            article_blocks = [
+                block_builders.simple_section(
+                    f"Articles used for summary {title_text} {index + 1}/{len(news_list)}", "mrkdwn"
+                ),
+                block_builders.divider_block(),
+                block_builders.simple_section(message, "mrkdwn"),
+            ]
+            article_res = slack_requests.update_channel_message(
+                user.slack_integration.channel,
+                context.get("ts"),
+                access_token,
+                block_set=article_blocks,
+            )
+        except Exception as e:
+            logger.exception(
+                f"ERROR sending update channel message for chat submission because of <{e}>"
+            )
     return

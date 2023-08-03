@@ -34,6 +34,7 @@ from managr.slack.background import (
     emit_process_alert_send_deal_review,
 )
 from managr.salesforce.models import MeetingWorkflow
+from managr.comms.tasks import emit_process_send_clips
 from managr.core.models import User
 from managr.core.background import (
     emit_process_calendar_meetings,
@@ -4231,7 +4232,6 @@ def process_show_regenerate_news_summary_form(payload, context):
 
 
 def process_add_news_summary_template(payload, context):
-    print(payload)
     slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
     user = slack_account.user
     access_token = user.organization.slack_integration.access_token
@@ -4255,6 +4255,21 @@ def process_add_news_summary_template(payload, context):
     }
     slack_requests.generic_request(url, data, access_token=access_token)
     return
+
+def process_send_clips(payload, context):
+    slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
+    user = slack_account.user
+    loading_block = get_block_set("loading", {"message": "Gathering clips..."})
+    try:
+        res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=loading_block,
+        )
+        context.update(ts=res["ts"])
+        emit_process_send_clips(payload, context)
+    except Exception as e:
+        logger.exception(e)
 
 
 def handle_block_actions(payload):
@@ -4336,6 +4351,7 @@ def handle_block_actions(payload):
         slack_const.CHOOSE_MEETING_OPTIONS: process_choose_meeting_options,
         slack_const.PROCESS_SHOW_REGENERATE_NEWS_SUMMARY_FORM: process_show_regenerate_news_summary_form,
         slack_const.ADD_NEWS_SUMMARY_TEMPLATE: process_add_news_summary_template,
+        slack_const.PROCESS_SEND_CLIPS: process_send_clips
     }
 
     action_query_string = payload["actions"][0]["action_id"]
