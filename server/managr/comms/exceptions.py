@@ -34,7 +34,7 @@ class NewsApiException:
         elif self.status_code == 500:
             raise ServerError()
         else:
-            raise Exception(f"News error: {self.message}")
+            raise Exception(f"News error: {self.param}")
 
 
 def _handle_response(response, fn_name=None):

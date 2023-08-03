@@ -196,13 +196,13 @@ Limit your response to under 1,000 characters.
 
 
 OPEN_AI_NEWS_BOOLEAN_CONVERSION = (
-    lambda prompt: f"""Convert the Search Term below into a boolean query to be used for News API. 
+    lambda search: f"""Convert the Search Term below into a boolean query to be used for News API. 
     Follow these steps in order to create the best possible search:
     1: Do not make it a title search unless specifically instructed via the prompt.
     2: Do not use acronyms in your search unless specifically asked to.
     3: If the search term is a broad category such as "sports", ensure you include or exclude relevant subtopics (e.g., "football", "baseball", "basketball", "coaches", etc.), based on the nature of the query.
     4: When there are multiple variations or homonyms of a search term, use the boolean 'NOT' to filter out irrelevant results (e.g., use (Carter's NOT "Jimmy Carter's") if the search is aimed at Carter's brand, not the former president).
-    Search Term: {prompt}"""
+    Search Term: {search}"""
 )
 
 
@@ -364,7 +364,6 @@ WORKFLOW_REMINDER = "WORKFLOW_REMINDER"
 REMINDER_MESSAGE_REP = "REMINDER_MESSAGE_REP"
 REMINDER_MESSAGE_MANAGER = "REMINDER_MESSAGE_MANAGER"
 CALENDAR_REMINDER = "CALENDAR_REMINDER"
-MORNING_DIGEST = "MORNING_DIGEST"
 NON_ZOOM_MEETINGS = "NON_ZOOM_MEETINGS"
 CALENDAR_CHECK = "CALENDAR_CHECK"
 WORKFLOW_CONFIG_CHECK = "WORKFLOW_CONFIG_CHECK"
@@ -374,7 +373,6 @@ TRIAL_STATUS = "TRIAL_STATUS"
 # These times should be a half hour before the intended time
 REMINDER_CONFIG = {
     WORKFLOW_REMINDER: {"HOUR": 7, "MINUTE": 00},
-    MORNING_DIGEST: {"HOUR": 7, "MINUTE": 30},
     REMINDER_MESSAGE_REP: {"HOUR": 17, "MINUTE": 30},
     REMINDER_MESSAGE_MANAGER: {"HOUR": 18, "MINUTE": 00},
 }
@@ -389,7 +387,6 @@ TIMEZONE_TASK_TIMES = {
 def REMINDERS():
     return {
         WORKFLOW_REMINDER: True,
-        MORNING_DIGEST: False,
         REMINDER_MESSAGE_REP: True,
         REMINDER_MESSAGE_MANAGER: True,
     }
