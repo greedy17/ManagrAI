@@ -34,6 +34,7 @@ channels = "~=2.1"
 nylas = "*"
 ddtrace = "==0.48.0"
 httpx = "*"
+newspaper3k = "*"
 
 [requires]
 python_version = "3.9"
