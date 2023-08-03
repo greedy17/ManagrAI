@@ -2,7 +2,7 @@
   <div class="main-content">
     <div class="left-content">
       <div>
-        <div class="gray-background">
+        <div @click="getClips" class="gray-background">
           <div
             class="toggle-container"
             :class="summaryChat === 'SUMMARY' ? 'active' : ''"
@@ -27,17 +27,16 @@
       </div>
       <div v-if="summaryChat === 'SUMMARY'">
         <div v-if="!summary" class="summary-buttons-container">
-          <button class="summary-button wide" @click="generateSummary">
+          <button class="summary-button wide">
             <img src="@/assets/images/sparkles-round.svg" />Generate Summary
           </button>
         </div>
-        <div @click="getClips" v-else>
+        <div v-else>
           <div class="highlights-summary-container">
             <div>
               <h3 class="highlights">Highlights:</h3>
               <div v-for="(highlight, i) in summary.highlights" :key="i">
                 <div class="display-flex">
-                  <!-- <span class="divier-dot large-dot">.</span> -->
                   <img class="dot" src="@/assets/images/dot.svg" />
                   <span class="highlight-point">{{ highlight }}</span>
                 </div>
@@ -65,7 +64,6 @@
                   class="gray"
                   style="height: 14px; cursor: pointer"
                   icon="fa-regular fa-paper-plane"
-                  @click="regenerateSummary"
                 />
               </div>
             </div>
@@ -97,258 +95,7 @@
         </div>
       </div>
       <div v-else-if="summaryChat === 'CHAT'" class="chat-container">
-        <div class="margin-top chat-window" ref="chatWindow">
-          <!-- <div v-for="(message, i) in messages" :key="i" class="col-start">
-            <div class="message-container">
-              <div class="images">
-                <span v-if="message.failed" style="font-size: 24px"> 🚫 </span>
-                <span v-else-if="message.user === 'bot' && !message.updated" style="font-size: 24px">
-                  🤖
-                </span>
-                <span style="margin-left: -4px" v-else-if="message.user === 'bot' && message.updated">
-                  <img class="green-filter" src="@/assets/images/logo.png" height="30px" alt="" />
-                </span>
-
-                <div class="avatar" v-else>{{ userName[0] }}</div>
-              </div>
-
-              <div class="text-container">
-                <div style="position: relative">
-                  <div
-                    class="type-header"
-                    :class="{ marg: message.gtMsg === 'AI Generated Summary' }"
-                    v-if="message.user === 'bot' && message.gtMsg"
-                  >
-                    <h4 style="margin: 0">
-                      {{ message.gtMsg }}
-                    </h4>
-                    <small>
-                      {{ message.data.Name }}
-                    </small>
-                  </div>
-
-                  <div
-                    :class="{ 'type-header': message.title === 'Deal Review' }"
-                    style="font-weight: bold; font-size: 14px"
-                    v-else-if="message.user === 'bot' && message.title"
-                  >
-                    {{ message.title }}
-                  </div>
-
-                  <pre v-html="message.value" class="message-text"></pre>
-                </div>
-
-                <div v-if="message.generated">
-                  <div
-                    v-if="generating && generatingId === message.id"
-                    style="border-radius: 6px; padding: 0.2rem 0 0.25rem 0"
-                    class="row"
-                  >
-                    <div class="loading">
-                      <div class="dot"></div>
-                      <div class="dot"></div>
-                      <div class="dot"></div>
-                    </div>
-                  </div>
-
-                  <div v-else style="margin-top: 1.5rem">
-                    <div class="column" v-if="message.generatedType === 'email' && addingInstructions">
-                      <div class="space-between">
-                        <small>Provide any additional instructions below:</small>
-
-                        <p @click="closeInstructions">x</p>
-                      </div>
-
-                      <textarea
-                        v-model="instructionText"
-                        class="inline-input"
-                        v-autoresize
-                        autofocus="true"
-                        rows="1"
-                      />
-                    </div>
-
-                    <button
-                      v-if="!addingInstructions"
-                      style="margin-bottom: 0.25rem"
-                      @click="
-                        regenerate(
-                          message.generatedType,
-                          message.data['meeting_comments'],
-                          message.id,
-                          {
-                            data: message.data,
-                            integration: message.integrationId,
-                            resource: message.resourceType,
-                          },
-                        )
-                      "
-                      class="content-button padding-small"
-                    >
-                      <img
-                        style="margin-right: 0.6rem"
-                        class="gold-filter"
-                        src="@/assets/images/sparkle.svg"
-                        height="14px"
-                        alt=""
-                      />
-                      Regenerate
-                    </button>
-
-                    <button
-                      v-else
-                      style="margin-bottom: 0.25rem"
-                      @click="
-                        regenerateEmail(instructionText, message.data['meeting_comments'], message.id)
-                      "
-                      class="content-button padding-small"
-                    >
-                      <img
-                        style="margin-right: 0.6rem"
-                        class="gold-filter"
-                        src="@/assets/images/sparkle.svg"
-                        height="14px"
-                        alt=""
-                      />
-                      Regenerate
-                    </button>
-
-                    <p v-if="message.error" style="margin-top: 0.5rem" class="red-text">
-                      {{ message.error }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              v-if="message.user === 'bot' && message.formId && !message.updated"
-              class="generate-container"
-              style="margin-left: -0.5rem"
-            >
-              <button @click="toggleChatModal(message)" class="generate-button green">
-                <img src="@/assets/images/wand.svg" class="invert" height="14px" alt="" />
-                {{
-                  message.error
-                    ? 'Retry'
-                    : `Review & Update ${user.crm[0] + user.crm.slice(1).toLowerCase()}`
-                }}
-              </button>
-
-              <p v-if="message.error" class="red-text">{{ message.error }}</p>
-            </div>
-
-            <div
-              v-else-if="message.user === 'bot' && message.formId && message.updated"
-              class="generate-container"
-            >
-              <div v-if="!message.generated">
-                <button
-                  @click="toggleSelectContentOption(i)"
-                  v-if="!selectingContent || selectedIndex !== i"
-                  class="generate-button"
-                  style="margin-left: -0.75rem"
-                >
-                  <img class="gold-filter" src="@/assets/images/sparkle.svg" height="16px" alt="" />
-                  Generate content
-                </button>
-
-                <div v-else-if="selectingContent && selectedIndex === i">
-                  <div
-                    style="position: relative; margin-bottom: 2rem; margin-left: -0.75rem"
-                    class="row"
-                    v-if="!generating"
-                  >
-                    <button
-                      @click="generateEmail(message.data['meeting_comments'], message.id)"
-                      class="content-button"
-                    >
-                      <font-awesome-icon icon="fa-regular fa-envelope" />Draft follow-up email
-
-                      {{ message.note }}
-                    </button>
-                    <button
-                      @click="nextSteps(message.data['meeting_comments'], message.id)"
-                      class="content-button"
-                    >
-                      <font-awesome-icon style="height: 10px" icon="fa-solid fa-angles-right" />
-                      Suggest next steps
-                    </button>
-                    <button
-                      @click="
-                        getSummary(
-                          message.data,
-                          message.integrationId,
-                          message.resourceType,
-                          message.id,
-                        )
-                      "
-                      class="content-button"
-                    >
-                      <font-awesome-icon icon="fa-regular fa-file-lines" />Get summary
-                    </button>
-
-                    <img
-                      style="margin-left: 0.25rem; cursor: pointer"
-                      class="gray-blue-scale"
-                      @click="selectingContent = !selectingContent"
-                      src="@/assets/images/return.svg"
-                      height="18px"
-                      alt=""
-                    />
-                  </div>
-
-                  <div v-else class="loader-container">
-                    <span
-                      style="
-                        font-size: 20px;
-                        margin-right: .75rem;
-                        padding-top: 0.75rem;
-                        margin-left: -2.75rem
-                        margin-top: 0.5rem;
-                      "
-                      >🚀</span
-                    >
-
-                    <div style="border-radius: 6px; padding: 0.25rem 0.25rem" class="row">
-                      <p>Processing your submission</p>
-                      <div class="loading">
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <p class="red-text" v-if="message.error">{{ message.error }}</p>
-              </div>
-            </div>
-          </div> -->
-
-          <!-- <div style="margin-left: 1rem" v-show="messageLoading" class="loader-container">
-            <span
-              style="font-size: 20px; margin-right: 0.5rem; padding-top: 0.75rem; margin-left: 0.25rem"
-              >🚀</span
-            >
-
-            <div style="border-radius: 6px; padding: 0.25rem 0.75rem" class="row">
-              <p>Processing your submission</p>
-              <div class="loading">
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-              </div>
-            </div>
-          </div> -->
-        </div>
-        <!-- <ChatTextBox 
-          class="bottom"
-          :messages="messages"
-          :scrollToBottom="scrollToBottom"
-          :actions="actions"
-          :currentOpp="true"
-        /> -->
+        <div class="margin-top chat-window" ref="chatWindow"></div>
         <div class="bottom">
           <div class="chat-button-container">
             <div class="chat-button">Summarize</div>
@@ -370,9 +117,7 @@
       </div>
     </div>
     <div class="right-content">
-      <div class="updated-time">
-        <span>Updated {{ getUpdated }} ago</span>
-      </div>
+      <div class="updated-time"></div>
       <div class="search-results">
         <div>
           <p>Results: {{ filteredArticles.length }}</p>
@@ -383,37 +128,41 @@
         </div>
       </div>
       <div class="card-container">
-        <div v-for="article in filteredArticles" :key="article.id" class="">
-          <div class="card" @click="selectArticle(article)">
-            <div class="display-flex">
-              <div class="">
-                <div class="card-top-left">
-                  <img :src="article.icon" />
-                  <span>{{ article.source }}</span>
+        <div v-if="loading">....</div>
+
+        <div v-else>
+          <div v-for="article in filteredArticles" :key="article.id" class="">
+            <div class="card" @click="selectArticle(article)">
+              <div class="display-flex">
+                <div class="">
+                  <div class="card-top-left">
+                    <img :src="article.icon" />
+                    <span>{{ article.source.name }}</span>
+                  </div>
+                  <h3 class="article-title" @click="goToArticle(article.url)">
+                    {{ article.title }}
+                  </h3>
+                  <h4 class="article-preview">{{ article.description }}</h4>
                 </div>
-                <h3 class="article-title" @click="goToArticle(article.link)">
-                  {{ article.title }}
-                </h3>
-                <h4 class="article-preview">{{ article.preview }}</h4>
-              </div>
-              <div @click="goToArticle(article.link)">
-                <img :src="article.coverPhoto" class="cover-photo" />
-              </div>
-            </div>
-            <div class="card-footer">
-              <div class="author-time">
-                <span>{{ article.time }}</span>
-                <span class="divier-dot">.</span>
-                <span>{{ article.author }}</span>
-              </div>
-              <div class="footer-icon-container">
-                <div v-if="newSummary" class="">
-                  <input type="checkbox" @click="addRemoveSelectedArticles(article)" />
+                <div @click="goToArticle(article.link)">
+                  <img :src="article.urlToImage" class="cover-photo" />
                 </div>
-                <img src="@/assets/images/sparkles-nofill-round.svg" class="footer-icon" />
-                <img src="@/assets/images/tags.svg" class="footer-icon" />
-                <img src="@/assets/images/search-round.svg" class="footer-icon" />
-                <img src="@/assets/images/arrow-small-right.svg" class="right-arrow-footer" />
+              </div>
+              <div class="card-footer">
+                <div class="author-time">
+                  <span>{{ article.publishedAt }}</span>
+                  <span class="divier-dot">.</span>
+                  <span>{{ article.author }}</span>
+                </div>
+                <div class="footer-icon-container">
+                  <div v-if="newSummary" class="">
+                    <input type="checkbox" @click="addRemoveSelectedArticles(article)" />
+                  </div>
+                  <img src="@/assets/images/sparkles-nofill-round.svg" class="footer-icon" />
+                  <img src="@/assets/images/tags.svg" class="footer-icon" />
+                  <img src="@/assets/images/search-round.svg" class="footer-icon" />
+                  <img src="@/assets/images/arrow-small-right.svg" class="right-arrow-footer" />
+                </div>
               </div>
             </div>
           </div>
@@ -433,6 +182,7 @@ export default {
   },
   data() {
     return {
+      loading: false,
       summary: null,
       articles: [],
       summaryChat: 'SUMMARY',
@@ -441,6 +191,7 @@ export default {
       regenSummary: false,
       newSummary: false,
       selectedArticles: [],
+      filteredArticles: [],
       actions: [
         {
           name: 'Summarize',
@@ -452,97 +203,33 @@ export default {
     }
   },
   watch: {},
-  created() {
-    this.getArticles()
-  },
+  created() {},
   methods: {
     async getClips() {
-      console.log('STARTING>>>')
+      this.loading = true
       try {
-        let res = await Comms.api.getClips({
-          search: 'Houston rockets',
-        })
-        console.log(res)
+        await Comms.api
+          .getClips({
+            search: 'Houston rockets',
+          })
+          .then((response) => {
+            console.log(response)
+            this.filteredArticles = response.articles
+          })
       } catch (e) {
         console.log(e)
+      } finally {
+        this.loading = false
       }
     },
     changeSummaryChat(type) {
       this.summaryChat = type
       this.scrollToBottom()
     },
-    async generateSummary() {
-      const res = {
-        overview: `Today's news highlights the success and growth of Tesla in Q2. The company achieved record deliveries in China, driven by tax credits and wider adoption. Tesla's Q2 results were impressive, with production and deliveries exceeding expectations. Additionally, plans for a new Tesla dealership in Orlando reflect the company's expanding local presence. These positive developments have fueled a 7% increase in Tesla's share prices.`,
-        highlights: [
-          'Telsa and BYD achieved record-high deliveries of their China-made cehicles in Q2',
-          `Tesla's Q2 deliveries rose 83% compared to the previous year, driven by tax credits and broader adoption.`,
-          `Tesla reported strong Q2 results, producing 479,700 cars and delivering 466,140 vehicles.`,
-          `Plans were filed for a new Tesla dealership in Orlando as the company expands its local presence.`,
-          `Tesla's quarterly deliveries beat expectations, resulting in a 7% jump in share prices.`,
-        ],
-      }
-      this.summary = res
-    },
-    regenerateSummary() {
-      const res = {
-        overview: `Today's news highlights the success and growth of Tesla in Q2. The company achieved record deliveries in China, driven by tax credits and wider adoption.`,
-        highlights: [
-          'Telsa and BYD achieved record-high deliveries of their China-made cehicles in Q2',
-          `Tesla's Q2 deliveries rose 83% compared to the previous year, driven by tax credits and broader adoption.`,
-          `Tesla reported strong Q2 results.`,
-        ],
-      }
-      this.summary = res
-      this.changeRegen()
-    },
-    getArticles() {
-      const res = [
-        {
-          id: 1,
-          icon: 'https://www.vectorlogo.zone/logos/marketwatch/marketwatch-icon.svg',
-          source: 'MarketWatch',
-          title: 'EV stocks see green after Tesla, Rivian, Nio report upbeat deliveries data',
-          preview: `Electric-vehicle maker stocks got a broad boost Monday, after upbeat delivery and production data from a host of companies in the U.S. and...`,
-          coverPhoto: `https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/New_York_City_%28New_York%2C_USA%29%2C_Empire_State_Building_--_2012_--_6448.jpg/1200px-New_York_City_%28New_York%2C_USA%29%2C_Empire_State_Building_--_2012_--_6448.jpg`,
-          time: '5 mins ago',
-          author: 'Eric Peters',
-          link: 'https://www.teslarati.com/tesla-cybertruck-orders-1-9-million-as-musk-off-the-hook-demand/',
-          data: {},
-        },
-        {
-          id: 2,
-          icon: 'https://www.vectorlogo.zone/logos/marketwatch/marketwatch-icon.svg',
-          source: 'Automotive News',
-          title: 'Tesla deliveries in China surge as supply-chain concerns ease.',
-          preview: `Electric-vehicle maker stocks got a broad boost Monday, after upbeat delivery and production data from a host of companies in the U.S. and...`,
-          coverPhoto: `https://empire-s3-production.bobvila.com/articles/wp-content/uploads/2023/01/iStock-1372085619-hidden-costs-of-owning-an-electric-car-vehicle-charging-by-solar-panels.jpg`,
-          time: '10 mins ago',
-          author: 'Susan Miller',
-          link: 'https://www.teslarati.com/tesla-cybertruck-orders-1-9-million-as-musk-off-the-hook-demand/',
-          data: {},
-        },
-        {
-          id: 3,
-          icon: 'https://www.vectorlogo.zone/logos/marketwatch/marketwatch-icon.svg',
-          source: 'MotorTrend',
-          title: '2025 Tesla Model S: What you should know',
-          preview: `Electric-vehicle maker stocks got a broad boost Monday, after upbeat delivery and production data from a host of companies in the U.S. and...`,
-          coverPhoto: `https://hips.hearstapps.com/hmg-prod/images/2022-tesla-model-s-mmp-3-1628540852.png?crop=0.891996891996892xw:1xh;center,top&resize=1200:*`,
-          time: '1 hr ago',
-          author: 'Rachel Myers',
-          link: 'https://www.teslarati.com/tesla-cybertruck-orders-1-9-million-as-musk-off-the-hook-demand/',
-          data: {},
-        },
-      ]
-      this.articles = res
-      this.filteredArticles = res
-    },
     selectArticle(article) {
       this.$store.dispatch('updateSelectedArticle', article)
     },
     saveSelectedArticles() {
-      this.generateSummary()
       this.selectedArticles = []
       this.changeNew()
     },
@@ -571,18 +258,13 @@ export default {
     scrollToBottom() {
       setTimeout(() => {
         const chatWindow = this.$refs.chatWindow
-        console.log('chatWindow first', chatWindow.scrollTop)
         setTimeout(() => {
           chatWindow.scrollTop = chatWindow.scrollHeight
-          console.log('chatWindow last', chatWindow.scrollTop)
         }, 200)
       }, 0)
     },
   },
   computed: {
-    getUpdated() {
-      return '22 mins'
-    },
     messages() {
       return this.$store.state.messages
     },
