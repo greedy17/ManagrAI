@@ -1280,82 +1280,38 @@ def launch_action(request):
     user = slack.user
     access_token = user.organization.slack_integration.access_token
     trigger_id = request.data.get("trigger_id")
-    options = (
-        ["Contact", "Opportunity", "Account", "Lead"]
-        if user.crm == "SALESFORCE"
-        else ["Contact", "Deal", "Company"]
-    )
-    options = "%".join(options)
     context = {
         "u": str(user.id),
         "trigger_id": trigger_id,
-        "options": options,
-        "action_id": slack_const.PROCESS_SEND_RESOURCE_MESSAGE,
-    }
+    }    
+    if user.role == "PR":
+        blockset = "news_summary_blockset"
+        title = "News Summary"
+    else:
+        options = (
+            ["Contact", "Opportunity", "Account", "Lead"]
+            if user.crm == "SALESFORCE"
+            else ["Contact", "Deal", "Company"]
+        )
+        options = "%".join(options)
+        context.update(options=options,action_id=slack_const.PROCESS_SEND_RESOURCE_MESSAGE)
+        blockset = "pick_resource_modal_block_set"
+        title = "Choose Record"
     data = {
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
-            "title": {"type": "plain_text", "text": "Choose Record"},
-            "blocks": get_block_set("pick_resource_modal_block_set", context=context),
+            "title": {"type": "plain_text", "text": title},
+            "blocks": get_block_set(blockset, context=context),
             "private_metadata": json.dumps(context),
-            "external_id": f"pick_resource_modal_block_set.{str(uuid.uuid4())}",
+            "external_id": f"{blockset}.{str(uuid.uuid4())}",
         },
     }
+    if user.role == "PR":
+        data["view"]["callback_id"] = slack_const.PROCESS_NEWS_SUMMARY
+        data["view"]["submit"] = {"type": "plain_text", "text": "Submit",}
     slack_requests.generic_request(url, data, access_token=access_token)
     return Response()
-
-
-@api_view(["post"])
-@authentication_classes((slack_auth.SlackWebhookAuthentication,))
-@permission_classes([permissions.AllowAny])
-@slack_api_exceptions(
-    return_opt=Response(data={"response_type": "ephemeral", "text": "Oh-Ohh an error occured",}),
-)
-def launch_digest(request):
-
-    # list of accepted commands for this fake endpoint
-    allowed_commands = ["morning", "afternoon"]
-    slack_id = request.data.get("user_id", None)
-
-    if slack_id:
-        slack = (
-            UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
-        )
-        if not slack:
-            return Response(
-                data={
-                    "response_type": "ephemeral",
-                    "text": "Sorry I cant find your managr account",
-                }
-            )
-    user = slack.user
-    text = request.data.get("text", "")
-    if len(text):
-        command_params = text.split(" ")
-    else:
-        command_params = []
-    time = None
-    if len(command_params):
-        if command_params[0] not in allowed_commands:
-            return Response(
-                data={
-                    "response_type": "ephemeral",
-                    "text": "Sorry I don't know that : {},only allowed{}".format(
-                        command_params[0], allowed_commands
-                    ),
-                }
-            )
-        time = command_params[0]
-    else:
-        time = "morning"
-    if time == "morning":
-        generate_morning_digest(user.id)
-    else:
-        generate_reminder_message(user.id)
-
-    return Response()
-
 
 class SlackFormInstanceViewSet(
     viewsets.GenericViewSet,
