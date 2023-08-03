@@ -125,6 +125,37 @@ def custom_paginator_block(
     return blocks
 
 
+def custom_clips_paginator_block(
+    pagination_object, user_id, action_id=slack_const.PROCESS_SEND_CLIPS
+):
+    next_page = pagination_object.get("next_page", None)
+    prev_page = pagination_object.get("previous_page", None)
+    blocks = []
+    button_blocks = []
+    page_context = {"u": user_id}
+
+    if prev_page:
+        prev_page_button = block_builders.simple_button_block(
+            "Previous",
+            str(prev_page),
+            style="danger",
+            action_id=f"{action_id}?{urlencode({**page_context,'new_page':int(prev_page)})}",
+        )
+        button_blocks.append(prev_page_button)
+    if next_page:
+        next_page_button = block_builders.simple_button_block(
+            "Next",
+            str(next_page),
+            action_id=f"{action_id}?{urlencode({**page_context,'new_page':int(next_page)})}",
+        )
+        button_blocks.append(next_page_button)
+    if len(button_blocks):
+        blocks.append(block_builders.actions_block(button_blocks))
+
+    blocks.append(block_builders.context_block(f"Showing {pagination_object.get('page')}"))
+    return blocks
+
+
 def custom_inline_paginator_block(pagination_object, invocation, config_id, api_name):
     next_page = pagination_object.get("next_page", None)
     prev_page = pagination_object.get("previous_page", None)
@@ -702,4 +733,28 @@ def reset_meeting_block_set(context, *args, **kwargs):
                 block_id="selected_meetings",
             ),
         )
+    return blocks
+
+@block_set()
+def news_summary_blockset(context):
+    blocks = [
+        block_builders.input_block(
+            "Enter your new search", optional=False, block_id="SEARCH", multiline=True
+        ),
+        block_builders.input_block(
+            "What would you like included in your summary?",
+            block_id="OUTPUT_INSTRUCTIONS",
+            multiline=True,
+        ),
+        block_builders.actions_block(
+            [
+                block_builders.simple_button_block(
+                    "Use a template",
+                    "USE_TEMPLATE",
+                    action_id=slack_const.ADD_NEWS_SUMMARY_TEMPLATE,
+                )
+            ],
+            block_id="USE_TEMPLATE_BLOCK",
+        ),
+    ]
     return blocks
