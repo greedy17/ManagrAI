@@ -116,7 +116,7 @@ const CLOSE_DATE_PASSED_HUBSPOT = {
 
 const CLOSE_DATE_APPROACHING = {
     title: "Close Date Approaching",
-    subtitle: 'Close date within 14 days',
+    subtitle: 'Close date within 7 days',
     user: null,
     isActive: true,
     crm: 'SALESFORCE',
@@ -174,7 +174,7 @@ const CLOSE_DATE_APPROACHING = {
 
 const CLOSE_DATE_APPROACHING_HUBSPOT = {
     title: "Close Date Approaching",
-    subtitle: 'Closing within 14 days',
+    subtitle: 'Closing within 7 days',
     user: null,
     isActive: true,
     crm: 'HUBSPOT',
@@ -376,7 +376,7 @@ const CLOSING_THIS_QUARTER = {
 
 const DEAL_REVIEW = {
     title: "Deal Review",
-    subtitle: 'Closing within 14 days & no recent updates',
+    subtitle: 'Closing within 7 days & no recent updates',
     user: null,
     isActive: true,
     crm: 'SALESFORCE',
@@ -434,7 +434,7 @@ const DEAL_REVIEW = {
 
 const DEAL_REVIEW_HUBSPOT = {
     title: "Deal Review",
-    subtitle: 'Closing within 14 days & no recent updates',
+    subtitle: 'Closing within 7 days & no recent updates',
     user: null,
     isActive: true,
     crm: 'HUBSPOT',
