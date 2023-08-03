@@ -41,7 +41,7 @@
         </div>
 
         <div class="" v-else>
-          <div class="row__" v-if="templates.list.length">
+          <div class="row__" v-if="templates.list && templates.list.length">
             <Multiselect
               style="width: 200px"
               v-model="activeList"
@@ -57,7 +57,7 @@
             >
             </Multiselect>
             <p class="counter" v-if="currentView !== 'pipeline' && !templates.refreshing">
-              Results: {{ currentView ? currentView.sobjectInstances.length : '' }}
+              Results: {{ currentView && currentView.sobjectInstances ? currentView.sobjectInstances.length : '' }}
             </p>
           </div>
           <div v-else>
@@ -464,9 +464,8 @@ export default {
       }
       const userCRM = this.userCRM
       let sortedWorkflow
-      if (this.currentView && this.currentView.sobjectInstances.length) {
+      if (this.currentView && this.currentView.sobjectInstances && this.currentView.sobjectInstances.length) {
         this.selectedFilter = field
-        console.log('this.selectedFilter', this.selectedFilter)
         if (field === 'Stage' || field === 'Deal Stage') {
           sortedWorkflow = this.currentView.sobjectInstances.sort(function (a, b) {
             const nameA =
@@ -534,7 +533,7 @@ export default {
 
       const userCRM = this.userCRM
       let sortedWorkflow
-      if (this.currentView && this.currentView.sobjectInstances.length) {
+      if (this.currentView && this.currentView.sobjectInstances && this.currentView.sobjectInstances.length) {
         this.selectedFilter = field
         if (field === 'Stage' || field === 'Deal Stage') {
           sortedWorkflow = this.currentView.sobjectInstances.sort(function (a, b) {
