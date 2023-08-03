@@ -80,7 +80,7 @@ def _process_news_summary(payload, context):
             r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
         try:
             r = open_ai_exceptions._handle_response(r)
-            message = r.get("choices")[0].get("message").get("content")
+            message = r.get("choices")[0].get("message").get("content").replace("**", "*")
 
             break
         except open_ai_exceptions.StopReasonLength:
@@ -224,7 +224,7 @@ def _process_article_summary(payload,context):
             r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
         try:
             r = open_ai_exceptions._handle_response(r)
-            message = r.get("choices")[0].get("message").get("content")
+            message = r.get("choices")[0].get("message").get("content").replace("**", "*")
 
             break
         except open_ai_exceptions.StopReasonLength:

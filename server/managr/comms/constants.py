@@ -33,10 +33,8 @@ Output format must be:\n"""
     if instructions:
         body += instructions
     else:
-        body += """Provide a 3 bullet point summary.\n 
-        * Was this a feature story or a mention.\n 
-        * What was the sentiment around our brand vs the rest of the article.\n 
-        * Where are the key messages\n
-        * Highlight any mentions and sentiment our products or people\n
-        * Highlight any mentions and sentiment of our competitors"""
+        body += """*Was this a feature story*\n 
+        *Brand vs article sentiment*\n 
+        *Sentiment around our products or people*\n
+        *Sentiment around competitors*"""
     return body

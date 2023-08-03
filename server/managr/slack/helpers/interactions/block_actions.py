@@ -4081,6 +4081,7 @@ def process_summarize_article(payload, context):
             user.organization.slack_integration.access_token,
             block_set=loading_block,
         )
+        print(res)
         context.update(ts=res["ts"])
         emit_process_article_summary(payload, context)
     except Exception as e:
