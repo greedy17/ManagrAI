@@ -1313,58 +1313,6 @@ def launch_action(request):
     slack_requests.generic_request(url, data, access_token=access_token)
     return Response()
 
-
-@api_view(["post"])
-@authentication_classes((slack_auth.SlackWebhookAuthentication,))
-@permission_classes([permissions.AllowAny])
-@slack_api_exceptions(
-    return_opt=Response(data={"response_type": "ephemeral", "text": "Oh-Ohh an error occured",}),
-)
-def launch_digest(request):
-
-    # list of accepted commands for this fake endpoint
-    allowed_commands = ["morning", "afternoon"]
-    slack_id = request.data.get("user_id", None)
-
-    if slack_id:
-        slack = (
-            UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
-        )
-        if not slack:
-            return Response(
-                data={
-                    "response_type": "ephemeral",
-                    "text": "Sorry I cant find your managr account",
-                }
-            )
-    user = slack.user
-    text = request.data.get("text", "")
-    if len(text):
-        command_params = text.split(" ")
-    else:
-        command_params = []
-    time = None
-    if len(command_params):
-        if command_params[0] not in allowed_commands:
-            return Response(
-                data={
-                    "response_type": "ephemeral",
-                    "text": "Sorry I don't know that : {},only allowed{}".format(
-                        command_params[0], allowed_commands
-                    ),
-                }
-            )
-        time = command_params[0]
-    else:
-        time = "morning"
-    if time == "morning":
-        generate_morning_digest(user.id)
-    else:
-        generate_reminder_message(user.id)
-
-    return Response()
-
-
 class SlackFormInstanceViewSet(
     viewsets.GenericViewSet,
     mixins.RetrieveModelMixin,
