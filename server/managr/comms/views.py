@@ -42,7 +42,7 @@ class PRSearchViewSet(
         url_path="clips",
     )
     def get_clips(self, request, *args, **kwargs):
-        search = request.data.get("search")
+        search = request.GET.get("search")
         user = request.user
         has_error = False
         while True:
@@ -70,7 +70,7 @@ class PRSearchViewSet(
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": articles})
 
-        return Response(data={"articles": articles})
+        return Response({"articles": articles})
 
     @action(
         methods=["get"],

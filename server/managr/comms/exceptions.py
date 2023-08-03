@@ -38,6 +38,7 @@ class NewsApiException:
 
 
 def _handle_response(response, fn_name=None):
+    data = None
     if not hasattr(response, "status_code"):
         raise ValueError
     elif response.status_code == 200:
