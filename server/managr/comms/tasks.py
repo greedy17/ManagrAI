@@ -109,7 +109,7 @@ def _process_news_summary(payload, context):
     try:
         blocks = [
             block_builders.simple_section(
-                f"*Summary for {company}*", "mrkdwn", block_id="NEWS_SUMMARY"
+                f"*Summary for {search}*", "mrkdwn", block_id="NEWS_SUMMARY"
             ),
             block_builders.context_block(f"AI-generated search: {query_input}", "mrkdwn"),
             block_builders.divider_block(),
