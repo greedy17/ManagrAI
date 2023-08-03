@@ -3,10 +3,18 @@
     <div class="left-content">
       <div>
         <div class="gray-background">
-          <div class="toggle-container" :class="summaryChat === 'SUMMARY' ? 'active' : ''" @click="changeSummaryChat('SUMMARY')">
+          <div
+            class="toggle-container"
+            :class="summaryChat === 'SUMMARY' ? 'active' : ''"
+            @click="changeSummaryChat('SUMMARY')"
+          >
             <p>Summary</p>
           </div>
-          <div class="toggle-container" :class="summaryChat === 'CHAT' ? 'active' : ''" @click="changeSummaryChat('CHAT')">
+          <div
+            class="toggle-container"
+            :class="summaryChat === 'CHAT' ? 'active' : ''"
+            @click="changeSummaryChat('CHAT')"
+          >
             <p>Chat</p>
           </div>
         </div>
@@ -21,7 +29,7 @@
         <div v-if="!summary" class="summary-buttons-container">
           <button class="summary-button wide"><img src="@/assets/images/sparkles-round.svg" />Generate Summary</button>
         </div>
-        <div v-else>
+        <div @click="getClips" v-else>
           <div class="highlights-summary-container">
             <div>
               <h3 class="highlights">Highlights:</h3>
@@ -41,33 +49,48 @@
           <div v-if="regenSummary">
             <div class="provide-instructions">
               <span>Provide Instructions:</span>
-              <img class="back-arrow" src="@/assets/images/arrow-small-left.svg" @click="changeRegen"/>
-            </div>
-            <div class="chat-border">
-            <div class="input-container">
-              <input v-model="message" placeholder="Provide Instructions..." />
-              <font-awesome-icon
-                :class="{ invert: !message.length }"
-                class="gray"
-                style="height: 14px; cursor: pointer"
-                icon="fa-regular fa-paper-plane"
+              <img
+                class="back-arrow"
+                src="@/assets/images/arrow-small-left.svg"
+                @click="changeRegen"
               />
             </div>
-          </div>
+            <div class="chat-border">
+              <div class="input-container">
+                <input v-model="message" placeholder="Provide Instructions..." />
+                <font-awesome-icon
+                  :class="{ invert: !message.length }"
+                  class="gray"
+                  style="height: 14px; cursor: pointer"
+                  icon="fa-regular fa-paper-plane"
+                  @click="regenerateSummary"
+                />
+              </div>
+            </div>
           </div>
           <div v-else-if="newSummary">
             <div class="provide-instructions">
               <span>Selected: {{ selectedArticles.length }}</span>
-              <img class="back-arrow" src="@/assets/images/arrow-small-left.svg" @click="changeNew"/>
+              <img
+                class="back-arrow"
+                src="@/assets/images/arrow-small-left.svg"
+                @click="changeNew"
+              />
             </div>
             <div>
-              <div v-if="!selectedArticles.length" class="summarize-disabled">Select the clips you'd like to summarize</div>
+              <div v-if="!selectedArticles.length" class="summarize-disabled">
+                Select the clips you'd like to summarize
+              </div>
               <div v-else class="summarize" @click="saveSelectedArticles">Summarize</div>
             </div>
           </div>
           <div v-else class="summary-buttons-container">
-            <button @click="changeRegen" class="summary-button"><img src="@/assets/images/sparkles-round.svg" />Regenerate</button>
-            <button @click="changeNew" class="summary-button dark-button"><img src="@/assets/images/sparkles-round.svg" />New Summary</button>
+            <button @click="changeRegen" class="summary-button">
+              <img src="@/assets/images/sparkles-round.svg" />Regenerate
+            </button>
+            <button @click="changeNew" class="summary-button dark-button">
+              <img src="@/assets/images/sparkles-round.svg" />New Summary
+            </button>
           </div>
         </div>
       </div>
@@ -316,7 +339,6 @@
               </div>
             </div>
           </div> -->
-
         </div>
         <!-- <ChatTextBox 
           class="bottom"
@@ -355,12 +377,7 @@
         </div>
         <div class="search-bar">
           <img class="search" src="@/assets/images/search-round.svg" />
-          <input
-            @input="searchTitles"
-            type="search"
-            :placeholder="`Search`"
-            v-model="filterText"
-          />
+          <input @input="searchTitles" type="search" :placeholder="`Search`" v-model="filterText" />
         </div>
       </div>
       <div class="card-container">
@@ -372,7 +389,9 @@
                   <img :src="article.icon" />
                   <span>{{ article.source }}</span>
                 </div>
-                <h3 class="article-title" @click="goToArticle(article.link)">{{ article.title }}</h3>
+                <h3 class="article-title" @click="goToArticle(article.link)">
+                  {{ article.title }}
+                </h3>
                 <h4 class="article-preview">{{ article.preview }}</h4>
               </div>
               <div @click="goToArticle(article.link)">
@@ -387,10 +406,7 @@
               </div>
               <div class="footer-icon-container">
                 <div v-if="newSummary" class="">
-                  <input 
-                    type="checkbox"
-                    @click="addRemoveSelectedArticles(article)"
-                  />
+                  <input type="checkbox" @click="addRemoveSelectedArticles(article)" />
                 </div>
                 <img src="@/assets/images/sparkles-nofill-round.svg" class="footer-icon" />
                 <img src="@/assets/images/tags.svg" class="footer-icon" />
@@ -406,6 +422,8 @@
 </template>
 <script>
 import ChatTextBox from '../Chat/ChatTextBox.vue'
+import Comms from '@/services/comms'
+
 export default {
   name: 'SummariesMainContent',
   components: {
@@ -432,13 +450,22 @@ export default {
       ],
     }
   },
-  watch: {
-
-  },
+  watch: {},
   created() {
     
   },
   methods: {
+    async getClips() {
+      console.log('STARTING>>>')
+      try {
+        let res = await Comms.api.getClips({
+          search: 'Houston rockets',
+        })
+        console.log(res)
+      } catch (e) {
+        console.log(e)
+      }
+    },
     changeSummaryChat(type) {
       this.summaryChat = type
       this.scrollToBottom()
@@ -451,9 +478,9 @@ export default {
       this.changeNew()
     },
     addRemoveSelectedArticles(article) {
-      const existingArticle = this.selectedArticles.filter(ar => ar.id === article.id)[0]
+      const existingArticle = this.selectedArticles.filter((ar) => ar.id === article.id)[0]
       if (existingArticle) {
-        this.selectedArticles = this.selectedArticles.filter(ar => ar.id !== article.id)
+        this.selectedArticles = this.selectedArticles.filter((ar) => ar.id !== article.id)
       } else {
         this.selectedArticles.push(article)
       }
@@ -468,7 +495,9 @@ export default {
       this.newSummary = !this.newSummary
     },
     searchTitles() {
-      this.filteredArticles = this.articles.filter(article => article.title.includes(this.filterText))
+      this.filteredArticles = this.articles.filter((article) =>
+        article.title.includes(this.filterText),
+      )
     },
     scrollToBottom() {
       setTimeout(() => {
@@ -486,267 +515,267 @@ export default {
     userName() {
       return this.$store.state.user.firstName
     },
-  }
+  },
 }
 </script>
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
-  .main-content {
-    display: flex;
-    background-color: $white;
-    border-radius: 8px;
-    margin: 1rem 0.5rem 0.5rem 0;
-    padding: 1rem;
-    min-height: 88vh;
-    color: $dark-black-blue;
-  }
-  .display-flex {
-    display: flex;
-  }
-  .space-between {
-    display: flex;
-    justify-content: space-between;
-  }
-  .search-results {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-left: 1rem;
-    margin-right: 1rem;
-    padding-left: 1rem;
-  }
-  .left-content {
-    width: 29vw;
-  }
-  .right-content {
-    width: 38vw;
-  }
-  .card-container {
-    border-left: 1px solid $soft-gray;
-    margin-left: 1rem;
-    padding-left: 1rem;
-    height: 75vh;
-    overflow-y: auto;
-  }
-  .card {
-    border: 1px solid $soft-gray;
-    border-radius: 8px;
-    box-shadow: 2px 2px 5px 0 $soft-gray;
-    transition: all 0.3s;
-    margin-bottom: 1rem;
-    margin-right: 1rem;
-  }
-  .card:hover {
-    transform: scale(1.025);
-    box-shadow: 4px 4px 5px 0px $soft-gray;
-  }
-  .card-top-left {
-    display: flex;
-    font-size: 12px;
-    img {
-      height: 12px;
-      margin-right: 0.5rem;
-    }
-  }
-  .cover-photo {
-    height: 7rem;
-    width: 7rem;
-    margin-left: 1rem;
-    margin-top: 1rem;
-    object-fit: cover;
-    border-radius: 8px;
-    cursor: pointer;
-  }
-  .highlights-summary-container {
-    border-bottom: 1px solid $soft-gray;
-    height: 65vh;
-    overflow-y: auto;
-    padding: 0 1rem;
-  }
-  .summary-buttons-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 1rem;
-  }
-  .summary-button {
-    @include gray-text-button();
-    margin: 0 0.5rem;
-    padding: 8px 16px;
-    img {
-      height: 12px;
-      margin-right: 0.5rem;
-    }
-  }
-  .dark-button {
-    @include dark-blue-button();
-    padding: 8px 16px;
-    img {
-      // filter: invert(99%);
-      filter: invert(81%) sepia(38%) saturate(738%) hue-rotate(349deg) brightness(95%) contrast(88%);
-    }
-  }
-  .wide {
-    width: 90%
-  }
-  .article-title {
-    color: $dark-green;
-    cursor: pointer;
-    font-size: 16px;
-  }
-  .article-preview {
-    color: $base-gray;
-    font-size: 14px;
-  }
-  .card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-top: 1px solid $soft-gray;
-    padding-top: 0.5rem;
-    span {
-      font-size: 12px;
-      margin-right: 0.5rem;
-    }
-  }
-  .footer-icon-container {
-    display: flex;
-    align-items: center;
-  }
-  .right-arrow-footer {
-    height: 16px;
-    margin-left: 1rem;
-    cursor: pointer;
-  }
-  .footer-icon {
-    height: 14px;
-    margin-left: 1rem;
-    cursor: pointer;
-  }
-  .author-time {
-    color: $light-gray-blue;
-  }
-  .divier-dot {
-    position: relative;
-    bottom: 0.2rem;
-  }
-  .large-dot {
-    font-size: 40px;
-    bottom: 1.7rem;
-    margin-right: 0.75rem;
-  }
-  .gray-background {
-    display: flex;
-    align-items: center;
-    background-color: $soft-gray;
-    height: 4vh;
-    width: 11vw;
-    border-radius: 8px;
-  }
-  .toggle-container {
-    border: 1px solid $soft-gray;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 5vw;
-    height: 3vh;
-    border-radius: 8px;
-    margin: 0 0.25rem;
-    color: $light-gray-blue;
-    p {
-      margin: 0;
-      font-size: 12px;
-      // text-align: center;
-    }
-  }
-  .active {
-    background-color: $white;
-    border-radius: 8px;
-    color: $dark-black-blue;
-  }
-  .updated-time {
-    font-size: 12px;
-    color: $light-gray-blue;
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 0.5rem;
-    margin-top: 0.5rem;
-    margin-right: 1rem;
-  }
-  .search {
+.main-content {
+  display: flex;
+  background-color: $white;
+  border-radius: 8px;
+  margin: 1rem 0.5rem 0.5rem 0;
+  padding: 1rem;
+  min-height: 88vh;
+  color: $dark-black-blue;
+}
+.display-flex {
+  display: flex;
+}
+.space-between {
+  display: flex;
+  justify-content: space-between;
+}
+.search-results {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-left: 1rem;
+  margin-right: 1rem;
+  padding-left: 1rem;
+}
+.left-content {
+  width: 29vw;
+}
+.right-content {
+  width: 38vw;
+}
+.card-container {
+  border-left: 1px solid $soft-gray;
+  margin-left: 1rem;
+  padding-left: 1rem;
+  height: 75vh;
+  overflow-y: auto;
+}
+.card {
+  border: 1px solid $soft-gray;
+  border-radius: 8px;
+  box-shadow: 2px 2px 5px 0 $soft-gray;
+  transition: all 0.3s;
+  margin-bottom: 1rem;
+  margin-right: 1rem;
+}
+.card:hover {
+  transform: scale(1.025);
+  box-shadow: 4px 4px 5px 0px $soft-gray;
+}
+.card-top-left {
+  display: flex;
+  font-size: 12px;
+  img {
     height: 12px;
     margin-right: 0.5rem;
-    filter: invert(20%);
   }
-  .search-bar {
-    // background-color: white;
-    border: 1px solid $very-light-gray;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 3px 6px;
-    border-radius: 8px;
-    // margin-top: 16px;
-    height: 4vh;
+}
+.cover-photo {
+  height: 7rem;
+  width: 7rem;
+  margin-left: 1rem;
+  margin-top: 1rem;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.highlights-summary-container {
+  border-bottom: 1px solid $soft-gray;
+  height: 65vh;
+  overflow-y: auto;
+  padding: 0 1rem;
+}
+.summary-buttons-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+}
+.summary-button {
+  @include gray-text-button();
+  margin: 0 0.5rem;
+  padding: 8px 16px;
+  img {
+    height: 12px;
+    margin-right: 0.5rem;
   }
-  [type='search']::-webkit-search-cancel-button {
-    -webkit-appearance: none;
-    appearance: none;
+}
+.dark-button {
+  @include dark-blue-button();
+  padding: 8px 16px;
+  img {
+    // filter: invert(99%);
+    filter: invert(81%) sepia(38%) saturate(738%) hue-rotate(349deg) brightness(95%) contrast(88%);
   }
-  input[type='search'] {
-    width: 6.5vw;
-    letter-spacing: 0.75px;
-    border: none;
-    padding: 4px 0;
+}
+.wide {
+  width: 90%;
+}
+.article-title {
+  color: $dark-green;
+  cursor: pointer;
+  font-size: 16px;
+}
+.article-preview {
+  color: $base-gray;
+  font-size: 14px;
+}
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid $soft-gray;
+  padding-top: 0.5rem;
+  span {
+    font-size: 12px;
+    margin-right: 0.5rem;
+  }
+}
+.footer-icon-container {
+  display: flex;
+  align-items: center;
+}
+.right-arrow-footer {
+  height: 16px;
+  margin-left: 1rem;
+  cursor: pointer;
+}
+.footer-icon {
+  height: 14px;
+  margin-left: 1rem;
+  cursor: pointer;
+}
+.author-time {
+  color: $light-gray-blue;
+}
+.divier-dot {
+  position: relative;
+  bottom: 0.2rem;
+}
+.large-dot {
+  font-size: 40px;
+  bottom: 1.7rem;
+  margin-right: 0.75rem;
+}
+.gray-background {
+  display: flex;
+  align-items: center;
+  background-color: $soft-gray;
+  height: 4vh;
+  width: 11vw;
+  border-radius: 8px;
+}
+.toggle-container {
+  border: 1px solid $soft-gray;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 5vw;
+  height: 3vh;
+  border-radius: 8px;
+  margin: 0 0.25rem;
+  color: $light-gray-blue;
+  p {
     margin: 0;
-    background: none;
     font-size: 12px;
+    // text-align: center;
   }
-  input[type='search']:focus {
-    outline: none;
+}
+.active {
+  background-color: $white;
+  border-radius: 8px;
+  color: $dark-black-blue;
+}
+.updated-time {
+  font-size: 12px;
+  color: $light-gray-blue;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
+  margin-top: 0.5rem;
+  margin-right: 1rem;
+}
+.search {
+  height: 12px;
+  margin-right: 0.5rem;
+  filter: invert(20%);
+}
+.search-bar {
+  // background-color: white;
+  border: 1px solid $very-light-gray;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 6px;
+  border-radius: 8px;
+  // margin-top: 16px;
+  height: 4vh;
+}
+[type='search']::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+input[type='search'] {
+  width: 6.5vw;
+  letter-spacing: 0.75px;
+  border: none;
+  padding: 4px 0;
+  margin: 0;
+  background: none;
+  font-size: 12px;
+}
+input[type='search']:focus {
+  outline: none;
+}
+::placeholder {
+  color: $very-light-gray;
+  font-size: 12px;
+}
+.highlights {
+  margin-top: 0;
+  font-size: 16px;
+}
+.dot {
+  height: 8px;
+  width: 8px;
+  margin: 0.275rem 0.5rem 0 0;
+}
+.overall {
+  font-size: 16px;
+}
+.highlight-point {
+  font-size: 14px;
+  // word-spacing: 1.15px;
+  line-height: 1.5;
+}
+.small-title-text {
+  font-size: 14px;
+  color: $light-gray-blue;
+  img {
+    height: 12px;
+    margin-right: 0.5rem;
+    filter: invert(81%) sepia(38%) saturate(738%) hue-rotate(349deg) brightness(95%) contrast(88%);
+    // filter: invert(63%) sepia(9%) saturate(735%) hue-rotate(200deg) brightness(95%) contrast(92%);
   }
-  ::placeholder {
-    color: $very-light-gray;
-    font-size: 12px;
-  }
-  .highlights {
-    margin-top: 0;
-    font-size: 16px;
-  }
-  .dot {
-    height: 8px;
-    width: 8px;
-    margin: 0.275rem 0.5rem 0 0;
-  }
-  .overall {
-    font-size: 16px;
-  }
-  .highlight-point {
-    font-size: 14px;
-    // word-spacing: 1.15px;
-    line-height: 1.5;
-  }
-  .small-title-text {
-    font-size: 14px;
-    color: $light-gray-blue;
-    img {
-      height: 12px;
-      margin-right: 0.5rem;
-      filter: invert(81%) sepia(38%) saturate(738%) hue-rotate(349deg) brightness(95%) contrast(88%);
-      // filter: invert(63%) sepia(9%) saturate(735%) hue-rotate(200deg) brightness(95%) contrast(92%);
-    }
-  }
-  .chat-container {
-    width: 100%;
-    height: 75vh;
-    overflow-y: auto;
-  }
-  .chat-window {
-    min-height: 63vh;
-  }
-  .message-text {
+}
+.chat-container {
+  width: 100%;
+  height: 75vh;
+  overflow-y: auto;
+}
+.chat-window {
+  min-height: 63vh;
+}
+.message-text {
   font-family: $base-font-family;
   word-wrap: break-word;
   white-space: pre-wrap;
