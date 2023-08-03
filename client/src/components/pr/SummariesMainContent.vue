@@ -2,7 +2,7 @@
   <div class="main-content">
     <div class="left-content">
       <div>
-        <div class="gray-background">
+        <div @click="getClips" class="gray-background">
           <div
             class="toggle-container"
             :class="summaryChat === 'SUMMARY' ? 'active' : ''"
@@ -29,13 +29,12 @@
         <div v-if="!summary" class="summary-buttons-container">
           <button class="summary-button wide"><img src="@/assets/images/sparkles-round.svg" />Generate Summary</button>
         </div>
-        <div @click="getClips" v-else>
+        <div v-else>
           <div class="highlights-summary-container">
             <div>
               <h3 class="highlights">Highlights:</h3>
               <div v-for="(highlight, i) in summary.highlights" :key="i">
                 <div class="display-flex">
-                  <!-- <span class="divier-dot large-dot">.</span> -->
                   <img class="dot" src="@/assets/images/dot.svg" />
                   <span class="highlight-point">{{ highlight }}</span>
                 </div>
@@ -63,7 +62,6 @@
                   class="gray"
                   style="height: 14px; cursor: pointer"
                   icon="fa-regular fa-paper-plane"
-                  @click="regenerateSummary"
                 />
               </div>
             </div>
@@ -95,258 +93,7 @@
         </div>
       </div>
       <div v-else-if="summaryChat === 'CHAT'" class="chat-container">
-        <div class="margin-top chat-window" ref="chatWindow">
-          <!-- <div v-for="(message, i) in messages" :key="i" class="col-start">
-            <div class="message-container">
-              <div class="images">
-                <span v-if="message.failed" style="font-size: 24px"> 🚫 </span>
-                <span v-else-if="message.user === 'bot' && !message.updated" style="font-size: 24px">
-                  🤖
-                </span>
-                <span style="margin-left: -4px" v-else-if="message.user === 'bot' && message.updated">
-                  <img class="green-filter" src="@/assets/images/logo.png" height="30px" alt="" />
-                </span>
-
-                <div class="avatar" v-else>{{ userName[0] }}</div>
-              </div>
-
-              <div class="text-container">
-                <div style="position: relative">
-                  <div
-                    class="type-header"
-                    :class="{ marg: message.gtMsg === 'AI Generated Summary' }"
-                    v-if="message.user === 'bot' && message.gtMsg"
-                  >
-                    <h4 style="margin: 0">
-                      {{ message.gtMsg }}
-                    </h4>
-                    <small>
-                      {{ message.data.Name }}
-                    </small>
-                  </div>
-
-                  <div
-                    :class="{ 'type-header': message.title === 'Deal Review' }"
-                    style="font-weight: bold; font-size: 14px"
-                    v-else-if="message.user === 'bot' && message.title"
-                  >
-                    {{ message.title }}
-                  </div>
-
-                  <pre v-html="message.value" class="message-text"></pre>
-                </div>
-
-                <div v-if="message.generated">
-                  <div
-                    v-if="generating && generatingId === message.id"
-                    style="border-radius: 6px; padding: 0.2rem 0 0.25rem 0"
-                    class="row"
-                  >
-                    <div class="loading">
-                      <div class="dot"></div>
-                      <div class="dot"></div>
-                      <div class="dot"></div>
-                    </div>
-                  </div>
-
-                  <div v-else style="margin-top: 1.5rem">
-                    <div class="column" v-if="message.generatedType === 'email' && addingInstructions">
-                      <div class="space-between">
-                        <small>Provide any additional instructions below:</small>
-
-                        <p @click="closeInstructions">x</p>
-                      </div>
-
-                      <textarea
-                        v-model="instructionText"
-                        class="inline-input"
-                        v-autoresize
-                        autofocus="true"
-                        rows="1"
-                      />
-                    </div>
-
-                    <button
-                      v-if="!addingInstructions"
-                      style="margin-bottom: 0.25rem"
-                      @click="
-                        regenerate(
-                          message.generatedType,
-                          message.data['meeting_comments'],
-                          message.id,
-                          {
-                            data: message.data,
-                            integration: message.integrationId,
-                            resource: message.resourceType,
-                          },
-                        )
-                      "
-                      class="content-button padding-small"
-                    >
-                      <img
-                        style="margin-right: 0.6rem"
-                        class="gold-filter"
-                        src="@/assets/images/sparkle.svg"
-                        height="14px"
-                        alt=""
-                      />
-                      Regenerate
-                    </button>
-
-                    <button
-                      v-else
-                      style="margin-bottom: 0.25rem"
-                      @click="
-                        regenerateEmail(instructionText, message.data['meeting_comments'], message.id)
-                      "
-                      class="content-button padding-small"
-                    >
-                      <img
-                        style="margin-right: 0.6rem"
-                        class="gold-filter"
-                        src="@/assets/images/sparkle.svg"
-                        height="14px"
-                        alt=""
-                      />
-                      Regenerate
-                    </button>
-
-                    <p v-if="message.error" style="margin-top: 0.5rem" class="red-text">
-                      {{ message.error }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              v-if="message.user === 'bot' && message.formId && !message.updated"
-              class="generate-container"
-              style="margin-left: -0.5rem"
-            >
-              <button @click="toggleChatModal(message)" class="generate-button green">
-                <img src="@/assets/images/wand.svg" class="invert" height="14px" alt="" />
-                {{
-                  message.error
-                    ? 'Retry'
-                    : `Review & Update ${user.crm[0] + user.crm.slice(1).toLowerCase()}`
-                }}
-              </button>
-
-              <p v-if="message.error" class="red-text">{{ message.error }}</p>
-            </div>
-
-            <div
-              v-else-if="message.user === 'bot' && message.formId && message.updated"
-              class="generate-container"
-            >
-              <div v-if="!message.generated">
-                <button
-                  @click="toggleSelectContentOption(i)"
-                  v-if="!selectingContent || selectedIndex !== i"
-                  class="generate-button"
-                  style="margin-left: -0.75rem"
-                >
-                  <img class="gold-filter" src="@/assets/images/sparkle.svg" height="16px" alt="" />
-                  Generate content
-                </button>
-
-                <div v-else-if="selectingContent && selectedIndex === i">
-                  <div
-                    style="position: relative; margin-bottom: 2rem; margin-left: -0.75rem"
-                    class="row"
-                    v-if="!generating"
-                  >
-                    <button
-                      @click="generateEmail(message.data['meeting_comments'], message.id)"
-                      class="content-button"
-                    >
-                      <font-awesome-icon icon="fa-regular fa-envelope" />Draft follow-up email
-
-                      {{ message.note }}
-                    </button>
-                    <button
-                      @click="nextSteps(message.data['meeting_comments'], message.id)"
-                      class="content-button"
-                    >
-                      <font-awesome-icon style="height: 10px" icon="fa-solid fa-angles-right" />
-                      Suggest next steps
-                    </button>
-                    <button
-                      @click="
-                        getSummary(
-                          message.data,
-                          message.integrationId,
-                          message.resourceType,
-                          message.id,
-                        )
-                      "
-                      class="content-button"
-                    >
-                      <font-awesome-icon icon="fa-regular fa-file-lines" />Get summary
-                    </button>
-
-                    <img
-                      style="margin-left: 0.25rem; cursor: pointer"
-                      class="gray-blue-scale"
-                      @click="selectingContent = !selectingContent"
-                      src="@/assets/images/return.svg"
-                      height="18px"
-                      alt=""
-                    />
-                  </div>
-
-                  <div v-else class="loader-container">
-                    <span
-                      style="
-                        font-size: 20px;
-                        margin-right: .75rem;
-                        padding-top: 0.75rem;
-                        margin-left: -2.75rem
-                        margin-top: 0.5rem;
-                      "
-                      >🚀</span
-                    >
-
-                    <div style="border-radius: 6px; padding: 0.25rem 0.25rem" class="row">
-                      <p>Processing your submission</p>
-                      <div class="loading">
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <p class="red-text" v-if="message.error">{{ message.error }}</p>
-              </div>
-            </div>
-          </div> -->
-
-          <!-- <div style="margin-left: 1rem" v-show="messageLoading" class="loader-container">
-            <span
-              style="font-size: 20px; margin-right: 0.5rem; padding-top: 0.75rem; margin-left: 0.25rem"
-              >🚀</span
-            >
-
-            <div style="border-radius: 6px; padding: 0.25rem 0.75rem" class="row">
-              <p>Processing your submission</p>
-              <div class="loading">
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-              </div>
-            </div>
-          </div> -->
-        </div>
-        <!-- <ChatTextBox 
-          class="bottom"
-          :messages="messages"
-          :scrollToBottom="scrollToBottom"
-          :actions="actions"
-          :currentOpp="true"
-        /> -->
+        <div class="margin-top chat-window" ref="chatWindow"></div>
         <div class="bottom">
           <div class="chat-button-container">
             <div class="chat-button">Summarize</div>
@@ -368,9 +115,7 @@
       </div>
     </div>
     <div class="right-content">
-      <div class="updated-time">
-        
-      </div>
+      <div class="updated-time"></div>
       <div class="search-results">
         <div>
           <p>Results: {{ filteredArticles.length }}</p>
@@ -381,37 +126,41 @@
         </div>
       </div>
       <div class="card-container">
-        <div v-for="article in filteredArticles" :key="article.id" class="">
-          <div class="card" @click="selectArticle(article)">
-            <div class="display-flex">
-              <div class="">
-                <div class="card-top-left">
-                  <img :src="article.icon" />
-                  <span>{{ article.source }}</span>
+        <div v-if="loading">....</div>
+
+        <div v-else>
+          <div v-for="article in filteredArticles" :key="article.id" class="">
+            <div class="card" @click="selectArticle(article)">
+              <div class="display-flex">
+                <div class="">
+                  <div class="card-top-left">
+                    <img :src="article.icon" />
+                    <span>{{ article.source.name }}</span>
+                  </div>
+                  <h3 class="article-title" @click="goToArticle(article.url)">
+                    {{ article.title }}
+                  </h3>
+                  <h4 class="article-preview">{{ article.description }}</h4>
                 </div>
-                <h3 class="article-title" @click="goToArticle(article.link)">
-                  {{ article.title }}
-                </h3>
-                <h4 class="article-preview">{{ article.preview }}</h4>
-              </div>
-              <div @click="goToArticle(article.link)">
-                <img :src="article.coverPhoto" class="cover-photo" />
-              </div>
-            </div>
-            <div class="card-footer">
-              <div class="author-time">
-                <span>{{ article.time }}</span>
-                <span class="divier-dot">.</span>
-                <span>{{ article.author }}</span>
-              </div>
-              <div class="footer-icon-container">
-                <div v-if="newSummary" class="">
-                  <input type="checkbox" @click="addRemoveSelectedArticles(article)" />
+                <div @click="goToArticle(article.link)">
+                  <img :src="article.urlToImage" class="cover-photo" />
                 </div>
-                <img src="@/assets/images/sparkles-nofill-round.svg" class="footer-icon" />
-                <img src="@/assets/images/tags.svg" class="footer-icon" />
-                <img src="@/assets/images/search-round.svg" class="footer-icon" />
-                <img src="@/assets/images/arrow-small-right.svg" class="right-arrow-footer" />
+              </div>
+              <div class="card-footer">
+                <div class="author-time">
+                  <span>{{ article.publishedAt }}</span>
+                  <span class="divier-dot">.</span>
+                  <span>{{ article.author }}</span>
+                </div>
+                <div class="footer-icon-container">
+                  <div v-if="newSummary" class="">
+                    <input type="checkbox" @click="addRemoveSelectedArticles(article)" />
+                  </div>
+                  <img src="@/assets/images/sparkles-nofill-round.svg" class="footer-icon" />
+                  <img src="@/assets/images/tags.svg" class="footer-icon" />
+                  <img src="@/assets/images/search-round.svg" class="footer-icon" />
+                  <img src="@/assets/images/arrow-small-right.svg" class="right-arrow-footer" />
+                </div>
               </div>
             </div>
           </div>
@@ -431,6 +180,7 @@ export default {
   },
   data() {
     return {
+      loading: false,
       summary: null,
       articles: [],
       summaryChat: 'SUMMARY',
@@ -451,19 +201,23 @@ export default {
     }
   },
   watch: {},
-  created() {
-    
-  },
+  created() {},
   methods: {
     async getClips() {
-      console.log('STARTING>>>')
+      this.loading = true
       try {
-        let res = await Comms.api.getClips({
-          search: 'Houston rockets',
-        })
-        console.log(res)
+        await Comms.api
+          .getClips({
+            search: 'Houston rockets',
+          })
+          .then((response) => {
+            console.log(response)
+            this.filteredArticles = response.articles
+          })
       } catch (e) {
         console.log(e)
+      } finally {
+        this.loading = false
       }
     },
     changeSummaryChat(type) {
