@@ -19,7 +19,7 @@
       </div>
       <div v-if="summaryChat === 'SUMMARY'">
         <div v-if="!summary" class="summary-buttons-container">
-          <button class="summary-button wide" @click="generateSummary"><img src="@/assets/images/sparkles-round.svg" />Generate Summary</button>
+          <button class="summary-button wide"><img src="@/assets/images/sparkles-round.svg" />Generate Summary</button>
         </div>
         <div v-else>
           <div class="highlights-summary-container">
@@ -51,7 +51,6 @@
                 class="gray"
                 style="height: 14px; cursor: pointer"
                 icon="fa-regular fa-paper-plane"
-                @click="regenerateSummary"
               />
             </div>
           </div>
@@ -348,7 +347,7 @@
     </div>
     <div class="right-content">
       <div class="updated-time">
-        <span>Updated {{ getUpdated }} ago</span>
+        
       </div>
       <div class="search-results">
         <div>
@@ -422,6 +421,7 @@ export default {
       regenSummary: false,
       newSummary: false,
       selectedArticles: [],
+      filteredArticles: [],
       actions: [
         {
           name: 'Summarize',
@@ -436,85 +436,17 @@ export default {
 
   },
   created() {
-    this.getArticles()
+    
   },
   methods: {
     changeSummaryChat(type) {
       this.summaryChat = type
       this.scrollToBottom()
     },
-    async generateSummary() {
-      const res = {
-        overview: `Today's news highlights the success and growth of Tesla in Q2. The company achieved record deliveries in China, driven by tax credits and wider adoption. Tesla's Q2 results were impressive, with production and deliveries exceeding expectations. Additionally, plans for a new Tesla dealership in Orlando reflect the company's expanding local presence. These positive developments have fueled a 7% increase in Tesla's share prices.`,
-        highlights: [
-          'Telsa and BYD achieved record-high deliveries of their China-made cehicles in Q2',
-          `Tesla's Q2 deliveries rose 83% compared to the previous year, driven by tax credits and broader adoption.`,
-          `Tesla reported strong Q2 results, producing 479,700 cars and delivering 466,140 vehicles.`,
-          `Plans were filed for a new Tesla dealership in Orlando as the company expands its local presence.`,
-          `Tesla's quarterly deliveries beat expectations, resulting in a 7% jump in share prices.`,
-        ]
-      }
-      this.summary = res
-    },
-    regenerateSummary() {
-      const res = {
-        overview: `Today's news highlights the success and growth of Tesla in Q2. The company achieved record deliveries in China, driven by tax credits and wider adoption.`,
-        highlights: [
-          'Telsa and BYD achieved record-high deliveries of their China-made cehicles in Q2',
-          `Tesla's Q2 deliveries rose 83% compared to the previous year, driven by tax credits and broader adoption.`,
-          `Tesla reported strong Q2 results.`,
-        ]
-      }
-      this.summary = res
-      this.changeRegen()
-    },
-    getArticles() {
-      const res = [
-        {
-          id: 1,
-          icon: 'https://www.vectorlogo.zone/logos/marketwatch/marketwatch-icon.svg',
-          source: 'MarketWatch',
-          title: 'EV stocks see green after Tesla, Rivian, Nio report upbeat deliveries data',
-          preview: `Electric-vehicle maker stocks got a broad boost Monday, after upbeat delivery and production data from a host of companies in the U.S. and...`,
-          coverPhoto: `https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/New_York_City_%28New_York%2C_USA%29%2C_Empire_State_Building_--_2012_--_6448.jpg/1200px-New_York_City_%28New_York%2C_USA%29%2C_Empire_State_Building_--_2012_--_6448.jpg`,
-          time: '5 mins ago',
-          author: 'Eric Peters',
-          link: 'https://www.teslarati.com/tesla-cybertruck-orders-1-9-million-as-musk-off-the-hook-demand/',
-          data: {},
-        },
-        {
-          id: 2,
-          icon: 'https://www.vectorlogo.zone/logos/marketwatch/marketwatch-icon.svg',
-          source: 'Automotive News',
-          title: 'Tesla deliveries in China surge as supply-chain concerns ease.',
-          preview: `Electric-vehicle maker stocks got a broad boost Monday, after upbeat delivery and production data from a host of companies in the U.S. and...`,
-          coverPhoto: `https://empire-s3-production.bobvila.com/articles/wp-content/uploads/2023/01/iStock-1372085619-hidden-costs-of-owning-an-electric-car-vehicle-charging-by-solar-panels.jpg`,
-          time: '10 mins ago',
-          author: 'Susan Miller',
-          link: 'https://www.teslarati.com/tesla-cybertruck-orders-1-9-million-as-musk-off-the-hook-demand/',
-          data: {},
-        },
-        {
-          id: 3,
-          icon: 'https://www.vectorlogo.zone/logos/marketwatch/marketwatch-icon.svg',
-          source: 'MotorTrend',
-          title: '2025 Tesla Model S: What you should know',
-          preview: `Electric-vehicle maker stocks got a broad boost Monday, after upbeat delivery and production data from a host of companies in the U.S. and...`,
-          coverPhoto: `https://hips.hearstapps.com/hmg-prod/images/2022-tesla-model-s-mmp-3-1628540852.png?crop=0.891996891996892xw:1xh;center,top&resize=1200:*`,
-          time: '1 hr ago',
-          author: 'Rachel Myers',
-          link: 'https://www.teslarati.com/tesla-cybertruck-orders-1-9-million-as-musk-off-the-hook-demand/',
-          data: {},
-        },
-      ]
-      this.articles = res
-      this.filteredArticles = res
-    },
     selectArticle(article) {
       this.$store.dispatch('updateSelectedArticle', article)
     },
     saveSelectedArticles() {
-      this.generateSummary()
       this.selectedArticles = []
       this.changeNew()
     },
@@ -541,18 +473,13 @@ export default {
     scrollToBottom() {
       setTimeout(() => {
         const chatWindow = this.$refs.chatWindow
-        console.log('chatWindow first', chatWindow.scrollTop)
         setTimeout(() => {
           chatWindow.scrollTop = chatWindow.scrollHeight
-          console.log('chatWindow last', chatWindow.scrollTop)
         }, 200)
       }, 0)
     },
   },
   computed: {
-    getUpdated() {
-      return '22 mins'
-    },
     messages() {
       return this.$store.state.messages
     },
