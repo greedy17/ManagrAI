@@ -272,7 +272,7 @@
           style="margin-left: 1rem; width: 23.5vw"
         >
           <div v-if="selectedObject" class="row__" style="margin: 0">
-            <div style="display: flex; flex-direction: column">
+            <div class="upper-container">
               <div
                 v-if="selectedObject && selectedObject.value !== 'CustomObject'"
                 class="half-view-flex"
@@ -309,6 +309,28 @@
                     >
                       <p>Stages</p>
                     </div>
+                  </div>
+                  <div 
+                    class="wrapper"
+                    v-if="
+                      (selectedObject.value === 'Opportunity' || selectedObject.value === 'Deal') &&
+                      selectedType.value === 'UPDATE' || selectedType.value === 'CREATE'
+                    "
+                  >
+                    <label class="icon workflow" style="margin-top: 0">
+                      <!-- <span class="tooltip"
+                        >You can also add {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} to
+                        Stages. These {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} will
+                        appear as you move to the Stage.</span
+                      > -->
+                      <span class="tooltip">
+                        <!-- Select the fields you'd like to interact with.  -->
+                        We recommend: Name, Stage,
+                        Forecast, Close Date, Next Step, Next Step Date, along with MEDDICC / BANT
+                        fields.
+                      </span>
+                      <span>?</span>
+                    </label>
                   </div>
                   <!-- <Multiselect
                     v-if="formattedTypes.length"
@@ -540,22 +562,7 @@
               </template>
             </Multiselect>
             <div v-else class="choose-fields-container">
-              <h5>Choose CRM fields:</h5>
-              <div class="wrapper">
-                <label class="icon workflow" style="margin-top: 0">
-                  <!-- <span class="tooltip"
-                    >You can also add {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} to
-                    Stages. These {{ user.crm === 'SALESFORCE' ? 'fields' : 'properties' }} will
-                    appear as you move to the Stage.</span
-                  > -->
-                  <span class="tooltip">
-                    Select the fields you'd like to interact with. We recommend: Name, Stage,
-                    Forecast, Close Date, Next Step, Next Step Date, along with MEDDICC / BANT
-                    fields.
-                  </span>
-                  <span>?</span>
-                </label>
-              </div>
+              <h5>Select fields:</h5>
             </div>
             <div class="search-bar">
               <img class="search" src="@/assets/images/search.svg" />
@@ -631,7 +638,7 @@
           </div>
         </section>
         <div class="selected-container">
-          <h5>Selected CRM Fields:</h5>
+          <h5>Selected Fields:</h5>
           <div class="selected" style="margin-left: 1rem">
             <draggable
               v-model="addedFields"
@@ -679,7 +686,6 @@ import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button
 import { CollectionManager } from '@thinknimble/tn-models'
 
 import Modal from '@/components/InviteModal'
-import AlertsHeader from '@/components/AlertsHeader.vue'
 
 import ActionChoice from '@/services/action-choices'
 import draggable from 'vuedraggable'
@@ -699,7 +705,6 @@ export default {
     Modal,
     draggable,
     ToggleCheckBox,
-    AlertsHeader,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
     Loader: () => import(/* webpackPrefetch: true */ '@/components/Loader'),
@@ -1222,6 +1227,7 @@ export default {
     try {
       this.getActionChoices()
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
+      this.$store.commit('SAVE_CRM_FORMS', this.allForms)
       let object = this.userCRM === 'SALESFORCE' ? this.OPPORTUNITY : this.DEAL
       if (this.userCRM === 'SALESFORCE') {
         this.resources = [
@@ -1388,9 +1394,10 @@ export default {
     async refreshForms() {
       this.pulseLoading = true
       const res = await SlackOAuth.api.refreshForms()
+      this.searchFields()
       setTimeout(() => {
+        this.formFields.refresh()
         this.pulseLoading = false
-        this.$router.go()
       }, 300)
     },
     checkAndClearInterval() {
@@ -1459,12 +1466,6 @@ export default {
         }
         setTimeout(() => {
           this.$store.dispatch('setCustomObject', this.selectedCustomObjectName)
-          // setTimeout(() => {
-          //   this.loaderText = 'Reloading page, please be patient...'
-          //   setTimeout(() => {
-          //     this.$router.go()
-          //   }, 1000)
-          // }, 2000)
           this.searchFields()
         }, 400)
       } catch (e) {
@@ -1533,11 +1534,9 @@ export default {
     async deleteForm(form) {
       if (form && form.id && form.id.length) {
         const id = form.id
-
         SlackOAuth.api
           .delete(id)
-          .then(async (res) => {
-            this.$router.go()
+          .then((res) => {
             this.$toast('Form removed', {
               timeout: 2000,
               position: 'top-left',
@@ -1563,9 +1562,6 @@ export default {
           }
         })
         this.allForms = [...forms]
-        if (this.storedField) {
-          this.$router.go()
-        }
       }
     },
     closeModal() {
@@ -1954,7 +1950,6 @@ export default {
               ),
           },
         )
-        // this.$router.go()
       }, 400)
     },
     getActionChoices() {
@@ -2092,44 +2087,49 @@ export default {
       ) {
         this.changeCustomObjectName()
       }
-      SlackOAuth.api
-        .postOrgCustomForm({
-          ...this.newCustomForm,
-          fields: fields,
-          removedFields: this.removedFields,
-          fields_ref: fields_ref,
-          custom_object: this.newCustomForm.customObject ? this.newCustomForm.customObject : '',
-        })
-        .then((res) => {
-          // this.$emit('update:selectedForm', res)
 
-          this.newCustomForm = res
-
-          this.$toast('Form saved', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
+      try {
+        await SlackOAuth.api
+          .postOrgCustomForm({
+            ...this.newCustomForm,
+            fields: fields,
+            removedFields: this.removedFields,
+            fields_ref: fields_ref,
+            custom_object: this.newCustomForm.customObject ? this.newCustomForm.customObject : '',
           })
-          this.removedFields = []
-          // setTimeout(() => {
-          //   this.removedFields = []
-          //   // this.$router.go()
-          // }, 300)
-          this.addedFields = fields_ref
-        })
-        .finally(() => {
-          this.savingForm = false
-          this.getAllForms()
-          this.formChange = false
-          if (this.newCustomForm.formType === 'STAGE_GATING') {
-            this.$router.go()
-          }
-        })
+          .then((res) => {
+            // this.$emit('update:selectedForm', res)
+
+            const filteredForm = this.allForms.filter(form => form.resource === res.resource && form.formType === res.formType)[0]
+
+            if (filteredForm) {
+              const withoutNewForm = this.allForms.filter(form => !(form.resource === res.resource && form.formType === res.formType))
+              this.$store.commit('SAVE_CRM_FORMS', [...withoutNewForm, res])
+            } else {
+              this.$store.commit('SAVE_CRM_FORMS', [...this.allForms, res])
+            }
+
+            this.newCustomForm = res
+
+            this.$toast('Form saved', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+            this.removedFields = []
+            this.addedFields = fields_ref
+          })
+      } finally {
+        this.savingForm = false
+        this.getAllForms()
+        this.formChange = false
+      }
     },
     async getAllForms() {
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
+      this.$store.commit('SAVE_CRM_FORMS', this.allForms)
       this.updateAllForms(this.allForms)
     },
   },
@@ -2241,7 +2241,7 @@ input[type='checkbox'] + label::before {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 16px;
+  margin-top: 2rem;
   padding-bottom: 16px;
   border-bottom: 1px solid $soft-gray;
   h5 {
@@ -2275,7 +2275,7 @@ input[type='checkbox'] + label::before {
   appearance: none;
 }
 input[type='search'] {
-  width: 6.5vw;
+  width: 12vw;
   letter-spacing: 0.75px;
   border: none;
   padding: 4px 0;
@@ -2291,12 +2291,13 @@ input[type='search']:focus {
   font-size: 12px;
 }
 .selected-container {
-  height: 52vh;
+  height: 48vh;
   margin-right: 1rem;
   // margin-top: 3rem;
   width: 30vw;
   h5 {
     margin-left: 1rem;
+    margin-top: 2.1rem;
     margin-bottom: 1.3rem;
     color: $light-gray-blue;
   }
@@ -2334,7 +2335,7 @@ input[type='search']:focus {
       padding: 4px 0px;
       // margin-top: 16px;
       // height: 76vh;
-      height: 52vh;
+      height: 48vh;
       overflow: scroll;
       section {
         span {
@@ -2908,7 +2909,7 @@ img:hover {
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 .wrapper .icon:hover .tooltip {
-  top: -125px;
+  top: -82px;
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -2960,6 +2961,12 @@ img:hover {
 }
 ::v-deep .multiselect {
   min-height: 0;
+}
+.upper-container {
+  display: flex; 
+  flex-direction: column;
+  border-bottom: 1px solid $soft-gray;
+  padding-bottom: 1rem;
 }
 .green-check {
   height: 0.6rem;

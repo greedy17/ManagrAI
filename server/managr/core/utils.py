@@ -399,6 +399,88 @@ def swap_submitted_data_labels(data, fields):
     return api_key_data
 
 
+WORD_TO_NUMBER = {
+    "a": 1,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+}
+
+TIME_TO_NUMBER = {"week": 7, "weeks": 7, "month": 30, "months": 30, "year": 365, "tomorrow": 1}
+DAYS_TO_NUMBER = {
+    "monday": 0,
+    "tuesday": 1,
+    "wednesday": 2,
+    "thursday": 3,
+    "friday": 4,
+    "saturday": 5,
+    "sunday": 6,
+}
+
+
+def convert_date_string(date_string, value):
+    from dateutil.parser import parse
+
+    if value is None:
+        value = datetime.now()
+    else:
+        value = value.split("T")[0]
+    split_date_string = date_string.lower().split(" ")
+    time_key = None
+    number_key = 1
+    if any("push" in s for s in split_date_string) or any("move" in s for s in split_date_string):
+        for key in split_date_string:
+            if key in TIME_TO_NUMBER.keys():
+                time_key = TIME_TO_NUMBER[key]
+            if key in WORD_TO_NUMBER:
+                number_key = WORD_TO_NUMBER[key]
+    elif any(key in split_date_string for key in DAYS_TO_NUMBER.keys()):
+        for key in split_date_string:
+            if key in DAYS_TO_NUMBER.keys():
+                current = datetime.now()
+                start = current - timezone.timedelta(days=current.weekday())
+                day_value = start + timezone.timedelta(days=DAYS_TO_NUMBER[key])
+                if any("next" in s for s in split_date_string):
+                    day_value = day_value + timezone.timedelta(days=7)
+                return day_value
+    elif any("end" in s for s in split_date_string):
+        if any("week" in s for s in split_date_string):
+            current = datetime.strptime(value, "%Y-%m-%d")
+            start = current - timezone.timedelta(days=current.weekday())
+            return start + timezone.timedelta(days=4)
+        elif any("month" in s for s in split_date_string):
+            current = datetime.strptime(value, "%Y-%m-%d")
+            last_of_month = calendar.monthrange(current.year, current.month)[1]
+            return current.replace(day=last_of_month)
+    elif any("week" in s for s in split_date_string):
+        current = datetime.strptime(value, "%Y-%m-%d")
+        return current + timezone.timedelta(days=7)
+    if "back" in date_string:
+        new_value = datetime.strptime(value, "%Y-%m-%d") - timezone.timedelta(
+            days=(time_key * number_key)
+        )
+    else:
+        if time_key:
+            new_value = datetime.strptime(value, "%Y-%m-%d") + timezone.timedelta(
+                days=(time_key * number_key)
+            )
+        else:
+            try:
+                date_parsed = parse(date_string)
+                new_value = date_parsed
+            except Exception as e:
+                print(e)
+                new_value = value
+    return new_value
+
+
 def ask_managr_data_collector(user_id, resource_type, resource_id):
     from managr.core.models import User
     from managr.salesforce.models import MeetingWorkflow

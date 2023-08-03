@@ -71,13 +71,11 @@
                 alt=""
               />
             </span>
-            <p>
-              {{ currentMeeting.topic }}
-            </p>
+            <p>{{ currentMeeting.topic }}</p>
           </div>
 
           <div style="margin-left: -8px" class="flexed-row">
-            <small class="gray-text">{{ formatDate(currentMeeting.start_time) }}</small>
+            <small class="gray-text">{{ formatDateTime(currentMeeting.start_time) }}</small>
           </div>
         </span>
       </section>
@@ -144,7 +142,7 @@
             <section v-if="!selectedFilter">
               <div
                 @click="selectFilter(filter)"
-                v-for="filter in filters"
+                v-for="filter in userCRM === 'HUBSPOT' ? filters : SalesforceFilters"
                 :key="filter.name"
                 class="icon-row"
               >
@@ -248,7 +246,7 @@
 
         <div v-else style="margin-top: 0.5rem" class="flexed-row-spread__">
           <div>
-            <p class="gray-text neg-mar-small">Select a date:</p>
+            <!-- <p class="gray-text neg-mar-small">Select a date:</p> -->
             <input class="inline-input" v-model="meetingDate" type="date" />
           </div>
 
@@ -284,7 +282,11 @@
         <img src="@/assets/images/note.svg" height="12px" alt="" />
         Notes
       </div>
-      <div style="cursor: not-allowed" class="switch-item">
+      <div
+        @click="switchView('summary')"
+        :class="{ activeswitch: view === 'summary' }"
+        class="switch-item"
+      >
         <img src="@/assets/images/callsummary.svg" height="14px" alt="" />
         Summaries
       </div>
@@ -304,6 +306,7 @@
             @select-opp="selectOpp"
             @deselect-meeting="deselectMeeting"
             :meetingOpp="meetingOpp"
+            :meetingName="currentMeeting.topic"
             :key="logkey"
           />
         </div>
@@ -311,6 +314,16 @@
     </div>
 
     <div class="selected-opp-container" v-else-if="selectedOpp && !loading">
+      <div class="center" v-if="showUpdateBanner">
+        <Transition name="slide-fade">
+          <div v-if="showUpdateBanner" :class="{ greenbg: updateSuccess }" class="templates">
+            <p>
+              {{ updateSuccessFail }}
+            </p>
+          </div>
+        </Transition>
+      </div>
+
       <div v-show="view === 'crm'" class="selected-opp-section bordered">
         <div class="opp-section">
           <div v-for="field in oppFields" :key="field.id" style="margin-bottom: 1rem">
@@ -364,11 +377,24 @@
           </div>
         </div>
       </div>
+      <div v-if="!Object.keys(sortedNotes).length" v-show="view === 'notes'">
+        <section>
+          <div class="note-section">
+            <p
+              style="margin-top: 0.5rem; margin-bottom: 0; background-color: white"
+              class="selected-opp gray-text"
+            >
+              Nothing here yet...
+            </p>
+          </div>
+        </section>
+      </div>
       <div
         v-for="(notes, month) in sortedNotes"
         :key="month"
         v-show="view === 'notes'"
         class="selected-opp-section"
+        style="height: fit-content"
       >
         <h4 style="margin-top: 0; background-color: white" class="selected-opp">
           {{ month }}
@@ -376,7 +402,7 @@
         </h4>
         <section v-if="notes.length">
           <div v-for="note in notes" :key="note.id">
-            <div class="note-section">
+            <div style="width: 100%" class="note-section">
               <small class="gray-text left-margin right-absolute">{{
                 `${getMonth(note.submission_date)} ${getDate(note.submission_date)}, ${getYear(
                   note.submission_date,
@@ -412,6 +438,75 @@
           </div>
         </section>
       </div>
+      <div v-show="view === 'summary'" class="selected-opp-section">
+        <div v-if="!selectedSummaries.length" class="note-section">
+          <p
+            style="margin-top: 0.5rem; margin-bottom: 0; background-color: white"
+            class="selected-opp gray-text"
+          >
+            No summaries
+            <!-- <img src="@/assets/images/dropdown.svg" height="14px" alt="" /> -->
+          </p>
+        </div>
+        <section v-else>
+          <div v-for="summary in selectedSummaries" :key="summary.id">
+            <div class="note-section">
+              <small class="gray-text left-margin right-absolute">{{
+                `${getMonth(summary.meeting_ref.start_time)} ${getDate(
+                  summary.meeting_ref.start_time,
+                )}, ${getYear(summary.meeting_ref.start_time)}`
+              }}</small>
+              <!-- <div class="row text-ellipsis">
+                <p
+                  :class="{ 'gray-text strike': !!note.saved_data__StageName }"
+                  style="margin-right: 0.25rem"
+                >
+                  {{ note.previous_data__StageName }}
+                </p>
+
+                <img
+                  v-if="note.saved_data__StageName"
+                  src="@/assets/images/transition.svg"
+                  height="12px"
+                  alt=""
+                />
+
+                <p style="margin: 0.25rem 0">{{ note.saved_data__StageName }}</p>
+              </div> -->
+              <div>
+                <p class="logged">Summary</p>
+                <pre
+                  v-html="
+                    summary &&
+                    summary.transcript_summary &&
+                    typeof summary.transcript_summary === 'string'
+                      ? summary.transcript_summary.trim()
+                      : (summary.transcript_summary ? summary.transcript_summary : '---')
+                  "
+                  class="transcript"
+                />
+                <p class="logged-blue">Analysis</p>
+                <pre
+                  v-html="
+                    summary &&
+                    summary.transcript_analysis &&
+                    typeof summary.transcript_analysis === 'string'
+                      ? summary.transcript_analysis.trim()
+                      : (summary.transcript_analysis ? summary.transcript_analysis : '---')
+                  "
+                  class="transcript"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- <section v-else>
+          <div class="note-section">
+            <p class="gray-text">Nothing here yet...</p>
+          </div>
+        </section> -->
+      </div>
     </div>
 
     <div
@@ -420,12 +515,13 @@
     >
       <!-- @mouseenter="setTooltip(opp.id)"
         @mouseleave="removeTooltip" -->
+      <!-- <div @click="test({userCRM, displayedOpps, activeFilters})">Test</div> -->
       <div
-        v-if="userCRM && !(displayedOpps.results && displayedOpps.results.length)"
+        v-if="formsLength && !(displayedOpps.results && displayedOpps.results.length)"
         class="no-results"
       >
-        <p>Sync in progress... Reload in a few minutes</p>
-        <span @click="refreshFields()" class="button">
+        <p>Still building your pipeline, check back in a few minutes...</p>
+        <!-- <span @click="refreshFields()" class="button">
           <img
             v-if="reloading"
             class="rotate opaque not-allowed"
@@ -433,7 +529,7 @@
             height="14px"
             alt=""
           />Reload</span
-        >
+        > -->
       </div>
       <div
         v-else
@@ -469,26 +565,22 @@
     </div>
 
     <div class="opp-scroll-container" v-else-if="this.mainView === 'meetings' && !loading">
-      <p class="gray-text small-text">Select a meeting:</p>
+      <!-- <p class="gray-text small-text">Meetings:</p> -->
       <div class="empty-container" v-if="!meetings.length && hasZoomIntegration">
         <p>No Zoom meetings found... refresh or select a different day</p>
       </div>
 
       <div class="empty-container" v-else-if="!hasZoomIntegration">
-        <p><span @click="openSettings" class="link">Connect Zoom</span> in order to log meetings</p>
+        <p>
+          <span @click="openSettings" class="link">Connect Zoom</span> in order to view meetings
+        </p>
       </div>
 
-      <div
-        v-else
-        @click="changeSelectedMeeting(meeting)"
-        class="opp-container"
-        v-for="(meeting, i) in meetings"
-        :key="i"
-      >
+      <div v-else class="opp-container no-cursor" v-for="(meeting, i) in meetings" :key="i">
         <p class="no-margin">
           {{ meeting.topic }}
         </p>
-        <small>{{ formatDate(meeting.start_time) }} </small>
+        <small>{{ formatDateTime(meeting.start_time) }} </small>
       </div>
     </div>
 
@@ -522,6 +614,9 @@ export default {
   },
   data() {
     return {
+      showUpdateBanner: false,
+      updateSuccessFail: '',
+      updateSuccess: true,
       logkey: 0,
       hoverId: null,
       showTooltip: false,
@@ -549,6 +644,8 @@ export default {
       filtervalue: null,
       allStages: [],
       meetings: [],
+      selectedSummaries: [],
+      meetingWorkflows: [],
       meetingOpp: null,
       reloading: false,
       meetingDate: this.getCurrentDate(),
@@ -614,6 +711,62 @@ export default {
         ],
       },
       selectedFilter: null,
+      SalesforceFilters: [
+        {
+          name: 'Owner',
+          dataType: 'text',
+          icon: 'fa-user',
+          apiName: 'Owner',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+        {
+          name: 'Name',
+          dataType: 'text',
+          icon: 'fa-signature',
+          apiName: 'Name',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+        {
+          name: 'Stage',
+          dataType: 'text',
+          icon: 'fa-stairs',
+          apiName: 'StageName',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+        {
+          name: 'Close date',
+          dataType: 'date',
+          icon: 'fa-calendar-plus',
+          apiName: 'CloseDate',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+        {
+          name: 'Amount',
+          dataType: 'number',
+          icon: 'fa-sack-dollar',
+          apiName: 'Amount',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+        {
+          name: 'Last activity date',
+          dataType: 'date',
+          icon: 'fa-calendar-plus',
+          apiName: 'LastActivityDate',
+          operator: null,
+          value: null,
+          operatorLabel: null,
+        },
+      ],
       filters: [
         {
           name: 'Owner',
@@ -628,7 +781,7 @@ export default {
           name: 'Name',
           dataType: 'text',
           icon: 'fa-signature',
-          apiName: `${this.userCRM === 'SALESFORCE' ? 'Name' : 'dealname'}`,
+          apiName: 'dealname',
           operator: null,
           value: null,
           operatorLabel: null,
@@ -637,7 +790,7 @@ export default {
           name: 'Stage',
           dataType: 'text',
           icon: 'fa-stairs',
-          apiName: `${this.userCRM === 'SALESFORCE' ? 'StageName' : 'dealstage'}`,
+          apiName: 'dealstage',
           operator: null,
           value: null,
           operatorLabel: null,
@@ -646,7 +799,7 @@ export default {
           name: 'Close date',
           dataType: 'date',
           icon: 'fa-calendar-plus',
-          apiName: `${this.userCRM === 'SALESFORCE' ? 'CloseDate' : 'closedate'}`,
+          apiName: 'closedate',
           operator: null,
           value: null,
           operatorLabel: null,
@@ -655,7 +808,7 @@ export default {
           name: 'Amount',
           dataType: 'number',
           icon: 'fa-sack-dollar',
-          apiName: `${this.userCRM === 'SALESFORCE' ? 'Amount' : 'amount'}`,
+          apiName: 'amount',
           operator: null,
           value: null,
           operatorLabel: null,
@@ -676,6 +829,7 @@ export default {
     formFields: {},
     stageFields: {},
     stagesWithForms: {},
+    formsLength: {},
   },
   watch: {
     activeFilters(newValue, oldValue) {
@@ -709,8 +863,26 @@ export default {
     selectedOpp: 'getNotes',
   },
   methods: {
-    test() {
-      console.log('log', this.opportunities)
+    updateBanner(bool, error) {
+      this.updateSuccess = bool
+      if (bool === true) {
+        this.updateSuccessFail = 'Update successful!'
+      } else {
+        if (error) {
+          this.updateSuccessFail = error
+        } else {
+          this.updateSuccessFail = 'Update Failed, Be sure to fill out required fields.'
+        }
+      }
+      setTimeout(() => {
+        this.showUpdateBanner = true
+      }, 500)
+      setTimeout(() => {
+        this.showUpdateBanner = false
+      }, 3000)
+    },
+    test(log) {
+      console.log('log', log)
     },
     openSettings() {
       this.$emit('open-settings')
@@ -1037,6 +1209,14 @@ export default {
       this.$store.dispatch('setCurrentMeeting', null)
       if (opp) {
         this.selectedOpp = opp
+        // this.summary =
+        const summaries = []
+        for (let i = 0; i < this.meetingWorkflows.length; i++) {
+          if (this.meetingWorkflows[i].resource_id === opp.id) {
+            summaries.push(this.meetingWorkflows[i])
+          }
+        }
+        this.selectedSummaries = summaries
         this.$store.dispatch('setCurrentOpp', opp)
       } else if (name) {
         let opp
@@ -1068,6 +1248,7 @@ export default {
       let stageGateForms
       let stagesWithForms
       const formsRes = await SlackOAuth.api.getOrgCustomForm()
+      this.$store.commit('SAVE_CRM_FORMS', formsRes)
 
       this.updateOppForm = formsRes.filter(
         (obj) =>
@@ -1077,7 +1258,7 @@ export default {
       let allFields = this.updateOppForm[0].fieldsRef
 
       let stageField = this.updateOppForm[0].fieldsRef.filter(
-        (field) => field.apiName === 'Stage' || field.apiName === 'dealstage',
+        (field) => field.apiName === 'StageName' || field.apiName === 'dealstage',
       )
       this.stageField = stageField[0]
 
@@ -1328,6 +1509,53 @@ export default {
   100% {
     -webkit-mask-position: left;
   }
+}
+
+.templates {
+  // animation: shake 0.3s 1;
+  display: block;
+  width: fit-content;
+  height: 40px;
+  position: absolute;
+  top: 0;
+  font-size: 12px;
+  background: $coral;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  line-height: 1.5;
+  z-index: 2000;
+
+  p {
+    margin-top: 8px;
+    padding: 0;
+  }
+}
+
+.templates::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: $coral;
+  bottom: -3px;
+  left: 10%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.center {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.greenbg::before,
+.greenbg {
+  background: $dark-green;
 }
 
 .link {
@@ -1636,10 +1864,6 @@ header {
   p {
     color: $light-gray-blue;
   }
-}
-
-.pointer {
-  cursor: pointer;
 }
 
 .flex-row-between {
@@ -2314,5 +2538,54 @@ img {
 .button {
   @include gray-text-button();
   width: 60%;
+}
+.transcript {
+  margin: 1rem 0 0.25rem;
+  font-family: $base-font-family;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  padding: 0;
+}
+.logged {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  background-color: $white-green;
+  width: fit-content;
+  font-size: 12px;
+  color: $dark-green;
+  padding: 6px 8px;
+  border-radius: 5px;
+  margin-top: 1rem;
+
+  img {
+    margin-right: 0.25rem;
+    margin-bottom: -2px;
+    filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
+      contrast(82%);
+  }
+}
+
+.logged-blue {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  background-color: $white-blue;
+  width: fit-content;
+  font-size: 12px;
+  color: $dark-black-blue;
+  padding: 6px 8px;
+  border-radius: 5px;
+  margin-top: 1rem;
+
+  img {
+    margin-right: 0.25rem;
+    margin-bottom: -2px;
+    filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
+      contrast(82%);
+  }
+}
+.no-cursor {
+  cursor: text;
 }
 </style>

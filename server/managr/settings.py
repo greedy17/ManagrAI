@@ -104,6 +104,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # 'django_eventstream',
     # Third Party
     "django_nose",
     "storages",
@@ -116,6 +117,9 @@ INSTALLED_APPS = [
     # "django_otp",
     # "django_otp.plugins.otp_totp",
 ]
+
+# EVENTSTREAM_STORE_CLASS = 'django_eventstream.stores.DjangoModelStore'
+# EVENTSTREAM_STORE = 'django_eventstream.stores.redis.RedisEventStore'
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

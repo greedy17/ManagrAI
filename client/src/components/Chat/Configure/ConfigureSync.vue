@@ -10,27 +10,33 @@
     </div> -->
     <div class="card">
       <div class="card__header">
-        <img v-if="userCRM === 'SALESFORCE'" src="@/assets/images/salesforce.png" style="margin-right: 16px; height: 40px" />
-        <img v-else-if="userCRM === 'HUBSPOT'" src="@/assets/images/hubspot-single-logo.svg" style="height: 40px" />
+        <img
+          v-if="userCRM === 'SALESFORCE'"
+          src="@/assets/images/salesforce.png"
+          style="margin-right: 16px; height: 40px"
+        />
+        <img
+          v-else-if="userCRM === 'HUBSPOT'"
+          src="@/assets/images/hubspot-single-logo.svg"
+          style="height: 40px"
+        />
       </div>
       <div class="card__body">
         <div style="display: flex">
-          <h3 class="card__title">
-            Sync {{userCRMFormatted}}
-          </h3>
+          <h3 class="card__title">Sync {{ userCRMFormatted }}</h3>
         </div>
         <div class="card-text-container">
-          <p class="card-text">Click sync to get the lastest data from {{userCRMFormatted}}</p>
+          <p class="card-text">Click sync to get the lastest data from {{ userCRMFormatted }}</p>
         </div>
         <div class="sep-button-container">
           <div class="separator"></div>
-          <button class="long-button" style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem;" @click="refreshCRM">
-            <img 
-              src="@/assets/images/cycle.svg" 
-              class="img-height"
-              style=""
-            />
-            Sync 
+          <button
+            class="long-button"
+            style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem"
+            @click="refreshCRM"
+          >
+            <img src="@/assets/images/cycle.svg" class="img-height" style="" />
+            Sync
           </button>
         </div>
       </div>
@@ -66,80 +72,94 @@
 </template>
 
 <script>
-  // import SlackOAuth from '@/services/slack'
-  import User from '@/services/users'
-  import { CRMObjects } from '@/services/crm'
+// import SlackOAuth from '@/services/slack'
+import User from '@/services/users'
+import { CRMObjects } from '@/services/crm'
 
-  export default {
-    name: 'ConfigureSync',
-    components: {},
-    props: {},
-    data() {
-      return {
-        pulseLoadingForms: false,
-        pulseLoadingCal: false,
-      }
-    },
-    created() {
-
-    },
-    methods: {
-      async refreshCRM() {
-        this.pulseLoadingForms = true
-        const res = await CRMObjects.api.resourceSync()
-        setTimeout(() => {
-          this.pulseLoadingForms = false
-          this.$store.dispatch('refreshCurrentUser')
-          this.$router.go()
-        }, 300)
-      },
-      // async manualSync() {
-      //   try {
-      //     await CRMObjects.api.resourceSync()
-      //     this.$toast('Sync complete', {
-      //       timeout: 2000,
-      //       position: 'top-left',
-      //       type: 'success',
-      //       toastClassName: 'custom',
-      //       bodyClassName: ['custom'],
-      //     })
-      //   } catch (e) {
-      //     this.$toast('Error syncing your resources, refresh page', {
-      //       timeout: 2000,
-      //       position: 'top-left',
-      //       type: 'error',
-      //       toastClassName: 'custom',
-      //       bodyClassName: ['custom'],
-      //     })
-      //   } finally {
-      //     this.$store.dispatch('refreshCurrentUser')
-      //     setTimeout(() => {
-      //       this.loading = false
-      //     }, 100)
-      //   }
-      // },
-      async refreshCalEvents() {
-        this.pulseLoadingCal = true
-        try {
-          const res = await User.api.refreshCalendarEvents()
-          setTimeout(() => {
-            this.pulseLoadingCal = false
-            this.$router.go()
-          }, 300)
-        } catch (e) {
-          console.log('Error in refreshCalEvents: ', e)
+export default {
+  name: 'ConfigureSync',
+  components: {},
+  props: {},
+  data() {
+    return {
+      pulseLoadingForms: false,
+      pulseLoadingCal: false,
+    }
+  },
+  created() {},
+  methods: {
+    async refreshCRM() {
+      this.pulseLoadingForms = true
+      const res = await CRMObjects.api.resourceSync()
+      setTimeout(() => {
+        this.pulseLoadingForms = false
+        console.log('res', res)
+        this.$store.dispatch('refreshCurrentUser')
+        if (res.success) {
+          this.$toast('Sync complete', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } else {
+          this.$toast('Could not sync your CRM', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
         }
-      },
+      }, 300)
     },
-    computed: {
-      userCRM() {
-        return this.$store.state.user.crm
-      },
-      userCRMFormatted() {
-        return this.userCRM[0] + this.userCRM.slice(1, this.userCRM.length).toLowerCase()
+    // async manualSync() {
+    //   try {
+    //     await CRMObjects.api.resourceSync()
+    //     this.$toast('Sync complete', {
+    //       timeout: 2000,
+    //       position: 'top-left',
+    //       type: 'success',
+    //       toastClassName: 'custom',
+    //       bodyClassName: ['custom'],
+    //     })
+    //   } catch (e) {
+    //     this.$toast('Error syncing your resources, refresh page', {
+    //       timeout: 2000,
+    //       position: 'top-left',
+    //       type: 'error',
+    //       toastClassName: 'custom',
+    //       bodyClassName: ['custom'],
+    //     })
+    //   } finally {
+    //     this.$store.dispatch('refreshCurrentUser')
+    //     setTimeout(() => {
+    //       this.loading = false
+    //     }, 100)
+    //   }
+    // },
+    async refreshCalEvents() {
+      this.pulseLoadingCal = true
+      try {
+        const res = await User.api.refreshCalendarEvents()
+        setTimeout(() => {
+          this.pulseLoadingCal = false
+        }, 300)
+      } catch (e) {
+        console.log('Error in refreshCalEvents: ', e)
       }
     },
-  }
+  },
+  computed: {
+    userCRM() {
+      return this.$store.state.user.crm
+    },
+    userCRMFormatted() {
+      return this.userCRM[0] + this.userCRM.slice(1, this.userCRM.length).toLowerCase()
+    },
+  },
+}
 </script>
 
 <style lang="scss" scoped>

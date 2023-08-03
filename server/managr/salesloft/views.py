@@ -1,43 +1,21 @@
 import logging
-import requests
-import json
-from faker import Faker
 from urllib.parse import urlencode
-from datetime import datetime
-
-from django.core.management import call_command
-from django.shortcuts import render, redirect
-from django.conf import settings
-from django.views.decorators.csrf import csrf_exempt, csrf_protect
-
+from django.shortcuts import redirect
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
-from rest_framework.views import APIView
-from rest_framework import (
-    authentication,
-    filters,
-    permissions,
-    generics,
-    mixins,
-    status,
-    views,
-    viewsets,
-)
+from rest_framework import permissions
 from rest_framework.decorators import (
     api_view,
     permission_classes,
-    authentication_classes,
 )
 
 from . import constants as salesloft_consts
 from .models import (
     SalesloftAuthAccount,
     SalesloftAuthAdapter,
-    SalesloftAccount,
-    SalesloftAccountAdapter,
 )
 from .helpers.class_functions import process_account
-from .serializers import SalesloftAuthSerializer, SalesloftAccountSerializer
+from .serializers import SalesloftAuthSerializer
 from .cron import queue_account_sl_syncs
 
 # Create your views here.
@@ -81,14 +59,7 @@ def revoke_salesloft_access_token(request):
         try:
             salesloft.helper_class.revoke()
         except Exception:
-            # revoke token will fail if ether token is expired
             pass
-        # if salesloft.refresh_token_task:
-        #     task = Task.objects.filter(id=salesloft.refresh_token_task).first()
-        #     if task:
-        #         task.delete()
-        # salesloft.delete()
-
     return Response()
 
 

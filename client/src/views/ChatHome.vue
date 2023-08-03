@@ -130,7 +130,7 @@
               <p style="margin: 0">Make Team Lead</p>
               <input
                 v-model="selectedTeamLead"
-                :disabled="!selectedTeam || user.team === selectedTeam.id"
+                :disabled="!selectedTeam"
                 type="checkbox"
                 style="height: 1rem; align-self: center; width: 2rem; margin-top: 0.5rem"
               />
@@ -241,6 +241,7 @@
         <ConfigureModal
           :configPage="configPage"
           @change-config-page="changeConfigPage"
+          @close-config="handleCancel"
           ref="configModal"
         />
       </div>
@@ -391,9 +392,118 @@
             Create New Team
           </button> -->
 
-          <button class="chat-button" @click="handleInviteOpen">Add</button>
+          <button class="chat-button" style="margin-right: 0.5rem;" @click="handleInviteOpen">Add</button>
+          <button v-if="user.isAdmin || user.userLevel === 'MANAGER'" class="chat-button" @click="handleNewTeam">
+            Create New Team
+          </button>
         </div>
       </div>
+    </Modal>
+    <!-- Create Team -->
+    <Modal
+      v-if="newTeam"
+      dimmed
+      @close-modal="
+        () => {
+          $emit('cancel'), handleNewTeam()
+        }
+      "
+    >
+      <form v-if="true /*hasSlack*/" class="invite-form" style="margin-top: 7.5rem">
+        <div class="header">
+          <div class="flex-row" style="justify-content: space-between; width: 100%">
+            <div class="flex-row">
+              <img src="@/assets/images/logo.png" class="logo" alt="" />
+              <h3 class="invite-form__title">Create a Team</h3>
+            </div>
+            <img
+              src="@/assets/images/close.svg"
+              style="height: 1.25rem; margin-top: 0rem; cursor: pointer; margin-right: 1rem;"
+              @click="handleNewTeam"
+              alt=""
+            />
+          </div>
+          <!-- <div class="flex-row">
+            <img
+              @click="handleCancel"
+              src="@/assets/images/close.svg"
+              height="24px"
+              alt=""
+              style="filter: invert(30%); cursor: pointer"
+            />
+          </div> -->
+        </div>
+
+        <div
+          style="
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            margin-top: -3rem;
+            margin-bottom: 1rem;
+          "
+        >
+          <div style="display: flex; align-items: flex-start; flex-direction: column">
+            <FormField>
+              <template v-slot:input>
+                <input
+                  placeholder="Team Name"
+                  v-model="teamName"
+                  style="width: 33vw"
+                  class="template-input modal-input"
+                  type="text"
+                  name=""
+                  id=""
+                  :disabled="false /*savingTemplate*/"
+                />
+              </template>
+            </FormField>
+          </div>
+          <div style="display: flex; align-items: flex-start; flex-direction: column">
+            <FormField>
+              <template v-slot:input>
+                <!-- teamUsers.filter((u) => u.id !== user.id) -->
+                <Multiselect
+                  placeholder="Team Lead"
+                  v-model="teamLead"
+                  :options="
+                    teamUsers
+                  "
+                  openDirection="below"
+                  style="width: 33vw"
+                  selectLabel="Enter"
+                  label="email"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                  <template slot="placeholder">
+                    <p class="slot-icon">
+                      <img src="@/assets/images/search.svg" alt="" />
+                      Select Team Lead
+                    </p>
+                  </template>
+                </Multiselect>
+              </template>
+            </FormField>
+          </div>
+        </div>
+        <div class="invite-form__actions">
+          <!-- <div style="width: 10vw;"></div> -->
+          <div class="invite-form__inner_actions">
+            <template>
+              <PulseLoadingSpinnerButton
+                @click="createTeamSubmit"
+                class="invite-button modal-button"
+                style="width: 5rem; margin-right: 5%; height: 1.75rem"
+                text="Save"
+                :loading="pulseLoading"
+                >Save</PulseLoadingSpinnerButton
+              >
+            </template>
+          </div>
+        </div>
+      </form>
     </Modal>
 
     <div @click="toggleSidebar" class="hamburger">
@@ -411,8 +521,21 @@
     </aside>
 
     <main v-if="currentView === 'home'" id="main">
+      <!-- if userCRM and fieldsLength -->
       <ChatBox
+        v-if="userCRM && fieldsLength"
         ref="chatBox"
+        @set-opp="setOpp"
+        @set-view="setView"
+        @set-open-form="setOpenForm"
+        @toggle-chat-modal="toggleChatModal"
+        @remove-opp="removeOpp"
+      />
+      <ChatBoxOnboarding
+        v-else
+        :userCRM="userCRM"
+        :formsLength="formsLength"
+        @open-config-change="openChangeConfig"
         @set-opp="setOpp"
         @set-view="setView"
         @set-open-form="setOpenForm"
@@ -447,6 +570,7 @@
         :formFields="formFields"
         :stageFields="stageFields"
         :stagesWithForms="stagesWithForms"
+        :formsLength="formsLength"
       />
     </aside>
   </div>
@@ -454,6 +578,7 @@
 
 <script>
 import ChatBox from '../components/Chat/ChatBox.vue'
+import ChatBoxOnboarding from '../components/Chat/ChatBoxOnboarding.vue'
 import RightBar from '../components/Chat/RightBar.vue'
 import LeftSideBar from '../components/Chat/LeftSideBar.vue'
 import ConfigureModal from '../components/Chat/Configure/ConfigureModal.vue'
@@ -476,6 +601,7 @@ export default {
   name: 'Home',
   components: {
     ChatBox,
+    ChatBoxOnboarding,
     RightBar,
     LeftSideBar,
     ConfigureModal,
@@ -496,6 +622,10 @@ export default {
       configPage: 'integrations',
       submitting: false,
       profileOrTeam: 'profile',
+      teamName: '',
+      teamLead: null,
+      pulseLoading: false,
+      teamUsers: [],
       team: CollectionManager.create({ ModelClass: User }),
       chatModalOpen: false,
       chatData: null,
@@ -507,6 +637,7 @@ export default {
       formData: null,
       formOpen: false,
       inviteOpen: false,
+      newTeam: false,
       selectedTeam: null,
       selectedTeamLead: false,
       loading: false,
@@ -529,6 +660,12 @@ export default {
   },
   async created() {
     this.team = CollectionManager.create({ ModelClass: User })
+    if (this.user.isAdmin) {
+      this.teamUsers = await this.getAllOrgUsers(this.user.organization)
+    } else {
+      this.teamUsers = [this.user]
+    }
+    console.log('teamUsers', this.teamUsers)
     this.userInviteForm = new UserInviteForm({
       role: User.roleChoices[0].key,
       userLevel: User.types.REP,
@@ -547,11 +684,13 @@ export default {
           this.selectedTeam = admin ? admin.team : null
         }
         await this.listUsers()
+        const allForms = await SlackOAuth.api.getOrgCustomForm()
+        this.$store.commit('SAVE_CRM_FORMS', allForms)
       } catch (e) {
         console.log(e)
       }
-      this.team.refresh()
     }
+    this.team.refresh()
 
     if (this.$route.query.code) {
       this.handleConfigureOpen()
@@ -561,6 +700,10 @@ export default {
   methods: {
     setOpenForm() {
       this.formOpen = false
+    },
+    async getAllOrgUsers(orgId) {
+      const res = await User.api.getAllOrgUsers(orgId)
+      return res
     },
     openChangeConfig(page) {
       this.configPage = page
@@ -582,6 +725,65 @@ export default {
       this.inviteOpen = true
       this.profileModalOpen = false
       // this.selectingOption = false
+    },
+    async createTeamSubmit() {
+      this.pulseLoading = true
+      if (!this.teamLead || !this.teamName) {
+        setTimeout(() => {
+          this.$toast('Please submit all info', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          this.pulseLoading = false
+          return
+        }, 200)
+      } else {
+        try {
+          const data = {
+            name: this.teamName,
+            organization: this.user.organizationRef.id,
+            team_lead: this.teamLead.id,
+          }
+          const teamRes = await Organization.api.createNewTeam(data)
+          const addTeamData = {
+            users: [this.teamLead.id],
+            team_id: teamRes.id,
+          }
+          await Organization.api.addTeamMember(addTeamData)
+          setTimeout(() => {
+            this.$router.go()
+          }, 1400)
+          // this.orgUsers = await this.getAllOrgUsers(this.selected_org.id)
+          // this.team = this.orgUsers
+          // this.getStaffOrgs()
+          // setTimeout(() => {
+          //   this.handleCancel()
+          //   this.teamName = ''
+          //   this.teamLead = ''
+          //   this.$toast('Sucessfully submitted', {
+          //     timeout: 2000,
+          //     position: 'top-left',
+          //     type: 'success',
+          //     toastClassName: 'custom',
+          //     bodyClassName: ['custom'],
+          //   })
+          //   this.pulseLoading = false
+          // }, 1400)
+        } catch (e) {
+          console.log(e)
+          this.$toast('Error Creating Team', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          this.pulseLoading = false;
+        }
+      }
     },
     toggleLeftBar() {
       this.leftBarClosed = !this.leftBarClosed
@@ -658,7 +860,6 @@ export default {
             integration_ids: [
               this.formOpen ? this.currentOpp.integration_id : this.chatData.integration_id,
             ],
-            chat_form_id: [this.formOpen ? null : this.chatData.form_id],
             from_workflow: false,
             workflow_title: 'None',
             stage_name: null,
@@ -678,7 +879,17 @@ export default {
                 .then((response) => {
                   this.$refs.chatBox.getConversations()
                   this.$refs.rightSideBar.reloadOpps()
+                  this.$refs.chatBox.clearSelectedAction()
                 })
+            } else {
+              console.log(response)
+              if (response.success) {
+                this.$refs.rightSideBar.updateBanner(true)
+                this.$refs.chatBox.clearSelectedAction()
+              } else {
+                this.$refs.rightSideBar.updateBanner(false, response.error)
+                this.$refs.chatBox.clearSelectedAction()
+              }
             }
           })
       } catch (e) {
@@ -757,7 +968,15 @@ export default {
         this.resetData()
       } catch (e) {
         let err = e.response.data
-        if (err.email) {
+        if (e.response.status === 426) {
+          this.$toast('Max users reached. Please upgrade', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } else if (err.email) {
           this.$toast('Email error', {
             timeout: 2000,
             position: 'top-left',
@@ -867,6 +1086,10 @@ export default {
       this.profileModalOpen = true
       this.inviteOpen = false
     },
+    handleNewTeam() {
+      this.newTeam = !this.newTeam
+      this.profileModalOpen = !this.profileModalOpen
+    },
     logOut() {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
@@ -876,8 +1099,6 @@ export default {
       this.chatModalOpen = !this.chatModalOpen
       if (data && !formOpen) {
         let jsonString = data.data
-        jsonString = jsonString.replace(/'/g, '"')
-        jsonString = jsonString.replace(/\bNone\b/g, 'null')
         jsonString = JSON.parse(jsonString)
         this.formData = jsonString
         this.chatData = data
@@ -909,6 +1130,25 @@ export default {
     user() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user
+    },
+    userCRM() {
+      return this.$store.state.user.crm
+    },
+    formsLength() {
+      return !!this.$store.state.crmForms.length
+    },
+    fieldsLength() {
+      const forms = this.$store.state.crmForms
+      for (let i = 0; i < forms.length; i++) {
+        const form = forms[i]
+        const filteredFields = form.fieldsRef.filter(
+          (field) => !(field.apiName === 'meeting_type' || field.apiName === 'meeting_comments'),
+        )
+        if (filteredFields.length) {
+          return true
+        }
+      }
+      return false
     },
     usersInTeam() {
       return this.team.list.filter(
@@ -1504,5 +1744,40 @@ body {
     border-radius: 4px;
     margin-top: 0.5rem;
   }
+}
+.template-input {
+  border: 1px solid #ccc;
+  border-bottom: none;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  padding-left: 1rem;
+  height: 44px;
+  width: 40vw;
+  font-family: inherit;
+  margin-bottom: 1rem;
+}
+.template-input:focus {
+  outline: none;
+}
+.modal-input {
+  width: 15vw;
+  height: 2.5rem;
+  border-radius: 5px;
+  border: 1px solid #e8e8e8;
+}
+.modal-input:focus {
+  outline: none;
+}
+.modal-input::placeholder {
+  // color: #35495e;
+  color: $very-light-gray;
+}
+.modal-button {
+  @include primary-button();
+  box-shadow: none;
+  margin-top: 1.5rem;
+  height: 2.5rem;
+  width: 19rem;
+  font-size: 14px;
 }
 </style>
