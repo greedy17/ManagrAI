@@ -239,7 +239,7 @@
               )"
               class="pipeline-header"
             >
-              Name {{ selectedFilter === 'Name' }}
+              <span>Name</span>
               <span v-if="selectedFilter === 'Name' || selectedFilter === 'dealname'" class="filter-arrow-container">
                 <img v-if="reversed" src="@/assets/images/arrowDrop.svg"  class="filter-arrow"/>
                 <img v-else src="@/assets/images/arrowDropUp.svg"  class="filter-arrow"/>
@@ -259,7 +259,7 @@
               )"
               class="pipeline-header"
             >
-              Stage
+              <span>Stage</span>
               <span v-if="selectedFilter === 'Stage' || selectedFilter === 'dealstage'" class="filter-arrow-container">
                 <img v-if="reversed" src="@/assets/images/arrowDrop.svg"  class="filter-arrow"/>
                 <img v-else src="@/assets/images/arrowDropUp.svg"  class="filter-arrow"/>
@@ -279,7 +279,7 @@
               )"
               class="pipeline-header"
             >
-              Close Date
+              <span>Close Date</span>
               <span v-if="selectedFilter === 'CloseDate' || selectedFilter === 'closedate'" class="filter-arrow-container">
                 <img v-if="reversed" src="@/assets/images/arrowDrop.svg"  class="filter-arrow"/>
                 <img v-else src="@/assets/images/arrowDropUp.svg"  class="filter-arrow"/>
@@ -291,7 +291,7 @@
               @click="reversed ? sortOpps(field.dataType, field.label, field.apiName) : sortOppsReverse(field.dataType, field.label, field.apiName)"
               class="pipeline-header"
             >
-              {{ field.label }}
+              <span>{{ field.label }}</span>
               <span v-if="selectedFilter === field.label" class="filter-arrow-container">
                 <img v-if="reversed" src="@/assets/images/arrowDrop.svg"  class="filter-arrow"/>
                 <img v-else src="@/assets/images/arrowDropUp.svg"  class="filter-arrow"/>
@@ -1312,8 +1312,12 @@ th:first-of-type {
   // flex-direction: column;
   // justify-content: flex-end;
   // padding-top: 1.5rem;
-  position: relative;
-  top: 5px;
+  position: absolute;
+  top: 38%;
+  right: 2%;
+  margin-left: auto;
+  // right: 0;
+  // right: -50%;
 }
 .filter-arrow {
   height: 14px;
@@ -1322,6 +1326,12 @@ th:first-of-type {
 }
 .pipeline-header {
   cursor: pointer;
+  // display: flex;
+  // flex-direction: row !important;
+  // justify-content: space-around;
+  // span {
+  //   margin-right: 50%;
+  // }
 }
 .pipeline-header:hover {
   background-color: $soft-gray !important;
