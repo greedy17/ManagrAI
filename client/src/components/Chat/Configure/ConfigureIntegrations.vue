@@ -34,30 +34,32 @@
             </div>
           </div>
         </div>
-        <p class="card-text" style="width: 90%; font-size: 11px">
-          Choose your CRM from the options below.
-        </p>
-        <div class="flex-row inner-crm">
-          <Multiselect
-            placeholder="Select CRM"
-            v-model="selectedCRM"
-            :options="crmList"
-            openDirection="below"
-            style="width: 34vw; margin-bottom: 1rem"
-            class="custom-picklist-font"
-            selectLabel="Enter"
-            label="label"
-          >
-            <template slot="noResult">
-              <p class="multi-slot custom-picklist-font">No results. Try loading more</p>
-            </template>
-            <template slot="placeholder">
-              <p class="slot-icon custom-picklist-font">
-                <img src="@/assets/images/search.svg" alt="" />
-                Select CRM
-              </p>
-            </template>
-          </Multiselect>
+        <div>
+          <p class="modal-card-text">
+            Choose your CRM from the options below.
+          </p>
+          <div class="flex-row inner-crm">
+            <Multiselect
+              placeholder="Select CRM"
+              v-model="selectedCRM"
+              :options="crmList"
+              openDirection="below"
+              style="width: 34vw; margin-bottom: 1rem"
+              class="custom-picklist-font"
+              selectLabel="Enter"
+              label="label"
+            >
+              <template slot="noResult">
+                <p class="multi-slot custom-picklist-font">No results. Try loading more</p>
+              </template>
+              <template slot="placeholder">
+                <p class="slot-icon custom-picklist-font">
+                  <img src="@/assets/images/search.svg" alt="" />
+                  Select CRM
+                </p>
+              </template>
+            </Multiselect>
+          </div>
         </div>
         <div class="confirm-cancel-container" style="">
           <div
@@ -1007,9 +1009,6 @@ export default {
     hasHubspotIntegration() {
       return !!this.$store.state.user.hubspotAccount
     },
-    hasSlackIntegration() {
-      return !!this.$store.state.user.slackRef
-    },
     hasZoomIntegration() {
       return !!this.$store.state.user.hasZoomIntegration
     },
@@ -1328,6 +1327,13 @@ a {
   margin-top: 0.5rem;
   // text-align: center;
 }
+.modal-card-text {
+  font-size: 14px;
+  color: $light-gray-blue;
+  margin-top: 0.5rem;
+  margin-left: 5%;
+  width: 90%;
+}
 // .privacy {
 //   color: $base-gray;
 //   font-size: 12px;
@@ -1443,7 +1449,7 @@ a {
   z-index: 30;
 }
 .crm-form {
-  height: 30vh;
+  height: 34vh;
   width: 32vw;
 }
 .form-margin-small {

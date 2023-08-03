@@ -2,8 +2,6 @@ import logging
 import uuid
 import time
 import random
-
-from django.conf import settings
 from background_task import background
 from rest_framework.exceptions import ValidationError
 

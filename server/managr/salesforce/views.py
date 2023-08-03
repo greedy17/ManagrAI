@@ -36,7 +36,6 @@ from managr.core.models import User
 from managr.slack import constants as slack_const
 from managr.api.emails import send_html_email
 from managr.slack.helpers import requests as slack_requests
-from managr.slack.models import OrgCustomSlackForm
 from managr.slack.helpers.block_sets import get_block_set
 from managr.slack.models import OrgCustomSlackFormInstance
 from managr.salesforce.utils import process_text_field_format
@@ -1044,7 +1043,12 @@ class MeetingWorkflowViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     )
 
     def get_queryset(self):
-        return MeetingWorkflow.objects.for_user(self.request.user).order_by("meeting__start_time")
+        if self.request.data.get("date", False):
+            return MeetingWorkflow.objects.for_user(
+                self.request.user, date=self.request.data.get("date")
+            ).order_by("meeting__start_time")
+        else:
+            return MeetingWorkflow.objects.filter(user=self.request.user)
 
     @action(
         methods=["post"],

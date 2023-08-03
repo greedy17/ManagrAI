@@ -172,10 +172,14 @@ export default class UserAPI {
   }
 
   async submitChatTranscript(data) {
-    return this.client
-      .post(CHAT_TRANSCRIPT, data)
-      .then(response => response.data)
-      .catch(apiErrorHandler({ apiName: 'User.chatMeeting' }))
+    try {
+      const response = await this.client.post(CHAT_TRANSCRIPT, data)
+      console.log('response', response)
+      return response.data
+    } catch (e) {
+      console.log('error in submitChatTranscript', e)
+      apiErrorHandler({ apiName: 'User.chatMeeting' })
+    }
   }
 
   async list({ pagination, filters }) {
@@ -242,20 +246,18 @@ export default class UserAPI {
    * @param {UserRegistrationForm} registerForm - A form containing first name, last name, email,
    *                                              password, and organization name.
    */
-  register(registerForm) {
+  async register(registerForm) {
     const data = registerForm.toAPI()
-
-    return this.client
-      .post(REGISTRATION_ENDPOINT, this.cls.toAPI(data))
-      .then(response => response.data)
-      .then(data => this.cls.fromAPI(data))
-      .catch(
-        apiErrorHandler({
-          apiName: 'Register User',
-          enable400Alert: true,
-          enable500Alert: true,
-        }),
-      )
+    let returnedData
+    try {
+      const response = await this.client.post(REGISTRATION_ENDPOINT, this.cls.toAPI(data))
+      returnedData = this.cls.fromAPI(response.data)
+    } catch (e) {
+      console.log('error in register', e)
+      returnedData = e.response
+    } finally {
+      return returnedData
+    }
   }
 
   invite(userDetails) {
@@ -291,6 +293,7 @@ export default class UserAPI {
       const response = await this.client.get(ALL_USERS_ENDPOINT, { params: { org_id } })
       return response.data
     } catch (e) {
+      console.log('error in getAllOrgUsers', e.response)
       apiErrorHandler({ apiName: 'UsersAPI.getAllOrgUsers' })
     }
   }

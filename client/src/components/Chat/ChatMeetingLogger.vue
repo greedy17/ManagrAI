@@ -4,10 +4,10 @@
       v-if="
         !hasMeetingWorkflow || (selectedMeetingWorkflow && !selectedMeetingWorkflow.forms.length)
       "
-      :class="{ disabled: submitting }"
+      :class="{ disabled: submitting || currentTask }"
     >
       <div class="margin-top-s">
-        <p @click="test">Related to type:</p>
+        <p>Related to type:</p>
 
         <Multiselect
           v-model="selectedResourceType"
@@ -16,7 +16,7 @@
           :options="resources"
           :loading="dropdownLoading"
           style="width: 96%"
-          :disabled="submitting"
+          :disabled="(submitting || currentTask) && !errorText"
         >
         </Multiselect>
       </div>
@@ -41,7 +41,7 @@
               : selectedList
           "
           :loading="dropdownLoading || listLoading"
-          :disabled="!selectedResourceType || submitting"
+          :disabled="(!selectedResourceType || submitting || currentTask) && !errorText"
         >
           <template slot="noResult">
             <p class="multi-slot">No results. Try loading more</p>
@@ -62,7 +62,7 @@
           track-by="value"
           :options="aiOptions"
           :loading="dropdownLoading"
-          :disabled="!mappedOpp || submitting"
+          :disabled="(!mappedOpp || submitting || currentTask) && !errorText"
         >
         </Multiselect>
       </div>
@@ -70,10 +70,16 @@
         <p class="error">{{ errorText }}</p>
       </div>
 
-      <p v-if="processing" class="row__ gray-text smaller">
-        <img class="rotate" src="@/assets/images/loading.svg" height="14px" alt="" /> Processing
-        transcript, this could take a few minutes...
-      </p>
+      <div v-if="(processing || currentTask) && !errorText" class="rowed">
+        <p v-if="!canCheckTask" class="row__ gray-text smaller">
+          <img class="rotate" src="@/assets/images/loading.svg" height="14px" alt="" /> Processing
+          transcript, this could take a few minutes...
+        </p>
+
+        <p v-else>Complete! Click "View summary" to continue.</p>
+
+        <p style="margin-right: 1rem" class="gray-text smaller">({{ currentTime }}%)</p>
+      </div>
     </div>
 
     <div v-else-if="selectedMeetingWorkflow && selectedMeetingWorkflow.forms.length">
@@ -132,7 +138,7 @@
                 style="margin-right: 4px"
                 alt=""
               />
-              Log Meeting
+              Submit
             </button>
           </div>
         </div>
@@ -202,11 +208,16 @@
       </div>
     </div>
 
-    <div v-if="!hasMeetingWorkflow">
+    <div
+      v-if="
+        !hasMeetingWorkflow ||
+        (hasMeetingWorkflow && selectedMeetingWorkflow && !selectedMeetingWorkflow.forms.length)
+      "
+    >
       <div class="meeting-modal-footer">
         <button
           @click="deselectMeeting"
-          v-if="selectedResourceId && usingAi"
+          v-if="selectedResourceId && usingAi && !currentTask"
           :disabled="submitting"
         >
           Cancel
@@ -215,7 +226,7 @@
         <button
           @click="submitChatMeeting"
           class="green-button"
-          v-if="selectedResourceId && usingAi && usingAi.value === 'false'"
+          v-if="selectedResourceId && usingAi && usingAi.value === 'false' && !currentTask"
           :disabled="submitting"
         >
           <img
@@ -232,7 +243,7 @@
         <button
           @click="submitChatTranscript"
           class="green-button"
-          v-if="selectedResourceId && usingAi && usingAi.value === 'true'"
+          v-if="selectedResourceId && usingAi && usingAi.value === 'true' && !currentTask"
           :disabled="submitting"
         >
           <img
@@ -244,6 +255,23 @@
             alt=""
           />
           Submit
+        </button>
+
+        <button
+          :disabled="!canCheckTask"
+          @click="checkTask"
+          class="green-button"
+          v-if="currentTask"
+        >
+          <img
+            v-if="checkingTask"
+            class="rotate"
+            src="@/assets/images/loading.svg"
+            height="14px"
+            style="margin-right: 4px"
+            alt=""
+          />
+          View summary
         </button>
       </div>
     </div>
@@ -291,6 +319,7 @@ export default {
     stageFields: {},
     stagesWithForms: {},
     meetingOpp: {},
+    meetingName: {},
   },
   watch: {
     // usingAi(val) {
@@ -300,6 +329,7 @@ export default {
     //     this.submitChatTranscript()
     //   }
     // },
+    currentTime: 'watchTime',
     selectedResourceType: 'changeList',
     searchValue(newVal, oldVal) {
       if (newVal !== oldVal && newVal !== '') {
@@ -314,6 +344,10 @@ export default {
   },
   data() {
     return {
+      currentTime: 0,
+      interval: null,
+      canCheckTask: false,
+      checkingTask: false,
       updatingMeeting: false,
       textLoading: null,
       listLoading: false,
@@ -359,9 +393,6 @@ export default {
     }
   },
   methods: {
-    test() {
-      console.log(this.currentOpp)
-    },
     deselectMeeting() {
       this.$emit('deselect-meeting')
     },
@@ -386,7 +417,47 @@ export default {
         this.currentAnalysis = analysis
       }
     },
-
+    async checkTask() {
+      this.checkingTask = true
+      try {
+        await User.api
+          .checkTasks({
+            verbose_name: this.currentTask,
+          })
+          .then((response) => {
+            if (
+              this.selectedMeetingWorkflow &&
+              this.selectedMeetingWorkflow.failed_task_description.length
+            ) {
+              this.errorText = `Try again: ${this.selectedMeetingWorkflow.failed_task_description[0]}`
+            } else if (response.completed) {
+              this.processing = false
+              this.$emit('reload-workflows')
+              this.$store.dispatch('updateTask', null)
+              this.$store.dispatch('setProcessedMeeting', null)
+            }
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.checkingTask = false
+        }, 1000)
+      }
+    },
+    watchTime() {
+      if (this.currentTime > 99) {
+        clearInterval(this.interval)
+        this.canCheckTask = true
+      }
+    },
+    startTimer() {
+      this.interval = setInterval(() => {
+        if (this.currentTime < 100) {
+          this.currentTime += 1
+        }
+      }, 1800)
+    },
     async submitChatTranscript() {
       this.submitting = true
       this.processing = true
@@ -401,16 +472,19 @@ export default {
             meeting_id: this.meeting.id,
           })
           .then((response) => {
-            if (response.status === 200) {
-              setTimeout(() => {
-                this.$emit('reload-workflows')
-              }, 1500)
-            } else {
-              this.errorText = response.data
-              this.selectedResourceType = null
-              this.mappedOpp = null
-              this.usingAi = null
-            }
+            this.startTimer()
+            this.$store.dispatch('updateTask', response.verbose_name)
+            this.$store.dispatch('setProcessedMeeting', this.meetingName)
+            // if (response.status === 200) {
+            //   setTimeout(() => {
+            //     this.$emit('reload-workflows')
+            //   }, 1500)
+            // } else {
+            //   this.errorText = response.data
+            //   this.selectedResourceType = null
+            //   this.mappedOpp = null
+            //   this.usingAi = null
+            // }
           })
       } catch (e) {
         console.log(e)
@@ -450,6 +524,7 @@ export default {
     },
 
     async onSubmitChat() {
+      console.log(this.updateData)
       this.submitting = true
       try {
         await MeetingWorkflows.api
@@ -510,6 +585,7 @@ export default {
     },
     async submitChatMeeting() {
       this.submitting = true
+      this.errorText = null
       try {
         let res = await User.api
           .submitChatMeeting({
@@ -652,8 +728,16 @@ export default {
       name: 'Yes',
       value: 'true',
     }
+
+    this.checkTask()
   },
   computed: {
+    currentTask() {
+      return this.$store.state.currentTask
+    },
+    meetingBeingProcessed() {
+      return this.$store.state.meetingBeingProcessed
+    },
     hasMeetingWorkflow() {
       let newWfList = this.workflows.map((wf) => wf.meeting_ref.meeting_id)
       let stringId = this.meeting.id.toString()
@@ -1102,6 +1186,14 @@ button {
   align-items: center;
   width: 100%;
   justify-content: space-between;
+}
+
+.rowed {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-top: 1rem;
 }
 
 .row__ {

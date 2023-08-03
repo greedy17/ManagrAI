@@ -1,40 +1,23 @@
 import logging
-import json
-from django.conf import settings
-from django.forms import ValidationError
 import pytz
-from django.core import serializers
 from django.db.models import Q
 from datetime import datetime
 from django_filters.rest_framework import DjangoFilterBackend
 from copy import copy
 from django.utils import timezone
-from rest_framework.views import APIView
 from rest_framework import (
-    authentication,
     filters,
     permissions,
-    generics,
     mixins,
     status,
-    views,
     viewsets,
 )
 from managr.core.permissions import IsStaff
 from rest_framework.decorators import action
-from rest_framework.decorators import (
-    api_view,
-    permission_classes,
-    authentication_classes,
-)
 from managr.crm.routes import model_routes
-
 from managr.crm.exceptions import TokenExpired, SFQueryOffsetError
-
 from rest_framework.response import Response
-
 from .background import _process_check_alert
-
 from . import models as alert_models
 from . import serializers as alert_serializers
 from .filters import AlertInstanceFilterSet, AlertTemplateFilterSet
@@ -116,7 +99,10 @@ def alert_config_creator(data, user):
             if len(all_configs) > 1:
                 all_configs = remove_duplicate_alert_configs(all_configs)
             new_configs = all_configs if len(all_configs) else None
-        if getattr(user, 'slack_integration', None) and user.slack_integration.recap_channel is None:
+        if (
+            getattr(user, "slack_integration", None)
+            and user.slack_integration.recap_channel is None
+        ):
             if "SELF" in new_configs[0]["alert_targets"]:
                 user.slack_integration.change_recap_channel(new_configs[0]["recipients"][0])
     else:
@@ -162,7 +148,10 @@ class AlertTemplateViewSet(
         alert_target_ref = data["new_configs"][0]["alert_targets"]
         configs = alert_config_creator(data, request.user)
         if configs is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data={"message": "Selected users do not have a CRM and Slack connected"})
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={"message": "Selected users do not have a CRM and Slack connected"},
+            )
         else:
             data["new_configs"] = configs
             data["target_reference"] = alert_target_ref
@@ -171,7 +160,6 @@ class AlertTemplateViewSet(
             serializer.save()
             readSerializer = self.serializer_class(instance=serializer.instance)
             return Response(data=readSerializer.data)
-        return Response(data=data)
 
     @action(
         methods=["post"],

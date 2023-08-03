@@ -21,7 +21,7 @@
           <span class="config-number">{{ integrationsLength }}</span>
         </div>
         <div
-          v-if="userCRM"
+          v-if="userCRM && (user.userLevel === 'MANAGER' || user.isAdmin || !user.organizationRef.isPaid)"
           class="base-select"
           :class="configPage === 'forms' ? 'left-active' : 'pointer'"
           @click="changeConfigPage('forms')"
@@ -175,6 +175,9 @@ export default {
         : []
       // return this.$store.state.templates
     },
+    user() {
+      return this.$store.state.user
+    },
     userCRM() {
       return this.$store.state.user.crm
     },
@@ -230,15 +233,14 @@ export default {
     align-items: center;
   }
 }
+.base-select:hover {
+
+}
 .pointer {
   // color: $light-gray-blue;
   img {
     // filter: invert(45%);
   }
-}
-.pointer:hover {
-  // background-color: $white-green;
-  opacity: 60%;
 }
 .cursor-color {
   color: $light-gray-blue;

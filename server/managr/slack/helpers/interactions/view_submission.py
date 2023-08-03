@@ -13,7 +13,6 @@ from managr.crm.exceptions import (
 )
 from managr.alerts.models import AlertInstance, AlertConfig
 from managr.organization.models import Contact, OpportunityLineItem, PricebookEntry
-from managr.crm.routes import adapter_routes as crm_routes
 from managr.core.background import (
     emit_create_calendar_event,
     emit_process_calendar_meetings,
@@ -36,11 +35,9 @@ from managr.slack.helpers.utils import (
     NO_OP,
     processor,
     block_finder,
-    check_contact_last_name,
     send_loading_screen,
 )
 from managr.crm.models import BaseOpportunity
-from managr.hubspot.routes import routes as hs_routes
 from managr.salesforce.routes import routes as model_routes
 from managr.salesforce.background import (
     _process_create_new_resource,
@@ -731,64 +728,6 @@ def process_zoom_meeting_attach_resource(payload, context):
         return logger.exception(
             f"Failed To Attach resource for user {str(workflow.id)} email {workflow.user.email} {e}"
         )
-    return
-
-
-@processor()
-def process_edit_meeting_contact(payload, context):
-    """This Submission returns the update form stacked on top of the view contacts form"""
-
-    return {
-        "response_action": "push",
-        "view": {
-            "type": "modal",
-            "title": {"type": "plain_text", "text": "Edit Contact"},
-            "submit": {"type": "plain_text", "text": "Save"},
-            "blocks": get_block_set("edit_meeting_contacts", context,),
-            "callback_id": slack_const.ZOOM_MEETING__UPDATE_PARTICIPANT_DATA,
-            "private_metadata": json.dumps(context),
-        },
-    }
-
-
-@processor()
-def process_save_contact_data(payload, context):
-    workflow = MeetingWorkflow.objects.get(id=context.get("w"))
-    # update the old view to change edit contact to submit again
-
-    state = payload["view"]["state"]["values"]
-    ## save the checked contacts to the operations list
-    create = []
-    update = []
-    for val in state.values():
-        if val.get("CREATE") and len(val["CREATE"]["selected_options"]):
-            create.append(val["CREATE"]["selected_options"][0]["value"])
-        elif val.get("UPDATE") and len(val["UPDATE"]["selected_options"]):
-            update.append(val["UPDATE"]["selected_options"][0]["value"])
-
-    if not len(workflow.operations_list):
-        workflow.operations_list = []
-    if len(create):
-
-        workflow.operations_list = [
-            *workflow.operations_list,
-            *[
-                f"{sf_consts.MEETING_REVIEW__CREATE_CONTACTS}.{str(workflow.id)},{form}"
-                for form in create
-            ],
-        ]
-
-    if len(update):
-        workflow.operations_list = [
-            *workflow.operations_list,
-            *[
-                f"{sf_consts.MEETING_REVIEW__UPDATE_CONTACTS}.{str(workflow.id)},{form}"
-                for form in update
-            ],
-        ]
-
-    workflow.save()
-
     return
 
 
@@ -2669,6 +2608,7 @@ def process_news_summary(payload, context):
 
     emit_process_news_summary(payload, context)
     return {"response_action": "clear"}
+    return
 
 
 def process_submit_ask_managr(payload, context):
@@ -2773,9 +2713,7 @@ def handle_view_submission(payload):
     switcher = {
         slack_const.ZOOM_MEETING__SELECTED_RESOURCE: process_zoom_meeting_attach_resource,
         slack_const.ZOOM_MEETING__PROCESS_MEETING_SENTIMENT: process_zoom_meeting_data,
-        slack_const.ZOOM_MEETING__EDIT_CONTACT: process_edit_meeting_contact,
         slack_const.ZOOM_MEETING__PROCESS_STAGE_NEXT_PAGE: process_stage_next_page,
-        slack_const.ZOOM_MEETING__SAVE_CONTACTS: process_save_contact_data,
         slack_const.COMMAND_FORMS__SUBMIT_FORM: process_submit_resource_data,
         slack_const.COMMAND_FORMS__PROCESS_NEXT_PAGE: process_next_page_slack_commands_form,
         slack_const.ALERT_INLINE_STAGE_SUBMITTED: process_alert_inline_stage_submitted,

@@ -40,6 +40,7 @@
           <h2>Error loading page. Please try again later.</h2>
         </div>
       </div>
+      <div class="close-config" @click="closeConfig">X</div>
     </div>
   </div>
 </template>
@@ -95,6 +96,7 @@ export default {
         this.currentResource = this.OPPORTUNITY
       }
       this.allForms = await SlackOAuth.api.getOrgCustomForm()
+      this.$store.commit('SAVE_CRM_FORMS', this.allForms)
       this.allFields = await this.listFields()
       await this.listPicklists({
         salesforceObject: this.currentResource,
@@ -111,6 +113,9 @@ export default {
   methods: {
     changeConfigPage(page) {
       this.$emit('change-config-page', page)
+    },
+    closeConfig() {
+      this.$emit('close-config')
     },
     async listPicklists(query_params = {}) {
       try {
@@ -199,5 +204,11 @@ export default {
 .main-content {
   width: 85%;
   overflow-y: auto;
+}
+.close-config {
+  position: absolute;
+  top: 2vh;
+  right: 2vw;
+  cursor: pointer;
 }
 </style>

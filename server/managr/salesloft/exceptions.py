@@ -1,5 +1,4 @@
 import logging
-from rest_framework.exceptions import APIException
 from rest_framework.exceptions import ValidationError
 
 logger = logging.getLogger("managr")

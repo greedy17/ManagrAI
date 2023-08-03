@@ -1,11 +1,12 @@
 <template>
   <PopularWorkflows
+    @refresh-configs="refreshConfigs"
     :closePopularModal="closePopularModal"
     :selectField="true"
     :config="config"
     :noRenderHeader="noRenderHeader"
     :closeBuilder="closeBuilder"
-    :canSave="canSave" 
+    :canSave="canSave"
     :saveWorkflow="saveWorkflow"
   />
 </template>
@@ -27,28 +28,33 @@ export default {
   },
   props: {
     noRenderHeader: {
-      type: Boolean
+      type: Boolean,
     },
     closeBuilder: {
-      type: Function
+      type: Function,
     },
-    canSave: { 
-      type: Function
+    canSave: {
+      type: Function,
     },
-    saveWorkflow: { 
-      type: Function 
+    saveWorkflow: {
+      type: Function,
     },
     config: {
-      type: Object
+      type: Object,
     },
     closePopularModal: {
-      type: Function
+      type: Function,
     },
   },
   data() {
     return {
       allConfigs,
     }
+  },
+  methods: {
+    refreshConfigs() {
+      this.$emit('refresh-configs')
+    },
   },
   computed: {
     userCRM() {
