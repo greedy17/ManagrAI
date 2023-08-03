@@ -225,7 +225,6 @@ def _process_article_summary(payload,context):
         try:
             r = open_ai_exceptions._handle_response(r)
             message = r.get("choices")[0].get("message").get("content").replace("**", "*")
-
             break
         except open_ai_exceptions.StopReasonLength:
             logger.exception(
