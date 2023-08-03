@@ -237,8 +237,13 @@
                 userCRM === 'SALESFORCE' ? 'Name' : 'dealname',
                 userCRM === 'SALESFORCE' ? 'name' : 'dealname',
               )"
+              class="pipeline-header"
             >
-              Name
+              Name {{ selectedFilter === 'Name' }}
+              <span v-if="selectedFilter === 'Name' || selectedFilter === 'dealname'" class="filter-arrow-container">
+                <img v-if="reversed" src="@/assets/images/arrowDrop.svg"  class="filter-arrow"/>
+                <img v-else src="@/assets/images/arrowDropUp.svg"  class="filter-arrow"/>
+              </span>
             </th>
             <th
               @click="reversed ? sortOpps(
@@ -252,8 +257,13 @@
                 userCRM === 'SALESFORCE' ? 'Stage' : 'dealstage',
                 userCRM === 'SALESFORCE' ? 'stage' : 'dealstage',
               )"
+              class="pipeline-header"
             >
               Stage
+              <span v-if="selectedFilter === 'Stage' || selectedFilter === 'dealstage'" class="filter-arrow-container">
+                <img v-if="reversed" src="@/assets/images/arrowDrop.svg"  class="filter-arrow"/>
+                <img v-else src="@/assets/images/arrowDropUp.svg"  class="filter-arrow"/>
+              </span>
             </th>
             <th
               @click="reversed ? sortOpps(
@@ -267,15 +277,25 @@
                 userCRM === 'SALESFORCE' ? 'CloseDate' : 'closedate',
                 userCRM === 'SALESFORCE' ? 'closedate' : 'closedate',
               )"
+              class="pipeline-header"
             >
               Close Date
+              <span v-if="selectedFilter === 'CloseDate' || selectedFilter === 'closedate'" class="filter-arrow-container">
+                <img v-if="reversed" src="@/assets/images/arrowDrop.svg"  class="filter-arrow"/>
+                <img v-else src="@/assets/images/arrowDropUp.svg"  class="filter-arrow"/>
+              </span>
             </th>
             <th 
               v-for="(field, i) in extraPipelineFields" 
               :key="i" 
               @click="reversed ? sortOpps(field.dataType, field.label, field.apiName) : sortOppsReverse(field.dataType, field.label, field.apiName)"
+              class="pipeline-header"
             >
               {{ field.label }}
+              <span v-if="selectedFilter === field.label" class="filter-arrow-container">
+                <img v-if="reversed" src="@/assets/images/arrowDrop.svg"  class="filter-arrow"/>
+                <img v-else src="@/assets/images/arrowDropUp.svg"  class="filter-arrow"/>
+              </span>
             </th>
           </tr>
         </thead>
@@ -381,6 +401,7 @@ export default {
       loading: false,
       activeList: null,
       reversed: true,
+      selectedFilter: '',
       storedFilters: [],
       listCount: 0,
       formFields: CollectionManager.create({
@@ -422,6 +443,7 @@ export default {
       this.$emit('open-change-config', page)
     },
     selectList(alert) {
+      this.selectedFilter = ''
       this.$store.dispatch('setCurrentView', alert)
     },
     capitalizeFirstLetter(string) {
@@ -443,6 +465,8 @@ export default {
       const userCRM = this.userCRM
       let sortedWorkflow
       if (this.currentView && this.currentView.sobjectInstances.length) {
+        this.selectedFilter = field
+        console.log('this.selectedFilter', this.selectedFilter)
         if (field === 'Stage' || field === 'Deal Stage') {
           sortedWorkflow = this.currentView.sobjectInstances.sort(function (a, b) {
             const nameA =
@@ -493,7 +517,7 @@ export default {
           })
         }
         this.activeList.sobjectInstances = sortedWorkflow
-        this.selectList(this.activeList)
+        this.$store.dispatch('setCurrentView', this.activeList)
       }
 
       let custom = false
@@ -511,6 +535,7 @@ export default {
       const userCRM = this.userCRM
       let sortedWorkflow
       if (this.currentView && this.currentView.sobjectInstances.length) {
+        this.selectedFilter = field
         if (field === 'Stage' || field === 'Deal Stage') {
           sortedWorkflow = this.currentView.sobjectInstances.sort(function (a, b) {
             const nameA =
@@ -561,7 +586,7 @@ export default {
           })
         }
         this.activeList.sobjectInstances = sortedWorkflow
-        this.selectList(this.activeList)
+        this.$store.dispatch('setCurrentView', this.activeList)
       } 
 
       let custom = false
@@ -1281,5 +1306,24 @@ th:first-of-type {
 .create-disabled:hover {
   box-shadow: none;
   scale: 1;
+}
+.filter-arrow-container {
+  // display: flex;
+  // flex-direction: column;
+  // justify-content: flex-end;
+  // padding-top: 1.5rem;
+  position: relative;
+  top: 5px;
+}
+.filter-arrow {
+  height: 14px;
+  width: 16px;
+  // padding-top: 0.5rem;
+}
+.pipeline-header {
+  cursor: pointer;
+}
+.pipeline-header:hover {
+  background-color: $soft-gray !important;
 }
 </style>
