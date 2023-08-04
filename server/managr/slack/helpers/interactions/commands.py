@@ -571,7 +571,7 @@ def news_summary(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     blocks = [
         block_builders.input_block(
-            "Enter your new search", optional=False, block_id="COMPANY_INPUT", multiline=True
+            "Enter your new search", optional=False, block_id="SEARCH", multiline=True
         ),
         block_builders.input_block(
             "What would you like included in your summary?",
