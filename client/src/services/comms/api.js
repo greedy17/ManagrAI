@@ -26,4 +26,12 @@ export default class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    async getSummary(data) {
+        try {
+            const res = await this.client.get(CommsApi.ENDPOINT + 'summary/', { params: data } )
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
 }

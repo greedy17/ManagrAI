@@ -1,93 +1,68 @@
 <template>
   <div class="right-bar">
     <div v-if="selectedArticle" class="right-content">
-      <div>
-        <h3 class="right-bar-title">{{truncateTitle(selectedArticle.title)}}</h3>
-      </div>
-      <div class="gray-background">
-        <div class="toggle-container" :class="selectedResource === 'Source' ? 'active' : ''" @click="changeResource('Source')">
-          <p>Source</p>
+      <div v-if="selectedArticle.summary">
+        <div>
+          <h3 class="right-bar-title">{{truncateTitle(selectedArticle.title)}}</h3>
         </div>
-        <div class="toggle-container" :class="selectedResource === 'Data' ? 'active' : ''" @click="changeResource('Data')">
-          <p>Data</p>
+        <div class="gray-background">
+          <div class="toggle-container" :class="selectedResource === 'Summary' ? 'active' : ''" @click="changeResource('Summary')">
+            <p>Summary</p>
+          </div>
+          <div class="toggle-container" :class="selectedResource === 'Chat' ? 'active' : ''" @click="changeResource('Chat')">
+            <p>Chat</p>
+          </div>
         </div>
-        <div class="toggle-container" :class="selectedResource === 'Chat' ? 'active' : ''" @click="changeResource('Chat')">
-          <p>Chat</p>
-        </div>
-      </div>
-      <div v-if="selectedResource === 'Data'" class="data-container">
-        <div v-if="loading">
-          Loading...
-        </div>
-        <div v-else-if="selectedArticle && selectedArticle.data && !Object.keys(selectedArticle.data).length" @click="setData" class="add-edit-button">
-          <img src="@/assets/images/sparkles-round.svg" class="button-img margin-right" /><span>Auto-populate fields</span>
-        </div>
-        <div v-else class="right-side">
-          <img src="@/assets/images/sparkles-round.svg" class="button-img" />
-        </div>
-        <div class="data-content" v-if="selectedArticle.data">
-          <div>
+        <div v-if="selectedResource === 'Summary'" class="data-container">
+          <!-- <div v-if="loading">
+            Loading...
+          </div> -->
+          <!-- <div>
             <p class="data-title">Impact Score</p>
             <p class="data-detail">{{ selectedArticle.data.impactScore }}</p>
+          </div> -->
+          <div class="data-content">
+            <pre v-html="selectedArticle.summary" class="message-text" />
           </div>
-          <div>
-            <p class="data-title">Impact Score Details</p>
-            <p class="data-detail">{{ selectedArticle.data.impactScoreDetails }}</p>
-          </div>
-          <div>
-            <p class="data-title">Key Messages</p>
-            <p class="data-detail">{{ selectedArticle.data.keyMessages }}</p>
-          </div>
-          <div>
-            <p class="data-title">Summary / Notes</p>
-            <p class="data-detail">{{ selectedArticle.data.summary }}</p>
-          </div>
-          <div>
-            <p class="data-title">Topics</p>
-            <p class="data-detail">{{ selectedArticle.data.topics }}</p>
-          </div>
-          <div>
-            <p class="data-title">Competitors</p>
-            <p class="data-detail">{{ selectedArticle.data.competitors }}</p>
-          </div>
-          <div>
-            <p class="data-title">Products</p>
-            <p class="data-detail">{{ selectedArticle.data.products }}</p>
-          </div>
-          <div>
-            <p class="data-title">Follow up</p>
-            <p class="data-detail">{{ selectedArticle.data.followUp }}</p>
+          <div class="add-edit-button">
+            <img src="@/assets/images/edit-round.svg" class="button-img margin-right" /> <span>Add / Edit</span>
           </div>
         </div>
-        <div class="add-edit-button">
-          <img src="@/assets/images/edit-round.svg" class="button-img margin-right" /> <span>Add / Edit</span>
-        </div>
-      </div>
-      <div v-else-if="selectedResource === 'Chat'" class="chat-container">
-        <div class="margin-top chat-window" ref="chatWindow">
-
-        </div>
-        <div class="bottom">
-          <div class="chat-button-container">
-            <div class="chat-button">Summarize</div>
-            <div class="chat-button">Generate</div>
-            <div class="chat-button">Ask Question</div>
+        <div v-else-if="selectedResource === 'Chat'" class="chat-container">
+          <div class="margin-top chat-window" ref="chatWindow">
+  
           </div>
-          <div class="chat-border">
-            <div class="input-container">
-              <input v-model="message" placeholder="What would you like to do..." />
-              <font-awesome-icon
-                :class="{ invert: !message }"
-                class="gray"
-                style="height: 14px; cursor: pointer"
-                icon="fa-regular fa-paper-plane"
-              />
+          <div class="bottom">
+            <div class="chat-button-container">
+              <div class="chat-button">Summarize</div>
+              <div class="chat-button">Generate</div>
+              <div class="chat-button">Ask Question</div>
+            </div>
+            <div class="chat-border">
+              <div class="input-container">
+                <input v-model="message" placeholder="What would you like to do..." />
+                <font-awesome-icon
+                  :class="{ invert: !message }"
+                  class="gray"
+                  style="height: 14px; cursor: pointer"
+                  icon="fa-regular fa-paper-plane"
+                />
+              </div>
             </div>
           </div>
         </div>
+        <div v-else>
+          {{ selectedResource }}
+        </div>
       </div>
       <div v-else>
-        {{ selectedResource }}
+        <div>
+          <h3 class="right-bar-title">{{truncateTitle(selectedArticle.title)}}</h3>
+        </div>
+        <div class="article-summary-button" @click="getSummary">
+          <img src="@/assets/images/sparkles-round.svg" class="button-img margin-right" />
+          <span>Generate Article Summary</span>
+        </div>
       </div>
     </div>
     <div v-else class="right-content">
@@ -97,6 +72,7 @@
 </template>
 <script>
 import ChatTextBox from '../Chat/ChatTextBox.vue'
+import Comms from '@/services/comms'
 export default {
   name: 'PRRightBar',
   components: {
@@ -107,7 +83,7 @@ export default {
   },
   data() {
     return {
-      selectedResource: 'Data',
+      selectedResource: 'Summary',
       loading: false,
       message: '',
       actions: [
@@ -155,6 +131,21 @@ export default {
       }
       return newTitle
       // return title.slice(0, 34) + '...'
+    },
+    async getSummary() {
+      const data = {
+        clips: this.selectedArticle.url, 
+        search: '',
+        instructions: '',
+      }
+      try {
+        const res = await Comms.api.getSummary(data)
+        const withSummary = {...this.selectedArticle}
+        withSummary.summary = res.summary
+        this.$store.dispatch('updateSelectedArticle', withSummary)
+      } catch(e) {
+        console.log('Error in getSummary', e)
+      }
     },
     setData() {
       this.loading = true
@@ -217,6 +208,7 @@ export default {
   .gray-background {
     display: flex;
     align-items: center;
+    justify-content: space-around;
     background-color: $soft-gray;
     height: 5vh;
     // width: 16vw;
@@ -277,6 +269,13 @@ export default {
     height: 65vh;
     // border: 1px solid red;
     overflow-y: auto;
+  }
+  .message-text {
+    font-family: $base-font-family;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    padding: 0;
+    margin: 0;
   }
   .add-edit-button {
     @include gray-text-button();
@@ -630,5 +629,8 @@ export default {
 }
 .gray {
   color: rgb(82, 80, 80);
+}
+.article-summary-button {
+  @include gray-text-button();
 }
 </style>

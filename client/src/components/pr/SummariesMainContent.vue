@@ -27,23 +27,11 @@
       </div>
       <div v-if="summaryChat === 'SUMMARY'">
         <div v-if="!summary" class="summary-buttons-container">
-          <button class="summary-button wide"><img src="@/assets/images/sparkles-round.svg" />Generate Summary</button>
+          <button class="summary-button wide" @click="getSummary(filteredArticles)"><img src="@/assets/images/sparkles-round.svg" />Generate Summary</button>
         </div>
         <div v-else>
           <div class="highlights-summary-container">
-            <div>
-              <h3 class="highlights">Highlights:</h3>
-              <div v-for="(highlight, i) in summary.highlights" :key="i">
-                <div class="display-flex">
-                  <img class="dot" src="@/assets/images/dot.svg" />
-                  <span class="highlight-point">{{ highlight }}</span>
-                </div>
-              </div>
-            </div>
-            <div>
-              <h3 class="overall">Overall Summary:</h3>
-              <div class="highlight-point">{{ summary.overview }}</div>
-            </div>
+            <pre v-html="summary" class="message-text" />
           </div>
           <div v-if="regenSummary">
             <div class="provide-instructions">
@@ -62,6 +50,7 @@
                   class="gray"
                   style="height: 14px; cursor: pointer"
                   icon="fa-regular fa-paper-plane"
+                  @click="regenNewSummary"
                 />
               </div>
             </div>
@@ -211,14 +200,37 @@ export default {
             search: 'Houston rockets',
           })
           .then((response) => {
-            console.log(response)
-            this.filteredArticles = response.articles
+            this.filteredArticles = JSON.parse(response.articles)
           })
       } catch (e) {
         console.log(e)
       } finally {
         this.loading = false
       }
+    },
+    getArticleURLs(articles) {
+      console.log('articles', articles)
+      return articles.map(a => a.url)
+    },
+    async getSummary(clips, search = '', instructions = '') {
+      const urls = this.getArticleURLs(clips)
+      const data = {
+        clips: urls,
+        search,
+        instructions,
+      }
+      try {
+        console.log('data', data)
+        const res = await Comms.api.getSummary(data)
+        this.summary = res.summary
+      } catch(e) {
+        console.log('Error in getSummary', e)
+      }
+    },
+    regenNewSummary() {
+      this.getSummary(this.filteredArticles, '', this.message)
+      this.changeRegen()
+      this.message = ''
     },
     changeSummaryChat(type) {
       this.summaryChat = type
@@ -228,6 +240,7 @@ export default {
       this.$store.dispatch('updateSelectedArticle', article)
     },
     saveSelectedArticles() {
+      this.getSummary(this.selectedArticles)
       this.selectedArticles = []
       this.changeNew()
     },
