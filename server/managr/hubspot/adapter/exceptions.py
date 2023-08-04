@@ -120,6 +120,7 @@ class CustomAPIException:
         self.raise_error()
 
     def raise_error(self):
+        print(self.message, self.param)
         # if an invalid Basic auth is sent the response is still a 200 success
         # instead we check data.json() which will return a JSONDecodeError
         if self.error_class_name == "JSONDecodeError":
