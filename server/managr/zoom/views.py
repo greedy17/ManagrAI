@@ -345,22 +345,22 @@ def zoom_recordings_webhook(request):
     topic = main_payload.get("topic", None)
     user = User.objects.get(zoom_account__account_id=obj["account_id"])
     if event == zoom_consts.ZOOM_RECORDING_COMPLETED:
-        download_object = list(
-            filter(lambda file: file["file_type"] == "MP4", obj["recording_files"])
-        )[0]
-        download_url = download_object["download_url"]
-        try:
-            res = slack_requests.send_channel_message(
-                user.slack_integration.channel,
-                user.organization.slack_integration.access_token,
-                text="Your meeting recording is ready!",
-                block_set=get_block_set(
-                    "zoom_recording_blockset",
-                    {"u": str(user.id), "url": download_url, "topic": topic},
-                ),
-            )
-        except Exception as e:
-            logger.warning(f"Zoom recording error: {e}")
+        # download_object = list(
+        #     filter(lambda file: file["file_type"] == "MP4", obj["recording_files"])
+        # )[0]
+        # download_url = download_object["download_url"]
+        # try:
+        #     res = slack_requests.send_channel_message(
+        #         user.slack_integration.channel,
+        #         user.organization.slack_integration.access_token,
+        #         text="Your meeting recording is ready!",
+        #         block_set=get_block_set(
+        #             "zoom_recording_blockset",
+        #             {"u": str(user.id), "url": download_url, "topic": topic},
+        #         ),
+        #     )
+        # except Exception as e:
+        #     logger.warning(f"Zoom recording error: {e}")
         return Response()
 
 
