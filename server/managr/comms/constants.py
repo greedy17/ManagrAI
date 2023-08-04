@@ -26,14 +26,11 @@ Output format must be:\n"""
     return body
 
 def OPEN_AI_ARTICLE_SUMMARY(date, article, search, instructions=False):
-    body = f"""Today's date is {date}  Summarize this news article:\n Article: {article}\n As it relates to {search}
-It cannot be longer than 500 characters. Writing style, analysis, observations and tone must mirror that of a VP of Communications. 
-Output format must be:\n"""
+    body = f"Today's date is {date}  Summarize this news article:\n Article: {article}\n As it relates to {search} It cannot be longer than 500 characters. Output format must be:\n"
     if instructions:
         body += instructions
     else:
-        body += """*Was this a feature story*\n 
-        *Brand vs article sentiment*\n 
-        *Sentiment around our products or people*\n
-        *Sentiment around competitors*"""
+        body += f"""*Was {search} featured or mentioned in this article. Briefly explain.*\n
+        *{search} sentiment vs article sentiment*\n
+        *Sentiment around our products or people*"""
     return body
