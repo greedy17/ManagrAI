@@ -67,7 +67,7 @@ def _process_news_summary(payload, context):
     while True:
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
         prompt = comms_consts.OPEN_AI_NEWS_CLIPS_SUMMARY(
-            datetime.datetime.now().date(), descriptions, user.organization.name, instructions
+            datetime.datetime.now().date(), descriptions, search, instructions
         )
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
             user.email,
@@ -155,8 +155,8 @@ def _process_send_clips(payload, context):
         news_res["articles"], count=10, page=context.get("new_page", 1)
     )
     paginated_article_blocks = [
-        block_builders.simple_section(f"*Articles summarized for {title_text}*", "mrkdwn"),
-        block_builders.context_block(f"AI-generated search: {context_text}", "mrkdwn"),
+        block_builders.simple_section(f"*Clips for {title_text}*", "mrkdwn"),
+        block_builders.context_block(f"AI-generated search: {boolean_text}", "mrkdwn"),
         block_builders.divider_block(),
     ]
     for article in paginated_articles["results"]:
