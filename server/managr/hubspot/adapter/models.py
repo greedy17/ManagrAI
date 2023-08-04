@@ -276,14 +276,14 @@ class HubspotAuthAccountAdapter:
                     break
                 else:
                     attempts += 1
-                    time.sleep(10)
+                    time.sleep(20)
             except UnhandledCRMError as e:
                 if "secondly" in str(e):
                     if attempts >= 3:
                         break
                     else:
                         attempts += 1
-                        time.sleep(10)
+                        time.sleep(20)
                 else:
                     logger.exception(e)
                     break
@@ -312,7 +312,17 @@ class HubspotAuthAccountAdapter:
                         break
                     else:
                         attempts += 1
-                        time.sleep(10.0)
+                        time.sleep(20)
+                except UnhandledCRMError as e:
+                    if "secondly" in str(e):
+                        if attempts >= 3:
+                            break
+                        else:
+                            attempts += 1
+                            time.sleep(20)
+                    else:
+                        logger.exception(e)
+                        break
                 except Exception as e:
                     logger.exception(
                         f"Exception calling hubspot api during next page list resources for {self.internal_user.email}: {e}"
@@ -320,9 +330,8 @@ class HubspotAuthAccountAdapter:
                     break
             else:
                 break
-        logger.info(
-            f"Request a total of {len(res.get('results', []))} results for {resource} after {page} page/s for {self.internal_user.email}"
-        )
+        text = f"Request a total of {len(res.get('results', []))} results for {resource} after {page} page/s for {self.internal_user.email}"
+        logger.info(text)
         res = self._format_resource_response(saved_response, resource)
         return res
 
