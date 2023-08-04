@@ -4,7 +4,7 @@ import json
 import time
 from requests.exceptions import HTTPError
 from managr.utils.client import Client
-from .exceptions import CustomAPIException, ApiRateLimitExceeded, TokenExpired
+from .exceptions import CustomAPIException, ApiRateLimitExceeded, TokenExpired, UnhandledCRMError
 from urllib.parse import urlencode
 from managr.utils.misc import object_to_snake_case
 from .. import constants as hubspot_consts
@@ -277,6 +277,16 @@ class HubspotAuthAccountAdapter:
                 else:
                     attempts += 1
                     time.sleep(10)
+            except UnhandledCRMError as e:
+                if "secondly" in str(e):
+                    if attempts >= 3:
+                        break
+                    else:
+                        attempts += 1
+                        time.sleep(10)
+                else:
+                    logger.exception(e)
+                    break
         saved_response = res
         page = 1
         attempts = 1
