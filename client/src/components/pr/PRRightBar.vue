@@ -24,9 +24,9 @@
           <div class="data-content">
             <pre v-html="selectedArticle.summary" class="message-text" />
           </div>
-          <div class="add-edit-button">
+          <!-- <div class="add-edit-button">
             <img src="@/assets/images/edit-round.svg" class="button-img margin-right" /> <span>Add / Edit</span>
-          </div>
+          </div> -->
         </div>
         <div v-else-if="selectedResource === 'Chat'" class="chat-container">
           <div class="margin-top chat-window" ref="chatWindow">
@@ -61,7 +61,7 @@
         </div>
         <div class="article-summary-button" @click="getSummary">
           <img src="@/assets/images/sparkles-round.svg" class="button-img margin-right" />
-          <span>Generate Article Summary</span>
+          <span>{{!summaryLoading ? 'Generate Article Summary' : '...'}}</span>
         </div>
       </div>
     </div>
@@ -85,6 +85,7 @@ export default {
     return {
       selectedResource: 'Summary',
       loading: false,
+      summaryLoading: false,
       message: '',
       actions: [
         {
@@ -139,12 +140,15 @@ export default {
         instructions: '',
       }
       try {
+        this.summaryLoading = true
         const res = await Comms.api.getSummary(data)
         const withSummary = {...this.selectedArticle}
         withSummary.summary = res.summary
         this.$store.dispatch('updateSelectedArticle', withSummary)
       } catch(e) {
         console.log('Error in getSummary', e)
+      } finally {
+        this.summaryLoading = false
       }
     },
     setData() {

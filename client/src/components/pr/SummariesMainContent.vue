@@ -27,7 +27,7 @@
       </div>
       <div v-if="summaryChat === 'SUMMARY'">
         <div v-if="!summary" class="summary-buttons-container">
-          <button class="summary-button wide" @click="getSummary(filteredArticles)"><img src="@/assets/images/sparkles-round.svg" />Generate Summary</button>
+          <button  class="summary-button wide" @click="getSummary(filteredArticles)"><img src="@/assets/images/sparkles-round.svg" />{{!summaryLoading ? 'Generate Summary' : '...'}}</button>
         </div>
         <div v-else>
           <div class="highlights-summary-container">
@@ -73,10 +73,10 @@
           </div>
           <div v-else class="summary-buttons-container">
             <button @click="changeRegen" class="summary-button">
-              <img src="@/assets/images/sparkles-round.svg" />Regenerate
+              <img src="@/assets/images/sparkles-round.svg" />{{!summaryLoading ? 'Regenerate' : '...'}}
             </button>
             <button @click="changeNew" class="summary-button dark-button">
-              <img src="@/assets/images/sparkles-round.svg" />New Summary
+              <img src="@/assets/images/sparkles-round.svg" />{{!summaryLoading ? 'New Summary' : '...'}}
             </button>
           </div>
         </div>
@@ -170,6 +170,7 @@ export default {
   data() {
     return {
       loading: false,
+      summaryLoading: false,
       summary: null,
       articles: [],
       summaryChat: 'SUMMARY',
@@ -209,7 +210,6 @@ export default {
       }
     },
     getArticleURLs(articles) {
-      console.log('articles', articles)
       return articles.map(a => a.url)
     },
     async getSummary(clips, search = '', instructions = '') {
@@ -220,11 +220,13 @@ export default {
         instructions,
       }
       try {
-        console.log('data', data)
+        this.summaryLoading = true
         const res = await Comms.api.getSummary(data)
         this.summary = res.summary
       } catch(e) {
         console.log('Error in getSummary', e)
+      } finally {
+        this.summaryLoading = false
       }
     },
     regenNewSummary() {
@@ -245,9 +247,9 @@ export default {
       this.changeNew()
     },
     addRemoveSelectedArticles(article) {
-      const existingArticle = this.selectedArticles.filter((ar) => ar.id === article.id)[0]
+      const existingArticle = this.selectedArticles.filter((ar) => ar.url === article.url)[0]
       if (existingArticle) {
-        this.selectedArticles = this.selectedArticles.filter((ar) => ar.id !== article.id)
+        this.selectedArticles = this.selectedArticles.filter((ar) => ar.url !== article.url)
       } else {
         this.selectedArticles.push(article)
       }
