@@ -1,173 +1,93 @@
 <template>
   <div class="main-content">
-    <div class="left-content">
-      <div>
-        <div @click="getClips" class="gray-background">
-          <div
-            class="toggle-container"
-            :class="summaryChat === 'SUMMARY' ? 'active' : ''"
-            @click="changeSummaryChat('SUMMARY')"
-          >
-            <p>Summary</p>
-          </div>
-          <div
-            class="toggle-container"
-            :class="summaryChat === 'CHAT' ? 'active' : ''"
-            @click="changeSummaryChat('CHAT')"
-          >
-            <p>Chat</p>
-          </div>
-        </div>
-        <div v-if="summaryChat === 'SUMMARY'">
-          <p class="small-title-text"><img src="@/assets/images/sparkles-round.svg" />Summary</p>
-        </div>
-        <div v-else>
-          <p class="small-title-text"><img src="@/assets/images/sparkles-round.svg" />Chat</p>
-        </div>
-      </div>
-      <div v-if="summaryChat === 'SUMMARY'">
-        <div v-if="!summary" class="summary-buttons-container">
-          <button class="summary-button wide">
-            <img src="@/assets/images/sparkles-round.svg" />Generate Summary
-          </button>
-        </div>
-        <div v-else>
-          <div class="highlights-summary-container">
-            <div>
-              <h3 class="highlights">Highlights:</h3>
-              <div v-for="(highlight, i) in summary.highlights" :key="i">
-                <div class="display-flex">
-                  <img class="dot" src="@/assets/images/dot.svg" />
-                  <span class="highlight-point">{{ highlight }}</span>
-                </div>
-              </div>
-            </div>
-            <div>
-              <h3 class="overall">Overall Summary:</h3>
-              <div class="highlight-point">{{ summary.overview }}</div>
-            </div>
-          </div>
-          <div v-if="regenSummary">
-            <div class="provide-instructions">
-              <span>Provide Instructions:</span>
-              <img
-                class="back-arrow"
-                src="@/assets/images/arrow-small-left.svg"
-                @click="changeRegen"
-              />
-            </div>
-            <div class="chat-border">
-              <div class="input-container">
-                <input v-model="message" placeholder="Provide Instructions..." />
-                <font-awesome-icon
-                  :class="{ invert: !message.length }"
-                  class="gray"
-                  style="height: 14px; cursor: pointer"
-                  icon="fa-regular fa-paper-plane"
-                />
-              </div>
-            </div>
-          </div>
-          <div v-else-if="newSummary">
-            <div class="provide-instructions">
-              <span>Selected: {{ selectedArticles.length }}</span>
-              <img
-                class="back-arrow"
-                src="@/assets/images/arrow-small-left.svg"
-                @click="changeNew"
-              />
-            </div>
-            <div>
-              <div v-if="!selectedArticles.length" class="summarize-disabled">
-                Select the clips you'd like to summarize
-              </div>
-              <div v-else class="summarize" @click="saveSelectedArticles">Summarize</div>
-            </div>
-          </div>
-          <div v-else class="summary-buttons-container">
-            <button @click="changeRegen" class="summary-button">
-              <img src="@/assets/images/sparkles-round.svg" />Regenerate
-            </button>
-            <button @click="changeNew" class="summary-button dark-button">
-              <img src="@/assets/images/sparkles-round.svg" />New Summary
-            </button>
-          </div>
-        </div>
-      </div>
-      <div v-else-if="summaryChat === 'CHAT'" class="chat-container">
-        <div class="margin-top chat-window" ref="chatWindow"></div>
-        <div class="bottom">
-          <div class="chat-button-container">
-            <div class="chat-button">Summarize</div>
-            <div class="chat-button">Generate</div>
-            <div class="chat-button">Ask Question</div>
-          </div>
-          <div class="chat-border">
-            <div class="input-container">
-              <input v-model="message" placeholder="What would you like to do..." />
-              <font-awesome-icon
-                :class="{ invert: !message }"
-                class="gray"
-                style="height: 14px; cursor: pointer"
-                icon="fa-regular fa-paper-plane"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="right-content">
-      <div class="updated-time"></div>
-      <div class="search-results">
-        <div>
-          <p>Results: {{ filteredArticles.length }}</p>
-        </div>
-        <div class="search-bar">
-          <img class="search" src="@/assets/images/search-round.svg" />
-          <input @input="searchTitles" type="search" :placeholder="`Search`" v-model="filterText" />
-        </div>
-      </div>
-      <div class="card-container">
-        <div v-if="loading">....</div>
+    <div class="card-container">
+      <div class="bar-header">
+        <div class="row">
+          <svg width="18" height="18">
+            <path d="M9 9H3v1h6v6h1v-6h6V9h-6V3H9v6z" fill-rule="evenodd"></path>
+          </svg>
 
-        <div v-else>
-          <div v-for="article in filteredArticles" :key="article.id" class="">
-            <div class="card" @click="selectArticle(article)">
-              <div class="display-flex">
-                <div class="">
-                  <div class="card-top-left">
-                    <img :src="article.icon" />
-                    <span>{{ article.source.name }}</span>
-                  </div>
-                  <h3 class="article-title" @click="goToArticle(article.url)">
-                    {{ article.title }}
-                  </h3>
-                  <h4 class="article-preview">{{ article.description }}</h4>
+          <div class="row current-search">
+            <small>{{ currentSearch }}</small>
+            <img src="@/assets/images/downArrow.svg" height="14px" alt="" />
+            <!-- <small>{{ filteredArticles.length }}</small> -->
+          </div>
+
+          <small>Today</small>
+          <small>Media Type</small>
+          <small>Edit Search</small>
+        </div>
+
+        <button @click="getClips" class="dark-button">Generate Summary</button>
+      </div>
+      <div v-if="loading" class="loader-container">
+        <div class="loader-row">
+          <div class="loading">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+      </div>
+      <div v-else>
+        <div v-for="article in filteredArticles" :key="article.id" class="news-container">
+          <div class="news-card" @click="selectArticle(article)">
+            <header>
+              <div>
+                <div class="card-top-left">
+                  <!-- <img :src="article.icon" /> -->
+                  <span>{{ article.source.name }}</span>
                 </div>
-                <div @click="goToArticle(article.link)">
-                  <img :src="article.urlToImage" class="cover-photo" />
-                </div>
+                <h1 class="article-title" @click="goToArticle(article.url)">
+                  {{ article.title }}
+                </h1>
+                <p class="article-preview">{{ article.description }}</p>
               </div>
-              <div class="card-footer">
-                <div class="author-time">
-                  <span>{{ article.publishedAt }}</span>
-                  <span class="divier-dot">.</span>
-                  <span>{{ article.author }}</span>
+
+              <div @click="goToArticle(article.link)">
+                <img :src="article.urlToImage" class="cover-photo" />
+              </div>
+            </header>
+
+            <div class="card-footer">
+              <div class="author-time">
+                <span class="author">{{ article.author }}</span>
+                <span class="divier-dot">.</span>
+                <span class="off-gray">{{ getTimeDifferenceInMinutes(article.publishedAt) }}</span>
+              </div>
+              <div class="footer-icon-container">
+                <div v-if="newSummary" class="">
+                  <input type="checkbox" @click="addRemoveSelectedArticles(article)" />
                 </div>
-                <div class="footer-icon-container">
-                  <div v-if="newSummary" class="">
-                    <input type="checkbox" @click="addRemoveSelectedArticles(article)" />
-                  </div>
-                  <img src="@/assets/images/sparkles-nofill-round.svg" class="footer-icon" />
-                  <img src="@/assets/images/tags.svg" class="footer-icon" />
-                  <img src="@/assets/images/search-round.svg" class="footer-icon" />
-                  <img src="@/assets/images/arrow-small-right.svg" class="right-arrow-footer" />
-                </div>
+                <img src="@/assets/images/sparkles-nofill-round.svg" class="footer-icon" />
+                <!-- <img src="@/assets/images/tags.svg" class="footer-icon" /> -->
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="left-mar">
+                  <path
+                    d="M17.5 1.25a.5.5 0 0 1 1 0v2.5H21a.5.5 0 0 1 0 1h-2.5v2.5a.5.5 0 0 1-1 0v-2.5H15a.5.5 0 0 1 0-1h2.5v-2.5zm-11 4.5a1 1 0 0 1 1-1H11a.5.5 0 0 0 0-1H7.5a2 2 0 0 0-2 2v14a.5.5 0 0 0 .8.4l5.7-4.4 5.7 4.4a.5.5 0 0 0 .8-.4v-8.5a.5.5 0 0 0-1 0v7.48l-5.2-4a.5.5 0 0 0-.6 0l-5.2 4V5.75z"
+                    fill="#000"
+                  ></path>
+                </svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="left-mar">
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
+                    fill="currentColor"
+                  ></path>
+                </svg>
+                <img src="@/assets/images/arrow-small-right.svg" class="right-arrow-footer" />
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- <div class="empty-container" >
+        <button class="large-dark-button">
+          <img src="@/assets/images/sparkle.svg" height="14px" alt="" />
+          Create a new search using AI
+        </button>
+      </div> -->
     </div>
   </div>
 </template>
@@ -185,6 +105,8 @@ export default {
       loading: false,
       summary: null,
       articles: [],
+      currentSearch: 'Scratchpad',
+      currentDate: new Date(),
       summaryChat: 'SUMMARY',
       filterText: '',
       message: '',
@@ -210,7 +132,7 @@ export default {
       try {
         await Comms.api
           .getClips({
-            search: 'Houston rockets',
+            search: 'Scratchpad',
           })
           .then((response) => {
             console.log(response)
@@ -220,6 +142,28 @@ export default {
         console.log(e)
       } finally {
         this.loading = false
+      }
+    },
+    getTimeDifferenceInMinutes(dateString) {
+      const currentDate = new Date()
+      const givenDate = new Date(dateString)
+
+      if (
+        givenDate.getDate() === currentDate.getDate() &&
+        givenDate.getMonth() === currentDate.getMonth() &&
+        givenDate.getFullYear() === currentDate.getFullYear()
+      ) {
+        const timeDifferenceInMilliseconds = currentDate - givenDate
+        const timeDifferenceInMinutes = Math.floor(timeDifferenceInMilliseconds / (1000 * 60))
+        if (timeDifferenceInMinutes >= 60) {
+          const timeDifferenceInHours = Math.floor(timeDifferenceInMinutes / 60)
+          const remainingMinutes = timeDifferenceInMinutes % 60
+          return `${timeDifferenceInHours}h`
+        } else {
+          return `${timeDifferenceInMinutes}m`
+        }
+      } else {
+        return `${givenDate.getMonth() + 1}/${givenDate.getDate()}/${givenDate.getFullYear()}`
       }
     },
     changeSummaryChat(type) {
@@ -277,22 +221,33 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.bar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row;
+  position: sticky;
+  top: 0;
+  padding: 16px 12px;
+
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  width: 100%;
+  height: 66px;
+  background-color: white;
+  z-index: 10;
+}
+
 .main-content {
   display: flex;
-  background-color: $white;
-  border-radius: 8px;
-  margin: 1rem 0.5rem 0.5rem 0;
-  padding: 1rem;
-  min-height: 88vh;
+  margin: 0;
   color: $dark-black-blue;
+  height: 100vh;
+  padding-left: 68px;
+  padding-right: 68px;
+  overflow: none;
 }
-.display-flex {
-  display: flex;
-}
-.space-between {
-  display: flex;
-  justify-content: space-between;
-}
+
 .search-results {
   display: flex;
   justify-content: space-between;
@@ -301,30 +256,72 @@ export default {
   margin-right: 1rem;
   padding-left: 1rem;
 }
-.left-content {
-  width: 29vw;
-}
-.right-content {
-  width: 38vw;
+.row {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  gap: 20px;
 }
 .card-container {
-  border-left: 1px solid $soft-gray;
-  margin-left: 1rem;
-  padding-left: 1rem;
-  height: 75vh;
   overflow-y: auto;
+  padding-top: 58px;
+  position: relative;
+  width: 100%;
 }
-.card {
-  border: 1px solid $soft-gray;
-  border-radius: 8px;
-  box-shadow: 2px 2px 5px 0 $soft-gray;
+
+.current-search {
+  cursor: pointer;
+}
+
+.empty-container {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+}
+
+.news-container {
+  display: flex;
+  align-items: center;
+  padding-top: 1.5rem;
+}
+
+.author {
+  display: inline-block;
+  overflow: hidden;
+  max-width: 150px;
+  height: 26px;
+  text-overflow: ellipsis;
+  background-color: $soft-gray;
+  padding: 4px 12px;
+  color: $base-gray;
+  border-radius: 12px;
+}
+
+.off-gray {
+  color: #6b6b6b;
+}
+
+.news-card {
+  position: relative;
+  height: 212px;
+  width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
   transition: all 0.3s;
   margin-bottom: 1rem;
-  margin-right: 1rem;
+  padding: 1rem;
+  border-radius: 5px;
 }
 .card:hover {
   transform: scale(1.025);
-  box-shadow: 4px 4px 5px 0px $soft-gray;
 }
 .card-top-left {
   display: flex;
@@ -335,12 +332,12 @@ export default {
   }
 }
 .cover-photo {
-  height: 7rem;
-  width: 7rem;
+  height: 112px;
+  width: 116px;
   margin-left: 1rem;
-  margin-top: 1rem;
+  margin-top: 1.25rem;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 4px;
   cursor: pointer;
 }
 .highlights-summary-container {
@@ -364,32 +361,53 @@ export default {
     margin-right: 0.5rem;
   }
 }
+.large-dark-button {
+  @include dark-blue-button();
+  padding: 12px 16px;
+  img {
+    filter: invert(81%) sepia(38%) saturate(738%) hue-rotate(349deg) brightness(95%) contrast(88%);
+    margin-right: 8px;
+  }
+}
 .dark-button {
   @include dark-blue-button();
-  padding: 8px 16px;
+  padding: 8px;
   img {
-    // filter: invert(99%);
     filter: invert(81%) sepia(38%) saturate(738%) hue-rotate(349deg) brightness(95%) contrast(88%);
+    margin-right: 8px;
   }
 }
 .wide {
   width: 90%;
 }
 .article-title {
-  color: $dark-green;
-  cursor: pointer;
-  font-size: 16px;
+  font-size: 18px;
+  font-weight: 1000;
+  line-height: 24px;
+  letter-spacing: 0;
+  color: $base-gray;
+  margin: 12px 0;
 }
+
 .article-preview {
   color: $base-gray;
   font-size: 14px;
+  max-height: 72px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  font-weight: 400;
+  margin: 0;
 }
 .card-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-top: 1px solid $soft-gray;
-  padding-top: 0.5rem;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  padding: 12px 18px 12px 1rem;
+  width: 100%;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
   span {
     font-size: 12px;
     margin-right: 0.5rem;
@@ -404,12 +422,17 @@ export default {
   margin-left: 1rem;
   cursor: pointer;
 }
+.left-mar {
+  margin-left: 1rem;
+}
 .footer-icon {
   height: 14px;
   margin-left: 1rem;
   cursor: pointer;
 }
 .author-time {
+  display: flex;
+  align-items: center;
   color: $light-gray-blue;
 }
 .divier-dot {
@@ -680,34 +703,41 @@ input[type='search']:focus {
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
-  margin-bottom: 1.5rem;
+}
+
+.loader-row {
+  border-radius: 6px;
+  padding: 0.25rem 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 .loading {
   display: flex;
   justify-content: center;
   align-items: center;
-  // background-color: $soft-gray;
   border-radius: 6px;
-  padding: 0.75rem 0.75rem;
+  padding: 1.5rem 0.75rem;
 }
 
-// .dot {
-//   width: 4px;
-//   height: 4px;
-//   margin: 0 5px;
-//   background: rgb(97, 96, 96);
-//   border-radius: 50%;
-//   animation: bounce 1.2s infinite ease-in-out;
-// }
+.dot {
+  width: 4px;
+  height: 4px;
+  margin: 0 5px;
+  background: rgb(97, 96, 96);
+  border-radius: 50%;
+  animation: bounce 1.2s infinite ease-in-out;
+}
 
-// .dot:nth-child(2) {
-//   animation-delay: -0.4s;
-// }
+.dot:nth-child(2) {
+  animation-delay: -0.4s;
+}
 
-// .dot:nth-child(3) {
-//   animation-delay: -0.2s;
-// }
+.dot:nth-child(3) {
+  animation-delay: -0.2s;
+}
 
 .col-start {
   display: flex;

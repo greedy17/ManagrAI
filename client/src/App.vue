@@ -131,9 +131,9 @@ input {
   flex-flow: column;
 }
 
-.page-content {
-  padding: 2px 16px;
-}
+// .page-content {
+//   padding: 2px 16px;
+// }
 
 ::-webkit-scrollbar {
   width: 0px;

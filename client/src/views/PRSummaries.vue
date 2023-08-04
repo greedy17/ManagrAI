@@ -1,15 +1,16 @@
 <template>
   <div class="summaries">
-    <PRTopBar />
-    <div class="display-flex">
+    <main id="main">
       <SummariesMainContent />
+    </main>
+    <aside id="right-sidebar">
       <PRRightBar />
-    </div>
+    </aside>
   </div>
 </template>
 <script>
-import PRTopBar from '@/components/pr/PRTopBar.vue';
-import SummariesMainContent from '@/components/pr/SummariesMainContent.vue';
+import PRTopBar from '@/components/pr/PRTopBar.vue'
+import SummariesMainContent from '@/components/pr/SummariesMainContent.vue'
 import PRRightBar from '@/components/pr/PRRightBar.vue'
 
 export default {
@@ -17,32 +18,68 @@ export default {
   components: {
     PRTopBar,
     SummariesMainContent,
-    PRRightBar
+    PRRightBar,
   },
   data() {
-    return {
-      
-    }
+    return {}
   },
-  watch: {
-
-  },
-  created() {
-
-  },
-  methods: {
-    
-  },
-  computed: {
-    
-  }
+  watch: {},
+  created() {},
+  methods: {},
+  computed: {},
 }
 </script>
-<style scoped>
+
+<style lang="scss" scoped>
+@import '@/styles/variables';
+
+.summaries {
+  background-color: white;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  font-family: $base-font-family;
+  color: $chat-font-color;
+  letter-spacing: 0.4px;
+  line-height: 1.5;
+  position: relative;
+}
+
+#main {
+  flex: 1;
+  width: 54vw;
+  background-color: white;
+  z-index: 5;
+}
+
+.elipsis-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 450px;
+}
+
+#right-sidebar {
+  width: 525px;
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 1000px) {
   .summaries {
-    margin-left: 60px;
+    flex-direction: column;
   }
-  .display-flex {
-    display: flex;
+
+  #main {
+    order: 2;
+    width: 100%;
+    height: 75%;
   }
+
+  #right-sidebar {
+    width: 100%;
+    height: 40%;
+    order: 1;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+}
 </style>

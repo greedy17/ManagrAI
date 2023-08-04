@@ -1,98 +1,14 @@
 <template>
   <div class="right-bar">
-    <div v-if="selectedArticle" class="right-content">
-      <div>
-        <h3 class="right-bar-title">{{truncateTitle(selectedArticle.title)}}</h3>
-      </div>
-      <div class="gray-background">
-        <div class="toggle-container" :class="selectedResource === 'Source' ? 'active' : ''" @click="changeResource('Source')">
-          <p>Source</p>
-        </div>
-        <div class="toggle-container" :class="selectedResource === 'Data' ? 'active' : ''" @click="changeResource('Data')">
-          <p>Data</p>
-        </div>
-        <div class="toggle-container" :class="selectedResource === 'Chat' ? 'active' : ''" @click="changeResource('Chat')">
-          <p>Chat</p>
-        </div>
-      </div>
-      <div v-if="selectedResource === 'Data'" class="data-container">
-        <div v-if="loading">
-          Loading...
-        </div>
-        <div v-else-if="selectedArticle && selectedArticle.data && !Object.keys(selectedArticle.data).length" @click="setData" class="add-edit-button">
-          <img src="@/assets/images/sparkles-round.svg" class="button-img margin-right" /><span>Auto-populate fields</span>
-        </div>
-        <div v-else class="right-side">
-          <img src="@/assets/images/sparkles-round.svg" class="button-img" />
-        </div>
-        <div class="data-content" v-if="selectedArticle.data">
-          <div>
-            <p class="data-title">Impact Score</p>
-            <p class="data-detail">{{ selectedArticle.data.impactScore }}</p>
-          </div>
-          <div>
-            <p class="data-title">Impact Score Details</p>
-            <p class="data-detail">{{ selectedArticle.data.impactScoreDetails }}</p>
-          </div>
-          <div>
-            <p class="data-title">Key Messages</p>
-            <p class="data-detail">{{ selectedArticle.data.keyMessages }}</p>
-          </div>
-          <div>
-            <p class="data-title">Summary / Notes</p>
-            <p class="data-detail">{{ selectedArticle.data.summary }}</p>
-          </div>
-          <div>
-            <p class="data-title">Topics</p>
-            <p class="data-detail">{{ selectedArticle.data.topics }}</p>
-          </div>
-          <div>
-            <p class="data-title">Competitors</p>
-            <p class="data-detail">{{ selectedArticle.data.competitors }}</p>
-          </div>
-          <div>
-            <p class="data-title">Products</p>
-            <p class="data-detail">{{ selectedArticle.data.products }}</p>
-          </div>
-          <div>
-            <p class="data-title">Follow up</p>
-            <p class="data-detail">{{ selectedArticle.data.followUp }}</p>
-          </div>
-        </div>
-        <div class="add-edit-button">
-          <img src="@/assets/images/edit-round.svg" class="button-img margin-right" /> <span>Add / Edit</span>
-        </div>
-      </div>
-      <div v-else-if="selectedResource === 'Chat'" class="chat-container">
-        <div class="margin-top chat-window" ref="chatWindow">
-
-        </div>
-        <div class="bottom">
-          <div class="chat-button-container">
-            <div class="chat-button">Summarize</div>
-            <div class="chat-button">Generate</div>
-            <div class="chat-button">Ask Question</div>
-          </div>
-          <div class="chat-border">
-            <div class="input-container">
-              <input v-model="message" placeholder="What would you like to do..." />
-              <font-awesome-icon
-                :class="{ invert: !message }"
-                class="gray"
-                style="height: 14px; cursor: pointer"
-                icon="fa-regular fa-paper-plane"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-      <div v-else>
-        {{ selectedResource }}
-      </div>
-    </div>
-    <div v-else class="right-content">
-      <h3>Please select an article</h3>
-    </div>
+    <header>
+      <h4>Select a Clip...</h4>
+    </header>
+    <footer>
+      <!-- <button class="secondary-button">
+        <img src="@/assets/images/sparkle.svg" height="14px" alt="" />
+        Generate Clip Summary
+      </button> -->
+    </footer>
   </div>
 </template>
 <script>
@@ -102,30 +18,16 @@ export default {
   components: {
     ChatTextBox,
   },
-  props: {
-    
-  },
+  props: {},
   data() {
     return {
       selectedResource: 'Data',
       loading: false,
       message: '',
-      actions: [
-        {
-          name: 'Summarize',
-          value: 'Summarize...',
-        },
-        { name: 'Generate', value: 'Generate...' },
-        // { name: 'Ask Managr', value: 'Ask managr... ' },
-      ],
     }
   },
-  watch: {
-
-  },
-  created() {
-
-  },
+  watch: {},
+  created() {},
   methods: {
     changeResource(resource) {
       this.selectedResource = resource
@@ -143,14 +45,14 @@ export default {
         const word = titleSplit[i]
         newTitle += `${word} `
         if (newTitle.length >= 30) {
-          const lastChar = newTitle[newTitle.length-2]
+          const lastChar = newTitle[newTitle.length - 2]
           if (lastChar === ',' || lastChar === '.') {
-            newTitle = newTitle.slice(0, newTitle.length-2)
+            newTitle = newTitle.slice(0, newTitle.length - 2)
           } else {
-            newTitle = newTitle.slice(0, newTitle.length-1)
+            newTitle = newTitle.slice(0, newTitle.length - 1)
           }
           newTitle += '...'
-          break;
+          break
         }
       }
       return newTitle
@@ -159,7 +61,7 @@ export default {
     setData() {
       this.loading = true
       setTimeout(() => {
-        let articleCopy = {...this.selectedArticle}
+        let articleCopy = { ...this.selectedArticle }
         // articleCopy.data = {
         //   impactScore: 8,
         //   impactScoreDetails: 'Talked positively about Tesla',
@@ -186,111 +88,142 @@ export default {
     userName() {
       return this.$store.state.user.firstName
     },
-  }
+  },
 }
 </script>
 <style lang="scss" scoped>
-  @import '@/styles/variables';
-  @import '@/styles/buttons';
-  .right-bar {
-    margin: 1rem 0.5rem 0.5rem 0.5rem;
-    background-color: $white;
-    // width: 23vw;
-    position: sticky;
-    // width: 100%;
-    width: 25vw;
-    // height: 100%;
-    border-radius: 8px;
-  }
-  .display-flex {
-    display: flex;
-  }
-  .right-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 0.5rem;
-  }
-  .right-bar-title {
+@import '@/styles/variables';
+@import '@/styles/buttons';
+.right-bar {
+  background-color: $white;
+  width: 100%;
+  height: 100%;
+  position: sticky;
+  overflow-y: auto;
+  padding-top: 74px;
+}
+.display-flex {
+  display: flex;
+}
+.right-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0.5rem;
+}
+.gray-background {
+  display: flex;
+  align-items: center;
+  background-color: $soft-gray;
+  height: 5vh;
+  // width: 16vw;
+  width: 95%;
+  border-radius: 8px;
+}
+.toggle-container {
+  border: 1px solid $soft-gray;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  // width: 5vw;
+  width: 30%;
+  height: 3vh;
+  border-radius: 8px;
+  margin: 0 0.25rem;
+  color: $light-gray-blue;
+  p {
+    margin: 0;
+    font-size: 12px;
     // text-align: center;
   }
-  .gray-background {
-    display: flex;
-    align-items: center;
-    background-color: $soft-gray;
-    height: 5vh;
-    // width: 16vw;
-    width: 95%;
-    border-radius: 8px;
-  }
-  .toggle-container {
-    border: 1px solid $soft-gray;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    // width: 5vw;
-    width: 30%;
-    height: 3vh;
-    border-radius: 8px;
-    margin: 0 0.25rem;
-    color: $light-gray-blue;
-    p {
-      margin: 0;
-      font-size: 12px;
-      // text-align: center;
-    }
-  }
-  .active {
-    background-color: $white;
-    border-radius: 8px;
-    color: $dark-black-blue;
-  }
-  .button-img {
-    height: 14px;
-  }
-  .margin-right {
-    margin-right: 0.5rem;
-  }
-  .right-side {
-    display: flex;
-    justify-content: flex-end;
-    width: 100%;
-  }
-  .data-title {
-    font-size: 14px;
-    color: $light-gray-blue;
-    margin-bottom: 0.25rem;
-  }
-  .data-detail {
+}
+.active {
+  background-color: $white;
+  border-radius: 8px;
+  color: $dark-black-blue;
+}
+.button-img {
+  height: 14px;
+}
+.margin-right {
+  margin-right: 0.5rem;
+}
+.right-side {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+.data-title {
+  font-size: 14px;
+  color: $light-gray-blue;
+  margin-bottom: 0.25rem;
+}
+.data-detail {
+  font-size: 13px;
+  // color: $light-gray-blue;
+  margin-top: 0.25rem;
+  margin-left: 0.25rem;
+  min-height: 1.5rem;
+}
+.data-container {
+  width: 90%;
+  margin-top: 1rem;
+}
+.data-content {
+  height: 65vh;
+  // border: 1px solid red;
+  overflow-y: auto;
+}
+.add-edit-button {
+  @include gray-text-button();
+  padding-bottom: 0.5rem;
+  padding-top: 0.5rem;
+  position: relative;
+  bottom: 0rem;
+}
+.chat-container {
+  width: 90%;
+  height: 70vh;
+  overflow-y: auto;
+}
+
+header {
+  position: sticky;
+  top: 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  width: 100%;
+  height: 50px;
+  background-color: white;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  h4 {
     font-size: 13px;
-    // color: $light-gray-blue;
-    margin-top: 0.25rem;
-    margin-left: 0.25rem;
-    min-height: 1.5rem;
+    margin: 0;
   }
-  .data-container {
-    width: 90%;
-    margin-top: 1rem;
+}
+
+footer {
+  position: absolute;
+  left: 150px;
+  bottom: 1rem;
+}
+
+.secondary-button {
+  @include dark-blue-button();
+  border: 1px solid $dark-black-blue;
+  color: $dark-black-blue;
+  background-color: white;
+  padding: 10px 12px;
+  img {
+    filter: invert(25%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
+    margin-right: 8px;
   }
-  .data-content {
-    height: 65vh;
-    // border: 1px solid red;
-    overflow-y: auto;
-  }
-  .add-edit-button {
-    @include gray-text-button();
-    padding-bottom: 0.5rem;
-    padding-top: 0.5rem;
-    position: relative;
-    bottom: 0rem;
-  }
-  .chat-container {
-    width: 90%;
-    height: 70vh;
-    overflow-y: auto;
-  }
-  .message-text {
+}
+.message-text {
   font-family: $base-font-family;
   word-wrap: break-word;
   white-space: pre-wrap;
@@ -602,12 +535,6 @@ export default {
   display: flex;
   justify-content: center;
   margin-bottom: 0.5rem;
-}
-.chat-button {
-  @include secondary-button();
-  // width: 6rem;
-  padding: 0.5rem 0.65rem;
-  margin: 0 0.2rem;
 }
 .chat-border {
   background-color: $silver;
