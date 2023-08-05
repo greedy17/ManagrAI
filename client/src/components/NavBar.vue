@@ -36,16 +36,41 @@
           <!-- <router-link active-class="active" :to="{ name: 'PRClipReport' }">
             <img src="@/assets/images/file-excel.svg" class="nav-img" height="16px" alt="" />
           </router-link> -->
-          <div class="row right-mar">
-            <div class="avatar">{{ userName[0] }}</div>
-            <img src="@/assets/images/downArrow.svg" height="14px" alt="" />
+          <div class="row pointer">
+            <svg width="18" height="18">
+              <path d="M9 9H3v1h6v6h1v-6h6V9h-6V3H9v6z" fill-rule="evenodd"></path>
+            </svg>
+            <p class="left-mar">Search</p>
           </div>
 
-          <!-- <router-link :to="{ name: 'Login' }">
-            <div>
-              <img @click="logOut" src="@/assets/images/logout.svg" alt="" height="16px" />
+          <div class="row right-mar avatar-container">
+            <div @click="toggleMenu" class="avatar">{{ userName[0] }}</div>
+            <img
+              @click="toggleMenu"
+              class="pointer"
+              src="@/assets/images/downArrow.svg"
+              height="14px"
+              alt=""
+            />
+
+            <div v-if="menuOpen" class="avatar-dropdown">
+              <p class="dropdown-item">
+                <img src="@/assets/images/profile.svg" height="14px" alt="" />
+                Profile
+              </p>
+              <p class="dropdown-item">
+                <img class="mar-right" src="@/assets/images/settings.svg" height="16px" alt="" />
+                Settings
+              </p>
+              <p @click="logOut" class="dropdown-item__bottom">Sign out</p>
+              <!-- 
+              <router-link :to="{ name: 'Login' }">
+                <div>
+                  <img @click="logOut" src="@/assets/images/logout.svg" alt="" height="16px" />
+                </div>
+              </router-link> -->
             </div>
-          </router-link> -->
+          </div>
         </div>
       </nav>
     </div>
@@ -65,10 +90,14 @@ export default {
     return {
       items: [],
       searchText: null,
+      menuOpen: false,
     }
   },
 
   methods: {
+    toggleMenu() {
+      this.menuOpen = !this.menuOpen
+    },
     logOut() {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
@@ -167,6 +196,91 @@ export default {
   width: 100%;
 }
 
+.avatar-container {
+  position: relative;
+}
+
+.avatar-dropdown {
+  width: 180px;
+  position: absolute;
+  top: 40px;
+  right: -8px;
+  font-size: 12px;
+  font-weight: 400;
+  background: white;
+  padding: 1rem 0 0 0;
+  border-radius: 5px;
+  box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+  line-height: 1.5;
+  z-index: 2000;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+
+  p {
+    margin-top: 8px;
+    padding: 0;
+  }
+}
+
+.avatar-dropdown::before {
+  position: absolute;
+  height: 8px;
+  width: 8px;
+  background: $dark-green;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  font-size: 14px;
+  color: $dark-black-blue;
+  padding: 2px 0 !important;
+  padding-left: 1rem;
+  cursor: pointer;
+  position: relative;
+  width: 100%;
+  img {
+    margin: 0 1.5rem 0 1.5rem;
+  }
+
+  p {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    width: 100%;
+    margin: 0;
+  }
+
+  &:hover {
+    opacity: 0.65;
+  }
+
+  &__bottom {
+    font-size: 14px;
+    padding-top: 8px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $dark-black-blue;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+
+    &:hover {
+      opacity: 0.65;
+    }
+  }
+}
+
+.mar-right {
+  margin-right: 23px !important;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
 .avatar {
   background-color: $soft-gray;
   color: $base-gray;
@@ -178,8 +292,12 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
-
+.left-mar {
+  margin-left: 0.5rem;
+  color: $dark-black-blue;
+}
 .nav-img {
   height: 16px;
 }
@@ -217,7 +335,10 @@ nav {
   display: flex;
   align-items: center;
   flex-direction: row;
-  gap: 16px;
+  gap: 36px;
+  font-weight: 300 !important;
+  font-family: $base-font-family;
+  font-size: 14px;
 }
 
 a {

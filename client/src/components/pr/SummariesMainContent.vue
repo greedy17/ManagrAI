@@ -3,10 +3,10 @@
     <div class="card-container">
       <div class="bar-header">
         <div class="row">
-          <svg width="18" height="18">
+          <!-- <svg width="18" height="18">
             <path d="M9 9H3v1h6v6h1v-6h6V9h-6V3H9v6z" fill-rule="evenodd"></path>
-          </svg>
-
+          </svg> -->
+          <small class="off-gray">{{ filteredArticles.length }}</small>
           <div class="row current-search">
             <small>{{ currentSearch }}</small>
             <img src="@/assets/images/downArrow.svg" height="14px" alt="" />
@@ -33,7 +33,7 @@
         <div v-for="article in filteredArticles" :key="article.id" class="news-container">
           <div class="news-card" @click="selectArticle(article)">
             <header>
-              <div>
+              <div class="card-col">
                 <div class="card-top-left">
                   <!-- <img :src="article.icon" /> -->
                   <span>{{ article.source.name }}</span>
@@ -59,15 +59,15 @@
                 <div v-if="newSummary" class="">
                   <input type="checkbox" @click="addRemoveSelectedArticles(article)" />
                 </div>
-                <img src="@/assets/images/sparkles-nofill-round.svg" class="footer-icon" />
-                <!-- <img src="@/assets/images/tags.svg" class="footer-icon" /> -->
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="left-mar">
+                <!-- <img src="@/assets/images/sparkles-nofill-round.svg" class="footer-icon" /> -->
+
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="left-mar">
                   <path
                     d="M17.5 1.25a.5.5 0 0 1 1 0v2.5H21a.5.5 0 0 1 0 1h-2.5v2.5a.5.5 0 0 1-1 0v-2.5H15a.5.5 0 0 1 0-1h2.5v-2.5zm-11 4.5a1 1 0 0 1 1-1H11a.5.5 0 0 0 0-1H7.5a2 2 0 0 0-2 2v14a.5.5 0 0 0 .8.4l5.7-4.4 5.7 4.4a.5.5 0 0 0 .8-.4v-8.5a.5.5 0 0 0-1 0v7.48l-5.2-4a.5.5 0 0 0-.6 0l-5.2 4V5.75z"
                     fill="#000"
                   ></path>
                 </svg>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="left-mar">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="left-mar">
                   <path
                     fill-rule="evenodd"
                     clip-rule="evenodd"
@@ -75,7 +75,7 @@
                     fill="currentColor"
                   ></path>
                 </svg>
-                <img src="@/assets/images/arrow-small-right.svg" class="right-arrow-footer" />
+                <img src="@/assets/images/sparkles-thin.svg" class="right-arrow-footer" />
               </div>
             </div>
           </div>
@@ -105,7 +105,7 @@ export default {
       loading: false,
       summary: null,
       articles: [],
-      currentSearch: 'Scratchpad',
+      currentSearch: 'Houston Texans',
       currentDate: new Date(),
       summaryChat: 'SUMMARY',
       filterText: '',
@@ -132,7 +132,7 @@ export default {
       try {
         await Comms.api
           .getClips({
-            search: 'Scratchpad',
+            search: 'Houston Texans',
           })
           .then((response) => {
             console.log(response)
@@ -286,6 +286,10 @@ header {
   align-items: center;
   justify-content: space-between;
   gap: 32px;
+  height: 120px;
+  overflow: none;
+  text-overflow: ellipsis;
+  margin-bottom: 2rem;
 }
 
 .news-container {
@@ -312,13 +316,18 @@ header {
 
 .news-card {
   position: relative;
-  height: 212px;
+  min-height: 220px;
   width: 100%;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   transition: all 0.3s;
-  margin-bottom: 1rem;
   padding: 1rem;
   border-radius: 5px;
+}
+
+.card-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 .card:hover {
   transform: scale(1.025);
@@ -337,7 +346,7 @@ header {
   margin-left: 1rem;
   margin-top: 1.25rem;
   object-fit: cover;
-  border-radius: 4px;
+
   cursor: pointer;
 }
 .highlights-summary-container {
@@ -402,12 +411,8 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  padding: 12px 18px 12px 1rem;
-  width: 100%;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 16px 0;
+  margin-top: 1rem;
   span {
     font-size: 12px;
     margin-right: 0.5rem;
@@ -416,6 +421,7 @@ header {
 .footer-icon-container {
   display: flex;
   align-items: center;
+  margin-right: 8px;
 }
 .right-arrow-footer {
   height: 16px;
@@ -426,7 +432,7 @@ header {
   margin-left: 1rem;
 }
 .footer-icon {
-  height: 14px;
+  height: 24px;
   margin-left: 1rem;
   cursor: pointer;
 }

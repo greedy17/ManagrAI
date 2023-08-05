@@ -1,8 +1,37 @@
 <template>
   <div class="right-bar">
     <header>
-      <h4>Select a Clip...</h4>
+      <h3>No idea what to do here...</h3>
     </header>
+    <div class="right-body">
+      <!-- <p>
+        First, create a new
+        <span class="search"
+          ><svg width="18" height="18">
+            <path d="M9 9H3v1h6v6h1v-6h6V9h-6V3H9v6z" fill-rule="evenodd"></path>
+          </svg>
+          Search</span
+        >. Your clips will be populate in the feed to the left.
+      </p>
+
+      <p>When you generate a summary from your clips it will appear here.</p> -->
+
+      <!-- <h3 style="margin-top: 2.5rem">Tags</h3>
+
+      <p>
+        Click the
+        <span class="search">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="left-mar">
+            <path
+              d="M17.5 1.25a.5.5 0 0 1 1 0v2.5H21a.5.5 0 0 1 0 1h-2.5v2.5a.5.5 0 0 1-1 0v-2.5H15a.5.5 0 0 1 0-1h2.5v-2.5zm-11 4.5a1 1 0 0 1 1-1H11a.5.5 0 0 0 0-1H7.5a2 2 0 0 0-2 2v14a.5.5 0 0 0 .8.4l5.7-4.4 5.7 4.4a.5.5 0 0 0 .8-.4v-8.5a.5.5 0 0 0-1 0v7.48l-5.2-4a.5.5 0 0 0-.6 0l-5.2 4V5.75z"
+              fill="#000"
+            ></path>
+          </svg>
+        </span>
+
+        icon to tag an article and save it for later.
+      </p> -->
+    </div>
     <footer>
       <!-- <button class="secondary-button">
         <img src="@/assets/images/sparkle.svg" height="14px" alt="" />
@@ -32,51 +61,6 @@ export default {
     changeResource(resource) {
       this.selectedResource = resource
     },
-    truncateTitle(title) {
-      if (!title) {
-        return ''
-      }
-      if (title.length <= 33) {
-        return title
-      }
-      const titleSplit = title.split(' ')
-      let newTitle = ''
-      for (let i = 0; i < titleSplit.length; i++) {
-        const word = titleSplit[i]
-        newTitle += `${word} `
-        if (newTitle.length >= 30) {
-          const lastChar = newTitle[newTitle.length - 2]
-          if (lastChar === ',' || lastChar === '.') {
-            newTitle = newTitle.slice(0, newTitle.length - 2)
-          } else {
-            newTitle = newTitle.slice(0, newTitle.length - 1)
-          }
-          newTitle += '...'
-          break
-        }
-      }
-      return newTitle
-      // return title.slice(0, 34) + '...'
-    },
-    setData() {
-      this.loading = true
-      setTimeout(() => {
-        let articleCopy = { ...this.selectedArticle }
-        // articleCopy.data = {
-        //   impactScore: 8,
-        //   impactScoreDetails: 'Talked positively about Tesla',
-        //   keyMessages: `Tesla revolutionizes the automotive industry with sustainable innovation.`,
-        //   summary: `The article discusses projections for U.S. new-vehicle sales in 2023 and lists the best-selling...`,
-        //   topics: `Auto, Ford, Truck, Electric cars`,
-        //   competitors: `Ford`,
-        //   products: `Tesla Model X`,
-        //   followUp: `No follow up is required`,
-        // }
-        this.$store.dispatch('updateSelectedArticle', articleCopy)
-        this.loading = false
-        // this.selectedArticle.data = {}
-      }, 1500)
-    },
   },
   computed: {
     selectedArticle() {
@@ -102,6 +86,35 @@ export default {
   overflow-y: auto;
   padding-top: 74px;
 }
+.right-body {
+  color: $dark-black-blue;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: 0;
+  padding: 0 36px;
+}
+
+.search {
+  svg {
+    margin-right: 8px;
+    margin-top: 2px;
+    margin-left: 6px;
+  }
+}
+
+.off-gray {
+  color: #6b6b6b;
+  font-weight: 400;
+  font-size: 14px;
+}
+
+.divier-dot {
+  position: relative;
+  bottom: 0.2rem;
+  margin: 0 0.5rem;
+}
+
 .display-flex {
   display: flex;
 }
@@ -188,22 +201,25 @@ export default {
   overflow-y: auto;
 }
 
+h3 {
+  font-size: 16px;
+  font-weight: 400;
+  margin: 0;
+  color: $base-gray;
+}
+
 header {
   position: sticky;
   top: 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0 36px;
   width: 100%;
   height: 50px;
   background-color: white;
   z-index: 10;
   display: flex;
   align-items: center;
-  justify-content: center;
-
-  h4 {
-    font-size: 13px;
-    margin: 0;
-  }
+  justify-content: flex-start;
 }
 
 footer {
