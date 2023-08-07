@@ -108,9 +108,7 @@
             <div>
               Summary for {{ selectedSearch.search }}
             </div>
-            <div>
-              {{summary}}
-            </div>
+            <pre v-html="summary" class="message-text" />
             <div>
               <div @click="openRegenModal">Regenerate</div>
               <div>Save Search</div>
@@ -604,5 +602,10 @@ export default {
 }
 .regen-modal {
   margin-top: 10rem;
+}
+.message-text {
+  font-family: $base-font-family;
+  word-wrap: break-word;
+  white-space: pre-wrap;
 }
 </style>
