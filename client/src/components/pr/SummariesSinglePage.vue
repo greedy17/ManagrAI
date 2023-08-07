@@ -103,13 +103,21 @@
                     <span>{{ article.author }}</span>
                   </div>
                   <div class="footer-icon-container">
-                    <div v-if="newSummary" class="">
-                      <input type="checkbox" />
+                    <div>
+                      <img src="@/assets/images/sparkles-nofill-round.svg" class="logo" />
+                      <span>Summarize Article</span>
                     </div>
-                    <img src="@/assets/images/sparkles-nofill-round.svg" class="footer-icon" />
-                    <img src="@/assets/images/tags.svg" class="footer-icon" />
-                    <img src="@/assets/images/search-round.svg" class="footer-icon" />
-                    <img src="@/assets/images/arrow-small-right.svg" class="right-arrow-footer" />
+                    <div>
+                      <img src="@/assets/images/tags.svg" class="logo" />
+                      <span>Tag</span>
+                    </div>
+                    <!-- <div v-if="newSummary" class="">
+                      <input type="checkbox" />
+                    </div> -->
+                    <!-- <img src="@/assets/images/sparkles-nofill-round.svg" class="footer-icon" /> -->
+                    <!-- <img src="@/assets/images/tags.svg" class="footer-icon" /> -->
+                    <!-- <img src="@/assets/images/search-round.svg" class="footer-icon" /> -->
+                    <!-- <img src="@/assets/images/arrow-small-right.svg" class="right-arrow-footer" /> -->
                   </div>
                 </div>
               </div>
@@ -216,8 +224,14 @@ export default {
       this.loading = true
       this.summaryLoading = true
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
-      await this.getClips()
-      await this.getSummary(this.filteredArticles, '', this.newTemplate)
+      try {
+        this.getClips().then((response) => {
+       this.getSummary(this.filteredArticles, '', this.newTemplate)
+      })
+      } catch(e){
+        console.log(e)
+      } 
+  
       this.newSearch = ''
       this.newTemplate = ''
     },
