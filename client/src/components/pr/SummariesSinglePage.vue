@@ -1,5 +1,50 @@
 <template>
   <div class="main-content">
+    <Modal
+      v-if="regenModal"
+      @close-modal="
+        () => {
+          $emit('cancel'), closeRegenModal()
+        }
+      "
+      class="regen-modal"
+    >
+      <div class="regen-container">
+        <div class="regen-header">
+          <div>
+            <h4 class="regen-header-title">New Search</h4>
+            <p class="regen-header-subtitle">Create a new search using conversational AI</p>
+          </div>
+          <div class="pointer" @click="closeRegenModal">X</div>
+        </div>
+        <div class="regen-body">
+          <div>
+            <div>
+              <h5 class="regen-body-title">Search</h5>
+              <span class="regen-header-subtitle">Use conversation text. AI will convert it to a boolean.</span>
+            </div>
+            <textarea 
+              v-model="newSearch" 
+              class="regen-body-text"
+            />
+          </div>
+          <div>
+            <div>
+              <h5 class="regen-body-title">Summary Instructions <span class="regen-header-subtitle">(optional)</span></h5>
+            </div>
+            <textarea 
+              v-model="newTemplate" 
+              class="regen-body-text"
+            />
+          </div>
+          <div class="blue-border-button">Use a Template</div>
+        </div>
+        <div class="regen-footer">
+          <div class="cancel-button" @click="closeRegenModal">Cancel</div>
+          <div class="save-button" @click="generateNewSearch">Save</div>
+        </div>
+      </div>
+    </Modal>
     <div v-if="page === 'SUMMARIES'">
       <div v-if="!selectedSearch">
         <div>
@@ -67,7 +112,7 @@
               {{summary}}
             </div>
             <div>
-              <div>Regenerate</div>
+              <div @click="openRegenModal">Regenerate</div>
               <div>Save Search</div>
             </div>
           </div>
@@ -189,6 +234,7 @@ export default {
   name: 'SummariesSinglePage',
   components: {
     ChatTextBox,
+    Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
   },
   props: {
     selectedSearch: {
@@ -209,6 +255,7 @@ export default {
       outputInstructions: '',
       loading: false,
       summaryLoading: false,
+      regenModal: false,
       filteredArticles: [],
       summary: '',
       newSummary: false,
@@ -242,6 +289,12 @@ export default {
       this.brandName = ''
       this.targetPersona = ''
       this.outputInstructions = ''
+    },
+    openRegenModal() {
+      this.regenModal = true
+    },
+    closeRegenModal() {
+      this.regenModal = false
     },
     changeSearch(search) {
       this.$emit('change-search', search)
@@ -496,5 +549,60 @@ export default {
 .content-width {
   width: 70vw;
   overflow-y: auto;
+}
+.regen-header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid $soft-gray;
+  margin-bottom: 1rem;
+}
+.regen-header-title {
+  margin: 0.25rem 0;
+}
+.regen-header-subtitle {
+  font-size: 12px;
+  color: $light-gray-blue;
+  margin: 0.5rem 0;
+}
+.regen-body {
+  margin: 0.5rem 0;
+  border-bottom: 1px solid $soft-gray;
+}
+.regen-body-title {
+  margin: 0 0 0 0;
+}
+.regen-body-text {
+  resize: none;
+  outline: none;
+  border: 1px solid $soft-gray;
+  border-radius: 8px;
+  height: 4rem;
+  width: 25rem;
+  overflow-y: auto;
+  margin: 1rem 0;
+  padding: 0.75rem;
+  font-family: $base-font-family;
+}
+.regen-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+.blue-border-button {
+  @include dark-blue-border-button();
+  width: 8rem;
+  margin-bottom: 1rem;
+}
+.cancel-button {
+  @include gray-text-button();
+}
+.save-button {
+  @include dark-blue-button();
+  margin-left: 0.5rem;
+}
+.pointer {
+  cursor: pointer;
+}
+.regen-modal {
+  margin-top: 10rem;
 }
 </style>
