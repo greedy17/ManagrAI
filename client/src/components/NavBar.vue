@@ -8,7 +8,19 @@
           </div>
         </router-link>
 
-        <div class="input">
+        <router-link active-class="active" :to="{ name: 'PRSummaries' }">
+          <p>Summaries</p>
+        </router-link>
+
+        <router-link :to="{ name: 'PRSummaries' }">
+          <p>Pitches</p>
+        </router-link>
+
+        <router-link :to="{ name: 'PRSummaries' }">
+          <p>Meetings</p>
+        </router-link>
+
+        <!-- <div class="input">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path
               fill-rule="evenodd"
@@ -17,7 +29,6 @@
               fill="currentColor"
             ></path>
           </svg>
-          <!-- @keydown.enter="loadFromEnter" -->
           <input class="search-input" v-model="searchText" :placeholder="`Search...`" />
           <img
             v-show="searchText"
@@ -27,7 +38,7 @@
             height="12px"
             alt=""
           />
-        </div>
+        </div> -->
 
         <div class="auto-left">
           <!-- <router-link active-class="active" :to="{ name: 'PRSummaries' }">
@@ -341,29 +352,36 @@ nav {
   font-size: 14px;
 }
 
+.off-gray {
+  color: #6b6b6b;
+}
+
 a {
   text-decoration: none;
-  color: $base-gray;
-  font-family: #{$base-font-family};
-  font-weight: bold;
-  // padding: 16px 12px;
-  padding: 12px 12px 10px 12px;
+  font-weight: 300 !important;
+  font-family: $base-font-family;
+  color: #6b6b6b;
+  font-size: 14px;
+  padding: 6px 16px;
   img {
     transition: all 0.2s;
   }
 }
 a:hover {
-  color: white;
+  color: rgba(0, 0, 0, 0.5);
 }
 .active {
-  background-color: $white-green;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 5px;
-  img {
-    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-      brightness(93%) contrast(89%);
-  }
+  color: $base-gray;
+  position: relative;
+}
+
+.active::before {
+  content: '';
+  position: absolute;
+  left: 16px;
+  bottom: 0;
+  height: 1px;
+  width: 70%;
+  border-bottom: 1px solid $dark-black-blue;
 }
 </style>

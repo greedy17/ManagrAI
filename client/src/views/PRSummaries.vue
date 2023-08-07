@@ -1,11 +1,11 @@
 <template>
   <div class="summaries">
     <main id="main">
-      <SummariesMainContent />
+      <SummariesMainContent @set-summary="setSummary" @set-loader="setLoader" />
     </main>
-    <aside id="right-sidebar">
-      <PRRightBar />
-    </aside>
+    <!-- <aside id="right-sidebar">
+      <PRRightBar :summary="summary" :summaryLoading="summaryLoading" />
+    </aside> -->
   </div>
 </template>
 <script>
@@ -21,11 +21,22 @@ export default {
     PRRightBar,
   },
   data() {
-    return {}
+    return {
+      summary: null,
+      summaryLoading: false,
+    }
   },
   watch: {},
   created() {},
-  methods: {},
+  methods: {
+    setSummary(sum) {
+      this.summary = sum
+    },
+    setLoader(val) {
+      this.summaryLoading = val
+      console.log(this.summaryLoading)
+    },
+  },
   computed: {},
 }
 </script>
@@ -47,7 +58,7 @@ export default {
 
 #main {
   flex: 1;
-  width: 54vw;
+  width: 100vw;
   background-color: white;
   z-index: 5;
 }
@@ -64,22 +75,22 @@ export default {
   border-left: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-@media (max-width: 1000px) {
-  .summaries {
-    flex-direction: column;
-  }
+// @media (max-width: 1000px) {
+//   .summaries {
+//     flex-direction: column;
+//   }
 
-  #main {
-    order: 2;
-    width: 100%;
-    height: 75%;
-  }
+//   #main {
+//     order: 2;
+//     width: 100%;
+//     height: 75%;
+//   }
 
-  #right-sidebar {
-    width: 100%;
-    height: 40%;
-    order: 1;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  }
-}
+//   #right-sidebar {
+//     width: 100%;
+//     height: 40%;
+//     order: 1;
+//     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+//   }
+// }
 </style>

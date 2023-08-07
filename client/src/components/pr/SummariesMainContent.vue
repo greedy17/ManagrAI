@@ -1,25 +1,6 @@
 <template>
   <div class="main-content">
     <div class="card-container">
-      <div class="bar-header">
-        <div class="row">
-          <!-- <svg width="18" height="18">
-            <path d="M9 9H3v1h6v6h1v-6h6V9h-6V3H9v6z" fill-rule="evenodd"></path>
-          </svg> -->
-          <small class="off-gray">{{ filteredArticles.length }}</small>
-          <div class="row current-search">
-            <small>{{ currentSearch }}</small>
-            <img src="@/assets/images/downArrow.svg" height="14px" alt="" />
-            <!-- <small>{{ filteredArticles.length }}</small> -->
-          </div>
-
-          <small>Today</small>
-          <small>Media Type</small>
-          <small>Edit Search</small>
-        </div>
-
-        <button @click="getClips" class="dark-button">Generate Summary</button>
-      </div>
       <div v-if="loading" class="loader-container">
         <div class="loader-row">
           <div class="loading">
@@ -29,7 +10,7 @@
           </div>
         </div>
       </div>
-      <div v-else>
+      <div v-else-if="filteredArticles.length">
         <div v-for="article in filteredArticles" :key="article.id" class="news-container">
           <div class="news-card" @click="selectArticle(article)">
             <header>
@@ -41,7 +22,9 @@
                 <h1 class="article-title" @click="goToArticle(article.url)">
                   {{ article.title }}
                 </h1>
-                <p class="article-preview">{{ article.description }}</p>
+                <p @click="getArticleSummary(article.url)" class="article-preview">
+                  {{ article.description }}
+                </p>
               </div>
 
               <div @click="goToArticle(article.link)">
@@ -59,20 +42,11 @@
                 <div v-if="newSummary" class="">
                   <input type="checkbox" @click="addRemoveSelectedArticles(article)" />
                 </div>
-                <!-- <img src="@/assets/images/sparkles-nofill-round.svg" class="footer-icon" /> -->
 
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="left-mar">
                   <path
                     d="M17.5 1.25a.5.5 0 0 1 1 0v2.5H21a.5.5 0 0 1 0 1h-2.5v2.5a.5.5 0 0 1-1 0v-2.5H15a.5.5 0 0 1 0-1h2.5v-2.5zm-11 4.5a1 1 0 0 1 1-1H11a.5.5 0 0 0 0-1H7.5a2 2 0 0 0-2 2v14a.5.5 0 0 0 .8.4l5.7-4.4 5.7 4.4a.5.5 0 0 0 .8-.4v-8.5a.5.5 0 0 0-1 0v7.48l-5.2-4a.5.5 0 0 0-.6 0l-5.2 4V5.75z"
                     fill="#000"
-                  ></path>
-                </svg>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="left-mar">
-                  <path
-                    fill-rule="evenodd"
-                    clip-rule="evenodd"
-                    d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
-                    fill="currentColor"
                   ></path>
                 </svg>
                 <img src="@/assets/images/sparkles-thin.svg" class="right-arrow-footer" />
@@ -82,12 +56,12 @@
         </div>
       </div>
 
-      <!-- <div class="empty-container" >
-        <button class="large-dark-button">
+      <div v-else class="empty-container">
+        <button @click="getClips" class="large-dark-button">
           <img src="@/assets/images/sparkle.svg" height="14px" alt="" />
-          Create a new search using AI
+          Create a new search
         </button>
-      </div> -->
+      </div>
     </div>
   </div>
 </template>
@@ -103,17 +77,19 @@ export default {
   data() {
     return {
       loading: false,
+      submitting: false,
+      summaryLoading: false,
       summary: null,
       articles: [],
-      currentSearch: 'Houston Texans',
+      selectedSearch: '',
       currentDate: new Date(),
       summaryChat: 'SUMMARY',
       filterText: '',
       message: '',
-      regenSummary: false,
       newSummary: false,
       selectedArticles: [],
       filteredArticles: [],
+      searchModalOpen: false,
       actions: [
         {
           name: 'Summarize',
@@ -127,16 +103,35 @@ export default {
   watch: {},
   created() {},
   methods: {
+    toggleSearchModal() {
+      this.searchModalOpen = !this.searchModalOpen
+    },
+    async getArticleSummary(url, instructions = null) {
+      console.log(url)
+      try {
+        await Comms.api
+          .getArticleSummary({
+            url: url,
+            search: 'Houston Rockets',
+            instructions: instructions,
+          })
+          .then((response) => {
+            console.log(response)
+          })
+      } catch (e) {
+        console.log(e)
+      }
+    },
     async getClips() {
       this.loading = true
       try {
         await Comms.api
           .getClips({
-            search: 'Houston Texans',
+            search: 'Houston Rockets',
           })
           .then((response) => {
-            console.log(response)
             this.filteredArticles = response.articles
+            this.selectedSearch = 'Houston Rockets'
           })
       } catch (e) {
         console.log(e)
@@ -166,6 +161,38 @@ export default {
         return `${givenDate.getMonth() + 1}/${givenDate.getDate()}/${givenDate.getFullYear()}`
       }
     },
+    getArticleUrls(articles) {
+      return articles.map((a) => a.url)
+    },
+    async getSummary(clips, search = '', instructions = '') {
+      this.$emit('set-loader', true)
+      this.summaryLoading = true
+      const urls = this.getArticleUrls(clips)
+      const data = {
+        clips: urls,
+        search,
+        instructions,
+      }
+      try {
+        await Comms.api.getSummary(data).then((response) => {
+          if (response.summary) {
+            this.$emit('set-summary', response.summary)
+          } else {
+            this.$emit('set-summary', response.error)
+          }
+        })
+      } catch (e) {
+        console.log('Error in getSummary', e)
+      } finally {
+        this.$emit('set-loader', false)
+        this.summaryLoading = false
+      }
+    },
+    regenNewSummary() {
+      this.getSummary(this.filteredArticles, '', this.message)
+      this.changeRegen()
+      this.message = ''
+    },
     changeSummaryChat(type) {
       this.summaryChat = type
       this.scrollToBottom()
@@ -174,22 +201,20 @@ export default {
       this.$store.dispatch('updateSelectedArticle', article)
     },
     saveSelectedArticles() {
+      this.getSummary(this.selectedArticles)
       this.selectedArticles = []
       this.changeNew()
     },
     addRemoveSelectedArticles(article) {
-      const existingArticle = this.selectedArticles.filter((ar) => ar.id === article.id)[0]
+      const existingArticle = this.selectedArticles.filter((ar) => ar.url === article.url)[0]
       if (existingArticle) {
-        this.selectedArticles = this.selectedArticles.filter((ar) => ar.id !== article.id)
+        this.selectedArticles = this.selectedArticles.filter((ar) => ar.url !== article.url)
       } else {
         this.selectedArticles.push(article)
       }
     },
     goToArticle(link) {
       window.location.href = link
-    },
-    changeRegen() {
-      this.regenSummary = !this.regenSummary
     },
     changeNew() {
       this.newSummary = !this.newSummary
@@ -230,12 +255,15 @@ export default {
   position: sticky;
   top: 0;
   padding: 16px 12px;
-
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   width: 100%;
   height: 66px;
   background-color: white;
   z-index: 10;
+}
+
+small {
+  font-size: 14px !important;
 }
 
 .main-content {
@@ -246,6 +274,7 @@ export default {
   padding-left: 68px;
   padding-right: 68px;
   overflow: none;
+  position: relative;
 }
 
 .search-results {
@@ -260,7 +289,7 @@ export default {
   display: flex;
   align-items: center;
   flex-direction: row;
-  gap: 20px;
+  gap: 24px;
 }
 .card-container {
   overflow-y: auto;
@@ -279,6 +308,7 @@ export default {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  margin-top: -58px;
 }
 
 header {
@@ -295,7 +325,7 @@ header {
 .news-container {
   display: flex;
   align-items: center;
-  padding-top: 1.5rem;
+  padding-top: 0.5rem;
 }
 
 .author {
@@ -321,7 +351,22 @@ header {
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   transition: all 0.3s;
   padding: 1rem;
-  border-radius: 5px;
+}
+
+.spinning-load {
+  animation: rotation 3s infinite linear;
+  opacity: 0.3;
+  cursor: not-allowed;
+  margin-top: 1rem;
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
 }
 
 .card-col {
@@ -390,7 +435,7 @@ header {
   width: 90%;
 }
 .article-title {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 1000;
   line-height: 24px;
   letter-spacing: 0;
@@ -400,7 +445,7 @@ header {
 
 .article-preview {
   color: $base-gray;
-  font-size: 14px;
+  font-size: 16px;
   max-height: 72px;
   text-overflow: ellipsis;
   overflow: hidden;

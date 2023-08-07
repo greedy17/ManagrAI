@@ -80,9 +80,12 @@ class PRSearchViewSet(
         url_path="summary",
     )
     def get_summary(self, request, *args, **kwargs):
-        clips = request.data.get("clips")
-        search = request.data.get("search")
-        instructions = request.data.get("instructions")
+        if request.GET.get("clips"):
+            clips = request.GET.get("clips")
+        else:
+            clips = request.GET.getlist("clips[]")
+        search = request.GET.get("search")
+        instructions = request.GET.get("instructions")
         user = request.user
         has_error = False
         attempts = 1
@@ -146,9 +149,9 @@ class PRSearchViewSet(
         url_path="article-summary",
     )
     def get_article_summary(self, request, *args, **kwargs):
-        url = request.data.get("url")
-        search = request.data.get("search")
-        instructions = request.data.get("instructions", False)
+        url = request.data['params']["url"]
+        search = request.data['params']["search"]
+        instructions = request.data['params']["instructions"]
         user = request.user
         article_res = Article(url)
         article_res.download()

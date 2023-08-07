@@ -1,65 +1,84 @@
 <template>
   <div class="right-bar">
     <header>
-      <h3>No idea what to do here...</h3>
+      <div class="title-container">
+        <h3>Summary for Lorem Ipsum</h3>
+        <p>AI generated search: "Lorem ipsum search"</p>
+      </div>
+
+      <!-- <div class="switcher">
+        <div
+          @click="switchView('Summary')"
+          :class="{ activeswitch: view === 'Summary' }"
+          class="switch-item"
+        >
+          <img src="@/assets/images/listed.svg" height="14px" alt="" />
+          Summary
+        </div>
+        <div
+          @click="switchView('Chat')"
+          :class="{ activeswitch: view === 'Chat' }"
+          class="switch-item"
+        >
+          <img src="@/assets/images/comment.svg" height="14px" alt="" />
+          Chat
+        </div>
+      </div> -->
     </header>
+
     <div class="right-body">
-      <!-- <p>
-        First, create a new
-        <span class="search"
-          ><svg width="18" height="18">
-            <path d="M9 9H3v1h6v6h1v-6h6V9h-6V3H9v6z" fill-rule="evenodd"></path>
-          </svg>
-          Search</span
-        >. Your clips will be populate in the feed to the left.
-      </p>
-
-      <p>When you generate a summary from your clips it will appear here.</p> -->
-
-      <!-- <h3 style="margin-top: 2.5rem">Tags</h3>
-
-      <p>
-        Click the
-        <span class="search">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="left-mar">
-            <path
-              d="M17.5 1.25a.5.5 0 0 1 1 0v2.5H21a.5.5 0 0 1 0 1h-2.5v2.5a.5.5 0 0 1-1 0v-2.5H15a.5.5 0 0 1 0-1h2.5v-2.5zm-11 4.5a1 1 0 0 1 1-1H11a.5.5 0 0 0 0-1H7.5a2 2 0 0 0-2 2v14a.5.5 0 0 0 .8.4l5.7-4.4 5.7 4.4a.5.5 0 0 0 .8-.4v-8.5a.5.5 0 0 0-1 0v7.48l-5.2-4a.5.5 0 0 0-.6 0l-5.2 4V5.75z"
-              fill="#000"
-            ></path>
-          </svg>
-        </span>
-
-        icon to tag an article and save it for later.
-      </p> -->
+      <div v-if="summaryLoading" class="loader-container">
+        <div class="loader-row">
+          <div class="loading">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="pre-container" v-else>
+        <pre v-html="summary" class="pre-text"></pre>
+      </div>
     </div>
     <footer>
-      <!-- <button class="secondary-button">
-        <img src="@/assets/images/sparkle.svg" height="14px" alt="" />
-        Generate Clip Summary
-      </button> -->
+      <button class="secondary-button">
+        <!-- <img src="@/assets/images/sparkle.svg" height="14px" alt="" /> -->
+        Regenerate
+      </button>
+      <button class="primary-button">
+        <!-- <img src="@/assets/images/sparkle.svg" height="14px" alt="" /> -->
+        Save Search
+      </button>
     </footer>
   </div>
 </template>
 <script>
 import ChatTextBox from '../Chat/ChatTextBox.vue'
+import Comms from '@/services/comms'
 export default {
   name: 'PRRightBar',
   components: {
     ChatTextBox,
   },
-  props: {},
+  props: {
+    // summary: {},
+    summaryLoading: {},
+  },
   data() {
     return {
-      selectedResource: 'Data',
+      searchTitle: null,
       loading: false,
       message: '',
+      view: 'Summary',
+      summary:
+        "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
     }
   },
   watch: {},
   created() {},
   methods: {
-    changeResource(resource) {
-      this.selectedResource = resource
+    switchView(view) {
+      this.view = view
     },
   },
   computed: {
@@ -78,21 +97,111 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.title-container {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 4px 0px;
+  color: $base-gray;
+  h3 {
+    display: inline;
+  }
+  p {
+    margin: 8px 0 0 0;
+    font-size: 12px;
+    color: $light-gray-blue;
+  }
+}
+
+.align-svg {
+  position: relative;
+  top: 2px;
+  margin: 0 4px 0 8px;
+}
+
+.divier-dot {
+  position: relative;
+  bottom: 0.2rem;
+  color: $light-gray-blue;
+  margin: 0 1rem;
+}
+
 .right-bar {
   background-color: $white;
   width: 100%;
   height: 100%;
-  position: sticky;
+  position: relative;
   overflow-y: auto;
-  padding-top: 74px;
 }
 .right-body {
   color: $dark-black-blue;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 400;
   line-height: 20px;
   letter-spacing: 0;
-  padding: 0 36px;
+  padding: 16px 36px;
+}
+
+.pre-text {
+  color: $dark-black-blue;
+  font-family: $base-font-family;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 24px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  padding: 0;
+  margin: 0;
+}
+
+.mar-top {
+  margin-top: 1.5rem;
+}
+
+.med-text {
+  font-size: 14px;
+}
+
+.loader-container {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.loader-row {
+  border-radius: 6px;
+  padding: 0.25rem 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 6px;
+  padding: 1.5rem 0;
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  margin: 0 5px;
+  background: rgb(97, 96, 96);
+  border-radius: 50%;
+  animation: bounce 1.2s infinite ease-in-out;
+}
+
+.dot:nth-child(2) {
+  animation-delay: -0.4s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: -0.2s;
 }
 
 .search {
@@ -109,10 +218,42 @@ export default {
   font-size: 14px;
 }
 
-.divier-dot {
-  position: relative;
-  bottom: 0.2rem;
-  margin: 0 0.5rem;
+.switcher {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-evenly;
+  background-color: $off-white;
+  border: 1px solid $off-white;
+  border-radius: 5px;
+  padding: 2px 0;
+  width: 275px;
+}
+.switch-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.25rem;
+  border-radius: 6px;
+  width: 100%;
+  margin: 0 2px;
+  cursor: pointer;
+  color: $light-gray-blue;
+  white-space: nowrap;
+  font-size: 14px;
+  img {
+    filter: invert(63%) sepia(10%) saturate(617%) hue-rotate(200deg) brightness(93%) contrast(94%);
+    margin-right: 0.5rem;
+  }
+}
+
+.activeswitch {
+  background-color: white;
+  border: 1px solid $soft-gray;
+  color: $base-gray;
+  img {
+    filter: none;
+  }
 }
 
 .display-flex {
@@ -212,20 +353,40 @@ header {
   position: sticky;
   top: 0;
   // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 0 36px;
+  padding: 106px 16px 36px 36px;
   width: 100%;
   height: 50px;
   background-color: white;
   z-index: 10;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
 }
 
 footer {
   position: absolute;
-  left: 150px;
-  bottom: 1rem;
+  width: 100%;
+  bottom: 0;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 1rem;
+  button {
+    margin-right: 1rem;
+  }
+}
+
+.primary-button {
+  @include dark-blue-button();
+  // border: 1px solid $dark-black-blue;
+  // color: $dark-black-blue;
+  // background-color: white;
+  padding: 10px 12px;
+  img {
+    filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
+    margin-right: 8px;
+  }
 }
 
 .secondary-button {
@@ -384,39 +545,6 @@ footer {
   border: 1px solid $dark-green !important;
 }
 
-.loader-container {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  margin-bottom: 1.5rem;
-}
-
-.loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  // background-color: $soft-gray;
-  border-radius: 6px;
-  padding: 0.75rem 0.75rem;
-}
-
-// .dot {
-//   width: 4px;
-//   height: 4px;
-//   margin: 0 5px;
-//   background: rgb(97, 96, 96);
-//   border-radius: 50%;
-//   animation: bounce 1.2s infinite ease-in-out;
-// }
-
-// .dot:nth-child(2) {
-//   animation-delay: -0.4s;
-// }
-
-// .dot:nth-child(3) {
-//   animation-delay: -0.2s;
-// }
-
 .col-start {
   display: flex;
   flex-direction: column;
@@ -573,5 +701,8 @@ footer {
 }
 .gray {
   color: rgb(82, 80, 80);
+}
+.article-summary-button {
+  @include gray-text-button();
 }
 </style>
