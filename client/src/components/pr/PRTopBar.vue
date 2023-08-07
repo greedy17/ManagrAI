@@ -9,6 +9,7 @@
         openDirection="below"
         class="search-picklist"
         selectLabel="Enter"
+        :customLabel="searchCustomLabel"
         label="search"
       >
         <template slot="noResult">
@@ -91,6 +92,15 @@ export default {
   methods: {
     changePage(page) {
       this.$emit('change-page', page)
+    },
+    shortenText(text) {
+      return text.slice(0 , 15)
+    },
+    searchCustomLabel(props) {
+      if (props.template) {
+        return `${props.search} - ${this.shortenText(props.template)}...`
+      }
+      return props.search
     },
   },
   computed: {
