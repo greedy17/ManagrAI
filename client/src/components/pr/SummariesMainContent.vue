@@ -137,7 +137,7 @@
               </div>
               <div class="card-footer">
                 <div class="author-time">
-                  <span>{{ article.publishedAt }}</span>
+                  <span>{{ article.publishedAt.split('T')[0] }}</span>
                   <span class="divier-dot">.</span>
                   <span>{{ article.author }}</span>
                 </div>
@@ -198,7 +198,7 @@ export default {
       try {
         await Comms.api
           .getClips({
-            search: `Baldur's Gate`,
+            search: `CRPG`,
           })
           .then((response) => {
             this.filteredArticles = JSON.parse(response.articles)
