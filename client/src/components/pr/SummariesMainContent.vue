@@ -225,6 +225,13 @@ export default {
         this.summary = res.summary
       } catch(e) {
         console.log('Error in getSummary', e)
+        this.$toast('Something went wrong, please try again.', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.summaryLoading = false
       }
