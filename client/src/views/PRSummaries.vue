@@ -1,15 +1,17 @@
 <template>
   <div class="summaries">
-    <PRTopBar />
+    <PRTopBar :selectedSearch="selectedSearch" :searchList="searchList" @change-page="changePage" />
     <div class="display-flex">
-      <SummariesMainContent />
-      <PRRightBar />
+      <SummariesSinglePage :page="page" :selectedSearch="selectedSearch" @change-search="changeSearch" />
+      <!-- <SummariesMainContent /> -->
+      <!-- <PRRightBar /> -->
     </div>
   </div>
 </template>
 <script>
 import PRTopBar from '@/components/pr/PRTopBar.vue';
 import SummariesMainContent from '@/components/pr/SummariesMainContent.vue';
+import SummariesSinglePage from '@/components/pr/SummariesSinglePage.vue';
 import PRRightBar from '@/components/pr/PRRightBar.vue'
 
 export default {
@@ -17,11 +19,18 @@ export default {
   components: {
     PRTopBar,
     SummariesMainContent,
-    PRRightBar
+    PRRightBar,
+    SummariesSinglePage,
   },
   data() {
     return {
-      
+      selectedSearch: null,
+      page: 'SUMMARIES',
+      searchList: [
+        {
+          search: 'Tesla',
+        }
+      ],
     }
   },
   watch: {
@@ -31,7 +40,13 @@ export default {
 
   },
   methods: {
-    
+    changeSearch(newSearch) {
+      this.searchList.push(newSearch)
+      this.selectedSearch = newSearch
+    },
+    changePage(page) {
+      this.page = page
+    },
   },
   computed: {
     

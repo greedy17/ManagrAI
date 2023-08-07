@@ -9,7 +9,7 @@
         openDirection="below"
         class="search-picklist"
         selectLabel="Enter"
-        label="name"
+        label="search"
       >
         <template slot="noResult">
           <p class="multi-slot custom-picklist-font">No results. Try loading more</p>
@@ -23,29 +23,43 @@
       </Multiselect>
     </div>
     <div class="display-flex">
-      <div class="button">
+      <div>
+        <div @click="changePage('SUMMARIES')">
+          <img />
+          <span>Summaries</span>
+        </div>
+        <div @click="changePage('PITCHES')">
+          <img />
+          <span>Pitches</span>
+        </div>
+        <div @click="changePage('MEETINGS')">
+          <img />
+          <span>Meetings</span>
+        </div>
+      </div>
+      <!-- <div class="button">
         <img class="icon-img" src="@/assets/images/calendar.svg" />
         <span>Today</span>
-      </div>
-      <div class="button">
+      </div> -->
+      <!-- <div class="button">
         <img class="icon-img" src="@/assets/images/comment.svg" />
         <span>Media Type</span>
-      </div>
-      <div class="button">
+      </div> -->
+      <!-- <div class="button">
         <img class="icon-img no-img-margin" src="@/assets/images/filter-round.svg" />
-      </div>
-      <div class="button refresh-margin">
+      </div> -->
+      <!-- <div class="button refresh-margin">
         <img class="icon-img" src="@/assets/images/refresh-pr.svg" />
         <span>Refresh</span>
-      </div>
-      <div class="button">
+      </div> -->
+      <!-- <div class="button">
         <img class="icon-img" src="@/assets/images/edit-round.svg" />
         <span>Edit Search</span>
-      </div>
-      <div class="dark-button">
+      </div> -->
+      <!-- <div class="dark-button">
         <img class="icon-img" src="@/assets/images/sparkles-round.svg" />
         <span>New Search</span>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
@@ -55,14 +69,17 @@ export default {
   components: {
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
+  props: {
+    selectedSearch: {
+      type: Object,
+    },
+    searchList: {
+      type: Array
+    },
+  },
   data() {
     return {
-      searchList: [
-        {
-          name: 'Tesla'
-        }
-      ],
-      selectedSearch: null,
+      
     }
   },
   watch: {
@@ -72,7 +89,9 @@ export default {
 
   },
   methods: {
-
+    changePage(page) {
+      this.$emit('change-page', page)
+    },
   },
   computed: {
     
