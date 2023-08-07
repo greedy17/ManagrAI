@@ -25,7 +25,7 @@
               <span>Templates</span>
             </div>
             <div>
-              <input 
+              <textarea 
                 placeholder="Provide additional instructions. This step is optional."
                 v-model="newTemplate"
               />
@@ -53,7 +53,7 @@
         </div>
       </div>
       <div v-else class="loaded-content">
-        <div v-if="summaryLoading" class="summaries-container">Loading Summary...</div>
+        <div v-if="summaryLoading" class="summaries-container">Generating news summary...</div>
         <div v-else class="summaries-container">
           <div class="label-width">
             <img class="logo" src="@/assets/images/sparkles-nofill-round.svg" />
@@ -72,7 +72,7 @@
             </div>
           </div>
         </div>
-        <div v-if="loading" class="clips-container">Loading Clips...</div>
+        <div v-if="loading" class="clips-container">Gathering news articles...</div>
         <div v-else class="clips-container">
           <div class="label-width">
             <img class="logo" src="@/assets/images/list.svg" />
@@ -467,14 +467,12 @@ export default {
   display: flex;
   justify-content: space-between;
   height: 40vh;
-  overflow-y: auto;
   width: 90vw;
 }
 .clips-container {
   display: flex;
   justify-content: space-between;
   height: 40vh;
-  overflow-y: auto;
   width: 90vw;
 }
 .label-width {
@@ -483,5 +481,6 @@ export default {
 }
 .content-width {
   width: 70vw;
+  overflow-y: auto;
 }
 </style>
