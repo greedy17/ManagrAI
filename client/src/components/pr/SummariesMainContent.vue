@@ -129,7 +129,7 @@
                   <h3 class="article-title" @click="goToArticle(article.url)">
                     {{ article.title }}
                   </h3>
-                  <h4 class="article-preview">{{ article.description }}</h4>
+                  <pre v-html="article.description" class="article-preview" />
                 </div>
                 <div @click="goToArticle(article.link)">
                   <img :src="article.urlToImage" class="cover-photo" />
@@ -198,7 +198,7 @@ export default {
       try {
         await Comms.api
           .getClips({
-            search: 'Houston rockets',
+            search: `Baldur's Gate`,
           })
           .then((response) => {
             this.filteredArticles = JSON.parse(response.articles)
@@ -402,7 +402,12 @@ export default {
 }
 .article-preview {
   color: $base-gray;
+  font-family: $base-font-family;
   font-size: 14px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  padding: 0;
+  margin: 0 0 0.5rem 0;
 }
 .card-footer {
   display: flex;
