@@ -33,7 +33,7 @@
                 @keydown.enter.exact.prevent="generateNewSearch"
               />
               <img
-                :class="{ invert: !message }"
+                :class="{ invert: !newSearch }"
                 src="@/assets/images/paper-plane.svg"
                 height="14px"
                 alt=""
@@ -76,9 +76,6 @@
       </div>
       <div v-else class="loaded-content">
         <div v-if="summaryLoading" class="center">
-          <!-- <p v-if="loading">Gathering clips and summarizing coverage</p>
-          <p v-else>Summarizing coverage</p> -->
-
           <div class="loader-container">
             <div class="loader-row">
               <div class="loading">
@@ -94,7 +91,9 @@
             <div class="news-container">
               <div class="title-container">
                 <h1 class="no-text-margin">{{ selectedSearch.search }}</h1>
-                <p class="sub-text">AI generated search: {{ booleanString }}</p>
+                <p class="sub-text">
+                  AI generated search: <span>{{ booleanString }}</span>
+                </p>
               </div>
               <div class="title-bar">
                 <div class="row">
@@ -146,10 +145,6 @@
                     }}</span>
                   </div>
                   <div class="footer-icon-container">
-                    <!-- <div v-if="newSummary" class="">
-                      <input type="checkbox" @click="addRemoveSelectedArticles(article)" />
-                    </div> -->
-
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="left-mar">
                       <path
                         d="M17.5 1.25a.5.5 0 0 1 1 0v2.5H21a.5.5 0 0 1 0 1h-2.5v2.5a.5.5 0 0 1-1 0v-2.5H15a.5.5 0 0 1 0-1h2.5v-2.5zm-11 4.5a1 1 0 0 1 1-1H11a.5.5 0 0 0 0-1H7.5a2 2 0 0 0-2 2v14a.5.5 0 0 0 .8.4l5.7-4.4 5.7 4.4a.5.5 0 0 0 .8-.4v-8.5a.5.5 0 0 0-1 0v7.48l-5.2-4a.5.5 0 0 0-.6 0l-5.2 4V5.75z"
@@ -228,6 +223,7 @@ export default {
   name: 'SummariesSinglePage',
   components: {
     ChatTextBox,
+    Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
   },
   props: {
     selectedSearch: {
@@ -248,6 +244,7 @@ export default {
       outputInstructions: '',
       loading: false,
       summaryLoading: false,
+      regenModal: false,
       filteredArticles: [],
       summary: '',
       booleanString: null,
@@ -302,8 +299,9 @@ export default {
         console.log(e)
       }
 
-      this.newSearch = ''
-      this.newTemplate = ''
+      // this.newSearch = ''
+      // this.newTemplate = ''
+      this.closeRegenModal()
     },
     clearNewSearch() {
       this.newSearch = ''
@@ -312,6 +310,12 @@ export default {
       this.brandName = ''
       this.targetPersona = ''
       this.outputInstructions = ''
+    },
+    openRegenModal() {
+      this.regenModal = true
+    },
+    closeRegenModal() {
+      this.regenModal = false
     },
     changeSearch(search) {
       this.$emit('change-search', search)
@@ -836,8 +840,14 @@ header {
 
 .sub-text {
   color: $light-gray-blue;
-  margin-top: 8px;
+  margin-top: 16px;
   font-size: 14px;
+  font-weight: bold;
+  font-family: $thin-font-family;
+  span {
+    font-weight: normal;
+    word-wrap: break-word;
+  }
 }
 
 .no-text-margin {
@@ -965,5 +975,65 @@ header {
   font-size: 40px;
   bottom: 1.7rem;
   margin-right: 0.75rem;
+}
+.regen-header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid $soft-gray;
+  margin-bottom: 1rem;
+}
+.regen-header-title {
+  margin: 0.25rem 0;
+}
+.regen-header-subtitle {
+  font-size: 12px;
+  color: $light-gray-blue;
+  margin: 0.5rem 0;
+}
+.regen-body {
+  margin: 0.5rem 0;
+  border-bottom: 1px solid $soft-gray;
+}
+.regen-body-title {
+  margin: 0 0 0 0;
+}
+.regen-body-text {
+  resize: none;
+  outline: none;
+  border: 1px solid $soft-gray;
+  border-radius: 8px;
+  height: 4rem;
+  width: 25rem;
+  overflow-y: auto;
+  margin: 1rem 0;
+  padding: 0.75rem;
+  font-family: $base-font-family;
+}
+.regen-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+.blue-border-button {
+  @include dark-blue-border-button();
+  width: 8rem;
+  margin-bottom: 1rem;
+}
+.cancel-button {
+  @include gray-text-button();
+}
+.save-button {
+  @include dark-blue-button();
+  margin-left: 0.5rem;
+}
+.pointer {
+  cursor: pointer;
+}
+.regen-modal {
+  margin-top: 10rem;
+}
+.message-text {
+  font-family: $base-font-family;
+  word-wrap: break-word;
+  white-space: pre-wrap;
 }
 </style>
