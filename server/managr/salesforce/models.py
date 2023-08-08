@@ -6,7 +6,7 @@ from collections import OrderedDict
 from datetime import datetime
 from django.db import models
 from django.utils import timezone
-from managr.utils.client import Client
+from managr.utils.client import Variable_Client
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db.models import Q
 from django.db.models.constraints import UniqueConstraint
@@ -1133,7 +1133,7 @@ class SalesforceAuthAccount(TimeStampModel):
         json_data = json.dumps(data)
         url = sf_consts.SALESFORCE_WRITE_URI(custom_base, api_name, "")
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
-        with Client as client:
+        with Variable_Client() as client:
             r = client.post(
                 url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
             )

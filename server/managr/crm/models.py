@@ -462,7 +462,7 @@ class ObjectField(TimeStampModel, IntegrationModel):
             and self.relationship_name
             and not self.is_public
         ):
-            return self.relationship_name
+            return self.relationship_name.replace("__r", "").replace("_", " ")
         return self.label
 
     def to_slack_field(self, value=None, *args, **kwargs):

@@ -49,48 +49,9 @@ export default {
 
   },
   created() {
-    this.getArticles()
+    
   },
   methods: {
-    getArticles() {
-      const res = [
-        {
-          icon: 'https://www.vectorlogo.zone/logos/marketwatch/marketwatch-icon.svg',
-          source: 'MarketWatch',
-          title: 'EV stocks see green after Tesla, Rivian, Nio report upbeat deliveries data',
-          preview: `Electric-vehicle maker stocks got a broad boost Monday, after upbeat delivery and production data from a host of companies in the U.S. and...`,
-          coverPhoto: `https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/New_York_City_%28New_York%2C_USA%29%2C_Empire_State_Building_--_2012_--_6448.jpg/1200px-New_York_City_%28New_York%2C_USA%29%2C_Empire_State_Building_--_2012_--_6448.jpg`,
-          time: '5 mins ago',
-          author: 'Eric Peters',
-          link: 'https://www.teslarati.com/tesla-cybertruck-orders-1-9-million-as-musk-off-the-hook-demand/',
-          data: {},
-        },
-        {
-          icon: 'https://www.vectorlogo.zone/logos/marketwatch/marketwatch-icon.svg',
-          source: 'Automotive News',
-          title: 'Tesla deliveries in China surge as supply-chain concerns ease.',
-          preview: `Electric-vehicle maker stocks got a broad boost Monday, after upbeat delivery and production data from a host of companies in the U.S. and...`,
-          coverPhoto: `https://empire-s3-production.bobvila.com/articles/wp-content/uploads/2023/01/iStock-1372085619-hidden-costs-of-owning-an-electric-car-vehicle-charging-by-solar-panels.jpg`,
-          time: '10 mins ago',
-          author: 'Susan Miller',
-          link: 'https://www.teslarati.com/tesla-cybertruck-orders-1-9-million-as-musk-off-the-hook-demand/',
-          data: {},
-        },
-        {
-          icon: 'https://www.vectorlogo.zone/logos/marketwatch/marketwatch-icon.svg',
-          source: 'MotorTrend',
-          title: '2025 Tesla Model S: What you should know',
-          preview: `Electric-vehicle maker stocks got a broad boost Monday, after upbeat delivery and production data from a host of companies in the U.S. and...`,
-          coverPhoto: `https://hips.hearstapps.com/hmg-prod/images/2022-tesla-model-s-mmp-3-1628540852.png?crop=0.891996891996892xw:1xh;center,top&resize=1200:*`,
-          time: '1 hr ago',
-          author: 'Rachel Myers',
-          link: 'https://www.teslarati.com/tesla-cybertruck-orders-1-9-million-as-musk-off-the-hook-demand/',
-          data: {},
-        },
-      ]
-      this.articles = res
-      this.filteredArticles = res
-    },
     selectArticle(article) {
       this.$store.dispatch('updateSelectedArticle', article)
     },

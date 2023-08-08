@@ -3,7 +3,7 @@ import logging
 import json
 import time
 from requests.exceptions import HTTPError
-from managr.utils.client import Client
+from managr.utils.client import Variable_Client
 from .exceptions import CustomAPIException, ApiRateLimitExceeded, TokenExpired, UnhandledCRMError
 from urllib.parse import urlencode
 from managr.utils.misc import object_to_snake_case
@@ -86,7 +86,7 @@ class HubspotAuthAccountAdapter:
 
     @classmethod
     def access_token_info(cls, access_token):
-        with Client as client:
+        with Variable_Client() as client:
             res = client.get(
                 hubspot_consts.TOKEN_INFO_URI(access_token),
                 headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token),
@@ -142,7 +142,7 @@ class HubspotAuthAccountAdapter:
     def list_deal_stages(self, resource):
         url = hubspot_consts.HUBSPOT_PIPELINE_URI(resource)
         headers = hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token)
-        with Client as client:
+        with Variable_Client() as client:
             res = client.get(url, headers=headers,)
             return self._handle_response(res)
 
@@ -158,7 +158,7 @@ class HubspotAuthAccountAdapter:
             + f"{association_id}"
             + "}]"
         )
-        with Client as client:
+        with Variable_Client() as client:
             res = client.put(url, headers=headers, data=payload,)
             return self._handle_response(res)
 
@@ -166,7 +166,7 @@ class HubspotAuthAccountAdapter:
         url = hubspot_consts.HUBSPOT_ASSOCIATIONS_READ_URI(resource, associated_resource)
         headers = hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token)
         data = {"inputs": [{"id": resource_id}]}
-        with Client as client:
+        with Variable_Client() as client:
             res = client.post(url, data=json.dumps(data), headers=headers,)
             return self._handle_response(res)
 
@@ -174,7 +174,7 @@ class HubspotAuthAccountAdapter:
         url = hubspot_consts.HUBSPOT_RESOURCE_URI("meetings")
         headers = hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token)
         send_data = {"properties": meeting_data}
-        with Client as client:
+        with Variable_Client() as client:
             res = client.post(url, data=json.dumps(send_data), headers=headers,)
             return self._handle_response(res)
 
@@ -182,7 +182,7 @@ class HubspotAuthAccountAdapter:
         url = hubspot_consts.HUBSPOT_RESOURCE_URI("notes")
         headers = hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token)
         send_data = {"properties": note_data}
-        with Client as client:
+        with Variable_Client() as client:
             res = client.post(url, data=json.dumps(send_data), headers=headers,)
             return self._handle_response(res)
 
@@ -194,7 +194,7 @@ class HubspotAuthAccountAdapter:
     @staticmethod
     def authenticate(code):
         data = hubspot_consts.AUTHENTICATION_BODY(code)
-        with Client as client:
+        with Variable_Client() as client:
             res = client.post(
                 f"{hubspot_consts.AUTHENTICATION_URI}",
                 data=data,
@@ -204,7 +204,7 @@ class HubspotAuthAccountAdapter:
 
     @staticmethod
     def get_user_info(access_token, email):
-        with Client as client:
+        with Variable_Client() as client:
             res = client.get(
                 hubspot_consts.HUBSPOT_OWNERS_URI(email),
                 headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token),
@@ -212,7 +212,7 @@ class HubspotAuthAccountAdapter:
         return HubspotAuthAccountAdapter._handle_response(res)
 
     def refresh(self):
-        with Client as client:
+        with Variable_Client() as client:
             data = hubspot_consts.REAUTHENTICATION_BODY(self.refresh_token)
             res = client.post(
                 f"{hubspot_consts.BASE_URL}{hubspot_consts.REFRESH_TOKEN_URI}",
@@ -223,7 +223,7 @@ class HubspotAuthAccountAdapter:
 
     def list_fields(self, resource):
         url = f"{hubspot_consts.BASE_URL}{hubspot_consts.HUBSPOT_PROPERTIES_URI}{resource}"
-        with Client as client:
+        with Variable_Client() as client:
             res = client.get(
                 url, headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
             )
@@ -263,7 +263,7 @@ class HubspotAuthAccountAdapter:
         attempts = 1
         while True:
             try:
-                with Client as client:
+                with Variable_Client() as client:
                     res = client.post(
                         url,
                         headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
@@ -276,14 +276,14 @@ class HubspotAuthAccountAdapter:
                     break
                 else:
                     attempts += 1
-                    time.sleep(10)
+                    time.sleep(20)
             except UnhandledCRMError as e:
                 if "secondly" in str(e):
                     if attempts >= 3:
                         break
                     else:
                         attempts += 1
-                        time.sleep(10)
+                        time.sleep(20)
                 else:
                     logger.exception(e)
                     break
@@ -295,7 +295,7 @@ class HubspotAuthAccountAdapter:
             if has_next_page and page <= 5:
                 data["after"] = has_next_page
                 try:
-                    with Client as client:
+                    with Variable_Client() as client:
                         res = client.post(
                             url,
                             headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
@@ -312,7 +312,17 @@ class HubspotAuthAccountAdapter:
                         break
                     else:
                         attempts += 1
-                        time.sleep(10.0)
+                        time.sleep(20)
+                except UnhandledCRMError as e:
+                    if "secondly" in str(e):
+                        if attempts >= 3:
+                            break
+                        else:
+                            attempts += 1
+                            time.sleep(20)
+                    else:
+                        logger.exception(e)
+                        break
                 except Exception as e:
                     logger.exception(
                         f"Exception calling hubspot api during next page list resources for {self.internal_user.email}: {e}"
@@ -320,9 +330,8 @@ class HubspotAuthAccountAdapter:
                     break
             else:
                 break
-        logger.info(
-            f"Request a total of {len(res.get('results', []))} results for {resource} after {page} page/s for {self.internal_user.email}"
-        )
+        text = f"Request a total of {len(res.get('results', []))} results for {resource} after {page} page/s for {self.internal_user.email}"
+        logger.info(text)
         res = self._format_resource_response(saved_response, resource)
         return res
 
@@ -338,7 +347,7 @@ class HubspotAuthAccountAdapter:
                 if relationship == "OWNER"
                 else hubspot_consts.HUBSPOT_OBJECTS_URI(resource, fields)
             )
-        with Client as client:
+        with Variable_Client() as client:
             if len(value) > 0 and relationship != "OWNER":
                 data = hubspot_consts.HUBSPOT_SEARCH_NAME_BODY(fields, value)
                 res = client.post(
@@ -362,7 +371,7 @@ class HubspotAuthAccountAdapter:
 
     def get_individual_picklist_values(self, resource, field_name):
         url = f"{hubspot_consts.BASE_URL}{hubspot_consts.HUBSPOT_PROPERTIES_URI}{resource}/{field_name}"
-        with Client as client:
+        with Variable_Client() as client:
             res = client.get(
                 url, headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
             )
@@ -375,7 +384,7 @@ class HubspotAuthAccountAdapter:
     def execute_alert_query(self, url, resource):
         """Handles alert requests to salesforce"""
         data = json.dumps(url[1])
-        with Client as client:
+        with Variable_Client() as client:
             res = client.post(
                 url[0], headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token), data=data
             )
@@ -386,7 +395,7 @@ class HubspotAuthAccountAdapter:
                 if has_next_page:
                     data["after"] = has_next_page
                     time.sleep(5.00)
-                    with Client as client:
+                    with Variable_Client() as client:
                         res = client.post(
                             url,
                             headers=hubspot_consts.HUBSPOT_REQUEST_HEADERS(self.access_token),
@@ -401,7 +410,7 @@ class HubspotAuthAccountAdapter:
 
     def revoke(self):
         # if a token is already expired a 400 error occurs we can ignore that
-        with Client as client:
+        with Variable_Client() as client:
             client.post(hubspot_consts.REVOKE_URI, data={"token": self.access_token})
             client.post(hubspot_consts.REVOKE_URI, data={"token": self.refresh_token})
 
@@ -547,7 +556,7 @@ class CompanyAdapter:
             }
         )
         url = hubspot_consts.HUBSPOT_RESOURCE_URI("companies") + deal_id
-        with Client as client:
+        with Variable_Client() as client:
             r = client.patch(
                 url,
                 data=json_data,
@@ -568,7 +577,7 @@ class CompanyAdapter:
             }
         )
         url = hubspot_consts.HUBSPOT_RESOURCE_URI("companies")
-        with Client as client:
+        with Variable_Client() as client:
             r = client.post(
                 url,
                 data=json_data,
@@ -591,7 +600,7 @@ class CompanyAdapter:
             resource_fields,
             [{"propertyName": "hs_object_id", "operator": "EQ", "value": self.integration_id}],
         )
-        with Client as client:
+        with Variable_Client() as client:
             r = client.post(
                 url,
                 data=json.dumps(body),
@@ -696,7 +705,7 @@ class DealAdapter:
     def get_deal_stage_options(self, access_token):
         url = hubspot_consts.HUBSPOT_PIPELINES_URI(self.secondary_data["pipeline"])
         headers = hubspot_consts.HUBSPOT_REQUEST_HEADERS(access_token)
-        with Client as client:
+        with Variable_Client() as client:
             res = client.get(url, headers=headers,)
             return HubspotAuthAccountAdapter._handle_response(res)
 
@@ -706,7 +715,7 @@ class DealAdapter:
             {"properties": DealAdapter.to_api(data, DealAdapter.integration_mapping, object_fields)}
         )
         url = hubspot_consts.HUBSPOT_RESOURCE_URI("deals") + deal_id
-        with Client as client:
+        with Variable_Client() as client:
             r = client.patch(
                 url,
                 data=json_data,
@@ -723,7 +732,7 @@ class DealAdapter:
             {"properties": DealAdapter.to_api(data, DealAdapter.integration_mapping, object_fields)}
         )
         url = hubspot_consts.HUBSPOT_RESOURCE_URI("deals")
-        with Client as client:
+        with Variable_Client() as client:
             r = client.post(
                 url,
                 data=json_data,
@@ -744,7 +753,7 @@ class DealAdapter:
             resource_fields,
             [{"propertyName": "hs_object_id", "operator": "EQ", "value": self.integration_id}],
         )
-        with Client as client:
+        with Variable_Client() as client:
             r = client.post(
                 url,
                 data=json.dumps(body),
@@ -846,7 +855,7 @@ class HubspotContactAdapter:
             }
         )
         url = hubspot_consts.HUBSPOT_RESOURCE_URI("contacts") + deal_id
-        with Client as client:
+        with Variable_Client() as client:
             r = client.patch(
                 url,
                 data=json_data,
@@ -867,7 +876,7 @@ class HubspotContactAdapter:
             }
         )
         url = hubspot_consts.HUBSPOT_RESOURCE_URI("contacts")
-        with Client as client:
+        with Variable_Client() as client:
             r = client.post(
                 url,
                 data=json_data,
@@ -890,7 +899,7 @@ class HubspotContactAdapter:
             resource_fields,
             [{"propertyName": "hs_object_id", "operator": "EQ", "value": self.integration_id}],
         )
-        with Client as client:
+        with Variable_Client() as client:
             r = client.post(
                 url,
                 data=json.dumps(body),
