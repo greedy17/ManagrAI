@@ -41,6 +41,12 @@
         </div> -->
 
         <div class="auto-left">
+          <div class="row pointer nav-text">
+            Saved Searches
+            <!-- <img src="@/assets/images/saved-search.svg" height="28px" alt="" /> -->
+            <img src="@/assets/images/downArrow.svg" height="14px" alt="" />
+          </div>
+
           <div class="row pointer">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-label="Lists">
               <path
@@ -357,11 +363,23 @@ nav {
   color: #6b6b6b;
 }
 
-a {
-  text-decoration: none;
-  font-weight: 300 !important;
+.nav-text {
+  font-weight: 400;
   font-family: $base-font-family;
   color: #6b6b6b;
+  font-size: 14px;
+  padding: 6px 0;
+  img {
+    margin-left: 8px;
+  }
+}
+
+a {
+  text-decoration: none;
+  font-weight: 400;
+  font-family: $base-font-family;
+  // color: #6b6b6b;
+  color: $light-gray-blue;
   font-size: 14px;
   padding: 6px 16px;
   img {
@@ -372,7 +390,7 @@ a:hover {
   color: rgba(0, 0, 0, 0.5);
 }
 .active {
-  color: $base-gray;
+  color: #6b6b6b;
   position: relative;
 }
 
@@ -383,6 +401,6 @@ a:hover {
   bottom: 0;
   height: 1px;
   width: 70%;
-  border-bottom: 1px solid $dark-black-blue;
+  border-bottom: 1px solid $mid-gray;
 }
 </style>

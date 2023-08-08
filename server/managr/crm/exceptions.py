@@ -6,13 +6,13 @@ logger = logging.getLogger("managr")
 
 
 class TokenExpired(Exception):
-    def __init(self, message="Token Expired"):
+    def __init__(self, message="Token Expired"):
         self.message = message
         super().__init__(self.message)
 
 
 class InvalidRefreshToken(Exception):
-    def __init(
+    def __init__(
         self, message="There was a problem with your SFDC connection, please reconnect to SFDC"
     ):
         self.message = message
@@ -20,61 +20,61 @@ class InvalidRefreshToken(Exception):
 
 
 class MalformedQuery(Exception):
-    def __init(self, message="Cannot Refresh Token User Must Revoke Token"):
+    def __init__(self, message="Cannot Refresh Token User Must Revoke Token"):
         self.message = message
         super().__init__(self.message)
 
 
 class ApiRateLimitExceeded(Exception):
-    def __init(self, message="Token Expired"):
+    def __init__(self, message="You have reached your secondly limit"):
         self.message = message
         super().__init__(self.message)
 
 
 class FieldValidationError(Exception):
-    def __init(self, message="Validation Error on Fields"):
+    def __init__(self, message="Validation Error on Fields"):
         self.message = message
         super().__init__(self.message)
 
 
 class RequiredFieldError(Exception):
-    def __init(self, message="Invalid/Missing Required Field"):
+    def __init__(self, message="Invalid/Missing Required Field"):
         self.message = message
         super().__init__(self.message)
 
 
 class SFNotFoundError(Exception):
-    def __init(self, message="Error Generating Slack Modal"):
+    def __init__(self, message="Error Generating Slack Modal"):
         self.message = message
         super().__init__(self.message)
 
 
 class SFQueryOffsetError(Exception):
-    def __init(self, message="OFFSET MAX IS 2000"):
+    def __init__(self, message="OFFSET MAX IS 2000"):
         self.message = message
         super().__init__(self.message)
 
 
 class InvalidFieldError(Exception):
-    def __init(self, message="Invalid/Duplicate Field in query"):
+    def __init__(self, message="Invalid/Duplicate Field in query"):
         self.message = message
         super().__init__(self.message)
 
 
 class UnableToUnlockRow(Exception):
-    def __init(self, message="Unable to unlock row"):
+    def __init__(self, message="Unable to unlock row"):
         self.message = message
         super().__init__(self.message)
 
 
 class CannotRetreiveObjectType(Exception):
-    def __init(self, message="A new error occured Invalid Type/Insufficient Access"):
+    def __init__(self, message="A new error occured Invalid Type/Insufficient Access"):
         self.message = message
         super().__init__(self.message)
 
 
 class UnhandledCRMError(Exception):
-    def __init(self, message="A new error occured"):
+    def __init__(self, message="A new error occured"):
         self.message = message
         super().__init__(self.message)
 
@@ -86,6 +86,6 @@ class Api500Error(APIException):
 
 
 class ConvertTargetNotAllowedError(Exception):
-    def __init(self, message="A new error occured"):
+    def __init__(self, message="A new error occured"):
         self.message = message
         super().__init__(self.message)

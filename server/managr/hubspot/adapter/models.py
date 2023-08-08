@@ -4,7 +4,7 @@ import json
 import time
 from requests.exceptions import HTTPError
 from managr.utils.client import Client
-from .exceptions import CustomAPIException, ApiRateLimitExceeded, TokenExpired
+from .exceptions import CustomAPIException, ApiRateLimitExceeded, TokenExpired, UnhandledCRMError
 from urllib.parse import urlencode
 from managr.utils.misc import object_to_snake_case
 from .. import constants as hubspot_consts
@@ -276,7 +276,17 @@ class HubspotAuthAccountAdapter:
                     break
                 else:
                     attempts += 1
-                    time.sleep(10)
+                    time.sleep(20)
+            except UnhandledCRMError as e:
+                if "secondly" in str(e):
+                    if attempts >= 3:
+                        break
+                    else:
+                        attempts += 1
+                        time.sleep(20)
+                else:
+                    logger.exception(e)
+                    break
         saved_response = res
         page = 1
         attempts = 1
@@ -302,7 +312,17 @@ class HubspotAuthAccountAdapter:
                         break
                     else:
                         attempts += 1
-                        time.sleep(10.0)
+                        time.sleep(20)
+                except UnhandledCRMError as e:
+                    if "secondly" in str(e):
+                        if attempts >= 3:
+                            break
+                        else:
+                            attempts += 1
+                            time.sleep(20)
+                    else:
+                        logger.exception(e)
+                        break
                 except Exception as e:
                     logger.exception(
                         f"Exception calling hubspot api during next page list resources for {self.internal_user.email}: {e}"
@@ -310,9 +330,8 @@ class HubspotAuthAccountAdapter:
                     break
             else:
                 break
-        logger.info(
-            f"Request a total of {len(res.get('results', []))} results for {resource} after {page} page/s for {self.internal_user.email}"
-        )
+        text = f"Request a total of {len(res.get('results', []))} results for {resource} after {page} page/s for {self.internal_user.email}"
+        logger.info(text)
         res = self._format_resource_response(saved_response, resource)
         return res
 

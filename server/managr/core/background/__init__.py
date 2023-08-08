@@ -47,6 +47,7 @@ from managr.salesforce.background import emit_add_update_to_sf, emit_add_call_to
 from managr.hubspot.tasks import emit_add_update_to_hs, emit_add_call_to_hs
 from managr.core.exceptions import _handle_response, ServerError, StopReasonLength
 from managr.zoom.zoom_helper import exceptions as zoom_exceptions
+from managr.crm.utils import set_owner_field
 
 logger = logging.getLogger("managr")
 

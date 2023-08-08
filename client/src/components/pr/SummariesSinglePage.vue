@@ -8,7 +8,7 @@
             Generate a news summary from over 1 million sources.
           </p>
           <p v-else>
-            Hey Managr, summarize <span class="search-text">"{{ newSearch }}"</span>
+            Summarize coverage for <span class="search-text">"{{ newSearch }}"</span>
           </p>
         </div>
         <div>
@@ -41,60 +41,43 @@
             </div>
           </div>
 
-          <!-- <div class="input-container">
+          <div v-if="addingPrompt" style="margin-top: 1rem" class="input-container">
             <div class="input-row">
-              <div class="main-text">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path
-                    fill-rule="evenodd"
-                    clip-rule="evenodd"
-                    d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
-                    fill="currentColor"
-                  ></path>
-                </svg>
-              </div>
-
-              <input
-                autofocus
-                class="area-input"
-                placeholder="Provide additional instructions. This step is optional."
+              <textarea
+                rows="3"
+                class="area-input s-padding"
+                placeholder="Provide additional instructions..."
                 v-model="newTemplate"
+                v-autoresize
               />
             </div>
           </div>
 
-          <div class="input-container">
+          <div v-if="addingSources" style="margin-top: 1rem" class="input-container">
             <div class="input-row">
-              <div class="main-text">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path
-                    fill-rule="evenodd"
-                    clip-rule="evenodd"
-                    d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
-                    fill="currentColor"
-                  ></path>
-                </svg>
-              </div>
-
               <input
                 autofocus
-                class="area-input"
-                placeholder="Separate with commas"
+                class="area-input s-padding"
+                placeholder="Separate with commas.."
                 v-model="additionalSources"
               />
             </div>
-          </div> -->
+          </div>
 
-          <div class="center">
-            <button class="secondary-button">Add Instructions</button>
-            <button class="secondary-button">Add Sources</button>
+          <div class="center mar-top">
+            <button @click="toggleAddPrompt" v-if="!addingPrompt" class="secondary-button">
+              Custom Prompt
+            </button>
+            <button @click="toggleAddSource" v-if="!addingSources" class="secondary-button">
+              Add Sources
+            </button>
           </div>
         </div>
       </div>
       <div v-else class="loaded-content">
-        <div v-if="summaryLoading" class="no-content">
-          <p v-if="loading">Gathering clips and summarizing coverage</p>
-          <p v-else>Summarizing coverage</p>
+        <div v-if="summaryLoading" class="center">
+          <!-- <p v-if="loading">Gathering clips and summarizing coverage</p>
+          <p v-else>Summarizing coverage</p> -->
 
           <div class="loader-container">
             <div class="loader-row">
@@ -109,15 +92,27 @@
         <div v-else class="summaries-container">
           <div class="content-width">
             <div class="news-container">
-              <div>Summary for {{ selectedSearch.search }}</div>
-              <pre class="pre-text" v-html="summary"></pre>
-              <div>
-                <div>Regenerate</div>
-                <div>Save Search</div>
+              <div class="title-container">
+                <h1 class="no-text-margin">{{ selectedSearch.search }}</h1>
+                <p class="sub-text">AI generated search: "Lorem ipsum no access yet"</p>
               </div>
+              <div class="title-bar">
+                <div class="row">
+                  <button class="secondary-button">Regenerate</button>
+                  <button class="primary-button">Save</button>
+                </div>
+
+                <img class="right-mar" src="@/assets/images/share.svg" height="24px" alt="" />
+              </div>
+
+              <pre class="pre-text" v-html="summary"></pre>
             </div>
           </div>
         </div>
+
+        <!-- <div v-if="filteredArticles.length" class="divider">
+          <p class="divider-text">Featured Clips</p>
+        </div> -->
 
         <div v-if="!loading" class="clips-container">
           <div class="content-width">
@@ -256,11 +251,19 @@ export default {
       filteredArticles: [],
       summary: '',
       newSummary: false,
+      addingPrompt: false,
+      addingSources: false,
     }
   },
   watch: {},
   created() {},
   methods: {
+    toggleAddPrompt() {
+      this.addingPrompt = !this.addingPrompt
+    },
+    toggleAddSource() {
+      this.addingSources = !this.addingSources
+    },
     getTimeDifferenceInMinutes(dateString) {
       const currentDate = new Date()
       const givenDate = new Date(dateString)
@@ -426,6 +429,23 @@ export default {
       return this.$store.state.user.firstName
     },
   },
+  directives: {
+    autoresize: {
+      inserted(el) {
+        // el.style.overflow = 'scro'
+
+        function adjustTextareaHeight() {
+          el.style.height = 'auto'
+          el.style.height = el.scrollHeight + 'px'
+        }
+
+        el.addEventListener('input', adjustTextareaHeight)
+        el.addEventListener('focus', adjustTextareaHeight)
+        el.addEventListener('textarea-clear', adjustTextareaHeight)
+        adjustTextareaHeight()
+      },
+    },
+  },
 }
 </script>
 <style lang="scss" scoped>
@@ -496,6 +516,9 @@ export default {
   border-radius: 6px;
   padding: 1.5rem 0.75rem;
 }
+.mar-top {
+  margin-top: 24px;
+}
 
 .dot {
   width: 4px;
@@ -522,7 +545,8 @@ export default {
 
 .primary-button {
   @include dark-blue-button();
-  padding: 10px 12px;
+  padding: 8px 12px;
+  border: none;
   img {
     filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
     margin-right: 8px;
@@ -534,17 +558,22 @@ export default {
   border: 1px solid rgba(0, 0, 0, 0.1);
   color: $dark-black-blue;
   background-color: white;
-  padding: 10px 12px;
+  padding: 8px 12px;
   img {
     filter: invert(25%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
     margin-right: 8px;
   }
 }
+
+.row {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+}
 .center {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 24px;
   button:first-of-type {
     margin-right: 1rem;
   }
@@ -557,6 +586,9 @@ export default {
   width: 500px;
   background-color: $offer-white;
   color: $base-gray;
+}
+.s-padding {
+  padding: 0 0.25rem !important;
 }
 .area-input {
   width: 100%;
@@ -623,15 +655,18 @@ export default {
   overflow-y: scroll;
 }
 .pre-text {
-  color: $dark-black-blue;
-  font-family: $base-font-family;
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 24px;
+  color: $base-gray;
+  font-family: $thin-font-family;
+  font-size: 16px;
+  line-height: 32px;
   word-wrap: break-word;
   white-space: pre-wrap;
   padding: 0;
   margin: 0;
+}
+
+.right-mar {
+  margin-right: 8px;
 }
 .loaded-content {
   display: flex;
@@ -708,16 +743,37 @@ export default {
     margin-right: 0.5rem;
   }
 }
+
+.divider {
+  position: relative;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  width: 90%;
+}
+
+.divider-text {
+  position: absolute;
+  top: -32px;
+  left: 44%;
+  z-index: 20;
+  background-color: white;
+  padding: 4px 16px;
+}
+
 .summaries-container {
   display: flex;
   justify-content: flex-start;
-  width: 100%;
+  width: 100vw;
+  margin-bottom: 32px;
+  background-color: $off-white;
+  padding: 32px 0;
+  border-radius: 4px;
 }
-// .clips-container {
-//   display: flex;
-//   justify-content: flex-start;
-//   width: 100%;
-// }
+.clips-container {
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+  // margin-top: 40px;
+}
 .label-width {
   display: flex;
   flex-direction: row;
@@ -754,7 +810,33 @@ header {
   width: 50%;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.title-container {
+  // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  width: 100%;
+}
+
+.title-bar {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 16px 0 32px 0;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.sub-text {
+  color: $light-gray-blue;
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.no-text-margin {
+  margin: 0;
 }
 
 .author {
@@ -826,8 +908,10 @@ header {
 
 .article-preview {
   color: $base-gray;
+  font-family: $thin-font-family;
   font-size: 14px;
   height: 68px;
+  line-height: 24px;
   display: inline;
   text-overflow: ellipsis;
   overflow: hidden;
