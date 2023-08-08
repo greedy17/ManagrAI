@@ -63,7 +63,7 @@ def sf_api_exceptions_wf(error_key):
                 operation_key = f"Failed to {snake_to_space(error_key)}"
 
                 workflow_id = args[0]
-                failed_task_string = f"{operation_key} {str(e)}.{WORKFLOW_KEY_MAP[error_key]}"
+                failed_task_string = f"{str(e)}.{WORKFLOW_KEY_MAP[error_key]}"
                 w = MeetingWorkflow.objects.filter(id=workflow_id).first()
                 if not w:
                     return LOGGER.exception(
@@ -82,7 +82,7 @@ def sf_api_exceptions_wf(error_key):
                     return LOGGER.exception(
                         f"Function wrapped in sfw logger but cannot find workflow {e}"
                     )
-                failed_task_string = f"{operation_key} {str(e)}.{WORKFLOW_KEY_MAP[error_key]}"
+                failed_task_string = f"{str(e)}.{WORKFLOW_KEY_MAP[error_key]}"
                 w.failed_task_description.append(failed_task_string)
                 w.save()
             except InvalidFieldError as e:
@@ -96,7 +96,8 @@ def sf_api_exceptions_wf(error_key):
                     return LOGGER.exception(
                         f"Function wrapped in sfw logger but cannot find workflow {e}"
                     )
-                w.failed_task_description.append(f"{operation_key} {str(e)}")
+                failed_task_string = f"{str(e)}.{WORKFLOW_KEY_MAP[error_key]}"
+                w.failed_task_description.append(failed_task_string)
                 w.save()
             except UnhandledCRMError as e:
                 from managr.salesforce.models import MeetingWorkflow
@@ -108,7 +109,8 @@ def sf_api_exceptions_wf(error_key):
                     return LOGGER.exception(
                         f"Function wrapped in sfw logger but cannot find workflow {e}"
                     )
-                w.failed_task_description.append(f"{operation_key} {str(e)}")
+                failed_task_string = f"{str(e)}.{WORKFLOW_KEY_MAP[error_key]}"
+                w.failed_task_description.append(failed_task_string)
                 w.save()
             except SFNotFoundError as e:
                 from managr.salesforce.models import MeetingWorkflow
@@ -120,7 +122,8 @@ def sf_api_exceptions_wf(error_key):
                     return LOGGER.exception(
                         f"Function wrapped in sfw logger but cannot find workflow {e}"
                     )
-                w.failed_task_description.append(f"{operation_key} {str(e)}")
+                failed_task_string = f"{str(e)}.{WORKFLOW_KEY_MAP[error_key]}"
+                w.failed_task_description.append(failed_task_string)
                 w.save()
             except UnableToUnlockRow as e:
                 from managr.salesforce.models import MeetingWorkflow

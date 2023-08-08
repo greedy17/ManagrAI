@@ -6,10 +6,8 @@ import uuid
 import httpx
 import time
 from django.utils import timezone
-import calendar
 from django.core import serializers
 from managr.utils.misc import get_site_url
-from dateutil.parser import parse
 from django.shortcuts import redirect
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
@@ -78,7 +76,7 @@ from managr.salesforce.cron import (
 )
 from managr.hubspot.cron import queue_users_hs_fields, queue_users_hs_resource
 from .nylas.models import NylasAccountStatusList
-from managr.utils.client import Client, Variable_Client
+from managr.utils.client import Variable_Client
 from ..core import constants as core_consts
 
 logger = logging.getLogger("managr")
@@ -358,8 +356,7 @@ def submit_chat_prompt(request):
                 user.email, full_prompt, token_amount=token_amount, top_p=0.1
             )
             # logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: body <{body}>")
-            Client = Variable_Client(timeout)
-            with Client as client:
+            with Variable_Client(timeout) as client:
                 r = client.post(url, data=json.dumps(body), headers=OPEN_AI_HEADERS,)
                 r = _handle_response(r)
                 # logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
@@ -530,7 +527,6 @@ def ask_managr(request):
 @permission_classes([permissions.IsAuthenticated])
 def deal_review(request):
     from managr.core import constants as core_consts
-    from managr.utils.client import Client
     from managr.crm.utils import CRM_SWITCHER
     from ..slack.models import OrgCustomSlackFormInstance, OrgCustomSlackForm
     from managr.core.exceptions import _handle_response
@@ -565,7 +561,7 @@ def deal_review(request):
     has_error = False
     while True:
         try:
-            with Client as client:
+            with Variable_Client() as client:
                 url = core_consts.OPEN_AI_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
                 r = _handle_response(r)
@@ -603,7 +599,7 @@ def draft_follow_up(request):
 
     while True:
         try:
-            with Client as client:
+            with Variable_Client() as client:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             if r.status_code == 200:
@@ -625,7 +621,7 @@ def chat_next_steps(request):
     attempts = 1
     while True:
         try:
-            with Client as client:
+            with Variable_Client() as client:
                 url = core_consts.OPEN_AI_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             if r.status_code == 200:
@@ -650,7 +646,7 @@ def get_chat_summary(request):
         summary_prompt = core_consts.OPEN_AI_SUMMARY_PROMPT(cleaned_data)
         body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, summary_prompt, 500, top_p=0.1)
         url = core_consts.OPEN_AI_COMPLETIONS_URI
-        with Client as client:
+        with Variable_Client() as client:
             r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
             if r.status_code == 200:
                 r = r.json()
@@ -1476,7 +1472,7 @@ def send_new_email(request):
         )
         return Response(status=status.HTTP_403_FORBIDDEN)
 
-    # Otherwise, init the Nylas Client
+    # Otherwise, init the Nylas Variable_Client()
     try:
         nylas = APIClient(
             settings.NYLAS_CLIENT_ID, settings.NYLAS_CLIENT_SECRET, nylas.access_token
@@ -1507,7 +1503,7 @@ def reply_to_email(request):
         )
         return Response(status=status.HTTP_403_FORBIDDEN)
 
-    # Otherwise, init the Nylas Client
+    # Otherwise, init the Nylas Variable_Client()
     try:
         nylas = APIClient(
             settings.NYLAS_CLIENT_ID, settings.NYLAS_CLIENT_SECRET, nylas.access_token
