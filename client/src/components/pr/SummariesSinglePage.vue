@@ -1005,6 +1005,7 @@ header {
   display: inline;
   text-overflow: ellipsis;
   overflow: hidden;
+  cursor: pointer;
 }
 
 .article-preview {
