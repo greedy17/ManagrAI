@@ -30,6 +30,5 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, instructions=False):
         body += instructions
     else:
         body += f"""*Was {search} featured or mentioned in this article. Briefly explain.*\n
-        *{search} sentiment vs article sentiment*\n
-        *Sentiment around our products or people*"""
+        *{search} sentiment vs article sentiment*\n"""
     return body

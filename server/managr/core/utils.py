@@ -4,7 +4,7 @@ import json
 
 from django.conf import settings
 from django.utils import timezone
-from managr.utils.client import Client
+from managr.utils.client import Variable_Client
 from datetime import datetime
 from django.db.models import Q
 from managr.core.models import User
@@ -329,7 +329,7 @@ def get_summary_completion(user, data):
     tokens = max_token_calculator(summary_prompt)
     body = core_const.OPEN_AI_COMPLETIONS_BODY(user.email, summary_prompt, tokens)
     url = core_const.OPEN_AI_COMPLETIONS_URI
-    with Client as client:
+    with Variable_Client() as client:
         r = client.post(url, data=json.dumps(body), headers=core_const.OPEN_AI_HEADERS,)
         r = r.json()
     return r

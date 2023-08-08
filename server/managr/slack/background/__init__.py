@@ -881,7 +881,7 @@ def deal_review_data_builder(resource_data, api_name_list, crm, form_data, field
 @slack_api_exceptions(rethrow=0)
 def _process_alert_send_deal_review(payload, context):
     from managr.core import constants as core_consts
-    from managr.utils.client import Client
+    from managr.utils.client import Variable_Client
     from managr.crm.utils import set_name_field
 
     user_slack_id = payload.get("user", {}).get("id", None)
@@ -911,7 +911,7 @@ def _process_alert_send_deal_review(payload, context):
     has_error = False
     while True:
         try:
-            with Client as client:
+            with Variable_Client() as client:
                 url = core_consts.OPEN_AI_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
                 r = _handle_response(r)
@@ -966,7 +966,7 @@ def _process_alert_send_deal_review(payload, context):
 @slack_api_exceptions(rethrow=0)
 def _process_send_deal_review(payload, context):
     from managr.core import constants as core_consts
-    from managr.utils.client import Client
+    from managr.utils.client import Variable_Client
     from managr.crm.utils import CRM_SWITCHER
 
     user = User.objects.get(id=context.get("u"))
@@ -996,7 +996,7 @@ def _process_send_deal_review(payload, context):
     has_error = False
     while True:
         try:
-            with Client as client:
+            with Variable_Client() as client:
                 url = core_consts.OPEN_AI_COMPLETIONS_URI
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
                 r = _handle_response(r)
