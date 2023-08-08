@@ -491,7 +491,7 @@ export default {
       }
     },
     goToArticle(link) {
-      window.location.href = link
+      window.open(link, '_blank')
     },
     changeRegen() {
       this.regenSummary = !this.regenSummary
