@@ -1,9 +1,51 @@
 <template>
   <div class="main-content">
+    <Modal
+      v-if="regenModal"
+      @close-modal="
+        () => {
+          $emit('cancel'), closeRegenModal()
+        }
+      "
+      class="regen-modal"
+    >
+      <div class="regen-container">
+        <div class="regen-header">
+          <div>
+            <h4 class="regen-header-title">New Search</h4>
+            <p class="regen-header-subtitle">Create a new search using conversational AI</p>
+          </div>
+          <div class="pointer" @click="closeRegenModal"><small>X</small></div>
+        </div>
+        <div class="regen-body">
+          <div>
+            <div>
+              <h5 class="regen-body-title">Search</h5>
+              <span class="regen-header-subtitle"
+                >Use conversation text. AI will convert it to a boolean.</span
+              >
+            </div>
+            <textarea v-model="newSearch" class="regen-body-text" />
+          </div>
+          <div>
+            <div>
+              <h5 class="regen-body-title">
+                Summary Instructions <span class="regen-header-subtitle">(optional)</span>
+              </h5>
+            </div>
+            <textarea v-model="newTemplate" class="regen-body-text" />
+          </div>
+          <div class="blue-border-button">Use a Template</div>
+        </div>
+        <div class="regen-footer">
+          <div class="cancel-button" @click="closeRegenModal">Cancel</div>
+          <div class="save-button" @click="generateNewSearch">Save</div>
+        </div>
+      </div>
+    </Modal>
     <div class="center" v-if="page === 'SUMMARIES'">
       <div class="no-content" v-if="!selectedSearch">
         <div class="title-row">
-          <!-- <img src="@/assets/images/logo.png" class="logo" /> -->
           <p class="typed" v-if="!newSearch">
             Generate a news summary from over 1 million sources.
           </p>
@@ -75,8 +117,22 @@
         </div>
       </div>
       <div v-else class="loaded-content">
-        <div v-if="summaryLoading" class="center">
-          <div class="loader-container">
+        <div style="margin-left: -1rem" v-if="summaryLoading" class="center">
+          <div class="summary-preview-skeleton shimmer">
+            <div class="content">
+              <div class="title-wide"></div>
+              <div class="meta-wide"></div>
+            </div>
+
+            <div class="skeleton-bar">
+              <div class="row">
+                <div class="skeleton-button"></div>
+                <div class="skeleton-button"></div>
+              </div>
+              <div class="skeleton-icon"></div>
+            </div>
+          </div>
+          <!-- <div class="loader-container">
             <div class="loader-row">
               <div class="loading">
                 <div class="dot"></div>
@@ -84,7 +140,7 @@
                 <div class="dot"></div>
               </div>
             </div>
-          </div>
+          </div> -->
         </div>
         <div v-else class="summaries-container">
           <div class="content-width">
@@ -97,7 +153,7 @@
               </div>
               <div class="title-bar">
                 <div class="row">
-                  <button class="secondary-button">Regenerate</button>
+                  <button @click="openRegenModal" class="secondary-button">Regenerate</button>
                   <button class="primary-button">Save</button>
                 </div>
 
@@ -109,8 +165,38 @@
           </div>
         </div>
 
-        <div v-if="filteredArticles.length" class="divider">
+        <div v-if="filteredArticles.length && !loading" class="divider">
           <p class="divider-text">News Clips</p>
+        </div>
+
+        <div v-if="loading">
+          <div class="article-preview-skeleton shimmer">
+            <div class="content">
+              <div class="title"></div>
+              <div class="meta"></div>
+              <div class="excerpt"></div>
+              <div class="skeleton-footer"></div>
+            </div>
+            <div class="thumbnail"></div>
+          </div>
+          <div class="article-preview-skeleton shimmer">
+            <div class="content">
+              <div class="title"></div>
+              <div class="meta"></div>
+              <div class="excerpt"></div>
+              <div class="skeleton-footer"></div>
+            </div>
+            <div class="thumbnail"></div>
+          </div>
+          <div class="article-preview-skeleton shimmer">
+            <div class="content">
+              <div class="title"></div>
+              <div class="meta"></div>
+              <div class="excerpt"></div>
+              <div class="skeleton-footer"></div>
+            </div>
+            <div class="thumbnail"></div>
+          </div>
         </div>
 
         <div v-if="!loading" class="clips-container">
@@ -1010,11 +1096,13 @@ header {
   font-family: $base-font-family;
 }
 .regen-footer {
+  padding-top: 12px;
   display: flex;
   justify-content: flex-end;
 }
 .blue-border-button {
   @include dark-blue-border-button();
+  border: 1px solid rgba(0, 0, 0, 0.1);
   width: 8rem;
   margin-bottom: 1rem;
 }
@@ -1029,11 +1117,123 @@ header {
   cursor: pointer;
 }
 .regen-modal {
-  margin-top: 10rem;
+  margin-top: 100px;
 }
 .message-text {
   font-family: $base-font-family;
   word-wrap: break-word;
   white-space: pre-wrap;
+}
+@keyframes shimmer {
+  100% {
+    -webkit-mask-position: left;
+  }
+}
+
+.shimmer {
+  display: inline-block;
+  background-repeat: no-repeat;
+  animation: shimmer 2.5s infinite;
+  -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/300% 100%;
+}
+
+.article-preview-skeleton {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 20px;
+  border-radius: 4px;
+}
+
+.summary-preview-skeleton {
+  width: 100%;
+  padding: 36px 20px;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+.thumbnail {
+  height: 112px;
+  width: 116px;
+  background-color: #f2f2f2;
+  border-radius: 2px;
+  margin-right: 20px;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.title {
+  width: 400px;
+  height: 24px;
+  background-color: #f2f2f2;
+  margin-bottom: 8px;
+  border-radius: 2px;
+}
+.title-wide {
+  width: 520px;
+  height: 36px;
+  background-color: #f2f2f2;
+  margin-bottom: 8px;
+  border-radius: 2px;
+}
+
+.meta {
+  width: 399px;
+  height: 8px;
+  background-color: #f2f2f2;
+  border-radius: 2px;
+  margin-bottom: 8px;
+}
+
+.meta-wide {
+  width: 520px;
+  height: 16px;
+  background-color: #f2f2f2;
+  border-radius: 2px;
+  margin-bottom: 8px;
+}
+
+.skeleton-bar {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 16px 0;
+}
+
+.skeleton-button {
+  height: 20px;
+  width: 120px;
+  margin-right: 16px;
+  background-color: #f2f2f2;
+}
+
+.skeleton-icon {
+  border-radius: 50%;
+  height: 20px;
+  width: 20px;
+  background-color: #f2f2f2;
+}
+
+.excerpt {
+  width: 399px;
+  height: 8px;
+  background-color: #f2f2f2;
+  border-radius: 2px;
+}
+
+.skeleton-footer {
+  width: 150px;
+  height: 12px;
+  margin-top: 32px;
+  background-color: #f2f2f2;
+  border-radius: 2px;
 }
 </style>
