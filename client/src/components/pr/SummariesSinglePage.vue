@@ -92,8 +92,19 @@
         </div>
       </div>
       <div v-else class="loaded-content">
-        <div v-if="summaryLoading" class="summaries-container">
-          Summarizing coverage for {{ newSearch }}
+        <div v-if="summaryLoading" class="no-content">
+          <p v-if="loading">Gathering clips and summarizing coverage</p>
+          <p v-else>Summarizing coverage</p>
+
+          <div class="loader-container">
+            <div class="loader-row">
+              <div class="loading">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
+            </div>
+          </div>
         </div>
         <div v-else class="summaries-container">
           <div class="content-width">
@@ -442,12 +453,65 @@ export default {
   }
 }
 
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 .typed {
   overflow: hidden;
   white-space: nowrap;
   width: 0;
   animation: typing 1.5s steps(30, end) forwards, blinking 1s infinite;
   border-right: 1px solid;
+}
+
+.loader-container {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.loader-row {
+  border-radius: 6px;
+  padding: 0.25rem 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 6px;
+  padding: 1.5rem 0.75rem;
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  margin: 0 5px;
+  background: rgb(97, 96, 96);
+  border-radius: 50%;
+  animation: bounce 1.2s infinite ease-in-out;
+}
+
+.dot:nth-child(2) {
+  animation-delay: -0.4s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: -0.2s;
 }
 
 .search-text {
