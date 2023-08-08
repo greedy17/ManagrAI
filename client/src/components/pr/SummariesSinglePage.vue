@@ -79,6 +79,8 @@
                 src="@/assets/images/paper-plane.svg"
                 height="14px"
                 alt=""
+                @click="generateNewSearch"
+                class="pointer"
               />
             </div>
           </div>
