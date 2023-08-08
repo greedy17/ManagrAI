@@ -71,7 +71,7 @@ class PRSearchViewSet(
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": articles})
 
-        return Response({"articles": articles})
+        return Response({"articles": articles, "string": query_input})
 
     @action(
         methods=["get"],

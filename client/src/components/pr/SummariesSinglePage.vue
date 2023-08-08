@@ -46,7 +46,7 @@
               <textarea
                 rows="3"
                 class="area-input s-padding"
-                placeholder="Provide additional instructions..."
+                placeholder="What would you like included in the summary?"
                 v-model="newTemplate"
                 v-autoresize
               />
@@ -94,7 +94,7 @@
             <div class="news-container">
               <div class="title-container">
                 <h1 class="no-text-margin">{{ selectedSearch.search }}</h1>
-                <p class="sub-text">AI generated search: "Lorem ipsum no access yet"</p>
+                <p class="sub-text">AI generated search: {{ booleanString }}</p>
               </div>
               <div class="title-bar">
                 <div class="row">
@@ -110,9 +110,9 @@
           </div>
         </div>
 
-        <!-- <div v-if="filteredArticles.length" class="divider">
-          <p class="divider-text">Featured Clips</p>
-        </div> -->
+        <div v-if="filteredArticles.length" class="divider">
+          <p class="divider-text">News Clips</p>
+        </div>
 
         <div v-if="!loading" class="clips-container">
           <div class="content-width">
@@ -250,6 +250,7 @@ export default {
       summaryLoading: false,
       filteredArticles: [],
       summary: '',
+      booleanString: null,
       newSummary: false,
       addingPrompt: false,
       addingSources: false,
@@ -323,6 +324,7 @@ export default {
           })
           .then((response) => {
             this.filteredArticles = response.articles
+            this.booleanString = response.string
           })
       } catch (e) {
         console.log(e)
@@ -498,6 +500,8 @@ export default {
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
+  margin-left: -48px;
+  margin-bottom: 16px;
 }
 
 .loader-row {
@@ -747,7 +751,7 @@ export default {
 .divider {
   position: relative;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  width: 90%;
+  width: 100%;
 }
 
 .divider-text {
@@ -757,16 +761,16 @@ export default {
   z-index: 20;
   background-color: white;
   padding: 4px 16px;
+  border-radius: 20px;
 }
 
 .summaries-container {
   display: flex;
   justify-content: flex-start;
   width: 100vw;
-  margin-bottom: 32px;
+  margin-bottom: 0;
   background-color: $off-white;
-  padding: 32px 0;
-  border-radius: 4px;
+  padding: 8px 0 40px 0;
 }
 .clips-container {
   display: flex;
@@ -807,6 +811,7 @@ header {
 }
 
 .news-container {
+  padding-top: 32px;
   width: 50%;
   display: flex;
   flex-direction: column;
