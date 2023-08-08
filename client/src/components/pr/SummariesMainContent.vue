@@ -1,412 +1,70 @@
 <template>
   <div class="main-content">
-    <div class="left-content">
-      <div>
-        <div class="gray-background">
-          <div class="toggle-container" :class="summaryChat === 'SUMMARY' ? 'active' : ''" @click="changeSummaryChat('SUMMARY')">
-            <p>Summary</p>
-          </div>
-          <div class="toggle-container" :class="summaryChat === 'CHAT' ? 'active' : ''" @click="changeSummaryChat('CHAT')">
-            <p>Chat</p>
-          </div>
-        </div>
-        <div v-if="summaryChat === 'SUMMARY'">
-          <p class="small-title-text"><img src="@/assets/images/sparkles-round.svg" />Summary</p>
-        </div>
-        <div v-else>
-          <p class="small-title-text"><img src="@/assets/images/sparkles-round.svg" />Chat</p>
-        </div>
-      </div>
-      <div v-if="summaryChat === 'SUMMARY'">
-        <div v-if="!summary" class="summary-buttons-container">
-          <button class="summary-button wide" @click="generateSummary"><img src="@/assets/images/sparkles-round.svg" />Generate Summary</button>
-        </div>
-        <div v-else>
-          <div class="highlights-summary-container">
-            <div>
-              <h3 class="highlights">Highlights:</h3>
-              <div v-for="(highlight, i) in summary.highlights" :key="i">
-                <div class="display-flex">
-                  <!-- <span class="divier-dot large-dot">.</span> -->
-                  <img class="dot" src="@/assets/images/dot.svg" />
-                  <span class="highlight-point">{{ highlight }}</span>
-                </div>
-              </div>
-            </div>
-            <div>
-              <h3 class="overall">Overall Summary:</h3>
-              <div class="highlight-point">{{ summary.overview }}</div>
-            </div>
-          </div>
-          <div v-if="regenSummary">
-            <div class="provide-instructions">
-              <span>Provide Instructions:</span>
-              <img class="back-arrow" src="@/assets/images/arrow-small-left.svg" @click="changeRegen"/>
-            </div>
-            <div class="chat-border">
-            <div class="input-container">
-              <input v-model="message" placeholder="Provide Instructions..." />
-              <font-awesome-icon
-                :class="{ invert: !message.length }"
-                class="gray"
-                style="height: 14px; cursor: pointer"
-                icon="fa-regular fa-paper-plane"
-                @click="regenerateSummary"
-              />
-            </div>
-          </div>
-          </div>
-          <div v-else-if="newSummary">
-            <div class="provide-instructions">
-              <span>Selected: {{ selectedArticles.length }}</span>
-              <img class="back-arrow" src="@/assets/images/arrow-small-left.svg" @click="changeNew"/>
-            </div>
-            <div>
-              <div v-if="!selectedArticles.length" class="summarize-disabled">Select the clips you'd like to summarize</div>
-              <div v-else class="summarize" @click="saveSelectedArticles">Summarize</div>
-            </div>
-          </div>
-          <div v-else class="summary-buttons-container">
-            <button @click="changeRegen" class="summary-button"><img src="@/assets/images/sparkles-round.svg" />Regenerate</button>
-            <button @click="changeNew" class="summary-button dark-button"><img src="@/assets/images/sparkles-round.svg" />New Summary</button>
+    <div class="card-container">
+      <div v-if="loading" class="loader-container">
+        <div class="loader-row">
+          <div class="loading">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
           </div>
         </div>
       </div>
-      <div v-else-if="summaryChat === 'CHAT'" class="chat-container">
-        <div class="margin-top chat-window" ref="chatWindow">
-          <!-- <div v-for="(message, i) in messages" :key="i" class="col-start">
-            <div class="message-container">
-              <div class="images">
-                <span v-if="message.failed" style="font-size: 24px"> 🚫 </span>
-                <span v-else-if="message.user === 'bot' && !message.updated" style="font-size: 24px">
-                  🤖
-                </span>
-                <span style="margin-left: -4px" v-else-if="message.user === 'bot' && message.updated">
-                  <img class="green-filter" src="@/assets/images/logo.png" height="30px" alt="" />
-                </span>
-
-                <div class="avatar" v-else>{{ userName[0] }}</div>
-              </div>
-
-              <div class="text-container">
-                <div style="position: relative">
-                  <div
-                    class="type-header"
-                    :class="{ marg: message.gtMsg === 'AI Generated Summary' }"
-                    v-if="message.user === 'bot' && message.gtMsg"
-                  >
-                    <h4 style="margin: 0">
-                      {{ message.gtMsg }}
-                    </h4>
-                    <small>
-                      {{ message.data.Name }}
-                    </small>
-                  </div>
-
-                  <div
-                    :class="{ 'type-header': message.title === 'Deal Review' }"
-                    style="font-weight: bold; font-size: 14px"
-                    v-else-if="message.user === 'bot' && message.title"
-                  >
-                    {{ message.title }}
-                  </div>
-
-                  <pre v-html="message.value" class="message-text"></pre>
-                </div>
-
-                <div v-if="message.generated">
-                  <div
-                    v-if="generating && generatingId === message.id"
-                    style="border-radius: 6px; padding: 0.2rem 0 0.25rem 0"
-                    class="row"
-                  >
-                    <div class="loading">
-                      <div class="dot"></div>
-                      <div class="dot"></div>
-                      <div class="dot"></div>
-                    </div>
-                  </div>
-
-                  <div v-else style="margin-top: 1.5rem">
-                    <div class="column" v-if="message.generatedType === 'email' && addingInstructions">
-                      <div class="space-between">
-                        <small>Provide any additional instructions below:</small>
-
-                        <p @click="closeInstructions">x</p>
-                      </div>
-
-                      <textarea
-                        v-model="instructionText"
-                        class="inline-input"
-                        v-autoresize
-                        autofocus="true"
-                        rows="1"
-                      />
-                    </div>
-
-                    <button
-                      v-if="!addingInstructions"
-                      style="margin-bottom: 0.25rem"
-                      @click="
-                        regenerate(
-                          message.generatedType,
-                          message.data['meeting_comments'],
-                          message.id,
-                          {
-                            data: message.data,
-                            integration: message.integrationId,
-                            resource: message.resourceType,
-                          },
-                        )
-                      "
-                      class="content-button padding-small"
-                    >
-                      <img
-                        style="margin-right: 0.6rem"
-                        class="gold-filter"
-                        src="@/assets/images/sparkle.svg"
-                        height="14px"
-                        alt=""
-                      />
-                      Regenerate
-                    </button>
-
-                    <button
-                      v-else
-                      style="margin-bottom: 0.25rem"
-                      @click="
-                        regenerateEmail(instructionText, message.data['meeting_comments'], message.id)
-                      "
-                      class="content-button padding-small"
-                    >
-                      <img
-                        style="margin-right: 0.6rem"
-                        class="gold-filter"
-                        src="@/assets/images/sparkle.svg"
-                        height="14px"
-                        alt=""
-                      />
-                      Regenerate
-                    </button>
-
-                    <p v-if="message.error" style="margin-top: 0.5rem" class="red-text">
-                      {{ message.error }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              v-if="message.user === 'bot' && message.formId && !message.updated"
-              class="generate-container"
-              style="margin-left: -0.5rem"
-            >
-              <button @click="toggleChatModal(message)" class="generate-button green">
-                <img src="@/assets/images/wand.svg" class="invert" height="14px" alt="" />
-                {{
-                  message.error
-                    ? 'Retry'
-                    : `Review & Update ${user.crm[0] + user.crm.slice(1).toLowerCase()}`
-                }}
-              </button>
-
-              <p v-if="message.error" class="red-text">{{ message.error }}</p>
-            </div>
-
-            <div
-              v-else-if="message.user === 'bot' && message.formId && message.updated"
-              class="generate-container"
-            >
-              <div v-if="!message.generated">
-                <button
-                  @click="toggleSelectContentOption(i)"
-                  v-if="!selectingContent || selectedIndex !== i"
-                  class="generate-button"
-                  style="margin-left: -0.75rem"
-                >
-                  <img class="gold-filter" src="@/assets/images/sparkle.svg" height="16px" alt="" />
-                  Generate content
-                </button>
-
-                <div v-else-if="selectingContent && selectedIndex === i">
-                  <div
-                    style="position: relative; margin-bottom: 2rem; margin-left: -0.75rem"
-                    class="row"
-                    v-if="!generating"
-                  >
-                    <button
-                      @click="generateEmail(message.data['meeting_comments'], message.id)"
-                      class="content-button"
-                    >
-                      <font-awesome-icon icon="fa-regular fa-envelope" />Draft follow-up email
-
-                      {{ message.note }}
-                    </button>
-                    <button
-                      @click="nextSteps(message.data['meeting_comments'], message.id)"
-                      class="content-button"
-                    >
-                      <font-awesome-icon style="height: 10px" icon="fa-solid fa-angles-right" />
-                      Suggest next steps
-                    </button>
-                    <button
-                      @click="
-                        getSummary(
-                          message.data,
-                          message.integrationId,
-                          message.resourceType,
-                          message.id,
-                        )
-                      "
-                      class="content-button"
-                    >
-                      <font-awesome-icon icon="fa-regular fa-file-lines" />Get summary
-                    </button>
-
-                    <img
-                      style="margin-left: 0.25rem; cursor: pointer"
-                      class="gray-blue-scale"
-                      @click="selectingContent = !selectingContent"
-                      src="@/assets/images/return.svg"
-                      height="18px"
-                      alt=""
-                    />
-                  </div>
-
-                  <div v-else class="loader-container">
-                    <span
-                      style="
-                        font-size: 20px;
-                        margin-right: .75rem;
-                        padding-top: 0.75rem;
-                        margin-left: -2.75rem
-                        margin-top: 0.5rem;
-                      "
-                      >🚀</span
-                    >
-
-                    <div style="border-radius: 6px; padding: 0.25rem 0.25rem" class="row">
-                      <p>Processing your submission</p>
-                      <div class="loading">
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <p class="red-text" v-if="message.error">{{ message.error }}</p>
-              </div>
-            </div>
-          </div> -->
-
-          <!-- <div style="margin-left: 1rem" v-show="messageLoading" class="loader-container">
-            <span
-              style="font-size: 20px; margin-right: 0.5rem; padding-top: 0.75rem; margin-left: 0.25rem"
-              >🚀</span
-            >
-
-            <div style="border-radius: 6px; padding: 0.25rem 0.75rem" class="row">
-              <p>Processing your submission</p>
-              <div class="loading">
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-              </div>
-            </div>
-          </div> -->
-
-        </div>
-        <!-- <ChatTextBox 
-          class="bottom"
-          :messages="messages"
-          :scrollToBottom="scrollToBottom"
-          :actions="actions"
-          :currentOpp="true"
-        /> -->
-        <div class="bottom">
-          <div class="chat-button-container">
-            <div class="chat-button">Summarize</div>
-            <div class="chat-button">Generate</div>
-            <div class="chat-button">Ask Question</div>
-          </div>
-          <div class="chat-border">
-            <div class="input-container">
-              <input v-model="message" placeholder="What would you like to do..." />
-              <font-awesome-icon
-                :class="{ invert: !message }"
-                class="gray"
-                style="height: 14px; cursor: pointer"
-                icon="fa-regular fa-paper-plane"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="right-content">
-      <div class="updated-time">
-        <span>Updated {{ getUpdated }} ago</span>
-      </div>
-      <div class="search-results">
-        <div>
-          <p>Results: {{ filteredArticles.length }}</p>
-        </div>
-        <div class="search-bar">
-          <img class="search" src="@/assets/images/search-round.svg" />
-          <input
-            @input="searchTitles"
-            type="search"
-            :placeholder="`Search`"
-            v-model="filterText"
-          />
-        </div>
-      </div>
-      <div class="card-container">
-        <div v-for="article in filteredArticles" :key="article.id" class="">
-          <div class="card" @click="selectArticle(article)">
-            <div class="display-flex">
-              <div class="">
+      <div v-else-if="filteredArticles.length">
+        <div v-for="article in filteredArticles" :key="article.id" class="news-container">
+          <div class="news-card" @click="selectArticle(article)">
+            <header>
+              <div class="card-col">
                 <div class="card-top-left">
-                  <img :src="article.icon" />
-                  <span>{{ article.source }}</span>
+                  <!-- <img :src="article.icon" /> -->
+                  <span>{{ article.source.name }}</span>
                 </div>
-                <h3 class="article-title" @click="goToArticle(article.link)">{{ article.title }}</h3>
-                <h4 class="article-preview">{{ article.preview }}</h4>
+                <h1 class="article-title" @click="goToArticle(article.url)">
+                  {{ article.title }}
+                </h1>
+                <p @click="getArticleSummary(article.url)" class="article-preview">
+                  {{ article.description }}
+                </p>
               </div>
+
               <div @click="goToArticle(article.link)">
-                <img :src="article.coverPhoto" class="cover-photo" />
+                <img :src="article.urlToImage" class="cover-photo" />
               </div>
-            </div>
+            </header>
+
             <div class="card-footer">
               <div class="author-time">
-                <span>{{ article.time }}</span>
+                <span class="author">{{ article.author }}</span>
                 <span class="divier-dot">.</span>
-                <span>{{ article.author }}</span>
+                <span class="off-gray">{{ getTimeDifferenceInMinutes(article.publishedAt) }}</span>
               </div>
               <div class="footer-icon-container">
-                <div v-if="newSummary" class="">
-                  <input 
-                    type="checkbox"
-                    @click="addRemoveSelectedArticles(article)"
-                  />
-                </div>
-                <img src="@/assets/images/sparkles-nofill-round.svg" class="footer-icon" />
-                <img src="@/assets/images/tags.svg" class="footer-icon" />
-                <img src="@/assets/images/search-round.svg" class="footer-icon" />
-                <img src="@/assets/images/arrow-small-right.svg" class="right-arrow-footer" />
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="left-mar">
+                  <path
+                    d="M17.5 1.25a.5.5 0 0 1 1 0v2.5H21a.5.5 0 0 1 0 1h-2.5v2.5a.5.5 0 0 1-1 0v-2.5H15a.5.5 0 0 1 0-1h2.5v-2.5zm-11 4.5a1 1 0 0 1 1-1H11a.5.5 0 0 0 0-1H7.5a2 2 0 0 0-2 2v14a.5.5 0 0 0 .8.4l5.7-4.4 5.7 4.4a.5.5 0 0 0 .8-.4v-8.5a.5.5 0 0 0-1 0v7.48l-5.2-4a.5.5 0 0 0-.6 0l-5.2 4V5.75z"
+                    fill="#000"
+                  ></path>
+                </svg>
+                <img src="@/assets/images/sparkles-thin.svg" class="right-arrow-footer" />
               </div>
             </div>
           </div>
         </div>
+      </div>
+
+      <div v-else class="empty-container">
+        <button @click="getClips" class="large-dark-button">
+          <img src="@/assets/images/sparkle.svg" height="14px" alt="" />
+          Create a new search
+        </button>
       </div>
     </div>
   </div>
 </template>
 <script>
 import ChatTextBox from '../Chat/ChatTextBox.vue'
+import Comms from '@/services/comms'
+
 export default {
   name: 'SummariesMainContent',
   components: {
@@ -414,14 +72,20 @@ export default {
   },
   data() {
     return {
+      loading: false,
+      submitting: false,
+      summaryLoading: false,
       summary: null,
       articles: [],
+      selectedSearch: '',
+      currentDate: new Date(),
       summaryChat: 'SUMMARY',
       filterText: '',
       message: '',
-      regenSummary: false,
       newSummary: false,
       selectedArticles: [],
+      filteredArticles: [],
+      searchModalOpen: false,
       actions: [
         {
           name: 'Summarize',
@@ -432,96 +96,122 @@ export default {
       ],
     }
   },
-  watch: {
-
-  },
-  created() {
-    this.getArticles()
-  },
+  watch: {},
+  created() {},
   methods: {
+    toggleSearchModal() {
+      this.searchModalOpen = !this.searchModalOpen
+    },
+    async getArticleSummary(url, instructions = null) {
+      console.log(url)
+      try {
+        await Comms.api
+          .getArticleSummary({
+            url: url,
+            search: 'Houston Rockets',
+            instructions: instructions,
+          })
+          .then((response) => {
+            console.log(response)
+          })
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async getClips() {
+      this.loading = true
+      try {
+        await Comms.api
+          .getClips({
+            search: 'Houston Rockets',
+          })
+          .then((response) => {
+            this.filteredArticles = response.articles
+            this.selectedSearch = 'Houston Rockets'
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.loading = false
+      }
+    },
+    getTimeDifferenceInMinutes(dateString) {
+      const currentDate = new Date()
+      const givenDate = new Date(dateString)
+
+      if (
+        givenDate.getDate() === currentDate.getDate() &&
+        givenDate.getMonth() === currentDate.getMonth() &&
+        givenDate.getFullYear() === currentDate.getFullYear()
+      ) {
+        const timeDifferenceInMilliseconds = currentDate - givenDate
+        const timeDifferenceInMinutes = Math.floor(timeDifferenceInMilliseconds / (1000 * 60))
+        if (timeDifferenceInMinutes >= 60) {
+          const timeDifferenceInHours = Math.floor(timeDifferenceInMinutes / 60)
+          const remainingMinutes = timeDifferenceInMinutes % 60
+          return `${timeDifferenceInHours}h`
+        } else {
+          return `${timeDifferenceInMinutes}m`
+        }
+      } else {
+        return `${givenDate.getMonth() + 1}/${givenDate.getDate()}/${givenDate.getFullYear()}`
+      }
+    },
+    getArticleUrls(articles) {
+      return articles.map((a) => a.url)
+    },
+    async getSummary(clips, search = '', instructions = '') {
+      this.$emit('set-loader', true)
+      this.summaryLoading = true
+      const urls = this.getArticleUrls(clips)
+      const data = {
+        clips: urls,
+        search,
+        instructions,
+      }
+      try {
+        await Comms.api.getSummary(data).then((response) => {
+          if (response.summary) {
+            this.$emit('set-summary', response.summary)
+          } else {
+            this.$emit('set-summary', response.error)
+          }
+        })
+      } catch (e) {
+        console.log('Error in getSummary', e)
+        this.$toast('Something went wrong, please try again.', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.$emit('set-loader', false)
+        this.summaryLoading = false
+      }
+    },
+    regenNewSummary() {
+      this.getSummary(this.filteredArticles, '', this.message)
+      this.changeRegen()
+      this.message = ''
+    },
     changeSummaryChat(type) {
       this.summaryChat = type
       this.scrollToBottom()
-    },
-    async generateSummary() {
-      const res = {
-        overview: `Today's news highlights the success and growth of Tesla in Q2. The company achieved record deliveries in China, driven by tax credits and wider adoption. Tesla's Q2 results were impressive, with production and deliveries exceeding expectations. Additionally, plans for a new Tesla dealership in Orlando reflect the company's expanding local presence. These positive developments have fueled a 7% increase in Tesla's share prices.`,
-        highlights: [
-          'Telsa and BYD achieved record-high deliveries of their China-made cehicles in Q2',
-          `Tesla's Q2 deliveries rose 83% compared to the previous year, driven by tax credits and broader adoption.`,
-          `Tesla reported strong Q2 results, producing 479,700 cars and delivering 466,140 vehicles.`,
-          `Plans were filed for a new Tesla dealership in Orlando as the company expands its local presence.`,
-          `Tesla's quarterly deliveries beat expectations, resulting in a 7% jump in share prices.`,
-        ]
-      }
-      this.summary = res
-    },
-    regenerateSummary() {
-      const res = {
-        overview: `Today's news highlights the success and growth of Tesla in Q2. The company achieved record deliveries in China, driven by tax credits and wider adoption.`,
-        highlights: [
-          'Telsa and BYD achieved record-high deliveries of their China-made cehicles in Q2',
-          `Tesla's Q2 deliveries rose 83% compared to the previous year, driven by tax credits and broader adoption.`,
-          `Tesla reported strong Q2 results.`,
-        ]
-      }
-      this.summary = res
-      this.changeRegen()
-    },
-    getArticles() {
-      const res = [
-        {
-          id: 1,
-          icon: 'https://www.vectorlogo.zone/logos/marketwatch/marketwatch-icon.svg',
-          source: 'MarketWatch',
-          title: 'EV stocks see green after Tesla, Rivian, Nio report upbeat deliveries data',
-          preview: `Electric-vehicle maker stocks got a broad boost Monday, after upbeat delivery and production data from a host of companies in the U.S. and...`,
-          coverPhoto: `https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/New_York_City_%28New_York%2C_USA%29%2C_Empire_State_Building_--_2012_--_6448.jpg/1200px-New_York_City_%28New_York%2C_USA%29%2C_Empire_State_Building_--_2012_--_6448.jpg`,
-          time: '5 mins ago',
-          author: 'Eric Peters',
-          link: 'https://www.teslarati.com/tesla-cybertruck-orders-1-9-million-as-musk-off-the-hook-demand/',
-          data: {},
-        },
-        {
-          id: 2,
-          icon: 'https://www.vectorlogo.zone/logos/marketwatch/marketwatch-icon.svg',
-          source: 'Automotive News',
-          title: 'Tesla deliveries in China surge as supply-chain concerns ease.',
-          preview: `Electric-vehicle maker stocks got a broad boost Monday, after upbeat delivery and production data from a host of companies in the U.S. and...`,
-          coverPhoto: `https://empire-s3-production.bobvila.com/articles/wp-content/uploads/2023/01/iStock-1372085619-hidden-costs-of-owning-an-electric-car-vehicle-charging-by-solar-panels.jpg`,
-          time: '10 mins ago',
-          author: 'Susan Miller',
-          link: 'https://www.teslarati.com/tesla-cybertruck-orders-1-9-million-as-musk-off-the-hook-demand/',
-          data: {},
-        },
-        {
-          id: 3,
-          icon: 'https://www.vectorlogo.zone/logos/marketwatch/marketwatch-icon.svg',
-          source: 'MotorTrend',
-          title: '2025 Tesla Model S: What you should know',
-          preview: `Electric-vehicle maker stocks got a broad boost Monday, after upbeat delivery and production data from a host of companies in the U.S. and...`,
-          coverPhoto: `https://hips.hearstapps.com/hmg-prod/images/2022-tesla-model-s-mmp-3-1628540852.png?crop=0.891996891996892xw:1xh;center,top&resize=1200:*`,
-          time: '1 hr ago',
-          author: 'Rachel Myers',
-          link: 'https://www.teslarati.com/tesla-cybertruck-orders-1-9-million-as-musk-off-the-hook-demand/',
-          data: {},
-        },
-      ]
-      this.articles = res
-      this.filteredArticles = res
     },
     selectArticle(article) {
       this.$store.dispatch('updateSelectedArticle', article)
     },
     saveSelectedArticles() {
-      this.generateSummary()
+      this.getSummary(this.selectedArticles)
       this.selectedArticles = []
       this.changeNew()
     },
     addRemoveSelectedArticles(article) {
-      const existingArticle = this.selectedArticles.filter(ar => ar.id === article.id)[0]
+      const existingArticle = this.selectedArticles.filter((ar) => ar.url === article.url)[0]
       if (existingArticle) {
-        this.selectedArticles = this.selectedArticles.filter(ar => ar.id !== article.id)
+        this.selectedArticles = this.selectedArticles.filter((ar) => ar.url !== article.url)
       } else {
         this.selectedArticles.push(article)
       }
@@ -529,297 +219,396 @@ export default {
     goToArticle(link) {
       window.location.href = link
     },
-    changeRegen() {
-      this.regenSummary = !this.regenSummary
-    },
     changeNew() {
       this.newSummary = !this.newSummary
     },
     searchTitles() {
-      this.filteredArticles = this.articles.filter(article => article.title.includes(this.filterText))
+      this.filteredArticles = this.articles.filter((article) =>
+        article.title.includes(this.filterText),
+      )
     },
     scrollToBottom() {
       setTimeout(() => {
         const chatWindow = this.$refs.chatWindow
-        console.log('chatWindow first', chatWindow.scrollTop)
         setTimeout(() => {
           chatWindow.scrollTop = chatWindow.scrollHeight
-          console.log('chatWindow last', chatWindow.scrollTop)
         }, 200)
       }, 0)
     },
   },
   computed: {
-    getUpdated() {
-      return '22 mins'
-    },
     messages() {
       return this.$store.state.messages
     },
     userName() {
       return this.$store.state.user.firstName
     },
-  }
+  },
 }
 </script>
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
-  .main-content {
-    display: flex;
-    background-color: $white;
-    border-radius: 8px;
-    margin: 1rem 0.5rem 0.5rem 0;
-    padding: 1rem;
-    min-height: 88vh;
-    color: $dark-black-blue;
+
+.bar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row;
+  position: sticky;
+  top: 0;
+  padding: 16px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  width: 100%;
+  height: 66px;
+  background-color: white;
+  z-index: 10;
+}
+
+small {
+  font-size: 14px !important;
+}
+
+.main-content {
+  display: flex;
+  margin: 0;
+  color: $dark-black-blue;
+  height: 100vh;
+  padding-left: 68px;
+  padding-right: 68px;
+  overflow: none;
+  position: relative;
+}
+
+.search-results {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-left: 1rem;
+  margin-right: 1rem;
+  padding-left: 1rem;
+}
+.row {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  gap: 24px;
+}
+.card-container {
+  overflow-y: auto;
+  padding-top: 58px;
+  position: relative;
+  width: 100%;
+}
+
+.current-search {
+  cursor: pointer;
+}
+
+.empty-container {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-top: -58px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  height: 120px;
+  overflow: none;
+  text-overflow: ellipsis;
+  margin-bottom: 2rem;
+}
+
+.news-container {
+  display: flex;
+  align-items: center;
+  padding-top: 0.5rem;
+}
+
+.author {
+  display: inline-block;
+  overflow: hidden;
+  max-width: 150px;
+  height: 26px;
+  text-overflow: ellipsis;
+  background-color: $soft-gray;
+  padding: 4px 12px;
+  color: $base-gray;
+  border-radius: 12px;
+}
+
+.off-gray {
+  color: #6b6b6b;
+}
+
+.news-card {
+  position: relative;
+  min-height: 220px;
+  width: 100%;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.3s;
+  padding: 1rem;
+}
+
+.spinning-load {
+  animation: rotation 3s infinite linear;
+  opacity: 0.3;
+  cursor: not-allowed;
+  margin-top: 1rem;
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
   }
-  .display-flex {
-    display: flex;
+  to {
+    transform: rotate(359deg);
   }
-  .space-between {
-    display: flex;
-    justify-content: space-between;
-  }
-  .search-results {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-left: 1rem;
-    margin-right: 1rem;
-    padding-left: 1rem;
-  }
-  .left-content {
-    width: 29vw;
-  }
-  .right-content {
-    width: 38vw;
-  }
-  .card-container {
-    border-left: 1px solid $soft-gray;
-    margin-left: 1rem;
-    padding-left: 1rem;
-    height: 75vh;
-    overflow-y: auto;
-  }
-  .card {
-    border: 1px solid $soft-gray;
-    border-radius: 8px;
-    box-shadow: 2px 2px 5px 0 $soft-gray;
-    transition: all 0.3s;
-    margin-bottom: 1rem;
-    margin-right: 1rem;
-  }
-  .card:hover {
-    transform: scale(1.025);
-    box-shadow: 4px 4px 5px 0px $soft-gray;
-  }
-  .card-top-left {
-    display: flex;
-    font-size: 12px;
-    img {
-      height: 12px;
-      margin-right: 0.5rem;
-    }
-  }
-  .cover-photo {
-    height: 7rem;
-    width: 7rem;
-    margin-left: 1rem;
-    margin-top: 1rem;
-    object-fit: cover;
-    border-radius: 8px;
-    cursor: pointer;
-  }
-  .highlights-summary-container {
-    border-bottom: 1px solid $soft-gray;
-    height: 65vh;
-    overflow-y: auto;
-    padding: 0 1rem;
-  }
-  .summary-buttons-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 1rem;
-  }
-  .summary-button {
-    @include gray-text-button();
-    margin: 0 0.5rem;
-    padding: 8px 16px;
-    img {
-      height: 12px;
-      margin-right: 0.5rem;
-    }
-  }
-  .dark-button {
-    @include dark-blue-button();
-    padding: 8px 16px;
-    img {
-      // filter: invert(99%);
-      filter: invert(81%) sepia(38%) saturate(738%) hue-rotate(349deg) brightness(95%) contrast(88%);
-    }
-  }
-  .wide {
-    width: 90%
-  }
-  .article-title {
-    color: $dark-green;
-    cursor: pointer;
-    font-size: 16px;
-  }
-  .article-preview {
-    color: $base-gray;
-    font-size: 14px;
-  }
-  .card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-top: 1px solid $soft-gray;
-    padding-top: 0.5rem;
-    span {
-      font-size: 12px;
-      margin-right: 0.5rem;
-    }
-  }
-  .footer-icon-container {
-    display: flex;
-    align-items: center;
-  }
-  .right-arrow-footer {
-    height: 16px;
-    margin-left: 1rem;
-    cursor: pointer;
-  }
-  .footer-icon {
-    height: 14px;
-    margin-left: 1rem;
-    cursor: pointer;
-  }
-  .author-time {
-    color: $light-gray-blue;
-  }
-  .divier-dot {
-    position: relative;
-    bottom: 0.2rem;
-  }
-  .large-dot {
-    font-size: 40px;
-    bottom: 1.7rem;
-    margin-right: 0.75rem;
-  }
-  .gray-background {
-    display: flex;
-    align-items: center;
-    background-color: $soft-gray;
-    height: 4vh;
-    width: 11vw;
-    border-radius: 8px;
-  }
-  .toggle-container {
-    border: 1px solid $soft-gray;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 5vw;
-    height: 3vh;
-    border-radius: 8px;
-    margin: 0 0.25rem;
-    color: $light-gray-blue;
-    p {
-      margin: 0;
-      font-size: 12px;
-      // text-align: center;
-    }
-  }
-  .active {
-    background-color: $white;
-    border-radius: 8px;
-    color: $dark-black-blue;
-  }
-  .updated-time {
-    font-size: 12px;
-    color: $light-gray-blue;
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 0.5rem;
-    margin-top: 0.5rem;
-    margin-right: 1rem;
-  }
-  .search {
+}
+
+.card-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.card:hover {
+  transform: scale(1.025);
+}
+.card-top-left {
+  display: flex;
+  font-size: 12px;
+  img {
     height: 12px;
     margin-right: 0.5rem;
-    filter: invert(20%);
   }
-  .search-bar {
-    // background-color: white;
-    border: 1px solid $very-light-gray;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 3px 6px;
-    border-radius: 8px;
-    // margin-top: 16px;
-    height: 4vh;
+}
+.cover-photo {
+  height: 112px;
+  width: 116px;
+  margin-left: 1rem;
+  margin-top: 1.25rem;
+  object-fit: cover;
+
+  cursor: pointer;
+}
+.highlights-summary-container {
+  border-bottom: 1px solid $soft-gray;
+  height: 65vh;
+  overflow-y: auto;
+  padding: 0 1rem;
+}
+.summary-buttons-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+}
+.summary-button {
+  @include gray-text-button();
+  margin: 0 0.5rem;
+  padding: 8px 16px;
+  img {
+    height: 12px;
+    margin-right: 0.5rem;
   }
-  [type='search']::-webkit-search-cancel-button {
-    -webkit-appearance: none;
-    appearance: none;
+}
+.large-dark-button {
+  @include dark-blue-button();
+  padding: 12px 16px;
+  img {
+    filter: invert(81%) sepia(38%) saturate(738%) hue-rotate(349deg) brightness(95%) contrast(88%);
+    margin-right: 8px;
   }
-  input[type='search'] {
-    width: 6.5vw;
-    letter-spacing: 0.75px;
-    border: none;
-    padding: 4px 0;
+}
+.dark-button {
+  @include dark-blue-button();
+  padding: 8px;
+  img {
+    filter: invert(81%) sepia(38%) saturate(738%) hue-rotate(349deg) brightness(95%) contrast(88%);
+    margin-right: 8px;
+  }
+}
+.wide {
+  width: 90%;
+}
+.article-title {
+  font-size: 20px;
+  font-weight: 1000;
+  line-height: 24px;
+  letter-spacing: 0;
+  color: $base-gray;
+  margin: 12px 0;
+}
+
+.article-preview {
+  color: $base-gray;
+  font-size: 16px;
+  max-height: 72px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  font-weight: 400;
+  margin: 0;
+}
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  margin-top: 1rem;
+  span {
+    font-size: 12px;
+    margin-right: 0.5rem;
+  }
+}
+.footer-icon-container {
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+}
+.right-arrow-footer {
+  height: 16px;
+  margin-left: 1rem;
+  cursor: pointer;
+}
+.left-mar {
+  margin-left: 1rem;
+}
+.footer-icon {
+  height: 24px;
+  margin-left: 1rem;
+  cursor: pointer;
+}
+.author-time {
+  display: flex;
+  align-items: center;
+  color: $light-gray-blue;
+}
+.divier-dot {
+  position: relative;
+  bottom: 0.2rem;
+}
+.large-dot {
+  font-size: 40px;
+  bottom: 1.7rem;
+  margin-right: 0.75rem;
+}
+.gray-background {
+  display: flex;
+  align-items: center;
+  background-color: $soft-gray;
+  height: 4vh;
+  width: 11vw;
+  border-radius: 8px;
+}
+.toggle-container {
+  border: 1px solid $soft-gray;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 5vw;
+  height: 3vh;
+  border-radius: 8px;
+  margin: 0 0.25rem;
+  color: $light-gray-blue;
+  p {
     margin: 0;
-    background: none;
     font-size: 12px;
+    // text-align: center;
   }
-  input[type='search']:focus {
-    outline: none;
+}
+.active {
+  background-color: $white;
+  border-radius: 8px;
+  color: $dark-black-blue;
+}
+.updated-time {
+  font-size: 12px;
+  color: $light-gray-blue;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
+  margin-top: 0.5rem;
+  margin-right: 1rem;
+}
+.search {
+  height: 12px;
+  margin-right: 0.5rem;
+  filter: invert(20%);
+}
+.search-bar {
+  // background-color: white;
+  border: 1px solid $very-light-gray;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 6px;
+  border-radius: 8px;
+  // margin-top: 16px;
+  height: 4vh;
+}
+[type='search']::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+input[type='search'] {
+  width: 6.5vw;
+  letter-spacing: 0.75px;
+  border: none;
+  padding: 4px 0;
+  margin: 0;
+  background: none;
+  font-size: 12px;
+}
+input[type='search']:focus {
+  outline: none;
+}
+::placeholder {
+  color: $very-light-gray;
+  font-size: 12px;
+}
+.highlights {
+  margin-top: 0;
+  font-size: 16px;
+}
+.dot {
+  height: 8px;
+  width: 8px;
+  margin: 0.275rem 0.5rem 0 0;
+}
+.overall {
+  font-size: 16px;
+}
+.highlight-point {
+  font-size: 14px;
+  // word-spacing: 1.15px;
+  line-height: 1.5;
+}
+.small-title-text {
+  font-size: 14px;
+  color: $light-gray-blue;
+  img {
+    height: 12px;
+    margin-right: 0.5rem;
+    filter: invert(81%) sepia(38%) saturate(738%) hue-rotate(349deg) brightness(95%) contrast(88%);
+    // filter: invert(63%) sepia(9%) saturate(735%) hue-rotate(200deg) brightness(95%) contrast(92%);
   }
-  ::placeholder {
-    color: $very-light-gray;
-    font-size: 12px;
-  }
-  .highlights {
-    margin-top: 0;
-    font-size: 16px;
-  }
-  .dot {
-    height: 8px;
-    width: 8px;
-    margin: 0.275rem 0.5rem 0 0;
-  }
-  .overall {
-    font-size: 16px;
-  }
-  .highlight-point {
-    font-size: 14px;
-    // word-spacing: 1.15px;
-    line-height: 1.5;
-  }
-  .small-title-text {
-    font-size: 14px;
-    color: $light-gray-blue;
-    img {
-      height: 12px;
-      margin-right: 0.5rem;
-      filter: invert(81%) sepia(38%) saturate(738%) hue-rotate(349deg) brightness(95%) contrast(88%);
-      // filter: invert(63%) sepia(9%) saturate(735%) hue-rotate(200deg) brightness(95%) contrast(92%);
-    }
-  }
-  .chat-container {
-    width: 100%;
-    height: 75vh;
-    overflow-y: auto;
-  }
-  .chat-window {
-    min-height: 63vh;
-  }
-  .message-text {
+}
+.chat-container {
+  width: 100%;
+  height: 75vh;
+  overflow-y: auto;
+}
+.chat-window {
+  min-height: 63vh;
+}
+.message-text {
   font-family: $base-font-family;
   word-wrap: break-word;
   white-space: pre-wrap;
@@ -968,34 +757,41 @@ export default {
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
-  margin-bottom: 1.5rem;
+}
+
+.loader-row {
+  border-radius: 6px;
+  padding: 0.25rem 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 .loading {
   display: flex;
   justify-content: center;
   align-items: center;
-  // background-color: $soft-gray;
   border-radius: 6px;
-  padding: 0.75rem 0.75rem;
+  padding: 1.5rem 0.75rem;
 }
 
-// .dot {
-//   width: 4px;
-//   height: 4px;
-//   margin: 0 5px;
-//   background: rgb(97, 96, 96);
-//   border-radius: 50%;
-//   animation: bounce 1.2s infinite ease-in-out;
-// }
+.dot {
+  width: 4px;
+  height: 4px;
+  margin: 0 5px;
+  background: rgb(97, 96, 96);
+  border-radius: 50%;
+  animation: bounce 1.2s infinite ease-in-out;
+}
 
-// .dot:nth-child(2) {
-//   animation-delay: -0.4s;
-// }
+.dot:nth-child(2) {
+  animation-delay: -0.4s;
+}
 
-// .dot:nth-child(3) {
-//   animation-delay: -0.2s;
-// }
+.dot:nth-child(3) {
+  animation-delay: -0.2s;
+}
 
 .col-start {
   display: flex;

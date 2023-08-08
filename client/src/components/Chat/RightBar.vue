@@ -1130,7 +1130,24 @@ export default {
         let res = await this.$store.dispatch('loadChatOpps')
         if (this.selectedOpp) {
           newOpp = res.results.filter((opp) => opp.id === this.selectedOpp.id)
-          this.selectedOpp = newOpp[0]
+          if (newOpp[0]) {
+            this.selectedOpp = newOpp[0]
+          } else {
+            let n = 2
+            while (!newOpp.length) {
+              let oldOpps = res.results;
+              const moreOpps = await this.$store.dispatch('loadChatOpps', n)
+              newOpp = moreOpps.results.filter((opp) => opp.id === this.selectedOpp.id)
+              n++
+              if (newOpp[0]) {
+                this.selectedOpp = newOpp[0]
+                break;
+              }
+              if (oldOpps.length === moreOpps.results.length) {
+                break;
+              }
+            }
+          }
         }
       } catch (e) {
         console.log(e)

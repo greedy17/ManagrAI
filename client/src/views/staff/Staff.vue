@@ -876,9 +876,9 @@
                   <!-- <span :class="member.has_zoom_integration ? '' : 'grayscale'">
                     <img src="@/assets/images/zoom.png" alt="" height="18px" />
                   </span> -->
-                  <span :class="member.nylas_ref ? '' : 'grayscale'">
+                  <!-- <span :class="member.nylas_ref ? '' : 'grayscale'">
                     <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
-                  </span>
+                  </span> -->
                 </div>
               </template>
             </div>
@@ -2222,9 +2222,9 @@
                           <span :class="user.slack_integration ? '' : 'grayscale'">
                             <img src="@/assets/images/slackLogo.png" height="18px" alt="" />
                           </span>
-                          <span :class="user.nylas ? '' : 'grayscale'">
+                          <!-- <span :class="user.nylas ? '' : 'grayscale'">
                             <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
-                          </span>
+                          </span> -->
                           <span :class="user.zoom_account ? '' : 'grayscale'">
                             <img src="@/assets/images/zoom.png" alt="" height="18px" />
                           </span>

@@ -15,6 +15,7 @@ from managr.gong import views as gong_views
 from managr.outreach import views as outreach_views
 from managr.hubspot import views as hubspot_views
 from managr.crm import views as crm_views
+from managr.comms import views as comms_views
 
 # from . import views
 
@@ -54,36 +55,16 @@ urlpatterns = [
     path("users/chat/follow-up-email/", core_views.draft_follow_up, name="draft_follow_up",),
     path("users/chat/next-steps/", core_views.chat_next_steps, name="chat_next_steps",),
     path("users/chat/summary/", core_views.get_chat_summary, name="get_chat_summary",),
-    path(
-        "users/chat/submit-chat-meeting/",
-        core_views.log_chat_meeting,
-        name="log_chat_meeting",
-    ),
+    path("users/chat/submit-chat-meeting/", core_views.log_chat_meeting, name="log_chat_meeting",),
     path(
         "users/nylas/authorization/",
         core_views.get_email_authorization_link,
         name="get_email_auth_link",
     ),
-    path(
-        "users/nylas/authenticate/",
-        core_views.email_auth_token,
-        name="get_email_auth_token",
-    ),
-    path(
-        "users/nylas/revoke/",
-        core_views.revoke_access_token,
-        name="revoke_email_auth",
-    ),
-    path(
-        "users/nylas/send-new-email/",
-        core_views.send_new_email,
-        name="send_new_email",
-    ),
-    path(
-        "users/nylas/reply-to-email/",
-        core_views.reply_to_email,
-        name="reply_to_email",
-    ),
+    path("users/nylas/authenticate/", core_views.email_auth_token, name="get_email_auth_token",),
+    path("users/nylas/revoke/", core_views.revoke_access_token, name="revoke_email_auth",),
+    path("users/nylas/send-new-email/", core_views.send_new_email, name="send_new_email",),
+    path("users/nylas/reply-to-email/", core_views.reply_to_email, name="reply_to_email",),
     path("users/zoom/re-direct", zoom_views.redirect_from_zoom, name="redirect-from-zoom"),
     path(
         "users/salesloft/re-direct",
@@ -100,11 +81,7 @@ urlpatterns = [
     path("account-status/", core_views.get_account_status, name="get_account_status"),
     path("task-status/", core_views.get_task_status, name="get-task-status"),
     path("sso-data/", core_views.get_sso_data, name="get-sso-data"),
-    path(
-        "get-file/<str:file_id>/",
-        core_views.GetFileView.as_view(),
-        name="get_file_from_nylas",
-    ),
+    path("get-file/<str:file_id>/", core_views.GetFileView.as_view(), name="get_file_from_nylas",),
     path(
         "nylas/callback/accounts",
         core_views.NylasAccountWebhook.as_view(),
@@ -254,4 +231,5 @@ router.register(
 )
 router.register("alerts/instances", alert_views.AlertInstanceViewSet, "alert-instance")
 router.register("alerts/real-time", alert_views.RealTimeAlertViewSet, "real-time-alerts")
+router.register("prsearch", comms_views.PRSearchViewSet, "prsearch")
 urlpatterns += router.urls
