@@ -277,8 +277,9 @@ export default {
         console.log(e)
       } 
   
-      this.newSearch = ''
-      this.newTemplate = ''
+      // this.newSearch = ''
+      // this.newTemplate = ''
+      this.closeRegenModal()
     },
     clearNewSearch() {
       this.newSearch = ''
