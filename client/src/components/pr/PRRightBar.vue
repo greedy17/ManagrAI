@@ -5,25 +5,6 @@
         <h3>Summary for Lorem Ipsum</h3>
         <p>AI generated search: "Lorem ipsum search"</p>
       </div>
-
-      <!-- <div class="switcher">
-        <div
-          @click="switchView('Summary')"
-          :class="{ activeswitch: view === 'Summary' }"
-          class="switch-item"
-        >
-          <img src="@/assets/images/listed.svg" height="14px" alt="" />
-          Summary
-        </div>
-        <div
-          @click="switchView('Chat')"
-          :class="{ activeswitch: view === 'Chat' }"
-          class="switch-item"
-        >
-          <img src="@/assets/images/comment.svg" height="14px" alt="" />
-          Chat
-        </div>
-      </div> -->
     </header>
 
     <div class="right-body">
@@ -41,14 +22,8 @@
       </div>
     </div>
     <footer>
-      <button class="secondary-button">
-        <!-- <img src="@/assets/images/sparkle.svg" height="14px" alt="" /> -->
-        Regenerate
-      </button>
-      <button class="primary-button">
-        <!-- <img src="@/assets/images/sparkle.svg" height="14px" alt="" /> -->
-        Save Search
-      </button>
+      <button class="secondary-button">Regenerate</button>
+      <button class="primary-button">Save Search</button>
     </footer>
   </div>
 </template>
@@ -379,9 +354,6 @@ footer {
 
 .primary-button {
   @include dark-blue-button();
-  // border: 1px solid $dark-black-blue;
-  // color: $dark-black-blue;
-  // background-color: white;
   padding: 10px 12px;
   img {
     filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);

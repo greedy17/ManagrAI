@@ -41,17 +41,18 @@
         </div> -->
 
         <div class="auto-left">
-          <!-- <router-link active-class="active" :to="{ name: 'PRSummaries' }">
-            <img src="@/assets/images/search-alt.svg" class="nav-img" height="16px" alt="" />
-          </router-link> -->
-          <!-- <router-link active-class="active" :to="{ name: 'PRClipReport' }">
-            <img src="@/assets/images/file-excel.svg" class="nav-img" height="16px" alt="" />
-          </router-link> -->
           <div class="row pointer">
-            <svg width="18" height="18">
-              <path d="M9 9H3v1h6v6h1v-6h6V9h-6V3H9v6z" fill-rule="evenodd"></path>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-label="Lists">
+              <path
+                d="M6.44 6.69h0a1.5 1.5 0 0 1 1.06-.44h9c.4 0 .78.16 1.06.44l.35-.35-.35.35c.28.28.44.66.44 1.06v14l-5.7-4.4-.3-.23-.3.23-5.7 4.4v-14c0-.4.16-.78.44-1.06z"
+                stroke="currentColor"
+              ></path>
+              <path
+                d="M12.5 2.75h-8a2 2 0 0 0-2 2v11.5"
+                stroke="currentColor"
+                stroke-linecap="round"
+              ></path>
             </svg>
-            <p class="left-mar">Search</p>
           </div>
 
           <div class="row right-mar avatar-container">

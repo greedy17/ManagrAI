@@ -1,16 +1,21 @@
 <template>
   <div class="summaries">
-    <main id="main">
-      <SummariesMainContent @set-summary="setSummary" @set-loader="setLoader" />
-    </main>
-    <!-- <aside id="right-sidebar">
-      <PRRightBar :summary="summary" :summaryLoading="summaryLoading" />
-    </aside> -->
+    <!-- <PRTopBar :selectedSearch="selectedSearch" :searchList="searchList" @change-page="changePage" /> -->
+    <div class="display-flex">
+      <SummariesSinglePage
+        :page="page"
+        :selectedSearch="selectedSearch"
+        @change-search="changeSearch"
+      />
+      <!-- <SummariesMainContent /> -->
+      <!-- <PRRightBar /> -->
+    </div>
   </div>
 </template>
 <script>
 import PRTopBar from '@/components/pr/PRTopBar.vue'
 import SummariesMainContent from '@/components/pr/SummariesMainContent.vue'
+import SummariesSinglePage from '@/components/pr/SummariesSinglePage.vue'
 import PRRightBar from '@/components/pr/PRRightBar.vue'
 
 export default {
@@ -19,22 +24,28 @@ export default {
     PRTopBar,
     SummariesMainContent,
     PRRightBar,
+    SummariesSinglePage,
   },
   data() {
     return {
-      summary: null,
-      summaryLoading: false,
+      selectedSearch: null,
+      page: 'SUMMARIES',
+      searchList: [
+        {
+          search: 'Tesla',
+        },
+      ],
     }
   },
   watch: {},
   created() {},
   methods: {
-    setSummary(sum) {
-      this.summary = sum
+    changeSearch(newSearch) {
+      this.searchList.push(newSearch)
+      this.selectedSearch = newSearch
     },
-    setLoader(val) {
-      this.summaryLoading = val
-      console.log(this.summaryLoading)
+    changePage(page) {
+      this.page = page
     },
   },
   computed: {},
@@ -49,6 +60,7 @@ export default {
   width: 100vw;
   height: 100vh;
   display: flex;
+  overflow-y: scroll;
   font-family: $base-font-family;
   color: $chat-font-color;
   letter-spacing: 0.4px;
