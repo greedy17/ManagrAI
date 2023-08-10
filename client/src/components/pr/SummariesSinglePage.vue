@@ -131,13 +131,14 @@
               v-if="addingSources || addingPrompt"
               class="primary-button"
             >
-              Submit Search
+              Submit
             </button>
           </div>
         </div>
       </div>
       <div v-else class="loaded-content">
-        <div style="width: 50%" v-if="summaryLoading">
+        <div style="width: 50%; position: relative" v-if="summaryLoading">
+          <!-- <p class="loadingText">Summarizing clips</p> -->
           <div class="summary-preview-skeleton shimmer">
             <div class="content">
               <div class="title-wide"></div>
@@ -171,7 +172,7 @@
                   <button class="primary-button">Save</button>
                 </div>
 
-                <img class="right-mar" src="@/assets/images/share.svg" height="24px" alt="" />
+                <img class="right-mar" src="@/assets/images/share.svg" height="20px" alt="" />
               </div>
 
               <pre class="pre-text" v-html="summary"></pre>
@@ -245,24 +246,29 @@
                     }}</span>
                   </div>
                   <div class="footer-icon-container">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="left-mar">
+                    <!-- <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="left-mar">
                       <path
                         d="M17.5 1.25a.5.5 0 0 1 1 0v2.5H21a.5.5 0 0 1 0 1h-2.5v2.5a.5.5 0 0 1-1 0v-2.5H15a.5.5 0 0 1 0-1h2.5v-2.5zm-11 4.5a1 1 0 0 1 1-1H11a.5.5 0 0 0 0-1H7.5a2 2 0 0 0-2 2v14a.5.5 0 0 0 .8.4l5.7-4.4 5.7 4.4a.5.5 0 0 0 .8-.4v-8.5a.5.5 0 0 0-1 0v7.48l-5.2-4a.5.5 0 0 0-.6 0l-5.2 4V5.75z"
                         fill="#000"
                       ></path>
-                    </svg>
+                    </svg> -->
                     <img
                       v-if="articleSummaryLoading && loadingUrl === article.url"
                       class="rotate right-arrow-footer"
                       src="@/assets/images/loading.svg"
                       alt=""
                     />
-                    <img
+
+                    <button
+                      style="margin-right: -0.1rem"
                       @click="getArticleSummary(article.url)"
                       v-else-if="!articleSummaries[article.url]"
-                      src="@/assets/images/sparkles-thin.svg"
-                      class="right-arrow-footer"
-                    />
+                      class="secondary-button"
+                    >
+                      <img src="@/assets/images/sparkles-thin.svg" class="right-arrow-footer" />
+                      Summarize article
+                    </button>
+
                     <img
                       v-else
                       src="@/assets/images/sparkle.svg"
@@ -270,9 +276,9 @@
                     />
                   </div>
                 </div>
-              </div>
-              <div v-if="articleSummaries[article.url]">
-                <pre v-html="articleSummaries[article.url]" class="pre-text blue-bg"></pre>
+                <div v-if="articleSummaries[article.url]">
+                  <pre v-html="articleSummaries[article.url]" class="pre-text blue-bg"></pre>
+                </div>
               </div>
             </div>
           </div>
@@ -831,7 +837,7 @@ export default {
   word-wrap: break-word;
   white-space: pre-wrap;
   padding: 0;
-  margin: 0;
+  margin-top: 1rem;
 }
 
 .blue-bg {
@@ -844,7 +850,7 @@ export default {
 }
 
 .right-mar {
-  margin-right: 8px;
+  margin-right: 12px;
 }
 .loaded-content {
   width: 100%;
@@ -956,7 +962,7 @@ export default {
   justify-content: flex-start;
   width: 100%;
   margin-bottom: 0;
-  // background-color: $off-white;
+  background-color: $off-white;
   padding-top: 8px;
   padding-bottom: 40px;
 }
@@ -1139,7 +1145,6 @@ header {
 .footer-icon-container {
   display: flex;
   align-items: center;
-  margin-right: 8px;
 }
 .right-arrow-footer {
   height: 16px;
@@ -1243,6 +1248,9 @@ header {
   -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/300% 100%;
 }
 
+.loadingText {
+}
+
 .article-preview-skeleton {
   display: flex;
   flex-direction: row;
@@ -1258,7 +1266,7 @@ header {
   width: 100%;
   min-width: 400px;
   padding: 36px 20px;
-  border-radius: 4px;
+  border-radius: 6px;
   display: flex;
   flex-direction: column;
 }
@@ -1267,7 +1275,7 @@ header {
   height: 112px;
   width: 116px;
   background-color: #f2f2f2;
-  border-radius: 2px;
+  border-radius: 6px;
   margin-left: 16px;
 }
 
@@ -1284,14 +1292,14 @@ header {
   height: 24px;
   background-color: #f2f2f2;
   margin-bottom: 8px;
-  border-radius: 2px;
+  border-radius: 6px;
 }
 .title-wide {
   width: 100%;
   height: 36px;
   background-color: #f2f2f2;
   margin-bottom: 8px;
-  border-radius: 2px;
+  border-radius: 6px;
 }
 
 .meta {
@@ -1299,7 +1307,7 @@ header {
   min-width: 399px;
   height: 8px;
   background-color: #f2f2f2;
-  border-radius: 2px;
+  border-radius: 6px;
   margin-bottom: 8px;
 }
 
@@ -1307,7 +1315,7 @@ header {
   width: 100%;
   height: 16px;
   background-color: #f2f2f2;
-  border-radius: 2px;
+  border-radius: 6px;
   margin-bottom: 8px;
 }
 
@@ -1324,6 +1332,7 @@ header {
   width: 100px;
   margin-right: 16px;
   background-color: #f2f2f2;
+  border-radius: 6px;
 }
 
 .skeleton-icon {
@@ -1338,14 +1347,14 @@ header {
   min-width: 399px;
   height: 8px;
   background-color: #f2f2f2;
-  border-radius: 2px;
+  border-radius: 6px;
 }
 .excerpt-wide {
   width: 100%;
   height: 8px;
   background-color: #f2f2f2;
   margin-top: 16px;
-  border-radius: 2px;
+  border-radius: 6px;
 }
 
 .skeleton-footer {
@@ -1353,6 +1362,6 @@ header {
   height: 12px;
   margin-top: 32px;
   background-color: #f2f2f2;
-  border-radius: 2px;
+  border-radius: 6px;
 }
 </style>
