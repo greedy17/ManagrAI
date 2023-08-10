@@ -1,14 +1,6 @@
 <template>
   <div class="main-content">
-    <Modal
-      v-if="regenModal"
-      @close-modal="
-        () => {
-          $emit('cancel'), closeRegenModal()
-        }
-      "
-      class="regen-modal"
-    >
+    <Modal v-if="regenModal" class="regen-modal">
       <div class="regen-container">
         <div class="regen-header">
           <div>
@@ -46,7 +38,7 @@
     <div ref="loadedContent" class="center" v-if="page === 'SUMMARIES'">
       <div class="no-content" v-if="!selectedSearch">
         <div class="title-row">
-          <p class="typed" v-if="!newSearch">Generate a news summary from over 1 million sites.</p>
+          <p class="typed" v-if="!newSearch">{{ starterText }}</p>
           <p v-else>
             Summarize coverage for <span class="search-text">"{{ newSearch }}"</span>
           </p>
@@ -137,15 +129,20 @@
         </div>
       </div>
       <div v-else class="loaded-content">
-        <div style="width: 50%; position: relative" v-if="summaryLoading">
-          <!-- <p class="loadingText">Summarizing clips</p> -->
+        <div style="width: 50%; margin-left: -2.5rem" v-if="summaryLoading">
+          <div style="margin-left: 1rem" class="row">
+            <img src="@/assets/images/logo.png" class="blue-logo" height="16px" alt="" />
+            <p class="summary-load-text">Generating Summary...</p>
+          </div>
+
           <div class="summary-preview-skeleton shimmer">
             <div class="content">
-              <div class="title-wide"></div>
+              <!-- <div class="title-wide"></div> -->
               <div class="meta-wide"></div>
+              <div class="meta-shorter"></div>
             </div>
 
-            <div class="skeleton-bar">
+            <!-- <div class="skeleton-bar">
               <div class="row">
                 <div class="skeleton-button"></div>
                 <div class="skeleton-button"></div>
@@ -154,7 +151,7 @@
             </div>
             <div class="excerpt-wide"></div>
             <div class="excerpt-wide"></div>
-            <div class="excerpt-wide"></div>
+            <div class="excerpt-wide"></div> -->
           </div>
         </div>
         <div v-else class="summaries-container">
@@ -168,11 +165,31 @@
               </div>
               <div class="title-bar">
                 <div class="row">
-                  <button @click="openRegenModal" class="secondary-button">Regenerate</button>
-                  <button class="primary-button">Save</button>
+                  <button
+                    :disabled="articleSummaryLoading || loading || summaryLoading"
+                    @click="openRegenModal"
+                    class="secondary-button"
+                  >
+                    Regenerate
+                  </button>
+                  <button
+                    :disabled="articleSummaryLoading || loading || summaryLoading"
+                    class="primary-button"
+                  >
+                    Save
+                  </button>
                 </div>
 
-                <img class="right-mar" src="@/assets/images/share.svg" height="20px" alt="" />
+                <div class="wrapper">
+                  <img
+                    style="cursor: pointer"
+                    class="right-mar"
+                    src="@/assets/images/share.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  <div style="margin-left: -20px" class="tooltip">Share</div>
+                </div>
               </div>
 
               <pre class="pre-text" v-html="summary"></pre>
@@ -246,27 +263,34 @@
                     }}</span>
                   </div>
                   <div class="footer-icon-container">
-                    <!-- <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="left-mar">
-                      <path
-                        d="M17.5 1.25a.5.5 0 0 1 1 0v2.5H21a.5.5 0 0 1 0 1h-2.5v2.5a.5.5 0 0 1-1 0v-2.5H15a.5.5 0 0 1 0-1h2.5v-2.5zm-11 4.5a1 1 0 0 1 1-1H11a.5.5 0 0 0 0-1H7.5a2 2 0 0 0-2 2v14a.5.5 0 0 0 .8.4l5.7-4.4 5.7 4.4a.5.5 0 0 0 .8-.4v-8.5a.5.5 0 0 0-1 0v7.48l-5.2-4a.5.5 0 0 0-.6 0l-5.2 4V5.75z"
-                        fill="#000"
-                      ></path>
-                    </svg> -->
-                    <img
-                      v-if="articleSummaryLoading && loadingUrl === article.url"
-                      class="rotate right-arrow-footer"
-                      src="@/assets/images/loading.svg"
-                      alt=""
-                    />
+                    <button
+                      :disabled="articleSummaryLoading || loading || summaryLoading"
+                      class="tertiary-button"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M17.5 1.25a.5.5 0 0 1 1 0v2.5H21a.5.5 0 0 1 0 1h-2.5v2.5a.5.5 0 0 1-1 0v-2.5H15a.5.5 0 0 1 0-1h2.5v-2.5zm-11 4.5a1 1 0 0 1 1-1H11a.5.5 0 0 0 0-1H7.5a2 2 0 0 0-2 2v14a.5.5 0 0 0 .8.4l5.7-4.4 5.7 4.4a.5.5 0 0 0 .8-.4v-8.5a.5.5 0 0 0-1 0v7.48l-5.2-4a.5.5 0 0 0-.6 0l-5.2 4V5.75z"
+                          fill="#000"
+                        ></path>
+                      </svg>
+                      Tag
+                    </button>
 
                     <button
-                      style="margin-right: -0.1rem"
+                      v-if="!articleSummaries[article.url]"
                       @click="getArticleSummary(article.url)"
-                      v-else-if="!articleSummaries[article.url]"
-                      class="secondary-button"
+                      class="tertiary-button"
+                      :disabled="articleSummaryLoading || loading || summaryLoading"
                     >
-                      <img src="@/assets/images/sparkles-thin.svg" class="right-arrow-footer" />
-                      Summarize article
+                      <img
+                        v-if="articleSummaryLoading && loadingUrl === article.url"
+                        class="rotate"
+                        height="14px"
+                        src="@/assets/images/loading.svg"
+                        alt=""
+                      />
+                      <img v-else src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
+                      Summarize
                     </button>
 
                     <img
@@ -360,6 +384,8 @@ export default {
   },
   data() {
     return {
+      starterText: 'Generate a news summary from over 1 million sites.',
+      starterNum: 0,
       newSearch: '',
       newTemplate: '',
       additionalSources: '',
@@ -381,9 +407,13 @@ export default {
       articleSummaryLoading: false,
     }
   },
-  watch: {},
   created() {},
+  // mounted() {
+  //   this.changeText()
+  // },
   methods: {
+    // changeText() {
+    // },
     scrollToTop() {
       setTimeout(() => {
         const loadedContent = this.$refs.loadedContent
@@ -506,23 +536,28 @@ export default {
       }
     },
     async getArticleSummary(url, instructions = null) {
-      this.articleSummaryLoading = true
-      this.loadingUrl = url
-      try {
-        await Comms.api
-          .getArticleSummary({
-            url: url,
-            search: this.newSearch,
-            instructions: instructions,
-          })
-          .then((response) => {
-            this.articleSummaries[url] = response.summary
-          })
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.articleSummaryLoading = false
-        this.loadingUrl = null
+      if (this.articleSummaryLoading === false && this.summaryLoading === false) {
+        this.articleSummaryLoading = true
+
+        this.loadingUrl = url
+        try {
+          await Comms.api
+            .getArticleSummary({
+              url: url,
+              search: this.newSearch,
+              instructions: instructions,
+            })
+            .then((response) => {
+              this.articleSummaries[url] = response.summary
+            })
+        } catch (e) {
+          console.log(e)
+        } finally {
+          this.articleSummaryLoading = false
+          this.loadingUrl = null
+        }
+      } else {
+        console.log('CANT DO THAT')
       }
     },
     regenNewSummary() {
@@ -655,6 +690,12 @@ export default {
   }
 }
 
+.summary-load-text {
+  font-family: $thin-font-family;
+  font-size: 14px;
+  margin-left: 8px;
+}
+
 .rotate {
   animation: rotation 3s infinite linear;
   cursor: not-allowed;
@@ -715,12 +756,31 @@ export default {
   color: #6b6b6b;
 }
 
+button:disabled {
+  background-color: $off-white !important;
+  cursor: not-allowed !important;
+}
+
 .primary-button {
   @include dark-blue-button();
   padding: 8px 12px;
   border: none;
   img {
     filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
+    margin-right: 8px;
+  }
+}
+
+.tertiary-button {
+  @include dark-blue-button();
+  padding: 8px 12px;
+  border: 1px solid $dark-black-blue;
+  color: $dark-black-blue;
+  background-color: white;
+  margin-right: -2px;
+  svg,
+  img {
+    // filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
     margin-right: 8px;
   }
 }
@@ -955,6 +1015,7 @@ export default {
   background-color: white;
   padding: 4px 16px;
   border-radius: 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .summaries-container {
@@ -1147,9 +1208,10 @@ header {
   align-items: center;
 }
 .right-arrow-footer {
-  height: 16px;
+  padding: 2px 0;
+  height: 20px;
   margin-left: 1rem;
-  cursor: pointer;
+  cursor: text;
 }
 .left-mar {
   margin-left: 1rem;
@@ -1265,7 +1327,7 @@ header {
 .summary-preview-skeleton {
   width: 100%;
   min-width: 400px;
-  padding: 36px 20px;
+  padding: 8px 20px 36px 20px;
   border-radius: 6px;
   display: flex;
   flex-direction: column;
@@ -1296,10 +1358,10 @@ header {
 }
 .title-wide {
   width: 100%;
-  height: 36px;
-  background-color: #f2f2f2;
-  margin-bottom: 8px;
-  border-radius: 6px;
+  height: 28px;
+  background-color: $dark-black-blue;
+  margin-bottom: 12px;
+  border-radius: 12px;
 }
 
 .meta {
@@ -1311,11 +1373,23 @@ header {
   margin-bottom: 8px;
 }
 
+.blue-logo {
+  filter: brightness(0%) invert(26%) sepia(16%) saturate(936%) hue-rotate(162deg) brightness(93%)
+    contrast(97%);
+}
+
 .meta-wide {
   width: 100%;
   height: 16px;
-  background-color: #f2f2f2;
-  border-radius: 6px;
+  background-color: $black-blue;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.meta-shorter {
+  width: 80%;
+  height: 16px;
+  background-color: $black-blue;
+  border-radius: 8px;
   margin-bottom: 8px;
 }
 
@@ -1363,5 +1437,89 @@ header {
   margin-top: 32px;
   background-color: #f2f2f2;
   border-radius: 6px;
+}
+
+.wrapper {
+  display: flex;
+  align-items: center;
+  // background-color: red;
+  font-family: $thin-font-family;
+  font-size: 14px;
+  position: relative;
+  text-align: center;
+  -webkit-transform: translateZ(0); /* webkit flicker fix */
+  -webkit-font-smoothing: antialiased; /* webkit text rendering fix */
+}
+
+.wrapper .tooltip {
+  background: $dark-black-blue;
+  border-radius: 4px;
+  bottom: 100%;
+  color: #fff;
+  display: block;
+  left: -20px;
+  margin-bottom: 15px;
+  opacity: 0;
+  padding: 8px;
+  pointer-events: none;
+  position: absolute;
+  width: 100px;
+  -webkit-transform: translateY(10px);
+  -moz-transform: translateY(10px);
+  -ms-transform: translateY(10px);
+  -o-transform: translateY(10px);
+  transform: translateY(10px);
+  -webkit-transition: all 0.25s ease-out;
+  -moz-transition: all 0.25s ease-out;
+  -ms-transition: all 0.25s ease-out;
+  -o-transition: all 0.25s ease-out;
+  transition: all 0.25s ease-out;
+  -webkit-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -moz-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -ms-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -o-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+}
+
+/* This bridges the gap so you can mouse into the tooltip without it disappearing */
+.wrapper .tooltip:before {
+  bottom: -20px;
+  content: ' ';
+  display: block;
+  height: 20px;
+  left: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.wrapper .tooltip:after {
+  border-left: solid transparent 10px;
+  border-right: solid transparent 10px;
+  border-top: solid $dark-black-blue 10px;
+  bottom: -10px;
+  content: ' ';
+  height: 0;
+  left: 50%;
+  margin-left: -13px;
+  position: absolute;
+  width: 0;
+}
+
+.wrapper:hover .tooltip {
+  opacity: 1;
+  pointer-events: auto;
+  -webkit-transform: translateY(0px);
+  -moz-transform: translateY(0px);
+  -ms-transform: translateY(0px);
+  -o-transform: translateY(0px);
+  transform: translateY(0px);
+}
+
+.lte8 .wrapper .tooltip {
+  display: none;
+}
+
+.lte8 .wrapper:hover .tooltip {
+  display: block;
 }
 </style>
