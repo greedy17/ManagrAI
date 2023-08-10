@@ -256,8 +256,15 @@
       <p class="inactive">Connect Managr to your favorite Apps</p>
     </div> -->
 
-    <div v-if="userRoll === 'PR'">
+    <div v-if="userRoll === 'PR'" class="pr-integrations-container">
+      <div class="title-container">
+        <h1 class="no-text-margin">Integrations</h1>
+        <p class="sub-text">
+          Connect your apps to expand functionality
+        </p>
+      </div>
       <div class="integrations__cards">
+        <!-- Slack -->
         <div class="card">
           <div class="card__header" style="">
             <img style="height: 40px" src="@/assets/images/slackLogo.png" />
@@ -279,7 +286,7 @@
             >
               Slack Connected
             </p>
-            <p v-else class="card-text">Interact with Managr through Slack</p>
+            <p v-else class="card-text">Generate summaries via slack</p>
             <div></div>
             <div class="sep-button-container">
               <div class="separator"></div>
@@ -313,6 +320,7 @@
             </div>
           </div>
         </div>
+        <!-- Zoom -->
         <div class="card">
           <div class="card__header" style="justify-content: space-between">
             <img style="height: 40px" src="@/assets/images/zoom.png" />
@@ -321,12 +329,10 @@
           <div class="card__body">
             <div style="display: flex">
               <h3 class="card__title">
-                <img v-if="hasZoomIntegration" src="@/assets/images/dot.svg" class="green-filter" />
                 Zoom
               </h3>
             </div>
-            <p v-if="hasZoomIntegration" class="card-text">Zoom Connected</p>
-            <p v-else class="card-text">Activate AI-note taking & call summaries</p>
+            <p class="card-text">AI-note taking & call summaries</p>
             <div class="sep-button-container">
               <div class="separator"></div>
               <button
@@ -338,7 +344,6 @@
                   padding-top: 0.4rem;
                   padding-bottom: 0.4rem;
                 "
-                @click="setRemoveApp('ZOOM')"
               >
                 Coming Soon...
               </button>
@@ -361,6 +366,177 @@
                 class="long-button"
                 style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem"
                 @click="connectApp('ZOOM')"
+              >
+                Connect
+                <img
+                  src="@/assets/images/angle-small-right.svg"
+                  class="green-filter"
+                  style="margin-top: 1px; margin-left: 0.5rem; height: 16px; font-weight: bold"
+                />
+              </button> -->
+            </div>
+          </div>
+        </div>
+        <!-- Twitter -->
+        <div class="card">
+          <div class="card__header" style="">
+            <img style="height: 40px" src="@/assets/images/twitter-x.svg" />
+          </div>
+          <div class="card__body">
+            <div style="display: flex">
+              <h3 class="card__title">
+                Twitter
+              </h3>
+            </div>
+            <p class="card-text">Connect to search Twitter</p>
+            <div></div>
+            <div class="sep-button-container">
+              <div class="separator"></div>
+              <button
+                class="long-button gray"
+                style="
+                  margin-right: 0;
+                  margin-top: 1rem;
+                  margin-bottom: 0.5rem;
+                  padding-top: 0.4rem;
+                  padding-bottom: 0.4rem;
+                "
+              >
+                Coming Soon...
+              </button>
+              <!-- <button
+                v-if="hasSlackIntegration || (orgHasSlackIntegration && userCanIntegrateSlack)"
+                class="long-button coral"
+                style="
+                  margin-right: 0;
+                  margin-top: 1rem;
+                  margin-bottom: 0.5rem;
+                  padding-top: 0.4rem;
+                  padding-bottom: 0.4rem;
+                "
+                @click="setRemoveApp('SLACK')"
+              >
+                Disconnect
+              </button> -->
+              <!-- <button
+                v-else
+                class="long-button"
+                style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem"
+                @click="connectApp('SLACK')"
+              >
+                Connect
+                <img
+                  src="@/assets/images/angle-small-right.svg"
+                  class="green-filter"
+                  style="margin-top: 1px; margin-left: 0.5rem; height: 16px; font-weight: bold"
+                />
+              </button> -->
+            </div>
+          </div>
+        </div>
+        <!-- Instagram -->
+        <div class="card">
+          <div class="card__header" style="">
+            <img style="height: 40px" src="@/assets/images/instagram-11.svg" />
+          </div>
+          <div class="card__body">
+            <div style="display: flex">
+              <h3 class="card__title">
+                Instagram
+              </h3>
+            </div>
+            <p class="card-text">Connect to search Instagram</p>
+            <div></div>
+            <div class="sep-button-container">
+              <div class="separator"></div>
+              <button
+                class="long-button gray"
+                style="
+                  margin-right: 0;
+                  margin-top: 1rem;
+                  margin-bottom: 0.5rem;
+                  padding-top: 0.4rem;
+                  padding-bottom: 0.4rem;
+                "
+              >
+                Coming Soon...
+              </button>
+              <!-- <button
+                v-if="hasSlackIntegration || (orgHasSlackIntegration && userCanIntegrateSlack)"
+                class="long-button coral"
+                style="
+                  margin-right: 0;
+                  margin-top: 1rem;
+                  margin-bottom: 0.5rem;
+                  padding-top: 0.4rem;
+                  padding-bottom: 0.4rem;
+                "
+                @click="setRemoveApp('SLACK')"
+              >
+                Disconnect
+              </button> -->
+              <!-- <button
+                v-else
+                class="long-button"
+                style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem"
+                @click="connectApp('SLACK')"
+              >
+                Connect
+                <img
+                  src="@/assets/images/angle-small-right.svg"
+                  class="green-filter"
+                  style="margin-top: 1px; margin-left: 0.5rem; height: 16px; font-weight: bold"
+                />
+              </button> -->
+            </div>
+          </div>
+        </div>
+        <!-- Tiktok -->
+        <div class="card">
+          <div class="card__header" style="">
+            <img style="height: 40px" src="@/assets/images/tiktok.svg" />
+          </div>
+          <div class="card__body">
+            <div style="display: flex">
+              <h3 class="card__title">
+                Tiktok
+              </h3>
+            </div>
+            <p class="card-text">Connect to search Tiktok</p>
+            <div></div>
+            <div class="sep-button-container">
+              <div class="separator"></div>
+              <button
+                class="long-button gray"
+                style="
+                  margin-right: 0;
+                  margin-top: 1rem;
+                  margin-bottom: 0.5rem;
+                  padding-top: 0.4rem;
+                  padding-bottom: 0.4rem;
+                "
+              >
+                Coming Soon...
+              </button>
+              <!-- <button
+                v-if="hasSlackIntegration || (orgHasSlackIntegration && userCanIntegrateSlack)"
+                class="long-button coral"
+                style="
+                  margin-right: 0;
+                  margin-top: 1rem;
+                  margin-bottom: 0.5rem;
+                  padding-top: 0.4rem;
+                  padding-bottom: 0.4rem;
+                "
+                @click="setRemoveApp('SLACK')"
+              >
+                Disconnect
+              </button> -->
+              <!-- <button
+                v-else
+                class="long-button"
+                style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem"
+                @click="connectApp('SLACK')"
               >
                 Connect
                 <img
@@ -1833,5 +2009,29 @@ a {
 }
 .padding-button {
   padding: 0.8rem 1.2rem;
+}
+.title-container {
+  // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  width: 100%;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  margin-left: 1.5rem;
+}
+.no-text-margin {
+  margin: 0;
+}
+.sub-text {
+  color: $light-gray-blue;
+  margin-top: 16px;
+  font-size: 14px;
+  font-weight: bold;
+  font-family: $thin-font-family;
+  span {
+    font-weight: normal;
+    word-wrap: break-word;
+  }
+}
+.pr-integrations-container {
+  margin-left: 5rem;
 }
 </style>
