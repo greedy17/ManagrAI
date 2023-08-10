@@ -138,7 +138,7 @@ class PRSearchViewSet(
                 logger.exception(e)
                 break
         if has_error:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
 
         return Response(data={"summary": message})
 
@@ -208,5 +208,5 @@ class PRSearchViewSet(
                 logger.exception(e)
                 break
         if has_error:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
         return Response(data={"summary": message})
