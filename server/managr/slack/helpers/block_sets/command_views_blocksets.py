@@ -2,13 +2,13 @@ import json
 from django.conf import settings
 from urllib.parse import urlencode
 from managr.utils.sites import get_site_url
-from managr.salesforce.models import MeetingWorkflow
 from managr.salesforce import constants as sf_consts
 from managr.slack import constants as slack_const
 from managr.slack.helpers.utils import (
     action_with_params,
     block_set,
 )
+from managr.comms.models import Search
 from managr.slack.helpers import block_builders, block_sets
 from managr.slack.models import OrgCustomSlackFormInstance
 from managr.alerts.models import AlertInstance
@@ -737,6 +737,9 @@ def reset_meeting_block_set(context, *args, **kwargs):
 
 @block_set()
 def news_summary_blockset(context):
+    user = User.objects.get(id=context.get("u"))
+    searches = Search.objects.filter(user=user)
+    search_options = [block_builders.option(search.name, str(search.id)) for search in searches]
     blocks = [
         block_builders.input_block(
             "Enter your new search", optional=False, block_id="SEARCH", multiline=True
@@ -756,5 +759,6 @@ def news_summary_blockset(context):
             ],
             block_id="USE_TEMPLATE_BLOCK",
         ),
+        block_builders.static_select("Saved Searches", search_options,slack_const.PROCESS_SELECT_SAVED_SEARCH)
     ]
     return blocks

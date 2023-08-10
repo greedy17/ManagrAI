@@ -44,7 +44,7 @@ def _process_news_summary(payload, context):
         instructions = False
     while True:
         try:
-            data = {"input_text": input_text, "user":user, "name": input_text[:250]}
+            data = {"input_text": input_text, "user":user, "name": input_text[:70]}
             if instructions:
                 data["instructions"] = instructions
             serializer = SearchSerializer(data=data)

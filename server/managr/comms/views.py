@@ -48,7 +48,7 @@ class PRSearchViewSet(
     def create(self, request, *args, **kwargs):
         user = request.user
         data = request.data
-        data["user"] = user
+        data["user"] = str(user.id)
         try:
             serializer = SearchSerializer(data=data)
             serializer.is_valid()
