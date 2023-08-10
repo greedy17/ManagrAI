@@ -2,13 +2,13 @@ import logging
 import json
 import httpx
 import datetime
-from urllib.parse import urlencode
 from background_task import background
 from managr.utils.client import Variable_Client
-from .utils import get_news_for_company
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_clips_paginator_block
 from . import constants as comms_consts
+from . models import Search
+from . serializers import SearchSerializer
 from managr.core import constants as core_consts
 from managr.core.models import User
 from managr.core import exceptions as open_ai_exceptions
@@ -37,51 +37,34 @@ def emit_process_article_summary(payload, context):
 def _process_news_summary(payload, context):
     state = payload["view"]["state"]["values"]
     user = User.objects.get(id=context.get("u"))
-    search = state["SEARCH"]["plain_input"]["value"]
+    input_text = state["SEARCH"]["plain_input"]["value"]
     try:
         instructions = state["OUTPUT_INSTRUCTIONS"]["plain_input"]["value"]
     except KeyError:
         instructions = False
     while True:
         try:
-            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = core_consts.OPEN_AI_NEWS_BOOLEAN_CONVERSION(search)
-            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                user.email, prompt, token_amount=500, top_p=0.1,
-            )
-            with Variable_Client() as client:
-                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
-                r = open_ai_exceptions._handle_response(r)
-                query_input = r.get("choices")[0].get("message").get("content")
-                break
+            data = {"input_text": input_text, "user":user, "name": input_text[:250]}
+            if instructions:
+                data["instructions"] = instructions
+            serializer = SearchSerializer(data=data)
+            serializer.is_valid()
+            search = serializer.instance
+            search.update_boolean()
+            news_res = search.get_clips()
+            articles = news_res["articles"]
+            descriptions = [article["description"] for article in articles]
+            break
         except Exception as e:
             logger.exception(e)
             break
-    query = urlencode({"q": query_input})
-    news_res = get_news_for_company(query)
-    articles = news_res["articles"]
-    descriptions = [article["description"] for article in articles]
     attempts = 1
     token_amount = 500
     timeout = 60.0
     while True:
-        url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-        prompt = comms_consts.OPEN_AI_NEWS_CLIPS_SUMMARY(
-            datetime.datetime.now().date(), descriptions, search, instructions
-        )
-        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-            user.email,
-            prompt,
-            "You are a VP of Communications",
-            token_amount=token_amount,
-            top_p=0.1,
-        )
-        with Variable_Client(timeout) as client:
-            r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
         try:
-            r = open_ai_exceptions._handle_response(r)
-            message = r.get("choices")[0].get("message").get("content").replace("**", "*")
-
+            res = search.get_summary(token_amount, timeout, descriptions)
+            message = res.get("choices")[0].get("message").get("content").replace("**", "*")
             break
         except open_ai_exceptions.StopReasonLength:
             logger.exception(
@@ -111,7 +94,7 @@ def _process_news_summary(payload, context):
             block_builders.simple_section(
                 f"*Summary for {search}*", "mrkdwn", block_id="NEWS_SUMMARY"
             ),
-            block_builders.context_block(f"AI-generated search: {query_input}", "mrkdwn"),
+            block_builders.context_block(f"AI-generated search: {search.search_boolean}", "mrkdwn"),
             block_builders.divider_block(),
             block_builders.simple_section(message, "mrkdwn"),
             block_builders.divider_block(),
@@ -120,10 +103,10 @@ def _process_news_summary(payload, context):
                     block_builders.simple_button_block(
                         "Regenerate",
                         "REGENERATE",
-                        action_id=slack_const.PROCESS_SHOW_REGENERATE_NEWS_SUMMARY_FORM,
+                        action_id=action_with_params(slack_const.PROCESS_SHOW_REGENERATE_NEWS_SUMMARY_FORM, params=[f"search_id={str(search.id)}"]),
                     ),
                     block_builders.simple_button_block(
-                        "Show Clips", "SHOW_CLIPS", action_id=slack_const.PROCESS_SEND_CLIPS
+                        "Show Clips", "SHOW_CLIPS", action_id=action_with_params(slack_const.PROCESS_SEND_CLIPS, params=[f"search_id={str(search.id)}"])
                     ),
                 ]
             ),
@@ -146,17 +129,14 @@ def _process_send_clips(payload, context):
     slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
     user = slack_account.user
     access_token = user.organization.slack_integration.access_token
-    blocks = payload["message"]["blocks"]
-    title_text = blocks[0]["text"]["text"].split("for ")[1].replace("*", "")
-    context_text = blocks[1]["elements"][0]["text"]
-    boolean_text = context_text.split("search: ")[1]
-    news_res = get_news_for_company(f"q={boolean_text}")
+    search = Search.objects.get(id=context.get("search_id"))
+    news_res = search.get_clips()
     paginated_articles = custom_paginator(
         news_res["articles"], count=10, page=context.get("new_page", 1)
     )
     paginated_article_blocks = [
-        block_builders.simple_section(f"*Clips for {title_text}*", "mrkdwn"),
-        block_builders.context_block(f"AI-generated search: {boolean_text}", "mrkdwn"),
+        block_builders.simple_section(f"*Clips for {search.input_text}*", "mrkdwn"),
+        block_builders.context_block(f"AI-generated search: {search.search_boolean}", "mrkdwn"),
         block_builders.divider_block(),
     ]
     for article in paginated_articles["results"]:

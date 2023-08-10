@@ -4,10 +4,13 @@ from datetime import datetime
 from django.db import models
 from managr.core.models import TimeStampModel
 from managr.core import constants as core_consts
+from . import constants as comms_consts
+from .exceptions import _handle_response as _handle_news_response
 from managr.utils.client import Variable_Client
 from managr.utils.sites import get_site_url
 from managr.core import exceptions as open_ai_exceptions
 from managr.utils.misc import encrypt_dict
+from urllib.parse import urlencode
 
 logger = logging.getLogger("managr")
 
@@ -24,6 +27,7 @@ class Search(TimeStampModel):
     input_text = models.TextField(null=True, blank=True)
     search_boolean = models.TextField(null=True, blank=True)
     instructions = models.TextField(null=True, blank=True)
+    summary = models.TextField(null=True, blank=True)
 
     class Meta:
         ordering = ["name"]
@@ -46,6 +50,30 @@ class Search(TimeStampModel):
         except Exception as e:
             logger.exception(e)
         return self.save()
+    
+    def get_summary(self, tokens, timeout, clips, for_client=False):
+        if self.summary:
+            return self.summary
+        url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+        prompt = comms_consts.OPEN_AI_NEWS_CLIPS_SUMMARY(
+            datetime.datetime.now().date(), clips, self.input_text, self.instructions, for_client
+        )
+        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+            self.user.email,
+            prompt,
+            "You are a VP of Communications",
+            token_amount=tokens,
+            top_p=0.1,
+        )
+        with Variable_Client(timeout) as client:
+            r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+        return open_ai_exceptions._handle_response(r)
+        
+    def get_clips(self):
+        news_url = comms_consts.NEW_API_URI + "/" + comms_consts.NEW_API_EVERYTHING_URI(urlencode({"q": self.search_boolean}))
+        with Variable_Client() as client:
+            new_res = client.get(news_url, headers=comms_consts.NEWS_API_HEADERS)
+        return _handle_news_response(new_res)
     
     def generate_shareable_link(self):
         date = str(datetime.now())
