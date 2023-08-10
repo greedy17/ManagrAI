@@ -378,8 +378,8 @@ export default {
       this.summaryLoading = true
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       try {
+        this.closeRegenModal()
         const data = await this.createSearch()
-        console.log('data here', data)
         await this.getClips(data.id)
         await this.getSummary(this.filteredArticles, data.id, '', this.newTemplate)
       } catch (e) {
