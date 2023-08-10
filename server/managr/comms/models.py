@@ -56,7 +56,7 @@ class Search(TimeStampModel):
             return self.summary
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
         prompt = comms_consts.OPEN_AI_NEWS_CLIPS_SUMMARY(
-            datetime.datetime.now().date(), clips, self.input_text, self.instructions, for_client
+            datetime.now().date(), clips, self.input_text, self.instructions, for_client
         )
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
             self.user.email,

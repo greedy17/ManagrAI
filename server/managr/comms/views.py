@@ -51,7 +51,7 @@ class PRSearchViewSet(
         data["user"] = str(user.id)
         try:
             serializer = SearchSerializer(data=data)
-            serializer.is_valid()
+            serializer.is_valid(raise_exception=True)
             serializer.save()
             response_data = serializer.data
             serializer.instance.update_boolean()
@@ -109,7 +109,8 @@ class PRSearchViewSet(
             try:
                 res = search.get_summary(token_amount, timeout, clips, True)
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
-                search.update(summary=message)
+                search.summary = message
+                search.save()
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
