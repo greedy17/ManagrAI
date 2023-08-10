@@ -17,6 +17,8 @@ from rest_framework import (
 )
 from rest_framework.decorators import action
 from . import constants as comms_consts
+from . models import Search
+from . serializers import SearchSerializer
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
 from managr.core import exceptions as open_ai_exceptions
@@ -35,6 +37,34 @@ class PRSearchViewSet(
     mixins.DestroyModelMixin,
 ):
     authentication_classes = [ExpiringTokenAuthentication]
+    serializer_class = SearchSerializer
+
+    def get_queryset(self):
+        return Search.objects.filter(user=self.request.user)
+    
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        data = request.data
+        data["user"] = user
+        try:
+            serializer = SearchSerializer(data=data)
+            serializer.is_valid()
+            serializer.save()
+            response_data = serializer.data
+            serializer.instance.update_boolean()
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_201_CREATED, data=response_data)
+    
+    def update(self, request, *args, **kwargs):
+        search = Search.objects.get(id=request.data.get("id"))
+        try:
+            search.update(input_text=request.data.get("input_text"), instructions=request.data.get("instructions"))
+            search.update_boolean()
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
     @action(
         methods=["get"],
