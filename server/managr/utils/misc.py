@@ -1,18 +1,13 @@
-import random
 import re
 import boto3
-
-from django.core.management.base import BaseCommand
-
+from cryptography.fernet import Fernet
 from django.conf import settings
 from django.utils import timezone
-
 from rest_framework.response import Response
 from rest_framework import filters
-
-
-from django.core.paginator import Paginator, EmptyPage
-
+from django.core.paginator import Paginator
+import base64
+import hashlib
 
 def to_snake_case(val):
     # note if first value is capital then it will return a starting _
@@ -191,3 +186,38 @@ def upload_to_bucket(f, filename, bucket_name, access_key_id, secret):
         "s3", aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
     )
     s3.upload_file(f, bucket_name, filename)
+
+
+def generate_fernet_key(secret_key):
+    # Use a hash function to generate a 256-bit (32-byte) key
+    key = hashlib.sha256(secret_key.encode()).digest()
+    return base64.urlsafe_b64encode(key)
+
+
+def encrypt_dict(data_dict):
+    """
+    Encrypts a dictionary using Fernet encryption.
+    :param data_dict: Dictionary to be encrypted
+    :return: Encrypted data as bytes
+    """
+    secret_key = settings.SECRET_KEY
+    fernet_key = generate_fernet_key(secret_key)
+    cipher_suite = Fernet(fernet_key)
+    data_str = str(data_dict).encode('utf-8')
+    encrypted_data = cipher_suite.encrypt(data_str)
+    return encrypted_data
+
+
+def decrypt_dict(encrypted_data):
+    """
+    Decrypts Fernet-encrypted data and returns the original dictionary.
+    :param encrypted_data: Encrypted data as bytes
+    :return: Decrypted dictionary
+    """
+    secret_key = settings.SECRET_KEY
+    fernet_key = generate_fernet_key(secret_key)
+    cipher_suite = Fernet(fernet_key)
+    decrypted_data = cipher_suite.decrypt(encrypted_data)
+    data_str = decrypted_data.decode('utf-8')
+    decrypted_dict = eval(data_str)
+    return decrypted_dict

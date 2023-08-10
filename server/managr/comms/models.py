@@ -1,11 +1,16 @@
 import json
 import logging
+from datetime import datetime
 from django.db import models
 from managr.core.models import TimeStampModel
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
+from managr.utils.sites import get_site_url
 from managr.core import exceptions as open_ai_exceptions
+from managr.utils.misc import encrypt_dict
+
 logger = logging.getLogger("managr")
+
 
 class Search(TimeStampModel):
     user = models.OneToOneField(
@@ -35,9 +40,16 @@ class Search(TimeStampModel):
             )
             with Variable_Client() as client:
                 r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
-                r = open_ai_exceptions._handle_response(r)
-                query_input = r.get("choices")[0].get("message").get("content")
-                self.search_boolean = query_input
+            r = open_ai_exceptions._handle_response(r)
+            query_input = r.get("choices")[0].get("message").get("content")
+            self.search_boolean = query_input
         except Exception as e:
             logger.exception(e)
         return self.save()
+    
+    def generate_shareable_link(self):
+        date = str(datetime.now())
+        data = {"created_at": date, "id": str(self.id)}
+        encrypted_data = encrypt_dict(data)
+        base_url = get_site_url()
+        return f"{base_url}/shared/{encrypted_data}"
