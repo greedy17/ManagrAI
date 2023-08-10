@@ -759,6 +759,6 @@ def news_summary_blockset(context):
             ],
             block_id="USE_TEMPLATE_BLOCK",
         ),
-        block_builders.static_select("Saved Searches", search_options,slack_const.PROCESS_SELECT_SAVED_SEARCH)
+        block_builders.static_select("Saved Searches", search_options,slack_const.PROCESS_SELECT_SAVED_SEARCH, block_id="SAVED_SEARCH")
     ]
     return blocks

@@ -16,7 +16,7 @@ logger = logging.getLogger("managr")
 
 
 class Search(TimeStampModel):
-    user = models.OneToOneField(
+    user = models.ForeignKey(
             "core.User",
             related_name="news_search",
             blank=False,
