@@ -379,6 +379,7 @@ export default {
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       try {
         const data = await this.createSearch()
+        console.log('data here', data)
         await this.getClips(data.id)
         await this.getSummary(this.filteredArticles, data.id, '', this.newTemplate)
       } catch (e) {
@@ -408,7 +409,11 @@ export default {
     },
     async createSearch() {
       try {
-        const response = await Comms.api.createSearch({name: this.newSearch.slice(0, 69)}) // nice
+        const response = await Comms.api.createSearch({ 
+          name: this.newSearch.slice(0, 69),  // nice
+          input_text: this.newSearch, 
+          instructions: this.newTemplate, 
+        })
         return response
       } catch (e) {
         console.log(e)
@@ -444,6 +449,7 @@ export default {
       }
       try {
         this.summaryLoading = true
+        console.log('data', data)
         const res = await Comms.api.getSummary(data)
         this.summary = res.summary
       } catch (e) {
