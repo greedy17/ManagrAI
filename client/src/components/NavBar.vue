@@ -119,12 +119,12 @@ export default {
   },
 
   methods: {
-    toggleMenu() {
-      this.menuOpen = !this.menuOpen
-    },
     logOut() {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
+    },
+    toggleMenu() {
+      this.$emit('toggle-menu')
     },
     clearText() {
       this.searchText = ''

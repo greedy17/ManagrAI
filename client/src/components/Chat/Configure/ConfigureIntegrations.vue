@@ -260,7 +260,7 @@
       <div class="title-container">
         <h1 class="no-text-margin">Integrations</h1>
         <p class="sub-text">
-          Connect your apps to expand functionality
+          Connect your apps to expand functionality.
         </p>
       </div>
       <div class="integrations__cards">
@@ -286,7 +286,7 @@
             >
               Slack Connected
             </p>
-            <p v-else class="card-text">Generate summaries via slack</p>
+            <p v-else class="card-text">Generate summaries via Slack</p>
             <div></div>
             <div class="sep-button-container">
               <div class="separator"></div>
@@ -332,7 +332,7 @@
                 Zoom
               </h3>
             </div>
-            <p class="card-text">AI-note taking & call summaries</p>
+            <p class="card-text">Use AI to summarize calls</p>
             <div class="sep-button-container">
               <div class="separator"></div>
               <button

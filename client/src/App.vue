@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <NavBar v-if="!hideNavBar && userIsLoggedIn" :menuOpen="menuOpen" @close-menu="closeMenu"  />
+    <NavBar v-if="!hideNavBar && userIsLoggedIn" :menuOpen="menuOpen" @toggle-menu="toggleMenu" @close-menu="closeMenu"  />
     <!-- <alert-alert /> -->
     <!-- Binding a key to the full path will remount a view if
         the detail endpoint changes-->
@@ -76,6 +76,12 @@ export default {
     },
     closeModal() {
       this.modalOpen = false
+    },
+    toggleMenu() {
+      this.menuOpen = !this.menuOpen
+    },
+    closeMenu() {
+      this.menuOpen = false
     },
   },
   computed: {
