@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <NavBar v-if="!hideNavBar && userIsLoggedIn" />
+    <NavBar v-if="!hideNavBar && userIsLoggedIn" :menuOpen="menuOpen" @close-menu="closeMenu"  />
     <!-- <alert-alert /> -->
     <!-- Binding a key to the full path will remount a view if
         the detail endpoint changes-->
@@ -25,7 +25,9 @@ export default {
     NavBar,
   },
   data() {
-    return {}
+    return {
+      menuOpen: false,
+    }
   },
   watch: {
     // When route changes,
@@ -69,6 +71,12 @@ export default {
 
   methods: {
     ...mapActions(['refreshCurrentUser']),
+    openModal() {
+      this.modalOpen = true
+    },
+    closeModal() {
+      this.modalOpen = false
+    },
   },
   computed: {
     ...mapGetters(['userIsLoggedIn']),

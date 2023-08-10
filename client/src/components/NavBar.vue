@@ -80,6 +80,10 @@
                 <img class="mar-right" src="@/assets/images/settings.svg" height="16px" alt="" />
                 Settings
               </p>
+              <p class="dropdown-item" @click="goToIntegrations">
+                <img class="mar-right" src="@/assets/images/edit.svg" height="16px" alt="" />
+                Integrations
+              </p>
               <p @click="logOut" class="dropdown-item__bottom">Sign out</p>
               <!-- 
               <router-link :to="{ name: 'Login' }">
@@ -104,11 +108,13 @@ export default {
   components: {
     CollectionManager,
   },
+  props: {
+    menuOpen: { type: Boolean },
+  },
   data() {
     return {
       items: [],
       searchText: null,
-      menuOpen: false,
     }
   },
 
@@ -120,14 +126,12 @@ export default {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
     },
-    openModal() {
-      this.modalOpen = true
-    },
-    closeModal() {
-      this.modalOpen = false
-    },
     clearText() {
       this.searchText = ''
+    },
+    goToIntegrations() {
+      this.$router.push('pr-integrations')
+      this.$emit('close-menu')
     },
   },
   computed: {

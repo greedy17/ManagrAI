@@ -256,7 +256,7 @@
       <p class="inactive">Connect Managr to your favorite Apps</p>
     </div> -->
 
-    <div v-if="userRoll === 'PR'" class="pr-integrations-container">
+    <div v-if="userRole === 'PR'" class="pr-integrations-container">
       <div class="title-container">
         <h1 class="no-text-margin">Integrations</h1>
         <p class="sub-text">
@@ -1285,10 +1285,12 @@ export default {
         await this.$store.dispatch('refreshCurrentUser')
         this.generatingToken = false
         this.selectedIntegration = null
-        this.$router.replace({
-          name: 'Home',
-          params: {},
-        })
+        if (this.userRole === 'SALES') {
+          this.$router.replace({
+            name: 'Home',
+            params: {},
+          })
+        }
       }
     }
   },
@@ -1299,7 +1301,7 @@ export default {
     isPaid() {
       return !!this.$store.state.user.organizationRef.isPaid
     },
-    userRoll() {
+    userRole() {
       return this.$store.state.user.role
     },
     hasSalesforceIntegration() {
