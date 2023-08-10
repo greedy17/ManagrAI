@@ -74,7 +74,7 @@ class PRSearchViewSet(
         return Response({"articles": articles, "string": query_input})
 
     @action(
-        methods=["get"],
+        methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
         url_path="summary",
