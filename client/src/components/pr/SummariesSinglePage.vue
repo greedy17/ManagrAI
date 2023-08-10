@@ -43,12 +43,10 @@
         </div>
       </div>
     </Modal>
-    <div class="center" v-if="page === 'SUMMARIES'">
+    <div ref="loadedContent" class="center" v-if="page === 'SUMMARIES'">
       <div class="no-content" v-if="!selectedSearch">
         <div class="title-row">
-          <p class="typed" v-if="!newSearch">
-            Generate a news summary from over 1 million sources.
-          </p>
+          <p class="typed" v-if="!newSearch">Generate a news summary from over 1 million sites.</p>
           <p v-else>
             Summarize coverage for <span class="search-text">"{{ newSearch }}"</span>
           </p>
@@ -87,24 +85,36 @@
 
           <div v-if="addingPrompt" style="margin-top: 1rem" class="input-container">
             <div class="input-row">
+              <div class="main-text">
+                <img
+                  style="margin-right: 8px"
+                  src="@/assets/images/sparkles-thin.svg"
+                  height="18px"
+                />
+              </div>
               <textarea
-                rows="3"
-                class="area-input s-padding"
+                rows="1"
+                class="area-input"
                 placeholder="What would you like included in the summary?"
                 v-model="newTemplate"
                 v-autoresize
               />
+              <small @click="removePrompt" class="remove">X</small>
             </div>
           </div>
 
           <div v-if="addingSources" style="margin-top: 1rem" class="input-container">
             <div class="input-row">
+              <div class="main-text">
+                <img style="margin-right: 8px" src="@/assets/images/globe.svg" height="20px" />
+              </div>
               <input
                 autofocus
-                class="area-input s-padding"
-                placeholder="Separate with commas.."
+                class="area-input"
+                placeholder="Paste additional news sites, separate using commas"
                 v-model="additionalSources"
               />
+              <small @click="removeSource" class="remove">X</small>
             </div>
           </div>
 
@@ -115,11 +125,19 @@
             <button @click="toggleAddSource" v-if="!addingSources" class="secondary-button">
               Add Sources
             </button>
+
+            <button
+              @click="generateNewSearch"
+              v-if="addingSources || addingPrompt"
+              class="primary-button"
+            >
+              Submit Search
+            </button>
           </div>
         </div>
       </div>
       <div v-else class="loaded-content">
-        <div style="margin-left: -1rem" v-if="summaryLoading" class="center">
+        <div style="width: 50%" v-if="summaryLoading">
           <div class="summary-preview-skeleton shimmer">
             <div class="content">
               <div class="title-wide"></div>
@@ -133,16 +151,10 @@
               </div>
               <div class="skeleton-icon"></div>
             </div>
+            <div class="excerpt-wide"></div>
+            <div class="excerpt-wide"></div>
+            <div class="excerpt-wide"></div>
           </div>
-          <!-- <div class="loader-container">
-            <div class="loader-row">
-              <div class="loading">
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-              </div>
-            </div>
-          </div> -->
         </div>
         <div v-else class="summaries-container">
           <div class="content-width">
@@ -171,7 +183,7 @@
           <p class="divider-text">News Clips</p>
         </div>
 
-        <div v-if="loading">
+        <div style="width: 50%" v-if="loading">
           <div class="article-preview-skeleton shimmer">
             <div class="content">
               <div class="title"></div>
@@ -201,7 +213,7 @@
           </div>
         </div>
 
-        <div v-if="!loading" class="clips-container">
+        <div v-else class="clips-container">
           <div class="content-width">
             <div v-for="article in filteredArticles" :key="article.id" class="news-container">
               <div class="news-card" @click="selectArticle(article)">
@@ -214,12 +226,12 @@
                     <h1 class="article-title" @click="goToArticle(article.url)">
                       {{ article.title }}
                     </h1>
-                    <p @click="getArticleSummary(article.url)" class="article-preview">
+                    <p class="article-preview">
                       {{ article.description }}
                     </p>
                   </div>
 
-                  <div @click="goToArticle(article.link)">
+                  <div @click="goToArticle(article.url)">
                     <img :src="article.urlToImage" class="cover-photo" />
                   </div>
                 </header>
@@ -239,9 +251,28 @@
                         fill="#000"
                       ></path>
                     </svg>
-                    <img src="@/assets/images/sparkles-thin.svg" class="right-arrow-footer" />
+                    <img
+                      v-if="articleSummaryLoading && loadingUrl === article.url"
+                      class="rotate right-arrow-footer"
+                      src="@/assets/images/loading.svg"
+                      alt=""
+                    />
+                    <img
+                      @click="getArticleSummary(article.url)"
+                      v-else-if="!articleSummaries[article.url]"
+                      src="@/assets/images/sparkles-thin.svg"
+                      class="right-arrow-footer"
+                    />
+                    <img
+                      v-else
+                      src="@/assets/images/sparkle.svg"
+                      class="right-arrow-footer blue-icon"
+                    />
                   </div>
                 </div>
+              </div>
+              <div v-if="articleSummaries[article.url]">
+                <pre v-html="articleSummaries[article.url]" class="pre-text blue-bg"></pre>
               </div>
             </div>
           </div>
@@ -339,11 +370,28 @@ export default {
       newSummary: false,
       addingPrompt: false,
       addingSources: false,
+      articleSummaries: {},
+      loadingUrl: null,
+      articleSummaryLoading: false,
     }
   },
   watch: {},
   created() {},
   methods: {
+    scrollToTop() {
+      setTimeout(() => {
+        const loadedContent = this.$refs.loadedContent
+        loadedContent.scrollTop = loadedContent.scrollHeight
+      }, 200)
+    },
+    removeSource() {
+      this.additionalSources = ''
+      this.addingSources = !this.addingSources
+    },
+    removePrompt() {
+      this.newTemplate = ''
+      this.addingPrompt = !this.addingPrompt
+    },
     toggleAddPrompt() {
       this.addingPrompt = !this.addingPrompt
     },
@@ -373,7 +421,7 @@ export default {
       }
     },
     async generateNewSearch() {
-      if (!this.newSearch) {
+      if (!this.newSearch || this.newSearch.length < 3) {
         return
       }
       this.loading = true
@@ -386,7 +434,6 @@ export default {
       } catch (e) {
         console.log(e)
       }
-
       // this.newSearch = ''
       // this.newTemplate = ''
       this.closeRegenModal()
@@ -449,10 +496,12 @@ export default {
         })
       } finally {
         this.summaryLoading = false
+        this.scrollToTop()
       }
     },
     async getArticleSummary(url, instructions = null) {
-      console.log(url)
+      this.articleSummaryLoading = true
+      this.loadingUrl = url
       try {
         await Comms.api
           .getArticleSummary({
@@ -461,10 +510,13 @@ export default {
             instructions: instructions,
           })
           .then((response) => {
-            console.log(response)
+            this.articleSummaries[url] = response.summary
           })
       } catch (e) {
         console.log(e)
+      } finally {
+        this.articleSummaryLoading = false
+        this.loadingUrl = null
       }
     },
     regenNewSummary() {
@@ -588,6 +640,24 @@ export default {
   border-right: 1px solid;
 }
 
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
+}
+
+.rotate {
+  animation: rotation 3s infinite linear;
+  cursor: not-allowed;
+}
+
+.invert {
+  filter: invert(70%);
+}
+
 .loader-container {
   display: flex;
   align-items: flex-start;
@@ -667,6 +737,7 @@ export default {
   flex-direction: row;
 }
 .center {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -697,12 +768,14 @@ export default {
   border: none;
   letter-spacing: 0.5px;
   font-size: 14px;
-  font-family: $base-font-family !important;
+  font-family: $base-font-family;
+  font-weight: 400;
   border: none !important;
   resize: none;
   text-align: left;
   overflow: auto;
   scroll-behavior: smooth;
+  color: $dark-black-blue;
 }
 
 .area-input:disabled {
@@ -761,10 +834,20 @@ export default {
   margin: 0;
 }
 
+.blue-bg {
+  background-color: $white-blue;
+  padding: 16px;
+  border-radius: 4px;
+}
+.blue-icon {
+  filter: invert(92%) sepia(53%) saturate(2928%) hue-rotate(178deg) brightness(72%) contrast(96%);
+}
+
 .right-mar {
   margin-right: 8px;
 }
 .loaded-content {
+  width: 100%;
   display: flex;
   align-items: center;
   flex-direction: column;
@@ -795,6 +878,18 @@ export default {
 .space-between {
   display: flex;
   justify-content: space-between;
+}
+.remove {
+  color: #6b6b6b;
+  cursor: pointer;
+  border-radius: 100%;
+  padding: 1px 6px;
+  margin-right: -4px;
+  font-family: $thin-font-family;
+  &:hover {
+    color: $coral;
+    background-color: $light-red;
+  }
 }
 .logo {
   height: 20px;
@@ -859,10 +954,11 @@ export default {
 .summaries-container {
   display: flex;
   justify-content: flex-start;
-  width: 100vw;
+  width: 100%;
   margin-bottom: 0;
-  background-color: $off-white;
-  padding: 8px 0 40px 0;
+  // background-color: $off-white;
+  padding-top: 8px;
+  padding-bottom: 40px;
 }
 .clips-container {
   display: flex;
@@ -991,8 +1087,11 @@ header {
   margin-left: 1rem;
   margin-top: 1.25rem;
   object-fit: cover;
-
   cursor: pointer;
+
+  &:hover {
+    opacity: 0.7;
+  }
 }
 
 .article-title {
@@ -1008,6 +1107,10 @@ header {
   text-overflow: ellipsis;
   overflow: hidden;
   cursor: pointer;
+
+  &:hover {
+    color: #6b6b6b;
+  }
 }
 
 .article-preview {
@@ -1141,17 +1244,19 @@ header {
 }
 
 .article-preview-skeleton {
-  width: 100%;
   display: flex;
   flex-direction: row;
   align-items: flex-start;
   justify-content: space-between;
   padding: 20px;
   border-radius: 4px;
+  margin-top: 16px;
+  width: 100%;
 }
 
 .summary-preview-skeleton {
   width: 100%;
+  min-width: 400px;
   padding: 36px 20px;
   border-radius: 4px;
   display: flex;
@@ -1163,24 +1268,26 @@ header {
   width: 116px;
   background-color: #f2f2f2;
   border-radius: 2px;
-  margin-right: 20px;
+  margin-left: 16px;
 }
 
 .content {
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
 }
 
 .title {
-  width: 400px;
+  width: 100%;
+  min-width: 400px;
   height: 24px;
   background-color: #f2f2f2;
   margin-bottom: 8px;
   border-radius: 2px;
 }
 .title-wide {
-  width: 520px;
+  width: 100%;
   height: 36px;
   background-color: #f2f2f2;
   margin-bottom: 8px;
@@ -1188,7 +1295,8 @@ header {
 }
 
 .meta {
-  width: 399px;
+  width: 100%;
+  min-width: 399px;
   height: 8px;
   background-color: #f2f2f2;
   border-radius: 2px;
@@ -1196,7 +1304,7 @@ header {
 }
 
 .meta-wide {
-  width: 520px;
+  width: 100%;
   height: 16px;
   background-color: #f2f2f2;
   border-radius: 2px;
@@ -1213,7 +1321,7 @@ header {
 
 .skeleton-button {
   height: 20px;
-  width: 120px;
+  width: 100px;
   margin-right: 16px;
   background-color: #f2f2f2;
 }
@@ -1226,9 +1334,17 @@ header {
 }
 
 .excerpt {
-  width: 399px;
+  width: 100%;
+  min-width: 399px;
   height: 8px;
   background-color: #f2f2f2;
+  border-radius: 2px;
+}
+.excerpt-wide {
+  width: 100%;
+  height: 8px;
+  background-color: #f2f2f2;
+  margin-top: 16px;
   border-radius: 2px;
 }
 
