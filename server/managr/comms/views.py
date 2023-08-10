@@ -80,12 +80,12 @@ class PRSearchViewSet(
         url_path="summary",
     )
     def get_summary(self, request, *args, **kwargs):
-        if request.GET.get("clips"):
-            clips = request.GET.get("clips")
+        if request.data.get("clips"):
+            clips = request.data.get("clips")
         else:
-            clips = request.GET.getlist("clips[]")
-        search = request.GET.get("search")
-        instructions = request.GET.get("instructions")
+            clips = request.data.getlist("clips[]")
+        search = request.data.get("search")
+        instructions = request.data.get("instructions")
         user = request.user
         has_error = False
         attempts = 1
