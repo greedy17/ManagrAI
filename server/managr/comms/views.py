@@ -17,8 +17,8 @@ from rest_framework import (
 )
 from rest_framework.decorators import action
 from . import constants as comms_consts
-from . models import Search
-from . serializers import SearchSerializer
+from .models import Search
+from .serializers import SearchSerializer
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
 from managr.utils.misc import decrypt_dict
@@ -44,7 +44,7 @@ class PRSearchViewSet(
 
     def get_queryset(self):
         return Search.objects.filter(user=self.request.user)
-    
+
     def create(self, request, *args, **kwargs):
         user = request.user
         data = request.data
@@ -58,16 +58,18 @@ class PRSearchViewSet(
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_201_CREATED, data=response_data)
-    
+
     def update(self, request, *args, **kwargs):
         search = Search.objects.get(id=request.data.get("id"))
         try:
-            search.update(input_text=request.data.get("input_text"), instructions=request.data.get("instructions"))
+            search.update(
+                input_text=request.data.get("input_text"),
+                instructions=request.data.get("instructions"),
+            )
             search.update_boolean()
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_204_NO_CONTENT)
-
 
     @action(
         methods=["get"],
@@ -77,10 +79,10 @@ class PRSearchViewSet(
     )
     def get_clips(self, request, *args, **kwargs):
         has_error = False
+        search = request.get("search")
         while True:
             try:
-                search = Search.objects.get(id=request.GET.get("id"))
-                news_res = search.get_clips()
+                news_res = Search.get_clips(search)
                 articles = news_res["articles"]
                 break
             except Exception as e:
@@ -100,16 +102,18 @@ class PRSearchViewSet(
     )
     def get_summary(self, request, *args, **kwargs):
         clips = request.data.get("clips")
-        search = Search.objects.get(id=request.data.get("id"))
+        search = request.data.get("search")
+        instructions = request.data.get("instructions", False)
         has_error = False
         attempts = 1
         token_amount = 500
         timeout = 60.0
         while True:
             try:
-                res = search.get_summary(token_amount, timeout, clips, True)
+                res = Search.get_summary(
+                    request.user, token_amount, timeout, clips, search, instructions, True
+                )
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
-                search.update(summary=message)
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -149,9 +153,9 @@ class PRSearchViewSet(
         url_path="article-summary",
     )
     def get_article_summary(self, request, *args, **kwargs):
-        url = request.data['params']["url"]
-        search = request.data['params']["search"]
-        instructions = request.data['params']["instructions"]
+        url = request.data["params"]["url"]
+        search = request.data["params"]["search"]
+        instructions = request.data["params"]["instructions"]
         user = request.user
         article_res = Article(url)
         article_res.download()
@@ -164,7 +168,7 @@ class PRSearchViewSet(
         while True:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
             prompt = comms_consts.OPEN_AI_ARTICLE_SUMMARY(
-                datetime.datetime.now().date(), text, search,instructions
+                datetime.datetime.now().date(), text, search, instructions
             )
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
@@ -174,7 +178,11 @@ class PRSearchViewSet(
                 top_p=0.1,
             )
             with Variable_Client(timeout) as client:
-                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
             try:
                 r = open_ai_exceptions._handle_response(r)
                 message = r.get("choices")[0].get("message").get("content").replace("**", "*")
@@ -221,15 +229,17 @@ class PRSearchViewSet(
         search = Search.objects.get(id=request.GET.get("id"))
         link = search.generate_shareable_link()
         return Response(data={"link": link})
-    
+
 
 @api_view(["GET"])
 @permission_classes(
-    [permissions.AllowAny,]
+    [
+        permissions.AllowAny,
+    ]
 )
 def get_shared_summary(request, encrypted_param):
     decrypted_dict = decrypt_dict(encrypted_param)
-    created_at = datetime.strptime(decrypted_dict.get("created_at"), '%Y-%m-%d %H:%M:%S.%f')
+    created_at = datetime.strptime(decrypted_dict.get("created_at"), "%Y-%m-%d %H:%M:%S.%f")
     time_difference = datetime.now() - created_at
     twenty_four_hours = timedelta(hours=24)
     if time_difference > twenty_four_hours:

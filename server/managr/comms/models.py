@@ -17,12 +17,12 @@ logger = logging.getLogger("managr")
 
 class Search(TimeStampModel):
     user = models.ForeignKey(
-            "core.User",
-            related_name="news_search",
-            blank=False,
-            null=False,
-            on_delete=models.CASCADE,
-        )
+        "core.User",
+        related_name="news_search",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
+    )
     name = models.CharField(max_length=255)
     input_text = models.TextField(null=True, blank=True)
     search_boolean = models.TextField(null=True, blank=True)
@@ -40,41 +40,58 @@ class Search(TimeStampModel):
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
             prompt = core_consts.OPEN_AI_NEWS_BOOLEAN_CONVERSION(self.input_text)
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                self.user.email, prompt, token_amount=500, top_p=0.1,
+                self.user.email,
+                prompt,
+                token_amount=500,
+                top_p=0.1,
             )
             with Variable_Client() as client:
-                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
             r = open_ai_exceptions._handle_response(r)
             query_input = r.get("choices")[0].get("message").get("content")
             self.search_boolean = query_input
         except Exception as e:
             logger.exception(e)
         return self.save()
-    
-    def get_summary(self, tokens, timeout, clips, for_client=False):
-        if self.summary:
-            return self.summary
+
+    @classmethod
+    def get_summary(
+        cls, user, tokens, timeout, clips, input_text, instructions=False, for_client=False
+    ):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
         prompt = comms_consts.OPEN_AI_NEWS_CLIPS_SUMMARY(
-            datetime.datetime.now().date(), clips, self.input_text, self.instructions, for_client
+            datetime.now().date(), clips, input_text, instructions, for_client
         )
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-            self.user.email,
+            user.email,
             prompt,
             "You are a VP of Communications",
             token_amount=tokens,
             top_p=0.1,
         )
         with Variable_Client(timeout) as client:
-            r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+            r = client.post(
+                url,
+                data=json.dumps(body),
+                headers=core_consts.OPEN_AI_HEADERS,
+            )
         return open_ai_exceptions._handle_response(r)
-        
-    def get_clips(self):
-        news_url = comms_consts.NEW_API_URI + "/" + comms_consts.NEW_API_EVERYTHING_URI(urlencode({"q": self.search_boolean}))
+
+    @classmethod
+    def get_clips(cls, search_boolean):
+        news_url = (
+            comms_consts.NEW_API_URI
+            + "/"
+            + comms_consts.NEW_API_EVERYTHING_URI(urlencode({"q": search_boolean}))
+        )
         with Variable_Client() as client:
             new_res = client.get(news_url, headers=comms_consts.NEWS_API_HEADERS)
         return _handle_news_response(new_res)
-    
+
     def generate_shareable_link(self):
         date = str(datetime.now())
         data = {"created_at": date, "id": str(self.id)}
