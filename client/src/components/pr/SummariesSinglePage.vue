@@ -378,9 +378,10 @@ export default {
       this.summaryLoading = true
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       try {
-        this.getClips().then((response) => {
-          this.getSummary(this.filteredArticles, '', this.newTemplate)
-        })
+        this.closeRegenModal()
+        const data = await this.createSearch()
+        await this.getClips(data.id)
+        await this.getSummary(this.filteredArticles, data.id, '', this.newTemplate)
       } catch (e) {
         console.log(e)
       }
@@ -406,11 +407,24 @@ export default {
     changeSearch(search) {
       this.$emit('change-search', search)
     },
-    async getClips() {
+    async createSearch() {
+      try {
+        const response = await Comms.api.createSearch({ 
+          name: this.newSearch.slice(0, 69),  // nice
+          input_text: this.newSearch, 
+          instructions: this.newTemplate, 
+        })
+        return response
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async getClips(id) {
       try {
         await Comms.api
           .getClips({
             search: this.newSearch,
+            id
           })
           .then((response) => {
             this.filteredArticles = response.articles
@@ -425,15 +439,17 @@ export default {
     getArticleDescriptions(articles) {
       return articles.map((a) => a.description)
     },
-    async getSummary(clips, search = '', instructions = '') {
+    async getSummary(clips, id, search = '', instructions = '') {
       const urls = this.getArticleDescriptions(clips)
       const data = {
         clips: urls,
         search,
         instructions,
+        id,
       }
       try {
         this.summaryLoading = true
+        console.log('data', data)
         const res = await Comms.api.getSummary(data)
         this.summary = res.summary
       } catch (e) {
@@ -465,8 +481,9 @@ export default {
         console.log(e)
       }
     },
-    regenNewSummary() {
-      this.getSummary(this.filteredArticles, '', this.message)
+    async regenNewSummary() {
+      const data = await this.createSearch()
+      this.getSummary(this.filteredArticles, data.id, '', this.message)
       this.changeRegen()
       this.message = ''
     },

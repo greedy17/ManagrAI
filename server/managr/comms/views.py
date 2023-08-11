@@ -51,7 +51,7 @@ class PRSearchViewSet(
         data["user"] = str(user.id)
         try:
             serializer = SearchSerializer(data=data)
-            serializer.is_valid()
+            serializer.is_valid(raise_exception=True)
             serializer.save()
             response_data = serializer.data
             serializer.instance.update_boolean()
