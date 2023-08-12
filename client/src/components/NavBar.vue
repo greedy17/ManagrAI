@@ -3,7 +3,7 @@
     <div v-if="userIsLoggedIn">
       <nav id="nav" v-if="isPR">
         <router-link :to="{ name: 'PRSummaries' }">
-          <div class="logo">
+          <div @click="goHome" class="logo">
             <img style="height: 32px" src="@/assets/images/logo.png" />
           </div>
         </router-link>
@@ -113,6 +113,9 @@ export default {
   },
 
   methods: {
+    goHome() {
+      this.$router.go()
+    },
     toggleMenu() {
       this.menuOpen = !this.menuOpen
     },
