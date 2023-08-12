@@ -378,16 +378,12 @@ export default {
       this.summaryLoading = true
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       try {
-        this.closeRegenModal()
-        const data = await this.createSearch()
-        await this.getClips(data.id)
-        await this.getSummary(this.filteredArticles, data.id, '', this.newTemplate)
+        this.getClips(this.newSearch).then((response) => {
+          this.getSummary(this.filteredArticles, data.id, '', this.newTemplate)
+        })
       } catch (e) {
         console.log(e)
       }
-
-      // this.newSearch = ''
-      // this.newTemplate = ''
       this.closeRegenModal()
     },
     clearNewSearch() {
@@ -409,12 +405,15 @@ export default {
     },
     async createSearch() {
       try {
-        const response = await Comms.api.createSearch({ 
-          name: this.newSearch.slice(0, 69),  // nice
-          input_text: this.newSearch, 
-          instructions: this.newTemplate, 
-        })
-        return response
+        const response = await Comms.api
+          .createSearch({
+            name: this.newSearch.slice(0, 60),
+            input_text: this.newSearch,
+            instructions: this.newTemplate,
+          })
+          .then((response) => {
+            console.log(response)
+          })
       } catch (e) {
         console.log(e)
       }
@@ -424,7 +423,7 @@ export default {
         await Comms.api
           .getClips({
             search: this.newSearch,
-            id
+            id,
           })
           .then((response) => {
             this.filteredArticles = response.articles
