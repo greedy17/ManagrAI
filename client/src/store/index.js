@@ -6,6 +6,7 @@ import User from '@/services/users/'
 import Status from '@/services/statuses'
 // import { apiClient, apiErrorHandler } from '@/services/api'
 import { MeetingWorkflows, SObjectPicklist, SObjects } from '@/services/salesforce/models'
+import Comms from '@/services/comms'
 import { ObjectField, CRMObjects } from '@/services/crm'
 import { decryptData, encryptData } from '../encryption'
 
@@ -53,7 +54,9 @@ const state = {
   selectedArticle: null,
   chatTitle: 'All Open Opportunities',
   currentTask: null,
-  meetingBeingProcessed: ''
+  meetingBeingProcessed: '',
+  allSearches: [],
+  currentSearch: null,
 }
 
 const mutations = {
@@ -117,6 +120,9 @@ const mutations = {
   SAVE_MEETINGS(state, meetings) {
     state.meetings = meetings
   },
+  SAVE_SEARCHES(state, searches) {
+    state.allSearches = searches
+  },
   SAVE_TEMPLATES(state, templates) {
     state.templates = templates
   },
@@ -137,6 +143,10 @@ const mutations = {
   },
   SET_VIEW: (state, payload) => {
     state.currentView = payload
+  },
+  SET_SEARCH: (state, payload) => {
+    state.currentSearch = payload
+    console.log(state.currentSearch)
   },
   SET_MEETING: (state, payload) => {
     state.currentMeeting = payload
@@ -255,6 +265,18 @@ const actions = {
     } catch (e) {
       console.log(e)
     }
+  },
+  async getSearches({ commit }) {
+    try {
+      await Comms.api.getSearches().then((response) => {
+        commit('SAVE_SEARCHES', response.results)
+      })
+    } catch (e) {
+      console.log(e)
+    }
+  },
+  setSearch({ commit }, search) {
+    commit('SET_SEARCH', search)
   },
   setCurrentView({ commit }, view) {
     commit('SET_VIEW', view)

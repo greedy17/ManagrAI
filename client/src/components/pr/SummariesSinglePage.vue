@@ -133,7 +133,7 @@
       </div>
       <div v-else class="loaded-content">
         <div style="width: 50%" :class="{ 'neg-lmar': !loading }" v-if="summaryLoading">
-          <div class="row">
+          <div :class="{ 'left-mar': loading }" class="row">
             <img src="@/assets/images/logo.png" class="blue-logo" height="16px" alt="" />
             <p class="summary-load-text">Generating Summary...</p>
           </div>
@@ -169,16 +169,25 @@
               <div class="title-bar">
                 <div class="row">
                   <button
-                    :disabled="articleSummaryLoading || loading || summaryLoading"
+                    :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
                     @click="openRegenModal"
                     class="secondary-button"
                   >
-                    Regenerate
+                    {{ filteredArticles.length ? 'Regenerate' : 'New Search' }}
                   </button>
                   <button
-                    :disabled="articleSummaryLoading || loading || summaryLoading"
+                    @click="createSearch"
+                    v-if="filteredArticles.length"
+                    :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
                     class="primary-button"
                   >
+                    <img
+                      v-if="savingSearch"
+                      class="rotate"
+                      height="12px"
+                      src="@/assets/images/loading.svg"
+                      alt=""
+                    />
                     Save
                   </button>
                 </div>
@@ -267,7 +276,7 @@
                   </div>
                   <div class="footer-icon-container">
                     <button
-                      :disabled="articleSummaryLoading || loading || summaryLoading"
+                      :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
                       class="tertiary-button"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -283,7 +292,7 @@
                       v-if="!articleSummaries[article.url]"
                       @click="getArticleSummary(article.url)"
                       class="tertiary-button"
-                      :disabled="articleSummaryLoading || loading || summaryLoading"
+                      :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
                     >
                       <img
                         v-if="articleSummaryLoading && loadingUrl === article.url"
@@ -395,6 +404,7 @@ export default {
       isTyping: false,
       textIndex: 0,
       typedMessage: '',
+      savingSearch: false,
       searchMessages: [
         'University of Michigan no sports related mentions',
         'Walmart no stock related mentions',
@@ -443,11 +453,21 @@ export default {
   created() {},
   watch: {
     typedMessage: 'changeIndex',
+    currentSearch(newVal, oldVal) {
+      if (newVal.id !== (oldVal ? oldVal.id : null)) {
+        this.setSearch(newVal)
+      }
+    },
   },
   mounted() {
     // this.updateMessage()
   },
   methods: {
+    setSearch(search) {
+      this.newSearch = search.input_text
+      this.newTemplate = search.instructions
+      this.generateNewSearch()
+    },
     changeIndex() {
       setTimeout(() => {
         this.isTyping = false
@@ -513,14 +533,12 @@ export default {
       this.summaryLoading = true
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       try {
-        this.getClips().then((response) => {
-          this.getSummary(this.filteredArticles, '', this.newTemplate)
+        this.getClips(this.newSearch).then((response) => {
+          this.getSummary(this.filteredArticles, this.newTemplate)
         })
       } catch (e) {
         console.log(e)
       }
-      // this.newSearch = ''
-      // this.newTemplate = ''
       this.closeRegenModal()
     },
     clearNewSearch() {
@@ -540,13 +558,35 @@ export default {
     changeSearch(search) {
       this.$emit('change-search', search)
     },
+    async createSearch() {
+      this.savingSearch = true
+      try {
+        const response = await Comms.api
+          .createSearch({
+            name: this.newSearch.slice(0, 60),
+            input_text: this.newSearch,
+            search_boolean: this.booleanString,
+            instructions: this.newTemplate,
+          })
+          .then((response) => {
+            console.log(response)
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.savingSearch = false
+        this.$store.dispatch('getSearches')
+      }
+    },
     async getClips() {
       try {
         await Comms.api
           .getClips({
             search: this.newSearch,
+            user_id: this.user.id,
           })
           .then((response) => {
+            console.log(response)
             this.filteredArticles = response.articles
             this.booleanString = response.string
           })
@@ -557,19 +597,22 @@ export default {
       }
     },
     getArticleDescriptions(articles) {
-      return articles.map((a) => a.description)
+      return articles.map((a) => a.content)
     },
-    async getSummary(clips, search = '', instructions = '') {
-      const urls = this.getArticleDescriptions(clips)
-      const data = {
-        clips: urls,
-        search,
-        instructions,
-      }
+    async getSummary(clips, instructions = '') {
+      const allClips = this.getArticleDescriptions(clips)
+      this.summaryLoading = true
       try {
-        this.summaryLoading = true
-        const res = await Comms.api.getSummary(data)
-        this.summary = res.summary
+        await Comms.api
+          .getSummary({
+            clips: allClips,
+            search: this.newSearch,
+            instructions: instructions,
+          })
+          .then((response) => {
+            console.log(response)
+            this.summary = response.summary
+          })
       } catch (e) {
         console.log('Error in getSummary', e)
         this.$toast('Something went wrong, please try again.', {
@@ -585,34 +628,24 @@ export default {
       }
     },
     async getArticleSummary(url, instructions = null) {
-      if (this.articleSummaryLoading === false && this.summaryLoading === false) {
-        this.articleSummaryLoading = true
-
-        this.loadingUrl = url
-        try {
-          await Comms.api
-            .getArticleSummary({
-              url: url,
-              search: this.newSearch,
-              instructions: instructions,
-            })
-            .then((response) => {
-              this.articleSummaries[url] = response.summary
-            })
-        } catch (e) {
-          console.log(e)
-        } finally {
-          this.articleSummaryLoading = false
-          this.loadingUrl = null
-        }
-      } else {
-        console.log('CANT DO THAT')
+      this.articleSummaryLoading = true
+      this.loadingUrl = url
+      try {
+        await Comms.api
+          .getArticleSummary({
+            url: url,
+            search: this.newSearch,
+            instructions: instructions,
+          })
+          .then((response) => {
+            this.articleSummaries[url] = response.summary
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.articleSummaryLoading = false
+        this.loadingUrl = null
       }
-    },
-    regenNewSummary() {
-      this.getSummary(this.filteredArticles, '', this.message)
-      this.changeRegen()
-      this.message = ''
     },
     changeSummaryChat(type) {
       this.summaryChat = type
@@ -663,6 +696,12 @@ export default {
     },
     userName() {
       return this.$store.state.user.firstName
+    },
+    user() {
+      return this.$store.state.user
+    },
+    currentSearch() {
+      return this.$store.state.currentSearch
     },
   },
   directives: {
@@ -833,6 +872,7 @@ export default {
 
 button:disabled {
   background-color: $off-white !important;
+  border: 1px solid rgba(0, 0, 0, 0.2) !important;
   cursor: not-allowed !important;
 }
 
