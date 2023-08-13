@@ -192,6 +192,8 @@ urlpatterns = [
     path("auto/sync-resources", auto_views.init_resource_sync, name="resource-sync",),
     path("auto/sync-fields", auto_views.init_object_field_sync, name="object-field-sync",),
     path("auto/trigger-alerts", auto_views.init_trigger_alerts, name="trigger-alerts",),
+    path("shared/<str:encrypted_param>", comms_views.get_shared_summary, "shared")
+
 ]
 
 router.register("users/conversations", core_views.ConversationViewSet, "conversations"),

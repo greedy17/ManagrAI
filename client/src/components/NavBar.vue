@@ -3,8 +3,8 @@
     <div v-if="userIsLoggedIn">
       <nav id="nav" v-if="isPR">
         <router-link :to="{ name: 'PRSummaries' }">
-          <div class="logo">
-            <img style="height: 32px" src="@/assets/images/logo.png" />
+          <div @click="goHome" class="logo">
+            <img style="height: 28px" src="@/assets/images/logo.png" />
           </div>
         </router-link>
 
@@ -41,10 +41,17 @@
         </div> -->
 
         <div class="auto-left">
-          <div class="row pointer nav-text">
-            Saved Searches
-            <!-- <img src="@/assets/images/saved-search.svg" height="28px" alt="" /> -->
-            <img src="@/assets/images/downArrow.svg" height="14px" alt="" />
+          <div class="relative">
+            <div @click="toggleShowSearches" class="row pointer nav-text">
+              Saved Searches
+              <img src="@/assets/images/downArrow.svg" height="14px" alt="" />
+            </div>
+
+            <div v-if="showSavedSearches" class="search-dropdown">
+              <p v-for="search in searches" :key="search.id" @click="selectSearch(search)">
+                {{ search.name }}
+              </p>
+            </div>
           </div>
 
           <div class="row pointer">
@@ -97,7 +104,6 @@
 
 <script>
 import { CollectionManager } from '@thinknimble/tn-models'
-import { decryptData } from '../encryption'
 
 export default {
   name: 'NavBar',
@@ -109,10 +115,26 @@ export default {
       items: [],
       searchText: null,
       menuOpen: false,
+      showSavedSearches: false,
     }
   },
-
+  created() {
+    this.getSearches()
+  },
   methods: {
+    selectSearch(search) {
+      this.toggleShowSearches()
+      this.$store.dispatch('setSearch', search)
+    },
+    toggleShowSearches() {
+      this.showSavedSearches = !this.showSavedSearches
+    },
+    getSearches() {
+      this.$store.dispatch('getSearches')
+    },
+    goHome() {
+      this.$router.go()
+    },
     toggleMenu() {
       this.menuOpen = !this.menuOpen
     },
@@ -131,6 +153,9 @@ export default {
     },
   },
   computed: {
+    searches() {
+      return this.$store.state.allSearches
+    },
     userName() {
       return this.$store.state.user.firstName
     },
@@ -187,6 +212,10 @@ export default {
   flex-direction: row;
 }
 
+.relative {
+  position: relative;
+}
+
 .right-mar {
   margin-right: 1.25rem;
 }
@@ -239,13 +268,37 @@ export default {
   }
 }
 
-.avatar-dropdown::before {
+.search-dropdown {
+  width: 220px;
   position: absolute;
-  height: 8px;
-  width: 8px;
-  background: $dark-green;
-  transform: translate(-50%) rotate(45deg);
-  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  top: 40px;
+  right: -8px;
+  font-size: 12px;
+  font-weight: 400;
+  background: white;
+  padding: 0;
+  border-radius: 5px;
+  box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+  line-height: 1.5;
+  z-index: 2001;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+
+  p {
+    // background: red;
+    padding: 8px 16px;
+    font-size: 14px;
+    color: #7c7b7b;
+    cursor: pointer;
+    width: 205px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin: 0;
+  }
+
+  p:hover {
+    color: $dark-black-blue;
+  }
 }
 
 .dropdown-item {
@@ -343,8 +396,13 @@ nav {
 }
 .logo {
   cursor: pointer;
-  filter: brightness(0%) invert(65%) sepia(7%) saturate(2970%) hue-rotate(101deg) brightness(94%)
-    contrast(89%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  img {
+    filter: brightness(0) saturate(100%) invert(26%) sepia(13%) saturate(1162%) hue-rotate(162deg)
+      brightness(94%) contrast(95%);
+  }
   margin-right: 0.5rem;
 }
 

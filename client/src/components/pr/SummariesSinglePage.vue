@@ -17,7 +17,7 @@
                 >Use conversation text. AI will convert it to a boolean.</span
               >
             </div>
-            <textarea v-model="newSearch" class="regen-body-text" />
+            <textarea v-autoresize v-model="newSearch" class="regen-body-text" />
           </div>
           <div>
             <div>
@@ -25,7 +25,7 @@
                 Summary Instructions <span class="regen-header-subtitle">(optional)</span>
               </h5>
             </div>
-            <textarea v-model="newTemplate" class="regen-body-text" />
+            <textarea v-autoresize v-model="newTemplate" class="regen-body-text" />
           </div>
           <div class="blue-border-button">Use a Template</div>
         </div>
@@ -38,7 +38,10 @@
     <div ref="loadedContent" class="center" v-if="page === 'SUMMARIES'">
       <div class="no-content" v-if="!selectedSearch">
         <div class="title-row">
-          <p class="typed" v-if="!newSearch">{{ starterText }}</p>
+          <!-- <p v-if="typedMessage" :class="{ typed: isTyping }">{{ typedMessage }}</p>
+            <p style="opacity: 0" v-else>...</p> -->
+          <p v-if="!newSearch" class="typed">Generate a summary from over 1 million sites</p>
+
           <p v-else>
             Summarize coverage for <span class="search-text">"{{ newSearch }}"</span>
           </p>
@@ -129,13 +132,13 @@
         </div>
       </div>
       <div v-else class="loaded-content">
-        <div style="width: 50%; margin-left: -2.5rem" v-if="summaryLoading">
-          <div style="margin-left: 1rem" class="row">
+        <div style="width: 50%" :class="{ 'neg-lmar': !loading }" v-if="summaryLoading">
+          <div :class="{ 'left-mar': loading }" class="row">
             <img src="@/assets/images/logo.png" class="blue-logo" height="16px" alt="" />
             <p class="summary-load-text">Generating Summary...</p>
           </div>
 
-          <div class="summary-preview-skeleton shimmer">
+          <div :class="{ 'neg-l-mar': !loading }" class="summary-preview-skeleton shimmer">
             <div class="content">
               <!-- <div class="title-wide"></div> -->
               <div class="meta-wide"></div>
@@ -166,16 +169,25 @@
               <div class="title-bar">
                 <div class="row">
                   <button
-                    :disabled="articleSummaryLoading || loading || summaryLoading"
+                    :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
                     @click="openRegenModal"
                     class="secondary-button"
                   >
-                    Regenerate
+                    {{ filteredArticles.length ? 'Regenerate' : 'New Search' }}
                   </button>
                   <button
-                    :disabled="articleSummaryLoading || loading || summaryLoading"
+                    @click="createSearch"
+                    v-if="filteredArticles.length"
+                    :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
                     class="primary-button"
                   >
+                    <img
+                      v-if="savingSearch"
+                      class="rotate"
+                      height="12px"
+                      src="@/assets/images/loading.svg"
+                      alt=""
+                    />
                     Save
                   </button>
                 </div>
@@ -264,7 +276,7 @@
                   </div>
                   <div class="footer-icon-container">
                     <button
-                      :disabled="articleSummaryLoading || loading || summaryLoading"
+                      :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
                       class="tertiary-button"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -280,7 +292,7 @@
                       v-if="!articleSummaries[article.url]"
                       @click="getArticleSummary(article.url)"
                       class="tertiary-button"
-                      :disabled="articleSummaryLoading || loading || summaryLoading"
+                      :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
                     >
                       <img
                         v-if="articleSummaryLoading && loadingUrl === article.url"
@@ -289,7 +301,12 @@
                         src="@/assets/images/loading.svg"
                         alt=""
                       />
-                      <img v-else src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
+                      <img
+                        v-else-if="!articleSummaryLoading"
+                        src="@/assets/images/sparkles-thin.svg"
+                        height="14px"
+                        alt=""
+                      />
                       Summarize
                     </button>
 
@@ -384,7 +401,33 @@ export default {
   },
   data() {
     return {
-      starterText: 'Generate a news summary from over 1 million sites.',
+      isTyping: false,
+      textIndex: 0,
+      typedMessage: '',
+      savingSearch: false,
+      searchMessages: [
+        'University of Michigan no sports related mentions',
+        'Walmart no stock related mentions',
+        "Boston Children's no ER related stories",
+        'Stranger Things and Netflix',
+        'The Bear and Hulu, reviews or ratings',
+        'Barbie or Oppenheimer movie debut',
+        'Sun bear and China Zoo',
+        'Cancer research and new treatment',
+        '2024 Tesla Model S',
+        'Madden NFL 24 reviews',
+        'Cybertruck vs Rivian',
+        'Rent prices in Manhattan',
+        'Best new electric cars',
+        'Climate change and wildlife',
+        'AI only in Techcrunch sources',
+        'Authors and Lawrence Bonk',
+        'All stories about or written by Ron Miller',
+        'Rutgers University broad search',
+        'Beyond meat broad search',
+        'Beyond burger or sausage or meat',
+        'Impossible burger, including their products',
+      ],
       starterNum: 0,
       newSearch: '',
       newTemplate: '',
@@ -408,12 +451,38 @@ export default {
     }
   },
   created() {},
-  // mounted() {
-  //   this.changeText()
-  // },
+  watch: {
+    typedMessage: 'changeIndex',
+    currentSearch(newVal, oldVal) {
+      if (newVal.id !== (oldVal ? oldVal.id : null)) {
+        this.setSearch(newVal)
+      }
+    },
+  },
+  mounted() {
+    // this.updateMessage()
+  },
   methods: {
-    // changeText() {
-    // },
+    setSearch(search) {
+      this.newSearch = search.input_text
+      this.newTemplate = search.instructions
+      this.generateNewSearch()
+    },
+    changeIndex() {
+      setTimeout(() => {
+        this.isTyping = false
+        this.typedMessage = ''
+      }, 5750)
+      setTimeout(() => {
+        this.updateMessage()
+      }, 5850)
+    },
+    updateMessage() {
+      console.log('here')
+      this.textIndex = Math.floor(Math.random() * this.searchMessages.length)
+      this.isTyping = true
+      this.typedMessage = this.searchMessages[this.textIndex]
+    },
     scrollToTop() {
       setTimeout(() => {
         const loadedContent = this.$refs.loadedContent
@@ -464,14 +533,12 @@ export default {
       this.summaryLoading = true
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       try {
-        this.getClips().then((response) => {
-          this.getSummary(this.filteredArticles, '', this.newTemplate)
+        this.getClips(this.newSearch).then((response) => {
+          this.getSummary(this.filteredArticles, this.newTemplate)
         })
       } catch (e) {
         console.log(e)
       }
-      // this.newSearch = ''
-      // this.newTemplate = ''
       this.closeRegenModal()
     },
     clearNewSearch() {
@@ -491,13 +558,35 @@ export default {
     changeSearch(search) {
       this.$emit('change-search', search)
     },
+    async createSearch() {
+      this.savingSearch = true
+      try {
+        const response = await Comms.api
+          .createSearch({
+            name: this.newSearch.slice(0, 60),
+            input_text: this.newSearch,
+            search_boolean: this.booleanString,
+            instructions: this.newTemplate,
+          })
+          .then((response) => {
+            console.log(response)
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.savingSearch = false
+        this.$store.dispatch('getSearches')
+      }
+    },
     async getClips() {
       try {
         await Comms.api
           .getClips({
             search: this.newSearch,
+            user_id: this.user.id,
           })
           .then((response) => {
+            console.log(response)
             this.filteredArticles = response.articles
             this.booleanString = response.string
           })
@@ -508,19 +597,22 @@ export default {
       }
     },
     getArticleDescriptions(articles) {
-      return articles.map((a) => a.description)
+      return articles.map((a) => a.content)
     },
-    async getSummary(clips, search = '', instructions = '') {
-      const urls = this.getArticleDescriptions(clips)
-      const data = {
-        clips: urls,
-        search,
-        instructions,
-      }
+    async getSummary(clips, instructions = '') {
+      const allClips = this.getArticleDescriptions(clips)
+      this.summaryLoading = true
       try {
-        this.summaryLoading = true
-        const res = await Comms.api.getSummary(data)
-        this.summary = res.summary
+        await Comms.api
+          .getSummary({
+            clips: allClips,
+            search: this.newSearch,
+            instructions: instructions,
+          })
+          .then((response) => {
+            console.log(response)
+            this.summary = response.summary
+          })
       } catch (e) {
         console.log('Error in getSummary', e)
         this.$toast('Something went wrong, please try again.', {
@@ -536,34 +628,24 @@ export default {
       }
     },
     async getArticleSummary(url, instructions = null) {
-      if (this.articleSummaryLoading === false && this.summaryLoading === false) {
-        this.articleSummaryLoading = true
-
-        this.loadingUrl = url
-        try {
-          await Comms.api
-            .getArticleSummary({
-              url: url,
-              search: this.newSearch,
-              instructions: instructions,
-            })
-            .then((response) => {
-              this.articleSummaries[url] = response.summary
-            })
-        } catch (e) {
-          console.log(e)
-        } finally {
-          this.articleSummaryLoading = false
-          this.loadingUrl = null
-        }
-      } else {
-        console.log('CANT DO THAT')
+      this.articleSummaryLoading = true
+      this.loadingUrl = url
+      try {
+        await Comms.api
+          .getArticleSummary({
+            url: url,
+            search: this.newSearch,
+            instructions: instructions,
+          })
+          .then((response) => {
+            this.articleSummaries[url] = response.summary
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.articleSummaryLoading = false
+        this.loadingUrl = null
       }
-    },
-    regenNewSummary() {
-      this.getSummary(this.filteredArticles, '', this.message)
-      this.changeRegen()
-      this.message = ''
     },
     changeSummaryChat(type) {
       this.summaryChat = type
@@ -615,6 +697,12 @@ export default {
     userName() {
       return this.$store.state.user.firstName
     },
+    user() {
+      return this.$store.state.user
+    },
+    currentSearch() {
+      return this.$store.state.currentSearch
+    },
   },
   directives: {
     autoresize: {
@@ -648,6 +736,15 @@ export default {
   }
 }
 
+@keyframes deleting {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0;
+  }
+}
+
 @keyframes blinking {
   0% {
     border-right-color: transparent;
@@ -673,11 +770,20 @@ export default {
   }
 }
 
+.typed-deleted {
+  overflow: hidden;
+  white-space: nowrap;
+  width: 0;
+  animation: typing 2.5s steps(30, end) forwards, deleting 2.75s steps(30, end) 2.75s forwards,
+    blinking 1s infinite;
+  border-right: 1px solid;
+}
+
 .typed {
   overflow: hidden;
   white-space: nowrap;
   width: 0;
-  animation: typing 1.5s steps(30, end) forwards, blinking 1s infinite;
+  animation: typing 2s steps(30, end) forwards, blinking 1s infinite;
   border-right: 1px solid;
 }
 
@@ -690,6 +796,14 @@ export default {
   }
 }
 
+.neg-l-mar {
+  margin-left: -1rem;
+}
+
+.neg-lmar {
+  margin-left: -1rem;
+}
+
 .summary-load-text {
   font-family: $thin-font-family;
   font-size: 14px;
@@ -697,7 +811,7 @@ export default {
 }
 
 .rotate {
-  animation: rotation 3s infinite linear;
+  animation: rotation 2.25s infinite linear;
   cursor: not-allowed;
 }
 
@@ -758,6 +872,7 @@ export default {
 
 button:disabled {
   background-color: $off-white !important;
+  border: 1px solid rgba(0, 0, 0, 0.2) !important;
   cursor: not-allowed !important;
 }
 
@@ -774,7 +889,7 @@ button:disabled {
 .tertiary-button {
   @include dark-blue-button();
   padding: 8px 12px;
-  border: 1px solid $dark-black-blue;
+  border: 1px solid rgba(0, 0, 0, 0.2);
   color: $dark-black-blue;
   background-color: white;
   margin-right: -2px;
@@ -897,7 +1012,6 @@ button:disabled {
   word-wrap: break-word;
   white-space: pre-wrap;
   padding: 0;
-  margin-top: 1rem;
 }
 
 .blue-bg {
@@ -1024,7 +1138,7 @@ button:disabled {
   width: 100%;
   margin-bottom: 0;
   background-color: $off-white;
-  padding-top: 8px;
+  padding-top: 0;
   padding-bottom: 40px;
 }
 .clips-container {
@@ -1081,17 +1195,16 @@ header {
 
 .title-bar {
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 16px 0 32px 0;
+  padding: 24px 0 24px 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  margin-bottom: 2rem;
 }
 
 .sub-text {
   color: $light-gray-blue;
-  margin-top: 16px;
+  margin: 8px 0 0 0;
   font-size: 14px;
   font-weight: bold;
   font-family: $thin-font-family;
@@ -1265,10 +1378,14 @@ header {
   width: 25rem;
   overflow-y: auto;
   margin: 1rem 0;
-  padding: 0.75rem;
+  padding: 1rem;
   font-family: $base-font-family;
 }
 .regen-footer {
+  position: sticky;
+  background: white;
+  width: 100%;
+  bottom: 0;
   padding-top: 12px;
   display: flex;
   justify-content: flex-end;
@@ -1290,7 +1407,12 @@ header {
   cursor: pointer;
 }
 .regen-modal {
-  margin-top: 100px;
+  margin-top: 84px;
+}
+.regen-container {
+  height: 500px;
+  position: relative;
+  overflow-y: scroll;
 }
 .message-text {
   font-family: $base-font-family;
