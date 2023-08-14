@@ -16,7 +16,7 @@
           <p>Pitch</p>
         </router-link>
 
-        <router-link :to="{ name: 'PRSummaries' }">
+        <router-link>
           <p>Transcribe</p>
         </router-link>
 
