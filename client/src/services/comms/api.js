@@ -27,6 +27,15 @@ export default class CommsApi extends ModelAPI {
         }
     }
 
+    async generatePitch(data) {
+        try {
+            const res = await this.client.post(CommsApi.ENDPOINT + 'pitch/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
     async getSearches() {
         try {
             const res = await this.client.get(CommsApi.ENDPOINT)

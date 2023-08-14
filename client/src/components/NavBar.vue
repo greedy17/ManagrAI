@@ -9,15 +9,15 @@
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'PRSummaries' }">
-          <p>Summaries</p>
+          <p>Digest</p>
+        </router-link>
+
+        <router-link active-class="active" :to="{ name: 'Pitches' }">
+          <p>Pitch</p>
         </router-link>
 
         <router-link :to="{ name: 'PRSummaries' }">
-          <p>Pitches</p>
-        </router-link>
-
-        <router-link :to="{ name: 'PRSummaries' }">
-          <p>Meetings</p>
+          <p>Transcribe</p>
         </router-link>
 
         <!-- <div class="input">
@@ -400,8 +400,8 @@ nav {
   align-items: center;
   justify-content: center;
   img {
-    filter: brightness(0) saturate(100%) invert(26%) sepia(13%) saturate(1162%) hue-rotate(162deg)
-      brightness(94%) contrast(95%);
+    filter: brightness(0) invert(48%) sepia(33%) saturate(348%) hue-rotate(161deg) brightness(91%)
+      contrast(90%);
   }
   margin-right: 0.5rem;
 }

@@ -31,7 +31,7 @@
         </div>
         <div class="regen-footer">
           <div class="cancel-button" @click="closeRegenModal">Cancel</div>
-          <div class="save-button" @click="generateNewSearch">Save</div>
+          <div class="save-button" @click="generateNewSearch">Submit</div>
         </div>
       </div>
     </Modal>
@@ -63,7 +63,7 @@
               <input
                 autofocus
                 class="area-input"
-                placeholder="Start a new search"
+                placeholder="Start a new search..."
                 v-model="newSearch"
                 @keydown.enter.exact.prevent="generateNewSearch"
               />
@@ -870,6 +870,10 @@ export default {
   color: #6b6b6b;
 }
 
+::placeholder {
+  color: $mid-gray;
+}
+
 button:disabled {
   background-color: $off-white !important;
   border: 1px solid rgba(0, 0, 0, 0.2) !important;
@@ -1386,7 +1390,8 @@ header {
   background: white;
   width: 100%;
   bottom: 0;
-  padding-top: 12px;
+  padding-top: 4px;
+  padding-top: 8px;
   display: flex;
   justify-content: flex-end;
 }
@@ -1398,9 +1403,19 @@ header {
 }
 .cancel-button {
   @include gray-text-button();
+  &:hover {
+    scale: 1;
+    opacity: 0.7;
+    box-shadow: none;
+  }
 }
 .save-button {
   @include dark-blue-button();
+  &:hover {
+    scale: 1;
+    opacity: 0.9;
+    box-shadow: none;
+  }
   margin-left: 0.5rem;
 }
 .pointer {
