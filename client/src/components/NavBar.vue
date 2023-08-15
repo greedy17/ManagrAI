@@ -5,6 +5,9 @@
         <router-link :to="{ name: 'PRSummaries' }">
           <div @click="goHome" class="logo">
             <img style="height: 28px" src="@/assets/images/logo.png" />
+            <div class="beta-tag">
+              <p>BETA</p>
+            </div>
           </div>
         </router-link>
 
@@ -16,9 +19,9 @@
           <p>Pitch</p>
         </router-link>
 
-        <!-- <router-link>
+        <router-link :to="{ name: 'PRSummaries' }">
           <p>Transcribe</p>
-        </router-link> -->
+        </router-link>
 
         <div class="auto-left">
           <div class="relative">
@@ -211,6 +214,24 @@ export default {
   flex-direction: row;
 }
 
+.beta-tag {
+  letter-spacing: 1px;
+  margin-left: 8px;
+
+  p {
+    background-color: $dark-black-blue;
+    color: white;
+    border-radius: 8px;
+    padding: 2px 8px;
+    font-size: 12px;
+    cursor: text;
+
+    &:hover {
+      color: white;
+    }
+  }
+}
+
 .relative {
   position: relative;
 }
@@ -396,6 +417,7 @@ nav {
 .logo {
   cursor: pointer;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   img {

@@ -40,7 +40,7 @@
         <div class="title-row">
           <!-- <p v-if="typedMessage" :class="{ typed: isTyping }">{{ typedMessage }}</p>
             <p style="opacity: 0" v-else>...</p> -->
-          <p v-if="!newSearch" class="typed">Generate a summary from over 1 million sites</p>
+          <p v-if="!newSearch" class="typed">Generate a media summary from over 1 million sites</p>
 
           <p v-else>
             Summarize coverage for <span class="search-text">"{{ newSearch }}"</span>
@@ -198,7 +198,6 @@
                     class="area-input-outline"
                     placeholder="Name your search"
                     v-model="searchName"
-                    @keydown.enter.exact.prevent="generateNewSearch(null)"
                   />
 
                   <button
@@ -347,61 +346,59 @@
                 </div>
                 <div v-if="articleSummaries[article.url]">
                   <pre v-html="articleSummaries[article.url]" class="pre-text blue-bg"></pre>
+
+                  <div class="regenerate-article">
+                    <button
+                      @click="toggleArticleRegenerate"
+                      v-if="!showArticleRegenerate"
+                      :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
+                      class="tertiary-button"
+                    >
+                      Regenerate
+                    </button>
+
+                    <div class="full-width" v-else>
+                      <textarea
+                        :disabled="
+                          articleSummaryLoading || loading || summaryLoading || savingSearch
+                        "
+                        autofocus
+                        class="area-input-outline wider"
+                        placeholder="Provide additional instructions..."
+                        v-autoresize
+                        v-model="articleInstructions"
+                      />
+
+                      <div class="row">
+                        <button @click="toggleArticleRegenerate" class="secondary-button">
+                          Cancel
+                        </button>
+
+                        <button
+                          @click="getArticleSummary(article.url, articleInstructions)"
+                          :disabled="
+                            articleSummaryLoading || loading || summaryLoading || savingSearch
+                          "
+                          class="primary-button"
+                        >
+                          <img
+                            v-if="articleSummaryLoading && loadingUrl === article.url"
+                            class="rotate"
+                            height="14px"
+                            src="@/assets/images/loading.svg"
+                            alt=""
+                          />
+                          {{
+                            articleSummaryLoading && loadingUrl === article.url
+                              ? 'Submitting'
+                              : 'Submit'
+                          }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div v-else-if="page === 'PITCHES'">
-      <div>
-        <div>
-          <img src="@/assets/images/logo.png" class="logo" />
-          <p>Generate a pitch or blog post based on any persona.</p>
-        </div>
-        <div>
-          <div class="new-summary-bow">
-            <div>
-              <img />
-              <span>Your Brand</span>
-            </div>
-            <div>
-              <input
-                placeholder="Lululemon, a global leader in athletic apparel"
-                v-model="brandName"
-              />
-            </div>
-          </div>
-          <div class="new-summary-bow">
-            <div>
-              <img />
-              <span>Target Persona</span>
-            </div>
-            <div>
-              <textarea
-                placeholder="A lifestyle and fitness reporter at 'The Wall Street Journal' who focuses on retail trends and consumer goods."
-                v-model="targetPersona"
-              />
-            </div>
-          </div>
-          <div class="new-summary-bow">
-            <div>
-              <span>Output Instructions</span>
-            </div>
-            <div>
-              <textarea
-                placeholder="Create a pitch for our new line of sustainably producted yoga wear, designed to appeal to eco-conscious consumers. A compelling pitch document that underscores the sustainable features..."
-                v-model="outputInstructions"
-              />
-            </div>
-          </div>
-          <div>
-            <div @click="clearNewSearch">
-              <div>Clear</div>
-            </div>
-            <div @click="generateNewSearch(null)">
-              <div>Submit</div>
             </div>
           </div>
         </div>
@@ -429,7 +426,9 @@ export default {
   },
   data() {
     return {
+      articleInstructions: null,
       showUpdateBanner: false,
+      showArticleRegenerate: false,
       showSaveName: false,
       isTyping: false,
       searchName: null,
@@ -437,29 +436,6 @@ export default {
       textIndex: 0,
       typedMessage: '',
       savingSearch: false,
-      searchMessages: [
-        'University of Michigan no sports related mentions',
-        'Walmart no stock related mentions',
-        "Boston Children's no ER related stories",
-        'Stranger Things and Netflix',
-        'The Bear and Hulu, reviews or ratings',
-        'Barbie or Oppenheimer movie debut',
-        'Sun bear and China Zoo',
-        'Cancer research and new treatment',
-        '2024 Tesla Model S',
-        'Madden NFL 24 reviews',
-        'Cybertruck vs Rivian',
-        'Rent prices in Manhattan',
-        'Best new electric cars',
-        'Climate change and wildlife',
-        'AI only in Techcrunch sources',
-        'Authors and Lawrence Bonk',
-        'All stories about or written by Ron Miller',
-        'Rutgers University broad search',
-        'Beyond meat broad search',
-        'Beyond burger or sausage or meat',
-        'Impossible burger, including their products',
-      ],
       starterNum: 0,
       newSearch: '',
       newTemplate: '',
@@ -495,6 +471,9 @@ export default {
     // this.updateMessage()
   },
   methods: {
+    toggleArticleRegenerate() {
+      this.showArticleRegenerate = !this.showArticleRegenerate
+    },
     toggleSaveName() {
       this.showSaveName = !this.showSaveName
     },
@@ -705,6 +684,7 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
+        this.showArticleRegenerate = false
         this.articleSummaryLoading = false
         this.loadingUrl = null
       }
@@ -780,8 +760,6 @@ export default {
   directives: {
     autoresize: {
       inserted(el) {
-        // el.style.overflow = 'scro'
-
         function adjustTextareaHeight() {
           el.style.height = 'auto'
           el.style.height = el.scrollHeight + 'px'
@@ -841,6 +819,18 @@ export default {
     transform: scale(1);
     opacity: 1;
   }
+}
+
+.relative {
+  position: relative;
+}
+.absolute {
+  position: absolute;
+}
+.regenerate-article {
+  // background-color: red;
+  // bottom: 0;
+  // right: 16px;
 }
 
 .slide-fade-enter-active {
@@ -1081,6 +1071,15 @@ button:disabled {
   scroll-behavior: smooth;
   color: $dark-black-blue;
   margin-right: 1rem;
+  resize: none;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.wider {
+  width: 100%;
 }
 
 .area-input {
@@ -1537,6 +1536,7 @@ header {
   display: flex;
   justify-content: flex-end;
 }
+
 .blue-border-button {
   @include dark-blue-border-button();
   border: 1px solid rgba(0, 0, 0, 0.1);
