@@ -31,7 +31,7 @@
         </div>
         <div class="regen-footer">
           <div class="cancel-button" @click="closeRegenModal">Cancel</div>
-          <div class="save-button" @click="generateNewSearch">Submit</div>
+          <div class="save-button" @click="generateNewSearch(null)">Submit</div>
         </div>
       </div>
     </Modal>
@@ -65,14 +65,14 @@
                 class="area-input"
                 placeholder="Start a new search..."
                 v-model="newSearch"
-                @keydown.enter.exact.prevent="generateNewSearch"
+                @keydown.enter.exact.prevent="generateNewSearch(null)"
               />
               <img
                 :class="{ invert: !newSearch }"
                 src="@/assets/images/paper-plane.svg"
                 height="14px"
                 alt=""
-                @click="generateNewSearch"
+                @click="generateNewSearch(null)"
                 class="pointer"
               />
             </div>
@@ -122,7 +122,7 @@
             </button>
 
             <button
-              @click="generateNewSearch"
+              @click="generateNewSearch(null)"
               v-if="addingSources || addingPrompt"
               class="primary-button"
             >
@@ -134,30 +134,24 @@
       <div v-else class="loaded-content">
         <div style="width: 50%" :class="{ 'neg-lmar': !loading }" v-if="summaryLoading">
           <div :class="{ 'left-mar': loading }" class="row">
-            <img src="@/assets/images/logo.png" class="blue-logo" height="16px" alt="" />
             <p class="summary-load-text">Generating Summary...</p>
           </div>
 
           <div :class="{ 'neg-l-mar': !loading }" class="summary-preview-skeleton shimmer">
             <div class="content">
-              <!-- <div class="title-wide"></div> -->
               <div class="meta-wide"></div>
               <div class="meta-shorter"></div>
+              <div class="meta-shortest"></div>
+              <!-- <div class="meta-small"></div> -->
             </div>
-
-            <!-- <div class="skeleton-bar">
-              <div class="row">
-                <div class="skeleton-button"></div>
-                <div class="skeleton-button"></div>
-              </div>
-              <div class="skeleton-icon"></div>
-            </div>
-            <div class="excerpt-wide"></div>
-            <div class="excerpt-wide"></div>
-            <div class="excerpt-wide"></div> -->
           </div>
         </div>
         <div v-else class="summaries-container">
+          <Transition name="slide-fade">
+            <div v-if="showUpdateBanner" class="templates">
+              <p>Search Saved successfully!</p>
+            </div>
+          </Transition>
           <div class="content-width">
             <div class="news-container">
               <div class="title-container">
@@ -167,7 +161,7 @@
                 </p>
               </div>
               <div class="title-bar">
-                <div class="row">
+                <div v-if="!showSaveName" class="row">
                   <button
                     :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
                     @click="openRegenModal"
@@ -176,9 +170,15 @@
                     {{ filteredArticles.length ? 'Regenerate' : 'New Search' }}
                   </button>
                   <button
-                    @click="createSearch"
+                    @click="toggleSaveName"
                     v-if="filteredArticles.length"
-                    :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
+                    :disabled="
+                      articleSummaryLoading ||
+                      loading ||
+                      summaryLoading ||
+                      savingSearch ||
+                      searchSaved
+                    "
                     class="primary-button"
                   >
                     <img
@@ -188,6 +188,30 @@
                       src="@/assets/images/loading.svg"
                       alt=""
                     />
+                    {{ savingSearch ? 'Saving' : 'Save' }}
+                  </button>
+                </div>
+
+                <div v-else class="row">
+                  <input
+                    autofocus
+                    class="area-input-outline"
+                    placeholder="Name your search"
+                    v-model="searchName"
+                    @keydown.enter.exact.prevent="generateNewSearch(null)"
+                  />
+
+                  <button
+                    @click="createSearch"
+                    :disabled="
+                      articleSummaryLoading ||
+                      loading ||
+                      summaryLoading ||
+                      savingSearch ||
+                      searchSaved
+                    "
+                    class="primary-button"
+                  >
                     Save
                   </button>
                 </div>
@@ -307,7 +331,11 @@
                         height="14px"
                         alt=""
                       />
-                      Summarize
+                      {{
+                        articleSummaryLoading && loadingUrl === article.url
+                          ? 'Summarizing'
+                          : 'Summarize'
+                      }}
                     </button>
 
                     <img
@@ -372,7 +400,7 @@
             <div @click="clearNewSearch">
               <div>Clear</div>
             </div>
-            <div @click="generateNewSearch">
+            <div @click="generateNewSearch(null)">
               <div>Submit</div>
             </div>
           </div>
@@ -401,7 +429,11 @@ export default {
   },
   data() {
     return {
+      showUpdateBanner: false,
+      showSaveName: false,
       isTyping: false,
+      searchName: null,
+      searchId: null,
       textIndex: 0,
       typedMessage: '',
       savingSearch: false,
@@ -463,10 +495,16 @@ export default {
     // this.updateMessage()
   },
   methods: {
+    toggleSaveName() {
+      this.showSaveName = !this.showSaveName
+    },
     setSearch(search) {
+      console.log(search)
+      this.searchId = search.id
+      this.searchName = search.name
       this.newSearch = search.input_text
       this.newTemplate = search.instructions
-      this.generateNewSearch()
+      this.generateNewSearch(search.search_boolean)
     },
     changeIndex() {
       setTimeout(() => {
@@ -525,7 +563,7 @@ export default {
         return `${givenDate.getMonth() + 1}/${givenDate.getDate()}/${givenDate.getFullYear()}`
       }
     },
-    async generateNewSearch() {
+    async generateNewSearch(boolean) {
       if (!this.newSearch || this.newSearch.length < 3) {
         return
       }
@@ -533,13 +571,30 @@ export default {
       this.summaryLoading = true
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       try {
-        this.getClips(this.newSearch).then((response) => {
-          this.getSummary(this.filteredArticles, this.newTemplate)
+        this.getClips(boolean).then((response) => {
+          this.getSummary(this.filteredArticles, this.newTemplate).then((response) => {
+            if (this.searchSaved) {
+              this.updateSearch()
+            }
+          })
         })
       } catch (e) {
         console.log(e)
       }
       this.closeRegenModal()
+    },
+    async updateSearch() {
+      try {
+        await Comms.api.upateSearch({
+          id: this.searchId,
+          name: this.searchName,
+          input_text: this.newSearch,
+          search_boolean: this.booleanString,
+          instructions: this.newTemplate,
+        })
+      } catch (e) {
+        console.log('ERROR UPDATING SEARCH', e)
+      }
     },
     clearNewSearch() {
       this.newSearch = ''
@@ -559,30 +614,37 @@ export default {
       this.$emit('change-search', search)
     },
     async createSearch() {
+      this.showSaveName = false
       this.savingSearch = true
       try {
         const response = await Comms.api
           .createSearch({
-            name: this.newSearch.slice(0, 60),
+            name: this.searchName || this.newSearch.slice(0, 60),
             input_text: this.newSearch,
             search_boolean: this.booleanString,
             instructions: this.newTemplate,
           })
           .then((response) => {
-            console.log(response)
+            if (response.id) {
+              this.showUpdateBanner = true
+            }
           })
       } catch (e) {
         console.log(e)
       } finally {
         this.savingSearch = false
         this.$store.dispatch('getSearches')
+        setTimeout(() => {
+          this.showUpdateBanner = false
+        }, 2000)
       }
     },
-    async getClips() {
+    async getClips(boolean = null) {
       try {
         await Comms.api
           .getClips({
             search: this.newSearch,
+            boolean: boolean,
             user_id: this.user.id,
           })
           .then((response) => {
@@ -703,6 +765,17 @@ export default {
     currentSearch() {
       return this.$store.state.currentSearch
     },
+    searchSaved() {
+      if (
+        this.newSearch &&
+        this.currentSearch &&
+        this.currentSearch.input_text === this.newSearch
+      ) {
+        return true
+      } else {
+        return false
+      }
+    },
   },
   directives: {
     autoresize: {
@@ -768,6 +841,54 @@ export default {
     transform: scale(1);
     opacity: 1;
   }
+}
+
+.slide-fade-enter-active {
+  transition: all 0.2s ease-in;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.1s ease-out;
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateY(100px);
+}
+
+.templates {
+  display: block;
+  width: fit-content;
+  height: 40px;
+  position: absolute;
+  top: 8px;
+  left: 45%;
+  font-size: 12px;
+  background: $dark-green;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  line-height: 1.5;
+  z-index: 2000;
+
+  p {
+    margin-top: 8px;
+    padding: 0;
+  }
+}
+
+.templates::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: $dark-green;
+  bottom: -3px;
+  left: 45%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .typed-deleted {
@@ -942,6 +1063,26 @@ button:disabled {
 .s-padding {
   padding: 0 0.25rem !important;
 }
+.area-input-outline {
+  width: 300px;
+  background-color: $offer-white;
+  margin-bottom: 0.25rem;
+  padding: 5px 8px;
+  border-radius: 4px;
+  line-height: 1.75;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  outline: none;
+  letter-spacing: 0.5px;
+  font-size: 14px;
+  font-family: $base-font-family;
+  font-weight: 400;
+  text-align: left;
+  overflow: auto;
+  scroll-behavior: smooth;
+  color: $dark-black-blue;
+  margin-right: 1rem;
+}
+
 .area-input {
   width: 100%;
   background-color: $offer-white;
@@ -1137,6 +1278,7 @@ button:disabled {
 }
 
 .summaries-container {
+  position: relative;
   display: flex;
   justify-content: flex-start;
   width: 100%;
@@ -1390,8 +1532,8 @@ header {
   background: white;
   width: 100%;
   bottom: 0;
-  padding-top: 4px;
   padding-top: 8px;
+  padding-bottom: 0;
   display: flex;
   justify-content: flex-end;
 }
@@ -1524,6 +1666,20 @@ header {
 }
 .meta-shorter {
   width: 80%;
+  height: 16px;
+  background-color: $black-blue;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.meta-shortest {
+  width: 60%;
+  height: 16px;
+  background-color: $black-blue;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.meta-small {
+  width: 40%;
   height: 16px;
   background-color: $black-blue;
   border-radius: 8px;
