@@ -24,6 +24,11 @@ export default new Router({
       component: () => import('@/views/PRSummaries')
     },
     {
+      path: '/pitches',
+      name: 'Pitches',
+      component: () => import('@/views/Pitches')
+    },
+    {
       path: '/clip-report',
       name: 'PRClipReport',
       component: () => import('@/views/PRClipReport')
