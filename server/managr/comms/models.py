@@ -132,7 +132,7 @@ class TwitterAuthAccountAdapter:
             return TwitterApiException(kwargs)
         return data
 
-    def search_recent_tweets(self, query):
+    def get_tweets(self, query):
         url = comms_consts.TWITTER_BASE_URI + comms_consts.TWITTER_RECENT_TWEETS_URI
         params = {
             "query": query,
@@ -147,6 +147,28 @@ class TwitterAuthAccountAdapter:
             response = client.get(url, headers=headers, params=params)
             res = self._handle_response(response)
         return res
+
+    def get_summary(
+        self, user, tokens, timeout, tweets, input_text, instructions=False, for_client=False
+    ):
+        url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+        prompt = comms_consts.OPEN_AI_TWITTER_SUMMARY(
+            datetime.now().date(), tweets, input_text, instructions, for_client
+        )
+        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+            user.email,
+            prompt,
+            "You are a VP of Communications",
+            token_amount=tokens,
+            top_p=0.1,
+        )
+        with Variable_Client(timeout) as client:
+            r = client.post(
+                url,
+                data=json.dumps(body),
+                headers=core_consts.OPEN_AI_HEADERS,
+            )
+        return open_ai_exceptions._handle_response(r)
 
 
 TwitterAuthAccount = TwitterAuthAccountAdapter(
