@@ -5,6 +5,9 @@
         <router-link :to="{ name: 'PRSummaries' }">
           <div @click="goHome" class="logo">
             <img style="height: 28px" src="@/assets/images/logo.png" />
+            <div class="beta-tag">
+              <p>BETA</p>
+            </div>
           </div>
         </router-link>
 
@@ -16,38 +19,25 @@
           <p>Pitch</p>
         </router-link>
 
-        <router-link>
+        <router-link :to="{ name: 'PRSummaries' }">
           <p>Transcribe</p>
         </router-link>
-
-        <!-- <div class="input">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path
-              fill-rule="evenodd"
-              clip-rule="evenodd"
-              d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
-              fill="currentColor"
-            ></path>
-          </svg>
-          <input class="search-input" v-model="searchText" :placeholder="`Search...`" />
-          <img
-            v-show="searchText"
-            @click="clearText"
-            src="@/assets/images/close.svg"
-            class="invert"
-            height="12px"
-            alt=""
-          />
-        </div> -->
 
         <div class="auto-left">
           <div class="relative">
             <div @click="toggleShowSearches" class="row pointer nav-text">
               Saved Searches
-              <img src="@/assets/images/downArrow.svg" height="14px" alt="" />
+              <img
+                v-if="!showSavedSearches"
+                src="@/assets/images/rightarrow.svg"
+                height="14px"
+                alt=""
+              />
+              <img v-else src="@/assets/images/downArrow.svg" height="14px" alt="" />
             </div>
 
             <div v-if="showSavedSearches" class="search-dropdown">
+              <p class="v-margin" v-if="!searches.length">No saved searches</p>
               <p v-for="search in searches" :key="search.id" @click="selectSearch(search)">
                 {{ search.name }}
               </p>
@@ -70,13 +60,21 @@
 
           <div class="row right-mar avatar-container">
             <div @click="toggleMenu" class="avatar">{{ userName[0] }}</div>
+            <!-- <img
+              @click="toggleMenu"
+              v-if="!menuOpen"
+              src="@/assets/images/rightarrow.svg"
+              height="14px"
+              alt=""
+            />
             <img
+              v-else
               @click="toggleMenu"
               class="pointer"
               src="@/assets/images/downArrow.svg"
               height="14px"
               alt=""
-            />
+            /> -->
 
             <div v-if="menuOpen" class="avatar-dropdown">
               <p class="dropdown-item">
@@ -206,10 +204,32 @@ export default {
     transform: translate(10%, 0%);
   }
 }
+
+.v-margin {
+  margin: 8px 0 !important;
+}
 .row {
   display: flex;
   align-items: center;
   flex-direction: row;
+}
+
+.beta-tag {
+  letter-spacing: 1px;
+  margin-left: 8px;
+
+  p {
+    background-color: $dark-black-blue;
+    color: white;
+    border-radius: 8px;
+    padding: 2px 8px;
+    font-size: 12px;
+    cursor: text;
+
+    &:hover {
+      color: white;
+    }
+  }
 }
 
 .relative {
@@ -397,6 +417,7 @@ nav {
 .logo {
   cursor: pointer;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   img {
@@ -439,7 +460,8 @@ a {
   // color: #6b6b6b;
   color: $light-gray-blue;
   font-size: 14px;
-  padding: 6px 16px;
+  padding: 6px 0;
+  margin: 0 16px;
   img {
     transition: all 0.2s;
   }
@@ -450,15 +472,16 @@ a:hover {
 .active {
   color: #6b6b6b;
   position: relative;
-}
-
-.active::before {
-  content: '';
-  position: absolute;
-  left: 16px;
-  bottom: 0;
-  height: 1px;
-  width: 70%;
   border-bottom: 1px solid $mid-gray;
 }
+
+// .active::before {
+//   content: '';
+//   position: absolute;
+//   left: 16px;
+//   bottom: 0;
+//   height: 1px;
+//   width: 70%;
+//   border-bottom: 1px solid $mid-gray;
+// }
 </style>

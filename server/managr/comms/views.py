@@ -62,14 +62,14 @@ class PRSearchViewSet(
 
     def update(self, request, *args, **kwargs):
         search = Search.objects.get(id=request.data.get("id"))
+        all_keys = [key for key, value in request.data.items()]
+        keys = [key for key in all_keys]
         try:
-            search.update(
-                input_text=request.data.get("input_text"),
-                instructions=request.data.get("instructions"),
-            )
-            search.update_boolean()
+            for field in keys:
+                setattr(search, field, request.data[field])
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        search.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -82,26 +82,32 @@ class PRSearchViewSet(
         user = User.objects.get(id=request.GET.get("user_id"))
         has_error = False
         search = request.GET.get("search")
+        boolean = request.GET.get("boolean", None)
         while True:
             try:
-                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = core_consts.OPEN_AI_NEWS_BOOLEAN_CONVERSION(search)
-                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                    user.email,
-                    prompt,
-                    token_amount=500,
-                    top_p=0.1,
-                )
-                with Variable_Client() as client:
-                    r = client.post(
-                        url,
-                        data=json.dumps(body),
-                        headers=core_consts.OPEN_AI_HEADERS,
+                if not boolean :
+                    url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                    prompt = core_consts.OPEN_AI_NEWS_BOOLEAN_CONVERSION(search)
+                    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                        user.email,
+                        prompt,
+                        token_amount=500,
+                        top_p=0.1,
                     )
-                r = open_ai_exceptions._handle_response(r)
-                query_input = r.get("choices")[0].get("message").get("content")
-                news_res = Search.get_clips(query_input)
-                articles = news_res["articles"]
+                    with Variable_Client() as client:
+                        r = client.post(
+                            url,
+                            data=json.dumps(body),
+                            headers=core_consts.OPEN_AI_HEADERS,
+                        )
+                    r = open_ai_exceptions._handle_response(r)
+                    query_input = r.get("choices")[0].get("message").get("content")
+                    news_res = Search.get_clips(query_input)
+                    articles = news_res["articles"]
+                else:
+                    news_res = Search.get_clips(boolean)
+                    articles = news_res["articles"]
+                    query_input = boolean
                 break
             except Exception as e:
                 has_error = True
