@@ -245,15 +245,15 @@ def _process_article_summary(payload, context):
     block_text = block["elements"][0]["text"]
     url = block_text[(block_text.find("<") + 1) : block_text.find("|")]
     user = slack_account.user
-    article_res = Article(url)
-    article_res.download()
-    article_res.parse()
-    title_text = blocks[0]["text"]["text"].split("for ")[1].replace("*", "")
-    text = article_res.text
     attempts = 1
     token_amount = 500
     timeout = 60.0
     while True:
+        article_res = Article(url)
+        article_res.download()
+        article_res.parse()
+        title_text = blocks[0]["text"]["text"].split("for ")[1].replace("*", "")
+        text = article_res.text
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
         prompt = comms_consts.OPEN_AI_ARTICLE_SUMMARY(
             datetime.datetime.now().date(), text, title_text
