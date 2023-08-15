@@ -3,9 +3,21 @@ from django.conf import settings
 USE_NEWS_API = settings.USE_NEWS_API
 NEWS_API_KEY = settings.NEWS_API_KEY if USE_NEWS_API else None
 
+USE_TWITTER_API = settings.USE_TWITTER_API
+TWITTER_CLIENT_ID = settings.TWITTER_CLIENT_ID if USE_TWITTER_API else None
+TWITTER_SECRET_KEY = settings.TWITTER_SECRET_KEY if USE_TWITTER_API else None
+TWITTER_REDIRECT_URI = settings.TWITTER_REDIRECT_URI if USE_TWITTER_API else None
+TWITTER_API_KEY = settings.TWITTER_API_KEY if USE_TWITTER_API else None
+TWITTER_ACCESS_TOKEN = settings.TWITTER_ACCESS_TOKEN if USE_TWITTER_API else None
+TWITTER_BASE_URI = "https://api.twitter.com/"
+TWITTER_RECENT_TWEETS_URI = "2/tweets/search/recent"
+
+
 NEWS_API_HEADERS = {
-    "Authorization": f"Bearer {NEWS_API_KEY}",
+    "Authorization": f"Bearer {TWITTER_ACCESS_TOKEN}",
 }
+
+TWITTER_API_HEADERS = {"Authorization": f"Bearer {TWITTER_ACCESS_TOKEN}"}
 NEW_API_URI = "https://newsapi.org/v2"
 
 NEW_API_EVERYTHING_URI = (
@@ -31,6 +43,27 @@ Output format must be:\n"""
         default = DEFAULT_CLIENT_INSTRUCTIONS if for_client else DEFAULT_INSTRUCTIONS
         body += default
     return body
+
+
+def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, instructions, for_client=False):
+    body = f"""Today's date is {date}.Summarize the twitter coverage for {search} based on these tweets.\n Tweets: {tweets}\n
+    Summary cannot be longer than 1,000 characters.
+    Output format must be:\n"""
+    if instructions:
+        body += instructions
+    else:
+        default = DEFAULT_CLIENT_INSTRUCTIONS if for_client else DEFAULT_INSTRUCTIONS
+        body += default
+    return body
+
+
+OPEN_AI_TWITTER_SEARCH_CONVERSION = (
+    lambda search: f"""Convert the Search Term below into a boolean query to be used for Twitter search API.
+    Follow these steps in order to create the best possible search:
+    1: Only use hashtag terms when given
+    2: Only do user search when instructed
+    Search Term: {search}"""
+)
 
 
 def OPEN_AI_ARTICLE_SUMMARY(date, article, search, instructions=False):

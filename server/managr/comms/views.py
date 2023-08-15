@@ -175,15 +175,15 @@ class PRSearchViewSet(
         search = request.data["params"]["search"]
         instructions = request.data["params"]["instructions"]
         user = request.user
-        article_res = Article(url)
-        article_res.download()
-        article_res.parse()
-        text = article_res.text
         has_error = False
         attempts = 1
         token_amount = 500
         timeout = 60.0
         while True:
+            article_res = Article(url)
+            article_res.download()
+            article_res.parse()
+            text = article_res.text
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
             prompt = comms_consts.OPEN_AI_ARTICLE_SUMMARY(
                 datetime.now().date(), text, search, instructions

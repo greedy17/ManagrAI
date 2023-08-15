@@ -5,7 +5,7 @@ from django.db import models
 from managr.core.models import TimeStampModel
 from managr.core import constants as core_consts
 from . import constants as comms_consts
-from .exceptions import _handle_response as _handle_news_response
+from .exceptions import _handle_response as _handle_news_response, TwitterApiException
 from managr.utils.client import Variable_Client
 from managr.utils.sites import get_site_url
 from managr.core import exceptions as open_ai_exceptions
@@ -98,3 +98,59 @@ class Search(TimeStampModel):
         encrypted_data = encrypt_dict(data)
         base_url = get_site_url()
         return f"{base_url}/shared/{encrypted_data}"
+
+
+class TwitterAuthAccountAdapter:
+    def __init__(self, **kwargs):
+        self.access_token = kwargs.get("access_token", None)
+
+    @staticmethod
+    def _handle_response(response, fn_name=None):
+        if not hasattr(response, "status_code"):
+            raise ValueError
+
+        elif response.status_code == 200 or response.status_code == 201:
+            try:
+                data = response.json()
+            except json.decoder.JSONDecodeError as e:
+                return logger.error(f"An error occured with a nylas integration, {e}")
+            except Exception as e:
+                TwitterApiException(e)
+
+        else:
+            status_code = response.status_code
+            error_data = response.json()
+            error_param = error_data.get("errors", None)
+            error_message = error_data.get("message", None)
+            error_code = error_data.get("code", None)
+            kwargs = {
+                "status_code": status_code,
+                "error_code": error_code,
+                "error_param": error_param,
+                "error_message": error_message,
+            }
+            return TwitterApiException(kwargs)
+        return data
+
+    def search_recent_tweets(self, query):
+        url = comms_consts.TWITTER_BASE_URI + comms_consts.TWITTER_RECENT_TWEETS_URI
+        params = {
+            "query": query,
+            "max_results": 10,
+            "expansions": "author_id,attachments.media_keys",
+            "user.fields": "username, name,profile_image_url",
+            "tweet.fields": "created_at",
+            "media.fields": "url",
+        }
+        headers = comms_consts.TWITTER_API_HEADERS
+        with Variable_Client() as client:
+            response = client.get(url, headers=headers, params=params)
+            res = self._handle_response(response)
+        return res
+
+
+TwitterAuthAccount = TwitterAuthAccountAdapter(
+    **{
+        "access_token": comms_consts.TWITTER_ACCESS_TOKEN,
+    }
+)
