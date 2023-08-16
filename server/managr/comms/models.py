@@ -138,9 +138,10 @@ class TwitterAuthAccountAdapter:
             "query": query,
             "max_results": 10,
             "expansions": "author_id,attachments.media_keys",
-            "user.fields": "username, name,profile_image_url",
+            "user.fields": "username, name,profile_image_url, public_metrics, verified, location",
             "tweet.fields": "created_at",
             "media.fields": "url",
+            "sort_order": "relevancy",
         }
         headers = comms_consts.TWITTER_API_HEADERS
         with Variable_Client() as client:

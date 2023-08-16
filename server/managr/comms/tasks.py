@@ -1,4 +1,5 @@
 import logging
+import random
 import json
 import uuid
 import httpx
@@ -18,10 +19,25 @@ from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import action_with_params
 from managr.slack import constants as slack_const
 from managr.slack.models import UserSlackIntegration
-from newspaper import Article
+from newspaper import Article, Config
 from managr.slack.helpers.utils import block_finder
 
 logger = logging.getLogger("managr")
+
+user_agents = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+    "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+    # add more User-Agents if you want
+]
+
+
+def generate_config():
+    config = Config()
+    config.browser_user_agent = random.choice(user_agents)  # randomly choose a User-Agent
+    config.request_timeout = 10
+    return config
 
 
 def emit_process_news_summary(payload, context, schedule=datetime.datetime.now()):
@@ -99,6 +115,7 @@ def _process_news_summary(payload, context):
                 else create_new_search(payload, str(user.id))
             )
             news_res = Search.get_clips(search.search_boolean)
+            print(news_res)
             articles = news_res["articles"]
             descriptions = [article["description"] for article in articles]
             break
@@ -249,7 +266,8 @@ def _process_article_summary(payload, context):
     token_amount = 500
     timeout = 60.0
     while True:
-        article_res = Article(url)
+        config = generate_config()
+        article_res = Article(url, config=config)
         article_res.download()
         article_res.parse()
         title_text = blocks[0]["text"]["text"].split("for ")[1].replace("*", "")
