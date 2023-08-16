@@ -28,6 +28,8 @@ from rest_framework.decorators import (
     api_view,
     permission_classes,
 )
+from managr.comms.utils import generate_config
+
 
 logger = logging.getLogger("managr")
 
@@ -85,7 +87,7 @@ class PRSearchViewSet(
         boolean = request.GET.get("boolean", None)
         while True:
             try:
-                if not boolean :
+                if not boolean:
                     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                     prompt = core_consts.OPEN_AI_NEWS_BOOLEAN_CONVERSION(search)
                     body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
@@ -186,7 +188,7 @@ class PRSearchViewSet(
         token_amount = 500
         timeout = 60.0
         while True:
-            article_res = Article(url)
+            article_res = Article(url, config=generate_config())
             article_res.download()
             article_res.parse()
             text = article_res.text
@@ -394,7 +396,7 @@ class PRSearchViewSet(
                     print(r)
                     print(r.json())
                 r = open_ai_exceptions._handle_response(r)
-                pitch = r.get("choices")[0].get("message").get("content")    
+                pitch = r.get("choices")[0].get("message").get("content")
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -427,6 +429,7 @@ class PRSearchViewSet(
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
         return Response({"pitch": pitch})
+
 
 @api_view(["GET"])
 @permission_classes(
