@@ -14,7 +14,7 @@ TWITTER_RECENT_TWEETS_URI = "2/tweets/search/recent"
 
 
 NEWS_API_HEADERS = {
-    "Authorization": f"Bearer {TWITTER_ACCESS_TOKEN}",
+    "Authorization": f"Bearer {NEWS_API_KEY}",
 }
 
 TWITTER_API_HEADERS = {"Authorization": f"Bearer {TWITTER_ACCESS_TOKEN}"}

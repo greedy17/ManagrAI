@@ -138,7 +138,7 @@ class TwitterAuthAccountAdapter:
             "query": query,
             "max_results": 10,
             "expansions": "author_id,attachments.media_keys",
-            "user.fields": "username, name,profile_image_url",
+            "user.fields": "username,name,profile_image_url",
             "tweet.fields": "created_at",
             "media.fields": "url",
         }

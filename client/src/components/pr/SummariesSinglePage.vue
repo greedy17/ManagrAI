@@ -72,7 +72,7 @@
                 src="@/assets/images/paper-plane.svg"
                 height="14px"
                 alt=""
-                @click="generateNewSearch(null)"
+                @click="getTweets"
                 class="pointer"
               />
             </div>
@@ -267,7 +267,57 @@
         </div>
 
         <div v-else class="clips-container">
-          <div class="content-width">
+          <div class="content-width" v-if="tweets.length">
+            <div class="news-container-med" v-for="(user, i) in tweetUsers" :key="i">
+              <div class="news-card-medium">
+                <header>
+                  <div class="card-row-med">
+                    <img :src="user.profile_image_url" />
+                    <h1 class="article-title">
+                      {{ user.name }}
+                    </h1>
+                  </div>
+                </header>
+
+                <div v-for="(tweet, i) in AllUserTweets[user.username]" :key="i">
+                  <p class="article-preview-medium">{{ tweet.text }}</p>
+                  <div v-if="tweet.attachments">
+                    <div v-for="media in tweetMedia" :key="media.media_key">
+                      <div v-if="media.media_key === tweet.attachments.media_keys[0]">
+                        <img
+                          v-if="media.type === 'photo'"
+                          :src="media.url"
+                          class="cover-photo-no-l-margin"
+                          alt=""
+                        />
+
+                        <video
+                          style="margin-top: 1rem"
+                          v-else-if="media.type === 'video'"
+                          width="400"
+                          controls
+                        >
+                          <source :src="media.url" type="video/mp4" />
+                        </video>
+                        <p v-else>OTHER MEDIA TYPE --- {{ media.type }}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="card-footer">
+                    <div class="author-time">
+                      <span class="author">{{ user.username }}</span>
+                      <span class="divier-dot">.</span>
+                      <span class="off-gray">{{
+                        getTimeDifferenceInMinutes(tweet.created_at)
+                      }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else class="content-width">
             <div v-for="article in filteredArticles" :key="article.id" class="news-container">
               <div class="news-card" @click="selectArticle(article)">
                 <header>
@@ -298,7 +348,7 @@
                     }}</span>
                   </div>
                   <div class="footer-icon-container">
-                    <button
+                    <!-- <button
                       :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
                       class="tertiary-button"
                     >
@@ -309,12 +359,13 @@
                         ></path>
                       </svg>
                       Tag
-                    </button>
+                    </button> -->
 
                     <button
                       v-if="!articleSummaries[article.url]"
                       @click="getArticleSummary(article.url)"
                       class="tertiary-button"
+                      style="margin: 0"
                       :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
                     >
                       <img
@@ -426,6 +477,11 @@ export default {
   },
   data() {
     return {
+      AllUserTweets: {},
+      savedSearch: null,
+      tweets: [],
+      tweetMedia: null,
+      tweetUsers: null,
       articleInstructions: null,
       showUpdateBanner: false,
       showArticleRegenerate: false,
@@ -478,7 +534,6 @@ export default {
       this.showSaveName = !this.showSaveName
     },
     setSearch(search) {
-      console.log(search)
       this.searchId = search.id
       this.searchName = search.name
       this.newSearch = search.input_text
@@ -495,7 +550,6 @@ export default {
       }, 5850)
     },
     updateMessage() {
-      console.log('here')
       this.textIndex = Math.floor(Math.random() * this.searchMessages.length)
       this.isTyping = true
       this.typedMessage = this.searchMessages[this.textIndex]
@@ -553,6 +607,7 @@ export default {
         this.getClips(boolean).then((response) => {
           this.getSummary(this.filteredArticles, this.newTemplate).then((response) => {
             if (this.searchSaved) {
+              console.log('made it')
               this.updateSearch()
             }
           })
@@ -564,13 +619,22 @@ export default {
     },
     async updateSearch() {
       try {
-        await Comms.api.upateSearch({
-          id: this.searchId,
-          name: this.searchName,
-          input_text: this.newSearch,
-          search_boolean: this.booleanString,
-          instructions: this.newTemplate,
-        })
+        await Comms.api
+          .upateSearch({
+            id: this.searchId,
+            name: this.searchName,
+            input_text: this.newSearch,
+            search_boolean: this.booleanString,
+            instructions: this.newTemplate,
+          })
+          .then((response) => {
+            this.savedSearch = {
+              name: this.searchName,
+              input_text: this.newSearch,
+              search_boolean: this.booleanString,
+              instructions: this.newTemplate,
+            }
+          })
       } catch (e) {
         console.log('ERROR UPDATING SEARCH', e)
       }
@@ -605,7 +669,14 @@ export default {
           })
           .then((response) => {
             if (response.id) {
+              this.searchId = response.id
               this.showUpdateBanner = true
+              this.savedSearch = {
+                name: response.namw,
+                input_text: this.newSearch,
+                search_boolean: this.booleanString,
+                instructions: this.newTemplate,
+              }
             }
           })
       } catch (e) {
@@ -627,7 +698,6 @@ export default {
             user_id: this.user.id,
           })
           .then((response) => {
-            console.log(response)
             this.filteredArticles = response.articles
             this.booleanString = response.string
           })
@@ -635,6 +705,37 @@ export default {
         console.log(e)
       } finally {
         this.loading = false
+      }
+    },
+    async getTweets(boolean = null) {
+      this.loading = true
+      this.summaryLoading = true
+      this.changeSearch({ search: this.newSearch, template: this.newTemplate })
+      try {
+        await Comms.api
+          .getTweets({
+            search: this.newSearch,
+            user_id: this.user.id,
+          })
+          .then((response) => {
+            console.log(response)
+            this.tweets = response.tweets.data
+            this.tweetMedia = response.tweets.includes.media
+            this.tweetUsers = response.tweets.includes.users
+            this.booleanString = response.string
+
+            for (let i = 0; i < this.tweetUsers.length; i++) {
+              this.AllUserTweets[this.tweetUsers[i].username] = this.tweets.filter(
+                (t) => t.user === this.tweetUsers[i].username,
+              )
+            }
+            console.log(this.AllUserTweets)
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.loading = false
+        this.summaryLoading = false
       }
     },
     getArticleDescriptions(articles) {
@@ -651,7 +752,6 @@ export default {
             instructions: instructions,
           })
           .then((response) => {
-            console.log(response)
             this.summary = response.summary
           })
       } catch (e) {
@@ -752,9 +852,14 @@ export default {
         this.currentSearch.input_text === this.newSearch
       ) {
         return true
+      } else if (this.savedSearch && this.newSearch === this.savedSearch.input_text) {
+        return true
       } else {
         return false
       }
+    },
+    fromNav() {
+      return this.$store.state.fromNav
     },
   },
   directives: {
@@ -1333,6 +1438,14 @@ header {
   justify-content: center;
 }
 
+.news-container-med {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+
 .title-container {
   // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   width: 100%;
@@ -1390,10 +1503,42 @@ header {
   margin-bottom: 1rem;
 }
 
+.news-card-medium {
+  position: relative;
+  min-height: 200px;
+  width: 100%;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.3s;
+  padding: 0 0 1rem 0;
+  margin-bottom: 1rem;
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    height: 60px;
+    overflow: none;
+    text-overflow: ellipsis;
+    margin-bottom: 8px;
+  }
+}
+
 .card-col {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+}
+
+.card-row-med {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  img {
+    height: 14px;
+    margin-right: 0.5rem;
+  }
 }
 .card:hover {
   transform: scale(1.025);
@@ -1417,6 +1562,15 @@ header {
   &:hover {
     opacity: 0.7;
   }
+}
+
+.cover-photo-no-l-margin {
+  height: 112px;
+  width: 116px;
+  margin-top: 1.25rem;
+  object-fit: cover;
+  cursor: text;
+  border-radius: 4px;
 }
 
 .article-title {
@@ -1443,6 +1597,18 @@ header {
   font-family: $thin-font-family;
   font-size: 14px;
   height: 68px;
+  line-height: 24px;
+  display: inline;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  font-weight: 400;
+  margin: 0;
+}
+
+.article-preview-medium {
+  color: $base-gray;
+  font-family: $thin-font-family;
+  font-size: 14px;
   line-height: 24px;
   display: inline;
   text-overflow: ellipsis;

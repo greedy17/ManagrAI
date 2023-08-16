@@ -72,6 +72,14 @@ class PRSearchViewSet(
         search.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    def delete(self, request, *args, **kwargs):
+        search = Search.objects.get(id=request.data.get("id"))
+        try:
+            search.delete()
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_204_NO_CONTENT)    
+
     @action(
         methods=["get"],
         permission_classes=[permissions.IsAuthenticated],
@@ -277,7 +285,7 @@ class PRSearchViewSet(
                 for idx, tweet in enumerate(tweets):
                     for user in user_data:
                         if user["id"] == tweet["author_id"]:
-                            tweet_res[idx]["user"] = user["username"]
+                            tweet_res["data"][idx]["user"] = user["username"]
                 break
             except Exception as e:
                 has_error = True
