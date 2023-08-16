@@ -1,5 +1,4 @@
 import logging
-import random
 import json
 import uuid
 import httpx
@@ -101,7 +100,6 @@ def _process_news_summary(payload, context):
                 else create_new_search(payload, str(user.id))
             )
             news_res = Search.get_clips(search.search_boolean)
-            print(news_res)
             articles = news_res["articles"]
             descriptions = [article["description"] for article in articles]
             break

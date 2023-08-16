@@ -75,15 +75,27 @@ OPEN_AI_TWITTER_SEARCH_CONVERSION = (
     Search Term: {search}"""
 )
 
+DEFAULT_ARTICLE_INSTRUCTIONS = (
+    lambda search: f"*Context and Sentiment pertaining to {search}:*\n*Relevance and Impact pertaining to {search}:*"
+)
+DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS = (
+    f"<strong>Context and Sentiment:</strong>\n<strong>Relevance and Impact:</strong>"
+)
 
-def OPEN_AI_ARTICLE_SUMMARY(date, article, search, instructions=False):
+
+def OPEN_AI_ARTICLE_SUMMARY(date, article, search, instructions=False, for_client=False):
     body = f"Today's date is {date}  Summarize this news article:\n Article: {article}\n As it relates to {search} It cannot be longer than 500 characters. Output format must be:\n"
     if instructions:
         body += instructions
     else:
-        body += f"""<strong>Was {search} featured or mentioned in this article. Briefly explain.</stong>\n
-        <strong>{search} sentiment vs article sentiment</stong>\n"""
+        default = (
+            DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS(search)
+            if for_client
+            else DEFAULT_ARTICLE_INSTRUCTIONS(search)
+        )
+        body += default
     return body
+
 
 def OPEN_AI_PITCH(date, name, type, brand, persona, briefing, style):
     body = f"Today is {date}. You are a VP of Communications tasked by {name} with generating {type} about company: {brand}. Tailor the content to this target persona: {persona}. Here is the briefing: {briefing}. Here are the output instructions: {style}"

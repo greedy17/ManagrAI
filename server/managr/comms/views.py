@@ -194,7 +194,7 @@ class PRSearchViewSet(
             text = article_res.text
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
             prompt = comms_consts.OPEN_AI_ARTICLE_SUMMARY(
-                datetime.now().date(), text, search, instructions
+                datetime.now().date(), text, search, instructions, True
             )
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
