@@ -6,7 +6,7 @@ import User from '@/services/users/'
 import Status from '@/services/statuses'
 // import { apiClient, apiErrorHandler } from '@/services/api'
 import { MeetingWorkflows, SObjectPicklist, SObjects } from '@/services/salesforce/models'
-import Comms from '@/services/comms'
+import { Comms } from '@/services/comms'
 import { ObjectField, CRMObjects } from '@/services/crm'
 import { decryptData, encryptData } from '../encryption'
 

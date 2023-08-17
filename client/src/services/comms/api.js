@@ -2,7 +2,7 @@ import { ModelAPI, ApiFilter } from '@thinknimble/tn-models'
 import { apiClient, apiErrorHandler } from '@/services/api'
 import { objectToSnakeCase } from '@/services/utils'
 
-export default class CommsApi extends ModelAPI {
+class CommsApi extends ModelAPI {
     static ENDPOINT = 'prsearch/'
 
     static FILTERS_MAP = {
@@ -80,3 +80,43 @@ export default class CommsApi extends ModelAPI {
         }
     }
 }
+
+class TwitterAccountAPI extends ModelAPI {
+    static ENDPOINT = 'users/twitter/'
+    static FILTERS_MAP = {
+        page: ApiFilter.create({ key: 'page' }),
+        pageSize: ApiFilter.create({ key: 'page_size' }),
+    }
+    get client() {
+        return apiClient()
+    }
+    static create(cls) {
+        return new TwitterAccountAPI(cls)
+    }
+    async getAuthLink() {
+        try {
+            const res = await this.client.get(TwitterAccountAPI.ENDPOINT + 'authorization')
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Salesloft Auth Link' })(e)
+        }
+    }
+    async authenticate(code, verifier) {
+        try {
+            const res = await this.client.post(TwitterAccountAPI.ENDPOINT + 'authenticate', { code: code, verifier: verifier })
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data from Code' })(e)
+        }
+    }
+
+    async revoke() {
+        try {
+            await this.client.delete(TwitterAccountAPI.ENDPOINT + 'revoke')
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data from Code' })(e)
+        }
+    }
+}
+
+export { CommsApi, TwitterAccountAPI }

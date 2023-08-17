@@ -1,3 +1,3 @@
-import CommsApi from './models'
+import { Comms, Twitter } from './models'
 
-export default CommsApi
+export { Comms, Twitter }

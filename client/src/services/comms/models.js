@@ -1,9 +1,13 @@
 import Model, { fields } from '@thinknimble/tn-models'
-import { objectToCamelCase, objectToSnakeCase } from '@thinknimble/tn-utils'
+import { CommsApi, TwitterAccountAPI } from './api'
 
-import CommsApi from './api'
-
-export default class Comms extends Model {
+class Comms extends Model {
     static api = CommsApi.create(Comms)
     static id = new fields.CharField({ readOnly: true })
 }
+
+class Twitter extends Model {
+    static api = TwitterAccountAPI.create(Twitter)
+}
+
+export { Comms, Twitter }

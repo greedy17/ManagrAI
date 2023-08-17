@@ -134,7 +134,7 @@
   </div>
 </template>
 <script>
-import Comms from '@/services/comms'
+import { Comms } from '@/services/comms'
 
 export default {
   name: 'Pitches',
