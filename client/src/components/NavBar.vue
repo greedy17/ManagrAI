@@ -9,7 +9,7 @@
           <h2>Delete Search</h2>
           <p>Are you sure you want to delete this search ?</p>
 
-          <div class="row">
+          <div style="margin-top: 20px" class="row">
             <button @click="toggleDeleteModal" class="tertiary-button">Cancel</button>
             <button @click="deleteSearch" class="red-button">Delete</button>
           </div>
@@ -329,6 +329,10 @@ export default {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+
+    // h2 {
+    //   margin-bottom: 0px;
+    // }
   }
 }
 

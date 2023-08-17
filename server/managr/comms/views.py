@@ -281,6 +281,8 @@ class PRSearchViewSet(
                         if user["id"] == tweet["author_id"]:
                             tweet["user"] = user
                 break
+            except KeyError:
+                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": f"No results for {query_input}", "string": query_input})
             except Exception as e:
                 has_error = True
                 logger.exception(e)
