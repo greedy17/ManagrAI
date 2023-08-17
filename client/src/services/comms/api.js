@@ -18,6 +18,15 @@ export default class CommsApi extends ModelAPI {
         return new CommsApi(cls)
     }
 
+    async deleteSearch(data) {
+        try {
+            const res = await this.client.delete(CommsApi.ENDPOINT + `${data.id}/`,)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
     async upateSearch(data) {
         try {
             const res = await this.client.patch(CommsApi.ENDPOINT + 'update/', data)
@@ -53,7 +62,14 @@ export default class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
-
+    async getTweets(data) {
+        try {
+            const res = await this.client.get(CommsApi.ENDPOINT + 'tweets/', { params: data })
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
     async getClips(data) {
         try {
             const res = await this.client.get(CommsApi.ENDPOINT + 'clips/', { params: data })

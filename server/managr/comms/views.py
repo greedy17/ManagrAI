@@ -17,7 +17,7 @@ from rest_framework import (
 )
 from rest_framework.decorators import action
 from . import constants as comms_consts
-from .models import Search
+from .models import Search, TwitterAuthAccount
 from managr.core.models import User
 from .serializers import SearchSerializer
 from managr.core import constants as core_consts
@@ -28,6 +28,8 @@ from rest_framework.decorators import (
     api_view,
     permission_classes,
 )
+from managr.comms.utils import generate_config
+
 
 logger = logging.getLogger("managr")
 
@@ -85,7 +87,7 @@ class PRSearchViewSet(
         boolean = request.GET.get("boolean", None)
         while True:
             try:
-                if not boolean :
+                if not boolean:
                     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                     prompt = core_consts.OPEN_AI_NEWS_BOOLEAN_CONVERSION(search)
                     body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
@@ -181,18 +183,18 @@ class PRSearchViewSet(
         search = request.data["params"]["search"]
         instructions = request.data["params"]["instructions"]
         user = request.user
-        article_res = Article(url)
-        article_res.download()
-        article_res.parse()
-        text = article_res.text
         has_error = False
         attempts = 1
         token_amount = 500
         timeout = 60.0
         while True:
+            article_res = Article(url, config=generate_config())
+            article_res.download()
+            article_res.parse()
+            text = article_res.text
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
             prompt = comms_consts.OPEN_AI_ARTICLE_SUMMARY(
-                datetime.now().date(), text, search, instructions
+                datetime.now().date(), text, search, instructions, True
             )
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
@@ -247,6 +249,103 @@ class PRSearchViewSet(
         methods=["get"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
+        url_path="tweets",
+    )
+    def get_tweets(self, request, *args, **kwargs):
+        user = User.objects.get(id=request.GET.get("user_id"))
+        has_error = False
+        search = request.GET.get("search")
+        while True:
+            try:
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.OPEN_AI_TWITTER_SEARCH_CONVERSION(search)
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    token_amount=500,
+                    top_p=0.1,
+                )
+                with Variable_Client() as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                r = open_ai_exceptions._handle_response(r)
+                query_input = r.get("choices")[0].get("message").get("content")
+                tweet_res = TwitterAuthAccount.get_tweets(query_input)
+                tweets = tweet_res["data"]
+                user_data = tweet_res["includes"].get("users")
+                for tweet in tweets:
+                    for user in user_data:
+                        if user["id"] == tweet["author_id"]:
+                            tweet["user"] = user
+                break
+            except Exception as e:
+                has_error = True
+                logger.exception(e)
+                tweet_res = e
+                break
+        if has_error:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": tweet_res})
+        return Response({"tweets": tweet_res, "string": query_input})
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="tweet-summary",
+    )
+    def get_tweet_summary(self, request, *args, **kwargs):
+        tweets = request.data.get("tweets")
+        search = request.data.get("search")
+        instructions = request.data.get("instructions", False)
+        has_error = False
+        attempts = 1
+        token_amount = 500
+        timeout = 60.0
+        while True:
+            try:
+                res = TwitterAuthAccount.get_summary(
+                    request.user, token_amount, timeout, tweets, search, instructions, True
+                )
+                message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount <= 2000:
+                    has_error = True
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 500
+                    continue
+            except httpx.ReadTimeout as e:
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+        if has_error:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
+
+        return Response(data={"summary": message})
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
         url_path="generate-link",
     )
     def generate_link(self, request, *args, **kwargs):
@@ -293,7 +392,7 @@ class PRSearchViewSet(
                     print(r)
                     print(r.json())
                 r = open_ai_exceptions._handle_response(r)
-                pitch = r.get("choices")[0].get("message").get("content")    
+                pitch = r.get("choices")[0].get("message").get("content")
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -326,6 +425,7 @@ class PRSearchViewSet(
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
         return Response({"pitch": pitch})
+
 
 @api_view(["GET"])
 @permission_classes(
