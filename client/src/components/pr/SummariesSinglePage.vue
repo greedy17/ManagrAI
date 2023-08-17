@@ -66,8 +66,11 @@
           <!-- <p v-if="typedMessage" :class="{ typed: isTyping }">{{ typedMessage }}</p>
             <p style="opacity: 0" v-else>...</p> -->
           <p v-if="!newSearch" class="typed">
-            Generate a media summary from over 1 million
-            {{ mainView === 'social' ? 'social posts' : 'sites' }}
+            {{
+              mainView === 'social'
+                ? 'Generate a summary from X (formally Twitter)'
+                : 'Generate a news summary from over 1 million sites'
+            }}
           </p>
 
           <p v-else>
@@ -188,7 +191,12 @@
           <div class="content-width">
             <div class="news-container">
               <div class="title-container">
-                <h1 class="no-text-margin">{{ selectedSearch.search }}</h1>
+                <div @click="resetSearch" class="back">
+                  <img src="@/assets/images/back.svg" height="18px" width="18px" alt="" />
+                </div>
+                <h1 class="no-text-margin">
+                  {{ selectedSearch.search }}
+                </h1>
                 <p class="sub-text">
                   AI generated search: <span>{{ booleanString }}</span>
                 </p>
@@ -200,7 +208,13 @@
                     @click="openRegenModal"
                     class="secondary-button"
                   >
-                    {{ filteredArticles.length ? 'Regenerate' : 'New Search' }}
+                    {{
+                      filteredArticles.length
+                        ? 'Regenerate'
+                        : tweets.length
+                        ? 'Regenerate'
+                        : 'New Search'
+                    }}
                   </button>
                   <button
                     @click="toggleSaveName"
@@ -266,7 +280,7 @@
         </div>
 
         <div v-if="(filteredArticles.length || tweets.length) && !loading" class="divider">
-          <p class="divider-text">{{ mainView === 'news' ? 'News Clips' : 'Tweets' }}</p>
+          <p class="divider-text">{{ mainView === 'news' ? 'News Clips' : 'Social Media' }}</p>
         </div>
 
         <div style="width: 50%" v-if="loading">
@@ -590,6 +604,10 @@ export default {
     // this.updateMessage()
   },
   methods: {
+    resetSearch() {
+      this.clearNewSearch()
+      this.selectedSearch = null
+    },
     switchMainView(view) {
       // if (view === 'news') {
       //   this.deselectOpp()
@@ -846,7 +864,7 @@ export default {
           .getTweetSummary({
             tweets: tweets,
             search: this.newSearch,
-            instructions: instructions,
+            instructions: this.newTemplate,
           })
           .then((response) => {
             console.log('TWEET SUMMARY IS HERE', response)
@@ -1052,7 +1070,8 @@ export default {
 }
 
 .switcher {
-  margin-top: 64px;
+  margin-top: 32px;
+  margin-bottom: 32px;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -1652,8 +1671,26 @@ header {
 }
 
 .title-container {
+  position: relative;
   // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   width: 100%;
+}
+
+.back {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  top: 0.75rem;
+  left: -56px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 100%;
+  padding: 3px 2px;
+  cursor: pointer;
+
+  img {
+    filter: invert(40%);
+  }
 }
 
 .title-bar {
@@ -2062,6 +2099,7 @@ header {
 .bold-text {
   font-weight: bold;
   color: $base-gray;
+  font-size: 12px;
 
   span {
     color: #6b6b6b;
