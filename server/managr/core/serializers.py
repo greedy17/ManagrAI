@@ -230,15 +230,15 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         try:
             org_check = Organization.objects.get(name__iexact=org_name)
             if org_check:
-                raise IntegrityError()
+                raise IntegrityError("Organization already exists")
             return User.objects.create_user(
                 organization=org_check, user_level=core_consts.ACCOUNT_TYPE_REP, **validated_data
             )
         except Organization.DoesNotExist:
             org = Organization.objects.create(name=org_name)
             return User.objects.create_admin_user(organization=org, **validated_data)
-        except IntegrityError:
-            return None
+        except IntegrityError as e:
+            return str(e)
 
 
 class UserLoginSerializer(serializers.ModelSerializer):
