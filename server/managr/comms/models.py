@@ -132,6 +132,9 @@ class TwitterAuthAccountAdapter:
             return TwitterApiException(kwargs)
         return data
 
+    def get_request_url():
+        return comms_consts.TWITTER_BASE_URI + comms_consts.TWITTER_REQUEST_TOKEN_URI
+
     def get_tweets(self, query):
         url = comms_consts.TWITTER_BASE_URI + comms_consts.TWITTER_RECENT_TWEETS_URI
         params = {

@@ -10,6 +10,7 @@ TWITTER_REDIRECT_URI = settings.TWITTER_REDIRECT_URI if USE_TWITTER_API else Non
 TWITTER_API_KEY = settings.TWITTER_API_KEY if USE_TWITTER_API else None
 TWITTER_ACCESS_TOKEN = settings.TWITTER_ACCESS_TOKEN if USE_TWITTER_API else None
 TWITTER_BASE_URI = "https://api.twitter.com/"
+TWITTER_REQUEST_TOKEN_URI = "oauth/request_token"
 TWITTER_RECENT_TWEETS_URI = "2/tweets/search/recent"
 
 

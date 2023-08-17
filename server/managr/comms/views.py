@@ -17,7 +17,7 @@ from rest_framework import (
 )
 from rest_framework.decorators import action
 from . import constants as comms_consts
-from .models import Search, TwitterAuthAccount
+from .models import Search, TwitterAuthAccountAdapter
 from managr.core.models import User
 from .serializers import SearchSerializer
 from managr.core import constants as core_consts
@@ -429,6 +429,13 @@ class PRSearchViewSet(
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
         return Response({"pitch": pitch})
+
+
+@api_view(["get"])
+@permission_classes([permissions.IsAuthenticated])
+def get_twitter_request_link(request):
+    link = TwitterAuthAccountAdapter.get_request_url()
+    return Response({"link": link})
 
 
 @api_view(["GET"])

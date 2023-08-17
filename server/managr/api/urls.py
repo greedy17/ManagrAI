@@ -166,6 +166,11 @@ urlpatterns = [
         name="get_zoom_auth_link",
     ),
     path(
+        "users/twitter/request-token",
+        comms_views.get_twitter_request_link,
+        name="get_twitter_request_token",
+    ),
+    path(
         "users/zoom/revoke",
         zoom_views.revoke_zoom_access_token,
         name="revoke_zoom_access_token",
