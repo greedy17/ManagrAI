@@ -279,11 +279,7 @@ class PRSearchViewSet(
                 for idx, tweet in enumerate(tweets):
                     for user in user_data:
                         if user["id"] == tweet["author_id"]:
-                            tweet_res[idx]["user"] = user["username"]
-                            tweet_res[idx]["location"] = user["location"]
-                            tweet_res[idx]["followers_count"] = user["public_metric"][
-                                "followers_count"
-                            ]
+                            tweet[idx]["user"] = user
                 break
             except Exception as e:
                 has_error = True
