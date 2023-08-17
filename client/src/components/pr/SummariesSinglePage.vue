@@ -41,12 +41,37 @@
         </div>
       </div>
     </Modal>
-    <div ref="loadedContent" class="center" v-if="page === 'SUMMARIES'">
+    <div ref="loadedContent" class="center column" v-if="page === 'SUMMARIES'">
+      <div v-if="!selectedSearch" class="switcher">
+        <div
+          @click="switchMainView('news')"
+          :class="{ activeswitch: mainView === 'news' }"
+          class="switch-item"
+        >
+          <img src="@/assets/images/memo.svg" height="12px" alt="" />
+          News
+        </div>
+        <div
+          @click="switchMainView('social')"
+          :class="{ activeswitch: mainView === 'social' }"
+          class="switch-item"
+        >
+          <img src="@/assets/images/comment.svg" height="12px" alt="" />
+          Social
+        </div>
+      </div>
+
       <div class="no-content" v-if="!selectedSearch">
         <div class="title-row">
           <!-- <p v-if="typedMessage" :class="{ typed: isTyping }">{{ typedMessage }}</p>
             <p style="opacity: 0" v-else>...</p> -->
-          <p v-if="!newSearch" class="typed">Generate a media summary from over 1 million sites</p>
+          <p v-if="!newSearch" class="typed">
+            {{
+              mainView === 'social'
+                ? 'Generate a summary from X (formally Twitter)'
+                : 'Generate a news summary from over 1 million sites'
+            }}
+          </p>
 
           <p v-else>
             Summarize coverage for <span class="search-text">"{{ newSearch }}"</span>
@@ -55,6 +80,11 @@
         <div>
           <div class="input-container">
             <div class="input-row">
+              <!-- <div @click="switchMainView('social')" class="row toggle-type">
+                <p>News</p>
+                <img src="@/assets/images/shuffle.svg" height="12px" alt="" />
+              </div> -->
+
               <div class="main-text">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <path
@@ -90,7 +120,7 @@
                 <img
                   style="margin-right: 8px"
                   src="@/assets/images/sparkles-thin.svg"
-                  height="18px"
+                  height="16px"
                 />
               </div>
               <textarea
@@ -161,7 +191,12 @@
           <div class="content-width">
             <div class="news-container">
               <div class="title-container">
-                <h1 class="no-text-margin">{{ selectedSearch.search }}</h1>
+                <div @click="resetSearch" class="back">
+                  <img src="@/assets/images/back.svg" height="18px" width="18px" alt="" />
+                </div>
+                <h1 class="no-text-margin">
+                  {{ selectedSearch.search }}
+                </h1>
                 <p class="sub-text">
                   AI generated search: <span>{{ booleanString }}</span>
                 </p>
@@ -173,11 +208,17 @@
                     @click="openRegenModal"
                     class="secondary-button"
                   >
-                    {{ filteredArticles.length ? 'Regenerate' : 'New Search' }}
+                    {{
+                      filteredArticles.length
+                        ? 'Regenerate'
+                        : tweets.length
+                        ? 'Regenerate'
+                        : 'New Search'
+                    }}
                   </button>
                   <button
                     @click="toggleSaveName"
-                    v-if="filteredArticles.length"
+                    v-if="filteredArticles.length || tweets.length"
                     :disabled="
                       articleSummaryLoading ||
                       loading ||
@@ -238,8 +279,8 @@
           </div>
         </div>
 
-        <div v-if="filteredArticles.length && !loading" class="divider">
-          <p class="divider-text">News Clips</p>
+        <div v-if="(filteredArticles.length || tweets.length) && !loading" class="divider">
+          <p class="divider-text">{{ mainView === 'news' ? 'News Clips' : 'Social Media' }}</p>
         </div>
 
         <div style="width: 50%" v-if="loading">
@@ -273,14 +314,14 @@
         </div>
 
         <div v-else class="clips-container">
-          <div class="content-width" v-if="tweets.length">
+          <div class="content-width" v-if="mainView === 'social' && tweets.length">
             <div class="news-container-med" v-for="(tweet, i) in tweets" :key="i">
               <div class="news-card-medium">
-                <header>
+                <header class="neg-margin">
                   <div class="card-row-med">
                     <img :src="user.profile_image_url" />
                     <h1 class="article-title">
-                      {{ tweeet.user.name }}
+                      {{ tweet.user.name }}
                     </h1>
                     <svg
                       v-if="tweet.user.verified"
@@ -337,16 +378,21 @@
                       >{{ formatNumber(tweet.user.public_metrics.followers_count) }}
                       <span>Followers</span>
                     </small>
-                    <!-- <span class="divier-dot">.</span> -->
-                    <span style="margin-left: 0.5rem" class="off-gray">{{
-                      getTimeDifferenceInMinutes(tweet.created_at)
-                    }}</span>
+                    <span class="divier-dot">.</span>
+                    <span class="off-gray">{{ getTimeDifferenceInMinutes(tweet.created_at) }}</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <div v-else class="content-width">
+          <div class="content-width" v-else-if="mainView === 'social' && tweetError">
+            <div class="news-container">
+              <div class="no-results">
+                <p>{{ tweetError }}</p>
+              </div>
+            </div>
+          </div>
+          <div v-else-if="mainView === 'news'" class="content-width">
             <div v-for="article in filteredArticles" :key="article.id" class="news-container">
               <div class="news-card" @click="selectArticle(article)">
                 <header>
@@ -507,6 +553,7 @@ export default {
   data() {
     return {
       AllUserTweets: {},
+      mainView: 'news',
       savedSearch: null,
       tweets: [],
       tweetMedia: null,
@@ -520,6 +567,7 @@ export default {
       searchId: null,
       textIndex: 0,
       typedMessage: '',
+      tweetError: '',
       savingSearch: false,
       starterNum: 0,
       newSearch: '',
@@ -556,6 +604,20 @@ export default {
     // this.updateMessage()
   },
   methods: {
+    resetSearch() {
+      this.clearNewSearch()
+      this.selectedSearch = null
+    },
+    switchMainView(view) {
+      // if (view === 'news') {
+      //   this.deselectOpp()
+      // } else if (view !== 'meetings') {
+      //   this.deselectMeeting()
+      // }
+      if (view !== this.mainView) {
+        this.mainView = view
+      }
+    },
     formatNumber(num) {
       if (num >= 1000000000) {
         return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B'
@@ -640,22 +702,26 @@ export default {
     async generateNewSearch(boolean) {
       if (!this.newSearch || this.newSearch.length < 3) {
         return
-      }
-      this.loading = true
-      this.summaryLoading = true
-      this.changeSearch({ search: this.newSearch, template: this.newTemplate })
-      try {
-        this.getClips(boolean).then((response) => {
-          this.getSummary(this.filteredArticles, this.newTemplate).then((response) => {
-            if (this.searchSaved) {
-              console.log('made it')
-              this.updateSearch()
-            }
+      } else if (this.mainView === 'social') {
+        this.getTweets()
+      } else {
+        this.loading = true
+        this.summaryLoading = true
+        this.changeSearch({ search: this.newSearch, template: this.newTemplate })
+        try {
+          this.getClips(boolean).then((response) => {
+            this.getSummary(this.filteredArticles, this.newTemplate).then((response) => {
+              if (this.searchSaved) {
+                console.log('made it')
+                this.updateSearch()
+              }
+            })
           })
-        })
-      } catch (e) {
-        console.log(e)
+        } catch (e) {
+          console.log(e)
+        }
       }
+
       this.closeRegenModal()
     },
     async updateSearch() {
@@ -759,20 +825,64 @@ export default {
             user_id: this.user.id,
           })
           .then((response) => {
-            console.log(response)
-            this.tweets = response.tweets.data
-            this.tweetMedia = response.tweets.includes.media
-            this.booleanString = response.string
+            if (response.tweets) {
+              this.tweets = response.tweets.data
+              this.tweetMedia = response.tweets.includes.media
+              this.booleanString = response.string
+              this.getTweetSummary()
+            }
           })
       } catch (e) {
-        console.log(e)
+        this.tweetError = e.data.error
+        this.booleanString = e.data.string
       } finally {
         this.loading = false
-        this.summaryLoading = false
       }
+    },
+    prepareTweetSummary(tweets) {
+      let tweetList = []
+      for (let i = 0; i < tweets.length; i++) {
+        tweetList.push(
+          'Name :' +
+            tweets[i].user.name +
+            'tweet: ' +
+            tweets[i].text +
+            ' Follower count: ' +
+            tweets[i].user.public_metrics.followers_count,
+        )
+      }
+      return tweetList
     },
     getArticleDescriptions(articles) {
       return articles.map((a) => a.content)
+    },
+    async getTweetSummary(instructions = '') {
+      let tweets = this.prepareTweetSummary(this.tweets)
+      this.summaryLoading = true
+      try {
+        await Comms.api
+          .getTweetSummary({
+            tweets: tweets,
+            search: this.newSearch,
+            instructions: this.newTemplate,
+          })
+          .then((response) => {
+            console.log('TWEET SUMMARY IS HERE', response)
+            this.summary = response.summary
+          })
+      } catch (e) {
+        console.log('Error in getSummary', e)
+        this.$toast('Something went wrong, please try again.', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.summaryLoading = false
+        this.scrollToTop()
+      }
     },
     async getSummary(clips, instructions = '') {
       const allClips = this.getArticleDescriptions(clips)
@@ -959,6 +1069,47 @@ export default {
   }
 }
 
+.switcher {
+  margin-top: 32px;
+  margin-bottom: 32px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-evenly;
+  background-color: $off-white;
+  border: 1px solid $off-white;
+  border-radius: 6px;
+  padding: 4px 0;
+  width: 200px;
+}
+.switch-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 6px;
+  width: 100%;
+  margin: 0 2px;
+  cursor: pointer;
+  color: $mid-gray;
+  white-space: nowrap;
+  font-weight: 400;
+  font-size: 13px;
+  img {
+    filter: invert(63%) sepia(10%) saturate(617%) hue-rotate(200deg) brightness(93%) contrast(94%);
+    margin-right: 8px;
+  }
+}
+
+.activeswitch {
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: $dark-black-blue;
+  img {
+    filter: none;
+  }
+}
+
 .relative {
   position: relative;
 }
@@ -982,6 +1133,9 @@ export default {
 .slide-fade-enter-from,
 .slide-fade-leave-to {
   transform: translateY(100px);
+}
+.neg-margin {
+  margin-left: -8px;
 }
 
 .templates {
@@ -1165,11 +1319,33 @@ button:disabled {
   }
 }
 
+.toggle-type {
+  cursor: pointer;
+  p {
+    padding: 0;
+    margin: 0;
+    font-weight: 400;
+    font-size: 13px;
+    color: $dark-black-blue;
+  }
+
+  img {
+    filter: invert(40%);
+    margin-left: 8px;
+  }
+}
+
 .row {
   display: flex;
   align-items: center;
   flex-direction: row;
 }
+
+.column {
+  flex-direction: column;
+  min-height: 60vh;
+}
+
 .center {
   width: 100%;
   display: flex;
@@ -1324,7 +1500,8 @@ button:disabled {
   align-items: center;
   flex-direction: column;
   justify-content: center;
-  height: 60vh;
+  max-height: 60vh;
+  margin-top: 32px;
   width: 700px;
 }
 
@@ -1483,9 +1660,37 @@ header {
   justify-content: center;
 }
 
+.no-results {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: 400;
+  font-size: 13px;
+  color: #6b6b6b;
+}
+
 .title-container {
+  position: relative;
   // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   width: 100%;
+}
+
+.back {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  top: 0.75rem;
+  left: -56px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 100%;
+  padding: 3px 2px;
+  cursor: pointer;
+
+  img {
+    filter: invert(40%);
+  }
 }
 
 .title-bar {
@@ -1894,6 +2099,7 @@ header {
 .bold-text {
   font-weight: bold;
   color: $base-gray;
+  font-size: 12px;
 
   span {
     color: #6b6b6b;
