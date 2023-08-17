@@ -104,3 +104,11 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, instructions=False, for_clien
 def OPEN_AI_PITCH(date, name, type, brand, persona, briefing, style):
     body = f"Today is {date}. You are a VP of Communications tasked by {name} with generating {type} about company: {brand}. Tailor the content to this target persona: {persona}. Here is the briefing: {briefing}. Here are the output instructions: {style}"
     return body
+
+
+OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS = (
+    lambda pitch, instructions: f"""
+Below is an AI generated pitch. Adjust and rewrite the pitch per instructions below:\n
+Pitch: {pitch}\n
+Instructions: {instructions}"""
+)
