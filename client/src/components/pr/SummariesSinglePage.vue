@@ -78,7 +78,7 @@
                 src="@/assets/images/paper-plane.svg"
                 height="14px"
                 alt=""
-                @click="getTweets"
+                @click="generateNewSearch(null)"
                 class="pointer"
               />
             </div>
@@ -274,16 +274,16 @@
 
         <div v-else class="clips-container">
           <div class="content-width" v-if="tweets.length">
-            <div class="news-container-med" v-for="(user, i) in tweetUsers" :key="i">
+            <div class="news-container-med" v-for="(tweet, i) in tweets" :key="i">
               <div class="news-card-medium">
                 <header>
                   <div class="card-row-med">
                     <img :src="user.profile_image_url" />
                     <h1 class="article-title">
-                      {{ user.name }}
+                      {{ tweeet.user.name }}
                     </h1>
                     <svg
-                      v-if="user.verified"
+                      v-if="tweet.user.verified"
                       width="16"
                       height="16"
                       viewBox="0 0 22 22"
@@ -301,48 +301,46 @@
                   </div>
                 </header>
 
-                <div v-for="(tweet, i) in AllUserTweets[user.username]" :key="i">
-                  <p class="article-preview">{{ tweet.text }}</p>
-                  <div v-if="tweet.attachments">
-                    <div
-                      style="margin-bottom: 16px"
-                      v-for="media in tweetMedia"
-                      :key="media.media_key"
-                    >
-                      <div v-if="media.media_key === tweet.attachments.media_keys[0]">
-                        <img
-                          v-if="media.type === 'photo'"
-                          :src="media.url"
-                          class="cover-photo-no-l-margin"
-                          alt=""
-                        />
+                <p class="article-preview">{{ tweet.text }}</p>
+                <div v-if="tweet.attachments">
+                  <div
+                    style="margin-bottom: 16px"
+                    v-for="media in tweetMedia"
+                    :key="media.media_key"
+                  >
+                    <div v-if="media.media_key === tweet.attachments.media_keys[0]">
+                      <img
+                        v-if="media.type === 'photo'"
+                        :src="media.url"
+                        class="cover-photo-no-l-margin"
+                        alt=""
+                      />
 
-                        <video
-                          style="margin-top: 1rem"
-                          v-else-if="media.type === 'video'"
-                          width="400"
-                          controls
-                        >
-                          <source :src="media.url" type="video/mp4" />
-                        </video>
-                        <p v-else>OTHER MEDIA TYPE --- {{ media.type }}</p>
-                      </div>
+                      <video
+                        style="margin-top: 1rem"
+                        v-else-if="media.type === 'video'"
+                        width="400"
+                        controls
+                      >
+                        <source :src="media.url" type="video/mp4" />
+                      </video>
+                      <p v-else>OTHER MEDIA TYPE --- {{ media.type }}</p>
                     </div>
                   </div>
+                </div>
 
-                  <div v-if="i === AllUserTweets[user.username].length - 1" class="card-footer">
-                    <div class="author-time">
-                      <span class="author">{{ '@' + user.username }}</span>
-                      <span class="divier-dot">.</span>
-                      <small class="bold-text"
-                        >{{ formatNumber(user.public_metrics.followers_count) }}
-                        <span>Followers</span>
-                      </small>
-                      <!-- <span class="divier-dot">.</span> -->
-                      <span style="margin-left: 0.5rem" class="off-gray">{{
-                        getTimeDifferenceInMinutes(tweet.created_at)
-                      }}</span>
-                    </div>
+                <div class="card-footer">
+                  <div class="author-time">
+                    <span class="author">{{ '@' + tweet.user.username }}</span>
+                    <span class="divier-dot">.</span>
+                    <small class="bold-text"
+                      >{{ formatNumber(tweet.user.public_metrics.followers_count) }}
+                      <span>Followers</span>
+                    </small>
+                    <!-- <span class="divier-dot">.</span> -->
+                    <span style="margin-left: 0.5rem" class="off-gray">{{
+                      getTimeDifferenceInMinutes(tweet.created_at)
+                    }}</span>
                   </div>
                 </div>
               </div>
@@ -764,15 +762,7 @@ export default {
             console.log(response)
             this.tweets = response.tweets.data
             this.tweetMedia = response.tweets.includes.media
-            this.tweetUsers = response.tweets.includes.users
             this.booleanString = response.string
-
-            for (let i = 0; i < this.tweetUsers.length; i++) {
-              this.AllUserTweets[this.tweetUsers[i].username] = this.tweets.filter(
-                (t) => t.user === this.tweetUsers[i].username,
-              )
-            }
-            console.log(this.AllUserTweets)
           })
       } catch (e) {
         console.log(e)
