@@ -18,8 +18,9 @@ from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import action_with_params
 from managr.slack import constants as slack_const
 from managr.slack.models import UserSlackIntegration
-from newspaper import Article
+from newspaper import Article, Config
 from managr.slack.helpers.utils import block_finder
+from managr.comms.utils import generate_config
 
 logger = logging.getLogger("managr")
 
@@ -247,15 +248,16 @@ def _process_article_summary(payload, context):
     block_text = block["elements"][0]["text"]
     url = block_text[(block_text.find("<") + 1) : block_text.find("|")]
     user = slack_account.user
-    article_res = Article(url)
-    article_res.download()
-    article_res.parse()
-    title_text = blocks[0]["text"]["text"].split("for ")[1].replace("*", "")
-    text = article_res.text
     attempts = 1
     token_amount = 500
     timeout = 60.0
     while True:
+        config = generate_config()
+        article_res = Article(url, config=config)
+        article_res.download()
+        article_res.parse()
+        title_text = blocks[0]["text"]["text"].split("for ")[1].replace("*", "")
+        text = article_res.text
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
         prompt = comms_consts.OPEN_AI_ARTICLE_SUMMARY(
             datetime.datetime.now().date(), text, title_text
