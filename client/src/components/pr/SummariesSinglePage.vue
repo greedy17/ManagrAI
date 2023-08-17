@@ -30,8 +30,14 @@
           <div class="blue-border-button">Use a Template</div>
         </div>
         <div class="regen-footer">
-          <div class="cancel-button" @click="closeRegenModal">Cancel</div>
-          <div class="save-button" @click="generateNewSearch(null)">Submit</div>
+          <small v-if="searchSaved" class="red-text"
+            >This new version will replace your current one
+          </small>
+          <small v-else></small>
+          <div class="row">
+            <div class="cancel-button" @click="closeRegenModal">Cancel</div>
+            <div class="save-button" @click="generateNewSearch(null)">Submit</div>
+          </div>
         </div>
       </div>
     </Modal>
@@ -149,7 +155,7 @@
         <div v-else class="summaries-container">
           <Transition name="slide-fade">
             <div v-if="showUpdateBanner" class="templates">
-              <p>Search Saved successfully!</p>
+              <p>Search saved successfully!</p>
             </div>
           </Transition>
           <div class="content-width">
@@ -276,13 +282,33 @@
                     <h1 class="article-title">
                       {{ user.name }}
                     </h1>
+                    <svg
+                      v-if="user.verified"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 22 22"
+                      aria-label="Verified account"
+                      role="img"
+                      class="twitter-blue"
+                      data-testid="icon-verified"
+                    >
+                      <g>
+                        <path
+                          d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"
+                        ></path>
+                      </g>
+                    </svg>
                   </div>
                 </header>
 
                 <div v-for="(tweet, i) in AllUserTweets[user.username]" :key="i">
-                  <p class="article-preview-medium">{{ tweet.text }}</p>
+                  <p class="article-preview">{{ tweet.text }}</p>
                   <div v-if="tweet.attachments">
-                    <div v-for="media in tweetMedia" :key="media.media_key">
+                    <div
+                      style="margin-bottom: 16px"
+                      v-for="media in tweetMedia"
+                      :key="media.media_key"
+                    >
                       <div v-if="media.media_key === tweet.attachments.media_keys[0]">
                         <img
                           v-if="media.type === 'photo'"
@@ -304,11 +330,16 @@
                     </div>
                   </div>
 
-                  <div class="card-footer">
+                  <div v-if="i === AllUserTweets[user.username].length - 1" class="card-footer">
                     <div class="author-time">
-                      <span class="author">{{ user.username }}</span>
+                      <span class="author">{{ '@' + user.username }}</span>
                       <span class="divier-dot">.</span>
-                      <span class="off-gray">{{
+                      <small class="bold-text"
+                        >{{ formatNumber(user.public_metrics.followers_count) }}
+                        <span>Followers</span>
+                      </small>
+                      <!-- <span class="divier-dot">.</span> -->
+                      <span style="margin-left: 0.5rem" class="off-gray">{{
                         getTimeDifferenceInMinutes(tweet.created_at)
                       }}</span>
                     </div>
@@ -527,6 +558,18 @@ export default {
     // this.updateMessage()
   },
   methods: {
+    formatNumber(num) {
+      if (num >= 1000000000) {
+        return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B'
+      }
+      if (num >= 1000000) {
+        return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M'
+      }
+      if (num >= 1000) {
+        return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K'
+      }
+      return num.toString()
+    },
     toggleArticleRegenerate() {
       this.showArticleRegenerate = !this.showArticleRegenerate
     },
@@ -1212,6 +1255,10 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.twitter-blue {
+  filter: invert(49%) sepia(87%) saturate(1104%) hue-rotate(175deg) brightness(95%) contrast(101%);
+  margin-left: 8px;
+}
 .area-input::-webkit-scrollbar {
   width: 6px;
   height: 0px;
@@ -1536,7 +1583,7 @@ header {
   align-items: center;
   justify-content: flex-start;
   img {
-    height: 14px;
+    height: 20px;
     margin-right: 0.5rem;
   }
 }
@@ -1686,7 +1733,7 @@ header {
   border: 1px solid $soft-gray;
   border-radius: 8px;
   height: 4rem;
-  width: 25rem;
+  width: 500px;
   overflow-y: auto;
   margin: 1rem 0;
   padding: 1rem;
@@ -1697,10 +1744,11 @@ header {
   background: white;
   width: 100%;
   bottom: 0;
-  padding-top: 8px;
-  padding-bottom: 0;
+  padding-top: 16px;
+  padding-bottom: 8px;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .blue-border-button {
@@ -1733,7 +1781,8 @@ header {
   margin-top: 84px;
 }
 .regen-container {
-  height: 500px;
+  width: 500px;
+  max-height: 500px;
   position: relative;
   overflow-y: scroll;
 }
@@ -1852,6 +1901,15 @@ header {
   margin-bottom: 8px;
 }
 
+.bold-text {
+  font-weight: bold;
+  color: $base-gray;
+
+  span {
+    color: #6b6b6b;
+  }
+}
+
 .skeleton-bar {
   width: 100%;
   display: flex;
@@ -1901,7 +1959,7 @@ header {
 .wrapper {
   display: flex;
   align-items: center;
-  // background-color: red;
+  // background-color: ;
   font-family: $thin-font-family;
   font-size: 14px;
   position: relative;
@@ -1980,5 +2038,11 @@ header {
 
 .lte8 .wrapper:hover .tooltip {
   display: block;
+}
+
+.red-text {
+  color: $coral;
+  font-weight: 400;
+  font-size: 12px;
 }
 </style>

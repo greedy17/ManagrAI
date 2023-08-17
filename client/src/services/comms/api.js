@@ -18,6 +18,15 @@ export default class CommsApi extends ModelAPI {
         return new CommsApi(cls)
     }
 
+    async deleteSearch(data) {
+        try {
+            const res = await this.client.delete(CommsApi.ENDPOINT + `${data.id}/`,)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
     async upateSearch(data) {
         try {
             const res = await this.client.patch(CommsApi.ENDPOINT + 'update/', data)

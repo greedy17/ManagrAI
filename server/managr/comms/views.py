@@ -28,6 +28,8 @@ from rest_framework.decorators import (
     api_view,
     permission_classes,
 )
+from managr.comms.utils import generate_config
+
 
 logger = logging.getLogger("managr")
 
@@ -72,14 +74,6 @@ class PRSearchViewSet(
         search.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    def delete(self, request, *args, **kwargs):
-        search = Search.objects.get(id=request.data.get("id"))
-        try:
-            search.delete()
-        except Exception as e:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
-        return Response(status=status.HTTP_204_NO_CONTENT)    
-
     @action(
         methods=["get"],
         permission_classes=[permissions.IsAuthenticated],
@@ -93,7 +87,7 @@ class PRSearchViewSet(
         boolean = request.GET.get("boolean", None)
         while True:
             try:
-                if not boolean :
+                if not boolean:
                     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                     prompt = core_consts.OPEN_AI_NEWS_BOOLEAN_CONVERSION(search)
                     body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
@@ -194,13 +188,13 @@ class PRSearchViewSet(
         token_amount = 500
         timeout = 60.0
         while True:
-            article_res = Article(url)
+            article_res = Article(url, config=generate_config())
             article_res.download()
             article_res.parse()
             text = article_res.text
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
             prompt = comms_consts.OPEN_AI_ARTICLE_SUMMARY(
-                datetime.now().date(), text, search, instructions
+                datetime.now().date(), text, search, instructions, True
             )
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
@@ -285,7 +279,9 @@ class PRSearchViewSet(
                 for idx, tweet in enumerate(tweets):
                     for user in user_data:
                         if user["id"] == tweet["author_id"]:
-                            tweet_res["data"][idx]["user"] = user["username"]
+                            tweet["user"] = user["username"]
+                            tweet["location"] = user.get("location", "")
+                            tweet["followers_count"] = user["public_metrics"]["followers_count"]
                 break
             except Exception as e:
                 has_error = True
@@ -398,7 +394,7 @@ class PRSearchViewSet(
                     print(r)
                     print(r.json())
                 r = open_ai_exceptions._handle_response(r)
-                pitch = r.get("choices")[0].get("message").get("content")    
+                pitch = r.get("choices")[0].get("message").get("content")
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -431,6 +427,7 @@ class PRSearchViewSet(
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
         return Response({"pitch": pitch})
+
 
 @api_view(["GET"])
 @permission_classes(
