@@ -433,8 +433,8 @@ class PRSearchViewSet(
 
 @api_view(["get"])
 @permission_classes([permissions.IsAuthenticated])
-def get_twitter_request_link(request):
-    link = TwitterAuthAccountAdapter.get_request_url()
+def get_twitter_auth_link(request):
+    link = TwitterAuthAccountAdapter.get_authorization_link()
     return Response({"link": link})
 
 

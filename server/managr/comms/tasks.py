@@ -18,7 +18,7 @@ from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import action_with_params
 from managr.slack import constants as slack_const
 from managr.slack.models import UserSlackIntegration
-from newspaper import Article, Config
+from newspaper import Article
 from managr.slack.helpers.utils import block_finder
 from managr.comms.utils import generate_config
 

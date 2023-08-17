@@ -12,7 +12,8 @@ TWITTER_ACCESS_TOKEN = settings.TWITTER_ACCESS_TOKEN if USE_TWITTER_API else Non
 TWITTER_BASE_URI = "https://api.twitter.com/"
 TWITTER_REQUEST_TOKEN_URI = "oauth/request_token"
 TWITTER_RECENT_TWEETS_URI = "2/tweets/search/recent"
-
+TWITTER_AUTHORIZATION_URI = "https://twitter.com/i/oauth2/authorize"
+TWITTER_SCOPES = ["tweets.read", "offline.access", "users.read"]
 
 NEWS_API_HEADERS = {
     "Authorization": f"Bearer {NEWS_API_KEY}",
@@ -69,7 +70,7 @@ def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, instructions, for_client=False
 
 
 OPEN_AI_TWITTER_SEARCH_CONVERSION = (
-    lambda search: f"""Convert the Search Term below into a boolean query to be used for Twitter search API.
+    lambda search: f"""Convert the Search Term below into a valid Twitter search string.
     Follow these steps in order to create the best possible search:
     1: Only use hashtag terms when given
     2: Only do user search when instructed

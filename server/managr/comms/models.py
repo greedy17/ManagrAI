@@ -1,4 +1,5 @@
 import json
+import os
 import logging
 from datetime import datetime
 from django.db import models
@@ -11,6 +12,8 @@ from managr.utils.sites import get_site_url
 from managr.core import exceptions as open_ai_exceptions
 from managr.utils.misc import encrypt_dict
 from urllib.parse import urlencode
+import base64
+import hashlib
 
 logger = logging.getLogger("managr")
 
@@ -133,7 +136,8 @@ class TwitterAuthAccountAdapter:
         return data
 
     def get_request_url():
-        return comms_consts.TWITTER_BASE_URI + comms_consts.TWITTER_REQUEST_TOKEN_URI
+        params = urlencode({"oauth_callback": comms_consts.TWITTER_REDIRECT_URI})
+        return f"{comms_consts.TWITTER_BASE_URI}{comms_consts.TWITTER_REQUEST_TOKEN_URI}?{params}"
 
     def get_tweets(self, query):
         url = comms_consts.TWITTER_BASE_URI + comms_consts.TWITTER_RECENT_TWEETS_URI
@@ -173,6 +177,26 @@ class TwitterAuthAccountAdapter:
                 headers=core_consts.OPEN_AI_HEADERS,
             )
         return open_ai_exceptions._handle_response(r)
+
+    @classmethod
+    def get_authorization_link(cls):
+        CODE_VERIFIER = os.urandom(32)
+        CODE_CHALLENGE = (
+            base64.urlsafe_b64encode(hashlib.sha256(CODE_VERIFIER).digest())
+            .rstrip(b"=")
+            .decode("utf-8")
+        )
+        auth_params = {
+            "response_type": "code",
+            "client_id": comms_consts.TWITTER_CLIENT_ID,
+            "redirect_uri": comms_consts.TWITTER_REDIRECT_URI,
+            "scope": " ".join(comms_consts.TWITTER_SCOPES),
+            "state": "TWITTER",
+            "code_challenge_method": "S256",
+            "code_challenge": CODE_CHALLENGE,
+        }
+        auth_url = comms_consts.TWITTER_AUTHORIZATION_URI + "?" + urlencode(auth_params)
+        return auth_url
 
 
 TwitterAuthAccount = TwitterAuthAccountAdapter(
