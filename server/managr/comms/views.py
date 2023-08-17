@@ -141,8 +141,7 @@ class PRSearchViewSet(
                     request.user, token_amount, timeout, clips, search, instructions, True
                 )
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
-                user.meta_data["news_summaries"] += 1
-                user.save()
+                user.add_meta_data("news_summaries")
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -215,8 +214,7 @@ class PRSearchViewSet(
             try:
                 r = open_ai_exceptions._handle_response(r)
                 message = r.get("choices")[0].get("message").get("content").replace("**", "*")
-                user.meta_data["article_summaries"] += 1
-                user.save()
+                user.add_meta_data("article_summaries")
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -301,6 +299,7 @@ class PRSearchViewSet(
         url_path="tweet-summary",
     )
     def get_tweet_summary(self, request, *args, **kwargs):
+        user = request.user
         tweets = request.data.get("tweets")
         search = request.data.get("search")
         instructions = request.data.get("instructions", False)
@@ -314,6 +313,7 @@ class PRSearchViewSet(
                     request.user, token_amount, timeout, tweets, search, instructions, True
                 )
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+                user.add_meta_data("tweet_summaries")
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -395,8 +395,7 @@ class PRSearchViewSet(
                     )
                 r = open_ai_exceptions._handle_response(r)
                 pitch = r.get("choices")[0].get("message").get("content")
-                user.meta_data["pitches"] += 1
-                user.save()
+                user.add_meta_data("pitches")
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(

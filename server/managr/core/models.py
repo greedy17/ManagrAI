@@ -396,6 +396,13 @@ class User(AbstractUser, TimeStampModel):
         self.is_active = False
         return self.save()
 
+    def add_meta_data(self, key):
+        if key in self.meta_data.keys():
+            self.meta_data[key] += 1
+        else:
+            self.meta_data[key] = 1
+        return self.save()
+
     @property
     def has_zoom_integration(self):
         # when a user integrates we set the info once
