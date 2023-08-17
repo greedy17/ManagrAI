@@ -278,10 +278,10 @@ class PRSearchViewSet(
                 tweet_res = TwitterAuthAccount.get_tweets(query_input)
                 tweets = tweet_res["data"]
                 user_data = tweet_res["includes"].get("users")
-                for idx, tweet in enumerate(tweets):
+                for tweet in tweets:
                     for user in user_data:
                         if user["id"] == tweet["author_id"]:
-                            tweet[idx]["user"] = user
+                            tweet["user"] = user
                 break
             except Exception as e:
                 has_error = True

@@ -42,7 +42,7 @@ DEFAULT_CLIENT_INSTRUCTIONS = """<strong>Executive summary:</strong>\n Highlight
 
 DEFAULT_TWITTER_CLIENT_INSTRUCTIONS = """<strong>Executive summary:</strong>\n Highlighting 5 key points from today's clips.\n
 <strong>Sentiment:</stong>\n Evaluate the overall tone or sentiment of the coverage. Is it primarily positive, neutral, or negative and why.\n
-<strong>Influencers:</strong>\n Determine whether the coverage communicates the company's key messages effectively."""
+<strong>Influencers:</strong>\n Identify key influencers based on follower count"""
 
 
 def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_client=False):
@@ -83,7 +83,7 @@ DEFAULT_ARTICLE_INSTRUCTIONS = (
     lambda search: f"*Context and Sentiment pertaining to {search}:*\n*Relevance and Impact pertaining to {search}:*"
 )
 DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS = (
-    f"<strong>Context and Sentiment:</strong>\n<strong>Relevance and Impact:</strong>"
+    lambda search: f"<strong>Context and Sentiment pertaining to {search}:</strong>\n<strong>Relevance and Impact pertaining to {search}:</strong>"
 )
 
 
