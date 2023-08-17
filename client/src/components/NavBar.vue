@@ -51,12 +51,17 @@
               Saved Searches
               <img
                 v-if="!showSavedSearches"
-                src="@/assets/images/rightarrow.svg"
+                src="@/assets/images/downArrow.svg"
                 height="14px"
                 alt=""
-                class="rotate-img"
               />
-              <img v-else src="@/assets/images/downArrow.svg" height="14px" alt="" />
+              <img
+                class="rotate-img"
+                v-else
+                src="@/assets/images/downArrow.svg"
+                height="14px"
+                alt=""
+              />
             </div>
 
             <div v-if="showSavedSearches" class="search-dropdown">
@@ -290,7 +295,7 @@ export default {
 }
 
 .rotate-img {
-  transform: rotate(-90deg);
+  transform: rotate(180deg);
 }
 
 .delete-modal {

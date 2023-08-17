@@ -68,7 +68,7 @@ def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, instructions, for_client=False
 
 
 OPEN_AI_TWITTER_SEARCH_CONVERSION = (
-    lambda search: f"""Convert the Search Term below into a boolean query to be used for Twitter search API.
+    lambda search: f"""Convert the Search Term below into a valid Twitter search string.
     Follow these steps in order to create the best possible search:
     1: Only use hashtag terms when given
     2: Only do user search when instructed
