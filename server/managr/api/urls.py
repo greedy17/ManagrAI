@@ -171,6 +171,11 @@ urlpatterns = [
         name="get_twitter_auth_link",
     ),
     path(
+        "users/twitter/authenticate",
+        comms_views.get_twitter_authentication,
+        name="get_twitter_authentication",
+    ),
+    path(
         "users/zoom/revoke",
         zoom_views.revoke_zoom_access_token,
         name="revoke_zoom_access_token",

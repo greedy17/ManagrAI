@@ -17,7 +17,7 @@ from rest_framework import (
 )
 from rest_framework.decorators import action
 from . import constants as comms_consts
-from .models import Search, TwitterAuthAccountAdapter
+from .models import Search, TwitterAuthAccount
 from managr.core.models import User
 from .serializers import SearchSerializer
 from managr.core import constants as core_consts
@@ -434,8 +434,21 @@ class PRSearchViewSet(
 @api_view(["get"])
 @permission_classes([permissions.IsAuthenticated])
 def get_twitter_auth_link(request):
-    link = TwitterAuthAccountAdapter.get_authorization_link()
-    return Response({"link": link})
+    link, verifier = TwitterAuthAccount.get_authorization_link()
+    return Response({"link": link, "verifier": verifier})
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def get_twitter_authentication(request):
+    code = request.data.get("code", None)
+    verifier = request.data.get("")
+    try:
+        res = TwitterAuthAccount.get_access_token(code, verifier)
+        print(res)
+    except Exception as e:
+        logger.exception(e)
+    return Response(data={"success": True})
 
 
 @api_view(["GET"])

@@ -196,7 +196,21 @@ class TwitterAuthAccountAdapter:
             "code_challenge": CODE_CHALLENGE,
         }
         auth_url = comms_consts.TWITTER_AUTHORIZATION_URI + "?" + urlencode(auth_params)
-        return auth_url
+        return auth_url, CODE_VERIFIER
+
+    @classmethod
+    def get_access_token(cls, code, verifier):
+        params = {
+            "grant-type": "authorization_code",
+            "code": code,
+            "client_id": comms_consts.TWITTER_CLIENT_ID,
+            "redirect_uri": comms_consts.TWITTER_REDIRECT_URI,
+            "code_verifier": verifier,
+        }
+        url = comms_consts.TWITTER_ACCESS_TOKEN_URI + "?" + urlencode(params)
+        with Variable_Client() as client:
+            res = client.post(url, headers={"Content-Type": "application/x-www-form-urlencoded"})
+        return cls._handle_response(res)
 
 
 TwitterAuthAccount = TwitterAuthAccountAdapter(

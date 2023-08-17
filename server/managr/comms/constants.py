@@ -13,13 +13,13 @@ TWITTER_BASE_URI = "https://api.twitter.com/"
 TWITTER_REQUEST_TOKEN_URI = "oauth/request_token"
 TWITTER_RECENT_TWEETS_URI = "2/tweets/search/recent"
 TWITTER_AUTHORIZATION_URI = "https://twitter.com/i/oauth2/authorize"
+TWITTER_ACCESS_TOKEN_URI = TWITTER_BASE_URI + "2/oauth2/token"
 TWITTER_SCOPES = ["tweets.read", "offline.access", "users.read"]
 
 NEWS_API_HEADERS = {
     "Authorization": f"Bearer {NEWS_API_KEY}",
 }
 
-TWITTER_API_HEADERS = {"Authorization": f"Bearer {TWITTER_ACCESS_TOKEN}"}
 NEW_API_URI = "https://newsapi.org/v2"
 
 NEW_API_EVERYTHING_URI = (
