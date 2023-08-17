@@ -85,7 +85,7 @@ class PRSearchViewSet(
         boolean = request.GET.get("boolean", None)
         while True:
             try:
-                if not boolean :
+                if not boolean:
                     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                     prompt = core_consts.OPEN_AI_NEWS_BOOLEAN_CONVERSION(search)
                     body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
@@ -125,6 +125,7 @@ class PRSearchViewSet(
         url_path="summary",
     )
     def get_summary(self, request, *args, **kwargs):
+        user = request.user
         clips = request.data.get("clips")
         search = request.data.get("search")
         instructions = request.data.get("instructions", False)
@@ -138,6 +139,8 @@ class PRSearchViewSet(
                     request.user, token_amount, timeout, clips, search, instructions, True
                 )
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+                user.meta_data["news_summaries"] += 1
+                user.save()
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -210,7 +213,8 @@ class PRSearchViewSet(
             try:
                 r = open_ai_exceptions._handle_response(r)
                 message = r.get("choices")[0].get("message").get("content").replace("**", "*")
-
+                user.meta_data["article_summaries"] += 1
+                user.save()
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -290,10 +294,10 @@ class PRSearchViewSet(
                         data=json.dumps(body),
                         headers=core_consts.OPEN_AI_HEADERS,
                     )
-                    print(r)
-                    print(r.json())
                 r = open_ai_exceptions._handle_response(r)
-                pitch = r.get("choices")[0].get("message").get("content")    
+                pitch = r.get("choices")[0].get("message").get("content")
+                user.meta_data["pitches"] += 1
+                user.save()
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -326,6 +330,7 @@ class PRSearchViewSet(
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
         return Response({"pitch": pitch})
+
 
 @api_view(["GET"])
 @permission_classes(

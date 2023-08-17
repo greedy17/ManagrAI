@@ -115,6 +115,8 @@ def _process_news_summary(payload, context):
                 user, token_amount, timeout, descriptions, search.input_text, instructions
             )
             message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+            user.meta_data["news_summaries"] += 1
+            user.save()
             break
         except open_ai_exceptions.StopReasonLength:
             logger.exception(
@@ -274,6 +276,8 @@ def _process_article_summary(payload, context):
         try:
             r = open_ai_exceptions._handle_response(r)
             message = r.get("choices")[0].get("message").get("content").replace("**", "*")
+            user.meta_data["article_summaries"] += 1
+            user.save()
             break
         except open_ai_exceptions.StopReasonLength:
             logger.exception(
