@@ -26,6 +26,8 @@ NEW_API_EVERYTHING_URI = (
     lambda query: f"everything?{query}&language=en&sortBy=publishedAt&pageSize=20"
 )
 
+SEARCH_TYPE_CHOICES = (("NEWS", "News"), ("SOCIAL_MEDIA", "Social Media"), ("MIXED", "Mixed"))
+
 DEFAULT_INSTRUCTIONS = """*Executive summary:*\n Highlighting 5 key points from today's clips.\n
 *Sentiment*\n Evaluate the overall tone or sentiment of the coverage. Is it primarily positive, neutral, or negative and why.\n
 *Key Messages:*\n Determine whether the coverage communicates the company's key messages effectively."""

@@ -31,6 +31,7 @@ class Search(TimeStampModel):
     search_boolean = models.TextField(null=True, blank=True)
     instructions = models.TextField(null=True, blank=True)
     summary = models.TextField(null=True, blank=True)
+    type = models.CharField(choices=comms_consts.SEARCH_TYPE_CHOICES, max_length=50, default="NEWS")
 
     class Meta:
         ordering = ["name"]

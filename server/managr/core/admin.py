@@ -25,7 +25,10 @@ from .models import (
 from . import constants as core_consts
 
 TRUE_FALSE_CHOICES = (
-    ("True", "ON",),
+    (
+        "True",
+        "ON",
+    ),
     ("False", "OFF"),
 )
 
@@ -150,12 +153,10 @@ class CustomUserAdmin(UserAdmin):
             None,
             {
                 "fields": (
-                    "password",
                     "last_login",
                     "first_name",
                     "last_name",
                     "email",
-                    "profile_photo",
                     "is_active",
                     "is_invited",
                     "is_admin",
@@ -168,19 +169,28 @@ class CustomUserAdmin(UserAdmin):
                     "reminders",
                     "crm",
                     "onboarding",
-                    "activated_managr_configs",
                     "team",
                     "make_team_lead",
+                    "meta_data",
                 )
             },
         ),
     )
 
     add_fieldsets = (
-        (None, {"classes": ("wide",), "fields": ("email", "password1", "password2",),},),
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": (
+                    "email",
+                    "password1",
+                    "password2",
+                ),
+            },
+        ),
     )
 
-    inlines = (UserSlackIntegrationInline, ZoomAuthAccountInline, SalesloftAccountInline)
     list_display = ("email", "first_name", "last_name", "datetime_created")
 
     list_display_links = (
@@ -188,6 +198,7 @@ class CustomUserAdmin(UserAdmin):
         "first_name",
         "last_name",
     )
+    readonly_fields = ["meta_data"]
 
     search_fields = (
         "email",
