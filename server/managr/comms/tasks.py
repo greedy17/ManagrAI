@@ -18,7 +18,7 @@ from managr.slack.helpers import block_builders
 from managr.slack.helpers.utils import action_with_params
 from managr.slack import constants as slack_const
 from managr.slack.models import UserSlackIntegration
-from newspaper import Article, Config
+from newspaper import Article
 from managr.slack.helpers.utils import block_finder
 from managr.comms.utils import generate_config
 
@@ -116,6 +116,8 @@ def _process_news_summary(payload, context):
                 user, token_amount, timeout, descriptions, search.input_text, instructions
             )
             message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+            user.add_meta_data("news_summaries")
+            user.save()
             break
         except open_ai_exceptions.StopReasonLength:
             logger.exception(
@@ -276,6 +278,7 @@ def _process_article_summary(payload, context):
         try:
             r = open_ai_exceptions._handle_response(r)
             message = r.get("choices")[0].get("message").get("content").replace("**", "*")
+            user.add_meta_data("article_summaries")
             break
         except open_ai_exceptions.StopReasonLength:
             logger.exception(

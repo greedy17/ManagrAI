@@ -1,16 +1,11 @@
 from django.contrib import admin
-from . models import Search
+from .models import Search
+
 # Register your models here.
 
 
 class CustomSearch(admin.ModelAdmin):
-    list_display = (
-        "datetime_created",
-        "user",
-        "input_text",
-        "search_boolean",
-        "instructions",
-    )
+    list_display = ("user", "type", "input_text", "search_boolean")
     list_filter = ("user__organization",)
     ordering = ("-datetime_created",)
 

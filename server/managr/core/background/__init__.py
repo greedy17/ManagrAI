@@ -112,7 +112,12 @@ def emit_generate_reminder_message(user_id, verbose_name):
 
 
 def emit_process_calendar_meetings(user_id, verbose_name, slack_interaction=None, date=None):
-    return _process_calendar_meetings(user_id, slack_interaction, date, verbose_name=verbose_name,)
+    return _process_calendar_meetings(
+        user_id,
+        slack_interaction,
+        date,
+        verbose_name=verbose_name,
+    )
 
 
 # Functions for Scheduling Meeting
@@ -273,7 +278,6 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
                 ]
 
                 if len(user_not_completed):
-
                     not_completed.extend(user_not_completed)
         else:
             # This will be for the reps
@@ -347,7 +351,13 @@ def sync_contacts(contacts, user_id):
 
 def CONTACT_FILTERS(crm, emails):
     if crm == "HUBSPOT":
-        return [{"propertyName": "email", "operator": "IN", "values": emails,}]
+        return [
+            {
+                "propertyName": "email",
+                "operator": "IN",
+                "values": emails,
+            }
+        ]
     else:
         email_string = "','".join(emails)
         return [f"AND Email IN ('{email_string}')"]
@@ -451,7 +461,9 @@ def _process_calendar_meetings(user_id, slack_int, date):
                     meeting.save()
                     # Conditional Check for Zoom meeting or Non-Zoom Meeting
                     meeting_workflow = MeetingWorkflow.objects.create(
-                        operation_type="MEETING_REVIEW", meeting=meeting, user=user,
+                        operation_type="MEETING_REVIEW",
+                        meeting=meeting,
+                        user=user,
                     )
                 else:
                     if workflow_check:
@@ -602,7 +614,11 @@ def generate_reminder_message(user_id):
             name = user.first_name if hasattr(user, "first_name") else user.full_name
             meeting = get_block_set(
                 "manager_meeting_reminder",
-                {"u": str(user.id), "not_completed": meetings["uncompleted"], "name": name,},
+                {
+                    "u": str(user.id),
+                    "not_completed": meetings["uncompleted"],
+                    "name": name,
+                },
             )
     else:
         meetings = check_for_uncompleted_meetings(user.id)
@@ -755,7 +771,8 @@ def _process_add_calendar_id(user_id):
     if hasattr(user, "nylas") and user.nylas.event_calendar_id is None:
         headers = dict(Authorization=f"Bearer {user.nylas.access_token}")
         calendars = requests.get(
-            f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.CALENDAR_URI}", headers=headers,
+            f"{core_consts.NYLAS_API_BASE_URL}/{core_consts.CALENDAR_URI}",
+            headers=headers,
         ).json()
 
         email_check = [cal for cal in calendars if cal["name"] == user.email]
@@ -992,7 +1009,11 @@ def _process_submit_chat_prompt(user_id, prompt, context):
             )
             # logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: body <{body}>")
             with Variable_Client(timeout) as client:
-                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
                 r = _handle_response(r)
                 # logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
                 choice = r["choices"][0]
@@ -1029,7 +1050,8 @@ def _process_submit_chat_prompt(user_id, prompt, context):
                                 "OPEN_CHAT",
                                 "Look like your prompt message is too long to process. Try removing white spaces!",
                                 action_id=action_with_params(
-                                    slack_consts.REOPEN_CHAT_MODAL, [f"form_id={str(form.id)}"],
+                                    slack_consts.REOPEN_CHAT_MODAL,
+                                    [f"form_id={str(form.id)}"],
                                 ),
                             )
                         ],
@@ -1104,7 +1126,8 @@ def _process_submit_chat_prompt(user_id, prompt, context):
                 "REVIEW_CHAT_UPDATE",
                 section_text=f":robot_face: {resource.display_value} {'fields' if user.crm == 'SALESFORCE' else 'properties'} have been filled, please review",
                 action_id=action_with_params(
-                    slack_consts.OPEN_REVIEW_CHAT_UPDATE_MODAL, params=params,
+                    slack_consts.OPEN_REVIEW_CHAT_UPDATE_MODAL,
+                    params=params,
                 ),
                 style="primary",
             )
@@ -1145,7 +1168,11 @@ def _process_submit_chat_note(user_id, prompt, resource_type, context):
     while True:
         try:
             with Variable_Client() as client:
-                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
                 # logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
                 r = _handle_response(r)
                 choice = r["choices"][0]["text"]
@@ -1203,9 +1230,14 @@ def _process_send_email_draft(payload, context):
         try:
             with Variable_Client() as client:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
                 r = _handle_response(r)
                 text = r.get("choices")[0].get("message").get("content")
+                user.add_meta_data("emails")
             break
         except Exception as e:
             logger.exception(e)
@@ -1279,7 +1311,11 @@ def _process_send_regenerated_email_draft(payload, context):
         try:
             with Variable_Client() as client:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
                 r = _handle_response(r)
                 text = r.get("choices")[0].get("message").get("content")
             break
@@ -1335,7 +1371,9 @@ def _process_send_regenerated_ask_managr(payload, context):
     ]
     user = User.objects.get(id=context.get("u"))
     data = ask_managr_data_collector(
-        str(user.id), context.get("resource_type"), context.get("resource_id"),
+        str(user.id),
+        context.get("resource_type"),
+        context.get("resource_id"),
     )
     resource = CRM_SWITCHER[user.crm][context.get("resource_type")]["model"].objects.get(
         id=context.get("resource_id")
@@ -1362,7 +1400,11 @@ def _process_send_regenerated_ask_managr(payload, context):
             )
             with Variable_Client(timeout) as client:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
             r = _handle_response(r)
             text = r.get("choices")[0].get("message").get("content")
             break
@@ -1525,7 +1567,11 @@ def _process_send_next_steps(payload, context):
         try:
             with Variable_Client() as client:
                 url = core_consts.OPEN_AI_COMPLETIONS_URI
-                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
                 r = _handle_response(r)
                 text = r.get("choices")[0].get("text")
                 break
@@ -1691,7 +1737,11 @@ def _process_add_call_analysis(workflow_id, summaries):
         try:
             with Variable_Client(timeout) as client:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
             r = _handle_response(r)
             text = r.get("choices")[0].get("message").get("content")
             break
@@ -1808,7 +1858,9 @@ def _process_send_call_summary_to_dm(payload, context):
 def _process_send_ask_managr_to_dm(payload, context):
     user = User.objects.get(id=context.get("u"))
     data = ask_managr_data_collector(
-        str(user.id), context.get("resource_type"), context.get("resource_id"),
+        str(user.id),
+        context.get("resource_type"),
+        context.get("resource_id"),
     )
     prompt = core_consts.OPEN_AI_ASK_MANAGR_PROMPT(
         user, datetime.today(), context.get("prompt"), data
@@ -1824,7 +1876,11 @@ def _process_send_ask_managr_to_dm(payload, context):
             )
             with Variable_Client(timeout) as client:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
             r = _handle_response(r)
             text = r.get("choices")[0].get("message").get("content")
             break

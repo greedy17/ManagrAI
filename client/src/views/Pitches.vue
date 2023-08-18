@@ -1,5 +1,5 @@
 <template>
-  <div class="pitches">
+  <div ref="pitchTop" class="pitches">
     <div :class="{ opaque: loading }" v-if="!pitch" class="center">
       <p>Generate a pitch, blog post or press release based on any persona</p>
 
@@ -19,22 +19,7 @@
           />
         </div>
       </div>
-      <div class="input-container">
-        <div class="input-row">
-          <div class="main-text">
-            <img src="@/assets/images/crown.svg" height="14px" alt="" />
-            Brand
-          </div>
 
-          <input
-            :disabled="loading"
-            autofocus
-            class="area-input"
-            placeholder="FutureTech innovations, a leading innovator..."
-            v-model="brand"
-          />
-        </div>
-      </div>
       <div class="input-container">
         <div class="input-row">
           <div class="main-text">
@@ -51,11 +36,12 @@
           />
         </div>
       </div>
+
       <div class="input-container">
         <div class="input-row">
           <div class="main-text">
             <img src="@/assets/images/file-word.svg" height="14px" alt="" />
-            Brief
+            Briefing
           </div>
 
           <textarea
@@ -68,11 +54,12 @@
           />
         </div>
       </div>
+
       <div class="input-container">
         <div class="input-row">
           <div class="main-text">
             <img src="@/assets/images/comment.svg" height="14px" alt="" />
-            Style
+            Output
           </div>
 
           <textarea
@@ -80,9 +67,32 @@
             autofocus
             class="area-input"
             placeholder="Write a concise, engaging press release, highlighting the uniqueness of the product and its benefits to the target audience…"
-            v-model="style"
+            v-model="output"
             v-autoresize
           />
+        </div>
+      </div>
+
+      <div class="input-container">
+        <div class="input-row relative">
+          <div class="main-text">
+            <img src="@/assets/images/note.svg" height="14px" alt="" />
+            Style
+          </div>
+
+          <textarea
+            :disabled="loading"
+            autofocus
+            maxlength="1000"
+            class="area-input"
+            placeholder="Provide a sample of your writing style..."
+            v-model="sample"
+            v-autoresize
+          />
+
+          <div class="absolute-count">
+            <small>{{ remainingChars }}</small>
+          </div>
         </div>
       </div>
 
@@ -104,6 +114,9 @@
     <div v-else class="center">
       <div class="pitch-container">
         <div class="title-container">
+          <div @click="resetSearch" class="back">
+            <img src="@/assets/images/back.svg" height="18px" width="18px" alt="" />
+          </div>
           <h1 class="no-text-margin">{{ type }}</h1>
           <p class="sub-text">
             Target: <span>{{ persona }}</span>
@@ -112,16 +125,41 @@
 
         <div class="title-bar">
           <div class="row">
-            <button class="secondary-button">Regenerate</button>
-            <button class="primary-button">Save</button>
+            <button
+              :disabled="loading"
+              @click="toggleRegenerate"
+              v-if="!regenerating"
+              class="secondary-button"
+            >
+              <img
+                v-if="loading"
+                class="rotate"
+                height="14px"
+                src="@/assets/images/loading.svg"
+                alt=""
+              />
+              {{ loading ? 'Regenerating' : 'Regenerate' }}
+            </button>
+            <div style="width: 600px" class="row" v-else>
+              <input
+                :disabled="loading"
+                placeholder="provide additional instructions..."
+                autofocus
+                class="regen-input"
+                type="textarea"
+                v-model="instructions"
+              />
+
+              <button @click="regeneratePitch" class="primary-button">Regenerate</button>
+            </div>
           </div>
 
-          <div class="wrapper">
+          <div v-if="!regenerating" class="wrapper">
             <img
               style="cursor: pointer"
               class="right-mar"
               src="@/assets/images/clipboard.svg"
-              height="18px"
+              height="16px"
               alt=""
             />
             <div style="margin-left: -20px" class="tooltip">Copy</div>
@@ -134,7 +172,7 @@
   </div>
 </template>
 <script>
-import Comms from '@/services/comms'
+import { Comms } from '@/services/comms'
 
 export default {
   name: 'Pitches',
@@ -142,46 +180,95 @@ export default {
   data() {
     return {
       type: '',
-      brand: '',
+      output: '',
       persona: '',
       briefing: '',
-      style: '',
+      sample: '',
       pitch: null,
       loading: false,
+      regenerating: false,
+      instructions: '',
     }
   },
   watch: {},
   created() {},
   methods: {
+    resetSearch() {
+      this.pitch = null
+      this.type = ''
+      this.output = ''
+      this.persona = ''
+      this.briefing = ''
+      this.sample = ''
+      this.instructions = ''
+    },
+    scrollToTop() {
+      setTimeout(() => {
+        const pitchTop = this.$refs.pitchTop
+        pitchTop.scrollTop = pitchTop.scrollHeight
+      }, 300)
+    },
+    toggleRegenerate() {
+      this.regenerating = !this.regenerating
+    },
+    async regeneratePitch() {
+      this.regenerating = false
+      this.loading = true
+      try {
+        await Comms.api
+          .regeneratePitch({
+            pitch: this.pitch,
+            instructions: this.instructions,
+          })
+          .then((response) => {
+            console.log(response)
+            this.pitch = response.pitch
+          })
+      } catch (e) {
+        console.log('ERROR CREATING PITCH::', e)
+      } finally {
+        // this.clearData()
+        this.instructions = ''
+        this.loading = false
+        this.scrollToTop()
+      }
+    },
     async generatePitch() {
       this.loading = true
       try {
         await Comms.api
           .generatePitch({
             type: this.type,
-            brand: this.brand,
+            output: this.output,
             persona: this.persona,
             briefing: this.briefing,
-            style: this.style,
+            sample: this.sample,
           })
           .then((response) => {
+            console.log(response)
             this.pitch = response.pitch
           })
-      } catch {
+      } catch (e) {
+        console.log('ERROR CREATING YOUR PITCH DAWGGY BONE', e)
       } finally {
         // this.clearData()
         this.loading = false
+        this.scrollToTop()
       }
     },
     clearData() {
       this.type = ''
-      this.brand = ''
+      this.output = ''
       this.persona = ''
       this.briefing = ''
-      this.style = ''
+      this.sample = ''
     },
   },
-  computed: {},
+  computed: {
+    remainingChars() {
+      return 1000 - this.sample.length
+    },
+  },
   directives: {
     autoresize: {
       inserted(el) {
@@ -218,7 +305,20 @@ export default {
 }
 
 .title-container {
+  position: relative;
   width: 100%;
+}
+
+.relative {
+  position: relative;
+}
+
+.absolute-count {
+  position: absolute;
+  bottom: -2px;
+  right: -8px;
+  font-size: 11px;
+  color: $light-gray-blue;
 }
 
 .no-text-margin {
@@ -312,7 +412,7 @@ export default {
   border: 1px solid rgba(0, 0, 0, 0.1);
   padding: 0.75rem 1.2rem 0.75rem 1.2rem;
   border-radius: 6px;
-  width: 600px;
+  width: 620px;
   background-color: $offer-white;
   color: $base-gray;
 }
@@ -350,6 +450,18 @@ export default {
   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
   border-radius: 6px;
 }
+
+.regen-input {
+  resize: none;
+  outline: none;
+  border: 1px solid $soft-gray;
+  border-radius: 6px;
+  width: 400px;
+  overflow-y: auto;
+  margin: 1rem 0;
+  padding: 8px 1rem;
+  font-family: $base-font-family;
+}
 .input-row {
   display: flex;
   align-items: center;
@@ -357,7 +469,7 @@ export default {
   align-items: center;
 }
 .main-text {
-  width: 80px;
+  width: 96px;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -385,6 +497,8 @@ footer {
   @include dark-blue-button();
   padding: 8px 12px;
   border: none;
+  white-space: nowrap;
+  margin-left: 1rem;
 }
 
 .secondary-button {
@@ -482,5 +596,22 @@ footer {
 
 .lte8 .wrapper:hover .tooltip {
   display: block;
+}
+
+.back {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  top: 0.75rem;
+  left: -56px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 100%;
+  padding: 3px 2px;
+  cursor: pointer;
+
+  img {
+    filter: invert(40%);
+  }
 }
 </style>

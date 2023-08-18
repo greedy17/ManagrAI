@@ -55,7 +55,6 @@ def _split_last_name(name):
     if name and len(name):
         name_parts = name.split(" ")
         if len(name_parts) > 1:
-
             return "".join(name_parts[1:])
 
 
@@ -176,7 +175,13 @@ def sync_contacts(contacts, user_id):
 
 def CONTACT_FILTERS(crm, emails):
     if crm == "HUBSPOT":
-        return [{"propertyName": "email", "operator": "IN", "values": emails,}]
+        return [
+            {
+                "propertyName": "email",
+                "operator": "IN",
+                "values": emails,
+            }
+        ]
     else:
         email_string = "','".join(emails)
         return [f"AND Email IN ('{email_string}')"]
@@ -307,7 +312,11 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 }
             )
             participants.append(
-                {"name": "Zachary Bradley", "id": "", "user_email": "zachbradleydev@gmail.com",}
+                {
+                    "name": "Zachary Bradley",
+                    "id": "",
+                    "user_email": "zachbradleydev@gmail.com",
+                }
             )
         contact_forms = []
         if len(participants):
@@ -317,14 +326,15 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
             while True:
                 try:
                     crm_contacts = user.crm_account.adapter_class.list_resource_data(
-                        "Contact", filter=CONTACT_FILTERS(user.crm, list(participant_emails)),
+                        "Contact",
+                        filter=CONTACT_FILTERS(user.crm, list(participant_emails)),
                     )
                     break
                 except CRMTokenExpired:
                     if attempts >= 5:
                         break
                     else:
-                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        sleep = 1 * 2**attempts + random.uniform(0, 1)
                         time.sleep(sleep)
                         user.crm_account.regenerate_token()
                         attempts += 1
@@ -352,7 +362,8 @@ def _get_past_zoom_meeting_details(user_id, meeting_uuid, original_duration, sen
                 )
             else:
                 account = BaseAccount.objects.filter(
-                    contacts__email__in=participant_emails, owner__id=user.id,
+                    contacts__email__in=participant_emails,
+                    owner__id=user.id,
                 ).first()
                 if account:
                     meeting_resource_data["resource_id"] = str(account.id)
@@ -691,7 +702,10 @@ def process_transcript_to_summaries(transcript, user):
                 print(index)
 
             transcript_body = core_consts.OPEN_AI_TRANSCRIPT_PROMPT(
-                {"date": datetime.today(), "transcript": transcript_part,}
+                {
+                    "date": datetime.today(),
+                    "transcript": transcript_part,
+                }
             )
             transcript_body = (
                 transcript_body.replace("\r\n", "")
@@ -713,7 +727,9 @@ def process_transcript_to_summaries(transcript, user):
                 with Variable_Client(timeout) as client:
                     try:
                         r = client.post(
-                            url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
+                            url,
+                            data=json.dumps(body),
+                            headers=core_consts.OPEN_AI_HEADERS,
                         )
                         r = _handle_response(r)
                         summary = r.get("choices")[0].get("message").get("content")
@@ -917,7 +933,9 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
                             with Variable_Client(timeout) as client:
                                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                                 r = client.post(
-                                    url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
+                                    url,
+                                    data=json.dumps(body),
+                                    headers=core_consts.OPEN_AI_HEADERS,
                                 )
                             r = _handle_response(r)
                             if not settings.IN_PROD:
@@ -943,6 +961,7 @@ def _process_get_transcript_and_update_crm(payload, context, summary_parts, viab
 
                         workflow.transcript_summary = combined_summary
                         workflow.save()
+                        user.add_meta_data("transcript_summaries")
                         break
                     except StopReasonLength:
                         logger.exception(
@@ -1215,7 +1234,9 @@ def _process_frontend_transcript(request_data):
                             with Variable_Client(timeout) as client:
                                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                                 r = client.post(
-                                    url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
+                                    url,
+                                    data=json.dumps(body),
+                                    headers=core_consts.OPEN_AI_HEADERS,
                                 )
                             r = _handle_response(r)
                             if not settings.IN_PROD:

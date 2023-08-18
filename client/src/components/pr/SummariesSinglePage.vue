@@ -1,16 +1,16 @@
 <template>
-  <div class="main-content">
+  <div ref="loadedContent" class="main-content">
     <Modal v-if="regenModal" class="regen-modal">
       <div class="regen-container">
         <div class="regen-header">
           <div>
-            <h4 class="regen-header-title">New Search</h4>
+            <h4 class="regen-header-title">Regenerate Search</h4>
             <p class="regen-header-subtitle">Create a new search using conversational AI</p>
           </div>
           <div class="pointer" @click="closeRegenModal"><small>X</small></div>
         </div>
         <div class="regen-body">
-          <div>
+          <div v-if="!searchSaved">
             <div>
               <h5 class="regen-body-title">Search</h5>
               <span class="regen-header-subtitle"
@@ -27,13 +27,9 @@
             </div>
             <textarea v-autoresize v-model="newTemplate" class="regen-body-text" />
           </div>
-          <div class="blue-border-button">Use a Template</div>
+          <!-- <div class="blue-border-button">Use a Template</div> -->
         </div>
         <div class="regen-footer">
-          <small v-if="searchSaved" class="red-text"
-            >This new version will replace your current one
-          </small>
-          <small v-else></small>
           <div class="row">
             <div class="cancel-button" @click="closeRegenModal">Cancel</div>
             <div class="save-button" @click="generateNewSearch(null)">Submit</div>
@@ -41,7 +37,7 @@
         </div>
       </div>
     </Modal>
-    <div ref="loadedContent" class="center column" v-if="page === 'SUMMARIES'">
+    <div class="center column" v-if="page === 'SUMMARIES'">
       <div v-if="!selectedSearch" class="switcher">
         <div
           @click="switchMainView('news')"
@@ -319,7 +315,7 @@
               <div class="news-card-medium">
                 <header class="neg-margin">
                   <div class="card-row-med">
-                    <img :src="user.profile_image_url" />
+                    <img :src="tweet.user.profile_image_url" />
                     <h1 class="article-title">
                       {{ tweet.user.name }}
                     </h1>
@@ -534,7 +530,7 @@
 </template>
 <script>
 import ChatTextBox from '../Chat/ChatTextBox.vue'
-import Comms from '@/services/comms'
+import { Comms } from '@/services/comms'
 
 export default {
   name: 'SummariesSinglePage',
@@ -641,6 +637,7 @@ export default {
       this.searchName = search.name
       this.newSearch = search.input_text
       this.newTemplate = search.instructions
+      this.mainView = search.type === 'SOCIAL_MEDIA' ? 'social' : 'news'
       this.generateNewSearch(search.search_boolean)
     },
     changeIndex() {
@@ -773,6 +770,7 @@ export default {
             input_text: this.newSearch,
             search_boolean: this.booleanString,
             instructions: this.newTemplate,
+            type: this.mainView === 'news' ? 'NEWS' : 'SOCIAL_MEDIA',
           })
           .then((response) => {
             if (response.id) {

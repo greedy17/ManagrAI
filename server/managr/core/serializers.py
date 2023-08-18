@@ -1,6 +1,7 @@
 from datetime import datetime
 import pytz
 from django.utils import timezone
+from django.db import IntegrityError
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import login
 from rest_framework import serializers
@@ -228,12 +229,16 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         org_name = validated_data.pop("organization_name")
         try:
             org_check = Organization.objects.get(name__iexact=org_name)
+            if org_check:
+                raise IntegrityError("Organization already exists")
             return User.objects.create_user(
                 organization=org_check, user_level=core_consts.ACCOUNT_TYPE_REP, **validated_data
             )
         except Organization.DoesNotExist:
             org = Organization.objects.create(name=org_name)
             return User.objects.create_admin_user(organization=org, **validated_data)
+        except IntegrityError as e:
+            return str(e)
 
 
 class UserLoginSerializer(serializers.ModelSerializer):

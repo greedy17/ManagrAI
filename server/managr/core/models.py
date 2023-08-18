@@ -51,7 +51,9 @@ class IntegrationModel(models.Model):
         max_length=255, blank=True, help_text="The UUID from the integration source"
     )
     integration_source = models.CharField(
-        max_length=255, choices=org_consts.INTEGRATION_SOURCES, blank=True,
+        max_length=255,
+        choices=org_consts.INTEGRATION_SOURCES,
+        blank=True,
     )
     imported_by = models.ForeignKey(
         "core.User", on_delete=models.CASCADE, null=True, related_name="imported_%(class)s"
@@ -163,7 +165,10 @@ class Message(TimeStampModel):
 
 class Conversation(TimeStampModel):
     user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="conversations")
-    title = models.CharField(max_length=255, blank=True,)
+    title = models.CharField(
+        max_length=255,
+        blank=True,
+    )
     members = ArrayField(models.CharField(max_length=1000), default=list, blank=True)
 
 
@@ -185,8 +190,14 @@ class User(AbstractUser, TimeStampModel):
     SALES = "SALES"
     PR = "PR"
     ROLE_CHOICES = [
-        (SALES, "Sales",),
-        (PR, "PR",),
+        (
+            SALES,
+            "Sales",
+        ),
+        (
+            PR,
+            "PR",
+        ),
         # (LEADERSHIP, "Leadership",),
         # (FRONTLINE_MANAGER, "Frontline Manager",),
         # (ACCOUNT_EXEC, "Account Executive",),
@@ -208,9 +219,14 @@ class User(AbstractUser, TimeStampModel):
         null=True,
     )
     user_level = models.CharField(
-        choices=core_consts.USER_LEVELS, max_length=255, default=core_consts.USER_LEVEL_REP,
+        choices=core_consts.USER_LEVELS,
+        max_length=255,
+        default=core_consts.USER_LEVEL_REP,
     )
-    first_name = models.CharField(max_length=255, blank=True,)
+    first_name = models.CharField(
+        max_length=255,
+        blank=True,
+    )
     last_name = models.CharField(max_length=255, blank=True, null=False)
     phone_number = models.CharField(max_length=255, blank=True, default="")
     is_invited = models.BooleanField(max_length=255, default=True)
@@ -239,11 +255,21 @@ class User(AbstractUser, TimeStampModel):
         blank=True,
         help_text="Object for reminder setting",
     )
-    crm = models.CharField(choices=core_consts.CRM_CHOICES, max_length=25, null=True, blank=True,)
+    crm = models.CharField(
+        choices=core_consts.CRM_CHOICES,
+        max_length=25,
+        null=True,
+        blank=True,
+    )
     team = models.ForeignKey(
         "organization.Team", related_name="users", on_delete=models.SET_NULL, null=True
     )
     make_team_lead = models.BooleanField(default=False)
+    meta_data = JSONField(
+        default=dict,
+        null=True,
+        blank=True,
+    )
     objects = UserManager()
 
     @property
@@ -368,6 +394,13 @@ class User(AbstractUser, TimeStampModel):
                 )
                 pass
         self.is_active = False
+        return self.save()
+
+    def add_meta_data(self, key):
+        if key in self.meta_data.keys():
+            self.meta_data[key] += 1
+        else:
+            self.meta_data[key] = 1
         return self.save()
 
     @property
@@ -560,7 +593,12 @@ class NylasAuthAccount(TimeStampModel):
         user_timezone = f"{self.user.timezone}"
         starts_after = convert_local_time_to_unix(user_timezone, 7, 00, date)
         ends_before = convert_local_time_to_unix(user_timezone, 20, 00, date)
-        query = dict({"starts_after": starts_after, "ends_before": ends_before,})
+        query = dict(
+            {
+                "starts_after": starts_after,
+                "ends_before": ends_before,
+            }
+        )
         if self.event_calendar_id:
             query["calendar_id"] = self.event_calendar_id
         params = urlencode(query)
@@ -657,7 +695,8 @@ class MeetingPrepInstance(TimeStampModel):
         max_length=255, null=True, blank=True, help_text="The class name of the resource"
     )
     invocation = models.PositiveIntegerField(
-        default=0, help_text="Keeps track of the number of times the meeting instance was called",
+        default=0,
+        help_text="Keeps track of the number of times the meeting instance was called",
     )
     form = models.OneToOneField(
         "slack.OrgCustomSlackFormInstance",
@@ -774,7 +813,10 @@ class UserForecast(models.Model):
     user = models.OneToOneField(
         "core.User", on_delete=models.CASCADE, related_name="current_forecast"
     )
-    state = JSONField(default=dict, null=True,)
+    state = JSONField(
+        default=dict,
+        null=True,
+    )
 
     def __str__(self):
         return f"Forecast for {self.user.email}"
@@ -803,7 +845,6 @@ class UserForecast(models.Model):
         return "Opportunity already in current forecast state"
 
     def remove_from_state(self, id):
-
         if id in self.state.keys():
             del self.state[id]
             self.save()
