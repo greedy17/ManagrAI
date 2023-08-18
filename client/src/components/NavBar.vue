@@ -16,6 +16,11 @@
         </main>
       </div>
     </Modal>
+    <Transition name="slide-fade">
+      <div v-if="showUpdateBanner" class="templates">
+        <p>Search successfully deleted!</p>
+      </div>
+    </Transition>
     <div v-if="userIsLoggedIn">
       <nav id="nav" v-if="isPR">
         <router-link :to="{ name: 'PRSummaries' }">
@@ -91,17 +96,39 @@
               <p class="v-margin" v-if="!searches.length">Nothing here...</p>
 
               <div class="searches-container">
-                <div class="row" v-for="search in searches" :key="search.id">
+                <div
+                  @mouseenter="setIndex(i)"
+                  @mouseLeave="removeIndex"
+                  class="row relative"
+                  v-for="(search, i) in searches"
+                  :key="search.id"
+                >
                   <img
-                    @click="toggleDeleteModal(search)"
+                    class="search-icon invert"
+                    v-if="search.type === 'NEWS'"
+                    src="@/assets/images/memo.svg"
+                    height="12px"
+                    alt=""
+                  />
+                  <img
                     class="search-icon"
-                    src="@/assets/images/trash.svg"
+                    v-else-if="search.type === 'SOCIAL_MEDIA'"
+                    src="@/assets/images/comment.svg"
                     height="12px"
                     alt=""
                   />
                   <p @click="selectSearch(search)">
                     {{ search.name }}
                   </p>
+
+                  <img
+                    @click="toggleDeleteModal(search)"
+                    v-if="hoverIndex === i"
+                    class="absolute-icon"
+                    src="@/assets/images/trash.svg"
+                    height="12px"
+                    alt=""
+                  />
                 </div>
               </div>
             </div>
@@ -163,7 +190,7 @@
 
 <script>
 import { CollectionManager } from '@thinknimble/tn-models'
-import Comms from '@/services/comms'
+import { Comms } from '@/services/comms'
 
 export default {
   name: 'NavBar',
@@ -182,12 +209,20 @@ export default {
       deleteModelOpen: false,
       selectedSearch: null,
       soonText: 'Transcribe',
+      hoverIndex: null,
+      showUpdateBanner: false,
     }
   },
   created() {
     this.getSearches()
   },
   methods: {
+    setIndex(i) {
+      this.hoverIndex = i
+    },
+    removeIndex() {
+      this.hoverIndex = null
+    },
     textSoonOn() {
       this.soonText = 'Coming Soon!'
     },
@@ -208,10 +243,16 @@ export default {
             id: this.selectedSearch.id,
           })
           .then(() => {
-            this.$router.go()
+            this.$store.dispatch('getSearches')
+            this.deleteModelOpen = false
+            this.showUpdateBanner = true
           })
       } catch (e) {
         console.log('ERROR DELETING SEARCH', e)
+      } finally {
+        setTimeout(() => {
+          this.showUpdateBanner = false
+        }, 2000)
       }
     },
     selectSearch(search) {
@@ -474,6 +515,23 @@ export default {
   padding: 0.5rem 0;
 }
 
+.relative {
+  position: relative;
+}
+
+.relative:hover {
+  img:last-of-type {
+    opacity: 1;
+  }
+}
+
+.absolute-icon {
+  position: absolute;
+  opacity: 0;
+  right: 8px;
+  cursor: pointer;
+}
+
 .search-dropdown {
   width: 260px;
   position: absolute;
@@ -696,13 +754,38 @@ a:hover {
   margin-left: 16px;
 }
 
-// .active::before {
-//   content: '';
-//   position: absolute;
-//   left: 16px;
-//   bottom: 0;
-//   height: 1px;
-//   width: 70%;
-//   border-bottom: 1px solid $mid-gray;
-// }
+.templates {
+  display: block;
+  width: fit-content;
+  height: 40px;
+  position: absolute;
+  top: 16px;
+  left: 45%;
+  font-size: 12px;
+  background: $dark-green;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  line-height: 1.5;
+  z-index: 2010;
+
+  p {
+    margin-top: 8px;
+    padding: 0;
+  }
+}
+
+.templates::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: $dark-green;
+  bottom: -3px;
+  left: 45%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
 </style>

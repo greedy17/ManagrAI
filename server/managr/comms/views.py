@@ -368,10 +368,10 @@ class PRSearchViewSet(
     def get_pitch(self, request, *args, **kwargs):
         user = request.user
         type = request.data.get("type")
-        brand = request.data.get("brand")
+        output = request.data.get("output")
         persona = request.data.get("persona")
         briefing = request.data.get("briefing")
-        style = request.data.get("style")
+        sample = request.data.get("sample")
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -381,7 +381,7 @@ class PRSearchViewSet(
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_PITCH(
-                    datetime.now().date(), user.full_name, type, brand, persona, briefing, style
+                    datetime.now().date(), type, output, persona, briefing, sample
                 )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,

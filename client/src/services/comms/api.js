@@ -45,6 +45,15 @@ class CommsApi extends ModelAPI {
         }
     }
 
+    async regeneratePitch(data) {
+        try {
+            const res = await this.client.post(CommsApi.ENDPOINT + 'regenerate-pitch/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
     async generatePitch(data) {
         try {
             const res = await this.client.post(CommsApi.ENDPOINT + 'pitch/', data)

@@ -16,6 +16,8 @@ TWITTER_AUTHORIZATION_URI = "https://twitter.com/i/oauth2/authorize"
 TWITTER_ACCESS_TOKEN_URI = TWITTER_BASE_URI + "2/oauth2/token"
 TWITTER_SCOPES = ["tweets.read", "offline.access", "users.read"]
 
+TWITTER_API_HEADERS = {"Authorization": f"Bearer {TWITTER_ACCESS_TOKEN}"}
+
 NEWS_API_HEADERS = {
     "Authorization": f"Bearer {NEWS_API_KEY}",
 }
@@ -101,8 +103,8 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, instructions=False, for_clien
     return body
 
 
-def OPEN_AI_PITCH(date, name, type, brand, persona, briefing, style):
-    body = f"Today is {date}. You are a VP of Communications tasked by {name} with generating {type} about company: {brand}. Tailor the content to this target persona: {persona}. Here is the briefing: {briefing}. Here are the output instructions: {style}"
+def OPEN_AI_PITCH(date, type, output, persona, briefing, sample):
+    body = f"Today is {date}. You are a VP of Communications tasked to generate a {type} targeting {persona}. Reference this briefing: {briefing} and follow these output instructions: {output}. Lastly, if provided, mirror this writing style: {sample}."
     return body
 
 
