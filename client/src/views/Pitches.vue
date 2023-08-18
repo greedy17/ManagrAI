@@ -120,7 +120,7 @@
             <img
               style="cursor: pointer"
               class="right-mar"
-              src="@/assets/images/copy.svg"
+              src="@/assets/images/clipboard.svg"
               height="18px"
               alt=""
             />

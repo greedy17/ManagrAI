@@ -9,7 +9,7 @@
           <h2>Delete Search</h2>
           <p>Are you sure you want to delete this search ?</p>
 
-          <div class="row">
+          <div style="margin-top: 20px" class="row">
             <button @click="toggleDeleteModal" class="tertiary-button">Cancel</button>
             <button @click="deleteSearch" class="red-button">Delete</button>
           </div>
@@ -35,16 +35,20 @@
           <p>Pitch</p>
         </router-link>
 
-        <router-link :to="{ name: 'PRSummaries' }">
-          <p>Transcribe</p>
-        </router-link>
+        <a @mouseenter="textSoonOn" @mouseleave="textSoonOff">{{ soonText }}</a>
 
         <div class="auto-left">
-          <div class="nav-text">
+          <!-- <div v-if="$route.name === 'PRSummaries' || $route.name === 'Pitches'" class="nav-text">
             <button @click="goHome" class="tertiary-button">
-              {{ $route.name === 'PRSummaries' ? 'New Search' : 'New Pitch' }}
+              {{
+                $route.name === 'PRSummaries'
+                  ? 'New Search'
+                  : $route.name === 'Pitches'
+                  ? 'New Pitch'
+                  : ''
+              }}
             </button>
-          </div>
+          </div> -->
 
           <div class="relative">
             <div @click="toggleShowSearches" class="row pointer nav-text">
@@ -141,8 +145,12 @@
                 Profile
               </p>
               <p class="dropdown-item">
-                <img class="mar-right" src="@/assets/images/settings.svg" height="16px" alt="" />
+                <img class="mar-right" src="@/assets/images/settings.svg" height="14px" alt="" />
                 Settings
+              </p>
+              <p class="dropdown-item" @click="goToIntegrations">
+                <img class="mar-right" src="@/assets/images/apps.svg" height="14px" alt="" />
+                Integrations
               </p>
               <p @click="logOut" class="dropdown-item__bottom">Sign out</p>
             </div>
@@ -163,20 +171,29 @@ export default {
     CollectionManager,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
   },
+  props: {
+    menuOpen: { type: Boolean },
+  },
   data() {
     return {
       items: [],
       searchText: '',
-      menuOpen: false,
       showSavedSearches: false,
       deleteModelOpen: false,
       selectedSearch: null,
+      soonText: 'Transcribe',
     }
   },
   created() {
     this.getSearches()
   },
   methods: {
+    textSoonOn() {
+      this.soonText = 'Coming Soon!'
+    },
+    textSoonOff() {
+      this.soonText = 'Transcribe'
+    },
     toggleDeleteModal(search = null) {
       if (search) {
         this.selectedSearch = search
@@ -217,18 +234,15 @@ export default {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
     },
-    openModal() {
-      this.modalOpen = true
-    },
-    closeModal() {
-      this.modalOpen = false
+    toggleMenu() {
+      this.$emit('toggle-menu')
     },
     clearText() {
       this.searchText = ''
     },
-    test() {
-      console.log(this.unfilteredSearches)
-      console.log(this.searches)
+    goToIntegrations() {
+      this.$router.push('pr-integrations')
+      this.$emit('close-menu')
     },
   },
   computed: {
@@ -329,6 +343,10 @@ export default {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+
+    // h2 {
+    //   margin-bottom: 0px;
+    // }
   }
 }
 
@@ -501,6 +519,7 @@ export default {
   width: 100%;
   img {
     margin: 0 1.5rem 0 1.5rem;
+    filter: invert(40%);
   }
 
   p {

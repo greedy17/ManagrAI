@@ -633,17 +633,33 @@ export default {
     // this.redirectLoading = true
     // // if there is a code assume an integration has begun
     if (!this.$route.query.code) {
-      this.$router.push({ name: 'Home' }).then(() => {
-        this.redirectLoading = false
-      })
+      if (this.$store.state.user.role === 'PR') {
+        this.$router.push({ name: 'PRIntegrations' }).then(() => {
+          this.redirectLoading = false
+        })
+      } else {
+        this.$router.push({ name: 'Home' }).then(() => {
+          this.redirectLoading = false
+        })
+      }
     } else {
-      this.$router.push({
-        name: 'Home',
-        query: {
-          code: this.$route.query.code,
-          state: this.$route.query.state,
-        },
-      })
+      if (this.$store.state.user.role === 'PR') {
+        this.$router.push({
+          name: 'PRIntegrations',
+          query: {
+            code: this.$route.query.code,
+            state: this.$route.query.state,
+          },
+        })
+      } else {
+        this.$router.push({
+          name: 'Home',
+          query: {
+            code: this.$route.query.code,
+            state: this.$route.query.state,
+          },
+        })
+      }
     }
   },
   computed: {

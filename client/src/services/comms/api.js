@@ -87,6 +87,15 @@ class CommsApi extends ModelAPI {
         }
     }
 
+    async getTweetSummary(data) {
+        try {
+            const res = await this.client.post(CommsApi.ENDPOINT + 'tweet-summary/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
     async getArticleSummary(url, search, instructions) {
         try {
             const res = await this.client.post(CommsApi.ENDPOINT + 'article-summary/', { params: url, search, instructions })
