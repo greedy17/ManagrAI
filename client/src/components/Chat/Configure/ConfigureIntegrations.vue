@@ -384,7 +384,7 @@
             <div></div>
             <div class="sep-button-container">
               <div class="separator"></div>
-              <button
+              <!-- <button
                 class="long-button gray"
                 style="
                   margin-right: 0;
@@ -393,12 +393,12 @@
                   padding-top: 0.4rem;
                   padding-bottom: 0.4rem;
                 "
-                @click="testTwitter"
+                @click="twitterAuthorization"
               >
                 Coming Soon...
-              </button>
-              <!-- <button
-                v-if="hasSlackIntegration || (orgHasSlackIntegration && userCanIntegrateSlack)"
+              </button> -->
+              <button
+                v-if="false"
                 class="long-button coral"
                 style="
                   margin-right: 0;
@@ -410,12 +410,12 @@
                 @click="setRemoveApp('SLACK')"
               >
                 Disconnect
-              </button> -->
-              <!-- <button
+              </button>
+              <button
                 v-else
                 class="long-button"
                 style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem"
-                @click="connectApp('SLACK')"
+                @click="twitterAuthorization"
               >
                 Connect
                 <img
@@ -423,7 +423,7 @@
                   class="green-filter"
                   style="margin-top: 1px; margin-left: 0.5rem; height: 16px; font-weight: bold"
                 />
-              </button> -->
+              </button>
             </div>
           </div>
         </div>
@@ -1178,7 +1178,7 @@ export default {
         // }
       }
     },
-    async testTwitter() {
+    async twitterAuthorization() {
       const authoRes = await User.api.getTwitterAuthorization()
       if (authoRes.link) {
         localStorage.twitterVerification = authoRes.verifier
