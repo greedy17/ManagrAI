@@ -84,4 +84,4 @@ class TwitterApiException:
         elif self.status_code == 500:
             raise ServerError()
         else:
-            raise Exception(f"News error: {self.param}")
+            raise Exception(f"Twitter api error: {self.param}")

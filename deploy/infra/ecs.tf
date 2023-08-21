@@ -89,6 +89,7 @@ data "template_file" "managr_app" {
     use_open_ai    = title(each.value.use_open_ai)
     use_sso        = title(each.value.use_sso)
     use_news_api   = title(each.value.use_news_api)
+    use_twitter_api= title(each.value.use_twitter_api)
   }
 }
 
@@ -141,6 +142,7 @@ data "template_file" "managr_app_scheduled_tasks" {
     use_open_ai    = title(each.value.env.use_open_ai)
     use_sso        = title(each.value.env.use_sso)
     use_news_api   = title(each.value.env.use_news_api)
+    use_twitter_api= title(each.value.env.use_twitter_api)
   }
 }
 
@@ -334,5 +336,9 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     googleLoginUri       = each.value.google_login_uri
 
     newsApiKey           = each.value.news_api_key
+
+    twitterClientId      = each.value.twitter_client_id
+    twitterRedirectUri   = each.value.twitter_redirect_uri
+    twitterAccessToken   = each.value.twitter_access_token
   })
 }

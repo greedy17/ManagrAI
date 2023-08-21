@@ -159,8 +159,13 @@ variable "environments" {
     google_client_id       = string
     google_login_uri       = string
 
-    use_news_api            = bool
+    use_news_api           = bool
     news_api_key           = string
+
+    use_twitter_api        = bool
+    twitter_client_id      = string
+    twitter_redirect_uri   = string
+    twitter_access_token   = string
   }))
 }
 
