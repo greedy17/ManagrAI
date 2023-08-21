@@ -9,7 +9,7 @@ export const SALES = 'SALES'
 export const PR = 'PR'
 export const ROLE_CHOICES = [
   { key: SALES, name: 'Sales' },
-  { key: PR, name: 'PR' },
+  { key: PR, name: 'Public Relations' },
   // { key: LEADERSHIP, name: 'Leadership' },
   // { key: FRONTLINE_MANAGER, name: 'Frontline Manager' },
   // { key: ACCOUNT_EXEC, name: 'Account Executive' },
