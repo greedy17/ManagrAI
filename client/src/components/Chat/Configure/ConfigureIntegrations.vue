@@ -1181,6 +1181,7 @@ export default {
     async testTwitter() {
       const authoRes = await User.api.getTwitterAuthorization()
       if (authoRes.link) {
+        localStorage.twitterVerification = authoRes.verifier
         window.location.href = authoRes.link
       }
     },
@@ -1193,7 +1194,11 @@ export default {
 
       try {
         const modelClass = this.selectedIntegrationSwitcher
-        if (this.selectedIntegration == 'SALESLOFT') {
+        if (this.selectedIntegration === 'TWITTER') {
+          const data = { code: this.$route.query.code, verifier: localStorage.twitterVerification }
+          localStorage.twitterVerification = ''
+          await modelClass.api.getTwitterAuthentication(data)
+        } else if (this.selectedIntegration == 'SALESLOFT') {
           await modelClass.api.authenticate(
             this.$route.query.code,
             this.$route.query.context,
@@ -1303,6 +1308,8 @@ export default {
           return GongAccount
         case 'OUTREACH':
           return OutreachAccount
+        case 'TWITTER':
+          return User
         default:
           return null
       }

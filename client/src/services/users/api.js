@@ -653,7 +653,7 @@ export default class UserAPI {
       apiErrorHandler({ apiName: 'User.getTwitterAuthorization' })
     }
   }
-  async getTwiiterAuthentication(data) {
+  async getTwitterAuthentication(data) {
     try {
       const res = await this.client.post(TWITTER_AUTHENTICATION, data)
       return res.data
