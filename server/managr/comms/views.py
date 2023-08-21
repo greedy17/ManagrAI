@@ -502,15 +502,17 @@ class PRSearchViewSet(
 @api_view(["get"])
 @permission_classes([permissions.IsAuthenticated])
 def get_twitter_auth_link(request):
+    print('\n\n1\n\n')
     link, verifier = TwitterAuthAccount.get_authorization_link()
-    return Response({"link": link, "verifier": verifier})
+    print('\n2\n', link, '\n\n', verifier, '\n\n')
+    return Response(data={"link": link, "verifier": verifier})
 
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def get_twitter_authentication(request):
     code = request.data.get("code", None)
-    verifier = request.data.get("")
+    verifier = request.data.get("verifier", None)
     try:
         res = TwitterAuthAccount.get_access_token(code, verifier)
         print(res)

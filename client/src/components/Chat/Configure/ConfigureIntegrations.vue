@@ -393,6 +393,7 @@
                   padding-top: 0.4rem;
                   padding-bottom: 0.4rem;
                 "
+                @click="testTwitter"
               >
                 Coming Soon...
               </button>
@@ -1175,6 +1176,12 @@ export default {
           return res
         }
         // }
+      }
+    },
+    async testTwitter() {
+      const authoRes = await User.api.getTwitterAuthorization()
+      if (authoRes.link) {
+        window.location.href = authoRes.link
       }
     },
   },

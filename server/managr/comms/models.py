@@ -197,7 +197,7 @@ class TwitterAuthAccountAdapter:
             "code_challenge": CODE_CHALLENGE,
         }
         auth_url = comms_consts.TWITTER_AUTHORIZATION_URI + "?" + urlencode(auth_params)
-        return auth_url, CODE_VERIFIER
+        return auth_url, str(CODE_VERIFIER)
 
     @classmethod
     def get_access_token(cls, code, verifier):

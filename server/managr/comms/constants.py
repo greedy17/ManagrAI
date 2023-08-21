@@ -7,14 +7,14 @@ USE_TWITTER_API = settings.USE_TWITTER_API
 TWITTER_CLIENT_ID = settings.TWITTER_CLIENT_ID if USE_TWITTER_API else None
 TWITTER_SECRET_KEY = settings.TWITTER_SECRET_KEY if USE_TWITTER_API else None
 TWITTER_REDIRECT_URI = settings.TWITTER_REDIRECT_URI if USE_TWITTER_API else None
-TWITTER_API_KEY = settings.TWITTER_API_KEY if USE_TWITTER_API else None
+# TWITTER_API_KEY = settings.TWITTER_API_KEY if USE_TWITTER_API else None
 TWITTER_ACCESS_TOKEN = settings.TWITTER_ACCESS_TOKEN if USE_TWITTER_API else None
 TWITTER_BASE_URI = "https://api.twitter.com/"
 TWITTER_REQUEST_TOKEN_URI = "oauth/request_token"
 TWITTER_RECENT_TWEETS_URI = "2/tweets/search/recent"
 TWITTER_AUTHORIZATION_URI = "https://twitter.com/i/oauth2/authorize"
 TWITTER_ACCESS_TOKEN_URI = TWITTER_BASE_URI + "2/oauth2/token"
-TWITTER_SCOPES = ["tweets.read", "offline.access", "users.read"]
+TWITTER_SCOPES = ["tweet.read", "offline.access", "users.read"]
 
 TWITTER_API_HEADERS = {"Authorization": f"Bearer {TWITTER_ACCESS_TOKEN}"}
 
