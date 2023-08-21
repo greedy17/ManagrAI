@@ -1,7 +1,21 @@
 <template>
   <div ref="pitchTop" class="pitches">
     <div :class="{ opaque: loading }" v-if="!pitch" class="center">
-      <p>Generate a pitch, blog post or press release based on any persona</p>
+      <p v-if="!loading">Generate a pitch, blog post or press release based on any persona</p>
+
+      <div style="width: 50%" v-else>
+        <div class="row">
+          <p class="summary-load-text">Generating {{ type }}...</p>
+        </div>
+
+        <div class="summary-preview-skeleton shimmer">
+          <div class="content">
+            <div class="meta-wide"></div>
+            <div class="meta-shorter"></div>
+            <div class="meta-shortest"></div>
+          </div>
+        </div>
+      </div>
 
       <div class="input-container">
         <div class="input-row">
@@ -58,8 +72,8 @@
       <div class="input-container">
         <div class="input-row">
           <div class="main-text">
-            <img src="@/assets/images/comment.svg" height="14px" alt="" />
-            Output
+            <img src="@/assets/images/wand.svg" height="14px" alt="" />
+            Instructions
           </div>
 
           <textarea
@@ -73,7 +87,7 @@
         </div>
       </div>
 
-      <div class="input-container">
+      <!-- <div class="input-container">
         <div class="input-row relative">
           <div class="main-text">
             <img src="@/assets/images/note.svg" height="14px" alt="" />
@@ -94,7 +108,7 @@
             <small>{{ remainingChars }}</small>
           </div>
         </div>
-      </div>
+      </div> -->
 
       <footer>
         <button :disabled="loading" @click="clearData" class="secondary-button">Clear</button>
@@ -183,7 +197,6 @@ export default {
       output: '',
       persona: '',
       briefing: '',
-      sample: '',
       pitch: null,
       loading: false,
       regenerating: false,
@@ -199,13 +212,11 @@ export default {
       this.output = ''
       this.persona = ''
       this.briefing = ''
-      this.sample = ''
       this.instructions = ''
     },
     scrollToTop() {
       setTimeout(() => {
-        const pitchTop = this.$refs.pitchTop
-        pitchTop.scrollTop = pitchTop.scrollHeight
+        this.$refs.pitchTop.scrollIntoView({ behavior: 'smooth' })
       }, 300)
     },
     toggleRegenerate() {
@@ -242,14 +253,14 @@ export default {
             output: this.output,
             persona: this.persona,
             briefing: this.briefing,
-            sample: this.sample,
           })
           .then((response) => {
             console.log(response)
             this.pitch = response.pitch
+            this.scrollToTop()
           })
       } catch (e) {
-        console.log('ERROR CREATING YOUR PITCH DAWGGY BONE', e)
+        console.log('ERROR CREATING PITCH', e)
       } finally {
         // this.clearData()
         this.loading = false
@@ -412,7 +423,7 @@ export default {
   border: 1px solid rgba(0, 0, 0, 0.1);
   padding: 0.75rem 1.2rem 0.75rem 1.2rem;
   border-radius: 6px;
-  width: 620px;
+  width: 675px;
   background-color: $offer-white;
   color: $base-gray;
 }
@@ -469,7 +480,7 @@ export default {
   align-items: center;
 }
 .main-text {
-  width: 96px;
+  width: 132px;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -613,5 +624,55 @@ footer {
   img {
     filter: invert(40%);
   }
+}
+
+.summary-load-text {
+  font-family: $thin-font-family;
+  font-size: 14px;
+  margin-left: 8px;
+}
+
+.summary-preview-skeleton {
+  width: 650px;
+  // min-width: 400px;
+  padding: 8px 20px 16px 8px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes shimmer {
+  100% {
+    -webkit-mask-position: left;
+  }
+}
+
+.shimmer {
+  display: inline-block;
+  background-repeat: no-repeat;
+  animation: shimmer 2.5s infinite;
+  -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/300% 100%;
+}
+
+.meta-wide {
+  width: 100%;
+  height: 16px;
+  background-color: $black-blue;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.meta-shorter {
+  width: 80%;
+  height: 16px;
+  background-color: $black-blue;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.meta-shortest {
+  width: 60%;
+  height: 16px;
+  background-color: $black-blue;
+  border-radius: 8px;
+  margin-bottom: 8px;
 }
 </style>

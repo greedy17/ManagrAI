@@ -179,7 +179,10 @@
                 <img class="mar-right" src="@/assets/images/apps.svg" height="14px" alt="" />
                 Integrations
               </p>
-              <p @click="logOut" class="dropdown-item__bottom">Sign out</p>
+              <p @click="logOut" class="dropdown-item dropdown-border">
+                <img class="mar-right" src="@/assets/images/logout.svg" height="14px" alt="" /> Sign
+                out
+              </p>
             </div>
           </div>
         </div>
@@ -404,9 +407,6 @@ export default {
   margin-left: 1rem;
   filter: invert(50%);
   cursor: pointer;
-  &:hover {
-    filter: invert(66%) sepia(47%) saturate(6468%) hue-rotate(322deg) brightness(85%) contrast(96%);
-  }
 }
 
 .beta-tag {
@@ -527,9 +527,14 @@ export default {
 
 .absolute-icon {
   position: absolute;
+  padding-left: 4px;
+  background: transparent;
   opacity: 0;
   right: 8px;
   cursor: pointer;
+  &:hover {
+    filter: invert(66%) sepia(47%) saturate(6468%) hue-rotate(322deg) brightness(85%) contrast(96%);
+  }
 }
 
 .search-dropdown {
@@ -606,6 +611,12 @@ export default {
       opacity: 0.65;
     }
   }
+}
+
+.dropdown-border {
+  padding-top: 8px !important;
+
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .mar-right {

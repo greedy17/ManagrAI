@@ -371,7 +371,6 @@ class PRSearchViewSet(
         output = request.data.get("output")
         persona = request.data.get("persona")
         briefing = request.data.get("briefing")
-        sample = request.data.get("sample")
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -381,7 +380,7 @@ class PRSearchViewSet(
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_PITCH(
-                    datetime.now().date(), type, output, persona, briefing, sample
+                    datetime.now().date(), type, output, persona, briefing,
                 )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
