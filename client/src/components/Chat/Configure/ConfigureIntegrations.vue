@@ -374,7 +374,7 @@
           </div>
         </div>
         <!-- Twitter -->
-        <div class="card">
+        <!-- <div class="card">
           <div class="card__header" style="">
             <img style="height: 40px" src="@/assets/images/twitter-x.svg" />
           </div>
@@ -386,19 +386,6 @@
             <div></div>
             <div class="sep-button-container">
               <div class="separator"></div>
-              <!-- <button
-                class="long-button gray"
-                style="
-                  margin-right: 0;
-                  margin-top: 1rem;
-                  margin-bottom: 0.5rem;
-                  padding-top: 0.4rem;
-                  padding-bottom: 0.4rem;
-                "
-                @click="twitterAuthorization"
-              >
-                Coming Soon...
-              </button> -->
               <button
                 v-if="false"
                 class="long-button coral"
@@ -428,7 +415,7 @@
               </button>
             </div>
           </div>
-        </div>
+        </div> -->
         <!-- Instagram -->
         <div class="card">
           <div class="card__header" style="">
@@ -1984,5 +1971,6 @@ a {
   }
 }
 .pr-integrations-container {
+  min-width: 82vw;
 }
 </style>

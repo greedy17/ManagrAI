@@ -2209,9 +2209,9 @@
                         class="invite-list-users__section__item invite-list-users__status"
                       >
                         <div style="display: flex; align-items: flex-start;">
-                          <span :class="user.crm ? '' : 'grayscale'">
+                          <!-- <span :class="user.crm ? '' : 'grayscale'">
                             <img src="@/assets/images/twitter-x.svg" alt="" height="18px" />
-                          </span>
+                          </span> -->
                           <!-- <span
                             v-if="user.crm === 'SALESFORCE'"
                             :class="user.salesforce_account ? '' : 'grayscale'"
