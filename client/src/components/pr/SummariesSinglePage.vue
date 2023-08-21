@@ -1113,9 +1113,9 @@ export default {
 }
 
 .dropdown {
-  padding: 8px 0 6px 0;
+  padding: 8px 0 8px 0;
   position: relative;
-  height: 250px;
+  height: 232px;
   width: 100%;
   top: 8px;
   overflow-y: scroll;
@@ -1171,6 +1171,7 @@ export default {
   border-radius: 6px;
   padding: 4px 0;
   width: 200px;
+  margin-top: 96px;
 }
 .switch-item {
   display: flex;
@@ -1460,11 +1461,11 @@ button:disabled {
 
 .column {
   flex-direction: column;
-  margin-top: -25vh;
+  height: 100%;
 }
 
 .fullHeight {
-  margin-top: -10vh;
+  // margin-top: -10vh;
 }
 
 .center {
@@ -1585,7 +1586,6 @@ button:disabled {
   padding: 58px 36px 0 36px;
   height: fit-content;
   width: 100vw;
-  height: 100vh;
   color: $dark-black-blue;
   overflow-y: scroll;
 }
