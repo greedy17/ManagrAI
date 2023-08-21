@@ -134,6 +134,7 @@ data "template_file" "managr_app" {
     use_open_ai    = title(var.app_config.use_open_ai)
     use_sso        = title(var.app_config.use_sso)
     use_news_api   = title(var.app_config.use_news_api)
+    use_twitter_api= title(var.app_config.use_twitter_api)
   }
 }
 
@@ -319,6 +320,10 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     googleLoginUri       = var.app_config.google_login_uri
 
     newApiKey            = var.app_config.news_api_key
+
+    twitterClientId      = each.app_config.twitter_client_id
+    twitterRedirectUri   = each.app_config.twitter_redirect_uri
+    twitterAccessToken   = each.app_config.twitter_access_token
   })
 }
 
