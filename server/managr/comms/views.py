@@ -15,6 +15,8 @@ from rest_framework import (
     status,
     viewsets,
 )
+from urllib.parse import urlencode
+from django.shortcuts import redirect
 from rest_framework.decorators import action
 from . import constants as comms_consts
 from .models import Search, TwitterAuthAccount
@@ -284,7 +286,10 @@ class PRSearchViewSet(
                             tweet["user"] = user
                 break
             except KeyError:
-                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": f"No results for {query_input}", "string": query_input})
+                return Response(
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    data={"error": f"No results for {query_input}", "string": query_input},
+                )
             except Exception as e:
                 has_error = True
                 logger.exception(e)
@@ -502,9 +507,7 @@ class PRSearchViewSet(
 @api_view(["get"])
 @permission_classes([permissions.IsAuthenticated])
 def get_twitter_auth_link(request):
-    print('\n\n1\n\n')
     link, verifier = TwitterAuthAccount.get_authorization_link()
-    print('\n2\n', link, '\n\n', verifier, '\n\n')
     return Response(data={"link": link, "verifier": verifier})
 
 
@@ -536,3 +539,13 @@ def get_shared_summary(request, encrypted_param):
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     search = Search.objects.get(id=decrypt_dict["id"])
     return Response(data={"summary": search.summary})
+
+
+def redirect_from_twitter(request):
+    code = request.GET.get("code", None)
+    q = urlencode({"code": code, "state": "TWITTER"})
+    if not code:
+        err = {"error": "there was an error"}
+        err = urlencode(err)
+        return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{err}")
+    return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{q}")

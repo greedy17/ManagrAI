@@ -142,6 +142,9 @@ urlpatterns = [
         name="redirect-from-outreach",
     ),
     path("users/slack/re-direct", slack_views.redirect_from_slack, name="redirect-from-slack"),
+    path(
+        "users/twitter/re-direct", comms_views.redirect_from_twitter, name="redirect-from-twitter"
+    ),
     path("account-status/", core_views.get_account_status, name="get_account_status"),
     path("task-status/", core_views.get_task_status, name="get-task-status"),
     path("sso-data/", core_views.get_sso_data, name="get-sso-data"),
