@@ -276,15 +276,22 @@ class PRSearchViewSet(
                 r = open_ai_exceptions._handle_response(r)
                 query_input = r.get("choices")[0].get("message").get("content")
                 tweet_res = TwitterAuthAccount.get_tweets(query_input)
-                tweets = tweet_res["data"]
-                user_data = tweet_res["includes"].get("users")
-                for tweet in tweets:
-                    for user in user_data:
-                        if user["id"] == tweet["author_id"]:
-                            tweet["user"] = user
+                tweets = tweet_res.get("data", None)
+                if tweets:
+                    user_data = tweet_res["includes"].get("users")
+                    for tweet in tweets:
+                        for user in user_data:
+                            if user["id"] == tweet["author_id"]:
+                                tweet["user"] = user
+                else:
+                    tweet_res = []
                 break
+
             except KeyError:
-                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": f"No results for {query_input}", "string": query_input})
+                return Response(
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    data={"error": f"No results for {query_input}", "string": query_input},
+                )
             except Exception as e:
                 has_error = True
                 logger.exception(e)
