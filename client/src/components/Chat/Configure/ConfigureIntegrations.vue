@@ -282,7 +282,8 @@
             >
               Slack Connected
             </p>
-            <p v-else class="card-text">Generate summaries via Slack</p>
+            <!-- <p v-else class="card-text">Generate summaries via Slack</p> -->
+            <p v-else class="card-text">Connect to generate summaries via Slack</p>
             <div></div>
             <div class="sep-button-container">
               <div class="separator"></div>
@@ -326,7 +327,8 @@
             <div style="display: flex">
               <h3 class="card__title">Zoom</h3>
             </div>
-            <p class="card-text">Use AI to summarize calls</p>
+            <!-- <p class="card-text">Use AI to summarize calls</p> -->
+            <p class="card-text">Connect to enable AI call summaries</p>
             <div class="sep-button-container">
               <div class="separator"></div>
               <button
