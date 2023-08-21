@@ -89,6 +89,7 @@ class UserClientSerializer(serializers.ModelSerializer):
             "team",
             "is_team_lead",
             "crm",
+            "meta_data",
         )
 
 
@@ -367,6 +368,7 @@ class UserTrialSerializer(serializers.ModelSerializer):
             "nylas",
             "slack_integration",
             "zoom_account",
+            "meta_data",
         )
 
     def get_days_active(self, instance):

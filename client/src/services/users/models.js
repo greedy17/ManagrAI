@@ -55,6 +55,7 @@ export default class User extends Model {
   static activationLinkRef = new fields.Field()
   static team = new fields.Field()
   static isTeamLead = new fields.Field({ readOnly: true })
+  static metaData = new fields.Field()
 
 
   static fromAPI(json = {}) {
