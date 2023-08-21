@@ -8,7 +8,10 @@
         <div class="regen-header">
           <div>
             <h4 class="regen-header-title">Regenerate Search</h4>
-            <p class="regen-header-subtitle">Create a new search using conversational AI</p>
+            <p v-if="!searchSaved" class="regen-header-subtitle">
+              Create a new search using conversational AI
+            </p>
+            <p class="regen-header-subtitle" v-else>Create a new summary</p>
           </div>
           <div class="pointer" @click="closeRegenModal"><small>X</small></div>
         </div>
@@ -33,6 +36,7 @@
           <!-- <div class="blue-border-button">Use a Template</div> -->
         </div>
         <div class="regen-footer">
+          <div></div>
           <div class="row">
             <div class="cancel-button" @click="closeRegenModal">Cancel</div>
             <div class="save-button" @click="generateNewSearch(null)">Submit</div>
@@ -275,15 +279,15 @@
                   </button>
                 </div>
 
-                <div class="wrapper">
+                <div @click="copyText" class="wrapper">
                   <img
                     style="cursor: pointer"
                     class="right-mar"
-                    src="@/assets/images/share.svg"
+                    src="@/assets/images/clipboard.svg"
                     height="14px"
                     alt=""
                   />
-                  <div style="margin-left: -20px" class="tooltip">Share</div>
+                  <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
                 </div>
               </div>
 
@@ -596,6 +600,7 @@ export default {
       loadingUrl: null,
       articleSummaryLoading: false,
       showingDropdown: false,
+      copyTip: 'Copy',
       searchSuggestions: [
         'University of Michigan no sports related mentions',
         'Walmart no stock related mentions',
@@ -634,6 +639,18 @@ export default {
     // this.updateMessage()
   },
   methods: {
+    async copyText() {
+      try {
+        await navigator.clipboard.writeText(this.summary)
+        this.copyTip = 'Copied!'
+
+        setTimeout(() => {
+          this.copyTip = 'Copy'
+        }, 2000)
+      } catch (err) {
+        console.error('Failed to copy text: ', err)
+      }
+    },
     showDropdown() {
       this.showingDropdown = true
     },
@@ -1115,7 +1132,8 @@ export default {
 .dropdown {
   padding: 8px 0 8px 0;
   position: relative;
-  height: 232px;
+  height: fit-content;
+  max-height: 232px;
   width: 100%;
   top: 8px;
   overflow-y: scroll;
@@ -1171,7 +1189,7 @@ export default {
   border-radius: 6px;
   padding: 4px 0;
   width: 200px;
-  margin-top: 96px;
+  margin-top: 128px;
 }
 .switch-item {
   display: flex;
@@ -1737,6 +1755,7 @@ button:disabled {
   padding-bottom: 40px;
 }
 .clips-container {
+  padding-top: 16px;
   display: flex;
   justify-content: flex-start;
   width: 100%;

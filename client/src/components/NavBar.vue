@@ -56,7 +56,11 @@
           </div> -->
 
           <div class="relative">
-            <div @click="toggleShowSearches" class="row pointer nav-text">
+            <div
+              v-if="$route.name === 'PRSummaries'"
+              @click="toggleShowSearches"
+              class="row pointer nav-text"
+            >
               Saved Searches
               <img
                 v-if="!showSavedSearches"
