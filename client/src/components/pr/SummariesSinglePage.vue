@@ -1128,12 +1128,16 @@ export default {
 .dropdown::-webkit-scrollbar {
   width: 6px;
   height: 0px;
-  margin-top: 4px;
+  display: none;
 }
 .dropdown::-webkit-scrollbar-thumb {
   background-color: $soft-gray;
   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
   border-radius: 6px;
+}
+
+.dropdown:hover::-webkit-scrollbar {
+  display: block;
 }
 
 .dropdown-item {
