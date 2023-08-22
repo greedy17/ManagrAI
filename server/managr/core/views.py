@@ -1603,6 +1603,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             request.data["make_team_lead"] = True
         team = Team.objects.get(id=request.data.pop("team"))
         request.data["team"] = team.id
+        request.data["role"] = u.role
         serializer = self.serializer_class(data=request.data, context={"request": request})
         # Bug 07/24/2023: 'invalid': 'Invalid data. Expected a dictionary, but got {datatype}.'
         serializer.is_valid(raise_exception=True)
