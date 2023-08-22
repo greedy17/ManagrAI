@@ -66,8 +66,6 @@
 
       <div class="no-content" v-if="!selectedSearch">
         <div class="title-row">
-          <!-- <p v-if="typedMessage" :class="{ typed: isTyping }">{{ typedMessage }}</p>
-            <p style="opacity: 0" v-else>...</p> -->
           <div class="row" v-if="!newSearch">
             <p class="typed">
               {{
@@ -75,15 +73,6 @@
                   ? 'Generate a summary from X (formally Twitter)'
                   : 'Generate a news summary from over 1 million sites'
               }}
-
-              <!-- <span class="img-border">
-                <img
-                  class="invert-dark-blue"
-                  src="@/assets/images/lightbulb.svg"
-                  height="12px"
-                  alt=""
-                />
-              </span> -->
             </p>
           </div>
 
@@ -106,6 +95,7 @@
               </div>
 
               <input
+                @click.stop
                 class="area-input"
                 placeholder="Start a new search..."
                 @focus="showDropdown"
@@ -126,7 +116,9 @@
             <div v-if="showingDropdown" class="dropdown">
               <small style="padding-top: 8px" class="gray-text">Example Searches</small>
               <div class="dropdown-item" v-for="(suggestion, i) in filteredSuggestions" :key="i">
-                {{ suggestion }}
+                <p @click.stop @click="addSuggestion(suggestion)">
+                  {{ suggestion }}
+                </p>
               </div>
             </div>
           </div>
@@ -166,7 +158,7 @@
             </div>
           </div>
 
-          <div class="center mar-top">
+          <div class="center mar-top pad-btm">
             <button @click="toggleAddPrompt" v-if="!addingPrompt" class="secondary-button">
               Custom Prompt
             </button>
@@ -184,8 +176,8 @@
           </div>
         </div>
       </div>
-      <div v-else class="loaded-content">
-        <div style="width: 50%" :class="{ 'neg-lmar': !loading }" v-if="summaryLoading">
+      <div :class="{ wbbackground: summaryLoading }" v-else class="loaded-content">
+        <div class="loader-bg" :class="{ 'neg-lmar': !loading }" v-if="summaryLoading">
           <div :class="{ 'left-mar': loading }" class="row">
             <p class="summary-load-text">Generating Summary...</p>
           </div>
@@ -282,7 +274,7 @@
                 <div @click="copyText" class="wrapper">
                   <img
                     style="cursor: pointer"
-                    class="right-mar"
+                    class="right-mar img-highlight"
                     src="@/assets/images/clipboard.svg"
                     height="14px"
                     alt=""
@@ -300,33 +292,35 @@
           <p class="divider-text">{{ mainView === 'news' ? 'News Clips' : 'Social Media' }}</p>
         </div>
 
-        <div style="width: 50%" v-if="loading">
-          <div class="article-preview-skeleton shimmer">
-            <div class="content">
-              <div class="title"></div>
-              <div class="meta"></div>
-              <div class="excerpt"></div>
-              <div class="skeleton-footer"></div>
+        <div style="background-color: white" class="loaded-content" v-if="loading">
+          <div style="width: 50%">
+            <div class="article-preview-skeleton shimmer">
+              <div class="content">
+                <div class="title"></div>
+                <div class="meta"></div>
+                <div class="excerpt"></div>
+                <div class="skeleton-footer"></div>
+              </div>
+              <div class="thumbnail"></div>
             </div>
-            <div class="thumbnail"></div>
-          </div>
-          <div class="article-preview-skeleton shimmer">
-            <div class="content">
-              <div class="title"></div>
-              <div class="meta"></div>
-              <div class="excerpt"></div>
-              <div class="skeleton-footer"></div>
+            <div class="article-preview-skeleton shimmer">
+              <div class="content">
+                <div class="title"></div>
+                <div class="meta"></div>
+                <div class="excerpt"></div>
+                <div class="skeleton-footer"></div>
+              </div>
+              <div class="thumbnail"></div>
             </div>
-            <div class="thumbnail"></div>
-          </div>
-          <div class="article-preview-skeleton shimmer">
-            <div class="content">
-              <div class="title"></div>
-              <div class="meta"></div>
-              <div class="excerpt"></div>
-              <div class="skeleton-footer"></div>
+            <div class="article-preview-skeleton shimmer">
+              <div class="content">
+                <div class="title"></div>
+                <div class="meta"></div>
+                <div class="excerpt"></div>
+                <div class="skeleton-footer"></div>
+              </div>
+              <div class="thumbnail"></div>
             </div>
-            <div class="thumbnail"></div>
           </div>
         </div>
 
@@ -337,7 +331,7 @@
                 <header class="neg-margin">
                   <div class="card-row-med">
                     <img :src="tweet.user.profile_image_url" />
-                    <h1 class="article-title">
+                    <h1 @click="openTweet(tweet.user.username, tweet.id)" class="article-title">
                       {{ tweet.user.name }}
                     </h1>
                     <svg
@@ -380,9 +374,20 @@
                         width="400"
                         controls
                       >
-                        <source :src="media.url" type="video/mp4" />
+                        <source :src="media.variants[1].url" type="video/mp4" />
                       </video>
-                      <p v-else>OTHER MEDIA TYPE --- {{ media.type }}</p>
+
+                      <video
+                        style="margin-top: 1rem"
+                        v-else-if="media.type === 'animated_gif'"
+                        width="400"
+                        autoplay
+                        loop
+                        muted
+                        playsinline
+                      >
+                        <source :src="media.variants[0].url" type="video/mp4" />
+                      </video>
                     </div>
                   </div>
                 </div>
@@ -639,6 +644,13 @@ export default {
     // this.updateMessage()
   },
   methods: {
+    openTweet(username, id) {
+      window.open(`https://twitter.com/${username}/status/${id}`, '_blank')
+    },
+    addSuggestion(ex) {
+      this.newSearch = ex
+      console.log(ex)
+    },
     async copyText() {
       try {
         await navigator.clipboard.writeText(this.summary)
@@ -655,7 +667,9 @@ export default {
       this.showingDropdown = true
     },
     hideDropdown() {
-      this.showingDropdown = false
+      setTimeout(() => {
+        this.showingDropdown = false
+      }, 100)
     },
     resetSearch() {
       this.clearNewSearch()
@@ -877,6 +891,7 @@ export default {
             user_id: this.user.id,
           })
           .then((response) => {
+            console.log(response)
             if (response.tweets) {
               this.tweets = response.tweets.data
               this.tweetMedia = response.tweets.includes.media
@@ -921,7 +936,6 @@ export default {
             instructions: this.newTemplate,
           })
           .then((response) => {
-            console.log('TWEET SUMMARY IS HERE', response)
             this.summary = response.summary
           })
       } catch (e) {
@@ -1140,7 +1154,6 @@ export default {
   overflow-x: hidden;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   scroll-behavior: smooth;
-  cursor: text;
 }
 
 .dropdown::-webkit-scrollbar {
@@ -1159,7 +1172,6 @@ export default {
 }
 
 .dropdown-item {
-  cursor: text !important;
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -1173,9 +1185,18 @@ export default {
   text-overflow: ellipsis;
   font-weight: 400;
   font-size: 13px;
+
+  p {
+    margin: 0;
+  }
+
   img {
     filter: invert(63%) sepia(10%) saturate(617%) hue-rotate(200deg) brightness(93%) contrast(94%);
     margin-right: 8px;
+  }
+
+  &:hover {
+    opacity: 0.7;
   }
 }
 
@@ -1384,6 +1405,9 @@ export default {
 }
 .mar-top {
   margin-top: 24px;
+}
+.pad-btm {
+  padding-bottom: 16px;
 }
 
 .dot {
@@ -1634,6 +1658,14 @@ button:disabled {
   filter: invert(92%) sepia(53%) saturate(2928%) hue-rotate(178deg) brightness(72%) contrast(96%);
 }
 
+.img-highlight {
+  filter: invert(40%);
+
+  &:hover {
+    filter: none;
+  }
+}
+
 .right-mar {
   margin-right: 12px;
 }
@@ -1644,6 +1676,18 @@ button:disabled {
   flex-direction: column;
   justify-content: center;
 }
+
+.wbbackground {
+  background-color: $white-blue;
+}
+
+.loader-bg {
+  width: 50%;
+  align-items: center;
+  justify-content: center;
+  background-color: $white-blue;
+}
+
 .no-content {
   display: flex;
   align-items: center;
@@ -1759,6 +1803,7 @@ button:disabled {
   display: flex;
   justify-content: flex-start;
   width: 100%;
+  background-color: white;
   // margin-top: 40px;
 }
 .label-width {
@@ -2172,7 +2217,6 @@ header {
   min-width: 400px;
   padding: 8px 20px 36px 20px;
   border-radius: 6px;
-  display: flex;
   flex-direction: column;
 }
 
