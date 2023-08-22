@@ -2198,6 +2198,7 @@
                   <div style="width: 10%">S. Summs</div>
                   <div style="width: 10%">N. Srchs</div>
                   <div style="width: 10%">S. Srchs</div>
+                  <div style="width: 10%">Pitches</div>
                   <!-- <div style="width: 25%">Total Updates</div> -->
                 </div>
                 <div style="height: 95%;">
@@ -2257,6 +2258,7 @@
                     <div style="width: 10%">{{user.meta_data.tweet_summaries ? user.meta_data.tweet_summaries : 0}}</div>
                     <div style="width: 10%">{{user.meta_data.tweet_summaries ? user.meta_data.tweet_summaries : 0}}</div>
                     <div style="width: 10%">{{user.meta_data.tweet_summaries ? user.meta_data.tweet_summaries : 0}}</div>
+                    <div style="width: 10%">{{user.meta_data.pitches ? user.meta_data.pitches : 0}}</div>
                     <!-- <div style="width: 25%">{{user.total_updates}}</div> -->
                   </div>
                 </div>
