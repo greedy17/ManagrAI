@@ -3,8 +3,8 @@
     <div :class="{ opaque: loading }" v-if="!pitch" class="center">
       <p v-if="!loading">Generate a pitch, blog post or press release based on any persona</p>
 
-      <div class="centered" v-else>
-        <div class="row">
+      <div class="centered blue-bg" v-else>
+        <div style="width: 675px" class="row">
           <p class="summary-load-text">Generating {{ type }}...</p>
         </div>
 
@@ -178,7 +178,7 @@
           <div @click="copyText" v-if="!regenerating" class="wrapper">
             <img
               style="cursor: pointer"
-              class="right-mar"
+              class="right-mar img-highlight"
               src="@/assets/images/clipboard.svg"
               height="16px"
               alt=""
@@ -362,9 +362,10 @@ export default {
 
 .centered {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   flex-direction: column;
+  width: 100%;
 }
 
 .sub-text {
@@ -392,6 +393,7 @@ export default {
   display: flex;
   align-items: center;
   flex-direction: row;
+  text-align: start !important;
 
   button:first-of-type {
     margin-right: 1rem;
@@ -552,8 +554,21 @@ footer {
   margin-right: -2px;
 }
 
+.blue-bg {
+  background-color: $white-blue;
+}
+
 .opaque {
   opacity: 0.75;
+  padding-top: 0 !important;
+}
+
+.img-highlight {
+  filter: invert(40%);
+
+  &:hover {
+    filter: none;
+  }
 }
 
 .wrapper {
