@@ -257,36 +257,44 @@ class PRSearchViewSet(
         user = User.objects.get(id=request.GET.get("user_id"))
         has_error = False
         search = request.GET.get("search")
+        query_input = None
+        next_token = False
+        tweet_list = []
         while True:
             try:
-                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_TWITTER_SEARCH_CONVERSION(search)
-                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                    user.email,
-                    prompt,
-                    token_amount=500,
-                    top_p=0.1,
-                )
-                with Variable_Client() as client:
-                    r = client.post(
-                        url,
-                        data=json.dumps(body),
-                        headers=core_consts.OPEN_AI_HEADERS,
+                if query_input is None:
+                    url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                    prompt = comms_consts.OPEN_AI_TWITTER_SEARCH_CONVERSION(search)
+                    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                        user.email,
+                        prompt,
+                        token_amount=500,
+                        top_p=0.1,
                     )
-                r = open_ai_exceptions._handle_response(r)
-                query_input = r.get("choices")[0].get("message").get("content")
-                tweet_res = TwitterAuthAccount.get_tweets(query_input)
+                    with Variable_Client() as client:
+                        r = client.post(
+                            url,
+                            data=json.dumps(body),
+                            headers=core_consts.OPEN_AI_HEADERS,
+                        )
+                    r = open_ai_exceptions._handle_response(r)
+                    query_input = r.get("choices")[0].get("message").get("content")
+                tweet_res = TwitterAuthAccount.get_tweets(query_input, next_token)
                 tweets = tweet_res.get("data", None)
                 if tweets:
+                    next_token = tweet_res["meta"]["next_token"]
                     user_data = tweet_res["includes"].get("users")
-                    for tweet in tweets:
+                    for tweet in enumerate(tweets):
+                        if len(tweet_list) > 20:
+                            break
                         for user in user_data:
                             if user["id"] == tweet["author_id"]:
                                 tweet["user"] = user
-                else:
-                    tweet_res = []
+                                if user["public_metrics"]["followers_count"] > 1000:
+                                    tweet_list.append(tweet)
+                if len(tweet_list) < 20:
+                    continue
                 break
-
             except KeyError:
                 return Response(
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -299,7 +307,7 @@ class PRSearchViewSet(
                 break
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": tweet_res})
-        return Response({"tweets": tweet_res, "string": query_input})
+        return Response({"tweets": tweet_list, "string": query_input})
 
     @action(
         methods=["post"],
@@ -378,6 +386,7 @@ class PRSearchViewSet(
         output = request.data.get("output")
         persona = request.data.get("persona")
         briefing = request.data.get("briefing")
+        sample = request.data.get("sample")
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -387,7 +396,7 @@ class PRSearchViewSet(
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_PITCH(
-                    datetime.now().date(), type, output, persona, briefing,
+                    datetime.now().date(), type, output, persona, briefing, sample
                 )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,

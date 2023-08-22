@@ -140,17 +140,19 @@ class TwitterAuthAccountAdapter:
         params = urlencode({"oauth_callback": comms_consts.TWITTER_REDIRECT_URI})
         return f"{comms_consts.TWITTER_BASE_URI}{comms_consts.TWITTER_REQUEST_TOKEN_URI}?{params}"
 
-    def get_tweets(self, query):
+    def get_tweets(self, query, next_token=False):
         url = comms_consts.TWITTER_BASE_URI + comms_consts.TWITTER_RECENT_TWEETS_URI
         params = {
             "query": query,
-            "max_results": 10,
+            "max_results": 20,
             "expansions": "author_id,attachments.media_keys",
             "user.fields": "username,name,profile_image_url,public_metrics,verified,location,url",
             "tweet.fields": "created_at",
             "media.fields": "url,variants",
             "sort_order": "relevancy",
         }
+        if next_token:
+            params["next_token"] = next_token
         headers = comms_consts.TWITTER_API_HEADERS
         with Variable_Client() as client:
             response = client.get(url, headers=headers, params=params)
