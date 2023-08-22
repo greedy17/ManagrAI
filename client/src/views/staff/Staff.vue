@@ -2256,8 +2256,8 @@
                     <div style="width: 10%">{{user.meta_data.news_summaries ? user.meta_data.news_summaries : 0}}</div>
                     <div style="width: 10%">{{user.meta_data.article_summaries ? user.meta_data.article_summaries : 0}}</div>
                     <div style="width: 10%">{{user.meta_data.tweet_summaries ? user.meta_data.tweet_summaries : 0}}</div>
-                    <div style="width: 10%">{{user.meta_data.tweet_summaries ? user.meta_data.tweet_summaries : 0}}</div>
-                    <div style="width: 10%">{{user.meta_data.tweet_summaries ? user.meta_data.tweet_summaries : 0}}</div>
+                    <div style="width: 10%">{{user.searches_ref.filter(search => search.type === 'NEWS').length}}</div>
+                    <div style="width: 10%">{{user.searches_ref.filter(search => search.type === 'SOCIAL_MEDIA').length}}</div>
                     <div style="width: 10%">{{user.meta_data.pitches ? user.meta_data.pitches : 0}}</div>
                     <!-- <div style="width: 25%">{{user.total_updates}}</div> -->
                   </div>
@@ -2436,6 +2436,9 @@ export default {
       showInstances: false,
       newAdmin: null,
       admin: null,
+      // adminSearches: {},
+      newsSearches: [],
+      socialSearches: [],
       selectedAction: null,
       allSlackFormInstances: [],
       everyUser: [],
@@ -3405,6 +3408,8 @@ export default {
         const res = await User.api.getTrialUsers()
         console.log('res', res)
         this.trialUsers = res
+        // this.adminSearches = await User.api.getAdminSearches()
+        // console.log('this.adminSearches', this.adminSearches)
         await this.getUsageData()
         this.setChartOptions()
       } catch(e) {

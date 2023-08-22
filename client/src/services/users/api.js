@@ -39,6 +39,7 @@ const FORECAST_ENDPOINT = '/users/modify-forecast/'
 const PULL_USAGE_DATA = '/users/pull-usage-data/'
 const PERFORMANCE_REPORT_ENDPOINT = '/users/performance-report/'
 const TRIAL_USERS_ENDPOINT = '/users/get-trial-users/'
+const ADMIN_SEARCHES_ENDPOINT = '/users/admin-searches/'
 const FORECAST_VALUES_ENDPOINT = '/users/get-forecast-values/'
 const CHAT_SUBMISSION = 'users/chat/submission/'
 const CHAT_ASK = 'users/chat/ask-managr/'
@@ -644,6 +645,14 @@ export default class UserAPI {
       .get(TRIAL_USERS_ENDPOINT)
       .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'API error' }))
+  }
+  async getAdminSearches() {
+    try {
+      const res = await this.client.get(ADMIN_SEARCHES_ENDPOINT)
+      return res.data
+    } catch(e) {
+      apiErrorHandler({ apiName: 'User.getAdminSearches' })
+    }
   }
   async getTwitterAuthorization() {
     try {
