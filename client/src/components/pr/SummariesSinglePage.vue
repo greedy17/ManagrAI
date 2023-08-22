@@ -1,11 +1,17 @@
 <template>
   <div ref="loadedContent" class="main-content">
+    <!-- <div class="suggestions" v-if="!selectedSearch">
+      <img class="invert-dark-blue" src="@/assets/images/lightbulb.svg" height="18px" alt="" />
+    </div> -->
     <Modal v-if="regenModal" class="regen-modal">
       <div class="regen-container">
         <div class="regen-header">
           <div>
             <h4 class="regen-header-title">Regenerate Search</h4>
-            <p class="regen-header-subtitle">Create a new search using conversational AI</p>
+            <p v-if="!searchSaved" class="regen-header-subtitle">
+              Create a new search using conversational AI
+            </p>
+            <p class="regen-header-subtitle" v-else>Create a new summary</p>
           </div>
           <div class="pointer" @click="closeRegenModal"><small>X</small></div>
         </div>
@@ -30,6 +36,7 @@
           <!-- <div class="blue-border-button">Use a Template</div> -->
         </div>
         <div class="regen-footer">
+          <div></div>
           <div class="row">
             <div class="cancel-button" @click="closeRegenModal">Cancel</div>
             <div class="save-button" @click="generateNewSearch(null)">Submit</div>
@@ -37,7 +44,7 @@
         </div>
       </div>
     </Modal>
-    <div class="center column" v-if="page === 'SUMMARIES'">
+    <div class="center column" :class="{ fullHeight: showingDropdown }" v-if="page === 'SUMMARIES'">
       <div v-if="!selectedSearch" class="switcher">
         <div
           @click="switchMainView('news')"
@@ -61,27 +68,33 @@
         <div class="title-row">
           <!-- <p v-if="typedMessage" :class="{ typed: isTyping }">{{ typedMessage }}</p>
             <p style="opacity: 0" v-else>...</p> -->
-          <p v-if="!newSearch" class="typed">
-            {{
-              mainView === 'social'
-                ? 'Generate a summary from X (formally Twitter)'
-                : 'Generate a news summary from over 1 million sites'
-            }}
-          </p>
+          <div class="row" v-if="!newSearch">
+            <p class="typed">
+              {{
+                mainView === 'social'
+                  ? 'Generate a summary from X (formally Twitter)'
+                  : 'Generate a news summary from over 1 million sites'
+              }}
+
+              <!-- <span class="img-border">
+                <img
+                  class="invert-dark-blue"
+                  src="@/assets/images/lightbulb.svg"
+                  height="12px"
+                  alt=""
+                />
+              </span> -->
+            </p>
+          </div>
 
           <p v-else>
             Summarize coverage for <span class="search-text">"{{ newSearch }}"</span>
           </p>
         </div>
         <div>
-          <div class="input-container">
+          <div style="margin-bottom: 30px" class="input-container">
             <div class="input-row">
-              <!-- <div @click="switchMainView('social')" class="row toggle-type">
-                <p>News</p>
-                <img src="@/assets/images/shuffle.svg" height="12px" alt="" />
-              </div> -->
-
-              <div class="main-text">
+              <div style="border-right: none" class="main-text">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <path
                     fill-rule="evenodd"
@@ -93,9 +106,10 @@
               </div>
 
               <input
-                autofocus
                 class="area-input"
                 placeholder="Start a new search..."
+                @focus="showDropdown"
+                @blur="hideDropdown"
                 v-model="newSearch"
                 @keydown.enter.exact.prevent="generateNewSearch(null)"
               />
@@ -107,6 +121,13 @@
                 @click="generateNewSearch(null)"
                 class="pointer"
               />
+            </div>
+
+            <div v-if="showingDropdown" class="dropdown">
+              <small style="padding-top: 8px" class="gray-text">Example Searches</small>
+              <div class="dropdown-item" v-for="(suggestion, i) in filteredSuggestions" :key="i">
+                {{ suggestion }}
+              </div>
             </div>
           </div>
 
@@ -133,7 +154,7 @@
           <div v-if="addingSources" style="margin-top: 1rem" class="input-container">
             <div class="input-row">
               <div class="main-text">
-                <img style="margin-right: 8px" src="@/assets/images/globe.svg" height="20px" />
+                <img src="@/assets/images/globe.svg" height="20px" />
               </div>
               <input
                 autofocus
@@ -258,15 +279,15 @@
                   </button>
                 </div>
 
-                <div class="wrapper">
+                <div @click="copyText" class="wrapper">
                   <img
                     style="cursor: pointer"
                     class="right-mar"
-                    src="@/assets/images/share.svg"
+                    src="@/assets/images/clipboard.svg"
                     height="14px"
                     alt=""
                   />
-                  <div style="margin-left: -20px" class="tooltip">Share</div>
+                  <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
                 </div>
               </div>
 
@@ -446,12 +467,7 @@
                         src="@/assets/images/loading.svg"
                         alt=""
                       />
-                      <img
-                        v-else-if="!articleSummaryLoading"
-                        src="@/assets/images/sparkles-thin.svg"
-                        height="14px"
-                        alt=""
-                      />
+                      <img v-else src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
                       {{
                         articleSummaryLoading && loadingUrl === article.url
                           ? 'Summarizing'
@@ -569,8 +585,6 @@ export default {
       newSearch: '',
       newTemplate: '',
       additionalSources: '',
-      brandName: '',
-      targetPersona: '',
       additionalSources: '',
       outputInstructions: '',
       loading: false,
@@ -585,6 +599,31 @@ export default {
       articleSummaries: {},
       loadingUrl: null,
       articleSummaryLoading: false,
+      showingDropdown: false,
+      copyTip: 'Copy',
+      searchSuggestions: [
+        'University of Michigan no sports related mentions',
+        'Walmart no stock related mentions',
+        "Boston Children's no ER related stories",
+        'Stranger Things and Netflix',
+        'The Bear and Hulu, reviews or ratings',
+        'Barbie or Oppenheimer movie debut',
+        'Sun bear and China Zoo',
+        'Cancer research and new treatment',
+        '2024 Tesla Model S',
+        'Madden NFL 24 reviews',
+        'Cybertruck vs Rivian',
+        'Rent prices in Manhattan',
+        'Best new electric cars',
+        'Climate change and wildlife',
+        'AI only in Techcrunch sources',
+        'Authors and Lawrence Bonk',
+        'All stories about or written by Ron Miller',
+        'Rutgers University broad search',
+        'Beyond meat broad search',
+        'Beyond burger or sausage or meat',
+        'Impossible burger, including their products',
+      ],
     }
   },
   created() {},
@@ -600,6 +639,24 @@ export default {
     // this.updateMessage()
   },
   methods: {
+    async copyText() {
+      try {
+        await navigator.clipboard.writeText(this.summary)
+        this.copyTip = 'Copied!'
+
+        setTimeout(() => {
+          this.copyTip = 'Copy'
+        }, 2000)
+      } catch (err) {
+        console.error('Failed to copy text: ', err)
+      }
+    },
+    showDropdown() {
+      this.showingDropdown = true
+    },
+    hideDropdown() {
+      this.showingDropdown = false
+    },
     resetSearch() {
       this.clearNewSearch()
       this.selectedSearch = null
@@ -656,9 +713,8 @@ export default {
     },
     scrollToTop() {
       setTimeout(() => {
-        const loadedContent = this.$refs.loadedContent
-        loadedContent.scrollTop = loadedContent.scrollHeight
-      }, 200)
+        this.$refs.loadedContent.scrollIntoView({ behavior: 'smooth' })
+      }, 300)
     },
     removeSource() {
       this.additionalSources = ''
@@ -746,10 +802,8 @@ export default {
     clearNewSearch() {
       this.newSearch = ''
       this.newTemplate = ''
+      this.searchName = ''
       this.additionalSources = ''
-      this.brandName = ''
-      this.targetPersona = ''
-      this.outputInstructions = ''
     },
     openRegenModal() {
       this.regenModal = true
@@ -777,7 +831,7 @@ export default {
               this.searchId = response.id
               this.showUpdateBanner = true
               this.savedSearch = {
-                name: response.namw,
+                name: response.name,
                 input_text: this.newSearch,
                 search_boolean: this.booleanString,
                 instructions: this.newTemplate,
@@ -833,6 +887,8 @@ export default {
       } catch (e) {
         this.tweetError = e.data.error
         this.booleanString = e.data.string
+        this.summaryLoading = false
+        this.clearNewSearch()
       } finally {
         this.loading = false
       }
@@ -986,6 +1042,12 @@ export default {
     currentSearch() {
       return this.$store.state.currentSearch
     },
+    filteredSuggestions() {
+      if (!this.newSearch) return this.searchSuggestions
+      return this.searchSuggestions.filter((suggestions) =>
+        suggestions.toLowerCase().includes(this.newSearch.toLowerCase()),
+      )
+    },
     searchSaved() {
       if (
         this.newSearch &&
@@ -1067,9 +1129,57 @@ export default {
   }
 }
 
+.dropdown {
+  padding: 8px 0 8px 0;
+  position: relative;
+  height: fit-content;
+  max-height: 232px;
+  width: 100%;
+  top: 8px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  scroll-behavior: smooth;
+  cursor: text;
+}
+
+.dropdown::-webkit-scrollbar {
+  width: 6px;
+  height: 0px;
+  display: none;
+}
+.dropdown::-webkit-scrollbar-thumb {
+  background-color: $soft-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px;
+}
+
+.dropdown:hover::-webkit-scrollbar {
+  display: block;
+}
+
+.dropdown-item {
+  cursor: text !important;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 8px 0;
+  width: 100%;
+  margin: 0;
+  cursor: pointer;
+  color: $dark-black-blue;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 400;
+  font-size: 13px;
+  img {
+    filter: invert(63%) sepia(10%) saturate(617%) hue-rotate(200deg) brightness(93%) contrast(94%);
+    margin-right: 8px;
+  }
+}
+
 .switcher {
-  margin-top: 32px;
-  margin-bottom: 32px;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -1079,6 +1189,7 @@ export default {
   border-radius: 6px;
   padding: 4px 0;
   width: 200px;
+  margin-top: 128px;
 }
 .switch-item {
   display: flex;
@@ -1181,11 +1292,14 @@ export default {
 }
 
 .typed {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
   overflow: hidden;
   white-space: nowrap;
   width: 0;
   animation: typing 2s steps(30, end) forwards, blinking 1s infinite;
-  border-right: 1px solid;
+  // border-right: 1px solid;
 }
 
 @keyframes rotation {
@@ -1195,6 +1309,11 @@ export default {
   to {
     transform: rotate(359deg);
   }
+}
+
+.rotate {
+  animation: rotation 2.25s infinite linear;
+  cursor: not-allowed;
 }
 
 .neg-l-mar {
@@ -1211,14 +1330,33 @@ export default {
   margin-left: 8px;
 }
 
-.rotate {
-  animation: rotation 2.25s infinite linear;
-  cursor: not-allowed;
-}
-
 .invert {
   filter: invert(70%);
 }
+
+// .invert-dark-blue {
+//   filter: invert(22%) sepia(51%) saturate(390%) hue-rotate(161deg) brightness(92%) contrast(87%);
+// }
+
+// .img-border {
+//   border: 1px solid #416177;
+//   border-radius: 100%;
+//   padding: 0px 4px;
+//   margin-left: 8px;
+//   cursor: pointer;
+//   img {
+//     margin: 0 !important;
+//     filter: invert(33%) sepia(27%) saturate(676%) hue-rotate(161deg) brightness(95%) contrast(84%);
+//   }
+// }
+
+// .img-border:hover {
+//   background: #416177;
+
+//   img {
+//     filter: invert(100%);
+//   }
+// }
 
 .loader-container {
   display: flex;
@@ -1341,7 +1479,11 @@ button:disabled {
 
 .column {
   flex-direction: column;
-  min-height: 60vh;
+  height: 100%;
+}
+
+.fullHeight {
+  // margin-top: -10vh;
 }
 
 .center {
@@ -1361,6 +1503,7 @@ button:disabled {
   width: 500px;
   background-color: $offer-white;
   color: $base-gray;
+  position: relative;
 }
 .s-padding {
   padding: 0 0.25rem !important;
@@ -1444,11 +1587,10 @@ button:disabled {
   flex-direction: row;
   align-items: center;
   white-space: nowrap;
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
-  padding-right: 1rem;
+  // padding-right: 0;
   margin: 0;
   svg {
-    margin-right: 8px;
+    margin-right: 4px;
   }
 }
 
@@ -1457,6 +1599,7 @@ button:disabled {
   align-items: center;
   justify-content: center;
   background-color: white;
+  position: relative;
   border-radius: 8px;
   padding: 58px 36px 0 36px;
   height: fit-content;
@@ -1464,6 +1607,14 @@ button:disabled {
   color: $dark-black-blue;
   overflow-y: scroll;
 }
+
+.suggestions {
+  position: absolute;
+  bottom: 1rem;
+  z-index: 2100;
+  right: 1.5rem;
+}
+
 .pre-text {
   color: $base-gray;
   font-family: $thin-font-family;
@@ -1499,7 +1650,7 @@ button:disabled {
   flex-direction: column;
   justify-content: center;
   max-height: 60vh;
-  margin-top: 32px;
+  margin-top: 16px;
   width: 700px;
 }
 
@@ -1604,6 +1755,7 @@ button:disabled {
   padding-bottom: 40px;
 }
 .clips-container {
+  padding-top: 16px;
   display: flex;
   justify-content: flex-start;
   width: 100%;
@@ -1995,6 +2147,10 @@ header {
   background-repeat: no-repeat;
   animation: shimmer 2.5s infinite;
   -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/300% 100%;
+}
+
+.gray-text {
+  color: $mid-gray;
 }
 
 .loadingText {

@@ -278,13 +278,17 @@ class PRSearchViewSet(
                 r = open_ai_exceptions._handle_response(r)
                 query_input = r.get("choices")[0].get("message").get("content")
                 tweet_res = TwitterAuthAccount.get_tweets(query_input)
-                tweets = tweet_res["data"]
-                user_data = tweet_res["includes"].get("users")
-                for tweet in tweets:
-                    for user in user_data:
-                        if user["id"] == tweet["author_id"]:
-                            tweet["user"] = user
+                tweets = tweet_res.get("data", None)
+                if tweets:
+                    user_data = tweet_res["includes"].get("users")
+                    for tweet in tweets:
+                        for user in user_data:
+                            if user["id"] == tweet["author_id"]:
+                                tweet["user"] = user
+                else:
+                    tweet_res = []
                 break
+
             except KeyError:
                 return Response(
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -376,7 +380,6 @@ class PRSearchViewSet(
         output = request.data.get("output")
         persona = request.data.get("persona")
         briefing = request.data.get("briefing")
-        sample = request.data.get("sample")
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -386,7 +389,7 @@ class PRSearchViewSet(
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_PITCH(
-                    datetime.now().date(), type, output, persona, briefing, sample
+                    datetime.now().date(), type, output, persona, briefing,
                 )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
