@@ -1,7 +1,21 @@
 <template>
   <div ref="pitchTop" class="pitches">
     <div :class="{ opaque: loading }" v-if="!pitch" class="center">
-      <p>Generate a pitch, blog post or press release based on any persona</p>
+      <p v-if="!loading">Generate a pitch, blog post or press release based on any persona</p>
+
+      <div class="centered" v-else>
+        <div class="row">
+          <p class="summary-load-text">Generating {{ type }}...</p>
+        </div>
+
+        <div class="summary-preview-skeleton shimmer">
+          <div class="content">
+            <div class="meta-wide"></div>
+            <div class="meta-shorter"></div>
+            <div class="meta-shortest"></div>
+          </div>
+        </div>
+      </div>
 
       <div class="input-container">
         <div class="input-row">
@@ -29,7 +43,6 @@
 
           <input
             :disabled="loading"
-            autofocus
             class="area-input"
             placeholder="Millenial tech enthusiast with a passion for healthcare..."
             v-model="persona"
@@ -38,7 +51,7 @@
       </div>
 
       <div class="input-container">
-        <div class="input-row">
+        <div class="input-row relative">
           <div class="main-text">
             <img src="@/assets/images/file-word.svg" height="14px" alt="" />
             Briefing
@@ -46,34 +59,42 @@
 
           <textarea
             :disabled="loading"
-            autofocus
+            maxlength="1000"
             class="area-input"
             placeholder="FutureTech Innovations is launching a cutting-edge smartwatch that not only measures vital signs but also predicts flu symptoms 48 hours in advance, using AI and biometric data…"
             v-model="briefing"
             v-autoresize
           />
+
+          <div class="absolute-count">
+            <small>{{ remainingCharsBrief }}</small>
+          </div>
         </div>
       </div>
 
       <div class="input-container">
-        <div class="input-row">
+        <div class="input-row relative">
           <div class="main-text">
-            <img src="@/assets/images/comment.svg" height="14px" alt="" />
-            Output
+            <img src="@/assets/images/wand.svg" height="14px" alt="" />
+            Instructions
           </div>
 
           <textarea
             :disabled="loading"
-            autofocus
+            maxlength="1000"
             class="area-input"
             placeholder="Write a concise, engaging press release, highlighting the uniqueness of the product and its benefits to the target audience…"
             v-model="output"
             v-autoresize
           />
+
+          <div class="absolute-count">
+            <small>{{ remainingChars }}</small>
+          </div>
         </div>
       </div>
 
-      <div class="input-container">
+      <!-- <div class="input-container">
         <div class="input-row relative">
           <div class="main-text">
             <img src="@/assets/images/note.svg" height="14px" alt="" />
@@ -94,7 +115,7 @@
             <small>{{ remainingChars }}</small>
           </div>
         </div>
-      </div>
+      </div> -->
 
       <footer>
         <button :disabled="loading" @click="clearData" class="secondary-button">Clear</button>
@@ -154,7 +175,7 @@
             </div>
           </div>
 
-          <div v-if="!regenerating" class="wrapper">
+          <div @click="copyText" v-if="!regenerating" class="wrapper">
             <img
               style="cursor: pointer"
               class="right-mar"
@@ -162,7 +183,7 @@
               height="16px"
               alt=""
             />
-            <div style="margin-left: -20px" class="tooltip">Copy</div>
+            <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
           </div>
         </div>
 
@@ -183,29 +204,39 @@ export default {
       output: '',
       persona: '',
       briefing: '',
-      sample: '',
       pitch: null,
       loading: false,
       regenerating: false,
       instructions: '',
+      copyTip: 'Copy',
     }
   },
   watch: {},
   created() {},
   methods: {
+    async copyText() {
+      try {
+        await navigator.clipboard.writeText(this.textToCopy)
+        this.copyTip = 'Copied!'
+
+        setTimeout(() => {
+          this.copyTip = 'Copy'
+        }, 2000)
+      } catch (err) {
+        console.error('Failed to copy text: ', err)
+      }
+    },
     resetSearch() {
       this.pitch = null
       this.type = ''
       this.output = ''
       this.persona = ''
       this.briefing = ''
-      this.sample = ''
       this.instructions = ''
     },
     scrollToTop() {
       setTimeout(() => {
-        const pitchTop = this.$refs.pitchTop
-        pitchTop.scrollTop = pitchTop.scrollHeight
+        this.$refs.pitchTop.scrollIntoView({ behavior: 'smooth' })
       }, 300)
     },
     toggleRegenerate() {
@@ -242,14 +273,14 @@ export default {
             output: this.output,
             persona: this.persona,
             briefing: this.briefing,
-            sample: this.sample,
           })
           .then((response) => {
             console.log(response)
             this.pitch = response.pitch
+            this.scrollToTop()
           })
       } catch (e) {
-        console.log('ERROR CREATING YOUR PITCH DAWGGY BONE', e)
+        console.log('ERROR CREATING PITCH', e)
       } finally {
         // this.clearData()
         this.loading = false
@@ -266,7 +297,10 @@ export default {
   },
   computed: {
     remainingChars() {
-      return 1000 - this.sample.length
+      return 1000 - this.output.length
+    },
+    remainingCharsBrief() {
+      return 1000 - this.briefing.length
     },
   },
   directives: {
@@ -319,10 +353,18 @@ export default {
   right: -8px;
   font-size: 11px;
   color: $light-gray-blue;
+  background-color: white;
 }
 
 .no-text-margin {
   margin: 0;
+}
+
+.centered {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
 }
 
 .sub-text {
@@ -412,7 +454,7 @@ export default {
   border: 1px solid rgba(0, 0, 0, 0.1);
   padding: 0.75rem 1.2rem 0.75rem 1.2rem;
   border-radius: 6px;
-  width: 620px;
+  width: 675px;
   background-color: $offer-white;
   color: $base-gray;
 }
@@ -469,7 +511,7 @@ export default {
   align-items: center;
 }
 .main-text {
-  width: 96px;
+  width: 132px;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -613,5 +655,54 @@ footer {
   img {
     filter: invert(40%);
   }
+}
+
+.summary-load-text {
+  font-family: $thin-font-family;
+  font-size: 14px;
+}
+
+.summary-preview-skeleton {
+  width: 675px;
+  // min-width: 400px;
+  padding: 8px 20px 16px 0;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes shimmer {
+  100% {
+    -webkit-mask-position: left;
+  }
+}
+
+.shimmer {
+  display: inline-block;
+  background-repeat: no-repeat;
+  animation: shimmer 2.5s infinite;
+  -webkit-mask: linear-gradient(-60deg, #000 30%, #0005, #000 70%) right/300% 100%;
+}
+
+.meta-wide {
+  width: 100%;
+  height: 16px;
+  background-color: $black-blue;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.meta-shorter {
+  width: 80%;
+  height: 16px;
+  background-color: $black-blue;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.meta-shortest {
+  width: 60%;
+  height: 16px;
+  background-color: $black-blue;
+  border-radius: 8px;
+  margin-bottom: 8px;
 }
 </style>

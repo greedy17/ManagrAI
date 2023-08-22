@@ -5,9 +5,7 @@ NEWS_API_KEY = settings.NEWS_API_KEY if USE_NEWS_API else None
 
 USE_TWITTER_API = settings.USE_TWITTER_API
 TWITTER_CLIENT_ID = settings.TWITTER_CLIENT_ID if USE_TWITTER_API else None
-TWITTER_SECRET_KEY = settings.TWITTER_SECRET_KEY if USE_TWITTER_API else None
 TWITTER_REDIRECT_URI = settings.TWITTER_REDIRECT_URI if USE_TWITTER_API else None
-TWITTER_API_KEY = settings.TWITTER_API_KEY if USE_TWITTER_API else None
 TWITTER_ACCESS_TOKEN = settings.TWITTER_ACCESS_TOKEN if USE_TWITTER_API else None
 TWITTER_BASE_URI = "https://api.twitter.com/"
 TWITTER_REQUEST_TOKEN_URI = "oauth/request_token"
@@ -103,8 +101,8 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, instructions=False, for_clien
     return body
 
 
-def OPEN_AI_PITCH(date, type, output, persona, briefing, sample):
-    body = f"Today is {date}. You are a VP of Communications tasked to generate a {type} targeting {persona}. Reference this briefing: {briefing} and follow these output instructions: {output}. Lastly, if provided, mirror this writing style: {sample}."
+def OPEN_AI_PITCH(date, type, output, persona, briefing):
+    body = f"Today is {date}. You are a VP of Communications tasked to generate a {type}, targeting {persona}. Reference briefing: {briefing} , and follow these output instructions: {output}."
     return body
 
 
