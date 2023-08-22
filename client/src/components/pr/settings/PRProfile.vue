@@ -59,7 +59,7 @@
               </template>
             </FormField>
           </div>
-          <div style="display: flex; align-items: flex-start; flex-direction: column">
+          <!-- <div style="display: flex; align-items: flex-start; flex-direction: column">
             <FormField>
               <template v-slot:input>
                 <Multiselect
@@ -84,7 +84,7 @@
                 </Multiselect>
               </template>
             </FormField>
-          </div>
+          </div> -->
           <div
             v-if="user.isAdmin"
             style="display: flex; align-items: flex-start; flex-direction: column"
@@ -228,6 +228,7 @@
 <script>
 import CollectionManager from '@/services/collectionManager'
 import User from '@/services/users'
+import Organization from '@/services/organizations'
 import { UserInviteForm } from '@/services/users/forms'
 import SlackOAuth, { SlackUserList } from '@/services/slack'
 import FormField from '@/components/forms/FormField'
@@ -245,7 +246,7 @@ export default {
     return {
       inviteOpen: false,
       selectedMember: null,
-      slackMembers: {},
+      slackMembers: new SlackUserList(),
       selectedLevel: null,
       userTypes: [
         { key: 'Manager', value: User.types.MANAGER },
@@ -282,6 +283,7 @@ export default {
     if ((this.isAdmin && this.orgHasSlackIntegration) || this.hasSlack) {
       try {
         const allTeams = await Organization.api.listTeams(this.user.id)
+        console.log('allTeams', allTeams)
         this.allTeams = allTeams.results
         if (this.user.isAdmin) {
           const userTeam = this.allTeams.filter((team) => team.id === this.user.team)
@@ -307,6 +309,7 @@ export default {
     },
     async listUsers(cursor = null) {
       const res = await SlackOAuth.api.listUsers(cursor)
+
       const results = new SlackUserList({
         members: [...this.slackMembers.members, ...res.members],
         responseMetadata: { nextCursor: res.nextCursor },
@@ -445,6 +448,13 @@ export default {
         })
       } finally {
         this.loading = false
+      }
+    },
+    customTeamLabel(props) {
+      if (this.user.team === props.id) {
+        return 'Your Team'
+      } else {
+        return props.name
       }
     },
     mapMember() {
