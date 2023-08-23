@@ -115,8 +115,14 @@
 
             <div v-if="showingDropdown" class="dropdown">
               <small style="padding-top: 8px" class="gray-text">Example Searches</small>
-              <div class="dropdown-item" v-for="(suggestion, i) in filteredSuggestions" :key="i">
-                <p @click.stop @click="addSuggestion(suggestion)">
+              <div
+                @click.stop
+                @click="addSuggestion(suggestion)"
+                class="dropdown-item"
+                v-for="(suggestion, i) in filteredSuggestions"
+                :key="i"
+              >
+                <p>
                   {{ suggestion }}
                 </p>
               </div>
@@ -149,8 +155,9 @@
                 class="dropdown-item"
                 v-for="(suggestion, i) in filteredPromptSuggestions"
                 :key="i"
+                @click="addPromptSuggestion(suggestion)"
               >
-                <p @click.stop @click="addPromptSuggestion(suggestion)">
+                <p>
                   {{ suggestion }}
                 </p>
               </div>
@@ -722,7 +729,7 @@ export default {
     },
     resetSearch() {
       this.clearNewSearch()
-      this.selectedSearch = null
+      this.$emit('change-search', null)
       this.summary = ''
     },
     switchMainView(view) {
@@ -830,7 +837,6 @@ export default {
           this.getClips(boolean).then((response) => {
             this.getSummary(this.filteredArticles, this.newTemplate).then((response) => {
               if (this.searchSaved) {
-                console.log('made it')
                 this.updateSearch()
               }
             })
@@ -1235,6 +1241,7 @@ export default {
   padding: 8px 0;
   width: 100%;
   margin: 0;
+
   cursor: pointer;
   color: $dark-black-blue;
   white-space: nowrap;
@@ -1242,6 +1249,7 @@ export default {
   text-overflow: ellipsis;
   font-weight: 400;
   font-size: 13px;
+  z-index: 2300;
 
   p {
     margin: 0;
