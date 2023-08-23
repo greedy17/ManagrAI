@@ -289,7 +289,7 @@ class PRSearchViewSet(
                         next_token = tweet_res["meta"]["next_token"]
                     user_data = tweet_res["includes"].get("users")
                     for tweet in tweets:
-                        print(f"TWEET COUNT: {len(tweet_list)}")
+                       
                         if len(tweet_list) > 20:
                             break
                         for user in user_data:
@@ -312,8 +312,7 @@ class PRSearchViewSet(
                 logger.exception(e)
                 tweet_res = e
                 break
-        print(has_error)
-        print(len(tweet_list))
+    
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": tweet_res})
         return Response({"tweets": tweet_list, "string": query_input, "includes": includes})

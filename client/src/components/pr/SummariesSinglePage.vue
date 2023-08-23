@@ -953,7 +953,6 @@ export default {
             user_id: this.user.id,
           })
           .then((response) => {
-            console.log(response)
             if (response.tweets) {
               this.tweets = response.tweets
               this.tweetMedia = response.includes.media
