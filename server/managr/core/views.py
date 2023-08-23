@@ -866,11 +866,13 @@ class UserRegistrationView(mixins.CreateModelMixin, generics.GenericAPIView):
 
         Return serialized user and auth token.
         """
-        serializer = UserRegistrationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        user = serializer.instance
-
+        try:
+            serializer = UserRegistrationSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            user = serializer.instance
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         # Log in the user server-side and make sure the response includes their
         # token so that they don't have to log in after plugging in their email
         # and password in this step.

@@ -66,8 +66,6 @@
 
       <div class="no-content" v-if="!selectedSearch">
         <div class="title-row">
-          <!-- <p v-if="typedMessage" :class="{ typed: isTyping }">{{ typedMessage }}</p>
-            <p style="opacity: 0" v-else>...</p> -->
           <div class="row" v-if="!newSearch">
             <p class="typed">
               {{
@@ -75,15 +73,6 @@
                   ? 'Generate a summary from X (formally Twitter)'
                   : 'Generate a news summary from over 1 million sites'
               }}
-
-              <!-- <span class="img-border">
-                <img
-                  class="invert-dark-blue"
-                  src="@/assets/images/lightbulb.svg"
-                  height="12px"
-                  alt=""
-                />
-              </span> -->
             </p>
           </div>
 
@@ -106,6 +95,7 @@
               </div>
 
               <input
+                @click.stop
                 class="area-input"
                 placeholder="Start a new search..."
                 @focus="showDropdown"
@@ -125,14 +115,21 @@
 
             <div v-if="showingDropdown" class="dropdown">
               <small style="padding-top: 8px" class="gray-text">Example Searches</small>
-              <div class="dropdown-item" v-for="(suggestion, i) in filteredSuggestions" :key="i">
-                {{ suggestion }}
+              <div
+                @click="addSuggestion(suggestion)"
+                class="dropdown-item"
+                v-for="(suggestion, i) in filteredSuggestions"
+                :key="i"
+              >
+                <p>
+                  {{ suggestion }}
+                </p>
               </div>
             </div>
           </div>
 
           <div v-if="addingPrompt" style="margin-top: 1rem" class="input-container">
-            <div class="input-row">
+            <div class="input-row-start">
               <div class="main-text">
                 <img
                   style="margin-right: 8px"
@@ -141,13 +138,28 @@
                 />
               </div>
               <textarea
-                rows="1"
+                @focus="showPromptDropdown"
+                @blur="hidePromptDropdown"
                 class="area-input"
                 placeholder="What would you like included in the summary?"
                 v-model="newTemplate"
                 v-autoresize
               />
               <small @click="removePrompt" class="remove">X</small>
+            </div>
+
+            <div v-if="showingPromptDropdown" class="dropdown">
+              <small style="padding-top: 8px" class="gray-text">Example Prompts</small>
+              <div
+                class="dropdown-item"
+                v-for="(suggestion, i) in filteredPromptSuggestions"
+                :key="i"
+                @click="addPromptSuggestion(suggestion)"
+              >
+                <p>
+                  {{ suggestion }}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -166,12 +178,18 @@
             </div>
           </div>
 
-          <div class="center mar-top">
+          <div class="center mar-top pad-btm">
             <button @click="toggleAddPrompt" v-if="!addingPrompt" class="secondary-button">
               Custom Prompt
             </button>
-            <button @click="toggleAddSource" v-if="!addingSources" class="secondary-button">
-              Add Sources
+            <button
+              @mouseenter.prevent="soonButtonText"
+              @mouseleave.prevent="defaultButtonText"
+              v-if="!addingSources"
+              class="secondary-button no-hover-effect"
+            >
+              <!-- @click="toggleAddSource" -->
+              {{ buttonText }}
             </button>
 
             <button
@@ -184,8 +202,8 @@
           </div>
         </div>
       </div>
-      <div v-else class="loaded-content">
-        <div style="width: 50%" :class="{ 'neg-lmar': !loading }" v-if="summaryLoading">
+      <div :class="{ wbbackground: summaryLoading }" v-else class="loaded-content">
+        <div class="loader-bg" :class="{ 'neg-lmar': !loading }" v-if="summaryLoading">
           <div :class="{ 'left-mar': loading }" class="row">
             <p class="summary-load-text">Generating Summary...</p>
           </div>
@@ -282,7 +300,7 @@
                 <div @click="copyText" class="wrapper">
                   <img
                     style="cursor: pointer"
-                    class="right-mar"
+                    class="right-mar img-highlight"
                     src="@/assets/images/clipboard.svg"
                     height="14px"
                     alt=""
@@ -296,37 +314,44 @@
           </div>
         </div>
 
-        <div v-if="(filteredArticles.length || tweets.length) && !loading" class="divider">
+        <div
+          v-if="
+            ((filteredArticles && filteredArticles.length) || (tweets && tweets.length)) && !loading
+          "
+          class="divider"
+        >
           <p class="divider-text">{{ mainView === 'news' ? 'News Clips' : 'Social Media' }}</p>
         </div>
 
-        <div style="width: 50%" v-if="loading">
-          <div class="article-preview-skeleton shimmer">
-            <div class="content">
-              <div class="title"></div>
-              <div class="meta"></div>
-              <div class="excerpt"></div>
-              <div class="skeleton-footer"></div>
+        <div style="background-color: white" class="loaded-content" v-if="loading">
+          <div style="width: 50%">
+            <div class="article-preview-skeleton shimmer">
+              <div class="content">
+                <div class="title"></div>
+                <div class="meta"></div>
+                <div class="excerpt"></div>
+                <div class="skeleton-footer"></div>
+              </div>
+              <div class="thumbnail"></div>
             </div>
-            <div class="thumbnail"></div>
-          </div>
-          <div class="article-preview-skeleton shimmer">
-            <div class="content">
-              <div class="title"></div>
-              <div class="meta"></div>
-              <div class="excerpt"></div>
-              <div class="skeleton-footer"></div>
+            <div class="article-preview-skeleton shimmer">
+              <div class="content">
+                <div class="title"></div>
+                <div class="meta"></div>
+                <div class="excerpt"></div>
+                <div class="skeleton-footer"></div>
+              </div>
+              <div class="thumbnail"></div>
             </div>
-            <div class="thumbnail"></div>
-          </div>
-          <div class="article-preview-skeleton shimmer">
-            <div class="content">
-              <div class="title"></div>
-              <div class="meta"></div>
-              <div class="excerpt"></div>
-              <div class="skeleton-footer"></div>
+            <div class="article-preview-skeleton shimmer">
+              <div class="content">
+                <div class="title"></div>
+                <div class="meta"></div>
+                <div class="excerpt"></div>
+                <div class="skeleton-footer"></div>
+              </div>
+              <div class="thumbnail"></div>
             </div>
-            <div class="thumbnail"></div>
           </div>
         </div>
 
@@ -337,7 +362,7 @@
                 <header class="neg-margin">
                   <div class="card-row-med">
                     <img :src="tweet.user.profile_image_url" />
-                    <h1 class="article-title">
+                    <h1 @click="openTweet(tweet.user.username, tweet.id)" class="article-title">
                       {{ tweet.user.name }}
                     </h1>
                     <svg
@@ -380,9 +405,20 @@
                         width="400"
                         controls
                       >
-                        <source :src="media.url" type="video/mp4" />
+                        <source :src="media.variants[1].url" type="video/mp4" />
                       </video>
-                      <p v-else>OTHER MEDIA TYPE --- {{ media.type }}</p>
+
+                      <video
+                        style="margin-top: 1rem"
+                        v-else-if="media.type === 'animated_gif'"
+                        width="400"
+                        autoplay
+                        loop
+                        muted
+                        playsinline
+                      >
+                        <source :src="media.variants[0].url" type="video/mp4" />
+                      </video>
                     </div>
                   </div>
                 </div>
@@ -564,6 +600,8 @@ export default {
   },
   data() {
     return {
+      showingPromptDropdown: false,
+      buttonText: 'Article Summary',
       AllUserTweets: {},
       mainView: 'news',
       savedSearch: null,
@@ -621,7 +659,18 @@ export default {
         'Rutgers University broad search',
         'Beyond meat broad search',
         'Beyond burger or sausage or meat',
-        'Impossible burger, including their products',
+        'Chick-fil-a competitors, list them out',
+      ],
+      promptSuggestions: [
+        `Background on John Smith:\nTips for pitching John Smith:`,
+        `Consumer Sentiment:\nMedia & Influencer Sentiment:`,
+        `Executive Summary:\nFaculty, Research & Alumni:\nStudent life:`,
+        `Executive Summary:\nImpact & Donor Insights:\nMember Impact:`,
+        'What is the impact of this coverage on Tesla:',
+        'Generate 5 questions and answers a journlist would ask based on this coverage',
+        'Generate 5 questions and answers an analyst would ask based on this coverage of product X',
+        'Suggest a strategy to combat the negative coverage',
+        'Suggest a strategy to amplify the positive coverage,',
       ],
     }
   },
@@ -638,6 +687,21 @@ export default {
     // this.updateMessage()
   },
   methods: {
+    soonButtonText() {
+      this.buttonText = 'Coming Soon!'
+    },
+    defaultButtonText() {
+      this.buttonText = 'Article Summary'
+    },
+    openTweet(username, id) {
+      window.open(`https://twitter.com/${username}/status/${id}`, '_blank')
+    },
+    addSuggestion(ex) {
+      this.newSearch = ex
+    },
+    addPromptSuggestion(ex) {
+      this.newTemplate = ex
+    },
     async copyText() {
       try {
         await navigator.clipboard.writeText(this.summary)
@@ -654,11 +718,22 @@ export default {
       this.showingDropdown = true
     },
     hideDropdown() {
-      this.showingDropdown = false
+      setTimeout(() => {
+        this.showingDropdown = false
+      }, 100)
+    },
+    showPromptDropdown() {
+      this.showingPromptDropdown = true
+    },
+    hidePromptDropdown() {
+      setTimeout(() => {
+        this.showingPromptDropdown = false
+      }, 100)
     },
     resetSearch() {
       this.clearNewSearch()
-      this.selectedSearch = null
+      this.$emit('change-search', null)
+      this.summary = ''
     },
     switchMainView(view) {
       // if (view === 'news') {
@@ -689,6 +764,7 @@ export default {
       this.showSaveName = !this.showSaveName
     },
     setSearch(search) {
+      this.summary = ''
       this.searchId = search.id
       this.searchName = search.name
       this.newSearch = search.input_text
@@ -764,7 +840,6 @@ export default {
           this.getClips(boolean).then((response) => {
             this.getSummary(this.filteredArticles, this.newTemplate).then((response) => {
               if (this.searchSaved) {
-                console.log('made it')
                 this.updateSearch()
               }
             })
@@ -877,8 +952,8 @@ export default {
           })
           .then((response) => {
             if (response.tweets) {
-              this.tweets = response.tweets.data
-              this.tweetMedia = response.tweets.includes.media
+              this.tweets = response.tweets
+              this.tweetMedia = response.includes.media
               this.booleanString = response.string
               this.getTweetSummary()
             }
@@ -920,7 +995,6 @@ export default {
             instructions: this.newTemplate,
           })
           .then((response) => {
-            console.log('TWEET SUMMARY IS HERE', response)
             this.summary = response.summary
           })
       } catch (e) {
@@ -1047,6 +1121,12 @@ export default {
         suggestions.toLowerCase().includes(this.newSearch.toLowerCase()),
       )
     },
+    filteredPromptSuggestions() {
+      if (!this.newTemplate) return this.promptSuggestions
+      return this.promptSuggestions.filter((suggestions) =>
+        suggestions.toLowerCase().includes(this.newTemplate.toLowerCase()),
+      )
+    },
     searchSaved() {
       if (
         this.newSearch &&
@@ -1139,7 +1219,6 @@ export default {
   overflow-x: hidden;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   scroll-behavior: smooth;
-  cursor: text;
 }
 
 .dropdown::-webkit-scrollbar {
@@ -1158,7 +1237,6 @@ export default {
 }
 
 .dropdown-item {
-  cursor: text !important;
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -1172,9 +1250,19 @@ export default {
   text-overflow: ellipsis;
   font-weight: 400;
   font-size: 13px;
+  z-index: 2300;
+
+  p {
+    margin: 0;
+  }
+
   img {
     filter: invert(63%) sepia(10%) saturate(617%) hue-rotate(200deg) brightness(93%) contrast(94%);
     margin-right: 8px;
+  }
+
+  &:hover {
+    opacity: 0.7;
   }
 }
 
@@ -1189,6 +1277,7 @@ export default {
   padding: 4px 0;
   width: 200px;
   margin-top: 128px;
+  margin-bottom: 16px;
 }
 .switch-item {
   display: flex;
@@ -1384,6 +1473,9 @@ export default {
 .mar-top {
   margin-top: 24px;
 }
+.pad-btm {
+  padding-bottom: 16px;
+}
 
 .dot {
   width: 4px;
@@ -1452,6 +1544,13 @@ button:disabled {
     filter: invert(25%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
     margin-right: 8px;
   }
+}
+
+.no-hover-effect:hover {
+  scale: 1;
+  box-shadow: none;
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .toggle-type {
@@ -1570,7 +1669,7 @@ button:disabled {
   height: 0px;
 }
 .area-input::-webkit-scrollbar-thumb {
-  background-color: $base-gray;
+  background-color: $soft-gray;
   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
   border-radius: 6px;
 }
@@ -1578,9 +1677,17 @@ button:disabled {
   display: flex;
   align-items: center;
   flex-direction: row;
-  align-items: center;
 }
+.input-row-start {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: row;
 
+  img,
+  small {
+    margin-top: 4px;
+  }
+}
 .main-text {
   display: flex;
   flex-direction: row;
@@ -1633,6 +1740,14 @@ button:disabled {
   filter: invert(92%) sepia(53%) saturate(2928%) hue-rotate(178deg) brightness(72%) contrast(96%);
 }
 
+.img-highlight {
+  filter: invert(40%);
+
+  &:hover {
+    filter: none;
+  }
+}
+
 .right-mar {
   margin-right: 12px;
 }
@@ -1643,13 +1758,24 @@ button:disabled {
   flex-direction: column;
   justify-content: center;
 }
+
+.wbbackground {
+  background-color: $white-blue;
+}
+
+.loader-bg {
+  width: 50%;
+  align-items: center;
+  justify-content: center;
+  background-color: $white-blue;
+}
+
 .no-content {
   display: flex;
   align-items: center;
   flex-direction: column;
   justify-content: center;
-  max-height: 60vh;
-  margin-top: 16px;
+
   width: 700px;
 }
 
@@ -1758,6 +1884,7 @@ button:disabled {
   display: flex;
   justify-content: flex-start;
   width: 100%;
+  background-color: white;
   // margin-top: 40px;
 }
 .label-width {
@@ -2171,7 +2298,6 @@ header {
   min-width: 400px;
   padding: 8px 20px 36px 20px;
   border-radius: 6px;
-  display: flex;
   flex-direction: column;
 }
 
