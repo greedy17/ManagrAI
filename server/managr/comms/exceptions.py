@@ -11,6 +11,12 @@ class ServerError(Exception):
         super().__init__(self.message)
 
 
+class TooManyRequestsError(Exception):
+    def __init__(self, error="Looks like we've hit a rate limit!"):
+        self.message = error
+        super().__init__(self.message)
+
+
 class NewsApiException:
     def __init__(self, e, fn_name=None, retries=0):
         self.error = e
@@ -72,8 +78,6 @@ class TwitterApiException:
         self.raise_error()
 
     def raise_error(self):
-        # if an invalid Basic auth is sent the response is still a 200 success
-        # instead we check data.json() which will return a JSONDecodeError
         if self.error_class_name == "JSONDecodeError":
             logger.error(f"An error occured decoding the json, {self.fn_name}")
             return
@@ -81,6 +85,8 @@ class TwitterApiException:
             return
         elif self.status_code == 404 and self.param == "EXPIRED_AUTHENTICATION":
             return
+        elif self.status_code == 429:
+            raise TooManyRequestsError()
         elif self.status_code == 500:
             raise ServerError()
         else:

@@ -15,6 +15,8 @@ from rest_framework import (
     status,
     viewsets,
 )
+from urllib.parse import urlencode
+from django.shortcuts import redirect
 from rest_framework.decorators import action
 from . import constants as comms_consts
 from .models import Search, TwitterAuthAccount
@@ -257,37 +259,50 @@ class PRSearchViewSet(
         user = User.objects.get(id=request.GET.get("user_id"))
         has_error = False
         search = request.GET.get("search")
+        query_input = None
+        next_token = False
+        tweet_list = []
         while True:
             try:
-                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_TWITTER_SEARCH_CONVERSION(search)
-                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                    user.email,
-                    prompt,
-                    token_amount=500,
-                    top_p=0.1,
-                )
-                with Variable_Client() as client:
-                    r = client.post(
-                        url,
-                        data=json.dumps(body),
-                        headers=core_consts.OPEN_AI_HEADERS,
+                if query_input is None:
+                    url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                    prompt = comms_consts.OPEN_AI_TWITTER_SEARCH_CONVERSION(search)
+                    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                        user.email,
+                        prompt,
+                        token_amount=500,
+                        top_p=0.1,
                     )
-                r = open_ai_exceptions._handle_response(r)
-                query_input = r.get("choices")[0].get("message").get("content")
-                tweet_res = TwitterAuthAccount.get_tweets(query_input)
+                    with Variable_Client() as client:
+                        r = client.post(
+                            url,
+                            data=json.dumps(body),
+                            headers=core_consts.OPEN_AI_HEADERS,
+                        )
+                    r = open_ai_exceptions._handle_response(r)
+                    query_input = r.get("choices")[0].get("message").get("content")
+                tweet_res = TwitterAuthAccount.get_tweets(query_input, next_token)
                 tweets = tweet_res.get("data", None)
+                includes = tweet_res.get("includes", None)
                 if tweets:
+                    if "next_token" in tweet_res["meta"].keys():
+                        next_token = tweet_res["meta"]["next_token"]
                     user_data = tweet_res["includes"].get("users")
                     for tweet in tweets:
+                       
+                        if len(tweet_list) > 20:
+                            break
                         for user in user_data:
                             if user["id"] == tweet["author_id"]:
-                                tweet["user"] = user
-                else:
-                    tweet_res = []
+                                if user["public_metrics"]["followers_count"] > 100:
+                                    tweet["user"] = user
+                                    tweet_list.append(tweet)
+                                break
+                if len(tweet_list) < 20:
+                    continue
                 break
-
-            except KeyError:
+            except KeyError as e:
+                logger.exception(e)
                 return Response(
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     data={"error": f"No results for {query_input}", "string": query_input},
@@ -297,9 +312,10 @@ class PRSearchViewSet(
                 logger.exception(e)
                 tweet_res = e
                 break
+    
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": tweet_res})
-        return Response({"tweets": tweet_res, "string": query_input})
+        return Response({"tweets": tweet_list, "string": query_input, "includes": includes})
 
     @action(
         methods=["post"],
@@ -378,6 +394,7 @@ class PRSearchViewSet(
         output = request.data.get("output")
         persona = request.data.get("persona")
         briefing = request.data.get("briefing")
+        sample = request.data.get("sample")
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -387,7 +404,7 @@ class PRSearchViewSet(
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_PITCH(
-                    datetime.now().date(), type, output, persona, briefing,
+                    datetime.now().date(), type, output, persona, briefing, sample
                 )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
@@ -509,17 +526,17 @@ class PRSearchViewSet(
 @permission_classes([permissions.IsAuthenticated])
 def get_twitter_auth_link(request):
     link, verifier = TwitterAuthAccount.get_authorization_link()
-    return Response({"link": link, "verifier": verifier})
+    return Response(data={"link": link, "verifier": verifier})
 
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def get_twitter_authentication(request):
     code = request.data.get("code", None)
-    verifier = request.data.get("")
+    verifier = request.data.get("verifier", None)
     try:
         res = TwitterAuthAccount.get_access_token(code, verifier)
-        print(res)
+        print('\nres\n', res)
     except Exception as e:
         logger.exception(e)
     return Response(data={"success": True})
@@ -540,3 +557,13 @@ def get_shared_summary(request, encrypted_param):
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     search = Search.objects.get(id=decrypt_dict["id"])
     return Response(data={"summary": search.summary})
+
+
+def redirect_from_twitter(request):
+    code = request.GET.get("code", None)
+    q = urlencode({"code": code, "state": "TWITTER"})
+    if not code:
+        err = {"error": "there was an error"}
+        err = urlencode(err)
+        return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{err}")
+    return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{q}")
