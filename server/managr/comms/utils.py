@@ -1,16 +1,17 @@
-import logging
-import math
-from . import constants as comms_consts
-from managr.utils.client import Client, Variable_Client
-from .exceptions import _handle_response as _handle_news_response
-from managr.slack.helpers import block_builders
-from managr.slack.helpers import requests as slack_requests
+import random
+from newspaper import Config
 
-logger = logging.getLogger("managr")
+user_agents = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+    "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+    # add more User-Agents if you want
+]
 
 
-def get_news_for_company(search):
-    news_url = comms_consts.NEW_API_URI + "/" + comms_consts.NEW_API_EVERYTHING_URI(search)
-    with Variable_Client() as client:
-        new_res = client.get(news_url, headers=comms_consts.NEWS_API_HEADERS)
-        return _handle_news_response(new_res)
+def generate_config():
+    config = Config()
+    config.browser_user_agent = random.choice(user_agents)  # randomly choose a User-Agent
+    config.request_timeout = 10
+    return config

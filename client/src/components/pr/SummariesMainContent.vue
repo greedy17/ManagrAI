@@ -63,7 +63,7 @@
 </template>
 <script>
 import ChatTextBox from '../Chat/ChatTextBox.vue'
-import Comms from '@/services/comms'
+import { Comms } from '@/services/comms'
 
 export default {
   name: 'SummariesMainContent',

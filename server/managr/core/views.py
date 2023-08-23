@@ -357,7 +357,11 @@ def submit_chat_prompt(request):
             )
             # logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: body <{body}>")
             with Variable_Client(timeout) as client:
-                r = client.post(url, data=json.dumps(body), headers=OPEN_AI_HEADERS,)
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=OPEN_AI_HEADERS,
+                )
                 r = _handle_response(r)
                 # logger.info(f"SUBMIT CHAT PROMPT DEBUGGER: response <{r}>")
                 choice = r["choices"][0]
@@ -400,12 +404,10 @@ def submit_chat_prompt(request):
                 attempts += 1
                 continue
         except Exception as e:
-            print('I AM HERE:')
+            print("I AM HERE:")
             logger.exception(f"Exception from Open AI response {e}")
             has_error = True
-            message = (
-                " Looks like we ran into an issue with your prompt, try removing things like quotes and ampersands"
-            )
+            message = " Looks like we ran into an issue with your prompt, try removing things like quotes and ampersands"
             res = {"value": f"There was an error processing chat submission: {message}"}
             break
     if has_error:
@@ -436,29 +438,23 @@ def submit_chat_prompt(request):
 @permission_classes([permissions.IsAuthenticated])
 def ask_managr(request):
     from managr.core.exceptions import _handle_response, ServerError, StopReasonLength
-    from managr.salesforce.routes import routes as sf_routes
-    from managr.hubspot.routes import routes as hs_routes
 
-    # CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
     instructions_check = request.data["instructions"]
     user = User.objects.get(id=request.data["user_id"])
     data = ask_managr_data_collector(
-        str(user.id), request.data["resource_type"], request.data["resource_id"],
+        str(user.id),
+        request.data["resource_type"],
+        request.data["resource_id"],
     )
-    # resource = CRM_SWITCHER[user.crm][request.data["resource_type"]]["model"].objects.get(
-    #     id=request.data["resource_id"]
-    # )
     if instructions_check:
         prompt = core_consts.OPEN_AI_ASK_MANAGR_WITH_INSTRUCTIONS(
-        request.data["prompt"],
-        instructions_check,
-        data
-    )
+            request.data["prompt"], instructions_check, data
+        )
     else:
         prompt = core_consts.OPEN_AI_ASK_MANAGR_PROMPT(
-        user, datetime.today(), request.data["prompt"], data
-    )
-    
+            user, datetime.today(), request.data["prompt"], data
+        )
+
     tokens = 500
     has_error = False
     attempts = 1
@@ -471,7 +467,11 @@ def ask_managr(request):
             # body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, prompt, tokens)
             with Variable_Client(timeout) as client:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
             r = _handle_response(r)
             text = r.get("choices")[0].get("message").get("content")
             break
@@ -563,7 +563,11 @@ def deal_review(request):
         try:
             with Variable_Client() as client:
                 url = core_consts.OPEN_AI_COMPLETIONS_URI
-                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
                 r = _handle_response(r)
                 response_text = r.get("choices")[0].get("text")
                 break
@@ -575,7 +579,12 @@ def deal_review(request):
         res = {"value": f"{response_text}"}
         return Response(data=res, status=status.HTTP_400_BAD_REQUEST)
     return Response(
-        data={**r, "res": response_text, "resourceId": resource_id, "resourceType": resource_type,},
+        data={
+            **r,
+            "res": response_text,
+            "resourceId": resource_id,
+            "resourceType": resource_type,
+        },
         status=status.HTTP_200_OK,
     )
 
@@ -583,17 +592,20 @@ def deal_review(request):
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
 def draft_follow_up(request):
-
     user = User.objects.get(id=request.data["id"])
     instructions = request.data["instructions"]
     if not instructions:
         prompt = core_consts.OPEN_AI_MEETING_EMAIL_DRAFT(request.data["notes"])
-        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(user.email, prompt, token_amount=500, top_p=0.9)
+        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+            user.email, prompt, token_amount=500, top_p=0.9
+        )
     else:
         prompt = core_consts.OPEN_AI_EMAIL_DRAFT_WITH_INSTRUCTIONS(
             request.data["notes"], instructions
         )
-        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(user.email, prompt, token_amount=500, top_p=0.9)
+        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+            user.email, prompt, token_amount=500, top_p=0.9
+        )
 
     attempts = 1
 
@@ -601,7 +613,11 @@ def draft_follow_up(request):
         try:
             with Variable_Client() as client:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
             if r.status_code == 200:
                 r = r.json()
                 text = r.get("choices")[0].get("message").get("content")
@@ -623,7 +639,11 @@ def chat_next_steps(request):
         try:
             with Variable_Client() as client:
                 url = core_consts.OPEN_AI_COMPLETIONS_URI
-                r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
             if r.status_code == 200:
                 r = r.json()
                 text = r.get("choices")[0].get("text")
@@ -636,18 +656,24 @@ def chat_next_steps(request):
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
 def get_chat_summary(request):
-
     user = User.objects.get(id=request.data["id"])
 
     cleaned_data = clean_data_for_summary(
-        str(user.id), request.data["data"], request.data["integrationId"], request.data["resource"],
+        str(user.id),
+        request.data["data"],
+        request.data["integrationId"],
+        request.data["resource"],
     )
     try:
         summary_prompt = core_consts.OPEN_AI_SUMMARY_PROMPT(cleaned_data)
         body = core_consts.OPEN_AI_COMPLETIONS_BODY(user.email, summary_prompt, 500, top_p=0.1)
         url = core_consts.OPEN_AI_COMPLETIONS_URI
         with Variable_Client() as client:
-            r = client.post(url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,)
+            r = client.post(
+                url,
+                data=json.dumps(body),
+                headers=core_consts.OPEN_AI_HEADERS,
+            )
             if r.status_code == 200:
                 r = r.json()
                 message_string_for_recap = r["choices"][0]["text"]
@@ -840,11 +866,13 @@ class UserRegistrationView(mixins.CreateModelMixin, generics.GenericAPIView):
 
         Return serialized user and auth token.
         """
-        serializer = UserRegistrationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        user = serializer.instance
-
+        try:
+            serializer = UserRegistrationSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            user = serializer.instance
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         # Log in the user server-side and make sure the response includes their
         # token so that they don't have to log in after plugging in their email
         # and password in this step.
@@ -858,7 +886,6 @@ class UserViewSet(
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
 ):
-
     serializer_class = UserClientSerializer
     filter_fields = (
         "organization",
@@ -1100,7 +1127,7 @@ class UserViewSet(
 
     @action(
         methods=["POST"],
-        # permission_classes=(IsSalesPerson,),
+        permission_classes=[permissions.IsAuthenticated],
         detail=False,
         url_path="update-user-info",
     )
@@ -1111,7 +1138,6 @@ class UserViewSet(
         fake_meeting_id = d.get("fake_meeting_id")
         zoom_channel = d.get("zoom_channel")
         recap_receivers = d.get("recap_receivers")
-        realtime_alert_config = d.get("realtime_alert_config")
         user_id = d.get("user_id")
         user = User.objects.get(id=user_id)
         if user.event_calendar_id != event_calendar_id:
@@ -1122,9 +1148,6 @@ class UserViewSet(
             user.zoom_channel = zoom_channel
         if user.recap_receivers != recap_receivers:
             user.recap_receivers = recap_receivers
-        # Uncomment this when it's working
-        # if user.realtime_alert_config != realtime_alert_config:
-        #     user.realtime_alert_config = realtime_alert_config
         user.save()
         return Response(data=status.HTTP_200_OK)
 
@@ -1160,7 +1183,10 @@ class UserViewSet(
             return Response(data={"error": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(
-        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin-tasks",
+        methods=["GET"],
+        permission_classes=(IsStaff,),
+        detail=False,
+        url_path="admin-tasks",
     )
     def admin_tasks(self, request, *args, **kwargs):
         tasks = CompletedTask.objects.all()[:100]
@@ -1168,12 +1194,31 @@ class UserViewSet(
         return Response(data={"tasks": dict_tasks})
 
     @action(
-        methods=["GET"], permission_classes=(IsStaff,), detail=False, url_path="admin-users",
+        methods=["GET"],
+        permission_classes=(IsStaff,),
+        detail=False,
+        url_path="admin-users",
     )
     def admin_users(self, request, *args, **kwargs):
         param = request.query_params.get("org_id", None)
         users = User.objects.filter(organization=param)
         serialized = self.get_serializer(users, many=True).data
+        return Response(serialized)
+
+    @action(
+        methods=["GET"],
+        permission_classes=(IsStaff,),
+        detail=False,
+        url_path="admin-searches",
+    )
+    def admin_searches(self, request, *args, **kwargs):
+        from managr.comms.models import Search
+        from managr.comms.serializers import SearchSerializer
+
+        param = request.query_params.get("org_id", None)
+        users = User.objects.filter(organization=param)
+        searches = Search.objects.filter(user__in=users)
+        serialized = SearchSerializer(searches, many=True).data
         return Response(serialized)
 
     @action(
@@ -1269,7 +1314,8 @@ class ActivationLinkView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if user and user.is_active:
             return Response(
-                data={"activation_link": user.activation_link}, status=status.HTTP_204_NO_CONTENT,
+                data={"activation_link": user.activation_link},
+                status=status.HTTP_204_NO_CONTENT,
             )
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -1277,7 +1323,9 @@ class ActivationLinkView(APIView):
 
 @api_view(["GET"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [
+        permissions.IsAuthenticated,
+    ]
 )
 def get_email_authorization_link(request):
     u = request.user
@@ -1343,7 +1391,9 @@ class NylasAccountWebhook(APIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [permissions.IsAuthenticated,]
+    [
+        permissions.IsAuthenticated,
+    ]
 )
 def email_auth_token(request):
     u = request.user
@@ -1555,6 +1605,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             request.data["make_team_lead"] = True
         team = Team.objects.get(id=request.data.pop("team"))
         request.data["team"] = team.id
+        request.data["role"] = u.role
         serializer = self.serializer_class(data=request.data, context={"request": request})
         # Bug 07/24/2023: 'invalid': 'Invalid data. Expected a dictionary, but got {datatype}.'
         serializer.is_valid(raise_exception=True)
@@ -1629,7 +1680,6 @@ class UserPasswordManagmentView(generics.GenericAPIView):
                 }
             )
         else:
-
             user_account = user.first()
             token_valid = default_token_generator.check_token(user_account, token)
             if not token_valid:
@@ -1651,7 +1701,9 @@ class UserPasswordManagmentView(generics.GenericAPIView):
 
 @api_view(["POST"])
 @permission_classes(
-    [permissions.AllowAny,]
+    [
+        permissions.AllowAny,
+    ]
 )
 def request_reset_link(request):
     """endpoint to request a password reset email (forgot password)"""
@@ -1685,13 +1737,15 @@ def request_reset_link(request):
 
 @api_view(["GET"])
 @permission_classes(
-    [permissions.AllowAny,]
+    [
+        permissions.AllowAny,
+    ]
 )
 def get_task_status(request):
     data = {}
-    verbose_string = request.GET.get('verbose_name', None)
+    verbose_string = request.GET.get("verbose_name", None)
     response_data = json.loads(verbose_string)
-    verbose_name = response_data.get('verbose_name')
+    verbose_name = response_data.get("verbose_name")
     if verbose_name:
         try:
             task = CompletedTask.objects.get(verbose_name=verbose_name)
@@ -1712,7 +1766,6 @@ class NoteTemplateViewSet(
     mixins.UpdateModelMixin,
     mixins.ListModelMixin,
 ):
-
     serializer_class = NoteTemplateSerializer
 
     def get_queryset(self):
@@ -1747,7 +1800,9 @@ class NoteTemplateViewSet(
 
 @api_view(["GET"])
 @permission_classes(
-    [permissions.AllowAny,]
+    [
+        permissions.AllowAny,
+    ]
 )
 def get_sso_data(request):
     data = {}
@@ -1794,7 +1849,10 @@ def process_transcript_to_summaries(transcript, user):
                 print(index)
 
             transcript_body = core_consts.OPEN_AI_TRANSCRIPT_PROMPT(
-                {"date": datetime.today(), "transcript": transcript_part,}
+                {
+                    "date": datetime.today(),
+                    "transcript": transcript_part,
+                }
             )
             transcript_body = (
                 transcript_body.replace("\r\n", "")
@@ -1802,9 +1860,6 @@ def process_transcript_to_summaries(transcript, user):
                 .replace("    ", "")
                 .replace(" --> ", "-")
             )
-            # if not settings.IN_PROD:
-            #     token_check = max_token_calculator(transcript_body)
-            #     print(f"MAX TOKEN CHECK: {len(transcript_body)}, {token_check}")
             attempts = 1
             timeout = 60.0
             tokens = 500
@@ -1816,7 +1871,9 @@ def process_transcript_to_summaries(transcript, user):
                 with Variable_Client(timeout) as client:
                     try:
                         r = client.post(
-                            url, data=json.dumps(body), headers=core_consts.OPEN_AI_HEADERS,
+                            url,
+                            data=json.dumps(body),
+                            headers=core_consts.OPEN_AI_HEADERS,
                         )
                         r = _handle_response(r)
                         summary = r.get("choices")[0].get("text")
@@ -1861,11 +1918,11 @@ def process_transcript(request):
     from managr.zoom.background import _process_frontend_transcript
 
     request_data = {
-        'user_id': request.data["user_id"],
-        'meeting_id': request.data["meeting_id"],
-        'resource_type': request.data["resource_type"],
-        'integration_id': request.data["integration_id"],
-        'resource_id': request.data["resource_id"],
+        "user_id": request.data["user_id"],
+        "meeting_id": request.data["meeting_id"],
+        "resource_type": request.data["resource_type"],
+        "integration_id": request.data["integration_id"],
+        "resource_id": request.data["resource_id"],
     }
 
     user = request.user

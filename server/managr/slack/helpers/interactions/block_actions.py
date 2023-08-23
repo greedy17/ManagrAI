@@ -35,6 +35,7 @@ from managr.slack.background import (
 )
 from managr.salesforce.models import MeetingWorkflow
 from managr.comms.tasks import emit_process_send_clips, emit_process_article_summary
+from managr.comms.models import Search
 from managr.core.models import User
 from managr.core.background import (
     emit_process_calendar_meetings,
@@ -65,6 +66,7 @@ from managr.salesforce.routes import routes as sf_routes
 from managr.hubspot.routes import routes as hs_routes
 from managr.outreach.exceptions import TokenExpired as OutreachTokenExpired
 from managr.zoom.background import emit_process_get_transcript_and_update_crm
+from managr.comms.tasks import emit_process_news_summary
 
 CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 logger = logging.getLogger("managr")
@@ -3973,25 +3975,19 @@ def process_show_regenerate_news_summary_form(payload, context):
     blocks = payload["message"]["blocks"]
     trigger_id = payload["trigger_id"]
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-    try:
-        index, block = block_finder("NEWS_SUMMARY", blocks)
-    except ValueError:
-        # did not find the block
-        block = None
-        pass
-    news_prompt = block["text"]["text"].split("*Summary for ")
-    entered_prompt = news_prompt[1].replace("*", "")
+    search = Search.objects.get(id=context.get("search_id"))
     blocks = [
         block_builders.input_block(
             "Enter your new search",
             optional=False,
             block_id="SEARCH",
             multiline=True,
-            initial_value=entered_prompt,
+            initial_value=search.input_text,
         ),
         block_builders.input_block(
             "What would you like included in your summary?",
             block_id="OUTPUT_INSTRUCTIONS",
+            initial_value=f"{search.instructions if search.instructions else ''}",
             multiline=True,
         ),
         block_builders.actions_block(
@@ -4076,16 +4072,47 @@ def process_summarize_article(payload, context):
     user = slack_account.user
     loading_block = get_block_set("loading", {"message": "Summarizing article..."})
     try:
+        access_token = user.organization.slack_integration.access_token
         res = slack_requests.send_channel_message(
             user.slack_integration.channel,
-            user.organization.slack_integration.access_token,
+            access_token,
             block_set=loading_block,
         )
-        print(res)
         context.update(ts=res["ts"])
         emit_process_article_summary(payload, context)
     except Exception as e:
         logger.exception(e)
+
+def process_summary_for_saved_search(payload, context):
+    slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
+    user = slack_account.user
+    selected_search = payload["actions"][0]["selected_option"]["value"]
+    context.update(search_id=selected_search, u=str(user.id))
+    try:
+        access_token = user.organization.slack_integration.access_token
+        url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+        data = {
+            "view_id": payload["view"]["id"],
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "News Summary"},
+                "blocks": [block_builders.simple_section("Getting summary for your saved clips, check your DM!")],
+            },
+        }
+        slack_requests.generic_request(url, data, access_token=access_token)
+        res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=get_block_set(
+                "loading", {"message": ":robot_face: Processing your news summary..."}
+            ),
+        )
+        context.update(ts=res["ts"])
+    except Exception as e:
+        logger.exception(f"Failed to send DM to {user.email} because of <{e}>")
+
+    emit_process_news_summary(payload, context)
+    return
 
 
 def handle_block_actions(payload):
@@ -4167,6 +4194,7 @@ def handle_block_actions(payload):
         slack_const.ADD_NEWS_SUMMARY_TEMPLATE: process_add_news_summary_template,
         slack_const.PROCESS_SEND_CLIPS: process_send_clips,
         slack_const.PROCESS_SUMMARIZE_ARTICLE: process_summarize_article,
+        slack_const.PROCESS_SELECT_SAVED_SEARCH: process_summary_for_saved_search
     }
 
     action_query_string = payload["actions"][0]["action_id"]

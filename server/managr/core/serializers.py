@@ -1,10 +1,12 @@
 from datetime import datetime
 import pytz
 from django.utils import timezone
+from django.db import IntegrityError
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import login
 from rest_framework import serializers
 import managr.core.constants as core_consts
+from managr.comms.serializers import SearchSerializer
 from managr.organization.serializers import OrganizationSerializer
 from managr.salesforce.serializers import SalesforceAuthSerializer
 from managr.organization.models import Organization
@@ -88,6 +90,7 @@ class UserClientSerializer(serializers.ModelSerializer):
             "team",
             "is_team_lead",
             "crm",
+            "meta_data",
         )
 
 
@@ -228,12 +231,16 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         org_name = validated_data.pop("organization_name")
         try:
             org_check = Organization.objects.get(name__iexact=org_name)
+            if org_check:
+                raise IntegrityError("Organization already exists")
             return User.objects.create_user(
                 organization=org_check, user_level=core_consts.ACCOUNT_TYPE_REP, **validated_data
             )
         except Organization.DoesNotExist:
             org = Organization.objects.create(name=org_name)
             return User.objects.create_admin_user(organization=org, **validated_data)
+        except IntegrityError:
+            raise IntegrityError("Organization already exists")
 
 
 class UserLoginSerializer(serializers.ModelSerializer):
@@ -344,6 +351,7 @@ class UserTrialSerializer(serializers.ModelSerializer):
     days_active = serializers.SerializerMethodField("get_days_active")
     updates_this_month = serializers.SerializerMethodField("get_updates_made_this_month")
     total_updates = serializers.SerializerMethodField("get_total_updates_made")
+    searches_ref = serializers.SerializerMethodField("get_searches")
 
     class Meta:
         model = User
@@ -362,6 +370,8 @@ class UserTrialSerializer(serializers.ModelSerializer):
             "nylas",
             "slack_integration",
             "zoom_account",
+            "meta_data",
+            "searches_ref",
         )
 
     def get_days_active(self, instance):
@@ -383,3 +393,10 @@ class UserTrialSerializer(serializers.ModelSerializer):
 
         updates = OrgCustomSlackFormInstance.objects.for_user(instance).filter(is_submitted=True)
         return len(updates)
+
+    def get_searches(self, instance):
+        from managr.comms.models import Search
+
+        searches = Search.objects.filter(user=instance)
+        serialized = SearchSerializer(searches, many=True).data
+        return serialized

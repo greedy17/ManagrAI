@@ -1,14 +1,11 @@
 <template>
   <div class="summaries">
-    <!-- <PRTopBar :selectedSearch="selectedSearch" :searchList="searchList" @change-page="changePage" /> -->
     <div class="display-flex">
       <SummariesSinglePage
         :page="page"
         :selectedSearch="selectedSearch"
         @change-search="changeSearch"
       />
-      <!-- <SummariesMainContent /> -->
-      <!-- <PRRightBar /> -->
     </div>
   </div>
 </template>

@@ -7,9 +7,10 @@ from managr.utils import sites as site_utils
 def _env_get_required(setting_name):
     """Get the value of an environment variable and assert that it is set."""
     setting = os.environ.get(setting_name)
-    assert setting not in {None, "",}, "{0} must be defined as an environment variable.".format(
-        setting_name
-    )
+    assert setting not in {
+        None,
+        "",
+    }, "{0} must be defined as an environment variable.".format(setting_name)
     return setting
 
 
@@ -200,9 +201,13 @@ AUTH_USER_MODEL = "core.User"
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-        "OPTIONS": {"min_length": 10,},
+        "OPTIONS": {
+            "min_length": 10,
+        },
     },
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
 ]
 
 #
@@ -224,7 +229,9 @@ USE_TZ = True
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_PAGINATION_CLASS": ("managr.core.pagination.PageNumberPagination"),
-    "DEFAULT_AUTHENTICATION_CLASSES": ["managr.api.models.ExpiringTokenAuthentication",],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "managr.api.models.ExpiringTokenAuthentication",
+    ],
     "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
     "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
 }
@@ -305,7 +312,9 @@ LOGGING = {
     "disable_existing_loggers": True,
     "filters": {
         "require_debug_false": {"()": "django.utils.log.RequireDebugFalse"},
-        "require_debug_true": {"()": "django.utils.log.RequireDebugTrue",},
+        "require_debug_true": {
+            "()": "django.utils.log.RequireDebugTrue",
+        },
     },
     "formatters": {
         "verbose": {
@@ -330,9 +339,19 @@ LOGGING = {
         },
     },
     "loggers": {
-        "django": {"handlers": ["console", "mail_admins"], "level": "INFO",},
+        "django": {
+            "handlers": ["console", "mail_admins"],
+            "level": "INFO",
+        },
         # The logger name matters -- it MUST match the name of the app
-        "managr": {"handlers": ["console", "mail_admins",], "level": "DEBUG", "propagate": True,},
+        "managr": {
+            "handlers": [
+                "console",
+                "mail_admins",
+            ],
+            "level": "DEBUG",
+            "propagate": True,
+        },
         "managr.request": {"handlers": [], "level": "INFO", "propagate": True},
         "managr.tasks": {"handlers": [], "level": "INFO", "propagate": True},
     },
@@ -410,7 +429,6 @@ if USE_TWILIO:
 
 USE_ZOOM = os.environ.get("USE_ZOOM") == "True"
 if USE_ZOOM:
-
     ZOOM_REDIRECT_URI = _env_get_required("ZOOM_REDIRECT_URI")
     ZOOM_CLIENT_ID = _env_get_required("ZOOM_CLIENT_ID")
     ZOOM_SECRET = _env_get_required("ZOOM_SECRET")
@@ -487,5 +505,11 @@ if USE_SSO:
 USE_NEWS_API = os.environ.get("USE_NEWS_API") == "True"
 if USE_NEWS_API:
     NEWS_API_KEY = _env_get_required("NEWS_API_KEY")
+
+USE_TWITTER_API = os.environ.get("USE_TWITTER_API") == "True"
+if USE_TWITTER_API:
+    TWITTER_ACCESS_TOKEN = _env_get_required("TWITTER_ACCESS_TOKEN")
+    TWITTER_CLIENT_ID = _env_get_required("TWITTER_CLIENT_ID")
+    TWITTER_REDIRECT_URI = _env_get_required("TWITTER_REDIRECT_URI")
 
 MAX_ATTEMPTS = 5

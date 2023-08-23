@@ -119,7 +119,11 @@ ENV SECRET_KEY='secret123' \
   GOOGLE_CLIENT_ID='' \
   GOOGLE_LOGIN_URI='' \
   USE_NEWS_API='' \
-  NEWS_API_KEY=''
+  NEWS_API_KEY='' \
+  USE_TWITTER_API='' \
+  TWITTER_CLIENT_ID='' \
+  TWITTER_REDIRECT_URI='' \
+  TWITTER_ACCESS_TOKEN=''
 
 
 # Set the name of the working directory inside the docker container

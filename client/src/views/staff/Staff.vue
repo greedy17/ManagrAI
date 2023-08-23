@@ -2188,37 +2188,47 @@
                 <h4>Filter by day:</h4>
                 <input type="number" min="0" v-model="filterByDay" style="width: 3.5rem; padding: 4px;" class="search-bar" />
               </div>
-              <div style="height: 45vh;">
-                <div class="flex-row-spread" style="margin-bottom: 0.5rem;">
+              <div style="height: 45vh; width: 75vw; overflow: auto;">
+                <div class="user-view-header-container" style="margin-bottom: 0.5rem;">
                   <div style="width: 25%">User</div>
-                  <div style="width: 25%">Integrations</div>
-                  <div style="width: 25%">Days Active</div>
-                  <div style="width: 25%">Total Updates</div>
+                  <div style="width: 15%">Integrations</div>
+                  <div style="width: 10%">Days Actv</div>
+                  <div style="width: 10%">Usage / Day</div>
+                  <div style="width: 10%">N. Summs</div>
+                  <div style="width: 10%">A. Summs</div>
+                  <div style="width: 10%">S. Summs</div>
+                  <div style="width: 10%">N. Srchs</div>
+                  <div style="width: 10%">S. Srchs</div>
+                  <div style="width: 10%">Pitches</div>
+                  <!-- <div style="width: 25%">Total Updates</div> -->
                 </div>
-                <div style="overflow: scroll; height: 85%;">
-                  <div v-for="user in dayTrialUsers" :key="user.id" class="flex-row-spread" style="margin-bottom: 0.25rem;">
+                <div style="height: 95%;">
+                  <div v-for="user in dayTrialUsers" :key="user.id" class="user-view-header-container" style="margin-bottom: 0.25rem;">
                     <div style="width: 25%">{{ user.email }}</div>
-                    <div class="flex-row-spread" style="width: 25%">
+                    <div class="flex-row-spread" style="width: 15%">
                       <div
                         style="display: flex; flex-direction: column;"
                         class="invite-list-users__section__item invite-list-users__status"
                       >
                         <div style="display: flex; align-items: flex-start;">
-                          <span
+                          <!-- <span :class="user.crm ? '' : 'grayscale'">
+                            <img src="@/assets/images/twitter-x.svg" alt="" height="18px" />
+                          </span> -->
+                          <!-- <span
                             v-if="user.crm === 'SALESFORCE'"
                             :class="user.salesforce_account ? '' : 'grayscale'"
                             >
                             <img src="@/assets/images/salesforce.png" height="18px" alt="" />
-                          </span>
-                          <span
+                          </span> -->
+                          <!-- <span
                             v-else-if="user.crm === 'HUBSPOT'"
                             :class="user.hubspot_account ? '' : 'grayscale'"
                           >
                             <img src="@/assets/images/hubspot-single-logo.svg" height="18px" alt="" />
-                          </span>
-                          <span v-else :class="'grayscale'">
+                          </span> -->
+                          <!-- <span v-else :class="'grayscale'">
                             <img src="@/assets/images/revoke.svg" style="margin-right: 20px; margin-left: 2px" height="18px" alt="" />
-                          </span>
+                          </span> -->
                           <span :class="user.slack_integration ? '' : 'grayscale'">
                             <img src="@/assets/images/slackLogo.png" height="18px" alt="" />
                           </span>
@@ -2243,8 +2253,15 @@
                         </div>
                       </div>
                     </div>
-                    <div style="width: 25%">{{user.days_active}}</div>
-                    <div style="width: 25%">{{user.total_updates}}</div>
+                    <div style="width: 10%">{{user.days_active}}</div>
+                    <div style="width: 10%">{{getUsageDay(user)}}</div>
+                    <div style="width: 10%">{{user.meta_data.news_summaries ? user.meta_data.news_summaries : 0}}</div>
+                    <div style="width: 10%">{{user.meta_data.article_summaries ? user.meta_data.article_summaries : 0}}</div>
+                    <div style="width: 10%">{{user.meta_data.tweet_summaries ? user.meta_data.tweet_summaries : 0}}</div>
+                    <div style="width: 10%">{{user.searches_ref.filter(search => search.type === 'NEWS').length}}</div>
+                    <div style="width: 10%">{{user.searches_ref.filter(search => search.type === 'SOCIAL_MEDIA').length}}</div>
+                    <div style="width: 10%">{{user.meta_data.pitches ? user.meta_data.pitches : 0}}</div>
+                    <!-- <div style="width: 25%">{{user.total_updates}}</div> -->
                   </div>
                 </div>
               </div>
@@ -2421,6 +2438,9 @@ export default {
       showInstances: false,
       newAdmin: null,
       admin: null,
+      // adminSearches: {},
+      newsSearches: [],
+      socialSearches: [],
       selectedAction: null,
       allSlackFormInstances: [],
       everyUser: [],
@@ -2654,6 +2674,19 @@ export default {
     getUserName(id) {
       const user = this.everyUser.filter((user) => user.id == id)[0]
       return user ? `${user.first_name} ${user.last_name}` : '-'
+    },
+    getUsageDay(user) {
+      const metaData = user.meta_data
+      let count = 0
+      for (let key in metaData) {
+        count += metaData[key]
+      }
+      count += user.searches_ref.length
+      if (user.days_active) {
+        return Math.round((count / user.days_active) * 10) / 10
+      } else {
+        return count
+      }
     },
     filtersLabel(prop) {
       if (this.selectedTeamOrUser) {
@@ -3388,7 +3421,10 @@ export default {
     async getTrialUsers() {
       try {
         const res = await User.api.getTrialUsers()
+        console.log('res', res)
         this.trialUsers = res
+        // this.adminSearches = await User.api.getAdminSearches()
+        // console.log('this.adminSearches', this.adminSearches)
         await this.getUsageData()
         this.setChartOptions()
       } catch(e) {
@@ -4371,5 +4407,10 @@ input[type='search']:focus {
 .no__button:hover {
   box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
   scale: 1.025;
+}
+.user-view-header-container {
+  display: -webkit-box;
+  -webkit-box-align: center;
+  -webkit-box-pack: justify;
 }
 </style>

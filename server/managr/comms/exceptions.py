@@ -11,6 +11,12 @@ class ServerError(Exception):
         super().__init__(self.message)
 
 
+class TooManyRequestsError(Exception):
+    def __init__(self, error="Looks like we've hit a rate limit!"):
+        self.message = error
+        super().__init__(self.message)
+
+
 class NewsApiException:
     def __init__(self, e, fn_name=None, retries=0):
         self.error = e
@@ -59,3 +65,29 @@ def _handle_response(response, fn_name=None):
         }
         NewsApiException(HTTPError(kwargs), fn_name)
     return data
+
+
+class TwitterApiException:
+    def __init__(self, e, fn_name=None, retries=0):
+        self.error = e
+        self.error_class_name = e.__class__.__name__
+        self.status_code = e["status_code"]
+        self.param = e["error_param"]
+        self.fn_name = fn_name
+        self.retry_attempts = 0
+        self.raise_error()
+
+    def raise_error(self):
+        if self.error_class_name == "JSONDecodeError":
+            logger.error(f"An error occured decoding the json, {self.fn_name}")
+            return
+        elif self.status_code == 401:
+            return
+        elif self.status_code == 404 and self.param == "EXPIRED_AUTHENTICATION":
+            return
+        elif self.status_code == 429:
+            raise TooManyRequestsError()
+        elif self.status_code == 500:
+            raise ServerError()
+        else:
+            raise Exception(f"Twitter api error: {self.param}")

@@ -26,6 +26,8 @@ const GENERATE_ACTIVATE_ENDPOINT = uid => `/users/${uid}/activate/`
 const CHECK_STATUS_ENDPOINT = '/account-status/'
 const CHECK_TASKS_ENDPOINT = '/task-status/'
 const SSO_DATA_ENDPOINT = '/sso-data/'
+const TWITTER_AUTHORIZATION = '/users/twitter/authorization'
+const TWITTER_AUTHENTICATION = '/users/twitter/authenticate'
 const NYLAS_AUTH_EMAIL_LINK = '/users/email-auth-link/'
 const NYLAS_SEND_EMAIL = '/users/nylas/send-new-email/'
 const NYLAS_REPLY_EMAIL = '/users/nylas/reply-to-email/'
@@ -37,6 +39,7 @@ const FORECAST_ENDPOINT = '/users/modify-forecast/'
 const PULL_USAGE_DATA = '/users/pull-usage-data/'
 const PERFORMANCE_REPORT_ENDPOINT = '/users/performance-report/'
 const TRIAL_USERS_ENDPOINT = '/users/get-trial-users/'
+const ADMIN_SEARCHES_ENDPOINT = '/users/admin-searches/'
 const FORECAST_VALUES_ENDPOINT = '/users/get-forecast-values/'
 const CHAT_SUBMISSION = 'users/chat/submission/'
 const CHAT_ASK = 'users/chat/ask-managr/'
@@ -642,5 +645,29 @@ export default class UserAPI {
       .get(TRIAL_USERS_ENDPOINT)
       .then(response => response.data)
       .catch(apiErrorHandler({ apiName: 'API error' }))
+  }
+  async getAdminSearches() {
+    try {
+      const res = await this.client.get(ADMIN_SEARCHES_ENDPOINT)
+      return res.data
+    } catch(e) {
+      apiErrorHandler({ apiName: 'User.getAdminSearches' })
+    }
+  }
+  async getTwitterAuthorization() {
+    try {
+      const res = await this.client.get(TWITTER_AUTHORIZATION)
+      return res.data
+    } catch(e) {
+      apiErrorHandler({ apiName: 'User.getTwitterAuthorization' })
+    }
+  }
+  async getTwitterAuthentication(data) {
+    try {
+      const res = await this.client.post(TWITTER_AUTHENTICATION, data)
+      return res.data
+    } catch(e) {
+      apiErrorHandler({ apiName: 'User.getTwiiterAuthentication' })
+    }
   }
 }
