@@ -283,6 +283,7 @@ class PRSearchViewSet(
                     query_input = r.get("choices")[0].get("message").get("content")
                 tweet_res = TwitterAuthAccount.get_tweets(query_input, next_token)
                 tweets = tweet_res.get("data", None)
+                includes = tweet_res.get("includes", None)
                 if tweets:
                     if "next_token" in tweet_res["meta"].keys():
                         next_token = tweet_res["meta"]["next_token"]
@@ -315,7 +316,7 @@ class PRSearchViewSet(
         print(len(tweet_list))
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": tweet_res})
-        return Response({"tweets": tweet_list, "string": query_input})
+        return Response({"tweets": tweet_list, "string": query_input, "includes": includes})
 
     @action(
         methods=["post"],

@@ -315,7 +315,12 @@
           </div>
         </div>
 
-        <div v-if="(filteredArticles.length || tweets.length) && !loading" class="divider">
+        <div
+          v-if="
+            ((filteredArticles && filteredArticles.length) || (tweets && tweets.length)) && !loading
+          "
+          class="divider"
+        >
           <p class="divider-text">{{ mainView === 'news' ? 'News Clips' : 'Social Media' }}</p>
         </div>
 
@@ -950,8 +955,8 @@ export default {
           .then((response) => {
             console.log(response)
             if (response.tweets) {
-              this.tweets = response.tweets.data
-              this.tweetMedia = response.tweets.includes.media
+              this.tweets = response.tweets
+              this.tweetMedia = response.includes.media
               this.booleanString = response.string
               this.getTweetSummary()
             }

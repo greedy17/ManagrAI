@@ -171,10 +171,6 @@
             /> -->
 
             <div v-if="menuOpen" class="avatar-dropdown">
-              <p class="dropdown-item">
-                <img src="@/assets/images/profile.svg" height="14px" alt="" />
-                Profile
-              </p>
               <p class="dropdown-item" @click="goToSettings">
                 <img class="mar-right" src="@/assets/images/settings.svg" height="14px" alt="" />
                 Settings
