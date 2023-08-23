@@ -116,7 +116,6 @@
             <div v-if="showingDropdown" class="dropdown">
               <small style="padding-top: 8px" class="gray-text">Example Searches</small>
               <div
-                @click.stop
                 @click="addSuggestion(suggestion)"
                 class="dropdown-item"
                 v-for="(suggestion, i) in filteredSuggestions"
@@ -656,12 +655,11 @@ export default {
         'Best new electric cars',
         'Climate change and wildlife',
         'AI only in Techcrunch sources',
-        'Authors and Lawrence Bonk',
-        'All stories about or written by Ron Miller',
+        'Articles written or about Ron Miller',
         'Rutgers University broad search',
         'Beyond meat broad search',
         'Beyond burger or sausage or meat',
-        'Impossible burger, including their products',
+        'Chick-fil-a competitors, list them out',
       ],
       promptSuggestions: [
         `Background on John Smith:\nTips for pitching John Smith:`,
@@ -1245,7 +1243,6 @@ export default {
   padding: 8px 0;
   width: 100%;
   margin: 0;
-
   cursor: pointer;
   color: $dark-black-blue;
   white-space: nowrap;

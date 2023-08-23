@@ -209,6 +209,7 @@ export default {
       regenerating: false,
       instructions: '',
       copyTip: 'Copy',
+      textToCopy: '',
     }
   },
   watch: {},
@@ -216,7 +217,7 @@ export default {
   methods: {
     async copyText() {
       try {
-        await navigator.clipboard.writeText(this.textToCopy)
+        await navigator.clipboard.writeText(this.pitch)
         this.copyTip = 'Copied!'
 
         setTimeout(() => {
