@@ -321,6 +321,20 @@ export default {
           }
           return
         }
+        else if (user.status === 500) {
+          for (let key in user.data) {
+            this.$toast(user.data[key], {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+          }
+          return
+        } else {
+          this.$router.push({ name: 'Login' })
+        }
       } catch (error) {
         this.$toast('There was a problem creating your account.', {
           timeout: 2000,
@@ -342,7 +356,6 @@ export default {
 
       // this.$store.commit('UPDATE_USER', user)
       // this.$store.commit('UPDATE_USERTOKEN', user.token)
-      this.$router.push({ name: 'Login' })
       // if (this.isPR) {
       //   this.$router.push({ name: 'PRSummaries' })
       // } else {
