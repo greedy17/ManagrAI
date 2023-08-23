@@ -1,228 +1,51 @@
 <template>
-  <div>
+  <div class="settings">
     <div>
-      <form
-        v-if="hasSlack || (this.isAdmin && this.orgHasSlackIntegration)"
-        class="invite-form form-height-small"
-        @submit.prevent="handleInvite"
-        style="margin-top: 7.5rem; height: 50vh"
-      >
-        <div class="header">
-          <div class="flex-row">
-            <img src="@/assets/images/logo.png" class="logo" alt="" />
-            <h3 class="invite-form__title">Invite Slack Users</h3>
-          </div>
-          <div class="flex-row">
-            <img
-              @click="handleInviteCancel"
-              src="@/assets/images/close.svg"
-              height="24px"
-              alt=""
-              style="filter: invert(30%); cursor: pointer"
-            />
+      <h1>Settings</h1>
+
+      <div class="bar-header">
+        <small :class="{ active: page === 'invite' }">Invite</small>
+        <small class="not-allowed">Team</small>
+        <small class="not-allowed">Profile</small>
+      </div>
+
+      <div v-if="page === 'invite'">
+        <div>
+          <div class="vertical-margin">
+            <h3>Invite Users</h3>
           </div>
         </div>
 
-        <div
-          style="display: flex; justify-content: center; flex-direction: column; margin-top: -3rem"
-        >
-          <div style="display: flex; align-items: flex-start; flex-direction: column">
-            <FormField>
-              <template v-slot:input>
-                <Multiselect
-                  placeholder="Select Slack User"
-                  @input="mapMember"
-                  v-model="selectedMember"
-                  :options="slackMembers.members"
-                  openDirection="below"
-                  style="width: 33vw; margin-bottom: 1rem"
-                  selectLabel="Enter"
-                  track-by="id"
-                  label="realName"
-                >
-                  <template slot="noResult">
-                    <p class="multi-slot">No results. Try loading more</p>
-                  </template>
-                  <template slot="afterList">
-                    <p class="multi-slot__more" @click="listUsers(slackMembers.nextCursor)">
-                      Load More
-                      <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
-                    </p>
-                  </template>
-                  <template slot="placeholder">
-                    <p class="slot-icon">
-                      <img src="@/assets/images/search.svg" alt="" />
-                      Select Slack User
-                    </p>
-                  </template>
-                </Multiselect>
-              </template>
-            </FormField>
-          </div>
-          <!-- <div style="display: flex; align-items: flex-start; flex-direction: column">
-            <FormField>
-              <template v-slot:input>
-                <Multiselect
-                  placeholder="Select User Level"
-                  @input="mapUserLevel"
-                  v-model="selectedLevel"
-                  :options="userTypes"
-                  openDirection="below"
-                  style="width: 33vw; margin-bottom: 1rem"
-                  selectLabel="Enter"
-                  label="key"
-                >
-                  <template slot="noResult">
-                    <p class="multi-slot">No results.</p>
-                  </template>
-                  <template slot="placeholder">
-                    <p class="slot-icon">
-                      <img src="@/assets/images/search.svg" alt="" />
-                      Select User Level
-                    </p>
-                  </template>
-                </Multiselect>
-              </template>
-            </FormField>
-          </div> -->
-          <div
-            v-if="user.isAdmin"
-            style="display: flex; align-items: flex-start; flex-direction: column"
+        <div v-if="userInviteForm" class="row">
+          <input
+            v-model="userInviteForm.field.email.value"
+            placeholder="Enter User email"
+            type="email"
+            class="input"
+            :disabled="disableInput"
+          />
+
+          <PulseLoadingSpinnerButton
+            class="primary-button"
+            v-if="!activationLink"
+            @click="handleInviteNonSlack"
+            text="Generate Link"
+            :loading="loading"
+            :disabled="!userInviteForm.field.email.value || loading"
+          ></PulseLoadingSpinnerButton>
+
+          <button
+            class="primary-button"
+            v-else
+            @click="copyText"
+            :loading="loading"
+            :disabled="!activationLink || loading"
           >
-            <FormField>
-              <template v-slot:input>
-                <Multiselect
-                  placeholder="Select Team"
-                  @input="checkTeamLead"
-                  v-model="selectedTeam"
-                  :options="allTeams"
-                  openDirection="below"
-                  style="width: 33vw; margin-bottom: 1rem"
-                  selectLabel="Enter"
-                  :customLabel="customTeamLabel"
-                >
-                  <template slot="noResult">
-                    <p class="multi-slot">No results.</p>
-                  </template>
-                  <template slot="placeholder">
-                    <p class="slot-icon">
-                      <img src="@/assets/images/search.svg" alt="" />
-                      Select Team
-                    </p>
-                  </template>
-                </Multiselect>
-              </template>
-            </FormField>
-          </div>
-          <div
-            v-if="user.isAdmin"
-            style="display: flex; align-items: flex-start; flex-direction: column"
-          >
-            <div style="display: flex; height: 1rem; margin-bottom: 2rem; margin-left: 0.25rem">
-              <p style="margin: 0">Make Team Lead</p>
-              <input
-                v-model="selectedTeamLead"
-                :disabled="!selectedTeam"
-                type="checkbox"
-                style="height: 1rem; align-self: center; width: 2rem; margin-top: 0.5rem"
-              />
-            </div>
-          </div>
-        </div>
-        <div class="invite-form__actions">
-          <div class="invite-form__inner_actions">
-            <template>
-              <PulseLoadingSpinnerButton
-                @click="handleInvite"
-                class="invite-button"
-                style="width: 5rem; margin-right: 5%; height: 2rem; margin-top: 2rem"
-                text="Invite"
-                :loading="loading"
-                >Invite</PulseLoadingSpinnerButton
-              >
-            </template>
-          </div>
-        </div>
-      </form>
-      <div v-else class="invite-form" style="padding: 2rem">
-        <div class="header">
-          <div class="flex-row">
-            <img src="@/assets/images/logo.png" class="logo" alt="" />
-            <h3 class="invite-form__title">Invite Users to Managr</h3>
-          </div>
-        </div>
-
-        <div style="margin-top: 1rem">
-          <!-- <FormField>
-            <template v-slot:input>
-              <Multiselect
-                placeholder="Select User Level"
-                @input="mapUserLevel"
-                v-model="selectedLevel"
-                :options="userTypesNoSlack"
-                openDirection="below"
-                style="min-width: 16vw"
-                selectLabel="Enter"
-                label="key"
-              >
-                <template slot="noResult">
-                  <p class="multi-slot">No results.</p>
-                </template>
-                <template slot="placeholder">
-                  <p class="slot-icon">
-                    <img src="@/assets/images/search.svg" alt="" />
-                    Select User Level
-                  </p>
-                </template>
-              </Multiselect>
-            </template>
-          </FormField> -->
-          <div class="form_field">
-            <input
-              v-model="userInviteForm.field.email.value"
-              placeholder="Enter User email"
-              type="email"
-            />
-          </div>
-        </div>
-
-        <div class="invite-form__actions-noslack">
-          <template>
-            <PulseLoadingSpinnerButton
-              v-if="!activationLink"
-              @click="handleInviteNonSlack"
-              class="invite-button"
-              text="Invite"
-              :loading="loading"
-              >Invite</PulseLoadingSpinnerButton
-            >
-            <span style="margin-top: 1rem; cursor: pointer" v-else
-              ><small
-                v-clipboard:copy="activationLink"
-                v-clipboard:success="onCopy"
-                v-clipboard:error="onError"
-                >{{ activationLink }}
-                <img
-                  src="@/assets/images/copy.svg"
-                  height="18px"
-                  style="margin-left: 0.5rem"
-                  alt="" /></small
-            ></span>
-            <div v-if="!activationLink" class="cancel-button" @click="handleInviteCancel">
-              Cancel
-            </div>
-            <small v-else class="copyText">Copy above link and send to user</small>
-          </template>
-        </div>
-
-        <div v-if="activationLink">
-          <button @click="handleInviteCancel" class="invite-button">Reset form</button>
+            <img src="@/assets/images/link.svg" height="12px" alt="" /> {{ copyTip }}
+          </button>
         </div>
       </div>
     </div>
-    <h1>Hi there</h1>
-    <h1>Hi there</h1>
-    <h1>Hi there</h1>
   </div>
 </template>
 <script>
@@ -234,7 +57,6 @@ import SlackOAuth, { SlackUserList } from '@/services/slack'
 import FormField from '@/components/forms/FormField'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 
-
 export default {
   name: 'PRProfile',
   components: {
@@ -244,6 +66,9 @@ export default {
   },
   data() {
     return {
+      page: 'invite',
+      copyTip: 'Copy link',
+      disableInput: false,
       inviteOpen: false,
       selectedMember: null,
       slackMembers: new SlackUserList(),
@@ -273,17 +98,14 @@ export default {
     } else {
       this.teamUsers = [this.user]
     }
-    console.log('teamUsers', this.teamUsers)
     this.userInviteForm = new UserInviteForm({
       role: User.roleChoices[0].key,
       userLevel: User.types.REP,
       organization: this.user.organization,
     })
-    console.log('this.userInviteForm', this.userInviteForm)
     if ((this.isAdmin && this.orgHasSlackIntegration) || this.hasSlack) {
       try {
         const allTeams = await Organization.api.listTeams(this.user.id)
-        console.log('allTeams', allTeams)
         this.allTeams = allTeams.results
         if (this.user.isAdmin) {
           const userTeam = this.allTeams.filter((team) => team.id === this.user.team)
@@ -304,6 +126,21 @@ export default {
     this.team.refresh()
   },
   methods: {
+    async copyText() {
+      this.disableInput = false
+      this.userInviteForm.field.email.value = null
+      try {
+        await navigator.clipboard.writeText(this.activationLink)
+        this.copyTip = 'Copied!'
+
+        setTimeout(() => {
+          this.activationLink = ''
+          this.copyTip = 'Copy link'
+        }, 2000)
+      } catch (err) {
+        console.error('Failed to copy text: ', err)
+      }
+    },
     handleInviteCancel() {
       this.inviteOpen = false
     },
@@ -439,15 +276,28 @@ export default {
         await this.noSlackRefresh()
         this.resetData()
       } catch (e) {
-        this.$toast('Error sending invite', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        if (e.response.status === 426) {
+          this.$toast('Max users reached, upgrade to add more', {
+            timeout: 2500,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } else {
+          this.$toast('Error creating link, try again', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }
       } finally {
-        this.loading = false
+        this.disableInput = true
+        setTimeout(() => {
+          this.loading = false
+        }, 500)
       }
     },
     customTeamLabel(props) {
@@ -490,5 +340,87 @@ export default {
 </script>
 
 <style scoped lang="scss">
+@import '@/styles/variables';
+@import '@/styles/buttons';
 
+.settings {
+  padding: 96px 144px 32px 144px;
+  height: 100vh;
+  font-weight: 400;
+  font-family: $base-font-family;
+  color: $dark-black-blue;
+}
+
+.bar-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: row;
+  position: sticky;
+  top: 0;
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  width: 100%;
+  // height: 66px;
+  // background-color: white;
+  z-index: 10;
+
+  small {
+    font-size: 14px;
+    margin-right: 1rem;
+    color: $off-gray;
+    padding: 16px 0;
+  }
+}
+
+.input {
+  width: 400px;
+  background-color: $offer-white;
+  margin-bottom: 0.25rem;
+  max-height: 250px;
+  padding: 8px 16px;
+  line-height: 1.75;
+  outline: none;
+  letter-spacing: 0.5px;
+  font-size: 14px;
+  font-family: $base-font-family;
+  font-weight: 400;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  resize: none;
+  text-align: left;
+  color: $dark-black-blue;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  // justify-content: space-between;
+}
+
+.primary-button {
+  @include dark-blue-button();
+  padding: 11px 12px;
+  font-size: 13px;
+  border: none;
+  img {
+    filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
+    margin-right: 8px;
+  }
+}
+
+.vertical-margin {
+  margin: 32px 0;
+}
+
+.active {
+  color: $dark-black-blue !important;
+  border-bottom: 1px solid $dark-black-blue;
+}
+
+.not-allowed {
+  cursor: not-allowed;
+}
 </style>

@@ -31,7 +31,7 @@
                 v-model="userRole"
                 :options="userRoles"
                 openDirection="below"
-                style="width: 26vw; padding: 0; margin-top: 6px;"
+                style="width: 26vw; padding: 0; margin-top: 6px"
                 selectLabel="Enter"
                 label="name"
                 id="key"
@@ -45,14 +45,14 @@
             <span class="">
               <label for="name">Full Name</label>
               <input
-              @blur="registrationForm.field.fullName.validate()"
-              :errors="registrationForm.field.fullName.errors"
-              v-model="registrationForm.field.fullName.value"
-              placeholder="Enter Full Name"
-              id="name"
+                @blur="registrationForm.field.fullName.validate()"
+                :errors="registrationForm.field.fullName.errors"
+                v-model="registrationForm.field.fullName.value"
+                placeholder="Enter Full Name"
+                id="name"
               />
             </span>
-            
+
             <span>
               <label for="email">Email</label>
               <input
@@ -64,7 +64,7 @@
                 placeholder="Enter Email"
               />
             </span>
-  
+
             <span>
               <label for="password">Set a Password</label>
               <input
@@ -80,7 +80,7 @@
                 <small class="error">{{ message }}</small>
               </div>
             </span>
-  
+
             <span>
               <label for="confirm-password">Re-Enter Password</label>
               <input
@@ -93,7 +93,7 @@
                 placeholder="Must be 9 characters or longer"
               />
             </span>
-  
+
             <span class="col">
               <label for="company">Company Name</label>
               <input
@@ -111,7 +111,7 @@
               By signing up, I agree to Managr's
               <a href="https://managr.ai/terms-of-service" target="_blank">Terms</a>
               &
-              <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>. 
+              <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>.
               <!-- and -->
               <!-- <a href="https://managr.ai/privacy-policy" target="_blank"></a>. -->
             </div>
@@ -268,7 +268,10 @@ export default {
     async onSubmit() {
       this.registrationForm.validate()
 
-      if (this.registrationForm.field.password.value !== this.registrationForm.field.confirmPassword.value) {
+      if (
+        this.registrationForm.field.password.value !==
+        this.registrationForm.field.confirmPassword.value
+      ) {
         this.$toast('Please make sure password match.', {
           timeout: 2000,
           position: 'top-left',
@@ -290,16 +293,16 @@ export default {
         return
       }
       const splitEmail = this.registrationForm.field.email.value.split('@')
-      if (splitEmail[splitEmail.length - 1] === 'gmail.com') {
-        this.$toast('Please use a company email.', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-        return
-      }
+      // if (splitEmail[splitEmail.length - 1] === 'gmail.com') {
+      //   this.$toast('Please use a company email.', {
+      //     timeout: 2000,
+      //     position: 'top-left',
+      //     type: 'error',
+      //     toastClassName: 'custom',
+      //     bodyClassName: ['custom'],
+      //   })
+      //   return
+      // }
 
       this.submitting = true
 

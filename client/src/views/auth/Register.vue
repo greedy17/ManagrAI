@@ -93,7 +93,9 @@
               <div class="form-card__footer">
                 <div>
                   By signing up, I agree to Managr's
-                  <a href="https://managr.ai/terms-of-service" target="_blank">Terms & Conditions.</a> 
+                  <a href="https://managr.ai/terms-of-service" target="_blank"
+                    >Terms & Conditions.</a
+                  >
                   <!-- and -->
                   <!-- <a href="https://managr.ai/privacy-policy" target="_blank"></a>. -->
                 </div>
@@ -233,16 +235,16 @@ export default {
         return
       }
       const splitEmail = this.registrationForm.field.email.value.split('@')
-      if (splitEmail[splitEmail.length - 1] === 'gmail.com') {
-        this.$toast('Please use a company email.', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-        return
-      }
+      // if (splitEmail[splitEmail.length - 1] === 'gmail.com') {
+      //   this.$toast('Please use a company email.', {
+      //     timeout: 2000,
+      //     position: 'top-left',
+      //     type: 'error',
+      //     toastClassName: 'custom',
+      //     bodyClassName: ['custom'],
+      //   })
+      //   return
+      // }
       // Continue with user registration...
       this.submitting = true
       let user
