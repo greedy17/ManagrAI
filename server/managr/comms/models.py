@@ -144,7 +144,7 @@ class TwitterAuthAccountAdapter:
         url = comms_consts.TWITTER_BASE_URI + comms_consts.TWITTER_RECENT_TWEETS_URI
         params = {
             "query": query,
-            "max_results": 20,
+            "max_results": 100,
             "expansions": "author_id,attachments.media_keys",
             "user.fields": "username,name,profile_image_url,public_metrics,verified,location,url",
             "tweet.fields": "created_at",

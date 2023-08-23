@@ -124,7 +124,7 @@
           </div>
 
           <div v-if="addingPrompt" style="margin-top: 1rem" class="input-container">
-            <div class="input-row">
+            <div class="input-row-start">
               <div class="main-text">
                 <img
                   style="margin-right: 8px"
@@ -133,13 +133,27 @@
                 />
               </div>
               <textarea
-                rows="1"
+                @focus="showPromptDropdown"
+                @blur="hidePromptDropdown"
                 class="area-input"
                 placeholder="What would you like included in the summary?"
                 v-model="newTemplate"
                 v-autoresize
               />
               <small @click="removePrompt" class="remove">X</small>
+            </div>
+
+            <div v-if="showingPromptDropdown" class="dropdown">
+              <small style="padding-top: 8px" class="gray-text">Example Prompts</small>
+              <div
+                class="dropdown-item"
+                v-for="(suggestion, i) in filteredPromptSuggestions"
+                :key="i"
+              >
+                <p @click.stop @click="addPromptSuggestion(suggestion)">
+                  {{ suggestion }}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -162,8 +176,14 @@
             <button @click="toggleAddPrompt" v-if="!addingPrompt" class="secondary-button">
               Custom Prompt
             </button>
-            <button @click="toggleAddSource" v-if="!addingSources" class="secondary-button">
-              Add Sources
+            <button
+              @mouseenter.prevent="soonButtonText"
+              @mouseleave.prevent="defaultButtonText"
+              v-if="!addingSources"
+              class="secondary-button no-hover-effect"
+            >
+              <!-- @click="toggleAddSource" -->
+              {{ buttonText }}
             </button>
 
             <button
@@ -569,6 +589,8 @@ export default {
   },
   data() {
     return {
+      showingPromptDropdown: false,
+      buttonText: 'Article Summary',
       AllUserTweets: {},
       mainView: 'news',
       savedSearch: null,
@@ -607,9 +629,7 @@ export default {
       showingDropdown: false,
       copyTip: 'Copy',
       searchSuggestions: [
-        'Chick-fil-a competitor news, search by name',
         'University of Michigan no sports related mentions',
-        'List out Lululemon competitors',
         'Walmart no stock related mentions',
         "Boston Children's no ER related stories",
         'Stranger Things and Netflix',
@@ -631,6 +651,17 @@ export default {
         'Beyond burger or sausage or meat',
         'Impossible burger, including their products',
       ],
+      promptSuggestions: [
+        `Background on John Smith:\nTips for pitching John Smith:`,
+        `Consumer Sentiment:\nMedia & Influencer Sentiment:`,
+        `Executive Summary:\nFaculty, Research & Alumni:\nStudent life:`,
+        `Executive Summary:\nImpact & Donor Insights:\nMember Impact:`,
+        'What is the impact of this coverage on Tesla:',
+        'Generate 5 questions and answers a journlist would ask based on this coverage',
+        'Generate 5 questions and answers an analyst would ask based on this coverage of product X',
+        'Suggest a strategy to combat the negative coverage',
+        'Suggest a strategy to amplify the positive coverage,',
+      ],
     }
   },
   created() {},
@@ -646,11 +677,20 @@ export default {
     // this.updateMessage()
   },
   methods: {
+    soonButtonText() {
+      this.buttonText = 'Coming Soon!'
+    },
+    defaultButtonText() {
+      this.buttonText = 'Article Summary'
+    },
     openTweet(username, id) {
       window.open(`https://twitter.com/${username}/status/${id}`, '_blank')
     },
     addSuggestion(ex) {
       this.newSearch = ex
+    },
+    addPromptSuggestion(ex) {
+      this.newTemplate = ex
     },
     async copyText() {
       try {
@@ -672,9 +712,18 @@ export default {
         this.showingDropdown = false
       }, 100)
     },
+    showPromptDropdown() {
+      this.showingPromptDropdown = true
+    },
+    hidePromptDropdown() {
+      setTimeout(() => {
+        this.showingPromptDropdown = false
+      }, 100)
+    },
     resetSearch() {
       this.clearNewSearch()
       this.selectedSearch = null
+      this.summary = ''
     },
     switchMainView(view) {
       // if (view === 'news') {
@@ -705,6 +754,7 @@ export default {
       this.showSaveName = !this.showSaveName
     },
     setSearch(search) {
+      this.summary = ''
       this.searchId = search.id
       this.searchName = search.name
       this.newSearch = search.input_text
@@ -1063,6 +1113,12 @@ export default {
         suggestions.toLowerCase().includes(this.newSearch.toLowerCase()),
       )
     },
+    filteredPromptSuggestions() {
+      if (!this.newTemplate) return this.promptSuggestions
+      return this.promptSuggestions.filter((suggestions) =>
+        suggestions.toLowerCase().includes(this.newTemplate.toLowerCase()),
+      )
+    },
     searchSaved() {
       if (
         this.newSearch &&
@@ -1212,6 +1268,7 @@ export default {
   padding: 4px 0;
   width: 200px;
   margin-top: 128px;
+  margin-bottom: 16px;
 }
 .switch-item {
   display: flex;
@@ -1480,6 +1537,13 @@ button:disabled {
   }
 }
 
+.no-hover-effect:hover {
+  scale: 1;
+  box-shadow: none;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .toggle-type {
   cursor: pointer;
   p {
@@ -1596,7 +1660,7 @@ button:disabled {
   height: 0px;
 }
 .area-input::-webkit-scrollbar-thumb {
-  background-color: $base-gray;
+  background-color: $soft-gray;
   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
   border-radius: 6px;
 }
@@ -1604,9 +1668,17 @@ button:disabled {
   display: flex;
   align-items: center;
   flex-direction: row;
-  align-items: center;
 }
+.input-row-start {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: row;
 
+  img,
+  small {
+    margin-top: 4px;
+  }
+}
 .main-text {
   display: flex;
   flex-direction: row;
@@ -1694,8 +1766,7 @@ button:disabled {
   align-items: center;
   flex-direction: column;
   justify-content: center;
-  max-height: 60vh;
-  margin-top: 16px;
+
   width: 700px;
 }
 

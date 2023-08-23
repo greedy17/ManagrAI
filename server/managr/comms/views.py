@@ -291,7 +291,7 @@ class PRSearchViewSet(
                         for user in user_data:
                             if user["id"] == tweet["author_id"]:
                                 print(user["username"], user["public_metrics"]["followers_count"])
-                                if user["public_metrics"]["followers_count"] > 1000:
+                                if user["public_metrics"]["followers_count"] > 100:
                                     tweet["user"] = user
                                     tweet_list.append(tweet)
                                 break
