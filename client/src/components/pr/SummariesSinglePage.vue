@@ -607,7 +607,9 @@ export default {
       showingDropdown: false,
       copyTip: 'Copy',
       searchSuggestions: [
+        'Chick-fil-a competitor news, search by name',
         'University of Michigan no sports related mentions',
+        'List out Lululemon competitors',
         'Walmart no stock related mentions',
         "Boston Children's no ER related stories",
         'Stranger Things and Netflix',
@@ -649,7 +651,6 @@ export default {
     },
     addSuggestion(ex) {
       this.newSearch = ex
-      console.log(ex)
     },
     async copyText() {
       try {
