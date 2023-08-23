@@ -282,7 +282,8 @@ class PRSearchViewSet(
                 tweet_res = TwitterAuthAccount.get_tweets(query_input, next_token)
                 tweets = tweet_res.get("data", None)
                 if tweets:
-                    next_token = tweet_res["meta"]["next_token"]
+                    if "next_token" in tweet_res["meta"].keys():
+                        next_token = tweet_res["meta"]["next_token"]
                     user_data = tweet_res["includes"].get("users")
                     for tweet in tweets:
                         print(f"TWEET COUNT: {len(tweet_list)}")
@@ -290,7 +291,6 @@ class PRSearchViewSet(
                             break
                         for user in user_data:
                             if user["id"] == tweet["author_id"]:
-                                print(user["username"], user["public_metrics"]["followers_count"])
                                 if user["public_metrics"]["followers_count"] > 100:
                                     tweet["user"] = user
                                     tweet_list.append(tweet)
@@ -298,7 +298,8 @@ class PRSearchViewSet(
                 if len(tweet_list) < 20:
                     continue
                 break
-            except KeyError:
+            except KeyError as e:
+                logger.exception(e)
                 return Response(
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     data={"error": f"No results for {query_input}", "string": query_input},
@@ -308,6 +309,8 @@ class PRSearchViewSet(
                 logger.exception(e)
                 tweet_res = e
                 break
+        print(has_error)
+        print(len(tweet_list))
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": tweet_res})
         return Response({"tweets": tweet_list, "string": query_input})

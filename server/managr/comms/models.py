@@ -144,7 +144,7 @@ class TwitterAuthAccountAdapter:
         url = comms_consts.TWITTER_BASE_URI + comms_consts.TWITTER_RECENT_TWEETS_URI
         params = {
             "query": query,
-            "max_results": 100,
+            "max_results": 50,
             "expansions": "author_id,attachments.media_keys",
             "user.fields": "username,name,profile_image_url,public_metrics,verified,location,url",
             "tweet.fields": "created_at",
@@ -156,7 +156,9 @@ class TwitterAuthAccountAdapter:
         headers = comms_consts.TWITTER_API_HEADERS
         with Variable_Client() as client:
             response = client.get(url, headers=headers, params=params)
+            print(vars(response))
             res = self._handle_response(response)
+
         return res
 
     def get_summary(
