@@ -508,8 +508,8 @@ if USE_NEWS_API:
 
 USE_TWITTER_API = os.environ.get("USE_TWITTER_API") == "True"
 if USE_TWITTER_API:
+    TWITTER_ACCESS_TOKEN = _env_get_required("TWITTER_ACCESS_TOKEN")
     TWITTER_CLIENT_ID = _env_get_required("TWITTER_CLIENT_ID")
     TWITTER_REDIRECT_URI = _env_get_required("TWITTER_REDIRECT_URI")
-    TWITTER_ACCESS_TOKEN = _env_get_required("TWITTER_ACCESS_TOKEN")
 
 MAX_ATTEMPTS = 5

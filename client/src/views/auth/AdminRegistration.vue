@@ -22,92 +22,96 @@
             <span> OR </span>
           </div> -->
 
-          <span>
-            <label for="name">Full Name</label>
-            <input
-              @blur="registrationForm.field.fullName.validate()"
-              :errors="registrationForm.field.fullName.errors"
-              v-model="registrationForm.field.fullName.value"
-              placeholder="Enter Full Name"
-              id="name"
-            />
-          </span>
+          <div class="fields-container">
+            <span class="col top-field">
+              <label for="role">Select Product</label>
+              <Multiselect
+                placeholder="Select your role"
+                @input="selectRole($event)"
+                v-model="userRole"
+                :options="userRoles"
+                openDirection="below"
+                style="width: 26vw; padding: 0; margin-top: 6px"
+                selectLabel="Enter"
+                label="name"
+                id="key"
+              >
+                <template slot="noResult">
+                  <p>No results.</p>
+                </template>
+              </Multiselect>
+            </span>
 
-          <span>
-            <label for="email">Email</label>
-            <input
-              @blur="registrationForm.field.email.validate()"
-              :errors="registrationForm.field.email.errors"
-              v-model="registrationForm.field.email.value"
-              type="email"
-              id="email"
-              placeholder="Enter Email"
-            />
-          </span>
+            <span class="">
+              <label for="name">Full Name</label>
+              <input
+                @blur="registrationForm.field.fullName.validate()"
+                :errors="registrationForm.field.fullName.errors"
+                v-model="registrationForm.field.fullName.value"
+                placeholder="Enter Full Name"
+                id="name"
+              />
+            </span>
 
-          <span>
-            <label for="password">Set a Password</label>
-            <input
-              id="password"
-              @blur="showVals(registrationForm.field.password)"
-              @input="registrationForm.field.password.validate()"
-              :errors="registrationForm.field.password.errors"
-              v-model="registrationForm.field.password.value"
-              type="password"
-              placeholder="Must be 9 characters or longer"
-            />
-            <div class="column" v-for="(message, i) in errorMessages" :key="i">
-              <small class="error">{{ message }}</small>
-            </div>
-          </span>
+            <span>
+              <label for="email">Email</label>
+              <input
+                @blur="registrationForm.field.email.validate()"
+                :errors="registrationForm.field.email.errors"
+                v-model="registrationForm.field.email.value"
+                type="email"
+                id="email"
+                placeholder="Enter Email"
+              />
+            </span>
 
-          <span>
-            <label for="confirm-password">Re-Enter Password</label>
-            <input
-              id="confirm-password"
-              label="Re-Enter Password"
-              @blur="registrationForm.field.confirmPassword.validate()"
-              :errors="registrationForm.field.confirmPassword.errors"
-              v-model="registrationForm.field.confirmPassword.value"
-              type="password"
-              placeholder="Must be 9 characters or longer"
-            />
-          </span>
+            <span>
+              <label for="password">Set a Password</label>
+              <input
+                id="password"
+                @blur="showVals(registrationForm.field.password)"
+                @input="registrationForm.field.password.validate()"
+                :errors="registrationForm.field.password.errors"
+                v-model="registrationForm.field.password.value"
+                type="password"
+                placeholder="Must be 9 characters or longer"
+              />
+              <div class="column" v-for="(message, i) in errorMessages" :key="i">
+                <small class="error">{{ message }}</small>
+              </div>
+            </span>
 
-          <span class="col">
-            <label for="company">Company Name</label>
-            <input
-              @blur="registrationForm.field.organizationName.validate()"
-              :errors="registrationForm.field.organizationName.errors"
-              v-model="registrationForm.field.organizationName.value"
-              placeholder="Enter Company Name"
-              id="company"
-            />
-          </span>
+            <span>
+              <label for="confirm-password">Re-Enter Password</label>
+              <input
+                id="confirm-password"
+                label="Re-Enter Password"
+                @blur="registrationForm.field.confirmPassword.validate()"
+                :errors="registrationForm.field.confirmPassword.errors"
+                v-model="registrationForm.field.confirmPassword.value"
+                type="password"
+                placeholder="Must be 9 characters or longer"
+              />
+            </span>
 
-          <!-- <span class="col">
-            <label for="role">Role</label>
-            <Multiselect
-              placeholder="Select your role"
-              @input="selectRole($event)"
-              v-model="userRole"
-              :options="userRoles"
-              openDirection="above"
-              style="width: 26vw; padding: 0; margin-top: 6px;"
-              selectLabel="Enter"
-              label="name"
-              id="role"
-            >
-              <template slot="noResult">
-                <p>No results.</p>
-              </template>
-            </Multiselect>
-          </span> -->
+            <span class="col">
+              <label for="company">Company Name</label>
+              <input
+                @blur="registrationForm.field.organizationName.validate()"
+                :errors="registrationForm.field.organizationName.errors"
+                v-model="registrationForm.field.organizationName.value"
+                placeholder="Enter Company Name"
+                id="company"
+              />
+            </span>
+          </div>
 
           <div class="form-card__footer">
             <div>
               By signing up, I agree to Managr's
-              <a href="https://managr.ai/terms-of-service" target="_blank">Terms & Conditions.</a> 
+              <a href="https://managr.ai/terms-of-service" target="_blank">Terms</a>
+              &
+              <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>.
               <!-- and -->
               <!-- <a href="https://managr.ai/privacy-policy" target="_blank"></a>. -->
             </div>
@@ -162,7 +166,7 @@ export default {
       userTime: moment.tz.guess(),
       changeZone: false,
       validatedForm: false,
-      userRole: { key: 'SALES', name: 'Sales' },
+      userRole: { key: 'PR', name: 'Public Relations' },
       selectedZone: null,
       errorMessages: [],
       selectedCrm: null,
@@ -257,13 +261,17 @@ export default {
       this.registrationForm.field.timezone.value = n.value
     },
     selectRole(n) {
+      console.log('userRole', this.userRole)
+      console.log('n', n)
       this.registrationForm.field.role.value = n.key
     },
     async onSubmit() {
       this.registrationForm.validate()
 
-      console.log('this.registrationForm', this.registrationForm)
-      if (this.registrationForm.field.password.value !== this.registrationForm.field.confirmPassword.value) {
+      if (
+        this.registrationForm.field.password.value !==
+        this.registrationForm.field.confirmPassword.value
+      ) {
         this.$toast('Please make sure password match.', {
           timeout: 2000,
           position: 'top-left',
@@ -285,16 +293,16 @@ export default {
         return
       }
       const splitEmail = this.registrationForm.field.email.value.split('@')
-      if (splitEmail[splitEmail.length - 1] === 'gmail.com') {
-        this.$toast('Please use a company email.', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-        return
-      }
+      // if (splitEmail[splitEmail.length - 1] === 'gmail.com') {
+      //   this.$toast('Please use a company email.', {
+      //     timeout: 2000,
+      //     position: 'top-left',
+      //     type: 'error',
+      //     toastClassName: 'custom',
+      //     bodyClassName: ['custom'],
+      //   })
+      //   return
+      // }
 
       this.submitting = true
 
@@ -332,8 +340,8 @@ export default {
       // this.$store.commit('UPDATE_USER', encryptedUser)
       // this.$store.commit('UPDATE_USERTOKEN', encryptedKey)
 
-      this.$store.commit('UPDATE_USER', user)
-      this.$store.commit('UPDATE_USERTOKEN', user.token)
+      // this.$store.commit('UPDATE_USER', user)
+      // this.$store.commit('UPDATE_USERTOKEN', user.token)
       this.$router.push({ name: 'Login' })
       // if (this.isPR) {
       //   this.$router.push({ name: 'PRSummaries' })
@@ -603,5 +611,17 @@ h2 {
   opacity: 0.7;
   background-color: white;
   cursor: text !important;
+}
+.fields-container {
+  height: 40vh;
+  overflow-x: auto;
+  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.top-field {
+  margin-top: 7rem;
 }
 </style>

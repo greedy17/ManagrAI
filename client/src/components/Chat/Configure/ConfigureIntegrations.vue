@@ -282,7 +282,8 @@
             >
               Slack Connected
             </p>
-            <p v-else class="card-text">Generate summaries via Slack</p>
+            <!-- <p v-else class="card-text">Generate summaries via Slack</p> -->
+            <p v-else class="card-text">Connect to generate summaries via Slack</p>
             <div></div>
             <div class="sep-button-container">
               <div class="separator"></div>
@@ -326,7 +327,8 @@
             <div style="display: flex">
               <h3 class="card__title">Zoom</h3>
             </div>
-            <p class="card-text">Use AI to summarize calls</p>
+            <!-- <p class="card-text">Use AI to summarize calls</p> -->
+            <p class="card-text">Connect to enable AI call summaries</p>
             <div class="sep-button-container">
               <div class="separator"></div>
               <button
@@ -372,7 +374,7 @@
           </div>
         </div>
         <!-- Twitter -->
-        <div class="card">
+        <!-- <div class="card">
           <div class="card__header" style="">
             <img style="height: 40px" src="@/assets/images/twitter-x.svg" />
           </div>
@@ -385,19 +387,7 @@
             <div class="sep-button-container">
               <div class="separator"></div>
               <button
-                class="long-button gray"
-                style="
-                  margin-right: 0;
-                  margin-top: 1rem;
-                  margin-bottom: 0.5rem;
-                  padding-top: 0.4rem;
-                  padding-bottom: 0.4rem;
-                "
-              >
-                Coming Soon...
-              </button>
-              <!-- <button
-                v-if="hasSlackIntegration || (orgHasSlackIntegration && userCanIntegrateSlack)"
+                v-if="false"
                 class="long-button coral"
                 style="
                   margin-right: 0;
@@ -409,12 +399,12 @@
                 @click="setRemoveApp('SLACK')"
               >
                 Disconnect
-              </button> -->
-              <!-- <button
+              </button>
+              <button
                 v-else
                 class="long-button"
                 style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem"
-                @click="connectApp('SLACK')"
+                @click="twitterAuthorization"
               >
                 Connect
                 <img
@@ -422,10 +412,10 @@
                   class="green-filter"
                   style="margin-top: 1px; margin-left: 0.5rem; height: 16px; font-weight: bold"
                 />
-              </button> -->
+              </button>
             </div>
           </div>
-        </div>
+        </div> -->
         <!-- Instagram -->
         <div class="card">
           <div class="card__header" style="">
@@ -1177,6 +1167,13 @@ export default {
         // }
       }
     },
+    async twitterAuthorization() {
+      const authoRes = await User.api.getTwitterAuthorization()
+      if (authoRes.link) {
+        localStorage.twitterVerification = authoRes.verifier
+        window.location.href = authoRes.link
+      }
+    },
   },
   async created() {
     // if there is a code assume an integration has begun
@@ -1186,7 +1183,11 @@ export default {
 
       try {
         const modelClass = this.selectedIntegrationSwitcher
-        if (this.selectedIntegration == 'SALESLOFT') {
+        if (this.selectedIntegration === 'TWITTER') {
+          const data = { code: this.$route.query.code, verifier: localStorage.twitterVerification }
+          localStorage.twitterVerification = ''
+          await modelClass.api.getTwitterAuthentication(data)
+        } else if (this.selectedIntegration == 'SALESLOFT') {
           await modelClass.api.authenticate(
             this.$route.query.code,
             this.$route.query.context,
@@ -1296,6 +1297,8 @@ export default {
           return GongAccount
         case 'OUTREACH':
           return OutreachAccount
+        case 'TWITTER':
+          return User
         default:
           return null
       }
@@ -1968,5 +1971,6 @@ a {
   }
 }
 .pr-integrations-container {
+  min-width: 82vw;
 }
 </style>

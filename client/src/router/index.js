@@ -34,6 +34,11 @@ export default new Router({
       component: () => import('@/views/PRIntegrations')
     },
     {
+      path: '/pr-settings',
+      name: 'PRSettings',
+      component: () => import('@/views/PRSettings')
+    },
+    {
       path: '/clip-report',
       name: 'PRClipReport',
       component: () => import('@/views/PRClipReport')

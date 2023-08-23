@@ -146,7 +146,6 @@ const mutations = {
   },
   SET_SEARCH: (state, payload) => {
     state.currentSearch = payload
-    console.log(state.currentSearch)
   },
   SET_MEETING: (state, payload) => {
     state.currentMeeting = payload
