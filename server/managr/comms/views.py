@@ -289,7 +289,6 @@ class PRSearchViewSet(
                         next_token = tweet_res["meta"]["next_token"]
                     user_data = tweet_res["includes"].get("users")
                     for tweet in tweets:
-                       
                         if len(tweet_list) > 20:
                             break
                         for user in user_data:
@@ -312,7 +311,7 @@ class PRSearchViewSet(
                 logger.exception(e)
                 tweet_res = e
                 break
-    
+
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": tweet_res})
         return Response({"tweets": tweet_list, "string": query_input, "includes": includes})
@@ -394,7 +393,6 @@ class PRSearchViewSet(
         output = request.data.get("output")
         persona = request.data.get("persona")
         briefing = request.data.get("briefing")
-        sample = request.data.get("sample")
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -404,7 +402,7 @@ class PRSearchViewSet(
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_PITCH(
-                    datetime.now().date(), type, output, persona, briefing, sample
+                    datetime.now().date(), type, output, persona, briefing
                 )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
@@ -536,7 +534,7 @@ def get_twitter_authentication(request):
     verifier = request.data.get("verifier", None)
     try:
         res = TwitterAuthAccount.get_access_token(code, verifier)
-        print('\nres\n', res)
+        print("\nres\n", res)
     except Exception as e:
         logger.exception(e)
     return Response(data={"success": True})
