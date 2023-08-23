@@ -2683,7 +2683,7 @@ export default {
       }
       count += user.searches_ref.length
       if (user.days_active) {
-        return Math.round((count / user.days_active) * 100) / 100
+        return Math.round((count / user.days_active) * 10) / 10
       } else {
         return count
       }
