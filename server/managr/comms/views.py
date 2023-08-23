@@ -284,14 +284,17 @@ class PRSearchViewSet(
                 if tweets:
                     next_token = tweet_res["meta"]["next_token"]
                     user_data = tweet_res["includes"].get("users")
-                    for tweet in enumerate(tweets):
+                    for tweet in tweets:
+                        print(f"TWEET COUNT: {len(tweet_list)}")
                         if len(tweet_list) > 20:
                             break
                         for user in user_data:
                             if user["id"] == tweet["author_id"]:
+                                print(user["username"], user["public_metrics"]["followers_count"])
                                 if user["public_metrics"]["followers_count"] > 1000:
                                     tweet["user"] = user
                                     tweet_list.append(tweet)
+                                break
                 if len(tweet_list) < 20:
                     continue
                 break

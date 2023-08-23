@@ -156,7 +156,6 @@ class TwitterAuthAccountAdapter:
         headers = comms_consts.TWITTER_API_HEADERS
         with Variable_Client() as client:
             response = client.get(url, headers=headers, params=params)
-            print(vars(response))
             res = self._handle_response(response)
         return res
 
