@@ -38,7 +38,7 @@
         <div class="input-row">
           <div class="main-text">
             <img src="@/assets/images/target.svg" height="14px" alt="" />
-            Persona
+            Audience
           </div>
 
           <input

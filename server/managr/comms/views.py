@@ -298,7 +298,13 @@ class PRSearchViewSet(
                                     tweet["user"] = user
                                     tweet_list.append(tweet)
                                 break
-                if len(tweet_list) < 20:
+                else:
+                    return Response(
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        data={"error": f"No results for {query_input}", "string": query_input},
+                    )
+
+                if len(tweet_list) < 20 and tweets:
                     continue
                 break
             except KeyError as e:
@@ -535,7 +541,6 @@ def get_twitter_authentication(request):
     verifier = request.data.get("verifier", None)
     try:
         res = TwitterAuthAccount.get_access_token(code, verifier)
-        print("\nres\n", res)
     except Exception as e:
         logger.exception(e)
     return Response(data={"success": True})

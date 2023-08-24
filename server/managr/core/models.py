@@ -78,7 +78,9 @@ class UserQuerySet(models.QuerySet):
         if user.is_superuser or user.is_staff:
             return self.all()
         elif user.is_active:
-            if user.user_level == core_consts.USER_LEVEL_MANAGER:
+            if user.user_level == core_consts.USER_LEVEL_MANAGER or (
+                user.user_level == core_consts.USER_LEVEL_REP and user.role == "PR"
+            ):
                 return self.filter(organization=user.organization, is_active=True)
             if user.user_level == core_consts.USER_LEVEL_REP:
                 return self.filter(id=user.id)
@@ -398,9 +400,10 @@ class User(AbstractUser, TimeStampModel):
 
     def add_meta_data(self, key):
         if key in self.meta_data.keys():
-            self.meta_data[key] += 1
+            self.meta_data[key]["total"] += 1
+            self.meta_data[key]["timestamps"].append(str(datetime.now().date()))
         else:
-            self.meta_data[key] = 1
+            self.meta_data[key] = {"total": 1, "timestamps": [str(datetime.now().date())]}
         return self.save()
 
     @property
