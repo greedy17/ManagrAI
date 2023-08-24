@@ -74,7 +74,7 @@
                 :errors="registrationForm.field.password.errors"
                 v-model="registrationForm.field.password.value"
                 type="password"
-                placeholder="Must be 9 characters or longer"
+                placeholder="Must be 10 characters or longer"
               />
               <div class="column" v-for="(message, i) in errorMessages" :key="i">
                 <small class="error">{{ message }}</small>
@@ -90,7 +90,7 @@
                 :errors="registrationForm.field.confirmPassword.errors"
                 v-model="registrationForm.field.confirmPassword.value"
                 type="password"
-                placeholder="Must be 9 characters or longer"
+                placeholder="Must be 10 characters or longer"
               />
             </span>
 
