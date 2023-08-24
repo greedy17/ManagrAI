@@ -172,8 +172,9 @@
 
             <div v-if="menuOpen" class="avatar-dropdown">
               <p class="dropdown-item" @click="goToSettings">
-                <img class="mar-right" src="@/assets/images/settings.svg" height="14px" alt="" />
-                Settings
+                <!-- <img class="mar-right" src="@/assets/images/settings.svg" height="14px" alt="" /> -->
+                <img class="mar-right" src="@/assets/images/profile.svg" height="14px" alt="" />
+                Users
               </p>
               <p class="dropdown-item" @click="goToIntegrations">
                 <img class="mar-right" src="@/assets/images/apps.svg" height="14px" alt="" />
