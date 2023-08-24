@@ -53,7 +53,7 @@ class Organization(TimeStampModel):
     )
     has_products = models.BooleanField(default=False)
     is_paid = models.BooleanField(default=False)
-    number_of_allowed_users = models.IntegerField(default=3)
+    number_of_allowed_users = models.IntegerField(default=5)
     objects = OrganizationQuerySet.as_manager()
 
     def __str__(self):
