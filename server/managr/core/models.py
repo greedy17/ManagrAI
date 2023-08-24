@@ -403,7 +403,7 @@ class User(AbstractUser, TimeStampModel):
             self.meta_data[key]["total"] += 1
             self.meta_data[key]["timestamps"].append(str(datetime.now().date()))
         else:
-            self.meta_data[key] = {"total": 1, "timestamps": str(datetime.now().date())}
+            self.meta_data[key] = {"total": 1, "timestamps": [str(datetime.now().date())]}
         return self.save()
 
     @property
