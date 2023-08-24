@@ -140,7 +140,7 @@
           </div>
           <h1 class="no-text-margin">{{ type }}</h1>
           <p class="sub-text">
-            Target: <span>{{ persona }}</span>
+            Target Audience: <span>{{ persona }}</span>
           </p>
         </div>
 
