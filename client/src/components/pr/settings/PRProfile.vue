@@ -1,12 +1,13 @@
 <template>
   <div class="settings">
     <div>
-      <h1>Settings</h1>
+      <!-- <h1>Settings</h1> -->
+      <h1>{{ user.organizationRef.name }} - Users</h1>
 
       <div class="bar-header">
-        <small @click="changeActivePage('invite')" class="pointer" :class="{ active: page === 'invite' }">Invite</small>
         <small @click="changeActivePage('users')" class="pointer" :class="{ active: page === 'users' }">Users</small>
-        <small @click="changeActivePage('profile')" class="pointer" :class="{ active: page === 'profile' }">Profile</small>
+        <small @click="changeActivePage('invite')" class="pointer" :class="{ active: page === 'invite' }">Invite</small>
+        <!-- <small @click="changeActivePage('profile')" class="pointer" :class="{ active: page === 'profile' }">Profile</small> -->
       </div>
 
       <div v-if="page === 'invite'">
@@ -57,9 +58,14 @@
           <div class="team-width">Email</div>
         </div>
 
-        <div v-for="user in team.list" :key="user.id" class="row smaller-text">
-          <div class="team-width thin-font">{{ user.fullName.trim() ? user.fullName : '[NO NAME]' }}</div>
-          <div class="team-width thin-font">{{ user.email }}</div>
+        <div class="row smaller-text">
+          <div class="team-width">{{ user.fullName.trim() ? user.fullName : '[NO NAME]' }}</div>
+          <div class="team-width">{{ user.email }}</div>
+        </div>
+
+        <div v-for="teamUser in team.list" :key="teamUser.id" class="row smaller-text">
+          <div v-if="teamUser.id !== user.id" class="team-width thin-font">{{ teamUser.fullName.trim() ? teamUser.fullName : '[NO NAME]' }}</div>
+          <div v-if="teamUser.id !== user.id" class="team-width thin-font">{{ teamUser.email }}</div>
         </div>
       </div>
       <div v-if="page === 'profile'">
@@ -121,7 +127,7 @@ export default {
   },
   data() {
     return {
-      page: 'invite',
+      page: 'users',
       copyTip: 'Copy link',
       disableInput: false,
       inviteOpen: false,
@@ -148,11 +154,12 @@ export default {
   },
   async created() {
     this.team = CollectionManager.create({ ModelClass: User })
-    if (this.user.isAdmin) {
-      this.teamUsers = await this.getAllOrgUsers(this.user.organization)
-    } else {
-      this.teamUsers = [this.user]
-    }
+    this.teamUsers = this.listAllUsers()
+    // if (this.user.isAdmin) {
+    //   this.teamUsers = await this.getAllOrgUsers(this.user.organization)
+    // } else {
+    //   this.teamUsers = [this.user]
+    // }
     this.userInviteForm = new UserInviteForm({
       role: User.roleChoices[0].key,
       userLevel: User.types.REP,
@@ -216,6 +223,10 @@ export default {
     },
     async getAllOrgUsers(orgId) {
       const res = await User.api.getAllOrgUsers(orgId)
+      return res
+    },
+    async listAllUsers() {
+      const res = await User.api.list({pagination: null})
       return res
     },
     async refresh() {
@@ -429,7 +440,7 @@ export default {
 
   small {
     font-size: 14px;
-    margin-right: 1rem;
+    margin-right: 2rem;
     color: $off-gray;
     padding: 16px 0;
   }

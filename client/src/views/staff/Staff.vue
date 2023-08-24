@@ -2255,12 +2255,12 @@
                     </div>
                     <div style="width: 10%">{{user.days_active}}</div>
                     <div style="width: 10%">{{getUsageDay(user)}}</div>
-                    <div style="width: 10%">{{user.meta_data.news_summaries ? user.meta_data.news_summaries : 0}}</div>
-                    <div style="width: 10%">{{user.meta_data.article_summaries ? user.meta_data.article_summaries : 0}}</div>
-                    <div style="width: 10%">{{user.meta_data.tweet_summaries ? user.meta_data.tweet_summaries : 0}}</div>
+                    <div style="width: 10%">{{user.meta_data.news_summaries ? user.meta_data.news_summaries.total : 0}}</div>
+                    <div style="width: 10%">{{user.meta_data.article_summaries ? user.meta_data.article_summaries.total : 0}}</div>
+                    <div style="width: 10%">{{user.meta_data.tweet_summaries ? user.meta_data.tweet_summaries.total : 0}}</div>
                     <div style="width: 10%">{{user.searches_ref.filter(search => search.type === 'NEWS').length}}</div>
                     <div style="width: 10%">{{user.searches_ref.filter(search => search.type === 'SOCIAL_MEDIA').length}}</div>
-                    <div style="width: 10%">{{user.meta_data.pitches ? user.meta_data.pitches : 0}}</div>
+                    <div style="width: 10%">{{user.meta_data.pitches ? user.meta_data.pitches.total : 0}}</div>
                     <!-- <div style="width: 25%">{{user.total_updates}}</div> -->
                   </div>
                 </div>
@@ -2522,6 +2522,7 @@ export default {
       editTeam: false,
       inviteOpen: false,
       manageTeamSelected: true,
+      prUsageData: [],
       teamLead: null,
       teamName: '',
       selectedTeamLead: null,
@@ -2679,7 +2680,7 @@ export default {
       const metaData = user.meta_data
       let count = 0
       for (let key in metaData) {
-        count += metaData[key]
+        count += metaData[key].total
       }
       count += user.searches_ref.length
       if (user.days_active) {
@@ -3421,12 +3422,11 @@ export default {
     async getTrialUsers() {
       try {
         const res = await User.api.getTrialUsers()
-        console.log('res', res)
         this.trialUsers = res
         // this.adminSearches = await User.api.getAdminSearches()
-        // console.log('this.adminSearches', this.adminSearches)
         await this.getUsageData()
         this.setChartOptions()
+        this.organizePRUsageData()
       } catch(e) {
         console.log('Error in getTrialUsers', e)
       }
@@ -3461,8 +3461,42 @@ export default {
         totalsArr.push(totalsCount)
       }
       this.chartOptions.series = [{name: 'Users', data: []}, {name: 'Active Users', data: []}]
+      // remove last active and totals and replace with usage / day info
+      const usageActiveTotals = this.getUsageActiveTotals()
+      totalsArr.pop()
+      activeArr.pop()
+      totalsArr.push(usageActiveTotals[0])
+      activeArr.push(usageActiveTotals[1])
       this.chartOptions.series[0].data = [...totalsArr]
       this.chartOptions.series[1].data = [...activeArr]
+    },
+    getUsageActiveTotals() {
+      let active = 0;
+      for (let i = 0; i < this.trialUsers.length; i++) {
+        const data = this.getUsageDay(this.trialUsers[i])
+        if (data >= 1) {
+          active += 1
+        }
+      }
+      // [total, active]
+      return [this.trialUsers.length-active, active]
+    },
+    organizePRUsageData() {
+      const data = []
+      for (let i = 0; i < this.trialUsers.length; i++) {
+        const email = this.trialUsers[i].email
+        const metaData = this.trialUsers[i].meta_data
+        for (let key in metaData) {
+          for (let j = 0; j < metaData[key].timestamps.length; j++) {
+            data.push({
+              user: email,
+              date: metaData[key].timestamps[j],
+              updateSource: key,
+            })
+          }
+        }
+      }
+      this.prUsageData = data.sort((a, b) => new Date(b.date) - new Date(a.date));
     },
     formatCopyObject(obj) {
       let string = '{'
@@ -3490,6 +3524,7 @@ export default {
     this.getTasks()
     this.getStaffOrgs()
     this.getTrialUsers()
+    
   },
   watch: {
     async selected_org() {
