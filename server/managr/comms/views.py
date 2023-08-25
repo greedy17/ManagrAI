@@ -1,5 +1,6 @@
 import json
 import httpx
+import time
 import logging
 from rest_framework import (
     mixins,
@@ -21,6 +22,7 @@ from rest_framework.decorators import action
 from . import constants as comms_consts
 from .models import Search, TwitterAuthAccount
 from managr.core.models import User
+from managr.comms import exceptions as comms_exceptions
 from .serializers import SearchSerializer
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
@@ -199,7 +201,7 @@ class PRSearchViewSet(
             text = article_res.text
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
             prompt = comms_consts.OPEN_AI_ARTICLE_SUMMARY(
-                datetime.now().date(), text, search,length, instructions, True
+                datetime.now().date(), text, search, length, instructions, True
             )
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
@@ -248,7 +250,7 @@ class PRSearchViewSet(
                 break
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
-        return Response(data={"summary": message})    
+        return Response(data={"summary": message})
 
     @action(
         methods=["get"],
@@ -263,6 +265,7 @@ class PRSearchViewSet(
         query_input = None
         next_token = False
         tweet_list = []
+        attempts = 1
         while True:
             try:
                 if query_input is None:
@@ -313,6 +316,19 @@ class PRSearchViewSet(
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     data={"error": f"No results for {query_input}", "string": query_input},
                 )
+            except comms_exceptions.TooManyRequestsError:
+                if attempts > 3:
+                    return Response(
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        data={
+                            "error": f"We've hit an issue contacting Twitter for {query_input}",
+                            "string": query_input,
+                        },
+                    )
+                attempts += 1
+                retry_after = int(tweet_res.headers.get("Retry-After", 5))
+                time.sleep(retry_after)
+                continue
             except Exception as e:
                 has_error = True
                 logger.exception(e)

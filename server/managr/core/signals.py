@@ -6,8 +6,7 @@ from .models import User
 from background_task.models import CompletedTask
 from managr.hubspot import constants as hs_consts
 from managr.salesforce import constants as sf_consts
-from .models import User, UserActivity, UserForecast, NoteTemplate, Conversation
-from managr.organization.models import Team
+from .models import User, Conversation
 from managr.api.models import ManagrToken
 
 
@@ -46,14 +45,7 @@ def update_succesful_task_operations(sender, instance=None, created=False, **kwa
 @receiver(post_save, sender=get_user_model())
 def create_user_related_models(sender, instance, created, **kwargs):
     if created:
-        UserActivity.objects.create(user=instance)
-        UserForecast.objects.create(user=instance)
-        NoteTemplate.objects.create(
-            user=instance,
-            subject="Default Template",
-            body="<p>Pain:</p><p><br></p><p>Value:</p><p><br></p><p>Timeline:</p><p><br></p><p>Budget</p>",
-        )
-        Conversation.objects.create(user=instance,title=f"default-{instance.email}")
+        Conversation.objects.create(user=instance, title=f"default-{instance.email}")
 
 
 @receiver(post_save, sender=User)
