@@ -8,8 +8,11 @@
         <div class="regen-header">
           <div>
             <h4 class="regen-header-title">Regenerate Search</h4>
-            <p v-if="!searchSaved" class="regen-header-subtitle">
+            <p v-if="!searchSaved && mainView !== 'website'" class="regen-header-subtitle">
               Create a new search using conversational AI
+            </p>
+            <p v-else-if="mainView === 'website'" class="regen-header-subtitle">
+              Create a new summary
             </p>
             <p class="regen-header-subtitle" v-else>Create a new summary</p>
           </div>
@@ -18,14 +21,14 @@
         <div class="regen-body">
           <div v-if="!searchSaved">
             <div>
-              <h5 class="regen-body-title">Search</h5>
-              <span class="regen-header-subtitle"
+              <h5 class="regen-body-title">Search term</h5>
+              <!-- <span class="regen-header-subtitle"
                 >Use conversation text. AI will convert it to a boolean.</span
-              >
+              > -->
             </div>
             <textarea v-autoresize v-model="newSearch" class="regen-body-text" />
           </div>
-          <div>
+          <div v-if="mainView !== 'website'">
             <div>
               <h5 class="regen-body-title">
                 Summary Instructions <span class="regen-header-subtitle">(optional)</span>
@@ -33,7 +36,15 @@
             </div>
             <textarea v-autoresize v-model="newTemplate" class="regen-body-text" />
           </div>
-          <!-- <div class="blue-border-button">Use a Template</div> -->
+
+          <div v-else>
+            <div>
+              <h5 class="regen-body-title">
+                Summary instructions <span class="regen-header-subtitle"></span>
+              </h5>
+            </div>
+            <textarea v-autoresize v-model="newTemplate" class="regen-body-text" />
+          </div>
         </div>
         <div class="regen-footer">
           <div></div>
@@ -62,6 +73,14 @@
           <img src="@/assets/images/comment.svg" height="12px" alt="" />
           Social
         </div>
+        <div
+          @click="switchMainView('website')"
+          :class="{ activeswitch: mainView === 'website' }"
+          class="switch-item"
+        >
+          <img src="@/assets/images/globe.svg" height="18px" alt="" />
+          URL
+        </div>
       </div>
 
       <div class="no-content" v-if="!selectedSearch">
@@ -71,6 +90,8 @@
               {{
                 mainView === 'social'
                   ? 'Generate a summary from X (formally Twitter)'
+                  : mainView === 'website'
+                  ? 'Generate a summary from a news article'
                   : 'Generate a news summary from over 1 million sites'
               }}
             </p>
@@ -93,24 +114,23 @@
                   ></path>
                 </svg>
               </div>
-
+              <!-- @keydown.enter.exact.prevent="generateNewSearch(null)" -->
               <input
                 @click.stop
                 class="area-input"
-                placeholder="Start a new search..."
+                placeholder="Search term..."
                 @focus="showDropdown"
                 @blur="hideDropdown"
                 v-model="newSearch"
-                @keydown.enter.exact.prevent="generateNewSearch(null)"
               />
-              <img
+              <!-- <img
                 :class="{ invert: !newSearch }"
                 src="@/assets/images/paper-plane.svg"
                 height="14px"
                 alt=""
                 @click="generateNewSearch(null)"
                 class="pointer"
-              />
+              /> -->
             </div>
 
             <div v-if="showingDropdown" class="dropdown">
@@ -128,7 +148,7 @@
             </div>
           </div>
 
-          <div v-if="addingPrompt" style="margin-top: 1rem" class="input-container">
+          <div style="margin-top: 1rem" class="input-container">
             <div class="input-row-start">
               <div class="main-text">
                 <img
@@ -141,11 +161,11 @@
                 @focus="showPromptDropdown"
                 @blur="hidePromptDropdown"
                 class="area-input"
-                placeholder="What would you like included in the summary?"
+                placeholder="Custom summary instructions... (Optional)"
                 v-model="newTemplate"
                 v-autoresize
               />
-              <small @click="removePrompt" class="remove">X</small>
+              <!-- <small @click="removePrompt" class="remove">X</small> -->
             </div>
 
             <div v-if="showingPromptDropdown" class="dropdown">
@@ -163,41 +183,40 @@
             </div>
           </div>
 
-          <div v-if="addingSources" style="margin-top: 1rem" class="input-container">
+          <div v-if="mainView === 'website'" style="margin-top: 2rem" class="input-container">
             <div class="input-row">
               <div class="main-text">
                 <img src="@/assets/images/globe.svg" height="20px" />
               </div>
-              <input
-                autofocus
-                class="area-input"
-                placeholder="Paste additional news sites, separate using commas"
-                v-model="additionalSources"
-              />
-              <small @click="removeSource" class="remove">X</small>
+              <input class="area-input" placeholder="Article URL..." v-model="additionalSources" />
+              <!-- <small @click="removeSource" class="remove">X</small> -->
             </div>
           </div>
 
           <div class="center mar-top pad-btm">
-            <button @click="toggleAddPrompt" v-if="!addingPrompt" class="secondary-button">
+            <!-- <button @click="toggleAddPrompt" v-if="!addingPrompt" class="secondary-button">
               Custom Prompt
-            </button>
+            </button> -->
+            <!-- <button @click="toggleAddSource" v-if="!addingSources" class="secondary-button">
+              Article Summary
+            </button> -->
+
             <button
-              @mouseenter.prevent="soonButtonText"
-              @mouseleave.prevent="defaultButtonText"
-              v-if="!addingSources"
-              class="secondary-button no-hover-effect"
+              v-if="mainView !== 'website'"
+              @click="generateNewSearch(null)"
+              :disabled="!newSearch"
+              class="primary-button"
             >
-              <!-- @click="toggleAddSource" -->
-              {{ buttonText }}
+              Generate Summary
             </button>
 
             <button
-              @click="generateNewSearch(null)"
-              v-if="addingSources || addingPrompt"
+              v-else
+              @click="getSourceSummary()"
+              :disabled="!additionalSources || !newSearch"
               class="primary-button"
             >
-              Submit
+              Generate Summary
             </button>
           </div>
         </div>
@@ -232,8 +251,12 @@
                 <h1 class="no-text-margin">
                   {{ selectedSearch.search }}
                 </h1>
-                <p class="sub-text">
+                <p v-if="mainView !== 'website'" class="sub-text">
                   AI generated search: <span>{{ booleanString }}</span>
+                </p>
+
+                <p v-else class="sub-text">
+                  Article summary: <span>{{ additionalSources }}</span>
                 </p>
               </div>
               <div class="title-bar">
@@ -244,7 +267,7 @@
                     class="secondary-button"
                   >
                     {{
-                      filteredArticles.length
+                      filteredArticles.length || mainView === 'website'
                         ? 'Regenerate'
                         : tweets.length
                         ? 'Regenerate'
@@ -601,6 +624,7 @@ export default {
   data() {
     return {
       showingPromptDropdown: false,
+      sourceSummary: null,
       buttonText: 'Article Summary',
       AllUserTweets: {},
       mainView: 'news',
@@ -622,7 +646,6 @@ export default {
       starterNum: 0,
       newSearch: '',
       newTemplate: '',
-      additionalSources: '',
       additionalSources: '',
       outputInstructions: '',
       loading: false,
@@ -832,6 +855,8 @@ export default {
         return
       } else if (this.mainView === 'social') {
         this.getTweets()
+      } else if (this.mainView === 'website') {
+        this.getSourceSummary()
       } else {
         this.loading = true
         this.summaryLoading = true
@@ -848,8 +873,28 @@ export default {
           console.log(e)
         }
       }
-
       this.closeRegenModal()
+    },
+    async getSourceSummary() {
+      this.changeSearch({ search: this.newSearch, template: this.newTemplate })
+      this.summaryLoading = true
+      try {
+        await Comms.api
+          .getArticleSummary({
+            url: this.additionalSources,
+            search: this.newSearch,
+            instructions: this.newTemplate || null,
+            length: 1000,
+          })
+          .then((response) => {
+            console.log(response)
+            this.summary = response.summary
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.summaryLoading = false
+      }
     },
     async updateSearch() {
       try {
@@ -935,6 +980,8 @@ export default {
             this.booleanString = response.string
           })
       } catch (e) {
+        this.clearNewSearch()
+        this.filteredArticles = []
         console.log(e)
       } finally {
         this.loading = false
@@ -962,6 +1009,8 @@ export default {
         this.tweetError = e.data.error
         this.booleanString = e.data.string
         this.summaryLoading = false
+        this.tweets = []
+        this.tweetMedia = null
         this.clearNewSearch()
       } finally {
         this.loading = false
@@ -1038,7 +1087,7 @@ export default {
         this.scrollToTop()
       }
     },
-    async getArticleSummary(url, instructions = null) {
+    async getArticleSummary(url, instructions = null, length = 500) {
       this.articleSummaryLoading = true
       this.loadingUrl = url
       try {
@@ -1047,6 +1096,7 @@ export default {
             url: url,
             search: this.newSearch,
             instructions: instructions,
+            length: length,
           })
           .then((response) => {
             this.articleSummaries[url] = response.summary
@@ -1275,7 +1325,7 @@ export default {
   border: 1px solid $off-white;
   border-radius: 6px;
   padding: 4px 0;
-  width: 200px;
+  width: 300px;
   margin-top: 128px;
   margin-bottom: 16px;
 }

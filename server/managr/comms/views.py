@@ -186,6 +186,7 @@ class PRSearchViewSet(
         url = request.data["params"]["url"]
         search = request.data["params"]["search"]
         instructions = request.data["params"]["instructions"]
+        length = request.data["params"]["length"]
         user = request.user
         has_error = False
         attempts = 1
@@ -198,7 +199,7 @@ class PRSearchViewSet(
             text = article_res.text
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
             prompt = comms_consts.OPEN_AI_ARTICLE_SUMMARY(
-                datetime.now().date(), text, search, instructions, True
+                datetime.now().date(), text, search,length, instructions, True
             )
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
@@ -247,7 +248,7 @@ class PRSearchViewSet(
                 break
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
-        return Response(data={"summary": message})
+        return Response(data={"summary": message})    
 
     @action(
         methods=["get"],
@@ -297,7 +298,13 @@ class PRSearchViewSet(
                                     tweet["user"] = user
                                     tweet_list.append(tweet)
                                 break
-                if len(tweet_list) < 20:
+                else:
+                    return Response(
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        data={"error": f"No results for {query_input}", "string": query_input},
+                    )
+
+                if len(tweet_list) < 20 and tweets:
                     continue
                 break
             except KeyError as e:
@@ -534,7 +541,6 @@ def get_twitter_authentication(request):
     verifier = request.data.get("verifier", None)
     try:
         res = TwitterAuthAccount.get_access_token(code, verifier)
-        print("\nres\n", res)
     except Exception as e:
         logger.exception(e)
     return Response(data={"success": True})

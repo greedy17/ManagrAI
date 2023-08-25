@@ -1,12 +1,13 @@
 <template>
   <div class="settings">
     <div>
-      <h1>Settings</h1>
+      <!-- <h1>Settings</h1> -->
+      <h1>{{ user.organizationRef.name }} - Users</h1>
 
       <div class="bar-header">
-        <small :class="{ active: page === 'invite' }">Invite</small>
-        <small class="not-allowed">Team</small>
-        <small class="not-allowed">Profile</small>
+        <small @click="changeActivePage('users')" class="pointer" :class="{ active: page === 'users' }">Users</small>
+        <small @click="changeActivePage('invite')" class="pointer" :class="{ active: page === 'invite' }">Invite</small>
+        <!-- <small @click="changeActivePage('profile')" class="pointer" :class="{ active: page === 'profile' }">Profile</small> -->
       </div>
 
       <div v-if="page === 'invite'">
@@ -45,6 +46,66 @@
           </button>
         </div>
       </div>
+      <div v-if="page === 'users'">
+        <!-- <div>
+          <div class="vertical-margin">
+            <h3>Users</h3>
+          </div>
+        </div> -->
+
+        <div class="row margin-top margin-bottom">
+          <div class="team-width">Name</div>
+          <div class="team-width">Email</div>
+        </div>
+
+        <div class="row smaller-text">
+          <div class="team-width">{{ user.fullName.trim() ? user.fullName : '[NO NAME]' }}</div>
+          <div class="team-width">{{ user.email }}</div>
+        </div>
+
+        <div v-for="teamUser in team.list" :key="teamUser.id" class="row smaller-text">
+          <div v-if="teamUser.id !== user.id" class="team-width thin-font">{{ teamUser.fullName.trim() ? teamUser.fullName : '[NO NAME]' }}</div>
+          <div v-if="teamUser.id !== user.id" class="team-width thin-font">{{ teamUser.email }}</div>
+        </div>
+      </div>
+      <div v-if="page === 'profile'">
+        <div>
+          <div class="profile-img">
+            <img
+              src="@/assets/images/profile.svg"
+              style="filter: invert(80%)"
+              height="40px"
+              alt=""
+            />
+            <h3 class="profile-name">{{ user.fullName }}</h3>
+          </div>
+
+          <div class="row org-timezone-container">
+            <p>{{ user.organizationRef.name }} -</p>
+            <p>{{ user.timezone }}</p>
+          </div>
+        </div>
+
+        <div>
+          <div class="row small-gap">
+            <!-- <font-awesome-icon icon="fa-solid fa-at" /> -->
+
+            Email:
+
+            <p>{{ user.email }}</p>
+          </div>
+
+          <!-- <div class="row">
+            <font-awesome-icon icon="fa-solid fa-user-group" />
+            <p>{{ user.organizationRef.teamsRef[0].name }}</p>
+          </div> -->
+
+          <!-- <div class="row">
+            <font-awesome-icon icon="fa-solid fa-layer-group" />
+            <p>{{ user.userLevel.toLowerCase() }}</p>
+          </div> -->
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -66,7 +127,7 @@ export default {
   },
   data() {
     return {
-      page: 'invite',
+      page: 'users',
       copyTip: 'Copy link',
       disableInput: false,
       inviteOpen: false,
@@ -93,11 +154,12 @@ export default {
   },
   async created() {
     this.team = CollectionManager.create({ ModelClass: User })
-    if (this.user.isAdmin) {
-      this.teamUsers = await this.getAllOrgUsers(this.user.organization)
-    } else {
-      this.teamUsers = [this.user]
-    }
+    this.teamUsers = this.listAllUsers()
+    // if (this.user.isAdmin) {
+    //   this.teamUsers = await this.getAllOrgUsers(this.user.organization)
+    // } else {
+    //   this.teamUsers = [this.user]
+    // }
     this.userInviteForm = new UserInviteForm({
       role: User.roleChoices[0].key,
       userLevel: User.types.REP,
@@ -126,6 +188,9 @@ export default {
     this.team.refresh()
   },
   methods: {
+    test(log) {
+      console.log('log', log)
+    },
     async copyText() {
       this.disableInput = false
       this.userInviteForm.field.email.value = null
@@ -141,6 +206,9 @@ export default {
         console.error('Failed to copy text: ', err)
       }
     },
+    changeActivePage(page) {
+      this.page = page
+    },
     handleInviteCancel() {
       this.inviteOpen = false
     },
@@ -155,6 +223,10 @@ export default {
     },
     async getAllOrgUsers(orgId) {
       const res = await User.api.getAllOrgUsers(orgId)
+      return res
+    },
+    async listAllUsers() {
+      const res = await User.api.list({pagination: null})
       return res
     },
     async refresh() {
@@ -368,7 +440,7 @@ export default {
 
   small {
     font-size: 14px;
-    margin-right: 1rem;
+    margin-right: 2rem;
     color: $off-gray;
     padding: 16px 0;
   }
@@ -422,5 +494,76 @@ export default {
 
 .not-allowed {
   cursor: not-allowed;
+}
+.pointer {
+  cursor: pointer;
+}
+.team-width {
+  width: 10rem;
+  height: 2rem;
+  overflow-x: auto;
+}
+.border-right {
+  border-right: 1px solid $soft-gray;
+}
+.profile-img {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background-color: $off-white;
+  border: 1px solid $soft-gray;
+  border-radius: 100%;
+  height: 120px;
+  width: 120px;
+}
+.profile-name {
+  position: absolute;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+  top: 88px;
+  background-color: $soft-gray;
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  font-size: 12px;
+}
+.org-timezone-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  // justify-content: center;
+  font-size: 14px;
+  p:first-of-type {
+    margin-right: 0rem;
+    // color: $grape;
+    font-weight: bold;
+  }
+  p:last-of-type {
+    margin-right: 0.5rem;
+    color: $light-gray-blue;
+  }
+}
+.small-gap {
+  gap: 6px;
+}
+.underline {
+  text-decoration: underline;
+}
+.smaller-text {
+  font-size: 14px;
+}
+.margin-top {
+  margin-top: 1rem;
+}
+.margin-bottom {
+  margin-bottom: 0.25rem;
+}
+.thin-font {
+  font-family: $thin-font-family;
 }
 </style>

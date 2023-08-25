@@ -153,7 +153,7 @@
           </div> -->
 
           <div class="row right-mar avatar-container">
-            <div @click="toggleMenu" class="avatar">{{ userName[0] }}</div>
+            <div @click="toggleMenu" class="avatar">{{ getInitials() }}</div>
             <!-- <img
               @click="toggleMenu"
               v-if="!menuOpen"
@@ -172,8 +172,9 @@
 
             <div v-if="menuOpen" class="avatar-dropdown">
               <p class="dropdown-item" @click="goToSettings">
-                <img class="mar-right" src="@/assets/images/settings.svg" height="14px" alt="" />
-                Settings
+                <!-- <img class="mar-right" src="@/assets/images/settings.svg" height="14px" alt="" /> -->
+                <img class="mar-right" src="@/assets/images/profile.svg" height="14px" alt="" />
+                Users
               </p>
               <p class="dropdown-item" @click="goToIntegrations">
                 <img class="mar-right" src="@/assets/images/apps.svg" height="14px" alt="" />
@@ -258,6 +259,12 @@ export default {
         }, 2000)
       }
     },
+    getInitials() {
+      const fullSplit = this.fullName.split(' ')
+      let initials = ''
+      fullSplit.forEach(word => initials += word[0])
+      return initials
+    },
     selectSearch(search) {
       this.toggleShowSearches()
       this.$store.dispatch('setSearch', search)
@@ -306,6 +313,9 @@ export default {
     },
     userName() {
       return this.$store.state.user.firstName
+    },
+    fullName() {
+      return this.$store.state.user.fullName
     },
     isPR() {
       return this.$store.state.user.role === 'PR'

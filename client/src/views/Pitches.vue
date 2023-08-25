@@ -38,7 +38,7 @@
         <div class="input-row">
           <div class="main-text">
             <img src="@/assets/images/target.svg" height="14px" alt="" />
-            Persona
+            Audience
           </div>
 
           <input
@@ -140,7 +140,7 @@
           </div>
           <h1 class="no-text-margin">{{ type }}</h1>
           <p class="sub-text">
-            Target: <span>{{ persona }}</span>
+            Target Audience: <span>{{ persona }}</span>
           </p>
         </div>
 

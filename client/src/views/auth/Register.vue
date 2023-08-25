@@ -56,7 +56,7 @@
                   v-model="registrationForm.field.password.value"
                   type="password"
                   id="password"
-                  placeholder="Must be 9 characters or longer"
+                  placeholder="Must be 10 characters or longer"
                 />
                 <div class="column" v-for="(message, i) in errorMessages" :key="i">
                   <small class="error">{{ message }}</small>
@@ -71,7 +71,7 @@
                   v-model="registrationForm.field.confirmPassword.value"
                   type="password"
                   id="renterpassword"
-                  placeholder="Must be 9 characters or longer"
+                  placeholder="Must be 10 characters or longer"
                 />
               </span>
 
