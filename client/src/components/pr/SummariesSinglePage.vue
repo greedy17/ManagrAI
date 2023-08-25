@@ -704,7 +704,14 @@ export default {
     },
     async copyText() {
       try {
-        await navigator.clipboard.writeText(this.summary)
+        const cleanedSummary = this.summary
+          .split('<strong>')
+          .filter(item => item !== '<strong>')
+          .join('')
+          .split('</strong>')
+          .filter(item => item !== '</strong>')
+          .join('');
+        await navigator.clipboard.writeText(cleanedSummary)
         this.copyTip = 'Copied!'
 
         setTimeout(() => {
