@@ -232,12 +232,6 @@ variable "scheduled_tasks" {
       cron       = "cron(0 23 * * ? *)"
       task_count = 1
     },
-    {
-      name       = "runtimezonetasks"
-      command    = "timezonetasks"
-      cron       = "cron(*/30 * * * ? *)"
-      task_count = 1
-    },
   ]
 }
 
