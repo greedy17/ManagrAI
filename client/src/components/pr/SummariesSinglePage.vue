@@ -343,7 +343,15 @@
           "
           class="divider"
         >
-          <p class="divider-text">{{ mainView === 'news' ? 'News Clips' : 'Social Media' }}</p>
+          <p class="divider-text">
+            {{
+              mainView === 'news'
+                ? 'News Clips'
+                : mainView === 'website'
+                ? 'Website'
+                : 'Social Media'
+            }}
+          </p>
         </div>
 
         <div style="background-color: white" class="loaded-content" v-if="loading">

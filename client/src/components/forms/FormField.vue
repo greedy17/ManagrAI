@@ -71,6 +71,7 @@ export default {
   flex-direction: column;
   align-items: flex-start;
   width: 100% !important;
+  font-weight: 400;
 
   &__label {
     font-size: 14px;
@@ -83,8 +84,8 @@ export default {
     display: flex;
     flex-direction: column;
     color: $coral;
-    font-size: 0.75rem;
-    font-family: $base-font-family;
+    font-size: 12px;
+    font-family: $thin-font-family;
     z-index: 999;
   }
   background-img {
@@ -95,6 +96,7 @@ export default {
 ::v-deep .input-content {
   background-color: white;
   width: 100% !important;
+  font-family: $thin-font-family;
 }
 ::v-deep .input-content__large {
   width: 100% !important;

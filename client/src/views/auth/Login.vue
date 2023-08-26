@@ -1,11 +1,17 @@
 <template>
   <div class="login-page">
-    <div :class="{ disabled: loggingIn }" class="login-page__form">
-      <div class="center">
-        <img src="@/assets/images/logo.png" height="66px" alt="" />
-        <h1>Welcome Back</h1>
-        <small class="gray-blue">Login with your email</small>
+    <header>
+      <img class="blue-filter" src="@/assets/images/logo.png" height="36px" alt="" />
+      <div class="header">
+        <small>New to Managr ?</small>
+        <router-link class="secondary-button" :to="{ name: 'RegisterSelection' }"
+          >Create Account
+        </router-link>
       </div>
+    </header>
+
+    <div :class="{ disabled: loggingIn }" class="login-form">
+      <h2>Sign In</h2>
 
       <FormField
         type="email"
@@ -31,7 +37,7 @@
         :disabled="loggingIn || !loginForm.isValid"
         @click="handleLoginAttempt"
         class="login-button"
-        style="font-size: 14px; width: 23vw"
+        style="font-size: 13px; width: 320px"
         text="Continue"
         :loading="loggingIn"
       />
@@ -46,20 +52,15 @@
         <img src="@/assets/images/microsoft.svg" />
         <span>Continue with Microsoft</span>
       </button> -->
-      <div class="row">
-        <p class="pad-right">New to Managr?</p>
-        <router-link class="register-link" :to="{ name: 'RegisterSelection' }"
-          >Register
-        </router-link>
-      </div>
+
       <div class="row">
         <p class="pad-right">Forgot password?</p>
         <router-link :to="{ name: 'ForgotPassword' }"> Reset it </router-link>
       </div>
     </div>
     <div class="links">
-      <p style="color: #4d4e4c">
-        <a href="https://managr.ai/terms-of-service" target="_blank">Term of Service</a>
+      <p class="t-c">
+        <a href="https://managr.ai/terms-of-service" target="_blank">Terms of Service</a>
         |
         <a href="https://managr.ai/documentation" target="_blank">Documentation</a>
         |
@@ -399,77 +400,121 @@ export default {
   flex-direction: column;
   width: 100%;
 }
+
+.header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  small {
+    margin-right: 16px;
+  }
+}
+header {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  font-family: $thin-font-family;
+  font-size: 16px;
+  padding-top: 12px;
+}
+
 h2 {
-  font-weight: bold;
-  text-align: center;
+  font-family: $thin-font-family;
+  padding: 0;
+  margin: 0;
 }
 ::v-deep .tn-input:focus {
   outline: none;
 }
 
-::placeholder {
-  color: $mid-gray;
+input {
+  font-family: $thin-font-family;
 }
+
+::v-deep .input-content {
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+
+  &::placeholder {
+    font-family: $thin-font-family;
+    color: $very-light-gray;
+  }
+}
+::v-deep .input-form {
+  width: 320px;
+}
+::v-deep .input-form__active {
+  border: none;
+}
+
 .logo {
   margin-top: 16px;
   filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
     brightness(93%) contrast(89%);
 }
+.blue-filter {
+  filter: brightness(0) invert(48%) sepia(33%) saturate(348%) hue-rotate(161deg) brightness(91%)
+    contrast(90%);
+}
 input:focus {
   outline: none;
 }
+
 .login-page {
-  padding: 2rem 2rem 0 2rem;
+  padding: 0 32px 32px 32px;
   height: 100vh;
+  font-family: $base-font-family;
+
+  font-weight: 400;
+  color: $dark-black-blue;
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
   align-items: center;
-  color: white;
-  letter-spacing: 0.75px;
-  @media only screen and (max-width: 768px) {
-    /* For mobile phones: */
-    padding: 0rem;
-  }
+  justify-content: space-between;
+  flex-direction: column;
 }
-.login-page__form {
-  background-color: $white;
-  margin-top: 5rem;
+.login-form {
   display: flex;
   flex-flow: column;
-  align-items: center;
-  justify-content: flex-start;
-  color: $base-gray;
-  gap: 12px;
-  border-radius: 6px;
-  background-color: white;
-  box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
-  padding: 2rem 3rem;
-  width: 29vw;
-
-  // @media only screen and (max-width: 768px) {
-
-  //   width: 100%;
-  //   height: 100%;
-  //   padding: 0rem;
-  //   left: 0;
-  //   display: block;
-  //   border: 0;
-  // }
+  align-items: flex-start;
+  justify-content: center;
+  color: $dark-black-blue;
+  background-color: $offer-white;
+  border-radius: 4px;
+  gap: 16px;
+  padding: 64px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-family: $thin-font-family;
 }
 .login-button {
-  @include primary-button();
+  @include dark-blue-button();
+  text-align: center;
   margin-bottom: 6px;
-  width: 23vw;
-  padding: 14px;
+  width: 320px;
+  padding: 12px;
   box-shadow: none;
+
+  &:disabled {
+    background-color: $off-white;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    opacity: 0.7;
+  }
 }
+
+.secondary-button {
+  @include dark-blue-button();
+  width: 120px;
+  padding: 8px;
+  font-family: $thin-font-family;
+}
+
 ::v-deep .haAclf {
   width: 23vw;
 }
 a {
   text-decoration: none;
-  color: $light-gray-blue;
+  color: $off-gray;
 }
 label {
   font-size: 15px;
@@ -486,7 +531,10 @@ label {
   flex-direction: row;
   align-items: center;
   font-size: 13px;
-  margin-bottom: -16px;
+
+  p {
+    margin: 0;
+  }
 }
 .column {
   display: flex;
@@ -494,29 +542,21 @@ label {
   align-items: center;
   margin-bottom: 1rem;
 }
-// .enter-email {
-//   @include muted-font();
-//   margin-top: -0.5rem;
-//   color: $light-gray-blue;
-// }
+
 .pad-right {
   padding-right: 0.3em;
 }
 .links {
   font-size: 13px;
-  letter-spacing: 0.75px;
-  margin: 3rem;
+  font-family: $thin-font-family;
 }
-::v-deep .input-content {
-  border: 1px solid #e8e8e8;
-  border-radius: 4px;
+
+.t-c {
+  a {
+    margin: 0 16px;
+  }
 }
-::v-deep .input-form {
-  width: 23vw;
-}
-::v-deep .input-form__active {
-  border: none;
-}
+
 .logo-title {
   display: flex;
   flex-direction: row;
@@ -611,10 +651,5 @@ label {
   img {
     height: 22px;
   }
-}
-
-.register-link {
-  text-decoration: none;
-  color: $dark-green;
 }
 </style>
