@@ -282,7 +282,8 @@
                       loading ||
                       summaryLoading ||
                       savingSearch ||
-                      searchSaved
+                      searchSaved ||
+                      mainView === 'website'
                     "
                     class="primary-button"
                   >
