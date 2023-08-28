@@ -63,6 +63,26 @@ class CommsApi extends ModelAPI {
         }
     }
 
+    async regenerateTranscript(data) {
+        try {
+            const res = { data: { transcript: 'transcript' } }
+            // const res = await this.client.post(CommsApi.ENDPOINT + 'regenerate-pitch/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
+    async generateTranscript(data) {
+        try {
+            const res = { data: { transcript: 'transcript' } }
+            // const res = await this.client.post(CommsApi.ENDPOINT + 'pitch/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
     async getSearches() {
         try {
             const res = await this.client.get(CommsApi.ENDPOINT)
