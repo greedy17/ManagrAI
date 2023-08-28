@@ -2,7 +2,6 @@
   <div class="login-signup-page">
     <div class="elements-container">
       <div>
-        <!-- logo -->
         <img style="height: 66px" src="@/assets/images/logo.png" />
       </div>
       <div class="header">
@@ -27,72 +26,70 @@
 </template>
 
 <script>
-  export default {
-    name: 'LoginOrSignup',
-    data() {
-      return {
-
-      }
+export default {
+  name: 'LoginOrSignup',
+  data() {
+    return {}
+  },
+  methods: {
+    goToRegister() {
+      this.$router.push({ name: 'RegisterSelection' })
     },
-    methods: {
-      goToRegister() {
-        this.$router.push({ name: 'RegisterSelection' })
-      },
-      goToLogin() {
-        this.$router.push({ name: 'Login' })
-      },
+    goToLogin() {
+      this.$router.push({ name: 'Login' })
     },
-    created() {
-      this.$store.dispatch('updateGoogleSignIn', {})
-    },
-  }
+  },
+  created() {
+    this.$store.dispatch('updateGoogleSignIn', {})
+  },
+}
 </script>
 
 <style lang="scss" scoped>
-  @import '@/styles/variables';
-  @import '@/styles/buttons';
+@import '@/styles/variables';
+@import '@/styles/buttons';
 
-  .login-signup-page {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
-  .elements-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .display-flex {
-    display: flex;
-  }
-  .space-around {
-    width: 60%;
-    justify-content: space-around;
-  }
-  .header {
-    text-align: center;
-  }
-  .button {
-    @include primary-button;
-  }
-  .second-button {
-    @include gray-text-button;
-    color: $dark-green;
-  }
-  .links {
-    font-size: 13px;
-    margin: 3rem;
-    position: absolute;
-    bottom: 0;
-  }
-  a {
-    text-decoration: none;
-    color: $light-gray-blue;
-  }
-  .button-sizing {
-    // font-size: 16px;
-    font-size: 13px;
-    padding: 0.55rem 1.2rem;
-  }
+.login-signup-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+.elements-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.display-flex {
+  display: flex;
+}
+.space-around {
+  width: 60%;
+  justify-content: space-around;
+}
+.header {
+  text-align: center;
+}
+.button {
+  @include primary-button;
+}
+.second-button {
+  @include gray-text-button;
+  color: $dark-green;
+}
+.links {
+  font-size: 13px;
+  margin: 3rem;
+  position: absolute;
+  bottom: 0;
+}
+a {
+  text-decoration: none;
+  color: $light-gray-blue;
+}
+.button-sizing {
+  // font-size: 16px;
+  font-size: 13px;
+  padding: 0.55rem 1.2rem;
+}
 </style>
