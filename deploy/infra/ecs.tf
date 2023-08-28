@@ -21,34 +21,8 @@ resource "aws_ecr_repository" "managr" {
   }
 }
 
-resource "aws_ecr_lifecycle_policy" "staging_policy" {
+resource "aws_ecr_lifecycle_policy" "ecrlifecyclepolicy" {
   for_each = aws_ecr_repository.managr
-
-  name        = "staging-policy-${each.key}"
-  repository  = each.value.name
-
-  policy = jsonencode({
-    rules = [
-      {
-        rulePriority = 1,
-        description  = "Keep staging images for 90 days",
-        selection    = {
-          tagStatus = "tagged",
-          tagPrefix = "staging",
-        },
-        action       = {
-          type = "expire",
-          days = 90,
-        },
-      },
-    ],
-  })
-}
-
-resource "aws_ecr_lifecycle_policy" "production_policy" {
-  for_each = aws_ecr_repository.managr
-
-  name        = "production-policy-${each.key}"
   repository  = each.value.name
 
   policy = jsonencode({
@@ -58,13 +32,29 @@ resource "aws_ecr_lifecycle_policy" "production_policy" {
         description  = "Keep production images for 180 days",
         selection    = {
           tagStatus = "tagged",
-          tagPrefix = "prod",
+          tagPrefixList = ["prod"],
+          countType = "sinceImagePushed",
+          countUnit = "days",
+          countNumber = 180
         },
         action       = {
           type = "expire",
-          days = 180,
         },
       },
+      {
+        rulePriority = 2,
+        description  = "Keep staging images for 90 days",
+        selection    = {
+          tagStatus = "tagged",
+          tagPrefixList = ["staging"],
+          countType = "sinceImagePushed",
+          countUnit = "days",
+          countNumber = 90
+        },
+        action       = {
+          type = "expire",
+        },
+      }
     ],
   })
 }
