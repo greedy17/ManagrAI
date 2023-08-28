@@ -2267,27 +2267,27 @@
               </div>
             </div>
           </div>
-          <h2>Slack Form Instances <span v-if="!showInstances" @click="showInstances = !showInstances" style="cursor: pointer;">></span><span v-else @click="showInstances = !showInstances" style="cursor: pointer;">v</span></h2>
+          <h2>PR Usage Data <span v-if="!showInstances" @click="showInstances = !showInstances" style="cursor: pointer;">></span><span v-else @click="showInstances = !showInstances" style="cursor: pointer;">v</span></h2>
           <div v-if="showInstances">
             <div v-if="allOrgsLoading">
               Loading...
             </div>
             <div v-else>
-              <div class="pure-white padding" style="display: flex;">
-                <h4 style="position: relative; left: 0;">USER</h4>
-                <h4 style="position: relative; left: 40%;">DATE</h4>
-                <h4 style="position: relative; left: 80%;">UPDATE SOURCE</h4>
+              <div class="pure-white padding" style="display: flex; justify-content: space-between;">
+                <h4 style="left: 0; width: 10rem; overflow-x: auto;">USER</h4>
+                <h4 style="left: 40%; width: 10rem; overflow-x: auto;">DATE</h4>
+                <h4 style="left: 80%; width: 10rem; overflow-x: auto;">UPDATE SOURCE</h4>
               </div>
-              <div v-for="(instance, i) in allSlackFormInstances" :key="instance.pk">
+              <div v-for="(instance, i) in prUsageData" :key="instance.pk">
                 <div
                   :class="i % 2 === 0 ? 'light-back padding' : 'pure-white padding'"
-                  class="click"
-                  @click="openModal('slackFormInstance', instance)"
-                  style="display: flex;"
+                  class=""
+                  @click="() => null"
+                  style="display: flex; justify-content: space-between;"
                 >
-                  <h4 style="position: relative; left: 0;">{{ getUserName(instance.user) }}</h4>
-                  <h4 style="position: relative; min-width: 165px; left: 34.75%;">{{ instance.submission_date ? `${formatDateTime(instance.submission_date)}, ${getTime(instance.submission_date)}` : '--' }}</h4>
-                  <h4 style="position: relative; left: 63.5%;">{{ instance.update_source ? instance.update_source : '--' }}</h4>
+                  <h4 style="left: 0; width: 10rem; overflow-x: auto;">{{ instance.user }}</h4>
+                  <h4 style="left: 34.75%; width: 10rem; overflow-x: auto;">{{ instance.date ? instance.date : '--' }}</h4>
+                  <h4 style="left: 63.5%; width: 10rem; overflow-x: auto;">{{ instance.updateSource ? instance.updateSource : '--' }}</h4>
                 </div>
               </div>
             </div>
