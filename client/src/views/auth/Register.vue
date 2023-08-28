@@ -1,135 +1,103 @@
 <template>
   <div class="registration">
-    <div class="center">
-      <template v-if="!isLoading">
-        <template v-if="errorValidatingEmail">
-          <div class="box" style="display: flex; flex-direction: column; align-items: center">
-            <span>
-              <small
-                >You have already activated your account, if you forgot your password you can reset
-                it here
-              </small>
-            </span>
-            <br />
-            <router-link :to="{ name: 'ForgotPassword' }"> Forgot Password ? </router-link>
-          </div>
-        </template>
-        <template v-else>
-          <div class="registration__form">
-            <div class="form-card">
-              <div class="center-title">
-                <img src="@/assets/images/logo.png" height="80px" alt="" />
-                <h2 class="logo-title">Welcome to Managr</h2>
-                <small class="gray-blue">Fill out the form below to get started</small>
-              </div>
+    <header>
+      <img class="blue-filter" src="@/assets/images/logo.png" height="36px" alt="" />
 
-              <span>
-                <label for="fullname">Full Name</label>
-                <input
-                  @blur="registrationForm.field.fullName.validate()"
-                  :errors="registrationForm.field.fullName.errors"
-                  v-model="registrationForm.field.fullName.value"
-                  id="fullname"
-                  placeholder="Enter Full Name"
-                />
-              </span>
+      <div class="header">
+        <small>Registration Form</small>
+      </div>
+    </header>
 
-              <span>
-                <label for="email">Email</label>
-                <input
-                  label="Your Email"
-                  @blur="registrationForm.field.email.validate()"
-                  :errors="registrationForm.field.email.errors"
-                  v-model="registrationForm.field.email.value"
-                  type="email"
-                  id="email"
-                  placeholder="Enter Email"
-                />
-              </span>
+    <template v-if="!isLoading">
+      <template v-if="errorValidatingEmail">
+        <div class="forgot-box">
+          <small
+            >You have already activated your account, if you forgot your password you can reset it
+            here
+          </small>
 
-              <span>
-                <label for="password">Set a Password</label>
-                <input
-                  @blur="showVals(registrationForm.field.password)"
-                  @input="registrationForm.field.password.validate()"
-                  :errors="registrationForm.field.password.errors"
-                  v-model="registrationForm.field.password.value"
-                  type="password"
-                  id="password"
-                  placeholder="Must be 10 characters or longer"
-                />
-                <div class="column" v-for="(message, i) in errorMessages" :key="i">
-                  <small class="error">{{ message }}</small>
-                </div>
-              </span>
-
-              <span>
-                <label for="renterpassword">Re-Enter Password</label>
-                <input
-                  @blur="registrationForm.field.confirmPassword.validate()"
-                  :errors="registrationForm.field.confirmPassword.errors"
-                  v-model="registrationForm.field.confirmPassword.value"
-                  type="password"
-                  id="renterpassword"
-                  placeholder="Must be 10 characters or longer"
-                />
-              </span>
-
-              <!-- <Multiselect
-                :placeholder="userTime"
-                @input="test($event)"
-                v-model="selectedZone"
-                :options="timezones"
-                openDirection="above"
-                style="width: 26vw"
-                selectLabel="Enter"
-                label="key"
-              >
-                <template slot="noResult">
-                  <p>No results.</p>
-                </template>
-              </Multiselect> -->
-
-              <div class="form-card__footer">
-                <div>
-                  By signing up, I agree to Managr's
-                  <a href="https://managr.ai/terms-of-service" target="_blank"
-                    >Terms & Conditions.</a
-                  >
-                  <!-- and -->
-                  <!-- <a href="https://managr.ai/privacy-policy" target="_blank"></a>. -->
-                </div>
-
-                <!-- <Button
-                  :disabled="!validatedForm"
-                  :class="{ disabled: !validatedForm }"
-                  class="registration__button"
-                  type="submit"
-                  @click="onSubmit"
-                  text="Sign Up"
-                /> -->
-                <button
-                  :disabled="!validatedForm"
-                  :class="{ disabled: !validatedForm }"
-                  class="registration__button"
-                  type="submit"
-                  @click="onSubmit"
-                >
-                  Sign Up
-                </button>
-              </div>
-            </div>
-
-            <!-- <div style="margin-top: 1rem">
-              <router-link :to="{ name: 'Login' }">Back to Login</router-link>
-            </div> -->
-          </div>
-        </template>
+          <br />
+          <router-link :to="{ name: 'ForgotPassword' }"> Forgot Password ? </router-link>
+        </div>
       </template>
+
       <template v-else>
-        <p>...</p>
+        <div class="form-card">
+          <h2>Account Registration</h2>
+          <div class="column">
+            <label for="fullname">Full Name</label>
+            <input
+              @blur="registrationForm.field.fullName.validate()"
+              :errors="registrationForm.field.fullName.errors"
+              v-model="registrationForm.field.fullName.value"
+              id="fullname"
+              placeholder="Enter Full Name"
+            />
+          </div>
+
+          <div class="column">
+            <label for="email">Email</label>
+            <input
+              label="Your Email"
+              @blur="registrationForm.field.email.validate()"
+              :errors="registrationForm.field.email.errors"
+              v-model="registrationForm.field.email.value"
+              type="email"
+              id="email"
+              placeholder="Enter Email"
+            />
+          </div>
+
+          <div class="column">
+            <label for="password">Set a Password</label>
+            <input
+              @blur="showVals(registrationForm.field.password)"
+              @input="registrationForm.field.password.validate()"
+              :errors="registrationForm.field.password.errors"
+              v-model="registrationForm.field.password.value"
+              type="password"
+              id="password"
+              placeholder="Must be 10 characters or longer"
+            />
+            <div class="column" v-for="(message, i) in errorMessages" :key="i">
+              <small class="error">{{ message }}</small>
+            </div>
+          </div>
+
+          <div class="column">
+            <label for="renterpassword">Re-Enter Password</label>
+            <input
+              @blur="registrationForm.field.confirmPassword.validate()"
+              :errors="registrationForm.field.confirmPassword.errors"
+              v-model="registrationForm.field.confirmPassword.value"
+              type="password"
+              id="renterpassword"
+              placeholder="Must be 10 characters or longer"
+            />
+          </div>
+
+          <div class="row">
+            <small>
+              By signing up, I agree to Managr's
+              <a href="https://managr.ai/terms-of-service" target="_blank">Terms </a>
+              &
+              <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>.
+            </small>
+
+            <button
+              :disabled="!validatedForm"
+              class="primary-button"
+              type="submit"
+              @click="onSubmit"
+            >
+              Sign Up
+            </button>
+          </div>
+        </div>
       </template>
-    </div>
+    </template>
+
+    <div></div>
   </div>
 </template>
 
@@ -307,8 +275,11 @@ export default {
 @import '@/styles/mixins/utils';
 
 a {
-  color: $light-gray-blue;
-  font-weight: bold;
+  color: $dark-blue;
+  font-family: $base-font-family;
+  text-decoration: none;
+  font-size: 13px;
+  margin: 0 4px;
 }
 .center {
   display: flex;
@@ -326,34 +297,15 @@ a {
   margin-bottom: 16px;
 }
 .registration {
-  padding: 2rem 0rem 0rem 0rem;
-
-  // max-width: 24rem;
-  // margin: 1.5rem auto;
-
-  &__text {
-    color: $base-gray;
-    font-family: #{$base-font-family};
-    margin-bottom: 1rem;
-    text-align: center;
-    font-size: 14px;
-  }
-  &__privacy {
-    padding: 0.5rem 1rem;
-    font-size: 0.75rem;
-    margin-top: 0.5rem;
-    letter-spacing: 0.75px;
-  }
-
-  &__button {
-    @include primary-button();
-    width: 27vw;
-    font-size: 15px;
-    padding: 20px !important;
-    border-radius: 6px;
-    margin: 1rem 0;
-    box-shadow: none;
-  }
+  padding: 0 32px 32px 32px;
+  height: 100vh;
+  font-family: $base-font-family;
+  font-weight: 400;
+  color: $dark-black-blue;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: column;
 }
 
 .disabled {
@@ -380,14 +332,13 @@ h1 {
   align-items: center;
 }
 input {
-  width: 26vw;
+  width: 100%;
   border-radius: 4px;
   padding: 10px;
   border: 1px solid $soft-gray;
   color: $base-gray;
-  letter-spacing: 0.5px;
-  font-family: #{$base-font-family};
-  margin-top: 6px;
+  font-family: $thin-font-family;
+  margin-top: 8px;
 }
 input::placeholder {
   color: $very-light-gray;
@@ -402,24 +353,17 @@ label {
 }
 .form-card {
   display: flex;
+  flex-flow: column;
   align-items: flex-start;
-  justify-content: space-evenly;
-  flex-direction: column;
-  gap: 12px;
-  border-radius: 6px;
-  background-color: white;
-  // border: 1px solid #e8e8e8;
-  box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
-  padding: 2rem 3rem;
-  width: 34vw;
-  color: $base-gray;
-  letter-spacing: 0.75px;
-
-  &__footer {
-    width: 100%;
-    font-size: 12px;
-    margin-top: 8px;
-  }
+  justify-content: center;
+  color: $dark-black-blue;
+  background-color: $offer-white;
+  border-radius: 4px;
+  gap: 16px;
+  width: 600px;
+  padding: 64px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-family: $thin-font-family;
 }
 .error {
   color: red;
@@ -427,6 +371,7 @@ label {
   margin-right: 12px;
 }
 .column {
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -447,5 +392,63 @@ label {
 }
 ::v-deep .input-form__active {
   border: none;
+}
+
+.header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  small {
+    margin-right: 16px;
+  }
+}
+header {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  font-family: $thin-font-family;
+  font-size: 16px;
+  padding-top: 12px;
+}
+.blue-filter {
+  filter: brightness(0) invert(48%) sepia(33%) saturate(348%) hue-rotate(161deg) brightness(91%)
+    contrast(90%);
+}
+
+.forgot-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $dark-black-blue;
+  background-color: $offer-white;
+  border-radius: 4px;
+  padding: 64px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-family: $thin-font-family;
+}
+
+.primary-button {
+  @include dark-blue-button();
+  text-align: center;
+  margin-bottom: 6px;
+  width: 100px;
+  padding: 8px;
+  box-shadow: none;
+
+  &:disabled {
+    background-color: $off-white;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    opacity: 0.7;
+  }
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
 }
 </style>
