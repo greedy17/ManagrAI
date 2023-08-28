@@ -58,7 +58,7 @@ resource "aws_ecr_lifecycle_policy" "production_policy" {
         description  = "Keep production images for 180 days",
         selection    = {
           tagStatus = "tagged",
-          tagPrefix = "production",
+          tagPrefix = "prod",
         },
         action       = {
           type = "expire",
