@@ -5,8 +5,18 @@
       <h1>{{ user.organizationRef.name }} - Users</h1>
 
       <div class="bar-header">
-        <small @click="changeActivePage('users')" class="pointer" :class="{ active: page === 'users' }">Users</small>
-        <small @click="changeActivePage('invite')" class="pointer" :class="{ active: page === 'invite' }">Invite</small>
+        <small
+          @click="changeActivePage('users')"
+          class="pointer"
+          :class="{ active: page === 'users' }"
+          >Users</small
+        >
+        <small
+          @click="changeActivePage('invite')"
+          class="pointer"
+          :class="{ active: page === 'invite' }"
+          >Invite</small
+        >
         <!-- <small @click="changeActivePage('profile')" class="pointer" :class="{ active: page === 'profile' }">Profile</small> -->
       </div>
 
@@ -54,8 +64,8 @@
         </div> -->
 
         <div class="row margin-top margin-bottom">
-          <div class="team-width">Name</div>
-          <div class="team-width">Email</div>
+          <h3 class="team-width thin-font">Name</h3>
+          <h3 class="team-width thin-font">Email</h3>
         </div>
 
         <div class="row smaller-text">
@@ -64,8 +74,12 @@
         </div>
 
         <div v-for="teamUser in team.list" :key="teamUser.id" class="row smaller-text">
-          <div v-if="teamUser.id !== user.id" class="team-width thin-font">{{ teamUser.fullName.trim() ? teamUser.fullName : '[NO NAME]' }}</div>
-          <div v-if="teamUser.id !== user.id" class="team-width thin-font">{{ teamUser.email }}</div>
+          <div v-if="teamUser.id !== user.id" class="team-width thin-font">
+            {{ teamUser.fullName.trim() ? teamUser.fullName : '[NO NAME]' }}
+          </div>
+          <div v-if="teamUser.id !== user.id" class="team-width thin-font">
+            {{ teamUser.email }}
+          </div>
         </div>
       </div>
       <div v-if="page === 'profile'">
@@ -226,7 +240,7 @@ export default {
       return res
     },
     async listAllUsers() {
-      const res = await User.api.list({pagination: null})
+      const res = await User.api.list({ pagination: null })
       return res
     },
     async refresh() {
@@ -437,6 +451,7 @@ export default {
   // height: 66px;
   // background-color: white;
   z-index: 10;
+  font-family: $thin-font-family;
 
   small {
     font-size: 14px;
@@ -489,7 +504,7 @@ export default {
 
 .active {
   color: $dark-black-blue !important;
-  border-bottom: 1px solid $dark-black-blue;
+  border-bottom: 0.75px solid $dark-black-blue;
 }
 
 .not-allowed {
@@ -498,9 +513,17 @@ export default {
 .pointer {
   cursor: pointer;
 }
+h3 {
+  margin: 0;
+}
+h1,
+h3 {
+  font-family: $thin-font-family;
+}
+
 .team-width {
   width: 10rem;
-  height: 2rem;
+  padding: 8px 0;
   overflow-x: auto;
 }
 .border-right {
