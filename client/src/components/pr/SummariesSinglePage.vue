@@ -55,6 +55,20 @@
         </div>
       </div>
     </Modal>
+
+    <div class="floating-action-bar">
+      <div class="main-slot">
+        <img src="@/assets/images/share.svg" height="10px" alt="" />
+      </div>
+
+      <div class="slot-container">
+        <!-- <img src="" alt=""> -->
+        <div class="empty-slot"></div>
+        <div class="empty-slot"></div>
+        <div class="empty-slot"></div>
+      </div>
+    </div>
+
     <div class="center column" :class="{ fullHeight: showingDropdown }" v-if="page === 'SUMMARIES'">
       <div v-if="!selectedSearch" class="switcher">
         <div
@@ -121,6 +135,7 @@
                 class="area-input"
                 placeholder="Search term..."
                 @focus="showDropdown"
+                autocomplete="off"
                 v-model="newSearch"
               />
               <!-- <img
@@ -1807,6 +1822,50 @@ button:disabled {
   }
 }
 
+.main-slot {
+  width: 28px;
+  height: 28px;
+  border-radius: 100%;
+  background-color: $dark-black-blue;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    filter: invert(99%);
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.slot-container {
+  margin-top: 32px;
+}
+
+.empty-slot {
+  border-radius: 100%;
+  height: 10px;
+  width: 10px;
+  margin-bottom: 16px;
+  background-color: rgba(108, 106, 106, 0.1);
+}
+
+.floating-action-bar {
+  background-color: $white-blue;
+  position: fixed;
+  z-index: 3000;
+  right: 24px;
+  top: 40vh;
+  height: 150px;
+  border-radius: 32px;
+  border: 1px solid $white-blue;
+  width: 34px;
+  display: flex;
+  padding-top: 4px;
+  flex-direction: column;
+  align-items: center;
+}
+
 .main-content {
   display: flex;
   align-items: center;
@@ -1817,7 +1876,7 @@ button:disabled {
   padding: 58px 36px 0 36px;
   height: fit-content;
   width: 100vw;
-  color: $dark-black-blue;
+  color: $dark-blue;
   overflow-y: scroll;
 }
 
