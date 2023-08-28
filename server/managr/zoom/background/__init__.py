@@ -701,11 +701,15 @@ def process_transcript_to_summaries(transcript, user):
             if not settings.IN_PROD:
                 print(index)
 
-            transcript_body = core_consts.OPEN_AI_TRANSCRIPT_PROMPT(
-                {
-                    "date": datetime.today(),
-                    "transcript": transcript_part,
-                }
+            transcript_body = (
+                core_consts.OPEN_AI_TRANSCRIPT_PROMPT(
+                    {
+                        "date": datetime.today(),
+                        "transcript": transcript_part,
+                    }
+                )
+                if user.role == "SALES"
+                else core_consts.OPEN_AI_PR_TRANSCRIPT_SECTIONS_PROMPT("transcript")
             )
             transcript_body = (
                 transcript_body.replace("\r\n", "")
