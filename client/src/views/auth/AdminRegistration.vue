@@ -1,134 +1,122 @@
 <template>
   <div class="registration">
-    <div class="registration-card">
-      <!-- <img class="background-img" src="@/assets/images/logo.png" height="48px" alt="" /> -->
-      <div style="width: 100vw; height: 94vh" class="registration__form">
-        <div :class="{ disable: generatingToken }" class="form-card">
-          <div class="center">
-            <img src="@/assets/images/logo.png" height="60px" alt="" />
-            <h2 class="logo-title">Welcome to Managr</h2>
-            <small class="gray-blue" style="margin: 8px 0px 16px 8px"
-              >Fill out the form below to get started</small
-            >
-          </div>
+    <header>
+      <img class="blue-filter" src="@/assets/images/logo.png" height="36px" alt="" />
 
-          <!-- <button v-if="!generatingToken">Fill out register form</button>
+      <div class="header">
+        <small>Registration Form</small>
+      </div>
+    </header>
 
-          <div v-if="!generatingToken" class="seperator">
-            <span> OR </span>
-          </div> -->
+    <div :class="{ disable: generatingToken }" class="form-card">
+      <h2>Account Registration</h2>
+      <div class="col full-width">
+        <label for="company">Company Name</label>
+        <input
+          class="full-width"
+          @blur="registrationForm.field.organizationName.validate()"
+          :errors="registrationForm.field.organizationName.errors"
+          v-model="registrationForm.field.organizationName.value"
+          placeholder="Enter Company Name"
+          id="company"
+        />
+      </div>
 
-          <!-- <div v-if="!generatingToken" class="seperator">
-            <span> OR </span>
-          </div> -->
+      <div class="col full-width">
+        <label for="role">Select Product</label>
+        <Multiselect
+          placeholder="Select product"
+          class="full-width"
+          style="margin-top: 8px"
+          @input="selectRole($event)"
+          v-model="userRole"
+          :options="userRoles"
+          openDirection="below"
+          selectLabel="Enter"
+          label="name"
+          id="key"
+        >
+          <template slot="noResult">
+            <p>No results.</p>
+          </template>
+        </Multiselect>
+      </div>
 
-          <div class="fields-container">
-            <span class="col top-field">
-              <label for="role">Select Product</label>
-              <Multiselect
-                placeholder="Select your role"
-                @input="selectRole($event)"
-                v-model="userRole"
-                :options="userRoles"
-                openDirection="below"
-                style="width: 26vw; padding: 0; margin-top: 6px"
-                selectLabel="Enter"
-                label="name"
-                id="key"
-              >
-                <template slot="noResult">
-                  <p>No results.</p>
-                </template>
-              </Multiselect>
-            </span>
+      <div class="input-wrap full-width">
+        <div class="col">
+          <label for="name">Full Name</label>
+          <input
+            @blur="registrationForm.field.fullName.validate()"
+            :errors="registrationForm.field.fullName.errors"
+            v-model="registrationForm.field.fullName.value"
+            placeholder="Enter Full Name"
+            id="name"
+          />
+        </div>
 
-            <span class="">
-              <label for="name">Full Name</label>
-              <input
-                @blur="registrationForm.field.fullName.validate()"
-                :errors="registrationForm.field.fullName.errors"
-                v-model="registrationForm.field.fullName.value"
-                placeholder="Enter Full Name"
-                id="name"
-              />
-            </span>
+        <div class="col">
+          <label for="email">Email</label>
+          <input
+            @blur="registrationForm.field.email.validate()"
+            :errors="registrationForm.field.email.errors"
+            v-model="registrationForm.field.email.value"
+            type="email"
+            id="email"
+            placeholder="Enter Email"
+          />
+        </div>
 
-            <span>
-              <label for="email">Email</label>
-              <input
-                @blur="registrationForm.field.email.validate()"
-                :errors="registrationForm.field.email.errors"
-                v-model="registrationForm.field.email.value"
-                type="email"
-                id="email"
-                placeholder="Enter Email"
-              />
-            </span>
-
-            <span>
-              <label for="password">Set a Password</label>
-              <input
-                id="password"
-                @blur="showVals(registrationForm.field.password)"
-                @input="registrationForm.field.password.validate()"
-                :errors="registrationForm.field.password.errors"
-                v-model="registrationForm.field.password.value"
-                type="password"
-                placeholder="Must be 10 characters or longer"
-              />
-              <div class="column" v-for="(message, i) in errorMessages" :key="i">
-                <small class="error">{{ message }}</small>
-              </div>
-            </span>
-
-            <span>
-              <label for="confirm-password">Re-Enter Password</label>
-              <input
-                id="confirm-password"
-                label="Re-Enter Password"
-                @blur="registrationForm.field.confirmPassword.validate()"
-                :errors="registrationForm.field.confirmPassword.errors"
-                v-model="registrationForm.field.confirmPassword.value"
-                type="password"
-                placeholder="Must be 10 characters or longer"
-              />
-            </span>
-
-            <span class="col">
-              <label for="company">Company Name</label>
-              <input
-                @blur="registrationForm.field.organizationName.validate()"
-                :errors="registrationForm.field.organizationName.errors"
-                v-model="registrationForm.field.organizationName.value"
-                placeholder="Enter Company Name"
-                id="company"
-              />
-            </span>
-          </div>
-
-          <div class="form-card__footer">
-            <div>
-              By signing up, I agree to Managr's
-              <a href="https://managr.ai/terms-of-service" target="_blank">Terms</a>
-              &
-              <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>.
-              <!-- and -->
-              <!-- <a href="https://managr.ai/privacy-policy" target="_blank"></a>. -->
-            </div>
-
-            <button
-              :disabled="!validatedForm"
-              :class="{ disabled: !validatedForm }"
-              class="registration__button"
-              type="submit"
-              @click="onSubmit"
-            >
-              Sign Up
-            </button>
+        <div class="col">
+          <label for="password">Set a Password</label>
+          <input
+            id="password"
+            @blur="showVals(registrationForm.field.password)"
+            @input="registrationForm.field.password.validate()"
+            :errors="registrationForm.field.password.errors"
+            v-model="registrationForm.field.password.value"
+            type="password"
+            placeholder="Must be 10 characters or longer"
+          />
+          <div class="column" v-for="(message, i) in errorMessages" :key="i">
+            <small class="error">{{ message }}</small>
           </div>
         </div>
+
+        <div class="col">
+          <label for="confirm-password">Re-Enter Password</label>
+          <input
+            id="confirm-password"
+            label="Re-Enter Password"
+            @blur="registrationForm.field.confirmPassword.validate()"
+            :errors="registrationForm.field.confirmPassword.errors"
+            v-model="registrationForm.field.confirmPassword.value"
+            type="password"
+            placeholder="Must be 10 characters or longer"
+          />
+        </div>
+      </div>
+
+      <div class="row mar-top">
+        <div>
+          <small>By signing up, I agree to Managr's</small>
+          <a href="https://managr.ai/terms-of-service" target="_blank">Terms</a>
+          <small>&</small>
+          <a href="https://managr.ai/privacy-policy" target="_blank">Privacy Policy</a>.
+        </div>
+
+        <button
+          :disabled="!validatedForm"
+          :class="{ disabled: !validatedForm }"
+          class="primary-button"
+          type="submit"
+          @click="onSubmit"
+        >
+          Sign Up
+        </button>
       </div>
     </div>
+
+    <div></div>
   </div>
 </template>
 
@@ -320,8 +308,7 @@ export default {
             })
           }
           return
-        }
-        else if (user.status === 500) {
+        } else if (user.status === 500) {
           for (let key in user.data) {
             this.$toast(user.data[key], {
               timeout: 2000,
@@ -410,17 +397,33 @@ export default {
   width: 100%;
 }
 
+.input-wrap {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  div {
+    input {
+      width: 227px;
+    }
+  }
+}
+
 .col {
   display: flex;
   flex-direction: column;
 }
-
+.full-width {
+  width: 100%;
+}
 .row {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  width: 102%;
+  width: 100%;
 }
 
 .registration-card {
@@ -439,39 +442,15 @@ export default {
 }
 
 .registration {
+  padding: 0 32px 32px 32px;
+  height: 100vh;
+  font-family: $base-font-family;
+  font-weight: 400;
+  color: $dark-black-blue;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  padding: 0rem;
-  // max-width: 24rem;
-  // margin: 1.5rem auto;
-
-  &__text {
-    color: $base-gray;
-    font-family: #{$base-font-family};
-    margin-bottom: 1rem;
-    text-align: center;
-    font-size: 14px;
-  }
-  &__privacy {
-    padding: 0.5rem 1rem;
-    font-size: 0.75rem;
-    margin-top: 0.5rem;
-    letter-spacing: 0.75px;
-  }
-
-  &__button {
-    @include primary-button();
-    justify-self: center;
-    width: 26vw;
-    border-radius: 6px;
-    padding: 12px;
-    font-size: 16px;
-    margin: 1rem 0rem 0rem 0rem;
-    box-shadow: none;
-    z-index: 10;
-  }
+  justify-content: space-between;
+  flex-direction: column;
 }
 .time {
   color: $base-gray;
@@ -486,36 +465,19 @@ export default {
 }
 .form-card {
   display: flex;
-  align-items: center;
+  flex-flow: column;
+  align-items: flex-start;
   justify-content: center;
-  flex-direction: column;
-  gap: 12px;
-  border-radius: 6px;
-  background-color: white;
-  box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
-  padding: 2rem 3rem 2rem 3rem;
-  margin-top: 2rem;
-  width: 33vw;
-  color: $base-gray;
-  letter-spacing: 0.75px;
+  color: $dark-black-blue;
+  background-color: $offer-white;
+  border-radius: 4px;
+  gap: 16px;
+  width: 600px;
+  padding: 64px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-family: $thin-font-family;
+}
 
-  &__footer {
-    width: 100%;
-    font-size: 12px;
-    margin-top: 24px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
-}
-.registration__form {
-  background-color: transparent !important;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 10;
-}
 .error {
   color: red;
   font-size: 10px;
@@ -528,14 +490,12 @@ export default {
   justify-content: flex-start;
 }
 input {
-  width: 26vw;
   border-radius: 4px;
   padding: 10px;
   border: 1px solid $soft-gray;
   color: $base-gray;
-  letter-spacing: 0.5px;
-  font-family: #{$base-font-family};
-  margin-top: 6px;
+  font-family: $thin-font-family;
+  margin-top: 8px;
 }
 input::placeholder {
   color: $very-light-gray;
@@ -549,8 +509,12 @@ label {
   color: $base-gray;
 }
 a {
-  color: $light-gray-blue;
-  font-weight: bold;
+  color: $darker-blue;
+  font-family: $base-font-family;
+  text-decoration: none;
+
+  font-size: 13px;
+  margin: 0 4px;
 }
 .disabled {
   background-color: $soft-gray !important;
@@ -625,16 +589,46 @@ h2 {
   background-color: white;
   cursor: text !important;
 }
-.fields-container {
-  height: 40vh;
-  overflow-x: auto;
-  gap: 12px;
+
+.header {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
+  small {
+    margin-right: 16px;
+  }
 }
-.top-field {
-  margin-top: 7rem;
+header {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  font-family: $thin-font-family;
+  font-size: 16px;
+  padding-top: 12px;
+}
+.blue-filter {
+  filter: brightness(0) invert(48%) sepia(33%) saturate(348%) hue-rotate(161deg) brightness(91%)
+    contrast(90%);
+}
+
+.primary-button {
+  @include dark-blue-button();
+  text-align: center;
+  margin-bottom: 6px;
+  width: 100px;
+  padding: 8px;
+  box-shadow: none;
+
+  &:disabled {
+    background-color: $off-white;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    opacity: 0.7;
+  }
+}
+
+.mar-top {
+  margin-top: 16px;
 }
 </style>

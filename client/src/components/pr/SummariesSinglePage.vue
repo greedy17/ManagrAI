@@ -102,7 +102,7 @@
           </p>
         </div>
         <div>
-          <div style="margin-bottom: 30px" class="input-container">
+          <div style="margin-bottom: 30px" class="input-container" v-clickOutsideMenu>
             <div class="input-row">
               <div style="border-right: none" class="main-text">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -117,10 +117,10 @@
               <!-- @keydown.enter.exact.prevent="generateNewSearch(null)" -->
               <input
                 @click.stop
+                id="search-input"
                 class="area-input"
                 placeholder="Search term..."
                 @focus="showDropdown"
-                @blur="hideDropdown"
                 v-model="newSearch"
               />
               <!-- <img
@@ -148,7 +148,7 @@
             </div>
           </div>
 
-          <div style="margin-top: 1rem" class="input-container">
+          <div style="margin-top: 1rem" class="input-container" v-clickOutsidePromptMenu>
             <div class="input-row-start">
               <div class="main-text">
                 <img
@@ -159,7 +159,6 @@
               </div>
               <textarea
                 @focus="showPromptDropdown"
-                @blur="hidePromptDropdown"
                 class="area-input"
                 placeholder="Custom summary instructions... (Optional)"
                 v-model="newTemplate"
@@ -282,7 +281,8 @@
                       loading ||
                       summaryLoading ||
                       savingSearch ||
-                      searchSaved
+                      searchSaved ||
+                      mainView === 'website'
                     "
                     class="primary-button"
                   >
@@ -343,7 +343,15 @@
           "
           class="divider"
         >
-          <p class="divider-text">{{ mainView === 'news' ? 'News Clips' : 'Social Media' }}</p>
+          <p class="divider-text">
+            {{
+              mainView === 'news'
+                ? 'News Clips'
+                : mainView === 'website'
+                ? 'Website'
+                : 'Social Media'
+            }}
+          </p>
         </div>
 
         <div style="background-color: white" class="loaded-content" v-if="loading">
@@ -721,13 +729,22 @@ export default {
     },
     addSuggestion(ex) {
       this.newSearch = ex
+      this.hideDropdown()
     },
     addPromptSuggestion(ex) {
       this.newTemplate = ex
+      this.hidePromptDropdown()
     },
     async copyText() {
       try {
-        await navigator.clipboard.writeText(this.summary)
+        const cleanedSummary = this.summary
+          .split('<strong>')
+          .filter((item) => item !== '<strong>')
+          .join('')
+          .split('</strong>')
+          .filter((item) => item !== '</strong>')
+          .join('')
+        await navigator.clipboard.writeText(cleanedSummary)
         this.copyTip = 'Copied!'
 
         setTimeout(() => {
@@ -741,17 +758,13 @@ export default {
       this.showingDropdown = true
     },
     hideDropdown() {
-      setTimeout(() => {
-        this.showingDropdown = false
-      }, 100)
+      this.showingDropdown = false
     },
     showPromptDropdown() {
       this.showingPromptDropdown = true
     },
     hidePromptDropdown() {
-      setTimeout(() => {
-        this.showingPromptDropdown = false
-      }, 100)
+      this.showingPromptDropdown = false
     },
     resetSearch() {
       this.clearNewSearch()
@@ -1206,6 +1219,50 @@ export default {
         el.addEventListener('focus', adjustTextareaHeight)
         el.addEventListener('textarea-clear', adjustTextareaHeight)
         adjustTextareaHeight()
+      },
+    },
+    clickOutsideMenu: {
+      bind(el, binding, vnode) {
+        // Define a function to handle click events
+        function clickOutsideHandler(e) {
+          // Check if the clicked element is outside the target element
+          if (!el.contains(e.target)) {
+            // Trigger the provided method from the binding value
+            vnode.context.hideDropdown()
+          }
+        }
+
+        // Add a click event listener to the document body
+        document.body.addEventListener('click', clickOutsideHandler)
+
+        // Store the event listener on the element for cleanup
+        el._clickOutsideHandler = clickOutsideHandler
+      },
+      unbind(el) {
+        // Remove the event listener when the directive is unbound
+        document.body.removeEventListener('click', el._clickOutsideHandler)
+      },
+    },
+    clickOutsidePromptMenu: {
+      bind(el, binding, vnode) {
+        // Define a function to handle click events
+        function clickOutsideHandler(e) {
+          // Check if the clicked element is outside the target element
+          if (!el.contains(e.target)) {
+            // Trigger the provided method from the binding value
+            vnode.context.hidePromptDropdown()
+          }
+        }
+
+        // Add a click event listener to the document body
+        document.body.addEventListener('click', clickOutsideHandler)
+
+        // Store the event listener on the element for cleanup
+        el._clickOutsideHandler = clickOutsideHandler
+      },
+      unbind(el) {
+        // Remove the event listener when the directive is unbound
+        document.body.removeEventListener('click', el._clickOutsideHandler)
       },
     },
   },

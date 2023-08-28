@@ -1,16 +1,18 @@
 <template>
   <div class="leadership-code">
+    <!-- <header>
+      <img class="blue-filter" src="@/assets/images/logo.png" height="36px" alt="" />
+    </header> -->
+
     <div class="leadership-card">
-      <img class="leadership-code__logo" src="@/assets/images/logo.png" />
-      <!-- <div class="seperator">
-        <span>Welcome</span>
-      </div> -->
-      <h2 class="leadership-code__text">Please enter your Leadership code</h2>
+      <h2>Enter leadership code</h2>
       <div class="input__container">
-        <input placeholder="Enter Code" v-model="code" type="text" class="leadership-code__input" />
+        <input placeholder="Enter Code" autofocus v-model="code" type="text" />
       </div>
       <button :disabled="!code" type="submit" @click="handleApplyCode">Apply Code</button>
     </div>
+
+    <div></div>
   </div>
 </template>
 
@@ -28,8 +30,7 @@ export default {
     handleApplyCode() {
       if (Object.keys(this.$store.state.googleSignIn).length) {
         this.$router.push({ name: 'GoogleRegister', params: { validCode: true } })
-      }
-      else {
+      } else {
         if (this.code === this.leadershipCode) {
           this.$router.push({ name: 'AdminRegistration', params: { validCode: true } })
         } else {
@@ -54,49 +55,29 @@ export default {
 @import '@/styles/mixins/utils';
 
 .leadership-card {
-  margin-top: 2rem;
-  background-color: white;
-  // border: 1px solid #e8e8e8;
-  box-shadow: 1px 1px 2px 1px rgba($very-light-gray, 50%);
-  border-radius: 0.5rem;
-  padding: 3rem;
-  color: $base-gray;
+  display: flex;
+  flex-flow: column;
+  align-items: flex-start;
+  justify-content: center;
+  color: $dark-black-blue;
+  background-color: $offer-white;
+  border-radius: 4px;
+  gap: 16px;
+  padding: 64px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-family: $thin-font-family;
 }
 
 .leadership-code {
-  height: 86vh;
+  padding: 0 32px 32px 32px;
+  height: 100vh;
+  font-family: $base-font-family;
+  font-weight: 400;
+  color: $dark-black-blue;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  text-align: center;
-  background-color: transparent;
-  letter-spacing: 0.75px;
-  &__logo {
-    height: 4rem;
-    filter: brightness(0%) saturate(100%) invert(63%) sepia(31%) saturate(743%) hue-rotate(101deg)
-      brightness(87%) contrast(89%);
-  }
-
-  &__text {
-    color: $base-gray;
-    font-family: #{$base-font-family};
-    width: 100%;
-    margin: 2rem 0rem;
-    letter-spacing: 0.8px;
-  }
-
-  &__input {
-    @include input-field-white();
-    outline: none;
-    width: 22vw;
-  }
-
-  &__input:focus,
-  &__input:active {
-    outline: none !important;
-    box-shadow: none;
-  }
+  justify-content: center;
+  flex-direction: column;
 }
 
 input:focus {
@@ -122,38 +103,47 @@ form {
 }
 
 input {
-  @include input-field();
-  height: 2.5rem;
-  width: 19rem;
-  display: block;
-  margin: 0.625rem 0;
-  padding: 0 0 0 1rem;
-
-  &:disabled {
-    border: 2px solid $dark-green;
-  }
+  width: 320px;
+  background-color: $offer-white;
+  margin-bottom: 0.25rem;
+  padding: 8px;
+  border-radius: 4px;
+  line-height: 1.75;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  outline: none;
+  letter-spacing: 0.5px;
+  font-size: 14px;
+  font-family: $thin-font-family;
+  font-weight: 400;
+  text-align: left;
+  overflow: auto;
+  scroll-behavior: smooth;
+  color: $dark-black-blue;
+  margin-right: 1rem;
+  resize: none;
 
   &:focus {
     outline: none;
   }
-}
 
-.input {
-  &__container {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+  &::placeholder {
+    color: $very-light-gray;
   }
 }
 
 button {
-  @include primary-button();
-  margin-top: 1rem;
-  border-radius: 6px;
-  width: 22vw;
+  @include dark-blue-button();
+  text-align: center;
+  margin-bottom: 6px;
+  width: 320px;
   padding: 12px;
-  font-size: 15px;
   box-shadow: none;
+
+  &:disabled {
+    background-color: $off-white;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    opacity: 0.7;
+  }
 }
 
 .seperator {
@@ -171,5 +161,32 @@ button {
     color: $light-gray-blue;
     font-size: 13px;
   }
+}
+
+h2 {
+  font-family: $thin-font-family;
+}
+
+.blue-filter {
+  filter: brightness(0) invert(48%) sepia(33%) saturate(348%) hue-rotate(161deg) brightness(91%)
+    contrast(90%);
+}
+.header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  small {
+    margin-right: 16px;
+  }
+}
+header {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  font-family: $thin-font-family;
+  font-size: 16px;
+  padding-top: 12px;
 }
 </style>
