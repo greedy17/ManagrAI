@@ -40,18 +40,18 @@
             Meeting
           </div>
 
-          <div @click="showDropdown">{{ selectedMeeting && selectedMeeting.meeting_ref ? selectedMeeting.meeting_ref.topic : 'No meetings. Select another day' }}</div>
+          <div @click="showDropdown">{{ selectedMeeting && selectedMeeting ? selectedMeeting.topic : 'No meetings. Select another day' }}</div>
         </div>
         <div v-if="showingMeetingDropdown" class="dropdown">
           <small style="padding-top: 8px" class="gray-text">Example Meetings</small>
           <div
             @click="selectMeeting(meeting)"
             class="dropdown-item"
-            v-for="(meeting, i) in filteredMeetings"
+            v-for="(meeting, i) in meetings"
             :key="i"
           >
             <p>
-              {{ meeting.meeting_ref.topic }}
+              {{ meeting.topic }}
             </p>
           </div>
         </div>
@@ -78,7 +78,7 @@
           <div @click="resetSearch" class="back">
             <img src="@/assets/images/back.svg" height="18px" width="18px" alt="" />
           </div>
-          <h1 class="no-text-margin">{{ selectedMeeting && selectedMeeting.meeting_ref ? selectedMeeting.meeting_ref.topic : "" }}</h1>
+          <h1 class="no-text-margin">{{ selectedMeeting && selectedMeeting ? selectedMeeting.topic : "" }}</h1>
           <p class="sub-text">
             Meeting Date: <span>{{ meetingDate }}</span>
           </p>
@@ -134,6 +134,8 @@
 </template>
 <script>
 import { Comms } from '@/services/comms'
+import User from '@/services/users'
+import Zoom from '@/services/zoom/account'
 
 export default {
   name: 'PRTranscripts',
@@ -141,11 +143,13 @@ export default {
   data() {
     return {
       meetingDate: '',
+      meetings: [],
       output: '',
       persona: '',
       briefing: '',
       transcript: null,
       loading: false,
+      zoomLoading: false,
       regenerating: false,
       showingMeetingDropdown: false,
       instructions: '',
@@ -160,13 +164,13 @@ export default {
     }
   },
   watch: {
-    filteredMeetings: ['changeSelectedMeeting']
+    // filteredMeetings: ['changeSelectedMeeting']
+    meetingDate: ['getZoomMeetings']
   },
   async created() {
-    await this.$store.dispatch('loadMeetings')
-    this.selectedMeeting = this.filteredMeetings.length ? this.filteredMeetings[0] : null
-    this.getDate(Date.now())
-    console.log('selected meeting', this.selectedMeeting)
+    // await this.$store.dispatch('loadMeetings')
+    await this.getDate(Date.now())
+    await this.getZoomMeetings()
   },
   methods: {
     showDropdown() {
@@ -176,7 +180,7 @@ export default {
       this.showingMeetingDropdown = false
     },
     changeSelectedMeeting() {
-      this.selectedMeeting = this.filteredMeetings[0]
+      this.selectedMeeting = this.meetings[0]
     },
     getDate(date) {
       const unformattedDate = new Date(date)
@@ -221,12 +225,30 @@ export default {
     toggleRegenerate() {
       this.regenerating = !this.regenerating
     },
+    async getZoomMeetings() {
+      this.zoomLoading = true
+      try {
+        let res = await Zoom.api.getZoomMeetings({
+          user_id: this.$store.state.user.id,
+          date: this.meetingDate,
+        })
+        console.log('res', res)
+        this.meetings = res.data
+        this.selectedMeeting = res.data.length ? res.data[0] : null
+      } catch (e) {
+        console.log('ERROR GETTING MEETINGS:', e)
+      } finally {
+        setTimeout(() => {
+          this.zoomLoading = false
+        }, 1000)
+      }
+    },
     async regenerateTranscript() {
       this.regenerating = false
       this.loading = true
       try {
-        await Comms.api
-          .regenerateTranscript({
+        await User.api
+          .submitChatTranscript({
             transcript: this.transcript,
             instructions: this.instructions,
           })
@@ -256,16 +278,31 @@ export default {
       }
       this.loading = true
       try {
-        await Comms.api
-          .generateTranscript({
-            date: this.meetingDate,
-            meeting: this.selectedMeeting.id
+        const res = await User.api
+          .submitChatTranscript({
+            user_id: this.$store.state.user.id,
+            meeting_id: this.selectedMeeting.id,
           })
-          .then((response) => {
-            console.log(response)
-            this.transcript = response.transcript
-            this.scrollToTop()
-          })
+          if (res.status === 200) {
+            console.log(res)
+            this.$store.dispatch('setMeetingData', {
+              id: this.selectedMeeting.id,
+              data: res.data,
+              success: false,
+              retry: false,
+              analysis: res.analysis,
+            })
+          } else {
+            this.$store.dispatch('setMeetingData', {
+              id: this.selectedMeeting.id,
+              data: res.data,
+              success: false,
+              retry: true,
+              analysis: null,
+            })
+          }
+          // this.transcript = response.transcript
+          this.scrollToTop()
       } catch (e) {
         console.log('ERROR CREATING TRANSCRIPT', e)
       } finally {
@@ -289,13 +326,12 @@ export default {
     remainingCharsBrief() {
       return 1000 - this.briefing.length
     },
-    meetings() {
-      return this.$store.state.meetings
-    },
-    filteredMeetings() {
-      const filteredMeetings = this.$store.state.meetings.filter(meeting => this.meetingDate === meeting.meeting_ref.start_time.split('T')[0])
-      return filteredMeetings
-    },
+    // meetings() {
+    //   return this.$store.state.meetings
+    // },
+    // filteredMeetings() {
+    //   return this.$store.state.meetings.filter(meeting => this.meetingDate === meeting.start_time.split('T')[0])
+    // },
   },
   directives: {
     autoresize: {

@@ -65,8 +65,7 @@ class CommsApi extends ModelAPI {
 
     async regenerateTranscript(data) {
         try {
-            const res = { data: { transcript: 'transcript' } }
-            // const res = await this.client.post(CommsApi.ENDPOINT + 'regenerate-pitch/', data)
+            const res = await this.client.post(CommsApi.ENDPOINT + 'regenerate-pitch/', data)
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
