@@ -1339,3 +1339,156 @@ def _process_frontend_transcript(request_data):
             new_form.save_form(cleaned_data, False)
         emit_process_add_call_analysis(str(workflow.id), summary_parts)
     return
+
+
+@background()
+def _process_frontend_pr_transcript(request_data):
+    from managr.core.models import User
+
+    user = User.objects.get(id=request_data["user_id"])
+    summary_parts = []
+    viable_data = []
+    meeting_id = request_data["meeting_id"]
+    meeting_res = user.zoom_account.helper_class.get_meeting_by_id(
+        meeting_id, user.zoom_account.access_token
+    )
+    end_time = datetime.strptime(meeting_res["start_time"], "%Y-%m-%dT%H:%M:%S%z")
+    end_time = end_time + timezone.timedelta(minutes=meeting_res["duration"])
+    meeting_data = {
+        "meeting_id": meeting_res["id"],
+        "topic": meeting_res["topic"],
+        "start_time": meeting_res["start_time"],
+        "end_time": end_time,
+        "user": user.id,
+        "provider": "Zoom Meeting",
+        "meta_data": json.dumps(meeting_res),
+    }
+    try:
+        meeting = MeetingZoomSerializer(data=meeting_data)
+        meeting.is_valid(True)
+        meeting.save()
+        workflow = MeetingWorkflow.objects.create(
+            operation_type="MEETING_REVIEW",
+            meeting=meeting.instance,
+            user=user,
+        )
+        workflow.save()
+    except Exception as e:
+        logger.info(e)
+    has_error = False
+    error_message = None
+    try:
+        if not settings.IN_PROD:
+            logger.info("Retreiving meeting data...")
+        meeting = workflow.meeting
+        meeting_data = meeting.meeting_account.helper_class.get_meeting_data(
+            meeting.meeting_id, meeting.meeting_account.access_token
+        )
+        if not settings.IN_PROD:
+            logger.info(f"Done! {meeting_data}")
+
+        recordings = meeting_data["recording_files"]
+        filtered_recordings = [
+            recording
+            for recording in recordings
+            if recording["recording_type"] == "audio_transcript"
+        ]
+        if len(filtered_recordings):
+            if not len(summary_parts):
+                recording_obj = filtered_recordings[0]
+                download_url = recording_obj["download_url"]
+                transcript = meeting.meeting_account.helper_class.get_transcript(
+                    download_url, meeting.meeting_account.access_token
+                )
+                transcript = transcript.decode("utf-8")
+                summary_parts = process_transcript_to_summaries(transcript, user)
+            if len(summary_parts):
+                timeout = 90.0
+                tokens = 1500
+                attempts = 1
+                while True:
+                    summary_body = core_consts.OPEN_AI_TRANSCRIPT_PR_PROMPT(
+                        {
+                            "date": workflow.datetime_created.date(),
+                            "transcript_summaries": summary_parts,
+                        },
+                        user,
+                    )
+                    tokens = 1000
+                    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                        user.email, summary_body, token_amount=tokens, top_p=0.9
+                    )
+                    try:
+                        if not settings.IN_PROD:
+                            logger.info("Combining Summary parts")
+                        if not viable_data:
+                            with Variable_Client(timeout) as client:
+                                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                                r = client.post(
+                                    url,
+                                    data=json.dumps(body),
+                                    headers=core_consts.OPEN_AI_HEADERS,
+                                )
+                            r = _handle_response(r)
+                            if not settings.IN_PROD:
+                                logger.info(f"Summary response: {r}")
+                            summary = r["choices"][0].get("message").get("content")
+                        workflow.transcript_summary = summary
+                        workflow.save()
+                        break
+                    except StopReasonLength:
+                        logger.exception(
+                            f"Retrying for stop reason length, token amount at: {tokens}"
+                        )
+                        if tokens >= 2000:
+                            error_message = (
+                                "There was an error processing your transcript, try again"
+                            )
+                            break
+                        else:
+                            tokens += 500
+                            continue
+                    except ServerError as e:
+                        logger.exception(f"Server error from Open AI: {e}")
+                        if attempts >= 5:
+                            has_error = True
+                            error_message = "There was a server error with Open AI"
+                            break
+                        else:
+                            attempts += 1
+                            time.sleep(10.0)
+                    except ValueError as e:
+                        print(e)
+                        if str(e) == "substring not found":
+                            continue
+                        else:
+                            has_error = True
+                            error_message = "Looks like we ran into an internal issue"
+                            break
+                    except SyntaxError as e:
+                        print(e)
+                        continue
+                    except httpx.ReadTimeout:
+                        logger.exception(
+                            f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}"
+                        )
+                        if timeout >= 120.0:
+                            has_error = True
+                            error_message = "OpenAI servers are busy. Try again in a few minutes."
+
+                            break
+                        else:
+                            timeout += 30.0
+                    except Exception as e:
+                        logger.exception(f"Exception combining summaries: <{e}>")
+            else:
+                has_error = True
+                error_message = "Unknown error"
+        else:
+            has_error = True
+            error_message = "We could not find a transcript for this meeting"
+    except RecordingNotFound:
+        logger.exception(e)
+    except Exception as e:
+        logger.exception(e)
+    return
