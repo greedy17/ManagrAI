@@ -122,6 +122,7 @@
                 placeholder="Search term..."
                 @focus="showDropdown"
                 v-model="newSearch"
+                autocomplete="off"
               />
               <!-- <img
                 :class="{ invert: !newSearch }"
