@@ -95,14 +95,7 @@ plus any budget and cost details. The summary must be in paragraph form. You mus
 
 OPEN_AI_PR_TRANSCRIPT_SECTIONS_PROMPT = (
     lambda transcript: f"""
-'input': {transcript},'prompt': 'You are a VP of PR. Analyze and summarize this section from a Zoom call transcript, ensuring to capture:\n
-1. Main objectives and goals of the discussion.\n
-2. Primary concerns or challenges mentioned.\n
-3. Proposed strategies or solutions discussed.\n
-4. Any action items or next steps agreed upon.\n
-5. Important dates or deadlines mentioned.\n
-6. Key stakeholders or individuals involved.\n
-7. Miscellaneous notes or items of interest.\n
+'input': {transcript},'prompt': 'You are a VP of PR Summarize key points of the Zoom call. Highlight objectives, challenges, strategies, action items, deadlines, stakeholders, and any miscellaneous notes
 Present the summary in a concise and structured manner. You must use this format: \nSummary: <summary>'"""
 )
 
@@ -114,8 +107,8 @@ OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
 )
 
 OPEN_AI_TRANSCRIPT_PR_PROMPT = (
-    lambda input: f"""'input': {input}, 'prompt': 'You are a VP of PR. Consolidate the provided summaries from the Zoom call into one comprehensive summary:
-Ensure the final summary is structured, concise, and captures the overarching objectives, concerns, strategies, action items, key dates, stakeholders, next steps, and other items of interest.'"""
+    lambda input: f"""'input': {input}, 'prompt': 'You are a VP of PR. Consolidate the following summaries from the Zoom call into one comprehensive summary:
+Ensure the final summary is structured, concise, and captures the overarching objectives, challenges, strategies, action items, deadlines, stakeholders, and any miscellaneous notes. End the summary with proposed and next steps'"""
 )
 
 OPEN_AI_CALL_ANALYSIS_PROMPT = (
