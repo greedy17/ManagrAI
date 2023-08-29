@@ -201,14 +201,7 @@ export default {
       this.meetingDate = outputDateString;
     },
     selectMeeting(meeting) {
-      // console.log('meeting here', meeting)
-      // const generatedMeeting = this.$store.state.meetings.filter(meet => meet.meeting_ref.meeting_id == meeting.id)[0]
-      // console.log('generatedMeeting', generatedMeeting)
-      // if (generatedMeeting.transcript_summary) {
-      //   this.transcript = generatedMeeting.transcript_summary
-      // } else {
-        this.selectedMeeting = meeting
-      // }
+      this.selectedMeeting = meeting
       this.hideDropdown()
     },
     async copyText() {
@@ -245,12 +238,19 @@ export default {
         const response = await User.api.checkTasks({
             verbose_name: this.currentTask,
           })
-        console.log('response checkTask', response)
         if (response.completed) {
           clearInterval(this.interval)
           await this.$store.dispatch('loadMeetings')
           const generatedMeeting = this.$store.state.meetings.filter(meet => meet.meeting_ref.meeting_id == this.selectedMeeting.id)[0]
-          this.transcript = generatedMeeting.transcript_summary
+          let transcriptString = generatedMeeting.transcript_summary.split(`'output': `)[1]
+          if (!transcriptString) {
+            transcriptString = generatedMeeting.transcript_summary.split(`'Summary': `)[1]
+          }
+          let transcriptStringArr = transcriptString.split(`'`)
+          transcriptStringArr.pop()
+          transcriptStringArr.shift()
+          transcriptString = transcriptStringArr.join(`'`)
+          this.transcript = transcriptString
           this.loading = false
         }
       } catch (e) {
@@ -268,7 +268,6 @@ export default {
           user_id: this.$store.state.user.id,
           date: this.meetingDate,
         })
-        console.log('res', res)
         this.meetings = res.data
         this.selectedMeeting = res.data.length ? res.data[0] : null
       } catch (e) {
@@ -289,7 +288,6 @@ export default {
             instructions: this.instructions,
           })
           .then((response) => {
-            console.log(response)
             this.transcript = response.transcript
           })
       } catch (e) {
@@ -314,41 +312,29 @@ export default {
       }
       const generatedMeeting = this.$store.state.meetings.filter(meet => meet.meeting_ref.meeting_id == this.selectedMeeting.id)[0]
       if (generatedMeeting && generatedMeeting.transcript_summary) {
-        this.transcript = generatedMeeting.transcript_summary
+        let transcriptString = generatedMeeting.transcript_summary.split(`'output': `)[1]
+        if (!transcriptString) {
+          transcriptString = generatedMeeting.transcript_summary.split(`'Summary': `)[1]
+        }
+        console.log('generatedMeeting.transcript_summary', generatedMeeting.transcript_summary)
+        let transcriptStringArr = transcriptString.split(`'`)
+        transcriptStringArr.pop()
+        transcriptStringArr.shift()
+        transcriptString = transcriptStringArr.join(`'`)
+        this.transcript = transcriptString
         return
       }
       this.loading = true
       try {
-        // return console.log('this.selectedMeeting', this.selectedMeeting)
         const res = await User.api
           .submitChatTranscript({
             user_id: this.$store.state.user.id,
             meeting_id: this.selectedMeeting.id,
           })
-          console.log('res here', res)
           this.currentTask = res.verbose_name
           this.interval = setInterval(() => {
             this.checkTask()
           }, 1800)
-          // if (res.status === 200) {
-          //   console.log(res)
-          //   this.$store.dispatch('setMeetingData', {
-          //     id: this.selectedMeeting.id,
-          //     data: res.data,
-          //     success: false,
-          //     retry: false,
-          //     analysis: res.analysis,
-          //   })
-          // } else {
-          //   this.$store.dispatch('setMeetingData', {
-          //     id: this.selectedMeeting.id,
-          //     data: res.data,
-          //     success: false,
-          //     retry: true,
-          //     analysis: null,
-          //   })
-          // }
-          // this.transcript = response.transcript
           this.scrollToTop()
       } catch (e) {
         console.log('ERROR CREATING TRANSCRIPT', e)
@@ -528,7 +514,7 @@ export default {
 .pre-text {
   // background-color: $white-blue;
   border-radius: 4px;
-  padding: 16px;
+  padding: 16px 0px;
   color: $base-gray;
   font-family: $thin-font-family;
   font-size: 16px;
