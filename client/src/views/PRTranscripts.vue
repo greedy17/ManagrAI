@@ -514,7 +514,7 @@ export default {
 .pre-text {
   // background-color: $white-blue;
   border-radius: 4px;
-  padding: 16px;
+  padding: 16px 0px;
   color: $base-gray;
   font-family: $thin-font-family;
   font-size: 16px;
