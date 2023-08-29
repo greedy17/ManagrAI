@@ -1,6 +1,6 @@
 <template>
   <div ref="transcriptTop" class="transcripts">
-    <div :class="{ opaque: loading }" v-if="!transcript" class="center">
+    <div :class="{ opaque: loading }" v-if="!transcript" class="center extra-margin-top">
       <p v-if="!loading">Generate a transcript from your zoom meeting</p>
 
       <div class="centered blue-bg" v-else>
@@ -74,62 +74,64 @@
     </div>
 
     <div v-else class="center">
-      <div class="transcript-container">
-        <div class="title-container">
-          <div @click="resetSearch" class="back">
-            <img src="@/assets/images/back.svg" height="18px" width="18px" alt="" />
+      <div class="transcript-background">
+        <div class="transcript-container">
+          <div class="title-container">
+            <div @click="resetSearch" class="back">
+              <img src="@/assets/images/back.svg" height="18px" width="18px" alt="" />
+            </div>
+            <h1 class="no-text-margin">{{ selectedMeeting && selectedMeeting ? selectedMeeting.topic : "" }}</h1>
+            <p class="sub-text">
+              Meeting Date: <span>{{ meetingDate }}</span>
+            </p>
           </div>
-          <h1 class="no-text-margin">{{ selectedMeeting && selectedMeeting ? selectedMeeting.topic : "" }}</h1>
-          <p class="sub-text">
-            Meeting Date: <span>{{ meetingDate }}</span>
-          </p>
-        </div>
-
-        <div class="title-bar">
-          <div class="row">
-            <!-- toggleRegenerate -->
-            <button
-              :disabled="loading"
-              @click="() => null"
-              v-if="!regenerating"
-              class="secondary-button"
-            >
+  
+          <div class="title-bar">
+            <div class="row">
+              <!-- toggleRegenerate -->
+              <button
+                :disabled="loading"
+                @click="() => null"
+                v-if="!regenerating"
+                class="secondary-button"
+              >
+                <img
+                  v-if="loading"
+                  class="rotate"
+                  height="14px"
+                  src="@/assets/images/loading.svg"
+                  alt=""
+                />
+                {{ loading ? 'Generating' : 'Generate' }}
+              </button>
+              <div style="width: 600px" class="row" v-else>
+                <input
+                  :disabled="loading"
+                  placeholder="provide additional instructions..."
+                  autofocus
+                  class="regen-input"
+                  type="textarea"
+                  v-model="instructions"
+                />
+  
+                <button @click="regenerateTranscript" class="primary-button">Regenerate</button>
+              </div>
+            </div>
+  
+            <div @click="copyText" v-if="!regenerating" class="wrapper">
               <img
-                v-if="loading"
-                class="rotate"
-                height="14px"
-                src="@/assets/images/loading.svg"
+                style="cursor: pointer"
+                class="right-mar img-highlight"
+                src="@/assets/images/clipboard.svg"
+                height="16px"
                 alt=""
               />
-              {{ loading ? 'Generating' : 'Generate' }}
-            </button>
-            <div style="width: 600px" class="row" v-else>
-              <input
-                :disabled="loading"
-                placeholder="provide additional instructions..."
-                autofocus
-                class="regen-input"
-                type="textarea"
-                v-model="instructions"
-              />
-
-              <button @click="regenerateTranscript" class="primary-button">Regenerate</button>
+              <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
             </div>
           </div>
-
-          <div @click="copyText" v-if="!regenerating" class="wrapper">
-            <img
-              style="cursor: pointer"
-              class="right-mar img-highlight"
-              src="@/assets/images/clipboard.svg"
-              height="16px"
-              alt=""
-            />
-            <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
-          </div>
+  
+          <pre v-html="transcript" class="pre-text"></pre>
         </div>
-
-        <pre v-html="transcript" class="pre-text"></pre>
       </div>
     </div>
   </div>
@@ -444,6 +446,10 @@ export default {
   position: relative;
 }
 
+.extra-margin-top {
+  margin-top: 16px;
+}
+
 .absolute-count {
   position: absolute;
   bottom: -2px;
@@ -497,6 +503,13 @@ export default {
   }
 }
 
+.transcript-background {
+  background-color: $off-white;
+  padding-top: 16px;
+  width: 85%;
+  display: flex;
+  justify-content: center;
+}
 .transcript-container {
   width: 50%;
   display: flex;
@@ -513,7 +526,7 @@ export default {
 }
 
 .pre-text {
-  background-color: $white-blue;
+  // background-color: $white-blue;
   border-radius: 4px;
   padding: 16px;
   color: $base-gray;
@@ -541,8 +554,8 @@ export default {
   align-items: center;
   justify-content: flex-start;
   width: 100%;
-  height: 100%;
-  padding-top: 32px;
+  // height: 100%;
+  padding-top: 16px;
   font-size: 14px;
   color: $dark-black-blue;
   gap: 24px;
