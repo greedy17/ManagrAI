@@ -21,6 +21,44 @@ resource "aws_ecr_repository" "managr" {
   }
 }
 
+resource "aws_ecr_lifecycle_policy" "ecrlifecyclepolicy" {
+  for_each = aws_ecr_repository.managr
+  repository  = each.value.name
+
+  policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 1,
+        description  = "Keep production images for 180 days",
+        selection    = {
+          tagStatus = "tagged",
+          tagPrefixList = ["prod"],
+          countType = "sinceImagePushed",
+          countUnit = "days",
+          countNumber = 180
+        },
+        action       = {
+          type = "expire",
+        },
+      },
+      {
+        rulePriority = 2,
+        description  = "Keep staging images for 90 days",
+        selection    = {
+          tagStatus = "tagged",
+          tagPrefixList = ["staging"],
+          countType = "sinceImagePushed",
+          countUnit = "days",
+          countNumber = 90
+        },
+        action       = {
+          type = "expire",
+        },
+      }
+    ],
+  })
+}
+
 resource "aws_ecs_cluster" "main" {
   name = "managr-cluster"
   setting {
