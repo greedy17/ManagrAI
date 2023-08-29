@@ -5,7 +5,7 @@
 
       <div class="centered blue-bg" v-else>
         <div style="width: 675px" class="row">
-          <p class="summary-load-text">Generating transcript...</p>
+          <p class="summary-load-text">Generating summary...</p>
         </div>
 
         <div class="summary-preview-skeleton shimmer">
@@ -17,10 +17,10 @@
         </div>
       </div>
 
-      <div class="input-container">
+      <div class="input-container" v-if="!loading">
         <div class="input-row">
           <div class="main-text">
-            <img src="@/assets/images/document.svg" height="14px" alt="" />
+            <img src="@/assets/images/calendar-day.svg" height="14px" alt="" />
             Date
           </div>
 
@@ -29,21 +29,22 @@
             type="date"
             autofocus
             v-model="meetingDate"
+            class="date-input padding-left"
           />
         </div>
       </div>
 
-      <div class="input-container" v-clickOutsideMenu>
+      <div class="input-container" v-clickOutsideMenu v-if="!loading">
         <div class="input-row">
           <div class="main-text">
-            <img src="@/assets/images/target.svg" height="14px" alt="" />
+            <img src="@/assets/images/circle-video.svg" height="14px" alt="" />
             Meeting
           </div>
 
-          <div @click="showDropdown">{{ selectedMeeting && selectedMeeting ? selectedMeeting.topic : 'No meetings. Select another day' }}</div>
+          <div @click="showDropdown" class="pointer padding-left">{{ selectedMeeting && selectedMeeting ? selectedMeeting.topic : 'No meetings. Select another day' }}</div>
         </div>
         <div v-if="showingMeetingDropdown" class="dropdown">
-          <small style="padding-top: 8px" class="gray-text">Example Meetings</small>
+          <small style="padding-top: 8px" class="gray-text">Your Meetings</small>
           <div
             @click="selectMeeting(meeting)"
             class="dropdown-item"
@@ -58,8 +59,8 @@
       </div>
 
       <footer>
-        <button :disabled="loading" @click="clearData" class="secondary-button">Clear</button>
-        <button :disabled="loading" @click="generateTranscript" class="primary-button">
+        <!-- <button :disabled="loading" @click="clearData" class="secondary-button">Clear</button> -->
+        <button v-if="!loading" :disabled="loading" @click="generateTranscript" class="primary-button">
           <img
             v-if="loading"
             class="rotate"
@@ -86,9 +87,10 @@
 
         <div class="title-bar">
           <div class="row">
+            <!-- toggleRegenerate -->
             <button
               :disabled="loading"
-              @click="toggleRegenerate"
+              @click="() => null"
               v-if="!regenerating"
               class="secondary-button"
             >
@@ -99,7 +101,7 @@
                 src="@/assets/images/loading.svg"
                 alt=""
               />
-              {{ loading ? 'Regenerating' : 'Regenerate' }}
+              {{ loading ? 'Generating' : 'Generate' }}
             </button>
             <div style="width: 600px" class="row" v-else>
               <input
@@ -155,6 +157,9 @@ export default {
       instructions: '',
       copyTip: 'Copy',
       textToCopy: '',
+      currentTask: null,
+      checkingTask: false,
+      interval: null,
       // meetings: [
       //   { title: 'Bryan Meeting' },
       //   { title: 'Zach Meeting' },
@@ -168,7 +173,7 @@ export default {
     meetingDate: ['getZoomMeetings']
   },
   async created() {
-    // await this.$store.dispatch('loadMeetings')
+    await this.$store.dispatch('loadMeetings')
     await this.getDate(Date.now())
     await this.getZoomMeetings()
   },
@@ -194,7 +199,14 @@ export default {
       this.meetingDate = outputDateString;
     },
     selectMeeting(meeting) {
-      this.selectedMeeting = meeting
+      // console.log('meeting here', meeting)
+      // const generatedMeeting = this.$store.state.meetings.filter(meet => meet.meeting_ref.meeting_id == meeting.id)[0]
+      // console.log('generatedMeeting', generatedMeeting)
+      // if (generatedMeeting.transcript_summary) {
+      //   this.transcript = generatedMeeting.transcript_summary
+      // } else {
+        this.selectedMeeting = meeting
+      // }
       this.hideDropdown()
     },
     async copyText() {
@@ -211,7 +223,7 @@ export default {
     },
     resetSearch() {
       this.transcript = null
-      this.meetingDate = ''
+      // this.meetingDate = ''
       this.output = ''
       this.persona = ''
       this.briefing = ''
@@ -224,6 +236,28 @@ export default {
     },
     toggleRegenerate() {
       this.regenerating = !this.regenerating
+    },
+    async checkTask() {
+      this.checkingTask = true
+      try {
+        const response = await User.api.checkTasks({
+            verbose_name: this.currentTask,
+          })
+        console.log('response checkTask', response)
+        if (response.completed) {
+          clearInterval(this.interval)
+          await this.$store.dispatch('loadMeetings')
+          const generatedMeeting = this.$store.state.meetings.filter(meet => meet.meeting_ref.meeting_id == this.selectedMeeting.id)[0]
+          this.transcript = generatedMeeting.transcript_summary
+          this.loading = false
+        }
+      } catch (e) {
+        console.log(e)
+      } finally {
+        setTimeout(() => {
+          this.checkingTask = false
+        }, 1000)
+      }
     },
     async getZoomMeetings() {
       this.zoomLoading = true
@@ -276,43 +310,54 @@ export default {
         })
         return
       }
+      const generatedMeeting = this.$store.state.meetings.filter(meet => meet.meeting_ref.meeting_id == this.selectedMeeting.id)[0]
+      if (generatedMeeting && generatedMeeting.transcript_summary) {
+        this.transcript = generatedMeeting.transcript_summary
+        return
+      }
       this.loading = true
       try {
+        // return console.log('this.selectedMeeting', this.selectedMeeting)
         const res = await User.api
           .submitChatTranscript({
             user_id: this.$store.state.user.id,
             meeting_id: this.selectedMeeting.id,
           })
-          if (res.status === 200) {
-            console.log(res)
-            this.$store.dispatch('setMeetingData', {
-              id: this.selectedMeeting.id,
-              data: res.data,
-              success: false,
-              retry: false,
-              analysis: res.analysis,
-            })
-          } else {
-            this.$store.dispatch('setMeetingData', {
-              id: this.selectedMeeting.id,
-              data: res.data,
-              success: false,
-              retry: true,
-              analysis: null,
-            })
-          }
+          console.log('res here', res)
+          this.currentTask = res.verbose_name
+          this.interval = setInterval(() => {
+            this.checkTask()
+          }, 1800)
+          // if (res.status === 200) {
+          //   console.log(res)
+          //   this.$store.dispatch('setMeetingData', {
+          //     id: this.selectedMeeting.id,
+          //     data: res.data,
+          //     success: false,
+          //     retry: false,
+          //     analysis: res.analysis,
+          //   })
+          // } else {
+          //   this.$store.dispatch('setMeetingData', {
+          //     id: this.selectedMeeting.id,
+          //     data: res.data,
+          //     success: false,
+          //     retry: true,
+          //     analysis: null,
+          //   })
+          // }
           // this.transcript = response.transcript
           this.scrollToTop()
       } catch (e) {
         console.log('ERROR CREATING TRANSCRIPT', e)
       } finally {
         // this.clearData()
-        this.loading = false
+        // this.loading = false
         this.scrollToTop()
       }
     },
     clearData() {
-      this.meetingDate = ''
+      // this.meetingDate = ''
       this.output = ''
       this.persona = ''
       this.briefing = ''
@@ -502,7 +547,12 @@ export default {
   color: $dark-black-blue;
   gap: 24px;
 }
-
+.date-input {
+  background-color: $offer-white;
+  outline: none;
+  border: none;
+  font-family: $base-font-family;
+}
 .input-container {
   flex-wrap: nowrap;
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -565,7 +615,7 @@ export default {
   align-items: center;
 }
 .main-text {
-  width: 132px;
+  width: 82px;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -828,6 +878,12 @@ footer {
   &:hover {
     opacity: 0.7;
   }
+}
+.pointer {
+  cursor: pointer;
+}
+.padding-left {
+  padding-left: 0.5rem;
 }
 .gray-text {
   color: $mid-gray;
