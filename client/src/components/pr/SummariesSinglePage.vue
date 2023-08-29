@@ -900,7 +900,6 @@ export default {
             length: 1000,
           })
           .then((response) => {
-            console.log(response)
             this.summary = response.summary
           })
       } catch (e) {
@@ -1035,10 +1034,12 @@ export default {
         tweetList.push(
           'Name :' +
             tweets[i].user.name +
-            'tweet: ' +
+            ' Tweet: ' +
             tweets[i].text +
             ' Follower count: ' +
-            tweets[i].user.public_metrics.followers_count,
+            tweets[i].user.public_metrics.followers_count +
+            ' Date: ' +
+            tweets[i].created_at,
         )
       }
       return tweetList

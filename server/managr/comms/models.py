@@ -157,7 +157,6 @@ class TwitterAuthAccountAdapter:
         with Variable_Client() as client:
             response = client.get(url, headers=headers, params=params)
             res = self._handle_response(response)
-
         return res
 
     def get_summary(
