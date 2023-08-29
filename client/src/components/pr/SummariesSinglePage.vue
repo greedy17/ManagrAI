@@ -1039,6 +1039,7 @@ export default {
             tweets[i].text +
             ' Follower count: ' +
             tweets[i].user.public_metrics.followers_count,
+          'Date: ' + tweets[i].created_at,
         )
       }
       return tweetList
