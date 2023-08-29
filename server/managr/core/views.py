@@ -1917,7 +1917,6 @@ def process_transcript(request):
     from managr.zoom.background import _process_frontend_transcript, _process_frontend_pr_transcript
 
     user = request.user
-    print(user.role)
     if user.role == "PR":
         request_data = {
             "user_id": request.data["user_id"],
