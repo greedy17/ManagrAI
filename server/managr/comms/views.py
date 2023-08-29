@@ -131,6 +131,7 @@ class PRSearchViewSet(
         url_path="summary",
     )
     def get_summary(self, request, *args, **kwargs):
+        print("here")
         user = request.user
         clips = request.data.get("clips")
         search = request.data.get("search")
@@ -195,28 +196,28 @@ class PRSearchViewSet(
         token_amount = 500
         timeout = 60.0
         while True:
-            article_res = Article(url, config=generate_config())
-            article_res.download()
-            article_res.parse()
-            text = article_res.text
-            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_ARTICLE_SUMMARY(
-                datetime.now().date(), text, search, length, instructions, True
-            )
-            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                user.email,
-                prompt,
-                "You are a VP of Communications",
-                token_amount=token_amount,
-                top_p=0.1,
-            )
-            with Variable_Client(timeout) as client:
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=core_consts.OPEN_AI_HEADERS,
-                )
             try:
+                article_res = Article(url, config=generate_config())
+                article_res.download()
+                article_res.parse()
+                text = article_res.text
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.OPEN_AI_ARTICLE_SUMMARY(
+                    datetime.now().date(), text, search, length, instructions, True
+                )
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    "You are a VP of Communications",
+                    token_amount=token_amount,
+                    top_p=0.1,
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
                 r = open_ai_exceptions._handle_response(r)
                 message = r.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("article_summaries")
