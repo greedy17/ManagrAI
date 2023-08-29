@@ -709,7 +709,11 @@ def process_transcript_to_summaries(transcript, user):
                     }
                 )
                 if user.role == "SALES"
-                else core_consts.OPEN_AI_PR_TRANSCRIPT_SECTIONS_PROMPT("transcript")
+                else core_consts.OPEN_AI_PR_TRANSCRIPT_SECTIONS_PROMPT(
+                    {
+                        "transcript": transcript_part,
+                    }
+                )
             )
             transcript_body = (
                 transcript_body.replace("\r\n", "")
@@ -1416,7 +1420,6 @@ def _process_frontend_pr_transcript(request_data):
                             "date": workflow.datetime_created.date(),
                             "transcript_summaries": summary_parts,
                         },
-                        user,
                     )
                     tokens = 1000
                     body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
