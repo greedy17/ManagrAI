@@ -93,8 +93,6 @@ class CommsApi extends ModelAPI {
     async getTweets(data) {
         try {
             const res = await this.client.get(CommsApi.ENDPOINT + 'tweets/', { params: data })
-            console.log(res)
-            console.log(res.data)
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
