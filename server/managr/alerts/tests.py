@@ -223,7 +223,6 @@ class UserTestCase(TestCase):
         self.assertEqual(f, 1)
 
     def test_cron_config_filter_3(self):
-
         for i in range(2):
             alert_models.AlertConfig.objects.create(
                 recurrence_day=timezone.now().weekday(),
@@ -242,7 +241,6 @@ class UserTestCase(TestCase):
         self.assertEqual(f, 3)
 
     def test_cron_config_filter_5(self):
-
         for i in range(2):
             alert_models.AlertConfig.objects.create(
                 recurrence_day=timezone.now().weekday(),
@@ -269,7 +267,6 @@ class UserTestCase(TestCase):
         self.assertEqual(f, 5)
 
     def test_cron_config_filter_4(self):
-
         for i in range(2):
             alert_models.AlertConfig.objects.create(
                 recipient_type="USER_LEVEL",
@@ -287,7 +284,7 @@ class UserTestCase(TestCase):
                 template=self.template,
             )
         conf = self.config
-        conf.recurrence_day = (timezone.now() + timezone.timedelta(days=3)).day
+        conf.recurrence_day = (timezone.now() + timezone.timedelta(days=1)).day
         conf.save()
         f = alert_models.AlertConfig.objects.filter(
             Q(template__user__is_active=True, template__is_active=True)
@@ -296,7 +293,7 @@ class UserTestCase(TestCase):
                 | Q(recurrence_frequency="MONTHLY", recurrence_day=timezone.now().day)
             )
         ).count()
-
+        print(f)
         self.assertEqual(f, 4)
 
     def test_sends_to_self_and_owner_only(self):
@@ -355,7 +352,6 @@ class UserTestCase(TestCase):
                         elif user_group == "REPS":
                             query |= Q(user_level="REP", is_active=True)
                         elif user_group == "ALL":
-
                             query = Q(is_active=True) & Q(
                                 Q(user_level="MANAGER") | Q(user_level="REP")
                             )
@@ -467,7 +463,6 @@ class UserTestCase(TestCase):
                         elif user_group == "REPS":
                             query |= Q(user_level="REP", is_active=True)
                         elif user_group == "ALL":
-
                             query = Q(is_active=True) & Q(
                                 Q(user_level="MANAGER") | Q(user_level="REP")
                             )
@@ -588,7 +583,6 @@ class UserTestCase(TestCase):
                         elif user_group == "REPS":
                             query |= Q(user_level="REP", is_active=True)
                         elif user_group == "ALL":
-
                             query = Q(is_active=True) & Q(
                                 Q(user_level="MANAGER") | Q(user_level="REP")
                             )
@@ -659,7 +653,6 @@ class UserTestCase(TestCase):
                             query |= Q(user_level="SDR", is_active=True)
 
                         elif user_group == "ALL":
-
                             query = Q(is_active=True) & Q(
                                 Q(user_level="MANAGER") | Q(user_level="REP")
                             )
