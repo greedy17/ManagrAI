@@ -259,7 +259,6 @@ const actions = {
   async loadMeetings({ commit }) {
     try {
       const res = await MeetingWorkflows.api.getMeetingList()
-      console.log(res)
       commit('SAVE_MEETINGS', res.results)
     } catch (e) {
       console.log(e)

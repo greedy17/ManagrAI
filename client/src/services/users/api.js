@@ -177,7 +177,6 @@ export default class UserAPI {
   async submitChatTranscript(data) {
     try {
       const response = await this.client.post(CHAT_TRANSCRIPT, data)
-      console.log('response', response)
       return response.data
     } catch (e) {
       console.log('error in submitChatTranscript', e)

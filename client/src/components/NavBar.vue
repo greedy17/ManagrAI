@@ -40,7 +40,11 @@
           <p>Pitch</p>
         </router-link>
 
-        <a @mouseenter="textSoonOn" @mouseleave="textSoonOff">{{ soonText }}</a>
+        <router-link active-class="active" :to="{ name: 'PRTranscripts' }">
+          <p>Transcribe</p>
+        </router-link>
+
+        <!-- <a @mouseenter="textSoonOn" @mouseleave="textSoonOff">{{ soonText }}</a> -->
 
         <div class="auto-left">
           <!-- <div v-if="$route.name === 'PRSummaries' || $route.name === 'Pitches'" class="nav-text">

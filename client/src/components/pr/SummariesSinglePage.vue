@@ -692,17 +692,21 @@ export default {
         'Beyond meat broad search',
         'Beyond burger or sausage or meat',
         'Chick-fil-a competitors, list them out',
+        'List out XXX competitors, by name',
       ],
       promptSuggestions: [
         `Background on John Smith:\nTips for pitching John Smith:`,
         `Consumer Sentiment:\nMedia & Influencer Sentiment:`,
         `Executive Summary:\nFaculty, Research & Alumni:\nStudent life:`,
         `Executive Summary:\nImpact & Donor Insights:\nMember Impact:`,
+        `Prospect 10 companies that would care about this coverage. Draft a short, catchy, casual email opener per this coverage.`,
         'What is the impact of this coverage on Tesla:',
         'Generate 5 questions and answers a journlist would ask based on this coverage',
         'Generate 5 questions and answers an analyst would ask based on this coverage of product X',
         'Suggest a strategy to combat the negative coverage',
         'Suggest a strategy to amplify the positive coverage,',
+        'Highlight the top news story and the impact it will have on XXX',
+        'Newsjack this coverage and turn into a blog post on behalf of XXX',
       ],
     }
   },
@@ -901,7 +905,6 @@ export default {
             length: 1000,
           })
           .then((response) => {
-            console.log(response)
             this.summary = response.summary
           })
       } catch (e) {
@@ -1036,10 +1039,12 @@ export default {
         tweetList.push(
           'Name :' +
             tweets[i].user.name +
-            'tweet: ' +
+            ' Tweet: ' +
             tweets[i].text +
             ' Follower count: ' +
-            tweets[i].user.public_metrics.followers_count,
+            tweets[i].user.public_metrics.followers_count +
+            ' Date: ' +
+            tweets[i].created_at,
         )
       }
       return tweetList
