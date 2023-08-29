@@ -293,7 +293,6 @@ class UserTestCase(TestCase):
                 | Q(recurrence_frequency="MONTHLY", recurrence_day=timezone.now().day)
             )
         ).count()
-        print(f)
         self.assertEqual(f, 4)
 
     def test_sends_to_self_and_owner_only(self):
