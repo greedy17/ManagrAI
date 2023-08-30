@@ -1914,20 +1914,29 @@ def process_transcript_to_summaries(transcript, user):
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
 def process_transcript(request):
-    from managr.zoom.background import _process_frontend_transcript
-
-    request_data = {
-        "user_id": request.data["user_id"],
-        "meeting_id": request.data["meeting_id"],
-        "resource_type": request.data["resource_type"],
-        "integration_id": request.data["integration_id"],
-        "resource_id": request.data["resource_id"],
-    }
+    from managr.zoom.background import _process_frontend_transcript, _process_frontend_pr_transcript
 
     user = request.user
-    task = _process_frontend_transcript(
-        request_data, verbose_name=f"transcript-{user.email}-{uuid.uuid4()}"
-    )
+    if user.role == "PR":
+        request_data = {
+            "user_id": request.data["user_id"],
+            "meeting_id": request.data["meeting_id"],
+        }
+        task = _process_frontend_pr_transcript(
+            request_data, verbose_name=f"transcript-{user.email}-{uuid.uuid4()}"
+        )
+    else:
+        request_data = {
+            "user_id": request.data["user_id"],
+            "meeting_id": request.data["meeting_id"],
+            "resource_type": request.data["resource_type"],
+            "integration_id": request.data["integration_id"],
+            "resource_id": request.data["resource_id"],
+        }
+
+        task = _process_frontend_transcript(
+            request_data, verbose_name=f"transcript-{user.email}-{uuid.uuid4()}"
+        )
     return Response(data={"verbose_name": task.verbose_name}, status=status.HTTP_200_OK)
 
 

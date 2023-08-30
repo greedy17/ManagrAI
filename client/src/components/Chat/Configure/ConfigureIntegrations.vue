@@ -331,7 +331,7 @@
             <p class="card-text">Connect to enable AI call summaries</p>
             <div class="sep-button-container">
               <div class="separator"></div>
-              <button
+              <!-- <button
                 class="long-button gray"
                 style="
                   margin-right: 0;
@@ -342,8 +342,8 @@
                 "
               >
                 Coming Soon...
-              </button>
-              <!-- <button
+              </button> -->
+              <button
                 v-if="hasZoomIntegration"
                 class="long-button coral"
                 style="
@@ -356,8 +356,8 @@
                 @click="setRemoveApp('ZOOM')"
               >
                 Disconnect
-              </button> -->
-              <!-- <button
+              </button>
+              <button
                 v-else
                 class="long-button"
                 style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem"
@@ -369,7 +369,7 @@
                   class="green-filter"
                   style="margin-top: 1px; margin-left: 0.5rem; height: 16px; font-weight: bold"
                 />
-              </button> -->
+              </button>
             </div>
           </div>
         </div>

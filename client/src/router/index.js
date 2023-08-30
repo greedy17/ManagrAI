@@ -29,6 +29,11 @@ export default new Router({
       component: () => import('@/views/Pitches'),
     },
     {
+      path: '/transcribe',
+      name: 'PRTranscripts',
+      component: () => import('@/views/PRTranscripts'),
+    },
+    {
       path: '/pr-integrations',
       name: 'PRIntegrations',
       component: () => import('@/views/PRIntegrations')
