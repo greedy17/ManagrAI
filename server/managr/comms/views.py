@@ -131,7 +131,6 @@ class PRSearchViewSet(
         url_path="summary",
     )
     def get_summary(self, request, *args, **kwargs):
-        print("here")
         user = request.user
         clips = request.data.get("clips")
         search = request.data.get("search")
