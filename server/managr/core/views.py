@@ -530,8 +530,8 @@ def generate_content_transcript(request):
 
     instructions = request.data.get("instructions")
     user = User.objects.get(id=request.data["user_id"])
-
     summary = request.data.get("summary")
+    
     prompt = core_consts.OPEN_AI_TRANSCRIPT_GENERATE_CONTENT(
         datetime.now().date(), summary, instructions
     )
