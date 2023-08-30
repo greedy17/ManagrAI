@@ -525,6 +525,83 @@ def ask_managr(request):
 
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
+def generate_content_transcript(request):
+    from managr.core.exceptions import _handle_response, ServerError, StopReasonLength
+
+    instructions = request.data.get("instructions")
+    user = User.objects.get(id=request.data["user_id"])
+
+    summary = request.data.get("summary")
+    prompt = core_consts.OPEN_AI_TRANSCRIPT_GENERATE_CONTENT(
+        datetime.now().date(), summary, instructions
+    )
+    tokens = 500
+    has_error = False
+    attempts = 1
+    timeout = 60.0
+    while True:
+        try:
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email, prompt, "You are a VP of Communications.", token_amount=tokens
+            )
+            with Variable_Client(timeout) as client:
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            r = _handle_response(r)
+            content = r.get("choices")[0].get("message").get("content")
+            break
+        except StopReasonLength:
+            if tokens >= 2000:
+                break
+            else:
+                tokens += 500
+                continue
+        except ServerError:
+            if attempts >= 5:
+                has_error = True
+                error_message = "There was a server error with Open AI"
+                break
+            else:
+                attempts += 1
+                time.sleep(10.0)
+        except ValueError as e:
+            print(e)
+            if str(e) == "substring not found":
+                continue
+            else:
+                has_error = True
+                error_message = "Looks like we ran into an internal issue"
+                break
+        except SyntaxError as e:
+            print(e)
+            continue
+        except httpx.ReadTimeout:
+            logger.exception(f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}")
+            if timeout >= 120.0:
+                has_error = True
+                break
+            else:
+                timeout += 30.0
+        except Exception as e:
+            logger.exception(f"Unknown error on ask managr <{e}>")
+    if has_error:
+        res = {"value": f"{error_message}"}
+        return Response(data=res, status=status.HTTP_400_BAD_REQUEST)
+    return Response(
+        data={
+            **r,
+            "content": content,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
 def deal_review(request):
     from managr.core import constants as core_consts
     from managr.crm.utils import CRM_SWITCHER
