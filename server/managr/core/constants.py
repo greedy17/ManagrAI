@@ -221,6 +221,11 @@ OPEN_AI_NEWS_BOOLEAN_CONVERSION = (
     Search Term: {search}"""
 )
 
+OPEN_AI_TRANSCRIPT_GENERATE_CONTENT = (
+    lambda date, summary, instructions: f"""Today's date is {date}.
+    Here is call summary {summary} from {date}. Generate content based on these instructions {instructions}."""
+)
+
 
 # OAuth permission scopes to request from Nylas
 SCOPE_CALENDAR = "calendar"
