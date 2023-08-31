@@ -3,13 +3,10 @@ import uuid
 import json
 import logging
 from datetime import datetime
-from urllib.error import HTTPError
 from django.db.models.fields.related import ForeignKey
-import requests
-
-from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
-
+from managr.utils.sites import get_site_url
+from managr.utils.misc import encrypt_dict
 from django.db import models, IntegrityError
 from django.contrib.auth.models import AbstractUser, BaseUserManager, AnonymousUser
 from django.db.models import Q
@@ -283,8 +280,11 @@ class User(AbstractUser, TimeStampModel):
     @property
     def activation_link(self):
         """Generate A Link for the User who has been invited to complete registration"""
-        base_url = site_utils.get_site_url()
-        return f"{base_url}/activation/{self.pk}/{self.magic_token}/"
+        date = str(datetime.now())
+        data = {"created_at": date, "id": str(self.id)}
+        encrypted_data = encrypt_dict(data)
+        base_url = get_site_url()
+        return f"{base_url}/activation/{encrypted_data}"
 
     @property
     def email_auth_link(self):

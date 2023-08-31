@@ -60,6 +60,7 @@ from .serializers import (
     UserRegistrationSerializer,
     NoteTemplateSerializer,
     ConversationSerializer,
+    UserAdminRegistrationSerializer,
 )
 from managr.organization.models import Team
 from .permissions import IsStaff
@@ -531,7 +532,7 @@ def generate_content_transcript(request):
     instructions = request.data.get("instructions")
     user = User.objects.get(id=request.data["user_id"])
     summary = request.data.get("summary")
-    
+
     prompt = core_consts.OPEN_AI_TRANSCRIPT_GENERATE_CONTENT(
         datetime.now().date(), summary, instructions
     )
@@ -1709,6 +1710,21 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
                     text="You've been invited to Managr!",
                     block_set=blocks,
                 )
+        return Response(response_data)
+
+    @action(
+        methods=["post"],
+        permission_classes=[IsStaff],
+        detail=False,
+        url_path="admin",
+    )
+    def invite_admin(self, request, *args, **kwargs):
+        serializer = UserAdminRegistrationSerializer(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        response_data = serializer.data
         return Response(response_data)
 
 
