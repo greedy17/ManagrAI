@@ -84,7 +84,7 @@
             v-if="loading"
             class="rotate filter-invert"
             height="14px"
-            src="@/assets/images/loading.svg"
+            src="@/assets/images/loading.png"
             alt=""
           />
           <!-- {{ findTranscriptLoading ? 'Searching...' : 'Continue' }} -->
@@ -118,7 +118,7 @@
                   v-if="loading"
                   class="rotate"
                   height="14px"
-                  src="@/assets/images/loading.svg"
+                  src="@/assets/images/loading.png"
                   alt=""
                 />
                 {{ loading ? 'Generating' : 'Generate' }}
@@ -180,7 +180,7 @@
                 v-if="loading"
                 class="rotate"
                 height="14px"
-                src="@/assets/images/loading.svg"
+                src="@/assets/images/loading.png"
                 alt=""
               />
               {{ loading ? 'Regenerating' : 'Regenerate' }}
@@ -431,7 +431,7 @@ export default {
           .generateContentTranscript({
             user_id: this.$store.state.user.id,
             instructions: this.instructions,
-            summary: this.transcript,
+            summary: this.transcriptStorage,
           })
         // this.content.push({content: response.content, instructions: this.instructions, id: this.contentId})
         this.content = [{content: response.content, instructions: this.instructions, id: this.contentId}]
