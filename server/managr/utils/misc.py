@@ -207,7 +207,7 @@ def encrypt_dict(data_dict):
     cipher_suite = Fernet(fernet_key)
     data_str = str(data_dict).encode("utf-8")
     encrypted_data = cipher_suite.encrypt(data_str)
-    return encrypted_data
+    return encrypted_data.decode("utf-8")
 
 
 def decrypt_dict(encrypted_data):
