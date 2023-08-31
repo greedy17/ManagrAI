@@ -1,6 +1,6 @@
 <template>
   <div ref="pitchTop" class="pitches">
-    <div :class="{ opaque: loading }" v-if="!pitch" class="center">
+    <div :class="loading ? 'opaque' : 'extra-margin-top'" v-if="!pitch" class="center">
       <p v-if="!loading">Generate a pitch, blog post or press release based on any persona</p>
 
       <div class="centered blue-bg" v-else>
@@ -720,5 +720,9 @@ footer {
   background-color: $black-blue;
   border-radius: 8px;
   margin-bottom: 8px;
+}
+.extra-margin-top {
+  // margin-top: 16px;
+  margin-top: 5.5rem;
 }
 </style>
