@@ -2,14 +2,11 @@ from urllib.parse import urlencode
 import uuid
 import json
 import logging
+from managr.utils.sites import get_site_url
 from datetime import datetime
-from urllib.error import HTTPError
+from managr.utils.misc import encrypt_dict
 from django.db.models.fields.related import ForeignKey
-import requests
-
-from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
-
 from django.db import models, IntegrityError
 from django.contrib.auth.models import AbstractUser, BaseUserManager, AnonymousUser
 from django.db.models import Q
@@ -22,7 +19,6 @@ from managr.core import constants as core_consts
 from managr.organization import constants as org_consts
 from managr.slack.helpers import block_builders
 from managr.core.nylas.auth import convert_local_time_to_unix
-
 from .nylas.exceptions import NylasAPIError
 from managr.core.nylas.auth import gen_auth_url, revoke_access_token
 
@@ -889,3 +885,19 @@ class NoteTemplate(TimeStampModel):
 
     class Meta:
         ordering = ["datetime_created"]
+
+
+class Report(TimeStampModel):
+    title = models.CharField(max_length=255)
+    user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="reports")
+    main_image = models.ImageField(
+        upload_to=datetime_appended_filepath, max_length=255, null=True, blank=True
+    )
+    meta_data = JSONField()
+
+    def generate_url(self):
+        date = str(datetime.now())
+        data = {"created_at": date, "id": str(self.id)}
+        encrypted_data = encrypt_dict(data)
+        base_url = get_site_url()
+        return f"{base_url}/shared/reports/{encrypted_data}"
