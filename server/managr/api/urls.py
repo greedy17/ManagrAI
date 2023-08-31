@@ -239,6 +239,11 @@ urlpatterns = [
         name="get_meetings",
     ),
     path(
+        "zoom/check-for-transcript",
+        zoom_views.check_for_transcript,
+        name="check_for_transcript",
+    ),
+    path(
         "zoom/webhooks/deauthorize",
         zoom_views.zoom_deauth_webhook,
         name="zoom_deauth",

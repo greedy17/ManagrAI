@@ -5,6 +5,7 @@ import CSRF from '@/services/csrf'
 import API_BASE from '@/services/api/base'
 
 const GET_ZOOM_MEETINGS = 'zoom/get-meetings'
+const TRANSCRIPT_CONFIRMATION = 'zoom/check-for-transcript'
 
 export default class ZoomAPI extends ModelAPI {
   static ENDPOINT = 'users/zoom/'
@@ -57,6 +58,14 @@ export default class ZoomAPI extends ModelAPI {
   async getZoomMeetings(data) {
     try {
       const res = await this.client.post(GET_ZOOM_MEETINGS, data)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'Error Creating Meeting' })(e)
+    }
+  }
+  async transcriptConfirmation(data) {
+    try {
+      const res = await this.client.post(TRANSCRIPT_CONFIRMATION, data)
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Error Creating Meeting' })(e)

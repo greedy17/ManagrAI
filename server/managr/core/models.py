@@ -191,6 +191,7 @@ class User(AbstractUser, TimeStampModel):
     # SDR = "SDR"
     SALES = "SALES"
     PR = "PR"
+    DUAL = "DUAL"
     ROLE_CHOICES = [
         (
             SALES,
@@ -200,6 +201,7 @@ class User(AbstractUser, TimeStampModel):
             PR,
             "PR",
         ),
+        (DUAL, "Dual"),
         # (LEADERSHIP, "Leadership",),
         # (FRONTLINE_MANAGER, "Frontline Manager",),
         # (ACCOUNT_EXEC, "Account Executive",),

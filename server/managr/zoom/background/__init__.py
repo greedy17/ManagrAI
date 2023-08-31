@@ -1442,6 +1442,7 @@ def _process_frontend_pr_transcript(request_data):
                             summary = r["choices"][0].get("message").get("content")
                         workflow.transcript_summary = summary
                         workflow.save()
+                        user.add_meta_data("transcript")
                         break
                     except StopReasonLength:
                         logger.exception(
