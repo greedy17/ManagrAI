@@ -55,6 +55,30 @@
         </div>
       </div>
     </Modal>
+
+    <Reports
+      v-if="selectedSearch && ShowReport"
+      @toggle-report="toggleReport"
+      @clear-clips="clearClips"
+      :clips="addedClips"
+    />
+
+    <div @click="toggleReport" v-if="selectedSearch && !ShowReport" class="floating-action-bar">
+      <div class="main-slot">
+        <img src="@/assets/images/share.svg" height="10px" alt="" />
+      </div>
+
+      <div class="slot-container">
+        <div v-for="(clip, i) in addedClips" :key="i">
+          <img v-if="i < 3" :src="clip.urlToImage" class="small-photo" />
+        </div>
+
+        <div v-if="addedClips.length < 1" class="empty-slot"></div>
+        <div v-if="addedClips.length < 2" class="empty-slot"></div>
+        <div v-if="addedClips.length < 3" class="empty-slot"></div>
+      </div>
+    </div>
+
     <div class="center column" :class="{ fullHeight: showingDropdown }" v-if="page === 'SUMMARIES'">
       <div v-if="!selectedSearch" class="switcher">
         <div
@@ -121,8 +145,8 @@
                 class="area-input"
                 placeholder="Search term..."
                 @focus="showDropdown"
-                v-model="newSearch"
                 autocomplete="off"
+                v-model="newSearch"
               />
               <!-- <img
                 :class="{ invert: !newSearch }"
@@ -466,6 +490,12 @@
                     <span class="divier-dot">.</span>
                     <span class="off-gray">{{ getTimeDifferenceInMinutes(tweet.created_at) }}</span>
                   </div>
+
+                  <button class="tertiary-button" @click="addClip(tweet)">
+                    <img height="10px" src="@/assets/images/share.svg" alt="" />
+
+                    Share
+                  </button>
                 </div>
               </div>
             </div>
@@ -506,20 +536,18 @@
                     <span class="off-gray">{{
                       getTimeDifferenceInMinutes(article.publishedAt)
                     }}</span>
+                    <span class="divier-dot">.</span>
                   </div>
                   <div class="footer-icon-container">
-                    <!-- <button
-                      :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
+                    <button
+                      :disabled="clipTitles.includes(article.title)"
                       class="tertiary-button"
+                      @click="addClip(article)"
                     >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <path
-                          d="M17.5 1.25a.5.5 0 0 1 1 0v2.5H21a.5.5 0 0 1 0 1h-2.5v2.5a.5.5 0 0 1-1 0v-2.5H15a.5.5 0 0 1 0-1h2.5v-2.5zm-11 4.5a1 1 0 0 1 1-1H11a.5.5 0 0 0 0-1H7.5a2 2 0 0 0-2 2v14a.5.5 0 0 0 .8.4l5.7-4.4 5.7 4.4a.5.5 0 0 0 .8-.4v-8.5a.5.5 0 0 0-1 0v7.48l-5.2-4a.5.5 0 0 0-.6 0l-5.2 4V5.75z"
-                          fill="#000"
-                        ></path>
-                      </svg>
-                      Tag
-                    </button> -->
+                      <img height="10px" src="@/assets/images/share.svg" alt="" />
+
+                      {{ clipTitles.includes(article.title) ? 'Shared' : 'Share' }}
+                    </button>
 
                     <button
                       v-if="!articleSummaries[article.url]"
@@ -614,6 +642,7 @@
 </template>
 <script>
 import ChatTextBox from '../Chat/ChatTextBox.vue'
+import Reports from '../pr/Reports.vue'
 import { Comms } from '@/services/comms'
 
 export default {
@@ -621,6 +650,7 @@ export default {
   components: {
     ChatTextBox,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
+    Reports,
   },
   props: {
     selectedSearch: {
@@ -632,6 +662,8 @@ export default {
   },
   data() {
     return {
+      addedClips: [],
+      ShowReport: false,
       showingPromptDropdown: false,
       sourceSummary: null,
       buttonText: 'Article Summary',
@@ -694,6 +726,10 @@ export default {
         'Chick-fil-a competitors, list them out',
       ],
       promptSuggestions: [
+        `Highlight the top news story and the impact it will have on XXX`,
+        `Newsjack this coverage and turn into a blog post on behalf of XXX`,
+        `List out XXX competitors, by name`,
+        `Prospect 10 companies that would care about this coverage. Draft a short, catchy, casual email opener per this coverage`,
         `Background on John Smith:\nTips for pitching John Smith:`,
         `Consumer Sentiment:\nMedia & Influencer Sentiment:`,
         `Executive Summary:\nFaculty, Research & Alumni:\nStudent life:`,
@@ -719,6 +755,15 @@ export default {
     // this.updateMessage()
   },
   methods: {
+    clearClips() {
+      this.addedClips = []
+    },
+    toggleReport() {
+      this.ShowReport = !this.ShowReport
+    },
+    addClip(clip) {
+      this.addedClips.push(clip)
+    },
     soonButtonText() {
       this.buttonText = 'Coming Soon!'
     },
@@ -1039,7 +1084,9 @@ export default {
             'tweet: ' +
             tweets[i].text +
             ' Follower count: ' +
-            tweets[i].user.public_metrics.followers_count,
+            tweets[i].user.public_metrics.followers_count +
+            'Date: ' +
+            tweets[i].created_at,
         )
       }
       return tweetList
@@ -1167,6 +1214,9 @@ export default {
     },
   },
   computed: {
+    clipTitles() {
+      return this.addedClips.map((clip) => clip.title)
+    },
     messages() {
       return this.$store.state.messages
     },
@@ -1616,6 +1666,7 @@ button:disabled {
   background-color: $off-white !important;
   border: 1px solid rgba(0, 0, 0, 0.2) !important;
   cursor: not-allowed !important;
+  opacity: 0.7;
 }
 
 .primary-button {
@@ -1808,6 +1859,54 @@ button:disabled {
   }
 }
 
+.main-slot {
+  width: 28px;
+  height: 28px;
+  border-radius: 100%;
+  background-color: $dark-black-blue;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  img {
+    filter: invert(99%);
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.slot-container {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+.empty-slot {
+  border-radius: 100%;
+  height: 10px;
+  width: 10px;
+  margin: 8px 0;
+  background-color: rgba(108, 106, 106, 0.1);
+}
+
+.floating-action-bar {
+  background-color: $white-blue;
+  position: fixed;
+  z-index: 3000;
+  right: 24px;
+  top: 40vh;
+  min-height: 160px;
+  border-radius: 32px;
+  border: 1px solid $white-blue;
+  width: 34px;
+  display: flex;
+  padding-top: 4px;
+  flex-direction: column;
+  align-items: center;
+}
+
 .main-content {
   display: flex;
   align-items: center;
@@ -1818,7 +1917,7 @@ button:disabled {
   padding: 58px 36px 0 36px;
   height: fit-content;
   width: 100vw;
-  color: $dark-black-blue;
+  color: $dark-blue;
   overflow-y: scroll;
 }
 
@@ -2197,6 +2296,15 @@ header {
   object-fit: cover;
   cursor: text;
   border-radius: 4px;
+}
+
+.small-photo {
+  height: 28px;
+  width: 28px;
+  margin-bottom: 8px;
+  object-fit: cover;
+  cursor: text;
+  border-radius: 100%;
 }
 
 .article-title {

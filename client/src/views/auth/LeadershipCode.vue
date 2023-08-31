@@ -5,7 +5,7 @@
     </header> -->
 
     <div class="leadership-card">
-      <h2>Enter leadership code</h2>
+      <h2>Enter Access code</h2>
       <div class="input__container">
         <input placeholder="Enter Code" autofocus v-model="code" type="text" />
       </div>
