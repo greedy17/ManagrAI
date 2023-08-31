@@ -120,6 +120,7 @@ export default {
       registrationForm: new RepRegistrationForm(),
       userId: null,
       token: null,
+      code: null,
       email: null,
       isLoading: false,
       organization: null,
@@ -133,9 +134,11 @@ export default {
     }
   },
   async created() {
-    this.userId = this.$route.params.userId
-    this.token = this.$route.params.magicToken
-    await this.retrieveEmail(this.userId, this.token)
+    // this.userId = this.$route.params.userId
+    // this.token = this.$route.params.magicToken
+    this.code = this.$route.params.code
+    console.log('route', this.$route)
+    await this.retrieveEmail(this.code)
     this.timezones = this.timezones.map((tz) => {
       return { key: tz, value: tz }
     })
@@ -170,10 +173,10 @@ export default {
     test(n) {
       this.registrationForm.field.timezone.value = n.value
     },
-    async retrieveEmail(id, token) {
+    async retrieveEmail(code) {
       this.isLoading = true
       try {
-        const res = await User.api.retrieveEmail(id, token)
+        const res = await User.api.retrieveEmail(code)
         this.registrationForm.field.email.value = res.data.email
         this.organization = res.data.organization
       } catch (e) {
