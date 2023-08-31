@@ -1050,7 +1050,8 @@ export default {
       return tweetList
     },
     getArticleDescriptions(articles) {
-      return articles.map((a) => a.content)
+      console.log(articles)
+      return articles.map((a) => `Content:${a.content} Date:${a.publishedAt}`)
     },
     async getTweetSummary(instructions = '') {
       let tweets = this.prepareTweetSummary(this.tweets)

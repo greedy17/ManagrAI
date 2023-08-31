@@ -88,10 +88,9 @@
   
           <div class="title-bar">
             <div class="row">
-              <!-- toggleRegenerate -->
               <button
                 :disabled="loading"
-                @click="() => null"
+                @click="toggleRegenerate"
                 v-if="!regenerating"
                 class="secondary-button"
               >
@@ -107,14 +106,14 @@
               <div style="width: 600px" class="row" v-else>
                 <input
                   :disabled="loading"
-                  placeholder="provide additional instructions..."
+                  placeholder="provide instructions..."
                   autofocus
                   class="regen-input"
                   type="textarea"
                   v-model="instructions"
                 />
   
-                <button @click="regenerateTranscript" class="primary-button">Regenerate</button>
+                <button @click="generateTranscriptContent" class="primary-button">Generate</button>
               </div>
             </div>
   
@@ -133,6 +132,43 @@
           <pre v-html="transcript" class="pre-text"></pre>
         </div>
       </div>
+      <div class="center negative-margin-top half-width">
+        <div class="content-circle">Content</div>
+        <div v-for="item in content" :key="item.content">
+          <div class="content-info-container">
+            <h2 class="generate-title">Generate</h2>
+            <div class="gray-text margin-bottom"><b>Instructions:</b> <span class="thin left-space">{{ item.instructions }}</span></div>
+            <!-- <button
+              :disabled="loading"
+              @click="toggleContentRegenerate"
+              v-if="!contentRegenerating"
+              class="secondary-button margin-around"
+            >
+              <img
+                v-if="loading"
+                class="rotate"
+                height="14px"
+                src="@/assets/images/loading.svg"
+                alt=""
+              />
+              {{ loading ? 'Regenerating' : 'Regenerate' }}
+            </button>
+            <div style="width: 600px" class="row" v-else>
+              <input
+                :disabled="loading"
+                placeholder="provide additional instructions..."
+                autofocus
+                class="regen-input"
+                type="textarea"
+                v-model="contentInstructions"
+              />
+  
+              <button @click="regenerateTranscriptContent(item)" class="primary-button">Regenerate</button>
+            </div> -->
+          </div>
+          <pre v-html="item.content" class="content-pre-text"></pre>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -148,6 +184,8 @@ export default {
     return {
       meetingDate: '',
       meetings: [],
+      content: [],
+      contentId: 0,
       output: '',
       persona: '',
       briefing: '',
@@ -155,8 +193,10 @@ export default {
       loading: false,
       zoomLoading: false,
       regenerating: false,
+      contentRegenerating: false,
       showingMeetingDropdown: false,
       instructions: '',
+      contentInstructions: '',
       copyTip: 'Copy',
       textToCopy: '',
       currentTask: null,
@@ -232,6 +272,9 @@ export default {
     toggleRegenerate() {
       this.regenerating = !this.regenerating
     },
+    toggleContentRegenerate() {
+      this.contentRegenerating = !this.contentRegenerating
+    },
     async checkTask() {
       this.checkingTask = true
       try {
@@ -278,25 +321,48 @@ export default {
         }, 1000)
       }
     },
-    async regenerateTranscript() {
+    async generateTranscriptContent() {
       this.regenerating = false
       this.loading = true
       try {
-        await User.api
-          .submitChatTranscript({
-            transcript: this.transcript,
+        const response = await User.api
+          .generateContentTranscript({
+            user_id: this.$store.state.user.id,
             instructions: this.instructions,
+            summary: this.transcript,
           })
-          .then((response) => {
-            this.transcript = response.transcript
-          })
+        this.content.push({content: response.content, instructions: this.instructions, id: this.contentId})
+        this.contentId += 1
       } catch (e) {
-        console.log('ERROR CREATING TRANSCRIPT::', e)
+        console.log('ERROR CREATING CONTENT::', e)
       } finally {
         // this.clearData()
         this.instructions = ''
         this.loading = false
         this.scrollToTop()
+      }
+    },
+    async regenerateTranscriptContent(content) {
+      this.contentRegenerating = false
+      this.loading = true
+      try {
+        const response = await User.api
+          .generateContentTranscript({
+            user_id: this.$store.state.user.id,
+            instructions: content.instructions + ' AND ' + this.contentInstructions,
+            summary: this.transcript,
+          })
+        this.content[content.id].content = response.content
+        this.content[content.id].instructions = content.instructions + ' AND ' + this.contentInstructions
+        // this.content.push({content: response.content, instructions: this.instructions, id: this.contentId})
+        // this.contentId += 1
+      } catch (e) {
+        console.log('ERROR CREATING CONTENT::', e)
+      } finally {
+        // this.clearData()
+        this.contentInstructions = ''
+        this.loading = false
+        // this.scrollToTop()
       }
     },
     async generateTranscript() {
@@ -316,7 +382,6 @@ export default {
         if (!transcriptString) {
           transcriptString = generatedMeeting.transcript_summary.split(`'Summary': `)[1]
         }
-        console.log('generatedMeeting.transcript_summary', generatedMeeting.transcript_summary)
         let transcriptStringArr = transcriptString.split(`'`)
         transcriptStringArr.pop()
         transcriptStringArr.shift()
@@ -468,6 +533,12 @@ export default {
     word-wrap: break-word;
   }
 }
+.thin {
+  font-family: $thin-font-family;
+}
+.left-space {
+  margin-left: 0.2rem;
+}
 
 .title-bar {
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
@@ -495,6 +566,7 @@ export default {
   width: 85%;
   display: flex;
   justify-content: center;
+  border-bottom: 1px solid $soft-gray;
 }
 .transcript-container {
   width: 50%;
@@ -518,6 +590,18 @@ export default {
   color: $base-gray;
   font-family: $thin-font-family;
   font-size: 16px;
+  line-height: 32px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.content-pre-text {
+  // background-color: $white-blue;
+  border-radius: 4px;
+  padding: 16px 0px;
+  color: $base-gray;
+  font-family: $thin-font-family;
+  font-size: 13px;
   line-height: 32px;
   word-wrap: break-word;
   white-space: pre-wrap;
@@ -886,5 +970,29 @@ footer {
 }
 .gray-text {
   color: $mid-gray;
+}
+.negative-margin-top {
+  margin-top: -3.1rem;
+}
+.content-info-container {
+  border-bottom: 1px solid $soft-gray;
+}
+.margin-around {
+  margin: 1rem 0.5rem;
+}
+.margin-bottom {
+  margin-bottom: 2rem;
+}
+.generate-title {
+  margin-bottom: 0.5rem;
+}
+.content-circle {
+  background-color: $white;
+  padding: 0.1rem 1rem;
+  border-radius: 3rem;
+  border-top: 1px solid $soft-gray;
+}
+.half-width {
+  width: 50%;
 }
 </style>

@@ -296,11 +296,11 @@ export default {
       this.searchText = ''
     },
     goToIntegrations() {
-      this.$router.push('pr-integrations')
+      this.$router.push({ name: 'PRIntegrations' })
       this.$emit('close-menu')
     },
     goToSettings() {
-      this.$router.push('pr-settings')
+      this.$router.push({ name: 'PRSettings' })
       this.$emit('close-menu')
     },
   },

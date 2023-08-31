@@ -49,6 +49,7 @@ const CHAT_NEXT_STEPS = 'users/chat/next-steps/'
 const CHAT_SUMMARY = 'users/chat/summary/'
 const CHAT_MEETING = 'users/chat/submit-chat-meeting/'
 const CHAT_TRANSCRIPT = 'users/chat/chat-transcript/'
+const CHAT_TRANSCRIPT_CONTENT = 'users/comms/generate_content_transcript/'
 const ADD_MESSAGE = 'users/chat/add-message/'
 const EDIT_MESSAGE = 'users/chat/edit-message/'
 const DELETE_MESSAGES = 'users/chat/delete-messages/'
@@ -181,6 +182,16 @@ export default class UserAPI {
     } catch (e) {
       console.log('error in submitChatTranscript', e)
       apiErrorHandler({ apiName: 'User.chatMeeting' })
+    }
+  }
+
+  async generateContentTranscript(data) {
+    try {
+      const response = await this.client.post(CHAT_TRANSCRIPT_CONTENT, data)
+      return response.data
+    } catch (e) {
+      console.log('error in generateContentTranscript', e)
+      apiErrorHandler({ apiName: 'User.generateContentTranscript' })
     }
   }
 
