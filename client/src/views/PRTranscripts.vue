@@ -1,11 +1,30 @@
 <template>
   <div ref="transcriptTop" class="transcripts">
-    <div :class="{ opaque: loading }" v-if="!transcript" class="center extra-margin-top">
+    <Modal v-if="transcriptModal" class="delete-modal">
+      <div class="delete-container">
+        <header @click="closeTranscriptModal">
+          <p>X</p>
+        </header>
+        <main>
+          <h2>{{hasTranscript ? `Summarize Transcript` : `Transcript Not Found`}}</h2>
+          <p>{{hasTranscript ? `Would you like to summarize?` : `Either one does not exist or Zoom is still processing it.`}}</p>
+
+          <div v-if="hasTranscript" style="margin-top: 20px" class="row">
+            <button @click="closeTranscriptModal" class="secondary-button">Cancel</button>
+            <button @click="generateTranscript" class="primary-button">Submit</button>
+          </div>
+          <div v-else style="margin-top: 20px" class="row">
+            <button @click="closeTranscriptModal" class="secondary-button">Close</button>
+          </div>
+        </main>
+      </div>
+    </Modal>
+    <div :class="loading ? 'opaque' : 'extra-margin-top'" v-if="!transcript" class="center">
       <p v-if="!loading">Generate a transcript from your zoom meeting</p>
 
       <div class="centered blue-bg" v-else>
         <div style="width: 675px" class="row">
-          <p class="summary-load-text">Generating summary...</p>
+          <p class="summary-load-text">Generating {{ type }}... This will take a few minutes.</p>
         </div>
 
         <div class="summary-preview-skeleton shimmer">
@@ -60,15 +79,16 @@
 
       <footer>
         <!-- <button :disabled="loading" @click="clearData" class="secondary-button">Clear</button> -->
-        <button v-if="!loading" :disabled="loading" @click="generateTranscript" class="primary-button">
+        <button v-if="!loading" :disabled="loading" @click="confirmTranscript" class="primary-button">
           <img
             v-if="loading"
-            class="rotate"
+            class="rotate filter-invert"
             height="14px"
             src="@/assets/images/loading.svg"
             alt=""
           />
-          {{ loading ? 'Submitting' : 'Submit' }}
+          <!-- {{ findTranscriptLoading ? 'Searching...' : 'Continue' }} -->
+          Continue
         </button>
       </footer>
     </div>
@@ -134,9 +154,21 @@
       </div>
       <div class="center negative-margin-top half-width">
         <div class="content-circle">Content</div>
-        <div v-for="item in content" :key="item.content">
+        <div v-for="item in content" :key="item.content" ref="contentTop">
           <div class="content-info-container">
-            <h2 class="generate-title">Generate</h2>
+            <div class="space-between">
+              <h2 class="generate-title">Generate</h2>
+              <div @click="copyContentText" class="wrapper top-mar">
+                <img
+                  style="cursor: pointer"
+                  class="img-highlight"
+                  src="@/assets/images/clipboard.svg"
+                  height="14px"
+                  alt=""
+                />
+                <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
+              </div>
+            </div>
             <div class="gray-text margin-bottom"><b>Instructions:</b> <span class="thin left-space">{{ item.instructions }}</span></div>
             <!-- <button
               :disabled="loading"
@@ -179,7 +211,9 @@ import Zoom from '@/services/zoom/account'
 
 export default {
   name: 'PRTranscripts',
-  components: {},
+  components: {
+    Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
+  },
   data() {
     return {
       meetingDate: '',
@@ -202,6 +236,11 @@ export default {
       currentTask: null,
       checkingTask: false,
       interval: null,
+      hasTranscript: false,
+      transcriptModal: false,
+      findTranscriptLoading: false,
+      transcriptStorage: null,
+      type: 'summary',
       // meetings: [
       //   { title: 'Bryan Meeting' },
       //   { title: 'Zach Meeting' },
@@ -228,6 +267,25 @@ export default {
     },
     changeSelectedMeeting() {
       this.selectedMeeting = this.meetings[0]
+    },
+    async copyContentText() {
+      try {
+        const cleanedSummary = this.content[0].content
+          .split('<strong>')
+          .filter((item) => item !== '<strong>')
+          .join('')
+          .split('</strong>')
+          .filter((item) => item !== '</strong>')
+          .join('')
+        await navigator.clipboard.writeText(cleanedSummary)
+        this.copyTip = 'Copied!'
+
+        setTimeout(() => {
+          this.copyTip = 'Copy'
+        }, 2000)
+      } catch (err) {
+        console.error('Failed to copy text: ', err)
+      }
     },
     getDate(date) {
       const unformattedDate = new Date(date)
@@ -269,6 +327,11 @@ export default {
         this.$refs.transcriptTop.scrollIntoView({ behavior: 'smooth' })
       }, 300)
     },
+    scrollToContent() {
+      setTimeout(() => {
+        this.$refs.contentTop[0].scrollIntoView({ behavior: 'smooth' })
+      }, 300)
+    },
     toggleRegenerate() {
       this.regenerating = !this.regenerating
     },
@@ -289,11 +352,17 @@ export default {
           if (!transcriptString) {
             transcriptString = generatedMeeting.transcript_summary.split(`'Summary': `)[1]
           }
-          let transcriptStringArr = transcriptString.split(`'`)
-          transcriptStringArr.pop()
-          transcriptStringArr.shift()
-          transcriptString = transcriptStringArr.join(`'`)
-          this.transcript = transcriptString
+          let transcriptStringArr
+          if (transcriptString) {
+            // transcriptStringArr = transcriptString.split(`'`)
+            // transcriptStringArr.pop()
+            // transcriptStringArr.shift()
+            // transcriptString = transcriptStringArr.join(`'`)
+            this.transcript = transcriptString
+          } else {
+            this.transcript = generatedMeeting.transcript_summary
+          }
+          
           this.loading = false
         }
       } catch (e) {
@@ -302,6 +371,36 @@ export default {
         setTimeout(() => {
           this.checkingTask = false
         }, 1000)
+      }
+    },
+    openTranscriptModal() {
+      this.transcriptModal = true
+    },
+    closeTranscriptModal() {
+      this.transcriptModal = false
+    },
+    async confirmTranscript() {
+      this.loading = true
+      this.type = 'summary'
+      try {
+        let res = await Zoom.api.transcriptConfirmation({
+          meeting_id: this.selectedMeeting.id,
+          user_id: this.$store.state.user.id,
+        })
+        console.log('hi there', res)
+        this.hasTranscript = res.has_transcript
+        this.generateTranscript()
+        // this.hasTranscript = false
+        // this.openTranscriptModal()
+      } catch(e) {
+        console.log('error in confirmTranscript:', e)
+        if (e.data && e.data.has_transcript === false) {
+          this.hasTranscript = e.data.has_transcript
+          this.openTranscriptModal()
+          this.loading = false
+        }
+      } finally {
+        // this.loading = false
       }
     },
     async getZoomMeetings() {
@@ -324,6 +423,9 @@ export default {
     async generateTranscriptContent() {
       this.regenerating = false
       this.loading = true
+      this.transcriptStorage = this.transcript
+      this.type = 'content'
+      this.transcript = null
       try {
         const response = await User.api
           .generateContentTranscript({
@@ -331,7 +433,8 @@ export default {
             instructions: this.instructions,
             summary: this.transcript,
           })
-        this.content.push({content: response.content, instructions: this.instructions, id: this.contentId})
+        // this.content.push({content: response.content, instructions: this.instructions, id: this.contentId})
+        this.content = [{content: response.content, instructions: this.instructions, id: this.contentId}]
         this.contentId += 1
       } catch (e) {
         console.log('ERROR CREATING CONTENT::', e)
@@ -339,7 +442,9 @@ export default {
         // this.clearData()
         this.instructions = ''
         this.loading = false
-        this.scrollToTop()
+        this.transcript = this.transcriptStorage
+        this.transcriptStorage = null
+        this.scrollToContent()
       }
     },
     async regenerateTranscriptContent(content) {
@@ -376,17 +481,31 @@ export default {
         })
         return
       }
+      this.closeTranscriptModal()
       const generatedMeeting = this.$store.state.meetings.filter(meet => meet.meeting_ref.meeting_id == this.selectedMeeting.id)[0]
       if (generatedMeeting && generatedMeeting.transcript_summary) {
         let transcriptString = generatedMeeting.transcript_summary.split(`'output': `)[1]
         if (!transcriptString) {
           transcriptString = generatedMeeting.transcript_summary.split(`'Summary': `)[1]
         }
-        let transcriptStringArr = transcriptString.split(`'`)
-        transcriptStringArr.pop()
-        transcriptStringArr.shift()
-        transcriptString = transcriptStringArr.join(`'`)
-        this.transcript = transcriptString
+        let transcriptStringArr
+        if (transcriptString) {
+          // transcriptStringArr = transcriptString.split(`'`)
+          // transcriptStringArr.pop()
+          // transcriptStringArr.shift()
+          // transcriptString = transcriptStringArr.join(`'`)
+          this.transcript = transcriptString
+        } else {
+          this.transcript = generatedMeeting.transcript_summary.toString()
+        }
+        this.$toast('Summary retrieved!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.loading = false
         return
       }
       this.loading = true
@@ -498,7 +617,8 @@ export default {
 }
 
 .extra-margin-top {
-  margin-top: 16px;
+  // margin-top: 16px;
+  margin-top: 6.5rem;
 }
 
 .absolute-count {
@@ -639,9 +759,11 @@ export default {
 .input-container {
   flex-wrap: nowrap;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 0.75rem 1.2rem 0.75rem 1.2rem;
+  padding: 1.1rem 1.2rem 1.1rem 1.2rem;
   border-radius: 6px;
-  width: 675px;
+  // width: 675px;
+  width: 500px;
+  // height: 3rem;
   background-color: $offer-white;
   color: $base-gray;
 }
@@ -994,5 +1116,51 @@ footer {
 }
 .half-width {
   width: 50%;
+}
+.delete-modal {
+  margin-top: 120px;
+  width: 100%;
+  height: 100%;
+}
+.delete-container {
+  width: 500px;
+  height: 220px;
+  color: $base-gray;
+  font-family: $thin-font-family;
+  font-size: 14px;
+  line-height: 24px;
+  font-weight: 400;
+
+  header {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+
+    p {
+      cursor: pointer;
+      margin-top: -4px;
+    }
+  }
+
+  main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    // h2 {
+    //   margin-bottom: 0px;
+    // }
+  }
+}
+.filter-invert {
+  filter: invert(99%);
+}
+.space-between {
+  display: flex;
+  justify-content: space-between;
+}
+.top-mar {
+  margin-top: 1rem;
 }
 </style>
