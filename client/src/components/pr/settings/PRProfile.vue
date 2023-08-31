@@ -44,16 +44,20 @@
             :loading="loading"
             :disabled="!userInviteForm.field.email.value || loading"
           ></PulseLoadingSpinnerButton>
-
-          <button
-            class="primary-button"
-            v-else
-            @click="copyText"
-            :loading="loading"
-            :disabled="!activationLink || loading"
-          >
-            <img src="@/assets/images/link.svg" height="12px" alt="" /> {{ copyTip }}
-          </button>
+        </div>
+        <div v-if="activationLink" class="vertical-margin">
+          <h3>Your link:</h3>
+          <div>
+            <p class="small-text">{{ activationLink }}</p>
+            <button
+              class="primary-button extra-margin-top"
+              @click="copyText"
+              :loading="loading"
+              :disabled="!activationLink || loading"
+            >
+              <img src="@/assets/images/link.svg" height="12px" alt="" /> {{ copyTip }}
+            </button>
+          </div>
         </div>
       </div>
       <div v-if="page === 'users'">
@@ -213,7 +217,7 @@ export default {
         this.copyTip = 'Copied!'
 
         setTimeout(() => {
-          this.activationLink = ''
+          // this.activationLink = ''
           this.copyTip = 'Copy link'
         }, 2000)
       } catch (err) {
@@ -588,5 +592,13 @@ h3 {
 }
 .thin-font {
   font-family: $thin-font-family;
+}
+
+.small-text {
+  font-family: $thin-font-family;
+  font-size: 15px;
+}
+.extra-margin-top {
+  margin-top: 1.5rem;
 }
 </style>

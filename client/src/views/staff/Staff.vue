@@ -2141,7 +2141,7 @@
             <div style="display: flex; flex-direction: row; justify-content: flex-start; height: 41vh; width: 100%;">
               <div class="added-collection padding" style="width: 25vw; height: 39vh; display: flex; justify-content: flex-start; flex-direction: column; align-items: flex-start; margin-right: 1rem;;">
                 <h4 style="margin-top: 1rem; margin-bottom: 1rem;">Total Users: {{trialUsers.length}}</h4>
-                <h4 style="margin-top: 1rem; margin-bottom: 1rem;">Active Users: {{activeTrialUsers.length}}</h4>
+                <h4 style="margin-top: 1rem; margin-bottom: 1rem;">Active Users: {{/*activeTrialUsers.length*/ prActiveUsers}}</h4>
                 <h4 style="margin-bottom: 0rem; margin-top: 0.75rem;">Deactivate:</h4>
                 <div style="display: flex; align-items: center;">
                   <Multiselect
@@ -2200,6 +2200,8 @@
                   <div style="width: 10%">N. Srchs</div>
                   <div style="width: 10%">S. Srchs</div>
                   <div style="width: 10%">Pitches</div>
+                  <div style="width: 10%">TScripts</div>
+                  <div style="width: 10%">T. Summs</div>
                   <!-- <div style="width: 25%">Total Updates</div> -->
                 </div>
                 <div style="height: 95%;">
@@ -2261,6 +2263,8 @@
                     <div style="width: 10%">{{user.searches_ref.filter(search => search.type === 'NEWS').length}}</div>
                     <div style="width: 10%">{{user.searches_ref.filter(search => search.type === 'SOCIAL_MEDIA').length}}</div>
                     <div style="width: 10%">{{user.meta_data.pitches ? user.meta_data.pitches.total : 0}}</div>
+                    <div style="width: 10%">{{user.meta_data.transcript ? user.meta_data.transcript.total : 0}}</div>
+                    <div style="width: 10%">{{user.meta_data.transcript_summaries ? user.meta_data.transcript_summaries.total : 0}}</div>
                     <!-- <div style="width: 25%">{{user.total_updates}}</div> -->
                   </div>
                 </div>
@@ -2528,6 +2532,7 @@ export default {
       selectedTeamLead: null,
       usageData: null,
       allOrgsLoading: false,
+      prActiveUsers: 0,
       chartOptions: {
         series: [{
           name: 'Users',
@@ -2660,6 +2665,7 @@ export default {
     },
     dayTrialUsers() {
       const trialUsers = this.trialUsers.filter(user => user.days_active <= this.filterByDay)
+      console.log('trialUsers', trialUsers)
       return trialUsers.sort((a, b) => a.days_active - b.days_active)
     }
   },
@@ -3467,6 +3473,7 @@ export default {
       activeArr.pop()
       totalsArr.push(usageActiveTotals[0])
       activeArr.push(usageActiveTotals[1])
+      this.prActiveUsers = usageActiveTotals[1]
       this.chartOptions.series[0].data = [...totalsArr]
       this.chartOptions.series[1].data = [...activeArr]
     },
