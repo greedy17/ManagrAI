@@ -7,7 +7,7 @@ import httpx
 import time
 from django.utils import timezone
 from django.core import serializers
-from managr.utils.misc import get_site_url
+from managr.utils.misc import get_site_url, decrypt_dict
 from django.shortcuts import redirect
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
@@ -1027,29 +1027,22 @@ class UserViewSet(
     def retrieve_email(self, request, *args, **kwargs):
         """retrieve's a users email to display in field on activation"""
         params = request.query_params
-        pk = params.get("id")
-        magic_token = params.get("token")
+        code = params.get("code")
 
         try:
-            user = User.objects.get(pk=pk)
-            if str(user.magic_token) == str(magic_token) and user.is_invited:
-                if user.is_active:
-                    raise ValidationError(
-                        {
-                            "detail": [
-                                (
-                                    "It looks like you have already activate your account, click forgot password to reset it"
-                                )
-                            ]
-                        }
-                    )
-                return Response({"email": user.email, "organization": user.organization.name})
-
-            else:
-                return Response(
-                    {"non_field_errors": ("Invalid Link or Token")},
-                    status=status.HTTP_400_BAD_REQUEST,
+            data = decrypt_dict(code)
+            user = User.objects.get(pk=data.get("id"))
+            if user.is_active:
+                raise ValidationError(
+                    {
+                        "detail": [
+                            (
+                                "It looks like you have already activate your account, click forgot password to reset it"
+                            )
+                        ]
+                    }
                 )
+            return Response({"email": user.email, "organization": user.organization.name})
         except User.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
