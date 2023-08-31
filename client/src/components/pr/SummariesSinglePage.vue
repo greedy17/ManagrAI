@@ -56,7 +56,14 @@
       </div>
     </Modal>
 
-    <div v-if="selectedSearch" class="floating-action-bar">
+    <Reports
+      v-if="selectedSearch && ShowReport"
+      @toggle-report="toggleReport"
+      @clear-clips="clearClips"
+      :clips="addedClips"
+    />
+
+    <div @click="toggleReport" v-if="selectedSearch && !ShowReport" class="floating-action-bar">
       <div class="main-slot">
         <img src="@/assets/images/share.svg" height="10px" alt="" />
       </div>
@@ -140,7 +147,6 @@
                 @focus="showDropdown"
                 autocomplete="off"
                 v-model="newSearch"
-                autocomplete="off"
               />
               <!-- <img
                 :class="{ invert: !newSearch }"
@@ -484,6 +490,12 @@
                     <span class="divier-dot">.</span>
                     <span class="off-gray">{{ getTimeDifferenceInMinutes(tweet.created_at) }}</span>
                   </div>
+
+                  <button class="tertiary-button" @click="addClip(tweet)">
+                    <img height="10px" src="@/assets/images/share.svg" alt="" />
+
+                    Share
+                  </button>
                 </div>
               </div>
             </div>
@@ -528,21 +540,14 @@
                   </div>
                   <div class="footer-icon-container">
                     <button
-                      v-if="!clipTitles.includes(article.title)"
+                      :disabled="clipTitles.includes(article.title)"
                       class="tertiary-button"
                       @click="addClip(article)"
                     >
                       <img height="10px" src="@/assets/images/share.svg" alt="" />
-                      Share
-                    </button>
 
-                    <img
-                      v-else
-                      height="10px"
-                      src="@/assets/images/share.svg"
-                      alt=""
-                      class="right-arrow-footer blue-icon"
-                    />
+                      {{ clipTitles.includes(article.title) ? 'Shared' : 'Share' }}
+                    </button>
 
                     <button
                       v-if="!articleSummaries[article.url]"
@@ -637,6 +642,7 @@
 </template>
 <script>
 import ChatTextBox from '../Chat/ChatTextBox.vue'
+import Reports from '../pr/Reports.vue'
 import { Comms } from '@/services/comms'
 
 export default {
@@ -644,6 +650,7 @@ export default {
   components: {
     ChatTextBox,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
+    Reports,
   },
   props: {
     selectedSearch: {
@@ -656,6 +663,7 @@ export default {
   data() {
     return {
       addedClips: [],
+      ShowReport: false,
       showingPromptDropdown: false,
       sourceSummary: null,
       buttonText: 'Article Summary',
@@ -719,9 +727,11 @@ export default {
       ],
       promptSuggestions: [
         `Highlight the top news story and the impact it will have on XXX`,
+        `Newsjack this coverage and turn into a blog post on behalf of XXX`,
+        `List out XXX competitors, by name`,
+        `Prospect 10 companies that would care about this coverage. Draft a short, catchy, casual email opener per this coverage`,
         `Background on John Smith:\nTips for pitching John Smith:`,
         `Consumer Sentiment:\nMedia & Influencer Sentiment:`,
-        `Prospect 10 companies that would care about this coverage. Draft a short, catchy, casual email opener per this coverage`,
         `Executive Summary:\nFaculty, Research & Alumni:\nStudent life:`,
         `Executive Summary:\nImpact & Donor Insights:\nMember Impact:`,
         'What is the impact of this coverage on Tesla:',
@@ -745,6 +755,12 @@ export default {
     // this.updateMessage()
   },
   methods: {
+    clearClips() {
+      this.addedClips = []
+    },
+    toggleReport() {
+      this.ShowReport = !this.ShowReport
+    },
     addClip(clip) {
       this.addedClips.push(clip)
     },
@@ -1068,7 +1084,9 @@ export default {
             'tweet: ' +
             tweets[i].text +
             ' Follower count: ' +
-            tweets[i].user.public_metrics.followers_count,
+            tweets[i].user.public_metrics.followers_count +
+            'Date: ' +
+            tweets[i].created_at,
         )
       }
       return tweetList
@@ -1648,6 +1666,7 @@ button:disabled {
   background-color: $off-white !important;
   border: 1px solid rgba(0, 0, 0, 0.2) !important;
   cursor: not-allowed !important;
+  opacity: 0.7;
 }
 
 .primary-button {
@@ -1848,6 +1867,7 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 
   img {
     filter: invert(99%);
