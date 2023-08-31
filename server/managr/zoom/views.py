@@ -480,9 +480,7 @@ def check_for_transcript(request):
 
     while True:
         try:
-            meeting_res = user.meeting_account.helper_class.get_meeting_data(
-                meeting_id, user.meeting_account.access_token
-            )
+            meeting_res = ZoomAcct.get_meeting_data(meeting_id, user.zoom_account.access_token)
             recordings = meeting_res["recording_files"]
             filtered_recordings = [
                 recording
@@ -492,9 +490,7 @@ def check_for_transcript(request):
             if len(filtered_recordings):
                 recording_obj = filtered_recordings[0]
                 download_url = recording_obj["download_url"]
-                transcript = user.meeting_account.helper_class.get_transcript(
-                    download_url, user.meeting_account.access_token
-                )
+                transcript = ZoomAcct.get_transcript(download_url, user.zoom_account.access_token)
             break
         except TokenExpired:
             user.zoom_account.regenerate_token()
