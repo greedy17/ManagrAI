@@ -281,7 +281,7 @@ class User(AbstractUser, TimeStampModel):
     def activation_link(self):
         """Generate A Link for the User who has been invited to complete registration"""
         date = str(datetime.now())
-        data = {"created_at": date, "id": str(self.id), "magic_token": self.magic_token}
+        data = {"created_at": date, "id": str(self.id), "magic_token": str(self.magic_token)}
         encrypted_data = encrypt_dict(data)
         base_url = get_site_url()
         return f"{base_url}/activation/{encrypted_data}"
