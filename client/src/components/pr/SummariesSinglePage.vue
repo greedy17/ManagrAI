@@ -685,6 +685,8 @@ export default {
       ],
       promptSuggestions: [
         'Highlight the top 3 news story and the impact it will have on XXX',
+        `Write a highly engaging LinkedIn post based on this coverage for XXX`,
+        `Craft an entertaining Twitter post based on this coverage for XXX`,
         'Newsjack this coverage and turn into a blog post on behalf of XXX',
         `Consumer Sentiment:\nMedia & Influencer Sentiment:`,
         `Background on John Smith:\nTips for pitching John Smith:`,
