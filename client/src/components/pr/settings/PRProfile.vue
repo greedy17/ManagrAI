@@ -70,7 +70,7 @@
         <div class="row margin-top margin-bottom">
           <h3 class="team-width thin-font">Name</h3>
           <h3 class="team-width thin-font">Email</h3>
-          <h3 class="team-width thin-font">Invite</h3>
+          <h3 class="team-width thin-font extra-mar-left">Invite</h3>
         </div>
 
         <div class="row smaller-text">
@@ -86,7 +86,7 @@
           <div v-if="teamUser.id !== user.id" class="team-width thin-font">
             {{ teamUser.email }}
           </div>
-          <div v-if="teamUser.id !== user.id && !teamUser.fullName.trim()" @click="test(teamUser)" class="invite-link-button-container wrapper thin-font">
+          <div v-if="teamUser.id !== user.id && !teamUser.fullName.trim()" @click="copyUserLink(teamUser.activationLinkRef)" class="invite-link-button-container wrapper thin-font">
             <img 
               src="@/assets/images/link.svg"
               class="invite-link-button"
@@ -218,6 +218,19 @@ export default {
   methods: {
     test(log) {
       console.log('log', log)
+    },
+    async copyUserLink(link) {
+      try {
+        await navigator.clipboard.writeText(link)
+        this.copyTip = 'Copied!'
+
+        setTimeout(() => {
+          // this.activationLink = ''
+          this.copyTip = 'Copy link'
+        }, 2000)
+      } catch (err) {
+        console.error('Failed to copy text: ', err)
+      }
     },
     async copyText() {
       this.disableInput = false
@@ -616,7 +629,7 @@ h3 {
   border-radius: 100%;
   width: 1.375rem;
   height: 1.375rem;
-  margin-left: 0.5rem;
+  margin-left: 4rem;
   cursor: pointer;
 }
 .invite-link-button {
@@ -706,5 +719,8 @@ h3 {
 
 .lte8 .wrapper:hover .tooltip {
   display: block;
+}
+.extra-mar-left {
+  margin-left: 3.5rem;
 }
 </style>
