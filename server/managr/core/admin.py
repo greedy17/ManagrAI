@@ -16,7 +16,6 @@ from .models import (
     NylasAuthAccount,
     MeetingPrepInstance,
     UserActivity,
-    UserForecast,
     NoteTemplate,
     #    NotificationOption,
     #    NotificationSelection,
@@ -222,11 +221,6 @@ class CustomMeetingPrepInstance(admin.ModelAdmin):
 
 class CustomUserActivity(admin.ModelAdmin):
     model = UserActivity
-    list_display = ("user",)
-
-
-class CustomUserForecast(admin.ModelAdmin):
-    model = UserForecast
     list_display = ("user",)
 
 

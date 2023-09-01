@@ -83,8 +83,13 @@ export default new Router({
       name: 'AuthCallback',
       component: () => import('@/views/auth/AuthCallback'),
     },
+    // {
+    //   path: '/activation/:userId/:magicToken',
+    //   name: 'RepRegistration',
+    //   component: () => import('@/views/auth/Register')
+    // },
     {
-      path: '/activation/:userId/:magicToken',
+      path: '/activation/:code',
       name: 'RepRegistration',
       component: () => import('@/views/auth/Register')
     },

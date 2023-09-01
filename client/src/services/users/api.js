@@ -352,11 +352,11 @@ export default class UserAPI {
       console.log('Error in sendNewEmail: ', e)
     }
   }
-  retrieveEmail(uid, token) {
+  retrieveEmail(code) {
     /**
      * Checks user email from id to add to form
      */
-    let q = { id: uid, token: token }
+    let q = { code }
     const promise = apiClient()
       .get(USERS_ENDPOINT + 'retrieve-email/', { params: q })
       .catch(

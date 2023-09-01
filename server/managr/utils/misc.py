@@ -9,6 +9,7 @@ from django.core.paginator import Paginator
 import base64
 import hashlib
 
+
 def to_snake_case(val):
     # note if first value is capital then it will return a starting _
     if not val:
@@ -160,7 +161,6 @@ def get_site_url():
 def query_debugger(func):
     @functools.wraps(func)
     def inner_func(*args, **kwargs):
-
         reset_queries()
 
         start_queries = len(connection.queries)
@@ -183,7 +183,9 @@ def upload_to_bucket(f, filename, bucket_name, access_key_id, secret):
     AWS_ACCESS_KEY_ID = access_key_id
     AWS_SECRET_ACCESS_KEY = secret
     s3 = boto3.client(
-        "s3", aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        "s3",
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
     )
     s3.upload_file(f, bucket_name, filename)
 
@@ -203,9 +205,9 @@ def encrypt_dict(data_dict):
     secret_key = settings.SECRET_KEY
     fernet_key = generate_fernet_key(secret_key)
     cipher_suite = Fernet(fernet_key)
-    data_str = str(data_dict).encode('utf-8')
+    data_str = str(data_dict).encode("utf-8")
     encrypted_data = cipher_suite.encrypt(data_str)
-    return encrypted_data
+    return encrypted_data.decode("utf-8")
 
 
 def decrypt_dict(encrypted_data):
@@ -214,10 +216,11 @@ def decrypt_dict(encrypted_data):
     :param encrypted_data: Encrypted data as bytes
     :return: Decrypted dictionary
     """
+    # encrypted_data = encrypted_data.encode("utf-8")
     secret_key = settings.SECRET_KEY
     fernet_key = generate_fernet_key(secret_key)
     cipher_suite = Fernet(fernet_key)
     decrypted_data = cipher_suite.decrypt(encrypted_data)
-    data_str = decrypted_data.decode('utf-8')
+    data_str = decrypted_data.decode("utf-8")
     decrypted_dict = eval(data_str)
     return decrypted_dict

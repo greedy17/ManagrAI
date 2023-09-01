@@ -3,13 +3,10 @@ import uuid
 import json
 import logging
 from datetime import datetime
-from urllib.error import HTTPError
 from django.db.models.fields.related import ForeignKey
-import requests
-
-from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
-
+from managr.utils.sites import get_site_url
+from managr.utils.misc import encrypt_dict
 from django.db import models, IntegrityError
 from django.contrib.auth.models import AbstractUser, BaseUserManager, AnonymousUser
 from django.db.models import Q
@@ -283,8 +280,11 @@ class User(AbstractUser, TimeStampModel):
     @property
     def activation_link(self):
         """Generate A Link for the User who has been invited to complete registration"""
-        base_url = site_utils.get_site_url()
-        return f"{base_url}/activation/{self.pk}/{self.magic_token}/"
+        date = str(datetime.now())
+        data = {"created_at": date, "id": str(self.id), "magic_token": str(self.magic_token)}
+        encrypted_data = encrypt_dict(data)
+        base_url = get_site_url()
+        return f"{base_url}/activation/{encrypted_data}"
 
     @property
     def email_auth_link(self):
@@ -812,55 +812,6 @@ class UserActivity(models.Model):
         self.clicks["workflows"]["untouched"] -= 1
         self.clicks["workflows"]["touched"].append(obj)
         return self.save()
-
-
-class UserForecast(models.Model):
-    user = models.OneToOneField(
-        "core.User", on_delete=models.CASCADE, related_name="current_forecast"
-    )
-    state = JSONField(
-        default=dict,
-        null=True,
-    )
-
-    def __str__(self):
-        return f"Forecast for {self.user.email}"
-
-    @classmethod
-    def create_for_existing_users(cls):
-        users = User.objects.all()
-        for user in users:
-            if not hasattr(user, "current_forecast"):
-                UserForecast.objects.create(user=user)
-                logger.info(f"Created forecast model for user {user.email}")
-        return
-
-    def add_to_state(self, id):
-        from managr.opportunity.models import Opportunity
-
-        opp = Opportunity.objects.get(integration_id=id)
-        if opp.integration_id not in self.state.keys():
-            current_date = str(datetime.now())
-            self.state[opp.integration_id] = {
-                "date_added": current_date,
-                "data": opp.secondary_data,
-            }
-            self.save()
-            return "Opportunity saved to current forecast state"
-        return "Opportunity already in current forecast state"
-
-    def remove_from_state(self, id):
-        if id in self.state.keys():
-            del self.state[id]
-            self.save()
-            return "Opportunity removed from current forecast state"
-        return "Opportunity not in current forecast state"
-
-    def get_current_values(self):
-        res = self.user.salesforce_account.adapter_class.get_resource_in_list(
-            "Opportunity", list(self.state.keys())
-        )
-        return res
 
 
 class NoteTemplateQuerySet(models.QuerySet):
