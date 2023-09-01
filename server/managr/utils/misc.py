@@ -216,6 +216,7 @@ def decrypt_dict(encrypted_data):
     :param encrypted_data: Encrypted data as bytes
     :return: Decrypted dictionary
     """
+    encrypted_data = encrypted_data.encode("utf-8")
     secret_key = settings.SECRET_KEY
     fernet_key = generate_fernet_key(secret_key)
     cipher_suite = Fernet(fernet_key)
