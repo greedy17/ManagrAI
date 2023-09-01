@@ -2193,6 +2193,7 @@
                   <div style="width: 25%">User</div>
                   <div style="width: 15%">Integrations</div>
                   <div style="width: 10%">Days Actv</div>
+                  <div style="width: 10%">Total Usage</div>
                   <div style="width: 10%">Usage / Day</div>
                   <div style="width: 10%">N. Summs</div>
                   <div style="width: 10%">A. Summs</div>
@@ -2256,6 +2257,7 @@
                       </div>
                     </div>
                     <div style="width: 10%">{{user.days_active}}</div>
+                    <div style="width: 10%">{{getTotalUsage(user)}}</div>
                     <div style="width: 10%">{{getUsageDay(user)}}</div>
                     <div style="width: 10%">{{user.meta_data.news_summaries ? user.meta_data.news_summaries.total : 0}}</div>
                     <div style="width: 10%">{{user.meta_data.article_summaries ? user.meta_data.article_summaries.total : 0}}</div>
@@ -2681,6 +2683,15 @@ export default {
     getUserName(id) {
       const user = this.everyUser.filter((user) => user.id == id)[0]
       return user ? `${user.first_name} ${user.last_name}` : '-'
+    },
+    getTotalUsage(user) {
+      const metaData = user.meta_data
+      let count = 0
+      for (let key in metaData) {
+        count += metaData[key].total
+      }
+      count += user.searches_ref.length
+      return count
     },
     getUsageDay(user) {
       const metaData = user.meta_data
