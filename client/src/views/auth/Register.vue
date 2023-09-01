@@ -178,6 +178,9 @@ export default {
       try {
         const res = await User.api.retrieveEmail(code)
         this.registrationForm.field.email.value = res.data.email
+        this.userId = res.data.id
+        this.token = res.data.magic_token
+        console.log('res', res)
         this.organization = res.data.organization
       } catch (e) {
         this.errorValidatingEmail = true
