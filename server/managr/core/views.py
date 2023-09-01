@@ -1043,7 +1043,12 @@ class UserViewSet(
                     }
                 )
             return Response(
-                {"email": user.email, "organization": user.organization.name, "id": str(user.id)}
+                {
+                    "email": user.email,
+                    "organization": user.organization.name,
+                    "id": str(user.id),
+                    "magic_token": data.get("magic_token"),
+                }
             )
         except User.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
