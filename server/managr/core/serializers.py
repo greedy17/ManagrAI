@@ -51,6 +51,7 @@ class UserClientSerializer(serializers.ModelSerializer):
     slack_account = UserFrontEndSlackIntegrationSerializer(
         source="slack_integration", read_only=True
     )
+    activation_link_ref = serializers.SerializerMethodField("get_activation_link")
 
     class Meta:
         model = User
@@ -84,7 +85,11 @@ class UserClientSerializer(serializers.ModelSerializer):
             "is_team_lead",
             "crm",
             "meta_data",
+            "activation_link_ref",
         )
+
+    def get_activation_link(self, instance):
+        return instance.activation_link
 
 
 class MessageSerializer(serializers.ModelSerializer):
