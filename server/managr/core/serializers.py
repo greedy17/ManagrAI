@@ -20,17 +20,10 @@ from .models import (
     User,
     NylasAuthAccount,
     MeetingPrepInstance,
-    UserForecast,
     NoteTemplate,
     Message,
     Conversation,
 )
-
-
-class UserForecastSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserForecast
-        fields = ("user", "state")
 
 
 class NylasAuthAccountSerializer(serializers.ModelSerializer):
@@ -58,6 +51,7 @@ class UserClientSerializer(serializers.ModelSerializer):
     slack_account = UserFrontEndSlackIntegrationSerializer(
         source="slack_integration", read_only=True
     )
+    activation_link_ref = serializers.SerializerMethodField("get_activation_link")
 
     class Meta:
         model = User
@@ -91,7 +85,11 @@ class UserClientSerializer(serializers.ModelSerializer):
             "is_team_lead",
             "crm",
             "meta_data",
+            "activation_link_ref",
         )
+
+    def get_activation_link(self, instance):
+        return instance.activation_link
 
 
 class MessageSerializer(serializers.ModelSerializer):
@@ -237,6 +235,35 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
                 organization=org_check, user_level=core_consts.ACCOUNT_TYPE_REP, **validated_data
             )
         except Organization.DoesNotExist:
+            org = Organization.objects.create(name=org_name)
+            return User.objects.create_admin_user(organization=org, **validated_data)
+        except IntegrityError:
+            raise IntegrityError("Organization already exists")
+
+
+class UserAdminRegistrationSerializer(serializers.ModelSerializer):
+    activation_link_ref = serializers.SerializerMethodField("get_activation_link")
+
+    class Meta:
+        model = User
+        fields = (
+            "first_name",
+            "last_name",
+            "email",
+            "organization_name",
+            "role",
+        )
+        extra_kwargs = {
+            "first_name": {"required": True},
+            "last_name": {"required": True},
+        }
+
+    def get_activation_link(self, instance):
+        return instance.activation_link
+
+    def create(self, validated_data):
+        org_name = validated_data.pop("organization_name")
+        try:
             org = Organization.objects.create(name=org_name)
             return User.objects.create_admin_user(organization=org, **validated_data)
         except IntegrityError:

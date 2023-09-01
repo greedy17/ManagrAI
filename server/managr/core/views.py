@@ -7,7 +7,7 @@ import httpx
 import time
 from django.utils import timezone
 from django.core import serializers
-from managr.utils.misc import get_site_url
+from managr.utils.misc import get_site_url, decrypt_dict
 from django.shortcuts import redirect
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
@@ -60,6 +60,7 @@ from .serializers import (
     UserRegistrationSerializer,
     NoteTemplateSerializer,
     ConversationSerializer,
+    UserAdminRegistrationSerializer,
 )
 from managr.organization.models import Team
 from .permissions import IsStaff
@@ -531,7 +532,7 @@ def generate_content_transcript(request):
     instructions = request.data.get("instructions")
     user = User.objects.get(id=request.data["user_id"])
     summary = request.data.get("summary")
-    
+
     prompt = core_consts.OPEN_AI_TRANSCRIPT_GENERATE_CONTENT(
         datetime.now().date(), summary, instructions
     )
@@ -1026,29 +1027,29 @@ class UserViewSet(
     def retrieve_email(self, request, *args, **kwargs):
         """retrieve's a users email to display in field on activation"""
         params = request.query_params
-        pk = params.get("id")
-        magic_token = params.get("token")
+        code = params.get("code")
 
         try:
-            user = User.objects.get(pk=pk)
-            if str(user.magic_token) == str(magic_token) and user.is_invited:
-                if user.is_active:
-                    raise ValidationError(
-                        {
-                            "detail": [
-                                (
-                                    "It looks like you have already activate your account, click forgot password to reset it"
-                                )
-                            ]
-                        }
-                    )
-                return Response({"email": user.email, "organization": user.organization.name})
-
-            else:
-                return Response(
-                    {"non_field_errors": ("Invalid Link or Token")},
-                    status=status.HTTP_400_BAD_REQUEST,
+            data = decrypt_dict(code.encode("utf-8"))
+            user = User.objects.get(pk=data.get("id"))
+            if user.is_active:
+                raise ValidationError(
+                    {
+                        "detail": [
+                            (
+                                "It looks like you have already activate your account, click forgot password to reset it"
+                            )
+                        ]
+                    }
                 )
+            return Response(
+                {
+                    "email": user.email,
+                    "organization": user.organization.name,
+                    "id": str(user.id),
+                    "magic_token": data.get("magic_token"),
+                }
+            )
         except User.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -1162,45 +1163,6 @@ class UserViewSet(
                 "data": command_function(),
             }
         return Response(data=response_data)
-
-    @action(
-        methods=["post"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="modify-forecast",
-    )
-    def modify_forecast(self, request, *args, **kwargs):
-        from managr.opportunity.models import Opportunity
-
-        user = request.user
-        action = request.data.get("action")
-        ids = request.data.get("ids")
-        if action == "add":
-            for id in ids:
-                user.current_forecast.add_to_state(id)
-        else:
-            for id in ids:
-                user.current_forecast.remove_from_state(id)
-        return Response(status=status.HTTP_200_OK)
-
-    @action(
-        methods=["get"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="get-forecast-values",
-    )
-    def get_forecast_values(self, request, *args, **kwargs):
-        from managr.opportunity.serializers import OpportunitySerializer
-
-        user = request.user
-        res = user.current_forecast.get_current_values()
-        logger.info(f"FORECAST VALUES ENDPOINT: {res}")
-        opps = []
-        for item in res:
-            serializer = OpportunitySerializer(data=item.as_dict)
-            serializer.is_valid()
-            opps.append(serializer.data)
-        return Response(data=opps, status=status.HTTP_200_OK)
 
     @action(
         methods=["POST"],
@@ -1709,6 +1671,21 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
                     text="You've been invited to Managr!",
                     block_set=blocks,
                 )
+        return Response(response_data)
+
+    @action(
+        methods=["post"],
+        permission_classes=[IsStaff],
+        detail=False,
+        url_path="admin",
+    )
+    def invite_admin(self, request, *args, **kwargs):
+        serializer = UserAdminRegistrationSerializer(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        response_data = serializer.data
         return Response(response_data)
 
 
