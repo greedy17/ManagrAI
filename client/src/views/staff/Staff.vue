@@ -2206,7 +2206,7 @@
                   <!-- <div style="width: 25%">Total Updates</div> -->
                 </div>
                 <div style="height: 95%;">
-                  <div v-for="user in dayTrialUsers" :key="user.id" class="user-view-header-container" style="margin-bottom: 0.25rem;">
+                  <div v-for="user in sortedDayTrialUsers" :key="user.id" class="user-view-header-container" style="margin-bottom: 0.25rem;">
                     <div style="width: 25%">{{ user.email }}</div>
                     <div class="flex-row-spread" style="width: 15%">
                       <div
@@ -2389,6 +2389,7 @@ export default {
       selectedSlackForms: null,
       showOrgList: false,
       showCommandList: false,
+      sortedDayTrialUsers: [],
       filtering: false,
       teamOrUser: [{ name: 'team' }, { name: 'user' }],
       selectedTeamOrUser: null,
@@ -2667,7 +2668,6 @@ export default {
     },
     dayTrialUsers() {
       const trialUsers = this.trialUsers.filter(user => user.days_active <= this.filterByDay)
-      console.log('trialUsers', trialUsers)
       return trialUsers.sort((a, b) => a.days_active - b.days_active)
     }
   },
@@ -2679,6 +2679,9 @@ export default {
   methods: {
     test(log) {
       console.log('log', log)
+    },
+    sortDayTrialUsers() {
+      this.sortedDayTrialUsers = this.dayTrialUsers
     },
     getUserName(id) {
       const user = this.everyUser.filter((user) => user.id == id)[0]
@@ -3579,6 +3582,7 @@ export default {
         this.orgLoading = false
       }
     },
+    dayTrialUsers: ['sortDayTrialUsers']
   },
 }
 </script>
