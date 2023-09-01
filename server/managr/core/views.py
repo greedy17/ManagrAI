@@ -1042,7 +1042,9 @@ class UserViewSet(
                         ]
                     }
                 )
-            return Response({"email": user.email, "organization": user.organization.name})
+            return Response(
+                {"email": user.email, "organization": user.organization.name, "id": str(user.id)}
+            )
         except User.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
