@@ -20,17 +20,10 @@ from .models import (
     User,
     NylasAuthAccount,
     MeetingPrepInstance,
-    UserForecast,
     NoteTemplate,
     Message,
     Conversation,
 )
-
-
-class UserForecastSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserForecast
-        fields = ("user", "state")
 
 
 class NylasAuthAccountSerializer(serializers.ModelSerializer):

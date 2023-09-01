@@ -1165,45 +1165,6 @@ class UserViewSet(
         return Response(data=response_data)
 
     @action(
-        methods=["post"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="modify-forecast",
-    )
-    def modify_forecast(self, request, *args, **kwargs):
-        from managr.opportunity.models import Opportunity
-
-        user = request.user
-        action = request.data.get("action")
-        ids = request.data.get("ids")
-        if action == "add":
-            for id in ids:
-                user.current_forecast.add_to_state(id)
-        else:
-            for id in ids:
-                user.current_forecast.remove_from_state(id)
-        return Response(status=status.HTTP_200_OK)
-
-    @action(
-        methods=["get"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="get-forecast-values",
-    )
-    def get_forecast_values(self, request, *args, **kwargs):
-        from managr.opportunity.serializers import OpportunitySerializer
-
-        user = request.user
-        res = user.current_forecast.get_current_values()
-        logger.info(f"FORECAST VALUES ENDPOINT: {res}")
-        opps = []
-        for item in res:
-            serializer = OpportunitySerializer(data=item.as_dict)
-            serializer.is_valid()
-            opps.append(serializer.data)
-        return Response(data=opps, status=status.HTTP_200_OK)
-
-    @action(
         methods=["POST"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
