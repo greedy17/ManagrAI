@@ -27,7 +27,7 @@
           <div @click="goHome" class="logo">
             <img style="height: 28px" src="@/assets/images/logo.png" />
             <div class="beta-tag">
-              <p>BETA</p>
+              <p>{{isPaid ? 'PRO' : 'FREE'}}</p>
             </div>
           </div>
         </router-link>
@@ -67,6 +67,12 @@
             </button>
           </div> -->
 
+          <div
+            v-if="($route.name === 'PRSummaries' || $route.name === 'Pitches') && !isPaid"
+            class="row searches-used-text"
+          >
+            {{ searchesUsed }} / 10
+          </div>
           <div class="relative">
             <div
               v-if="$route.name === 'PRSummaries'"
@@ -331,6 +337,27 @@ export default {
     },
     isPR() {
       return this.$store.state.user.role === 'PR'
+    },
+    isPaid() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!this.$store.state.user.organizationRef.isPaid
+    },
+    searchesUsed() {
+      let arr = [];
+      let currentMonth = new Date(Date.now()).getMonth()+1
+      if (currentMonth < 10) {
+        currentMonth = `0${currentMonth}`
+      } else {
+        currentMonth = `${currentMonth}`
+      }
+      for (let key in this.$store.state.user.metaData) {
+        const item = this.$store.state.user.metaData[key]
+        const filteredByMonth = item.timestamps.filter(date => {
+          return date.split('-')[1] == currentMonth
+        })
+        arr = [...arr, ...filteredByMonth]
+      }
+      return arr.length
     },
     userIsLoggedIn() {
       return this.$store.getters.userIsLoggedIn
@@ -911,5 +938,12 @@ a:hover {
 
 .lte8 .wrapper:hover .tooltip {
   display: block;
+}
+.searches-used-text {
+  background-color: #e8f2fa;
+  padding: 0.35rem;
+  border-radius: 0.25rem;
+  color: $dark-black-blue;
+  font-size: 12px;
 }
 </style>
