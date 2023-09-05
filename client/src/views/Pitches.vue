@@ -1,5 +1,35 @@
 <template>
   <div ref="pitchTop" class="pitches">
+    <!-- paidModal -->
+    <Modal v-if="paidModal" class="paid-modal">
+      <div class="regen-container">
+        <div class="paid-header">
+          <div>
+            <h4 class="regen-header-title"></h4>
+            <p class="regen-header-subtitle"></p>
+          </div>
+          <div class="pointer" @click="closePaidModal"><small>X</small></div>
+        </div>
+        <div class="paid-body">
+          <div>
+            <div class="paid-center">
+              <h3 class="paid-title">Upgrade to Pro</h3>
+              <h5 class="regen-body-title">
+                You have your usage limit for the month. Please upgrade your plan.
+              </h5>
+            </div>
+            <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
+          </div>
+        </div>
+        <div class="paid-footer">
+          <!-- <div></div> -->
+          <div class="row">
+            <div class="cancel-button" @click="closePaidModal">Close</div>
+            <div class="save-button" @click="goToContact">Contact Us</div>
+          </div>
+        </div>
+      </div>
+    </Modal>
     <div :class="loading ? 'opaque' : 'extra-margin-top'" v-if="!pitch" class="center">
       <p v-if="!loading">Generate a pitch, blog post or press release based on any persona</p>
 
@@ -194,10 +224,13 @@
 </template>
 <script>
 import { Comms } from '@/services/comms'
+import User from '@/services/users/'
 
 export default {
   name: 'Pitches',
-  components: {},
+  components: {
+    Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
+  },
   data() {
     return {
       type: '',
@@ -207,6 +240,7 @@ export default {
       pitch: null,
       loading: false,
       regenerating: false,
+      paidModal: false,
       instructions: '',
       copyTip: 'Copy',
       textToCopy: '',
@@ -240,6 +274,15 @@ export default {
         this.$refs.pitchTop.scrollIntoView({ behavior: 'smooth' })
       }, 300)
     },
+    openPaidModal() {
+      this.paidModal = true
+    },
+    closePaidModal() {
+      this.paidModal = false
+    },
+    goToContact() {
+      window.open('https://managr.ai/contact', '_blank')
+    },
     toggleRegenerate() {
       this.regenerating = !this.regenerating
     },
@@ -266,6 +309,10 @@ export default {
       }
     },
     async generatePitch() {
+      if (!this.isPaid && this.searchesUsed >= 10) {
+        this.openPaidModal()
+        return
+      }
       this.loading = true
       try {
         await Comms.api
@@ -279,6 +326,8 @@ export default {
             console.log(response)
             this.pitch = response.pitch
             this.scrollToTop()
+          }).then((response) => {
+            this.refreshUser()
           })
       } catch (e) {
         console.log('ERROR CREATING PITCH', e)
@@ -287,6 +336,18 @@ export default {
         this.loading = false
         this.scrollToTop()
       }
+    },
+    refreshUser() {
+      User.api
+        .getUser(this.user.id)
+        .then((user) => {
+          this.$store.dispatch('updateUser', user)
+          return user
+        })
+        .catch(() => {
+          // do nothing for now
+          return null
+        })
     },
     clearData() {
       this.type = ''
@@ -302,6 +363,30 @@ export default {
     },
     remainingCharsBrief() {
       return 1000 - this.briefing.length
+    },
+    user() {
+      return this.$store.state.user
+    },
+    isPaid() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!this.$store.state.user.organizationRef.isPaid
+    },
+    searchesUsed() {
+      let arr = [];
+      let currentMonth = new Date(Date.now()).getMonth()+1
+      if (currentMonth < 10) {
+        currentMonth = `0${currentMonth}`
+      } else {
+        currentMonth = `${currentMonth}`
+      }
+      for (let key in this.$store.state.user.metaData) {
+        const item = this.$store.state.user.metaData[key]
+        const filteredByMonth = item.timestamps.filter(date => {
+          return date.split('-')[1] == currentMonth
+        })
+        arr = [...arr, ...filteredByMonth]
+      }
+      return arr.length
     },
   },
   directives: {
@@ -724,5 +809,74 @@ footer {
 .extra-margin-top {
   // margin-top: 16px;
   margin-top: 5.5rem;
+}
+.paid-modal {
+  margin-top: 132px;
+}
+.regen-container {
+  width: 500px;
+  max-height: 500px;
+  position: relative;
+  overflow-y: scroll;
+}
+.paid-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.paid-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.regen-header-title {
+  margin: 0.25rem 0;
+}
+.regen-header-subtitle {
+  font-size: 12px;
+  color: $light-gray-blue;
+  margin: 0.5rem 0;
+}
+.pointer {
+  cursor: pointer;
+}
+.paid-body {
+  margin: 0.5rem 0;
+}
+.regen-body-title {
+  margin: 0 0 0 0;
+}
+.paid-title {
+  margin-top: 0;
+  margin-bottom: 2rem;
+}
+.paid-footer {
+  position: sticky;
+  background: white;
+  width: 100%;
+  bottom: 0;
+  padding-top: 16px;
+  padding-bottom: 8px;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cancel-button {
+  @include gray-text-button();
+  &:hover {
+    scale: 1;
+    opacity: 0.7;
+    box-shadow: none;
+  }
+}
+.save-button {
+  @include dark-blue-button();
+  &:hover {
+    scale: 1;
+    opacity: 0.9;
+    box-shadow: none;
+  }
+  margin-left: 0.5rem;
 }
 </style>
