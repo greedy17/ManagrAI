@@ -41,7 +41,6 @@
         </router-link>
 
         <router-link v-if="!hasZoomIntegration" :to="{ name: 'PRIntegrations' }">
-          <!-- <p>Transcribe</p> -->
           <div class="wrapper">
             <p>Transcribe</p>
             <div style="margin-left: -20px" class="tooltip">Connect Zoom</div>
@@ -69,9 +68,10 @@
 
           <div
             v-if="($route.name === 'PRSummaries' || $route.name === 'Pitches') && !isPaid"
-            class="row searches-used-text"
+            class="row wrapper-count"
           >
-            {{ searchesUsed }} / 10
+            <p class="searches-used-text">{{ searchesUsed }} / 10</p>
+            <div style="margin-left: -20px" class="tooltip-count">Remaining credits</div>
           </div>
           <div class="relative">
             <div
@@ -937,6 +937,91 @@ a:hover {
 }
 
 .lte8 .wrapper:hover .tooltip {
+  display: block;
+}
+
+.wrapper-count {
+  display: flex;
+  align-items: center;
+  // background-color: ;
+  font-family: $thin-font-family;
+  font-size: 14px;
+  position: relative;
+  text-align: center;
+  -webkit-transform: translateZ(0); /* webkit flicker fix */
+  -webkit-font-smoothing: antialiased; /* webkit text rendering fix */
+}
+
+.wrapper-count .tooltip-count {
+  background: $dark-black-blue;
+  border-radius: 4px;
+  // bottom: 100%;
+  bottom: -100%;
+  color: #fff;
+  display: block;
+  left: -20px;
+  margin-bottom: 15px;
+  opacity: 0;
+  padding: 8px;
+  pointer-events: none;
+  position: absolute;
+  width: 125px;
+  -webkit-transform: translateY(10px);
+  -moz-transform: translateY(10px);
+  -ms-transform: translateY(10px);
+  -o-transform: translateY(10px);
+  transform: translateY(10px);
+  -webkit-transition: all 0.25s ease-out;
+  -moz-transition: all 0.25s ease-out;
+  -ms-transition: all 0.25s ease-out;
+  -o-transition: all 0.25s ease-out;
+  transition: all 0.25s ease-out;
+  -webkit-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -moz-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -ms-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -o-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+}
+
+/* This bridges the gap so you can mouse into the tooltip-count without it disappearing */
+.wrapper-count .tooltip-count:before {
+  bottom: -20px;
+  content: ' ';
+  display: block;
+  height: 20px;
+  left: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.wrapper-count .tooltip-count:after {
+  border-left: solid transparent 10px;
+  border-right: solid transparent 10px;
+  border-bottom: solid $dark-black-blue 10px;
+  bottom: 32px;
+  content: ' ';
+  height: 0;
+  left: 50%;
+  margin-left: -13px;
+  position: absolute;
+  width: 0;
+}
+
+.wrapper-count:hover .tooltip-count {
+  opacity: 1;
+  pointer-events: auto;
+  -webkit-transform: translateY(0px);
+  -moz-transform: translateY(0px);
+  -ms-transform: translateY(0px);
+  -o-transform: translateY(0px);
+  transform: translateY(0px);
+}
+
+.lte8 .wrapper-count .tooltip-count {
+  display: none;
+}
+
+.lte8 .wrapper-count:hover .tooltip-count {
   display: block;
 }
 .searches-used-text {
