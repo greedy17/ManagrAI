@@ -887,6 +887,14 @@ class NoteTemplate(TimeStampModel):
         ordering = ["datetime_created"]
 
 
+class ReportQuerySet(models.QuerySet):
+    def for_user(self, user):
+        if user.is_superuser:
+            return self.all()
+        else:
+            return self.filter(user=user.id)
+
+
 class Report(TimeStampModel):
     title = models.CharField(max_length=255)
     user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="reports")
@@ -894,6 +902,19 @@ class Report(TimeStampModel):
         upload_to=datetime_appended_filepath, max_length=255, null=True, blank=True
     )
     meta_data = JSONField()
+
+    objects = ReportQuerySet.as_manager()
+
+    def __str__(self):
+        return f"{self.title} {self.user}"
+
+    @property
+    def as_slack_option(self):
+        value = phrase_to_snake_case(self.title)
+        return block_builders.option(self.title, value)
+
+    class Meta:
+        ordering = ["datetime_created"]
 
     def generate_url(self):
         date = str(datetime.now())

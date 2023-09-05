@@ -50,7 +50,7 @@ from managr.core.utils import (
 )
 from managr.slack.helpers import requests as slack_requests, block_builders
 from .nylas.auth import get_access_token, get_account_details
-from .models import User, NylasAuthAccount, NoteTemplate, Message, Conversation
+from .models import User, NylasAuthAccount, NoteTemplate, Message, Conversation, Report
 from .serializers import (
     UserSerializer,
     UserClientSerializer,
@@ -60,6 +60,7 @@ from .serializers import (
     UserRegistrationSerializer,
     NoteTemplateSerializer,
     ConversationSerializer,
+    ReportSerializer,
 )
 from managr.organization.models import Team
 from .permissions import IsStaff
@@ -1994,3 +1995,42 @@ class ConversationViewSet(viewsets.ModelViewSet):
         queryset = Conversation.objects.filter(user=user)
 
         return queryset
+
+
+class ReportViewSet(
+    viewsets.GenericViewSet,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.ListModelMixin,
+):
+    serializer_class = ReportSerializer
+
+    def get_queryset(self):
+        return Report.objects.for_user(self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        except Exception as e:
+            logger.exception(f"Error validating data for report <{e}>")
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_201_CREATED)
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = self.request.data
+        serializer = self.serializer_class(instance=instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            instance.delete()
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_200_OK)
