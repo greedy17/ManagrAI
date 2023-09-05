@@ -409,6 +409,22 @@ class User(AbstractUser, TimeStampModel):
         return self.save()
 
     @property
+    def has_hit_summary_limit(self):
+        from managr.core.utils import day_counter
+
+        if self.organization.is_paid:
+            return False
+        else:
+            date_list = []
+            for value in self.meta_data.values():
+                date_list.extend(value["timestamps"])
+            count = day_counter(date_list)
+            if count >= 10:
+                return True
+            else:
+                return False
+
+    @property
     def has_zoom_integration(self):
         # when a user integrates we set the info once
         # when the user then removes the integration we keep the account
