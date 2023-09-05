@@ -1158,6 +1158,7 @@ export default {
           })
           .then((response) => {
             this.articleSummaries[url] = response.summary
+            this.refreshUser()
           })
       } catch (e) {
         console.log(e)
