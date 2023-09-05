@@ -70,7 +70,7 @@
             <div class="paid-center">
               <h3 class="paid-title">Upgrade to Pro</h3>
               <h5 class="regen-body-title">
-                You have your usage limit for the month. Please upgrade your plan.
+                You have reached your usage limit for the month. Please upgrade your plan.
               </h5>
             </div>
             <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
