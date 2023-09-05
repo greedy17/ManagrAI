@@ -1,7 +1,6 @@
 import calendar
 import json
-
-
+from copy import copy
 from django.conf import settings
 from django.utils import timezone
 from managr.utils.client import Variable_Client
@@ -12,6 +11,22 @@ from managr.alerts.models import AlertConfig
 from managr.slack.models import OrgCustomSlackFormInstance
 from managr.organization.models import Organization
 from managr.core import constants as core_const
+
+
+MONTH_OBJECT = {
+    "01": "31",
+    "02": "28",
+    "03": "31",
+    "04": "30",
+    "05": "31",
+    "06": "30",
+    "07": "31",
+    "08": "31",
+    "09": "30",
+    "10": "31",
+    "11": "30",
+    "12": "31",
+}
 
 
 def count_character_tokens(text):
@@ -52,20 +67,7 @@ def qsort(inlist, obj):
 
 def get_month_start_and_end(year, current_month, return_current_month_only=False):
     # create dictionary of normal month lengths
-    months = {
-        "01": "31",
-        "02": "28",
-        "03": "31",
-        "04": "30",
-        "05": "31",
-        "06": "30",
-        "07": "31",
-        "08": "31",
-        "09": "30",
-        "10": "31",
-        "11": "30",
-        "12": "31",
-    }
+    months = copy(MONTH_OBJECT)
     if calendar.isleap(year):
         months["02"] = "29"
     if return_current_month_only:
@@ -74,6 +76,15 @@ def get_month_start_and_end(year, current_month, return_current_month_only=False
         return date_arr
     date_arr = [(f"{year}-{key}-01", f"{year}-{key}-{value}") for key, value in months.items()]
     return date_arr[:current_month]
+
+
+def day_counter(date_list, month=datetime.now().month, year=datetime.now().year):
+    counter = 0
+    for date in date_list:
+        date_object = datetime.strptime(date, "%Y-%m-%d")
+        if date_object.month == month and date_object.year == year:
+            counter += 1
+    return counter
 
 
 def get_instance_averages(model_queryset, month_end):
@@ -330,7 +341,11 @@ def get_summary_completion(user, data):
     body = core_const.OPEN_AI_COMPLETIONS_BODY(user.email, summary_prompt, tokens)
     url = core_const.OPEN_AI_COMPLETIONS_URI
     with Variable_Client() as client:
-        r = client.post(url, data=json.dumps(body), headers=core_const.OPEN_AI_HEADERS,)
+        r = client.post(
+            url,
+            data=json.dumps(body),
+            headers=core_const.OPEN_AI_HEADERS,
+        )
         r = r.json()
     return r
 

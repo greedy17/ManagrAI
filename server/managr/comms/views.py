@@ -132,6 +132,8 @@ class PRSearchViewSet(
     )
     def get_summary(self, request, *args, **kwargs):
         user = request.user
+        if user.has_hit_summary_limit:
+            return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         clips = request.data.get("clips")
         search = request.data.get("search")
         instructions = request.data.get("instructions", False)
@@ -185,11 +187,13 @@ class PRSearchViewSet(
         url_path="article-summary",
     )
     def get_article_summary(self, request, *args, **kwargs):
+        user = request.user
+        if user.has_hit_summary_limit:
+            return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         url = request.data["params"]["url"]
         search = request.data["params"]["search"]
         instructions = request.data["params"]["instructions"]
         length = request.data["params"]["length"]
-        user = request.user
         has_error = False
         attempts = 1
         token_amount = 500
@@ -347,6 +351,8 @@ class PRSearchViewSet(
     )
     def get_tweet_summary(self, request, *args, **kwargs):
         user = request.user
+        if user.has_hit_summary_limit:
+            return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         tweets = request.data.get("tweets")
         search = request.data.get("search")
         instructions = request.data.get("instructions", False)
@@ -412,6 +418,8 @@ class PRSearchViewSet(
     )
     def get_pitch(self, request, *args, **kwargs):
         user = request.user
+        if user.has_hit_summary_limit:
+            return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         type = request.data.get("type")
         output = request.data.get("output")
         persona = request.data.get("persona")
