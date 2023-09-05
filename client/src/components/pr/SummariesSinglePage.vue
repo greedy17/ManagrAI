@@ -60,6 +60,7 @@
       v-if="selectedSearch && ShowReport"
       @toggle-report="toggleReport"
       @clear-clips="clearClips"
+      @remove-clip="removeClip"
       :clips="addedClips"
     />
 
@@ -757,6 +758,9 @@ export default {
   methods: {
     clearClips() {
       this.addedClips = []
+    },
+    removeClip(title) {
+      this.addedClips = this.addedClips.filter((clip) => clip.title !== title)
     },
     toggleReport() {
       this.ShowReport = !this.ShowReport

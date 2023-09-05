@@ -13,7 +13,7 @@
     <div class="container">
       <img v-if="imageUrl" :src="imageUrl" height="80px" alt="Uploaded Cover" class="cover-photo" />
 
-      <div>
+      <div class="top-padding">
         <p v-if="!imageUrl">Cover Slide</p>
         <small v-if="!imageUrl">Add a cover slide</small>
 
@@ -25,7 +25,7 @@
       </div>
     </div>
     <div class="container medium">
-      <div style="padding-bottom: 8px" class="space-between">
+      <div style="padding-bottom: 8px" class="space-between sticky-top">
         <div>
           <p>Summary</p>
           <small>AI-generated summary of the clips below</small>
@@ -51,7 +51,7 @@
     </div>
 
     <div class="container-large">
-      <div class="space-between">
+      <div class="space-between sticky-top">
         <div>
           <p>Clips</p>
           <small>Add / remove clips</small>
@@ -60,13 +60,28 @@
         <div class="counter">{{ clips.length }}/20</div>
       </div>
 
-      <div class="clip" v-for="(clip, i) in clips" :key="i">
+      <div
+        @mouseenter="setRow(i)"
+        @mouseleave="removeRow"
+        class="clip"
+        v-for="(clip, i) in clips"
+        :key="i"
+      >
         <div class="clip-header">
           <img :src="clip.urlToImage" class="clip-photo" />
           <small>{{ clip.title }}</small>
         </div>
+
+        <div v-show="currentRow === i" class="row absolute-right actions">
+          <img src="@/assets/images/sparkles-thin.svg" height="14px" />
+          <img @click="removeClip(clip)" src="@/assets/images/trash.svg" height="14px" />
+        </div>
       </div>
     </div>
+    <footer>
+      <p>test</p>
+      <button>test</button>
+    </footer>
   </div>
 </template>
 <script>
@@ -78,14 +93,25 @@ export default {
     return {
       imageUrl: null,
       summary: '',
-      searchTerm: 'Athletic wear',
+      searchTerm: '',
       loading: false,
+      currentRow: null,
     }
   },
   props: {
     clips: {},
   },
   methods: {
+    setRow(i) {
+      this.currentRow = i
+    },
+    removeRow() {
+      this.currentRow = null
+    },
+    removeClip(clip) {
+      console.log(clip)
+      this.$emit('remove-clip', clip.title)
+    },
     emitReportToggle() {
       this.$emit('toggle-report')
     },
@@ -145,7 +171,7 @@ export default {
   height: 100vh;
   overflow-y: auto;
   font-family: $thin-font-family;
-  padding: 0 16px;
+  padding: 0 8px 0 16px;
   background-color: $offer-white;
   border-left: 1px solid rgba(0, 0, 0, 0.1);
   position: fixed;
@@ -154,6 +180,23 @@ export default {
   top: 0;
   box-shadow: 30px 30px 40px;
 }
+.reports::-webkit-scrollbar {
+  width: 6px;
+  height: 0px;
+}
+
+.reports::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px;
+}
+
+.reports:hover::-webkit-scrollbar-thumb {
+  background-color: $mid-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px;
+}
+
 .report-toggle {
   width: 24px;
   height: 24px;
@@ -191,10 +234,14 @@ h3 {
   padding: 0;
 }
 
+.top-padding {
+  padding-top: 16px;
+}
+
 .container {
   border: 1px solid rgba(0, 0, 0, 0.1);
   background-color: white;
-  padding: 16px;
+  padding: 0 16px 16px 16px;
   margin: 16px 0;
   border-radius: 4px;
   height: 28vh;
@@ -216,10 +263,25 @@ h3 {
   height: 36vh;
 }
 
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  img {
+    filter: invert(30%);
+    cursor: pointer;
+  }
+
+  img:last-of-type {
+    filter: invert(60%);
+  }
+}
+
 .container-large {
   border: 1px solid rgba(0, 0, 0, 0.1);
   background-color: white;
-  padding: 16px;
+  padding: 0 16px 16px 16px;
   margin: 16px 0;
   border-radius: 4px;
   height: 70vh;
@@ -236,6 +298,13 @@ h3 {
     color: $mid-gray;
     font-size: 12px;
   }
+}
+
+.sticky-top {
+  background-color: white;
+  position: sticky;
+  top: 0;
+  padding-top: 16px;
 }
 
 .absolute {
@@ -262,6 +331,21 @@ h3 {
 
 .clip {
   margin: 16px 0;
+  position: relative;
+}
+
+.absolute-right {
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 3200;
+  padding: 8px 0 8px 8px;
+
+  img:first-of-type {
+    padding: 0;
+    margin: 0;
+    margin-right: 12px;
+  }
 }
 
 .clip-header {
@@ -368,5 +452,26 @@ input[type='file'] {
 
 .dot:nth-child(3) {
   animation-delay: -0.2s;
+}
+
+.actions {
+  background-color: white;
+}
+
+footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 3200;
+  background-color: $offer-white;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+
+  button,
+  p {
+    margin: 0;
+  }
 }
 </style>
