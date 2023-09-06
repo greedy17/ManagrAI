@@ -67,7 +67,7 @@ export default {
         this.$store.dispatch('updateSelectedArticle', article)
       }
     } else {
-      this.$router.push({ name: 'Login' })
+      // this.$router.push({ name: 'Login' })
     }
   },
 
