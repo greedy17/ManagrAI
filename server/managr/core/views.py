@@ -7,7 +7,7 @@ import httpx
 import time
 from django.utils import timezone
 from django.core import serializers
-from managr.utils.misc import get_site_url
+from managr.utils.misc import get_site_url, decrypt_dict
 from django.shortcuts import redirect
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
@@ -2034,3 +2034,20 @@ class ReportViewSet(
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.AllowAny],
+        detail=False,
+        url_path="shared",
+    )
+    def get_shared_report(self, request, *args, **kwargs):
+        encrypted_code = request.GET.get("code")
+        try:
+            decrypted_dict = decrypt_dict(encrypted_code)
+            id = decrypted_dict.get("id")
+            report = Report.objects.get(id=id)
+            serializer = self.get_serializer(report)
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
