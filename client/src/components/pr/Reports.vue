@@ -2,7 +2,7 @@
   <div class="reports">
     <header class="blur-bottom">
       <div>
-        <h3 @click="clearClips">Share</h3>
+        <h3>Share</h3>
         <small class="subtext">Preview & customize your report</small>
       </div>
 
@@ -17,7 +17,7 @@
         <p v-if="!imageUrl">Cover Slide</p>
         <small v-if="!imageUrl">Add a cover slide</small>
 
-        <input class="absolute pointer" type="file" @change="test" />
+        <input id="imageInput" class="absolute pointer" type="file" @change="test" />
 
         <svg class="absolute pointer" width="18" height="18">
           <path d="M9 9H3v1h6v6h1v-6h6V9h-6V3H9v6z" fill-rule="evenodd"></path>
@@ -54,7 +54,7 @@
       <div class="space-between sticky-top">
         <div>
           <p>Clips</p>
-          <small>Add / remove clips</small>
+          <small>View / remove clips</small>
         </div>
 
         <div class="counter">{{ clips.length }}/20</div>
@@ -79,13 +79,14 @@
       </div>
     </div>
     <footer>
-      <p>test</p>
-      <button>test</button>
+      <p @click="clearClips">test</p>
+      <button @click="createReport">test</button>
     </footer>
   </div>
 </template>
 <script>
 import { Comms } from '@/services/comms'
+import User from '@/services/users'
 
 export default {
   name: 'Reports',
@@ -93,15 +94,51 @@ export default {
     return {
       imageUrl: null,
       summary: '',
-      searchTerm: '',
+      searchTerm: 'Anime',
       loading: false,
       currentRow: null,
+      imageFile: null,
     }
   },
   props: {
     clips: {},
   },
   methods: {
+    // async getReports() {
+    //   try {
+    //     await User.api.getReports({ user: this.$store.state.user.id }).then((response) => {
+    //       console.log(response)
+    //     })
+    //   } catch (e) {
+    //     console.log(e)
+    //   }
+    // },
+    async createReport() {
+      let formData = new FormData()
+      formData.append('title', 'JJ Kaisen')
+      let imageFile = document.querySelector('#imageInput').files[0]
+      if (imageFile) {
+        formData.append('main_image', imageFile)
+        console.log('Has main_image?', formData.has('main_image'))
+      } else {
+        console.log('No image file selected')
+      }
+      formData.append('user', this.$store.state.user.id)
+      formData.append(
+        'meta_data',
+        JSON.stringify({
+          clips: this.clips,
+          summary: this.summary,
+        }),
+      )
+      try {
+        await User.api.createReport(formData).then((response) => {
+          console.log(response)
+        })
+      } catch (e) {
+        console.log(e)
+      }
+    },
     setRow(i) {
       this.currentRow = i
     },
@@ -117,6 +154,8 @@ export default {
     },
     test(event) {
       const file = event.target.files[0]
+      this.imageFile = file
+      console.log('IMAGE FILE', this.imageFile)
       this.createImage(file)
     },
     createImage(file) {
@@ -217,7 +256,7 @@ export default {
 header {
   position: sticky;
   top: 0;
-  z-index: 3100;
+  z-index: 3300;
   background-color: $offer-white;
   display: flex;
   flex-direction: row;
@@ -305,6 +344,7 @@ h3 {
   position: sticky;
   top: 0;
   padding-top: 16px;
+  z-index: 3200;
 }
 
 .absolute {

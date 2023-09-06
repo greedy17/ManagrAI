@@ -358,6 +358,7 @@ urlpatterns = [
     path("shared/<str:encrypted_param>", comms_views.get_shared_summary, "shared"),
 ]
 
+router.register("users/reports", core_views.ReportViewSet, "reports"),
 router.register("users/conversations", core_views.ConversationViewSet, "conversations"),
 router.register("users/invite", core_views.UserInvitationView, "invite-user")
 router.register("users", core_views.UserViewSet, "users")
