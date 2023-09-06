@@ -3593,7 +3593,7 @@ export default {
 @import '@/styles/modals';
 
 .staff {
-  margin-top: 3rem;
+  margin-top: 6rem;
   display: flex;
   flex-direction: column;
   height: 100vh;
