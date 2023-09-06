@@ -49,14 +49,25 @@
           <h3>Your link:</h3>
           <div>
             <p class="small-text">{{ activationLink }}</p>
-            <button
-              class="primary-button extra-margin-top"
-              @click="copyText"
-              :loading="loading"
-              :disabled="!activationLink || loading"
-            >
-              <img src="@/assets/images/link.svg" height="12px" alt="" /> {{ copyTip }}
-            </button>
+            <div class="display-flex">
+              <button
+                class="primary-button extra-margin-top"
+                @click="copyText"
+                :loading="loading"
+                :disabled="!activationLink || loading"
+              >
+                <img src="@/assets/images/link.svg" height="12px" alt="" /> {{ copyTip }}
+              </button>
+              <button
+                class="secondary-button extra-margin-top mar-left"
+                @click="clearInvite"
+                :loading="loading"
+                :disabled="!activationLink || loading"
+              >
+                <!-- <img src="@/assets/images/trash.svg" height="12px" alt="" />  -->
+                Clear
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -279,6 +290,10 @@ export default {
       // this.inviteOpen = false
       // this.profileModalOpen = true
     },
+    clearInvite() {
+      this.activationLink = ''
+      this.disableInput = false
+    },
     resetData() {
       this.userInviteForm.field.organization.value = this.user.organization
       this.selectedMember = null
@@ -388,6 +403,7 @@ export default {
         })
         await this.noSlackRefresh()
         this.resetData()
+        this.disableInput = true
       } catch (e) {
         if (e.response.status === 426) {
           this.$toast('Max users reached, upgrade to add more', {
@@ -407,7 +423,6 @@ export default {
           })
         }
       } finally {
-        this.disableInput = true
         setTimeout(() => {
           this.loading = false
         }, 500)
@@ -519,6 +534,17 @@ export default {
   padding: 11px 12px;
   font-size: 13px;
   border: none;
+  img {
+    filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
+    margin-right: 8px;
+  }
+}
+
+.secondary-button {
+  @include dark-blue-border-button();
+  padding: 11px 12px;
+  font-size: 13px;
+  border: 1px solid $soft-gray;
   img {
     filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
     margin-right: 8px;
@@ -720,7 +746,13 @@ h3 {
 .lte8 .wrapper:hover .tooltip {
   display: block;
 }
+.mar-left {
+  margin-left: 1rem;
+}
 .extra-mar-left {
   margin-left: 3.5rem;
+}
+.display-flex {
+  display: flex;
 }
 </style>
