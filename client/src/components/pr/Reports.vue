@@ -3,11 +3,11 @@
     <header class="blur-bottom">
       <div>
         <h3>Share</h3>
-        <small class="subtext">Preview & customize your report</small>
+        <small class="subtext">Customize & preview your report</small>
       </div>
 
       <div @click="emitReportToggle" class="report-toggle">
-        <img src="@/assets/images/share.svg" height="10px" alt="" />
+        <img src="@/assets/images/close.svg" height="14px" alt="" />
       </div>
     </header>
     <div class="container">
@@ -31,7 +31,7 @@
           <small>AI-generated summary of the clips below</small>
         </div>
 
-        <button @click="getSummary" :disabled="!clips.length || loading" class="primary-button">
+        <button @click="getSummary" :disabled="!clips.length || loading" class="secondary-button">
           Generate
         </button>
       </div>
@@ -54,7 +54,7 @@
       <div class="space-between sticky-top">
         <div>
           <p>Clips</p>
-          <small>View / remove clips</small>
+          <small>Clips included in your report</small>
         </div>
 
         <div class="counter">{{ clips.length }}/20</div>
@@ -64,6 +64,7 @@
         @mouseenter="setRow(i)"
         @mouseleave="removeRow"
         class="clip"
+        :class="{ 'blue-bg': clip.summary }"
         v-for="(clip, i) in clips"
         :key="i"
       >
@@ -72,15 +73,41 @@
           <small>{{ clip.title }}</small>
         </div>
 
-        <div v-show="currentRow === i" class="row absolute-right actions">
-          <img src="@/assets/images/sparkles-thin.svg" height="14px" />
-          <img @click="removeClip(clip)" src="@/assets/images/trash.svg" height="14px" />
+        <div v-if="clip.summary" class="summary-box">
+          <pre v-html="clip.summary" class="pre-text-small"></pre>
+        </div>
+
+        <div
+          :class="{ 'blue-bg': clip.summary }"
+          v-show="currentRow === i || loadingUrl === clip.url"
+          class="row absolute-right actions"
+        >
+          <button
+            @click="getArticleSummary(clip.title, clip.url)"
+            style="margin-right: 8px; padding: 6px"
+            class="secondary-button blue"
+            v-if="!clip.summary"
+          >
+            <img v-if="!summaryLoading" src="@/assets/images/sparkles-thin.svg" height="12px" />
+            <img v-else class="rotate" height="12px" src="@/assets/images/loading.svg" alt="" />
+          </button>
+          <button v-else style="margin-right: 8px; padding: 6px" class="secondary-button blue">
+            <img src="@/assets/images/expand-arrows.svg" height="12px" />
+          </button>
+          <button @click="removeClip(clip)" style="padding: 6px" class="secondary-button danger">
+            <img src="@/assets/images/trash.svg" height="12px" />
+          </button>
         </div>
       </div>
     </div>
     <footer>
-      <p @click="clearClips">test</p>
-      <button @click="createReport">test</button>
+      <p></p>
+      <div class="row">
+        <button class="secondary-button" @click="clearClips">Clear</button>
+        <button style="margin-left: 16px" class="primary-button" @click="createReport">
+          Preview
+        </button>
+      </div>
     </footer>
   </div>
 </template>
@@ -98,6 +125,8 @@ export default {
       loading: false,
       currentRow: null,
       imageFile: null,
+      summaryLoading: false,
+      loadingUrl: null,
     }
   },
   props: {
@@ -113,15 +142,33 @@ export default {
     //     console.log(e)
     //   }
     // },
+    async getArticleSummary(title, url, instructions = null, length = 500) {
+      this.summaryLoading = true
+      this.loadingUrl = url
+      try {
+        await Comms.api
+          .getArticleSummary({
+            url: url,
+            search: '',
+            instructions: instructions,
+            length: length,
+          })
+          .then((response) => {
+            this.$emit('edit-clip', title, response.summary)
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.summaryLoading = false
+        this.loadingUrl = null
+      }
+    },
     async createReport() {
       let formData = new FormData()
       formData.append('title', 'JJ Kaisen')
       let imageFile = document.querySelector('#imageInput').files[0]
       if (imageFile) {
         formData.append('main_image', imageFile)
-        console.log('Has main_image?', formData.has('main_image'))
-      } else {
-        console.log('No image file selected')
       }
       formData.append('user', this.$store.state.user.id)
       formData.append(
@@ -148,6 +195,13 @@ export default {
     removeClip(clip) {
       console.log(clip)
       this.$emit('remove-clip', clip.title)
+    },
+    summarizeClip(clip) {
+      this.$emit(
+        'edit-clip',
+        clip.title,
+        'This is a test not the real summary. Lorem ipsum placeholder text i need to test the elippsis for longer summaries. Wondering if users should be able to regenerate here as well or if that would be too much ?',
+      )
     },
     emitReportToggle() {
       this.$emit('toggle-report')
@@ -240,14 +294,15 @@ export default {
   width: 24px;
   height: 24px;
   border-radius: 100%;
-  background-color: $dark-black-blue;
+  background-color: $white-blue;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
 
   img {
-    filter: invert(99%);
+    filter: brightness(0) invert(48%) sepia(33%) saturate(348%) hue-rotate(161deg) brightness(91%)
+      contrast(90%);
     margin: 0;
     padding: 0;
   }
@@ -307,8 +362,8 @@ h3 {
   flex-direction: row;
   align-items: center;
 
-  img {
-    filter: invert(30%);
+  img:last-of-type {
+    filter: invert(40%);
     cursor: pointer;
   }
 
@@ -344,7 +399,7 @@ h3 {
   position: sticky;
   top: 0;
   padding-top: 16px;
-  z-index: 3200;
+  z-index: 3250;
 }
 
 .absolute {
@@ -371,6 +426,8 @@ h3 {
 
 .clip {
   margin: 16px 0;
+  padding: 4px 0;
+  border-radius: 4px;
   position: relative;
 }
 
@@ -379,12 +436,11 @@ h3 {
   right: 0;
   top: 0;
   z-index: 3200;
-  padding: 8px 0 8px 8px;
+  padding: 8px;
 
   img:first-of-type {
     padding: 0;
     margin: 0;
-    margin-right: 12px;
   }
 }
 
@@ -394,6 +450,10 @@ h3 {
   align-items: flex-start;
   small {
     color: $dark-black-blue !important;
+  }
+
+  &:hover {
+    opacity: 0.7;
   }
 }
 
@@ -430,6 +490,19 @@ h3 {
   }
 }
 
+.secondary-button {
+  @include dark-blue-button();
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: $dark-black-blue;
+  background-color: white;
+  padding: 8px 12px;
+  img {
+    filter: invert(25%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
+    margin: 0;
+    padding: 0;
+  }
+}
+
 input[type='file'] {
   opacity: 0;
   z-index: 3050;
@@ -442,6 +515,19 @@ input[type='file'] {
   line-height: 32px;
   word-wrap: break-word;
   white-space: pre-wrap;
+  padding: 0;
+}
+
+.pre-text-small {
+  color: $mid-gray;
+  font-family: $thin-font-family;
+  font-size: 12px;
+  line-height: 32px;
+  width: 450px;
+  word-wrap: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   padding: 0;
 }
 
@@ -501,7 +587,7 @@ input[type='file'] {
 footer {
   position: sticky;
   bottom: 0;
-  z-index: 3200;
+  z-index: 3250;
   background-color: $offer-white;
   display: flex;
   flex-direction: row;
@@ -513,5 +599,65 @@ footer {
   p {
     margin: 0;
   }
+}
+
+.blue {
+  &:hover {
+    box-shadow: none;
+    border: 0.7px solid $dark-black-blue;
+    transform: scale(1);
+    img {
+      filter: invert(25%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%)
+        contrast(90%);
+    }
+  }
+}
+
+.danger {
+  box-shadow: none !important;
+  &:hover {
+    border: 1px solid $coral;
+    transform: scale(1);
+    img {
+      filter: invert(51%) sepia(74%) saturate(2430%) hue-rotate(320deg) brightness(104%)
+        contrast(121%);
+    }
+  }
+}
+
+.blue-bg {
+  background-color: $white-blue;
+  padding-left: 4px;
+}
+.summary-box {
+  height: 30px;
+  width: 425px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  p {
+    margin: 0;
+    padding: 0;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: $mid-gray;
+  }
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
+}
+
+.rotate {
+  animation: rotation 2.25s infinite linear;
+  cursor: not-allowed;
 }
 </style>

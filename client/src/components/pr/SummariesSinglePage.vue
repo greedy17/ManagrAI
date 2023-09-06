@@ -61,6 +61,7 @@
       @toggle-report="toggleReport"
       @clear-clips="clearClips"
       @remove-clip="removeClip"
+      @edit-clip="editClip"
       :clips="addedClips"
     />
 
@@ -777,6 +778,12 @@ export default {
     },
     addClip(clip) {
       this.addedClips.push(clip)
+    },
+    editClip(title, summary) {
+      let clip = this.addedClips.filter((clip) => clip.title === title)[0]
+      clip['summary'] = summary
+      this.addedClips = this.addedClips.filter((clip) => clip.title !== title)
+      this.addedClips.unshift(clip)
     },
     soonButtonText() {
       this.buttonText = 'Coming Soon!'
