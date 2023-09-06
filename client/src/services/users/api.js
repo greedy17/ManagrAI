@@ -53,6 +53,7 @@ const ADD_MESSAGE = 'users/chat/add-message/'
 const EDIT_MESSAGE = 'users/chat/edit-message/'
 const DELETE_MESSAGES = 'users/chat/delete-messages/'
 const CONVERSATIONS = 'users/conversations/'
+const REPORTS = 'users/reports/'
 
 export default class UserAPI {
   get client() {
@@ -75,6 +76,24 @@ export default class UserAPI {
    **/
   static create(cls) {
     return new UserAPI(cls)
+  }
+
+  async getReports(user) {
+    try {
+      const response = await this.client.get(REPORTS, { params: user })
+      return response.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'UsersAPI.getAllOrgUsers' })
+    }
+  }
+
+  async createReport(data) {
+    try {
+      const response = await this.client.post(REPORTS, data)
+      return response.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'UsersAPI.createReports' })
+    }
   }
 
   async getConversations(user_id) {
@@ -650,7 +669,7 @@ export default class UserAPI {
     try {
       const res = await this.client.get(ADMIN_SEARCHES_ENDPOINT)
       return res.data
-    } catch(e) {
+    } catch (e) {
       apiErrorHandler({ apiName: 'User.getAdminSearches' })
     }
   }
@@ -658,7 +677,7 @@ export default class UserAPI {
     try {
       const res = await this.client.get(TWITTER_AUTHORIZATION)
       return res.data
-    } catch(e) {
+    } catch (e) {
       apiErrorHandler({ apiName: 'User.getTwitterAuthorization' })
     }
   }
@@ -666,7 +685,7 @@ export default class UserAPI {
     try {
       const res = await this.client.post(TWITTER_AUTHENTICATION, data)
       return res.data
-    } catch(e) {
+    } catch (e) {
       apiErrorHandler({ apiName: 'User.getTwiiterAuthentication' })
     }
   }

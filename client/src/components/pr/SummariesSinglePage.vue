@@ -110,7 +110,7 @@
 
       <div class="no-content" v-if="!selectedSearch">
         <div class="title-row">
-          <div class="row" v-if="!newSearch">
+          <div @click="getReports" class="row" v-if="!newSearch">
             <p class="typed">
               {{
                 mainView === 'social'
@@ -645,6 +645,7 @@
 import ChatTextBox from '../Chat/ChatTextBox.vue'
 import Reports from '../pr/Reports.vue'
 import { Comms } from '@/services/comms'
+import User from '@/services/users'
 
 export default {
   name: 'SummariesSinglePage',
@@ -756,6 +757,15 @@ export default {
     // this.updateMessage()
   },
   methods: {
+    async getReports() {
+      try {
+        await User.api.getReports({ user: this.$store.state.user.id }).then((response) => {
+          console.log(response)
+        })
+      } catch (e) {
+        console.log(e)
+      }
+    },
     clearClips() {
       this.addedClips = []
     },
