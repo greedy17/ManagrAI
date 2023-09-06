@@ -404,6 +404,12 @@ class UserTrialSerializer(serializers.ModelSerializer):
 
 
 class ReportSerializer(serializers.ModelSerializer):
+    share_url = serializers.SerializerMethodField("get_share_url")
+
     class Meta:
         model = Report
-        fields = ("title", "user", "main_image", "meta_data")
+        fields = ("title", "user", "main_image", "meta_data", "share_url")
+
+    def get_share_url(self, instance):
+        url = instance.generate_url()
+        return url
