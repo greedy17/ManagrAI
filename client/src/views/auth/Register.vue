@@ -137,7 +137,6 @@ export default {
     // this.userId = this.$route.params.userId
     // this.token = this.$route.params.magicToken
     this.code = this.$route.params.code
-    console.log('route', this.$route)
     await this.retrieveEmail(this.code)
     this.timezones = this.timezones.map((tz) => {
       return { key: tz, value: tz }
@@ -180,7 +179,6 @@ export default {
         this.registrationForm.field.email.value = res.data.email
         this.userId = res.data.id
         this.token = res.data.magic_token
-        console.log('res', res)
         this.organization = res.data.organization
       } catch (e) {
         this.errorValidatingEmail = true

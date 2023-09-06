@@ -223,8 +223,8 @@ export default {
     this.selectRole(this.userRole)
   },
   methods: {
-    test() {
-      console.log(this.registrationForm.field.timezone.value)
+    test(log) {
+      console.log('log', log)
     },
     async onGetAuthLink(integration) {
       this.generatingToken = true
@@ -249,8 +249,6 @@ export default {
       this.registrationForm.field.timezone.value = n.value
     },
     selectRole(n) {
-      console.log('userRole', this.userRole)
-      console.log('n', n)
       this.registrationForm.field.role.value = n.key
     },
     async onSubmit() {
