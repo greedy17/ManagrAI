@@ -938,7 +938,7 @@ export default {
             url: this.additionalSources,
             search: this.newSearch,
             instructions: this.newTemplate || null,
-            length: 1000,
+            length: 1500,
           })
           .then((response) => {
             this.summary = response.summary
@@ -1145,7 +1145,7 @@ export default {
         this.scrollToTop()
       }
     },
-    async getArticleSummary(url, instructions = null, length = 500) {
+    async getArticleSummary(url, instructions = null, length = 1000) {
       this.articleSummaryLoading = true
       this.loadingUrl = url
       try {

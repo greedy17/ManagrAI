@@ -2136,6 +2136,34 @@
             </h5>
           </div>
         </template>
+        <template v-else-if="page === 'StaffInvite'">
+          <div>
+            <span>Email: </span> <input />
+          </div>
+          <div>
+            <span>Org Name: </span> <input />
+          </div>
+          <div>
+            <span>Is Paid?: </span> <input type="checkbox" />
+          </div>
+          <div>
+            <span>Product: </span> 
+            <Multiselect
+              placeholder="Select Product"
+              style="max-width: 18vw; margin-bottom: 1rem; margin-top: 1rem"
+              v-model="inviteRole"
+              :options="[{name: 'PR'}, {name: 'Sales'}]"
+              openDirection="below"
+              selectLabel="Enter"
+              track-by="name"
+              label="name"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+            </Multiselect>
+          </div>
+        </template>
         <template v-else>
           <div class="" style="margin-top: 1rem;">
             <div style="display: flex; flex-direction: row; justify-content: flex-start; height: 41vh; width: 100%;">
@@ -2161,6 +2189,7 @@
                   </Multiselect>
                   <button @click="deactivateOrg" class="green_button" style="height: 2rem; margin-left: 1rem;">Deactivate</button>
                 </div>
+                <div @click="goToStaffInvite">Invite Admin</div>
               </div>
               <div class="added-collection padding" style="display: flex; flex-direction: row; width: 55vw; height: 39vh; align-items: center;">
                 <apexchart ref="chartRef" :type="chartOptions.chart.type" :series="series" :options="chartOptions" style="width: 32vw;" />
@@ -3203,6 +3232,9 @@ export default {
     closeListSelect() {
       this.showOrgList = false
       this.showCommandList = false
+    },
+    goToStaffInvite() {
+      this.page = 'StaffInvite'
     },
     goToTeamManager() {
       // this.old_selected_org = this.selected_org
