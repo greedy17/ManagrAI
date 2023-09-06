@@ -197,9 +197,22 @@ export default {
     },
     async onSubmit() {
       this.registrationForm.validate()
+      if (
+        this.registrationForm.field.password.value !==
+        this.registrationForm.field.confirmPassword.value
+      ) {
+        this.$toast('Please make sure password match.', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        return
+      }
       // Do not continue if the form has errors
       if (!this.registrationForm.isValid) {
-        this.$toast('Please complete all fields', {
+        this.$toast(this.registrationForm.errors[0].errors[0].message, {
           timeout: 2000,
           position: 'top-left',
           type: 'error',

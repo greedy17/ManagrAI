@@ -271,7 +271,7 @@ export default {
       }
 
       if (!this.registrationForm.isValid) {
-        this.$toast('Please complete all fields.', {
+        this.$toast(this.registrationForm.errors[0].errors[0].message, {
           timeout: 2000,
           position: 'top-left',
           type: 'error',
