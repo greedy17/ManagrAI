@@ -139,7 +139,7 @@ class PRSearchViewSet(
         instructions = request.data.get("instructions", False)
         has_error = False
         attempts = 1
-        token_amount = 500
+        token_amount = 1000
         timeout = 60.0
         while True:
             try:
@@ -196,7 +196,7 @@ class PRSearchViewSet(
         length = request.data["params"]["length"]
         has_error = False
         attempts = 1
-        token_amount = 500
+        token_amount = 1000
         timeout = 60.0
         while True:
             try:
@@ -358,7 +358,7 @@ class PRSearchViewSet(
         instructions = request.data.get("instructions", False)
         has_error = False
         attempts = 1
-        token_amount = 500
+        token_amount = 1000
         timeout = 60.0
         while True:
             try:
