@@ -284,6 +284,8 @@ class User(AbstractUser, TimeStampModel):
         data = {"created_at": date, "id": str(self.id), "magic_token": str(self.magic_token)}
         encrypted_data = encrypt_dict(data)
         base_url = get_site_url()
+        if self.is_admin:
+            return f"{base_url}/admin-registration/{encrypted_data}"
         return f"{base_url}/activation/{encrypted_data}"
 
     @property
