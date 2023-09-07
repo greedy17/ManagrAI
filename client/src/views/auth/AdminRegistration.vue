@@ -223,8 +223,8 @@ export default {
     this.selectRole(this.userRole)
   },
   methods: {
-    test() {
-      console.log(this.registrationForm.field.timezone.value)
+    test(log) {
+      console.log('log', log)
     },
     async onGetAuthLink(integration) {
       this.generatingToken = true
@@ -249,8 +249,6 @@ export default {
       this.registrationForm.field.timezone.value = n.value
     },
     selectRole(n) {
-      console.log('userRole', this.userRole)
-      console.log('n', n)
       this.registrationForm.field.role.value = n.key
     },
     async onSubmit() {
@@ -271,7 +269,7 @@ export default {
       }
 
       if (!this.registrationForm.isValid) {
-        this.$toast('Please complete all fields.', {
+        this.$toast(this.registrationForm.errors[0].errors[0].message, {
           timeout: 2000,
           position: 'top-left',
           type: 'error',
