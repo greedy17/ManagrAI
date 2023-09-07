@@ -7,7 +7,7 @@ from rest_framework import (
     viewsets,
 )
 from datetime import datetime, timedelta
-from newspaper import Article
+from newspaper import Article, ArticleException
 from managr.api.models import ExpiringTokenAuthentication
 from rest_framework.response import Response
 from rest_framework import (
@@ -247,6 +247,11 @@ class PRSearchViewSet(
                 else:
                     attempts += 1
                     continue
+            except ArticleException:
+                return Response(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    data={"error": "We could not access that url"},
+                )
             except Exception as e:
                 has_error = True
                 message = f"Unknown exception: {e}"
