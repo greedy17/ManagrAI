@@ -114,6 +114,7 @@ class PRSearchViewSet(
                     news_res = Search.get_clips(boolean)
                     articles = news_res["articles"]
                     query_input = boolean
+                articles = [article for article in articles if article["title"] != "[Removed]"]
                 break
             except Exception as e:
                 has_error = True
