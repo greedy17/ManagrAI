@@ -31,7 +31,7 @@
       </div>
     </Modal>
     <div :class="loading ? 'opaque' : 'extra-margin-top'" v-if="!pitch" class="center">
-      <p v-if="!loading">Generate a pitch, blog post or press release based on any persona</p>
+      <p v-if="!loading">Generate a pitch, blog post or press release based on any persona.</p>
 
       <div class="centered blue-bg" v-else>
         <div style="width: 675px" class="row">
@@ -46,63 +46,8 @@
           </div>
         </div>
       </div>
-
-      <div class="input-container">
-        <div class="input-row">
-          <div class="main-text">
-            <img src="@/assets/images/document.svg" height="14px" alt="" />
-            Type
-          </div>
-
-          <input
-            :disabled="loading"
-            autofocus
-            class="area-input"
-            placeholder="Media Pitch, Blog Post, Press Release..."
-            v-model="type"
-          />
-        </div>
-      </div>
-
-      <div class="input-container">
-        <div class="input-row">
-          <div class="main-text">
-            <img src="@/assets/images/target.svg" height="14px" alt="" />
-            Audience
-          </div>
-
-          <input
-            :disabled="loading"
-            class="area-input"
-            placeholder="Millenial tech enthusiast with a passion for healthcare..."
-            v-model="persona"
-          />
-        </div>
-      </div>
-
-      <div class="input-container">
-        <div class="input-row relative">
-          <div class="main-text">
-            <img src="@/assets/images/file-word.svg" height="14px" alt="" />
-            Briefing
-          </div>
-
-          <textarea
-            :disabled="loading"
-            maxlength="1000"
-            class="area-input"
-            placeholder="FutureTech Innovations is launching a cutting-edge smartwatch that not only measures vital signs but also predicts flu symptoms 48 hours in advance, using AI and biometric data…"
-            v-model="briefing"
-            v-autoresize
-          />
-
-          <div class="absolute-count">
-            <small>{{ remainingCharsBrief }}</small>
-          </div>
-        </div>
-      </div>
-
-      <div class="input-container">
+      
+      <div class="input-container" v-clickOutsideInstructionsMenu>
         <div class="input-row relative">
           <div class="main-text">
             <img src="@/assets/images/wand.svg" height="14px" alt="" />
@@ -112,14 +57,134 @@
           <textarea
             :disabled="loading"
             maxlength="1000"
-            class="area-input"
-            placeholder="Write a concise, engaging press release, highlighting the uniqueness of the product and its benefits to the target audience…"
+            class="area-input text-area-input"
+            :placeholder="instructionsPlaceholder"
             v-model="output"
             v-autoresize
+            @focus="showInstructionsDropdown($event)"
           />
 
           <div class="absolute-count">
             <small>{{ remainingChars }}</small>
+          </div>
+        </div>
+        <div v-if="showingInstructionsDropdown" class="dropdown">
+          <small style="padding-top: 8px" class="gray-text">Example Instructions</small>
+          <div
+            @click="addInstructionsSuggestion(suggestion)"
+            class="dropdown-item"
+            v-for="(suggestion, i) in filteredInstructionsSuggestions"
+            :key="i"
+          >
+            <p>
+              {{ suggestion }}
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <div
+        class="divider"
+      >
+        <p class="divider-text">
+          {{
+            'Optional'
+          }}
+        </p>
+      </div>
+
+      <div class="input-container mar-top" v-clickOutsideTypeMenu>
+        <div class="input-row">
+          <div class="main-text">
+            <img src="@/assets/images/document.svg" height="14px" alt="" />
+            Type
+          </div>
+
+          <input
+            :disabled="loading"
+            class="area-input"
+            placeholder="Optional"
+            v-model="type"
+            @focus="showTypeDropdown"
+          />
+        </div>
+        <div v-if="showingTypeDropdown" class="dropdown">
+          <small style="padding-top: 8px" class="gray-text">Example Type</small>
+          <div
+            @click="addTypeSuggestion(suggestion)"
+            class="dropdown-item"
+            v-for="(suggestion, i) in filteredTypeSuggestions"
+            :key="i"
+          >
+            <p>
+              {{ suggestion }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-container" v-clickOutsideAudienceMenu>
+        <div class="input-row">
+          <div class="main-text">
+            <img src="@/assets/images/target.svg" height="14px" alt="" />
+            Audience
+          </div>
+
+          <input
+            :disabled="loading"
+            class="area-input"
+            placeholder="Optional"
+            v-model="persona"
+            @focus="showAudienceDropdown"
+          />
+        </div>
+        <div v-if="showingAudienceDropdown" class="dropdown">
+          <small style="padding-top: 8px" class="gray-text">Example Audience</small>
+          <div
+            @click="addAudienceSuggestion(suggestion)"
+            class="dropdown-item"
+            v-for="(suggestion, i) in filteredAudienceSuggestions"
+            :key="i"
+          >
+            <p>
+              {{ suggestion }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-container" v-clickOutsideBriefingMenu>
+        <div class="input-row relative">
+          <div class="main-text">
+            <img src="@/assets/images/file-word.svg" height="14px" alt="" />
+            Content
+          </div>
+
+          <textarea
+            :disabled="loading"
+            maxlength="1000"
+            class="area-input text-area-input"
+            :placeholder="optionalPlaceholder"
+            v-model="briefing"
+            v-autoresize
+            @focus="showBriefingDropdown($event)"
+          />
+
+          <div class="absolute-count">
+            <small>{{ remainingCharsBrief }}</small>
+          </div>
+        </div>
+        <div v-if="showingBriefingDropdown" class="dropdown">
+          <small style="padding-top: 8px" class="gray-text">Example Content</small>
+          <div
+            @click="addBriefingSuggestion(suggestion)"
+            class="dropdown-item"
+            v-for="(suggestion, i) in filteredBriefingSuggestions"
+            :key="i"
+          >
+            <p>
+              {{ suggestion }}
+            </p>
           </div>
         </div>
       </div>
@@ -241,6 +306,43 @@ export default {
       loading: false,
       regenerating: false,
       paidModal: false,
+      showingTypeDropdown: false,
+      showingAudienceDropdown: false,
+      showingBriefingDropdown: false,
+      showingInstructionsDropdown: false,
+      storedEvent: null,
+      storedPlaceholder: '',
+      optionalPlaceholder: 'Optional',
+      instructionsPlaceholder: 'What would you like written?',
+      typeSuggestions: [
+        `Press Release`,
+        `Media Pitch`,
+        `Blog Post`,
+        `LinkedIn Post`,
+        `Twitter Post`,
+        `Email`,
+      ],
+      audienceSuggestions: [
+        `Millenial moms`,
+        `Vegans`,
+        `College students`,
+        `Local writers in Georgia`,
+        `Gen Z`,
+        `Health and wellness enthusiast`,
+      ],
+      briefingSuggestions: [
+        `XXX is launching a ...`,
+        `XXX's professor, an expert in ...`,
+        `Call summary: XXX ...`,
+        `Email exchange: XXX ...`,
+      ],
+      instructionsSuggestions: [
+        `A concise blog post targeting millennial moms about ... Mirror this writing style: {insert paragraph of your writing}`,
+        `Media pitch, concise, on behalf of XXX, tailored to a tech beat writer at the NYTs about XXX ...`,
+        `Press release, highly persuasive about the launch of XXX's new product ...`,
+        `An entertaining tweet about XXX catered to Gen X ...`,
+        `A short, casual, direct follow up email to Susan, the VP of Marketing at XXX ...`,
+      ],
       instructions: '',
       copyTip: 'Copy',
       textToCopy: '',
@@ -268,6 +370,61 @@ export default {
       this.persona = ''
       this.briefing = ''
       this.instructions = ''
+    },
+    showTypeDropdown() {
+      this.showingTypeDropdown = true
+    },
+    hideTypeDropdown() {
+      this.showingTypeDropdown = false
+    },
+    showAudienceDropdown() {
+      this.showingAudienceDropdown = true
+    },
+    hideAudienceDropdown() {
+      this.showingAudienceDropdown = false
+    },
+    showBriefingDropdown(e) {
+      // this.storedEvent = e
+      // this.storedPlaceholder = e.target.placeholder
+      // e.target.placeholder = ''
+      this.optionalPlaceholder = ''
+      this.showingBriefingDropdown = true
+    },
+    hideBriefingDropdown() {
+      this.optionalPlaceholder = 'Optional'
+      // this.storedEvent.target.placeholder = this.storedPlaceholder
+      // this.storedPlaceholder = ''
+      this.showingBriefingDropdown = false
+    },
+    showInstructionsDropdown(e) {
+      // this.storedEvent = e
+      // this.storedPlaceholder = e.target.placeholder
+      // e.target.placeholder = ''
+      this.instructionsPlaceholder = ''
+      this.showingInstructionsDropdown = true
+      console.log(1)
+    },
+    hideInstructionsDropdown() {
+      // this.storedEvent.target.placeholder = this.storedPlaceholder
+      // this.storedPlaceholder = ''
+      this.instructionsPlaceholder = 'What would you like written?'
+      this.showingInstructionsDropdown = false
+    },
+    addTypeSuggestion(ex) {
+      this.type = ex
+      this.hideTypeDropdown()
+    },
+    addAudienceSuggestion(ex) {
+      this.persona = ex
+      this.hideAudienceDropdown()
+    },
+    addBriefingSuggestion(ex) {
+      this.briefing = ex
+      this.hideBriefingDropdown()
+    },
+    addInstructionsSuggestion(ex) {
+      this.instructions = ex
+      this.hideInstructionsDropdown()
     },
     scrollToTop() {
       setTimeout(() => {
@@ -367,6 +524,30 @@ export default {
     user() {
       return this.$store.state.user
     },
+    filteredTypeSuggestions() {
+      if (!this.type) return this.typeSuggestions
+      return this.typeSuggestions.filter((suggestions) =>
+        suggestions.toLowerCase().includes(this.type.toLowerCase()),
+      )
+    },
+    filteredAudienceSuggestions() {
+      if (!this.persona) return this.audienceSuggestions
+      return this.audienceSuggestions.filter((suggestions) =>
+        suggestions.toLowerCase().includes(this.persona.toLowerCase()),
+      )
+    },
+    filteredBriefingSuggestions() {
+      if (!this.briefing) return this.briefingSuggestions
+      return this.briefingSuggestions.filter((suggestions) =>
+        suggestions.toLowerCase().includes(this.briefing.toLowerCase()),
+      )
+    },
+    filteredInstructionsSuggestions() {
+      if (!this.instructions) return this.instructionsSuggestions
+      return this.instructionsSuggestions.filter((suggestions) =>
+        suggestions.toLowerCase().includes(this.instructions.toLowerCase()),
+      )
+    },
     isPaid() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.organizationRef.isPaid
@@ -379,10 +560,12 @@ export default {
       } else {
         currentMonth = `${currentMonth}`
       }
+      let currentYear = new Date(Date.now()).getFullYear()
       for (let key in this.$store.state.user.metaData) {
         const item = this.$store.state.user.metaData[key]
         const filteredByMonth = item.timestamps.filter(date => {
-          return date.split('-')[1] == currentMonth
+          const split = date.split('-')
+          return split[1] == currentMonth && split[0] == currentYear
         })
         arr = [...arr, ...filteredByMonth]
       }
@@ -401,6 +584,94 @@ export default {
         el.addEventListener('focus', adjustTextareaHeight)
         el.addEventListener('textarea-clear', adjustTextareaHeight)
         adjustTextareaHeight()
+      },
+    },
+    clickOutsideInstructionsMenu: {
+      bind(el, binding, vnode) {
+        // Define a function to handle click events
+        function clickOutsideHandler(e) {
+          // Check if the clicked element is outside the target element
+          if (!el.contains(e.target)) {
+            // Trigger the provided method from the binding value
+            vnode.context.hideInstructionsDropdown()
+          }
+        }
+
+        // Add a click event listener to the document body
+        document.body.addEventListener('click', clickOutsideHandler)
+
+        // Store the event listener on the element for cleanup
+        el._clickOutsideHandler = clickOutsideHandler
+      },
+      unbind(el) {
+        // Remove the event listener when the directive is unbound
+        document.body.removeEventListener('click', el._clickOutsideHandler)
+      },
+    },
+    clickOutsideTypeMenu: {
+      bind(el, binding, vnode) {
+        // Define a function to handle click events
+        function clickOutsideHandler(e) {
+          // Check if the clicked element is outside the target element
+          if (!el.contains(e.target)) {
+            // Trigger the provided method from the binding value
+            vnode.context.hideTypeDropdown()
+          }
+        }
+
+        // Add a click event listener to the document body
+        document.body.addEventListener('click', clickOutsideHandler)
+
+        // Store the event listener on the element for cleanup
+        el._clickOutsideHandler = clickOutsideHandler
+      },
+      unbind(el) {
+        // Remove the event listener when the directive is unbound
+        document.body.removeEventListener('click', el._clickOutsideHandler)
+      },
+    },
+    clickOutsideAudienceMenu: {
+      bind(el, binding, vnode) {
+        // Define a function to handle click events
+        function clickOutsideHandler(e) {
+          // Check if the clicked element is outside the target element
+          if (!el.contains(e.target)) {
+            // Trigger the provided method from the binding value
+            vnode.context.hideAudienceDropdown()
+          }
+        }
+
+        // Add a click event listener to the document body
+        document.body.addEventListener('click', clickOutsideHandler)
+
+        // Store the event listener on the element for cleanup
+        el._clickOutsideHandler = clickOutsideHandler
+      },
+      unbind(el) {
+        // Remove the event listener when the directive is unbound
+        document.body.removeEventListener('click', el._clickOutsideHandler)
+      },
+    },
+    clickOutsideBriefingMenu: {
+      bind(el, binding, vnode) {
+        // Define a function to handle click events
+        function clickOutsideHandler(e) {
+          // Check if the clicked element is outside the target element
+          if (!el.contains(e.target)) {
+            // Trigger the provided method from the binding value
+            vnode.context.hideBriefingDropdown()
+          }
+        }
+
+        // Add a click event listener to the document body
+        document.body.addEventListener('click', clickOutsideHandler)
+
+        // Store the event listener on the element for cleanup
+        el._clickOutsideHandler = clickOutsideHandler
+      },
+      unbind(el) {
+        // Remove the event listener when the directive is unbound
+        document.body.removeEventListener('click', el._clickOutsideHandler)
       },
     },
   },
@@ -878,5 +1149,88 @@ footer {
     box-shadow: none;
   }
   margin-left: 0.5rem;
+}
+.dropdown {
+  padding: 8px 0 8px 0;
+  position: relative;
+  height: fit-content;
+  max-height: 232px;
+  width: 100%;
+  top: 8px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  scroll-behavior: smooth;
+}
+
+.dropdown::-webkit-scrollbar {
+  width: 6px;
+  height: 0px;
+  display: none;
+}
+.dropdown::-webkit-scrollbar-thumb {
+  background-color: $soft-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px;
+}
+
+.dropdown:hover::-webkit-scrollbar {
+  display: block;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 8px 0;
+  width: 100%;
+  margin: 0;
+  cursor: pointer;
+  color: $dark-black-blue;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 400;
+  font-size: 13px;
+  z-index: 2300;
+
+  p {
+    margin: 0;
+  }
+
+  img {
+    filter: invert(63%) sepia(10%) saturate(617%) hue-rotate(200deg) brightness(93%) contrast(94%);
+    margin-right: 8px;
+  }
+
+  &:hover {
+    opacity: 0.7;
+  }
+}
+.gray-text {
+  color: $mid-gray;
+}
+.mar-top {
+  margin-top: 1rem;
+}
+.text-area-input::placeholder {
+  padding-top: 1rem;
+}
+.divider {
+  position: relative;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  width: 675px;
+  margin-top: 1rem;
+}
+
+.divider-text {
+  position: absolute;
+  top: -24px;
+  left: 44%;
+  z-index: 20;
+  background-color: white;
+  padding: 4px 16px;
+  border-radius: 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 </style>

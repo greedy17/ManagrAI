@@ -243,6 +243,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 class UserAdminRegistrationSerializer(serializers.ModelSerializer):
     activation_link_ref = serializers.SerializerMethodField("get_activation_link")
+    organization_name = serializers.CharField(required=True)
 
     class Meta:
         model = User
@@ -252,6 +253,7 @@ class UserAdminRegistrationSerializer(serializers.ModelSerializer):
             "email",
             "organization_name",
             "role",
+            "activation_link_ref",
         )
         extra_kwargs = {
             "first_name": {"required": True},
