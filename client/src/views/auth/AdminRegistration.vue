@@ -158,6 +158,10 @@ export default {
       selectedZone: null,
       errorMessages: [],
       selectedCrm: null,
+      isLoading: false,
+      userId: '',
+      token: '',
+      organization: null,
     }
   },
   watch: {
@@ -181,12 +185,14 @@ export default {
   },
   async created() {
     const validCode = this.$route.params.validCode
+    console.log(this.$route.params)
 
-    if (!validCode && !this.$route.query.code) {
-      this.$router.push({
-        name: 'Register',
-      })
-    }
+    // if (!validCode && !this.$route.query.code) {
+    //   this.$router.push({
+    //     name: 'Register',
+    //   })
+    // }
+    await this.retrieveEmail(this.$route.params.code)
     this.timezones = this.timezones.map((tz) => {
       return { key: tz, value: tz }
     })
@@ -225,6 +231,33 @@ export default {
   methods: {
     test(log) {
       console.log('log', log)
+    },
+    async retrieveEmail(code) {
+      this.isLoading = true
+      try {
+        console.log('code', code)
+        const res = await User.api.retrieveEmail(code)
+        console.log('res retrieveEmail', res)
+        this.registrationForm.field.email.value = res.data.email
+        this.registrationForm.field.organizationName.value = res.data.organization
+        this.registrationForm.field.role.value = res.data.role
+        this.registrationForm.field.fullName.value = res.data.first_name + ' ' + res.data.last_name
+        this.userId = res.data.id
+        this.token = res.data.magic_token
+        this.organization = res.data.organization
+      } catch (e) {
+        // this.errorValidatingEmail = true
+        console.log('e', e)
+        this.$toast('Unable to retrieve email', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.isLoading = false
+      }
     },
     async onGetAuthLink(integration) {
       this.generatingToken = true
@@ -279,22 +312,23 @@ export default {
         return
       }
       const splitEmail = this.registrationForm.field.email.value.split('@')
-      // if (splitEmail[splitEmail.length - 1] === 'gmail.com') {
-      //   this.$toast('Please use a company email.', {
-      //     timeout: 2000,
-      //     position: 'top-left',
-      //     type: 'error',
-      //     toastClassName: 'custom',
-      //     bodyClassName: ['custom'],
-      //   })
-      //   return
-      // }
+      if (splitEmail[splitEmail.length - 1] === 'gmail.com') {
+        this.$toast('Please use a company email.', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        return
+      }
 
       this.submitting = true
 
       let user
       try {
-        user = await User.api.register(this.registrationForm)
+        // user = await User.api.register(this.registrationForm)
+        user = await User.api.activate(this.userId, this.token, this.registrationForm)
         if (user.status === 400) {
           for (let key in user.data) {
             this.$toast(user.data[key][0], {

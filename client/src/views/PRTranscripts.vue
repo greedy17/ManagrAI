@@ -20,9 +20,9 @@
       </div>
     </Modal>
     <div :class="loading ? 'opaque' : 'extra-margin-top'" v-if="!transcript" class="center">
-      <p v-if="!loading">Generate a transcript from your zoom meeting</p>
+      <p v-if="!loading">Generate a transcript from your zoom meeting.</p>
 
-      <div class="centered blue-bg" v-else>
+      <div class="centered blue-bg" v-else> 
         <div style="width: 675px" class="row">
           <p class="summary-load-text">Generating {{ type }}... This will take a few minutes.</p>
         </div>

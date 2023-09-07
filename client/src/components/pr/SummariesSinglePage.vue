@@ -119,10 +119,10 @@
             <p class="typed">
               {{
                 mainView === 'social'
-                  ? 'Generate a summary from X (formally Twitter)'
+                  ? 'Generate a summary from X (formally Twitter).'
                   : mainView === 'website'
-                  ? 'Generate a summary from a news article'
-                  : 'Generate a news summary from over 1 million sites'
+                  ? 'Generate a summary from a news article.'
+                  : 'Generate a news summary from over 1 million sites.'
               }}
             </p>
           </div>
@@ -716,27 +716,24 @@ export default {
       showingDropdown: false,
       copyTip: 'Copy',
       searchSuggestions: [
-        'Beyond meat broad search',
-        'Climate change and wildlife',
+        'XXX broad search',
+        'XXX and YYY',
         'List out XXX competitors, by name',
-        `University of Georgia and research`,
-        'University of Michigan no sports related news',
-        'Walmart no stock related news',
-        "Boston Children's no ER related stories",
-        'Cancer research and new treatment',
-        'AI only in Techcrunch sources',
-        'Articles written or about Ron Miller',
+        `University of XXX and research`,
+        'University of XXX no sports related news',
+        'XXX Hospital no ER related stories',
+        'XXX no stock related news',
+        'Articles written or about [JOURNALIST NAME]',
       ],
       promptSuggestions: [
         'Highlight the top 3 news story and the impact it will have on XXX',
         `Write a highly engaging LinkedIn post based on this coverage for XXX`,
         `Craft an entertaining Twitter post based on this coverage for XXX`,
         'Newsjack this coverage and turn into a blog post on behalf of XXX',
-        `Consumer Sentiment:\nMedia & Influencer Sentiment:`,
-        `Background on John Smith:\nTips for pitching John Smith:`,
+        `Background on John Smith\nTips for pitching John Smith`,
         `Prospect 10 companies that would care about this coverage.`,
-        'Generate 5 questions and answers a journlist would ask based on this coverage',
-        'Suggest a strategy to combat the negative coverage',
+        'Generate 5 questions & answers journlists would ask based on this news',
+        'Suggest a strategy to combat this negative coverage',
       ],
     }
   },

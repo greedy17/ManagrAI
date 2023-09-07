@@ -69,6 +69,11 @@ export default new Router({
       component: () => import('@/views/auth/AdminRegistration')
     },
     {
+      path: '/admin-registration/:code',
+      name: 'AdminRegistration',
+      component: () => import('@/views/auth/AdminRegistration')
+    },
+    {
       path: '/register',
       name: 'Register',
       component: () => import('@/views/auth/LeadershipCode')
