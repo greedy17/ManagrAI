@@ -581,7 +581,19 @@
                   </div>
                 </div>
                 <div v-if="articleSummaries[article.url]">
-                  <pre v-html="articleSummaries[article.url]" class="pre-text blue-bg"></pre>
+                  <div class="blue-bg display-flex">
+                    <pre v-html="articleSummaries[article.url]" class="pre-text"></pre>
+                    <div @click="copyArticleSummary(articleSummaries[article.url])" class="wrapper article-copy-container">
+                      <img
+                        style="cursor: pointer"
+                        class="right-mar img-highlight"
+                        src="@/assets/images/clipboard.svg"
+                        height="14px"
+                        alt=""
+                      />
+                      <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
+                    </div>
+                  </div>
 
                   <div class="regenerate-article">
                     <button
@@ -757,6 +769,25 @@ export default {
     addPromptSuggestion(ex) {
       this.newTemplate = ex
       this.hidePromptDropdown()
+    },
+    async copyArticleSummary(article) {
+      try {
+        const cleanedSummary = article
+          .split('<strong>')
+          .filter((item) => item !== '<strong>')
+          .join('')
+          .split('</strong>')
+          .filter((item) => item !== '</strong>')
+          .join('')
+        await navigator.clipboard.writeText(cleanedSummary)
+        this.copyTip = 'Copied!'
+
+        setTimeout(() => {
+          this.copyTip = 'Copy'
+        }, 2000)
+      } catch (err) {
+        console.error('Failed to copy text: ', err)
+      }
     },
     async copyText() {
       try {
@@ -2737,5 +2768,9 @@ header {
   color: $coral;
   font-weight: 400;
   font-size: 12px;
+}
+.article-copy-container {
+  height: 20px;
+  margin-top: 0.5rem;
 }
 </style>
