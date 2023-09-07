@@ -20,6 +20,7 @@ from django.conf import settings
 from django_filters.rest_framework import DjangoFilterBackend
 from background_task.models import CompletedTask
 from datetime import datetime
+import base64
 
 from rest_framework.views import APIView
 from rest_framework import (
@@ -2043,6 +2044,7 @@ class ReportViewSet(
     )
     def get_shared_report(self, request, *args, **kwargs):
         encrypted_code = request.GET.get("code")
+        encrypted_code = base64.urlsafe_b64decode(encrypted_code.encode('utf-8'))
         try:
             decrypted_dict = decrypt_dict(encrypted_code)
             id = decrypted_dict.get("id")

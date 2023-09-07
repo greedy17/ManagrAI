@@ -54,6 +54,11 @@ export default new Router({
       component: () => import('@/views/auth/LoginOrSignup')
     },
     {
+      path: '/shared/:code?',
+      name: 'SharedReport',
+      component: () => import('../components/pr/SharedReport')
+    },
+    {
       path: '/admin-registration',
       name: 'AdminRegistration',
       component: () => import('@/views/auth/AdminRegistration')

@@ -54,6 +54,7 @@ const EDIT_MESSAGE = 'users/chat/edit-message/'
 const DELETE_MESSAGES = 'users/chat/delete-messages/'
 const CONVERSATIONS = 'users/conversations/'
 const REPORTS = 'users/reports/'
+const SHARED_REPORT = '/shared/'
 
 export default class UserAPI {
   get client() {
@@ -76,6 +77,16 @@ export default class UserAPI {
    **/
   static create(cls) {
     return new UserAPI(cls)
+  }
+
+  async getReport(code) {
+    try {
+      const response = await this.client.get(REPORTS + '/shared/', { params: { code: code } })
+      return response.data
+    } catch (e) {
+      console.error('Error in getReport:', e)
+
+    }
   }
 
   async getReports(user) {

@@ -1,7 +1,7 @@
 <template>
   <div class="reports">
     <header class="blur-bottom">
-      <div>
+      <div @click="getReports">
         <h3>Share</h3>
         <small class="subtext">Customize & preview your report</small>
       </div>
@@ -133,15 +133,15 @@ export default {
     clips: {},
   },
   methods: {
-    // async getReports() {
-    //   try {
-    //     await User.api.getReports({ user: this.$store.state.user.id }).then((response) => {
-    //       console.log(response)
-    //     })
-    //   } catch (e) {
-    //     console.log(e)
-    //   }
-    // },
+    async getReports() {
+      try {
+        await User.api.getReports({ user: this.$store.state.user.id }).then((response) => {
+          console.log(response)
+        })
+      } catch (e) {
+        console.log(e)
+      }
+    },
     async getArticleSummary(title, url, instructions = null, length = 500) {
       this.summaryLoading = true
       this.loadingUrl = url
@@ -165,7 +165,7 @@ export default {
     },
     async createReport() {
       let formData = new FormData()
-      formData.append('title', 'JJ Kaisen')
+      formData.append('title', 'Lords of the Fallen')
       let imageFile = document.querySelector('#imageInput').files[0]
       if (imageFile) {
         formData.append('main_image', imageFile)

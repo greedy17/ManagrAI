@@ -205,6 +205,7 @@ def encrypt_dict(data_dict):
     cipher_suite = Fernet(fernet_key)
     data_str = str(data_dict).encode('utf-8')
     encrypted_data = cipher_suite.encrypt(data_str)
+    encrypted_data = base64.urlsafe_b64encode(encrypted_data).decode('utf-8')
     return encrypted_data
 
 
