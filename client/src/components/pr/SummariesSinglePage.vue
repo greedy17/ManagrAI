@@ -1534,6 +1534,7 @@ export default {
   // background-color: red;
   // bottom: 0;
   // right: 16px;
+  margin-top: 1rem;
 }
 
 .slide-fade-enter-active {
