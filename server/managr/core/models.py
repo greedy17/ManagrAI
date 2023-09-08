@@ -116,7 +116,7 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
         """An Admin user is the one who set up the initial account and org"""
         extra_fields["is_staff"] = False
         extra_fields["is_superuser"] = False
-        extra_fields["is_active"] = True
+        extra_fields["is_active"] = False
         extra_fields["is_admin"] = True
         extra_fields["user_level"] = core_consts.USER_LEVEL_REP
         return self._create_user(email, password, **extra_fields)
@@ -284,6 +284,8 @@ class User(AbstractUser, TimeStampModel):
         data = {"created_at": date, "id": str(self.id), "magic_token": str(self.magic_token)}
         encrypted_data = encrypt_dict(data)
         base_url = get_site_url()
+        if self.is_admin:
+            return f"{base_url}/admin-registration/{encrypted_data}"
         return f"{base_url}/activation/{encrypted_data}"
 
     @property

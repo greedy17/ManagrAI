@@ -119,10 +119,10 @@
             <p class="typed">
               {{
                 mainView === 'social'
-                  ? 'Generate a summary from X (formally Twitter)'
+                  ? 'Generate a summary from X (formally Twitter).'
                   : mainView === 'website'
-                  ? 'Generate a summary from a news article'
-                  : 'Generate a news summary from over 1 million sites'
+                  ? 'Generate a summary from a news article.'
+                  : 'Generate a news summary from over 1 million sites.'
               }}
             </p>
           </div>
@@ -581,7 +581,19 @@
                   </div>
                 </div>
                 <div v-if="articleSummaries[article.url]">
-                  <pre v-html="articleSummaries[article.url]" class="pre-text blue-bg"></pre>
+                  <div class="blue-bg display-flex">
+                    <pre v-html="articleSummaries[article.url]" class="pre-text"></pre>
+                    <div @click="copyArticleSummary(articleSummaries[article.url])" class="wrapper article-copy-container">
+                      <img
+                        style="cursor: pointer"
+                        class="right-mar img-highlight"
+                        src="@/assets/images/clipboard.svg"
+                        height="14px"
+                        alt=""
+                      />
+                      <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
+                    </div>
+                  </div>
 
                   <div class="regenerate-article">
                     <button
@@ -704,27 +716,25 @@ export default {
       showingDropdown: false,
       copyTip: 'Copy',
       searchSuggestions: [
-        'Beyond meat broad search',
-        'Climate change and wildlife',
+        'XXX broad search',
+        'XXX and YYY',
+        `UCB or Unit City Bank`,
         'List out XXX competitors, by name',
-        `University of Georgia and research`,
-        'University of Michigan no sports related news',
-        'Walmart no stock related news',
-        "Boston Children's no ER related stories",
-        'Cancer research and new treatment',
-        'AI only in Techcrunch sources',
-        'Articles written or about Ron Miller',
+        `University of XXX and research`,
+        'University of XXX no sports related news',
+        'XXX Hospital no ER related stories',
+        'XXX no stock related news',
+        'Articles written or about [JOURNALIST NAME]',
       ],
       promptSuggestions: [
         'Highlight the top 3 news story and the impact it will have on XXX',
         `Write a highly engaging LinkedIn post based on this coverage for XXX`,
         `Craft an entertaining Twitter post based on this coverage for XXX`,
         'Newsjack this coverage and turn into a blog post on behalf of XXX',
-        `Consumer Sentiment:\nMedia & Influencer Sentiment:`,
-        `Background on John Smith:\nTips for pitching John Smith:`,
+        `Background on John Smith\nTips for pitching John Smith`,
         `Prospect 10 companies that would care about this coverage.`,
-        'Generate 5 questions and answers a journlist would ask based on this coverage',
-        'Suggest a strategy to combat the negative coverage',
+        'Generate 5 questions & answers journlists would ask based on this news',
+        'Suggest a strategy to combat this negative coverage',
       ],
     }
   },
@@ -757,6 +767,25 @@ export default {
     addPromptSuggestion(ex) {
       this.newTemplate = ex
       this.hidePromptDropdown()
+    },
+    async copyArticleSummary(article) {
+      try {
+        const cleanedSummary = article
+          .split('<strong>')
+          .filter((item) => item !== '<strong>')
+          .join('')
+          .split('</strong>')
+          .filter((item) => item !== '</strong>')
+          .join('')
+        await navigator.clipboard.writeText(cleanedSummary)
+        this.copyTip = 'Copied!'
+
+        setTimeout(() => {
+          this.copyTip = 'Copy'
+        }, 2000)
+      } catch (err) {
+        console.error('Failed to copy text: ', err)
+      }
     },
     async copyText() {
       try {
@@ -938,7 +967,7 @@ export default {
             url: this.additionalSources,
             search: this.newSearch,
             instructions: this.newTemplate || null,
-            length: 1000,
+            length: 1500,
           })
           .then((response) => {
             this.summary = response.summary
@@ -1145,7 +1174,7 @@ export default {
         this.scrollToTop()
       }
     },
-    async getArticleSummary(url, instructions = null, length = 500) {
+    async getArticleSummary(url, instructions = null, length = 1000) {
       this.articleSummaryLoading = true
       this.loadingUrl = url
       try {
@@ -1260,10 +1289,12 @@ export default {
       } else {
         currentMonth = `${currentMonth}`
       }
+      let currentYear = new Date(Date.now()).getFullYear()
       for (let key in this.$store.state.user.metaData) {
         const item = this.$store.state.user.metaData[key]
         const filteredByMonth = item.timestamps.filter(date => {
-          return date.split('-')[1] == currentMonth
+          const split = date.split('-')
+          return split[1] == currentMonth && split[0] == currentYear
         })
         arr = [...arr, ...filteredByMonth]
       }
@@ -1503,6 +1534,7 @@ export default {
   // background-color: red;
   // bottom: 0;
   // right: 16px;
+  margin-top: 1rem;
 }
 
 .slide-fade-enter-active {
@@ -2737,5 +2769,9 @@ header {
   color: $coral;
   font-weight: 400;
   font-size: 12px;
+}
+.article-copy-container {
+  height: 20px;
+  margin-top: 0.5rem;
 }
 </style>
