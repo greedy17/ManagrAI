@@ -337,8 +337,9 @@ export default {
         `Email exchange: XXX ...`,
       ],
       instructionsSuggestions: [
-        `A concise blog post targeting millennial moms about ... Mirror this writing style: {insert paragraph of your writing}`,
-        `Media pitch, concise, on behalf of XXX, tailored to a tech beat writer at the NYTs about XXX ...`,
+        `A concise blog post targeting millennial moms about ...`,
+        `Media pitch, concise, on behalf of XXX, tailored to a tech beat writer at the NYTs about ...`,
+        `Mirror my writing style: {insert a paragraph of your writing}`,
         `Press release, highly persuasive about the launch of XXX's new product ...`,
         `An entertaining tweet about XXX catered to Gen X ...`,
         `A short, casual, direct follow up email to Susan, the VP of Marketing at XXX ...`,
@@ -402,7 +403,6 @@ export default {
       // e.target.placeholder = ''
       this.instructionsPlaceholder = ''
       this.showingInstructionsDropdown = true
-      console.log(1)
     },
     hideInstructionsDropdown() {
       // this.storedEvent.target.placeholder = this.storedPlaceholder
@@ -423,7 +423,7 @@ export default {
       this.hideBriefingDropdown()
     },
     addInstructionsSuggestion(ex) {
-      this.instructions = ex
+      this.output = ex
       this.hideInstructionsDropdown()
     },
     scrollToTop() {
@@ -543,9 +543,9 @@ export default {
       )
     },
     filteredInstructionsSuggestions() {
-      if (!this.instructions) return this.instructionsSuggestions
+      if (!this.output) return this.instructionsSuggestions
       return this.instructionsSuggestions.filter((suggestions) =>
-        suggestions.toLowerCase().includes(this.instructions.toLowerCase()),
+        suggestions.toLowerCase().includes(this.output.toLowerCase()),
       )
     },
     isPaid() {
