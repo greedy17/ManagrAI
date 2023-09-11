@@ -22,6 +22,7 @@ from .models import (
     NoteTemplate,
     Message,
     Conversation,
+    Report,
 )
 
 
@@ -415,3 +416,15 @@ class UserTrialSerializer(serializers.ModelSerializer):
         searches = Search.objects.filter(user=instance)
         serialized = SearchSerializer(searches, many=True).data
         return serialized
+
+
+class ReportSerializer(serializers.ModelSerializer):
+    share_url = serializers.SerializerMethodField("get_share_url")
+
+    class Meta:
+        model = Report
+        fields = ("title", "user", "main_image", "meta_data", "share_url")
+
+    def get_share_url(self, instance):
+        url = instance.generate_url()
+        return url

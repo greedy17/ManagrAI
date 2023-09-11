@@ -85,6 +85,38 @@
         </div>
       </div>
     </Modal>
+
+    <Transition name="slide-left">
+      <Reports
+        v-if="selectedSearch && ShowReport"
+        @toggle-report="toggleReport"
+        @clear-clips="clearClips"
+        @remove-clip="removeClip"
+        @edit-clip="editClip"
+        :clips="addedClips"
+        :defaultSearch="newSearch"
+      />
+    </Transition>
+
+    <div @click="toggleReport" v-if="selectedSearch && !ShowReport" class="floating-action-bar">
+      <div class="main-slot">
+        <img src="@/assets/images/share.svg" height="10px" alt="" />
+      </div>
+
+      <div class="slot-container">
+        <div v-for="(clip, i) in addedClips" :key="i">
+          <img v-if="i < 3" :src="clip.urlToImage" class="small-photo" />
+        </div>
+
+        <div v-if="addedClips.length < 1" class="empty-slot"></div>
+        <div v-if="addedClips.length < 2" class="empty-slot"></div>
+        <div v-if="addedClips.length < 3" class="empty-slot"></div>
+      </div>
+
+      <div class="slot-count">
+        <small>{{ addedClips.length }}/20</small>
+      </div>
+    </div>
     <div class="center column" :class="{ fullHeight: showingDropdown }" v-if="page === 'SUMMARIES'">
       <div v-if="!selectedSearch" class="switcher">
         <div
@@ -151,8 +183,8 @@
                 class="area-input"
                 placeholder="Search term..."
                 @focus="showDropdown"
-                v-model="newSearch"
                 autocomplete="off"
+                v-model="newSearch"
               />
               <!-- <img
                 :class="{ invert: !newSearch }"
@@ -191,11 +223,10 @@
               <textarea
                 @focus="showPromptDropdown"
                 class="area-input"
-                placeholder="Custom summary instructions... (Optional)"
+                placeholder="Summary instructions... (Optional)"
                 v-model="newTemplate"
                 v-autoresize
               />
-              <!-- <small @click="removePrompt" class="remove">X</small> -->
             </div>
 
             <div v-if="showingPromptDropdown" class="dropdown">
@@ -496,6 +527,12 @@
                     <span class="divier-dot">.</span>
                     <span class="off-gray">{{ getTimeDifferenceInMinutes(tweet.created_at) }}</span>
                   </div>
+
+                  <button class="tertiary-button" @click="addClip(tweet)">
+                    <img height="10px" src="@/assets/images/share.svg" alt="" />
+
+                    Share
+                  </button>
                 </div>
               </div>
             </div>
@@ -536,20 +573,18 @@
                     <span class="off-gray">{{
                       getTimeDifferenceInMinutes(article.publishedAt)
                     }}</span>
+                    <span class="divier-dot">.</span>
                   </div>
                   <div class="footer-icon-container">
-                    <!-- <button
-                      :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
+                    <button
+                      :disabled="clipTitles.includes(article.title)"
                       class="tertiary-button"
+                      @click="addClip(article)"
                     >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <path
-                          d="M17.5 1.25a.5.5 0 0 1 1 0v2.5H21a.5.5 0 0 1 0 1h-2.5v2.5a.5.5 0 0 1-1 0v-2.5H15a.5.5 0 0 1 0-1h2.5v-2.5zm-11 4.5a1 1 0 0 1 1-1H11a.5.5 0 0 0 0-1H7.5a2 2 0 0 0-2 2v14a.5.5 0 0 0 .8.4l5.7-4.4 5.7 4.4a.5.5 0 0 0 .8-.4v-8.5a.5.5 0 0 0-1 0v7.48l-5.2-4a.5.5 0 0 0-.6 0l-5.2 4V5.75z"
-                          fill="#000"
-                        ></path>
-                      </svg>
-                      Tag
-                    </button> -->
+                      <img height="10px" src="@/assets/images/share.svg" alt="" />
+
+                      {{ clipTitles.includes(article.title) ? 'Shared' : 'Share' }}
+                    </button>
 
                     <button
                       v-if="!articleSummaries[article.url]"
@@ -583,7 +618,10 @@
                 <div v-if="articleSummaries[article.url]">
                   <div class="blue-bg display-flex">
                     <pre v-html="articleSummaries[article.url]" class="pre-text"></pre>
-                    <div @click="copyArticleSummary(articleSummaries[article.url])" class="wrapper article-copy-container">
+                    <div
+                      @click="copyArticleSummary(articleSummaries[article.url])"
+                      class="wrapper article-copy-container"
+                    >
                       <img
                         style="cursor: pointer"
                         class="right-mar img-highlight"
@@ -656,14 +694,16 @@
 </template>
 <script>
 import ChatTextBox from '../Chat/ChatTextBox.vue'
+import Reports from '../pr/Reports.vue'
 import { Comms } from '@/services/comms'
-import User from '@/services/users/'
+import User from '@/services/users'
 
 export default {
   name: 'SummariesSinglePage',
   components: {
     ChatTextBox,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
+    Reports,
   },
   props: {
     selectedSearch: {
@@ -675,6 +715,8 @@ export default {
   },
   data() {
     return {
+      addedClips: [],
+      ShowReport: false,
       showingPromptDropdown: false,
       sourceSummary: null,
       buttonText: 'Article Summary',
@@ -752,6 +794,40 @@ export default {
     // this.updateMessage()
   },
   methods: {
+    async getReports() {
+      try {
+        await User.api.getReports({ user: this.$store.state.user.id }).then((response) => {
+          console.log(response)
+        })
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    clearClips() {
+      this.addedClips = []
+    },
+    removeClip(title) {
+      this.addedClips = this.addedClips.filter((clip) => clip.title !== title)
+    },
+    toggleReport() {
+      this.ShowReport = !this.ShowReport
+    },
+    addClip(clip) {
+      if (this.addedClips.length < 20) {
+        this.addedClips.push(clip)
+      } else {
+        this.clipLimit()
+      }
+    },
+    editClip(title, summary) {
+      let clip = this.addedClips.filter((clip) => clip.title === title)[0]
+      clip['summary'] = summary
+      this.addedClips = this.addedClips.filter((clip) => clip.title !== title)
+      this.addedClips.unshift(clip)
+    },
+    clipLimit() {
+      console.log('clip limit')
+    },
     soonButtonText() {
       this.buttonText = 'Coming Soon!'
     },
@@ -1254,6 +1330,9 @@ export default {
     },
   },
   computed: {
+    clipTitles() {
+      return this.addedClips.map((clip) => clip.title)
+    },
     messages() {
       return this.$store.state.messages
     },
@@ -1283,8 +1362,8 @@ export default {
       return !!this.$store.state.user.organizationRef.isPaid
     },
     searchesUsed() {
-      let arr = [];
-      let currentMonth = new Date(Date.now()).getMonth()+1
+      let arr = []
+      let currentMonth = new Date(Date.now()).getMonth() + 1
       if (currentMonth < 10) {
         currentMonth = `0${currentMonth}`
       } else {
@@ -1293,7 +1372,7 @@ export default {
       let currentYear = new Date(Date.now()).getFullYear()
       for (let key in this.$store.state.user.metaData) {
         const item = this.$store.state.user.metaData[key]
-        const filteredByMonth = item.timestamps.filter(date => {
+        const filteredByMonth = item.timestamps.filter((date) => {
           const split = date.split('-')
           return split[1] == currentMonth && split[0] == currentYear
         })
@@ -1727,6 +1806,7 @@ button:disabled {
   background-color: $off-white !important;
   border: 1px solid rgba(0, 0, 0, 0.2) !important;
   cursor: not-allowed !important;
+  opacity: 0.7;
 }
 
 .primary-button {
@@ -1919,6 +1999,54 @@ button:disabled {
   }
 }
 
+.main-slot {
+  width: 28px;
+  height: 28px;
+  border-radius: 100%;
+  background-color: $dark-black-blue;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  img {
+    filter: invert(99%);
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.slot-container {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+.empty-slot {
+  border-radius: 100%;
+  height: 10px;
+  width: 10px;
+  margin: 8px 0;
+  background-color: rgba(108, 106, 106, 0.1);
+}
+
+.floating-action-bar {
+  background-color: $white-blue;
+  position: fixed;
+  z-index: 3000;
+  right: 24px;
+  top: 40vh;
+  min-height: 160px;
+  border-radius: 32px;
+  border: 1px solid $white-blue;
+  width: 34px;
+  display: flex;
+  padding: 4px 0 8px 0;
+  flex-direction: column;
+  align-items: center;
+}
+
 .main-content {
   display: flex;
   align-items: center;
@@ -1929,7 +2057,7 @@ button:disabled {
   padding: 58px 36px 0 36px;
   height: fit-content;
   width: 100vw;
-  color: $dark-black-blue;
+  color: $dark-blue;
   overflow-y: scroll;
 }
 
@@ -2308,6 +2436,15 @@ header {
   object-fit: cover;
   cursor: text;
   border-radius: 4px;
+}
+
+.small-photo {
+  height: 28px;
+  width: 28px;
+  margin-bottom: 8px;
+  object-fit: cover;
+  cursor: text;
+  border-radius: 100%;
 }
 
 .article-title {
@@ -2770,6 +2907,31 @@ header {
   color: $coral;
   font-weight: 400;
   font-size: 12px;
+}
+
+.slot-count {
+  font-size: 11px;
+  margin-top: 6px;
+  opacity: 0.7;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.slide-left-enter-active,
+.slide-left-leave-active {
+  transition: all 0.2s ease;
+}
+.slide-left-enter,
+.slide-left-leave-to {
+  transform: translateX(100%);
+  opacity: 0;
+}
+.slide-left-enter-to,
+.slide-left-leave {
+  transform: translateX(0);
+  opacity: 1;
 }
 .article-copy-container {
   height: 20px;
