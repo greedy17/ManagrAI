@@ -78,7 +78,12 @@ urlpatterns = [
     path(
         "users/chat/chat-transcript/",
         core_views.process_transcript,
-        name="rocess_transcript",
+        name="process_transcript",
+    ),
+    path(
+        "users/comms/generate_content_transcript/",
+        core_views.generate_content_transcript,
+        name="generate_content_transcript",
     ),
     path(
         "users/chat/follow-up-email/",
@@ -232,6 +237,11 @@ urlpatterns = [
         "zoom/get-meetings",
         zoom_views.get_meetings,
         name="get_meetings",
+    ),
+    path(
+        "zoom/check-for-transcript",
+        zoom_views.check_for_transcript,
+        name="check_for_transcript",
     ),
     path(
         "zoom/webhooks/deauthorize",

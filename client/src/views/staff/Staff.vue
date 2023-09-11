@@ -2141,7 +2141,7 @@
             <div style="display: flex; flex-direction: row; justify-content: flex-start; height: 41vh; width: 100%;">
               <div class="added-collection padding" style="width: 25vw; height: 39vh; display: flex; justify-content: flex-start; flex-direction: column; align-items: flex-start; margin-right: 1rem;;">
                 <h4 style="margin-top: 1rem; margin-bottom: 1rem;">Total Users: {{trialUsers.length}}</h4>
-                <h4 style="margin-top: 1rem; margin-bottom: 1rem;">Active Users: {{activeTrialUsers.length}}</h4>
+                <h4 style="margin-top: 1rem; margin-bottom: 1rem;">Active Users: {{/*activeTrialUsers.length*/ prActiveUsers}}</h4>
                 <h4 style="margin-bottom: 0rem; margin-top: 0.75rem;">Deactivate:</h4>
                 <div style="display: flex; align-items: center;">
                   <Multiselect
@@ -2193,6 +2193,7 @@
                   <div style="width: 25%">User</div>
                   <div style="width: 15%">Integrations</div>
                   <div style="width: 10%">Days Actv</div>
+                  <div style="width: 10%">Total Usage</div>
                   <div style="width: 10%">Usage / Day</div>
                   <div style="width: 10%">N. Summs</div>
                   <div style="width: 10%">A. Summs</div>
@@ -2200,10 +2201,12 @@
                   <div style="width: 10%">N. Srchs</div>
                   <div style="width: 10%">S. Srchs</div>
                   <div style="width: 10%">Pitches</div>
+                  <div style="width: 10%">TScripts</div>
+                  <div style="width: 10%">T. Summs</div>
                   <!-- <div style="width: 25%">Total Updates</div> -->
                 </div>
                 <div style="height: 95%;">
-                  <div v-for="user in dayTrialUsers" :key="user.id" class="user-view-header-container" style="margin-bottom: 0.25rem;">
+                  <div v-for="user in sortedDayTrialUsers" :key="user.id" class="user-view-header-container" style="margin-bottom: 0.25rem;">
                     <div style="width: 25%">{{ user.email }}</div>
                     <div class="flex-row-spread" style="width: 15%">
                       <div
@@ -2254,6 +2257,7 @@
                       </div>
                     </div>
                     <div style="width: 10%">{{user.days_active}}</div>
+                    <div style="width: 10%">{{getTotalUsage(user)}}</div>
                     <div style="width: 10%">{{getUsageDay(user)}}</div>
                     <div style="width: 10%">{{user.meta_data.news_summaries ? user.meta_data.news_summaries.total : 0}}</div>
                     <div style="width: 10%">{{user.meta_data.article_summaries ? user.meta_data.article_summaries.total : 0}}</div>
@@ -2261,6 +2265,8 @@
                     <div style="width: 10%">{{user.searches_ref.filter(search => search.type === 'NEWS').length}}</div>
                     <div style="width: 10%">{{user.searches_ref.filter(search => search.type === 'SOCIAL_MEDIA').length}}</div>
                     <div style="width: 10%">{{user.meta_data.pitches ? user.meta_data.pitches.total : 0}}</div>
+                    <div style="width: 10%">{{user.meta_data.transcript ? user.meta_data.transcript.total : 0}}</div>
+                    <div style="width: 10%">{{user.meta_data.transcript_summaries ? user.meta_data.transcript_summaries.total : 0}}</div>
                     <!-- <div style="width: 25%">{{user.total_updates}}</div> -->
                   </div>
                 </div>
@@ -2383,6 +2389,7 @@ export default {
       selectedSlackForms: null,
       showOrgList: false,
       showCommandList: false,
+      sortedDayTrialUsers: [],
       filtering: false,
       teamOrUser: [{ name: 'team' }, { name: 'user' }],
       selectedTeamOrUser: null,
@@ -2528,6 +2535,7 @@ export default {
       selectedTeamLead: null,
       usageData: null,
       allOrgsLoading: false,
+      prActiveUsers: 0,
       chartOptions: {
         series: [{
           name: 'Users',
@@ -2672,9 +2680,21 @@ export default {
     test(log) {
       console.log('log', log)
     },
+    sortDayTrialUsers() {
+      this.sortedDayTrialUsers = this.dayTrialUsers
+    },
     getUserName(id) {
       const user = this.everyUser.filter((user) => user.id == id)[0]
       return user ? `${user.first_name} ${user.last_name}` : '-'
+    },
+    getTotalUsage(user) {
+      const metaData = user.meta_data
+      let count = 0
+      for (let key in metaData) {
+        count += metaData[key].total
+      }
+      count += user.searches_ref.length
+      return count
     },
     getUsageDay(user) {
       const metaData = user.meta_data
@@ -3467,6 +3487,7 @@ export default {
       activeArr.pop()
       totalsArr.push(usageActiveTotals[0])
       activeArr.push(usageActiveTotals[1])
+      this.prActiveUsers = usageActiveTotals[1]
       this.chartOptions.series[0].data = [...totalsArr]
       this.chartOptions.series[1].data = [...activeArr]
     },
@@ -3561,6 +3582,7 @@ export default {
         this.orgLoading = false
       }
     },
+    dayTrialUsers: ['sortDayTrialUsers']
   },
 }
 </script>

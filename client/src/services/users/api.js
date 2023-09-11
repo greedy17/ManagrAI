@@ -49,6 +49,7 @@ const CHAT_NEXT_STEPS = 'users/chat/next-steps/'
 const CHAT_SUMMARY = 'users/chat/summary/'
 const CHAT_MEETING = 'users/chat/submit-chat-meeting/'
 const CHAT_TRANSCRIPT = 'users/chat/chat-transcript/'
+const CHAT_TRANSCRIPT_CONTENT = 'users/comms/generate_content_transcript/'
 const ADD_MESSAGE = 'users/chat/add-message/'
 const EDIT_MESSAGE = 'users/chat/edit-message/'
 const DELETE_MESSAGES = 'users/chat/delete-messages/'
@@ -207,11 +208,20 @@ export default class UserAPI {
   async submitChatTranscript(data) {
     try {
       const response = await this.client.post(CHAT_TRANSCRIPT, data)
-      console.log('response', response)
       return response.data
     } catch (e) {
       console.log('error in submitChatTranscript', e)
       apiErrorHandler({ apiName: 'User.chatMeeting' })
+    }
+  }
+
+  async generateContentTranscript(data) {
+    try {
+      const response = await this.client.post(CHAT_TRANSCRIPT_CONTENT, data)
+      return response.data
+    } catch (e) {
+      console.log('error in generateContentTranscript', e)
+      apiErrorHandler({ apiName: 'User.generateContentTranscript' })
     }
   }
 
@@ -372,11 +382,11 @@ export default class UserAPI {
       console.log('Error in sendNewEmail: ', e)
     }
   }
-  retrieveEmail(uid, token) {
+  retrieveEmail(code) {
     /**
      * Checks user email from id to add to form
      */
-    let q = { id: uid, token: token }
+    let q = { code }
     const promise = apiClient()
       .get(USERS_ENDPOINT + 'retrieve-email/', { params: q })
       .catch(

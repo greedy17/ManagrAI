@@ -31,7 +31,11 @@
           <small>AI-generated summary of the clips below</small>
         </div>
 
-        <button @click="getSummary" :disabled="!clips.length || loading" class="secondary-button">
+        <button
+          @click="getSummary"
+          :disabled="!clips.length || loading || summaryLoading"
+          class="secondary-button"
+        >
           Generate
         </button>
       </div>
@@ -44,9 +48,26 @@
             <div class="dot"></div>
           </div>
         </div>
-        <small v-else>
+        <small v-else-if="summary">
           <pre class="pre-text" v-html="summary"></pre>
         </small>
+
+        <div v-else>
+          <!-- <input
+            :disabled="!clips.length || loading || summaryLoading"
+            class="text-input"
+            placeholder="Search term..."
+            type="text"
+            v-model="searchTerm"
+          /> -->
+          <textarea
+            :disabled="!clips.length || loading || summaryLoading"
+            v-autoresize
+            class="area-input"
+            placeholder="Summary instructions (optional)..."
+            v-model="instructions"
+          ></textarea>
+        </div>
       </div>
     </div>
 
@@ -82,26 +103,59 @@
           v-show="currentRow === i || loadingUrl === clip.url"
           class="row absolute-right actions"
         >
-          <button
+          <img
             @click="getArticleSummary(clip.title, clip.url)"
-            style="margin-right: 8px; padding: 6px"
-            class="secondary-button blue"
-            v-if="!clip.summary"
-          >
-            <img v-if="!summaryLoading" src="@/assets/images/sparkles-thin.svg" height="12px" />
-            <img v-else class="rotate" height="12px" src="@/assets/images/loading.svg" alt="" />
-          </button>
-          <button v-else style="margin-right: 8px; padding: 6px" class="secondary-button blue">
-            <img src="@/assets/images/expand-arrows.svg" height="12px" />
-          </button>
-          <button @click="removeClip(clip)" style="padding: 6px" class="secondary-button danger">
-            <img src="@/assets/images/trash.svg" height="12px" />
-          </button>
+            style="margin-right: 12px"
+            class="blue"
+            v-if="!summaryLoading"
+            v-show="!clip.summary || !(loading || summaryLoading)"
+            src="@/assets/images/sparkles-thin.svg"
+            height="16px"
+          />
+
+          <img
+            style="margin-right: 12px"
+            v-else-if="loadingUrl === clip.url"
+            class="rotate"
+            height="16px"
+            src="@/assets/images/loading.svg"
+            alt=""
+          />
+
+          <img
+            @click="removeClip(clip)"
+            class="danger"
+            src="@/assets/images/trash.svg"
+            height="16px"
+          />
         </div>
       </div>
     </div>
     <footer>
-      <p></p>
+      <div @mouseenter="isHovering" @mouseleave="notHovering" class="report-name">
+        <div class="relative" v-if="editingTitle">
+          <input class="text-input no-margin" v-model="reportTitle" type="text" />
+          <img
+            @click="toggleTitleEdit"
+            class="abs-input-img"
+            height="12px"
+            src="@/assets/images/check.svg"
+            alt=""
+          />
+        </div>
+
+        <p class="pointer" v-else @click="toggleTitleEdit">
+          {{ reportTitle }}
+          <img
+            v-if="hovering"
+            style="margin-left: 8px"
+            src="@/assets/images/edit.svg"
+            height="14px"
+            alt=""
+          />
+        </p>
+      </div>
+
       <div class="row">
         <button class="secondary-button" @click="clearClips">Clear</button>
         <button style="margin-left: 16px" class="primary-button" @click="createReport">
@@ -121,18 +175,37 @@ export default {
     return {
       imageUrl: null,
       summary: '',
-      searchTerm: 'Anime',
+      searchTerm: '',
+      reportTitle: 'REPORT NAME',
       loading: false,
       currentRow: null,
       imageFile: null,
       summaryLoading: false,
       loadingUrl: null,
+      instructions: null,
+      editingTitle: false,
+      hovering: false,
+      loadingTitle: false,
     }
   },
+  // watch: {
+  //   reportTitle: 'saveTitle',
+  // },
   props: {
     clips: {},
+    defaultSearch: {},
   },
   methods: {
+    isHovering() {
+      this.hovering = true
+    },
+    notHovering() {
+      console.log('here')
+      this.hovering = false
+    },
+    toggleTitleEdit() {
+      this.editingTitle = !this.editingTitle
+    },
     async getReports() {
       try {
         await User.api.getReports({ user: this.$store.state.user.id }).then((response) => {
@@ -142,15 +215,15 @@ export default {
         console.log(e)
       }
     },
-    async getArticleSummary(title, url, instructions = null, length = 500) {
+    async getArticleSummary(title, url, length = 500) {
       this.summaryLoading = true
       this.loadingUrl = url
       try {
         await Comms.api
           .getArticleSummary({
             url: url,
-            search: '',
-            instructions: instructions,
+            search: this.searchTerm ? this.searchTerm : this.defaultSearch,
+            instructions: this.instructions,
             length: length,
           })
           .then((response) => {
@@ -165,7 +238,7 @@ export default {
     },
     async createReport() {
       let formData = new FormData()
-      formData.append('title', 'Lords of the Fallen')
+      formData.append('title', this.reportTitle)
       let imageFile = document.querySelector('#imageInput').files[0]
       if (imageFile) {
         formData.append('main_image', imageFile)
@@ -253,6 +326,21 @@ export default {
       }
     },
   },
+  directives: {
+    autoresize: {
+      inserted(el) {
+        function adjustTextareaHeight() {
+          el.style.height = 'auto'
+          el.style.height = el.scrollHeight + 'px'
+        }
+
+        el.addEventListener('input', adjustTextareaHeight)
+        el.addEventListener('focus', adjustTextareaHeight)
+        el.addEventListener('textarea-clear', adjustTextareaHeight)
+        adjustTextareaHeight()
+      },
+    },
+  },
 }
 </script>
 <style lang="scss" scoped>
@@ -322,6 +410,11 @@ header {
 
 h3 {
   margin-bottom: 0;
+}
+
+::placeholder {
+  font-weight: 400;
+  font-family: $thin-font-family;
 }
 
 .subtext {
@@ -593,7 +686,7 @@ footer {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 0;
+  padding: 16px 8px;
 
   button,
   p {
@@ -602,26 +695,19 @@ footer {
 }
 
 .blue {
+  cursor: pointer;
   &:hover {
-    box-shadow: none;
-    border: 0.7px solid $dark-black-blue;
-    transform: scale(1);
-    img {
-      filter: invert(25%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%)
-        contrast(90%);
-    }
+    opacity: 0.7;
+    filter: invert(25%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
   }
 }
 
 .danger {
-  box-shadow: none !important;
+  cursor: pointer;
   &:hover {
-    border: 1px solid $coral;
-    transform: scale(1);
-    img {
-      filter: invert(51%) sepia(74%) saturate(2430%) hue-rotate(320deg) brightness(104%)
-        contrast(121%);
-    }
+    opacity: 0.7 !important;
+    filter: invert(51%) sepia(74%) saturate(2430%) hue-rotate(320deg) brightness(104%)
+      contrast(121%) !important;
   }
 }
 
@@ -659,5 +745,81 @@ footer {
 .rotate {
   animation: rotation 2.25s infinite linear;
   cursor: not-allowed;
+}
+
+.text-input {
+  width: 100%;
+  margin-bottom: 16px;
+  outline: none;
+  background-color: $offer-white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  font-size: 13px;
+  font-family: $base-font-family;
+  font-weight: 400;
+  color: $dark-black-blue;
+  padding: 0.5rem 1rem;
+}
+
+.area-input {
+  width: 100%;
+  margin-bottom: 0.25rem;
+  max-height: 100px;
+  padding: 0.5rem 1rem;
+  line-height: 1.75;
+  outline: none;
+  background-color: $offer-white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  font-size: 13px;
+  font-family: $base-font-family;
+  font-weight: 400;
+  resize: none;
+  text-align: left;
+  overflow: auto;
+  scroll-behavior: smooth;
+  color: $dark-black-blue;
+}
+
+.report-name {
+  width: 300px;
+  overflow: hidden;
+
+  p {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}
+
+.relative {
+  position: relative;
+}
+
+.abs-input-img {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  z-index: 10;
+  padding-left: 8px;
+  background-color: white;
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+.no-margin {
+  margin: 0 !important;
+}
+
+.centered {
+  display: flex;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.pointer {
+  cursor: pointer;
 }
 </style>

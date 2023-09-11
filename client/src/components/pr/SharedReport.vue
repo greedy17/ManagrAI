@@ -1,26 +1,86 @@
 <template>
   <div v-if="this.report" class="reports">
     <div class="pdf-slide-container">
-      <img class="pdf-slide-image" :src="report.main_image" alt="Description of image" />
-      <!-- <h1>{{ report.title }}</h1> -->
-    </div>
+      <div class="pdf-overlay">
+        <div>
+          <h1>{{ report.title }}</h1>
+        </div>
 
-    <div>
-      {{ report.meta_data.summary }}
-    </div>
-
-    <section>
-      <div v-for="(clip, i) in report.meta_data.clips" :key="i">
-        <img :src="clip.urlToImage" height="80px" alt="" />
-        <h1>{{ clip.title }}</h1>
-        <p>{{ clip.description }}</p>
-        <p>{{ clip.summary }}</p>
+        <div style="margin-right: 16px" class="mar-top managr">
+          <small> Created by: </small>
+          <p>
+            <span
+              ><img
+                class="blue-filter"
+                style="margin-bottom: -2px"
+                src="@/assets/images/logo.png"
+                height="20px"
+                alt="" /></span
+            >managr
+          </p>
+        </div>
       </div>
-    </section>
+
+      <img class="pdf-slide-image" :src="report.main_image" alt="" />
+    </div>
+
+    <div class="divider off-bg no-border">
+      <p class="divider-text off-bg no-border">Summary</p>
+    </div>
+
+    <div class="main off-bg">
+      <div>
+        <pre class="pre-text" v-html="report.meta_data.summary"></pre>
+      </div>
+    </div>
+
+    <div class="divider">
+      <p style="left: 45%" class="divider-text">Media Clips</p>
+    </div>
+
+    <div class="main white-bg">
+      <section>
+        <div v-for="(clip, i) in report.meta_data.clips" :key="i" class="news-card">
+          <header>
+            <div class="card-col">
+              <div class="card-top-left">
+                <span>{{ clip.source.name }}</span>
+              </div>
+              <h1 class="article-title" @click="goToArticle(clip.url)">
+                {{ clip.title }}
+              </h1>
+              <p class="article-preview">
+                {{ clip.description }}
+              </p>
+            </div>
+
+            <div @click="goToArticle(clip.url)">
+              <img :src="clip.urlToImage" class="cover-photo" />
+            </div>
+          </header>
+
+          <div class="card-footer">
+            <div class="author-time">
+              <span class="author">{{ clip.author }}</span>
+              <span class="divier-dot">.</span>
+              <span class="off-gray">{{ getTimeDifferenceInMinutes(clip.publishedAt) }}</span>
+            </div>
+          </div>
+          <div v-if="clip.summary">
+            <pre v-html="clip.summary" class="pre-text blue-bg"></pre>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="report-footer">
+      <div class="branding">
+        <p>{{ formatDate(reportDate) }}</p>
+      </div>
+    </div>
   </div>
 </template>
 <script>
-import { Comms } from '@/services/comms'
 import User from '@/services/users'
 
 export default {
@@ -30,6 +90,7 @@ export default {
       report: null,
       code: null,
       imageUrl: null,
+      reportDate: null,
     }
   },
   props: {
@@ -41,7 +102,8 @@ export default {
       this.code = code
       try {
         await User.api.getReport(code).then((response) => {
-          this.report = response
+          this.report = response.data
+          this.reportDate = response.date
           console.log(this.report)
         })
       } catch (e) {
@@ -50,124 +112,63 @@ export default {
     }
   },
   methods: {
-    async getReports() {
-      try {
-        await User.api.getReports({ user: this.$store.state.user.id }).then((response) => {
-          console.log(response)
-        })
-      } catch (e) {
-        console.log(e)
-      }
-    },
-    async getArticleSummary(title, url, instructions = null, length = 500) {
-      this.summaryLoading = true
-      this.loadingUrl = url
-      try {
-        await Comms.api
-          .getArticleSummary({
-            url: url,
-            search: '',
-            instructions: instructions,
-            length: length,
-          })
-          .then((response) => {
-            this.$emit('edit-clip', title, response.summary)
-          })
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.summaryLoading = false
-        this.loadingUrl = null
-      }
-    },
-    async createReport() {
-      let formData = new FormData()
-      formData.append('title', 'JJ Kaisen')
-      let imageFile = document.querySelector('#imageInput').files[0]
-      if (imageFile) {
-        formData.append('main_image', imageFile)
-      }
-      formData.append('user', this.$store.state.user.id)
-      formData.append(
-        'meta_data',
-        JSON.stringify({
-          clips: this.clips,
-          summary: this.summary,
-        }),
-      )
-      try {
-        await User.api.createReport(formData).then((response) => {
-          console.log(response)
-        })
-      } catch (e) {
-        console.log(e)
-      }
-    },
-    setRow(i) {
-      this.currentRow = i
-    },
-    removeRow() {
-      this.currentRow = null
-    },
-    removeClip(clip) {
-      console.log(clip)
-      this.$emit('remove-clip', clip.title)
-    },
-    summarizeClip(clip) {
-      this.$emit(
-        'edit-clip',
-        clip.title,
-        'This is a test not the real summary. Lorem ipsum placeholder text i need to test the elippsis for longer summaries. Wondering if users should be able to regenerate here as well or if that would be too much ?',
-      )
-    },
-    emitReportToggle() {
-      this.$emit('toggle-report')
-    },
-    test(event) {
-      const file = event.target.files[0]
-      this.imageFile = file
-      console.log('IMAGE FILE', this.imageFile)
-      this.createImage(file)
-    },
-    createImage(file) {
-      const reader = new FileReader()
+    formatDate(dateString) {
+      // Split the date and time part
+      const [datePart] = dateString.split(' ')
 
-      reader.onload = (e) => {
-        this.imageUrl = e.target.result
+      // Create a new Date object
+      const date = new Date(datePart)
+
+      // Get the various components
+      const day = date.getDate()
+      const year = date.getFullYear()
+
+      // Get the month name
+      const monthNames = [
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December',
+      ]
+
+      const monthName = monthNames[date.getMonth()]
+
+      // Assemble the final string
+      return `${monthName} ${day}, ${year}`
+    },
+    getTimeDifferenceInMinutes(dateString) {
+      const currentDate = new Date()
+      const givenDate = new Date(dateString)
+
+      if (
+        givenDate.getDate() === currentDate.getDate() &&
+        givenDate.getMonth() === currentDate.getMonth() &&
+        givenDate.getFullYear() === currentDate.getFullYear()
+      ) {
+        const timeDifferenceInMilliseconds = currentDate - givenDate
+        const timeDifferenceInMinutes = Math.floor(timeDifferenceInMilliseconds / (1000 * 60))
+        if (timeDifferenceInMinutes >= 60) {
+          const timeDifferenceInHours = Math.floor(timeDifferenceInMinutes / 60)
+          const remainingMinutes = timeDifferenceInMinutes % 60
+          return `${timeDifferenceInHours}h`
+        } else {
+          return `${timeDifferenceInMinutes}m`
+        }
+      } else {
+        return `${givenDate.getMonth() + 1}/${givenDate.getDate()}/${givenDate.getFullYear()}`
       }
-      reader.readAsDataURL(file)
     },
-    getArticleDescriptions(articles) {
-      return articles.map((a) => a.content)
-    },
-    clearClips() {
-      this.$emit('clear-clips')
-    },
-    async getSummary() {
-      const allClips = this.getArticleDescriptions(this.clips)
-      this.loading = true
-      try {
-        await Comms.api
-          .getSummary({
-            clips: allClips,
-            search: this.searchTerm,
-            instructions: '',
-          })
-          .then((response) => {
-            this.summary = response.summary
-          })
-      } catch (e) {
-        console.log('Error in getSummary', e)
-        this.$toast('Something went wrong, please try again.', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.loading = false
-      }
+
+    goToArticle(link) {
+      window.open(link, '_blank')
     },
   },
 }
@@ -182,9 +183,13 @@ export default {
   align-items: center;
   justify-content: flex-start;
   height: 100vh;
+  background-color: white;
+  color: $base-gray;
+  font-family: $thin-font-family;
+  overflow-y: scroll;
 }
 .reports::-webkit-scrollbar {
-  width: 6px;
+  width: 0;
   height: 0px;
 }
 
@@ -200,18 +205,287 @@ export default {
   border-radius: 6px;
 }
 
+section {
+  margin-top: 32px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  height: 120px;
+  overflow: none;
+  text-overflow: ellipsis;
+  margin-bottom: 2rem;
+}
+
 .pdf-slide-container {
-  width: 800px;
-  height: 600px;
-  background-color: #ffffff;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 100vw;
+  height: 70vh;
+  position: relative;
+}
+
+.pdf-overlay {
+  position: absolute;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent);
+
+  p,
+  h1 {
+    margin: 0;
+    padding: 0 0 32px 16px;
+    font-family: $thin-font-family;
+    font-weight: 400;
+    color: $off-white;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
 }
 
 .pdf-slide-image {
   width: 100%;
   height: 100%;
+  // box-shadow: 26px 30px 64px rgba(0, 0, 0, 0.1);
   object-fit: cover;
+}
+
+.main {
+  padding: 32px 15vw 64px 15vw;
+}
+
+.pre-text {
+  color: $dark-black-blue;
+  font-family: $thin-font-family;
+  font-size: 17px;
+  line-height: 32px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  padding: 16px 0;
+}
+
+.divider {
+  position: relative;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  width: 100%;
+}
+
+.divider-text {
+  position: absolute;
+  top: -36px;
+  left: 46%;
+  z-index: 20;
+  background-color: white;
+  padding: 6px 18px;
+  border-radius: 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  font-size: 22px;
+}
+
+.off-bg {
+  background-color: $off-white;
+}
+
+.white-bg {
+  background-color: white;
+}
+
+.news-card {
+  position: relative;
+  min-height: 220px;
+  width: 100%;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.3s;
+  padding: 1rem 0;
+  margin-bottom: 1rem;
+}
+
+.card-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.card:hover {
+  transform: scale(1.025);
+}
+.card-top-left {
+  display: flex;
+  font-size: 12px;
+  img {
+    height: 12px;
+    margin-right: 0.5rem;
+  }
+}
+.article-title {
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 24px;
+  letter-spacing: 0;
+  color: $base-gray;
+  margin: 12px 0;
+  max-width: 500px;
+  white-space: nowrap;
+  display: inline;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    color: #6b6b6b;
+  }
+}
+
+.article-preview {
+  color: $base-gray;
+  font-family: $thin-font-family;
+  font-size: 16px;
+  height: 68px;
+  line-height: 24px;
+  display: inline;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  font-weight: 400;
+  margin: 0;
+}
+
+.cover-photo {
+  height: 112px;
+  width: 116px;
+  margin-left: 1rem;
+  margin-top: 1.25rem;
+  border-radius: 4px;
+  object-fit: cover;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.7;
+  }
+}
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  margin-top: 1rem;
+  span {
+    font-size: 13px;
+    margin-right: 0.5rem;
+  }
+}
+
+.author-time {
+  display: flex;
+  align-items: center;
+  color: $light-gray-blue;
+}
+.divier-dot {
+  position: relative;
+  bottom: 0.2rem;
+}
+
+.author {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 200px;
+  min-height: 22px;
+  text-overflow: ellipsis;
+  background-color: $soft-gray;
+  padding: 4px 12px;
+  color: $base-gray;
+  border-radius: 12px;
+}
+
+.off-gray {
+  color: #6b6b6b;
+}
+
+.blue-bg {
+  background-color: $white-blue;
+  padding: 16px;
+  border-radius: 4px;
+}
+
+.mar-top {
+  margin-top: 16px !important;
+}
+
+.no-border {
+  border-bottom: 1px solid transparent !important;
+  box-shadow: none !important;
+}
+
+.report-footer {
+  width: 100vw;
+  position: relative;
+  background-color: red;
+}
+
+.branding {
+  padding: 32px 0 104px 0;
+  font-size: 18px;
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.15), transparent);
+  font-family: $thin-font-family;
+  p,
+  h2 {
+    margin: 0;
+    font-weight: 400;
+  }
+  p {
+    font-size: 20px;
+    color: $dark-black-blue;
+  }
+  small {
+    font-size: 16px;
+  }
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.blue-filter {
+  filter: brightness(0) invert(100%);
+  opacity: 0.7;
+  //  sepia(33%) saturate(348%) hue-rotate(161deg) brightness(91%)
+  //   contrast(90%);
+}
+
+.managr {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-weight: 400;
+
+  p {
+    font-family: $thin-font-family !important;
+    opacity: 0.7;
+    font-size: 28px;
+    span {
+      margin-bottom: -2px;
+    }
+  }
+  small {
+    opacity: 0.7;
+    font-size: 12px;
+    color: white;
+  }
 }
 </style>

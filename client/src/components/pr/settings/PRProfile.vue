@@ -44,16 +44,31 @@
             :loading="loading"
             :disabled="!userInviteForm.field.email.value || loading"
           ></PulseLoadingSpinnerButton>
-
-          <button
-            class="primary-button"
-            v-else
-            @click="copyText"
-            :loading="loading"
-            :disabled="!activationLink || loading"
-          >
-            <img src="@/assets/images/link.svg" height="12px" alt="" /> {{ copyTip }}
-          </button>
+        </div>
+        <div v-if="activationLink" class="vertical-margin">
+          <h3>Your link:</h3>
+          <div>
+            <p class="small-text">{{ activationLink }}</p>
+            <div class="display-flex">
+              <button
+                class="primary-button extra-margin-top"
+                @click="copyText"
+                :loading="loading"
+                :disabled="!activationLink || loading"
+              >
+                <img src="@/assets/images/link.svg" height="12px" alt="" /> {{ copyTip }}
+              </button>
+              <button
+                class="secondary-button extra-margin-top mar-left"
+                @click="clearInvite"
+                :loading="loading"
+                :disabled="!activationLink || loading"
+              >
+                <!-- <img src="@/assets/images/trash.svg" height="12px" alt="" />  -->
+                Clear
+              </button>
+            </div>
+          </div>
         </div>
       </div>
       <div v-if="page === 'users'">
@@ -66,11 +81,13 @@
         <div class="row margin-top margin-bottom">
           <h3 class="team-width thin-font">Name</h3>
           <h3 class="team-width thin-font">Email</h3>
+          <h3 class="team-width thin-font extra-mar-left">Invite</h3>
         </div>
 
         <div class="row smaller-text">
           <div class="team-width">{{ user.fullName.trim() ? user.fullName : '[NO NAME]' }}</div>
           <div class="team-width">{{ user.email }}</div>
+          <div class="team-width">{{  }}</div>
         </div>
 
         <div v-for="teamUser in team.list" :key="teamUser.id" class="row smaller-text">
@@ -80,6 +97,14 @@
           <div v-if="teamUser.id !== user.id" class="team-width thin-font">
             {{ teamUser.email }}
           </div>
+          <div v-if="teamUser.id !== user.id && !teamUser.fullName.trim()" @click="copyUserLink(teamUser.activationLinkRef)" class="invite-link-button-container wrapper thin-font">
+            <img 
+              src="@/assets/images/link.svg"
+              class="invite-link-button"
+            />
+            <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
+          </div>
+          <!-- {{ teamUser.activationLinkRef }} hi -->
         </div>
       </div>
       <div v-if="page === 'profile'">
@@ -205,6 +230,19 @@ export default {
     test(log) {
       console.log('log', log)
     },
+    async copyUserLink(link) {
+      try {
+        await navigator.clipboard.writeText(link)
+        this.copyTip = 'Copied!'
+
+        setTimeout(() => {
+          // this.activationLink = ''
+          this.copyTip = 'Copy link'
+        }, 2000)
+      } catch (err) {
+        console.error('Failed to copy text: ', err)
+      }
+    },
     async copyText() {
       this.disableInput = false
       this.userInviteForm.field.email.value = null
@@ -213,7 +251,7 @@ export default {
         this.copyTip = 'Copied!'
 
         setTimeout(() => {
-          this.activationLink = ''
+          // this.activationLink = ''
           this.copyTip = 'Copy link'
         }, 2000)
       } catch (err) {
@@ -251,6 +289,10 @@ export default {
       this.team.refresh()
       // this.inviteOpen = false
       // this.profileModalOpen = true
+    },
+    clearInvite() {
+      this.activationLink = ''
+      this.disableInput = false
     },
     resetData() {
       this.userInviteForm.field.organization.value = this.user.organization
@@ -361,6 +403,7 @@ export default {
         })
         await this.noSlackRefresh()
         this.resetData()
+        this.disableInput = true
       } catch (e) {
         if (e.response.status === 426) {
           this.$toast('Max users reached, upgrade to add more', {
@@ -380,7 +423,6 @@ export default {
           })
         }
       } finally {
-        this.disableInput = true
         setTimeout(() => {
           this.loading = false
         }, 500)
@@ -498,6 +540,17 @@ export default {
   }
 }
 
+.secondary-button {
+  @include dark-blue-border-button();
+  padding: 11px 12px;
+  font-size: 13px;
+  border: 1px solid $soft-gray;
+  img {
+    filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
+    margin-right: 8px;
+  }
+}
+
 .vertical-margin {
   margin: 32px 0;
 }
@@ -588,5 +641,118 @@ h3 {
 }
 .thin-font {
   font-family: $thin-font-family;
+}
+
+.small-text {
+  font-family: $thin-font-family;
+  font-size: 15px;
+}
+.extra-margin-top {
+  margin-top: 1.5rem;
+}
+.invite-link-button-container {
+  background-color: $dark-black-blue;
+  border-radius: 100%;
+  width: 1.375rem;
+  height: 1.375rem;
+  margin-left: 4rem;
+  cursor: pointer;
+}
+.invite-link-button {
+  height: 14px;
+  filter: invert(99%);
+  margin: 0.25rem;
+}
+.wrapper {
+  display: flex;
+  align-items: center;
+  // background-color: ;
+  font-family: $thin-font-family;
+  font-size: 14px;
+  position: relative;
+  text-align: center;
+  -webkit-transform: translateZ(0); /* webkit flicker fix */
+  -webkit-font-smoothing: antialiased; /* webkit text rendering fix */
+}
+
+.wrapper .tooltip {
+  background: $dark-black-blue;
+  border-radius: 4px;
+  bottom: 100%;
+  color: #fff;
+  display: block;
+  left: -20px;
+  margin-bottom: 15px;
+  opacity: 0;
+  padding: 8px;
+  pointer-events: none;
+  position: absolute;
+  width: 100px;
+  -webkit-transform: translateY(10px);
+  -moz-transform: translateY(10px);
+  -ms-transform: translateY(10px);
+  -o-transform: translateY(10px);
+  transform: translateY(10px);
+  -webkit-transition: all 0.25s ease-out;
+  -moz-transition: all 0.25s ease-out;
+  -ms-transition: all 0.25s ease-out;
+  -o-transition: all 0.25s ease-out;
+  transition: all 0.25s ease-out;
+  -webkit-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -moz-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -ms-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -o-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+}
+
+/* This bridges the gap so you can mouse into the tooltip without it disappearing */
+.wrapper .tooltip:before {
+  bottom: -20px;
+  content: ' ';
+  display: block;
+  height: 20px;
+  left: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.wrapper .tooltip:after {
+  border-left: solid transparent 10px;
+  border-right: solid transparent 10px;
+  border-top: solid $dark-black-blue 10px;
+  bottom: -10px;
+  content: ' ';
+  height: 0;
+  left: 50%;
+  margin-left: -13px;
+  position: absolute;
+  width: 0;
+}
+
+.wrapper:hover .tooltip {
+  opacity: 1;
+  pointer-events: auto;
+  -webkit-transform: translateY(0px);
+  -moz-transform: translateY(0px);
+  -ms-transform: translateY(0px);
+  -o-transform: translateY(0px);
+  transform: translateY(0px);
+}
+
+.lte8 .wrapper .tooltip {
+  display: none;
+}
+
+.lte8 .wrapper:hover .tooltip {
+  display: block;
+}
+.mar-left {
+  margin-left: 1rem;
+}
+.extra-mar-left {
+  margin-left: 3.5rem;
+}
+.display-flex {
+  display: flex;
 }
 </style>

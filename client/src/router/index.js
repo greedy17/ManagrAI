@@ -29,6 +29,11 @@ export default new Router({
       component: () => import('@/views/Pitches'),
     },
     {
+      path: '/transcribe',
+      name: 'PRTranscripts',
+      component: () => import('@/views/PRTranscripts'),
+    },
+    {
       path: '/pr-integrations',
       name: 'PRIntegrations',
       component: () => import('@/views/PRIntegrations')
@@ -83,8 +88,13 @@ export default new Router({
       name: 'AuthCallback',
       component: () => import('@/views/auth/AuthCallback'),
     },
+    // {
+    //   path: '/activation/:userId/:magicToken',
+    //   name: 'RepRegistration',
+    //   component: () => import('@/views/auth/Register')
+    // },
     {
-      path: '/activation/:userId/:magicToken',
+      path: '/activation/:code',
       name: 'RepRegistration',
       component: () => import('@/views/auth/Register')
     },

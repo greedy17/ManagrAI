@@ -21,7 +21,7 @@ from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers.block_sets import get_block_set
 from managr.zoom.zoom_helper import constants as zoom_model_consts
 from managr.zoom.zoom_helper.models import ZoomAcct
-from managr.zoom.zoom_helper.exceptions import InvalidRequest
+from managr.zoom.zoom_helper.exceptions import InvalidRequest, RecordingNotFound
 from managr.slack.models import UserSlackIntegration
 from managr.core.models import User
 from .models import ZoomAuthAccount
@@ -199,7 +199,10 @@ def init_fake_meeting(request):
     user = slack.user
     if not user.has_zoom_integration:
         return Response(
-            data={"response_type": "ephemeral", "text": "Sorry I cant find your zoom account",}
+            data={
+                "response_type": "ephemeral",
+                "text": "Sorry I cant find your zoom account",
+            }
         )
     emit_process_calendar_meetings(
         str(user.id), f"calendar-meetings-{user.email}-{str(uuid.uuid4())}"
@@ -378,7 +381,8 @@ def fake_recording(request):
             user.organization.slack_integration.access_token,
             text="Your meeting recording is ready!",
             block_set=get_block_set(
-                "zoom_recording_blockset", {"u": str(user.id), "url": download_url, "topic": topic},
+                "zoom_recording_blockset",
+                {"u": str(user.id), "url": download_url, "topic": topic},
             ),
         )
     except Exception as e:
@@ -408,11 +412,19 @@ def schedule_zoom_meeting(request):
     extra_participants = data.get("extra_participants")
     for contact in contacts:
         participant_data.append(
-            {"email": contact.email, "name": contact.secondary_data["Name"], "status": "noreply",}
+            {
+                "email": contact.email,
+                "name": contact.secondary_data["Name"],
+                "status": "noreply",
+            }
         )
     for u in internal:
         participant_data.append(
-            {"email": u.email, "name": f"{u.first_name} {u.last_name}", "status": "noreply",}
+            {
+                "email": u.email,
+                "name": f"{u.first_name} {u.last_name}",
+                "status": "noreply",
+            }
         )
     for participant in extra_participants:
         participant_data.append({"email": participant})
@@ -431,12 +443,14 @@ def schedule_zoom_meeting(request):
         return Response(data={"error": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
     return Response(status=status.HTTP_200_OK)
 
+
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
 def get_meetings(request):
     from managr.zoom.zoom_helper.exceptions import TokenExpired
-    date = request.data['date']
-    user = User.objects.get(id=request.data['user_id'])
+
+    date = request.data["date"]
+    user = User.objects.get(id=request.data["user_id"])
     while True:
         try:
             options_res = user.zoom_account.helper_class.get_meetings_by_date(
@@ -453,4 +467,42 @@ def get_meetings(request):
             error = f"Error pulling zoom meetings: {e}"
             meetings = []
             return Response(error=error, status=status.HTTP_400_BAD_REQUEST)
-    return Response(data={'data':meetings}, status=status.HTTP_200_OK)
+    return Response(data={"data": meetings}, status=status.HTTP_200_OK)
+
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def check_for_transcript(request):
+    from managr.zoom.zoom_helper.exceptions import TokenExpired
+
+    user = User.objects.get(id=request.data["user_id"])
+    meeting_id = request.data.get("meeting_id")
+
+    while True:
+        try:
+            meeting_res = ZoomAcct.get_meeting_data(meeting_id, user.zoom_account.access_token)
+            recordings = meeting_res["recording_files"]
+            filtered_recordings = [
+                recording
+                for recording in recordings
+                if recording["recording_type"] == "audio_transcript"
+            ]
+            if len(filtered_recordings):
+                recording_obj = filtered_recordings[0]
+                download_url = recording_obj["download_url"]
+                transcript = ZoomAcct.get_transcript(download_url, user.zoom_account.access_token)
+            break
+        except TokenExpired:
+            user.zoom_account.regenerate_token()
+        except RecordingNotFound:
+            return Response(
+                data={"has_transcript": False}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        except Exception as e:
+            logger.exception(
+                f"Exception when pulling zoom meetings for {user.email} because of {e}"
+            )
+            return Response(
+                data={"has_transcript": False}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    return Response(data={"has_transcript": True}, status=status.HTTP_200_OK)

@@ -120,6 +120,7 @@ export default {
       registrationForm: new RepRegistrationForm(),
       userId: null,
       token: null,
+      code: null,
       email: null,
       isLoading: false,
       organization: null,
@@ -133,9 +134,10 @@ export default {
     }
   },
   async created() {
-    this.userId = this.$route.params.userId
-    this.token = this.$route.params.magicToken
-    await this.retrieveEmail(this.userId, this.token)
+    // this.userId = this.$route.params.userId
+    // this.token = this.$route.params.magicToken
+    this.code = this.$route.params.code
+    await this.retrieveEmail(this.code)
     this.timezones = this.timezones.map((tz) => {
       return { key: tz, value: tz }
     })
@@ -170,11 +172,13 @@ export default {
     test(n) {
       this.registrationForm.field.timezone.value = n.value
     },
-    async retrieveEmail(id, token) {
+    async retrieveEmail(code) {
       this.isLoading = true
       try {
-        const res = await User.api.retrieveEmail(id, token)
+        const res = await User.api.retrieveEmail(code)
         this.registrationForm.field.email.value = res.data.email
+        this.userId = res.data.id
+        this.token = res.data.magic_token
         this.organization = res.data.organization
       } catch (e) {
         this.errorValidatingEmail = true
@@ -191,9 +195,22 @@ export default {
     },
     async onSubmit() {
       this.registrationForm.validate()
+      if (
+        this.registrationForm.field.password.value !==
+        this.registrationForm.field.confirmPassword.value
+      ) {
+        this.$toast('Please make sure password match.', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        return
+      }
       // Do not continue if the form has errors
       if (!this.registrationForm.isValid) {
-        this.$toast('Please complete all fields', {
+        this.$toast(this.registrationForm.errors[0].errors[0].message, {
           timeout: 2000,
           position: 'top-left',
           type: 'error',

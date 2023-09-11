@@ -62,6 +62,7 @@ from .serializers import (
     NoteTemplateSerializer,
     ConversationSerializer,
     ReportSerializer,
+    UserAdminRegistrationSerializer,
 )
 from managr.organization.models import Team
 from .permissions import IsStaff
@@ -527,6 +528,83 @@ def ask_managr(request):
 
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
+def generate_content_transcript(request):
+    from managr.core.exceptions import _handle_response, ServerError, StopReasonLength
+
+    instructions = request.data.get("instructions")
+    user = User.objects.get(id=request.data["user_id"])
+    summary = request.data.get("summary")
+
+    prompt = core_consts.OPEN_AI_TRANSCRIPT_GENERATE_CONTENT(
+        datetime.now().date(), summary, instructions
+    )
+    tokens = 500
+    has_error = False
+    attempts = 1
+    timeout = 60.0
+    while True:
+        try:
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email, prompt, "You are a VP of Communications.", token_amount=tokens
+            )
+            with Variable_Client(timeout) as client:
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            r = _handle_response(r)
+            content = r.get("choices")[0].get("message").get("content")
+            break
+        except StopReasonLength:
+            if tokens >= 2000:
+                break
+            else:
+                tokens += 500
+                continue
+        except ServerError:
+            if attempts >= 5:
+                has_error = True
+                error_message = "There was a server error with Open AI"
+                break
+            else:
+                attempts += 1
+                time.sleep(10.0)
+        except ValueError as e:
+            print(e)
+            if str(e) == "substring not found":
+                continue
+            else:
+                has_error = True
+                error_message = "Looks like we ran into an internal issue"
+                break
+        except SyntaxError as e:
+            print(e)
+            continue
+        except httpx.ReadTimeout:
+            logger.exception(f"Read timeout to Open AI, trying again. TIMEOUT AT: {timeout}")
+            if timeout >= 120.0:
+                has_error = True
+                break
+            else:
+                timeout += 30.0
+        except Exception as e:
+            logger.exception(f"Unknown error on ask managr <{e}>")
+    if has_error:
+        res = {"value": f"{error_message}"}
+        return Response(data=res, status=status.HTTP_400_BAD_REQUEST)
+    return Response(
+        data={
+            **r,
+            "content": content,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
 def deal_review(request):
     from managr.core import constants as core_consts
     from managr.crm.utils import CRM_SWITCHER
@@ -951,29 +1029,29 @@ class UserViewSet(
     def retrieve_email(self, request, *args, **kwargs):
         """retrieve's a users email to display in field on activation"""
         params = request.query_params
-        pk = params.get("id")
-        magic_token = params.get("token")
+        code = params.get("code")
 
         try:
-            user = User.objects.get(pk=pk)
-            if str(user.magic_token) == str(magic_token) and user.is_invited:
-                if user.is_active:
-                    raise ValidationError(
-                        {
-                            "detail": [
-                                (
-                                    "It looks like you have already activate your account, click forgot password to reset it"
-                                )
-                            ]
-                        }
-                    )
-                return Response({"email": user.email, "organization": user.organization.name})
-
-            else:
-                return Response(
-                    {"non_field_errors": ("Invalid Link or Token")},
-                    status=status.HTTP_400_BAD_REQUEST,
+            data = decrypt_dict(code.encode("utf-8"))
+            user = User.objects.get(pk=data.get("id"))
+            if user.is_active:
+                raise ValidationError(
+                    {
+                        "detail": [
+                            (
+                                "It looks like you have already activate your account, click forgot password to reset it"
+                            )
+                        ]
+                    }
                 )
+            return Response(
+                {
+                    "email": user.email,
+                    "organization": user.organization.name,
+                    "id": str(user.id),
+                    "magic_token": data.get("magic_token"),
+                }
+            )
         except User.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -1087,45 +1165,6 @@ class UserViewSet(
                 "data": command_function(),
             }
         return Response(data=response_data)
-
-    @action(
-        methods=["post"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="modify-forecast",
-    )
-    def modify_forecast(self, request, *args, **kwargs):
-        from managr.opportunity.models import Opportunity
-
-        user = request.user
-        action = request.data.get("action")
-        ids = request.data.get("ids")
-        if action == "add":
-            for id in ids:
-                user.current_forecast.add_to_state(id)
-        else:
-            for id in ids:
-                user.current_forecast.remove_from_state(id)
-        return Response(status=status.HTTP_200_OK)
-
-    @action(
-        methods=["get"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="get-forecast-values",
-    )
-    def get_forecast_values(self, request, *args, **kwargs):
-        from managr.opportunity.serializers import OpportunitySerializer
-
-        user = request.user
-        res = user.current_forecast.get_current_values()
-        logger.info(f"FORECAST VALUES ENDPOINT: {res}")
-        opps = []
-        for item in res:
-            serializer = OpportunitySerializer(data=item.as_dict)
-            serializer.is_valid()
-            opps.append(serializer.data)
-        return Response(data=opps, status=status.HTTP_200_OK)
 
     @action(
         methods=["POST"],
@@ -1636,6 +1675,21 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 )
         return Response(response_data)
 
+    @action(
+        methods=["post"],
+        permission_classes=[IsStaff],
+        detail=False,
+        url_path="admin",
+    )
+    def invite_admin(self, request, *args, **kwargs):
+        serializer = UserAdminRegistrationSerializer(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        response_data = serializer.data
+        return Response(response_data)
+
 
 class UserPasswordManagmentView(generics.GenericAPIView):
     authentication_classes = ()
@@ -1916,20 +1970,31 @@ def process_transcript_to_summaries(transcript, user):
 @api_view(["post"])
 @permission_classes([permissions.IsAuthenticated])
 def process_transcript(request):
-    from managr.zoom.background import _process_frontend_transcript
-
-    request_data = {
-        "user_id": request.data["user_id"],
-        "meeting_id": request.data["meeting_id"],
-        "resource_type": request.data["resource_type"],
-        "integration_id": request.data["integration_id"],
-        "resource_id": request.data["resource_id"],
-    }
+    from managr.zoom.background import _process_frontend_transcript, _process_frontend_pr_transcript
 
     user = request.user
-    task = _process_frontend_transcript(
-        request_data, verbose_name=f"transcript-{user.email}-{uuid.uuid4()}"
-    )
+    if user.has_hit_summary_limit:
+        return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
+    if user.role == "PR":
+        request_data = {
+            "user_id": request.data["user_id"],
+            "meeting_id": request.data["meeting_id"],
+        }
+        task = _process_frontend_pr_transcript(
+            request_data, verbose_name=f"transcript-{user.email}-{uuid.uuid4()}"
+        )
+    else:
+        request_data = {
+            "user_id": request.data["user_id"],
+            "meeting_id": request.data["meeting_id"],
+            "resource_type": request.data["resource_type"],
+            "integration_id": request.data["integration_id"],
+            "resource_id": request.data["resource_id"],
+        }
+
+        task = _process_frontend_transcript(
+            request_data, verbose_name=f"transcript-{user.email}-{uuid.uuid4()}"
+        )
     return Response(data={"verbose_name": task.verbose_name}, status=status.HTTP_200_OK)
 
 
@@ -2044,12 +2109,13 @@ class ReportViewSet(
     )
     def get_shared_report(self, request, *args, **kwargs):
         encrypted_code = request.GET.get("code")
-        encrypted_code = base64.urlsafe_b64decode(encrypted_code.encode('utf-8'))
+        # encrypted_code = base64.urlsafe_b64decode(encrypted_code.encode('utf-8'))
         try:
             decrypted_dict = decrypt_dict(encrypted_code)
             id = decrypted_dict.get("id")
+            date = decrypted_dict.get("created_at")
             report = Report.objects.get(id=id)
             serializer = self.get_serializer(report)
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
-        return Response(status=status.HTTP_200_OK, data=serializer.data)
+        return Response(status=status.HTTP_200_OK, data={'data':serializer.data,'date': date})

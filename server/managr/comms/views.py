@@ -132,12 +132,14 @@ class PRSearchViewSet(
     )
     def get_summary(self, request, *args, **kwargs):
         user = request.user
+        if user.has_hit_summary_limit:
+            return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         clips = request.data.get("clips")
         search = request.data.get("search")
         instructions = request.data.get("instructions", False)
         has_error = False
         attempts = 1
-        token_amount = 500
+        token_amount = 1000
         timeout = 60.0
         while True:
             try:
@@ -185,38 +187,40 @@ class PRSearchViewSet(
         url_path="article-summary",
     )
     def get_article_summary(self, request, *args, **kwargs):
+        user = request.user
+        if user.has_hit_summary_limit:
+            return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         url = request.data["params"]["url"]
         search = request.data["params"]["search"]
         instructions = request.data["params"]["instructions"]
         length = request.data["params"]["length"]
-        user = request.user
         has_error = False
         attempts = 1
-        token_amount = 500
+        token_amount = 1000
         timeout = 60.0
         while True:
-            article_res = Article(url, config=generate_config())
-            article_res.download()
-            article_res.parse()
-            text = article_res.text
-            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_ARTICLE_SUMMARY(
-                datetime.now().date(), text, search, length, instructions, True
-            )
-            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                user.email,
-                prompt,
-                "You are a VP of Communications",
-                token_amount=token_amount,
-                top_p=0.1,
-            )
-            with Variable_Client(timeout) as client:
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=core_consts.OPEN_AI_HEADERS,
-                )
             try:
+                article_res = Article(url, config=generate_config())
+                article_res.download()
+                article_res.parse()
+                text = article_res.text
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.OPEN_AI_ARTICLE_SUMMARY(
+                    datetime.now().date(), text, search, length, instructions, True
+                )
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    "You are a VP of Communications",
+                    token_amount=token_amount,
+                    top_p=0.1,
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
                 r = open_ai_exceptions._handle_response(r)
                 message = r.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("article_summaries")
@@ -347,12 +351,14 @@ class PRSearchViewSet(
     )
     def get_tweet_summary(self, request, *args, **kwargs):
         user = request.user
+        if user.has_hit_summary_limit:
+            return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         tweets = request.data.get("tweets")
         search = request.data.get("search")
         instructions = request.data.get("instructions", False)
         has_error = False
         attempts = 1
-        token_amount = 500
+        token_amount = 1000
         timeout = 60.0
         while True:
             try:
@@ -412,6 +418,8 @@ class PRSearchViewSet(
     )
     def get_pitch(self, request, *args, **kwargs):
         user = request.user
+        if user.has_hit_summary_limit:
+            return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         type = request.data.get("type")
         output = request.data.get("output")
         persona = request.data.get("persona")

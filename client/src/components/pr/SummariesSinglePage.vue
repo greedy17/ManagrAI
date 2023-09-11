@@ -55,6 +55,36 @@
         </div>
       </div>
     </Modal>
+    <!-- paidModal -->
+    <Modal v-if="paidModal" class="paid-modal">
+      <div class="regen-container">
+        <div class="paid-header">
+          <div>
+            <h4 class="regen-header-title"></h4>
+            <p class="regen-header-subtitle"></p>
+          </div>
+          <div class="pointer" @click="closePaidModal"><small>X</small></div>
+        </div>
+        <div class="paid-body">
+          <div>
+            <div class="paid-center">
+              <h3 class="paid-title">Upgrade to Pro</h3>
+              <h5 class="regen-body-title">
+                You have reached your usage limit for the month. Please upgrade your plan.
+              </h5>
+            </div>
+            <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
+          </div>
+        </div>
+        <div class="paid-footer">
+          <!-- <div></div> -->
+          <div class="row">
+            <div class="cancel-button" @click="closePaidModal">Close</div>
+            <div class="save-button" @click="goToContact">Contact Us</div>
+          </div>
+        </div>
+      </div>
+    </Modal>
 
     <Reports
       v-if="selectedSearch && ShowReport"
@@ -63,6 +93,7 @@
       @remove-clip="removeClip"
       @edit-clip="editClip"
       :clips="addedClips"
+      :defaultSearch="newSearch"
     />
 
     <div @click="toggleReport" v-if="selectedSearch && !ShowReport" class="floating-action-bar">
@@ -80,7 +111,6 @@
         <div v-if="addedClips.length < 3" class="empty-slot"></div>
       </div>
     </div>
-
     <div class="center column" :class="{ fullHeight: showingDropdown }" v-if="page === 'SUMMARIES'">
       <div v-if="!selectedSearch" class="switcher">
         <div
@@ -191,7 +221,6 @@
                 v-model="newTemplate"
                 v-autoresize
               />
-              <!-- <small @click="removePrompt" class="remove">X</small> -->
             </div>
 
             <div v-if="showingPromptDropdown" class="dropdown">
@@ -704,44 +733,31 @@ export default {
       articleSummaries: {},
       loadingUrl: null,
       articleSummaryLoading: false,
+      paidModal: false,
       showingDropdown: false,
       copyTip: 'Copy',
       searchSuggestions: [
-        'University of Michigan no sports related mentions',
-        'Walmart no stock related mentions',
-        "Boston Children's no ER related stories",
-        'Stranger Things and Netflix',
-        'The Bear and Hulu, reviews or ratings',
-        'Barbie or Oppenheimer movie debut',
-        'Sun bear and China Zoo',
-        'Cancer research and new treatment',
-        '2024 Tesla Model S',
-        'Madden NFL 24 reviews',
-        'Cybertruck vs Rivian',
-        'Rent prices in Manhattan',
-        'Best new electric cars',
+        'Beyond meat broad search',
         'Climate change and wildlife',
+        'List out XXX competitors, by name',
+        `University of Georgia and research`,
+        'University of Michigan no sports related news',
+        'Walmart no stock related news',
+        "Boston Children's no ER related stories",
+        'Cancer research and new treatment',
         'AI only in Techcrunch sources',
         'Articles written or about Ron Miller',
-        'Rutgers University broad search',
-        'Beyond meat broad search',
-        'Beyond burger or sausage or meat',
-        'Chick-fil-a competitors, list them out',
       ],
       promptSuggestions: [
-        `Highlight the top news story and the impact it will have on XXX`,
-        `Newsjack this coverage and turn into a blog post on behalf of XXX`,
-        `List out XXX competitors, by name`,
-        `Prospect 10 companies that would care about this coverage. Draft a short, catchy, casual email opener per this coverage`,
-        `Background on John Smith:\nTips for pitching John Smith:`,
+        'Highlight the top 3 news story and the impact it will have on XXX',
+        `Write a highly engaging LinkedIn post based on this coverage for XXX`,
+        `Craft an entertaining Twitter post based on this coverage for XXX`,
+        'Newsjack this coverage and turn into a blog post on behalf of XXX',
         `Consumer Sentiment:\nMedia & Influencer Sentiment:`,
-        `Executive Summary:\nFaculty, Research & Alumni:\nStudent life:`,
-        `Executive Summary:\nImpact & Donor Insights:\nMember Impact:`,
-        'What is the impact of this coverage on Tesla:',
+        `Background on John Smith:\nTips for pitching John Smith:`,
+        `Prospect 10 companies that would care about this coverage.`,
         'Generate 5 questions and answers a journlist would ask based on this coverage',
-        'Generate 5 questions and answers an analyst would ask based on this coverage of product X',
         'Suggest a strategy to combat the negative coverage',
-        'Suggest a strategy to amplify the positive coverage,',
       ],
     }
   },
@@ -777,13 +793,20 @@ export default {
       this.ShowReport = !this.ShowReport
     },
     addClip(clip) {
-      this.addedClips.push(clip)
+      if (this.addedClips.length < 20) {
+        this.addedClips.push(clip)
+      } else {
+        this.clipLimit()
+      }
     },
     editClip(title, summary) {
       let clip = this.addedClips.filter((clip) => clip.title === title)[0]
       clip['summary'] = summary
       this.addedClips = this.addedClips.filter((clip) => clip.title !== title)
       this.addedClips.unshift(clip)
+    },
+    clipLimit() {
+      console.log('clip limit')
     },
     soonButtonText() {
       this.buttonText = 'Coming Soon!'
@@ -930,7 +953,20 @@ export default {
         return `${givenDate.getMonth() + 1}/${givenDate.getDate()}/${givenDate.getFullYear()}`
       }
     },
+    openPaidModal() {
+      this.paidModal = true
+    },
+    closePaidModal() {
+      this.paidModal = false
+    },
+    goToContact() {
+      window.open('https://managr.ai/contact', '_blank')
+    },
     async generateNewSearch(boolean) {
+      if (!this.isPaid && this.searchesUsed >= 10) {
+        this.openPaidModal()
+        return
+      }
       if (!this.newSearch || this.newSearch.length < 3) {
         return
       } else if (this.mainView === 'social') {
@@ -947,6 +983,7 @@ export default {
               if (this.searchSaved) {
                 this.updateSearch()
               }
+              this.refreshUser()
             })
           })
         } catch (e) {
@@ -956,6 +993,10 @@ export default {
       this.closeRegenModal()
     },
     async getSourceSummary() {
+      if (!this.isPaid && this.searchesUsed >= 10) {
+        this.openPaidModal()
+        return
+      }
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       this.summaryLoading = true
       try {
@@ -967,8 +1008,8 @@ export default {
             length: 1000,
           })
           .then((response) => {
-            console.log(response)
             this.summary = response.summary
+            this.refreshUser()
           })
       } catch (e) {
         console.log(e)
@@ -1102,18 +1143,19 @@ export default {
         tweetList.push(
           'Name :' +
             tweets[i].user.name +
-            'tweet: ' +
+            ' Tweet: ' +
             tweets[i].text +
             ' Follower count: ' +
             tweets[i].user.public_metrics.followers_count +
-            'Date: ' +
+            ' Date: ' +
             tweets[i].created_at,
         )
       }
       return tweetList
     },
     getArticleDescriptions(articles) {
-      return articles.map((a) => a.content)
+      console.log(articles)
+      return articles.map((a) => `Content:${a.content} Date:${a.publishedAt}`)
     },
     async getTweetSummary(instructions = '') {
       let tweets = this.prepareTweetSummary(this.tweets)
@@ -1127,6 +1169,7 @@ export default {
           })
           .then((response) => {
             this.summary = response.summary
+            this.refreshUser()
           })
       } catch (e) {
         console.log('Error in getSummary', e)
@@ -1182,6 +1225,7 @@ export default {
           })
           .then((response) => {
             this.articleSummaries[url] = response.summary
+            this.refreshUser()
           })
       } catch (e) {
         console.log(e)
@@ -1225,6 +1269,18 @@ export default {
         article.title.includes(this.filterText),
       )
     },
+    refreshUser() {
+      User.api
+        .getUser(this.user.id)
+        .then((user) => {
+          this.$store.dispatch('updateUser', user)
+          return user
+        })
+        .catch(() => {
+          // do nothing for now
+          return null
+        })
+    },
     scrollToBottom() {
       setTimeout(() => {
         const chatWindow = this.$refs.chatWindow
@@ -1261,6 +1317,27 @@ export default {
       return this.promptSuggestions.filter((suggestions) =>
         suggestions.toLowerCase().includes(this.newTemplate.toLowerCase()),
       )
+    },
+    isPaid() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!this.$store.state.user.organizationRef.isPaid
+    },
+    searchesUsed() {
+      let arr = []
+      let currentMonth = new Date(Date.now()).getMonth() + 1
+      if (currentMonth < 10) {
+        currentMonth = `0${currentMonth}`
+      } else {
+        currentMonth = `${currentMonth}`
+      }
+      for (let key in this.$store.state.user.metaData) {
+        const item = this.$store.state.user.metaData[key]
+        const filteredByMonth = item.timestamps.filter((date) => {
+          return date.split('-')[1] == currentMonth
+        })
+        arr = [...arr, ...filteredByMonth]
+      }
+      return arr.length
     },
     searchSaved() {
       if (
@@ -2420,6 +2497,16 @@ header {
   border-bottom: 1px solid $soft-gray;
   margin-bottom: 1rem;
 }
+.paid-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.paid-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 .regen-header-title {
   margin: 0.25rem 0;
 }
@@ -2431,6 +2518,9 @@ header {
 .regen-body {
   margin: 0.5rem 0;
   border-bottom: 1px solid $soft-gray;
+}
+.paid-body {
+  margin: 0.5rem 0;
 }
 .regen-body-title {
   margin: 0 0 0 0;
@@ -2457,6 +2547,22 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+.paid-title {
+  margin-top: 0;
+  margin-bottom: 2rem;
+}
+.paid-footer {
+  position: sticky;
+  background: white;
+  width: 100%;
+  bottom: 0;
+  padding-top: 16px;
+  padding-bottom: 8px;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .blue-border-button {
@@ -2487,6 +2593,9 @@ header {
 }
 .regen-modal {
   margin-top: 84px;
+}
+.paid-modal {
+  margin-top: 132px;
 }
 .regen-container {
   width: 500px;

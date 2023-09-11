@@ -93,11 +93,22 @@ product specifics, decision maker, decision process and criteria, internal champ
 plus any budget and cost details. The summary must be in paragraph form. You must use this format: \nSummary: <summary>'"""
 )
 
+OPEN_AI_PR_TRANSCRIPT_SECTIONS_PROMPT = (
+    lambda transcript: f"""
+'input': {transcript},'prompt': 'You are a VP of PR Summarize key points of the Zoom call. Highlight objectives, challenges, strategies, action items, deadlines, stakeholders, and any miscellaneous notes
+Present the summary in a concise and structured manner. You must use this format: \nSummary: <summary>'"""
+)
+
 OPEN_AI_TRANSCRIPT_UPDATE_PROMPT = (
-    lambda input, crm_fields, user: f"""'input': {input}, 'prompt': 'Consolidate and analyze the provided sales call transcript summaries. The sales rep on this call  is {user.first_name} from {user.organization.name}. You must complete the following tasks:
+    lambda input, crm_fields, user: f"""'input': {input}, 'prompt': 'Consolidate and analyze the provided sales call transcript summaries. The sales rep on this call is {user.first_name} from {user.organization.name}. You must complete the following tasks:
 1) Fill in all the relevant data from the transcript into the appropriate CRM fields:\n CRM fields: {crm_fields}\n Leave any non-applicable fields empty, any date must be converted to year-month-day format, and do not include quotes in the values. 
 2) Next, you will compose a concise and impactful summary of the sales call, as if you are the salesperson summarizing key takeaways for your team. Maintain relevance and sales-focused nuances. Make sure to Include what the next steps are at the end.
 3) The output of fields and summary must be a single Python dictionary. Ensure the summary is included in the Python dictionary as the key summary.'"""
+)
+
+OPEN_AI_TRANSCRIPT_PR_PROMPT = (
+    lambda input: f"""'input': {input}, 'prompt': 'You are a VP of PR. Consolidate the following summaries from the Zoom call into one comprehensive summary:
+Ensure the final summary is structured, concise, and captures the overarching objectives, challenges, strategies, action items, deadlines, stakeholders, and any miscellaneous notes. End the summary with proposed and next steps'"""
 )
 
 OPEN_AI_CALL_ANALYSIS_PROMPT = (
@@ -147,15 +158,21 @@ def OPEN_AI_COMPLETIONS_BODY(user_name, prompt, token_amount=500, temperature=Fa
 
 
 def OPEN_AI_CHAT_COMPLETIONS_BODY(
-    user_name, prompt, system_role=False, token_amount=2000, temperature=False, top_p=False,
+    user_name,
+    prompt,
+    system_role=False,
+    token_amount=2000,
+    temperature=False,
+    top_p=False,
 ):
     body = {
         "model": "gpt-4",
-        "messages": [{"role": "user", "content": prompt},],
+        "messages": [
+            {"role": "user", "content": prompt},
+        ],
         "user": user_name,
     }
     if system_role:
-
         first_message = [{"role": "system", "content": system_role}]
         first_message.extend(body["messages"])
         body["messages"] = first_message
@@ -184,7 +201,6 @@ def OPEN_AI_EDIT_BODY(user_name, input, instructions, data, temperature=False, t
 
 
 def OPEN_AI_ASK_MANAGR_PROMPT(user, date, prompt, data):
-
     body = f"""Today's date is {date}. Respond to {user.first_name}’s request using relevant CRM data provided.
 \nCRM_data: {data}
 \nRequest: {prompt}\n
@@ -203,6 +219,11 @@ OPEN_AI_NEWS_BOOLEAN_CONVERSION = (
     3: If the search term is a broad category such as "sports", ensure you include or exclude relevant subtopics (e.g., "football", "baseball", "basketball", "coaches", etc.), based on the nature of the query.
     4: When there are multiple variations or homonyms of a search term, use the boolean 'NOT' to filter out irrelevant results (e.g., use (Carter's NOT "Jimmy Carter's") if the search is aimed at Carter's brand, not the former president).
     Search Term: {search}"""
+)
+
+OPEN_AI_TRANSCRIPT_GENERATE_CONTENT = (
+    lambda date, summary, instructions: f"""Today's date is {date}.
+    Here is call summary {summary} from {date}. Generate content based on these instructions {instructions}."""
 )
 
 
@@ -269,9 +290,18 @@ NOTIFICATION_CLASS_ALERT = "ALERT"
 NOTIFICATION_CLASS_EMAIL = "EMAIL"
 NOTIFICATION_CLASS_SLACK = "SLACK"
 NOTIFICATION_CLASS_CHOICES = (
-    (NOTIFICATION_CLASS_ALERT, "ALERT",),
-    (NOTIFICATION_CLASS_EMAIL, "EMAIL",),
-    (NOTIFICATION_CLASS_SLACK, "SLACK",),
+    (
+        NOTIFICATION_CLASS_ALERT,
+        "ALERT",
+    ),
+    (
+        NOTIFICATION_CLASS_EMAIL,
+        "EMAIL",
+    ),
+    (
+        NOTIFICATION_CLASS_SLACK,
+        "SLACK",
+    ),
 )
 
 NOTIFICATION_RESOURCE_ACCOUNT = "ACCOUNT"
@@ -281,7 +311,10 @@ NOTIFICATION_RESOURCE_REPORT = "REPORT"
 NOTIFICATION_RESOURCE_OPPORTUNITY = "OPPORTUNITY"
 NOTIFICATION_RESOURCE_USER = "USER"
 NOTIFICATION_RESOURCES = (
-    (NOTIFICATION_RESOURCE_ACCOUNT, "Account",),
+    (
+        NOTIFICATION_RESOURCE_ACCOUNT,
+        "Account",
+    ),
     (NOTIFICATION_RESOURCE_ORGANIZATION, "Organization"),
     (NOTIFICATION_RESOURCE_REPORT, "Report"),
     (NOTIFICATION_RESOURCE_OPPORTUNITY, "Opportunity"),
@@ -390,4 +423,3 @@ def REMINDERS():
         REMINDER_MESSAGE_REP: True,
         REMINDER_MESSAGE_MANAGER: True,
     }
-
