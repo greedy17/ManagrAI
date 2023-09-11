@@ -15,7 +15,7 @@
 
     <div style="margin-top: 16px" v-if="reportSuccess">
       <div class="container small">
-        <div style="overflow: hidden" class="top-padding">
+        <div class="top-padding ellipsis-text">
           <small>{{ reportLink }}</small>
         </div>
       </div>
@@ -186,9 +186,15 @@
         <p></p>
 
         <div class="row">
-          <button class="secondary-button" @click="clearClips">Clear</button>
           <button
-            :disabled="!clips.length || !summary || !imageUrl || !reportTitle"
+            :disabled="!clips.length || !summary || !imageUrl || !reportTitle || reportLoading"
+            class="secondary-button"
+            @click="clearClips"
+          >
+            Clear
+          </button>
+          <button
+            :disabled="!clips.length || !summary || !imageUrl || !reportTitle || reportLoading"
             style="margin-left: 16px"
             class="primary-button"
             @click="createReport"
@@ -224,7 +230,7 @@ export default {
       loadingTitle: false,
       showTooltip: false,
       reportSuccess: false,
-      reportLink: null,
+      reportLink: '',
       copyTip: 'Copy',
     }
   },
@@ -305,6 +311,7 @@ export default {
           .getArticleSummary({
             url: url,
             search: '',
+            instructions: '',
             length: length,
           })
           .then((response) => {
@@ -1030,5 +1037,11 @@ a {
 
 .lte8 .wrapper:hover .tooltip {
   display: block;
+}
+
+.ellipsis-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>
