@@ -83,7 +83,7 @@ export default class UserAPI {
 
   async getReport(code) {
     try {
-      const response = await this.client.get(REPORTS + '/shared/', { params: { code: code } })
+      const response = await this.client.get(REPORTS + 'shared/', { params: { code: code } })
       return response.data
     } catch (e) {
       console.error('Error in getReport:', e)
