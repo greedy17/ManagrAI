@@ -19,7 +19,6 @@ from managr.hubspot.serializers import HubspotAuthAccountSerializer
 from .models import (
     User,
     NylasAuthAccount,
-    MeetingPrepInstance,
     NoteTemplate,
     Message,
     Conversation,
@@ -355,19 +354,6 @@ class UserInvitationSerializer(serializers.ModelSerializer):
             "organization": {"required": True},
         }
         read_only_fields = ("organization_ref",)
-
-
-class MeetingPrepInstanceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MeetingPrepInstance
-        fields = (
-            "user",
-            "event_data",
-            "participants",
-            "invocation",
-            "resource_id",
-            "resource_type",
-        )
 
 
 class NoteTemplateSerializer(serializers.ModelSerializer):

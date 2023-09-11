@@ -1,11 +1,10 @@
 import pytz
 import json
 import logging
-from django.conf import settings
 from datetime import datetime, date
 from django.db.models import Q
 from managr.utils.sites import get_site_url
-from managr.core.models import User, MeetingPrepInstance
+from managr.core.models import User
 from managr.salesforce.models import MeetingWorkflow, SObjectField
 from managr.crm.models import ObjectField
 from managr.salesforce import constants as sf_consts
@@ -121,7 +120,8 @@ def schedule_meeting(context):
         "Schedule another Zoom meeting?",
         style="primary",
         action_id=action_with_params(
-            slack_const.ZOOM_MEETING__MEETING_DETAILS, params=[f"u={str(workflow.user.id)}"],
+            slack_const.ZOOM_MEETING__MEETING_DETAILS,
+            params=[f"u={str(workflow.user.id)}"],
         ),
     )
 
@@ -198,7 +198,10 @@ def meeting_review_modal_block_set(context):
             action_id = slack_const.ZOOM_MEETING__STAGE_SELECTED + f"?w={context.get('w')}"
             block = {
                 **block,
-                "accessory": {**block["accessory"], "action_id": f"{action_id}",},
+                "accessory": {
+                    **block["accessory"],
+                    "action_id": f"{action_id}",
+                },
             }
             blocks = [*blocks[:index], block, *blocks[index + 1 :]]
 
@@ -218,7 +221,10 @@ def meeting_review_modal_block_set(context):
             block_builders.simple_button_block(
                 "Add Product",
                 "ADD_PRODUCT",
-                action_id=action_with_params(slack_const.PROCESS_ADD_PRODUCTS_FORM, params=params,),
+                action_id=action_with_params(
+                    slack_const.PROCESS_ADD_PRODUCTS_FORM,
+                    params=params,
+                ),
             )
         )
         if len(user.crm_account.custom_objects) > 0:
@@ -227,11 +233,17 @@ def meeting_review_modal_block_set(context):
                     "Add Custom Object",
                     "ADD_CUSTOM_OBJECT",
                     action_id=action_with_params(
-                        slack_const.PROCESS_PICK_CUSTOM_OBJECT, params=params,
+                        slack_const.PROCESS_PICK_CUSTOM_OBJECT,
+                        params=params,
                     ),
                 )
             )
-        blocks.append(block_builders.actions_block(buttons, block_id="ADD_EXTRA_OBJECTS_BUTTON",),)
+        blocks.append(
+            block_builders.actions_block(
+                buttons,
+                block_id="ADD_EXTRA_OBJECTS_BUTTON",
+            ),
+        )
         if current_products:
             for product in current_products:
                 product_block = block_sets.get_block_set(
@@ -270,7 +282,12 @@ def attach_resource_interaction_block_set(context, *args, **kwargs):
     blocks = [
         block_builders.static_select(
             f":information_source: Select a CRM record type",
-            [*map(lambda resource: block_builders.option(resource, resource), options,)],
+            [
+                *map(
+                    lambda resource: block_builders.option(resource, resource),
+                    options,
+                )
+            ],
             action_id=action,
             block_id=slack_const.ZOOM_MEETING__ATTACH_RESOURCE_SECTION,
         ),
@@ -328,7 +345,10 @@ def create_modal_block_set(context, *args, **kwargs):
         template = (
             OrgCustomSlackForm.objects.for_user(user)
             .filter(
-                Q(resource=context.get("resource_type"), form_type=slack_const.FORM_TYPE_CREATE,)
+                Q(
+                    resource=context.get("resource_type"),
+                    form_type=slack_const.FORM_TYPE_CREATE,
+                )
             )
             .first()
         )
@@ -374,7 +394,10 @@ def create_modal_block_set(context, *args, **kwargs):
             action_id = slack_const.ZOOM_MEETING__STAGE_SELECTED + f"?w={context.get('w')}"
             block = {
                 **block,
-                "accessory": {**block["accessory"], "action_id": f"{action_id}",},
+                "accessory": {
+                    **block["accessory"],
+                    "action_id": f"{action_id}",
+                },
             }
             blocks = [*blocks[:index], block, *blocks[index + 1 :]]
     else:
@@ -495,7 +518,8 @@ def convert_meeting_lead_block_set(context):
                 block_builders.checkbox_input(
                     [
                         block_builders.checkbox_option(
-                            "Choose existing Opportunity", "EXISTING_OPPORTUNITY",
+                            "Choose existing Opportunity",
+                            "EXISTING_OPPORTUNITY",
                         )
                     ],
                     action_id=action_with_params(
@@ -519,7 +543,8 @@ def convert_meeting_lead_block_set(context):
                 block_builders.checkbox_input(
                     [
                         block_builders.checkbox_option(
-                            "Choose existing Account", "EXISTING_ACCOUNT",
+                            "Choose existing Account",
+                            "EXISTING_ACCOUNT",
                         )
                     ],
                     action_id=action_with_params(
@@ -539,7 +564,8 @@ def convert_meeting_lead_block_set(context):
                 block_builders.checkbox_input(
                     [
                         block_builders.checkbox_option(
-                            "Choose existing Contact", "EXISTING_CONTACT",
+                            "Choose existing Contact",
+                            "EXISTING_CONTACT",
                         )
                     ],
                     action_id=action_with_params(
@@ -604,7 +630,8 @@ def convert_lead_block_set(context):
                 block_builders.checkbox_input(
                     [
                         block_builders.checkbox_option(
-                            "Choose existing Opportunity", "EXISTING_OPPORTUNITY",
+                            "Choose existing Opportunity",
+                            "EXISTING_OPPORTUNITY",
                         )
                     ],
                     action_id=action_with_params(
@@ -628,7 +655,8 @@ def convert_lead_block_set(context):
                 block_builders.checkbox_input(
                     [
                         block_builders.checkbox_option(
-                            "Choose existing Account", "EXISTING_ACCOUNT",
+                            "Choose existing Account",
+                            "EXISTING_ACCOUNT",
                         )
                     ],
                     action_id=action_with_params(
@@ -652,7 +680,8 @@ def convert_lead_block_set(context):
                 block_builders.checkbox_input(
                     [
                         block_builders.checkbox_option(
-                            "Choose existing Contact", "EXISTING_CONTACT",
+                            "Choose existing Contact",
+                            "EXISTING_CONTACT",
                         )
                     ],
                     action_id=action_with_params(
@@ -720,7 +749,11 @@ def meeting_blockset(context):
             block_id=str(workflow.id),
             action_id=action_with_params(
                 slack_const.ZOOM_MEETING__INIT_REVIEW,
-                params=[f"u={str(workflow.user.id)}", f"w={str(workflow.id)}", "type=meeting",],
+                params=[
+                    f"u={str(workflow.user.id)}",
+                    f"w={str(workflow.id)}",
+                    "type=meeting",
+                ],
             ),
         )
     elif len(workflow.operations) and workflow.progress < 100:
@@ -812,7 +845,11 @@ def paginated_meeting_blockset(context):
                 block_id=str(workflow.id),
                 action_id=action_with_params(
                     slack_const.ZOOM_MEETING__INIT_REVIEW,
-                    params=[f"u={str(workflow.user.id)}", f"w={str(workflow.id)}", "type=meeting",],
+                    params=[
+                        f"u={str(workflow.user.id)}",
+                        f"w={str(workflow.id)}",
+                        "type=meeting",
+                    ],
                 ),
             )
         elif (
