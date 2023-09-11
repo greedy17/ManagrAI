@@ -141,7 +141,7 @@
 
       <div class="no-content" v-if="!selectedSearch">
         <div class="title-row">
-          <div @click="getReports" class="row" v-if="!newSearch">
+          <div class="row" v-if="!newSearch">
             <p class="typed">
               {{
                 mainView === 'social'

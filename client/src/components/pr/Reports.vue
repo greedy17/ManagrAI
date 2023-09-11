@@ -3,166 +3,180 @@
     <header class="blur-bottom">
       <div @click="getReports">
         <h3>Share</h3>
-        <small class="subtext">Customize & preview your report</small>
+        <small class="subtext">Customize & create a report</small>
       </div>
 
       <div @click="emitReportToggle" class="report-toggle">
         <img src="@/assets/images/close.svg" height="14px" alt="" />
       </div>
     </header>
-    <div class="container">
-      <img v-if="imageUrl" :src="imageUrl" height="80px" alt="Uploaded Cover" class="cover-photo" />
+    <div v-if="reportSuccess"></div>
+    <div v-else>
+      <div :class="{ dull: reportLoading }" class="container">
+        <img
+          style="margin-top: 8px"
+          v-if="imageUrl"
+          :src="imageUrl"
+          alt="Uploaded Cover"
+          class="cover-photo"
+        />
 
-      <div class="top-padding">
-        <p v-if="!imageUrl">Cover Slide</p>
-        <small v-if="!imageUrl">Add a cover slide</small>
+        <div class="top-padding">
+          <p v-if="!imageUrl">Cover Slide</p>
+          <small v-if="!imageUrl">Add title and cover image</small>
 
-        <input id="imageInput" class="absolute pointer" type="file" @change="test" />
+          <input id="imageInput" class="absolute pointer" type="file" @change="test" />
 
-        <svg class="absolute pointer" width="18" height="18">
-          <path d="M9 9H3v1h6v6h1v-6h6V9h-6V3H9v6z" fill-rule="evenodd"></path>
-        </svg>
-      </div>
-    </div>
-    <div class="container medium">
-      <div style="padding-bottom: 8px" class="space-between sticky-top">
-        <div>
-          <p>Summary</p>
-          <small>AI-generated summary of the clips below</small>
+          <svg class="absolute pointer" width="18" height="18">
+            <path d="M9 9H3v1h6v6h1v-6h6V9h-6V3H9v6z" fill-rule="evenodd"></path>
+          </svg>
         </div>
-
-        <button
-          @click="getSummary"
-          :disabled="!clips.length || loading || summaryLoading"
-          class="secondary-button"
-        >
-          Generate
-        </button>
-      </div>
-
-      <div class="summary-body">
-        <div class="loader-container" v-if="loading">
-          <div class="loading">
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
+        <!-- @mouseenter="isHovering" @mouseleave="notHovering"  -->
+        <div class="report-name">
+          <div class="relative row">
+            <input
+              :disabled="reportLoading"
+              class="text-input no-margin"
+              placeholder="Report Title..."
+              autofocus
+              @blur="showTitleSave"
+              v-model="reportTitle"
+              type="text"
+            />
+            <!-- <button style="margin-left: 8px" class="secondary-button">save</button> -->
           </div>
         </div>
-        <small v-else-if="summary">
-          <pre class="pre-text" v-html="summary"></pre>
-        </small>
+      </div>
+      <div :class="{ dull: reportLoading }" class="container medium">
+        <div style="padding-bottom: 8px" class="space-between sticky-top">
+          <div>
+            <p>Summary</p>
+            <small>Generate a summary of the clips below</small>
+          </div>
 
-        <div v-else>
-          <!-- <input
+          <button
+            @click="getSummary"
+            :disabled="!clips.length || loading || summaryLoading"
+            class="secondary-button"
+          >
+            {{ summary ? 'Regenerate' : 'Generate' }}
+          </button>
+        </div>
+
+        <div class="summary-body">
+          <div class="loader-container" v-if="loading">
+            <div class="loading">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+          </div>
+          <small class="pointer" v-else-if="summary">
+            <pre
+              ref="editablePre"
+              @input="updateSummary"
+              contenteditable="true"
+              class="pre-text cursor"
+              v-html="summary"
+              :disabled="reportLoading"
+            ></pre>
+          </small>
+
+          <div v-else>
+            <!-- <input
             :disabled="!clips.length || loading || summaryLoading"
             class="text-input"
             placeholder="Search term..."
             type="text"
             v-model="searchTerm"
           /> -->
-          <textarea
-            :disabled="!clips.length || loading || summaryLoading"
-            v-autoresize
-            class="area-input"
-            placeholder="Summary instructions (optional)..."
-            v-model="instructions"
-          ></textarea>
+            <textarea
+              :disabled="!clips.length || loading || summaryLoading || reportLoading"
+              v-autoresize
+              class="area-input"
+              placeholder="Summary instructions (optional)..."
+              v-model="instructions"
+            ></textarea>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="container-large">
-      <div class="space-between sticky-top">
-        <div>
-          <p>Clips</p>
-          <small>Clips included in your report</small>
-        </div>
+      <div :class="{ dull: reportLoading }" class="container-large">
+        <div class="space-between sticky-top">
+          <div>
+            <p>Clips</p>
+            <small>Clips included in your report</small>
+          </div>
 
-        <div class="counter">{{ clips.length }}/20</div>
-      </div>
-
-      <div
-        @mouseenter="setRow(i)"
-        @mouseleave="removeRow"
-        class="clip"
-        :class="{ 'blue-bg': clip.summary }"
-        v-for="(clip, i) in clips"
-        :key="i"
-      >
-        <div class="clip-header">
-          <img :src="clip.urlToImage" class="clip-photo" />
-          <small>{{ clip.title }}</small>
-        </div>
-
-        <div v-if="clip.summary" class="summary-box">
-          <pre v-html="clip.summary" class="pre-text-small"></pre>
+          <div class="counter">{{ clips.length }}/20</div>
         </div>
 
         <div
+          @mouseenter="setRow(i)"
+          @mouseleave="removeRow"
+          class="clip"
           :class="{ 'blue-bg': clip.summary }"
-          v-show="currentRow === i || loadingUrl === clip.url"
-          class="row absolute-right actions"
+          v-for="(clip, i) in clips"
+          :key="i"
         >
-          <img
-            @click="getArticleSummary(clip.title, clip.url)"
-            style="margin-right: 12px"
-            class="blue"
-            v-if="!summaryLoading"
-            v-show="!clip.summary || !(loading || summaryLoading)"
-            src="@/assets/images/sparkles-thin.svg"
-            height="16px"
-          />
+          <div class="clip-header">
+            <img :src="clip.urlToImage" class="clip-photo" />
+            <small>{{ clip.title }}</small>
+          </div>
 
-          <img
-            style="margin-right: 12px"
-            v-else-if="loadingUrl === clip.url"
-            class="rotate"
-            height="16px"
-            src="@/assets/images/loading.svg"
-            alt=""
-          />
+          <div v-if="clip.summary" class="summary-box">
+            <pre v-html="clip.summary" class="pre-text-small"></pre>
+          </div>
 
-          <img
-            @click="removeClip(clip)"
-            class="danger"
-            src="@/assets/images/trash.svg"
-            height="16px"
-          />
+          <div
+            :class="{ 'blue-bg': clip.summary }"
+            v-show="currentRow === i || loadingUrl === clip.url"
+            class="row absolute-right actions"
+          >
+            <img
+              @click="getArticleSummary(clip.title, clip.url)"
+              style="margin-right: 12px"
+              class="blue"
+              v-if="!summaryLoading && !clip.summary"
+              v-show="!clip.summary || !(loading || summaryLoading || reportLoading)"
+              src="@/assets/images/sparkles-thin.svg"
+              height="16px"
+            />
+
+            <img
+              style="margin-right: 12px"
+              v-else-if="loadingUrl === clip.url"
+              class="rotate"
+              height="16px"
+              src="@/assets/images/loading.svg"
+              alt=""
+            />
+
+            <img
+              @click="removeClip(clip)"
+              class="danger"
+              src="@/assets/images/trash.svg"
+              height="16px"
+            />
+          </div>
         </div>
       </div>
+      <footer>
+        <p></p>
+
+        <div class="row">
+          <button class="secondary-button" @click="clearClips">Clear</button>
+          <button
+            :disabled="!clips.length || !summary || !imageUrl || !reportTitle"
+            style="margin-left: 16px"
+            class="primary-button"
+            @click="createReport"
+          >
+            Create Report
+          </button>
+        </div>
+      </footer>
     </div>
-    <footer>
-      <div @mouseenter="isHovering" @mouseleave="notHovering" class="report-name">
-        <div class="relative" v-if="editingTitle">
-          <input class="text-input no-margin" v-model="reportTitle" type="text" />
-          <img
-            @click="toggleTitleEdit"
-            class="abs-input-img"
-            height="12px"
-            src="@/assets/images/check.svg"
-            alt=""
-          />
-        </div>
-
-        <p class="pointer" v-else @click="toggleTitleEdit">
-          {{ reportTitle }}
-          <img
-            v-if="hovering"
-            style="margin-left: 8px"
-            src="@/assets/images/edit.svg"
-            height="14px"
-            alt=""
-          />
-        </p>
-      </div>
-
-      <div class="row">
-        <button class="secondary-button" @click="clearClips">Clear</button>
-        <button style="margin-left: 16px" class="primary-button" @click="createReport">
-          Preview
-        </button>
-      </div>
-    </footer>
   </div>
 </template>
 <script>
@@ -176,31 +190,53 @@ export default {
       imageUrl: null,
       summary: '',
       searchTerm: '',
-      reportTitle: 'REPORT NAME',
+      reportTitle: '',
       loading: false,
       currentRow: null,
       imageFile: null,
       summaryLoading: false,
       loadingUrl: null,
+      reportLoading: false,
       instructions: null,
       editingTitle: false,
       hovering: false,
       loadingTitle: false,
+      showTooltip: false,
+      reportSuccess: false,
     }
   },
-  // watch: {
-  //   reportTitle: 'saveTitle',
-  // },
+
   props: {
     clips: {},
     defaultSearch: {},
   },
   methods: {
+    showTitleSave() {
+      this.showTooltip = true
+      setTimeout(() => {
+        this.showTooltip = false
+      }, 1000)
+    },
+    updateSummary() {
+      let selection = window.getSelection()
+      let range = selection.getRangeAt(0)
+      let position = range.startOffset
+
+      this.summary = this.$refs.editablePre.textContent
+
+      this.$nextTick(() => {
+        let newRange = document.createRange()
+        let selection = window.getSelection()
+        newRange.setStart(this.$refs.editablePre.firstChild, position)
+        newRange.collapse(true)
+        selection.removeAllRanges()
+        selection.addRange(newRange)
+      })
+    },
     isHovering() {
       this.hovering = true
     },
     notHovering() {
-      console.log('here')
       this.hovering = false
     },
     toggleTitleEdit() {
@@ -209,10 +245,12 @@ export default {
     async getReports() {
       try {
         await User.api.getReports({ user: this.$store.state.user.id }).then((response) => {
-          console.log(response)
+          console.log(response.results[response.results.length - 1])
         })
       } catch (e) {
         console.log(e)
+      } finally {
+        this.reportSuccess = true
       }
     },
     async getArticleSummary(title, url, length = 500) {
@@ -222,8 +260,7 @@ export default {
         await Comms.api
           .getArticleSummary({
             url: url,
-            search: this.searchTerm ? this.searchTerm : this.defaultSearch,
-            instructions: this.instructions,
+            search: '',
             length: length,
           })
           .then((response) => {
@@ -237,6 +274,7 @@ export default {
       }
     },
     async createReport() {
+      this.reportLoading = true
       let formData = new FormData()
       formData.append('title', this.reportTitle)
       let imageFile = document.querySelector('#imageInput').files[0]
@@ -253,10 +291,12 @@ export default {
       )
       try {
         await User.api.createReport(formData).then((response) => {
-          console.log(response)
+          this.getReports()
         })
       } catch (e) {
         console.log(e)
+      } finally {
+        this.reportLoading = false
       }
     },
     setRow(i) {
@@ -306,8 +346,8 @@ export default {
         await Comms.api
           .getSummary({
             clips: allClips,
-            search: this.searchTerm,
-            instructions: '',
+            search: '',
+            instructions: this.instructions,
           })
           .then((response) => {
             this.summary = response.summary
@@ -346,6 +386,11 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+pre[contenteditable]:focus {
+  border: none;
+  outline: none;
+}
 
 .reports {
   width: 500px;
@@ -752,14 +797,14 @@ footer {
   margin-bottom: 16px;
   outline: none;
   background-color: $offer-white;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: none;
   border-radius: 4px;
   letter-spacing: 0.5px;
   font-size: 13px;
   font-family: $base-font-family;
   font-weight: 400;
   color: $dark-black-blue;
-  padding: 0.5rem 1rem;
+  padding: 0.475rem 1rem;
 }
 
 .area-input {
@@ -784,14 +829,13 @@ footer {
 }
 
 .report-name {
-  width: 300px;
-  overflow: hidden;
-
-  p {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
+  max-width: 300px;
+  position: absolute;
+  bottom: 16px;
+  left: 0;
+  padding: 2px 8px;
+  border-radius: 5px;
+  background-color: white;
 }
 
 .relative {
@@ -821,5 +865,13 @@ footer {
 
 .pointer {
   cursor: pointer;
+}
+
+.dull {
+  opacity: 0.5;
+}
+.green-filter {
+  filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
+    contrast(82%);
 }
 </style>
