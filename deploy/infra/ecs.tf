@@ -153,12 +153,17 @@ data "template_file" "managr_app_scheduled_tasks" {
     fargate_memory    = var.fargate_memory
     aws_region        = data.aws_region.current.name
     config_secret_arn = aws_secretsmanager_secret.managr_config[each.value.env.name].arn
-
     allowed_hosts  = each.value.env.allowed_hosts != "" ? each.value.env.allowed_hosts : "*"
     current_domain = each.value.env.current_domain != "" ? each.value.env.current_domain : aws_alb.main.dns_name
     current_port   = 8000
     debug          = title(each.value.env.debug)
-
+    health_check   = {
+      command       = ["CMD-SHELL", "curl -f ${var.health_check_path} || exit 1"]
+      interval      = 30
+      timeout       = 5
+      retries       = 3
+      startPeriod   = 60
+    }
     use_rollbar = title(each.value.env.use_rollbar)
 
     use_custom_smtp            = title(each.value.env.use_custom_smtp)
@@ -213,6 +218,7 @@ resource "aws_ecs_task_definition" "app_scheduled_tasks" {
   memory                   = var.fargate_memory
   container_definitions    = data.template_file.managr_app_scheduled_tasks[each.key].rendered
   task_role_arn            = aws_iam_role.ecs_task_role_ecs_exec.arn
+  health_check             = jsonencode(each.value.health_check)
   volume {
     name = "nginx-conf-vol"
   }

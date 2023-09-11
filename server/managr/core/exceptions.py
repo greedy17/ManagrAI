@@ -1,6 +1,5 @@
 import json
 import logging
-import httpx
 from requests.exceptions import HTTPError
 
 logger = logging.getLogger("managr")

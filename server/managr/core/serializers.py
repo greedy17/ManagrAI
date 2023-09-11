@@ -19,10 +19,10 @@ from managr.hubspot.serializers import HubspotAuthAccountSerializer
 from .models import (
     User,
     NylasAuthAccount,
-    MeetingPrepInstance,
     NoteTemplate,
     Message,
     Conversation,
+    Report,
 )
 
 
@@ -357,19 +357,6 @@ class UserInvitationSerializer(serializers.ModelSerializer):
         read_only_fields = ("organization_ref",)
 
 
-class MeetingPrepInstanceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MeetingPrepInstance
-        fields = (
-            "user",
-            "event_data",
-            "participants",
-            "invocation",
-            "resource_id",
-            "resource_type",
-        )
-
-
 class NoteTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = NoteTemplate
@@ -429,3 +416,15 @@ class UserTrialSerializer(serializers.ModelSerializer):
         searches = Search.objects.filter(user=instance)
         serialized = SearchSerializer(searches, many=True).data
         return serialized
+
+
+class ReportSerializer(serializers.ModelSerializer):
+    share_url = serializers.SerializerMethodField("get_share_url")
+
+    class Meta:
+        model = Report
+        fields = ("title", "user", "main_image", "meta_data", "share_url")
+
+    def get_share_url(self, instance):
+        url = instance.generate_url()
+        return url

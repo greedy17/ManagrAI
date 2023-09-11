@@ -43,6 +43,11 @@ export default new Router({
       component: () => import('@/views/PRIntegrations')
     },
     {
+      path: '/reports',
+      name: 'PRReports',
+      component: () => import('@/views/PRReports')
+    },
+    {
       path: '/pr-settings',
       name: 'PRSettings',
       beforeEnter: Auth.requireAuth,
@@ -62,6 +67,11 @@ export default new Router({
       path: '/loginsignup',
       name: 'LoginOrSignup',
       component: () => import('@/views/auth/LoginOrSignup')
+    },
+    {
+      path: '/shared/:code?',
+      name: 'SharedReport',
+      component: () => import('../components/pr/SharedReport')
     },
     {
       path: '/admin-registration',

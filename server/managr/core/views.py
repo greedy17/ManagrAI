@@ -20,6 +20,7 @@ from django.conf import settings
 from django_filters.rest_framework import DjangoFilterBackend
 from background_task.models import CompletedTask
 from datetime import datetime
+import base64
 
 from rest_framework.views import APIView
 from rest_framework import (
@@ -50,7 +51,7 @@ from managr.core.utils import (
 )
 from managr.slack.helpers import requests as slack_requests, block_builders
 from .nylas.auth import get_access_token, get_account_details
-from .models import User, NylasAuthAccount, NoteTemplate, Message, Conversation
+from .models import User, NylasAuthAccount, NoteTemplate, Message, Conversation, Report
 from .serializers import (
     UserSerializer,
     UserClientSerializer,
@@ -60,6 +61,7 @@ from .serializers import (
     UserRegistrationSerializer,
     NoteTemplateSerializer,
     ConversationSerializer,
+    ReportSerializer,
     UserAdminRegistrationSerializer,
 )
 from managr.organization.models import Team
@@ -2066,3 +2068,61 @@ class ConversationViewSet(viewsets.ModelViewSet):
         queryset = Conversation.objects.filter(user=user)
 
         return queryset
+
+
+class ReportViewSet(
+    viewsets.GenericViewSet,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.ListModelMixin,
+):
+    serializer_class = ReportSerializer
+
+    def get_queryset(self):
+        return Report.objects.for_user(self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        except Exception as e:
+            logger.exception(f"Error validating data for report <{e}>")
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_201_CREATED)
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = self.request.data
+        serializer = self.serializer_class(instance=instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            instance.delete()
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.AllowAny],
+        detail=False,
+        url_path="shared",
+    )
+    def get_shared_report(self, request, *args, **kwargs):
+        encrypted_code = request.GET.get("code")
+        # encrypted_code = base64.urlsafe_b64decode(encrypted_code.encode('utf-8'))
+        try:
+            decrypted_dict = decrypt_dict(encrypted_code)
+            id = decrypted_dict.get("id")
+            date = decrypted_dict.get("created_at")
+            report = Report.objects.get(id=id)
+            serializer = self.get_serializer(report)
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_200_OK, data={'data':serializer.data,'date': date})
