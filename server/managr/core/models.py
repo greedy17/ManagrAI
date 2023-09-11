@@ -695,6 +695,48 @@ class MeetingPrepQuerySet(models.QuerySet):
             return self.filter(user=user.id)
 
 
+class MeetingPrepInstance(TimeStampModel):
+    user = models.ForeignKey(
+        "core.User", on_delete=models.CASCADE, related_name="meeting_preps", null=True
+    )
+    participants = ArrayField(
+        JSONField(max_length=128, default=dict),
+        default=list,
+        blank=True,
+        null=True,
+        help_text="Json object of participants",
+    )
+    event_data = JSONField(max_length=128, default=dict)
+    resource_id = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text="The id of the related resource unopinionated",
+    )
+    resource_type = models.CharField(
+        max_length=255, null=True, blank=True, help_text="The class name of the resource"
+    )
+    invocation = models.PositiveIntegerField(
+        default=0,
+        help_text="Keeps track of the number of times the meeting instance was called",
+    )
+    form = models.OneToOneField(
+        "slack.OrgCustomSlackFormInstance",
+        on_delete=models.CASCADE,
+        related_name="meeting_prep_instance",
+        null=True,
+        blank=True,
+    )
+    objects = MeetingPrepQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["datetime_created"]
+
+    @property
+    def title(self):
+        return self.event_data["title"]
+
+
 class UserActivity(models.Model):
     user = models.OneToOneField(
         "core.User", on_delete=models.SET_NULL, related_name="activity", null=True
