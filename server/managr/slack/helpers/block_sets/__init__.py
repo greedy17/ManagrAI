@@ -31,7 +31,6 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "error_modal": common_blocksets.error_modal_block_set,
         "error_message": common_blocksets.error_message_block_set,
         "onboarding_interaction": common_blocksets.onboarding_interaction_block_set,
-        "create_meeting_task": meeting_review_block_sets.create_meeting_task,
         "schedule_meeting": meeting_review_block_sets.schedule_meeting,
         "add_to_cadence": meeting_review_block_sets.add_to_cadence_block_set,
         "success_modal": common_blocksets.success_modal_block_set,
@@ -56,7 +55,6 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "sequence_modal_blockset": command_views_blocksets.create_add_to_sequence_block_set,
         "select_account": command_views_blocksets.command_select_account_interaction,
         "initial_inline_blockset": command_views_blocksets.initial_inline_blockset,
-        "choose_opportunity": command_views_blocksets.choose_opportunity_block_set,
         "send_recap_block_set": meeting_review_block_sets.send_recap_block_set,
         "actions_block_set": command_views_blocksets.actions_block_set,
         "update_command_block_set": command_views_blocksets.update_command_block_set,
@@ -73,6 +71,6 @@ def get_block_set(set_name, context={}, *args, **kwargs):
         "update_form_blockset": common_blocksets.update_form_blockset,
         "chat_prompt_blockset": common_blocksets.chat_prompt_blockset,
         "meeting_blockset": meeting_review_block_sets.meeting_blockset,
-        "news_summary_blockset": command_views_blocksets.news_summary_blockset
+        "news_summary_blockset": command_views_blocksets.news_summary_blockset,
     }
     return switcher.get(set_name)(context, *args, **kwargs)
