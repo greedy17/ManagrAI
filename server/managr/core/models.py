@@ -19,7 +19,6 @@ from managr.core import constants as core_consts
 from managr.organization import constants as org_consts
 from managr.slack.helpers import block_builders
 from managr.core.nylas.auth import convert_local_time_to_unix
-
 from .nylas.exceptions import NylasAPIError
 from managr.core.nylas.auth import gen_auth_url, revoke_access_token
 

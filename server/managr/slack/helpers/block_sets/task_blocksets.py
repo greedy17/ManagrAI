@@ -1,23 +1,7 @@
-import pdb
-import pytz
-import uuid
-import json
-
-from datetime import datetime, date
-
-from django.db.models import Q
-
-from managr.utils.sites import get_site_url
-from managr.core.models import User, Notification
-from managr.opportunity.models import Opportunity
-from managr.salesforce.models import MeetingWorkflow
-from managr.salesforce import constants as sf_consts
+from managr.core.models import User
 from managr.slack import constants as slack_const
-from managr.slack.helpers.utils import action_with_params, block_set, map_fields_to_type
+from managr.slack.helpers.utils import block_set
 from managr.slack.helpers import block_builders
-from managr.utils.misc import snake_to_space
-from managr.salesforce.routes import routes as form_routes
-from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 from managr.salesforce.routes import routes as model_routes
 
 
@@ -39,7 +23,11 @@ def create_task_modal_block_set(context):
     )
 
     blocks = [
-        block_builders.input_block("Subject", optional=False, block_id="managr_task_subject",),
+        block_builders.input_block(
+            "Subject",
+            optional=False,
+            block_id="managr_task_subject",
+        ),
         # HACK:- According to slack values are cached based on block_id since this is a sub block adding action_id seems to preserve the value
         block_builders.input_block("Comments", block_id="managr_task_description", multiline=True),
         block_builders.datepicker(
@@ -104,7 +92,11 @@ def create_event_modal_block_set(context):
     )
 
     blocks = [
-        block_builders.input_block("Subject", optional=False, block_id="managr_event_subject",),
+        block_builders.input_block(
+            "Subject",
+            optional=False,
+            block_id="managr_event_subject",
+        ),
         # HACK:- According to slack values are cached based on block_id since this is a sub block adding action_id seems to preserve the value
         block_builders.datepicker(
             block_id="managr_event_date", label="Date of Event", action_id="DO_NOTHING"

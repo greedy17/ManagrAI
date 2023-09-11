@@ -8,39 +8,19 @@ from django.conf import settings
 from datetime import datetime
 
 from django.db.models import Q
-from rest_framework.decorators import action
-
 from managr.utils.sites import get_site_url
-from managr.core.models import User, Notification
-from managr.opportunity.models import Opportunity, Lead
-from managr.organization.models import Account, OpportunityLineItem
-from managr.salesforce.models import MeetingWorkflow
-from managr.salesforce import constants as sf_consts
+from managr.core.models import User
+from managr.organization.models import OpportunityLineItem
 from managr.slack import constants as slack_const
-from managr.slack.helpers.utils import action_with_params, block_set, map_fields_to_type
+from managr.slack.helpers.utils import action_with_params, block_set
 from managr.slack.helpers import block_builders
 from managr.slack.helpers import requests as slack_requests
-from managr.utils.misc import snake_to_space
-from managr.salesforce.routes import routes as form_routes
 from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
-from managr.gong.models import GongCall
-from managr.core.models import NylasAuthAccount, User
+from managr.core.models import User
 
 from managr.crm.exceptions import (
     TokenExpired,
-    FieldValidationError,
-    RequiredFieldError,
-    SFQueryOffsetError,
-    SFNotFoundError,
     InvalidRefreshToken,
-)
-from managr.core.models import MeetingPrepInstance
-from managr.slack.helpers.block_sets.meeting_review_block_sets import schedule_zoom_meeting_modal
-from managr.slack.helpers.block_sets.command_views_blocksets import (
-    create_modal_block_set,
-    command_create_task_interaction,
-    create_add_to_cadence_block_set,
-    choose_opportunity_block_set,
 )
 
 logger = logging.getLogger("managr")
@@ -97,7 +77,11 @@ def success_modal_block_set(context):
             section_text=message,
             action_id=action_with_params(
                 slack_const.OPEN_GENERATIVE_ACTION_MODAL,
-                params=[f"u={user}", f"form_ids={form_ids}", "type=command",],
+                params=[
+                    f"u={user}",
+                    f"form_ids={form_ids}",
+                    "type=command",
+                ],
             ),
         )
     ]
@@ -394,14 +378,24 @@ def meeting_reminder_block_set(context):
         )
     else:
         message_text = f":wave: You have {not_completed} un-logged {text}. Please log them."
-    blocks = [block_builders.simple_section(message_text, "mrkdwn",)]
+    blocks = [
+        block_builders.simple_section(
+            message_text,
+            "mrkdwn",
+        )
+    ]
     return blocks
 
 
 @block_set()
 def message_meeting_block_set():
     message = "this is a test"
-    blocks = [block_builders.simple_section(f"This is a {message}", "mrkdwn",)]
+    blocks = [
+        block_builders.simple_section(
+            f"This is a {message}",
+            "mrkdwn",
+        )
+    ]
     return blocks
 
 
@@ -410,7 +404,12 @@ def manager_meeting_reminder_block_set(context):
     not_completed = context.get("not_completed")
     name = context.get("name")
     text = "meeting" if not_completed < 2 else "meetings"
-    blocks = [block_builders.simple_section(f"{not_completed} {text} left to complete", "mrkdwn",)]
+    blocks = [
+        block_builders.simple_section(
+            f"{not_completed} {text} left to complete",
+            "mrkdwn",
+        )
+    ]
     return blocks
 
 
@@ -599,7 +598,10 @@ def update_form_blockset(context):
         action_id = slack_const.ZOOM_MEETING__STAGE_SELECTED + f"?w={context.get('w')}"
         block = {
             **block,
-            "accessory": {**block["accessory"], "action_id": f"{action_id}",},
+            "accessory": {
+                **block["accessory"],
+                "action_id": f"{action_id}",
+            },
         }
         blocks = [*blocks[:index], block, *blocks[index + 1 :]]
 

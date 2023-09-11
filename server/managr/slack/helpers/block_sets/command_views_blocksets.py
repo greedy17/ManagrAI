@@ -247,7 +247,12 @@ def alert_instance_block_set(context):
         )
         message = f":white_check_mark: Successfully updated *{form.resource_type}* _{form.resource_object.name if form.resource_type not in ['Lead', 'Contact'] else form.resource_object.email}_"
         blocks = block_sets.get_block_set(
-            "success_modal", {"u": str(user.id), "form_ids": str(form.id), "message": message,},
+            "success_modal",
+            {
+                "u": str(user.id),
+                "form_ids": str(form.id),
+                "message": message,
+            },
         )
     else:
         blocks = [
@@ -329,7 +334,6 @@ def update_modal_block_set(context, *args, **kwargs):
         if len(form_blocks):
             blocks = [*form_blocks]
         else:
-
             blocks = [
                 block_builders.section_with_button_block(
                     "Forms",
@@ -414,12 +418,12 @@ def create_modal_block_set(context, *args, **kwargs):
                     "Add Custom Object",
                     "ADD_CUSTOM_OBJECT",
                     action_id=action_with_params(
-                        slack_const.PROCESS_PICK_CUSTOM_OBJECT, params=params,
+                        slack_const.PROCESS_PICK_CUSTOM_OBJECT,
+                        params=params,
                     ),
                 )
                 blocks.append(block_builders.actions_block([custom_object_button]))
         else:
-
             blocks = [
                 block_builders.section_with_button_block(
                     "Forms",
@@ -475,21 +479,6 @@ def create_add_to_sequence_block_set(context):
                 placeholder="Type to search",
             ),
         )
-    return blocks
-
-
-@block_set(required_context=["u"])
-def choose_opportunity_block_set(context):
-    user_id = context.get("u", None)
-    type = context.get("type")
-    blocks = [
-        block_builders.external_select(
-            "Which opportunity would you like your notes for?",
-            f"{slack_const.GET_NOTES}?u={user_id}&resource_type={sf_consts.RESOURCE_SYNC_OPPORTUNITY}&type={type}",
-            block_id="select_opp",
-            placeholder="Type to search",
-        )
-    ]
     return blocks
 
 
@@ -689,7 +678,11 @@ def initial_inline_blockset(context, *args, **kwargs):
             "bulk_update",
             action_id=action_with_params(
                 slack_const.PROCESS_BULK_UPDATE,
-                params=[f"invocation={invocation}", f"config_id={config_id}", f"u={str(user.id)}",],
+                params=[
+                    f"invocation={invocation}",
+                    f"config_id={config_id}",
+                    f"u={str(user.id)}",
+                ],
             ),
         ),
     ]
@@ -735,6 +728,7 @@ def reset_meeting_block_set(context, *args, **kwargs):
         )
     return blocks
 
+
 @block_set()
 def news_summary_blockset(context):
     user = User.objects.get(id=context.get("u"))
@@ -759,6 +753,11 @@ def news_summary_blockset(context):
             ],
             block_id="USE_TEMPLATE_BLOCK",
         ),
-        block_builders.static_select("Saved Searches", search_options,slack_const.PROCESS_SELECT_SAVED_SEARCH, block_id="SAVED_SEARCH")
+        block_builders.static_select(
+            "Saved Searches",
+            search_options,
+            slack_const.PROCESS_SELECT_SAVED_SEARCH,
+            block_id="SAVED_SEARCH",
+        ),
     ]
     return blocks
