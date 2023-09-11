@@ -39,6 +39,11 @@ export default new Router({
       component: () => import('@/views/PRIntegrations')
     },
     {
+      path: '/reports',
+      name: 'PRReports',
+      component: () => import('@/views/PRReports')
+    },
+    {
       path: '/pr-settings',
       name: 'PRSettings',
       component: () => import('@/views/PRSettings')

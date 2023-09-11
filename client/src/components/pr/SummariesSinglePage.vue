@@ -217,7 +217,7 @@
               <textarea
                 @focus="showPromptDropdown"
                 class="area-input"
-                placeholder="Custom summary instructions... (Optional)"
+                placeholder="Summary instructions... (Optional)"
                 v-model="newTemplate"
                 v-autoresize
               />
