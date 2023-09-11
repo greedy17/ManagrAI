@@ -1,16 +1,37 @@
 <template>
   <div class="reports">
     <header class="blur-bottom">
-      <div @click="getReports">
-        <h3>Share</h3>
-        <small class="subtext">Customize & create a report</small>
+      <div>
+        <h3>{{ reportSuccess ? 'Successfully created report!' : 'Share' }}</h3>
+        <small class="subtext">{{
+          reportSuccess ? 'Below is your shareable link' : 'Customize & create a report'
+        }}</small>
       </div>
 
       <div @click="emitReportToggle" class="report-toggle">
         <img src="@/assets/images/close.svg" height="14px" alt="" />
       </div>
     </header>
-    <div v-if="reportSuccess"></div>
+
+    <div style="margin-top: 16px" v-if="reportSuccess">
+      <div class="container small">
+        <div style="overflow: hidden" class="top-padding">
+          <small>{{ reportLink }}</small>
+        </div>
+      </div>
+
+      <div class="wrapper">
+        <button @click="copyText" style="margin-left: 2px" class="primary-button">Copy link</button>
+        <div class="tooltip">{{ copyTip }}</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <small class="subtext med-text">
+        Access previously created reports <a @click="goToReports">here</a>
+      </small>
+    </div>
+
     <div v-else>
       <div :class="{ dull: reportLoading }" class="container">
         <img
@@ -25,7 +46,7 @@
           <p v-if="!imageUrl">Cover Slide</p>
           <small v-if="!imageUrl">Add title and cover image</small>
 
-          <input id="imageInput" class="absolute pointer" type="file" @change="test" />
+          <input id="imageInput" class="absolute pointer dull" type="file" @change="test" />
 
           <svg class="absolute pointer" width="18" height="18">
             <path d="M9 9H3v1h6v6h1v-6h6V9h-6V3H9v6z" fill-rule="evenodd"></path>
@@ -203,6 +224,8 @@ export default {
       loadingTitle: false,
       showTooltip: false,
       reportSuccess: false,
+      reportLink: null,
+      copyTip: 'Copy',
     }
   },
 
@@ -211,6 +234,24 @@ export default {
     defaultSearch: {},
   },
   methods: {
+    goToReports() {
+      this.$router.push({
+        name: 'PRReports',
+      })
+    },
+    async copyText() {
+      try {
+        await navigator.clipboard.writeText(this.reportLink)
+        this.copyTip = 'Copied!'
+
+        setTimeout(() => {
+          // this.activationLink = ''
+          this.copyTip = 'Copy link'
+        }, 2000)
+      } catch (err) {
+        console.error('Failed to copy text: ', err)
+      }
+    },
     showTitleSave() {
       this.showTooltip = true
       setTimeout(() => {
@@ -245,12 +286,15 @@ export default {
     async getReports() {
       try {
         await User.api.getReports({ user: this.$store.state.user.id }).then((response) => {
-          console.log(response.results[response.results.length - 1])
+          this.reportLink = response.results[response.results.length - 1]['share_url']
         })
       } catch (e) {
         console.log(e)
       } finally {
         this.reportSuccess = true
+        this.summary = null
+        this.imageUrl = null
+        this.clearClips()
       }
     },
     async getArticleSummary(title, url, length = 500) {
@@ -493,6 +537,10 @@ h3 {
 
 .medium {
   height: 36vh;
+}
+
+.small {
+  height: 10vh;
 }
 
 .row {
@@ -870,8 +918,117 @@ footer {
 .dull {
   opacity: 0.5;
 }
+
+.invert {
+  filter: invert(40%);
+}
+
 .green-filter {
   filter: brightness(0%) invert(64%) sepia(8%) saturate(2746%) hue-rotate(101deg) brightness(97%)
     contrast(82%);
+}
+
+.med-text {
+  font-size: 14px;
+}
+
+.divider {
+  margin: 32px 0;
+  position: relative;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  width: 100%;
+}
+
+a {
+  font-family: $base-font-family;
+  color: $dark-black-blue;
+  text-decoration-color: $dark-black-blue;
+  font-weight: 900;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.wrapper {
+  display: flex;
+  align-items: center;
+  // background-color: ;
+  font-family: $thin-font-family;
+  font-size: 14px;
+  position: relative;
+  text-align: center;
+  -webkit-transform: translateZ(0); /* webkit flicker fix */
+  -webkit-font-smoothing: antialiased; /* webkit text rendering fix */
+}
+
+.wrapper .tooltip {
+  background: $dark-black-blue;
+  border-radius: 4px;
+  bottom: 100%;
+  color: #fff;
+  display: block;
+  left: -8px;
+  margin-bottom: 15px;
+  opacity: 0;
+  padding: 8px;
+  pointer-events: none;
+  position: absolute;
+  width: 100px;
+  -webkit-transform: translateY(10px);
+  -moz-transform: translateY(10px);
+  -ms-transform: translateY(10px);
+  -o-transform: translateY(10px);
+  transform: translateY(10px);
+  -webkit-transition: all 0.25s ease-out;
+  -moz-transition: all 0.25s ease-out;
+  -ms-transition: all 0.25s ease-out;
+  -o-transition: all 0.25s ease-out;
+  transition: all 0.25s ease-out;
+  -webkit-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -moz-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -ms-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -o-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+}
+
+/* This bridges the gap so you can mouse into the tooltip without it disappearing */
+.wrapper .tooltip:before {
+  bottom: -20px;
+  content: ' ';
+  display: block;
+  height: 20px;
+  left: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.wrapper .tooltip:after {
+  border-left: solid transparent 10px;
+  border-right: solid transparent 10px;
+  border-top: solid $dark-black-blue 10px;
+  bottom: -10px;
+  content: ' ';
+  height: 0;
+  left: 50%;
+  margin-left: -13px;
+  position: absolute;
+  width: 0;
+}
+
+.wrapper:hover .tooltip {
+  opacity: 1;
+  pointer-events: auto;
+  -webkit-transform: translateY(0px);
+  -moz-transform: translateY(0px);
+  -ms-transform: translateY(0px);
+  -o-transform: translateY(0px);
+  transform: translateY(0px);
+}
+
+.lte8 .wrapper .tooltip {
+  display: none;
+}
+
+.lte8 .wrapper:hover .tooltip {
+  display: block;
 }
 </style>

@@ -86,15 +86,17 @@
       </div>
     </Modal>
 
-    <Reports
-      v-if="selectedSearch && ShowReport"
-      @toggle-report="toggleReport"
-      @clear-clips="clearClips"
-      @remove-clip="removeClip"
-      @edit-clip="editClip"
-      :clips="addedClips"
-      :defaultSearch="newSearch"
-    />
+    <Transition name="slide-left">
+      <Reports
+        v-if="selectedSearch && ShowReport"
+        @toggle-report="toggleReport"
+        @clear-clips="clearClips"
+        @remove-clip="removeClip"
+        @edit-clip="editClip"
+        :clips="addedClips"
+        :defaultSearch="newSearch"
+      />
+    </Transition>
 
     <div @click="toggleReport" v-if="selectedSearch && !ShowReport" class="floating-action-bar">
       <div class="main-slot">
@@ -109,6 +111,10 @@
         <div v-if="addedClips.length < 1" class="empty-slot"></div>
         <div v-if="addedClips.length < 2" class="empty-slot"></div>
         <div v-if="addedClips.length < 3" class="empty-slot"></div>
+      </div>
+
+      <div class="slot-count">
+        <small>{{ addedClips.length }}/20</small>
       </div>
     </div>
     <div class="center column" :class="{ fullHeight: showingDropdown }" v-if="page === 'SUMMARIES'">
@@ -217,7 +223,7 @@
               <textarea
                 @focus="showPromptDropdown"
                 class="area-input"
-                placeholder="Custom summary instructions... (Optional)"
+                placeholder="Summary instructions... (Optional)"
                 v-model="newTemplate"
                 v-autoresize
               />
@@ -2000,7 +2006,7 @@ button:disabled {
   border: 1px solid $white-blue;
   width: 34px;
   display: flex;
-  padding-top: 4px;
+  padding: 4px 0 8px 0;
   flex-direction: column;
   align-items: center;
 }
@@ -2865,5 +2871,30 @@ header {
   color: $coral;
   font-weight: 400;
   font-size: 12px;
+}
+
+.slot-count {
+  font-size: 11px;
+  margin-top: 6px;
+  opacity: 0.7;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.slide-left-enter-active,
+.slide-left-leave-active {
+  transition: all 0.2s ease;
+}
+.slide-left-enter,
+.slide-left-leave-to {
+  transform: translateX(100%);
+  opacity: 0;
+}
+.slide-left-enter-to,
+.slide-left-leave {
+  transform: translateX(0);
+  opacity: 1;
 }
 </style>
