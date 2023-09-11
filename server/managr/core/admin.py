@@ -1,27 +1,17 @@
 import pytz
 from django.contrib import admin
-from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.admin import UserAdmin
 from django import forms
-from django.forms import ModelForm, Textarea
 from django.contrib.auth.forms import ReadOnlyPasswordHashField, UserCreationForm, UserChangeForm
-from rest_framework.authtoken.models import Token
-
 from managr.slack.models import UserSlackIntegration
 from managr.zoom.models import ZoomAuthAccount
 from managr.salesloft.models import SalesloftAccount
-from managr.outreach.models import OutreachAccount
 from .models import (
     User,
     NylasAuthAccount,
-    MeetingPrepInstance,
     UserActivity,
     NoteTemplate,
-    #    NotificationOption,
-    #    NotificationSelection,
 )
-
-from . import constants as core_consts
 
 TRUE_FALSE_CHOICES = (
     (
@@ -213,12 +203,6 @@ class CustomNylasAuthAccount(admin.ModelAdmin):
     form = EmailAuthAccForm
 
 
-class CustomMeetingPrepInstance(admin.ModelAdmin):
-    model = MeetingPrepInstance
-    list_display = ("user", "event_data", "datetime_created")
-    ordering = ("-datetime_created",)
-
-
 class CustomUserActivity(admin.ModelAdmin):
     model = UserActivity
     list_display = ("user",)
@@ -234,7 +218,3 @@ class CustomNoteTemplate(admin.ModelAdmin):
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(NylasAuthAccount, CustomNylasAuthAccount)
 admin.site.register(NoteTemplate, CustomNoteTemplate)
-
-
-# admin.site.register(NotificationOption, CustomNotificationOption)
-# admin.site.register(NotificationSelection, CustomNotificationSelection)

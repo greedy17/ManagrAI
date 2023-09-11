@@ -21,21 +21,25 @@ export default new Router({
     {
       path: '/summaries',
       name: 'PRSummaries',
+      beforeEnter: Auth.requireAuth,
       component: () => import('@/views/PRSummaries')
     },
     {
       path: '/pitches',
       name: 'Pitches',
+      beforeEnter: Auth.requireAuth,
       component: () => import('@/views/Pitches'),
     },
     {
       path: '/transcribe',
       name: 'PRTranscripts',
+      beforeEnter: Auth.requireAuth,
       component: () => import('@/views/PRTranscripts'),
     },
     {
       path: '/pr-integrations',
       name: 'PRIntegrations',
+      beforeEnter: Auth.requireAuth,
       component: () => import('@/views/PRIntegrations')
     },
     {
@@ -46,6 +50,7 @@ export default new Router({
     {
       path: '/pr-settings',
       name: 'PRSettings',
+      beforeEnter: Auth.requireAuth,
       component: () => import('@/views/PRSettings')
     },
     {
@@ -70,6 +75,11 @@ export default new Router({
     },
     {
       path: '/admin-registration',
+      name: 'AdminRegistration',
+      component: () => import('@/views/auth/AdminRegistration')
+    },
+    {
+      path: '/admin-registration/:code',
       name: 'AdminRegistration',
       component: () => import('@/views/auth/AdminRegistration')
     },

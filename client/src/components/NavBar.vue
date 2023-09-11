@@ -358,10 +358,12 @@ export default {
       } else {
         currentMonth = `${currentMonth}`
       }
+      let currentYear = new Date(Date.now()).getFullYear()
       for (let key in this.$store.state.user.metaData) {
         const item = this.$store.state.user.metaData[key]
         const filteredByMonth = item.timestamps.filter(date => {
-          return date.split('-')[1] == currentMonth
+          const split = date.split('-')
+          return split[1] == currentMonth && split[0] == currentYear
         })
         arr = [...arr, ...filteredByMonth]
       }

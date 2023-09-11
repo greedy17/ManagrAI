@@ -2136,6 +2136,64 @@
             </h5>
           </div>
         </template>
+        <template v-else-if="page === 'StaffInvite'">
+          <h4 @click="page = null" style="cursor: pointer; padding-top: 0.25rem; margin: 0; font-size: 14px; justify-self: flex-end;">
+            <img
+              style="margin-right: 0px; filter: invert(40%); height: 0.6rem;"
+              src="@/assets/images/left.svg"
+              height="13px"
+            />
+          </h4>
+          <div style="margin-top: 1rem;">
+            <span>Full Name: </span> <input v-model="inviteFullName" />
+          </div>
+          <div style="margin-top: 1rem;">
+            <span>Email: </span> <input v-model="inviteEmail" />
+          </div>
+          <div style="margin-top: 1rem;">
+            <span>Company Name: </span> <input v-model="inviteOrgName" />
+          </div>
+          <div style="margin-top: 1rem;">
+            <span>Is Paid?: </span> <input type="checkbox" v-model="inviteIsPaid" />
+          </div>
+          <div style="margin-top: 1rem;">
+            <span>Product: </span> 
+            <Multiselect
+              placeholder="Select Product"
+              style="max-width: 18vw; margin-bottom: 1rem; margin-top: 1rem"
+              v-model="inviteRole"
+              :options="[{name: 'PR'}, {name: 'Sales'}]"
+              openDirection="below"
+              selectLabel="Enter"
+              track-by="name"
+              label="name"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+            </Multiselect>
+          </div>
+          <div>
+            <button @click="generateInvite" class="green_button">Generate Link</button>
+          </div>
+          <div v-if="invitedAdminLink" style="margin-top: 1rem; display: flex;">
+            <div style="max-width: 80%; overflow-x: auto; word-break: keep-all;">
+              {{ invitedAdminLink }}
+            </div>
+            <div>
+              <div @click="copyInviteLink" class="wrapper">
+                <img
+                  style="cursor: pointer"
+                  class="right-mar img-highlight"
+                  src="@/assets/images/clipboard.svg"
+                  height="14px"
+                  alt=""
+                />
+                <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
+              </div>
+            </div>
+          </div>
+        </template>
         <template v-else>
           <div class="" style="margin-top: 1rem;">
             <div style="display: flex; flex-direction: row; justify-content: flex-start; height: 41vh; width: 100%;">
@@ -2159,8 +2217,9 @@
                       <p class="multi-slot">No results.</p>
                     </template>
                   </Multiselect>
-                  <button @click="deactivateOrg" class="green_button" style="height: 2rem; margin-left: 1rem;">Deactivate</button>
+                  <button @click="deactivateOrg" class="green_button red" style="height: 2rem; margin-left: 1rem;">Deactivate</button>
                 </div>
+                <button @click="goToStaffInvite" class="green_button">Invite Admin</button>
               </div>
               <div class="added-collection padding" style="display: flex; flex-direction: row; width: 55vw; height: 39vh; align-items: center;">
                 <apexchart ref="chartRef" :type="chartOptions.chart.type" :series="series" :options="chartOptions" style="width: 32vw;" />
@@ -2416,6 +2475,11 @@ export default {
       filteredOrgMeetingWorkflows: [],
       filteredOrgSlackFormInstances: [],
       filteredOrgAlerts: [],
+      inviteRole: { name: 'PR' },
+      inviteFullName: '',
+      inviteEmail: '',
+      inviteOrgName: '',
+      inviteIsPaid: false,
       orgSlackFormInstances: null,
       selectedCommand: '',
       loading: true,
@@ -2436,6 +2500,7 @@ export default {
       old_selected_org: null,
       adminTasks: null,
       modalName: '',
+      invitedAdminLink: '',
       page: null,
       organizations: [],
       invitedUsers: null,
@@ -2532,6 +2597,7 @@ export default {
       prUsageData: [],
       teamLead: null,
       teamName: '',
+      copyTip: 'Copy',
       selectedTeamLead: null,
       usageData: null,
       allOrgsLoading: false,
@@ -2712,6 +2778,49 @@ export default {
     filtersLabel(prop) {
       if (this.selectedTeamOrUser) {
         return this.selectedTeamOrUser.name === 'team' ? prop.name : prop.email
+      }
+    },
+    async copyInviteLink() {
+      try {
+        await navigator.clipboard.writeText(this.invitedAdminLink)
+        this.copyTip = 'Copied!'
+
+        setTimeout(() => {
+          this.copyTip = 'Copy'
+        }, 2000)
+      } catch (err) {
+        console.error('Failed to copy text: ', err)
+      }
+    },
+    async generateInvite() {
+      try {
+        if (!this.inviteFullName || !this.inviteRole.name || !this.inviteEmail || !this.inviteOrgName) {
+          this.$toast('Come on Mike... submit all info.', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          return
+        }
+        const firstName = this.inviteFullName.split(' ')[0]
+        const lastName = this.inviteFullName
+          .split(' ')
+          .slice(1)
+          .join(' ')
+        const data = {
+          role: this.inviteRole.name,
+          first_name: firstName,
+          last_name: lastName,
+          email: this.inviteEmail,
+          organization_name: this.inviteOrgName,
+          is_paid: this.inviteIsPaid,
+        }
+        const res = await User.api.adminInvite(data)
+        this.invitedAdminLink = res.data.activation_link_ref
+      } catch (e) {
+        console.log('Error in generateInvite: ', e)
       }
     },
     resetFilters() {
@@ -3204,6 +3313,9 @@ export default {
       this.showOrgList = false
       this.showCommandList = false
     },
+    goToStaffInvite() {
+      this.page = 'StaffInvite'
+    },
     goToTeamManager() {
       // this.old_selected_org = this.selected_org
       // this.selected_org = null
@@ -3593,7 +3705,7 @@ export default {
 @import '@/styles/modals';
 
 .staff {
-  margin-top: 3rem;
+  margin-top: 6rem;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -4469,5 +4581,92 @@ input[type='search']:focus {
   display: -webkit-box;
   -webkit-box-align: center;
   -webkit-box-pack: justify;
+}
+.red {
+  background-color: $coral !important;
+  color: $white !important;
+}
+.wrapper {
+  display: flex;
+  align-items: center;
+  // background-color: ;
+  font-family: $thin-font-family;
+  font-size: 14px;
+  position: relative;
+  text-align: center;
+  -webkit-transform: translateZ(0); /* webkit flicker fix */
+  -webkit-font-smoothing: antialiased; /* webkit text rendering fix */
+}
+
+.wrapper .tooltip {
+  background: $dark-black-blue;
+  border-radius: 4px;
+  bottom: 100%;
+  color: #fff;
+  display: block;
+  left: -20px;
+  margin-bottom: 15px;
+  opacity: 0;
+  padding: 8px;
+  pointer-events: none;
+  position: absolute;
+  width: 100px;
+  -webkit-transform: translateY(10px);
+  -moz-transform: translateY(10px);
+  -ms-transform: translateY(10px);
+  -o-transform: translateY(10px);
+  transform: translateY(10px);
+  -webkit-transition: all 0.25s ease-out;
+  -moz-transition: all 0.25s ease-out;
+  -ms-transition: all 0.25s ease-out;
+  -o-transition: all 0.25s ease-out;
+  transition: all 0.25s ease-out;
+  -webkit-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -moz-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -ms-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -o-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+}
+
+/* This bridges the gap so you can mouse into the tooltip without it disappearing */
+.wrapper .tooltip:before {
+  bottom: -20px;
+  content: ' ';
+  display: block;
+  height: 20px;
+  left: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.wrapper .tooltip:after {
+  border-left: solid transparent 10px;
+  border-right: solid transparent 10px;
+  border-top: solid $dark-black-blue 10px;
+  bottom: -10px;
+  content: ' ';
+  height: 0;
+  left: 50%;
+  margin-left: -13px;
+  position: absolute;
+  width: 0;
+}
+
+.wrapper:hover .tooltip {
+  opacity: 1;
+  pointer-events: auto;
+  -webkit-transform: translateY(0px);
+  -moz-transform: translateY(0px);
+  -ms-transform: translateY(0px);
+  -o-transform: translateY(0px);
+  transform: translateY(0px);
+}
+
+.lte8 .wrapper .tooltip {
+  display: none;
+}
+
+.lte8 .wrapper:hover .tooltip {
+  display: block;
 }
 </style>

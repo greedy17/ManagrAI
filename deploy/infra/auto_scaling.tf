@@ -98,3 +98,47 @@ resource "aws_cloudwatch_metric_alarm" "service_cpu_low" {
     "app" = "managr"
   }
 }
+
+# CloudWatch alarm for monitoring memory utilization (high)
+resource "aws_cloudwatch_metric_alarm" "service_memory_high" {
+  for_each            = { for e in var.environments : e.name => e }
+  alarm_name          = "managr_memory_utilization_high"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "MemoryUtilization"
+  namespace           = "AWS/ECS"
+  period              = "60"
+  statistic           = "Average"
+  threshold           = "85"
+
+  dimensions = {
+    ClusterName = aws_ecs_cluster.main.name
+    ServiceName = aws_ecs_service.main[each.key].name
+  }
+
+  tags = {
+    "app" = "managr"
+  }
+}
+
+# CloudWatch alarm for monitoring memory utilization (low)
+resource "aws_cloudwatch_metric_alarm" "service_memory_low" {
+  for_each            = { for e in var.environments : e.name => e }
+  alarm_name          = "managr_memory_utilization_low"
+  comparison_operator = "LessThanOrEqualToThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "MemoryUtilization"  
+  namespace           = "AWS/ECS"
+  period              = "60"
+  statistic           = "Average"
+  threshold           = "10"
+
+  dimensions = {
+    ClusterName = aws_ecs_cluster.main.name
+    ServiceName = aws_ecs_service.main[each.key].name
+  }
+
+  tags = {
+    "app" = "managr"
+  }
+}

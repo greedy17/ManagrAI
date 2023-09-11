@@ -1048,6 +1048,9 @@ class UserViewSet(
                 {
                     "email": user.email,
                     "organization": user.organization.name,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "role": user.role,
                     "id": str(user.id),
                     "magic_token": data.get("magic_token"),
                 }
@@ -1091,7 +1094,7 @@ class UserViewSet(
                 user.timezone = timezone
                 # expire old magic token and create a new one for other uses
                 user.regen_magic_token()
-                if user.organization.is_paid is False:
+                if user.organization.is_paid is False and user.is_admin is False:
                     user_team = Team.objects.create(
                         name=user.first_name, organization=user.organization, team_lead=user
                     )
@@ -1682,11 +1685,15 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
         url_path="admin",
     )
     def invite_admin(self, request, *args, **kwargs):
+        is_paid = request.data.pop("is_paid")
         serializer = UserAdminRegistrationSerializer(
             data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
+        serializer = UserClientSerializer(serializer.instance, context={"request": request})
+        serializer.instance.organization.is_paid = is_paid
+        serializer.instance.organization.save()
         response_data = serializer.data
         return Response(response_data)
 

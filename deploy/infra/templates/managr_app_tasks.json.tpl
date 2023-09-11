@@ -303,7 +303,8 @@
         "awslogs-region": "${aws_region}",
         "awslogs-stream-prefix": "ecs"
       }
-    }
+    },
+    "healthCheck": ${each.value.health_check}
   },
   {
     "name": "datadog-agent",

@@ -15,6 +15,7 @@ const REFRESH_TOKEN_ENDPOINT = '/users/refresh-token/'
 const GET_USER_ENDPOINT = uid => `/users/${uid}/`
 const GET_USER_PHOTO_ENDPOINT = uid => `/users/${uid}/profile-photo/`
 const INVITE_ENDPOINT = '/users/invite/'
+const ADMIN_INVITE_ENDPOINT = '/users/invite/admin/'
 const UNINVITE_ENDPOINT = '/users/remove-user/'
 const ALL_USERS_ENDPOINT = '/users/admin-users/'
 const TASKS_ENDPOINT = '/users/admin-tasks/'
@@ -307,6 +308,20 @@ export default class UserAPI {
     const data = userDetails
     const promise = apiClient()
       .post(INVITE_ENDPOINT, this.cls.toAPI(data))
+      .catch(
+        apiErrorHandler({
+          apiName: 'UserAPI.invite',
+          enable400Alert: false,
+          enable500Alert: false,
+        }),
+      )
+    return promise
+  }
+
+  adminInvite(userDetails) {
+    const data = userDetails
+    const promise = apiClient()
+      .post(ADMIN_INVITE_ENDPOINT, this.cls.toAPI(data))
       .catch(
         apiErrorHandler({
           apiName: 'UserAPI.invite',
