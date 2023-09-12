@@ -200,7 +200,7 @@ def encrypt_dict(data_dict):
     """
     Encrypts a dictionary using Fernet encryption.
     :param data_dict: Dictionary to be encrypted
-    :return: Encrypted data as bytes
+    :return: Encrypted data as string
     """
     secret_key = settings.SECRET_KEY
     fernet_key = generate_fernet_key(secret_key)
@@ -213,7 +213,7 @@ def encrypt_dict(data_dict):
 def decrypt_dict(encrypted_data):
     """
     Decrypts Fernet-encrypted data and returns the original dictionary.
-    :param encrypted_data: Encrypted data as bytes
+    :param encrypted_data: Encrypted data as string
     :return: Decrypted dictionary
     """
     encrypted_data = encrypted_data.encode("utf-8")
