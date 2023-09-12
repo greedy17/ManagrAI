@@ -6,12 +6,7 @@ from django.contrib.auth.forms import ReadOnlyPasswordHashField, UserCreationFor
 from managr.slack.models import UserSlackIntegration
 from managr.zoom.models import ZoomAuthAccount
 from managr.salesloft.models import SalesloftAccount
-from .models import (
-    User,
-    NylasAuthAccount,
-    UserActivity,
-    NoteTemplate,
-)
+from .models import User, NylasAuthAccount, UserActivity, NoteTemplate, Report
 
 TRUE_FALSE_CHOICES = (
     (
@@ -215,6 +210,14 @@ class CustomNoteTemplate(admin.ModelAdmin):
     list_filter = ("user",)
 
 
+class CustomReportAdmin(admin.ModelAdmin):
+    model = Report
+    list_display = ("title", "user")
+    ordering = ("-datetime_created",)
+    list_filter = ("user__organization",)
+
+
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(NylasAuthAccount, CustomNylasAuthAccount)
 admin.site.register(NoteTemplate, CustomNoteTemplate)
+admin.site.register(Report, CustomReportAdmin)
