@@ -113,15 +113,12 @@ export default {
   },
   methods: {
     formatDate(dateString) {
-      // Split the date and time part
-      const [datePart] = dateString.split(' ')
-
-      // Create a new Date object
-      const date = new Date(datePart)
+      // Create a new Date object in UTC
+      const date = new Date(dateString)
 
       // Get the various components
-      const day = date.getDate()
-      const year = date.getFullYear()
+      const day = date.getUTCDate()
+      const year = date.getUTCFullYear()
 
       // Get the month name
       const monthNames = [
@@ -139,7 +136,7 @@ export default {
         'December',
       ]
 
-      const monthName = monthNames[date.getMonth()]
+      const monthName = monthNames[date.getUTCMonth()]
 
       // Assemble the final string
       return `${monthName} ${day}, ${year}`
@@ -234,7 +231,7 @@ header {
   align-items: flex-end;
   height: 100%;
   width: 100%;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.75), transparent);
 
   p,
   h1 {

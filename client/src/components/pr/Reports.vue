@@ -13,17 +13,26 @@
       </div>
     </header>
 
-    <div style="margin-top: 16px" v-if="reportSuccess">
+    <div style="margin-top: 16px" v-if="!reportSuccess">
       <div class="container small">
         <div class="top-padding ellipsis-text">
           <small>{{ reportLink }}</small>
         </div>
       </div>
 
-      <div class="wrapper">
-        <button @click="copyText" style="margin-left: 2px" class="primary-button">Copy link</button>
-        <div class="tooltip">{{ copyTip }}</div>
-      </div>
+      <section class="row">
+        <div class="wrapper">
+          <button @click="copyText" style="margin-left: 2px" class="secondary-button">
+            Copy link
+          </button>
+
+          <div class="tooltip">{{ copyTip }}</div>
+        </div>
+        <button @click="openLink" style="margin-left: 8px" class="primary-button">
+          <img src="@/assets/images/openwindow.svg" height="12px" alt="" />
+          Open
+        </button>
+      </section>
 
       <div class="divider"></div>
 
@@ -35,6 +44,7 @@
     <div v-else>
       <div :class="{ dull: reportLoading }" class="container">
         <img
+          accept=".jpg, .jpeg, .png, .gif, .bmp, .tiff, .tif, .webp"
           style="margin-top: 8px"
           v-if="imageUrl"
           :src="imageUrl"
@@ -155,7 +165,7 @@
             class="row absolute-right actions"
           >
             <img
-              @click="getArticleSummary(clip.title, clip.url)"
+              @click="getArticleSummary(clip.title, clip.url, clip.search)"
               style="margin-right: 12px"
               class="blue"
               v-if="!summaryLoading && !clip.summary"
@@ -245,6 +255,9 @@ export default {
         name: 'PRReports',
       })
     },
+    openLink() {
+      window.open(this.reportLink, '_blank')
+    },
     async copyText() {
       try {
         await navigator.clipboard.writeText(this.reportLink)
@@ -303,14 +316,15 @@ export default {
         this.clearClips()
       }
     },
-    async getArticleSummary(title, url, length = 500) {
+    async getArticleSummary(title, url, search, length = 500) {
+      console.log(search)
       this.summaryLoading = true
       this.loadingUrl = url
       try {
         await Comms.api
           .getArticleSummary({
             url: url,
-            search: '',
+            search: search,
             instructions: '',
             length: length,
           })
@@ -678,7 +692,7 @@ h3 {
   padding: 8px;
   border: none;
   img {
-    filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
+    filter: invert(100%) !important;
     margin-right: 8px;
   }
 }

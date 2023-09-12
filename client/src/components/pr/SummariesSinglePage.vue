@@ -70,7 +70,7 @@
             <div class="paid-center">
               <h3 class="paid-title">Upgrade to Pro</h3>
               <h5 class="regen-body-title">
-                You have reached your usage limit for the month. Please upgrade your plan.
+                {{ upgradeMessage }}
               </h5>
             </div>
             <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
@@ -79,7 +79,13 @@
         <div class="paid-footer">
           <!-- <div></div> -->
           <div class="row">
-            <div class="cancel-button" @click="closePaidModal">Close</div>
+            <div
+              style="padding-top: 9px; padding-bottom: 9px"
+              class="cancel-button"
+              @click="closePaidModal"
+            >
+              Close
+            </div>
             <div class="save-button" @click="goToContact">Contact Us</div>
           </div>
         </div>
@@ -528,11 +534,11 @@
                     <span class="off-gray">{{ getTimeDifferenceInMinutes(tweet.created_at) }}</span>
                   </div>
 
-                  <button class="tertiary-button" @click="addClip(tweet)">
+                  <!-- <button class="tertiary-button" @click="addClip(tweet)">
                     <img height="10px" src="@/assets/images/share.svg" alt="" />
 
                     Share
-                  </button>
+                  </button> -->
                 </div>
               </div>
             </div>
@@ -587,7 +593,7 @@
                     </button>
 
                     <button
-                      v-if="!articleSummaries[article.url]"
+                      v-if="!article.summary"
                       @click="getArticleSummary(article.url)"
                       class="tertiary-button"
                       style="margin: 0"
@@ -615,11 +621,11 @@
                     />
                   </div>
                 </div>
-                <div v-if="articleSummaries[article.url]">
+                <div v-if="article.summary">
                   <div class="blue-bg display-flex">
-                    <pre v-html="articleSummaries[article.url]" class="pre-text"></pre>
+                    <pre v-html="article.summary" class="pre-text"></pre>
                     <div
-                      @click="copyArticleSummary(articleSummaries[article.url])"
+                      @click="copyArticleSummary(article.summary)"
                       class="wrapper article-copy-container"
                     >
                       <img
@@ -751,11 +757,11 @@ export default {
       newSummary: false,
       addingPrompt: false,
       addingSources: false,
-      articleSummaries: {},
       loadingUrl: null,
       articleSummaryLoading: false,
       paidModal: false,
       showingDropdown: false,
+      upgradeMessage: 'You have reached your usage limit for the month. Please upgrade your plan.',
       copyTip: 'Copy',
       searchSuggestions: [
         'XXX broad search',
@@ -794,15 +800,6 @@ export default {
     // this.updateMessage()
   },
   methods: {
-    async getReports() {
-      try {
-        await User.api.getReports({ user: this.$store.state.user.id }).then((response) => {
-          console.log(response)
-        })
-      } catch (e) {
-        console.log(e)
-      }
-    },
     clearClips() {
       this.addedClips = []
     },
@@ -810,13 +807,18 @@ export default {
       this.addedClips = this.addedClips.filter((clip) => clip.title !== title)
     },
     toggleReport() {
-      this.ShowReport = !this.ShowReport
+      if (!this.isPaid) {
+        this.openPaidModal('Upgrade your plan in order to create reports.')
+      } else {
+        this.ShowReport = !this.ShowReport
+      }
     },
     addClip(clip) {
+      clip['search'] = this.newSearch
       if (this.addedClips.length < 20) {
         this.addedClips.push(clip)
       } else {
-        this.clipLimit()
+        return
       }
     },
     editClip(title, summary) {
@@ -824,9 +826,6 @@ export default {
       clip['summary'] = summary
       this.addedClips = this.addedClips.filter((clip) => clip.title !== title)
       this.addedClips.unshift(clip)
-    },
-    clipLimit() {
-      console.log('clip limit')
     },
     soonButtonText() {
       this.buttonText = 'Coming Soon!'
@@ -933,9 +932,10 @@ export default {
       this.searchId = search.id
       this.searchName = search.name
       this.newSearch = search.input_text
+      this.booleanString = search.search_boolean
       this.newTemplate = search.instructions
       this.mainView = search.type === 'SOCIAL_MEDIA' ? 'social' : 'news'
-      this.generateNewSearch(search.search_boolean)
+      this.generateNewSearch()
     },
     changeIndex() {
       setTimeout(() => {
@@ -992,7 +992,8 @@ export default {
         return `${givenDate.getMonth() + 1}/${givenDate.getDate()}/${givenDate.getFullYear()}`
       }
     },
-    openPaidModal() {
+    openPaidModal(msg) {
+      this.upgradeMessage = msg
       this.paidModal = true
     },
     closePaidModal() {
@@ -1001,9 +1002,11 @@ export default {
     goToContact() {
       window.open('https://managr.ai/contact', '_blank')
     },
-    async generateNewSearch(boolean) {
+    async generateNewSearch() {
       if (!this.isPaid && this.searchesUsed >= 10) {
-        this.openPaidModal()
+        this.openPaidModal(
+          'You have reached your usage limit for the month. Please upgrade your plan.',
+        )
         return
       }
       if (!this.newSearch || this.newSearch.length < 3) {
@@ -1017,7 +1020,7 @@ export default {
         this.summaryLoading = true
         this.changeSearch({ search: this.newSearch, template: this.newTemplate })
         try {
-          this.getClips(boolean).then((response) => {
+          this.getClips().then((response) => {
             this.getSummary(this.filteredArticles, this.newTemplate).then((response) => {
               if (this.searchSaved) {
                 this.updateSearch()
@@ -1054,6 +1057,7 @@ export default {
         console.log(e)
       } finally {
         this.summaryLoading = false
+        this.scrollToTop()
       }
     },
     async updateSearch() {
@@ -1127,12 +1131,12 @@ export default {
         }, 2000)
       }
     },
-    async getClips(boolean = null) {
+    async getClips() {
       try {
         await Comms.api
           .getClips({
             search: this.newSearch,
-            boolean: boolean,
+            boolean: this.searchSaved ? this.booleanString : null,
             user_id: this.user.id,
           })
           .then((response) => {
@@ -1193,7 +1197,6 @@ export default {
       return tweetList
     },
     getArticleDescriptions(articles) {
-      console.log(articles)
       return articles.map((a) => `Content:${a.content} Date:${a.publishedAt}`)
     },
     async getTweetSummary(instructions = '') {
@@ -1252,8 +1255,11 @@ export default {
       }
     },
     async getArticleSummary(url, instructions = null, length = 1000) {
+      let selectedClip = this.filteredArticles.filter((art) => art.url === url)[0]
+
       this.articleSummaryLoading = true
       this.loadingUrl = url
+
       try {
         await Comms.api
           .getArticleSummary({
@@ -1263,7 +1269,11 @@ export default {
             length: length,
           })
           .then((response) => {
-            this.articleSummaries[url] = response.summary
+            selectedClip['summary'] = response.summary
+            this.filteredArticles = this.filteredArticles.filter(
+              (clip) => clip.title !== selectedClip.title,
+            )
+            this.filteredArticles.unshift(selectedClip)
             this.refreshUser()
           })
       } catch (e) {
@@ -1272,6 +1282,7 @@ export default {
         this.showArticleRegenerate = false
         this.articleSummaryLoading = false
         this.loadingUrl = null
+        this.scrollToTop()
       }
     },
     changeSummaryChat(type) {
@@ -2638,6 +2649,7 @@ header {
 }
 .paid-modal {
   margin-top: 132px;
+  font-family: $thin-font-family;
 }
 .regen-container {
   width: 500px;
