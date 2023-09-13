@@ -25,7 +25,7 @@
     </div>
 
     <div class="divider off-bg no-border">
-      <p class="divider-text off-bg no-border">Summary</p>
+      <p class="divider-text off-bg no-border center-media">Summary</p>
     </div>
 
     <div class="main off-bg">
@@ -35,16 +35,16 @@
     </div>
 
     <div class="divider">
-      <p style="left: 45%" class="divider-text">Media Clips</p>
+      <p class="divider-text center-media">Media Clips</p>
     </div>
 
-    <div class="main white-bg">
+    <div class="main main-mobile white-bg">
       <section>
         <div v-for="(clip, i) in report.meta_data.clips" :key="i" class="news-card">
           <header>
             <div class="card-col">
               <div class="card-top-left">
-                <span>{{ clip.source.name }}</span>
+                <span>{{ clip.source.name ? clip.source.name : clip.source }}</span>
               </div>
               <h1 class="article-title" @click="goToArticle(clip.url)">
                 {{ clip.title }}
@@ -184,6 +184,9 @@ export default {
   color: $base-gray;
   font-family: $thin-font-family;
   overflow-y: scroll;
+  @media only screen and (max-width: 600px) {
+    height: 90vh;
+  }
 }
 .reports::-webkit-scrollbar {
   width: 0;
@@ -258,6 +261,12 @@ header {
   padding: 32px 15vw 64px 15vw;
 }
 
+.main-mobile {
+  @media only screen and (max-width: 600px) {
+    padding: 32px 10px 64px 10px;
+  }
+}
+
 .pre-text {
   color: $dark-black-blue;
   font-family: $thin-font-family;
@@ -284,6 +293,13 @@ header {
   border-radius: 20px;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   font-size: 22px;
+}
+
+.center-media {
+  left: 45%;
+  @media only screen and (max-width: 600px) {
+    left: 32.5%;
+  }
 }
 
 .off-bg {
@@ -337,6 +353,9 @@ header {
 
   &:hover {
     color: #6b6b6b;
+  }
+  @media only screen and (max-width: 600px) {
+    max-width: 50vw;
   }
 }
 

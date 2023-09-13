@@ -98,6 +98,10 @@ export default {
   font-family: $base-font-family;
   color: $dark-black-blue;
   overflow-y: scroll;
+  @media only screen and (max-width: 600px) {
+    height: 90vh;
+    padding: 0 1rem;
+  }
 }
 
 .reports::-webkit-scrollbar {

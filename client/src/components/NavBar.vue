@@ -237,7 +237,7 @@
           <div
             v-if="$route.name === 'PRSummaries'"
             @click="toggleShowSearches"
-            class="row pointer nav-text light-gray-blue saved-searches-mobile"
+            class="row pointer nav-text saved-searches-mobile"
           >
             Saved Searches
             <img
@@ -287,20 +287,20 @@
                 :key="search.id"
               >
                 <img
-                  class="search-icon invert"
+                  class="search-icon mobile-search-icon invert"
                   v-if="search.type === 'NEWS'"
                   src="@/assets/images/memo.svg"
                   height="12px"
                   alt=""
                 />
                 <img
-                  class="search-icon"
+                  class="search-icon mobile-search-icon"
                   v-else-if="search.type === 'SOCIAL_MEDIA'"
                   src="@/assets/images/comment.svg"
                   height="12px"
                   alt=""
                 />
-                <p @click="selectSearch(search)">
+                <p @click="selectSearch(search)" class="light-gray-blue">
                   {{ search.name }}
                 </p>
 
@@ -326,8 +326,12 @@
           <!-- <img class="mar-right" src="@/assets/images/apps.svg" height="14px" alt="" /> -->
           Integrations
         </router-link>
+        <router-link active-class="active" :to="{ name: 'PRReports' }">
+          <!-- <img class="mar-right" src="@/assets/images/report.svg" height="14px" alt="" /> -->
+          Reports
+        </router-link>
         <div active-class="active" @click="logOut" class="bottom">
-          <img class="minor-mar-right" src="@/assets/images/logout.svg" height="14px" alt="" /> Sign
+          <img class="minor-mar-right" src="@/assets/images/logout.svg" height="12px" alt="" /> Sign
           out
         </div>
       </nav>
@@ -639,6 +643,10 @@ export default {
   margin-left: 1rem;
   filter: invert(50%);
   cursor: pointer;
+}
+
+.mobile-search-icon {
+  filter: invert(65%) sepia(13%) saturate(505%) hue-rotate(200deg) brightness(90%) contrast(88%);
 }
 
 .beta-tag {
@@ -975,6 +983,11 @@ nav {
   color: #6b6b6b;
   font-size: 13px;
   padding: 6px 0;
+  @media only screen and (max-width: 600px) {
+    padding: 14px 0;
+    color: $dark-black-blue;
+    // font-size: 18px;
+  }
   img {
     margin-left: 8px;
   }
@@ -984,7 +997,8 @@ nav {
 }
 .saved-searches-mobile {
   @media only screen and (max-width: 600px) {
-    font-size: 18px;
+    font-size: 14px;
+    color: $dark-black-blue;
   }
 }
 a {
@@ -997,8 +1011,10 @@ a {
   padding: 6px 0;
   margin: 0 16px;
   @media only screen and (max-width: 600px) {
-    margin: 0 4px;
-    font-size: 18px;
+    margin: 0px 16px;
+    padding: 14px 0;
+    color: $dark-black-blue;
+    // font-size: 18px;
   }
   img {
     transition: all 0.2s;
@@ -1262,10 +1278,12 @@ a:hover {
   margin-top: 2rem;
 }
 .mar-left {
-  margin-left: 0.25rem;
+  margin-left: 1rem;
 }
 .bottom {
   position: absolute;
   bottom: 30px;
+  font-size: 14px;
+  color: $dark-black-blue;
 }
 </style>
