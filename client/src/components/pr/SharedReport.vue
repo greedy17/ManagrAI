@@ -44,7 +44,7 @@
           <header>
             <div class="card-col">
               <div class="card-top-left">
-                <span>{{ clip.source.name }}</span>
+                <span>{{ clip.source.name ? clip.source.name : clip.source }}</span>
               </div>
               <h1 class="article-title" @click="goToArticle(clip.url)">
                 {{ clip.title }}
