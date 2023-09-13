@@ -95,6 +95,17 @@ def datetime_appended_filepath(instance, filename):
     return name
 
 
+def bucket_upload_filepath(instance, filename):
+    if settings.DEBUG:
+        return datetime_appended_filepath(instance, filename)
+    extension = filename.split(".")[-1]
+    original_name = filename.split(".")[:-1][0]
+    time = str(timezone.now().isoformat())
+    time = time.split(".")[0]  # Remove trailing tz info
+    name = f"{instance.user.organization_name}/{instance.user.first_name}/{original_name}_{time}.{extension}"
+    return name
+
+
 def apply_filter_and_search(viewset, request):
     """
     Apply filter parameters and search query to a detailed endpoint.
@@ -179,7 +190,7 @@ def query_debugger(func):
     return inner_func
 
 
-def upload_to_bucket(f, filename, bucket_name, access_key_id, secret):
+def upload_to_bucket(file, filename, bucket_name, access_key_id, secret):
     AWS_ACCESS_KEY_ID = access_key_id
     AWS_SECRET_ACCESS_KEY = secret
     s3 = boto3.client(
@@ -187,7 +198,7 @@ def upload_to_bucket(f, filename, bucket_name, access_key_id, secret):
         aws_access_key_id=AWS_ACCESS_KEY_ID,
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
     )
-    s3.upload_file(f, bucket_name, filename)
+    s3.upload_file(file, bucket_name, filename)
 
 
 def generate_fernet_key(secret_key):

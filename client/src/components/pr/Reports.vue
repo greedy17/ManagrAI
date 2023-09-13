@@ -20,10 +20,19 @@
         </div>
       </div>
 
-      <div class="wrapper">
-        <button @click="copyText" style="margin-left: 2px" class="primary-button">Copy link</button>
-        <div class="tooltip">{{ copyTip }}</div>
-      </div>
+      <section class="row">
+        <div class="wrapper">
+          <button @click="copyText" style="margin-left: 2px" class="secondary-button">
+            Copy link
+          </button>
+
+          <div class="tooltip">{{ copyTip }}</div>
+        </div>
+        <button @click="openLink" style="margin-left: 8px" class="primary-button">
+          <img src="@/assets/images/openwindow.svg" height="12px" alt="" />
+          Open
+        </button>
+      </section>
 
       <div class="divider"></div>
 
@@ -35,6 +44,7 @@
     <div v-else>
       <div :class="{ dull: reportLoading }" class="container">
         <img
+          accept=".jpg, .jpeg, .png, .gif, .bmp, .tiff, .tif, .webp"
           style="margin-top: 8px"
           v-if="imageUrl"
           :src="imageUrl"
@@ -76,11 +86,12 @@
           </div>
 
           <button
+            v-if="!summary"
             @click="getSummary"
             :disabled="!clips.length || loading || summaryLoading"
             class="secondary-button"
           >
-            {{ summary ? 'Regenerate' : 'Generate' }}
+            Generate
           </button>
         </div>
 
@@ -126,10 +137,15 @@
         <div class="space-between sticky-top">
           <div>
             <p>Clips</p>
-            <small>Clips included in your report</small>
+            <small>Articles included in your report</small>
           </div>
 
-          <div class="counter">{{ clips.length }}/20</div>
+          <div style="margin-top: 8px" class="row">
+            <!-- <svg style="margin-right: 16px" width="16" height="16">
+              <path d="M9 9H3v1h6v6h1v-6h6V9h-6V3H9v6z" fill-rule="evenodd"></path>
+            </svg> -->
+            <div class="counter">{{ clips.length }}/20</div>
+          </div>
         </div>
 
         <div
@@ -155,11 +171,11 @@
             class="row absolute-right actions"
           >
             <img
-              @click="getArticleSummary(clip.title, clip.url)"
+              @click="getArticleSummary(clip.title, clip.url, clip.search)"
               style="margin-right: 12px"
               class="blue"
               v-if="!summaryLoading && !clip.summary"
-              v-show="!clip.summary || !(loading || summaryLoading || reportLoading)"
+              v-show="!clip.summary && !loading && !summaryLoading && !reportLoading"
               src="@/assets/images/sparkles-thin.svg"
               height="16px"
             />
@@ -182,9 +198,49 @@
           </div>
         </div>
       </div>
+
+      <div class="container-small">
+        <div class="sticky-top">
+          <div>
+            <p>Add Article</p>
+            <small>Paste article url below</small>
+          </div>
+        </div>
+
+        <Transition name="slide-fade">
+          <div v-if="showArticleBanner" :class="{ greenTemplates: success, templates: !success }">
+            <p>{{ articleBannerText }}</p>
+          </div>
+        </Transition>
+        <div style="margin-top: 16px" class="row">
+          <input
+            v-model="uploadLink"
+            placeholder="Article URL.."
+            class="text-input"
+            type="text"
+            style="border: 1px solid rgba(0, 0, 0, 0.1); margin-top: 8px; width: 200px"
+          />
+          <button
+            style="margin-bottom: 6px; margin-left: 8px"
+            :disabled="!uploadLink || clipLoading"
+            class="primary-button"
+            @click="uploadArticle"
+          >
+            <img
+              style="margin-right: 4px"
+              v-if="clipLoading"
+              class="rotate"
+              height="16px"
+              src="@/assets/images/loading.svg"
+              alt=""
+            />
+            {{ clipLoading ? 'Adding' : 'Add' }}
+          </button>
+        </div>
+      </div>
+
       <footer>
         <p></p>
-
         <div class="row">
           <button
             :disabled="!clips.length || !summary || !imageUrl || !reportTitle || reportLoading"
@@ -222,16 +278,20 @@ export default {
       currentRow: null,
       imageFile: null,
       summaryLoading: false,
+      clipLoading: false,
       loadingUrl: null,
       reportLoading: false,
       instructions: null,
       editingTitle: false,
       hovering: false,
-      loadingTitle: false,
       showTooltip: false,
       reportSuccess: false,
       reportLink: '',
       copyTip: 'Copy',
+      uploadLink: null,
+      showArticleBanner: false,
+      articleBannerText: '',
+      success: true,
     }
   },
 
@@ -240,10 +300,44 @@ export default {
     defaultSearch: {},
   },
   methods: {
+    async uploadArticle() {
+      this.clipLoading = true
+      try {
+        await Comms.api
+          .uploadLink({
+            url: this.uploadLink,
+          })
+          .then((response) => {
+            this.success = true
+            this.addClip(response)
+            this.articleBanner('Article added!')
+          })
+      } catch (e) {
+        this.success = false
+        console.log(e)
+        this.articleBanner('Error adding article!')
+      } finally {
+        this.clipLoading = false
+        this.uploadLink = null
+      }
+    },
+    articleBanner(text) {
+      this.articleBannerText = text
+      this.showArticleBanner = true
+      setTimeout(() => {
+        this.showArticleBanner = false
+      }, 2000)
+    },
+    addClip(clip) {
+      this.$emit('add-clip', clip)
+    },
     goToReports() {
       this.$router.push({
         name: 'PRReports',
       })
+    },
+    openLink() {
+      window.open(this.reportLink, '_blank')
     },
     async copyText() {
       try {
@@ -303,14 +397,15 @@ export default {
         this.clearClips()
       }
     },
-    async getArticleSummary(title, url, length = 500) {
+    async getArticleSummary(title, url, search, length = 500) {
+      console.log(search)
       this.summaryLoading = true
       this.loadingUrl = url
       try {
         await Comms.api
           .getArticleSummary({
             url: url,
-            search: '',
+            search: search,
             instructions: '',
             length: length,
           })
@@ -571,7 +666,29 @@ h3 {
   padding: 0 16px 16px 16px;
   margin: 16px 0;
   border-radius: 4px;
-  height: 70vh;
+  height: 40vh;
+  position: relative;
+  overflow-y: scroll;
+
+  p {
+    margin: 0;
+    padding: 0;
+    font-size: 14px;
+  }
+
+  small {
+    color: $mid-gray;
+    font-size: 12px;
+  }
+}
+
+.container-small {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: white;
+  padding: 0 16px 16px 16px;
+  margin: 16px 0;
+  border-radius: 4px;
+  height: 150px;
   position: relative;
   overflow-y: scroll;
 
@@ -606,7 +723,7 @@ h3 {
 }
 .space-between {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
 }
 
@@ -678,7 +795,7 @@ h3 {
   padding: 8px;
   border: none;
   img {
-    filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
+    filter: invert(100%) !important;
     margin-right: 8px;
   }
 }
@@ -1043,5 +1160,88 @@ a {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.slide-fade-enter-active {
+  transition: all 0.2s ease-in;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.1s ease-out;
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateY(100px);
+}
+
+.templates {
+  display: block;
+  width: fit-content;
+  height: 40px;
+  position: absolute;
+  top: 32px;
+  left: 16px;
+  font-size: 12px;
+  background: $coral;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  line-height: 1.5;
+  z-index: 5000;
+
+  p {
+    margin-top: 8px;
+    padding: 0;
+  }
+}
+
+.templates::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: $coral;
+  bottom: -3px;
+  left: 45%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.greenTemplates {
+  display: block;
+  width: fit-content;
+  height: 40px;
+  position: absolute;
+  top: 32px;
+  left: 16px;
+  font-size: 12px;
+  background: $dark-green;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  line-height: 1.5;
+  z-index: 5000;
+
+  p {
+    margin-top: 8px;
+    padding: 0;
+  }
+}
+
+.greenTemplates::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: $dark-green;
+  bottom: -3px;
+  left: 45%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 </style>

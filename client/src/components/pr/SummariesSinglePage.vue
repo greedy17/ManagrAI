@@ -70,7 +70,7 @@
             <div class="paid-center">
               <h3 class="paid-title">Upgrade to Pro</h3>
               <h5 class="regen-body-title">
-                You have reached your usage limit for the month. Please upgrade your plan.
+                {{ upgradeMessage }}
               </h5>
             </div>
             <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
@@ -79,7 +79,13 @@
         <div class="paid-footer">
           <!-- <div></div> -->
           <div class="row">
-            <div class="cancel-button" @click="closePaidModal">Close</div>
+            <div
+              style="padding-top: 9px; padding-bottom: 9px"
+              class="cancel-button"
+              @click="closePaidModal"
+            >
+              Close
+            </div>
             <div class="save-button" @click="goToContact">Contact Us</div>
           </div>
         </div>
@@ -93,6 +99,7 @@
         @clear-clips="clearClips"
         @remove-clip="removeClip"
         @edit-clip="editClip"
+        @add-clip="addClip"
         :clips="addedClips"
         :defaultSearch="newSearch"
       />
@@ -163,7 +170,7 @@
             Summarize coverage for <span class="search-text">"{{ newSearch }}"</span>
           </p>
         </div>
-        <div>
+        <div class="area-container">
           <div style="margin-bottom: 30px" class="input-container" v-clickOutsideMenu>
             <div class="input-row">
               <div style="border-right: none" class="main-text">
@@ -525,14 +532,14 @@
                       <span>Followers</span>
                     </small>
                     <span class="divier-dot">.</span>
-                    <span class="off-gray">{{ getTimeDifferenceInMinutes(tweet.created_at) }}</span>
+                    <span class="off-gray time">{{ getTimeDifferenceInMinutes(tweet.created_at) }}</span>
                   </div>
 
-                  <button class="tertiary-button" @click="addClip(tweet)">
+                  <!-- <button class="tertiary-button" @click="addClip(tweet)">
                     <img height="10px" src="@/assets/images/share.svg" alt="" />
 
                     Share
-                  </button>
+                  </button> -->
                 </div>
               </div>
             </div>
@@ -561,16 +568,16 @@
                     </p>
                   </div>
 
-                  <div @click="goToArticle(article.url)">
-                    <img :src="article.urlToImage" class="cover-photo" />
-                  </div>
+                  <!-- <div @click="goToArticle(article.url)"> -->
+                    <img @click="goToArticle(article.url)" :src="article.urlToImage" class="cover-photo" />
+                  <!-- </div> -->
                 </header>
 
                 <div class="card-footer">
                   <div class="author-time">
                     <span class="author">{{ article.author }}</span>
                     <span class="divier-dot">.</span>
-                    <span class="off-gray">{{
+                    <span class="off-gray time">{{
                       getTimeDifferenceInMinutes(article.publishedAt)
                     }}</span>
                     <span class="divier-dot">.</span>
@@ -587,9 +594,9 @@
                     </button>
 
                     <button
-                      v-if="!articleSummaries[article.url]"
+                      v-if="!article.summary"
                       @click="getArticleSummary(article.url)"
-                      class="tertiary-button"
+                      class="tertiary-button summarize-button"
                       style="margin: 0"
                       :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
                     >
@@ -615,11 +622,11 @@
                     />
                   </div>
                 </div>
-                <div v-if="articleSummaries[article.url]">
+                <div v-if="article.summary">
                   <div class="blue-bg display-flex">
-                    <pre v-html="articleSummaries[article.url]" class="pre-text"></pre>
+                    <pre v-html="article.summary" class="pre-text"></pre>
                     <div
-                      @click="copyArticleSummary(articleSummaries[article.url])"
+                      @click="copyArticleSummary(article.summary)"
                       class="wrapper article-copy-container"
                     >
                       <img
@@ -751,11 +758,11 @@ export default {
       newSummary: false,
       addingPrompt: false,
       addingSources: false,
-      articleSummaries: {},
       loadingUrl: null,
       articleSummaryLoading: false,
       paidModal: false,
       showingDropdown: false,
+      upgradeMessage: 'You have reached your usage limit for the month. Please upgrade your plan.',
       copyTip: 'Copy',
       searchSuggestions: [
         'XXX broad search',
@@ -769,7 +776,9 @@ export default {
         'Articles written or about [JOURNALIST NAME]',
       ],
       promptSuggestions: [
-        'Highlight the top 3 news story and the impact it will have on XXX',
+        `Summarize news from this week and its impact on XXX`,
+        'Highlight the top 3 news story and the impact it has on XXX',
+        "As XXX's PR agency, provide suggestions based on this news",
         `Write a highly engaging LinkedIn post based on this coverage for XXX`,
         `Craft an entertaining Twitter post based on this coverage for XXX`,
         'Newsjack this coverage and turn into a blog post on behalf of XXX',
@@ -794,15 +803,6 @@ export default {
     // this.updateMessage()
   },
   methods: {
-    async getReports() {
-      try {
-        await User.api.getReports({ user: this.$store.state.user.id }).then((response) => {
-          console.log(response)
-        })
-      } catch (e) {
-        console.log(e)
-      }
-    },
     clearClips() {
       this.addedClips = []
     },
@@ -810,13 +810,21 @@ export default {
       this.addedClips = this.addedClips.filter((clip) => clip.title !== title)
     },
     toggleReport() {
-      this.ShowReport = !this.ShowReport
+      if (!this.isPaid) {
+        this.openPaidModal('Upgrade your plan in order to create reports.')
+      } else {
+        this.ShowReport = !this.ShowReport
+      }
     },
     addClip(clip) {
+      if (Array.isArray(clip.author)) {
+        clip.author = clip.author[0]
+      }
+      clip['search'] = this.newSearch
       if (this.addedClips.length < 20) {
         this.addedClips.push(clip)
       } else {
-        this.clipLimit()
+        return
       }
     },
     editClip(title, summary) {
@@ -824,9 +832,6 @@ export default {
       clip['summary'] = summary
       this.addedClips = this.addedClips.filter((clip) => clip.title !== title)
       this.addedClips.unshift(clip)
-    },
-    clipLimit() {
-      console.log('clip limit')
     },
     soonButtonText() {
       this.buttonText = 'Coming Soon!'
@@ -933,9 +938,10 @@ export default {
       this.searchId = search.id
       this.searchName = search.name
       this.newSearch = search.input_text
+      this.booleanString = search.search_boolean
       this.newTemplate = search.instructions
       this.mainView = search.type === 'SOCIAL_MEDIA' ? 'social' : 'news'
-      this.generateNewSearch(search.search_boolean)
+      this.generateNewSearch()
     },
     changeIndex() {
       setTimeout(() => {
@@ -992,7 +998,8 @@ export default {
         return `${givenDate.getMonth() + 1}/${givenDate.getDate()}/${givenDate.getFullYear()}`
       }
     },
-    openPaidModal() {
+    openPaidModal(msg) {
+      this.upgradeMessage = msg
       this.paidModal = true
     },
     closePaidModal() {
@@ -1001,9 +1008,11 @@ export default {
     goToContact() {
       window.open('https://managr.ai/contact', '_blank')
     },
-    async generateNewSearch(boolean) {
+    async generateNewSearch() {
       if (!this.isPaid && this.searchesUsed >= 10) {
-        this.openPaidModal()
+        this.openPaidModal(
+          'You have reached your usage limit for the month. Please upgrade your plan.',
+        )
         return
       }
       if (!this.newSearch || this.newSearch.length < 3) {
@@ -1017,7 +1026,7 @@ export default {
         this.summaryLoading = true
         this.changeSearch({ search: this.newSearch, template: this.newTemplate })
         try {
-          this.getClips(boolean).then((response) => {
+          this.getClips().then((response) => {
             this.getSummary(this.filteredArticles, this.newTemplate).then((response) => {
               if (this.searchSaved) {
                 this.updateSearch()
@@ -1054,6 +1063,7 @@ export default {
         console.log(e)
       } finally {
         this.summaryLoading = false
+        this.scrollToTop()
       }
     },
     async updateSearch() {
@@ -1127,12 +1137,12 @@ export default {
         }, 2000)
       }
     },
-    async getClips(boolean = null) {
+    async getClips() {
       try {
         await Comms.api
           .getClips({
             search: this.newSearch,
-            boolean: boolean,
+            boolean: this.searchSaved ? this.booleanString : null,
             user_id: this.user.id,
           })
           .then((response) => {
@@ -1193,7 +1203,6 @@ export default {
       return tweetList
     },
     getArticleDescriptions(articles) {
-      console.log(articles)
       return articles.map((a) => `Content:${a.content} Date:${a.publishedAt}`)
     },
     async getTweetSummary(instructions = '') {
@@ -1252,8 +1261,11 @@ export default {
       }
     },
     async getArticleSummary(url, instructions = null, length = 1000) {
+      let selectedClip = this.filteredArticles.filter((art) => art.url === url)[0]
+
       this.articleSummaryLoading = true
       this.loadingUrl = url
+
       try {
         await Comms.api
           .getArticleSummary({
@@ -1263,7 +1275,11 @@ export default {
             length: length,
           })
           .then((response) => {
-            this.articleSummaries[url] = response.summary
+            selectedClip['summary'] = response.summary
+            this.filteredArticles = this.filteredArticles.filter(
+              (clip) => clip.title !== selectedClip.title,
+            )
+            this.filteredArticles.unshift(selectedClip)
             this.refreshUser()
           })
       } catch (e) {
@@ -1272,6 +1288,7 @@ export default {
         this.showArticleRegenerate = false
         this.articleSummaryLoading = false
         this.loadingUrl = null
+        this.scrollToTop()
       }
     },
     changeSummaryChat(type) {
@@ -1575,6 +1592,9 @@ export default {
   width: 300px;
   margin-top: 128px;
   margin-bottom: 16px;
+  @media only screen and (max-width: 600px) {
+    margin-top: 0;
+  }
 }
 .switch-item {
   display: flex;
@@ -1892,6 +1912,15 @@ button:disabled {
     margin-right: 1rem;
   }
 }
+.area-container {
+  @media only screen and (max-width: 600px) {
+    // width: 50%;
+    width: 80vw;
+  }
+  @media only screen and (max-width: 350px) {
+    // width: 30%;
+  }
+}
 .input-container {
   flex-wrap: nowrap;
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -1901,6 +1930,9 @@ button:disabled {
   background-color: $offer-white;
   color: $base-gray;
   position: relative;
+  @media only screen and (max-width: 600px) {
+    width: 100%;
+  }
 }
 .s-padding {
   padding: 0 0.25rem !important;
@@ -2059,6 +2091,9 @@ button:disabled {
   width: 100vw;
   color: $dark-blue;
   overflow-y: scroll;
+  @media only screen and (max-width: 600px) {
+    padding: 12px 36px 0 36px;
+  }
 }
 
 .suggestions {
@@ -2115,6 +2150,9 @@ button:disabled {
   align-items: center;
   justify-content: center;
   background-color: $white-blue;
+  @media only screen and (max-width: 600px) {
+    width: 70%;
+  }
 }
 
 .no-content {
@@ -2124,6 +2162,9 @@ button:disabled {
   justify-content: center;
 
   width: 700px;
+  @media only screen and (max-width: 600px) {
+    width: 100vw;
+  }
 }
 
 .title-row {
@@ -2134,6 +2175,19 @@ button:disabled {
   margin-bottom: 1rem;
   img {
     margin-right: 1rem;
+  }
+  @media only screen and (max-width: 350px) {
+    display: flex;
+    justify-content: center;
+    div {
+      width: 55%;
+      p {
+        overflow: visible;
+        text-align: center;
+        white-space: normal;
+      }
+      // text-overflow: ;
+    }
   }
 }
 .display-flex {
@@ -2214,6 +2268,9 @@ button:disabled {
   padding: 4px 16px;
   border-radius: 20px;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
+  @media only screen and (max-width: 600px) {
+    left: 31.5%;
+  }
 }
 
 .summaries-container {
@@ -2260,10 +2317,15 @@ header {
   align-items: center;
   justify-content: space-between;
   gap: 32px;
-  height: 120px;
+  height: 240px;
   overflow: none;
   text-overflow: ellipsis;
   margin-bottom: 2rem;
+  @media only screen and (max-width: 600px) {
+    gap: 4px;
+    flex-direction: column-reverse;
+    margin-bottom: 0;
+  }
 }
 
 .news-container {
@@ -2273,6 +2335,9 @@ header {
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
+  @media only screen and (max-width: 600px) {
+    width: 90%;
+  }
 }
 
 .news-container-med {
@@ -2335,10 +2400,16 @@ header {
     font-weight: normal;
     word-wrap: break-word;
   }
+  @media only screen and (max-width: 600px) {
+    text-align: center;
+  }
 }
 
 .no-text-margin {
   margin: 0;
+  @media only screen and (max-width: 600px) {
+    text-align: center;
+  }
 }
 
 .author {
@@ -2352,6 +2423,10 @@ header {
   padding: 4px 12px;
   color: $base-gray;
   border-radius: 12px;
+  @media only screen and (max-width: 600px) {
+    max-width: 95px;
+    font-size: 10px !important;
+  }
 }
 
 .off-gray {
@@ -2393,6 +2468,9 @@ header {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  @media only screen and (max-width: 600px) {
+    padding-top: 1rem;
+  }
 }
 
 .card-row-med {
@@ -2426,6 +2504,14 @@ header {
 
   &:hover {
     opacity: 0.7;
+  }
+  @media only screen and (max-width: 600px) {
+    margin-left: 0.25rem;
+    // height: 112px;
+    // width: 224px;
+    width: 100%;
+    object-fit: cover;
+    // height: 50%;
   }
 }
 
@@ -2464,6 +2550,10 @@ header {
   &:hover {
     color: #6b6b6b;
   }
+  @media only screen and (max-width: 600px) {
+    font-size: 12px;
+    max-width: 270px;
+  }
 }
 
 .article-preview {
@@ -2496,9 +2586,15 @@ header {
   align-items: center;
   padding: 16px 0;
   margin-top: 1rem;
+  @media only screen and (max-width: 600px) {
+    margin-top: 0rem;
+  }
   span {
     font-size: 12px;
     margin-right: 0.5rem;
+    @media only screen and (max-width: 600px) {
+      margin-right: 0.25rem;
+    }
   }
 }
 .footer-icon-container {
@@ -2523,6 +2619,12 @@ header {
   display: flex;
   align-items: center;
   color: $light-gray-blue;
+}
+.time {
+  @media only screen and (max-width: 600px) {
+    max-width: 100px;
+    font-size: 10px !important;
+  }
 }
 .divier-dot {
   position: relative;
@@ -2578,6 +2680,9 @@ header {
   margin: 1rem 0;
   padding: 1rem;
   font-family: $base-font-family;
+  @media only screen and (max-width: 600px) {
+    width: 100%;
+  }
 }
 .regen-footer {
   position: sticky;
@@ -2638,12 +2743,21 @@ header {
 }
 .paid-modal {
   margin-top: 132px;
+  font-family: $thin-font-family;
 }
 .regen-container {
   width: 500px;
   max-height: 500px;
   position: relative;
   overflow-y: scroll;
+  @media only screen and (max-width: 600px) {
+    width: 100%;
+  }
+}
+::v-deep .modal {
+  @media only screen and (max-width: 600px) {
+    width: 90%;
+  }
 }
 .message-text {
   font-family: $base-font-family;
@@ -2687,6 +2801,9 @@ header {
   padding: 8px 20px 36px 20px;
   border-radius: 6px;
   flex-direction: column;
+  @media only screen and (max-width: 600px) {
+    min-width: 0;
+  }
 }
 
 .thumbnail {
@@ -2695,6 +2812,7 @@ header {
   background-color: #f2f2f2;
   border-radius: 6px;
   margin-left: 16px;
+  
 }
 
 .content {
@@ -2936,5 +3054,13 @@ header {
 .article-copy-container {
   height: 20px;
   margin-top: 0.5rem;
+}
+.summarize-button {
+  @media only screen and (max-width: 600px) {
+    font-size: 11px;
+    img {
+      height: 11px;
+    }
+  }
 }
 </style>

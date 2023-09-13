@@ -304,7 +304,6 @@
         "awslogs-stream-prefix": "ecs"
       }
     },
-    "healthCheck": ${each.value.health_check}
   },
   {
     "name": "datadog-agent",

@@ -1450,6 +1450,7 @@ a {
   align-items: center;
   // padding: 0px 0px 0px 96px;
   margin-top: 4rem;
+  overflow-x: auto;
   &__cards {
     display: flex;
     flex-direction: row;
@@ -1458,6 +1459,13 @@ a {
     justify-content: flex-start;
     // width: 96vw;
     margin-top: 4px;
+    @media only screen and (max-width: 600px) {
+      flex-direction: column;
+    }
+  }
+  @media only screen and (max-width: 600px) {
+    margin-top: 0;
+    height: 90vh;
   }
 }
 // .gold-filter {
@@ -1496,6 +1504,9 @@ a {
   width: 18.5vw;
   min-height: 144px;
   transition: all 0.25s;
+  @media only screen and (max-width: 600px) {
+    width: 70vw;
+  }
 
   &__header {
     display: flex;
@@ -1721,6 +1732,9 @@ a {
 .crm-form {
   height: 34vh;
   width: 32vw;
+  @media only screen and (max-width: 600px) {
+    width: 70vw;
+  }
 }
 .form-margin-small {
   margin-top: 10rem;
@@ -1915,11 +1929,17 @@ a {
   display: flex;
   align-items: center;
   padding: 0.25rem 0.5rem;
+  @media only screen and (max-width: 600px) {
+    width: 60vw;
+  }
 }
 .separator {
   border-top: 1px solid $soft-gray;
   width: 15vw;
   // margin: 0rem 0 0.1rem 0;
+  @media only screen and (max-width: 600px) {
+    width: 60vw;
+  }
 }
 .confirm-cancel-container {
   display: flex;
@@ -1978,6 +1998,9 @@ a {
   margin-top: 2rem;
   margin-bottom: 1rem;
   margin-left: 1.5rem;
+  @media only screen and (max-width: 600px) {
+    margin-top: 0.55rem;
+  }
 }
 .no-text-margin {
   margin: 0;
