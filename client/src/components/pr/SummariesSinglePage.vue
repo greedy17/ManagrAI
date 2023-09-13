@@ -728,7 +728,8 @@ export default {
       ],
       promptSuggestions: [
         `Summarize news from this week and its impact on XXX`,
-        'Highlight the top 3 news stories',
+        'Highlight the top 3 news story and the impact it has on XXX',
+        "As XXX's PR agency, provide suggestions based on this news",
         `Write a highly engaging LinkedIn post based on this coverage for XXX`,
         `Craft an entertaining Twitter post based on this coverage for XXX`,
         'Newsjack this coverage and turn into a blog post on behalf of XXX',
