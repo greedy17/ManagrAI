@@ -95,14 +95,14 @@ def datetime_appended_filepath(instance, filename):
     return name
 
 
-def bucket_upload_filepath(organization_name, first_name, filename):
+def bucket_upload_filepath(instance, filename):
     if settings.DEBUG:
-        return datetime_appended_filepath(filename)
+        return datetime_appended_filepath(instance, filename)
     extension = filename.split(".")[-1]
     original_name = filename.split(".")[:-1][0]
     time = str(timezone.now().isoformat())
     time = time.split(".")[0]  # Remove trailing tz info
-    name = f"{organization_name}/{first_name}/{original_name}_{time}.{extension}"
+    name = f"{instance.user.organization_name}/{instance.user.first_name}/{original_name}_{time}.{extension}"
     return name
 
 
