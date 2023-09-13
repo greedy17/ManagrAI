@@ -1851,6 +1851,9 @@ button:disabled {
     // filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
     margin-right: 8px;
   }
+  @media only screen and (max-width: 600px) {
+    font-size: 10px;
+  }
 }
 
 .secondary-button {
@@ -1910,6 +1913,9 @@ button:disabled {
   justify-content: center;
   button:first-of-type {
     margin-right: 1rem;
+    @media only screen and (max-width: 600px) {
+      margin-right: 0.25rem;
+    }
   }
 }
 .area-container {
@@ -2092,7 +2098,7 @@ button:disabled {
   color: $dark-blue;
   overflow-y: scroll;
   @media only screen and (max-width: 600px) {
-    padding: 12px 36px 0 36px;
+    padding: 12px 12px 0 12px;
   }
 }
 
@@ -2424,7 +2430,7 @@ header {
   color: $base-gray;
   border-radius: 12px;
   @media only screen and (max-width: 600px) {
-    max-width: 95px;
+    max-width: 65px;
     font-size: 10px !important;
   }
 }
