@@ -551,6 +551,9 @@ pre[contenteditable]:focus {
   right: 0;
   top: 0;
   box-shadow: 30px 30px 40px;
+  @media only screen and (max-width: 600px) {
+    width: 100vw;
+  }
 }
 .reports::-webkit-scrollbar {
   width: 6px;
