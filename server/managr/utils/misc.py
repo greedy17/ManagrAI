@@ -96,6 +96,8 @@ def datetime_appended_filepath(instance, filename):
 
 
 def bucket_upload_filepath(organization_name, first_name, filename):
+    if settings.DEBUG:
+        return datetime_appended_filepath(filename)
     extension = filename.split(".")[-1]
     original_name = filename.split(".")[:-1][0]
     time = str(timezone.now().isoformat())
