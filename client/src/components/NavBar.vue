@@ -22,7 +22,7 @@
       </div>
     </Transition>
     <div v-if="userIsLoggedIn">
-      <nav id="nav" v-if="isPR">
+      <nav id="nav" v-if="this.$store.state.user.role === 'PR' && !isMobile">
         <router-link :to="{ name: 'PRSummaries' }">
           <div @click="goHome" class="logo">
             <img style="height: 28px" src="@/assets/images/logo.png" />
@@ -210,6 +210,127 @@
           </div>
         </div>
       </nav>
+      <div v-else-if="this.$store.state.user.role === 'PR' && isMobile" class="hamburger-container">
+        <img src="@/assets/images/menu-burger.svg" class="hamburger" @click="showMobileMenu" />
+      </div>
+      <nav v-if="mobileMenuOpen" class="mobile-nav-container" v-clickOutsideMobileNav>
+        <router-link active-class="active" :to="{ name: 'PRSummaries' }" class="mobile-nav-top">
+          <p class="small-margin">Digest</p>
+        </router-link>
+
+        <router-link active-class="active" :to="{ name: 'Pitches' }">
+          <p class="small-margin">Pitch</p>
+        </router-link>
+
+        <div v-if="!hasZoomIntegration" :to="{ name: 'PRIntegrations' }">
+          <div class="wrapper">
+            <p class="small-margin light-gray-blue">Transcribe</p>
+            <div style="margin-left: -20px" class="tooltip">Connect Zoom</div>
+          </div>
+        </div>
+
+        <router-link v-else active-class="active" :to="{ name: 'PRTranscripts' }">
+          <p class="small-margin">Transcribe</p>
+        </router-link>
+        
+        <div class="relative mar-left">
+          <div
+            v-if="$route.name === 'PRSummaries'"
+            @click="toggleShowSearches"
+            class="row pointer nav-text light-gray-blue saved-searches-mobile"
+          >
+            Saved Searches
+            <img
+              v-if="!showSavedSearches"
+              src="@/assets/images/downArrow.svg"
+              height="14px"
+              alt=""
+            />
+            <img
+              class="rotate-img"
+              v-else
+              src="@/assets/images/downArrow.svg"
+              height="14px"
+              alt=""
+            />
+          </div>
+
+          <!-- search-dropdown -->
+          <div v-if="showSavedSearches" class="">
+            <!-- <div class="input">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
+                  fill="currentColor"
+                ></path>
+              </svg>
+              <input class="search-input" v-model="searchText" :placeholder="`Search...`" />
+              <img
+                v-show="searchText"
+                @click="clearText"
+                src="@/assets/images/close.svg"
+                class="invert pointer"
+                height="12px"
+                alt=""
+              />
+            </div>
+            <p class="v-margin" v-if="!searches.length">Nothing here...</p> -->
+
+            <div class="searches-container">
+              <div
+                @mouseenter="setIndex(i)"
+                @mouseLeave="removeIndex"
+                class="row relative"
+                v-for="(search, i) in searches"
+                :key="search.id"
+              >
+                <img
+                  class="search-icon invert"
+                  v-if="search.type === 'NEWS'"
+                  src="@/assets/images/memo.svg"
+                  height="12px"
+                  alt=""
+                />
+                <img
+                  class="search-icon"
+                  v-else-if="search.type === 'SOCIAL_MEDIA'"
+                  src="@/assets/images/comment.svg"
+                  height="12px"
+                  alt=""
+                />
+                <p @click="selectSearch(search)">
+                  {{ search.name }}
+                </p>
+
+                <img
+                  @click="toggleDeleteModal(search)"
+                  v-if="hoverIndex === i"
+                  class="absolute-icon"
+                  src="@/assets/images/trash.svg"
+                  height="12px"
+                  alt=""
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <router-link active-class="active" :to="{ name: 'PRSettings' }">
+          <!-- <img class="mar-right" src="@/assets/images/settings.svg" height="14px" alt="" /> -->
+          <!-- <img class="mar-right" src="@/assets/images/profile.svg" height="14px" alt="" /> -->
+          Users
+        </router-link>
+        <router-link active-class="active" :to="{ name: 'PRIntegrations' }">
+          <!-- <img class="mar-right" src="@/assets/images/apps.svg" height="14px" alt="" /> -->
+          Integrations
+        </router-link>
+        <div active-class="active" @click="logOut" class="bottom">
+          <img class="minor-mar-right" src="@/assets/images/logout.svg" height="14px" alt="" /> Sign
+          out
+        </div>
+      </nav>
     </div>
   </div>
 </template>
@@ -237,14 +358,55 @@ export default {
       soonText: 'Transcribe',
       hoverIndex: null,
       showUpdateBanner: false,
+      mobileMenuOpen: false,
+      hamburgerClicked: false,
     }
   },
   created() {
     this.getSearches()
   },
+  directives: {
+    clickOutsideMobileNav: {
+      bind(el, binding, vnode) {
+        // Define a function to handle click events
+        function clickOutsideHandler(e) {
+          // Check if the clicked element is outside the target element
+          if (!el.contains(e.target)) {
+            // Trigger the provided method from the binding value
+            if (vnode.context.mobileMenuOpen && !vnode.context.hamburgerClicked) {
+              vnode.context.hideMobileMenu()
+            }
+            vnode.context.hamburgerClicked = false
+          }
+        }
+
+        // Add a click event listener to the document body
+        document.body.addEventListener('click', clickOutsideHandler)
+
+        // Store the event listener on the element for cleanup
+        el._clickOutsideHandler = clickOutsideHandler
+      },
+      unbind(el) {
+        // Remove the event listener when the directive is unbound
+        document.body.removeEventListener('click', el._clickOutsideHandler)
+      },
+    },
+  },
+  watch:{
+    $route (to, from){
+        this.hideMobileMenu()
+    }
+  },
   methods: {
     setIndex(i) {
       this.hoverIndex = i
+    },
+    showMobileMenu() {
+      this.hamburgerClicked = true
+      this.mobileMenuOpen = true
+    },
+    hideMobileMenu() {
+      this.mobileMenuOpen = false
     },
     removeIndex() {
       this.hoverIndex = null
@@ -306,6 +468,7 @@ export default {
     logOut() {
       this.$store.dispatch('logoutUser')
       this.$router.push({ name: 'Login' })
+      this.hideMobileMenu()
     },
     toggleMenu() {
       this.$emit('toggle-menu')
@@ -336,6 +499,9 @@ export default {
           search.name.toLowerCase().includes(this.searchText.toLowerCase()),
         )
       } else return []
+    },
+    isMobile() {
+      return window.innerWidth <= 600
     },
     userName() {
       return this.$store.state.user.firstName
@@ -579,6 +745,12 @@ export default {
   scroll-behavior: smooth;
   margin-bottom: 1rem;
   padding: 0.5rem 0;
+  @media only screen and (max-width: 600px) {
+    font-size: 13px;
+    p {
+      margin-left: 0.5rem;
+    }
+  }
 }
 
 .relative {
@@ -689,6 +861,11 @@ export default {
   margin-right: 23px !important;
 }
 
+.minor-mar-right {
+  margin-right: 6px !important;
+  margin-left: 6px;
+}
+
 .pointer {
   cursor: pointer;
 }
@@ -734,6 +911,28 @@ nav {
   background-color: white;
   padding: 0px 4px;
   border-bottom: 1px solid $soft-gray;
+  @media only screen and (max-width: 600px) {
+    align-items: flex-start;
+  }
+}
+.hamburger-container {
+  z-index: 2000;
+  height: 58px;
+  width: 100vw;
+  background-color: white;
+}
+.hamburger {
+  height: 20px;
+  margin: 1.5rem 2rem;
+}
+.mobile-nav-container {
+  z-index: 2000;
+  height: 100vh;
+  width: 80vw;
+  border-right: 1px solid $soft-gray;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
 }
 .logo {
   cursor: pointer;
@@ -761,6 +960,9 @@ nav {
   font-weight: 300 !important;
   font-family: $base-font-family;
   font-size: 14px;
+  @media only screen and (max-width: 600px) {
+    gap: 4px;
+  }
 }
 
 .off-gray {
@@ -777,7 +979,14 @@ nav {
     margin-left: 8px;
   }
 }
-
+.light-gray-blue {
+  color: $light-gray-blue;
+}
+.saved-searches-mobile {
+  @media only screen and (max-width: 600px) {
+    font-size: 18px;
+  }
+}
 a {
   text-decoration: none;
   font-weight: 400;
@@ -787,6 +996,10 @@ a {
   font-size: 14px;
   padding: 6px 0;
   margin: 0 16px;
+  @media only screen and (max-width: 600px) {
+    margin: 0 4px;
+    font-size: 18px;
+  }
   img {
     transition: all 0.2s;
   }
@@ -1040,5 +1253,19 @@ a:hover {
   border-radius: 0.25rem;
   color: $dark-black-blue;
   font-size: 12px;
+}
+
+.small-margin {
+  margin: 0rem 0;
+}
+.mobile-nav-top {
+  margin-top: 2rem;
+}
+.mar-left {
+  margin-left: 0.25rem;
+}
+.bottom {
+  position: absolute;
+  bottom: 30px;
 }
 </style>

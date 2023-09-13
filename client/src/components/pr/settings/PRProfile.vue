@@ -51,21 +51,21 @@
             <p class="small-text">{{ activationLink }}</p>
             <div class="display-flex">
               <button
-                class="primary-button extra-margin-top"
-                @click="copyText"
-                :loading="loading"
-                :disabled="!activationLink || loading"
-              >
-                <img src="@/assets/images/link.svg" height="12px" alt="" /> {{ copyTip }}
-              </button>
-              <button
-                class="secondary-button extra-margin-top mar-left"
+                class="secondary-button extra-margin-top"
                 @click="clearInvite"
                 :loading="loading"
                 :disabled="!activationLink || loading"
               >
                 <!-- <img src="@/assets/images/trash.svg" height="12px" alt="" />  -->
                 Clear
+              </button>
+              <button
+                class="primary-button extra-margin-top mar-left"
+                @click="copyText"
+                :loading="loading"
+                :disabled="!activationLink || loading"
+              >
+                <img src="@/assets/images/link.svg" height="12px" alt="" /> {{ copyTip }}
               </button>
             </div>
           </div>
@@ -84,27 +84,30 @@
           <h3 class="team-width thin-font extra-mar-left">Invite</h3>
         </div>
 
-        <div class="row smaller-text">
-          <div class="team-width">{{ user.fullName.trim() ? user.fullName : '[NO NAME]' }}</div>
-          <div class="team-width">{{ user.email }}</div>
-          <div class="team-width">{{  }}</div>
-        </div>
-
-        <div v-for="teamUser in team.list" :key="teamUser.id" class="row smaller-text">
-          <div v-if="teamUser.id !== user.id" class="team-width thin-font">
-            {{ teamUser.fullName.trim() ? teamUser.fullName : '[NO NAME]' }}
+        <div class="users-container">
+          <div class="row smaller-text">
+            <div class="team-width">{{ user.fullName.trim() ? user.fullName : '[NO NAME]' }}</div>
+            <div class="team-width">{{ user.email }}</div>
+            <div class="team-width">{{  }}</div>
           </div>
-          <div v-if="teamUser.id !== user.id" class="team-width thin-font">
-            {{ teamUser.email }}
+  
+          <div v-for="teamUser in team.list" :key="teamUser.id" class="row smaller-text">
+            <div v-if="teamUser.id !== user.id" class="team-width thin-font">
+              {{ teamUser.fullName.trim() ? teamUser.fullName : '[NO NAME]' }}
+            </div>
+            <div v-if="teamUser.id !== user.id" class="team-width thin-font">
+              {{ teamUser.email }}
+            </div>
+            <div v-if="teamUser.id !== user.id && !teamUser.fullName.trim()" @click="copyUserLink(teamUser.activationLinkRef)" class="invite-link-button-container wrapper thin-font">
+              <img 
+                src="@/assets/images/link.svg"
+                class="invite-link-button"
+              />
+              <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
+            </div>
+            <div v-else-if="teamUser.id !== user.id" class="invite-link-button-container-nothing wrapper thin-font"></div>
+            <!-- {{ teamUser.activationLinkRef }} hi -->
           </div>
-          <div v-if="teamUser.id !== user.id && !teamUser.fullName.trim()" @click="copyUserLink(teamUser.activationLinkRef)" class="invite-link-button-container wrapper thin-font">
-            <img 
-              src="@/assets/images/link.svg"
-              class="invite-link-button"
-            />
-            <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
-          </div>
-          <!-- {{ teamUser.activationLinkRef }} hi -->
         </div>
       </div>
       <div v-if="page === 'profile'">
@@ -477,6 +480,13 @@ export default {
   font-weight: 400;
   font-family: $base-font-family;
   color: $dark-black-blue;
+  @media only screen and (max-width: 600px) {
+    padding: 0rem 2rem 0.5rem 2rem;
+    height: 90vh;
+    h1 {
+      margin: 0.55rem 0 0.25rem;
+    }
+  }
 }
 
 .bar-header {
@@ -578,6 +588,9 @@ h3 {
   width: 10rem;
   padding: 8px 0;
   overflow-x: auto;
+  @media only screen and (max-width: 600px) {
+    width: 4.5rem;
+  }
 }
 .border-right {
   border-right: 1px solid $soft-gray;
@@ -646,6 +659,10 @@ h3 {
 .small-text {
   font-family: $thin-font-family;
   font-size: 15px;
+  @media only screen and (max-width: 600px) {
+    width: 100%;
+    overflow-x: auto;
+  }
 }
 .extra-margin-top {
   margin-top: 1.5rem;
@@ -657,6 +674,11 @@ h3 {
   height: 1.375rem;
   margin-left: 4rem;
   cursor: pointer;
+}
+.invite-link-button-container-nothing {
+  width: 1.375rem;
+  height: 1.375rem;
+  margin-left: 4rem;
 }
 .invite-link-button {
   height: 14px;
@@ -754,5 +776,9 @@ h3 {
 }
 .display-flex {
   display: flex;
+}
+.users-container {
+  overflow-y: auto;
+  height: 64vh;
 }
 </style>
