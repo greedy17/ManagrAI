@@ -132,6 +132,15 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+
+    async uploadLink(url) {
+        try {
+            const res = await this.client.post('users/comms/upload-link/', { params: url })
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
 }
 
 class TwitterAccountAPI extends ModelAPI {

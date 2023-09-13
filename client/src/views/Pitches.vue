@@ -259,7 +259,7 @@
             <div style="width: 600px" class="row" v-else>
               <input
                 :disabled="loading"
-                placeholder="provide additional instructions..."
+                placeholder="provide instructions..."
                 autofocus
                 class="regen-input"
                 type="textarea"
@@ -698,6 +698,9 @@ export default {
 .title-container {
   position: relative;
   width: 100%;
+  @media only screen and (max-width: 600px) {
+    // display: flex;
+  }
 }
 
 .relative {
@@ -763,6 +766,9 @@ export default {
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
+  @media only screen and (max-width: 600px) {
+    width: 80%;
+  }
 }
 
 .rotate {
@@ -793,6 +799,10 @@ export default {
   overflow-y: scroll;
   font-family: $base-font-family;
   color: $chat-font-color;
+  @media only screen and (max-width: 600px) {
+    height: 91vh;
+    padding: 12px 36px 0 36px;
+  }
 }
 
 .center {
@@ -806,6 +816,9 @@ export default {
   font-size: 14px;
   color: $dark-black-blue;
   gap: 24px;
+  @media only screen and (max-width: 600px) {
+    padding-top: 4px;
+  }
 }
 
 .input-container {
@@ -816,6 +829,9 @@ export default {
   width: 675px;
   background-color: $offer-white;
   color: $base-gray;
+  @media only screen and (max-width: 600px) {
+    width: 100%;
+  }
 }
 .area-input {
   width: 100%;
@@ -862,6 +878,10 @@ export default {
   margin: 1rem 0;
   padding: 8px 1rem;
   font-family: $base-font-family;
+  @media only screen and (max-width: 600px) {
+    // position: static;
+    width: 23%;
+  }
 }
 .input-row {
   display: flex;
@@ -1027,6 +1047,10 @@ footer {
   img {
     filter: invert(40%);
   }
+  @media only screen and (max-width: 600px) {
+    // position: static;
+    width: 1.5rem;
+  }
 }
 
 .summary-load-text {
@@ -1041,6 +1065,9 @@ footer {
   border-radius: 6px;
   display: flex;
   flex-direction: column;
+  @media only screen and (max-width: 600px) {
+    width: 80%;
+  }
 }
 
 @keyframes shimmer {
@@ -1080,6 +1107,9 @@ footer {
 .extra-margin-top {
   // margin-top: 16px;
   margin-top: 5.5rem;
+  @media only screen and (max-width: 600px) {
+    margin-top: 0rem;
+  }
 }
 .paid-modal {
   margin-top: 132px;
@@ -1221,6 +1251,9 @@ footer {
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   width: 675px;
   margin-top: 1rem;
+  @media only screen and (max-width: 600px) {
+    width: 100vw;
+  }
 }
 
 .divider-text {
@@ -1232,5 +1265,11 @@ footer {
   padding: 4px 16px;
   border-radius: 20px;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
+  @media only screen and (max-width: 600px) {
+    left: 39%;
+  }
+}
+.content {
+  // width: 80%;
 }
 </style>

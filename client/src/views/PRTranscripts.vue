@@ -123,7 +123,7 @@
                 />
                 {{ loading ? 'Generating' : 'Generate' }}
               </button>
-              <div style="width: 600px" class="row" v-else>
+              <div class="row input-button" v-else>
                 <input
                   :disabled="loading"
                   placeholder="provide instructions..."
@@ -152,11 +152,12 @@
           <pre v-html="transcript" class="pre-text"></pre>
         </div>
       </div>
-      <div class="center negative-margin-top half-width">
+      <div class="center negative-margin-top half-width generate-width">
         <div class="content-circle">Content</div>
         <div v-for="item in content" :key="item.content" ref="contentTop">
           <div class="content-info-container">
             <div class="space-between">
+              <div class="invisible-square"></div>
               <h2 class="generate-title">Generate</h2>
               <div @click="copyContentText" class="wrapper top-mar">
                 <img
@@ -169,7 +170,7 @@
                 <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
               </div>
             </div>
-            <div class="gray-text margin-bottom"><b>Instructions:</b> <span class="thin left-space">{{ item.instructions }}</span></div>
+            <div class="gray-text margin-bottom generate-instructions"><b>Instructions:</b> <span class="thin left-space">{{ item.instructions }}</span></div>
             <!-- <button
               :disabled="loading"
               @click="toggleContentRegenerate"
@@ -619,6 +620,9 @@ export default {
 .extra-margin-top {
   // margin-top: 16px;
   margin-top: 6.5rem;
+  @media only screen and (max-width: 600px) {
+    margin-top: 0rem;
+  }
 }
 
 .absolute-count {
@@ -632,6 +636,15 @@ export default {
 
 .no-text-margin {
   margin: 0;
+  @media only screen and (max-width: 600px) {
+    text-align: center;
+  }
+}
+
+.invisible-square {
+  @media only screen and (min-width: 601px) {
+    position: absolute;
+  }
 }
 
 .centered {
@@ -652,6 +665,9 @@ export default {
     font-weight: normal;
     word-wrap: break-word;
   }
+  @media only screen and (max-width: 600px) {
+    text-align: center;
+  }
 }
 .thin {
   font-family: $thin-font-family;
@@ -667,6 +683,9 @@ export default {
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  @media only screen and (max-width: 600px) {
+    justify-content: center;
+  }
 }
 
 .row {
@@ -687,6 +706,9 @@ export default {
   display: flex;
   justify-content: center;
   border-bottom: 1px solid $soft-gray;
+  @media only screen and (max-width: 600px) {
+    width: 100%;
+  }
 }
 .transcript-container {
   width: 50%;
@@ -694,6 +716,9 @@ export default {
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
+  @media only screen and (max-width: 600px) {
+    width: 82%;
+  }
 }
 
 .rotate {
@@ -736,6 +761,10 @@ export default {
   overflow-y: scroll;
   font-family: $base-font-family;
   color: $chat-font-color;
+  @media only screen and (max-width: 600px) {
+    height: 91vh;
+    padding: 12px 36px 0 36px;
+  }
 }
 
 .center {
@@ -766,6 +795,21 @@ export default {
   // height: 3rem;
   background-color: $offer-white;
   color: $base-gray;
+  @media only screen and (max-width: 600px) {
+    width: 100%;
+  }
+}
+.input-button {
+  width: 600px;
+  @media only screen and (max-width: 600px) {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    input {
+      width: 100%;
+    }
+  }
+  
 }
 .area-input {
   width: 100%;
@@ -812,6 +856,9 @@ export default {
   margin: 1rem 0;
   padding: 8px 1rem;
   font-family: $base-font-family;
+  @media only screen and (max-width: 600px) {
+    width: 20%;
+  }
 }
 .input-row {
   display: flex;
@@ -982,6 +1029,11 @@ footer {
 .summary-load-text {
   font-family: $thin-font-family;
   font-size: 14px;
+  @media only screen and (max-width: 600px) {
+    width: 100%;
+    text-align: center;
+    font-size: 13px;
+  }
 }
 
 .summary-preview-skeleton {
@@ -991,6 +1043,9 @@ footer {
   border-radius: 6px;
   display: flex;
   flex-direction: column;
+  @media only screen and (max-width: 600px) {
+    width: 80%;
+  }
 }
 
 @keyframes shimmer {
@@ -1107,6 +1162,16 @@ footer {
 }
 .generate-title {
   margin-bottom: 0.5rem;
+  @media only screen and (max-width: 600px) {
+    text-align: center;
+  }
+}
+.generate-instructions {
+  @media only screen and (max-width: 600px) {
+    text-align: center;
+  }
+}
+.generate-width {
 }
 .content-circle {
   background-color: $white;
@@ -1116,6 +1181,9 @@ footer {
 }
 .half-width {
   width: 50%;
+  @media only screen and (max-width: 600px) {
+    width: 100%;
+  }
 }
 .delete-modal {
   margin-top: 120px;
