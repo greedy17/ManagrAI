@@ -1032,7 +1032,7 @@ class UserViewSet(
         code = params.get("code")
 
         try:
-            data = decrypt_dict(code.encode("utf-8"))
+            data = decrypt_dict(code)
             user = User.objects.get(pk=data.get("id"))
             if user.is_active:
                 raise ValidationError(

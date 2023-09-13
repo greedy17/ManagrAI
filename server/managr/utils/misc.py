@@ -95,6 +95,15 @@ def datetime_appended_filepath(instance, filename):
     return name
 
 
+def bucket_upload_filepath(organization_name, first_name, filename):
+    extension = filename.split(".")[-1]
+    original_name = filename.split(".")[:-1][0]
+    time = str(timezone.now().isoformat())
+    time = time.split(".")[0]  # Remove trailing tz info
+    name = f"{organization_name}/{first_name}/{original_name}_{time}.{extension}"
+    return name
+
+
 def apply_filter_and_search(viewset, request):
     """
     Apply filter parameters and search query to a detailed endpoint.
@@ -179,7 +188,7 @@ def query_debugger(func):
     return inner_func
 
 
-def upload_to_bucket(f, filename, bucket_name, access_key_id, secret):
+def upload_to_bucket(file, filename, bucket_name, access_key_id, secret):
     AWS_ACCESS_KEY_ID = access_key_id
     AWS_SECRET_ACCESS_KEY = secret
     s3 = boto3.client(
@@ -187,7 +196,7 @@ def upload_to_bucket(f, filename, bucket_name, access_key_id, secret):
         aws_access_key_id=AWS_ACCESS_KEY_ID,
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
     )
-    s3.upload_file(f, bucket_name, filename)
+    s3.upload_file(file, bucket_name, filename)
 
 
 def generate_fernet_key(secret_key):
@@ -200,7 +209,7 @@ def encrypt_dict(data_dict):
     """
     Encrypts a dictionary using Fernet encryption.
     :param data_dict: Dictionary to be encrypted
-    :return: Encrypted data as bytes
+    :return: Encrypted data as string
     """
     secret_key = settings.SECRET_KEY
     fernet_key = generate_fernet_key(secret_key)
@@ -213,7 +222,7 @@ def encrypt_dict(data_dict):
 def decrypt_dict(encrypted_data):
     """
     Decrypts Fernet-encrypted data and returns the original dictionary.
-    :param encrypted_data: Encrypted data as bytes
+    :param encrypted_data: Encrypted data as string
     :return: Decrypted dictionary
     """
     encrypted_data = encrypted_data.encode("utf-8")
