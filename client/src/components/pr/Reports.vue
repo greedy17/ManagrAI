@@ -13,7 +13,7 @@
       </div>
     </header>
 
-    <div style="margin-top: 16px" v-if="!reportSuccess">
+    <div style="margin-top: 16px" v-if="reportSuccess">
       <div class="container small">
         <div class="top-padding ellipsis-text">
           <small>{{ reportLink }}</small>
