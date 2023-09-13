@@ -168,6 +168,7 @@ CHANNEL_LAYERS = {
             # 'hosts': [('127.0.0.1', 6379)],
             "hosts": [os.environ.get("REDIS_URL", "redis://localhost:6379")],
             "capacity": 500,
+            "websocket_timeout": 180,
         },
     },
 }

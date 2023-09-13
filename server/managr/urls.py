@@ -18,7 +18,7 @@ urlpatterns = [
     ),
 ]
 
-if settings.DEBUG:
+if settings.IN_DEV:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # These routes should come last, so that the application always falls back
