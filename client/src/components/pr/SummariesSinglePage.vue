@@ -99,6 +99,7 @@
         @clear-clips="clearClips"
         @remove-clip="removeClip"
         @edit-clip="editClip"
+        @add-clip="addClip"
         :clips="addedClips"
         :defaultSearch="newSearch"
       />
@@ -814,6 +815,9 @@ export default {
       }
     },
     addClip(clip) {
+      if (Array.isArray(clip.author)) {
+        clip.author = clip.author[0]
+      }
       clip['search'] = this.newSearch
       if (this.addedClips.length < 20) {
         this.addedClips.push(clip)

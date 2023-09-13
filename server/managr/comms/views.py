@@ -16,7 +16,7 @@ from rest_framework import (
     status,
     viewsets,
 )
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 from django.shortcuts import redirect
 from rest_framework.decorators import action
 from . import constants as comms_consts
@@ -601,3 +601,42 @@ def redirect_from_twitter(request):
         err = urlencode(err)
         return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{err}")
     return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{q}")
+
+
+def get_domain(url):
+    parsed_url = urlparse(url)
+    netloc = parsed_url.netloc
+    domain_parts = netloc.split('.')   
+    if 'www' in domain_parts:
+        domain_parts.remove('www')       
+    return domain_parts[0]
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def upload_link(request):
+    url = request.data["params"]["url"]
+    try:
+        article_res = Article(url, config=generate_config())
+        article_res.download()
+        article_res.parse()
+        title = article_res.title
+        author = article_res.authors
+        image = article_res.top_image
+        date = article_res.publish_date
+        text = article_res.text
+        domain = get_domain(url)
+
+        article = {}
+        article = {
+            'title': title,
+            'source': domain,
+            'author': author,
+            'urlToImage': image,
+            'publishedAt': date,
+            'content': text,
+            'url': url
+        }
+    except Exception as e:
+        logger.exception(e)
+    return Response(data=article)
