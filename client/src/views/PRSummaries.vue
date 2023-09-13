@@ -63,6 +63,9 @@ export default {
   letter-spacing: 0.4px;
   line-height: 1.5;
   position: relative;
+  @media only screen and (max-width: 600px) {
+    height: 91vh;
+  }
 }
 
 #main {
