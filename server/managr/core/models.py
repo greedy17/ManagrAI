@@ -13,8 +13,11 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager, AnonymousU
 from django.db.models import Q
 from django.contrib.auth import login
 from django.contrib.postgres.fields import JSONField, ArrayField
-from managr.utils import sites as site_utils
-from managr.utils.misc import datetime_appended_filepath, phrase_to_snake_case
+from managr.utils.misc import (
+    datetime_appended_filepath,
+    phrase_to_snake_case,
+    bucket_upload_filepath,
+)
 from managr.utils.client import HttpClient, Variable_Client
 from managr.core import constants as core_consts
 from managr.organization import constants as org_consts
@@ -874,7 +877,7 @@ class Report(TimeStampModel):
     title = models.CharField(max_length=255)
     user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="reports")
     main_image = models.ImageField(
-        upload_to=datetime_appended_filepath, max_length=255, null=True, blank=True
+        upload_to=bucket_upload_filepath, max_length=255, null=True, blank=True
     )
     meta_data = JSONField()
 
