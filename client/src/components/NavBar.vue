@@ -223,9 +223,9 @@
         </router-link>
 
         <div v-if="!hasZoomIntegration" :to="{ name: 'PRIntegrations' }">
-          <div class="wrapper">
+          <div class="wrapper-mobile">
             <p class="small-margin light-gray-blue">Transcribe</p>
-            <div style="margin-left: -20px" class="tooltip">Connect Zoom</div>
+            <div style="margin-left: -20px" class="tooltip-mobile">Connect Zoom</div>
           </div>
         </div>
 
@@ -1261,6 +1261,93 @@ a:hover {
 }
 
 .lte8 .wrapper-count:hover .tooltip-count {
+  display: block;
+}
+.wrapper-mobile {
+  display: flex;
+  align-items: center;
+  // background-color: ;
+  font-family: $thin-font-family;
+  font-size: 14px;
+  position: relative;
+  text-align: center;
+  -webkit-transform: translateZ(0); /* webkit flicker fix */
+  -webkit-font-smoothing: antialiased; /* webkit text rendering fix */
+  margin-left: 1rem;
+  padding: 10px 0;
+}
+
+.wrapper-mobile .tooltip-mobile {
+  background: $dark-black-blue;
+  border-radius: 4px;
+  // bottom: 100%;
+  bottom: -40%;
+  color: #fff;
+  display: block;
+  left: 90px;
+  margin-bottom: 15px;
+  opacity: 0;
+  padding: 8px;
+  pointer-events: none;
+  position: absolute;
+  width: 125px;
+  -webkit-transform: translateX(0px);
+  -moz-transform: translateX(0px);
+  -ms-transform: translateX(0px);
+  -o-transform: translateX(0px);
+  transform: translateX(0px);
+  -webkit-transition: all 0.25s ease-out;
+  -moz-transition: all 0.25s ease-out;
+  -ms-transition: all 0.25s ease-out;
+  -o-transition: all 0.25s ease-out;
+  transition: all 0.25s ease-out;
+  -webkit-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -moz-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -ms-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -o-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+}
+
+/* This bridges the gap so you can mouse into the tooltip-mobile without it disappearing */
+.wrapper-mobile .tooltip-mobile:before {
+  bottom: -20px;
+  content: ' ';
+  display: block;
+  height: 20px;
+  left: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.wrapper-mobile .tooltip-mobile:after {
+  border-right: solid $dark-black-blue 10px;
+  border-left: solid transparent 10px;
+  border-bottom: solid transparent 10px;
+  border-top: solid transparent 10px;
+  bottom: 20%;
+  content: ' ';
+  height: 0;
+  left: -5%;
+  margin-left: -13px;
+  position: absolute;
+  width: 0;
+}
+
+.wrapper-mobile:hover .tooltip-mobile {
+  opacity: 1;
+  pointer-events: auto;
+  -webkit-transform: translateX(10px);
+  -moz-transform: translateX(10px);
+  -ms-transform: translateX(10px);
+  -o-transform: translateX(10px);
+  transform: translateX(10px);
+}
+
+.lte8 .wrapper-mobile .tooltip-mobile {
+  display: none;
+}
+
+.lte8 .wrapper-mobile:hover .tooltip-mobile {
   display: block;
 }
 .searches-used-text {

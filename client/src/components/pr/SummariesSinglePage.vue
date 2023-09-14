@@ -2385,6 +2385,10 @@ header {
   img {
     filter: invert(40%);
   }
+  @media only screen and (max-width: 600px) {
+    left: -5%;
+    // top: -1.5rem;
+  }
 }
 
 .title-bar {

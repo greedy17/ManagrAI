@@ -56,7 +56,7 @@
           <p v-if="!imageUrl">Cover Slide</p>
           <small v-if="!imageUrl">Add title and cover image</small>
 
-          <input id="imageInput" class="absolute pointer dull" type="file" @change="test" />
+          <input id="imageInput" class="absolute pointer dull plus-input" type="file" @change="test" />
 
           <svg class="absolute pointer" width="18" height="18">
             <path d="M9 9H3v1h6v6h1v-6h6V9h-6V3H9v6z" fill-rule="evenodd"></path>
@@ -553,6 +553,11 @@ pre[contenteditable]:focus {
   box-shadow: 30px 30px 40px;
   @media only screen and (max-width: 600px) {
     width: 100vw;
+  }
+}
+.plus-input {
+  @media only screen and (max-width: 600px) {
+    width: 2rem;
   }
 }
 .reports::-webkit-scrollbar {

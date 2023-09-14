@@ -100,7 +100,7 @@ export default {
   overflow-y: scroll;
   @media only screen and (max-width: 600px) {
     height: 90vh;
-    padding: 0 1rem;
+    padding: 0 2rem;
   }
 }
 
@@ -131,6 +131,9 @@ export default {
   width: 100%;
   background-color: $off-white;
   z-index: 11;
+  @media only screen and (max-width: 600px) {
+    padding: 10px 0 8px 0;
+  }
 }
 
 .bar-header {
