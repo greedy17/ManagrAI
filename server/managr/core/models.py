@@ -892,7 +892,7 @@ class Report(TimeStampModel):
         return block_builders.option(self.title, value)
 
     class Meta:
-        ordering = ["datetime_created"]
+        ordering = ["-datetime_created"]
 
     def generate_url(self):
         date = str(datetime.now())

@@ -2343,6 +2343,7 @@ header {
   justify-content: center;
   @media only screen and (max-width: 600px) {
     width: 90%;
+    padding-top: 48px;
   }
 }
 
@@ -2384,6 +2385,10 @@ header {
 
   img {
     filter: invert(40%);
+  }
+  @media only screen and (max-width: 600px) {
+    left: 50%;
+    top: -2rem;
   }
 }
 

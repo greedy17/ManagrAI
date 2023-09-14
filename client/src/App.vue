@@ -33,6 +33,9 @@ export default {
     // When route changes,
     '$route.path': function watchRoutePath() {
       VueScrollTo.scrollTo('#app', 200)
+      if (localStorage.token && !this.$store.state.token) {
+        this.$store.dispatch('updateUserToken', localStorage.token)
+      }
       // if (this.userIsLoggedIn) {
       //   if (this.isOnboarding && this.user.isAdmin && this.$route.path !== '/alerts/list-templates') {
       //     this.$router.push({ name: 'ListTemplates' })
