@@ -14,34 +14,38 @@
       </div>
 
       <div v-if="page === 'reports'">
-        <div class="row margin-top margin-bottom">
+        <div class="row margin-top margin-bottom row-width">
           <h3 class="team-width thin-font">Name</h3>
-          <!-- <h3 class="team-width thin-font">Date</h3> -->
+          <h3 class="team-width thin-font">Date</h3>
           <h3 class="team-width thin-font extra-mar-left">Share</h3>
-          <h3 class="team-width thin-font extra-mar-left">Delete</h3>
+          <h3 class="team-width thin-font">Delete</h3>
         </div>
 
-        <div v-for="report in reports" :key="report.share_url" class="row smaller-text">
+        <div v-for="report in reports" :key="report.share_url" class="row smaller-text row-width">
           <div class="team-width thin-font">
             {{ report.title ? report.title : '[NO TITLE]' }}
           </div>
-          <!-- <div class="team-width thin-font">
-            {{ report.date ? report.date : '--' }}
-          </div> -->
-          <div
-            @click="copyInvite(report.share_url)"
-            class="invite-link-button-container wrapper thin-font"
-          >
-            <img src="@/assets/images/link.svg" class="invite-link-button" />
-            <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
+          <div class="team-width thin-font">
+            {{ report.datetime_created ? report.datetime_created.split('T')[0] : '--' }}
           </div>
-          <div
-            @click="deleteReport(report)"
-            class="invite-link-button-container wrapper thin-font"
-          >
-            <img src="@/assets/images/trash.svg" class="invite-link-button" />
-            <div style="margin-left: -20px" class="tooltip">{{ 'Delete' }}</div>
-          </div>
+          <!-- <div class="team-width"> -->
+            <div
+              @click="copyInvite(report.share_url)"
+              class="invite-link-button-container wrapper thin-font team-width-nopad"
+            >
+              <img src="@/assets/images/link.svg" class="invite-link-button" />
+              <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
+            </div>
+          <!-- </div> -->
+          <!-- <div class="team-width"> -->
+            <div
+              @click="deleteReport(report)"
+              class="invite-link-button-container delete-margin wrapper thin-font team-width-nopad"
+            >
+              <img src="@/assets/images/trash.svg" class="invite-link-button" />
+              <div style="margin-left: -20px" class="tooltip">{{ 'Delete' }}</div>
+            </div>
+          <!-- </div> -->
         </div>
       </div>
     </div>
@@ -248,9 +252,12 @@ h3 {
 }
 
 .team-width {
-  width: 10rem;
+  width: 10%;
   padding: 8px 0;
   overflow-x: auto;
+}
+.team-width-nopad {
+  width: 10%;
 }
 .border-right {
   border-right: 1px solid $soft-gray;
@@ -329,7 +336,12 @@ h3 {
   width: 1.375rem;
   height: 1.375rem;
   margin-left: 4rem;
+  // margin-left: 6%;
+  // margin: 0 6%;
   cursor: pointer;
+}
+.delete-margin {
+  margin-left: 9% !important;
 }
 .invite-link-button {
   height: 14px;

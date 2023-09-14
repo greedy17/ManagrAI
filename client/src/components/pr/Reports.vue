@@ -386,7 +386,7 @@ export default {
     async getReports() {
       try {
         await User.api.getReports({ user: this.$store.state.user.id }).then((response) => {
-          this.reportLink = response.results[response.results.length - 1]['share_url']
+          this.reportLink = response.results[0]['share_url']
         })
       } catch (e) {
         console.log(e)
