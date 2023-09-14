@@ -475,6 +475,7 @@ export default {
     },
     logOut() {
       this.$store.dispatch('logoutUser')
+      localStorage.token = null
       this.$router.push({ name: 'Login' })
       this.hideMobileMenu()
     },

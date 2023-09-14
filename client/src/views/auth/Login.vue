@@ -148,6 +148,7 @@ export default {
         // this.$store.dispatch('updateUser', encryptedUser)
         this.$store.commit('UPDATE_USER', userAPI)
         this.$store.dispatch('updateUserToken', key)
+        localStorage.token = key
       } catch (error) {
         const e = error
         this.$toast(`This method's for user's who signed up via ${this.selectedCrm}. Try again.`, {
@@ -235,6 +236,7 @@ export default {
         // this.$store.dispatch('updateUser', encryptedUser)
         this.$store.commit('UPDATE_USER', userAPI)
         this.$store.dispatch('updateUserToken', key)
+        localStorage.token = key
         // localStorage.dateTime = Date.now()
         this.$router.push({ name: 'ListTemplates' })
         this.loggingIn = false
@@ -255,6 +257,7 @@ export default {
           // const encryptedKey = encryptData(token, process.env.VUE_APP_SECRET_KEY)
           // this.$store.dispatch('updateUserToken', encryptedKey)
           this.$store.dispatch('updateUserToken', token)
+          localStorage.token = token
           // this.$store.dispatch('updateUser', encryptedUser)
           this.$store.commit('UPDATE_USER', userAPI)
           // localStorage.dateTime = Date.now()
@@ -365,6 +368,7 @@ export default {
             // const encryptedKey = encryptData(token, process.env.VUE_APP_SECRET_KEY)
             // this.$store.dispatch('updateUserToken', encryptedKey)
             this.$store.dispatch('updateUserToken', token)
+            localStorage.token = token
             this.$store.dispatch('updateUser', User.fromAPI(userData))
             if (this.isPR) {
               this.$router.push({ name: 'PRSummaries' })
