@@ -56,7 +56,7 @@
           <p v-if="!imageUrl">Cover Slide</p>
           <small v-if="!imageUrl">Add title and cover image</small>
 
-          <input id="imageInput" class="absolute pointer dull" type="file" @change="test" />
+          <input id="imageInput" class="absolute pointer dull plus-input" type="file" @change="test" />
 
           <svg class="absolute pointer" width="18" height="18">
             <path d="M9 9H3v1h6v6h1v-6h6V9h-6V3H9v6z" fill-rule="evenodd"></path>
@@ -386,7 +386,7 @@ export default {
     async getReports() {
       try {
         await User.api.getReports({ user: this.$store.state.user.id }).then((response) => {
-          this.reportLink = response.results[response.results.length - 1]['share_url']
+          this.reportLink = response.results[0]['share_url']
         })
       } catch (e) {
         console.log(e)
@@ -553,6 +553,11 @@ pre[contenteditable]:focus {
   box-shadow: 30px 30px 40px;
   @media only screen and (max-width: 600px) {
     width: 100vw;
+  }
+}
+.plus-input {
+  @media only screen and (max-width: 600px) {
+    width: 2rem;
   }
 }
 .reports::-webkit-scrollbar {
@@ -911,6 +916,9 @@ footer {
   button,
   p {
     margin: 0;
+  }
+  @media only screen and (max-width: 600px) {
+    padding: 16px 8px 48px 8px;
   }
 }
 

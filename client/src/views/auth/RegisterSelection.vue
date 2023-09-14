@@ -141,6 +141,7 @@ export default {
             let userData = response.data
             delete userData.token
             this.$store.dispatch('updateUserToken', token)
+            localStorage.token = token
             this.$store.dispatch('updateUser', User.fromAPI(userData))
             if (this.isPR) {
               this.$router.push({ name: 'PRSummaries' })
