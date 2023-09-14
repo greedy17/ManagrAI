@@ -214,7 +214,11 @@
         <img src="@/assets/images/menu-burger.svg" class="hamburger" @click="showMobileMenu" />
       </div>
       <nav v-if="mobileMenuOpen" class="mobile-nav-container" v-clickOutsideMobileNav>
-        <router-link active-class="active" :to="{ name: 'PRSummaries' }" class="mobile-nav-top">
+        <div @click="goHome" class="mobile-nav-top mar-left extra-padding-vert">
+          <p class="small-margin">Home</p>
+        </div>
+        
+        <router-link active-class="active" :to="{ name: 'PRSummaries' }">
           <p class="small-margin">Digest</p>
         </router-link>
 
@@ -1360,6 +1364,10 @@ a:hover {
 
 .small-margin {
   margin: 0rem 0;
+}
+.extra-padding-vert {
+  padding: 14px 0;
+  font-size: 14px;
 }
 .mobile-nav-top {
   margin-top: 2rem;

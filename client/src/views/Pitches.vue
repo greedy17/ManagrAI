@@ -699,7 +699,7 @@ export default {
   position: relative;
   width: 100%;
   @media only screen and (max-width: 600px) {
-    // display: flex;
+    margin-top: 1rem;
   }
 }
 
@@ -1050,6 +1050,9 @@ footer {
   @media only screen and (max-width: 600px) {
     // position: static;
     width: 1.5rem;
+    left: 50%;
+    top: -2rem;
+    // margin-bottom: 1rem;
   }
 }
 

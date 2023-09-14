@@ -917,6 +917,9 @@ footer {
   p {
     margin: 0;
   }
+  @media only screen and (max-width: 600px) {
+    padding: 16px 8px 48px 8px;
+  }
 }
 
 .blue {

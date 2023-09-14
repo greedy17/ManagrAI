@@ -15,10 +15,10 @@
 
       <div v-if="page === 'reports'">
         <div class="row margin-top margin-bottom row-width">
-          <h3 class="team-width thin-font">Name</h3>
-          <h3 class="team-width thin-font">Date</h3>
-          <h3 class="team-width thin-font extra-mar-left">Share</h3>
-          <h3 class="team-width thin-font">Delete</h3>
+          <h3 class="team-width thin-font title">Name</h3>
+          <h3 class="team-width thin-font title">Date</h3>
+          <h3 class="team-width thin-font title extra-mar-left">Share</h3>
+          <h3 class="team-width thin-font title">Delete</h3>
         </div>
 
         <div v-for="report in reports" :key="report.share_url" class="row smaller-text row-width">
@@ -40,7 +40,7 @@
           <!-- <div class="team-width"> -->
             <div
               @click="deleteReport(report)"
-              class="invite-link-button-container delete-margin wrapper thin-font team-width-nopad"
+              class="invite-link-button-container trash-color delete-margin wrapper thin-font team-width-nopad"
             >
               <img src="@/assets/images/trash.svg" class="invite-link-button" />
               <div style="margin-left: -20px" class="tooltip">{{ 'Delete' }}</div>
@@ -255,6 +255,9 @@ h3 {
   width: 10%;
   padding: 8px 0;
   overflow-x: auto;
+  @media only screen and (max-width: 600px) {
+    width: 22%;
+  }
 }
 .team-width-nopad {
   width: 10%;
@@ -322,6 +325,11 @@ h3 {
 .thin-font {
   font-family: $thin-font-family;
 }
+.title {
+  @media only screen and (max-width: 600px) {
+    font-size: 17px;
+  }
+}
 
 .small-text {
   font-family: $thin-font-family;
@@ -339,6 +347,12 @@ h3 {
   // margin-left: 6%;
   // margin: 0 6%;
   cursor: pointer;
+  @media only screen and (max-width: 600px) {
+    margin-left: 3rem;
+  }
+}
+.trash-color {
+  background-color: $coral !important;
 }
 .delete-margin {
   margin-left: 9% !important;
