@@ -423,7 +423,7 @@ class ReportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Report
-        fields = ("title", "user", "main_image", "meta_data", "share_url")
+        fields = ("title", "user", "main_image", "meta_data", "share_url", "id")
 
     def get_share_url(self, instance):
         url = instance.generate_url()

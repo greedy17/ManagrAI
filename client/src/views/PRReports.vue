@@ -18,6 +18,7 @@
           <h3 class="team-width thin-font">Name</h3>
           <!-- <h3 class="team-width thin-font">Date</h3> -->
           <h3 class="team-width thin-font extra-mar-left">Share</h3>
+          <h3 class="team-width thin-font extra-mar-left">Delete</h3>
         </div>
 
         <div v-for="report in reports" :key="report.share_url" class="row smaller-text">
@@ -33,6 +34,13 @@
           >
             <img src="@/assets/images/link.svg" class="invite-link-button" />
             <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
+          </div>
+          <div
+            @click="deleteReport(report)"
+            class="invite-link-button-container wrapper thin-font"
+          >
+            <img src="@/assets/images/trash.svg" class="invite-link-button" />
+            <div style="margin-left: -20px" class="tooltip">{{ 'Delete' }}</div>
           </div>
         </div>
       </div>
@@ -59,9 +67,17 @@ export default {
     async getReports() {
       try {
         const response = await User.api.getReports({ user: this.user.id })
-        console.log('response', response)
         this.reports = response.results
+        console.log('this.reports', this.reports)
       } catch (e) {
+        console.log(e)
+      }
+    },
+    async deleteReport(report) {
+      try {
+        await User.api.deleteReport(report.id)
+        await this.getReports()
+      } catch(e) {
         console.log(e)
       }
     },

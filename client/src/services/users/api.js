@@ -109,6 +109,15 @@ export default class UserAPI {
     }
   }
 
+  async deleteReport(id) {
+    try {
+      const response = await this.client.delete(REPORTS + `${id}/`)
+      return response.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'UsersAPI.deleteReports' })
+    }
+  }
+
   async getConversations(user_id) {
     try {
       const response = await this.client.get(CONVERSATIONS, { params: user_id })
