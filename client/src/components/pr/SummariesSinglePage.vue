@@ -781,7 +781,7 @@ export default {
         "As XXX's PR agency, provide suggestions based on this news",
         "Craft short responses as the VP of Comms for XXX to the stories that need a response",
         `Write a highly engaging LinkedIn post based on this coverage for XXX`,
-        `Craft an entertaining Twitter post based on this coverage for XXX`,
+        `Draft an entertaining Twitter post based on this coverage for XXX`,
         'Newsjack this coverage and turn into a blog post on behalf of XXX',
         `Summarize only September coverage`,
         `Based on recent news & your knowledge base ...`,
