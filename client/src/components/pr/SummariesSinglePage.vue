@@ -790,7 +790,16 @@ export default {
       ],
     }
   },
-  created() {},
+  created() {
+    if (localStorage.addedClips) {
+      const objectsArr = []
+      const unstrung = JSON.parse(localStorage.addedClips)
+      for (let key in unstrung) {
+        objectsArr.push(unstrung[key])
+      }
+      this.addedClips = objectsArr
+    }
+  },
   watch: {
     typedMessage: 'changeIndex',
     currentSearch(newVal, oldVal) {
@@ -805,9 +814,16 @@ export default {
   methods: {
     clearClips() {
       this.addedClips = []
+      localStorage.addedClips = null
     },
     removeClip(title) {
-      this.addedClips = this.addedClips.filter((clip) => clip.title !== title)
+      const newClips = this.addedClips.filter((clip) => clip.title !== title)
+      this.addedClips = newClips
+      const newRemovedClips = {}
+      for (let i  = 0; i < newClips.length; i++) {
+        newRemovedClips[i] = newClips[i]
+      }
+      localStorage.addedClips = JSON.stringify(newRemovedClips)
     },
     toggleReport() {
       if (!this.isPaid) {
@@ -823,6 +839,20 @@ export default {
       clip['search'] = this.newSearch
       if (this.addedClips.length < 20) {
         this.addedClips.push(clip)
+        if (localStorage.addedClips) {
+          const parsedAddedClips = JSON.parse(localStorage.addedClips)
+          const newAddedClips = {}
+          let newNum = 0
+          for (let num in parsedAddedClips) {
+            newAddedClips[num] = parsedAddedClips[num]
+            newNum = num + 1
+          }
+          newAddedClips[newNum] = clip
+          localStorage.addedClips = JSON.stringify(newAddedClips)
+        } else {
+          const jsonClip = JSON.stringify(clip)
+          localStorage.addedClips = `{"0": ${jsonClip}}`
+        }
       } else {
         return
       }
@@ -830,8 +860,15 @@ export default {
     editClip(title, summary) {
       let clip = this.addedClips.filter((clip) => clip.title === title)[0]
       clip['summary'] = summary
-      this.addedClips = this.addedClips.filter((clip) => clip.title !== title)
-      this.addedClips.unshift(clip)
+      const newClips = this.addedClips.filter((clip) => clip.title !== title)
+      newClips.unshift(clip)
+      this.addedClips = newClips
+      const newEditedClips = {}
+      for (let i  = 0; i < newClips.length; i++) {
+        newEditedClips[i] = newClips[i]
+      }
+      localStorage.addedClips = JSON.stringify(newEditedClips)
+      // localStorage.addedClips = newClips
     },
     soonButtonText() {
       this.buttonText = 'Coming Soon!'

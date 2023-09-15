@@ -243,7 +243,7 @@
         <p></p>
         <div class="row">
           <button
-            :disabled="!clips.length || !summary || !imageUrl || !reportTitle || reportLoading"
+            :disabled="!clips.length || reportLoading"
             class="secondary-button"
             @click="clearClips"
           >
@@ -439,6 +439,7 @@ export default {
         await User.api.createReport(formData).then((response) => {
           this.getReports()
         })
+        localStorage.addedClips = null
       } catch (e) {
         console.log(e)
       } finally {
@@ -452,7 +453,6 @@ export default {
       this.currentRow = null
     },
     removeClip(clip) {
-      console.log(clip)
       this.$emit('remove-clip', clip.title)
     },
     summarizeClip(clip) {
@@ -468,7 +468,6 @@ export default {
     test(event) {
       const file = event.target.files[0]
       this.imageFile = file
-      console.log('IMAGE FILE', this.imageFile)
       this.createImage(file)
     },
     createImage(file) {
