@@ -15,19 +15,16 @@
 
       <FormField
         type="email"
-        @input="execCheckEmail"
         @blur="loginForm.field.email.validate()"
-        :disabled="showPassword"
         v-model="loginForm.field.email.value"
         placeholder="Email address"
         :errors="loginForm.field.email.errors"
       />
-      <PulseLoadingSpinner v-if="!showPassword && loggingIn" />
+      <PulseLoadingSpinner v-if="loggingIn" />
       <FormField
         @blur="loginForm.field.password.validate()"
         v-on:keyup.enter.native="handleLoginAttempt"
         :errors="loginForm.field.password.errors"
-        v-if="showPassword"
         @keyup.enter="handleLoginAttempt"
         v-model="loginForm.field.password.value"
         inputType="password"
@@ -103,7 +100,6 @@ export default {
       showPassword: false,
       newToken: false,
       loginForm: new UserLoginForm(),
-      execCheckEmail: debounce(this.checkAccountStatus, 900),
     }
   },
   computed: {
@@ -184,7 +180,7 @@ export default {
         this.loggingIn = true
         try {
           await User.api.checkStatus(this.loginForm.field.email.value)
-          this.showPassword = true
+          // this.showPassword = true
         } catch (e) {
           console.log(e)
           this.loginForm.field.email.errors.push({
