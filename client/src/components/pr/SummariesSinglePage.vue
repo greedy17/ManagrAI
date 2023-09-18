@@ -767,6 +767,7 @@ export default {
       searchSuggestions: [
         'XXX broad search',
         'XXX and YYY',
+        `Topics XXX would care about`,
         `UCB or Unit City Bank`,
         'List out XXX competitors, by name',
         `University of XXX and research`,
