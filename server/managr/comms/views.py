@@ -100,6 +100,7 @@ class PRSearchViewSet(
                         token_amount=500,
                         top_p=0.1,
                     )
+                    print(body)
                     with Variable_Client() as client:
                         r = client.post(
                             url,
@@ -606,9 +607,9 @@ def redirect_from_twitter(request):
 def get_domain(url):
     parsed_url = urlparse(url)
     netloc = parsed_url.netloc
-    domain_parts = netloc.split('.')   
-    if 'www' in domain_parts:
-        domain_parts.remove('www')       
+    domain_parts = netloc.split(".")
+    if "www" in domain_parts:
+        domain_parts.remove("www")
     return domain_parts[0]
 
 
@@ -629,13 +630,13 @@ def upload_link(request):
 
         article = {}
         article = {
-            'title': title,
-            'source': domain,
-            'author': author,
-            'urlToImage': image,
-            'publishedAt': date,
-            'content': text,
-            'url': url
+            "title": title,
+            "source": domain,
+            "author": author,
+            "urlToImage": image,
+            "publishedAt": date,
+            "content": text,
+            "url": url,
         }
     except Exception as e:
         logger.exception(e)
