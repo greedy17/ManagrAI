@@ -48,7 +48,6 @@ class ExpiringTokenAuthentication(TokenAuthentication):
 
     def authenticate(self, request):
         auth = get_authorization_header(request).split()
-
         if not auth or auth[0].lower() != self.keyword.lower().encode():
             return None
 
@@ -74,13 +73,7 @@ class ExpiringTokenAuthentication(TokenAuthentication):
         if token.is_revoked:
             raise AuthenticationFailed("Token has been revoked")
         if token.expiration < timezone.now():
-            print(token.assigned_user, token.assigned_user.is_authenticated)
-            if token.assigned_user and token.assigned_user.is_authenticated:
-                print(vars(token))
-                token = ManagrToken.refresh(token)
-                print(vars(token))
-            else:
-                raise AuthenticationFailed("Token has expired")
+            raise AuthenticationFailed("Token expired")
         return (token.assigned_user, token)
 
     def authenticate_header(self, request):
