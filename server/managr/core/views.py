@@ -31,10 +31,7 @@ from rest_framework import (
     status,
     viewsets,
 )
-from rest_framework.decorators import (
-    api_view,
-    permission_classes,
-)
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -1617,6 +1614,7 @@ def reply_to_email(request):
 
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny])
+@authentication_classes([])
 def get_account_status(request):
     """Check whether a User account associated with a given email is active."""
     email = request.data.get("email")
@@ -1768,6 +1766,7 @@ class UserPasswordManagmentView(generics.GenericAPIView):
         permissions.AllowAny,
     ]
 )
+@authentication_classes([])
 def request_reset_link(request):
     """endpoint to request a password reset email (forgot password)"""
     email = request.data.get("email", None)
@@ -1862,11 +1861,8 @@ class NoteTemplateViewSet(
 
 
 @api_view(["GET"])
-@permission_classes(
-    [
-        permissions.AllowAny,
-    ]
-)
+@permission_classes([])
+@authentication_classes([])
 def get_sso_data(request):
     data = {}
     data["client_id"] = settings.GOOGLE_CLIENT_ID
@@ -2125,4 +2121,4 @@ class ReportViewSet(
             serializer = self.get_serializer(report)
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
-        return Response(status=status.HTTP_200_OK, data={'data':serializer.data,'date': date})
+        return Response(status=status.HTTP_200_OK, data={"data": serializer.data, "date": date})
