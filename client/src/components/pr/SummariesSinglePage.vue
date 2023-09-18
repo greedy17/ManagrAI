@@ -920,6 +920,8 @@ export default {
     },
     resetSearch() {
       this.clearNewSearch()
+      this.addedClips = []
+      this.metaData = { clips: [] }
       this.$emit('change-search', null)
       this.summary = ''
     },
