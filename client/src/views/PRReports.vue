@@ -16,13 +16,13 @@
       <div v-if="page === 'reports'">
         <div class="row margin-top margin-bottom row-width">
           <h3 class="team-width thin-font title">Name</h3>
-          <h3 class="team-width thin-font title">Date</h3>
-          <h3 class="team-width thin-font title extra-mar-left">Share</h3>
+          <h3 class="team-width thin-font title extra-mar-left">Date</h3>
+          <h3 class="team-width thin-font title smaller-mar-left">Share</h3>
           <h3 class="team-width thin-font title">Delete</h3>
         </div>
 
         <div v-for="report in reports" :key="report.share_url" class="row smaller-text row-width">
-          <div class="team-width thin-font">
+          <div class="team-width-extra thin-font">
             {{ report.title ? report.title : '[NO TITLE]' }}
           </div>
           <div class="team-width thin-font">
@@ -259,6 +259,12 @@ h3 {
     width: 22%;
   }
 }
+.team-width-extra {
+  width: 20%;
+  @media only screen and (max-width: 600px) {
+    width: 42%;
+  }
+}
 .team-width-nopad {
   width: 10%;
 }
@@ -449,7 +455,17 @@ h3 {
   margin-left: 1rem;
 }
 .extra-mar-left {
-  margin-left: 3.5rem;
+  // margin-left: 3.5rem;
+  margin-left: 10%;
+  @media only screen and (max-width: 600px) and (min-width: 400px) {
+    margin-left: 18%;
+  }
+}
+.smaller-mar-left {
+  margin-left: 5%;
+  @media only screen and (max-width: 600px) and (min-width: 400px) {
+    margin-left: 9%;
+  }
 }
 .display-flex {
   display: flex;
