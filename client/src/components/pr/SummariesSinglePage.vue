@@ -115,13 +115,13 @@
           <img v-if="i < 3" :src="clip.urlToImage" class="small-photo" />
         </div>
 
-        <div v-if="addedClips.length < 1" class="empty-slot"></div>
-        <div v-if="addedClips.length < 2" class="empty-slot"></div>
-        <div v-if="addedClips.length < 3" class="empty-slot"></div>
+        <div v-if="!addedClips || addedClips.length < 1" class="empty-slot"></div>
+        <div v-if="!addedClips || addedClips.length < 2" class="empty-slot"></div>
+        <div v-if="!addedClips || addedClips.length < 3" class="empty-slot"></div>
       </div>
 
       <div class="slot-count">
-        <small>{{ addedClips.length }}/20</small>
+        <small>{{ addedClips ? addedClips.length : 0 }}/20</small>
       </div>
     </div>
     <div class="center column" :class="{ fullHeight: showingDropdown }" v-if="page === 'SUMMARIES'">
@@ -335,7 +335,7 @@
                     class="secondary-button"
                   >
                     {{
-                      filteredArticles.length || mainView === 'website'
+                      (filteredArticles && filteredArticles.length) || mainView === 'website'
                         ? 'Regenerate'
                         : tweets.length
                         ? 'Regenerate'
@@ -344,7 +344,7 @@
                   </button>
                   <button
                     @click="toggleSaveName"
-                    v-if="filteredArticles.length || tweets.length"
+                    v-if="(filteredArticles && filteredArticles.length) || tweets.length"
                     :disabled="
                       articleSummaryLoading ||
                       loading ||
@@ -755,6 +755,7 @@ export default {
       filteredArticles: [],
       summary: '',
       booleanString: null,
+      metaData: { clips: [], },
       newSummary: false,
       addingPrompt: false,
       addingSources: false,
@@ -767,13 +768,13 @@ export default {
       searchSuggestions: [
         'XXX broad search',
         'XXX and YYY',
-        `Topics XXX would care about`,
+        `List out topics XXX would care about`,
         'List out XXX competitors, by name',
         `UCB or Unit City Bank`,
         `University of XXX and research`,
         'University of XXX no sports related news',
-        'XXX Hospital no ER related stories',
         'XXX no stock related news',
+        'XXX Hospital no ER related stories',
         'Articles written or about [JOURNALIST NAME]',
       ],
       promptSuggestions: [
@@ -793,14 +794,7 @@ export default {
     }
   },
   created() {
-    if (localStorage.addedClips) {
-      const objectsArr = []
-      const unstrung = JSON.parse(localStorage.addedClips)
-      for (let key in unstrung) {
-        objectsArr.push(unstrung[key])
-      }
-      this.addedClips = objectsArr
-    }
+
   },
   watch: {
     typedMessage: 'changeIndex',
@@ -816,16 +810,17 @@ export default {
   methods: {
     clearClips() {
       this.addedClips = []
-      localStorage.addedClips = null
+      this.metaData = { clips: [] }
+      // this.savedSearch.meta_data = {...this.savedSearch.meta_data, clips: []}
+      this.updateMetaData()
     },
     removeClip(title) {
       const newClips = this.addedClips.filter((clip) => clip.title !== title)
       this.addedClips = newClips
-      const newRemovedClips = {}
-      for (let i  = 0; i < newClips.length; i++) {
-        newRemovedClips[i] = newClips[i]
+      if (this.currentSearch) {
+        this.metaData = {...this.currentSearch.meta_data, clips: newClips}
+        this.updateMetaData()
       }
-      localStorage.addedClips = JSON.stringify(newRemovedClips)
     },
     toggleReport() {
       if (!this.isPaid) {
@@ -839,21 +834,11 @@ export default {
         clip.author = clip.author[0]
       }
       clip['search'] = this.newSearch
-      if (this.addedClips.length < 20) {
+      if (this.addedClips && this.addedClips.length < 20) {
         this.addedClips.push(clip)
-        if (localStorage.addedClips) {
-          const parsedAddedClips = JSON.parse(localStorage.addedClips)
-          const newAddedClips = {}
-          let newNum = 0
-          for (let num in parsedAddedClips) {
-            newAddedClips[num] = parsedAddedClips[num]
-            newNum = num + 1
-          }
-          newAddedClips[newNum] = clip
-          localStorage.addedClips = JSON.stringify(newAddedClips)
-        } else {
-          const jsonClip = JSON.stringify(clip)
-          localStorage.addedClips = `{"0": ${jsonClip}}`
+        if (this.currentSearch) {
+          this.metaData = {...this.currentSearch.meta_data, clips: this.addedClips}
+          this.updateMetaData()
         }
       } else {
         return
@@ -865,12 +850,10 @@ export default {
       const newClips = this.addedClips.filter((clip) => clip.title !== title)
       newClips.unshift(clip)
       this.addedClips = newClips
-      const newEditedClips = {}
-      for (let i  = 0; i < newClips.length; i++) {
-        newEditedClips[i] = newClips[i]
+      if (this.currentSearch) {
+        this.metaData = {...this.currentSearch.meta_data, clips: newClips}
+        this.updateMetaData()
       }
-      localStorage.addedClips = JSON.stringify(newEditedClips)
-      // localStorage.addedClips = newClips
     },
     soonButtonText() {
       this.buttonText = 'Coming Soon!'
@@ -979,6 +962,8 @@ export default {
       this.newSearch = search.input_text
       this.booleanString = search.search_boolean
       this.newTemplate = search.instructions
+      this.metaData = search.meta_data
+      this.addedClips = search.meta_data.clips ? search.meta_data.clips : []
       this.mainView = search.type === 'SOCIAL_MEDIA' ? 'social' : 'news'
       this.generateNewSearch()
     },
@@ -1105,6 +1090,27 @@ export default {
         this.scrollToTop()
       }
     },
+    async updateMetaData() {
+      try {
+        await Comms.api
+          .upateSearch({
+            id: this.searchId,
+            meta_data: this.metaData,
+          })
+          .then((response) => {
+            this.savedSearch = {
+              name: this.searchName,
+              input_text: this.newSearch,
+              meta_data: this.metaData,
+              search_boolean: this.booleanString,
+              instructions: this.newTemplate,
+            }
+            // this.$store.dispatch('setSearch', this.savedSearch)
+          })
+      } catch (e) {
+        console.log('ERROR UPDATING SEARCH', e)
+      }
+    },
     async updateSearch() {
       try {
         await Comms.api
@@ -1112,6 +1118,7 @@ export default {
             id: this.searchId,
             name: this.searchName,
             input_text: this.newSearch,
+            meta_data: this.metaData,
             search_boolean: this.booleanString,
             instructions: this.newTemplate,
           })
@@ -1119,9 +1126,11 @@ export default {
             this.savedSearch = {
               name: this.searchName,
               input_text: this.newSearch,
+              meta_data: this.metaData,
               search_boolean: this.booleanString,
               instructions: this.newTemplate,
             }
+            // this.$store.dispatch('setSearch', this.savedSearch)
           })
       } catch (e) {
         console.log('ERROR UPDATING SEARCH', e)
@@ -1131,6 +1140,7 @@ export default {
       this.newSearch = ''
       this.newTemplate = ''
       this.searchName = ''
+      this.metaData = { clips: [] }
       this.additionalSources = ''
     },
     openRegenModal() {
@@ -1152,6 +1162,7 @@ export default {
             input_text: this.newSearch,
             search_boolean: this.booleanString,
             instructions: this.newTemplate,
+            meta_data: this.metaData,
             type: this.mainView === 'news' ? 'NEWS' : 'SOCIAL_MEDIA',
           })
           .then((response) => {
@@ -1161,6 +1172,7 @@ export default {
               this.savedSearch = {
                 name: response.name,
                 input_text: this.newSearch,
+                meta_data: this.metaData,
                 search_boolean: this.booleanString,
                 instructions: this.newTemplate,
               }
@@ -1387,7 +1399,7 @@ export default {
   },
   computed: {
     clipTitles() {
-      return this.addedClips.map((clip) => clip.title)
+      return this.addedClips ? this.addedClips.map((clip) => clip.title) : []
     },
     messages() {
       return this.$store.state.messages
