@@ -1337,8 +1337,10 @@ class UserViewSet(
                 }
             )
         user = User.objects.filter(id=user_id)
-        token = user.access_token.refresh(user.access_token)
-        return Response({"detail": "User token has been successfully refreshed"})
+        token = ManagrToken.refresh(user.access_token)
+        return Response(
+            {"detail": "User token has been successfully refreshed", "token": str(token.id)}
+        )
 
 
 class ActivationLinkView(APIView):
