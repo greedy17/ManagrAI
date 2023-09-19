@@ -10,7 +10,7 @@ User = get_user_model()
 
 
 def set_expiration():
-    return timezone.now() + timezone.timedelta(hours=1)
+    return timezone.now() + timezone.timedelta(hours=4)
 
 
 class ManagrToken(Token):
