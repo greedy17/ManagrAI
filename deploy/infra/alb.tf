@@ -24,10 +24,10 @@ resource "aws_alb_target_group" "app" {
   target_type = "ip"
   health_check {
     healthy_threshold   = "3"
-    interval            = "30"
+    interval            = "60"
     protocol            = "HTTP"
     matcher             = "301"
-    timeout             = "3"
+    timeout             = "10"
     path                = var.health_check_path
     unhealthy_threshold = "2"
   }

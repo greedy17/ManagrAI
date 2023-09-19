@@ -46,7 +46,6 @@
         "name": "STAFF_EMAIL",
         "valueFrom": "${config_secret_arn}:staffEmail::"
       },
-
       {
         "name": "DB_HOST",
         "valueFrom": "${config_secret_arn}:dbHost::"
@@ -75,12 +74,10 @@
         "name": "DB_NAME",
         "valueFrom": "${config_secret_arn}:dbName::"
       },
-
       {
         "name": "ROLLBAR_ACCESS_TOKEN",
         "valueFrom": "${config_secret_arn}:rollbarAccessToken::"
       },
-
       {
         "name": "SMTP_USER",
         "valueFrom": "${config_secret_arn}:smtpUser::"
@@ -93,7 +90,6 @@
         "name": "SMTP_HOST",
         "valueFrom": "${config_secret_arn}:smtpHost::"
       },
-
       {
         "name": "AWS_ACCESS_KEY_ID",
         "valueFrom": "${config_secret_arn}:awsAccessKeyId::"
@@ -106,7 +102,6 @@
         "name": "AWS_STORAGE_BUCKET_NAME",
         "valueFrom": "${config_secret_arn}:awsStorageBucketName::"
       },
-
       {
         "name": "NYLAS_CLIENT_ID",
         "valueFrom": "${config_secret_arn}:nylasClientId::"
@@ -119,7 +114,6 @@
         "name": "NYLAS_OAUTH_CALLBACK_URL",
         "valueFrom": "${config_secret_arn}:nylasOauthCallbackUrl::"
       },
-
       {
         "name": "TWILIO_ACCOUNT_SID",
         "valueFrom": "${config_secret_arn}:twilioAccountSid::"
@@ -132,7 +126,6 @@
         "name": "TWILIO_BASE_CALLBACK_URL",
         "valueFrom": "${config_secret_arn}:twilioBaseCallbackUrl::"
       },
-
       {
         "name": "ZOOM_REDIRECT_URI",
         "valueFrom": "${config_secret_arn}:zoomRedirectUri::"
@@ -153,7 +146,6 @@
         "name": "ZOOM_FAKE_MEETING_UUID",
         "valueFrom": "${config_secret_arn}:zoomFakeMeetingUuid::"
       },
-
       {
         "name": "SLACK_CLIENT_ID",
         "valueFrom": "${config_secret_arn}:slackClientId::"
@@ -174,7 +166,6 @@
         "name": "SLACK_ERROR_WEBHOOK",
         "valueFrom": "${config_secret_arn}:slackErrorWebhook::"
       },
-
       {
         "name": "SALESFORCE_BASE_URL",
         "valueFrom": "${config_secret_arn}:salesforceBaseUrl::"
@@ -303,7 +294,7 @@
         "awslogs-region": "${aws_region}",
         "awslogs-stream-prefix": "ecs"
       }
-    },
+    }
   },
   {
     "name": "datadog-agent",

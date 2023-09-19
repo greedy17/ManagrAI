@@ -14,6 +14,7 @@ from managr.utils.misc import encrypt_dict
 from urllib.parse import urlencode
 import base64
 import hashlib
+from django.contrib.postgres.fields import JSONField
 
 logger = logging.getLogger("managr")
 
@@ -32,6 +33,11 @@ class Search(TimeStampModel):
     instructions = models.TextField(null=True, blank=True)
     summary = models.TextField(null=True, blank=True)
     type = models.CharField(choices=comms_consts.SEARCH_TYPE_CHOICES, max_length=50, default="NEWS")
+    meta_data = JSONField(
+        default=dict,
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         ordering = ["name"]
