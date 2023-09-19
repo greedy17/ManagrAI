@@ -775,7 +775,7 @@ export default {
         'Articles written or about [JOURNALIST NAME]',
       ],
       promptSuggestions: [
-        `Summarize news from this week and how it impacts on XXX`,
+        `Summarize news from this week and how it impacts XXX`,
         'Highlight the top 3 news story and the impact it has on XXX',
         "As XXX's PR agency, provide suggestions based on this news",
         "Craft short responses as the VP of PR for XXX to the stories that need it",

@@ -131,6 +131,7 @@
                     src="@/assets/images/memo.svg"
                     height="12px"
                     alt=""
+                    @click="selectSearch(search)"
                   />
                   <img
                     class="search-icon"
@@ -138,6 +139,7 @@
                     src="@/assets/images/comment.svg"
                     height="12px"
                     alt=""
+                    @click="selectSearch(search)"
                   />
                   <p @click="selectSearch(search)">
                     {{ search.name }}
@@ -458,6 +460,7 @@ export default {
       return initials
     },
     selectSearch(search) {
+      console.log('search', search)
       this.toggleShowSearches()
       this.$store.dispatch('setSearch', search)
     },
@@ -954,8 +957,9 @@ nav {
   align-items: center;
   justify-content: center;
   img {
-    filter: brightness(0) invert(48%) sepia(33%) saturate(348%) hue-rotate(161deg) brightness(91%)
-      contrast(90%);
+    // filter: brightness(0) invert(48%) sepia(33%) saturate(348%) hue-rotate(161deg) brightness(91%)
+    //   contrast(90%);
+    filter: brightness(0) invert(23%) sepia(19%) saturate(984%) hue-rotate(162deg) brightness(92%) contrast(87%);
   }
   margin-right: 0.5rem;
 }

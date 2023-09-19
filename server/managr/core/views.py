@@ -37,7 +37,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from managr.api.emails import send_html_email
-from managr.api.models import ManagrToken
+from managr.api.models import (ManagrToken, ExpiringTokenAuthentication)
 from managr.utils import sites as site_utils
 from managr.core.utils import (
     pull_usage_data,
@@ -1315,7 +1315,8 @@ class UserViewSet(
 
     @action(
         methods=["post"],
-        permission_classes=[permissions.IsAuthenticated],
+        permission_classes=[permissions.AllowAny],
+        authentication_classes=[],
         detail=False,
         url_path="refresh-token",
     )
@@ -1336,9 +1337,11 @@ class UserViewSet(
                     }
                 }
             )
-        user = User.objects.filter(id=user_id)
-        token = user.access_token.refresh(user.access_token)
-        return Response({"detail": "User token has been successfully refreshed"})
+        user = User.objects.get(id=user_id)
+        token = ManagrToken.refresh(user.access_token)
+        return Response(
+            {"detail": "User token has been successfully refreshed", "token": str(token.key)}
+        )
 
 
 class ActivationLinkView(APIView):

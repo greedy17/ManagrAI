@@ -10,7 +10,7 @@ User = get_user_model()
 
 
 def set_expiration():
-    return timezone.now() + timezone.timedelta(hours=1)
+    return timezone.now() + timezone.timedelta(hours=4)
 
 
 class ManagrToken(Token):
@@ -48,7 +48,6 @@ class ExpiringTokenAuthentication(TokenAuthentication):
 
     def authenticate(self, request):
         auth = get_authorization_header(request).split()
-
         if not auth or auth[0].lower() != self.keyword.lower().encode():
             return None
 
@@ -64,9 +63,9 @@ class ExpiringTokenAuthentication(TokenAuthentication):
         except UnicodeError:
             msg = _("Invalid token header. Token string should not contain invalid characters.")
             raise AuthenticationFailed(msg)
-        return self.authenticate_credentials(token, request)
+        return self.authenticate_credentials(token)
 
-    def authenticate_credentials(self, key, request):
+    def authenticate_credentials(self, key):
         try:
             token = ManagrToken.objects.get(key=key)
         except ManagrToken.DoesNotExist:
@@ -74,10 +73,7 @@ class ExpiringTokenAuthentication(TokenAuthentication):
         if token.is_revoked:
             raise AuthenticationFailed("Token has been revoked")
         if token.expiration < timezone.now():
-            if request.user and request.user.is_authenticated:
-                token = ManagrToken.refresh(token)
-            else:
-                raise AuthenticationFailed("Token has expired")
+            raise AuthenticationFailed("Token expired")
         return (token.assigned_user, token)
 
     def authenticate_header(self, request):
