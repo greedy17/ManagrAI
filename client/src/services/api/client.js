@@ -52,10 +52,10 @@ export function apiClient() {
           store.dispatch('updateUserToken', res.token).then(() => {
             store.dispatch('updateUser', tempUser).then(() => {
               // refresh user
-              store.dispatch('refreshCurrentUser').then(() => {
-                store.dispatch('updateTempRefreshUser', null)
-                // router.go()
-              })
+              // store.dispatch('refreshCurrentUser').then(() => {
+              //   store.dispatch('updateTempRefreshUser', null)
+              //   // router.go()
+              // })
             })
           })
         })
