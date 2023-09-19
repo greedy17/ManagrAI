@@ -454,6 +454,7 @@ export default class UserAPI {
     const url = GET_USER_ENDPOINT(userId)
     try {
       const response = await this.client.get(url)
+      console.log('response', response)
       return this.cls.fromAPI(response.data)
     } catch (e) {
       console.log(e)
@@ -519,8 +520,10 @@ export default class UserAPI {
       token,
       user_id: userId,
     }
+    console.log('data', data)
     try {
-      await this.client.post(url, data)
+      const res = await this.client.post(url, data)
+      return res
     } catch (e) {
       apiErrorHandler({ apiName: 'UserAPI.revokeToken' })
     }
