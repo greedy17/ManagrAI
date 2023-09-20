@@ -240,7 +240,7 @@
         </div>
 
         <div class="title-bar">
-          <div class="row">
+          <div v-if="!showSaveName" class="row">
             <button
               :disabled="loading"
               @click="toggleRegenerate"
@@ -268,6 +268,46 @@
 
               <button @click="regeneratePitch" class="primary-button">Regenerate</button>
             </div>
+            <button
+              @click="toggleSaveName"
+              v-if="!regenerating"
+              :disabled="
+                loading ||
+                savingPitch ||
+                pitchSaved
+              "
+              class="primary-button no-mar"
+            >
+              <img
+                v-if="savingPitch"
+                class="rotate"
+                height="12px"
+                src="@/assets/images/loading.svg"
+                alt=""
+              />
+              {{ savingPitch ? 'Saving' : 'Save' }}
+            </button>
+          </div>
+          
+          <div v-else class="row">
+            <input
+              autofocus
+              class="area-input-outline"
+              placeholder="Name your pitch"
+              v-model="pitchName"
+            />
+
+            <button
+              @click="createSavedPitch"
+              :disabled="
+                loading ||
+                savingPitch ||
+                pitchSaved
+              "
+              class="primary-button"
+            >
+              Save
+            </button>
           </div>
 
           <div @click="copyText" v-if="!regenerating" class="wrapper">
@@ -347,6 +387,10 @@ export default {
       instructions: '',
       copyTip: 'Copy',
       textToCopy: '',
+      showSaveName: false,
+      savingPitch: false,
+      pitchName: '',
+      savedPitch: null,
     }
   },
   watch: {},
@@ -363,6 +407,9 @@ export default {
       } catch (err) {
         console.error('Failed to copy text: ', err)
       }
+    },
+    toggleSaveName() {
+      this.showSaveName = !this.showSaveName
     },
     resetSearch() {
       this.pitch = null
@@ -443,6 +490,42 @@ export default {
     toggleRegenerate() {
       this.regenerating = !this.regenerating
     },
+    async createSavedPitch() {
+      this.showSaveName = false
+      this.savingPitch = true
+      try {
+        const response = await Comms.api.savePitch({
+            name: this.pitchName || this.pitch.slice(0, 60),
+            user: this.user.id,
+            type: this.type,
+            audience: this.persona,
+            generated_pitch: this.pitch,
+            content: this.briefing,
+            instructions: this.output,
+          })
+        if (response.id) {
+          // this.searchId = response.id
+          // this.showUpdateBanner = true
+          this.savedPitch = {
+            name: response.name,
+            user: this.user.id,
+            type: this.type,
+            audience: this.persona,
+            generated_pitch: this.pitch,
+            content: this.briefing,
+            instructions: this.output,
+          }
+        }
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.savingPitch = false
+        // this.$store.dispatch('getSearches')
+        setTimeout(() => {
+          // this.showUpdateBanner = false
+        }, 2000)
+      }
+    },
     async regeneratePitch() {
       this.regenerating = false
       this.loading = true
@@ -453,7 +536,6 @@ export default {
             instructions: this.instructions,
           })
           .then((response) => {
-            console.log(response)
             this.pitch = response.pitch
           })
       } catch (e) {
@@ -475,12 +557,11 @@ export default {
         await Comms.api
           .generatePitch({
             type: this.type,
-            output: this.output,
-            persona: this.persona,
-            briefing: this.briefing,
+            instructions: this.output,
+            audience: this.persona,
+            content: this.briefing,
           })
           .then((response) => {
-            console.log(response)
             this.pitch = response.pitch
             this.scrollToTop()
           }).then((response) => {
@@ -570,6 +651,17 @@ export default {
         arr = [...arr, ...filteredByMonth]
       }
       return arr.length
+    },
+    pitchSaved() {
+      if (
+        this.savedPitch &&
+        this.pitch &&
+        this.savedPitch.generated_pitch === this.pitch
+      ) {
+        return true
+      } else {
+        return false
+      }
     },
   },
   directives: {
@@ -1274,5 +1366,28 @@ footer {
 }
 .content {
   // width: 80%;
+}
+.area-input-outline {
+  width: 300px;
+  background-color: $offer-white;
+  margin-bottom: 0.25rem;
+  padding: 5px 8px;
+  border-radius: 4px;
+  line-height: 1.75;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  outline: none;
+  letter-spacing: 0.5px;
+  font-size: 14px;
+  font-family: $base-font-family;
+  font-weight: 400;
+  text-align: left;
+  overflow: auto;
+  scroll-behavior: smooth;
+  color: $dark-black-blue;
+  margin-right: 1rem;
+  resize: none;
+}
+.no-mar {
+  margin: 0;
 }
 </style>
