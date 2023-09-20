@@ -58,9 +58,13 @@ const state = {
   allSearches: [],
   currentSearch: null,
   tempRefreshUser: null,
+  generatedContent: null,
 }
 
 const mutations = {
+  setGeneratedContent(state, payload) {
+    state.generatedContent = payload;
+  },
   UPDATE_STAGES: (state, payload) => {
     state.stages = payload
   },
@@ -163,7 +167,6 @@ const mutations = {
     state.meetingData[id] = newData
   },
   EDIT_MEETING: (state, { id, updated }) => {
-    console.log(id, updated, '222222')
     let newData
     newData = state.meetingData[id]
     newData['updated'] = updated
@@ -290,7 +293,6 @@ const actions = {
     commit('SET_OPP', opp)
   },
   editMeeting({ commit }, { id, updated }) {
-    console.log(id, updated, '1111')
     commit('EDIT_MEETING', { id, updated })
   },
   editMessages({ commit }, {
@@ -315,7 +317,6 @@ const actions = {
     })
   },
   setMeetingData({ commit }, { id, data }) {
-    console.log(id, data)
     commit('SET_MEETING_DATA', { id, data })
   },
   removeMessage({ commit }, id) {
@@ -503,7 +504,6 @@ const actions = {
     commit('UPDATE_RECORD_TYPES', res)
   },
   updateUser({ commit }, payload) {
-    console.log('payload', payload)
     commit('UPDATE_USER', payload)
   },
   updateTempRefreshUser({ commit }, payload) {
@@ -523,48 +523,43 @@ const actions = {
     await User.api.logout()
   },
   async refreshCurrentUser({ state, dispatch, commit }) {
-    console.log(1)
     if (!state.token) {
       return null
     }
-    console.log(2)
     // const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
     const decryptedUser = state.user
-    console.log(3)
     try {
       const user = await User.api.getUser(decryptedUser.id)
-      console.log(4)
       // const encrypted = encryptData(user, process.env.VUE_APP_SECRET_KEY)
       // commit('UPDATE_USER', encrypted)
       commit('UPDATE_USER', user)
-      console.log(5)
-    } catch(e) {
+    } catch (e) {
       console.log('e refreshUser', e.response)
       // if (e.response.status === 401 && e.response.data.detail === 'Token expired') {
-        // Handle the 401 Unauthorized error here
-        // For example, you can log the user out or show an error message
-        // You can also redirect the user to the login page
-        // let tempUser
-        // if (state.user && state.user.id) {
-        //   store.dispatch('updateTempRefreshUser', state.user)
-        //   tempUser = state.user
-        // } else {
-        //   tempUser = state.tempRefreshUser
-        // }
-        // const user = state.user
-        // const token = state.token
-        // console.log('user', user)
-        // console.log('token', token)
-        // // call refresh token endpoint
-        // User.api.refreshToken(token, user && user.id ? user.id : tempUser.id).then((res) => {
-        //   // with token, insert into store
-        //   console.log('res', res)
-        //   dispatch('updateUserToken', res.token).then(() => {
-        //     // refresh user
-        //     dispatch('updateTempRefreshUser', null)
-        //     dispatch('refreshCurrentUser')
-        //   })
-        // })
+      // Handle the 401 Unauthorized error here
+      // For example, you can log the user out or show an error message
+      // You can also redirect the user to the login page
+      // let tempUser
+      // if (state.user && state.user.id) {
+      //   store.dispatch('updateTempRefreshUser', state.user)
+      //   tempUser = state.user
+      // } else {
+      //   tempUser = state.tempRefreshUser
+      // }
+      // const user = state.user
+      // const token = state.token
+      // console.log('user', user)
+      // console.log('token', token)
+      // // call refresh token endpoint
+      // User.api.refreshToken(token, user && user.id ? user.id : tempUser.id).then((res) => {
+      //   // with token, insert into store
+      //   console.log('res', res)
+      //   dispatch('updateUserToken', res.token).then(() => {
+      //     // refresh user
+      //     dispatch('updateTempRefreshUser', null)
+      //     dispatch('refreshCurrentUser')
+      //   })
+      // })
       // }
       // do nothing for now
       return null
@@ -596,7 +591,7 @@ const getters = {
   user: state => {
     return state.user
   },
-  token: state =>  {
+  token: state => {
     return state.token
   },
   tempRefreshUser: state => {

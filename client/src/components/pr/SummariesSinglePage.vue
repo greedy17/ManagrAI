@@ -342,6 +342,9 @@
                         : 'New Search'
                     }}
                   </button>
+                  <button @click="setPitchContent" class="lightblue-button">
+                    Generate Content
+                  </button>
                   <button
                     @click="toggleSaveName"
                     v-if="(filteredArticles && filteredArticles.length) || tweets.length"
@@ -532,7 +535,9 @@
                       <span>Followers</span>
                     </small>
                     <span class="divier-dot">.</span>
-                    <span class="off-gray time">{{ getTimeDifferenceInMinutes(tweet.created_at) }}</span>
+                    <span class="off-gray time">{{
+                      getTimeDifferenceInMinutes(tweet.created_at)
+                    }}</span>
                   </div>
 
                   <!-- <button class="tertiary-button" @click="addClip(tweet)">
@@ -569,7 +574,11 @@
                   </div>
 
                   <!-- <div @click="goToArticle(article.url)"> -->
-                    <img @click="goToArticle(article.url)" :src="article.urlToImage" class="cover-photo" />
+                  <img
+                    @click="goToArticle(article.url)"
+                    :src="article.urlToImage"
+                    class="cover-photo"
+                  />
                   <!-- </div> -->
                 </header>
 
@@ -755,7 +764,7 @@ export default {
       filteredArticles: [],
       summary: '',
       booleanString: null,
-      metaData: { clips: [], },
+      metaData: { clips: [] },
       newSummary: false,
       addingPrompt: false,
       addingSources: false,
@@ -778,7 +787,7 @@ export default {
         `Summarize news from this week and how it impacts XXX`,
         'Highlight the top 3 news story and the impact it has on XXX',
         "As XXX's PR agency, provide suggestions based on this news",
-        "Craft short responses as the VP of PR for XXX to the stories that need it",
+        'Craft short responses as the VP of PR for XXX to the stories that need it',
         `Write a highly engaging LinkedIn post based on this coverage for XXX`,
         `Draft an entertaining Twitter post based on this coverage for XXX`,
         'Newsjack this coverage and turn into a blog post on behalf of XXX',
@@ -789,9 +798,7 @@ export default {
       ],
     }
   },
-  created() {
-
-  },
+  created() {},
   watch: {
     typedMessage: 'changeIndex',
     currentSearch(newVal, oldVal) {
@@ -804,6 +811,16 @@ export default {
     // this.updateMessage()
   },
   methods: {
+    setPitchContent() {
+      let content = {
+        summary: this.summary,
+        term: this.newSearch,
+      }
+      this.$store.commit('setGeneratedContent', content)
+      setTimeout(() => {
+        this.$router.push({ name: 'Pitches' })
+      }, 500)
+    },
     clearClips() {
       this.addedClips = []
       this.metaData = { clips: [] }
@@ -814,7 +831,7 @@ export default {
       const newClips = this.addedClips.filter((clip) => clip.title !== title)
       this.addedClips = newClips
       if (this.currentSearch) {
-        this.metaData = {...this.currentSearch.meta_data, clips: newClips}
+        this.metaData = { ...this.currentSearch.meta_data, clips: newClips }
         this.updateMetaData()
       }
     },
@@ -833,7 +850,7 @@ export default {
       if (this.addedClips && this.addedClips.length < 20) {
         this.addedClips.push(clip)
         if (this.currentSearch) {
-          this.metaData = {...this.currentSearch.meta_data, clips: this.addedClips}
+          this.metaData = { ...this.currentSearch.meta_data, clips: this.addedClips }
           this.updateMetaData()
         }
       } else {
@@ -847,7 +864,7 @@ export default {
       newClips.unshift(clip)
       this.addedClips = newClips
       if (this.currentSearch) {
-        this.metaData = {...this.currentSearch.meta_data, clips: newClips}
+        this.metaData = { ...this.currentSearch.meta_data, clips: newClips }
         this.updateMetaData()
       }
     },
@@ -1888,6 +1905,19 @@ button:disabled {
   }
 }
 
+.lightblue-button {
+  @include dark-blue-button();
+  padding: 8px 12px;
+  border: 0.5px solid $dark-black-blue;
+  color: $dark-black-blue;
+  background-color: $white-blue;
+  margin-right: 1rem;
+  img {
+    filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
+    margin-right: 8px;
+  }
+}
+
 .tertiary-button {
   @include dark-blue-button();
   padding: 8px 12px;
@@ -2872,7 +2902,6 @@ header {
   background-color: #f2f2f2;
   border-radius: 6px;
   margin-left: 16px;
-  
 }
 
 .content {

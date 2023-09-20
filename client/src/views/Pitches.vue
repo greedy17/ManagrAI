@@ -46,7 +46,7 @@
           </div>
         </div>
       </div>
-      
+
       <div class="input-container" v-clickOutsideInstructionsMenu>
         <div class="input-row relative">
           <div class="main-text">
@@ -82,14 +82,10 @@
           </div>
         </div>
       </div>
-      
-      <div
-        class="divider"
-      >
+
+      <div class="divider">
         <p class="divider-text">
-          {{
-            'Optional'
-          }}
+          {{ 'Optional' }}
         </p>
       </div>
 
@@ -350,7 +346,15 @@ export default {
     }
   },
   watch: {},
-  created() {},
+  created() {
+    if (this.$store.state.generatedContent) {
+      this.briefing = this.$store.state.generatedContent.summary
+      this.output = `Create content based on this recent news summary for ${this.$store.state.generatedContent.term}`
+    }
+  },
+  beforeDestroy() {
+    this.$store.commit('setGeneratedContent', null)
+  },
   methods: {
     async copyText() {
       try {
@@ -453,7 +457,6 @@ export default {
             instructions: this.instructions,
           })
           .then((response) => {
-            console.log(response)
             this.pitch = response.pitch
           })
       } catch (e) {
@@ -480,10 +483,11 @@ export default {
             briefing: this.briefing,
           })
           .then((response) => {
-            console.log(response)
             this.pitch = response.pitch
             this.scrollToTop()
-          }).then((response) => {
+            this.$store.commit('setGeneratedContent', null)
+          })
+          .then((response) => {
             this.refreshUser()
           })
       } catch (e) {
@@ -553,8 +557,8 @@ export default {
       return !!this.$store.state.user.organizationRef.isPaid
     },
     searchesUsed() {
-      let arr = [];
-      let currentMonth = new Date(Date.now()).getMonth()+1
+      let arr = []
+      let currentMonth = new Date(Date.now()).getMonth() + 1
       if (currentMonth < 10) {
         currentMonth = `0${currentMonth}`
       } else {
@@ -563,7 +567,7 @@ export default {
       let currentYear = new Date(Date.now()).getFullYear()
       for (let key in this.$store.state.user.metaData) {
         const item = this.$store.state.user.metaData[key]
-        const filteredByMonth = item.timestamps.filter(date => {
+        const filteredByMonth = item.timestamps.filter((date) => {
           const split = date.split('-')
           return split[1] == currentMonth && split[0] == currentYear
         })
@@ -794,7 +798,7 @@ export default {
   background-color: white;
   width: 100vw;
   height: 100vh;
-  padding: 58px 36px 0 36px;
+  padding: 12px 36px 0 36px;
   display: flex;
   overflow-y: scroll;
   font-family: $base-font-family;
