@@ -162,7 +162,7 @@
 
           <textarea
             :disabled="loading"
-            maxlength="1000"
+            maxlength="1500"
             class="area-input text-area-input"
             :placeholder="optionalPlaceholder"
             v-model="briefing"
@@ -519,7 +519,7 @@ export default {
       return 1000 - this.output.length
     },
     remainingCharsBrief() {
-      return 1000 - this.briefing.length
+      return 1500 - this.briefing.length
     },
     user() {
       return this.$store.state.user
