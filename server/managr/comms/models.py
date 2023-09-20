@@ -227,3 +227,25 @@ TwitterAuthAccount = TwitterAuthAccountAdapter(
         "access_token": comms_consts.TWITTER_ACCESS_TOKEN,
     }
 )
+
+
+class Pitch(TimeStampModel):
+    user = models.ForeignKey(
+        "core.User",
+        related_name="pitches",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
+    )
+    name = models.CharField(max_length=255)
+    instructions = models.TextField()
+    type = models.CharField(max_length=255, null=True, blank=True)
+    audience = models.CharField(max_length=255, null=True, blank=True)
+    content = models.TextField(null=True, blank=True)
+    generated_pitch = models.TextField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.name}"

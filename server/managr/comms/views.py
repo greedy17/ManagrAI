@@ -20,10 +20,10 @@ from urllib.parse import urlencode, urlparse
 from django.shortcuts import redirect
 from rest_framework.decorators import action
 from . import constants as comms_consts
-from .models import Search, TwitterAuthAccount
+from .models import Search, TwitterAuthAccount, Pitch
 from managr.core.models import User
 from managr.comms import exceptions as comms_exceptions
-from .serializers import SearchSerializer
+from .serializers import SearchSerializer, PitchSerializer
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
 from managr.utils.misc import decrypt_dict
@@ -417,146 +417,6 @@ class PRSearchViewSet(
         link = search.generate_shareable_link()
         return Response(data={"link": link})
 
-    @action(
-        methods=["post"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="pitch",
-    )
-    def get_pitch(self, request, *args, **kwargs):
-        user = request.user
-        if user.has_hit_summary_limit:
-            return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
-        type = request.data.get("type")
-        output = request.data.get("output")
-        persona = request.data.get("persona")
-        briefing = request.data.get("briefing")
-        has_error = False
-        attempts = 1
-        token_amount = 1000
-        timeout = 60.0
-
-        while True:
-            try:
-                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_PITCH(
-                    datetime.now().date(), type, output, persona, briefing
-                )
-                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                    user.email,
-                    prompt,
-                    token_amount=token_amount,
-                    top_p=0.1,
-                )
-                with Variable_Client(timeout) as client:
-                    r = client.post(
-                        url,
-                        data=json.dumps(body),
-                        headers=core_consts.OPEN_AI_HEADERS,
-                    )
-                r = open_ai_exceptions._handle_response(r)
-                pitch = r.get("choices")[0].get("message").get("content")
-                user.add_meta_data("pitches")
-                break
-            except open_ai_exceptions.StopReasonLength:
-                logger.exception(
-                    f"Retrying again due to token amount, amount currently at: {token_amount}"
-                )
-                if token_amount <= 2000:
-                    has_error = True
-
-                    message = "Token amount error"
-                    break
-                else:
-                    token_amount += 500
-                    continue
-            except httpx.ReadTimeout as e:
-                print(e)
-                timeout += 30.0
-                if timeout >= 120.0:
-                    has_error = True
-                    message = "Read timeout issue"
-                    logger.exception(f"Read timeout from Open AI {e}")
-                    break
-                else:
-                    attempts += 1
-                    continue
-            except Exception as e:
-                has_error = True
-                message = f"Unknown exception: {e}"
-                logger.exception(e)
-                break
-        if has_error:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
-        return Response({"pitch": pitch})
-
-    @action(
-        methods=["post"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="regenerate-pitch",
-    )
-    def get_regenerated_pitch(self, request, *args, **kwargs):
-        user = request.user
-        instructions = request.data.get("instructions")
-        pitch = request.data.get("pitch")
-        has_error = False
-        attempts = 1
-        token_amount = 1000
-        timeout = 60.0
-
-        while True:
-            try:
-                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS(pitch, instructions)
-                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                    user.email,
-                    prompt,
-                    token_amount=token_amount,
-                    top_p=0.1,
-                )
-                with Variable_Client(timeout) as client:
-                    r = client.post(
-                        url,
-                        data=json.dumps(body),
-                        headers=core_consts.OPEN_AI_HEADERS,
-                    )
-                r = open_ai_exceptions._handle_response(r)
-                pitch = r.get("choices")[0].get("message").get("content")
-                user.add_meta_data("pitches")
-                break
-            except open_ai_exceptions.StopReasonLength:
-                logger.exception(
-                    f"Retrying again due to token amount, amount currently at: {token_amount}"
-                )
-                if token_amount <= 2000:
-                    has_error = True
-
-                    message = "Token amount error"
-                    break
-                else:
-                    token_amount += 500
-                    continue
-            except httpx.ReadTimeout as e:
-                print(e)
-                timeout += 30.0
-                if timeout >= 120.0:
-                    has_error = True
-                    message = "Read timeout issue"
-                    logger.exception(f"Read timeout from Open AI {e}")
-                    break
-                else:
-                    attempts += 1
-                    continue
-            except Exception as e:
-                has_error = True
-                message = f"Unknown exception: {e}"
-                logger.exception(e)
-                break
-        if has_error:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
-        return Response({"pitch": pitch})
-
 
 @api_view(["get"])
 @permission_classes([permissions.IsAuthenticated])
@@ -641,3 +501,180 @@ def upload_link(request):
     except Exception as e:
         logger.exception(e)
     return Response(data=article)
+
+
+class PitchViewSet(
+    viewsets.GenericViewSet,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.ListModelMixin,
+):
+    serializer_class = PitchSerializer
+
+    def create(self, request, *args, **kwargs):
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        except Exception as e:
+            logger.exception(f"Error validating data for pitch <{e}>")
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_201_CREATED)
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = self.request.data
+        serializer = self.serializer_class(instance=instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            instance.delete()
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="generate",
+    )
+    def generate_pitch(self, request, *args, **kwargs):
+        user = request.user
+        if user.has_hit_summary_limit:
+            return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
+        type = request.data.get("type")
+        audience = request.data.get("audience")
+        content = request.data.get("content")
+        instructions = request.data.get("instructions")
+        has_error = False
+        attempts = 1
+        token_amount = 1000
+        timeout = 60.0
+
+        while True:
+            try:
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.OPEN_AI_PITCH(
+                    datetime.now().date(), type, instructions, audience, content
+                )
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    token_amount=token_amount,
+                    top_p=0.1,
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                r = open_ai_exceptions._handle_response(r)
+                pitch = r.get("choices")[0].get("message").get("content")
+                user.add_meta_data("pitches")
+
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount <= 2000:
+                    has_error = True
+
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 500
+                    continue
+            except httpx.ReadTimeout as e:
+                print(e)
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+        if has_error:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
+        return Response({"pitch": pitch})
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="regenerate",
+    )
+    def get_regenerated_pitch(self, request, *args, **kwargs):
+        user = request.user
+        instructions = request.data.get("instructions")
+        pitch = request.data.get("pitch")
+        has_error = False
+        attempts = 1
+        token_amount = 1000
+        timeout = 60.0
+
+        while True:
+            try:
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS(pitch, instructions)
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    token_amount=token_amount,
+                    top_p=0.1,
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                r = open_ai_exceptions._handle_response(r)
+                pitch = r.get("choices")[0].get("message").get("content")
+                user.add_meta_data("pitches")
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount <= 2000:
+                    has_error = True
+
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 500
+                    continue
+            except httpx.ReadTimeout as e:
+                print(e)
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+        if has_error:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
+        return Response({"pitch": pitch})
