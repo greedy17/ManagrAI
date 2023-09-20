@@ -19,7 +19,7 @@
           <div class="pointer" @click="closeRegenModal"><small>X</small></div>
         </div>
         <div class="regen-body">
-          <div v-if="!searchSaved">
+          <div v-if="!searchSaved && mainView !== 'website'">
             <div>
               <h5 class="regen-body-title">Search term</h5>
               <!-- <span class="regen-header-subtitle"
@@ -171,7 +171,12 @@
           </p>
         </div>
         <div class="area-container">
-          <div style="margin-bottom: 30px" class="input-container" v-clickOutsideMenu>
+          <div
+            v-if="mainView !== 'website'"
+            style="margin-bottom: 30px"
+            class="input-container"
+            v-clickOutsideMenu
+          >
             <div class="input-row">
               <div style="border-right: none" class="main-text">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -281,7 +286,7 @@
             <button
               v-else
               @click="getSourceSummary()"
-              :disabled="!additionalSources || !newSearch"
+              :disabled="!additionalSources"
               class="primary-button"
             >
               Generate Summary
@@ -344,6 +349,13 @@
                   </button>
                   <button @click="setPitchContent" class="lightblue-button">
                     Generate Content
+                    <img
+                      v-if="contentLoading"
+                      src="@/assets/images/loading.svg"
+                      class="rotate"
+                      height="12px"
+                      alt=""
+                    />
                   </button>
                   <button
                     @click="toggleSaveName"
@@ -410,6 +422,7 @@
         </div>
 
         <div
+          ref="topDivider"
           v-if="
             ((filteredArticles && filteredArticles.length) || (tweets && tweets.length)) && !loading
           "
@@ -731,6 +744,7 @@ export default {
   },
   data() {
     return {
+      contentLoading: false,
       addedClips: [],
       ShowReport: false,
       showingPromptDropdown: false,
@@ -812,6 +826,7 @@ export default {
   },
   methods: {
     setPitchContent() {
+      this.contentLoading = true
       let content = {
         summary: this.summary,
         term: this.newSearch,
@@ -820,6 +835,9 @@ export default {
       setTimeout(() => {
         this.$router.push({ name: 'Pitches' })
       }, 500)
+      setTimeout(() => {
+        this.contentLoading = false
+      }, 750)
     },
     clearClips() {
       this.addedClips = []
@@ -1001,6 +1019,11 @@ export default {
         this.$refs.loadedContent.scrollIntoView({ behavior: 'smooth' })
       }, 300)
     },
+    scrollToTopDivider() {
+      setTimeout(() => {
+        this.$refs.topDivider.scrollIntoView({ behavior: 'smooth' })
+      }, 300)
+    },
     removeSource() {
       this.additionalSources = ''
       this.addingSources = !this.addingSources
@@ -1048,13 +1071,14 @@ export default {
       window.open('https://managr.ai/contact', '_blank')
     },
     async generateNewSearch() {
+      console.log('HERE !!!!!!')
       if (!this.isPaid && this.searchesUsed >= 10) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
         return
       }
-      if (!this.newSearch || this.newSearch.length < 3) {
+      if (this.mainView !== 'website' && (!this.newSearch || this.newSearch.length < 3)) {
         return
       } else if (this.mainView === 'social') {
         this.getTweets()
@@ -1088,11 +1112,9 @@ export default {
       this.summaryLoading = true
       try {
         await Comms.api
-          .getArticleSummary({
+          .getWebSummary({
             url: this.additionalSources,
-            search: this.newSearch,
             instructions: this.newTemplate || null,
-            length: 1500,
           })
           .then((response) => {
             this.summary = response.summary
@@ -1354,7 +1376,7 @@ export default {
         this.showArticleRegenerate = false
         this.articleSummaryLoading = false
         this.loadingUrl = null
-        this.scrollToTop()
+        this.scrollToTopDivider()
       }
     },
     changeSummaryChat(type) {
@@ -1913,8 +1935,8 @@ button:disabled {
   background-color: $white-blue;
   margin-right: 1rem;
   img {
-    filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
-    margin-right: 8px;
+    // filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
+    margin-left: 8px;
   }
 }
 

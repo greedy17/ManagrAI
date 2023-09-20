@@ -91,6 +91,9 @@ DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS = (
     lambda search: f"<strong>Context and Sentiment pertaining to {search}:</strong>\n<strong>Relevance and Impact pertaining to {search}:</strong>"
 )
 
+def OPEN_AI_WEB_SUMMARY(date, article, instructions,):
+    body = f"Today's date is {date}. Summarize this news article:\n {article}. \nOutput format must be:\n {instructions}. It cannot be longer than 1500 characters."
+    return body
 
 def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False,for_client=False):
     body = f"Today's date is {date}  Summarize this news article:\n Article: {article}\n As it relates to {search} It cannot be longer than {length} characters. Output format must be:\n"
@@ -106,7 +109,7 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False,fo
     return body
 
 def OPEN_AI_PITCH(date, type, output, persona, briefing):
-    body =f"Today is {date}. You're the VP of Communications crafting a {type}, aimed at {persona}. Go for an upbeat, engaging, straight-to-the-point style, no need for traditional formalities. Reference briefing: {briefing}, and follow output instructions: {output}."
+    body = f"Today is {date}. You're the VP of Communications crafting a {type}, aimed at {persona}. Go for a moderately upbeat, engaging, straight-to-the-point style, skip traditional formalities. Reference briefing: {briefing}, and follow output instructions: {output}."
     return body
 
 

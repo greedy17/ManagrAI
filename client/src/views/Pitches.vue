@@ -349,7 +349,13 @@ export default {
   created() {
     if (this.$store.state.generatedContent) {
       this.briefing = this.$store.state.generatedContent.summary
-      this.output = `Create content based on this recent news summary for ${this.$store.state.generatedContent.term}`
+        .split('<strong>')
+        .filter((item) => item !== '<strong>')
+        .join('')
+        .split('</strong>')
+        .filter((item) => item !== '</strong>')
+        .join('')
+      this.output = `Create content for ${this.$store.state.generatedContent.term}`
     }
   },
   beforeDestroy() {
@@ -433,7 +439,7 @@ export default {
     scrollToTop() {
       setTimeout(() => {
         this.$refs.pitchTop.scrollIntoView({ behavior: 'smooth' })
-      }, 300)
+      }, 450)
     },
     openPaidModal() {
       this.paidModal = true
@@ -765,6 +771,7 @@ export default {
 }
 
 .pitch-container {
+  padding-top: 48px;
   width: 50%;
   display: flex;
   flex-direction: column;
@@ -798,7 +805,7 @@ export default {
   background-color: white;
   width: 100vw;
   height: 100vh;
-  padding: 12px 36px 0 36px;
+  padding: 0 36px 0 36px;
   display: flex;
   overflow-y: scroll;
   font-family: $base-font-family;
@@ -936,6 +943,7 @@ footer {
 }
 
 .blue-bg {
+  padding-top: 66px;
   background-color: $white-blue;
 }
 
