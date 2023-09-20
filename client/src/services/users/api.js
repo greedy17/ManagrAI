@@ -454,7 +454,6 @@ export default class UserAPI {
     const url = GET_USER_ENDPOINT(userId)
     try {
       const response = await this.client.get(url)
-      console.log('response', response)
       return this.cls.fromAPI(response.data)
     } catch (e) {
       console.log(e)

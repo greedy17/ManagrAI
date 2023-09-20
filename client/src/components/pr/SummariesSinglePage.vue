@@ -19,7 +19,7 @@
           <div class="pointer" @click="closeRegenModal"><small>X</small></div>
         </div>
         <div class="regen-body">
-          <div v-if="!searchSaved">
+          <div v-if="!searchSaved && mainView !== 'website'">
             <div>
               <h5 class="regen-body-title">Search term</h5>
               <!-- <span class="regen-header-subtitle"
@@ -171,7 +171,12 @@
           </p>
         </div>
         <div class="area-container">
-          <div style="margin-bottom: 30px" class="input-container" v-clickOutsideMenu>
+          <div
+            v-if="mainView !== 'website'"
+            style="margin-bottom: 30px"
+            class="input-container"
+            v-clickOutsideMenu
+          >
             <div class="input-row">
               <div style="border-right: none" class="main-text">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -281,7 +286,7 @@
             <button
               v-else
               @click="getSourceSummary()"
-              :disabled="!additionalSources || !newSearch"
+              :disabled="!additionalSources"
               class="primary-button"
             >
               Generate Summary
@@ -341,6 +346,16 @@
                         ? 'Regenerate'
                         : 'New Search'
                     }}
+                  </button>
+                  <button @click="setPitchContent" class="lightblue-button">
+                    Generate Content
+                    <img
+                      v-if="contentLoading"
+                      src="@/assets/images/loading.svg"
+                      class="rotate"
+                      height="12px"
+                      alt=""
+                    />
                   </button>
                   <button
                     @click="toggleSaveName"
@@ -407,6 +422,7 @@
         </div>
 
         <div
+          ref="topDivider"
           v-if="
             ((filteredArticles && filteredArticles.length) || (tweets && tweets.length)) && !loading
           "
@@ -532,7 +548,9 @@
                       <span>Followers</span>
                     </small>
                     <span class="divier-dot">.</span>
-                    <span class="off-gray time">{{ getTimeDifferenceInMinutes(tweet.created_at) }}</span>
+                    <span class="off-gray time">{{
+                      getTimeDifferenceInMinutes(tweet.created_at)
+                    }}</span>
                   </div>
 
                   <!-- <button class="tertiary-button" @click="addClip(tweet)">
@@ -569,7 +587,11 @@
                   </div>
 
                   <!-- <div @click="goToArticle(article.url)"> -->
-                    <img @click="goToArticle(article.url)" :src="article.urlToImage" class="cover-photo" />
+                  <img
+                    @click="goToArticle(article.url)"
+                    :src="article.urlToImage"
+                    class="cover-photo"
+                  />
                   <!-- </div> -->
                 </header>
 
@@ -722,6 +744,7 @@ export default {
   },
   data() {
     return {
+      contentLoading: false,
       addedClips: [],
       ShowReport: false,
       showingPromptDropdown: false,
@@ -755,7 +778,7 @@ export default {
       filteredArticles: [],
       summary: '',
       booleanString: null,
-      metaData: { clips: [], },
+      metaData: { clips: [] },
       newSummary: false,
       addingPrompt: false,
       addingSources: false,
@@ -778,7 +801,7 @@ export default {
         `Summarize news from this week and how it impacts XXX`,
         'Highlight the top 3 news story and the impact it has on XXX',
         "As XXX's PR agency, provide suggestions based on this news",
-        "Craft short responses as the VP of PR for XXX to the stories that need it",
+        'Craft short responses as the VP of PR for XXX to the stories that need it',
         `Write a highly engaging LinkedIn post based on this coverage for XXX`,
         `Draft an entertaining Twitter post based on this coverage for XXX`,
         'Newsjack this coverage and turn into a blog post on behalf of XXX',
@@ -789,9 +812,7 @@ export default {
       ],
     }
   },
-  created() {
-
-  },
+  created() {},
   watch: {
     typedMessage: 'changeIndex',
     currentSearch(newVal, oldVal) {
@@ -804,6 +825,20 @@ export default {
     // this.updateMessage()
   },
   methods: {
+    setPitchContent() {
+      this.contentLoading = true
+      let content = {
+        summary: this.summary,
+        term: this.newSearch,
+      }
+      this.$store.commit('setGeneratedContent', content)
+      setTimeout(() => {
+        this.$router.push({ name: 'Pitches' })
+      }, 500)
+      setTimeout(() => {
+        this.contentLoading = false
+      }, 750)
+    },
     clearClips() {
       this.addedClips = []
       this.metaData = { clips: [] }
@@ -814,7 +849,7 @@ export default {
       const newClips = this.addedClips.filter((clip) => clip.title !== title)
       this.addedClips = newClips
       if (this.currentSearch) {
-        this.metaData = {...this.currentSearch.meta_data, clips: newClips}
+        this.metaData = { ...this.currentSearch.meta_data, clips: newClips }
         this.updateMetaData()
       }
     },
@@ -833,7 +868,7 @@ export default {
       if (this.addedClips && this.addedClips.length < 20) {
         this.addedClips.push(clip)
         if (this.currentSearch) {
-          this.metaData = {...this.currentSearch.meta_data, clips: this.addedClips}
+          this.metaData = { ...this.currentSearch.meta_data, clips: this.addedClips }
           this.updateMetaData()
         }
       } else {
@@ -847,7 +882,7 @@ export default {
       newClips.unshift(clip)
       this.addedClips = newClips
       if (this.currentSearch) {
-        this.metaData = {...this.currentSearch.meta_data, clips: newClips}
+        this.metaData = { ...this.currentSearch.meta_data, clips: newClips }
         this.updateMetaData()
       }
     },
@@ -984,6 +1019,11 @@ export default {
         this.$refs.loadedContent.scrollIntoView({ behavior: 'smooth' })
       }, 300)
     },
+    scrollToTopDivider() {
+      setTimeout(() => {
+        this.$refs.topDivider.scrollIntoView({ behavior: 'smooth' })
+      }, 300)
+    },
     removeSource() {
       this.additionalSources = ''
       this.addingSources = !this.addingSources
@@ -1031,13 +1071,14 @@ export default {
       window.open('https://managr.ai/contact', '_blank')
     },
     async generateNewSearch() {
+      console.log('HERE !!!!!!')
       if (!this.isPaid && this.searchesUsed >= 10) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
         return
       }
-      if (!this.newSearch || this.newSearch.length < 3) {
+      if (this.mainView !== 'website' && (!this.newSearch || this.newSearch.length < 3)) {
         return
       } else if (this.mainView === 'social') {
         this.getTweets()
@@ -1071,11 +1112,9 @@ export default {
       this.summaryLoading = true
       try {
         await Comms.api
-          .getArticleSummary({
+          .getWebSummary({
             url: this.additionalSources,
-            search: this.newSearch,
             instructions: this.newTemplate || null,
-            length: 1500,
           })
           .then((response) => {
             this.summary = response.summary
@@ -1337,7 +1376,7 @@ export default {
         this.showArticleRegenerate = false
         this.articleSummaryLoading = false
         this.loadingUrl = null
-        this.scrollToTop()
+        this.scrollToTopDivider()
       }
     },
     changeSummaryChat(type) {
@@ -1885,6 +1924,19 @@ button:disabled {
   img {
     filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
     margin-right: 8px;
+  }
+}
+
+.lightblue-button {
+  @include dark-blue-button();
+  padding: 8px 12px;
+  border: 0.5px solid $dark-black-blue;
+  color: $dark-black-blue;
+  background-color: $white-blue;
+  margin-right: 1rem;
+  img {
+    // filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
+    margin-left: 8px;
   }
 }
 
@@ -2872,7 +2924,6 @@ header {
   background-color: #f2f2f2;
   border-radius: 6px;
   margin-left: 16px;
-  
 }
 
 .content {
