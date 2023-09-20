@@ -81,7 +81,7 @@ class UserQuerySet(models.QuerySet):
             if user.user_level == core_consts.USER_LEVEL_MANAGER or (
                 user.user_level == core_consts.USER_LEVEL_REP and user.role == "PR"
             ):
-                return self.filter(organization=user.organization, is_active=True)
+                return self.filter(organization=user.organization)
             if user.user_level == core_consts.USER_LEVEL_REP:
                 return self.filter(id=user.id)
             elif user.user_level == core_consts.USER_LEVEL_SDR:
