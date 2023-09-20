@@ -15,6 +15,7 @@
 
       <FormField
         type="email"
+        id="emailfield"
         @blur="loginForm.field.email.validate()"
         v-model="loginForm.field.email.value"
         placeholder="Email address"
@@ -22,6 +23,7 @@
       />
       <PulseLoadingSpinner v-if="loggingIn" />
       <FormField
+        id="passwordfield"
         @blur="loginForm.field.password.validate()"
         v-on:keyup.enter.native="handleLoginAttempt"
         :errors="loginForm.field.password.errors"
@@ -162,13 +164,12 @@ export default {
     }
   },
   async mounted() {
-    const googleInitData = await User.api.googleInit()
-    window.google.accounts.id.initialize({
-      client_id: googleInitData.client_id,
-      callback: this.onGoogleSignIn,
-      login_uri: googleInitData.login_uri,
-    })
-
+    // const googleInitData = await User.api.googleInit()
+    // window.google.accounts.id.initialize({
+    //   client_id: googleInitData.client_id,
+    //   callback: this.onGoogleSignIn,
+    //   login_uri: googleInitData.login_uri,
+    // })
     // Attach event listener to the custom button
     // const customButton = document.getElementById('custom-google-signin-button');
     // customButton.addEventListener('click', this.signInWithGoogle);

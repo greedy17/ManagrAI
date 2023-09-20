@@ -1020,6 +1020,7 @@ class UserViewSet(
     @action(
         methods=["get"],
         permission_classes=[permissions.AllowAny],
+        authentication_classes=[],
         detail=False,
         url_path="retrieve-email",
     )
@@ -1058,6 +1059,7 @@ class UserViewSet(
     @action(
         methods=["post"],
         permission_classes=[permissions.AllowAny],
+        authentication_classes=[],
         detail=True,
         url_path="activate",
     )
