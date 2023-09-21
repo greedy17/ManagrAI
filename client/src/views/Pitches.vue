@@ -356,6 +356,7 @@ export default {
         .filter((item) => item !== '</strong>')
         .join('')
       this.output = `Create content for ${this.$store.state.generatedContent.term}`
+      this.type = this.$store.state.generatedContent.type
     }
   },
   beforeDestroy() {
