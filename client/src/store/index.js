@@ -523,21 +523,16 @@ const actions = {
     await User.api.logout()
   },
   async refreshCurrentUser({ state, dispatch, commit }) {
-    console.log(1)
     if (!state.token) {
       return null
     }
-    console.log(2)
     // const decryptedUser = decryptData(state.user, process.env.VUE_APP_SECRET_KEY)
     const decryptedUser = state.user
-    console.log(3)
     try {
       const user = await User.api.getUser(decryptedUser.id)
-      console.log(4)
       // const encrypted = encryptData(user, process.env.VUE_APP_SECRET_KEY)
       // commit('UPDATE_USER', encrypted)
       commit('UPDATE_USER', user)
-      console.log(5)
     } catch(e) {
       console.log('e refreshUser', e.response)
       // if (e.response.status === 401 && e.response.data.detail === 'Token expired') {

@@ -235,9 +235,7 @@ export default {
     async retrieveEmail(code) {
       this.isLoading = true
       try {
-        console.log('code', code)
         const res = await User.api.retrieveEmail(code)
-        console.log('res retrieveEmail', res)
         this.registrationForm.field.email.value = res.data.email
         this.registrationForm.field.organizationName.value = res.data.organization
         this.registrationForm.field.role.value = res.data.role
