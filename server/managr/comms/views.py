@@ -523,10 +523,11 @@ class PitchViewSet(
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
+            readSerializer = self.serializer_class(instance=serializer.instance)
         except Exception as e:
             logger.exception(f"Error validating data for pitch <{e}>")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
-        return Response(status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
 
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()

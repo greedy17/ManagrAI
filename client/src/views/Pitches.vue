@@ -268,25 +268,49 @@
 
               <button @click="regeneratePitch" class="primary-button">Regenerate</button>
             </div>
-            <button
-              @click="toggleSaveName"
-              v-if="!regenerating"
-              :disabled="
-                loading ||
-                savingPitch ||
-                pitchSaved
-              "
-              class="primary-button no-mar"
-            >
-              <img
-                v-if="savingPitch"
-                class="rotate"
-                height="12px"
-                src="@/assets/images/loading.svg"
-                alt=""
-              />
-              {{ savingPitch ? 'Saving' : 'Save' }}
-            </button>
+            <div class="save-wrapper" v-if="!loading && !savingPitch && !pitchSaved">
+              <button
+                @click="toggleSaveName"
+                v-if="!regenerating"
+                :disabled="
+                  loading ||
+                  savingPitch ||
+                  pitchSaved
+                "
+                class="primary-button no-mar"
+              >
+                <img
+                  v-if="savingPitch"
+                  class="rotate"
+                  height="12px"
+                  src="@/assets/images/loading.svg"
+                  alt=""
+                />
+                {{ savingPitch ? 'Saving' : 'Save' }}
+              </button>
+              <div style="margin-left: -50px" class="save-tooltip">Save a new version</div>
+            </div>
+            <div v-else>
+              <button
+                @click="toggleSaveName"
+                v-if="!regenerating"
+                :disabled="
+                  loading ||
+                  savingPitch ||
+                  pitchSaved
+                "
+                class="primary-button no-mar"
+              >
+                <img
+                  v-if="savingPitch"
+                  class="rotate"
+                  height="12px"
+                  src="@/assets/images/loading.svg"
+                  alt=""
+                />
+                {{ savingPitch ? 'Saving' : 'Save' }}
+              </button>
+            </div>
           </div>
           
           <div v-else class="row">
@@ -297,17 +321,17 @@
               v-model="pitchName"
             />
 
-            <button
-              @click="createSavedPitch"
-              :disabled="
-                loading ||
-                savingPitch ||
-                pitchSaved
-              "
-              class="primary-button"
-            >
-              Save
-            </button>
+              <button
+                @click="createSavedPitch"
+                :disabled="
+                  loading ||
+                  savingPitch ||
+                  pitchSaved
+                "
+                class="primary-button"
+              >
+                Save
+              </button>
           </div>
 
           <div @click="copyText" v-if="!regenerating" class="wrapper">
@@ -521,12 +545,13 @@ export default {
             content: this.briefing,
             instructions: this.output,
           }
+          await this.$store.dispatch('getPitches')
         }
       } catch (e) {
         console.log(e)
       } finally {
+        // this.showUpdateBanner = true
         this.savingPitch = false
-        this.$store.dispatch('getPitches')
         setTimeout(() => {
           // this.showUpdateBanner = false
         }, 2000)
@@ -1142,6 +1167,90 @@ footer {
 }
 
 .lte8 .wrapper:hover .tooltip {
+  display: block;
+}
+
+.save-wrapper {
+  display: flex;
+  align-items: center;
+  // background-color: red;
+  font-family: $thin-font-family;
+  font-size: 14px;
+  position: relative;
+  text-align: center;
+  -webkit-transform: translateZ(0); /* webkit flicker fix */
+  -webkit-font-smoothing: antialiased; /* webkit text rendering fix */
+}
+
+.save-wrapper .save-tooltip {
+  background: $dark-black-blue;
+  border-radius: 4px;
+  bottom: 100%;
+  color: #fff;
+  display: block;
+  left: 15px;
+  margin-bottom: 15px;
+  opacity: 0;
+  padding: 8px;
+  pointer-events: none;
+  position: absolute;
+  width: 130px;
+  -webkit-transform: translateY(10px);
+  -moz-transform: translateY(10px);
+  -ms-transform: translateY(10px);
+  -o-transform: translateY(10px);
+  transform: translateY(10px);
+  -webkit-transition: all 0.25s ease-out;
+  -moz-transition: all 0.25s ease-out;
+  -ms-transition: all 0.25s ease-out;
+  -o-transition: all 0.25s ease-out;
+  transition: all 0.25s ease-out;
+  -webkit-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -moz-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -ms-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -o-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+}
+
+/* This bridges the gap so you can mouse into the save-tooltip without it disappearing */
+.save-wrapper .save-tooltip:before {
+  bottom: -20px;
+  content: ' ';
+  display: block;
+  height: 20px;
+  left: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.save-wrapper .save-tooltip:after {
+  border-left: solid transparent 10px;
+  border-right: solid transparent 10px;
+  border-top: solid $dark-black-blue 10px;
+  bottom: -10px;
+  content: ' ';
+  height: 0;
+  left: 50%;
+  margin-left: -13px;
+  position: absolute;
+  width: 0;
+}
+
+.save-wrapper:hover .save-tooltip {
+  opacity: 1;
+  pointer-events: auto;
+  -webkit-transform: translateY(0px);
+  -moz-transform: translateY(0px);
+  -ms-transform: translateY(0px);
+  -o-transform: translateY(0px);
+  transform: translateY(0px);
+}
+
+.lte8 .save-wrapper .save-tooltip {
+  display: none;
+}
+
+.lte8 .save-wrapper:hover .save-tooltip {
   display: block;
 }
 
