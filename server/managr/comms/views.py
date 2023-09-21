@@ -515,6 +515,9 @@ class PitchViewSet(
 ):
     serializer_class = PitchSerializer
 
+    def get_queryset(self):
+        return Pitch.objects.filter(user=self.request.user)
+
     def create(self, request, *args, **kwargs):
         try:
             serializer = self.serializer_class(data=request.data)

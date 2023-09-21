@@ -214,7 +214,7 @@
 
       <footer>
         <button :disabled="loading" @click="clearData" class="secondary-button">Clear</button>
-        <button :disabled="loading" @click="generatePitch" class="primary-button">
+        <button :disabled="loading || !this.output" @click="generatePitch" class="primary-button">
           <img
             v-if="loading"
             class="rotate"
@@ -393,7 +393,13 @@ export default {
       savedPitch: null,
     }
   },
-  watch: {},
+  watch: {
+    currentPitch(newVal, oldVal) {
+      if (newVal.id !== (oldVal ? oldVal.id : null)) {
+        this.setPitch(newVal)
+      }
+    },
+  },
   created() {},
   methods: {
     async copyText() {
@@ -520,7 +526,7 @@ export default {
         console.log(e)
       } finally {
         this.savingPitch = false
-        // this.$store.dispatch('getSearches')
+        this.$store.dispatch('getPitches')
         setTimeout(() => {
           // this.showUpdateBanner = false
         }, 2000)
@@ -566,6 +572,8 @@ export default {
             this.scrollToTop()
           }).then((response) => {
             this.refreshUser()
+          }).then(response => {
+            this.$store.dispatch('getPitches')
           })
       } catch (e) {
         console.log('ERROR CREATING PITCH', e)
@@ -574,6 +582,14 @@ export default {
         this.loading = false
         this.scrollToTop()
       }
+    },
+    setPitch(pitch) {
+      this.pitch = pitch.generated_pitch
+      this.type = pitch.type
+      this.output = pitch.instructions
+      this.persona = pitch.audience
+      this.briefing = pitch.content
+      // this.generatePitch()
     },
     refreshUser() {
       User.api
@@ -652,12 +668,17 @@ export default {
       }
       return arr.length
     },
+    currentPitch() {
+      return this.$store.state.currentPitch
+    },
     pitchSaved() {
       if (
         this.savedPitch &&
         this.pitch &&
         this.savedPitch.generated_pitch === this.pitch
       ) {
+        return true
+      } else if (this.pitch && this.currentPitch && this.currentPitch.generated_pitch === this.pitch) {
         return true
       } else {
         return false
@@ -1389,5 +1410,8 @@ footer {
 }
 .no-mar {
   margin: 0;
+}
+.primary-button:disabled {
+  background-color: $soft-gray;
 }
 </style>

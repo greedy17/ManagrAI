@@ -56,7 +56,9 @@ const state = {
   currentTask: null,
   meetingBeingProcessed: '',
   allSearches: [],
+  allPitches: [],
   currentSearch: null,
+  currentPitch: null,
   tempRefreshUser: null,
 }
 
@@ -127,6 +129,9 @@ const mutations = {
   SAVE_SEARCHES(state, searches) {
     state.allSearches = searches
   },
+  SAVE_PITCHES(state, pitches) {
+    state.allPitches = pitches
+  },
   SAVE_TEMPLATES(state, templates) {
     state.templates = templates
   },
@@ -150,6 +155,9 @@ const mutations = {
   },
   SET_SEARCH: (state, payload) => {
     state.currentSearch = payload
+  },
+  SET_PITCH: (state, payload) => {
+    state.currentPitch = payload
   },
   SET_MEETING: (state, payload) => {
     state.currentMeeting = payload
@@ -276,8 +284,19 @@ const actions = {
       console.log(e)
     }
   },
+  async getPitches({ commit }) {
+    try {
+      const response = await Comms.api.getPitches()
+      commit('SAVE_PITCHES', response.results)
+    } catch (e) {
+      console.log(e)
+    }
+  },
   setSearch({ commit }, search) {
     commit('SET_SEARCH', search)
+  },
+  setPitch({ commit }, pitch) {
+    commit('SET_PITCH', pitch)
   },
   setCurrentView({ commit }, view) {
     commit('SET_VIEW', view)
@@ -598,7 +617,7 @@ export default new Vuex.Store({
   getters,
   plugins: [
     createPersistedState({
-      paths: ['user', 'token', 'chatTitle', 'currentView', 'currentTask', 'meetingBeingProcessed']
+      paths: ['user', 'token',]
     })
   ],
 })
