@@ -519,7 +519,6 @@ export default class UserAPI {
       token,
       user_id: userId,
     }
-    console.log('data', data)
     try {
       const res = await this.client.post(url, data)
       return res

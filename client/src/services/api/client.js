@@ -29,7 +29,6 @@ export function apiClient() {
       return response;
     },
     (error) => {
-      // console.log('hi error', error.response, error.response.status === 401, error.response.data.detail === 'Token expired')
       if (error.response.status === 401 && error.response.data.detail === 'Token expired') {
         // Handle the 401 Unauthorized error here
         // For example, you can log the user out or show an error message
@@ -43,12 +42,9 @@ export function apiClient() {
         // }
         // const user = store.getters.user
         // const token = store.getters.token
-        // console.log('user', user)
-        // console.log('token', token)
         // call refresh token endpoint
         // User.api.refreshToken(token, user && user.id ? user.id : tempUser.id).then((res) => {
         //   // with token, insert into store
-        //   console.log('res', res)
         //   store.dispatch('updateUserToken', res.token).then(() => {
         //     store.dispatch('updateUser', tempUser).then(() => {
         //       // refresh user

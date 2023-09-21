@@ -388,7 +388,6 @@ export default {
           meeting_id: this.selectedMeeting.id,
           user_id: this.$store.state.user.id,
         })
-        console.log('hi there', res)
         this.hasTranscript = res.has_transcript
         this.generateTranscript()
         // this.hasTranscript = false

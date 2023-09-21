@@ -185,7 +185,6 @@ export default {
   },
   async created() {
     const validCode = this.$route.params.validCode
-    console.log(this.$route.params)
 
     // if (!validCode && !this.$route.query.code) {
     //   this.$router.push({

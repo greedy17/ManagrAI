@@ -185,7 +185,6 @@ export default {
   },
   computed: {
     isPaid() {
-      console.log('this.$store', this.$store.state.user)
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.organizationRef.isPaid
     },

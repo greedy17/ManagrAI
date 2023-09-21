@@ -460,7 +460,6 @@ export default {
       return initials
     },
     selectSearch(search) {
-      console.log('search', search)
       this.toggleShowSearches()
       this.$store.dispatch('setSearch', search)
     },

@@ -163,7 +163,6 @@ const mutations = {
     state.meetingData[id] = newData
   },
   EDIT_MEETING: (state, { id, updated }) => {
-    console.log(id, updated, '222222')
     let newData
     newData = state.meetingData[id]
     newData['updated'] = updated
@@ -290,7 +289,6 @@ const actions = {
     commit('SET_OPP', opp)
   },
   editMeeting({ commit }, { id, updated }) {
-    console.log(id, updated, '1111')
     commit('EDIT_MEETING', { id, updated })
   },
   editMessages({ commit }, {
@@ -315,7 +313,6 @@ const actions = {
     })
   },
   setMeetingData({ commit }, { id, data }) {
-    console.log(id, data)
     commit('SET_MEETING_DATA', { id, data })
   },
   removeMessage({ commit }, id) {
@@ -503,7 +500,6 @@ const actions = {
     commit('UPDATE_RECORD_TYPES', res)
   },
   updateUser({ commit }, payload) {
-    console.log('payload', payload)
     commit('UPDATE_USER', payload)
   },
   updateTempRefreshUser({ commit }, payload) {
@@ -548,12 +544,9 @@ const actions = {
         // }
         // const user = state.user
         // const token = state.token
-        // console.log('user', user)
-        // console.log('token', token)
         // // call refresh token endpoint
         // User.api.refreshToken(token, user && user.id ? user.id : tempUser.id).then((res) => {
         //   // with token, insert into store
-        //   console.log('res', res)
         //   dispatch('updateUserToken', res.token).then(() => {
         //     // refresh user
         //     dispatch('updateTempRefreshUser', null)
@@ -584,7 +577,6 @@ const getters = {
     if (state.token) {
       // decryptedKey = decryptData(state.token, process.env.VUE_APP_SECRET_KEY)
     }
-    // console.log('isLoggedIn', decryptedKey, decryptedUser)
     // return !!(decryptedKey && decryptedUser)
     return !!(state.user && state.token)
   },

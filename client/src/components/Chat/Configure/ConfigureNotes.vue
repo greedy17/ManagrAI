@@ -489,7 +489,6 @@ export default {
     //   }
     // },
     saveNoteModal() {
-      console.log('this.createEditType', this.createEditType)
       if (!this.editSubject || !this.editBody) {
         this.$toast('Please fill out title and body', {
           timeout: 2000,
@@ -501,7 +500,6 @@ export default {
         return
       }
       if (this.createEditType === 'create') {
-        console.log('hit here')
         this.createTemplate()
       } else {
         this.selectedTemplate.subject = this.editSubject
@@ -513,12 +511,6 @@ export default {
     async createTemplate() {
       this.savingTemplate = true
       try {
-        console.log('why do you refresh', {
-          subject: this.editSubject,
-          body: this.editBody,
-          is_shared: this.editShared,
-          user: this.user.id,
-        })
         const res = await User.api.createTemplate({
           subject: this.editSubject,
           body: this.editBody,

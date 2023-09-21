@@ -792,7 +792,6 @@ export default {
       return option ? option.label : value
     },
     getReadableOperandRow(rowData) {
-      console.log(rowData)
       let operandOperator = rowData.operandOperator
       let value = rowData.operandValue
       let valuePromise = ''
