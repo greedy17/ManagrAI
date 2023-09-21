@@ -288,7 +288,7 @@
                 />
                 {{ savingPitch ? 'Saving' : 'Save' }}
               </button>
-              <div style="margin-left: -50px" class="save-tooltip">Save a new version</div>
+              <div style="margin-left: -50px" class="save-tooltip">Save this version</div>
             </div>
             <div v-else>
               <button
