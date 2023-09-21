@@ -266,15 +266,15 @@
             </div>
           </div>
 
-          <div @click="copyText" v-if="!regenerating" class="wrapper">
+          <div @click="copyText" v-if="!regenerating" class="wrapper circle-border">
             <img
               style="cursor: pointer"
               class="right-mar img-highlight"
               src="@/assets/images/clipboard.svg"
-              height="16px"
+              height="12px"
               alt=""
             />
-            <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
+            <div style="margin-left: -14px" class="tooltip">{{ copyTip }}</div>
           </div>
         </div>
 
@@ -1287,5 +1287,18 @@ footer {
 }
 .content {
   // width: 80%;
+}
+
+.circle-border {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 100%;
+  padding: 5px 6px;
+  background-color: $white-blue;
+  img {
+    margin: 0 !important;
+  }
 }
 </style>

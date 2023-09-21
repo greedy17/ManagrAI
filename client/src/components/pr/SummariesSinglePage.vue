@@ -3336,11 +3336,11 @@ header {
 }
 
 .searches-container {
-  max-height: 250px;
+  max-height: 300px;
   overflow-y: scroll;
   scroll-behavior: smooth;
   // margin-bottom: 1rem;
-  padding: 0.5rem 0;
+  padding: 1rem 0;
   @media only screen and (max-width: 600px) {
     font-size: 13px;
     p {
