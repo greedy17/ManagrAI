@@ -185,7 +185,6 @@ export default {
   },
   async created() {
     const validCode = this.$route.params.validCode
-    console.log(this.$route.params)
 
     // if (!validCode && !this.$route.query.code) {
     //   this.$router.push({
@@ -235,9 +234,7 @@ export default {
     async retrieveEmail(code) {
       this.isLoading = true
       try {
-        console.log('code', code)
         const res = await User.api.retrieveEmail(code)
-        console.log('res retrieveEmail', res)
         this.registrationForm.field.email.value = res.data.email
         this.registrationForm.field.organizationName.value = res.data.organization
         this.registrationForm.field.role.value = res.data.role

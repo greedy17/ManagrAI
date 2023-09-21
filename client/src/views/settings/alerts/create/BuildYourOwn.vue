@@ -1011,7 +1011,6 @@ export default {
     },
     userCRM() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      console.log('this.$stote', this.$store)
       return this.$store.state.user.crm
     },
     alertFrequency: {

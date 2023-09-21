@@ -50,39 +50,6 @@ export default class ConversationsAPI {
     //   }
     // }
 
-    async createConversation(data) {
-      try {
-        console.log('Create Conversation', data)
-        // const res = await this.client.post(`conversations/`, { data })
-        // return res.data
-      } catch (e) {
-        console.log('Error in createConversation/conversations', e)
-        // apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
-      }
-    }
-
-    editConversation(data) {
-      try {
-        console.log('Edit Conversation', data)
-        // const res = await this.client.patch(`conversations/${id}/`, { data })
-        // return res.data
-      } catch (e) {
-        console.log('Error in editConversation/conversations', e)
-        // apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
-      }
-    }
-
-    deleteConversation(id) {
-      try {
-        console.log('Delete Conversation', id)
-        // const res = await this.client.delete(`conversations/`, { id })
-        // return res.data
-      } catch (e) {
-        console.log('Error in deleteConversation/conversations', e)
-        // apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
-      }
-    }
-
     async sendMessage(id, data) {
       try {
         console.log('sent message', data)
@@ -103,15 +70,4 @@ export default class ConversationsAPI {
         // apiErrorHandler({ apiName: 'AlertTemplateAPI.UpdateAlertTemplate' })(e)
       }
     }
-
-    // deleteMessage(id) {
-    //   try {
-    //     console.log('Delete Message', id)
-    //     // const res = await this.client.delete(`conversations/${id}/`, { id })
-    //     // return res.data
-    //   } catch (e) {
-    //     console.log('Error in deleteMessage/conversations', e)
-    //     // apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
-    //   }
-    // }
 }

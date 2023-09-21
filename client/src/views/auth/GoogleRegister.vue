@@ -225,9 +225,6 @@ export default {
     }
   },
   methods: {
-    test() {
-      console.log(this.registrationForm.field.timezone.value)
-    },
     async onGetAuthLink(integration) {
       this.generatingToken = true
       this.selectedCrm = integration

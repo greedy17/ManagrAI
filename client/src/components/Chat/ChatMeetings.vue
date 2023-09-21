@@ -241,7 +241,7 @@
 
       <div class="meeting-block" v-for="(meeting, i) in meetings" :key="i">
         <div class="relative">
-          <p @click="test">
+          <p>
             {{ meeting.meeting_ref.topic }}
           </p>
 
@@ -435,9 +435,6 @@ export default {
     }
   },
   methods: {
-    test() {
-      console.log(this.meetings)
-    },
     toggleAnalysisModal(name, analysis) {
       this.analysisModalOpen = !this.analysisModalOpen
 
@@ -471,7 +468,6 @@ export default {
           meeting_id: this.currentMeeting.id,
         })
         if (res.status === 200) {
-          console.log(res)
           this.$store.dispatch('setMeetingData', {
             id: this.currentMeeting.id,
             data: res.data,

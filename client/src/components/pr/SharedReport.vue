@@ -104,7 +104,6 @@ export default {
         await User.api.getReport(code).then((response) => {
           this.report = response.data
           this.reportDate = response.date
-          console.log(this.report)
         })
       } catch (e) {
         console.log(e)

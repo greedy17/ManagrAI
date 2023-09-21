@@ -665,7 +665,6 @@ export default {
     } else {
       this.teamUsers = [this.user]
     }
-    console.log('teamUsers', this.teamUsers)
     this.userInviteForm = new UserInviteForm({
       role: User.roleChoices[0].key,
       userLevel: User.types.REP,
@@ -834,7 +833,6 @@ export default {
     },
     removeEmptyValues(obj) {
       for (let key in obj) {
-        console.log(!!obj.hasOwnProperty(key))
         if (obj.hasOwnProperty(key)) {
           if (obj[key] === null || obj[key] === undefined || obj[key] === '') {
             delete obj[key]
@@ -882,7 +880,6 @@ export default {
                   this.$refs.chatBox.clearSelectedAction()
                 })
             } else {
-              console.log(response)
               if (response.success) {
                 this.$refs.rightSideBar.updateBanner(true)
                 this.$refs.chatBox.clearSelectedAction()
@@ -1055,9 +1052,6 @@ export default {
       })
       this.slackMembers = results
     },
-    test() {
-      console.log(this.chatData.data)
-    },
     toggleSidebar() {
       this.$refs.sidebarRef.toggleSidebar()
     },
@@ -1074,7 +1068,6 @@ export default {
       this.configureModalOpen = true
 
       // setTimeout(() => {
-      //   console.log('name', name)
       //   this.$refs.configModal.changeConfigPage(name)
       // }, 300)
     },
@@ -1119,10 +1112,6 @@ export default {
       this.stageFields = fields
       this.stagesWithForms = stagesWithForms
     },
-
-    // handleInvite() {
-    //   console.log('handled')
-    // },
     removeOpp() {
       this.$refs.rightSideBar.deselectOpp()
     },

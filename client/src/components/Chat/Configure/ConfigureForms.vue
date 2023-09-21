@@ -1612,11 +1612,8 @@ export default {
       })
     },
     removeForms() {
-      // console.log('allForms', this.allForms)
       const stageForms = this.allForms.filter((form) => form.stage.trim().length)
-      console.log('stageForms', stageForms)
       this.allForms = stageForms.filter((form) => form.state === 'STAGE' || form.fieldsRef.length)
-      // console.log('allForms')
     },
     setStage(n) {
       if (!n) return
@@ -1636,7 +1633,6 @@ export default {
     },
     addForm(stage) {
       /** Method for Creating a new stage-gating form, this is only available for Opportunities at this time */
-      console.log('addForm')
       if (this.currentStagesWithForms.includes(stage)) {
         this.activeForm = this.formStages.find((form) => form.stage == stage)
       }

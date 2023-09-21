@@ -16,6 +16,22 @@
         </main>
       </div>
     </Modal>
+    <Modal v-if="deletePitchModelOpen" class="delete-modal">
+      <div class="delete-container">
+        <header @click="togglePitchDeleteModal">
+          <p>X</p>
+        </header>
+        <main>
+          <h2>Delete Pitch</h2>
+          <p>Are you sure you want to delete this pitch ?</p>
+
+          <div style="margin-top: 20px" class="row">
+            <button @click="togglePitchDeleteModal" class="tertiary-button">Cancel</button>
+            <button @click="deletePitch" class="red-button">Delete</button>
+          </div>
+        </main>
+      </div>
+    </Modal>
     <Transition name="slide-fade">
       <div v-if="showUpdateBanner" class="templates">
         <p>Search successfully deleted!</p>
@@ -95,6 +111,27 @@
               />
             </div>
 
+            <div
+              v-else-if="$route.name === 'Pitches'"
+              @click="toggleShowPitches"
+              class="row pointer nav-text"
+            >
+              Saved Pitches
+              <img
+                v-if="!showSavedPitches"
+                src="@/assets/images/downArrow.svg"
+                height="14px"
+                alt=""
+              />
+              <img
+                class="rotate-img"
+                v-else
+                src="@/assets/images/downArrow.svg"
+                height="14px"
+                alt=""
+              />
+            </div>
+
             <div v-if="showSavedSearches" class="search-dropdown">
               <div class="input">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -147,6 +184,67 @@
 
                   <img
                     @click="toggleDeleteModal(search)"
+                    v-if="hoverIndex === i"
+                    class="absolute-icon"
+                    src="@/assets/images/trash.svg"
+                    height="12px"
+                    alt=""
+                  />
+                </div>
+              </div>
+            </div>
+            <div v-if="showSavedPitches" class="search-dropdown">
+              <div class="input">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
+                    fill="currentColor"
+                  ></path>
+                </svg>
+                <input class="search-input" v-model="pitchText" :placeholder="`Search...`" />
+                <img
+                  v-show="pitchText"
+                  @click="clearText"
+                  src="@/assets/images/close.svg"
+                  class="invert pointer"
+                  height="12px"
+                  alt=""
+                />
+              </div>
+              <p class="v-margin" v-if="!pitches.length">Nothing here...</p>
+
+              <div class="searches-container">
+                <div
+                  @mouseenter="setIndex(i)"
+                  @mouseLeave="removeIndex"
+                  class="row relative"
+                  v-for="(pitch, i) in pitches"
+                  :key="pitch.id"
+                >
+                  <img
+                    class="search-icon invert"
+                    v-if="pitch.type === 'NEWS'"
+                    src="@/assets/images/memo.svg"
+                    height="12px"
+                    alt=""
+                    @click="selectPitch(pitch)"
+                  />
+                  <img
+                    class="search-icon"
+                    v-else-if="pitch.type === 'SOCIAL_MEDIA'"
+                    src="@/assets/images/comment.svg"
+                    height="12px"
+                    alt=""
+                    @click="selectPitch(pitch)"
+                  />
+                  <p @click="selectPitch(pitch)">
+                    {{ pitch.name }}
+                  </p>
+
+                  <img
+                    @click="togglePitchDeleteModal(pitch)"
                     v-if="hoverIndex === i"
                     class="absolute-icon"
                     src="@/assets/images/trash.svg"
@@ -348,6 +446,7 @@
 <script>
 import { CollectionManager } from '@thinknimble/tn-models'
 import { Comms } from '@/services/comms'
+import { Store } from 'vuex'
 
 export default {
   name: 'NavBar',
@@ -362,9 +461,13 @@ export default {
     return {
       items: [],
       searchText: '',
+      pitchText: '',
       showSavedSearches: false,
+      showSavedPitches: false,
       deleteModelOpen: false,
+      deletePitchModelOpen: false,
       selectedSearch: null,
+      selectedPich: null,
       soonText: 'Transcribe',
       hoverIndex: null,
       showUpdateBanner: false,
@@ -374,6 +477,7 @@ export default {
   },
   created() {
     this.getSearches()
+    this.getPitches()
   },
   directives: {
     clickOutsideMobileNav: {
@@ -405,6 +509,9 @@ export default {
   watch:{
     $route (to, from){
         this.hideMobileMenu()
+        this.showSavedPitches = false
+        this.showSavedSearches = false
+        this.$emit('close-menu')
     }
   },
   methods: {
@@ -433,6 +540,15 @@ export default {
       }
       this.deleteModelOpen = !this.deleteModelOpen
       this.showSavedSearches = false
+      this.showSavedPitches = false
+    },
+    togglePitchDeleteModal(pitch = null) {
+      if (pitch) {
+        this.selectedPitch = pitch
+      }
+      this.deletePitchModelOpen = !this.deletePitchModelOpen
+      this.showSavedSearches = false
+      this.showSavedPitches = false
     },
     async deleteSearch() {
       try {
@@ -453,6 +569,25 @@ export default {
         }, 2000)
       }
     },
+    async deletePitch() {
+      try {
+        await Comms.api
+          .deletePitch({
+            id: this.selectedPitch.id,
+          })
+          .then(() => {
+            this.$store.dispatch('getPitches')
+            this.deletePitchModelOpen = false
+            this.showUpdateBanner = true
+          })
+      } catch (e) {
+        console.log('ERROR DELETING PITCH', e)
+      } finally {
+        setTimeout(() => {
+          this.showUpdateBanner = false
+        }, 2000)
+      }
+    },
     getInitials() {
       const fullSplit = this.fullName.split(' ')
       let initials = ''
@@ -460,21 +595,29 @@ export default {
       return initials
     },
     selectSearch(search) {
-      console.log('search', search)
       this.toggleShowSearches()
       this.$store.dispatch('setSearch', search)
     },
+    selectPitch(pitch) {
+      this.toggleShowPitches()
+      this.$store.dispatch('setPitch', pitch)
+    },
     toggleShowSearches() {
+      this.$emit('close-menu')
       this.showSavedSearches = !this.showSavedSearches
+    },
+    toggleShowPitches() {
+      this.$emit('close-menu')
+      this.showSavedPitches = !this.showSavedPitches
     },
     getSearches() {
       this.$store.dispatch('getSearches')
     },
+    getPitches() {
+      this.$store.dispatch('getPitches')
+    },
     goHome() {
       this.$router.go()
-    },
-    toggleMenu() {
-      this.menuOpen = !this.menuOpen
     },
     logOut() {
       this.$store.dispatch('logoutUser')
@@ -483,10 +626,13 @@ export default {
       this.hideMobileMenu()
     },
     toggleMenu() {
+      this.showSavedPitches = false
+      this.showSavedSearches = false
       this.$emit('toggle-menu')
     },
     clearText() {
       this.searchText = ''
+      this.pitchText = ''
     },
     goToIntegrations() {
       this.$router.push({ name: 'PRIntegrations' })
@@ -505,10 +651,20 @@ export default {
     unfilteredSearches() {
       return this.$store.state.allSearches
     },
+    unfilteredPitches() {
+      return this.$store.state.allPitches
+    },
     searches() {
       if (this.unfilteredSearches.length) {
         return this.unfilteredSearches.filter((search) =>
           search.name.toLowerCase().includes(this.searchText.toLowerCase()),
+        )
+      } else return []
+    },
+    pitches() {
+      if (this.unfilteredPitches.length) {
+        return this.unfilteredPitches.filter((pitch) =>
+          pitch.name.toLowerCase().includes(this.pitchText.toLowerCase()),
         )
       } else return []
     },

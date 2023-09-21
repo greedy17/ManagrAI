@@ -93,7 +93,6 @@ export default {
       const res = await CRMObjects.api.resourceSync()
       setTimeout(() => {
         this.pulseLoadingForms = false
-        console.log('res', res)
         this.$store.dispatch('refreshCurrentUser')
         if (res.success) {
           this.$toast('Sync complete', {
