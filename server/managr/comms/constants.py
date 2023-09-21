@@ -77,7 +77,7 @@ def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, instructions, for_client=False
 
 
 OPEN_AI_TWITTER_SEARCH_CONVERSION = (
-    lambda search: f"""Convert the Search Term below into a valid Twitter search string.
+    lambda search: f"""Convert the Search Term below into a valid Twitter API query.
     Follow these steps in order to create the best possible search:
     1: Only use hashtag terms when given
     2: Only do user search when instructed
@@ -92,7 +92,7 @@ DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS = (
 )
 
 
-def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False,for_client=False):
+def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, for_client=False):
     body = f"Today's date is {date}  Summarize this news article:\n Article: {article}\n As it relates to {search} It cannot be longer than {length} characters. Output format must be:\n"
     if instructions:
         body += instructions
@@ -104,6 +104,7 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False,fo
         )
         body += default
     return body
+
 
 def OPEN_AI_PITCH(date, type, output, persona, briefing):
     body = f"Today is {date}. You are a VP of Communications tasked to generate a {type}, targeting {persona}. Reference briefing: {briefing} , and follow these output instructions: {output}."

@@ -249,3 +249,23 @@ class Pitch(TimeStampModel):
 
     def __str__(self):
         return f"{self.user.email} - {self.name}"
+
+    @classmethod
+    def generate_pitch(cls, user, type, instructions, audience, content, tokens, timeout):
+        url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+        prompt = comms_consts.OPEN_AI_PITCH(
+            datetime.now().date(), type, instructions, audience, content
+        )
+        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+            user.email,
+            prompt,
+            token_amount=tokens,
+            top_p=0.1,
+        )
+        with Variable_Client(timeout) as client:
+            r = client.post(
+                url,
+                data=json.dumps(body),
+                headers=core_consts.OPEN_AI_HEADERS,
+            )
+        return open_ai_exceptions._handle_response(r)

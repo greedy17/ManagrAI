@@ -282,12 +282,14 @@ class PRSearchViewSet(
                 if query_input is None:
                     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                     prompt = comms_consts.OPEN_AI_TWITTER_SEARCH_CONVERSION(search)
+
                     body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                         user.email,
                         prompt,
                         token_amount=500,
                         top_p=0.1,
                     )
+
                     with Variable_Client() as client:
                         r = client.post(
                             url,
@@ -296,6 +298,7 @@ class PRSearchViewSet(
                         )
                     r = open_ai_exceptions._handle_response(r)
                     query_input = r.get("choices")[0].get("message").get("content")
+                    query_input = query_input.replace("AND", " ")
                 tweet_res = TwitterAuthAccount.get_tweets(query_input, next_token)
                 tweets = tweet_res.get("data", None)
                 includes = tweet_res.get("includes", None)
@@ -552,6 +555,7 @@ class PitchViewSet(
         audience = request.data.get("audience")
         content = request.data.get("content")
         instructions = request.data.get("instructions")
+        pitch_id = request.data.get("pitch_id", False)
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -559,26 +563,15 @@ class PitchViewSet(
 
         while True:
             try:
-                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_PITCH(
-                    datetime.now().date(), type, instructions, audience, content
+                res = Pitch.generate_pitch(
+                    user, type, instructions, audience, content, token_amount, timeout
                 )
-                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                    user.email,
-                    prompt,
-                    token_amount=token_amount,
-                    top_p=0.1,
-                )
-                with Variable_Client(timeout) as client:
-                    r = client.post(
-                        url,
-                        data=json.dumps(body),
-                        headers=core_consts.OPEN_AI_HEADERS,
-                    )
-                r = open_ai_exceptions._handle_response(r)
-                pitch = r.get("choices")[0].get("message").get("content")
+                pitch = res.get("choices")[0].get("message").get("content")
+                if pitch_id:
+                    saved_pitch = Pitch.objects.get(id=pitch_id)
+                    saved_pitch.generate_pitch = pitch
+                    saved_pitch.save()
                 user.add_meta_data("pitches")
-
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
