@@ -19,7 +19,7 @@
           <div class="pointer" @click="closeRegenModal"><small>X</small></div>
         </div>
         <div class="regen-body">
-          <div v-if="!searchSaved">
+          <div v-if="!searchSaved && mainView !== 'website'">
             <div>
               <h5 class="regen-body-title">Search term</h5>
               <!-- <span class="regen-header-subtitle"
@@ -171,7 +171,12 @@
           </p>
         </div>
         <div class="area-container">
-          <div style="margin-bottom: 30px" class="input-container" v-clickOutsideMenu>
+          <div
+            v-if="mainView !== 'website'"
+            style="margin-bottom: 30px"
+            class="input-container"
+            v-clickOutsideMenu
+          >
             <div class="input-row">
               <div style="border-right: none" class="main-text">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -281,7 +286,7 @@
             <button
               v-else
               @click="getSourceSummary()"
-              :disabled="!additionalSources || !newSearch"
+              :disabled="!additionalSources"
               class="primary-button"
             >
               Generate Summary
@@ -342,6 +347,7 @@
                         : 'New Search'
                     }}
                   </button>
+
                   <button
                     @click="toggleSaveName"
                     v-if="(filteredArticles && filteredArticles.length) || tweets.length"
@@ -364,6 +370,16 @@
                     />
                     {{ savingSearch ? 'Saving' : 'Save' }}
                   </button>
+                  <!-- <button @click="setPitchContent" class="lightblue-button">
+                    Generate Content
+                    <img
+                      v-if="contentLoading"
+                      src="@/assets/images/loading.svg"
+                      class="rotate"
+                      height="12px"
+                      alt=""
+                    />
+                  </button> -->
                 </div>
 
                 <div v-else class="row">
@@ -389,24 +405,96 @@
                   </button>
                 </div>
 
-                <div @click="copyText" class="wrapper">
+                <div class="relative">
+                  <div @click="toggleGenerateDropdown" class="row pointer nav-text dropdownBorder">
+                    Generate Content
+                    <img
+                      v-if="!showGenerateDropdown"
+                      src="@/assets/images/downArrow.svg"
+                      height="14px"
+                      alt=""
+                    />
+                    <img
+                      class="rotate-img"
+                      v-else
+                      src="@/assets/images/downArrow.svg"
+                      height="14px"
+                      alt=""
+                    />
+                  </div>
+
+                  <div v-if="showGenerateDropdown" class="search-dropdown">
+                    <!-- <div class="input">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path
+                          fill-rule="evenodd"
+                          clip-rule="evenodd"
+                          d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
+                          fill="currentColor"
+                        ></path>
+                      </svg>
+                      <input class="search-input" placeholder="Search..." />
+                      <img
+                          v-show="searchText"
+                          @click="clearText"
+                          src="@/assets/images/close.svg"
+                          class="invert pointer"
+                          height="12px"
+                          alt=""
+                        />
+                    </div> -->
+                    <div class="searches-container">
+                      <div
+                        class="row relative"
+                        v-for="(option, i) in generateOptions"
+                        :key="option.value"
+                      >
+                        <p @click="selectOption(option.value, i)">
+                          {{ option.name }}
+                        </p>
+
+                        <img
+                          v-show="contentLoading && optionIndex === i"
+                          src="@/assets/images/loading.svg"
+                          class="rotate"
+                          height="12px"
+                          alt=""
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="width: 100%" class="relative">
+                <!-- <button class="secondary-button absolute-right" @click="copyText">
                   <img
                     style="cursor: pointer"
                     class="right-mar img-highlight"
                     src="@/assets/images/clipboard.svg"
-                    height="14px"
+                    height="10px"
                     alt=""
                   />
-                  <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
+                  {{ copyTip }}
+                </button> -->
+                <div @click="copyText" class="wrapper absolute-right circle-border">
+                  <img
+                    style="cursor: pointer"
+                    class="right-mar img-highlight"
+                    src="@/assets/images/clipboard.svg"
+                    height="12px"
+                    alt=""
+                  />
+                  <div style="margin-left: -22px" class="tooltip">{{ copyTip }}</div>
                 </div>
+                <pre class="pre-text" v-html="summary"></pre>
               </div>
-
-              <pre class="pre-text" v-html="summary"></pre>
             </div>
           </div>
         </div>
 
         <div
+          ref="topDivider"
           v-if="
             ((filteredArticles && filteredArticles.length) || (tweets && tweets.length)) && !loading
           "
@@ -532,7 +620,9 @@
                       <span>Followers</span>
                     </small>
                     <span class="divier-dot">.</span>
-                    <span class="off-gray time">{{ getTimeDifferenceInMinutes(tweet.created_at) }}</span>
+                    <span class="off-gray time">{{
+                      getTimeDifferenceInMinutes(tweet.created_at)
+                    }}</span>
                   </div>
 
                   <!-- <button class="tertiary-button" @click="addClip(tweet)">
@@ -569,7 +659,11 @@
                   </div>
 
                   <!-- <div @click="goToArticle(article.url)"> -->
-                    <img @click="goToArticle(article.url)" :src="article.urlToImage" class="cover-photo" />
+                  <img
+                    @click="goToArticle(article.url)"
+                    :src="article.urlToImage"
+                    class="cover-photo"
+                  />
                   <!-- </div> -->
                 </header>
 
@@ -627,16 +721,17 @@
                     <pre v-html="article.summary" class="pre-text"></pre>
                     <div
                       @click="copyArticleSummary(article.summary)"
-                      class="wrapper article-copy-container"
+                      class="wrapper article-copy-container circle-border"
+                      style="padding: 12px 6px; border: 0.5px solid #2f4656"
                     >
                       <img
                         style="cursor: pointer"
-                        class="right-mar img-highlight"
+                        class="img-highlight"
                         src="@/assets/images/clipboard.svg"
-                        height="14px"
+                        height="12px"
                         alt=""
                       />
-                      <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
+                      <div style="margin-left: -22px" class="tooltip">{{ copyTip }}</div>
                     </div>
                   </div>
 
@@ -722,6 +817,8 @@ export default {
   },
   data() {
     return {
+      optionIndex: null,
+      contentLoading: false,
       addedClips: [],
       ShowReport: false,
       showingPromptDropdown: false,
@@ -755,7 +852,7 @@ export default {
       filteredArticles: [],
       summary: '',
       booleanString: null,
-      metaData: { clips: [], },
+      metaData: { clips: [] },
       newSummary: false,
       addingPrompt: false,
       addingSources: false,
@@ -763,6 +860,17 @@ export default {
       articleSummaryLoading: false,
       paidModal: false,
       showingDropdown: false,
+      showGenerateDropdown: false,
+      selectedOption: null,
+      generateOptions: [
+        { name: 'Press Release', value: `Press Release` },
+        { name: 'Statement', value: 'Statement' },
+        { name: `Media Pitch`, value: `Media Pitch` },
+        { name: `Blog Post`, value: `Blog Post` },
+        { name: `LinkedIn Post`, value: `LinkedIn Post` },
+        { name: `Twitter Post`, value: `LinkedIn Post` },
+        { name: 'Email', value: 'Email' },
+      ],
       upgradeMessage: 'You have reached your usage limit for the month. Please upgrade your plan.',
       copyTip: 'Copy',
       searchSuggestions: [
@@ -778,7 +886,7 @@ export default {
         `Summarize news from this week and how it impacts XXX`,
         'Highlight the top 3 news story and the impact it has on XXX',
         "As XXX's PR agency, provide suggestions based on this news",
-        "Craft short responses as the VP of PR for XXX to the stories that need it",
+        'Craft short responses as the VP of PR for XXX to the stories that need it',
         `Write a highly engaging LinkedIn post based on this coverage for XXX`,
         `Draft an entertaining Twitter post based on this coverage for XXX`,
         'Newsjack this coverage and turn into a blog post on behalf of XXX',
@@ -789,9 +897,7 @@ export default {
       ],
     }
   },
-  created() {
-
-  },
+  created() {},
   watch: {
     typedMessage: 'changeIndex',
     currentSearch(newVal, oldVal) {
@@ -804,6 +910,31 @@ export default {
     // this.updateMessage()
   },
   methods: {
+    toggleGenerateDropdown() {
+      this.showGenerateDropdown = !this.showGenerateDropdown
+    },
+    selectOption(val, index) {
+      if (!this.contentLoading) {
+        this.optionIndex = index
+        this.contentLoading = true
+        this.selectedOption = val
+        this.setPitchContent()
+      }
+    },
+    setPitchContent() {
+      let content = {
+        summary: this.summary,
+        term: this.newSearch,
+        type: this.selectedOption,
+      }
+      this.$store.commit('setGeneratedContent', content)
+      setTimeout(() => {
+        this.$router.push({ name: 'Pitches' })
+      }, 500)
+      // setTimeout(() => {
+      //   this.contentLoading = false
+      // }, 750)
+    },
     clearClips() {
       this.addedClips = []
       this.metaData = { clips: [] }
@@ -814,7 +945,7 @@ export default {
       const newClips = this.addedClips.filter((clip) => clip.title !== title)
       this.addedClips = newClips
       if (this.currentSearch) {
-        this.metaData = {...this.currentSearch.meta_data, clips: newClips}
+        this.metaData = { ...this.currentSearch.meta_data, clips: newClips }
         this.updateMetaData()
       }
     },
@@ -833,7 +964,7 @@ export default {
       if (this.addedClips && this.addedClips.length < 20) {
         this.addedClips.push(clip)
         if (this.currentSearch) {
-          this.metaData = {...this.currentSearch.meta_data, clips: this.addedClips}
+          this.metaData = { ...this.currentSearch.meta_data, clips: this.addedClips }
           this.updateMetaData()
         }
       } else {
@@ -847,7 +978,7 @@ export default {
       newClips.unshift(clip)
       this.addedClips = newClips
       if (this.currentSearch) {
-        this.metaData = {...this.currentSearch.meta_data, clips: newClips}
+        this.metaData = { ...this.currentSearch.meta_data, clips: newClips }
         this.updateMetaData()
       }
     },
@@ -984,6 +1115,11 @@ export default {
         this.$refs.loadedContent.scrollIntoView({ behavior: 'smooth' })
       }, 300)
     },
+    scrollToTopDivider() {
+      setTimeout(() => {
+        this.$refs.topDivider.scrollIntoView({ behavior: 'smooth' })
+      }, 300)
+    },
     removeSource() {
       this.additionalSources = ''
       this.addingSources = !this.addingSources
@@ -1037,7 +1173,7 @@ export default {
         )
         return
       }
-      if (!this.newSearch || this.newSearch.length < 3) {
+      if (this.mainView !== 'website' && (!this.newSearch || this.newSearch.length < 3)) {
         return
       } else if (this.mainView === 'social') {
         this.getTweets()
@@ -1071,11 +1207,9 @@ export default {
       this.summaryLoading = true
       try {
         await Comms.api
-          .getArticleSummary({
+          .getWebSummary({
             url: this.additionalSources,
-            search: this.newSearch,
             instructions: this.newTemplate || null,
-            length: 1500,
           })
           .then((response) => {
             this.summary = response.summary
@@ -1337,7 +1471,7 @@ export default {
         this.showArticleRegenerate = false
         this.articleSummaryLoading = false
         this.loadingUrl = null
-        this.scrollToTop()
+        this.scrollToTopDivider()
       }
     },
     changeSummaryChat(type) {
@@ -1885,6 +2019,19 @@ button:disabled {
   img {
     filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
     margin-right: 8px;
+  }
+}
+
+.lightblue-button {
+  @include dark-blue-button();
+  padding: 8px 12px;
+  border: 0.5px solid $dark-black-blue;
+  color: $dark-black-blue;
+  background-color: $white-blue;
+  margin-right: 1rem;
+  img {
+    // filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
+    margin-left: 8px;
   }
 }
 
@@ -2872,7 +3019,6 @@ header {
   background-color: #f2f2f2;
   border-radius: 6px;
   margin-left: 16px;
-  
 }
 
 .content {
@@ -3015,7 +3161,7 @@ header {
   bottom: 100%;
   color: #fff;
   display: block;
-  left: -20px;
+  left: -12px;
   margin-bottom: 15px;
   opacity: 0;
   padding: 8px;
@@ -3121,6 +3267,149 @@ header {
     img {
       height: 11px;
     }
+  }
+}
+
+.nav-text {
+  font-weight: 400;
+  font-family: $base-font-family;
+  color: #6b6b6b;
+  font-size: 13px;
+  padding: 6px 0;
+  @media only screen and (max-width: 600px) {
+    padding: 14px 0;
+    color: $dark-black-blue;
+    // font-size: 18px;
+  }
+  img {
+    margin-left: 8px;
+  }
+}
+
+.search-dropdown {
+  width: 260px;
+  position: absolute;
+  top: 40px;
+  right: -8px;
+  font-size: 12px;
+  font-weight: 400;
+  background: white;
+  padding: 0;
+  border-radius: 5px;
+  box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+  line-height: 1.5;
+  z-index: 1000;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+
+  p {
+    padding: 8px 16px;
+    font-size: 14px;
+    color: #7c7b7b;
+    cursor: pointer;
+    width: 245px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin: 0;
+  }
+
+  p:hover {
+    color: $dark-black-blue;
+  }
+}
+
+.searches-container::-webkit-scrollbar {
+  width: 6px;
+  height: 0px;
+}
+
+.searches-container::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px;
+}
+
+.searches-container:hover::-webkit-scrollbar-thumb {
+  background-color: $soft-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px;
+}
+
+.searches-container {
+  max-height: 300px;
+  overflow-y: scroll;
+  scroll-behavior: smooth;
+  // margin-bottom: 1rem;
+  padding: 1rem 0;
+  @media only screen and (max-width: 600px) {
+    font-size: 13px;
+    p {
+      margin-left: 0.5rem;
+    }
+  }
+}
+
+.input {
+  position: sticky;
+  z-index: 5010;
+  top: 1.5rem;
+  width: 224px;
+  margin: 1.5rem 0 0.5rem 1rem;
+  border-radius: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-family: $base-font-family;
+  background-color: white;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 8px 20px 8px 10px;
+}
+
+.search-input {
+  border: none;
+  outline: none;
+  margin-left: 0.5rem;
+  width: 100%;
+}
+
+.absolute-icon {
+  position: absolute;
+  padding-left: 4px;
+  background: transparent;
+  opacity: 0;
+  right: 8px;
+  cursor: pointer;
+}
+
+.dropdownBorder {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  padding-left: 8px;
+  padding-right: 8px;
+  background-color: white;
+}
+
+.rotate-img {
+  transform: rotate(180deg);
+}
+
+.absolute-right {
+  position: absolute;
+  right: 0;
+  top: 16px;
+}
+
+.circle-border {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 100%;
+  padding: 5px 6px;
+  background-color: $white-blue;
+  img {
+    margin: 0 !important;
   }
 }
 </style>

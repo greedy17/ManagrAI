@@ -264,6 +264,86 @@ class PRSearchViewSet(
         return Response(data={"summary": message})
 
     @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="web-summary",
+    )
+    def get_web_summary(self, request, *args, **kwargs):
+        user = request.user
+        if user.has_hit_summary_limit:
+            return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
+        news_url = request.data["params"]["url"]
+        instructions = request.data["params"]["instructions"]
+        has_error = False
+        attempts = 1
+        token_amount = 1000
+        timeout = 60.0
+        while True:
+            try:
+                article_res = Article(news_url, config=generate_config())
+                article_res.download()
+                article_res.parse()
+                text = article_res.text
+                print('text is here:', text)
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.OPEN_AI_WEB_SUMMARY(
+                    datetime.now().date(), text, instructions,
+                )
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    "You are a VP of Communications",
+                    token_amount=token_amount,
+                    top_p=0.1,
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                r = open_ai_exceptions._handle_response(r)
+                message = r.get("choices")[0].get("message").get("content").replace("**", "*")
+                user.add_meta_data("article_summaries")
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount <= 2000:
+                    has_error = True
+
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 500
+                    continue
+            except httpx.ReadTimeout as e:
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except ArticleException:
+                return Response(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    data={"error": "We could not access that url"},
+                )
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+        if has_error:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
+        return Response(data={"summary": message})
+
+    @action(
         methods=["get"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,

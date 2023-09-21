@@ -60,9 +60,13 @@ const state = {
   currentSearch: null,
   currentPitch: null,
   tempRefreshUser: null,
+  generatedContent: null,
 }
 
 const mutations = {
+  setGeneratedContent(state, payload) {
+    state.generatedContent = payload;
+  },
   UPDATE_STAGES: (state, payload) => {
     state.stages = payload
   },
@@ -602,7 +606,7 @@ const getters = {
   user: state => {
     return state.user
   },
-  token: state =>  {
+  token: state => {
     return state.token
   },
   tempRefreshUser: state => {

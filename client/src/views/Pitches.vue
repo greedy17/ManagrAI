@@ -46,7 +46,7 @@
           </div>
         </div>
       </div>
-      
+
       <div class="input-container" v-clickOutsideInstructionsMenu>
         <div class="input-row relative">
           <div class="main-text">
@@ -82,14 +82,10 @@
           </div>
         </div>
       </div>
-      
-      <div
-        class="divider"
-      >
+
+      <div class="divider">
         <p class="divider-text">
-          {{
-            'Optional'
-          }}
+          {{ 'Optional' }}
         </p>
       </div>
 
@@ -334,15 +330,15 @@
               </button>
           </div>
 
-          <div @click="copyText" v-if="!regenerating" class="wrapper">
+          <div @click="copyText" v-if="!regenerating" class="wrapper circle-border">
             <img
               style="cursor: pointer"
               class="right-mar img-highlight"
               src="@/assets/images/clipboard.svg"
-              height="16px"
+              height="12px"
               alt=""
             />
-            <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
+            <div style="margin-left: -14px" class="tooltip">{{ copyTip }}</div>
           </div>
         </div>
 
@@ -424,7 +420,22 @@ export default {
       }
     },
   },
-  created() {},
+  created() {
+    if (this.$store.state.generatedContent) {
+      this.briefing = this.$store.state.generatedContent.summary
+        .split('<strong>')
+        .filter((item) => item !== '<strong>')
+        .join('')
+        .split('</strong>')
+        .filter((item) => item !== '</strong>')
+        .join('')
+      this.output = `Create content for ${this.$store.state.generatedContent.term}`
+      this.type = this.$store.state.generatedContent.type
+    }
+  },
+  beforeDestroy() {
+    this.$store.commit('setGeneratedContent', null)
+  },
   methods: {
     async copyText() {
       try {
@@ -506,7 +517,7 @@ export default {
     scrollToTop() {
       setTimeout(() => {
         this.$refs.pitchTop.scrollIntoView({ behavior: 'smooth' })
-      }, 300)
+      }, 450)
     },
     openPaidModal() {
       this.paidModal = true
@@ -595,7 +606,9 @@ export default {
           .then((response) => {
             this.pitch = response.pitch
             this.scrollToTop()
-          }).then((response) => {
+            this.$store.commit('setGeneratedContent', null)
+          })
+          .then((response) => {
             this.refreshUser()
           }).then(response => {
             this.$store.dispatch('getPitches')
@@ -675,8 +688,8 @@ export default {
       return !!this.$store.state.user.organizationRef.isPaid
     },
     searchesUsed() {
-      let arr = [];
-      let currentMonth = new Date(Date.now()).getMonth()+1
+      let arr = []
+      let currentMonth = new Date(Date.now()).getMonth() + 1
       if (currentMonth < 10) {
         currentMonth = `0${currentMonth}`
       } else {
@@ -685,7 +698,7 @@ export default {
       let currentYear = new Date(Date.now()).getFullYear()
       for (let key in this.$store.state.user.metaData) {
         const item = this.$store.state.user.metaData[key]
-        const filteredByMonth = item.timestamps.filter(date => {
+        const filteredByMonth = item.timestamps.filter((date) => {
           const split = date.split('-')
           return split[1] == currentMonth && split[0] == currentYear
         })
@@ -899,6 +912,7 @@ export default {
 }
 
 .pitch-container {
+  padding-top: 48px;
   width: 50%;
   display: flex;
   flex-direction: column;
@@ -932,7 +946,7 @@ export default {
   background-color: white;
   width: 100vw;
   height: 100vh;
-  padding: 58px 36px 0 36px;
+  padding: 0 36px 0 36px;
   display: flex;
   overflow-y: scroll;
   font-family: $base-font-family;
@@ -1070,6 +1084,7 @@ footer {
 }
 
 .blue-bg {
+  padding-top: 66px;
   background-color: $white-blue;
 }
 
@@ -1522,5 +1537,17 @@ footer {
 }
 .primary-button:disabled {
   background-color: $soft-gray;
+}
+.circle-border {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 100%;
+  padding: 5px 6px;
+  background-color: $white-blue;
+  img {
+    margin: 0 !important;
+  }
 }
 </style>

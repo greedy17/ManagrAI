@@ -168,6 +168,16 @@ class CommsApi extends ModelAPI {
         }
     }
 
+    async getWebSummary(url, instructions) {
+        console.log('here')
+        try {
+            const res = await this.client.post(CommsApi.ENDPOINT + 'web-summary/', { params: url, instructions })
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
     async uploadLink(url) {
         try {
             const res = await this.client.post('users/comms/upload-link/', { params: url })
