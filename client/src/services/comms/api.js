@@ -27,6 +27,15 @@ class CommsApi extends ModelAPI {
         }
     }
 
+    async deletePitch(data) {
+        try {
+            const res = await this.client.delete(`pitches/${data.id}/`,)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
     async upateSearch(data) {
         try {
             const res = await this.client.patch(CommsApi.ENDPOINT + 'update/', data)
@@ -56,7 +65,25 @@ class CommsApi extends ModelAPI {
 
     async generatePitch(data) {
         try {
-            const res = await this.client.post(CommsApi.ENDPOINT + 'pitch/', data)
+            const res = await this.client.post('pitches/generate/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
+    async regeneratePitch(data) {
+        try {
+            const res = await this.client.post('pitches/regenerate/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
+    async savePitch(data) {
+        try {
+            const res = await this.client.post('pitches/', data)
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
@@ -85,6 +112,14 @@ class CommsApi extends ModelAPI {
     async getSearches() {
         try {
             const res = await this.client.get(CommsApi.ENDPOINT)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async getPitches() {
+        try {
+            const res = await this.client.get('pitches/')
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)

@@ -56,7 +56,9 @@ const state = {
   currentTask: null,
   meetingBeingProcessed: '',
   allSearches: [],
+  allPitches: [],
   currentSearch: null,
+  currentPitch: null,
   tempRefreshUser: null,
   generatedContent: null,
 }
@@ -131,6 +133,9 @@ const mutations = {
   SAVE_SEARCHES(state, searches) {
     state.allSearches = searches
   },
+  SAVE_PITCHES(state, pitches) {
+    state.allPitches = pitches
+  },
   SAVE_TEMPLATES(state, templates) {
     state.templates = templates
   },
@@ -154,6 +159,9 @@ const mutations = {
   },
   SET_SEARCH: (state, payload) => {
     state.currentSearch = payload
+  },
+  SET_PITCH: (state, payload) => {
+    state.currentPitch = payload
   },
   SET_MEETING: (state, payload) => {
     state.currentMeeting = payload
@@ -280,8 +288,19 @@ const actions = {
       console.log(e)
     }
   },
+  async getPitches({ commit }) {
+    try {
+      const response = await Comms.api.getPitches()
+      commit('SAVE_PITCHES', response.results)
+    } catch (e) {
+      console.log(e)
+    }
+  },
   setSearch({ commit }, search) {
     commit('SET_SEARCH', search)
+  },
+  setPitch({ commit }, pitch) {
+    commit('SET_PITCH', pitch)
   },
   setCurrentView({ commit }, view) {
     commit('SET_VIEW', view)
@@ -533,33 +552,30 @@ const actions = {
       // const encrypted = encryptData(user, process.env.VUE_APP_SECRET_KEY)
       // commit('UPDATE_USER', encrypted)
       commit('UPDATE_USER', user)
-    } catch (e) {
+    } catch(e) {
       console.log('e refreshUser', e.response)
       // if (e.response.status === 401 && e.response.data.detail === 'Token expired') {
-      // Handle the 401 Unauthorized error here
-      // For example, you can log the user out or show an error message
-      // You can also redirect the user to the login page
-      // let tempUser
-      // if (state.user && state.user.id) {
-      //   store.dispatch('updateTempRefreshUser', state.user)
-      //   tempUser = state.user
-      // } else {
-      //   tempUser = state.tempRefreshUser
-      // }
-      // const user = state.user
-      // const token = state.token
-      // console.log('user', user)
-      // console.log('token', token)
-      // // call refresh token endpoint
-      // User.api.refreshToken(token, user && user.id ? user.id : tempUser.id).then((res) => {
-      //   // with token, insert into store
-      //   console.log('res', res)
-      //   dispatch('updateUserToken', res.token).then(() => {
-      //     // refresh user
-      //     dispatch('updateTempRefreshUser', null)
-      //     dispatch('refreshCurrentUser')
-      //   })
-      // })
+        // Handle the 401 Unauthorized error here
+        // For example, you can log the user out or show an error message
+        // You can also redirect the user to the login page
+        // let tempUser
+        // if (state.user && state.user.id) {
+        //   store.dispatch('updateTempRefreshUser', state.user)
+        //   tempUser = state.user
+        // } else {
+        //   tempUser = state.tempRefreshUser
+        // }
+        // const user = state.user
+        // const token = state.token
+        // // call refresh token endpoint
+        // User.api.refreshToken(token, user && user.id ? user.id : tempUser.id).then((res) => {
+        //   // with token, insert into store
+        //   dispatch('updateUserToken', res.token).then(() => {
+        //     // refresh user
+        //     dispatch('updateTempRefreshUser', null)
+        //     dispatch('refreshCurrentUser')
+        //   })
+        // })
       // }
       // do nothing for now
       return null
@@ -584,7 +600,6 @@ const getters = {
     if (state.token) {
       // decryptedKey = decryptData(state.token, process.env.VUE_APP_SECRET_KEY)
     }
-    // console.log('isLoggedIn', decryptedKey, decryptedUser)
     // return !!(decryptedKey && decryptedUser)
     return !!(state.user && state.token)
   },
@@ -606,7 +621,7 @@ export default new Vuex.Store({
   getters,
   plugins: [
     createPersistedState({
-      paths: ['user', 'token', 'chatTitle', 'currentView', 'currentTask', 'meetingBeingProcessed']
+      paths: ['user', 'token',]
     })
   ],
 })

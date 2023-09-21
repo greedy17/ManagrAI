@@ -636,7 +636,6 @@ export default {
       this.templates.refresh()
     },
     repCheck(config) {
-      console.log('this.hasSlackIntegration', this.hasSlackIntegration)
       if (this.hasSlackIntegration) {
         this.goToWorkflow(config.title)
         return

@@ -60,7 +60,6 @@ export class CustomSlackForm extends Model {
 
   static fromAPI(obj) {
     // HACK WE USE A CUSTOM MANYTOMANY HERE SO WE NEED TO REORG
-    // console.log('obj', obj)
     let _refFields = obj['fields_ref'].map(ref => {
       return { ...ref['field_ref'], order: ref['order'], includeInRecap: ref['include_in_recap'] }
     })

@@ -30,7 +30,6 @@
     </Modal>
 
     <header class="list-header">
-      <!-- <p @click="test()"><span>List: </span> {{ currentView.title }}</p> -->
       <div class="row__">
         <div class="flexed-start" v-if="templates.refreshing">
           <div class="loading">
@@ -425,9 +424,6 @@ export default {
     this.setList()
   },
   methods: {
-    test() {
-      console.log(this.templates.list)
-    },
     setList() {
       setTimeout(() => {
         if (this.templates.list) {
@@ -466,7 +462,6 @@ export default {
       let sortedWorkflow
       if (this.currentView && this.currentView.sobjectInstances && this.currentView.sobjectInstances.length) {
         this.selectedFilter = field
-        console.log('selectedFilter', this.selectedFilter)
         if (field === 'Stage' || field === 'dealstage') {
           sortedWorkflow = this.currentView.sobjectInstances.sort(function (a, b) {
             const nameA =
@@ -504,8 +499,6 @@ export default {
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         } else if (this.userCRM === 'HUBSPOT') {
-          console.log('this.currentView.sobjectInstances', this.currentView.sobjectInstances)
-          console.log('apiName', apiName)
           sortedWorkflow = this.currentView.sobjectInstances.sort(function (a, b) {
             const nameA = a[`${apiName}`]
             const nameB = b[`${apiName}`]
@@ -518,7 +511,6 @@ export default {
             return (nameB === null) - (nameA === null) || -(nameB > nameA) || +(nameB < nameA)
           })
         }
-        console.log('sortedWorkflow', sortedWorkflow)
         this.activeList.sobjectInstances = sortedWorkflow
         this.$store.dispatch('setCurrentView', this.activeList)
       }

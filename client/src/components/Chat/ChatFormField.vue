@@ -358,8 +358,8 @@ export default {
     stagesWithForms: {},
   },
   methods: {
-    test(op) {
-      console.log(op)
+    test(log) {
+      console.log('log', log)
     },
     formatDate(val) {
       if (this.userCRM === 'HUBSPOT' && val) {

@@ -467,7 +467,6 @@ input:focus {
   padding: 0 32px 32px 32px;
   height: 100vh;
   font-family: $base-font-family;
-
   font-weight: 400;
   color: $dark-black-blue;
   display: flex;

@@ -398,7 +398,6 @@ export default {
       }
     },
     async getArticleSummary(title, url, search, length = 500) {
-      console.log(search)
       this.summaryLoading = true
       this.loadingUrl = url
       try {

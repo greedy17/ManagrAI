@@ -103,7 +103,6 @@ export default {
       this.searchModalOpen = !this.searchModalOpen
     },
     async getArticleSummary(url, instructions = null) {
-      console.log(url)
       try {
         await Comms.api
           .getArticleSummary({

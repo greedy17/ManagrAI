@@ -1288,7 +1288,6 @@ export default {
         const allStages = mappedStages.reduce((acc, curr) => acc.concat(curr), [])
         this.allStages = allStages
         this.allStages = this.removeDuplicatesByKey(this.allStages, 'id')
-        // console.log(this.allStages)
       }
 
       this.oppFields = this.updateOppForm[0].fieldsRef.filter(

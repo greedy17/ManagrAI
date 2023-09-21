@@ -524,7 +524,6 @@ export default {
     },
 
     async onSubmitChat() {
-      console.log(this.updateData)
       this.submitting = true
       try {
         await MeetingWorkflows.api
@@ -677,7 +676,6 @@ export default {
       }
     },
     selectOpp(val) {
-      console.log(val)
       this.selectedResourceId = val.id
       if (this.selectedResourceType === 'Deal' || this.selectedResourceType === 'Opportunity') {
         this.$emit('set-opp', val.name)
@@ -697,10 +695,8 @@ export default {
         this.selectedMeetingWorkflow.forms[0].saved_data &&
         Object.values(this.selectedMeetingWorkflow.forms[0].saved_data).length > 0
       ) {
-        console.log(this.selectedMeetingWorkflow)
         this.updateData = this.selectedMeetingWorkflow.forms[0].saved_data
       } else {
-        console.log(this.selectedMeetingWorkflow)
         const keys = Object.keys(this.selectedMeetingWorkflow.resource_ref.secondary_data)
         const filteredKeys = keys.filter((key) => this.formFieldNames.includes(key))
         let filteredObject = {}

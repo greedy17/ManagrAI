@@ -210,7 +210,7 @@
 
       <footer>
         <button :disabled="loading" @click="clearData" class="secondary-button">Clear</button>
-        <button :disabled="loading" @click="generatePitch" class="primary-button">
+        <button :disabled="loading || !this.output" @click="generatePitch" class="primary-button">
           <img
             v-if="loading"
             class="rotate"
@@ -236,7 +236,7 @@
         </div>
 
         <div class="title-bar">
-          <div class="row">
+          <div v-if="!showSaveName" class="row">
             <button
               :disabled="loading"
               @click="toggleRegenerate"
@@ -264,17 +264,81 @@
 
               <button @click="regeneratePitch" class="primary-button">Regenerate</button>
             </div>
+            <div class="save-wrapper" v-if="!loading && !savingPitch && !pitchSaved">
+              <button
+                @click="toggleSaveName"
+                v-if="!regenerating"
+                :disabled="
+                  loading ||
+                  savingPitch ||
+                  pitchSaved
+                "
+                class="primary-button no-mar"
+              >
+                <img
+                  v-if="savingPitch"
+                  class="rotate"
+                  height="12px"
+                  src="@/assets/images/loading.svg"
+                  alt=""
+                />
+                {{ savingPitch ? 'Saving' : 'Save' }}
+              </button>
+              <div style="margin-left: -50px" class="save-tooltip">Save this version</div>
+            </div>
+            <div v-else>
+              <button
+                @click="toggleSaveName"
+                v-if="!regenerating"
+                :disabled="
+                  loading ||
+                  savingPitch ||
+                  pitchSaved
+                "
+                class="primary-button no-mar"
+              >
+                <img
+                  v-if="savingPitch"
+                  class="rotate"
+                  height="12px"
+                  src="@/assets/images/loading.svg"
+                  alt=""
+                />
+                {{ savingPitch ? 'Saving' : 'Save' }}
+              </button>
+            </div>
+          </div>
+          
+          <div v-else class="row">
+            <input
+              autofocus
+              class="area-input-outline"
+              placeholder="Name your pitch"
+              v-model="pitchName"
+            />
+
+              <button
+                @click="createSavedPitch"
+                :disabled="
+                  loading ||
+                  savingPitch ||
+                  pitchSaved
+                "
+                class="primary-button"
+              >
+                Save
+              </button>
           </div>
 
-          <div @click="copyText" v-if="!regenerating" class="wrapper">
+          <div @click="copyText" v-if="!regenerating" class="wrapper circle-border">
             <img
               style="cursor: pointer"
               class="right-mar img-highlight"
               src="@/assets/images/clipboard.svg"
-              height="16px"
+              height="12px"
               alt=""
             />
-            <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
+            <div style="margin-left: -14px" class="tooltip">{{ copyTip }}</div>
           </div>
         </div>
 
@@ -343,9 +407,19 @@ export default {
       instructions: '',
       copyTip: 'Copy',
       textToCopy: '',
+      showSaveName: false,
+      savingPitch: false,
+      pitchName: '',
+      savedPitch: null,
     }
   },
-  watch: {},
+  watch: {
+    currentPitch(newVal, oldVal) {
+      if (newVal.id !== (oldVal ? oldVal.id : null)) {
+        this.setPitch(newVal)
+      }
+    },
+  },
   created() {
     if (this.$store.state.generatedContent) {
       this.briefing = this.$store.state.generatedContent.summary
@@ -356,6 +430,7 @@ export default {
         .filter((item) => item !== '</strong>')
         .join('')
       this.output = `Create content for ${this.$store.state.generatedContent.term}`
+      this.type = this.$store.state.generatedContent.type
     }
   },
   beforeDestroy() {
@@ -373,6 +448,9 @@ export default {
       } catch (err) {
         console.error('Failed to copy text: ', err)
       }
+    },
+    toggleSaveName() {
+      this.showSaveName = !this.showSaveName
     },
     resetSearch() {
       this.pitch = null
@@ -453,6 +531,43 @@ export default {
     toggleRegenerate() {
       this.regenerating = !this.regenerating
     },
+    async createSavedPitch() {
+      this.showSaveName = false
+      this.savingPitch = true
+      try {
+        const response = await Comms.api.savePitch({
+            name: this.pitchName || this.pitch.slice(0, 60),
+            user: this.user.id,
+            type: this.type,
+            audience: this.persona,
+            generated_pitch: this.pitch,
+            content: this.briefing,
+            instructions: this.output,
+          })
+        if (response.id) {
+          // this.searchId = response.id
+          // this.showUpdateBanner = true
+          this.savedPitch = {
+            name: response.name,
+            user: this.user.id,
+            type: this.type,
+            audience: this.persona,
+            generated_pitch: this.pitch,
+            content: this.briefing,
+            instructions: this.output,
+          }
+          await this.$store.dispatch('getPitches')
+        }
+      } catch (e) {
+        console.log(e)
+      } finally {
+        // this.showUpdateBanner = true
+        this.savingPitch = false
+        setTimeout(() => {
+          // this.showUpdateBanner = false
+        }, 2000)
+      }
+    },
     async regeneratePitch() {
       this.regenerating = false
       this.loading = true
@@ -484,9 +599,9 @@ export default {
         await Comms.api
           .generatePitch({
             type: this.type,
-            output: this.output,
-            persona: this.persona,
-            briefing: this.briefing,
+            instructions: this.output,
+            audience: this.persona,
+            content: this.briefing,
           })
           .then((response) => {
             this.pitch = response.pitch
@@ -495,6 +610,8 @@ export default {
           })
           .then((response) => {
             this.refreshUser()
+          }).then(response => {
+            this.$store.dispatch('getPitches')
           })
       } catch (e) {
         console.log('ERROR CREATING PITCH', e)
@@ -503,6 +620,14 @@ export default {
         this.loading = false
         this.scrollToTop()
       }
+    },
+    setPitch(pitch) {
+      this.pitch = pitch.generated_pitch
+      this.type = pitch.type
+      this.output = pitch.instructions
+      this.persona = pitch.audience
+      this.briefing = pitch.content
+      // this.generatePitch()
     },
     refreshUser() {
       User.api
@@ -580,6 +705,22 @@ export default {
         arr = [...arr, ...filteredByMonth]
       }
       return arr.length
+    },
+    currentPitch() {
+      return this.$store.state.currentPitch
+    },
+    pitchSaved() {
+      if (
+        this.savedPitch &&
+        this.pitch &&
+        this.savedPitch.generated_pitch === this.pitch
+      ) {
+        return true
+      } else if (this.pitch && this.currentPitch && this.currentPitch.generated_pitch === this.pitch) {
+        return true
+      } else {
+        return false
+      }
     },
   },
   directives: {
@@ -1044,6 +1185,90 @@ footer {
   display: block;
 }
 
+.save-wrapper {
+  display: flex;
+  align-items: center;
+  // background-color: red;
+  font-family: $thin-font-family;
+  font-size: 14px;
+  position: relative;
+  text-align: center;
+  -webkit-transform: translateZ(0); /* webkit flicker fix */
+  -webkit-font-smoothing: antialiased; /* webkit text rendering fix */
+}
+
+.save-wrapper .save-tooltip {
+  background: $dark-black-blue;
+  border-radius: 4px;
+  bottom: 100%;
+  color: #fff;
+  display: block;
+  left: 15px;
+  margin-bottom: 15px;
+  opacity: 0;
+  padding: 8px;
+  pointer-events: none;
+  position: absolute;
+  width: 130px;
+  -webkit-transform: translateY(10px);
+  -moz-transform: translateY(10px);
+  -ms-transform: translateY(10px);
+  -o-transform: translateY(10px);
+  transform: translateY(10px);
+  -webkit-transition: all 0.25s ease-out;
+  -moz-transition: all 0.25s ease-out;
+  -ms-transition: all 0.25s ease-out;
+  -o-transition: all 0.25s ease-out;
+  transition: all 0.25s ease-out;
+  -webkit-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -moz-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -ms-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -o-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+}
+
+/* This bridges the gap so you can mouse into the save-tooltip without it disappearing */
+.save-wrapper .save-tooltip:before {
+  bottom: -20px;
+  content: ' ';
+  display: block;
+  height: 20px;
+  left: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.save-wrapper .save-tooltip:after {
+  border-left: solid transparent 10px;
+  border-right: solid transparent 10px;
+  border-top: solid $dark-black-blue 10px;
+  bottom: -10px;
+  content: ' ';
+  height: 0;
+  left: 50%;
+  margin-left: -13px;
+  position: absolute;
+  width: 0;
+}
+
+.save-wrapper:hover .save-tooltip {
+  opacity: 1;
+  pointer-events: auto;
+  -webkit-transform: translateY(0px);
+  -moz-transform: translateY(0px);
+  -ms-transform: translateY(0px);
+  -o-transform: translateY(0px);
+  transform: translateY(0px);
+}
+
+.lte8 .save-wrapper .save-tooltip {
+  display: none;
+}
+
+.lte8 .save-wrapper:hover .save-tooltip {
+  display: block;
+}
+
 .back {
   position: absolute;
   display: flex;
@@ -1286,5 +1511,43 @@ footer {
 }
 .content {
   // width: 80%;
+}
+.area-input-outline {
+  width: 300px;
+  background-color: $offer-white;
+  margin-bottom: 0.25rem;
+  padding: 5px 8px;
+  border-radius: 4px;
+  line-height: 1.75;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  outline: none;
+  letter-spacing: 0.5px;
+  font-size: 14px;
+  font-family: $base-font-family;
+  font-weight: 400;
+  text-align: left;
+  overflow: auto;
+  scroll-behavior: smooth;
+  color: $dark-black-blue;
+  margin-right: 1rem;
+  resize: none;
+}
+.no-mar {
+  margin: 0;
+}
+.primary-button:disabled {
+  background-color: $soft-gray;
+}
+.circle-border {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 100%;
+  padding: 5px 6px;
+  background-color: $white-blue;
+  img {
+    margin: 0 !important;
+  }
 }
 </style>

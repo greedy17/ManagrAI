@@ -348,7 +348,6 @@ export default {
           .then((response) => {
             this.chatRes = response
             if (response.status >= 400 && response.status < 500) {
-              console.log(response)
               User.api
                 .addMessage({
                   value: response.value,

@@ -227,3 +227,45 @@ TwitterAuthAccount = TwitterAuthAccountAdapter(
         "access_token": comms_consts.TWITTER_ACCESS_TOKEN,
     }
 )
+
+
+class Pitch(TimeStampModel):
+    user = models.ForeignKey(
+        "core.User",
+        related_name="pitches",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
+    )
+    name = models.CharField(max_length=255)
+    instructions = models.TextField()
+    type = models.CharField(max_length=255, null=True, blank=True)
+    audience = models.CharField(max_length=255, null=True, blank=True)
+    content = models.TextField(null=True, blank=True)
+    generated_pitch = models.TextField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.name}"
+
+    @classmethod
+    def generate_pitch(cls, user, type, instructions, audience, content, tokens, timeout):
+        url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+        prompt = comms_consts.OPEN_AI_PITCH(
+            datetime.now().date(), type, instructions, audience, content
+        )
+        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+            user.email,
+            prompt,
+            token_amount=tokens,
+            top_p=0.1,
+        )
+        with Variable_Client(timeout) as client:
+            r = client.post(
+                url,
+                data=json.dumps(body),
+                headers=core_consts.OPEN_AI_HEADERS,
+            )
+        return open_ai_exceptions._handle_response(r)

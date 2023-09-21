@@ -1132,7 +1132,6 @@ export default {
       }
     },
     setRemoveApp(appName) {
-      console.log('appName', appName)
       if (appName) {
         this.removeApp = appName
         this.removeAppFormatted = appName[0] + appName.slice(1).toLowerCase()

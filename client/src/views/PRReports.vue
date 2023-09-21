@@ -72,7 +72,6 @@ export default {
       try {
         const response = await User.api.getReports({ user: this.user.id })
         this.reports = response.results
-        console.log('this.reports', this.reports)
       } catch (e) {
         console.log(e)
       }
