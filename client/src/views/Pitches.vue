@@ -268,11 +268,7 @@
               <button
                 @click="toggleSaveName"
                 v-if="!regenerating"
-                :disabled="
-                  loading ||
-                  savingPitch ||
-                  pitchSaved
-                "
+                :disabled="loading || savingPitch || pitchSaved"
                 class="primary-button no-mar"
               >
                 <img
@@ -290,11 +286,7 @@
               <button
                 @click="toggleSaveName"
                 v-if="!regenerating"
-                :disabled="
-                  loading ||
-                  savingPitch ||
-                  pitchSaved
-                "
+                :disabled="loading || savingPitch || pitchSaved"
                 class="primary-button no-mar"
               >
                 <img
@@ -308,7 +300,7 @@
               </button>
             </div>
           </div>
-          
+
           <div v-else class="row">
             <input
               autofocus
@@ -317,17 +309,13 @@
               v-model="pitchName"
             />
 
-              <button
-                @click="createSavedPitch"
-                :disabled="
-                  loading ||
-                  savingPitch ||
-                  pitchSaved
-                "
-                class="primary-button"
-              >
-                Save
-              </button>
+            <button
+              @click="createSavedPitch"
+              :disabled="loading || savingPitch || pitchSaved"
+              class="primary-button"
+            >
+              Save
+            </button>
           </div>
 
           <div @click="copyText" v-if="!regenerating" class="wrapper circle-border">
@@ -429,7 +417,9 @@ export default {
         .split('</strong>')
         .filter((item) => item !== '</strong>')
         .join('')
-      this.output = `Create content for ${this.$store.state.generatedContent.term}`
+      this.output = `Create a ${
+        this.$store.state.generatedContent.type + ` for ` + this.$store.state.generatedContent.term
+      }`
       this.type = this.$store.state.generatedContent.type
     }
   },
@@ -536,14 +526,14 @@ export default {
       this.savingPitch = true
       try {
         const response = await Comms.api.savePitch({
-            name: this.pitchName || this.pitch.slice(0, 60),
-            user: this.user.id,
-            type: this.type,
-            audience: this.persona,
-            generated_pitch: this.pitch,
-            content: this.briefing,
-            instructions: this.output,
-          })
+          name: this.pitchName || this.pitch.slice(0, 60),
+          user: this.user.id,
+          type: this.type,
+          audience: this.persona,
+          generated_pitch: this.pitch,
+          content: this.briefing,
+          instructions: this.output,
+        })
         if (response.id) {
           // this.searchId = response.id
           // this.showUpdateBanner = true
@@ -610,7 +600,8 @@ export default {
           })
           .then((response) => {
             this.refreshUser()
-          }).then(response => {
+          })
+          .then((response) => {
             this.$store.dispatch('getPitches')
           })
       } catch (e) {
@@ -710,13 +701,13 @@ export default {
       return this.$store.state.currentPitch
     },
     pitchSaved() {
-      if (
-        this.savedPitch &&
-        this.pitch &&
-        this.savedPitch.generated_pitch === this.pitch
-      ) {
+      if (this.savedPitch && this.pitch && this.savedPitch.generated_pitch === this.pitch) {
         return true
-      } else if (this.pitch && this.currentPitch && this.currentPitch.generated_pitch === this.pitch) {
+      } else if (
+        this.pitch &&
+        this.currentPitch &&
+        this.currentPitch.generated_pitch === this.pitch
+      ) {
         return true
       } else {
         return false
