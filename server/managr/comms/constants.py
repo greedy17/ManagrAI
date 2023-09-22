@@ -110,7 +110,7 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
 
 
 def OPEN_AI_PITCH(date, type, output, persona, briefing):
-    body = f"Today is {date}. You're the VP of Communications crafting a {type}, aimed at {persona}. Go for a moderately upbeat, engaging, straight-to-the-point style, skip traditional formalities. Reference briefing: {briefing}, and follow output instructions: {output}."
+    body = f"Today's {date}. As the VP of Communications, I need a {type} tailored for {persona}. Aim for a professional yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Get right to the point. Take into account the information from: {briefing}. Adhere to the given output parameters: {output}." 
     return body
 
 

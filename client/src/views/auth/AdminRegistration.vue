@@ -22,7 +22,7 @@
         />
       </div>
 
-      <div class="col full-width">
+      <!-- <div class="col full-width">
         <label for="role">Select Product</label>
         <Multiselect
           placeholder="Select product"
@@ -40,7 +40,7 @@
             <p>No results.</p>
           </template>
         </Multiselect>
-      </div>
+      </div> -->
 
       <div class="input-wrap full-width">
         <div class="col">
