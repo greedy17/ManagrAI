@@ -1,15 +1,15 @@
 <template>
   <div class="password-reset">
     <form @submit.prevent="handleSubmit">
-      <h2 class="password-reset__title">Enter and confirm a new password below.</h2>
+      <h2>Enter and confirm a new password</h2>
 
       <input v-model="password" type="password" placeholder="New Password" />
       <input v-model="confirmPassword" type="password" placeholder="Confirm Password" />
 
       <button type="submit">Reset Password</button>
-      <div style="margin-top: 1rem">
+      <!-- <div style="margin-top: 1rem">
         <router-link :to="{ name: 'Login' }"> Back to login </router-link>
-      </div>
+      </div> -->
     </form>
   </div>
 </template>
@@ -96,39 +96,47 @@ export default {
 
 .password-reset {
   display: flex;
-  flex-flow: row;
+  align-items: center;
   justify-content: center;
-
-  &__title {
-    padding: 0 1rem 1rem 1rem;
-  }
+  background-color: $offer-white;
+  height: 94vh;
 }
 
-h2 {
-  @include base-font-styles();
-  font-weight: bold;
-  color: $main-font-gray;
-  text-align: center;
+h2,
+p {
+  font-family: $thin-font-family;
+  padding: 0;
+  margin: 0;
+  font-weight: 400;
 }
 
 form {
   @include standard-border();
-  margin-top: 3.125rem;
-  width: 31.25rem;
-
-  background-color: $white;
+  width: 500px;
+  padding: 64px;
   display: flex;
   flex-flow: column;
-  align-items: center;
-  padding: 2rem;
+  align-items: flex-start;
+  justify-content: center;
+  color: $dark-black-blue;
+  background-color: $offer-white;
+  border-radius: 4px;
+  gap: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-family: $thin-font-family;
+  font-weight: 400;
 }
 
 input {
   @include input-field();
   height: 2.5rem;
-  width: 15.65rem;
+  width: 100%;
   display: block;
-  margin: 0.625rem 0;
+
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-family: $thin-font-family;
+
+  outline: none;
 
   &:disabled {
     border: 2px solid $dark-green;
@@ -136,9 +144,6 @@ input {
 }
 
 button {
-  @include primary-button();
-  margin-top: 1.25rem;
-  height: 1.875rem;
-  min-width: 12rem;
+  @include dark-blue-button();
 }
 </style>

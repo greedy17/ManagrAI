@@ -487,7 +487,7 @@
                   />
                   <div style="margin-left: -22px" class="tooltip">{{ copyTip }}</div>
                 </div>
-                <pre class="pre-text" v-html="summary"></pre>
+                <pre style="margin-top: 16px" class="pre-text" v-html="summary"></pre>
               </div>
             </div>
           </div>
@@ -3291,7 +3291,7 @@ header {
   position: absolute;
   top: 40px;
   right: -8px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 400;
   background: white;
   padding: 0;
@@ -3303,7 +3303,6 @@ header {
 
   p {
     padding: 8px 16px;
-    font-size: 14px;
     color: #7c7b7b;
     cursor: pointer;
     width: 245px;
@@ -3388,6 +3387,7 @@ header {
   padding-left: 8px;
   padding-right: 8px;
   background-color: white;
+  font-size: 12px;
 }
 
 .rotate-img {
