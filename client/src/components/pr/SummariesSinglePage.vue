@@ -2519,11 +2519,11 @@ header {
   align-items: center;
   justify-content: space-between;
   gap: 32px;
-  height: 240px;
   overflow: none;
   text-overflow: ellipsis;
   margin-bottom: 2rem;
   @media only screen and (max-width: 600px) {
+    height: 240px;
     gap: 4px;
     flex-direction: column-reverse;
     margin-bottom: 0;
