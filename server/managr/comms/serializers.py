@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Search, Pitch
+from .models import Search, Pitch, NewsSource
 
 
 class SearchSerializer(serializers.ModelSerializer):
@@ -30,3 +30,9 @@ class PitchSerializer(serializers.ModelSerializer):
             "content",
             "generated_pitch",
         )
+
+
+class NewsSourceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NewsSource
+        fields = ("domain", "last_scrapped", "is_active")
