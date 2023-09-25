@@ -477,7 +477,7 @@
                   />
                   {{ copyTip }}
                 </button> -->
-                <div @click="copyText" class="wrapper absolute-right circle-border">
+                <div @click="copyText" class="wrapper absolute-right circle-border transparent-bg">
                   <img
                     style="cursor: pointer"
                     class="right-mar img-highlight"
@@ -3411,5 +3411,9 @@ header {
   img {
     margin: 0 !important;
   }
+}
+
+.transparent-bg {
+  background: transparent;
 }
 </style>
