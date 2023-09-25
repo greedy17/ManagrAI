@@ -8,8 +8,8 @@ from managr.utils.client import Variable_Client
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_clips_paginator_block
 from . import constants as comms_consts
-from .models import Search
-from .serializers import SearchSerializer
+from .models import Search, NewsSource
+from .serializers import SearchSerializer, NewsSourceSerializer
 from managr.core import constants as core_consts
 from managr.core.models import User
 from managr.core import exceptions as open_ai_exceptions
@@ -20,7 +20,7 @@ from managr.slack import constants as slack_const
 from managr.slack.models import UserSlackIntegration
 from newspaper import Article
 from managr.slack.helpers.utils import block_finder
-from managr.comms.utils import generate_config
+from managr.comms.utils import generate_config, extract_base_domain
 
 logger = logging.getLogger("managr")
 
@@ -35,6 +35,10 @@ def emit_process_send_clips(payload, context):
 
 def emit_process_article_summary(payload, context):
     return _process_article_summary(payload, context)
+
+
+def emit_process_website_domain(url):
+    return _process_website_domain(url)
 
 
 def create_new_search(payload, user_id):
@@ -320,4 +324,22 @@ def _process_article_summary(payload, context):
         logger.exception(
             f"ERROR sending update channel message for chat submission because of <{e}>"
         )
+    return
+
+
+@background()
+def _process_website_domain(url):
+    base_domain = extract_base_domain(url)
+    if base_domain:
+        try:
+            database_check = NewsSource.objects.get(domain=base_domain)
+        except NewsSource.DoesNotExist:
+            try:
+                serializer = NewsSourceSerializer(data={"domain": base_domain})
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+            except Exception as e:
+                logger.exception(
+                    f"Failed to save new NewsSource for domain: {base_domain} because of {e}"
+                )
     return

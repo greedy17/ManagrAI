@@ -37,7 +37,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from managr.api.emails import send_html_email
-from managr.api.models import (ManagrToken, ExpiringTokenAuthentication)
+from managr.api.models import ManagrToken, ExpiringTokenAuthentication
 from managr.utils import sites as site_utils
 from managr.core.utils import (
     pull_usage_data,
