@@ -3519,6 +3519,7 @@ header {
 
 .transparent-bg {
   background: transparent;
+}
 .modal {
   position: fixed;
   z-index: 1;
