@@ -63,6 +63,7 @@ variable "app_config" {
     nginx_image               = string
     app_image_scheduled_tasks = string
 
+    use_aws_storage    = bool
     s3_bucket_location = string
 
     allowed_hosts  = string

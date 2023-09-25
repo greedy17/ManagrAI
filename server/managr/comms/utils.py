@@ -1,4 +1,5 @@
 import random
+import re
 from newspaper import Config
 
 user_agents = [
@@ -18,3 +19,11 @@ def generate_config():
     config.browser_user_agent = random.choice(user_agents)  # randomly choose a User-Agent
     config.request_timeout = 10
     return config
+
+
+def extract_base_domain(article_link):
+    article_link = re.sub(r"^https?://", "", article_link)
+    match = re.search(r"[^/]+", article_link)
+    if match:
+        return match.group()
+    return None

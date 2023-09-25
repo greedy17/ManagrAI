@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Search, Pitch
+from .models import Search, Pitch, NewsSource
 
 # Register your models here.
 
@@ -16,5 +16,11 @@ class CustomPitch(admin.ModelAdmin):
     ordering = ("-datetime_created",)
 
 
+class CustomNewsSource(admin.ModelAdmin):
+    list_display = ("domain", "is_active", "last_scraped")
+    ordering = ("-datetime_created",)
+
+
 admin.site.register(Search, CustomSearch)
 admin.site.register(Pitch, CustomPitch)
+admin.site.register(NewsSource, CustomNewsSource)

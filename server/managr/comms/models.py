@@ -269,3 +269,31 @@ class Pitch(TimeStampModel):
                 headers=core_consts.OPEN_AI_HEADERS,
             )
         return open_ai_exceptions._handle_response(r)
+
+
+class NewsSource(TimeStampModel):
+    domain = models.CharField(max_length=255, unique=True)
+    rss_feed_url = models.URLField(blank=True, null=True)
+    last_scraped = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    # Web Scraping Fields
+    category_link_selector = models.CharField(max_length=255, blank=True, null=True)
+    category_name_attribute = models.CharField(max_length=50, blank=True, null=True)
+    category_mapping = JSONField(
+        blank=True,
+        null=True,
+        help_text="JSON mapping of website categories to application categories",
+    )
+    article_link_selector = models.CharField(max_length=255, blank=True, null=True)
+    article_link_attribute = models.CharField(max_length=50, blank=True, null=True)
+    article_link_prefix = models.URLField(blank=True, null=True)
+    article_link_regex = models.CharField(max_length=255, blank=True, null=True)
+    date_published_selector = models.CharField(max_length=255, blank=True, null=True)
+    date_published_format = models.CharField(max_length=255, blank=True, null=True)
+    article_title_selector = models.CharField(max_length=255, blank=True, null=True)
+    article_content_selector = models.CharField(max_length=255, blank=True, null=True)
+    author_selector = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return self.domain

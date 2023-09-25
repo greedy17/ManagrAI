@@ -59,6 +59,10 @@ const state = {
   allPitches: [],
   currentSearch: null,
   currentPitch: null,
+  currentReportClips: [],
+  reportTitle: null,
+  reportImage: null,
+  reportSummary: null,
   tempRefreshUser: null,
   generatedContent: null,
 }
@@ -75,6 +79,18 @@ const mutations = {
   },
   UPDATE_TEMP_REFRESH_USER: (state, payload) => {
     state.tempRefreshUser = payload
+  },
+  UPDATE_CURRENT_REPORT_CLIPS: (state, payload) => {
+    state.currentReportClips = payload
+  },
+  UPDATE_REPORT_TITLE: (state, payload) => {
+    state.reportTitle = payload
+  },
+  UPDATE_REPORT_IMAGE: (state, payload) => {
+    state.reportImage = payload
+  },
+  UPDATE_REPORT_SUMMARY: (state, payload) => {
+    state.reportSummary = payload
   },
   UPDATE_GOOGLE_SIGN_IN: (state, payload) => {
     state.googleSignIn = payload
@@ -528,6 +544,18 @@ const actions = {
   updateTempRefreshUser({ commit }, payload) {
     commit('UPDATE_TEMP_REFRESH_USER', payload)
   },
+  updateCurrentReportClips({ commit }, payload) {
+    commit('UPDATE_CURRENT_REPORT_CLIPS', payload)
+  },
+  updateReportTitle({ commit }, payload) {
+    commit('UPDATE_REPORT_TITLE', payload)
+  },
+  updateReportImage({ commit }, payload) {
+    commit('UPDATE_REPORT_IMAGE', payload)
+  },
+  updateReportSummary({ commit }, payload) {
+    commit('UPDATE_REPORT_SUMMARY', payload)
+  },
   updateGoogleSignIn({ commit }, payload) {
     commit('UPDATE_GOOGLE_SIGN_IN', payload)
   },
@@ -621,7 +649,7 @@ export default new Vuex.Store({
   getters,
   plugins: [
     createPersistedState({
-      paths: ['user', 'token',]
+      paths: ['user', 'token', 'currentReportClips', 'reportTitle', 'reportImage', 'reportSummary']
     })
   ],
 })
