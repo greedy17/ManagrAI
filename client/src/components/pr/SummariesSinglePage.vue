@@ -406,7 +406,7 @@
                 </div>
 
                 <div class="relative">
-                  <div @click="toggleGenerateDropdown" class="row pointer nav-text dropdownBorder">
+                  <div @click="toggleGenerateDropdown" class="row pointer dropdownBorder">
                     Generate Content
                     <img
                       v-if="!showGenerateDropdown"
@@ -897,7 +897,9 @@ export default {
       ],
     }
   },
-  created() {},
+  created() {
+    this.addedClips = this.$store.state.currentReportClips
+  },
   watch: {
     typedMessage: 'changeIndex',
     currentSearch(newVal, oldVal) {
@@ -939,14 +941,16 @@ export default {
       this.addedClips = []
       this.metaData = { clips: [] }
       // this.savedSearch.meta_data = {...this.savedSearch.meta_data, clips: []}
-      this.updateMetaData()
+      this.$store.dispatch('updateCurrentReportClips', this.addedClips)
+      // this.updateMetaData()
     },
     removeClip(title) {
       const newClips = this.addedClips.filter((clip) => clip.title !== title)
       this.addedClips = newClips
+      this.$store.dispatch('updateCurrentReportClips', this.addedClips)
       if (this.currentSearch) {
         this.metaData = { ...this.currentSearch.meta_data, clips: newClips }
-        this.updateMetaData()
+        // this.updateMetaData()
       }
     },
     toggleReport() {
@@ -963,9 +967,10 @@ export default {
       clip['search'] = this.newSearch
       if (this.addedClips && this.addedClips.length < 20) {
         this.addedClips.push(clip)
+        this.$store.dispatch('updateCurrentReportClips', this.addedClips)
         if (this.currentSearch) {
           this.metaData = { ...this.currentSearch.meta_data, clips: this.addedClips }
-          this.updateMetaData()
+          // this.updateMetaData()
         }
       } else {
         return
@@ -977,9 +982,10 @@ export default {
       const newClips = this.addedClips.filter((clip) => clip.title !== title)
       newClips.unshift(clip)
       this.addedClips = newClips
+      this.$store.dispatch('updateCurrentReportClips', this.addedClips)
       if (this.currentSearch) {
         this.metaData = { ...this.currentSearch.meta_data, clips: newClips }
-        this.updateMetaData()
+        // this.updateMetaData()
       }
     },
     soonButtonText() {
@@ -1052,6 +1058,7 @@ export default {
     resetSearch() {
       this.clearNewSearch()
       this.addedClips = []
+      // this.$store.dispatch('updateCurrentReportClips', this.addedClips)
       this.metaData = { clips: [] }
       this.$emit('change-search', null)
       this.summary = ''
@@ -1092,7 +1099,9 @@ export default {
       this.booleanString = search.search_boolean
       this.newTemplate = search.instructions
       this.metaData = search.meta_data
-      this.addedClips = search.meta_data.clips ? search.meta_data.clips : []
+      console.log('this.$store.state.currentReportClips', this.$store.state.currentReportClips)
+      this.addedClips = this.$store.state.currentReportClips
+      // this.addedClips = search.meta_data.clips ? search.meta_data.clips : []
       this.mainView = search.type === 'SOCIAL_MEDIA' ? 'social' : 'news'
       this.generateNewSearch()
     },
@@ -1173,6 +1182,7 @@ export default {
         )
         return
       }
+      this.addedClips = this.$store.state.currentReportClips
       if (this.mainView !== 'website' && (!this.newSearch || this.newSearch.length < 3)) {
         return
       } else if (this.mainView === 'social') {
@@ -3384,10 +3394,14 @@ header {
 .dropdownBorder {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 4px;
-  padding-left: 8px;
-  padding-right: 8px;
+  // padding-left: 8px;
+  // padding-right: 8px;
   background-color: white;
   font-size: 12px;
+  padding: 8px;
+  // @media only screen and (max-width: 600px) {
+  //   padding: 16px 8px 48px 8px;
+  // }
 }
 
 .rotate-img {
