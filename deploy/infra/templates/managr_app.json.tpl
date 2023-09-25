@@ -21,7 +21,7 @@
       { "name": "SMTP_USE_TLS", "value": "${smtp_use_tls}" },
       { "name": "SMTP_PORT", "value": "${smtp_port}" },
       { "name": "SMTP_VALID_TESTING_DOMAINS", "value": "${smtp_valid_testing_domains}" },
-
+      { "name": "USE_AWS_STORAGE", "value": "${use_aws_storage}" },
       { "name": "AWS_LOCATION", "value": "${aws_location}" },
       { "name": "ENVIRONMENT", "value": "${environment}" },
 
