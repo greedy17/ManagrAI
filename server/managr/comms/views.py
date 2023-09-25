@@ -206,7 +206,7 @@ class PRSearchViewSet(
                 article_res.download()
                 article_res.parse()
                 text = article_res.text
-                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                open_ai_url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_ARTICLE_SUMMARY(
                     datetime.now().date(), text, search, length, instructions, True
                 )
@@ -219,7 +219,7 @@ class PRSearchViewSet(
                 )
                 with Variable_Client(timeout) as client:
                     r = client.post(
-                        url,
+                        open_ai_url,
                         data=json.dumps(body),
                         headers=core_consts.OPEN_AI_HEADERS,
                     )

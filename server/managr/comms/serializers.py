@@ -35,4 +35,4 @@ class PitchSerializer(serializers.ModelSerializer):
 class NewsSourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = NewsSource
-        fields = ("domain", "last_scrapped", "is_active")
+        fields = ("domain", "last_scraped", "is_active")
