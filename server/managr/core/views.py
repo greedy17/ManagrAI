@@ -404,7 +404,6 @@ def submit_chat_prompt(request):
                 attempts += 1
                 continue
         except Exception as e:
-            print("I AM HERE:")
             logger.exception(f"Exception from Open AI response {e}")
             has_error = True
             message = " Looks like we ran into an issue with your prompt, try removing things like quotes and ampersands"

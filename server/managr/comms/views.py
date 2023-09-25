@@ -100,7 +100,6 @@ class PRSearchViewSet(
                         token_amount=500,
                         top_p=0.1,
                     )
-                    print(body)
                     with Variable_Client() as client:
                         r = client.post(
                             url,
@@ -285,10 +284,11 @@ class PRSearchViewSet(
                 article_res.download()
                 article_res.parse()
                 text = article_res.text
-                print('text is here:', text)
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_WEB_SUMMARY(
-                    datetime.now().date(), text, instructions,
+                    datetime.now().date(),
+                    text,
+                    instructions,
                 )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
