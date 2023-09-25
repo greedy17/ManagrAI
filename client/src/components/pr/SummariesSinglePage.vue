@@ -924,7 +924,7 @@ export default {
         { name: `Media Pitch`, value: `Media Pitch` },
         { name: `Blog Post`, value: `Blog Post` },
         { name: `LinkedIn Post`, value: `LinkedIn Post` },
-        { name: `Twitter Post`, value: `LinkedIn Post` },
+        { name: `Twitter Post`, value: `Twitter Post` },
         { name: 'Email', value: 'Email' },
       ],
       upgradeMessage: 'You have reached your usage limit for the month. Please upgrade your plan.',

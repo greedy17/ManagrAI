@@ -61,7 +61,6 @@
             </div>
             <button
               v-if="!imageUrl"
-              :disabled="!clips.length || loading || summaryLoading"
               class="secondary-button"
             >
               <input id="imageInput" class="absolute-button-input pointer dull" type="file" @change="getImage" />
