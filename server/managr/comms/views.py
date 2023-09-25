@@ -23,6 +23,7 @@ from . import constants as comms_consts
 from .models import Search, TwitterAuthAccount, Pitch
 from managr.core.models import User
 from managr.comms import exceptions as comms_exceptions
+from .tasks import emit_process_website_domain
 from .serializers import SearchSerializer, PitchSerializer
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
@@ -100,7 +101,6 @@ class PRSearchViewSet(
                         token_amount=500,
                         top_p=0.1,
                     )
-                    print(body)
                     with Variable_Client() as client:
                         r = client.post(
                             url,
@@ -261,6 +261,7 @@ class PRSearchViewSet(
                 break
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
+        emit_process_website_domain(url)
         return Response(data={"summary": message})
 
     @action(
@@ -285,10 +286,12 @@ class PRSearchViewSet(
                 article_res.download()
                 article_res.parse()
                 text = article_res.text
-                print('text is here:', text)
+                print("text is here:", text)
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_WEB_SUMMARY(
-                    datetime.now().date(), text, instructions,
+                    datetime.now().date(),
+                    text,
+                    instructions,
                 )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
