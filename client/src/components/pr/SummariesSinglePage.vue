@@ -105,6 +105,13 @@
       />
     </Transition>
 
+    <div v-if="showArticleModal" class="modal">
+      <div class="modal-content">
+        <span @click="showArticleModal = false" class="close">&times;</span>
+        <p>You've scrolled halfway down the page!</p>
+      </div>
+    </div>
+
     <div @click="toggleReport" v-if="selectedSearch && !ShowReport" class="floating-action-bar">
       <div class="main-slot">
         <img src="@/assets/images/share.svg" height="10px" alt="" />
@@ -487,7 +494,7 @@
                   />
                   <div style="margin-left: -22px" class="tooltip">{{ copyTip }}</div>
                 </div>
-                <pre style="margin-top: 16px" class="pre-text" v-html="summary"></pre>
+                <pre style="margin-top: 36px" class="pre-text" v-html="summary"></pre>
               </div>
             </div>
           </div>
@@ -736,14 +743,61 @@
                   </div>
 
                   <div class="regenerate-article">
-                    <button
-                      @click="toggleArticleRegenerate"
-                      v-if="!showArticleRegenerate"
-                      :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
-                      class="tertiary-button"
-                    >
-                      Regenerate
-                    </button>
+                    <div v-if="!showArticleRegenerate" class="row">
+                      <button
+                        @click="toggleArticleRegenerate"
+                        :disabled="
+                          articleSummaryLoading || loading || summaryLoading || savingSearch
+                        "
+                        class="tertiary-button"
+                      >
+                        Regenerate
+                      </button>
+
+                      <div class="relative">
+                        <div
+                          @click="toggleArticleGenerateDropdown"
+                          class="row pointer nav-text dropdownBorder"
+                        >
+                          Generate Content
+                          <img
+                            v-if="!showArticleGenerateDropdown"
+                            src="@/assets/images/downArrow.svg"
+                            height="14px"
+                            alt=""
+                          />
+                          <img
+                            class="rotate-img"
+                            v-else
+                            src="@/assets/images/downArrow.svg"
+                            height="14px"
+                            alt=""
+                          />
+                        </div>
+
+                        <div v-if="showArticleGenerateDropdown" class="search-dropdown">
+                          <div class="searches-container">
+                            <div
+                              class="row relative"
+                              v-for="(option, i) in generateOptions"
+                              :key="option.value"
+                            >
+                              <p @click="selectArticleOption(option.value, article.summary, i)">
+                                {{ option.name }}
+                              </p>
+
+                              <img
+                                v-show="contentLoading && optionIndex === i"
+                                src="@/assets/images/loading.svg"
+                                class="rotate"
+                                height="12px"
+                                alt=""
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
                     <div class="full-width" v-else>
                       <textarea
@@ -817,6 +871,8 @@ export default {
   },
   data() {
     return {
+      showArticleGenerateDropdown: false,
+      showArticleModal: false,
       optionIndex: null,
       contentLoading: false,
       addedClips: [],
@@ -907,9 +963,26 @@ export default {
     },
   },
   mounted() {
+    window.addEventListener('scroll', this.checkScroll)
     // this.updateMessage()
   },
+  beforeDestroy() {
+    window.removeEventListener('scroll', this.checkScroll)
+  },
   methods: {
+    // checkScroll() {
+    //   console.log('function triggered')
+    //   const scrolled = window.scrollY
+    //   const viewportHeight = window.innerHeight
+    //   const pageHeight = document.documentElement.scrollHeight
+
+    //   if (scrolled + viewportHeight >= pageHeight / 2 && !this.showArticleModal) {
+    //     this.showArticleModal = true
+    //   }
+    // },
+    toggleArticleGenerateDropdown() {
+      this.showArticleGenerateDropdown = !this.showArticleGenerateDropdown
+    },
     toggleGenerateDropdown() {
       this.showGenerateDropdown = !this.showGenerateDropdown
     },
@@ -919,6 +992,14 @@ export default {
         this.contentLoading = true
         this.selectedOption = val
         this.setPitchContent()
+      }
+    },
+    selectArticleOption(val, sum, index) {
+      if (!this.contentLoading) {
+        this.optionIndex = index
+        this.contentLoading = true
+        this.selectedOption = val
+        this.setArticlePitchContent(sum)
       }
     },
     setPitchContent() {
@@ -931,9 +1012,17 @@ export default {
       setTimeout(() => {
         this.$router.push({ name: 'Pitches' })
       }, 500)
-      // setTimeout(() => {
-      //   this.contentLoading = false
-      // }, 750)
+    },
+    setArticlePitchContent(sum) {
+      let content = {
+        summary: sum,
+        term: this.newSearch,
+        type: this.selectedOption,
+      }
+      this.$store.commit('setGeneratedContent', content)
+      setTimeout(() => {
+        this.$router.push({ name: 'Pitches' })
+      }, 500)
     },
     clearClips() {
       this.addedClips = []
@@ -3382,7 +3471,8 @@ header {
 }
 
 .dropdownBorder {
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid $dark-black-blue;
+  color: $dark-black-blue;
   border-radius: 4px;
   padding-left: 8px;
   padding-right: 8px;
@@ -3411,5 +3501,38 @@ header {
   img {
     margin: 0 !important;
   }
+}
+
+.modal {
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 70%;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
 }
 </style>
