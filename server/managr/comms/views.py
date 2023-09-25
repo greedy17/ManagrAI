@@ -100,7 +100,6 @@ class PRSearchViewSet(
                         token_amount=500,
                         top_p=0.1,
                     )
-                    print(body)
                     with Variable_Client() as client:
                         r = client.post(
                             url,
