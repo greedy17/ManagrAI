@@ -51,16 +51,27 @@
           alt="Uploaded Cover"
           class="cover-photo"
         />
-
+        <input id="imageInput" class="absolute-button-input-large pointer dull" type="file" @change="getImage" />
+        
         <div class="top-padding">
-          <p v-if="!imageUrl">Cover Slide</p>
-          <small v-if="!imageUrl">Add title and cover image</small>
+          <div class="space-between">
+            <div>
+              <p v-if="!imageUrl">Cover Slide</p>
+              <small v-if="!imageUrl">Add title and cover image</small>
+            </div>
+            <button
+              v-if="!imageUrl"
+              class="secondary-button"
+            >
+              <input id="imageInput" class="absolute-button-input pointer dull" type="file" @change="getImage" />
+              Add Image
+            </button>
+          </div>
 
-          <input id="imageInput" class="absolute pointer dull plus-input" type="file" @change="test" />
 
-          <svg class="absolute pointer" width="18" height="18">
+          <!-- <svg class="absolute pointer" width="18" height="18">
             <path d="M9 9H3v1h6v6h1v-6h6V9h-6V3H9v6z" fill-rule="evenodd"></path>
-          </svg>
+          </svg> -->
         </div>
         <!-- @mouseenter="isHovering" @mouseleave="notHovering"  -->
         <div class="report-name">
@@ -72,6 +83,7 @@
               autofocus
               @blur="showTitleSave"
               v-model="reportTitle"
+              @input="handleReportTitleInput"
               type="text"
             />
             <!-- <button style="margin-left: 8px" class="secondary-button">save</button> -->
@@ -265,6 +277,7 @@
 <script>
 import { Comms } from '@/services/comms'
 import User from '@/services/users'
+import debounce from 'lodash.debounce'
 
 export default {
   name: 'Reports',
@@ -299,6 +312,11 @@ export default {
     clips: {},
     defaultSearch: {},
   },
+  created() {
+    this.reportTitle = this.$store.state.reportTitle
+    this.imageFile = this.$store.state.reportImage
+    this.summary = this.$store.state.reportSummary
+  },
   methods: {
     async uploadArticle() {
       this.clipLoading = true
@@ -321,12 +339,18 @@ export default {
         this.uploadLink = null
       }
     },
+    handleDebounce: debounce((reportTitle, dispatch) => {
+      dispatch('updateReportTitle', reportTitle)
+    }, 900),
     articleBanner(text) {
       this.articleBannerText = text
       this.showArticleBanner = true
       setTimeout(() => {
         this.showArticleBanner = false
       }, 2000)
+    },
+    handleReportTitleInput() {
+      this.handleDebounce(this.reportTitle, this.$store.dispatch)
     },
     addClip(clip) {
       this.$emit('add-clip', clip)
@@ -395,6 +419,9 @@ export default {
         this.summary = null
         this.imageUrl = null
         this.clearClips()
+        this.$store.dispatch('updateReportTitle', null)
+        this.$store.dispatch('updateReportImage', null)
+        this.$store.dispatch('updateReportSummary', null)
       }
     },
     async getArticleSummary(title, url, search, length = 500) {
@@ -422,9 +449,9 @@ export default {
       this.reportLoading = true
       let formData = new FormData()
       formData.append('title', this.reportTitle)
-      let imageFile = document.querySelector('#imageInput').files[0]
-      if (imageFile) {
-        formData.append('main_image', imageFile)
+      // let imageFile = document.querySelector('#imageInput').files[0]
+      if (this.imageFile) {
+        formData.append('main_image', this.imageFile)
       }
       formData.append('user', this.$store.state.user.id)
       formData.append(
@@ -464,10 +491,11 @@ export default {
     emitReportToggle() {
       this.$emit('toggle-report')
     },
-    test(event) {
+    getImage(event) {
       const file = event.target.files[0]
       this.imageFile = file
       this.createImage(file)
+      this.$store.dispatch('updateReportImage', file)
     },
     createImage(file) {
       const reader = new FileReader()
@@ -495,6 +523,7 @@ export default {
           })
           .then((response) => {
             this.summary = response.summary
+            this.$store.dispatch('updateReportSummary', this.summary)
           })
       } catch (e) {
         console.log('Error in getSummary', e)
@@ -722,6 +751,29 @@ h3 {
   position: absolute;
   top: 13vh;
   left: 220px;
+}
+
+.absolute-button-input {
+  position: absolute;
+  // top: 2vh;
+  // top: 0;
+  // left: 240px;
+  height: 2rem;
+  width: 5.5rem;
+  z-index: 5000;
+}
+.absolute-button-input-large {
+  position: absolute;
+  // top: 2vh;
+  top: 8px;
+  left: 20px;
+  height: 13.25rem;
+  width: 27rem;
+  z-index: 30;
+  @media only screen and (max-width: 600px) {
+    height: 10.5rem;
+    width: 19.25rem;
+  }
 }
 
 .pointer {
@@ -986,6 +1038,7 @@ footer {
   font-weight: 400;
   color: $dark-black-blue;
   padding: 0.475rem 1rem;
+  z-index: 50;
 }
 
 .area-input {
@@ -1016,6 +1069,7 @@ footer {
   left: 0;
   padding: 2px 8px;
   border-radius: 5px;
+  z-index: 5000;
   background-color: white;
 }
 
@@ -1252,5 +1306,13 @@ a {
   left: 45%;
   transform: translate(-50%) rotate(45deg);
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.space-between {
+  display: flex;
+  justify-content: space-between;
+}
+.no-hover:hover {
+  scale: 1;
+  box-shadow: none;
 }
 </style>

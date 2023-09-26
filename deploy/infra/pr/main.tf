@@ -120,6 +120,7 @@ data "template_file" "managr_app" {
     smtp_port                  = var.app_config.smtp_port
     smtp_valid_testing_domains = var.app_config.smtp_valid_testing_domains
 
+    use_aws_storage = title(var.app_config.use_aws_storage)
     aws_location = var.app_config.s3_bucket_location
 
     use_nylas      = title(var.app_config.use_nylas)
