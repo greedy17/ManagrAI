@@ -329,6 +329,7 @@ def _process_article_summary(payload, context):
 
 @background()
 def _process_website_domain(url):
+    print("url")
     base_domain = extract_base_domain(url)
     if base_domain:
         try:

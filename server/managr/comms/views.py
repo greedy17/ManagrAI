@@ -226,6 +226,8 @@ class PRSearchViewSet(
                 r = open_ai_exceptions._handle_response(r)
                 message = r.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("article_summaries")
+                task = emit_process_website_domain(url)
+                print(task)
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -261,7 +263,7 @@ class PRSearchViewSet(
                 break
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
-        emit_process_website_domain(url)
+
         return Response(data={"summary": message})
 
     @action(
@@ -286,7 +288,6 @@ class PRSearchViewSet(
                 article_res.download()
                 article_res.parse()
                 text = article_res.text
-                print("text is here:", text)
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_WEB_SUMMARY(
                     datetime.now().date(),
