@@ -225,6 +225,11 @@
 
     <div v-else class="center">
       <div class="pitch-container">
+        <Transition name="slide-fade">
+          <div v-if="showUpdateBanner" class="templates">
+            <p>Search saved successfully!</p>
+          </div>
+        </Transition>
         <div class="title-container">
           <div @click="resetSearch" class="back">
             <img src="@/assets/images/back.svg" height="18px" width="18px" alt="" />
@@ -399,6 +404,7 @@ export default {
       savingPitch: false,
       pitchName: '',
       savedPitch: null,
+      showUpdateBanner: false,
     }
   },
   watch: {
@@ -536,7 +542,7 @@ export default {
         })
         if (response.id) {
           // this.searchId = response.id
-          // this.showUpdateBanner = true
+          this.showUpdateBanner = true
           this.savedPitch = {
             name: response.name,
             user: this.user.id,
@@ -554,7 +560,7 @@ export default {
         // this.showUpdateBanner = true
         this.savingPitch = false
         setTimeout(() => {
-          // this.showUpdateBanner = false
+          this.showUpdateBanner = false
         }, 2000)
       }
     },
@@ -1540,5 +1546,51 @@ footer {
   img {
     margin: 0 !important;
   }
+}
+.slide-fade-enter-active {
+  transition: all 0.2s ease-in;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.1s ease-out;
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateY(100px);
+}
+.templates {
+  display: block;
+  width: fit-content;
+  height: 40px;
+  position: absolute;
+  top: 8px;
+  left: 45%;
+  font-size: 12px;
+  background: $dark-green;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  line-height: 1.5;
+  z-index: 2000;
+
+  p {
+    margin-top: 8px;
+    padding: 0;
+  }
+}
+
+.templates::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: $dark-green;
+  bottom: -3px;
+  left: 45%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 </style>

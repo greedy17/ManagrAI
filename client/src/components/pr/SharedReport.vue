@@ -44,13 +44,13 @@
           <header>
             <div class="card-col">
               <div class="card-top-left">
-                <span>{{ clip.source.name ? clip.source.name : clip.source }}</span>
+                <span>{{ clip.source ? (clip.source.name ? clip.source.name : clip.source) : 'Tweet' }}</span>
               </div>
               <h1 class="article-title" @click="goToArticle(clip.url)">
-                {{ clip.title }}
+                {{ clip.title ? clip.title : clip.user.name }}
               </h1>
               <p class="article-preview">
-                {{ clip.description }}
+                {{ clip.description ? clip.description : clip.text }}
               </p>
             </div>
 
@@ -61,9 +61,9 @@
 
           <div class="card-footer">
             <div class="author-time">
-              <span class="author">{{ clip.author }}</span>
+              <span class="author">{{ clip.author ? clip.author : (clip.user && clip.user.username ? clip.user.username : '') }}</span>
               <span class="divier-dot">.</span>
-              <span class="off-gray">{{ getTimeDifferenceInMinutes(clip.publishedAt) }}</span>
+              <span class="off-gray">{{ getTimeDifferenceInMinutes(clip.publishedAt ? clip.publishedAt : clip.created_at) }}</span>
             </div>
           </div>
           <div v-if="clip.summary">
@@ -164,7 +164,9 @@ export default {
     },
 
     goToArticle(link) {
-      window.open(link, '_blank')
+      if (link) {
+        window.open(link, '_blank')
+      }
     },
   },
 }

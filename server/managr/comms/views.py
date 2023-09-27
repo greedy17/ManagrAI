@@ -226,7 +226,8 @@ class PRSearchViewSet(
                 r = open_ai_exceptions._handle_response(r)
                 message = r.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("article_summaries")
-                emit_process_website_domain(url)
+                task = emit_process_website_domain(url)
+                print(task)
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(

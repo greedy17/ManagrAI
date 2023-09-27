@@ -630,6 +630,15 @@
                     <span class="off-gray time">{{
                       getTimeDifferenceInMinutes(tweet.created_at)
                     }}</span>
+                    <button
+                      :disabled="clipTitles.includes(tweet.id)"
+                      class="tertiary-button"
+                      @click="addClip(tweet)"
+                    >
+                      <img height="10px" src="@/assets/images/share.svg" alt="" />
+
+                      {{ clipTitles.includes(tweet.id) ? 'Shared' : 'Share' }}
+                    </button>
                   </div>
 
                   <!-- <button class="tertiary-button" @click="addClip(tweet)">
@@ -930,7 +939,8 @@ export default {
       upgradeMessage: 'You have reached your usage limit for the month. Please upgrade your plan.',
       copyTip: 'Copy',
       searchSuggestions: [
-        'XXX broad search',
+        'XXX',
+        'XXX no exclusions',
         'List out XXX competitors, by name',
         `List out topics XXX would care about`,
         'XXX no stock related news',
@@ -1050,11 +1060,32 @@ export default {
       }
     },
     addClip(clip) {
+      console.log('clip', clip)
       if (Array.isArray(clip.author)) {
         clip.author = clip.author[0]
       }
       clip['search'] = this.newSearch
       if (this.addedClips && this.addedClips.length < 20) {
+        if (!clip.urlToImage && clip.attachments) {
+          let tweetImg = ''
+          for (let i = 0; i < this.tweetMedia.length; i++) {
+            const media = this.tweetMedia[i]
+            if (media.media_key === clip.attachments.media_keys[0]) {
+              if (media.type === 'photo') {
+                tweetImg = media.url
+                break;
+              } else if (media.type === 'video') {
+                // tweetImg = media.variants[1].url
+                // break;
+              }
+              else if (media.type === 'animated_gif') {
+                tweetImg = media.variants[0].url
+                break;
+              }
+            }
+          }
+          clip.urlToImage = tweetImg
+        }
         this.addedClips.push(clip)
         this.$store.dispatch('updateCurrentReportClips', this.addedClips)
         if (this.currentSearch) {
@@ -1442,7 +1473,9 @@ export default {
     async getTweets(boolean = null) {
       this.loading = true
       this.summaryLoading = true
+      console.log('newSearch 1', this.newSearch)
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
+      console.log('newSearch 2', this.newSearch)
       try {
         await Comms.api
           .getTweets({
@@ -1630,7 +1663,7 @@ export default {
   },
   computed: {
     clipTitles() {
-      return this.addedClips ? this.addedClips.map((clip) => clip.title) : []
+      return this.addedClips ? this.addedClips.map((clip) => clip.title ? clip.title : clip.id) : []
     },
     messages() {
       return this.$store.state.messages
