@@ -2156,7 +2156,7 @@
           <div style="margin-top: 1rem;">
             <span>Is Paid?: </span> <input type="checkbox" v-model="inviteIsPaid" />
           </div>
-          <div style="margin-top: 1rem;">
+          <!-- <div style="margin-top: 1rem;">
             <span>Product: </span> 
             <Multiselect
               placeholder="Select Product"
@@ -2172,7 +2172,7 @@
                 <p class="multi-slot">No results.</p>
               </template>
             </Multiselect>
-          </div>
+          </div> -->
           <div>
             <button @click="generateInvite" class="green_button">Generate Link</button>
           </div>

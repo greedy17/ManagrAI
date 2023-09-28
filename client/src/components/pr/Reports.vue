@@ -170,7 +170,7 @@
         >
           <div class="clip-header">
             <img :src="clip.urlToImage" class="clip-photo" />
-            <small>{{ clip.title }}</small>
+            <small>{{ clip.title ? clip.title : clip.text }}</small>
           </div>
 
           <div v-if="clip.summary" class="summary-box">
@@ -186,7 +186,7 @@
               @click="getArticleSummary(clip.title, clip.url, clip.search)"
               style="margin-right: 12px"
               class="blue"
-              v-if="!summaryLoading && !clip.summary"
+              v-if="!summaryLoading && !clip.summary && clip.title"
               v-show="!clip.summary && !loading && !summaryLoading && !reportLoading"
               src="@/assets/images/sparkles-thin.svg"
               height="16px"
@@ -194,7 +194,7 @@
 
             <img
               style="margin-right: 12px"
-              v-else-if="loadingUrl === clip.url"
+              v-else-if="loadingUrl === clip.url && clip.title"
               class="rotate"
               height="16px"
               src="@/assets/images/loading.svg"
@@ -506,7 +506,7 @@ export default {
       reader.readAsDataURL(file)
     },
     getArticleDescriptions(articles) {
-      return articles.map((a) => a.content)
+      return articles.map((a) => a.content ? a.content : a.text)
     },
     clearClips() {
       this.$emit('clear-clips')
