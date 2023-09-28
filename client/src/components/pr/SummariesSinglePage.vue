@@ -690,16 +690,16 @@
                     <span class="off-gray time">{{
                       getTimeDifferenceInMinutes(tweet.created_at)
                     }}</span>
-                    <button
-                      :disabled="clipTitles.includes(tweet.id)"
-                      class="tertiary-button"
-                      @click="addClip(tweet)"
-                    >
-                      <img height="10px" src="@/assets/images/share.svg" alt="" />
-
-                      {{ clipTitles.includes(tweet.id) ? 'Shared' : 'Share' }}
-                    </button>
                   </div>
+                  <button
+                    :disabled="clipTitles.includes(tweet.id)"
+                    class="tertiary-button"
+                    @click="addClip(tweet)"
+                  >
+                    <img height="10px" src="@/assets/images/share.svg" alt="" />
+
+                    {{ clipTitles.includes(tweet.id) ? 'Shared' : 'Share' }}
+                  </button>
 
                   <!-- <button class="tertiary-button" @click="addClip(tweet)">
                     <img height="10px" src="@/assets/images/share.svg" alt="" />
@@ -1121,7 +1121,7 @@ export default {
       this.addedArticles = newArticles
     },
     removeClip(title) {
-      const newClips = this.addedClips.filter((clip) => clip.title !== title)
+      const newClips = this.addedClips.filter((clip) => clip.title !== title && clip.text !== title)
       this.addedClips = newClips
       this.$store.dispatch('updateCurrentReportClips', this.addedClips)
       if (this.currentSearch) {
@@ -1187,10 +1187,13 @@ export default {
                 // tweetImg = media.variants[1].url
                 // break;
               } else if (media.type === 'animated_gif') {
-                tweetImg = media.variants[0].url
-                break
+                // tweetImg = media.variants[0].url
+                // break;
               }
             }
+          }
+          if (!tweetImg) {
+            tweetImg = clip.user.profile_image_url
           }
           clip.urlToImage = tweetImg
         }
@@ -1327,7 +1330,6 @@ export default {
       this.booleanString = search.search_boolean
       this.newTemplate = search.instructions
       this.metaData = search.meta_data
-      console.log('this.$store.state.currentReportClips', this.$store.state.currentReportClips)
       this.addedClips = this.$store.state.currentReportClips
       // this.addedClips = search.meta_data.clips ? search.meta_data.clips : []
       this.mainView = search.type === 'SOCIAL_MEDIA' ? 'social' : 'news'
@@ -1571,9 +1573,7 @@ export default {
     async getTweets(boolean = null) {
       this.loading = true
       this.summaryLoading = true
-      console.log('newSearch 1', this.newSearch)
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
-      console.log('newSearch 2', this.newSearch)
       try {
         await Comms.api
           .getTweets({
