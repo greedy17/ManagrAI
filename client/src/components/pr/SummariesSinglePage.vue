@@ -154,13 +154,13 @@
           :class="{ activeswitch: mainView === 'website' }"
           class="switch-item"
         >
-          <img src="@/assets/images/globe.svg" height="18px" alt="" />
-          URL
+          <img src="@/assets/images/globe.svg" height="16px" alt="" />
+          Article
         </div>
       </div>
 
       <div class="no-content" v-if="!selectedSearch">
-        <div class="title-row">
+        <div :class="{ 'neg-mar-btm': mainView === 'website' }" class="title-row">
           <div class="row" v-if="!newSearch">
             <p class="typed">
               {{
@@ -185,8 +185,8 @@
             v-clickOutsideMenu
           >
             <div class="input-row">
-              <div style="border-right: none" class="main-text">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <div class="main-text">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                   <path
                     fill-rule="evenodd"
                     clip-rule="evenodd"
@@ -194,13 +194,14 @@
                     fill="currentColor"
                   ></path>
                 </svg>
+                Search
               </div>
               <!-- @keydown.enter.exact.prevent="generateNewSearch(null)" -->
               <input
                 @click.stop
                 id="search-input"
                 class="area-input"
-                placeholder="Search term..."
+                placeholder="Enter keywords or phrase..."
                 @focus="showDropdown"
                 autocomplete="off"
                 v-model="newSearch"
@@ -234,15 +235,16 @@
             <div class="input-row-start">
               <div class="main-text">
                 <img
-                  style="margin-right: 8px"
+                  style="margin-right: 10px"
                   src="@/assets/images/sparkles-thin.svg"
-                  height="16px"
+                  height="14px"
                 />
+                Instructions
               </div>
               <textarea
                 @focus="showPromptDropdown"
-                class="area-input"
-                placeholder="Summary instructions... (Optional)"
+                class="area-input text-area-input"
+                placeholder="Summary details..."
                 v-model="newTemplate"
                 v-autoresize
               />
@@ -263,13 +265,73 @@
             </div>
           </div>
 
+          <div style="margin-top: 40px" v-if="mainView === 'website'" class="divider">
+            <p style="left: 40%; font-size: 13px" class="divider-text">Articles</p>
+          </div>
+
+          <div
+            class="article-container"
+            style="margin-top: 32px"
+            v-if="mainView === 'website' && addedArticles.length"
+          >
+            <div>
+              <div
+                @mouseenter="setRow(i)"
+                @mouseleave="removeRow"
+                class="article-text relative"
+                v-for="(article, i) in addedArticles"
+                :key="i"
+              >
+                <img :src="article.urlToImage" class="clip-photo" />
+                {{ article.title }}
+
+                <img
+                  v-show="currentRow === i"
+                  @click="removeArticle(article.title)"
+                  class="danger"
+                  src="@/assets/images/trash.svg"
+                  height="16px"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="relative">
+            <Transition name="slide-fade">
+              <div
+                v-if="showArticleBanner"
+                :class="{ greenTemplates: success, redTemplates: !success }"
+              >
+                <p>{{ articleBannerText }}</p>
+              </div>
+            </Transition>
+          </div>
+
           <div v-if="mainView === 'website'" style="margin-top: 2rem" class="input-container">
             <div class="input-row">
               <div class="main-text">
-                <img src="@/assets/images/globe.svg" height="20px" />
+                <img src="@/assets/images/globe.svg" height="18px" /> Article
               </div>
-              <input class="area-input" placeholder="Article URL..." v-model="additionalSources" />
-              <!-- <small @click="removeSource" class="remove">X</small> -->
+              <input
+                class="area-input-small"
+                :placeholder="addedArticles.length ? 'Paste another url...' : 'Paste url...'"
+                v-model="uploadLink"
+              />
+              <button
+                style="margin-right: -8px"
+                class="secondary-button"
+                :disabled="!uploadArticle || clipLoading"
+                @click="uploadArticle"
+              >
+                <img
+                  v-if="clipLoading"
+                  class="rotate"
+                  height="12px"
+                  src="@/assets/images/loading.svg"
+                  alt=""
+                />
+                Add
+              </button>
             </div>
           </div>
 
@@ -293,7 +355,7 @@
             <button
               v-else
               @click="getSourceSummary()"
-              :disabled="!additionalSources"
+              :disabled="!addedArticles.length"
               class="primary-button"
             >
               Generate Summary
@@ -334,10 +396,8 @@
                 <p v-if="mainView !== 'website'" class="sub-text">
                   AI generated search: <span>{{ booleanString }}</span>
                 </p>
-
-                <p v-else class="sub-text">
-                  Article summary: <span>{{ additionalSources }}</span>
-                </p>
+                <h1 v-if="mainView === 'website'" class="no-text-margin">Article Summary</h1>
+                <p v-if="mainView === 'website'" class="sub-text">Summary for uploaded articles</p>
               </div>
               <div class="title-bar">
                 <div v-if="!showSaveName" class="row">
@@ -815,7 +875,7 @@
                         "
                         autofocus
                         class="area-input-outline wider"
-                        placeholder="Provide additional instructions..."
+                        placeholder="Provide additional instructions"
                         v-autoresize
                         v-model="articleInstructions"
                       />
@@ -880,6 +940,13 @@ export default {
   },
   data() {
     return {
+      currentRow: null,
+      addedArticles: [],
+      clipLoading: false,
+      uploadLink: null,
+      success: true,
+      articleBannerText: '',
+      showArticleBanner: false,
       showArticleGenerateDropdown: false,
       showArticleModal: false,
       optionIndex: null,
@@ -982,6 +1049,12 @@ export default {
     window.removeEventListener('scroll', this.checkScroll)
   },
   methods: {
+    setRow(i) {
+      this.currentRow = i
+    },
+    removeRow() {
+      this.currentRow = null
+    },
     // checkScroll() {
     //   console.log('function triggered')
     //   const scrolled = window.scrollY
@@ -1043,6 +1116,10 @@ export default {
       this.$store.dispatch('updateCurrentReportClips', this.addedClips)
       // this.updateMetaData()
     },
+    removeArticle(title) {
+      const newArticles = this.addedArticles.filter((article) => article.title !== title)
+      this.addedArticles = newArticles
+    },
     removeClip(title) {
       const newClips = this.addedClips.filter((clip) => clip.title !== title)
       this.addedClips = newClips
@@ -1059,8 +1136,40 @@ export default {
         this.ShowReport = !this.ShowReport
       }
     },
+    async uploadArticle() {
+      this.clipLoading = true
+      try {
+        await Comms.api
+          .uploadLink({
+            url: this.uploadLink,
+          })
+          .then((response) => {
+            this.success = true
+            this.addClipFromUrl(response)
+            this.articleBanner('Article added!')
+          })
+      } catch (e) {
+        this.success = false
+        console.log(e)
+        this.articleBanner('Error adding article!')
+      } finally {
+        this.clipLoading = false
+        this.uploadLink = null
+      }
+    },
+    articleBanner(text) {
+      this.articleBannerText = text
+      this.showArticleBanner = true
+      setTimeout(() => {
+        this.showArticleBanner = false
+      }, 2000)
+    },
+    addClipFromUrl(clip) {
+      clip.author = clip.author[0]
+      clip['search'] = this.newSearch
+      this.addedArticles.push(clip)
+    },
     addClip(clip) {
-      console.log('clip', clip)
       if (Array.isArray(clip.author)) {
         clip.author = clip.author[0]
       }
@@ -1073,14 +1182,13 @@ export default {
             if (media.media_key === clip.attachments.media_keys[0]) {
               if (media.type === 'photo') {
                 tweetImg = media.url
-                break;
+                break
               } else if (media.type === 'video') {
                 // tweetImg = media.variants[1].url
                 // break;
-              }
-              else if (media.type === 'animated_gif') {
+              } else if (media.type === 'animated_gif') {
                 tweetImg = media.variants[0].url
-                break;
+                break
               }
             }
           }
@@ -1329,27 +1437,17 @@ export default {
       this.closeRegenModal()
     },
     async getSourceSummary() {
-      if (!this.isPaid && this.searchesUsed >= 10) {
-        this.openPaidModal()
-        return
-      }
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       this.summaryLoading = true
       try {
-        await Comms.api
-          .getWebSummary({
-            url: this.additionalSources,
-            instructions: this.newTemplate || null,
-          })
-          .then((response) => {
-            this.summary = response.summary
-            this.refreshUser()
-          })
+        this.getSummary(this.addedArticles, this.newTemplate).then((response) => {
+          if (this.searchSaved) {
+            this.updateSearch()
+          }
+          this.refreshUser()
+        })
       } catch (e) {
         console.log(e)
-      } finally {
-        this.summaryLoading = false
-        this.scrollToTop()
       }
     },
     async updateMetaData() {
@@ -1403,7 +1501,7 @@ export default {
       this.newTemplate = ''
       this.searchName = ''
       this.metaData = { clips: [] }
-      this.additionalSources = ''
+      this.addedArticles = []
     },
     openRegenModal() {
       this.regenModal = true
@@ -1518,7 +1616,8 @@ export default {
       return tweetList
     },
     getArticleDescriptions(articles) {
-      return articles.map((a) => `Content:${a.content} Date:${a.publishedAt}`)
+      console.log(articles)
+      return articles.map((a) => `Content:${a.description} Date:${a.publishedAt}`)
     },
     async getTweetSummary(instructions = '') {
       let tweets = this.prepareTweetSummary(this.tweets)
@@ -1663,7 +1762,9 @@ export default {
   },
   computed: {
     clipTitles() {
-      return this.addedClips ? this.addedClips.map((clip) => clip.title ? clip.title : clip.id) : []
+      return this.addedClips
+        ? this.addedClips.map((clip) => (clip.title ? clip.title : clip.id))
+        : []
     },
     messages() {
       return this.$store.state.messages
@@ -2003,6 +2104,76 @@ export default {
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
+.redTemplates {
+  display: block;
+  width: fit-content;
+  height: 40px;
+  position: absolute;
+  top: -140px;
+  left: 16px;
+  font-size: 12px;
+  background: $coral;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  line-height: 1.5;
+  z-index: 5000;
+
+  p {
+    margin-top: 8px;
+    padding: 0;
+  }
+}
+
+.redTemplates::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: $coral;
+  bottom: -3px;
+  left: 45%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.greenTemplates {
+  display: block;
+  width: fit-content;
+  height: 40px;
+  position: absolute;
+  top: -140px;
+  left: 16px;
+  font-size: 12px;
+  background: $dark-green;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  line-height: 1.5;
+  z-index: 5000;
+
+  p {
+    margin-top: 8px;
+    padding: 0;
+  }
+}
+
+.greenTemplates::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: $dark-green;
+  bottom: -3px;
+  left: 45%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
 .typed-deleted {
   overflow: hidden;
   white-space: nowrap;
@@ -2268,6 +2439,58 @@ button:disabled {
     width: 100%;
   }
 }
+
+.article-container {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 32px 24px;
+  border-radius: 4px;
+  width: 500px;
+  max-height: 100px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+
+  &__empty {
+    color: $mid-gray;
+  }
+}
+
+.article-container::-webkit-scrollbar {
+  width: 6px;
+  height: 0px;
+}
+
+.article-container::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px;
+}
+
+.article-container:hover::-webkit-scrollbar-thumb {
+  background-color: $soft-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px;
+}
+
+.clip-photo {
+  height: 32px;
+  width: 32px;
+  object-fit: cover;
+  cursor: text;
+  margin-right: 8px;
+
+  &:hover {
+    opacity: 0.7;
+  }
+}
+
+.article-text {
+  display: flex;
+  align-items: flex-start;
+  font-size: 12px;
+  color: $dark-black-blue;
+  margin-bottom: 12px;
+}
+
 .s-padding {
   padding: 0 0.25rem !important;
 }
@@ -2298,6 +2521,27 @@ button:disabled {
 
 .wider {
   width: 100%;
+}
+
+.area-input-small {
+  width: 80%;
+  background-color: $offer-white;
+  margin-bottom: 0.25rem;
+  max-height: 250px;
+  padding: 0 1.25rem;
+  line-height: 1.75;
+  outline: none;
+  border: none;
+  letter-spacing: 0.5px;
+  font-size: 14px;
+  font-family: $base-font-family;
+  font-weight: 400;
+  border: none !important;
+  resize: none;
+  text-align: left;
+  overflow: auto;
+  scroll-behavior: smooth;
+  color: $dark-black-blue;
 }
 
 .area-input {
@@ -2338,14 +2582,19 @@ button:disabled {
   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
   border-radius: 6px;
 }
+
+.text-area-input::placeholder {
+  padding-top: 0.9rem;
+}
 .input-row {
   display: flex;
   align-items: center;
   flex-direction: row;
 }
+
 .input-row-start {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   flex-direction: row;
 
   img,
@@ -2353,16 +2602,27 @@ button:disabled {
     margin-top: 4px;
   }
 }
+
 .main-text {
+  width: 148px;
   display: flex;
   flex-direction: row;
   align-items: center;
   white-space: nowrap;
-  // padding-right: 0;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  padding-right: 1rem;
   margin: 0;
-  svg {
-    margin-right: 4px;
+  font-size: 13px;
+  color: $dark-black-blue;
+  svg,
+  img {
+    margin-right: 8px;
+    filter: invert(40%);
   }
+}
+
+.neg-mar-btm {
+  margin-bottom: -6px !important;
 }
 
 .main-slot {
@@ -3584,5 +3844,18 @@ header {
   color: black;
   text-decoration: none;
   cursor: pointer;
+}
+
+.danger {
+  cursor: pointer;
+  filter: invert(40%);
+  position: absolute;
+  right: 0;
+  margin-right: -8px;
+  &:hover {
+    opacity: 0.7 !important;
+    filter: invert(51%) sepia(74%) saturate(2430%) hue-rotate(320deg) brightness(104%)
+      contrast(121%) !important;
+  }
 }
 </style>

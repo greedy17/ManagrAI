@@ -568,11 +568,12 @@ def upload_link(request):
         article_res = Article(url, config=generate_config())
         article_res.download()
         article_res.parse()
+       
         title = article_res.title
         author = article_res.authors
         image = article_res.top_image
         date = article_res.publish_date
-        text = article_res.text
+        text = article_res.meta_description
         domain = get_domain(url)
 
         article = {}
@@ -582,7 +583,7 @@ def upload_link(request):
             "author": author,
             "urlToImage": image,
             "publishedAt": date,
-            "content": text,
+            "description": text,
             "url": url,
         }
     except Exception as e:
