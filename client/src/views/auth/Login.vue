@@ -36,6 +36,7 @@
         :disabled="loggingIn || !loginForm.isValid"
         @click="handleLoginAttempt"
         class="login-button"
+        id="login-button"
         style="font-size: 13px; width: 320px"
         text="Continue"
         :loading="loggingIn"

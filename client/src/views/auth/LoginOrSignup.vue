@@ -15,8 +15,8 @@
       </div>
 
       <div class="row">
-        <button class="primary-button" @click="goToLogin">Log In</button>
-        <button class="secondary-button" @click="goToRegister">Sign Up</button>
+        <button id="login" class="primary-button" @click="goToLogin">Log In</button>
+        <button id="register" class="secondary-button" @click="goToRegister">Sign Up</button>
       </div>
 
       <div class="links">
