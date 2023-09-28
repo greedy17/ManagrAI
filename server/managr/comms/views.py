@@ -226,7 +226,7 @@ class PRSearchViewSet(
                 r = open_ai_exceptions._handle_response(r)
                 message = r.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("article_summaries")
-                task = emit_process_website_domain(url)
+                task = emit_process_website_domain(url, user.organization.name)
                 print(task)
                 break
             except open_ai_exceptions.StopReasonLength:
@@ -568,11 +568,12 @@ def upload_link(request):
         article_res = Article(url, config=generate_config())
         article_res.download()
         article_res.parse()
+       
         title = article_res.title
         author = article_res.authors
         image = article_res.top_image
         date = article_res.publish_date
-        text = article_res.text
+        text = article_res.meta_description
         domain = get_domain(url)
 
         article = {}
@@ -582,7 +583,7 @@ def upload_link(request):
             "author": author,
             "urlToImage": image,
             "publishedAt": date,
-            "content": text,
+            "description": text,
             "url": url,
         }
     except Exception as e:

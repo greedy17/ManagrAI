@@ -101,7 +101,7 @@ def bucket_upload_filepath(instance, filename):
         original_name = filename.split(".")[:-1][0]
         time = str(timezone.now().isoformat())
         time = time.split(".")[0]  # Remove trailing tz info
-        name = f"{instance.user.organization_name}/{instance.user.first_name}/{original_name}_{time}.{extension}"
+        name = f"{instance.user.organization.name}/{instance.user.first_name}/{original_name}_{time}.{extension}"
         return name
     return datetime_appended_filepath(instance, filename)
 

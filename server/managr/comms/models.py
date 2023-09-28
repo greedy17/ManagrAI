@@ -276,7 +276,7 @@ class NewsSource(TimeStampModel):
     rss_feed_url = models.URLField(blank=True, null=True)
     last_scraped = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
-
+    access_count = JSONField(null=True, blank=True)
     # Web Scraping Fields
     category_link_selector = models.CharField(max_length=255, blank=True, null=True)
     category_name_attribute = models.CharField(max_length=50, blank=True, null=True)
