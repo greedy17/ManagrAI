@@ -479,7 +479,7 @@ export default {
       this.currentRow = null
     },
     removeClip(clip) {
-      this.$emit('remove-clip', clip.title)
+      this.$emit('remove-clip', clip.title ? clip.title : clip.text)
     },
     summarizeClip(clip) {
       this.$emit(
