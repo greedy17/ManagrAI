@@ -167,7 +167,7 @@
                 mainView === 'social'
                   ? 'Generate a summary from X (formally Twitter).'
                   : mainView === 'website'
-                  ? 'Generate a summary from a news article.'
+                  ? 'Generate a summary from news articles.'
                   : 'Generate a news summary from over 1 million sites.'
               }}
             </p>
