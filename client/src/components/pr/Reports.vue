@@ -51,23 +51,29 @@
           alt="Uploaded Cover"
           class="cover-photo"
         />
-        <input id="imageInput" class="absolute-button-input-large pointer dull" type="file" @change="getImage" />
-        
+        <input
+          id="imageInput"
+          class="absolute-button-input-large pointer dull"
+          type="file"
+          @change="getImage"
+        />
+
         <div class="top-padding">
           <div class="space-between">
             <div>
               <p v-if="!imageUrl">Cover Slide</p>
               <small v-if="!imageUrl">Add title and cover image</small>
             </div>
-            <button
-              v-if="!imageUrl"
-              class="secondary-button"
-            >
-              <input id="imageInput" class="absolute-button-input pointer dull" type="file" @change="getImage" />
+            <button v-if="!imageUrl" class="secondary-button">
+              <input
+                id="imageInput"
+                class="absolute-button-input pointer dull"
+                type="file"
+                @change="getImage"
+              />
               Add Image
             </button>
           </div>
-
 
           <!-- <svg class="absolute pointer" width="18" height="18">
             <path d="M9 9H3v1h6v6h1v-6h6V9h-6V3H9v6z" fill-rule="evenodd"></path>
@@ -506,7 +512,7 @@ export default {
       reader.readAsDataURL(file)
     },
     getArticleDescriptions(articles) {
-      return articles.map((a) => a.content ? a.content : a.text)
+      return articles.map((a) => (a.description ? a.description : a.text))
     },
     clearClips() {
       this.$emit('clear-clips')

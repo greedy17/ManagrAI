@@ -19,6 +19,7 @@ class CustomPitch(admin.ModelAdmin):
 class CustomNewsSource(admin.ModelAdmin):
     list_display = ("domain", "is_active", "last_scraped")
     ordering = ("-datetime_created",)
+    readonly_fields = ("access_count",)
 
 
 admin.site.register(Search, CustomSearch)
