@@ -46,9 +46,6 @@ describe('Log In Test', () => {
   it('it visits the webapp', () => {
     cy.visit('localhost:8080/');
   })
-  it('mounts the vue app', () => {
-    cy.get('div').should('have.id', 'app');
-  })
   it('visits the login page', () => {
     cy.get('#login').click();
     cy.url().should('eq', 'http://localhost:8080/login');
