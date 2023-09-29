@@ -326,6 +326,7 @@ export default {
             url: this.uploadLink,
           })
           .then((response) => {
+            console.log('manual', response)
             this.success = true
             this.addClip(response)
             this.articleBanner('Article added!')

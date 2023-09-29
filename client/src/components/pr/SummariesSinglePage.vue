@@ -614,66 +614,70 @@
           <div class="content-width" v-if="mainView === 'social' && tweets.length">
             <div class="news-container-med" v-for="(tweet, i) in tweets" :key="i">
               <div class="news-card-medium">
-                <header class="neg-margin">
-                  <div class="card-row-med">
-                    <img :src="tweet.user.profile_image_url" />
-                    <h1 @click="openTweet(tweet.user.username, tweet.id)" class="article-title">
-                      {{ tweet.user.name }}
-                    </h1>
-                    <svg
-                      v-if="tweet.user.verified"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 22 22"
-                      aria-label="Verified account"
-                      role="img"
-                      class="twitter-blue"
-                      data-testid="icon-verified"
-                    >
-                      <g>
-                        <path
-                          d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"
-                        ></path>
-                      </g>
-                    </svg>
+                <div class="attachment-header-container">
+                  <div>
+                    <header class="neg-margin">
+                      <div class="card-row-med">
+                        <img :src="tweet.user.profile_image_url" />
+                        <h1 @click="openTweet(tweet.user.username, tweet.id)" class="article-title">
+                          {{ tweet.user.name }}
+                        </h1>
+                        <svg
+                          v-if="tweet.user.verified"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 22 22"
+                          aria-label="Verified account"
+                          role="img"
+                          class="twitter-blue"
+                          data-testid="icon-verified"
+                        >
+                          <g>
+                            <path
+                              d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"
+                            ></path>
+                          </g>
+                        </svg>
+                      </div>
+                    </header>
+    
+                    <p class="article-preview">{{ tweet.text }}</p>
                   </div>
-                </header>
-
-                <p class="article-preview">{{ tweet.text }}</p>
-                <div v-if="tweet.attachments">
-                  <div
-                    style="margin-bottom: 16px"
-                    v-for="media in tweetMedia"
-                    :key="media.media_key"
-                  >
-                    <div v-if="media.media_key === tweet.attachments.media_keys[0]">
-                      <img
-                        v-if="media.type === 'photo'"
-                        :src="media.url"
-                        class="cover-photo-no-l-margin"
-                        alt=""
-                      />
-
-                      <video
-                        style="margin-top: 1rem"
-                        v-else-if="media.type === 'video'"
-                        width="400"
-                        controls
-                      >
-                        <source :src="media.variants[1].url" type="video/mp4" />
-                      </video>
-
-                      <video
-                        style="margin-top: 1rem"
-                        v-else-if="media.type === 'animated_gif'"
-                        width="400"
-                        autoplay
-                        loop
-                        muted
-                        playsinline
-                      >
-                        <source :src="media.variants[0].url" type="video/mp4" />
-                      </video>
+                  <div v-if="tweet.attachments" class="tweet-attachement">
+                    <div
+                      style="margin-bottom: 16px"
+                      v-for="media in tweetMedia"
+                      :key="media.media_key"
+                    >
+                      <div v-if="media.media_key === tweet.attachments.media_keys[0]">
+                        <img
+                          v-if="media.type === 'photo'"
+                          :src="media.url"
+                          class="cover-photo-no-l-margin"
+                          alt=""
+                        />
+  
+                        <video
+                          style="margin-top: 1rem"
+                          v-else-if="media.type === 'video'"
+                          width="400"
+                          controls
+                        >
+                          <source :src="media.variants[1].url" type="video/mp4" />
+                        </video>
+  
+                        <video
+                          style="margin-top: 1rem"
+                          v-else-if="media.type === 'animated_gif'"
+                          width="400"
+                          autoplay
+                          loop
+                          muted
+                          playsinline
+                        >
+                          <source :src="media.variants[0].url" type="video/mp4" />
+                        </video>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1392,7 +1396,25 @@ export default {
           return `${timeDifferenceInMinutes}m`
         }
       } else {
-        return `${givenDate.getMonth() + 1}/${givenDate.getDate()}/${givenDate.getFullYear()}`
+        let month
+        let day
+        let year
+        if (Number(givenDate.getMonth() + 1)) {
+          month = givenDate.getMonth() + 1
+        } else {
+          month = '--'
+        }
+        if (Number(givenDate.getDate())) {
+          day = givenDate.getDate()
+        } else {
+          day = '--'
+        }
+        if (Number(givenDate.getFullYear())) {
+          year = givenDate.getFullYear()
+        } else {
+          year = '--'
+        }
+        return `${month}/${day}/${year}`
       }
     },
     openPaidModal(msg) {
@@ -2941,6 +2963,10 @@ header {
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
+  @media only screen and (max-width: 600px) {
+    width: 90%;
+    // padding-top: 48px;
+  }
 }
 
 .no-results {
@@ -3060,6 +3086,10 @@ header {
     overflow: none;
     text-overflow: ellipsis;
     margin-bottom: 8px;
+    @media only screen and (max-width: 600px) {
+      align-items: flex-start;
+      margin-left: 0.25rem;
+    }
   }
 }
 
@@ -3856,6 +3886,24 @@ header {
     opacity: 0.7 !important;
     filter: invert(51%) sepia(74%) saturate(2430%) hue-rotate(320deg) brightness(104%)
       contrast(121%) !important;
+  }
+}
+.attachment-header-container {
+  @media only screen and (max-width: 600px) {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+}
+.tweet-attachement {
+  img {
+    @media only screen and (max-width: 600px) {
+      width: 80vw;
+    }
+  }
+  video {
+    @media only screen and (max-width: 600px) {
+      width: 80vw;
+    }
   }
 }
 </style>
