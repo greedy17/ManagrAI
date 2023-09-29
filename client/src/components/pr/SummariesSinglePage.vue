@@ -105,13 +105,6 @@
       />
     </Transition>
 
-    <div v-if="showArticleModal" class="modal">
-      <div class="modal-content">
-        <span @click="showArticleModal = false" class="close">&times;</span>
-        <p>You've scrolled halfway down the page!</p>
-      </div>
-    </div>
-
     <div @click="toggleReport" v-if="selectedSearch && !ShowReport" class="floating-action-bar">
       <div class="main-slot">
         <img src="@/assets/images/share.svg" height="10px" alt="" />
@@ -563,7 +556,10 @@
         <div
           ref="topDivider"
           v-if="
-            ((filteredArticles && filteredArticles.length) || (tweets && tweets.length)) && !loading
+            ((filteredArticles && filteredArticles.length) ||
+              (tweets && tweets.length) ||
+              addedArticles.length) &&
+            !loading
           "
           class="divider"
         >
@@ -572,7 +568,7 @@
               mainView === 'news'
                 ? 'News Clips'
                 : mainView === 'website'
-                ? 'Website'
+                ? 'Articles'
                 : 'Social Media'
             }}
           </p>
@@ -640,7 +636,7 @@
                         </svg>
                       </div>
                     </header>
-    
+
                     <p class="article-preview">{{ tweet.text }}</p>
                   </div>
                   <div v-if="tweet.attachments" class="tweet-attachement">
@@ -656,7 +652,7 @@
                           class="cover-photo-no-l-margin"
                           alt=""
                         />
-  
+
                         <video
                           style="margin-top: 1rem"
                           v-else-if="media.type === 'video'"
@@ -665,7 +661,7 @@
                         >
                           <source :src="media.variants[1].url" type="video/mp4" />
                         </video>
-  
+
                         <video
                           style="margin-top: 1rem"
                           v-else-if="media.type === 'animated_gif'"
@@ -916,6 +912,201 @@
               </div>
             </div>
           </div>
+          <div v-else-if="mainView === 'website'" class="content-width">
+            <div v-for="(article, i) in addedArticles" :key="i" class="news-container">
+              <div class="news-card" @click="selectArticle(article)">
+                <header>
+                  <div class="card-col">
+                    <div class="card-top-left">
+                      <!-- <img :src="article.icon" /> -->
+                      <span>{{ article.source.name || article.source }}</span>
+                    </div>
+                    <h1 class="article-title" @click="goToArticle(article.url)">
+                      {{ article.title }}
+                    </h1>
+                    <p class="article-preview">
+                      {{ article.description }}
+                    </p>
+                  </div>
+
+                  <!-- <div @click="goToArticle(article.url)"> -->
+                  <img
+                    @click="goToArticle(article.url)"
+                    :src="article.urlToImage"
+                    class="cover-photo"
+                  />
+                  <!-- </div> -->
+                </header>
+
+                <div class="card-footer">
+                  <div class="author-time">
+                    <span class="author">{{ article.author }}</span>
+                    <span class="divier-dot">.</span>
+                    <span class="off-gray time">{{
+                      getTimeDifferenceInMinutes(article.publishedAt)
+                    }}</span>
+                    <span class="divier-dot">.</span>
+                  </div>
+                  <div class="footer-icon-container">
+                    <button
+                      :disabled="clipTitles.includes(article.title)"
+                      class="tertiary-button"
+                      @click="addClip(article)"
+                    >
+                      <img height="10px" src="@/assets/images/share.svg" alt="" />
+
+                      {{ clipTitles.includes(article.title) ? 'Shared' : 'Share' }}
+                    </button>
+
+                    <button
+                      v-if="!article.summary"
+                      @click="getArticleSummary(article.url)"
+                      class="tertiary-button summarize-button"
+                      style="margin: 0"
+                      :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
+                    >
+                      <img
+                        v-if="articleSummaryLoading && loadingUrl === article.url"
+                        class="rotate"
+                        height="14px"
+                        src="@/assets/images/loading.svg"
+                        alt=""
+                      />
+                      <img v-else src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
+                      {{
+                        articleSummaryLoading && loadingUrl === article.url
+                          ? 'Summarizing'
+                          : 'Summarize'
+                      }}
+                    </button>
+
+                    <img
+                      v-else
+                      src="@/assets/images/sparkle.svg"
+                      class="right-arrow-footer blue-icon"
+                    />
+                  </div>
+                </div>
+                <div v-if="article.summary">
+                  <div class="blue-bg display-flex">
+                    <pre v-html="article.summary" class="pre-text"></pre>
+                    <div
+                      @click="copyArticleSummary(article.summary)"
+                      class="wrapper article-copy-container circle-border"
+                      style="padding: 12px 6px; border: 0.5px solid #2f4656"
+                    >
+                      <img
+                        style="cursor: pointer"
+                        class="img-highlight"
+                        src="@/assets/images/clipboard.svg"
+                        height="12px"
+                        alt=""
+                      />
+                      <div style="margin-left: -22px" class="tooltip">{{ copyTip }}</div>
+                    </div>
+                  </div>
+
+                  <div class="regenerate-article">
+                    <div v-if="!showArticleRegenerate" class="row">
+                      <button
+                        @click="toggleArticleRegenerate"
+                        :disabled="
+                          articleSummaryLoading || loading || summaryLoading || savingSearch
+                        "
+                        class="tertiary-button"
+                      >
+                        Regenerate
+                      </button>
+
+                      <div class="relative">
+                        <div
+                          @click="toggleArticleGenerateDropdown"
+                          class="row pointer nav-text dropdownBorder"
+                        >
+                          Generate Content
+                          <img
+                            v-if="!showArticleGenerateDropdown"
+                            src="@/assets/images/downArrow.svg"
+                            height="14px"
+                            alt=""
+                          />
+                          <img
+                            class="rotate-img"
+                            v-else
+                            src="@/assets/images/downArrow.svg"
+                            height="14px"
+                            alt=""
+                          />
+                        </div>
+
+                        <div v-if="showArticleGenerateDropdown" class="search-dropdown">
+                          <div class="searches-container">
+                            <div
+                              class="row relative"
+                              v-for="(option, i) in generateOptions"
+                              :key="option.value"
+                            >
+                              <p @click="selectArticleOption(option.value, article.summary, i)">
+                                {{ option.name }}
+                              </p>
+
+                              <img
+                                v-show="contentLoading && optionIndex === i"
+                                src="@/assets/images/loading.svg"
+                                class="rotate"
+                                height="12px"
+                                alt=""
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="full-width" v-else>
+                      <textarea
+                        :disabled="
+                          articleSummaryLoading || loading || summaryLoading || savingSearch
+                        "
+                        autofocus
+                        class="area-input-outline wider"
+                        placeholder="Provide additional instructions"
+                        v-autoresize
+                        v-model="articleInstructions"
+                      />
+
+                      <div class="row">
+                        <button @click="toggleArticleRegenerate" class="secondary-button">
+                          Cancel
+                        </button>
+
+                        <button
+                          @click="getArticleSummary(article.url, articleInstructions)"
+                          :disabled="
+                            articleSummaryLoading || loading || summaryLoading || savingSearch
+                          "
+                          class="primary-button"
+                        >
+                          <img
+                            v-if="articleSummaryLoading && loadingUrl === article.url"
+                            class="rotate"
+                            height="14px"
+                            src="@/assets/images/loading.svg"
+                            alt=""
+                          />
+                          {{
+                            articleSummaryLoading && loadingUrl === article.url
+                              ? 'Submitting'
+                              : 'Submit'
+                          }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -952,7 +1143,6 @@ export default {
       articleBannerText: '',
       showArticleBanner: false,
       showArticleGenerateDropdown: false,
-      showArticleModal: false,
       optionIndex: null,
       contentLoading: false,
       addedClips: [],
@@ -1059,16 +1249,6 @@ export default {
     removeRow() {
       this.currentRow = null
     },
-    // checkScroll() {
-    //   console.log('function triggered')
-    //   const scrolled = window.scrollY
-    //   const viewportHeight = window.innerHeight
-    //   const pageHeight = document.documentElement.scrollHeight
-
-    //   if (scrolled + viewportHeight >= pageHeight / 2 && !this.showArticleModal) {
-    //     this.showArticleModal = true
-    //   }
-    // },
     toggleArticleGenerateDropdown() {
       this.showArticleGenerateDropdown = !this.showArticleGenerateDropdown
     },
@@ -1378,43 +1558,47 @@ export default {
       this.addingSources = !this.addingSources
     },
     getTimeDifferenceInMinutes(dateString) {
-      const currentDate = new Date()
-      const givenDate = new Date(dateString)
+      if (dateString) {
+        const currentDate = new Date()
+        const givenDate = new Date(dateString)
 
-      if (
-        givenDate.getDate() === currentDate.getDate() &&
-        givenDate.getMonth() === currentDate.getMonth() &&
-        givenDate.getFullYear() === currentDate.getFullYear()
-      ) {
-        const timeDifferenceInMilliseconds = currentDate - givenDate
-        const timeDifferenceInMinutes = Math.floor(timeDifferenceInMilliseconds / (1000 * 60))
-        if (timeDifferenceInMinutes >= 60) {
-          const timeDifferenceInHours = Math.floor(timeDifferenceInMinutes / 60)
-          const remainingMinutes = timeDifferenceInMinutes % 60
-          return `${timeDifferenceInHours}h`
+        if (
+          givenDate.getDate() === currentDate.getDate() &&
+          givenDate.getMonth() === currentDate.getMonth() &&
+          givenDate.getFullYear() === currentDate.getFullYear()
+        ) {
+          const timeDifferenceInMilliseconds = currentDate - givenDate
+          const timeDifferenceInMinutes = Math.floor(timeDifferenceInMilliseconds / (1000 * 60))
+          if (timeDifferenceInMinutes >= 60) {
+            const timeDifferenceInHours = Math.floor(timeDifferenceInMinutes / 60)
+            const remainingMinutes = timeDifferenceInMinutes % 60
+            return `${timeDifferenceInHours}h`
+          } else {
+            return `${timeDifferenceInMinutes}m`
+          }
         } else {
-          return `${timeDifferenceInMinutes}m`
+          let month
+          let day
+          let year
+          if (Number(givenDate.getMonth() + 1)) {
+            month = givenDate.getMonth() + 1
+          } else {
+            month = '--'
+          }
+          if (Number(givenDate.getDate())) {
+            day = givenDate.getDate()
+          } else {
+            day = '--'
+          }
+          if (Number(givenDate.getFullYear())) {
+            year = givenDate.getFullYear()
+          } else {
+            year = '--'
+          }
+          return `${month}/${day}/${year}`
         }
       } else {
-        let month
-        let day
-        let year
-        if (Number(givenDate.getMonth() + 1)) {
-          month = givenDate.getMonth() + 1
-        } else {
-          month = '--'
-        }
-        if (Number(givenDate.getDate())) {
-          day = givenDate.getDate()
-        } else {
-          day = '--'
-        }
-        if (Number(givenDate.getFullYear())) {
-          year = givenDate.getFullYear()
-        } else {
-          year = '--'
-        }
-        return `${month}/${day}/${year}`
+        return '--/--/----'
       }
     },
     openPaidModal(msg) {
@@ -1697,7 +1881,11 @@ export default {
       }
     },
     async getArticleSummary(url, instructions = null, length = 1000) {
-      let selectedClip = this.filteredArticles.filter((art) => art.url === url)[0]
+      let selectedClip = this.addedArticles.length
+        ? this.addedArticles.filter((art) => art.url === url)[0]
+        : this.filteredArticles.filter((art) => art.url === url)[0]
+
+      console.log(selectedClip)
 
       this.articleSummaryLoading = true
       this.loadingUrl = url
@@ -1712,10 +1900,16 @@ export default {
           })
           .then((response) => {
             selectedClip['summary'] = response.summary
-            this.filteredArticles = this.filteredArticles.filter(
-              (clip) => clip.title !== selectedClip.title,
-            )
-            this.filteredArticles.unshift(selectedClip)
+            if (!this.addedArticles.length) {
+              this.filteredArticles.filter((clip) => clip.title !== selectedClip.title)
+              this.filteredArticles.unshift(selectedClip)
+            } else {
+              this.addedArticles = this.addedArticles.filter(
+                (clip) => clip.title !== selectedClip.title,
+              )
+              this.addedArticles.unshift(selectedClip)
+            }
+
             this.refreshUser()
           })
       } catch (e) {

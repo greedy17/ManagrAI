@@ -576,6 +576,8 @@ def upload_link(request):
         text = article_res.meta_description
         domain = get_domain(url)
 
+        print("DATE IS HERE", date)
+
         article = {}
         article = {
             "title": title,
