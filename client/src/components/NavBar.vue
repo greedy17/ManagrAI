@@ -358,6 +358,26 @@
               alt=""
             />
           </div>
+          <div
+              v-else-if="$route.name === 'Pitches'"
+              @click="toggleShowPitches"
+              class="row pointer nav-text saved-searches-mobile"
+            >
+              Saved Pitches
+              <img
+                v-if="!showSavedPitches"
+                src="@/assets/images/downArrow.svg"
+                height="14px"
+                alt=""
+              />
+              <img
+                class="rotate-img"
+                v-else
+                src="@/assets/images/downArrow.svg"
+                height="14px"
+                alt=""
+              />
+            </div>
 
           <!-- search-dropdown -->
           <div v-if="showSavedSearches" class="">
@@ -410,6 +430,46 @@
 
                 <img
                   @click="toggleDeleteModal(search)"
+                  v-if="hoverIndex === i"
+                  class="absolute-icon"
+                  src="@/assets/images/trash.svg"
+                  height="12px"
+                  alt=""
+                />
+              </div>
+            </div>
+          </div>
+          <div v-else-if="showSavedPitches">
+            <div class="searches-container">
+              <div
+                @mouseenter="setIndex(i)"
+                @mouseLeave="removeIndex"
+                class="row relative"
+                v-for="(pitch, i) in pitches"
+                :key="pitch.id"
+              >
+                <img
+                  class="search-icon mobile-search-icon invert"
+                  v-if="pitch.type === 'NEWS'"
+                  src="@/assets/images/memo.svg"
+                  height="12px"
+                  alt=""
+                  @click="selectPitch(pitch)"
+                />
+                <img
+                  class="search-icon mobile-search-icon"
+                  v-else-if="pitch.type === 'SOCIAL_MEDIA'"
+                  src="@/assets/images/comment.svg"
+                  height="12px"
+                  alt=""
+                  @click="selectPitch(pitch)"
+                />
+                <p @click="selectPitch(pitch)" class="light-gray-blue">
+                  {{ pitch.name }}
+                </p>
+  
+                <img
+                  @click="togglePitchDeleteModal(pitch)"
                   v-if="hoverIndex === i"
                   class="absolute-icon"
                   src="@/assets/images/trash.svg"

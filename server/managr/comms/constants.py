@@ -110,13 +110,13 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
 
 
 def OPEN_AI_PITCH(date, type, output, persona, briefing):
-    body = f"Today's {date}. As the VP of Communications, I need a {type} tailored for {persona}. Aim for a professional yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Get right to the point. Take into account the information from: {briefing}. Adhere to the given output parameters: {output}." 
+    body = f"Today's {date}. As the VP of Communications, I need a {type} tailored for {persona}. Aim for a professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Get right to the point. Take into account the information from: {briefing}. Adhere to the given output parameters: {output}." 
     return body
 
 
 OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS = (
     lambda pitch, instructions: f"""
-Below is an AI generated pitch. Adjust and rewrite the pitch per instructions below:\n
-Pitch: {pitch}\n
+Below is an AI generated content. Adjust and rewrite the pitch per instructions below:\n
+Content: {pitch}\n
 Instructions: {instructions}"""
 )
