@@ -105,13 +105,6 @@
       />
     </Transition>
 
-    <div v-if="showArticleModal" class="modal">
-      <div class="modal-content">
-        <span @click="showArticleModal = false" class="close">&times;</span>
-        <p>You've scrolled halfway down the page!</p>
-      </div>
-    </div>
-
     <div @click="toggleReport" v-if="selectedSearch && !ShowReport" class="floating-action-bar">
       <div class="main-slot">
         <img src="@/assets/images/share.svg" height="10px" alt="" />
@@ -563,7 +556,10 @@
         <div
           ref="topDivider"
           v-if="
-            ((filteredArticles && filteredArticles.length) || (tweets && tweets.length)) && !loading
+            ((filteredArticles && filteredArticles.length) ||
+              (tweets && tweets.length) ||
+              addedArticles.length) &&
+            !loading
           "
           class="divider"
         >
@@ -572,7 +568,7 @@
               mainView === 'news'
                 ? 'News Clips'
                 : mainView === 'website'
-                ? 'Website'
+                ? 'Articles'
                 : 'Social Media'
             }}
           </p>
@@ -614,66 +610,70 @@
           <div class="content-width" v-if="mainView === 'social' && tweets.length">
             <div class="news-container-med" v-for="(tweet, i) in tweets" :key="i">
               <div class="news-card-medium">
-                <header class="neg-margin">
-                  <div class="card-row-med">
-                    <img :src="tweet.user.profile_image_url" />
-                    <h1 @click="openTweet(tweet.user.username, tweet.id)" class="article-title">
-                      {{ tweet.user.name }}
-                    </h1>
-                    <svg
-                      v-if="tweet.user.verified"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 22 22"
-                      aria-label="Verified account"
-                      role="img"
-                      class="twitter-blue"
-                      data-testid="icon-verified"
-                    >
-                      <g>
-                        <path
-                          d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"
-                        ></path>
-                      </g>
-                    </svg>
+                <div class="attachment-header-container">
+                  <div>
+                    <header class="neg-margin">
+                      <div class="card-row-med">
+                        <img :src="tweet.user.profile_image_url" />
+                        <h1 @click="openTweet(tweet.user.username, tweet.id)" class="article-title">
+                          {{ tweet.user.name }}
+                        </h1>
+                        <svg
+                          v-if="tweet.user.verified"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 22 22"
+                          aria-label="Verified account"
+                          role="img"
+                          class="twitter-blue"
+                          data-testid="icon-verified"
+                        >
+                          <g>
+                            <path
+                              d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"
+                            ></path>
+                          </g>
+                        </svg>
+                      </div>
+                    </header>
+
+                    <p class="article-preview">{{ tweet.text }}</p>
                   </div>
-                </header>
+                  <div v-if="tweet.attachments" class="tweet-attachement">
+                    <div
+                      style="margin-bottom: 16px"
+                      v-for="media in tweetMedia"
+                      :key="media.media_key"
+                    >
+                      <div v-if="media.media_key === tweet.attachments.media_keys[0]">
+                        <img
+                          v-if="media.type === 'photo'"
+                          :src="media.url"
+                          class="cover-photo-no-l-margin"
+                          alt=""
+                        />
 
-                <p class="article-preview">{{ tweet.text }}</p>
-                <div v-if="tweet.attachments">
-                  <div
-                    style="margin-bottom: 16px"
-                    v-for="media in tweetMedia"
-                    :key="media.media_key"
-                  >
-                    <div v-if="media.media_key === tweet.attachments.media_keys[0]">
-                      <img
-                        v-if="media.type === 'photo'"
-                        :src="media.url"
-                        class="cover-photo-no-l-margin"
-                        alt=""
-                      />
+                        <video
+                          style="margin-top: 1rem"
+                          v-else-if="media.type === 'video'"
+                          width="400"
+                          controls
+                        >
+                          <source :src="media.variants[1].url" type="video/mp4" />
+                        </video>
 
-                      <video
-                        style="margin-top: 1rem"
-                        v-else-if="media.type === 'video'"
-                        width="400"
-                        controls
-                      >
-                        <source :src="media.variants[1].url" type="video/mp4" />
-                      </video>
-
-                      <video
-                        style="margin-top: 1rem"
-                        v-else-if="media.type === 'animated_gif'"
-                        width="400"
-                        autoplay
-                        loop
-                        muted
-                        playsinline
-                      >
-                        <source :src="media.variants[0].url" type="video/mp4" />
-                      </video>
+                        <video
+                          style="margin-top: 1rem"
+                          v-else-if="media.type === 'animated_gif'"
+                          width="400"
+                          autoplay
+                          loop
+                          muted
+                          playsinline
+                        >
+                          <source :src="media.variants[0].url" type="video/mp4" />
+                        </video>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -912,6 +912,201 @@
               </div>
             </div>
           </div>
+          <div v-else-if="mainView === 'website'" class="content-width">
+            <div v-for="(article, i) in addedArticles" :key="i" class="news-container">
+              <div class="news-card" @click="selectArticle(article)">
+                <header>
+                  <div class="card-col">
+                    <div class="card-top-left">
+                      <!-- <img :src="article.icon" /> -->
+                      <span>{{ article.source.name || article.source }}</span>
+                    </div>
+                    <h1 class="article-title" @click="goToArticle(article.url)">
+                      {{ article.title }}
+                    </h1>
+                    <p class="article-preview">
+                      {{ article.description }}
+                    </p>
+                  </div>
+
+                  <!-- <div @click="goToArticle(article.url)"> -->
+                  <img
+                    @click="goToArticle(article.url)"
+                    :src="article.urlToImage"
+                    class="cover-photo"
+                  />
+                  <!-- </div> -->
+                </header>
+
+                <div class="card-footer">
+                  <div class="author-time">
+                    <span class="author">{{ article.author }}</span>
+                    <span class="divier-dot">.</span>
+                    <span class="off-gray time">{{
+                      getTimeDifferenceInMinutes(article.publishedAt)
+                    }}</span>
+                    <span class="divier-dot">.</span>
+                  </div>
+                  <div class="footer-icon-container">
+                    <button
+                      :disabled="clipTitles.includes(article.title)"
+                      class="tertiary-button"
+                      @click="addClip(article)"
+                    >
+                      <img height="10px" src="@/assets/images/share.svg" alt="" />
+
+                      {{ clipTitles.includes(article.title) ? 'Shared' : 'Share' }}
+                    </button>
+
+                    <button
+                      v-if="!article.summary"
+                      @click="getArticleSummary(article.url)"
+                      class="tertiary-button summarize-button"
+                      style="margin: 0"
+                      :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
+                    >
+                      <img
+                        v-if="articleSummaryLoading && loadingUrl === article.url"
+                        class="rotate"
+                        height="14px"
+                        src="@/assets/images/loading.svg"
+                        alt=""
+                      />
+                      <img v-else src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
+                      {{
+                        articleSummaryLoading && loadingUrl === article.url
+                          ? 'Summarizing'
+                          : 'Summarize'
+                      }}
+                    </button>
+
+                    <img
+                      v-else
+                      src="@/assets/images/sparkle.svg"
+                      class="right-arrow-footer blue-icon"
+                    />
+                  </div>
+                </div>
+                <div v-if="article.summary">
+                  <div class="blue-bg display-flex">
+                    <pre v-html="article.summary" class="pre-text"></pre>
+                    <div
+                      @click="copyArticleSummary(article.summary)"
+                      class="wrapper article-copy-container circle-border"
+                      style="padding: 12px 6px; border: 0.5px solid #2f4656"
+                    >
+                      <img
+                        style="cursor: pointer"
+                        class="img-highlight"
+                        src="@/assets/images/clipboard.svg"
+                        height="12px"
+                        alt=""
+                      />
+                      <div style="margin-left: -22px" class="tooltip">{{ copyTip }}</div>
+                    </div>
+                  </div>
+
+                  <div class="regenerate-article">
+                    <div v-if="!showArticleRegenerate" class="row">
+                      <button
+                        @click="toggleArticleRegenerate"
+                        :disabled="
+                          articleSummaryLoading || loading || summaryLoading || savingSearch
+                        "
+                        class="tertiary-button"
+                      >
+                        Regenerate
+                      </button>
+
+                      <div class="relative">
+                        <div
+                          @click="toggleArticleGenerateDropdown"
+                          class="row pointer nav-text dropdownBorder"
+                        >
+                          Generate Content
+                          <img
+                            v-if="!showArticleGenerateDropdown"
+                            src="@/assets/images/downArrow.svg"
+                            height="14px"
+                            alt=""
+                          />
+                          <img
+                            class="rotate-img"
+                            v-else
+                            src="@/assets/images/downArrow.svg"
+                            height="14px"
+                            alt=""
+                          />
+                        </div>
+
+                        <div v-if="showArticleGenerateDropdown" class="search-dropdown">
+                          <div class="searches-container">
+                            <div
+                              class="row relative"
+                              v-for="(option, i) in generateOptions"
+                              :key="option.value"
+                            >
+                              <p @click="selectArticleOption(option.value, article.summary, i)">
+                                {{ option.name }}
+                              </p>
+
+                              <img
+                                v-show="contentLoading && optionIndex === i"
+                                src="@/assets/images/loading.svg"
+                                class="rotate"
+                                height="12px"
+                                alt=""
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="full-width" v-else>
+                      <textarea
+                        :disabled="
+                          articleSummaryLoading || loading || summaryLoading || savingSearch
+                        "
+                        autofocus
+                        class="area-input-outline wider"
+                        placeholder="Provide additional instructions"
+                        v-autoresize
+                        v-model="articleInstructions"
+                      />
+
+                      <div class="row">
+                        <button @click="toggleArticleRegenerate" class="secondary-button">
+                          Cancel
+                        </button>
+
+                        <button
+                          @click="getArticleSummary(article.url, articleInstructions)"
+                          :disabled="
+                            articleSummaryLoading || loading || summaryLoading || savingSearch
+                          "
+                          class="primary-button"
+                        >
+                          <img
+                            v-if="articleSummaryLoading && loadingUrl === article.url"
+                            class="rotate"
+                            height="14px"
+                            src="@/assets/images/loading.svg"
+                            alt=""
+                          />
+                          {{
+                            articleSummaryLoading && loadingUrl === article.url
+                              ? 'Submitting'
+                              : 'Submit'
+                          }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -948,7 +1143,6 @@ export default {
       articleBannerText: '',
       showArticleBanner: false,
       showArticleGenerateDropdown: false,
-      showArticleModal: false,
       optionIndex: null,
       contentLoading: false,
       addedClips: [],
@@ -1055,16 +1249,6 @@ export default {
     removeRow() {
       this.currentRow = null
     },
-    // checkScroll() {
-    //   console.log('function triggered')
-    //   const scrolled = window.scrollY
-    //   const viewportHeight = window.innerHeight
-    //   const pageHeight = document.documentElement.scrollHeight
-
-    //   if (scrolled + viewportHeight >= pageHeight / 2 && !this.showArticleModal) {
-    //     this.showArticleModal = true
-    //   }
-    // },
     toggleArticleGenerateDropdown() {
       this.showArticleGenerateDropdown = !this.showArticleGenerateDropdown
     },
@@ -1374,25 +1558,47 @@ export default {
       this.addingSources = !this.addingSources
     },
     getTimeDifferenceInMinutes(dateString) {
-      const currentDate = new Date()
-      const givenDate = new Date(dateString)
+      if (dateString) {
+        const currentDate = new Date()
+        const givenDate = new Date(dateString)
 
-      if (
-        givenDate.getDate() === currentDate.getDate() &&
-        givenDate.getMonth() === currentDate.getMonth() &&
-        givenDate.getFullYear() === currentDate.getFullYear()
-      ) {
-        const timeDifferenceInMilliseconds = currentDate - givenDate
-        const timeDifferenceInMinutes = Math.floor(timeDifferenceInMilliseconds / (1000 * 60))
-        if (timeDifferenceInMinutes >= 60) {
-          const timeDifferenceInHours = Math.floor(timeDifferenceInMinutes / 60)
-          const remainingMinutes = timeDifferenceInMinutes % 60
-          return `${timeDifferenceInHours}h`
+        if (
+          givenDate.getDate() === currentDate.getDate() &&
+          givenDate.getMonth() === currentDate.getMonth() &&
+          givenDate.getFullYear() === currentDate.getFullYear()
+        ) {
+          const timeDifferenceInMilliseconds = currentDate - givenDate
+          const timeDifferenceInMinutes = Math.floor(timeDifferenceInMilliseconds / (1000 * 60))
+          if (timeDifferenceInMinutes >= 60) {
+            const timeDifferenceInHours = Math.floor(timeDifferenceInMinutes / 60)
+            const remainingMinutes = timeDifferenceInMinutes % 60
+            return `${timeDifferenceInHours}h`
+          } else {
+            return `${timeDifferenceInMinutes}m`
+          }
         } else {
-          return `${timeDifferenceInMinutes}m`
+          let month
+          let day
+          let year
+          if (Number(givenDate.getMonth() + 1)) {
+            month = givenDate.getMonth() + 1
+          } else {
+            month = '--'
+          }
+          if (Number(givenDate.getDate())) {
+            day = givenDate.getDate()
+          } else {
+            day = '--'
+          }
+          if (Number(givenDate.getFullYear())) {
+            year = givenDate.getFullYear()
+          } else {
+            year = '--'
+          }
+          return `${month}/${day}/${year}`
         }
       } else {
-        return `${givenDate.getMonth() + 1}/${givenDate.getDate()}/${givenDate.getFullYear()}`
+        return '--/--/----'
       }
     },
     openPaidModal(msg) {
@@ -1675,7 +1881,11 @@ export default {
       }
     },
     async getArticleSummary(url, instructions = null, length = 1000) {
-      let selectedClip = this.filteredArticles.filter((art) => art.url === url)[0]
+      let selectedClip = this.addedArticles.length
+        ? this.addedArticles.filter((art) => art.url === url)[0]
+        : this.filteredArticles.filter((art) => art.url === url)[0]
+
+      console.log(selectedClip)
 
       this.articleSummaryLoading = true
       this.loadingUrl = url
@@ -1690,10 +1900,16 @@ export default {
           })
           .then((response) => {
             selectedClip['summary'] = response.summary
-            this.filteredArticles = this.filteredArticles.filter(
-              (clip) => clip.title !== selectedClip.title,
-            )
-            this.filteredArticles.unshift(selectedClip)
+            if (!this.addedArticles.length) {
+              this.filteredArticles.filter((clip) => clip.title !== selectedClip.title)
+              this.filteredArticles.unshift(selectedClip)
+            } else {
+              this.addedArticles = this.addedArticles.filter(
+                (clip) => clip.title !== selectedClip.title,
+              )
+              this.addedArticles.unshift(selectedClip)
+            }
+
             this.refreshUser()
           })
       } catch (e) {
@@ -2941,6 +3157,10 @@ header {
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
+  @media only screen and (max-width: 600px) {
+    width: 90%;
+    // padding-top: 48px;
+  }
 }
 
 .no-results {
@@ -3060,6 +3280,10 @@ header {
     overflow: none;
     text-overflow: ellipsis;
     margin-bottom: 8px;
+    @media only screen and (max-width: 600px) {
+      align-items: flex-start;
+      margin-left: 0.25rem;
+    }
   }
 }
 
@@ -3856,6 +4080,24 @@ header {
     opacity: 0.7 !important;
     filter: invert(51%) sepia(74%) saturate(2430%) hue-rotate(320deg) brightness(104%)
       contrast(121%) !important;
+  }
+}
+.attachment-header-container {
+  @media only screen and (max-width: 600px) {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+}
+.tweet-attachement {
+  img {
+    @media only screen and (max-width: 600px) {
+      width: 80vw;
+    }
+  }
+  video {
+    @media only screen and (max-width: 600px) {
+      width: 80vw;
+    }
   }
 }
 </style>

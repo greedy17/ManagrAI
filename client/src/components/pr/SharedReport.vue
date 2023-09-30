@@ -46,12 +46,23 @@
               <div class="card-top-left">
                 <span>{{ clip.source ? (clip.source.name ? clip.source.name : clip.source) : 'Tweet' }}</span>
               </div>
-              <h1 class="article-title" @click="goToArticle(clip.url)">
-                {{ clip.title ? clip.title : clip.user.name }}
-              </h1>
+              <div class="article-title-container">
+                <img v-if="clip.user" class="user-profile-img" :src="clip.user.profile_image_url" />
+                <h1 class="article-title" @click="goToArticle(clip.url)">
+                  {{ clip.title ? clip.title : clip.user.name }}
+                </h1>
+              </div>
               <p class="article-preview">
                 {{ clip.description ? clip.description : clip.text }}
               </p>
+              <!-- <div v-if="clip.attachments" class="tweet-attachement">
+                <img
+                  v-if="media.type === 'photo'"
+                  :src="media.url"
+                  class="cover-photo-no-l-margin"
+                  alt=""
+                />
+              </div> -->
             </div>
 
             <div @click="goToArticle(clip.url)">
@@ -62,6 +73,11 @@
           <div class="card-footer">
             <div class="author-time">
               <span class="author">{{ clip.author ? clip.author : (clip.user && clip.user.username ? clip.user.username : '') }}</span>
+              <span class="divier-dot">.</span>
+              <small v-if="clip.user && clip.user.public_metrics" class="bold-text"
+                >{{ formatNumber(clip.user.public_metrics.followers_count) }}
+                <span>Followers</span>
+              </small>
               <span class="divier-dot">.</span>
               <span class="off-gray">{{ getTimeDifferenceInMinutes(clip.publishedAt ? clip.publishedAt : clip.created_at) }}</span>
             </div>
@@ -104,6 +120,7 @@ export default {
         await User.api.getReport(code).then((response) => {
           this.report = response.data
           this.reportDate = response.date
+          console.log('response', response)
         })
       } catch (e) {
         console.log(e)
@@ -139,6 +156,18 @@ export default {
 
       // Assemble the final string
       return `${monthName} ${day}, ${year}`
+    },
+    formatNumber(num) {
+      if (num >= 1000000000) {
+        return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B'
+      }
+      if (num >= 1000000) {
+        return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M'
+      }
+      if (num >= 1000) {
+        return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K'
+      }
+      return num.toString()
     },
     getTimeDifferenceInMinutes(dateString) {
       const currentDate = new Date()
@@ -504,5 +533,14 @@ header {
     font-size: 12px;
     color: white;
   }
+}
+.article-title-container {
+  display: flex;
+  align-items: center;
+}
+.user-profile-img {
+  height: 18px;
+  margin-right: 0.5rem;
+  // margin-top: 0.25rem;
 }
 </style>
