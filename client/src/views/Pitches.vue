@@ -323,7 +323,7 @@
             </button>
           </div>
 
-          <div @click="copyText" v-if="!regenerating" class="wrapper circle-border">
+          <div @click="copyText" v-if="true/*!regenerating*/" class="wrapper circle-border">
             <img
               style="cursor: pointer"
               class="right-mar img-highlight"
