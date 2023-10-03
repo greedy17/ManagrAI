@@ -359,25 +359,25 @@
             />
           </div>
           <div
-              v-else-if="$route.name === 'Pitches'"
-              @click="toggleShowPitches"
-              class="row pointer nav-text saved-searches-mobile"
-            >
-              Saved Pitches
-              <img
-                v-if="!showSavedPitches"
-                src="@/assets/images/downArrow.svg"
-                height="14px"
-                alt=""
-              />
-              <img
-                class="rotate-img"
-                v-else
-                src="@/assets/images/downArrow.svg"
-                height="14px"
-                alt=""
-              />
-            </div>
+            v-else-if="$route.name === 'Pitches'"
+            @click="toggleShowPitches"
+            class="row pointer nav-text saved-searches-mobile"
+          >
+            Saved Pitches
+            <img
+              v-if="!showSavedPitches"
+              src="@/assets/images/downArrow.svg"
+              height="14px"
+              alt=""
+            />
+            <img
+              class="rotate-img"
+              v-else
+              src="@/assets/images/downArrow.svg"
+              height="14px"
+              alt=""
+            />
+          </div>
 
           <!-- search-dropdown -->
           <div v-if="showSavedSearches" class="">
@@ -467,7 +467,7 @@
                 <p @click="selectPitch(pitch)" class="light-gray-blue">
                   {{ pitch.name }}
                 </p>
-  
+
                 <img
                   @click="togglePitchDeleteModal(pitch)"
                   v-if="hoverIndex === i"
@@ -681,7 +681,8 @@ export default {
     },
     logOut() {
       this.$store.dispatch('logoutUser')
-      localStorage.token = null
+      localStorage.removeItem('token')
+      localStorage.removeItem('tokenReceivedAt')
       this.$router.push({ name: 'Login' })
       this.hideMobileMenu()
     },
