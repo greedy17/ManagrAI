@@ -1363,20 +1363,22 @@ export default {
       }
       clip['search'] = this.newSearch
       if (this.addedClips && this.addedClips.length < 20) {
-        if (!clip.urlToImage && clip.attachments) {
+        if (!clip.urlToImage && (clip.attachments || clip.edit_history_tweet_ids)) {
           let tweetImg = ''
-          for (let i = 0; i < this.tweetMedia.length; i++) {
-            const media = this.tweetMedia[i]
-            if (media.media_key === clip.attachments.media_keys[0]) {
-              if (media.type === 'photo') {
-                tweetImg = media.url
-                break
-              } else if (media.type === 'video') {
-                // tweetImg = media.variants[1].url
-                // break;
-              } else if (media.type === 'animated_gif') {
-                // tweetImg = media.variants[0].url
-                // break;
+          if (clip.attachments) {
+            for (let i = 0; i < this.tweetMedia.length; i++) {
+              const media = this.tweetMedia[i]
+              if (media.media_key === clip.attachments.media_keys[0]) {
+                if (media.type === 'photo') {
+                  tweetImg = media.url
+                  break
+                } else if (media.type === 'video') {
+                  // tweetImg = media.variants[1].url
+                  // break;
+                } else if (media.type === 'animated_gif') {
+                  // tweetImg = media.variants[0].url
+                  // break;
+                }
               }
             }
           }
@@ -1384,6 +1386,25 @@ export default {
             tweetImg = clip.user.profile_image_url
           }
           clip.urlToImage = tweetImg
+        }
+        if (clip.attachments) {
+          const mediaURLs = []
+          for (let i = 0; i < clip.attachments.media_keys.length; i++) {
+            const mediaKey = clip.attachments.media_keys[i]
+            const media = this.tweetMedia.filter(tm => tm.media_key === mediaKey)
+            if (media[0]) {
+              if (media[0].url) {
+                mediaURLs.push({url: media[0].url, type: 'image'})
+              } else if (media[0].variants) {
+                if (media[0].type === 'video') {
+                  mediaURLs.push({url: media[0].variants[1].url, type: 'video'})
+                } else if (media[0].type === 'animated_gif') {
+                  mediaURLs.push({url: media[0].variants[0].url, type: 'animated_gif'})
+                }
+              }
+            }
+          }
+          clip.attachments.mediaURLs = mediaURLs
         }
         this.addedClips.push(clip)
         this.$store.dispatch('updateCurrentReportClips', this.addedClips)
@@ -1826,7 +1847,6 @@ export default {
       return tweetList
     },
     getArticleDescriptions(articles) {
-      console.log(articles)
       return articles.map((a) => `Content:${a.description} Date:${a.publishedAt}`)
     },
     async getTweetSummary(instructions = '') {
@@ -1889,8 +1909,6 @@ export default {
         ? this.addedArticles.filter((art) => art.url === url)[0]
         : this.filteredArticles.filter((art) => art.url === url)[0]
 
-      console.log(selectedClip)
-
       this.articleSummaryLoading = true
       this.loadingUrl = url
 
@@ -1905,10 +1923,10 @@ export default {
           .then((response) => {
             selectedClip['summary'] = response.summary
             if (!this.addedArticles.length) {
-              this.filteredArticles.filter((clip) => clip.title !== selectedClip.title)
+              this.filteredArticles = this.filteredArticles.filter((clip) => clip.title !== selectedClip.title)
               this.filteredArticles.unshift(selectedClip)
             } else {
-              this.addedArticles = this.addedArticles.filter(
+              this.addedArticles = this.addedArticles = this.addedArticles.filter(
                 (clip) => clip.title !== selectedClip.title,
               )
               this.addedArticles.unshift(selectedClip)
