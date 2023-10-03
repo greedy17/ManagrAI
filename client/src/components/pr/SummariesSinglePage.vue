@@ -1929,14 +1929,21 @@ export default {
             }
 
             this.refreshUser()
+            this.scrollToTopDivider()
           })
       } catch (e) {
         console.log(e)
+        // this.$toast('Could not access article URL', {
+        //   timeout: 2000,
+        //   position: 'top-left',
+        //   type: 'error',
+        //   toastClassName: 'custom',
+        //   bodyClassName: ['custom'],
+        // })
       } finally {
         this.showArticleRegenerate = false
         this.articleSummaryLoading = false
         this.loadingUrl = null
-        this.scrollToTopDivider()
       }
     },
     changeSummaryChat(type) {
