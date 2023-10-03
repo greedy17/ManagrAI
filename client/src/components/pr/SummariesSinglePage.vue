@@ -1919,10 +1919,10 @@ export default {
           .then((response) => {
             selectedClip['summary'] = response.summary
             if (!this.addedArticles.length) {
-              this.filteredArticles.filter((clip) => clip.title !== selectedClip.title)
+              this.filteredArticles = this.filteredArticles.filter((clip) => clip.title !== selectedClip.title)
               this.filteredArticles.unshift(selectedClip)
             } else {
-              this.addedArticles = this.addedArticles.filter(
+              this.addedArticles = this.addedArticles = this.addedArticles.filter(
                 (clip) => clip.title !== selectedClip.title,
               )
               this.addedArticles.unshift(selectedClip)
