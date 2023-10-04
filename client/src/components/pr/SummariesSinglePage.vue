@@ -148,7 +148,7 @@
           class="switch-item"
         >
           <img src="@/assets/images/globe.svg" height="16px" alt="" />
-          Article
+          Articles
         </div>
       </div>
 
@@ -1131,6 +1131,7 @@ import ChatTextBox from '../Chat/ChatTextBox.vue'
 import Reports from '../pr/Reports.vue'
 import { Comms } from '@/services/comms'
 import User from '@/services/users'
+import { mapActions } from 'vuex'
 
 export default {
   name: 'SummariesSinglePage',
@@ -1149,6 +1150,8 @@ export default {
   },
   data() {
     return {
+      showExpireModal: false,
+      checkInterval: null,
       currentRow: null,
       addedArticles: [],
       clipLoading: false,
@@ -1239,6 +1242,7 @@ export default {
     }
   },
   created() {
+    // this.checkInterval = setInterval(this.checkTokenExpiry, 60000)
     this.addedClips = this.$store.state.currentReportClips
   },
   watch: {

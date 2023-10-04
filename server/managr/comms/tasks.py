@@ -333,7 +333,7 @@ def _process_website_domain(url, organization_name):
     if base_domain:
         try:
             database_check = NewsSource.objects.get(domain=base_domain)
-            if organization_name in NewsSource.access_count.keys():
+            if organization_name in database_check.access_count.keys():
                 database_check.access_count[organization_name] += 1
             else:
                 database_check.access_count[organization_name] = 1
