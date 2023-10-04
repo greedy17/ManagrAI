@@ -763,36 +763,43 @@
                       {{ clipTitles.includes(article.title) ? 'Shared' : 'Share' }}
                     </button>
 
-                    <button
-                      v-if="!article.summary"
-                      @click="getArticleSummary(article.url)"
-                      class="tertiary-button summarize-button"
-                      style="margin: 0"
-                      :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
-                    >
+                    <div v-if="mainView === 'website' && addedArticles.length === 1">
+                    
+                    </div>
+                    <div v-else>
+                      <button
+                        v-if="!article.summary"
+                        @click="getArticleSummary(article.url)"
+                        class="tertiary-button summarize-button"
+                        style="margin: 0"
+                        :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
+                      >
+                        <img
+                          v-if="articleSummaryLoading && loadingUrl === article.url"
+                          class="rotate"
+                          height="14px"
+                          src="@/assets/images/loading.svg"
+                          alt=""
+                        />
+                        <img v-else src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
+                        {{
+                          articleSummaryLoading && loadingUrl === article.url
+                            ? 'Summarizing'
+                            : 'Summarize'
+                        }}
+                      </button>
                       <img
-                        v-if="articleSummaryLoading && loadingUrl === article.url"
-                        class="rotate"
-                        height="14px"
-                        src="@/assets/images/loading.svg"
-                        alt=""
+                        v-else
+                        src="@/assets/images/sparkle.svg"
+                        class="right-arrow-footer blue-icon"
                       />
-                      <img v-else src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
-                      {{
-                        articleSummaryLoading && loadingUrl === article.url
-                          ? 'Summarizing'
-                          : 'Summarize'
-                      }}
-                    </button>
-
-                    <img
-                      v-else
-                      src="@/assets/images/sparkle.svg"
-                      class="right-arrow-footer blue-icon"
-                    />
+                    </div>
                   </div>
                 </div>
-                <div v-if="article.summary">
+                <div v-if="mainView === 'website' && addedArticles.length === 1">
+                    
+                </div>
+                <div v-else-if="article.summary">
                   <div class="blue-bg display-flex">
                     <pre v-html="article.summary" class="pre-text"></pre>
                     <div
@@ -958,36 +965,43 @@
                       {{ clipTitles.includes(article.title) ? 'Shared' : 'Share' }}
                     </button>
 
-                    <button
-                      v-if="!article.summary"
-                      @click="getArticleSummary(article.url)"
-                      class="tertiary-button summarize-button"
-                      style="margin: 0"
-                      :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
-                    >
+                    <div v-if="mainView === 'website' && addedArticles.length === 1">
+                    
+                    </div>
+                    <div v-else>
+                      <button
+                        v-if="!article.summary"
+                        @click="getArticleSummary(article.url)"
+                        class="tertiary-button summarize-button"
+                        style="margin: 0"
+                        :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
+                      >
+                        <img
+                          v-if="articleSummaryLoading && loadingUrl === article.url"
+                          class="rotate"
+                          height="14px"
+                          src="@/assets/images/loading.svg"
+                          alt=""
+                        />
+                        <img v-else src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
+                        {{
+                          articleSummaryLoading && loadingUrl === article.url
+                            ? 'Summarizing'
+                            : 'Summarize'
+                        }}
+                      </button>
                       <img
-                        v-if="articleSummaryLoading && loadingUrl === article.url"
-                        class="rotate"
-                        height="14px"
-                        src="@/assets/images/loading.svg"
-                        alt=""
+                        v-else
+                        src="@/assets/images/sparkle.svg"
+                        class="right-arrow-footer blue-icon"
                       />
-                      <img v-else src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
-                      {{
-                        articleSummaryLoading && loadingUrl === article.url
-                          ? 'Summarizing'
-                          : 'Summarize'
-                      }}
-                    </button>
-
-                    <img
-                      v-else
-                      src="@/assets/images/sparkle.svg"
-                      class="right-arrow-footer blue-icon"
-                    />
+                    </div>
                   </div>
                 </div>
-                <div v-if="article.summary">
+                <div v-if="mainView === 'website' && addedArticles.length === 1">
+                    
+                </div>
+                <div v-else-if="article.summary">
                   <div class="blue-bg display-flex">
                     <pre v-html="article.summary" class="pre-text"></pre>
                     <div
@@ -1669,12 +1683,18 @@ export default {
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       this.summaryLoading = true
       try {
-        this.getSummary(this.addedArticles, this.newTemplate).then((response) => {
-          if (this.searchSaved) {
-            this.updateSearch()
-          }
-          this.refreshUser()
-        })
+        let response
+        if (this.addedArticles.length === 1) {
+          response = await this.getArticleSummary(this.addedArticles[0].url, this.newTemplate)
+          this.summary = response
+        } else {
+          response = await this.getSummary(this.addedArticles, this.newTemplate)
+        }
+        if (this.searchSaved) {
+          this.updateSearch()
+        }
+        this.refreshUser()
+        this.summaryLoading = false
       } catch (e) {
         console.log(e)
       }
@@ -1909,28 +1929,27 @@ export default {
       this.loadingUrl = url
 
       try {
-        await Comms.api
+        const response = await Comms.api
           .getArticleSummary({
             url: url,
             search: this.newSearch,
             instructions: instructions,
             length: length,
           })
-          .then((response) => {
-            selectedClip['summary'] = response.summary
-            if (!this.addedArticles.length) {
-              this.filteredArticles = this.filteredArticles.filter((clip) => clip.title !== selectedClip.title)
-              this.filteredArticles.unshift(selectedClip)
-            } else {
-              this.addedArticles = this.addedArticles = this.addedArticles.filter(
-                (clip) => clip.title !== selectedClip.title,
-              )
-              this.addedArticles.unshift(selectedClip)
-            }
+          selectedClip['summary'] = response.summary
+          if (!this.addedArticles.length) {
+            this.filteredArticles = this.filteredArticles.filter((clip) => clip.title !== selectedClip.title)
+            this.filteredArticles.unshift(selectedClip)
+          } else {
+            this.addedArticles = this.addedArticles = this.addedArticles.filter(
+              (clip) => clip.title !== selectedClip.title,
+            )
+            this.addedArticles.unshift(selectedClip)
+          }
 
-            this.refreshUser()
-            this.scrollToTopDivider()
-          })
+          this.refreshUser()
+          this.scrollToTopDivider()
+          return response.summary
       } catch (e) {
         console.log(e)
         // this.$toast('Could not access article URL', {
