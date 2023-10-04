@@ -31,7 +31,9 @@
       </div>
     </Modal>
     <div :class="loading ? 'opaque' : 'extra-margin-top'" v-if="!pitch" class="center">
-      <p v-if="!loading">Generate a pitch, blog post or press release based on any persona.</p>
+      <p @click="test" v-if="!loading">
+        Generate a pitch, blog post or press release based on any persona.
+      </p>
 
       <div class="centered blue-bg" v-else>
         <div style="width: 675px" class="row">

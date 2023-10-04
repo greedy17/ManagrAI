@@ -171,7 +171,6 @@ class UserSerializer(serializers.ModelSerializer):
             "team",
             "is_team_lead",
             "crm",
-            "writing_style",
         )
 
     read_only_fields = (
