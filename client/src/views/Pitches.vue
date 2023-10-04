@@ -47,6 +47,64 @@
         </div>
       </div>
 
+      <div v-if="!writingStyle">
+        <button
+          @mouseenter="changeStyleText"
+          @mouseleave="defaultStyleText"
+          style="margin-top: -8px; width: 280px"
+          v-if="!showInput"
+          @click="toggleLearnInput"
+          class="primary-button extra-padding"
+        >
+          <img class="invert" src="@/assets/images/sparkle.svg" height="12px" alt="" />
+          {{ styleText }}
+        </button>
+
+        <div v-else class="sample-row">
+          <div class="input-container">
+            <div class="input-row relative">
+              <div class="main-text">
+                <img src="@/assets/images/sparkle.svg" height="14px" alt="" />
+                Sample
+              </div>
+
+              <textarea
+                :disabled="savingStyle"
+                maxlength="8000"
+                class="area-input text-area-input"
+                placeholder="Provide a sample of your writing..."
+                v-model="sample"
+                v-autoresize
+              />
+
+              <div class="absolute-count">
+                <small>{{ remainingCharsSample }}</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="input-row">
+            <button :disabled="savingStyle" @click="toggleLearnInput" class="secondary-button">
+              Cancel
+            </button>
+            <button :disabled="savingStyle" @click="saveWritingStyle" class="primary-button">
+              <img
+                v-if="savingStyle"
+                class="rotate"
+                height="12px"
+                src="@/assets/images/loading.svg"
+                alt=""
+              />
+              Learn
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: -1.5rem" v-else>
+        <p class="thin-font">{{ writingStyle }}</p>
+      </div>
+
       <div class="input-container" v-clickOutsideInstructionsMenu>
         <div class="input-row relative">
           <div class="main-text">
@@ -323,7 +381,7 @@
             </button>
           </div>
 
-          <div @click="copyText" v-if="true/*!regenerating*/" class="wrapper circle-border">
+          <div @click="copyText" v-if="true /*!regenerating*/" class="wrapper circle-border">
             <img
               style="cursor: pointer"
               class="right-mar img-highlight"
@@ -351,6 +409,7 @@ export default {
   },
   data() {
     return {
+      styleText: 'Personalized AI: Learn my writing style',
       type: '',
       output: '',
       persona: '',
@@ -405,6 +464,10 @@ export default {
       pitchName: '',
       savedPitch: null,
       showUpdateBanner: false,
+      showInput: false,
+      sample: '',
+      savingStyle: false,
+      writingStyle: null,
     }
   },
   watch: {
@@ -433,6 +496,42 @@ export default {
     this.$store.commit('setGeneratedContent', null)
   },
   methods: {
+    async saveWritingStyle() {
+      this.savingStyle = true
+      try {
+        await Comms.api
+          .saveWritingStyle({
+            sample: this.sample,
+          })
+          .then((response) => {
+            console.log(response)
+            this.writingStyle = response
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.savingStyle = false
+      }
+    },
+    changeStyleText() {
+      if (!this.isPaid) {
+        this.styleText = 'Upgrade to Pro!'
+      } else {
+        return
+      }
+    },
+    defaultStyleText() {
+      if (!this.isPaid) {
+        this.styleText = 'Personalized AI: Learn my writing style'
+      } else {
+        return
+      }
+    },
+    toggleLearnInput() {
+      if (this.isPaid) {
+        this.showInput = !this.showInput
+      }
+    },
     async copyText() {
       try {
         await navigator.clipboard.writeText(this.pitch)
@@ -598,6 +697,7 @@ export default {
             instructions: this.output,
             audience: this.persona,
             content: this.briefing,
+            style: this.writingStyle,
           })
           .then((response) => {
             this.pitch = response.pitch
@@ -653,6 +753,9 @@ export default {
     remainingCharsBrief() {
       return 1500 - this.briefing.length
     },
+    remainingCharsSample() {
+      return 8000 - this.sample.length
+    },
     user() {
       return this.$store.state.user
     },
@@ -681,7 +784,6 @@ export default {
       )
     },
     isPaid() {
-      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.organizationRef.isPaid
     },
     searchesUsed() {
@@ -1069,6 +1171,14 @@ footer {
   border: none;
   white-space: nowrap;
   margin-left: 1rem;
+
+  img {
+    margin-right: 0.5rem;
+  }
+}
+
+.extra-padding {
+  padding: 12px 8px;
 }
 
 .secondary-button {
@@ -1592,5 +1702,20 @@ footer {
   left: 45%;
   transform: translate(-50%) rotate(45deg);
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.invert {
+  filter: invert(96%);
+}
+
+.sample-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.thin-font {
+  font-family: $thin-font-family;
 }
 </style>

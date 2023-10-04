@@ -122,7 +122,7 @@ export default {
     checkTokenExpiry() {
       if (localStorage.getItem('tokenReceivedAt')) {
         const tokenReceivedAt = new Date(parseInt(localStorage.getItem('tokenReceivedAt')))
-        const expiresAt = new Date(tokenReceivedAt.getTime() + 1440000)
+        const expiresAt = new Date(tokenReceivedAt.getTime() + 14400000)
         const currentTime = new Date()
 
         if (currentTime >= new Date(expiresAt.getTime() - 300000)) {
@@ -138,7 +138,6 @@ export default {
       }
     },
     showExpiryWarning() {
-      console.log('The modal should be showing now')
       this.showExpireModal = true
     },
     logOut() {
@@ -159,7 +158,6 @@ export default {
             localStorage.setItem('token', token)
             this.$store.dispatch('updateUserToken', token)
             localStorage.setItem('tokenReceivedAt', Date.now().toString())
-            this.refreshCurrentUser()
             this.checkTokenExpiry()
             this.checkInterval = setInterval(this.checkTokenExpiry, 60 * 1000)
           })
