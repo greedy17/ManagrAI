@@ -156,6 +156,7 @@ class CustomUserAdmin(UserAdmin):
                     "team",
                     "make_team_lead",
                     "meta_data",
+                    "writing_style",
                 )
             },
         ),
@@ -182,7 +183,7 @@ class CustomUserAdmin(UserAdmin):
         "first_name",
         "last_name",
     )
-    readonly_fields = ["meta_data"]
+    readonly_fields = ["meta_data", "writing_style"]
 
     search_fields = (
         "email",
