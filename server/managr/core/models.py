@@ -274,6 +274,7 @@ class User(AbstractUser, TimeStampModel):
         null=True,
         blank=True,
     )
+    writing_style = models.TextField(null=True, blank=True)
     objects = UserManager()
 
     @property
