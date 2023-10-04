@@ -557,6 +557,8 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
+        this.sample = ''
+        this.toggleLearnInput()
         this.savingStyle = false
         this.refreshUser()
       }
