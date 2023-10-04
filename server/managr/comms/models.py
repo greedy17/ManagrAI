@@ -253,7 +253,7 @@ class Pitch(TimeStampModel):
     @classmethod
     def generate_pitch(cls, user, type, instructions, audience, content, style, tokens, timeout):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-        style = user.writing_style if user.writing_type else False
+        style = user.writing_style if user.writing_style else False
         prompt = comms_consts.OPEN_AI_PITCH(
             datetime.now().date(), type, instructions, audience, content, style
         )
