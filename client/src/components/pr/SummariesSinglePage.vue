@@ -148,7 +148,7 @@
           class="switch-item"
         >
           <img src="@/assets/images/globe.svg" height="16px" alt="" />
-          Article
+          Articles
         </div>
       </div>
 
@@ -763,36 +763,43 @@
                       {{ clipTitles.includes(article.title) ? 'Shared' : 'Share' }}
                     </button>
 
-                    <button
-                      v-if="!article.summary"
-                      @click="getArticleSummary(article.url)"
-                      class="tertiary-button summarize-button"
-                      style="margin: 0"
-                      :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
-                    >
+                    <div v-if="mainView === 'website' && addedArticles.length === 1">
+                    
+                    </div>
+                    <div v-else>
+                      <button
+                        v-if="!article.summary"
+                        @click="getArticleSummary(article.url)"
+                        class="tertiary-button summarize-button"
+                        style="margin: 0"
+                        :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
+                      >
+                        <img
+                          v-if="articleSummaryLoading && loadingUrl === article.url"
+                          class="rotate"
+                          height="14px"
+                          src="@/assets/images/loading.svg"
+                          alt=""
+                        />
+                        <img v-else src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
+                        {{
+                          articleSummaryLoading && loadingUrl === article.url
+                            ? 'Summarizing'
+                            : 'Summarize'
+                        }}
+                      </button>
                       <img
-                        v-if="articleSummaryLoading && loadingUrl === article.url"
-                        class="rotate"
-                        height="14px"
-                        src="@/assets/images/loading.svg"
-                        alt=""
+                        v-else
+                        src="@/assets/images/sparkle.svg"
+                        class="right-arrow-footer blue-icon"
                       />
-                      <img v-else src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
-                      {{
-                        articleSummaryLoading && loadingUrl === article.url
-                          ? 'Summarizing'
-                          : 'Summarize'
-                      }}
-                    </button>
-
-                    <img
-                      v-else
-                      src="@/assets/images/sparkle.svg"
-                      class="right-arrow-footer blue-icon"
-                    />
+                    </div>
                   </div>
                 </div>
-                <div v-if="article.summary">
+                <div v-if="mainView === 'website' && addedArticles.length === 1">
+                    
+                </div>
+                <div v-else-if="article.summary">
                   <div class="blue-bg display-flex">
                     <pre v-html="article.summary" class="pre-text"></pre>
                     <div
@@ -958,36 +965,43 @@
                       {{ clipTitles.includes(article.title) ? 'Shared' : 'Share' }}
                     </button>
 
-                    <button
-                      v-if="!article.summary"
-                      @click="getArticleSummary(article.url)"
-                      class="tertiary-button summarize-button"
-                      style="margin: 0"
-                      :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
-                    >
+                    <div v-if="mainView === 'website' && addedArticles.length === 1">
+                    
+                    </div>
+                    <div v-else>
+                      <button
+                        v-if="!article.summary"
+                        @click="getArticleSummary(article.url)"
+                        class="tertiary-button summarize-button"
+                        style="margin: 0"
+                        :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
+                      >
+                        <img
+                          v-if="articleSummaryLoading && loadingUrl === article.url"
+                          class="rotate"
+                          height="14px"
+                          src="@/assets/images/loading.svg"
+                          alt=""
+                        />
+                        <img v-else src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
+                        {{
+                          articleSummaryLoading && loadingUrl === article.url
+                            ? 'Summarizing'
+                            : 'Summarize'
+                        }}
+                      </button>
                       <img
-                        v-if="articleSummaryLoading && loadingUrl === article.url"
-                        class="rotate"
-                        height="14px"
-                        src="@/assets/images/loading.svg"
-                        alt=""
+                        v-else
+                        src="@/assets/images/sparkle.svg"
+                        class="right-arrow-footer blue-icon"
                       />
-                      <img v-else src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
-                      {{
-                        articleSummaryLoading && loadingUrl === article.url
-                          ? 'Summarizing'
-                          : 'Summarize'
-                      }}
-                    </button>
-
-                    <img
-                      v-else
-                      src="@/assets/images/sparkle.svg"
-                      class="right-arrow-footer blue-icon"
-                    />
+                    </div>
                   </div>
                 </div>
-                <div v-if="article.summary">
+                <div v-if="mainView === 'website' && addedArticles.length === 1">
+                    
+                </div>
+                <div v-else-if="article.summary">
                   <div class="blue-bg display-flex">
                     <pre v-html="article.summary" class="pre-text"></pre>
                     <div
@@ -1117,6 +1131,7 @@ import ChatTextBox from '../Chat/ChatTextBox.vue'
 import Reports from '../pr/Reports.vue'
 import { Comms } from '@/services/comms'
 import User from '@/services/users'
+import { mapActions } from 'vuex'
 
 export default {
   name: 'SummariesSinglePage',
@@ -1135,6 +1150,8 @@ export default {
   },
   data() {
     return {
+      showExpireModal: false,
+      checkInterval: null,
       currentRow: null,
       addedArticles: [],
       clipLoading: false,
@@ -1225,6 +1242,7 @@ export default {
     }
   },
   created() {
+    // this.checkInterval = setInterval(this.checkTokenExpiry, 60000)
     this.addedClips = this.$store.state.currentReportClips
   },
   watch: {
@@ -1359,20 +1377,22 @@ export default {
       }
       clip['search'] = this.newSearch
       if (this.addedClips && this.addedClips.length < 20) {
-        if (!clip.urlToImage && clip.attachments) {
+        if (!clip.urlToImage && (clip.attachments || clip.edit_history_tweet_ids)) {
           let tweetImg = ''
-          for (let i = 0; i < this.tweetMedia.length; i++) {
-            const media = this.tweetMedia[i]
-            if (media.media_key === clip.attachments.media_keys[0]) {
-              if (media.type === 'photo') {
-                tweetImg = media.url
-                break
-              } else if (media.type === 'video') {
-                // tweetImg = media.variants[1].url
-                // break;
-              } else if (media.type === 'animated_gif') {
-                // tweetImg = media.variants[0].url
-                // break;
+          if (clip.attachments) {
+            for (let i = 0; i < this.tweetMedia.length; i++) {
+              const media = this.tweetMedia[i]
+              if (media.media_key === clip.attachments.media_keys[0]) {
+                if (media.type === 'photo') {
+                  tweetImg = media.url
+                  break
+                } else if (media.type === 'video') {
+                  // tweetImg = media.variants[1].url
+                  // break;
+                } else if (media.type === 'animated_gif') {
+                  // tweetImg = media.variants[0].url
+                  // break;
+                }
               }
             }
           }
@@ -1380,6 +1400,25 @@ export default {
             tweetImg = clip.user.profile_image_url
           }
           clip.urlToImage = tweetImg
+        }
+        if (clip.attachments) {
+          const mediaURLs = []
+          for (let i = 0; i < clip.attachments.media_keys.length; i++) {
+            const mediaKey = clip.attachments.media_keys[i]
+            const media = this.tweetMedia.filter(tm => tm.media_key === mediaKey)
+            if (media[0]) {
+              if (media[0].url) {
+                mediaURLs.push({url: media[0].url, type: 'image'})
+              } else if (media[0].variants) {
+                if (media[0].type === 'video') {
+                  mediaURLs.push({url: media[0].variants[1].url, type: 'video'})
+                } else if (media[0].type === 'animated_gif') {
+                  mediaURLs.push({url: media[0].variants[0].url, type: 'animated_gif'})
+                }
+              }
+            }
+          }
+          clip.attachments.mediaURLs = mediaURLs
         }
         this.addedClips.push(clip)
         this.$store.dispatch('updateCurrentReportClips', this.addedClips)
@@ -1648,12 +1687,18 @@ export default {
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       this.summaryLoading = true
       try {
-        this.getSummary(this.addedArticles, this.newTemplate).then((response) => {
-          if (this.searchSaved) {
-            this.updateSearch()
-          }
-          this.refreshUser()
-        })
+        let response
+        if (this.addedArticles.length === 1) {
+          response = await this.getArticleSummary(this.addedArticles[0].url, this.newTemplate)
+          this.summary = response
+        } else {
+          response = await this.getSummary(this.addedArticles, this.newTemplate)
+        }
+        if (this.searchSaved) {
+          this.updateSearch()
+        }
+        this.refreshUser()
+        this.summaryLoading = false
       } catch (e) {
         console.log(e)
       }
@@ -1822,7 +1867,6 @@ export default {
       return tweetList
     },
     getArticleDescriptions(articles) {
-      console.log(articles)
       return articles.map((a) => `Content:${a.description} Date:${a.publishedAt}`)
     },
     async getTweetSummary(instructions = '') {
@@ -1885,40 +1929,44 @@ export default {
         ? this.addedArticles.filter((art) => art.url === url)[0]
         : this.filteredArticles.filter((art) => art.url === url)[0]
 
-      console.log(selectedClip)
-
       this.articleSummaryLoading = true
       this.loadingUrl = url
 
       try {
-        await Comms.api
+        const response = await Comms.api
           .getArticleSummary({
             url: url,
             search: this.newSearch,
             instructions: instructions,
             length: length,
           })
-          .then((response) => {
-            selectedClip['summary'] = response.summary
-            if (!this.addedArticles.length) {
-              this.filteredArticles.filter((clip) => clip.title !== selectedClip.title)
-              this.filteredArticles.unshift(selectedClip)
-            } else {
-              this.addedArticles = this.addedArticles.filter(
-                (clip) => clip.title !== selectedClip.title,
-              )
-              this.addedArticles.unshift(selectedClip)
-            }
+          selectedClip['summary'] = response.summary
+          if (!this.addedArticles.length) {
+            this.filteredArticles = this.filteredArticles.filter((clip) => clip.title !== selectedClip.title)
+            this.filteredArticles.unshift(selectedClip)
+          } else {
+            this.addedArticles = this.addedArticles = this.addedArticles.filter(
+              (clip) => clip.title !== selectedClip.title,
+            )
+            this.addedArticles.unshift(selectedClip)
+          }
 
-            this.refreshUser()
-          })
+          this.refreshUser()
+          this.scrollToTopDivider()
+          return response.summary
       } catch (e) {
         console.log(e)
+        // this.$toast('Could not access article URL', {
+        //   timeout: 2000,
+        //   position: 'top-left',
+        //   type: 'error',
+        //   toastClassName: 'custom',
+        //   bodyClassName: ['custom'],
+        // })
       } finally {
         this.showArticleRegenerate = false
         this.articleSummaryLoading = false
         this.loadingUrl = null
-        this.scrollToTopDivider()
       }
     },
     changeSummaryChat(type) {
