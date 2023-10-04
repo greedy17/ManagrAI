@@ -597,70 +597,6 @@ def upload_link(request):
     return Response(data=article)
 
 
-@api_view(["POST"])
-@permission_classes([permissions.IsAuthenticated])
-def create_writing_style(request):
-    sample = request.data["params"]["sample"]
-    user = request.user
-    url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-    token_amount = 500
-    timeout = 60.0
-    has_error = False
-    attempts = 1
-    
-    while True:
-        try:
-            prompt = comms_consts.OPEN_AI_WRITING_STYLE(sample)
-
-            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                user.email,
-                prompt,
-                token_amount=token_amount,
-                top_p=0.1,
-            )
-            with Variable_Client(timeout) as client:
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=core_consts.OPEN_AI_HEADERS,
-                )
-            r = open_ai_exceptions._handle_response(r)
-            style = r.get("choices")[0].get("message").get("content")
-            print(style)
-            break
-        except open_ai_exceptions.StopReasonLength:
-            logger.exception(
-                f"Retrying again due to token amount, amount currently at: {token_amount}"
-            )
-            if token_amount <= 2000:
-                has_error = True
-
-                message = "Token amount error"
-                break
-            else:
-                token_amount += 500
-                continue
-        except httpx.ReadTimeout as e:
-            print(e)
-            timeout += 30.0
-            if timeout >= 120.0:
-                has_error = True
-                message = "Read timeout issue"
-                logger.exception(f"Read timeout from Open AI {e}")
-                break
-            else:
-                attempts += 1
-                continue
-        except Exception as e:
-            has_error = True
-            message = f"Unknown exception: {e}"
-            logger.exception(e)
-            break
-    if has_error:
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
-    return Response(data=style)
-
-
 class PitchViewSet(
     viewsets.GenericViewSet,
     mixins.CreateModelMixin,
@@ -720,6 +656,8 @@ class PitchViewSet(
         attempts = 1
         token_amount = 1000
         timeout = 60.0
+
+        print(style)
 
         while True:
             try:
@@ -831,3 +769,70 @@ class PitchViewSet(
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
         return Response({"pitch": pitch})
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="learn",
+    )
+    def learn_writing_style(self, request, *args, **kwargs):
+        user = request.user
+        example = request.data["params"]["example"]
+        has_error = False
+        attempts = 1
+        token_amount = 1000
+        timeout = 60.0
+
+        while True:
+            try:
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.OPEN_AI_LEARN_WRITING_STYLE_PROMPT(example)
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    token_amount=token_amount,
+                    top_p=0.1,
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                r = open_ai_exceptions._handle_response(r)
+                style = r.get("choices")[0].get("message").get("content")
+                user.writing_style = style
+                user.save()
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount <= 2000:
+                    has_error = True
+
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 500
+                    continue
+            except httpx.ReadTimeout as e:
+                print(e)
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+        if has_error:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
+        return Response({"style": style})

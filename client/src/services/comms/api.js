@@ -189,7 +189,7 @@ class CommsApi extends ModelAPI {
 
     async saveWritingStyle(data) {
         try {
-            const res = await this.client.post('users/comms/save-writing-style/', { params: data })
+            const res = await this.client.post('pitches/learn/', { params: data })
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)

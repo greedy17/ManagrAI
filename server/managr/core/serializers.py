@@ -86,6 +86,7 @@ class UserClientSerializer(serializers.ModelSerializer):
             "crm",
             "meta_data",
             "activation_link_ref",
+            "writing_style",
         )
 
     def get_activation_link(self, instance):
@@ -170,6 +171,7 @@ class UserSerializer(serializers.ModelSerializer):
             "team",
             "is_team_lead",
             "crm",
+            "writing_style",
         )
 
     read_only_fields = (

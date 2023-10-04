@@ -93,9 +93,15 @@ DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS = (
     lambda search: f"<strong>Context and Sentiment pertaining to {search}:</strong>\n<strong>Relevance and Impact pertaining to {search}:</strong>"
 )
 
-def OPEN_AI_WEB_SUMMARY(date, article, instructions,):
+
+def OPEN_AI_WEB_SUMMARY(
+    date,
+    article,
+    instructions,
+):
     body = f"Today's date is {date}. Summarize this news article:\n {article}. \nOutput format must be:\n {instructions}. It cannot be longer than 1500 characters."
     return body
+
 
 def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, for_client=False):
     body = f"Today's date is {date}  Summarize this news article:\n Article: {article}\n As it relates to {search} It cannot be longer than {length} characters. Output format must be:\n"
@@ -111,9 +117,13 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
     return body
 
 
-def OPEN_AI_PITCH(date, type, output, persona, briefing, style):
-    writing_style = style if style is not None else DEFAULT_WRITING_STYLE
-    body = f"Today's {date}. As the VP of Communications, I need a {type} tailored for {persona}. Writing style: {writing_style}. Take into account the information from: {briefing}. Adhere to the given output parameters: {output}." 
+def OPEN_AI_PITCH(date, type, output, persona, briefing, style=False):
+    if not style:
+        style = "Professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Direct, to the point."
+    body = f"""f"Today's {date}. As the VP of Communications, I need a {type} tailored for {persona}. 
+    Writing Style: {style}. Take into account the information from: {briefing}. Adhere to the given output parameters: {output}."""
+
+    print('BODY IS HERE',body)
     return body
 
 
@@ -124,7 +134,9 @@ Content: {pitch}\n
 Instructions: {instructions}"""
 )
 
-
-def OPEN_AI_WRITING_STYLE(sample):
-    body = f"Your task is to emulate this users writing style. Analyze this writing sample and summarize its key writing style characteristics in a concise manner, focusing on tone, vocabulary, structure, and any unique stylistic elements. The output must be short, within 200 characters, describing the writing style in a concise manner. sample: {sample}"
-    return body
+OPEN_AI_LEARN_WRITING_STYLE_PROMPT = (
+    lambda sample: f"""Your task is to emulate this users writing style.
+Analyze this writing sample {sample} and summarize its key writing style characteristics in a concise manner,
+focusing on tone, vocabulary, structure, and any unique stylistic elements. 
+The output must be short, within 200 characters, describing the writing style in a concise manner."""
+)

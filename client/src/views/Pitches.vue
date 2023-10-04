@@ -31,7 +31,9 @@
       </div>
     </Modal>
     <div :class="loading ? 'opaque' : 'extra-margin-top'" v-if="!pitch" class="center">
-      <p v-if="!loading">Generate a pitch, blog post or press release based on any persona.</p>
+      <p @click="test" v-if="!loading">
+        Generate a pitch, blog post or press release based on any persona.
+      </p>
 
       <div class="centered blue-bg" v-else>
         <div style="width: 675px" class="row">
@@ -47,7 +49,7 @@
         </div>
       </div>
 
-      <div v-if="!writingStyle">
+      <div v-if="!user.writingStyle && !writingStyle">
         <button
           @mouseenter="changeStyleText"
           @mouseleave="defaultStyleText"
@@ -102,7 +104,51 @@
       </div>
 
       <div style="margin-top: -1.5rem" v-else>
-        <p class="thin-font">{{ writingStyle }}</p>
+        <p v-if="!showInput" @click="toggleLearnInput" class="thin-font row pointer img-margin">
+          <img class="green-filter" src="@/assets/images/check.svg" height="12px" alt="" />
+          Trained on your writing style
+          <img src="@/assets/images/pencil.svg" height="10px" alt="" />
+        </p>
+
+        <div v-else class="sample-row">
+          <div class="input-container">
+            <div class="input-row relative">
+              <div class="main-text">
+                <img src="@/assets/images/sparkle.svg" height="14px" alt="" />
+                Sample
+              </div>
+
+              <textarea
+                :disabled="savingStyle"
+                maxlength="8000"
+                class="area-input text-area-input"
+                placeholder="Provide a sample of your writing..."
+                v-model="sample"
+                v-autoresize
+              />
+
+              <div class="absolute-count">
+                <small>{{ remainingCharsSample }}</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="input-row">
+            <button :disabled="savingStyle" @click="toggleLearnInput" class="secondary-button">
+              Cancel
+            </button>
+            <button :disabled="savingStyle" @click="saveWritingStyle" class="primary-button">
+              <img
+                v-if="savingStyle"
+                class="rotate"
+                height="12px"
+                src="@/assets/images/loading.svg"
+                alt=""
+              />
+              Learn
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="input-container" v-clickOutsideInstructionsMenu>
@@ -467,7 +513,7 @@ export default {
       showInput: false,
       sample: '',
       savingStyle: false,
-      writingStyle: null,
+      writingStyle: 'jjjj',
     }
   },
   watch: {
@@ -496,21 +542,25 @@ export default {
     this.$store.commit('setGeneratedContent', null)
   },
   methods: {
+    test() {
+      console.log(this.user)
+    },
     async saveWritingStyle() {
       this.savingStyle = true
       try {
         await Comms.api
           .saveWritingStyle({
-            sample: this.sample,
+            example: this.sample,
           })
           .then((response) => {
-            console.log(response)
-            this.writingStyle = response
+            console.log(response.style)
+            this.writingStyle = response.style
           })
       } catch (e) {
         console.log(e)
       } finally {
         this.savingStyle = false
+        this.refreshUser()
       }
     },
     changeStyleText() {
@@ -697,7 +747,7 @@ export default {
             instructions: this.output,
             audience: this.persona,
             content: this.briefing,
-            style: this.writingStyle,
+            style: this.user.writingStyle || this.writingStyle,
           })
           .then((response) => {
             this.pitch = response.pitch
@@ -1715,7 +1765,17 @@ footer {
   gap: 8px;
 }
 
+.img-margin {
+  img {
+    margin: 0 4px;
+  }
+}
+
 .thin-font {
   font-family: $thin-font-family;
+}
+
+.green-filter {
+  filter: invert(66%) sepia(20%) saturate(1059%) hue-rotate(101deg) brightness(89%) contrast(93%);
 }
 </style>
