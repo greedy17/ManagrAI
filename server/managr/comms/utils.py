@@ -25,8 +25,7 @@ def generate_config():
 
 
 def extract_base_domain(article_link):
-    article_link = re.sub(r"^https?://", "", article_link)
-    match = re.search(r"[^/]+", article_link)
+    match = re.search(r"https?://([^/]+)", article_link)
     if match:
-        return match.group()
+        return match.group(1)
     return None

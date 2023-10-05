@@ -350,3 +350,10 @@ def _process_website_domain(url, organization_name):
                     f"Failed to save new NewsSource for domain: {base_domain} because of {e}"
                 )
     return
+
+
+@background()
+def run_spider():
+    from .webcrawler.crawler import run_spider
+
+    return run_spider()

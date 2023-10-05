@@ -276,7 +276,7 @@ class NewsSource(TimeStampModel):
     rss_feed_url = models.URLField(blank=True, null=True)
     last_scraped = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
-    access_count = JSONField(null=True, blank=True)
+    access_count = JSONField(default=dict, null=True, blank=True)
     # Web Scraping Fields
     category_link_selector = models.CharField(max_length=255, blank=True, null=True)
     category_name_attribute = models.CharField(max_length=50, blank=True, null=True)
@@ -289,11 +289,45 @@ class NewsSource(TimeStampModel):
     article_link_attribute = models.CharField(max_length=50, blank=True, null=True)
     article_link_prefix = models.URLField(blank=True, null=True)
     article_link_regex = models.CharField(max_length=255, blank=True, null=True)
+    data_attribute_key = models.CharField(max_length=255, blank=True, null=True)
+    data_attribute_value = models.CharField(max_length=255, blank=True, null=True)
     date_published_selector = models.CharField(max_length=255, blank=True, null=True)
     date_published_format = models.CharField(max_length=255, blank=True, null=True)
     article_title_selector = models.CharField(max_length=255, blank=True, null=True)
     article_content_selector = models.CharField(max_length=255, blank=True, null=True)
     author_selector = models.CharField(max_length=255, blank=True, null=True)
+    scrape_data = JSONField(default=dict, null=True, blank=True)
 
     def __str__(self):
         return self.domain
+
+    # f"//a[@data-testid='Link' and contains(@href, '{current_year}')]"
+
+    def selector_processor(self):
+        selector_split = self.article_link_selector.split(",")
+        selector_type = selector_split[0]
+        if selector_type == "year":
+            selector = f"contains(@href, '{str(datetime.now().year)}')"
+        if selector_type == "value":
+            selector = selector_split[1]
+        return selector
+
+    def create_search_regex(self):
+        # TODO: add a check for year if its still current or not
+        if self.article_link_regex:
+            return self.article_link_regex
+        # add the link selector
+        regex = self.article_link_attribute
+        # check for data attribute
+        if self.data_attribute_key:
+            regex += f"[@data-{self.data_attribute_key}='{self.data_attribute_value}'"
+        # check for link attribute
+        if self.article_link_selector:
+            selector = self.selector_processor()
+            if "@data" in regex:
+                regex += f"and {selector}"
+
+        regex += "]"
+        self.article_link_regex = regex
+        self.save()
+        return regex

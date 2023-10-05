@@ -513,3 +513,6 @@ if USE_TWITTER_API:
     TWITTER_REDIRECT_URI = _env_get_required("TWITTER_REDIRECT_URI")
 
 MAX_ATTEMPTS = 5
+
+# Scrapy settings
+HTTPCACHE_ENABLED = True
