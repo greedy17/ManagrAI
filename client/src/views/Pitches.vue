@@ -45,7 +45,7 @@
             <div class="paid-center">
               <h3 class="paid-title">Are you sure?</h3>
               <h5 class="regen-body-title">
-                This will reset the writing style to the default model.
+                Writing style will reset to the default model.
               </h5>
             </div>
             <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
@@ -602,21 +602,14 @@ export default {
     async resetWritingStyle() {
       this.savingStyle = true
       this.sample = ''
+      this.closeResetModal()
       try {
-        await Comms.api
-          .saveWritingStyle({
-            example: this.sample,
-          })
-          .then((response) => {
-            console.log('response.style', response.style)
-            this.writingStyle = response.style
-          })
-          this.toggleLearnInput()
-          this.closeResetModal()
+        await Comms.api.deleteWritingStyle()
+        this.writingStyle = this.sample
+        this.toggleLearnInput()
       } catch (e) {
         console.log(e)
       } finally {
-        this.sample = ''
         this.savingStyle = false
         this.refreshUser()
       }
