@@ -836,3 +836,15 @@ class PitchViewSet(
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
         return Response({"style": style})
+    
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="unlearn",
+    )
+    def reset_writing_style(self, request, *args, **kwargs):
+        user = request.user
+        user.writing_style = None
+        user.save()
+        return Response(status=status.HTTP_200_OK)
