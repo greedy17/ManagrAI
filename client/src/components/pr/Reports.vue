@@ -2,9 +2,9 @@
   <div class="reports">
     <header class="blur-bottom">
       <div>
-        <h3>{{ reportSuccess ? 'Successfully created report!' : 'Share' }}</h3>
+        <h3>{{ reportSuccess ? 'Successfully created digest!' : 'Digest' }}</h3>
         <small class="subtext">{{
-          reportSuccess ? 'Below is your shareable link' : 'Customize & create a report'
+          reportSuccess ? 'Below is your shareable link' : 'Create a sharable media digest'
         }}</small>
       </div>
 
