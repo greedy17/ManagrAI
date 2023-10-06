@@ -356,4 +356,5 @@ def _process_website_domain(url, organization_name):
 def run_spider():
     from .webcrawler.crawler import run_spider
 
-    return run_spider()
+    run_spider()
+    return

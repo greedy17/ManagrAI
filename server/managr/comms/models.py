@@ -14,7 +14,7 @@ from managr.utils.misc import encrypt_dict
 from urllib.parse import urlencode
 import base64
 import hashlib
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import JSONField, ArrayField
 
 logger = logging.getLogger("managr")
 
@@ -297,6 +297,7 @@ class NewsSource(TimeStampModel):
     article_content_selector = models.CharField(max_length=255, blank=True, null=True)
     author_selector = models.CharField(max_length=255, blank=True, null=True)
     scrape_data = JSONField(default=dict, null=True, blank=True)
+    error_log = ArrayField(models.CharField(max_length=255), default=list, blank=True)
 
     def __str__(self):
         return self.domain
@@ -320,7 +321,7 @@ class NewsSource(TimeStampModel):
         regex = self.article_link_attribute
         # check for data attribute
         if self.data_attribute_key:
-            regex += f"[@data-{self.data_attribute_key}='{self.data_attribute_value}'"
+            regex += f"[@{self.data_attribute_key}='{self.data_attribute_value}'"
         # check for link attribute
         if self.article_link_selector:
             selector = self.selector_processor()
