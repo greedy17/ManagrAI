@@ -30,6 +30,36 @@
         </div>
       </div>
     </Modal>
+    <!-- resetModal -->
+    <Modal v-if="resetModal" class="paid-modal">
+      <div class="regen-container">
+        <div class="paid-header">
+          <div>
+            <h4 class="regen-header-title"></h4>
+            <p class="regen-header-subtitle"></p>
+          </div>
+          <div class="pointer" @click="closeResetModal"><small>X</small></div>
+        </div>
+        <div class="paid-body">
+          <div>
+            <div class="paid-center">
+              <h3 class="paid-title">Are you sure?</h3>
+              <h5 class="regen-body-title">
+                Writing style will reset to the default model.
+              </h5>
+            </div>
+            <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
+          </div>
+        </div>
+        <div class="paid-footer">
+          <!-- <div></div> -->
+          <div class="row">
+            <div class="cancel-button" @click="closeResetModal">Cancel</div>
+            <div class="reset-button mar-left gray-border" @click="resetWritingStyle">Reset</div>
+          </div>
+        </div>
+      </div>
+    </Modal>
     <div :class="loading ? 'opaque' : 'extra-margin-top'" v-if="!pitch" class="center">
       <p @click="test" v-if="!loading">
         Generate a pitch, blog post or press release based on any persona.
@@ -136,6 +166,9 @@
           <div class="input-row">
             <button :disabled="savingStyle" @click="toggleLearnInput" class="secondary-button">
               Cancel
+            </button>
+            <button :disabled="savingStyle" @click="openResetModal" class="reset-button mar-left">
+              Reset
             </button>
             <button :disabled="savingStyle" @click="saveWritingStyle" class="primary-button">
               <img
@@ -514,6 +547,7 @@ export default {
       sample: '',
       savingStyle: false,
       writingStyle: null,
+      resetModal: false,
     }
   },
   watch: {
@@ -553,7 +587,7 @@ export default {
             example: this.sample,
           })
           .then((response) => {
-            console.log(response.style)
+            console.log('response.style', response.style)
             this.writingStyle = response.style
           })
       } catch (e) {
@@ -561,6 +595,21 @@ export default {
       } finally {
         this.sample = ''
         this.toggleLearnInput()
+        this.savingStyle = false
+        this.refreshUser()
+      }
+    },
+    async resetWritingStyle() {
+      this.savingStyle = true
+      this.sample = ''
+      this.closeResetModal()
+      try {
+        await Comms.api.deleteWritingStyle()
+        this.writingStyle = this.sample
+        this.toggleLearnInput()
+      } catch (e) {
+        console.log(e)
+      } finally {
         this.savingStyle = false
         this.refreshUser()
       }
@@ -578,6 +627,12 @@ export default {
       } else {
         return
       }
+    },
+    openResetModal() {
+      this.resetModal = true
+    },
+    closeResetModal() {
+      this.resetModal = false
     },
     toggleLearnInput() {
       if (this.isPaid) {
@@ -1242,6 +1297,17 @@ footer {
   margin-right: -2px;
 }
 
+.reset-button {
+  @include white-button-danger();
+  padding: 8px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  margin-right: -2px;
+}
+
+.mar-left {
+  margin-left: 1rem;
+}
+
 .blue-bg {
   padding-top: 66px;
   background-color: $white-blue;
@@ -1518,6 +1584,8 @@ footer {
   max-height: 500px;
   position: relative;
   overflow-y: scroll;
+  color: $base-gray;
+  font-family: $thin-font-family;
 }
 .paid-header {
   display: flex;
@@ -1569,6 +1637,9 @@ footer {
     opacity: 0.7;
     box-shadow: none;
   }
+}
+.gray-border {
+  border: 1px solid $soft-gray;
 }
 .save-button {
   @include dark-blue-button();

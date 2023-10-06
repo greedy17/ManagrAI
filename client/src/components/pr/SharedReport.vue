@@ -198,25 +198,47 @@ export default {
       return num.toString()
     },
     getTimeDifferenceInMinutes(dateString) {
-      const currentDate = new Date()
-      const givenDate = new Date(dateString)
+      if (dateString) {
+        const currentDate = new Date()
+        const givenDate = new Date(dateString)
 
-      if (
-        givenDate.getDate() === currentDate.getDate() &&
-        givenDate.getMonth() === currentDate.getMonth() &&
-        givenDate.getFullYear() === currentDate.getFullYear()
-      ) {
-        const timeDifferenceInMilliseconds = currentDate - givenDate
-        const timeDifferenceInMinutes = Math.floor(timeDifferenceInMilliseconds / (1000 * 60))
-        if (timeDifferenceInMinutes >= 60) {
-          const timeDifferenceInHours = Math.floor(timeDifferenceInMinutes / 60)
-          const remainingMinutes = timeDifferenceInMinutes % 60
-          return `${timeDifferenceInHours}h`
+        if (
+          givenDate.getDate() === currentDate.getDate() &&
+          givenDate.getMonth() === currentDate.getMonth() &&
+          givenDate.getFullYear() === currentDate.getFullYear()
+        ) {
+          const timeDifferenceInMilliseconds = currentDate - givenDate
+          const timeDifferenceInMinutes = Math.floor(timeDifferenceInMilliseconds / (1000 * 60))
+          if (timeDifferenceInMinutes >= 60) {
+            const timeDifferenceInHours = Math.floor(timeDifferenceInMinutes / 60)
+            const remainingMinutes = timeDifferenceInMinutes % 60
+            return `${timeDifferenceInHours}h`
+          } else {
+            return `${timeDifferenceInMinutes}m`
+          }
         } else {
-          return `${timeDifferenceInMinutes}m`
+          let month
+          let day
+          let year
+          if (Number(givenDate.getMonth() + 1)) {
+            month = givenDate.getMonth() + 1
+          } else {
+            month = '--'
+          }
+          if (Number(givenDate.getDate())) {
+            day = givenDate.getDate()
+          } else {
+            day = '--'
+          }
+          if (Number(givenDate.getFullYear())) {
+            year = givenDate.getFullYear()
+          } else {
+            year = '--'
+          }
+          return `${month}/${day}/${year}`
         }
       } else {
-        return `${givenDate.getMonth() + 1}/${givenDate.getDate()}/${givenDate.getFullYear()}`
+        return '--/--/----'
       }
     },
 
