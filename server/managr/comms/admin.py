@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Search, Pitch, NewsSource
+from .models import Search, Pitch, NewsSource, Article
 
 # Register your models here.
 
@@ -22,6 +22,12 @@ class CustomNewsSource(admin.ModelAdmin):
     readonly_fields = ("access_count",)
 
 
+class CustomArticle(admin.ModelAdmin):
+    list_display = ("title", "publish_date")
+    list_filter = ("source",)
+
+
 admin.site.register(Search, CustomSearch)
 admin.site.register(Pitch, CustomPitch)
 admin.site.register(NewsSource, CustomNewsSource)
+admin.site.register(Article, CustomArticle)

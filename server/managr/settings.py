@@ -516,3 +516,4 @@ MAX_ATTEMPTS = 5
 
 # Scrapy settings
 HTTPCACHE_ENABLED = True
+HTTPCACHE_DIR = "httpcache"

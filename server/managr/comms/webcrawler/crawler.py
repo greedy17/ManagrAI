@@ -1,9 +1,13 @@
 import scrapy
+import logging
 import datetime
 from ..models import NewsSource
+from ..serializers import ArticleSerializer
 from scrapy.crawler import CrawlerProcess
 from scrapy import signals
 from scrapy.signalmanager import dispatcher
+
+logger = logging.getLogger("managr")
 
 
 class NewsSpider(scrapy.Spider):
@@ -25,24 +29,46 @@ class NewsSpider(scrapy.Spider):
         if source.last_scraped:
             regex = source.create_search_regex()
             article_links = response.xpath(regex)
-            if source.article_title_selector:
-                for anchor in article_links:
-                    url = url + anchor.xpath("@href").extract_first()
-                    yield scrapy.Request(
-                        url, callback=self.parse_article, cb_kwargs={"source": source}
-                    )
-            else:
-                first_article = article_links[0]
-                article_url = url + first_article.xpath("@href").extract_first()
+            # if source.last_scraped:
+            for anchor in article_links:
+                article_url = url + anchor.xpath("@href").extract_first()
                 yield scrapy.Request(
-                    article_url, callback=self.process_new_article_url, cb_kwargs={"source": source}
+                    article_url, callback=self.parse_article, cb_kwargs={"source": source}
                 )
+            # else:
+            #     first_article = article_links[0]
+            #     article_url = url + first_article.xpath("@href").extract_first()
+            #     yield scrapy.Request(
+            #         article_url, callback=self.process_new_article_url, cb_kwargs={"source": source}
+            #     )
         else:
             self.process_new_url(source, response)
         self.urls_processed += 1
 
     def parse_article(self, response, source):
-        # Process the article HTML here
+        meta_tag_selectors = [
+            "title.//meta[contains(@property, 'title')]/@content",
+            "description.//meta[contains(@property, 'description')]/@content",
+            "publish_date.//meta[contains(@property, 'published')]/@content",
+            "image_url.//meta[@property='og:image']/@content",
+            "author.//*[@rel='author']/text()",
+        ]
+        meta_tag_data = {"link": response.url, "source": source.id}
+        for tag in meta_tag_selectors:
+            key, path = tag.split(".")
+            selector = response.xpath(path).get()
+            meta_tag_data[key] = selector
+        article_tags = response.xpath("(//*[contains(@class, 'article')])[1]//p/text()").getall()
+        full_article = ""
+        for article in article_tags:
+            full_article += article
+        meta_tag_data["content"] = full_article
+        try:
+            serializer = ArticleSerializer(data=meta_tag_data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        except Exception as e:
+            logger.exception(f"Failed to save article :{e}\nData: {meta_tag_data}")
         return
 
     def process_new_url(self, source, response):
@@ -64,22 +90,20 @@ class NewsSpider(scrapy.Spider):
         meta_tag_selectors = [
             "title.//meta[contains(@property, 'title')]/@content",
             "description.//meta[contains(@property, 'description')]/@content",
-            "date.//meta[contains(@property, 'published')]/@content",
+            "publish_date.//meta[contains(@property, 'published')]/@content",
             "image.//meta[@property='og:image']/@content",
+            "author.//*[@rel='author']/text()",
         ]
         meta_tag_data = {}
         for tag in meta_tag_selectors:
             key, path = tag.split(".")
             selector = response.xpath(path).get()
             meta_tag_data[key] = selector
-        author_tag = response.xpath("//a[@rel='author']/text()").get()
-        meta_tag_data["author"] = author_tag
         article_tags = response.xpath("(//*[contains(@class, 'article')])[1]//p/text()").getall()
         full_article = ""
         for article in article_tags:
             full_article += article
         meta_tag_data["content"] = full_article
-        print(meta_tag_data)
         # source.scrape_data["article_data"] = article_data
         # source.save()
         return

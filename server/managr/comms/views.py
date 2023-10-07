@@ -568,15 +568,13 @@ def upload_link(request):
         article_res = Article(url, config=generate_config())
         article_res.download()
         article_res.parse()
-       
+
         title = article_res.title
         author = article_res.authors
         image = article_res.top_image
         date = article_res.publish_date
         text = article_res.meta_description
         domain = get_domain(url)
-
-        print("DATE IS HERE", date)
 
         article = {}
         article = {

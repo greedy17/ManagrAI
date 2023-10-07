@@ -332,3 +332,16 @@ class NewsSource(TimeStampModel):
         self.article_link_regex = regex
         self.save()
         return regex
+
+
+class Article(TimeStampModel):
+    title = models.CharField(max_length=150)
+    description = models.TextField(null=True)
+    author = models.CharField(max_length=150)
+    publish_date = models.DateTimeField()
+    link = models.CharField(max_length=255)
+    image_url = models.CharField(max_length=255)
+    source = models.ForeignKey(
+        "comms.NewsSource", on_delete=models.CASCADE, related_name="articles"
+    )
+    content = models.TextField()
