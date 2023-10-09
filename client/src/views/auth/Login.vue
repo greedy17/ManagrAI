@@ -246,27 +246,19 @@ export default {
       if (this.loginForm.isValid) {
         this.loggingIn = true
         try {
-          const response = await User.api.login({ ...this.loginForm.value })
-          let token = response.data.token
-          let userData = response.data
-          delete userData.token
-          const userAPI = User.fromAPI(userData)
-          // const encryptedUser = encryptData(userAPI, process.env.VUE_APP_SECRET_KEY)
-          // const encryptedKey = encryptData(token, process.env.VUE_APP_SECRET_KEY)
-          // this.$store.dispatch('updateUserToken', encryptedKey)
-          this.$store.dispatch('updateUserToken', token)
-          localStorage.token = token
-          // this.$store.dispatch('updateUser', encryptedUser)
-          this.$store.commit('UPDATE_USER', userAPI)
-          // localStorage.dateTime = Date.now()
-          // if (this.$route.query.redirect) {
-          //   this.$router.push(this.$route.query.redirect)
-          // }
-          if (this.isPR) {
-            this.$router.push({ name: 'PRSummaries' })
-          } else {
-            this.$router.push({ name: 'Home' })
-          }
+          const response = await User.api.login({ ...this.loginForm.value }).then((response) => {
+            localStorage.setItem('tokenReceivedAt', Date.now().toString())
+            let token = response.data.token
+            let userData = response.data
+            delete userData.token
+            const userAPI = User.fromAPI(userData)
+            this.$store.dispatch('updateUserToken', token)
+            localStorage.setItem('token', token)
+            this.$store.commit('UPDATE_USER', userAPI)
+            if (this.isPR) {
+              this.$router.push({ name: 'PRSummaries' })
+            }
+          })
         } catch (error) {
           const e = error
 

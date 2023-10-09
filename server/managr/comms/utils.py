@@ -16,7 +16,10 @@ user_agents = [
 
 def generate_config():
     config = Config()
-    config.browser_user_agent = random.choice(user_agents)  # randomly choose a User-Agent
+    # config.browser_user_agent = random.choice(user_agents)
+    config.browser_user_agent = (
+        "Mozilla/5.0 (compatible; managr-webcrawler/1.0; +https://managr.ai/documentation)"
+    )
     config.request_timeout = 10
     return config
 

@@ -251,10 +251,11 @@ class Pitch(TimeStampModel):
         return f"{self.user.email} - {self.name}"
 
     @classmethod
-    def generate_pitch(cls, user, type, instructions, audience, content, tokens, timeout):
+    def generate_pitch(cls, user, type, instructions, audience, content, style, tokens, timeout):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+        style = user.writing_style if user.writing_style else False
         prompt = comms_consts.OPEN_AI_PITCH(
-            datetime.now().date(), type, instructions, audience, content
+            datetime.now().date(), type, instructions, audience, content, style
         )
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
             user.email,
@@ -276,7 +277,7 @@ class NewsSource(TimeStampModel):
     rss_feed_url = models.URLField(blank=True, null=True)
     last_scraped = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
-
+    access_count = JSONField(null=True, blank=True)
     # Web Scraping Fields
     category_link_selector = models.CharField(max_length=255, blank=True, null=True)
     category_name_attribute = models.CharField(max_length=50, blank=True, null=True)

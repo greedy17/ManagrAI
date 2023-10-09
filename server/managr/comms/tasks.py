@@ -37,8 +37,8 @@ def emit_process_article_summary(payload, context):
     return _process_article_summary(payload, context)
 
 
-def emit_process_website_domain(url):
-    return _process_website_domain(url)
+def emit_process_website_domain(url, organization_name):
+    return _process_website_domain(url, organization_name)
 
 
 def create_new_search(payload, user_id):
@@ -328,15 +328,21 @@ def _process_article_summary(payload, context):
 
 
 @background()
-def _process_website_domain(url):
-    print("url")
+def _process_website_domain(url, organization_name):
     base_domain = extract_base_domain(url)
     if base_domain:
         try:
             database_check = NewsSource.objects.get(domain=base_domain)
+            if organization_name in database_check.access_count.keys():
+                database_check.access_count[organization_name] += 1
+            else:
+                database_check.access_count[organization_name] = 1
+            database_check.save()
         except NewsSource.DoesNotExist:
             try:
-                serializer = NewsSourceSerializer(data={"domain": base_domain})
+                serializer = NewsSourceSerializer(
+                    data={"domain": base_domain, "access_count": {organization_name: 1}}
+                )
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
             except Exception as e:

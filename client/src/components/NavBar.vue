@@ -43,13 +43,13 @@
           <div @click="goHome" class="logo">
             <img style="height: 28px" src="@/assets/images/logo.png" />
             <div class="beta-tag">
-              <p>{{isPaid ? 'PRO' : 'FREE'}}</p>
+              <p>{{ isPaid ? 'PRO' : 'FREE' }}</p>
             </div>
           </div>
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'PRSummaries' }">
-          <p>Digest</p>
+          <p>Summarize</p>
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'Pitches' }">
@@ -317,7 +317,7 @@
         <div @click="goHome" class="mobile-nav-top mar-left extra-padding-vert">
           <p class="small-margin">Home</p>
         </div>
-        
+
         <router-link active-class="active" :to="{ name: 'PRSummaries' }">
           <p class="small-margin">Digest</p>
         </router-link>
@@ -336,7 +336,7 @@
         <router-link v-else active-class="active" :to="{ name: 'PRTranscripts' }">
           <p class="small-margin">Transcribe</p>
         </router-link>
-        
+
         <div class="relative mar-left">
           <div
             v-if="$route.name === 'PRSummaries'"
@@ -346,6 +346,26 @@
             Saved Searches
             <img
               v-if="!showSavedSearches"
+              src="@/assets/images/downArrow.svg"
+              height="14px"
+              alt=""
+            />
+            <img
+              class="rotate-img"
+              v-else
+              src="@/assets/images/downArrow.svg"
+              height="14px"
+              alt=""
+            />
+          </div>
+          <div
+            v-else-if="$route.name === 'Pitches'"
+            @click="toggleShowPitches"
+            class="row pointer nav-text saved-searches-mobile"
+          >
+            Saved Pitches
+            <img
+              v-if="!showSavedPitches"
               src="@/assets/images/downArrow.svg"
               height="14px"
               alt=""
@@ -419,8 +439,48 @@
               </div>
             </div>
           </div>
+          <div v-else-if="showSavedPitches">
+            <div class="searches-container">
+              <div
+                @mouseenter="setIndex(i)"
+                @mouseLeave="removeIndex"
+                class="row relative"
+                v-for="(pitch, i) in pitches"
+                :key="pitch.id"
+              >
+                <img
+                  class="search-icon mobile-search-icon invert"
+                  v-if="pitch.type === 'NEWS'"
+                  src="@/assets/images/memo.svg"
+                  height="12px"
+                  alt=""
+                  @click="selectPitch(pitch)"
+                />
+                <img
+                  class="search-icon mobile-search-icon"
+                  v-else-if="pitch.type === 'SOCIAL_MEDIA'"
+                  src="@/assets/images/comment.svg"
+                  height="12px"
+                  alt=""
+                  @click="selectPitch(pitch)"
+                />
+                <p @click="selectPitch(pitch)" class="light-gray-blue">
+                  {{ pitch.name }}
+                </p>
+
+                <img
+                  @click="togglePitchDeleteModal(pitch)"
+                  v-if="hoverIndex === i"
+                  class="absolute-icon"
+                  src="@/assets/images/trash.svg"
+                  height="12px"
+                  alt=""
+                />
+              </div>
+            </div>
+          </div>
         </div>
-        
+
         <router-link active-class="active" :to="{ name: 'PRSettings' }">
           <!-- <img class="mar-right" src="@/assets/images/settings.svg" height="14px" alt="" /> -->
           <!-- <img class="mar-right" src="@/assets/images/profile.svg" height="14px" alt="" /> -->
@@ -506,13 +566,13 @@ export default {
       },
     },
   },
-  watch:{
-    $route (to, from){
-        this.hideMobileMenu()
-        this.showSavedPitches = false
-        this.showSavedSearches = false
-        this.$emit('close-menu')
-    }
+  watch: {
+    $route(to, from) {
+      this.hideMobileMenu()
+      this.showSavedPitches = false
+      this.showSavedSearches = false
+      this.$emit('close-menu')
+    },
   },
   methods: {
     setIndex(i) {
@@ -591,7 +651,7 @@ export default {
     getInitials() {
       const fullSplit = this.fullName.split(' ')
       let initials = ''
-      fullSplit.forEach(word => initials += word[0])
+      fullSplit.forEach((word) => (initials += word[0]))
       return initials
     },
     selectSearch(search) {
@@ -621,7 +681,8 @@ export default {
     },
     logOut() {
       this.$store.dispatch('logoutUser')
-      localStorage.token = null
+      localStorage.removeItem('token')
+      localStorage.removeItem('tokenReceivedAt')
       this.$router.push({ name: 'Login' })
       this.hideMobileMenu()
     },
@@ -685,8 +746,8 @@ export default {
       return !!this.$store.state.user.organizationRef.isPaid
     },
     searchesUsed() {
-      let arr = [];
-      let currentMonth = new Date(Date.now()).getMonth()+1
+      let arr = []
+      let currentMonth = new Date(Date.now()).getMonth() + 1
       if (currentMonth < 10) {
         currentMonth = `0${currentMonth}`
       } else {
@@ -695,7 +756,7 @@ export default {
       let currentYear = new Date(Date.now()).getFullYear()
       for (let key in this.$store.state.user.metaData) {
         const item = this.$store.state.user.metaData[key]
-        const filteredByMonth = item.timestamps.filter(date => {
+        const filteredByMonth = item.timestamps.filter((date) => {
           const split = date.split('-')
           return split[1] == currentMonth && split[0] == currentYear
         })
@@ -1115,7 +1176,8 @@ nav {
   img {
     // filter: brightness(0) invert(48%) sepia(33%) saturate(348%) hue-rotate(161deg) brightness(91%)
     //   contrast(90%);
-    filter: brightness(0) invert(23%) sepia(19%) saturate(984%) hue-rotate(162deg) brightness(92%) contrast(87%);
+    filter: brightness(0) invert(23%) sepia(19%) saturate(984%) hue-rotate(162deg) brightness(92%)
+      contrast(87%);
   }
   margin-right: 0.5rem;
 }

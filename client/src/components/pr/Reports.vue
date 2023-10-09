@@ -51,7 +51,8 @@
           alt="Uploaded Cover"
           class="cover-photo"
         />
-        <input id="imageInput" class="absolute-button-input-large pointer dull" type="file" @change="getImage" />
+        <input v-if="imageUrl" id="imageInput" class="absolute-button-input-large pointer dull" type="file" @change="getImage" />
+        <input v-else-if="!imageUrl" id="imageInput" class="absolute-button-input-less-large pointer dull" type="file" @change="getImage" />
         
         <div class="top-padding">
           <div class="space-between">
@@ -64,10 +65,9 @@
               class="secondary-button"
             >
               <input id="imageInput" class="absolute-button-input pointer dull" type="file" @change="getImage" />
-              Add Image
+              <span class="pointer">Add Image</span>
             </button>
           </div>
-
 
           <!-- <svg class="absolute pointer" width="18" height="18">
             <path d="M9 9H3v1h6v6h1v-6h6V9h-6V3H9v6z" fill-rule="evenodd"></path>
@@ -326,6 +326,7 @@ export default {
             url: this.uploadLink,
           })
           .then((response) => {
+            console.log('manual', response)
             this.success = true
             this.addClip(response)
             this.articleBanner('Article added!')
@@ -506,7 +507,7 @@ export default {
       reader.readAsDataURL(file)
     },
     getArticleDescriptions(articles) {
-      return articles.map((a) => a.content ? a.content : a.text)
+      return articles.map((a) => (a.description ? a.description : a.text))
     },
     clearClips() {
       this.$emit('clear-clips')
@@ -649,6 +650,7 @@ h3 {
 
 .top-padding {
   padding-top: 16px;
+  z-index: 4000;
 }
 
 .container {
@@ -768,6 +770,19 @@ h3 {
   top: 8px;
   left: 20px;
   height: 13.25rem;
+  width: 27rem;
+  z-index: 30;
+  @media only screen and (max-width: 600px) {
+    height: 10.5rem;
+    width: 19.25rem;
+  }
+}
+.absolute-button-input-less-large {
+  position: absolute;
+  // top: 2vh;
+  top: 48px;
+  left: 20px;
+  height: 10rem;
   width: 27rem;
   z-index: 30;
   @media only screen and (max-width: 600px) {
@@ -1098,12 +1113,12 @@ footer {
   justify-content: center !important;
 }
 
-.pointer {
-  cursor: pointer;
-}
-
 .dull {
   opacity: 0.5;
+}
+
+.more-z {
+  z-index: 5050;
 }
 
 .invert {

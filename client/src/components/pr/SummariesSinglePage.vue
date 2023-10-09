@@ -105,13 +105,6 @@
       />
     </Transition>
 
-    <div v-if="showArticleModal" class="modal">
-      <div class="modal-content">
-        <span @click="showArticleModal = false" class="close">&times;</span>
-        <p>You've scrolled halfway down the page!</p>
-      </div>
-    </div>
-
     <div @click="toggleReport" v-if="selectedSearch && !ShowReport" class="floating-action-bar">
       <div class="main-slot">
         <img src="@/assets/images/share.svg" height="10px" alt="" />
@@ -154,20 +147,20 @@
           :class="{ activeswitch: mainView === 'website' }"
           class="switch-item"
         >
-          <img src="@/assets/images/globe.svg" height="18px" alt="" />
-          URL
+          <img src="@/assets/images/globe.svg" height="16px" alt="" />
+          Articles
         </div>
       </div>
 
       <div class="no-content" v-if="!selectedSearch">
-        <div class="title-row">
+        <div :class="{ 'neg-mar-btm': mainView === 'website' }" class="title-row">
           <div class="row" v-if="!newSearch">
             <p class="typed">
               {{
                 mainView === 'social'
                   ? 'Generate a summary from X (formally Twitter).'
                   : mainView === 'website'
-                  ? 'Generate a summary from a news article.'
+                  ? 'Generate a summary from news articles.'
                   : 'Generate a news summary from over 1 million sites.'
               }}
             </p>
@@ -185,8 +178,8 @@
             v-clickOutsideMenu
           >
             <div class="input-row">
-              <div style="border-right: none" class="main-text">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <div class="main-text">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                   <path
                     fill-rule="evenodd"
                     clip-rule="evenodd"
@@ -194,13 +187,14 @@
                     fill="currentColor"
                   ></path>
                 </svg>
+                Search
               </div>
               <!-- @keydown.enter.exact.prevent="generateNewSearch(null)" -->
               <input
                 @click.stop
                 id="search-input"
                 class="area-input"
-                placeholder="Search term..."
+                placeholder="Enter keywords or phrase..."
                 @focus="showDropdown"
                 autocomplete="off"
                 v-model="newSearch"
@@ -234,15 +228,16 @@
             <div class="input-row-start">
               <div class="main-text">
                 <img
-                  style="margin-right: 8px"
+                  style="margin-right: 10px"
                   src="@/assets/images/sparkles-thin.svg"
-                  height="16px"
+                  height="14px"
                 />
+                Instructions
               </div>
               <textarea
                 @focus="showPromptDropdown"
-                class="area-input"
-                placeholder="Summary instructions... (Optional)"
+                class="area-input text-area-input"
+                placeholder="Summary details..."
                 v-model="newTemplate"
                 v-autoresize
               />
@@ -263,13 +258,73 @@
             </div>
           </div>
 
+          <div style="margin-top: 40px" v-if="mainView === 'website'" class="divider">
+            <p style="left: 40%; font-size: 13px" class="divider-text">Articles</p>
+          </div>
+
+          <div
+            class="article-container"
+            style="margin-top: 32px"
+            v-if="mainView === 'website' && addedArticles.length"
+          >
+            <div>
+              <div
+                @mouseenter="setRow(i)"
+                @mouseleave="removeRow"
+                class="article-text relative"
+                v-for="(article, i) in addedArticles"
+                :key="i"
+              >
+                <img :src="article.urlToImage" class="clip-photo" />
+                {{ article.title }}
+
+                <img
+                  v-show="currentRow === i"
+                  @click="removeArticle(article.title)"
+                  class="danger"
+                  src="@/assets/images/trash.svg"
+                  height="16px"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="relative">
+            <Transition name="slide-fade">
+              <div
+                v-if="showArticleBanner"
+                :class="{ greenTemplates: success, redTemplates: !success }"
+              >
+                <p>{{ articleBannerText }}</p>
+              </div>
+            </Transition>
+          </div>
+
           <div v-if="mainView === 'website'" style="margin-top: 2rem" class="input-container">
             <div class="input-row">
               <div class="main-text">
-                <img src="@/assets/images/globe.svg" height="20px" />
+                <img src="@/assets/images/globe.svg" height="18px" /> Article
               </div>
-              <input class="area-input" placeholder="Article URL..." v-model="additionalSources" />
-              <!-- <small @click="removeSource" class="remove">X</small> -->
+              <input
+                class="area-input-small"
+                :placeholder="addedArticles.length ? 'Paste another url...' : 'Paste url...'"
+                v-model="uploadLink"
+              />
+              <button
+                style="margin-right: -8px"
+                class="secondary-button"
+                :disabled="!uploadArticle || clipLoading"
+                @click="uploadArticle"
+              >
+                <img
+                  v-if="clipLoading"
+                  class="rotate"
+                  height="12px"
+                  src="@/assets/images/loading.svg"
+                  alt=""
+                />
+                Add
+              </button>
             </div>
           </div>
 
@@ -293,7 +348,7 @@
             <button
               v-else
               @click="getSourceSummary()"
-              :disabled="!additionalSources"
+              :disabled="!addedArticles.length"
               class="primary-button"
             >
               Generate Summary
@@ -334,10 +389,8 @@
                 <p v-if="mainView !== 'website'" class="sub-text">
                   AI generated search: <span>{{ booleanString }}</span>
                 </p>
-
-                <p v-else class="sub-text">
-                  Article summary: <span>{{ additionalSources }}</span>
-                </p>
+                <h1 v-if="mainView === 'website'" class="no-text-margin">Article Summary</h1>
+                <p v-if="mainView === 'website'" class="sub-text">Summary for uploaded articles</p>
               </div>
               <div class="title-bar">
                 <div v-if="!showSaveName" class="row">
@@ -503,7 +556,10 @@
         <div
           ref="topDivider"
           v-if="
-            ((filteredArticles && filteredArticles.length) || (tweets && tweets.length)) && !loading
+            ((filteredArticles && filteredArticles.length) ||
+              (tweets && tweets.length) ||
+              addedArticles.length) &&
+            !loading
           "
           class="divider"
         >
@@ -512,7 +568,7 @@
               mainView === 'news'
                 ? 'News Clips'
                 : mainView === 'website'
-                ? 'Website'
+                ? 'Articles'
                 : 'Social Media'
             }}
           </p>
@@ -554,66 +610,70 @@
           <div class="content-width" v-if="mainView === 'social' && tweets.length">
             <div class="news-container-med" v-for="(tweet, i) in tweets" :key="i">
               <div class="news-card-medium">
-                <header class="neg-margin">
-                  <div class="card-row-med">
-                    <img :src="tweet.user.profile_image_url" />
-                    <h1 @click="openTweet(tweet.user.username, tweet.id)" class="article-title">
-                      {{ tweet.user.name }}
-                    </h1>
-                    <svg
-                      v-if="tweet.user.verified"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 22 22"
-                      aria-label="Verified account"
-                      role="img"
-                      class="twitter-blue"
-                      data-testid="icon-verified"
-                    >
-                      <g>
-                        <path
-                          d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"
-                        ></path>
-                      </g>
-                    </svg>
+                <div class="attachment-header-container">
+                  <div>
+                    <header class="neg-margin">
+                      <div class="card-row-med">
+                        <img :src="tweet.user.profile_image_url" />
+                        <h1 @click="openTweet(tweet.user.username, tweet.id)" class="article-title">
+                          {{ tweet.user.name }}
+                        </h1>
+                        <svg
+                          v-if="tweet.user.verified"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 22 22"
+                          aria-label="Verified account"
+                          role="img"
+                          class="twitter-blue"
+                          data-testid="icon-verified"
+                        >
+                          <g>
+                            <path
+                              d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"
+                            ></path>
+                          </g>
+                        </svg>
+                      </div>
+                    </header>
+
+                    <p class="article-preview">{{ tweet.text }}</p>
                   </div>
-                </header>
+                  <div v-if="tweet.attachments" class="tweet-attachement">
+                    <div
+                      style="margin-bottom: 16px"
+                      v-for="media in tweetMedia"
+                      :key="media.media_key"
+                    >
+                      <div v-if="media.media_key === tweet.attachments.media_keys[0]">
+                        <img
+                          v-if="media.type === 'photo'"
+                          :src="media.url"
+                          class="cover-photo-no-l-margin"
+                          alt=""
+                        />
 
-                <p class="article-preview">{{ tweet.text }}</p>
-                <div v-if="tweet.attachments">
-                  <div
-                    style="margin-bottom: 16px"
-                    v-for="media in tweetMedia"
-                    :key="media.media_key"
-                  >
-                    <div v-if="media.media_key === tweet.attachments.media_keys[0]">
-                      <img
-                        v-if="media.type === 'photo'"
-                        :src="media.url"
-                        class="cover-photo-no-l-margin"
-                        alt=""
-                      />
+                        <video
+                          style="margin-top: 1rem"
+                          v-else-if="media.type === 'video'"
+                          width="400"
+                          controls
+                        >
+                          <source :src="media.variants[1].url" type="video/mp4" />
+                        </video>
 
-                      <video
-                        style="margin-top: 1rem"
-                        v-else-if="media.type === 'video'"
-                        width="400"
-                        controls
-                      >
-                        <source :src="media.variants[1].url" type="video/mp4" />
-                      </video>
-
-                      <video
-                        style="margin-top: 1rem"
-                        v-else-if="media.type === 'animated_gif'"
-                        width="400"
-                        autoplay
-                        loop
-                        muted
-                        playsinline
-                      >
-                        <source :src="media.variants[0].url" type="video/mp4" />
-                      </video>
+                        <video
+                          style="margin-top: 1rem"
+                          v-else-if="media.type === 'animated_gif'"
+                          width="400"
+                          autoplay
+                          loop
+                          muted
+                          playsinline
+                        >
+                          <source :src="media.variants[0].url" type="video/mp4" />
+                        </video>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -703,36 +763,43 @@
                       {{ clipTitles.includes(article.title) ? 'Shared' : 'Share' }}
                     </button>
 
-                    <button
-                      v-if="!article.summary"
-                      @click="getArticleSummary(article.url)"
-                      class="tertiary-button summarize-button"
-                      style="margin: 0"
-                      :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
-                    >
+                    <div v-if="mainView === 'website' && addedArticles.length === 1">
+                    
+                    </div>
+                    <div v-else>
+                      <button
+                        v-if="!article.summary"
+                        @click="getArticleSummary(article.url)"
+                        class="tertiary-button summarize-button"
+                        style="margin: 0"
+                        :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
+                      >
+                        <img
+                          v-if="articleSummaryLoading && loadingUrl === article.url"
+                          class="rotate"
+                          height="14px"
+                          src="@/assets/images/loading.svg"
+                          alt=""
+                        />
+                        <img v-else src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
+                        {{
+                          articleSummaryLoading && loadingUrl === article.url
+                            ? 'Summarizing'
+                            : 'Summarize'
+                        }}
+                      </button>
                       <img
-                        v-if="articleSummaryLoading && loadingUrl === article.url"
-                        class="rotate"
-                        height="14px"
-                        src="@/assets/images/loading.svg"
-                        alt=""
+                        v-else
+                        src="@/assets/images/sparkle.svg"
+                        class="right-arrow-footer blue-icon"
                       />
-                      <img v-else src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
-                      {{
-                        articleSummaryLoading && loadingUrl === article.url
-                          ? 'Summarizing'
-                          : 'Summarize'
-                      }}
-                    </button>
-
-                    <img
-                      v-else
-                      src="@/assets/images/sparkle.svg"
-                      class="right-arrow-footer blue-icon"
-                    />
+                    </div>
                   </div>
                 </div>
-                <div v-if="article.summary">
+                <div v-if="mainView === 'website' && addedArticles.length === 1">
+                    
+                </div>
+                <div v-else-if="article.summary">
                   <div class="blue-bg display-flex">
                     <pre v-html="article.summary" class="pre-text"></pre>
                     <div
@@ -815,7 +882,209 @@
                         "
                         autofocus
                         class="area-input-outline wider"
-                        placeholder="Provide additional instructions..."
+                        placeholder="Provide additional instructions"
+                        v-autoresize
+                        v-model="articleInstructions"
+                      />
+
+                      <div class="row">
+                        <button @click="toggleArticleRegenerate" class="secondary-button">
+                          Cancel
+                        </button>
+
+                        <button
+                          @click="getArticleSummary(article.url, articleInstructions)"
+                          :disabled="
+                            articleSummaryLoading || loading || summaryLoading || savingSearch
+                          "
+                          class="primary-button"
+                        >
+                          <img
+                            v-if="articleSummaryLoading && loadingUrl === article.url"
+                            class="rotate"
+                            height="14px"
+                            src="@/assets/images/loading.svg"
+                            alt=""
+                          />
+                          {{
+                            articleSummaryLoading && loadingUrl === article.url
+                              ? 'Submitting'
+                              : 'Submit'
+                          }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else-if="mainView === 'website'" class="content-width">
+            <div v-for="(article, i) in addedArticles" :key="i" class="news-container">
+              <div class="news-card" @click="selectArticle(article)">
+                <header>
+                  <div class="card-col">
+                    <div class="card-top-left">
+                      <!-- <img :src="article.icon" /> -->
+                      <span>{{ article.source.name || article.source }}</span>
+                    </div>
+                    <h1 class="article-title" @click="goToArticle(article.url)">
+                      {{ article.title }}
+                    </h1>
+                    <p class="article-preview">
+                      {{ article.description }}
+                    </p>
+                  </div>
+
+                  <!-- <div @click="goToArticle(article.url)"> -->
+                  <img
+                    @click="goToArticle(article.url)"
+                    :src="article.urlToImage"
+                    class="cover-photo"
+                  />
+                  <!-- </div> -->
+                </header>
+
+                <div class="card-footer">
+                  <div class="author-time">
+                    <span class="author">{{ article.author }}</span>
+                    <span class="divier-dot">.</span>
+                    <span class="off-gray time">{{
+                      getTimeDifferenceInMinutes(article.publishedAt)
+                    }}</span>
+                    <span class="divier-dot">.</span>
+                  </div>
+                  <div class="footer-icon-container">
+                    <button
+                      :disabled="clipTitles.includes(article.title)"
+                      class="tertiary-button"
+                      @click="addClip(article)"
+                    >
+                      <img height="10px" src="@/assets/images/share.svg" alt="" />
+
+                      {{ clipTitles.includes(article.title) ? 'Shared' : 'Share' }}
+                    </button>
+
+                    <div v-if="mainView === 'website' && addedArticles.length === 1">
+                    
+                    </div>
+                    <div v-else>
+                      <button
+                        v-if="!article.summary"
+                        @click="getArticleSummary(article.url)"
+                        class="tertiary-button summarize-button"
+                        style="margin: 0"
+                        :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
+                      >
+                        <img
+                          v-if="articleSummaryLoading && loadingUrl === article.url"
+                          class="rotate"
+                          height="14px"
+                          src="@/assets/images/loading.svg"
+                          alt=""
+                        />
+                        <img v-else src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
+                        {{
+                          articleSummaryLoading && loadingUrl === article.url
+                            ? 'Summarizing'
+                            : 'Summarize'
+                        }}
+                      </button>
+                      <img
+                        v-else
+                        src="@/assets/images/sparkle.svg"
+                        class="right-arrow-footer blue-icon"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div v-if="mainView === 'website' && addedArticles.length === 1">
+                    
+                </div>
+                <div v-else-if="article.summary">
+                  <div class="blue-bg display-flex">
+                    <pre v-html="article.summary" class="pre-text"></pre>
+                    <div
+                      @click="copyArticleSummary(article.summary)"
+                      class="wrapper article-copy-container circle-border"
+                      style="padding: 12px 6px; border: 0.5px solid #2f4656"
+                    >
+                      <img
+                        style="cursor: pointer"
+                        class="img-highlight"
+                        src="@/assets/images/clipboard.svg"
+                        height="12px"
+                        alt=""
+                      />
+                      <div style="margin-left: -22px" class="tooltip">{{ copyTip }}</div>
+                    </div>
+                  </div>
+
+                  <div class="regenerate-article">
+                    <div v-if="!showArticleRegenerate" class="row">
+                      <button
+                        @click="toggleArticleRegenerate"
+                        :disabled="
+                          articleSummaryLoading || loading || summaryLoading || savingSearch
+                        "
+                        class="tertiary-button"
+                      >
+                        Regenerate
+                      </button>
+
+                      <div class="relative">
+                        <div
+                          @click="toggleArticleGenerateDropdown"
+                          class="row pointer nav-text dropdownBorder"
+                        >
+                          Generate Content
+                          <img
+                            v-if="!showArticleGenerateDropdown"
+                            src="@/assets/images/downArrow.svg"
+                            height="14px"
+                            alt=""
+                          />
+                          <img
+                            class="rotate-img"
+                            v-else
+                            src="@/assets/images/downArrow.svg"
+                            height="14px"
+                            alt=""
+                          />
+                        </div>
+
+                        <div v-if="showArticleGenerateDropdown" class="search-dropdown">
+                          <div class="searches-container">
+                            <div
+                              class="row relative"
+                              v-for="(option, i) in generateOptions"
+                              :key="option.value"
+                            >
+                              <p @click="selectArticleOption(option.value, article.summary, i)">
+                                {{ option.name }}
+                              </p>
+
+                              <img
+                                v-show="contentLoading && optionIndex === i"
+                                src="@/assets/images/loading.svg"
+                                class="rotate"
+                                height="12px"
+                                alt=""
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="full-width" v-else>
+                      <textarea
+                        :disabled="
+                          articleSummaryLoading || loading || summaryLoading || savingSearch
+                        "
+                        autofocus
+                        class="area-input-outline wider"
+                        placeholder="Provide additional instructions"
                         v-autoresize
                         v-model="articleInstructions"
                       />
@@ -862,6 +1131,7 @@ import ChatTextBox from '../Chat/ChatTextBox.vue'
 import Reports from '../pr/Reports.vue'
 import { Comms } from '@/services/comms'
 import User from '@/services/users'
+import { mapActions } from 'vuex'
 
 export default {
   name: 'SummariesSinglePage',
@@ -880,8 +1150,16 @@ export default {
   },
   data() {
     return {
+      showExpireModal: false,
+      checkInterval: null,
+      currentRow: null,
+      addedArticles: [],
+      clipLoading: false,
+      uploadLink: null,
+      success: true,
+      articleBannerText: '',
+      showArticleBanner: false,
       showArticleGenerateDropdown: false,
-      showArticleModal: false,
       optionIndex: null,
       contentLoading: false,
       addedClips: [],
@@ -964,6 +1242,7 @@ export default {
     }
   },
   created() {
+    // this.checkInterval = setInterval(this.checkTokenExpiry, 60000)
     this.addedClips = this.$store.state.currentReportClips
   },
   watch: {
@@ -982,16 +1261,12 @@ export default {
     window.removeEventListener('scroll', this.checkScroll)
   },
   methods: {
-    // checkScroll() {
-    //   console.log('function triggered')
-    //   const scrolled = window.scrollY
-    //   const viewportHeight = window.innerHeight
-    //   const pageHeight = document.documentElement.scrollHeight
-
-    //   if (scrolled + viewportHeight >= pageHeight / 2 && !this.showArticleModal) {
-    //     this.showArticleModal = true
-    //   }
-    // },
+    setRow(i) {
+      this.currentRow = i
+    },
+    removeRow() {
+      this.currentRow = null
+    },
     toggleArticleGenerateDropdown() {
       this.showArticleGenerateDropdown = !this.showArticleGenerateDropdown
     },
@@ -1043,6 +1318,10 @@ export default {
       this.$store.dispatch('updateCurrentReportClips', this.addedClips)
       // this.updateMetaData()
     },
+    removeArticle(title) {
+      const newArticles = this.addedArticles.filter((article) => article.title !== title)
+      this.addedArticles = newArticles
+    },
     removeClip(title) {
       const newClips = this.addedClips.filter((clip) => clip.title !== title && clip.text !== title)
       this.addedClips = newClips
@@ -1059,27 +1338,61 @@ export default {
         this.ShowReport = !this.ShowReport
       }
     },
+    async uploadArticle() {
+      this.clipLoading = true
+      try {
+        await Comms.api
+          .uploadLink({
+            url: this.uploadLink,
+          })
+          .then((response) => {
+            this.success = true
+            this.addClipFromUrl(response)
+            this.articleBanner('Article added!')
+          })
+      } catch (e) {
+        this.success = false
+        console.log(e)
+        this.articleBanner('Error adding article!')
+      } finally {
+        this.clipLoading = false
+        this.uploadLink = null
+      }
+    },
+    articleBanner(text) {
+      this.articleBannerText = text
+      this.showArticleBanner = true
+      setTimeout(() => {
+        this.showArticleBanner = false
+      }, 2000)
+    },
+    addClipFromUrl(clip) {
+      clip.author = clip.author[0]
+      clip['search'] = this.newSearch
+      this.addedArticles.push(clip)
+    },
     addClip(clip) {
       if (Array.isArray(clip.author)) {
         clip.author = clip.author[0]
       }
       clip['search'] = this.newSearch
       if (this.addedClips && this.addedClips.length < 20) {
-        if (!clip.urlToImage && clip.attachments) {
+        if (!clip.urlToImage && (clip.attachments || clip.edit_history_tweet_ids)) {
           let tweetImg = ''
-          for (let i = 0; i < this.tweetMedia.length; i++) {
-            const media = this.tweetMedia[i]
-            if (media.media_key === clip.attachments.media_keys[0]) {
-              if (media.type === 'photo') {
-                tweetImg = media.url
-                break;
-              } else if (media.type === 'video') {
-                // tweetImg = media.variants[1].url
-                // break;
-              }
-              else if (media.type === 'animated_gif') {
-                // tweetImg = media.variants[0].url
-                // break;
+          if (clip.attachments) {
+            for (let i = 0; i < this.tweetMedia.length; i++) {
+              const media = this.tweetMedia[i]
+              if (media.media_key === clip.attachments.media_keys[0]) {
+                if (media.type === 'photo') {
+                  tweetImg = media.url
+                  break
+                } else if (media.type === 'video') {
+                  // tweetImg = media.variants[1].url
+                  // break;
+                } else if (media.type === 'animated_gif') {
+                  // tweetImg = media.variants[0].url
+                  // break;
+                }
               }
             }
           }
@@ -1087,6 +1400,25 @@ export default {
             tweetImg = clip.user.profile_image_url
           }
           clip.urlToImage = tweetImg
+        }
+        if (clip.attachments) {
+          const mediaURLs = []
+          for (let i = 0; i < clip.attachments.media_keys.length; i++) {
+            const mediaKey = clip.attachments.media_keys[i]
+            const media = this.tweetMedia.filter(tm => tm.media_key === mediaKey)
+            if (media[0]) {
+              if (media[0].url) {
+                mediaURLs.push({url: media[0].url, type: 'image'})
+              } else if (media[0].variants) {
+                if (media[0].type === 'video') {
+                  mediaURLs.push({url: media[0].variants[1].url, type: 'video'})
+                } else if (media[0].type === 'animated_gif') {
+                  mediaURLs.push({url: media[0].variants[0].url, type: 'animated_gif'})
+                }
+              }
+            }
+          }
+          clip.attachments.mediaURLs = mediaURLs
         }
         this.addedClips.push(clip)
         this.$store.dispatch('updateCurrentReportClips', this.addedClips)
@@ -1265,25 +1597,47 @@ export default {
       this.addingSources = !this.addingSources
     },
     getTimeDifferenceInMinutes(dateString) {
-      const currentDate = new Date()
-      const givenDate = new Date(dateString)
+      if (dateString) {
+        const currentDate = new Date()
+        const givenDate = new Date(dateString)
 
-      if (
-        givenDate.getDate() === currentDate.getDate() &&
-        givenDate.getMonth() === currentDate.getMonth() &&
-        givenDate.getFullYear() === currentDate.getFullYear()
-      ) {
-        const timeDifferenceInMilliseconds = currentDate - givenDate
-        const timeDifferenceInMinutes = Math.floor(timeDifferenceInMilliseconds / (1000 * 60))
-        if (timeDifferenceInMinutes >= 60) {
-          const timeDifferenceInHours = Math.floor(timeDifferenceInMinutes / 60)
-          const remainingMinutes = timeDifferenceInMinutes % 60
-          return `${timeDifferenceInHours}h`
+        if (
+          givenDate.getDate() === currentDate.getDate() &&
+          givenDate.getMonth() === currentDate.getMonth() &&
+          givenDate.getFullYear() === currentDate.getFullYear()
+        ) {
+          const timeDifferenceInMilliseconds = currentDate - givenDate
+          const timeDifferenceInMinutes = Math.floor(timeDifferenceInMilliseconds / (1000 * 60))
+          if (timeDifferenceInMinutes >= 60) {
+            const timeDifferenceInHours = Math.floor(timeDifferenceInMinutes / 60)
+            const remainingMinutes = timeDifferenceInMinutes % 60
+            return `${timeDifferenceInHours}h`
+          } else {
+            return `${timeDifferenceInMinutes}m`
+          }
         } else {
-          return `${timeDifferenceInMinutes}m`
+          let month
+          let day
+          let year
+          if (Number(givenDate.getMonth() + 1)) {
+            month = givenDate.getMonth() + 1
+          } else {
+            month = '--'
+          }
+          if (Number(givenDate.getDate())) {
+            day = givenDate.getDate()
+          } else {
+            day = '--'
+          }
+          if (Number(givenDate.getFullYear())) {
+            year = givenDate.getFullYear()
+          } else {
+            year = '--'
+          }
+          return `${month}/${day}/${year}`
         }
       } else {
-        return `${givenDate.getMonth() + 1}/${givenDate.getDate()}/${givenDate.getFullYear()}`
+        return '--/--/----'
       }
     },
     openPaidModal(msg) {
@@ -1330,27 +1684,23 @@ export default {
       this.closeRegenModal()
     },
     async getSourceSummary() {
-      if (!this.isPaid && this.searchesUsed >= 10) {
-        this.openPaidModal()
-        return
-      }
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       this.summaryLoading = true
       try {
-        await Comms.api
-          .getWebSummary({
-            url: this.additionalSources,
-            instructions: this.newTemplate || null,
-          })
-          .then((response) => {
-            this.summary = response.summary
-            this.refreshUser()
-          })
+        let response
+        if (this.addedArticles.length === 1) {
+          response = await this.getArticleSummary(this.addedArticles[0].url, this.newTemplate)
+          this.summary = response
+        } else {
+          response = await this.getSummary(this.addedArticles, this.newTemplate)
+        }
+        if (this.searchSaved) {
+          this.updateSearch()
+        }
+        this.refreshUser()
+        this.summaryLoading = false
       } catch (e) {
         console.log(e)
-      } finally {
-        this.summaryLoading = false
-        this.scrollToTop()
       }
     },
     async updateMetaData() {
@@ -1404,7 +1754,7 @@ export default {
       this.newTemplate = ''
       this.searchName = ''
       this.metaData = { clips: [] }
-      this.additionalSources = ''
+      this.addedArticles = []
     },
     openRegenModal() {
       this.regenModal = true
@@ -1517,7 +1867,7 @@ export default {
       return tweetList
     },
     getArticleDescriptions(articles) {
-      return articles.map((a) => `Content:${a.content} Date:${a.publishedAt}`)
+      return articles.map((a) => `Content:${a.description} Date:${a.publishedAt}`)
     },
     async getTweetSummary(instructions = '') {
       let tweets = this.prepareTweetSummary(this.tweets)
@@ -1575,34 +1925,48 @@ export default {
       }
     },
     async getArticleSummary(url, instructions = null, length = 1000) {
-      let selectedClip = this.filteredArticles.filter((art) => art.url === url)[0]
+      let selectedClip = this.addedArticles.length
+        ? this.addedArticles.filter((art) => art.url === url)[0]
+        : this.filteredArticles.filter((art) => art.url === url)[0]
 
       this.articleSummaryLoading = true
       this.loadingUrl = url
 
       try {
-        await Comms.api
+        const response = await Comms.api
           .getArticleSummary({
             url: url,
             search: this.newSearch,
             instructions: instructions,
             length: length,
           })
-          .then((response) => {
-            selectedClip['summary'] = response.summary
-            this.filteredArticles = this.filteredArticles.filter(
+          selectedClip['summary'] = response.summary
+          if (!this.addedArticles.length) {
+            this.filteredArticles = this.filteredArticles.filter((clip) => clip.title !== selectedClip.title)
+            this.filteredArticles.unshift(selectedClip)
+          } else {
+            this.addedArticles = this.addedArticles = this.addedArticles.filter(
               (clip) => clip.title !== selectedClip.title,
             )
-            this.filteredArticles.unshift(selectedClip)
-            this.refreshUser()
-          })
+            this.addedArticles.unshift(selectedClip)
+          }
+
+          this.refreshUser()
+          this.scrollToTopDivider()
+          return response.summary
       } catch (e) {
         console.log(e)
+        // this.$toast('Could not access article URL', {
+        //   timeout: 2000,
+        //   position: 'top-left',
+        //   type: 'error',
+        //   toastClassName: 'custom',
+        //   bodyClassName: ['custom'],
+        // })
       } finally {
         this.showArticleRegenerate = false
         this.articleSummaryLoading = false
         this.loadingUrl = null
-        this.scrollToTopDivider()
       }
     },
     changeSummaryChat(type) {
@@ -1662,7 +2026,9 @@ export default {
   },
   computed: {
     clipTitles() {
-      return this.addedClips ? this.addedClips.map((clip) => clip.title ? clip.title : clip.id) : []
+      return this.addedClips
+        ? this.addedClips.map((clip) => (clip.title ? clip.title : clip.id))
+        : []
     },
     messages() {
       return this.$store.state.messages
@@ -2002,6 +2368,76 @@ export default {
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
+.redTemplates {
+  display: block;
+  width: fit-content;
+  height: 40px;
+  position: absolute;
+  top: -140px;
+  left: 16px;
+  font-size: 12px;
+  background: $coral;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  line-height: 1.5;
+  z-index: 5000;
+
+  p {
+    margin-top: 8px;
+    padding: 0;
+  }
+}
+
+.redTemplates::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: $coral;
+  bottom: -3px;
+  left: 45%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.greenTemplates {
+  display: block;
+  width: fit-content;
+  height: 40px;
+  position: absolute;
+  top: -140px;
+  left: 16px;
+  font-size: 12px;
+  background: $dark-green;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  line-height: 1.5;
+  z-index: 5000;
+
+  p {
+    margin-top: 8px;
+    padding: 0;
+  }
+}
+
+.greenTemplates::before {
+  position: absolute;
+  content: '';
+  height: 8px;
+  width: 8px;
+  background: $dark-green;
+  bottom: -3px;
+  left: 45%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
 .typed-deleted {
   overflow: hidden;
   white-space: nowrap;
@@ -2267,6 +2703,58 @@ button:disabled {
     width: 100%;
   }
 }
+
+.article-container {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 32px 24px;
+  border-radius: 4px;
+  width: 500px;
+  max-height: 100px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+
+  &__empty {
+    color: $mid-gray;
+  }
+}
+
+.article-container::-webkit-scrollbar {
+  width: 6px;
+  height: 0px;
+}
+
+.article-container::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px;
+}
+
+.article-container:hover::-webkit-scrollbar-thumb {
+  background-color: $soft-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px;
+}
+
+.clip-photo {
+  height: 32px;
+  width: 32px;
+  object-fit: cover;
+  cursor: text;
+  margin-right: 8px;
+
+  &:hover {
+    opacity: 0.7;
+  }
+}
+
+.article-text {
+  display: flex;
+  align-items: flex-start;
+  font-size: 12px;
+  color: $dark-black-blue;
+  margin-bottom: 12px;
+}
+
 .s-padding {
   padding: 0 0.25rem !important;
 }
@@ -2297,6 +2785,27 @@ button:disabled {
 
 .wider {
   width: 100%;
+}
+
+.area-input-small {
+  width: 80%;
+  background-color: $offer-white;
+  margin-bottom: 0.25rem;
+  max-height: 250px;
+  padding: 0 1.25rem;
+  line-height: 1.75;
+  outline: none;
+  border: none;
+  letter-spacing: 0.5px;
+  font-size: 14px;
+  font-family: $base-font-family;
+  font-weight: 400;
+  border: none !important;
+  resize: none;
+  text-align: left;
+  overflow: auto;
+  scroll-behavior: smooth;
+  color: $dark-black-blue;
 }
 
 .area-input {
@@ -2337,14 +2846,19 @@ button:disabled {
   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
   border-radius: 6px;
 }
+
+.text-area-input::placeholder {
+  padding-top: 0.9rem;
+}
 .input-row {
   display: flex;
   align-items: center;
   flex-direction: row;
 }
+
 .input-row-start {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   flex-direction: row;
 
   img,
@@ -2352,16 +2866,27 @@ button:disabled {
     margin-top: 4px;
   }
 }
+
 .main-text {
+  width: 148px;
   display: flex;
   flex-direction: row;
   align-items: center;
   white-space: nowrap;
-  // padding-right: 0;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  padding-right: 1rem;
   margin: 0;
-  svg {
-    margin-right: 4px;
+  font-size: 13px;
+  color: $dark-black-blue;
+  svg,
+  img {
+    margin-right: 8px;
+    filter: invert(40%);
   }
+}
+
+.neg-mar-btm {
+  margin-bottom: -6px !important;
 }
 
 .main-slot {
@@ -2680,6 +3205,10 @@ header {
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
+  @media only screen and (max-width: 600px) {
+    width: 90%;
+    // padding-top: 48px;
+  }
 }
 
 .no-results {
@@ -2799,6 +3328,10 @@ header {
     overflow: none;
     text-overflow: ellipsis;
     margin-bottom: 8px;
+    @media only screen and (max-width: 600px) {
+      align-items: flex-start;
+      margin-left: 0.25rem;
+    }
   }
 }
 
@@ -3583,5 +4116,36 @@ header {
   color: black;
   text-decoration: none;
   cursor: pointer;
+}
+
+.danger {
+  cursor: pointer;
+  filter: invert(40%);
+  position: absolute;
+  right: 0;
+  margin-right: -8px;
+  &:hover {
+    opacity: 0.7 !important;
+    filter: invert(51%) sepia(74%) saturate(2430%) hue-rotate(320deg) brightness(104%)
+      contrast(121%) !important;
+  }
+}
+.attachment-header-container {
+  @media only screen and (max-width: 600px) {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+}
+.tweet-attachement {
+  img {
+    @media only screen and (max-width: 600px) {
+      width: 80vw;
+    }
+  }
+  video {
+    @media only screen and (max-width: 600px) {
+      width: 80vw;
+    }
+  }
 }
 </style>
