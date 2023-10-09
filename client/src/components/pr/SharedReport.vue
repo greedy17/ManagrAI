@@ -55,24 +55,53 @@
               <p class="article-preview">
                 {{ clip.description ? clip.description : clip.text }}
               </p>
-              <!-- <div v-if="clip.attachments" class="tweet-attachement">
-                <img
-                  v-if="media.type === 'photo'"
-                  :src="media.url"
-                  class="cover-photo-no-l-margin"
-                  alt=""
-                />
-              </div> -->
+              <div v-if="clip.attachments && clip.attachments.mediaURLs" class="tweet-attachement display-flex">
+                <div
+                  style="margin-bottom: 16px"
+                  v-for="mediaURL in clip.attachments.mediaURLs"
+                  :key="mediaURL.url"
+                  class="mar-right"
+                >
+                  <div v-if="mediaURL.type === 'video'">
+                    <video
+                      style="margin-top: 1rem"
+                      width="400"
+                      controls
+                    >
+                      <source :src="mediaURL.url" type="video/mp4" />
+                    </video>
+                  </div>
+                  <div v-else-if="mediaURL.type === 'animated_gif'">
+                    <video
+                      style="margin-top: 1rem"
+                      width="400"
+                      autoplay
+                      loop
+                      muted
+                      playsinline
+                    >
+                      <source :src="mediaURL.url" type="video/mp4" />
+                    </video>
+                  </div>
+                  <div v-else>
+                    <img
+                      :src="mediaURL.url"
+                      class="cover-photo-no-l-margin"
+                      alt=""
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div @click="goToArticle(clip.url)">
+            <div v-if="!clip.edit_history_tweet_ids" @click="goToArticle(clip.url)">
               <img :src="clip.urlToImage" class="cover-photo" />
             </div>
           </header>
 
           <div class="card-footer">
             <div class="author-time">
-              <span class="author">{{ clip.author ? clip.author : (clip.user && clip.user.username ? clip.user.username : '') }}</span>
+              <span class="author">@{{ clip.author ? clip.author : (clip.user && clip.user.username ? clip.user.username : '') }}</span>
               <span class="divier-dot">.</span>
               <small v-if="clip.user && clip.user.public_metrics" class="bold-text"
                 >{{ formatNumber(clip.user.public_metrics.followers_count) }}
@@ -120,7 +149,6 @@ export default {
         await User.api.getReport(code).then((response) => {
           this.report = response.data
           this.reportDate = response.date
-          console.log('response', response)
         })
       } catch (e) {
         console.log(e)
@@ -170,25 +198,47 @@ export default {
       return num.toString()
     },
     getTimeDifferenceInMinutes(dateString) {
-      const currentDate = new Date()
-      const givenDate = new Date(dateString)
+      if (dateString) {
+        const currentDate = new Date()
+        const givenDate = new Date(dateString)
 
-      if (
-        givenDate.getDate() === currentDate.getDate() &&
-        givenDate.getMonth() === currentDate.getMonth() &&
-        givenDate.getFullYear() === currentDate.getFullYear()
-      ) {
-        const timeDifferenceInMilliseconds = currentDate - givenDate
-        const timeDifferenceInMinutes = Math.floor(timeDifferenceInMilliseconds / (1000 * 60))
-        if (timeDifferenceInMinutes >= 60) {
-          const timeDifferenceInHours = Math.floor(timeDifferenceInMinutes / 60)
-          const remainingMinutes = timeDifferenceInMinutes % 60
-          return `${timeDifferenceInHours}h`
+        if (
+          givenDate.getDate() === currentDate.getDate() &&
+          givenDate.getMonth() === currentDate.getMonth() &&
+          givenDate.getFullYear() === currentDate.getFullYear()
+        ) {
+          const timeDifferenceInMilliseconds = currentDate - givenDate
+          const timeDifferenceInMinutes = Math.floor(timeDifferenceInMilliseconds / (1000 * 60))
+          if (timeDifferenceInMinutes >= 60) {
+            const timeDifferenceInHours = Math.floor(timeDifferenceInMinutes / 60)
+            const remainingMinutes = timeDifferenceInMinutes % 60
+            return `${timeDifferenceInHours}h`
+          } else {
+            return `${timeDifferenceInMinutes}m`
+          }
         } else {
-          return `${timeDifferenceInMinutes}m`
+          let month
+          let day
+          let year
+          if (Number(givenDate.getMonth() + 1)) {
+            month = givenDate.getMonth() + 1
+          } else {
+            month = '--'
+          }
+          if (Number(givenDate.getDate())) {
+            day = givenDate.getDate()
+          } else {
+            day = '--'
+          }
+          if (Number(givenDate.getFullYear())) {
+            year = givenDate.getFullYear()
+          } else {
+            year = '--'
+          }
+          return `${month}/${day}/${year}`
         }
       } else {
-        return `${givenDate.getMonth() + 1}/${givenDate.getDate()}/${givenDate.getFullYear()}`
+        return '--/--/----'
       }
     },
 
@@ -244,7 +294,7 @@ header {
   align-items: center;
   justify-content: space-between;
   gap: 32px;
-  height: 120px;
+  min-height: 120px;
   overflow: none;
   text-overflow: ellipsis;
   margin-bottom: 2rem;
@@ -542,5 +592,31 @@ header {
   height: 18px;
   margin-right: 0.5rem;
   // margin-top: 0.25rem;
+}
+.tweet-attachement {
+  img {
+    @media only screen and (max-width: 600px) {
+      width: 80vw;
+    }
+  }
+  video {
+    @media only screen and (max-width: 600px) {
+      width: 80vw;
+    }
+  }
+}
+.cover-photo-no-l-margin {
+  height: 112px;
+  width: 116px;
+  margin-top: 1.25rem;
+  object-fit: cover;
+  cursor: text;
+  border-radius: 4px;
+}
+.display-flex {
+  display: flex;
+}
+.mar-right {
+  margin-right: 1rem;
 }
 </style>

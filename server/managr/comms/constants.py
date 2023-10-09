@@ -49,6 +49,8 @@ DEFAULT_TWITTER_CLIENT_INSTRUCTIONS = """<strong>Executive summary:</strong>\n H
 <strong>Sentiment:</stong>\n Evaluate the overall tone or sentiment of the coverage. Is it primarily positive, neutral, or negative and why.\n
 <strong>Influencers:</strong>\n Identify key influencers based on follower count"""
 
+DEFAULT_WRITING_STYLE = "Aim for a professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Get right to the point"
+
 
 def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_client=False):
     body = f"""Today's date is {date}.Summarize the news coverage for {search} based on these news clips.\n Clips: {clips}\n
@@ -115,8 +117,13 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
     return body
 
 
-def OPEN_AI_PITCH(date, type, output, persona, briefing):
-    body = f"Today's {date}. As the VP of Communications, I need a {type} tailored for {persona}. Aim for a professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Get right to the point. Take into account the information from: {briefing}. Adhere to the given output parameters: {output}."
+def OPEN_AI_PITCH(date, type, output, persona, briefing, style=False):
+    if not style:
+        style = "Professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Direct, to the point."
+    body = f"""f"Today's {date}. As the VP of Communications, I need a {type} tailored for {persona}. 
+    Writing Style: {style}. Take into account the information from: {briefing}. Adhere to the given output parameters: {output}."""
+
+    print("BODY IS HERE", body)
     return body
 
 
@@ -127,9 +134,9 @@ Content: {pitch}\n
 Instructions: {instructions}"""
 )
 
-
-DO_NOT_TRACK_LIST = [
-    "https://www.wsj.com",
-    "https://www.nytimes.com",
-    "https://www.bizjournals.com",
-]
+OPEN_AI_LEARN_WRITING_STYLE_PROMPT = (
+    lambda sample: f"""Your task is to emulate this users writing style.
+Analyze this writing sample {sample} and summarize its key writing style characteristics in a concise manner,
+focusing on tone, vocabulary, structure, and any unique stylistic elements. 
+The output must be short, within 200 characters, describing the writing style in a concise manner."""
+)
