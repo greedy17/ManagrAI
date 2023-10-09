@@ -91,9 +91,15 @@ DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS = (
     lambda search: f"<strong>Context and Sentiment pertaining to {search}:</strong>\n<strong>Relevance and Impact pertaining to {search}:</strong>"
 )
 
-def OPEN_AI_WEB_SUMMARY(date, article, instructions,):
+
+def OPEN_AI_WEB_SUMMARY(
+    date,
+    article,
+    instructions,
+):
     body = f"Today's date is {date}. Summarize this news article:\n {article}. \nOutput format must be:\n {instructions}. It cannot be longer than 1500 characters."
     return body
+
 
 def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, for_client=False):
     body = f"Today's date is {date}  Summarize this news article:\n Article: {article}\n As it relates to {search} It cannot be longer than {length} characters. Output format must be:\n"
@@ -110,7 +116,7 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
 
 
 def OPEN_AI_PITCH(date, type, output, persona, briefing):
-    body = f"Today's {date}. As the VP of Communications, I need a {type} tailored for {persona}. Aim for a professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Get right to the point. Take into account the information from: {briefing}. Adhere to the given output parameters: {output}." 
+    body = f"Today's {date}. As the VP of Communications, I need a {type} tailored for {persona}. Aim for a professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Get right to the point. Take into account the information from: {briefing}. Adhere to the given output parameters: {output}."
     return body
 
 
@@ -120,3 +126,10 @@ Below is an AI generated content. Adjust and rewrite the pitch per instructions 
 Content: {pitch}\n
 Instructions: {instructions}"""
 )
+
+
+DO_NOT_TRACK_LIST = [
+    "https://www.wsj.com",
+    "https://www.nytimes.com",
+    "https://www.bizjournals.com",
+]

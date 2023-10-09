@@ -1,6 +1,7 @@
 import json
 import os
 import logging
+from django.db.models import F
 from datetime import datetime
 from django.db import models
 from managr.core.models import TimeStampModel
@@ -15,6 +16,8 @@ from urllib.parse import urlencode
 import base64
 import hashlib
 from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.search import SearchVectorField, SearchQuery, SearchRank
+from django.contrib.postgres.indexes import GinIndex
 
 logger = logging.getLogger("managr")
 
@@ -345,3 +348,19 @@ class Article(TimeStampModel):
         "comms.NewsSource", on_delete=models.CASCADE, related_name="articles"
     )
     content = models.TextField()
+    content_search_vector = SearchVectorField(null=True)
+
+    class Meta:
+        indexes = [
+            GinIndex(fields=["content_search_vector"]),
+        ]
+
+    @classmethod
+    def search_by_query(cls, boolean_string):
+        query = SearchQuery(boolean_string)
+        articles = (
+            cls.objects.annotate(rank=SearchRank(F("content_search_vector"), query))
+            .filter(rank__gt=0)
+            .order_by("-publish_date")
+        )
+        return list(articles)
