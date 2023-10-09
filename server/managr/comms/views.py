@@ -227,7 +227,6 @@ class PRSearchViewSet(
                 message = r.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("article_summaries")
                 task = emit_process_website_domain(url, user.organization.name)
-                print(task)
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -311,7 +310,6 @@ class PRSearchViewSet(
                 message = r.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("article_summaries")
                 task = emit_process_website_domain(url, user.organization.name)
-                print(task)
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -652,9 +650,6 @@ class PitchViewSet(
         attempts = 1
         token_amount = 1000
         timeout = 60.0
-
-        print(style)
-
         while True:
             try:
                 res = Pitch.generate_pitch(

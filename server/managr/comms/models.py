@@ -306,8 +306,6 @@ class NewsSource(TimeStampModel):
     def __str__(self):
         return self.domain
 
-    # f"//a[@data-testid='Link' and contains(@href, '{current_year}')]"
-
     def selector_processor(self):
         selector_split = self.article_link_selector.split(",")
         selector_type = selector_split[0]
@@ -315,6 +313,8 @@ class NewsSource(TimeStampModel):
             selector = f"contains(@href, '{str(datetime.now().year)}')"
         if selector_type == "value":
             selector = selector_split[1]
+        if selector_type == "class":
+            selector = f"contains(@class, '{selector_split[1]}')"
         return selector
 
     def create_search_regex(self):
@@ -322,16 +322,17 @@ class NewsSource(TimeStampModel):
         if self.article_link_regex:
             return self.article_link_regex
         # add the link selector
-        regex = self.article_link_attribute
+        regex = "//" + self.article_link_attribute + "["
         # check for data attribute
         if self.data_attribute_key:
-            regex += f"[@{self.data_attribute_key}='{self.data_attribute_value}'"
+            regex += f"@{self.data_attribute_key}='{self.data_attribute_value}'"
         # check for link attribute
         if self.article_link_selector:
             selector = self.selector_processor()
             if "@data" in regex:
                 regex += f"and {selector}"
-
+            else:
+                regex += selector
         regex += "]"
         self.article_link_regex = regex
         self.save()
@@ -365,3 +366,9 @@ class Article(TimeStampModel):
             .order_by("-publish_date")
         )
         return list(articles)
+
+
+# from managr.comms.tasks import run_spider
+
+# news = NewsSource.objects.all()[3]
+# run_spider(news.domain)

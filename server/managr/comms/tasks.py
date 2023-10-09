@@ -356,8 +356,8 @@ def _process_website_domain(url, organization_name):
 
 
 @background()
-def run_spider():
+def run_spider(url):
     from .webcrawler.crawler import run_spider
 
-    run_spider()
+    run_spider(url)
     return

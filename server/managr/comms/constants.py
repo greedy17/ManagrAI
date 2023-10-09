@@ -140,3 +140,5 @@ Analyze this writing sample {sample} and summarize its key writing style charact
 focusing on tone, vocabulary, structure, and any unique stylistic elements. 
 The output must be short, within 200 characters, describing the writing style in a concise manner."""
 )
+
+DO_NOT_TRACK_LIST = ["www.wsj.com", "www.nytimes.com", "www.bizjournals.com"]

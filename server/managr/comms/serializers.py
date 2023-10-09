@@ -52,12 +52,14 @@ class ArticleSerializer(serializers.ModelSerializer):
             "source",
             "link",
             "image_url",
+            "content_search_vector",
         )
 
     def create(self, validated_data):
         content = validated_data.get("content")
-        content_search_vector = SearchVector(content)
-        article = Article.objects.create(
-            content_search_vector=content_search_vector, **validated_data
-        )
+        content = content.replace("\n", " ").replace("\t", " ").replace("  ", "")
+        validated_data["content"] = content
+        article = Article.objects.create(**validated_data)
+        article.content_search_vector = SearchVector("content")
+        article.save()
         return article
