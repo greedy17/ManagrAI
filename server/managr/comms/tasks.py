@@ -341,7 +341,10 @@ def _process_website_domain(url, organization_name):
         except NewsSource.DoesNotExist:
             try:
                 serializer = NewsSourceSerializer(
-                    data={"domain": base_domain, "access_count": {organization_name: 1}}
+                    data={
+                        "domain": f"https://{base_domain}",
+                        "access_count": {organization_name: 1},
+                    }
                 )
                 serializer.is_valid(raise_exception=True)
                 serializer.save()

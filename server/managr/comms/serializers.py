@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Search, Pitch, NewsSource, Article
+from django.contrib.postgres.search import SearchVector
 
 
 class SearchSerializer(serializers.ModelSerializer):
@@ -52,3 +53,11 @@ class ArticleSerializer(serializers.ModelSerializer):
             "link",
             "image_url",
         )
+
+    def create(self, validated_data):
+        content = validated_data.get("content")
+        content_search_vector = SearchVector(content)
+        article = Article.objects.create(
+            content_search_vector=content_search_vector, **validated_data
+        )
+        return article

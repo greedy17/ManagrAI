@@ -575,7 +575,6 @@ def upload_link(request):
         date = article_res.publish_date
         text = article_res.meta_description
         domain = get_domain(url)
-
         article = {}
         article = {
             "title": title,
@@ -586,6 +585,7 @@ def upload_link(request):
             "description": text,
             "url": url,
         }
+        emit_process_website_domain(url, request.user.organization.name)
     except Exception as e:
         logger.exception(e)
     return Response(data=article)
