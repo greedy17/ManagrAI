@@ -2,9 +2,9 @@
   <div class="reports">
     <header class="blur-bottom">
       <div>
-        <h3>{{ reportSuccess ? 'Successfully created report!' : 'Share' }}</h3>
+        <h3>{{ reportSuccess ? 'Successfully created digest!' : 'Digest' }}</h3>
         <small class="subtext">{{
-          reportSuccess ? 'Below is your shareable link' : 'Customize & create a report'
+          reportSuccess ? 'Below is your shareable link' : 'Create a sharable media digest'
         }}</small>
       </div>
 
@@ -159,56 +159,76 @@
             <div class="counter">{{ clips.length }}/20</div>
           </div>
         </div>
-
-        <div
-          @mouseenter="setRow(i)"
-          @mouseleave="removeRow"
-          class="clip"
-          :class="{ 'blue-bg': clip.summary }"
-          v-for="(clip, i) in clips"
-          :key="i"
+        
+        <draggable
+          v-model="clips"
+          group="fields"
+          @start="drag = true"
+          @end="endDrag"
         >
-          <div class="clip-header">
-            <img :src="clip.urlToImage" class="clip-photo" />
-            <small>{{ clip.title ? clip.title : clip.text }}</small>
-          </div>
-
-          <div v-if="clip.summary" class="summary-box">
-            <pre v-html="clip.summary" class="pre-text-small"></pre>
-          </div>
-
           <div
+            @mouseenter="setRow(i)"
+            @mouseleave="removeRow"
+            class="clip"
             :class="{ 'blue-bg': clip.summary }"
-            v-show="currentRow === i || loadingUrl === clip.url"
-            class="row absolute-right actions"
+            v-for="(clip, i) in clips"
+            :key="i"
           >
-            <img
-              @click="getArticleSummary(clip.title, clip.url, clip.search)"
-              style="margin-right: 12px"
-              class="blue"
-              v-if="!summaryLoading && !clip.summary && clip.title"
-              v-show="!clip.summary && !loading && !summaryLoading && !reportLoading"
-              src="@/assets/images/sparkles-thin.svg"
-              height="16px"
-            />
+            <div class="clip-header">
+              <img :src="clip.urlToImage" class="clip-photo" />
+              <small>{{ clip.title ? clip.title : clip.text }}</small>
+            </div>
+            
+            <div v-if="clip.summary" class="summary-box">
+              <pre v-html="clip.summary" class="pre-text-small"></pre>
+            </div>
+            
+            <div
+              :class="{ 'blue-bg': clip.summary }"
+              v-show="currentRow === i || loadingUrl === clip.url"
+              class="row absolute-right actions"
+            >
+              <!-- <img 
+                src="@/assets/images/grip-dots-vertical.svg"
+                height="16px"
+                style="margin-right: 12px"
+              /> -->
 
-            <img
-              style="margin-right: 12px"
-              v-else-if="loadingUrl === clip.url && clip.title"
-              class="rotate"
-              height="16px"
-              src="@/assets/images/loading.svg"
-              alt=""
-            />
+              <img
+                @click="getArticleSummary(clip.title, clip.url, clip.search)"
+                style="margin-right: 12px"
+                class="blue"
+                v-if="!summaryLoading && !clip.summary && clip.title"
+                v-show="!clip.summary && !loading && !summaryLoading && !reportLoading"
+                src="@/assets/images/sparkles-thin.svg"
+                height="16px"
+              />
 
-            <img
-              @click="removeClip(clip)"
-              class="danger"
-              src="@/assets/images/trash.svg"
-              height="16px"
-            />
+              <img
+                style="margin-right: 12px"
+                v-else-if="loadingUrl === clip.url && clip.title"
+                class="rotate"
+                height="16px"
+                src="@/assets/images/loading.svg"
+                alt=""
+              />
+
+              <img
+                @click="removeClip(clip)"
+                class="danger trash-filter"
+                style="margin-right: 12px"
+                src="@/assets/images/trash2.svg"
+                height="16px"
+              />
+
+              <img 
+                src="@/assets/images/grip-dots-vertical.svg"
+                height="16px"
+                class="gray"
+              />
+            </div>
           </div>
-        </div>
+        </draggable>
       </div>
 
       <div class="container-small">
@@ -278,9 +298,17 @@
 import { Comms } from '@/services/comms'
 import User from '@/services/users'
 import debounce from 'lodash.debounce'
+import draggable from 'vuedraggable'
 
 export default {
   name: 'Reports',
+  components: {
+    draggable,
+  },
+  props: {
+    clips: {},
+    defaultSearch: {},
+  },
   data() {
     return {
       imageUrl: null,
@@ -308,10 +336,6 @@ export default {
     }
   },
 
-  props: {
-    clips: {},
-    defaultSearch: {},
-  },
   created() {
     this.reportTitle = this.$store.state.reportTitle
     this.imageFile = this.$store.state.reportImage
@@ -356,10 +380,18 @@ export default {
     addClip(clip) {
       this.$emit('add-clip', clip)
     },
+    setAddedClips() {
+      this.$emit('set-added-clips', this.clips)
+    },
     goToReports() {
       this.$router.push({
         name: 'PRReports',
       })
+    },
+    endDrag() {
+      this.$store.dispatch('updateCurrentReportClips', this.clips)
+      this.setAddedClips()
+      this.drag = false
     },
     openLink() {
       window.open(this.reportLink, '_blank')
@@ -687,14 +719,18 @@ h3 {
   flex-direction: row;
   align-items: center;
 
-  img:last-of-type {
-    filter: invert(40%);
-    cursor: pointer;
-  }
+  // img:last-of-type {
+  //   filter: invert(40%);
+  //   cursor: pointer;
+  // }
 
-  img:last-of-type {
-    filter: invert(60%);
-  }
+  // img:last-of-type {
+  //   filter: invert(60%);
+  // }
+}
+
+.trash-filter {
+  filter: invert(40%);
 }
 
 .container-large {
@@ -807,6 +843,10 @@ h3 {
   background-color: $white-blue;
 }
 
+.clip-container {
+  display: flex;
+  align-items: center;
+}
 .clip {
   margin: 16px 0;
   padding: 4px 0;

@@ -100,6 +100,7 @@
         @remove-clip="removeClip"
         @edit-clip="editClip"
         @add-clip="addClip"
+        @set-added-clips="setAddedClips"
         :clips="addedClips"
         :defaultSearch="newSearch"
       />
@@ -347,7 +348,7 @@
 
             <button
               v-else
-              @click="getSourceSummary()"
+              @click="generateNewSearch"
               :disabled="!addedArticles.length"
               class="primary-button"
             >
@@ -1248,7 +1249,7 @@ export default {
   watch: {
     typedMessage: 'changeIndex',
     currentSearch(newVal, oldVal) {
-      if (newVal.id !== (oldVal ? oldVal.id : null)) {
+      if (newVal && newVal.id !== (oldVal ? oldVal.id : null)) {
         this.setSearch(newVal)
       }
     },
@@ -1263,6 +1264,9 @@ export default {
   methods: {
     setRow(i) {
       this.currentRow = i
+    },
+    setAddedClips(clips) {
+      this.addedClips = clips
     },
     removeRow() {
       this.currentRow = null
@@ -1515,6 +1519,7 @@ export default {
       // this.$store.dispatch('updateCurrentReportClips', this.addedClips)
       this.metaData = { clips: [] }
       this.$emit('change-search', null)
+      this.$store.dispatch('setSearch', null)
       this.summary = ''
     },
     switchMainView(view) {
@@ -2893,14 +2898,16 @@ button:disabled {
   width: 28px;
   height: 28px;
   border-radius: 100%;
-  background-color: $dark-black-blue;
+  // background-color: $dark-black-blue;
+  background-color: $white;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
 
   img {
-    filter: invert(99%);
+    // filter: invert(99%);
+    filter: invert(20%) sepia(94%) saturate(234%) hue-rotate(161deg) brightness(92%) contrast(86%);
     margin: 0;
     padding: 0;
   }
