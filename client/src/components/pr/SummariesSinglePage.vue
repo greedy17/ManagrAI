@@ -100,6 +100,7 @@
         @remove-clip="removeClip"
         @edit-clip="editClip"
         @add-clip="addClip"
+        @set-added-clips="setAddedClips"
         :clips="addedClips"
         :defaultSearch="newSearch"
       />
@@ -347,7 +348,7 @@
 
             <button
               v-else
-              @click="getSourceSummary()"
+              @click="generateNewSearch"
               :disabled="!addedArticles.length"
               class="primary-button"
             >
@@ -1263,6 +1264,9 @@ export default {
   methods: {
     setRow(i) {
       this.currentRow = i
+    },
+    setAddedClips(clips) {
+      this.addedClips = clips
     },
     removeRow() {
       this.currentRow = null
