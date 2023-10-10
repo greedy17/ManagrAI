@@ -4,6 +4,7 @@ from managr.core.utils import Variable_Client
 from newspaper import Config
 from django.db.models import Q
 from .constants import DO_NOT_TRACK_LIST
+from dateutil import parser
 
 user_agents = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
@@ -87,3 +88,57 @@ def get_search_boolean(search):
     r = open_ai_exceptions._handle_response(r)
     query_input = r.get("choices")[0].get("message").get("content")
     return query_input
+
+
+def normalize_api_to_model(api_data):
+    normalized_data = [
+        dict(
+            title=article.get("title", ""),
+            description=article.get("description", ""),
+            author=article.get("author", ""),
+            publish_date=article.get("publishedAt", ""),
+            link=article.get("url", ""),
+            image_url=article.get("urlToImagg"),
+            source=article.get("source", []).get("name", ""),
+        )
+        for article in api_data
+    ]
+    return normalized_data
+
+
+def normalize_article_data(api_data, article_models):
+    normalized_list = []
+    normalized_api_list = normalize_api_to_model(api_data)
+    normalized_list.extend(normalized_api_list)
+    normalized_model_list = [article.fields_to_dict() for article in article_models]
+    normalized_list.extend(normalized_model_list)
+    return normalized_list
+
+
+def merge_sort_dates(arr):
+    if len(arr) > 1:
+        mid = len(arr) // 2
+        sub_array1 = arr[:mid]
+        sub_array2 = arr[mid:]
+        merge_sort_dates(sub_array1)
+        merge_sort_dates(sub_array2)
+        i = j = k = 0
+        while i < len(sub_array1) and j < len(sub_array2):
+            parsed_value1 = parser.parse(sub_array1[i]["publish_date"])
+            parsed_value2 = parser.parse(sub_array2[j]["publish_date"])
+            if parsed_value1 < parsed_value2:
+                arr[k] = sub_array1[i]
+                i += 1
+            else:
+                arr[k] = sub_array2[j]
+                j += 1
+            k += 1
+        while i < len(sub_array1):
+            arr[k] = sub_array1[i]
+            i += 1
+            k += 1
+        while j < len(sub_array2):
+            arr[k] = sub_array2[j]
+            j += 1
+            k += 1
+    return arr

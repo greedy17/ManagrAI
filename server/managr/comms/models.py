@@ -322,7 +322,8 @@ class NewsSource(TimeStampModel):
         if self.article_link_regex:
             return self.article_link_regex
         # add the link selector
-        regex = "//" + self.article_link_attribute + "["
+        attribute_list = self.article_link_attribute.split(",")
+        regex = "//" + attribute_list[0] + "["
         # check for data attribute
         if self.data_attribute_key:
             regex += f"@{self.data_attribute_key}='{self.data_attribute_value}'"
@@ -334,6 +335,8 @@ class NewsSource(TimeStampModel):
             else:
                 regex += selector
         regex += "]"
+        if len(attribute_list) > 1:
+            regex += f"/{attribute_list[1]}[1]"
         self.article_link_regex = regex
         self.save()
         return regex
@@ -357,6 +360,17 @@ class Article(TimeStampModel):
             GinIndex(fields=["content_search_vector"]),
         ]
 
+    def fields_to_dict(self):
+        return dict(
+            title=self.title,
+            description=self.description,
+            author=self.author,
+            publish_date=str(self.publish_date),
+            link=self.link,
+            image_url=self.image_url,
+            source=self.source.domain,
+        )
+
     @classmethod
     def search_by_query(cls, boolean_string):
         query = SearchQuery(boolean_string)
@@ -366,9 +380,3 @@ class Article(TimeStampModel):
             .order_by("-publish_date")
         )
         return list(articles)
-
-
-# from managr.comms.tasks import run_spider
-
-# news = NewsSource.objects.all()[3]
-# run_spider(news.domain)

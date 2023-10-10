@@ -56,9 +56,6 @@ class ArticleSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
-        content = validated_data.get("content")
-        content = content.replace("\n", " ").replace("\t", " ").replace("  ", "")
-        validated_data["content"] = content
         article = Article.objects.create(**validated_data)
         article.content_search_vector = SearchVector("content")
         article.save()
