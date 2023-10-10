@@ -1228,8 +1228,9 @@ export default {
         'Articles written or about [JOURNALIST NAME]',
       ],
       promptSuggestions: [
-        `Summarize news from this week and how it impacts XXX`,
-        'Highlight the top 3 news story and the impact it has on XXX',
+        `Summarize the news`,
+        'Select the 5 most impactful news stories',
+        'Find the most entertaining news about XXX and convert to a blog post',
         "As XXX's PR agency, provide suggestions based on this news",
         'Craft short responses as the VP of PR for XXX to the stories that need it',
         `Write a highly engaging LinkedIn post based on this coverage for XXX`,
