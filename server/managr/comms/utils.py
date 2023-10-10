@@ -90,7 +90,7 @@ def get_search_boolean(search):
     return query_input
 
 
-def normalize_api_to_model(api_data):
+def normalize_newsapi_to_model(api_data):
     normalized_data = [
         dict(
             title=article.get("title", ""),
@@ -108,7 +108,7 @@ def normalize_api_to_model(api_data):
 
 def normalize_article_data(api_data, article_models):
     normalized_list = []
-    normalized_api_list = normalize_api_to_model(api_data)
+    normalized_api_list = normalize_newsapi_to_model(api_data)
     normalized_list.extend(normalized_api_list)
     normalized_model_list = [article.fields_to_dict() for article in article_models]
     normalized_list.extend(normalized_model_list)
