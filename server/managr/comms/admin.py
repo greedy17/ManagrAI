@@ -23,8 +23,9 @@ class CustomNewsSource(admin.ModelAdmin):
 
 
 class CustomArticle(admin.ModelAdmin):
-    list_display = ("title", "publish_date")
+    list_display = ("title", "publish_date", "source")
     list_filter = ("source",)
+    ordering = ("-publish_date",)
 
 
 admin.site.register(Search, CustomSearch)

@@ -7,6 +7,12 @@ from scrapy.crawler import CrawlerProcess
 from scrapy import signals
 from scrapy.signalmanager import dispatcher
 from dateutil import parser
+from scrapy.utils.project import get_project_settings
+from twisted.internet import reactor
+
+settings = get_project_settings()
+process = CrawlerProcess()
+
 
 logger = logging.getLogger("managr")
 
@@ -135,10 +141,4 @@ class NewsSpider(scrapy.Spider):
 
 
 def run_spider(url):
-    process = CrawlerProcess()
-    try:
-        process.crawl(NewsSpider, start_urls=url)
-        process.start()
-    finally:
-        process.stop()
-    return
+    process.crawl(NewsSpider, start_urls=url)
