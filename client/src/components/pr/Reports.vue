@@ -164,7 +164,7 @@
           v-model="clips"
           group="fields"
           @start="drag = true"
-          @end="endDrag"
+          @end="endDrag($event.target)"
         >
           <div
             @mouseenter="setRow(i)"
@@ -388,7 +388,8 @@ export default {
         name: 'PRReports',
       })
     },
-    endDrag() {
+    endDrag(target) {
+      console.log('target', target)
       this.$store.dispatch('updateCurrentReportClips', this.clips)
       this.setAddedClips()
       this.drag = false
