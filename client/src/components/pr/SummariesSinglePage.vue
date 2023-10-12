@@ -176,6 +176,7 @@
             v-if="mainView !== 'website'"
             style="margin-bottom: 30px"
             class="input-container"
+            id="prompt-search"
             v-clickOutsideMenu
           >
             <div class="input-row">
@@ -225,7 +226,7 @@
             </div>
           </div>
 
-          <div style="margin-top: 1rem" class="input-container" v-clickOutsidePromptMenu>
+          <div style="margin-top: 1rem" id="instructions" class="input-container" v-clickOutsidePromptMenu>
             <div class="input-row-start">
               <div class="main-text">
                 <img
@@ -1303,6 +1304,34 @@ export default {
         this.$router.push({ name: 'Pitches' })
       }, 500)
     },
+    unbindClickOutsidePromptMenu() {
+      const el = document.getElementById("instructions");
+      
+      if (el && el._clickOutsideHandler) {
+        // Remove the event listener
+        document.body.removeEventListener("click", el._clickOutsideHandler);
+      }
+    },
+    bindClickOutsidePromptMenu() {
+      // Get the directive element where you want to bind the listener
+      const el = document.getElementById("instructions");
+
+      if (el) {
+        // Define the clickOutsideHandler function (the same logic as in your directive)
+        function clickOutsideHandler(e) {
+          if (!el.contains(e.target)) {
+            // Trigger your functionality when clicked outside the element
+            this.hidePromptDropdown(); // Replace with your actual functionality
+          }
+        }
+
+        // Attach the clickOutsideHandler to the element
+        el._clickOutsideHandler = clickOutsideHandler.bind(this);
+
+        // Add the event listener to the document body
+        document.body.addEventListener("click", el._clickOutsideHandler);
+      }
+    },
     setArticlePitchContent(sum) {
       let content = {
         summary: sum,
@@ -1521,6 +1550,22 @@ export default {
       this.$store.dispatch('setSearch', null)
       this.summary = ''
     },
+    bindClickOutsideSearchMenu() {
+      const el = document.getElementById("prompt-search");
+
+      if (el) {
+        function clickOutsideSearchMenuHandler(e) {
+          if (!el.contains(e.target)) {
+            // Trigger the functionality to close the search menu dropdown
+            this.hideDropdown(); // Replace with your actual functionality
+          }
+        }
+
+        el._clickOutsideSearchMenuHandler = clickOutsideSearchMenuHandler.bind(this);
+
+        document.body.addEventListener("click", el._clickOutsideSearchMenuHandler);
+      }
+    },
     switchMainView(view) {
       // if (view === 'news') {
       //   this.deselectOpp()
@@ -1528,7 +1573,17 @@ export default {
       //   this.deselectMeeting()
       // }
       if (view !== this.mainView) {
-        this.mainView = view
+        if (this.mainView === 'website') {
+          this.unbindClickOutsidePromptMenu()
+          this.mainView = view
+        } else  {
+          this.mainView = view
+        }
+        if (this.mainView !== 'website') {
+          setTimeout(() => {
+            this.bindClickOutsideSearchMenu()
+          }, 200)
+        }
       }
     },
     formatNumber(num) {
@@ -1888,7 +1943,7 @@ export default {
             this.refreshUser()
           })
       } catch (e) {
-        console.log('Error in getSummary', e)
+        console.log('Error in getTweetSummary', e)
         this.$toast('Something went wrong, please try again.', {
           timeout: 2000,
           position: 'top-left',
@@ -2155,7 +2210,7 @@ export default {
         // Remove the event listener when the directive is unbound
         document.body.removeEventListener('click', el._clickOutsideHandler)
       },
-    },
+    }
   },
 }
 </script>
