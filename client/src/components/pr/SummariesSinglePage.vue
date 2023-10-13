@@ -226,7 +226,12 @@
             </div>
           </div>
 
-          <div style="margin-top: 1rem" id="instructions" class="input-container" v-clickOutsidePromptMenu>
+          <div
+            style="margin-top: 1rem"
+            id="instructions"
+            class="input-container"
+            v-clickOutsidePromptMenu
+          >
             <div class="input-row-start">
               <div class="main-text">
                 <img
@@ -765,16 +770,16 @@
                       {{ clipTitles.includes(article.title) ? 'Shared' : 'Share' }}
                     </button>
 
-                    <div v-if="mainView === 'website' && addedArticles.length === 1">
-                    
-                    </div>
+                    <div v-if="mainView === 'website' && addedArticles.length === 1"></div>
                     <div v-else>
                       <button
                         v-if="!article.summary"
                         @click="getArticleSummary(article.url)"
                         class="tertiary-button summarize-button"
                         style="margin: 0"
-                        :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
+                        :disabled="
+                          articleSummaryLoading || loading || summaryLoading || savingSearch
+                        "
                       >
                         <img
                           v-if="articleSummaryLoading && loadingUrl === article.url"
@@ -798,9 +803,7 @@
                     </div>
                   </div>
                 </div>
-                <div v-if="mainView === 'website' && addedArticles.length === 1">
-                    
-                </div>
+                <div v-if="mainView === 'website' && addedArticles.length === 1"></div>
                 <div v-else-if="article.summary">
                   <div class="blue-bg display-flex">
                     <pre v-html="article.summary" class="pre-text"></pre>
@@ -967,16 +970,16 @@
                       {{ clipTitles.includes(article.title) ? 'Shared' : 'Share' }}
                     </button>
 
-                    <div v-if="mainView === 'website' && addedArticles.length === 1">
-                    
-                    </div>
+                    <div v-if="mainView === 'website' && addedArticles.length === 1"></div>
                     <div v-else>
                       <button
                         v-if="!article.summary"
                         @click="getArticleSummary(article.url)"
                         class="tertiary-button summarize-button"
                         style="margin: 0"
-                        :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
+                        :disabled="
+                          articleSummaryLoading || loading || summaryLoading || savingSearch
+                        "
                       >
                         <img
                           v-if="articleSummaryLoading && loadingUrl === article.url"
@@ -1000,9 +1003,7 @@
                     </div>
                   </div>
                 </div>
-                <div v-if="mainView === 'website' && addedArticles.length === 1">
-                    
-                </div>
+                <div v-if="mainView === 'website' && addedArticles.length === 1"></div>
                 <div v-else-if="article.summary">
                   <div class="blue-bg display-flex">
                     <pre v-html="article.summary" class="pre-text"></pre>
@@ -1305,31 +1306,31 @@ export default {
       }, 500)
     },
     unbindClickOutsidePromptMenu() {
-      const el = document.getElementById("instructions");
-      
+      const el = document.getElementById('instructions')
+
       if (el && el._clickOutsideHandler) {
         // Remove the event listener
-        document.body.removeEventListener("click", el._clickOutsideHandler);
+        document.body.removeEventListener('click', el._clickOutsideHandler)
       }
     },
     bindClickOutsidePromptMenu() {
       // Get the directive element where you want to bind the listener
-      const el = document.getElementById("instructions");
+      const el = document.getElementById('instructions')
 
       if (el) {
         // Define the clickOutsideHandler function (the same logic as in your directive)
         function clickOutsideHandler(e) {
           if (!el.contains(e.target)) {
             // Trigger your functionality when clicked outside the element
-            this.hidePromptDropdown(); // Replace with your actual functionality
+            this.hidePromptDropdown() // Replace with your actual functionality
           }
         }
 
         // Attach the clickOutsideHandler to the element
-        el._clickOutsideHandler = clickOutsideHandler.bind(this);
+        el._clickOutsideHandler = clickOutsideHandler.bind(this)
 
         // Add the event listener to the document body
-        document.body.addEventListener("click", el._clickOutsideHandler);
+        document.body.addEventListener('click', el._clickOutsideHandler)
       }
     },
     setArticlePitchContent(sum) {
@@ -1437,15 +1438,15 @@ export default {
           const mediaURLs = []
           for (let i = 0; i < clip.attachments.media_keys.length; i++) {
             const mediaKey = clip.attachments.media_keys[i]
-            const media = this.tweetMedia.filter(tm => tm.media_key === mediaKey)
+            const media = this.tweetMedia.filter((tm) => tm.media_key === mediaKey)
             if (media[0]) {
               if (media[0].url) {
-                mediaURLs.push({url: media[0].url, type: 'image'})
+                mediaURLs.push({ url: media[0].url, type: 'image' })
               } else if (media[0].variants) {
                 if (media[0].type === 'video') {
-                  mediaURLs.push({url: media[0].variants[1].url, type: 'video'})
+                  mediaURLs.push({ url: media[0].variants[1].url, type: 'video' })
                 } else if (media[0].type === 'animated_gif') {
-                  mediaURLs.push({url: media[0].variants[0].url, type: 'animated_gif'})
+                  mediaURLs.push({ url: media[0].variants[0].url, type: 'animated_gif' })
                 }
               }
             }
@@ -1551,19 +1552,19 @@ export default {
       this.summary = ''
     },
     bindClickOutsideSearchMenu() {
-      const el = document.getElementById("prompt-search");
+      const el = document.getElementById('prompt-search')
 
       if (el) {
         function clickOutsideSearchMenuHandler(e) {
           if (!el.contains(e.target)) {
             // Trigger the functionality to close the search menu dropdown
-            this.hideDropdown(); // Replace with your actual functionality
+            this.hideDropdown() // Replace with your actual functionality
           }
         }
 
-        el._clickOutsideSearchMenuHandler = clickOutsideSearchMenuHandler.bind(this);
+        el._clickOutsideSearchMenuHandler = clickOutsideSearchMenuHandler.bind(this)
 
-        document.body.addEventListener("click", el._clickOutsideSearchMenuHandler);
+        document.body.addEventListener('click', el._clickOutsideSearchMenuHandler)
       }
     },
     switchMainView(view) {
@@ -1576,7 +1577,7 @@ export default {
         if (this.mainView === 'website') {
           this.unbindClickOutsidePromptMenu()
           this.mainView = view
-        } else  {
+        } else {
           this.mainView = view
         }
         if (this.mainView !== 'website') {
@@ -1926,7 +1927,10 @@ export default {
       return tweetList
     },
     getArticleDescriptions(articles) {
-      return articles.map((a) => `Content:${a.description} Date:${a.publishedAt}`)
+      return articles.map(
+        (a) =>
+          `Content:${a.description} Date:${a.publishedAt}, Source:${a.source}, Author:${a.author}`,
+      )
     },
     async getTweetSummary(instructions = '') {
       let tweets = this.prepareTweetSummary(this.tweets)
@@ -1992,27 +1996,28 @@ export default {
       this.loadingUrl = url
 
       try {
-        const response = await Comms.api
-          .getArticleSummary({
-            url: url,
-            search: this.newSearch,
-            instructions: instructions,
-            length: length,
-          })
-          selectedClip['summary'] = response.summary
-          if (!this.addedArticles.length) {
-            this.filteredArticles = this.filteredArticles.filter((clip) => clip.title !== selectedClip.title)
-            this.filteredArticles.unshift(selectedClip)
-          } else {
-            this.addedArticles = this.addedArticles = this.addedArticles.filter(
-              (clip) => clip.title !== selectedClip.title,
-            )
-            this.addedArticles.unshift(selectedClip)
-          }
+        const response = await Comms.api.getArticleSummary({
+          url: url,
+          search: this.newSearch,
+          instructions: instructions,
+          length: length,
+        })
+        selectedClip['summary'] = response.summary
+        if (!this.addedArticles.length) {
+          this.filteredArticles = this.filteredArticles.filter(
+            (clip) => clip.title !== selectedClip.title,
+          )
+          this.filteredArticles.unshift(selectedClip)
+        } else {
+          this.addedArticles = this.addedArticles = this.addedArticles.filter(
+            (clip) => clip.title !== selectedClip.title,
+          )
+          this.addedArticles.unshift(selectedClip)
+        }
 
-          this.refreshUser()
-          this.scrollToTopDivider()
-          return response.summary
+        this.refreshUser()
+        this.scrollToTopDivider()
+        return response.summary
       } catch (e) {
         console.log(e)
         // this.$toast('Could not access article URL', {
@@ -2210,7 +2215,7 @@ export default {
         // Remove the event listener when the directive is unbound
         document.body.removeEventListener('click', el._clickOutsideHandler)
       },
-    }
+    },
   },
 }
 </script>
