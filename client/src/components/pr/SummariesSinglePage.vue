@@ -1929,7 +1929,7 @@ export default {
     getArticleDescriptions(articles) {
       return articles.map(
         (a) =>
-          `Content:${a.description} Date:${a.publishedAt}, Source:${a.source}, Author:${a.author}`,
+          `Content:${a.description} Date:${a.publishedAt}, Source:${a.source.name}, Author:${a.author}`,
       )
     },
     async getTweetSummary(instructions = '') {
