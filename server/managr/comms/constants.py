@@ -87,10 +87,10 @@ OPEN_AI_TWITTER_SEARCH_CONVERSION = (
 )
 
 DEFAULT_ARTICLE_INSTRUCTIONS = (
-    lambda search: f"*Context and Sentiment pertaining to {search}:*\n*Relevance and Impact pertaining to {search}:*"
+    lambda search: f"*Context, Sentiment and Impact pertaining to {search}. Keep it under 500 characters:*\n*"
 )
 DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS = (
-    lambda search: f"<strong>Context and Sentiment pertaining to {search}:</strong>\n<strong>Relevance and Impact pertaining to {search}:</strong>"
+    lambda search: f"<strong>Context, Sentiment and Impact pertaining to {search}. Keep it under 500 characters:</strong>"
 )
 
 
