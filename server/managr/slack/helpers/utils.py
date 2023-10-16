@@ -7,7 +7,6 @@ import datetime
 from django.conf import settings
 from dateutil import parser
 
-from managr.alerts.models import AlertConfig
 from managr.core.models import User
 from managr.slack.helpers import block_builders, requests
 from managr.slack import constants as slack_consts
@@ -73,7 +72,12 @@ def get_lead_rating_emoji(rating):
 
 def block_finder(block_id, blocks=[]):
     """Takes in a list of blocks and return block and index (used for updating and removing from modal)"""
-    item = list(filter(lambda x: x[1].get("block_id", None) == block_id, enumerate(blocks),))
+    item = list(
+        filter(
+            lambda x: x[1].get("block_id", None) == block_id,
+            enumerate(blocks),
+        )
+    )
     if len(item):
         return item[0]
     return item
@@ -400,6 +404,8 @@ def check_for_uncompleted_meetings(user_id, org_level=False):
 
 
 def check_workflows_count(user_id):
+    from managr.alerts.models import AlertConfig
+
     workflows = AlertConfig.objects.filter(template__user=user_id)
     if len(workflows):
         return {"status": True, "workflow_count": len(workflows)}
@@ -442,7 +448,9 @@ def send_loading_screen(access_token, message, view_type, user_id, trigger_id=No
             loading_view_data["view_id"] = view_id
     try:
         loading_res = requests.generic_request(
-            slack_consts.SLACK_API_ROOT + view, loading_view_data, access_token=access_token,
+            slack_consts.SLACK_API_ROOT + view,
+            loading_view_data,
+            access_token=access_token,
         )
         return loading_res
     except Exception as e:

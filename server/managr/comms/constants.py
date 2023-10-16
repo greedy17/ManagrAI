@@ -123,7 +123,7 @@ def OPEN_AI_PITCH(date, type, output, persona, briefing, style=False):
     body = f"""f"Today's {date}. As the VP of Communications, I need a {type} tailored for {persona}. 
     Writing Style: {style}. Take into account the information from: {briefing}. Adhere to the given output parameters: {output}."""
 
-    print('BODY IS HERE',body)
+    print("BODY IS HERE", body)
     return body
 
 
@@ -140,3 +140,5 @@ Analyze this writing sample {sample} and summarize its key writing style charact
 focusing on tone, vocabulary, structure, and any unique stylistic elements. 
 The output must be short, within 200 characters, describing the writing style in a concise manner."""
 )
+
+DO_NOT_TRACK_LIST = ["www.wsj.com", "www.nytimes.com", "www.bizjournals.com"]
