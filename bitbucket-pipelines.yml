@@ -8,7 +8,7 @@ djangoTests: &djangoTests
   name: Django Tests
   caches:
     - pip
-  image: python:3.9.1
+  image: python:3.9
   script:
     - pip install pipenv
     - pipenv install --system --deploy --ignore-pipfile
