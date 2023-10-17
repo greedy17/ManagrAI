@@ -60,6 +60,7 @@ const state = {
   currentSearch: null,
   currentPitch: null,
   currentReportClips: [],
+  categories: {},
   reportTitle: null,
   reportImage: null,
   reportSummary: null,
@@ -82,6 +83,9 @@ const mutations = {
   },
   UPDATE_CURRENT_REPORT_CLIPS: (state, payload) => {
     state.currentReportClips = payload
+  },
+  UPDATE_CATEGORIES: (state, payload) => {
+    state.categories = payload
   },
   UPDATE_REPORT_TITLE: (state, payload) => {
     state.reportTitle = payload
@@ -547,6 +551,9 @@ const actions = {
   updateCurrentReportClips({ commit }, payload) {
     commit('UPDATE_CURRENT_REPORT_CLIPS', payload)
   },
+  updateCategories({ commit }, payload) {
+    commit('UPDATE_CATEGORIES', payload)
+  },
   updateReportTitle({ commit }, payload) {
     commit('UPDATE_REPORT_TITLE', payload)
   },
@@ -649,7 +656,7 @@ export default new Vuex.Store({
   getters,
   plugins: [
     createPersistedState({
-      paths: ['user', 'token', 'currentReportClips', 'reportTitle', 'reportImage', 'reportSummary']
+      paths: ['user', 'token', 'currentReportClips', 'categories', 'reportTitle', 'reportImage', 'reportSummary']
     })
   ],
 })
