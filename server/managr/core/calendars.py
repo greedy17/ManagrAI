@@ -3,7 +3,7 @@ Helpers for interacting with Google and Microsoft calendars via Nylas.
 """
 import logging
 import math
-from nylas.client import Client
+from nylas import APIClient
 from django.conf import settings
 
 from .models import NylasAuthAccount
@@ -55,7 +55,7 @@ def calendar_participants_from_zoom_meeting(zoom_meeting, user):
         return []
 
     # Otherwise, init the Nylas Client
-    nylas = Client(settings.NYLAS_CLIENT_ID, settings.NYLAS_CLIENT_SECRET, nylas.access_token)
+    nylas = APIClient(settings.NYLAS_CLIENT_ID, settings.NYLAS_CLIENT_SECRET, nylas.access_token)
     """
     Zoom and Calendar meeting datetimes might not exactly match up, so
     we use some heuristics for finding the matching calendar event.

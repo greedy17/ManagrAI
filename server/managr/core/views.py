@@ -65,7 +65,7 @@ from managr.organization.models import Team
 from .permissions import IsStaff
 from managr.core.background import emit_process_calendar_meetings
 
-from nylas.client import Client
+from nylas.client import APIClient
 from .nylas.emails import (
     return_file_id_from_nylas,
     download_file_from_nylas,
@@ -1569,7 +1569,9 @@ def send_new_email(request):
 
     # Otherwise, init the Nylas Variable_Client()
     try:
-        nylas = Client(settings.NYLAS_CLIENT_ID, settings.NYLAS_CLIENT_SECRET, nylas.access_token)
+        nylas = APIClient(
+            settings.NYLAS_CLIENT_ID, settings.NYLAS_CLIENT_SECRET, nylas.access_token
+        )
         draft = nylas.drafts.create()
         draft.subject = subject
         draft.body = body
