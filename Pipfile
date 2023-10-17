@@ -33,7 +33,7 @@ channels-redis = "==2.4.0"
 channels = "~=2.1"
 nylas = "*"
 ddtrace = "==0.48.0"
-httpx = "*"
+httpx = "==0.24.1"
 newspaper3k = "*"
 scrapy = "==2.9.0"
 
