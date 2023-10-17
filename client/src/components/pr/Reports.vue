@@ -120,6 +120,20 @@
           >
             Generate
           </button>
+          <button
+            v-else
+            @click="toggleShowRegenerate"
+            :disabled="!clips.length || loading || summaryLoading"
+            class="secondary-button"
+          >
+            Regenerate
+          </button>
+        </div>
+
+        <div v-if="showRegenerate" class="category-input">
+          <input v-model="instructions" class="text-input category-name-input" placeholder="Instructions (optional)..." />
+          <button @click="getSummary" class="primary-button category-button">Regenerate</button>
+          <button @click="toggleShowRegenerate" class="secondary-button category-button">X</button>
         </div>
 
         <div class="summary-body">
@@ -163,7 +177,10 @@
       <div :class="{ dull: reportLoading }" class="container-large">
         <div class="space-between sticky-top">
           <div>
-            <p>Clips</p>
+            <div class="clips-length">
+              <p>Clips</p>
+              <div class="counter">{{ clips.length }}/20</div>
+            </div>
             <small>Articles included in your report</small>
           </div>
 
@@ -171,11 +188,119 @@
             <!-- <svg style="margin-right: 16px" width="16" height="16">
               <path d="M9 9H3v1h6v6h1v-6h6V9h-6V3H9v6z" fill-rule="evenodd"></path>
             </svg> -->
-            <div class="counter">{{ clips.length }}/20</div>
+            <!-- <div class="counter">{{ clips.length }}/20</div> -->
+            <div @click="toggleAddCategory" class="secondary-button">Add Category</div>
           </div>
         </div>
 
-        <draggable v-model="clips" group="fields" @start="drag = true" @end="endDrag">
+        <div v-if="addCategory" class="category-input">
+          <input v-model="categoryName" class="text-input category-name-input" placeholder="Category name" />
+          <button @click="saveCategory" class="primary-button category-button">Add</button>
+          <button @click="hideAddCategory" class="secondary-button category-button">X</button>
+        </div>
+
+        <div v-if="Object.keys(storeCategories).length">
+          <div v-for="(category, catName, j) in storeCategories" :key="catName">
+            <div
+              @mouseenter="setCatRow(j, catName)"
+              @mouseleave="removeRow"
+              class="relative"
+            >
+              <div class="category-name">{{ catName }}</div>
+              <div
+                v-show="currentCatRow === j"
+                class="row absolute-right actions"
+                style="padding-top: 0;"
+              >
+                <img
+                  @click="removeCategory(catName)"
+                  class="danger trash-filter"
+                  style="margin-right: 12px; margin-top: 2px;"
+                  src="@/assets/images/trash2.svg"
+                  height="16px"
+                />
+              </div>
+            </div>
+            <draggable
+              v-model="storeCategories[catName]"
+              group="fields"
+              @start="drag = true"
+              @end="endDrag($event, catName, storeCategories[catName])"
+            >
+              <div
+                @mouseenter="setRow(i, catName)"
+                @mouseleave="removeRow"
+                class="clip category-spacing"
+                :class="{ 'blue-bg': clip.summary }"
+                v-for="(clip, i) in category"
+                :key="i"
+              >
+                <div class="clip-header">
+                  <div :data-name="catName" class="invisible">{{ catName }}</div>
+                  <img :src="clip.urlToImage" class="clip-photo" />
+                  <small>{{ clip.title ? clip.title : clip.text }}</small>
+                </div>
+                
+                <div v-if="clip.summary" class="summary-box">
+                  <pre v-html="clip.summary" class="pre-text-small"></pre>
+                </div>
+                
+                <div
+                  :class="{ 'blue-bg': clip.summary }"
+                  v-show="(currentRow === i && clip.category === currentCategoryName) || loadingUrl === clip.url"
+                  class="row absolute-right actions"
+                >
+                  <!-- <img 
+                    src="@/assets/images/grip-dots-vertical.svg"
+                    height="16px"
+                    style="margin-right: 12px"
+                  /> -->
+
+                  <img
+                    @click="getArticleSummary(clip.title, clip.url, clip.search)"
+                    style="margin-right: 12px"
+                    class="blue"
+                    v-if="!summaryLoading && !clip.summary && clip.title"
+                    v-show="!clip.summary && !loading && !summaryLoading && !reportLoading"
+                    src="@/assets/images/sparkles-thin.svg"
+                    height="16px"
+                  />
+
+                  <img
+                    style="margin-right: 12px"
+                    v-else-if="loadingUrl === clip.url && clip.title"
+                    class="rotate"
+                    height="16px"
+                    src="@/assets/images/loading.svg"
+                    alt=""
+                  />
+
+                  <img
+                    @click="removeClip(clip)"
+                    class="danger trash-filter"
+                    style="margin-right: 12px"
+                    src="@/assets/images/trash2.svg"
+                    height="16px"
+                  />
+
+                  <img 
+                    src="@/assets/images/grip-dots-vertical.svg"
+                    height="16px"
+                    class="gray"
+                  />
+                </div>
+              </div>
+            </draggable>
+          </div>
+        </div>
+        
+        <draggable
+          v-model="clips"
+          group="fields"
+          @start="drag = true"
+          @end="endDrag"
+          v-else
+        >
           <div
             @mouseenter="setRow(i)"
             @mouseleave="removeRow"
@@ -323,6 +448,7 @@ export default {
       reportTitle: '',
       loading: false,
       currentRow: null,
+      currentCatRow: null,
       imageFile: null,
       summaryLoading: false,
       clipLoading: false,
@@ -339,6 +465,10 @@ export default {
       showArticleBanner: false,
       articleBannerText: '',
       success: true,
+      addCategory: false,
+      showRegenerate: false,
+      categoryName: '',
+      currentCategoryName: null,
     }
   },
 
@@ -356,7 +486,6 @@ export default {
             url: this.uploadLink,
           })
           .then((response) => {
-            console.log('manual', response)
             this.success = true
             this.addClip(response)
             this.articleBanner('Article added!')
@@ -394,7 +523,62 @@ export default {
         name: 'PRReports',
       })
     },
-    endDrag() {
+    toggleAddCategory() {
+      this.addCategory = !this.addCategory
+    },
+    showAddCategory() {
+      this.addCategory = true
+    },
+    hideAddCategory() {
+      this.addCategory = false
+    },
+    toggleShowRegenerate() {
+      this.showRegenerate = !this.showRegenerate
+    },
+    saveCategory() {
+      if (!this.categoryName) {
+        this.hideAddCategory()
+        return
+      }
+      const categoriesCopies = { ...this.$store.state.categories }
+      const catKeys = Object.keys(categoriesCopies)
+      if (catKeys.includes(this.categoryName)) {
+        this.hideAddCategory()
+        return
+      }
+      categoriesCopies[this.categoryName] = []
+      if (Object.keys(categoriesCopies).length === 1) {
+        const allClips = this.$store.state.currentReportClips
+        for (let i = 0; i < allClips.length; i++) {
+          allClips[i].category = this.categoryName
+        }
+        categoriesCopies[this.categoryName] = allClips
+      }
+      this.$store.dispatch('updateCategories', categoriesCopies)
+      this.hideAddCategory()
+      this.categoryName = ''
+    },
+    endDrag(event, catName, category) {
+      const catIDs = []
+      if (catName) {
+        const droppedCategory = event.to.querySelector('[data-name]').getAttribute('data-name');
+        const droppedCategoryObj = this.$store.state.categories[droppedCategory]
+        for (let i = 0; i < droppedCategoryObj.length; i++) {
+          if (droppedCategoryObj[i].category !== droppedCategory) {
+            droppedCategoryObj[i].category = droppedCategory
+            catIDs.push(droppedCategoryObj[i].url)
+          }
+        }
+        for (let j = 0; j < this.clips.length; j++) {
+          const clip = this.clips[j]
+          if (catIDs.includes(clip.url)) {
+            clip.category = droppedCategory
+          }
+        }
+        const catCopy = {...this.$store.state.categories}
+        catCopy[catName] = category
+        this.$store.dispatch('updateCategories', catCopy)
+      }
       this.$store.dispatch('updateCurrentReportClips', this.clips)
       this.setAddedClips()
       this.drag = false
@@ -511,14 +695,37 @@ export default {
         this.reportLoading = false
       }
     },
-    setRow(i) {
+    setRow(i, catName) {
       this.currentRow = i
+      this.currentCategoryName = catName
+    },
+    setCatRow(j) {
+      this.currentCatRow = j
     },
     removeRow() {
       this.currentRow = null
+      this.currentCategoryName = null
+      this.currentCatRow = null
     },
     removeClip(clip) {
       this.$emit('remove-clip', clip.title ? clip.title : clip.text)
+    },
+    removeCategory(catName) {
+      const categories = {...this.storeCategories}
+      const savedClips = categories[catName]
+      delete categories[catName]
+      const catKeys = Object.keys(categories)
+      if (catKeys.length) {
+        const lastKey = catKeys[catKeys.length-1]
+        // for (let key in categories) {
+        //   categories[key] = [...categories[key], ...savedClips]
+        //   break;
+        // }
+        categories[lastKey] = [...categories[lastKey], ...savedClips]
+      } else {
+        this.$emit('set-added-clips', savedClips)
+      }
+      this.$store.dispatch('updateCategories', categories)
     },
     summarizeClip(clip) {
       this.$emit(
@@ -548,11 +755,13 @@ export default {
       return articles.map((a) => (a.description ? a.description : a.text))
     },
     clearClips() {
+      this.$store.dispatch('updateCategories', {})
       this.$emit('clear-clips')
     },
     async getSummary() {
       const allClips = this.getArticleDescriptions(this.clips)
       this.loading = true
+      this.showRegenerate = false
       try {
         await Comms.api
           .getSummary({
@@ -576,6 +785,11 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+  },
+  computed: {
+    storeCategories() {
+      return this.$store.state.categories
     },
   },
   directives: {
@@ -1375,5 +1589,36 @@ a {
 .no-hover:hover {
   scale: 1;
   box-shadow: none;
+}
+.invisible {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+}
+.clips-length {
+  display: flex;
+  justify-content: space-between;
+  width: 50%;
+}
+.category-input {
+  margin-top: 1rem;
+  display: flex;
+  // justify-content: space-between;
+}
+.category-name-input {
+  width: 75%;
+  border: 1px solid $soft-gray;
+}
+.category-button {
+  height: 2rem;
+  margin-right: 0.5rem;
+}
+.category-name {
+  margin-top: 0.5rem;
+  margin-bottom: -0.25rem;
+}
+.category-spacing {
+  margin-left: 0.5rem;
 }
 </style>

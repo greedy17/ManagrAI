@@ -101,7 +101,7 @@
         @edit-clip="editClip"
         @add-clip="addClip"
         @set-added-clips="setAddedClips"
-        :clips="addedClips"
+        :clips="allCategoryClips"
         :defaultSearch="newSearch"
       />
     </Transition>
@@ -112,17 +112,17 @@
       </div>
 
       <div class="slot-container">
-        <div v-for="(clip, i) in addedClips" :key="i">
+        <div v-for="(clip, i) in allCategoryClips" :key="i">
           <img v-if="i < 3" :src="clip.urlToImage" class="small-photo" />
         </div>
 
-        <div v-if="!addedClips || addedClips.length < 1" class="empty-slot"></div>
-        <div v-if="!addedClips || addedClips.length < 2" class="empty-slot"></div>
-        <div v-if="!addedClips || addedClips.length < 3" class="empty-slot"></div>
+        <div v-if="!allCategoryClips || allCategoryClips.length < 1" class="empty-slot"></div>
+        <div v-if="!allCategoryClips || allCategoryClips.length < 2" class="empty-slot"></div>
+        <div v-if="!allCategoryClips || allCategoryClips.length < 3" class="empty-slot"></div>
       </div>
 
       <div class="slot-count">
-        <small>{{ addedClips ? addedClips.length : 0 }}/20</small>
+        <small>{{ allCategoryClips ? allCategoryClips.length : 0 }}/20</small>
       </div>
     </div>
     <div class="center column" :class="{ fullHeight: showingDropdown }" v-if="page === 'SUMMARIES'">
@@ -1222,18 +1222,20 @@ export default {
       searchSuggestions: [
         'XXX',
         'XXX no exclusions',
+        'Articles written or about [JOURNALIST NAME] AND XXX',
         'List out XXX competitors, by name',
         `List out topics XXX would care about`,
         'XXX no stock related news',
         'University of XXX no sports related news',
         'XXX Hospital no ER related stories',
-        'Articles written or about [JOURNALIST NAME]',
       ],
       promptSuggestions: [
         `Summarize the news`,
         'Select the 5 most impactful news stories',
+        'List the top 5 sources based on size & popularity',
+        `Provide pitch ideas and background on [JOURNALIST NAME]`,
         'Convert the most entertaining news story about XXX into a blog post',
-        "As XXX's PR agency, provide suggestions based on this news",
+        `As XXX PR agency, provide creative suggestions per this news, think outside the box`,
         'Craft short responses on behalf of XXX to the stories that need it',
         `Write a highly engaging LinkedIn post based on this coverage for XXX`,
         `Draft an entertaining Twitter post based on this coverage for XXX`,
@@ -1356,6 +1358,16 @@ export default {
       this.addedArticles = newArticles
     },
     removeClip(title) {
+      const cats = this.$store.state.categories
+      if (Object.keys(cats).length) {
+        const newCats = {...cats}
+        for (let key in cats) {
+          const clips = cats[key]
+          const filteredClips = clips.filter(clip => clip.title !== title && clip.text !== title)
+          newCats[key] = filteredClips
+        }
+        this.$store.dispatch('updateCategories', newCats)
+      }
       const newClips = this.addedClips.filter((clip) => clip.title !== title && clip.text !== title)
       this.addedClips = newClips
       this.$store.dispatch('updateCurrentReportClips', this.addedClips)
@@ -1453,8 +1465,17 @@ export default {
           }
           clip.attachments.mediaURLs = mediaURLs
         }
-        this.addedClips.push(clip)
-        this.$store.dispatch('updateCurrentReportClips', this.addedClips)
+        const categories = this.$store.state.categories
+        const categoryNames = Object.keys(categories)
+        if (categoryNames.length) {
+          clip.category = categoryNames[categoryNames.length-1]
+          categories[categoryNames[categoryNames.length-1]].push(clip)
+          this.$store.dispatch('updateCategories', categories)
+        } else {
+          clip.category = null
+          this.addedClips.push(clip)
+          this.$store.dispatch('updateCurrentReportClips', this.addedClips)
+        }
         if (this.currentSearch) {
           this.metaData = { ...this.currentSearch.meta_data, clips: this.addedClips }
           // this.updateMetaData()
@@ -2090,9 +2111,25 @@ export default {
   },
   computed: {
     clipTitles() {
-      return this.addedClips
-        ? this.addedClips.map((clip) => (clip.title ? clip.title : clip.id))
+      if (Object.keys(this.$store.state.categories).length) {
+        return this.allCategoryClips
+        ? this.allCategoryClips.map((clip) => (clip.title ? clip.title : clip.id))
         : []
+      } else {
+        return this.addedClips
+          ? this.addedClips.map((clip) => (clip.title ? clip.title : clip.id))
+          : []
+      }
+    },
+    allCategoryClips() {
+      const cats = this.$store.state.categories
+      if (Object.keys(cats).length) {
+        let addedClips = []
+        for (let key in cats) {
+          addedClips = [...addedClips, ...cats[key]]
+        }
+        return addedClips
+      } else return this.addedClips
     },
     messages() {
       return this.$store.state.messages
