@@ -9,7 +9,7 @@ RUN npm install
 COPY ./client .
 RUN npm run build
 
-FROM python:3.7-slim-buster
+FROM python:3.9-slim-buster
 
 # These environment values help with watching for file changes
 ENV PYTHONUNBUFFERED=1 \
