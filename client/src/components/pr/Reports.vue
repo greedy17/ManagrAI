@@ -44,27 +44,42 @@
     <div v-else>
       <div :class="{ dull: reportLoading }" class="container">
         <img
-          accept=".jpg, .jpeg, .png, .gif, .bmp, .tiff, .tif, .webp"
           style="margin-top: 8px"
           v-if="imageUrl"
           :src="imageUrl"
           alt="Uploaded Cover"
           class="cover-photo"
         />
-        <input v-if="imageUrl" id="imageInput" class="absolute-button-input-large pointer dull" type="file" @change="getImage" />
-        <input v-else-if="!imageUrl" id="imageInput" class="absolute-button-input-less-large pointer dull" type="file" @change="getImage" />
-        
+        <input
+          accept=".jpg, .jpeg, .png, .gif, .bmp, .tiff, .tif, .webp"
+          v-if="imageUrl"
+          id="imageInput"
+          class="absolute-button-input-large pointer dull"
+          type="file"
+          @change="getImage"
+        />
+        <input
+          accept=".jpg, .jpeg, .png, .gif, .bmp, .tiff, .tif, .webp"
+          v-else-if="!imageUrl"
+          id="imageInput"
+          class="absolute-button-input-less-large pointer dull"
+          type="file"
+          @change="getImage"
+        />
+
         <div class="top-padding">
           <div class="space-between">
             <div>
               <p v-if="!imageUrl">Cover Slide</p>
               <small v-if="!imageUrl">Add title and cover image</small>
             </div>
-            <button
-              v-if="!imageUrl"
-              class="secondary-button"
-            >
-              <input id="imageInput" class="absolute-button-input pointer dull" type="file" @change="getImage" />
+            <button v-if="!imageUrl" class="secondary-button">
+              <input
+                id="imageInput"
+                class="absolute-button-input pointer dull"
+                type="file"
+                @change="getImage"
+              />
               <span class="pointer">Add Image</span>
             </button>
           </div>
@@ -298,11 +313,11 @@
               <img :src="clip.urlToImage" class="clip-photo" />
               <small>{{ clip.title ? clip.title : clip.text }}</small>
             </div>
-            
+
             <div v-if="clip.summary" class="summary-box">
               <pre v-html="clip.summary" class="pre-text-small"></pre>
             </div>
-            
+
             <div
               :class="{ 'blue-bg': clip.summary }"
               v-show="currentRow === i || loadingUrl === clip.url"
@@ -341,11 +356,7 @@
                 height="16px"
               />
 
-              <img 
-                src="@/assets/images/grip-dots-vertical.svg"
-                height="16px"
-                class="gray"
-              />
+              <img src="@/assets/images/grip-dots-vertical.svg" height="16px" class="gray" />
             </div>
           </div>
         </draggable>
