@@ -37,6 +37,7 @@ httpx = "==0.24.1"
 newspaper3k = "*"
 scrapy = "==2.9.0"
 typing-extensions = "==4.7.1"
+cryptography = "*"
 
 [requires]
 python_version = "3.9"
