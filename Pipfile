@@ -35,7 +35,7 @@ nylas = "*"
 ddtrace = "==0.48.0"
 httpx = "*"
 newspaper3k = "*"
-scrapy = "*"
+scrapy = "==2.9.0"
 
 [requires]
 python_version = "3.9"
