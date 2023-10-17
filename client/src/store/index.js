@@ -60,7 +60,7 @@ const state = {
   currentSearch: null,
   currentPitch: null,
   currentReportClips: [],
-  categories: [],
+  categories: {},
   reportTitle: null,
   reportImage: null,
   reportSummary: null,
