@@ -168,6 +168,24 @@ class CommsApi extends ModelAPI {
         }
     }
 
+    async regenerateArticleSummary(url, summary, instructions) {
+        try {
+            const res = await this.client.post(CommsApi.ENDPOINT + 'regenerate-article-summary/', { params: url, summary, instructions })
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
+    async generateContent(url, instructions, style) {
+        try {
+            const res = await this.client.post(CommsApi.ENDPOINT + 'generate-content/', { params: url, instructions, style })
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
     async getWebSummary(url, instructions) {
         console.log('here')
         try {
