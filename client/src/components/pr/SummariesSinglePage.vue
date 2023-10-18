@@ -142,7 +142,7 @@
         @edit-clip="editClip"
         @add-clip="addClip"
         @set-added-clips="setAddedClips"
-        :clips="addedClips"
+        :clips="allCategoryClips"
         :defaultSearch="newSearch"
       />
     </Transition>
@@ -153,17 +153,17 @@
       </div>
 
       <div class="slot-container">
-        <div v-for="(clip, i) in addedClips" :key="i">
-          <img v-if="i < 3" :src="clip.urlToImage" class="small-photo" />
+        <div v-for="(clip, i) in allCategoryClips" :key="i">
+          <img v-if="i < 3" :src="clip.image_url" class="small-photo" />
         </div>
 
-        <div v-if="!addedClips || addedClips.length < 1" class="empty-slot"></div>
-        <div v-if="!addedClips || addedClips.length < 2" class="empty-slot"></div>
-        <div v-if="!addedClips || addedClips.length < 3" class="empty-slot"></div>
+        <div v-if="!allCategoryClips || allCategoryClips.length < 1" class="empty-slot"></div>
+        <div v-if="!allCategoryClips || allCategoryClips.length < 2" class="empty-slot"></div>
+        <div v-if="!allCategoryClips || allCategoryClips.length < 3" class="empty-slot"></div>
       </div>
 
       <div class="slot-count">
-        <small>{{ addedClips ? addedClips.length : 0 }}/20</small>
+        <small>{{ allCategoryClips ? allCategoryClips.length : 0 }}/20</small>
       </div>
     </div>
     <div class="center column" :class="{ fullHeight: showingDropdown }" v-if="page === 'SUMMARIES'">
@@ -323,7 +323,7 @@
                 v-for="(article, i) in addedArticles"
                 :key="i"
               >
-                <img :src="article.urlToImage" class="clip-photo" />
+                <img :src="article.image_url" class="clip-photo" />
                 {{ article.title }}
 
                 <img
@@ -539,7 +539,7 @@
                         v-for="(option, i) in generateOptions"
                         :key="option.value"
                       >
-                        <p @click="selectArticleOption(addedArticles[0].url, option.value, i)">
+                        <p @click="selectArticleOption(addedArticles[0].link, option.value, i)">
                           {{ option.name }}
                         </p>
 
@@ -756,7 +756,7 @@
                       <!-- <img :src="article.icon" /> -->
                       <span>{{ article.source.name }}</span>
                     </div>
-                    <h1 class="article-title" @click="goToArticle(article.url)">
+                    <h1 class="article-title" @click="goToArticle(article.link)">
                       {{ article.title }}
                     </h1>
                     <p class="article-preview">
@@ -764,10 +764,10 @@
                     </p>
                   </div>
 
-                  <!-- <div @click="goToArticle(article.url)"> -->
+                  <!-- <div @click="goToArticle(article.link)"> -->
                   <img
-                    @click="goToArticle(article.url)"
-                    :src="article.urlToImage"
+                    @click="goToArticle(article.link)"
+                    :src="article.image_url"
                     class="cover-photo"
                   />
                   <!-- </div> -->
@@ -778,7 +778,7 @@
                     <span class="author">{{ article.author }}</span>
                     <span class="divier-dot">.</span>
                     <span class="off-gray time">{{
-                      getTimeDifferenceInMinutes(article.publishedAt)
+                      getTimeDifferenceInMinutes(article.publish_date)
                     }}</span>
                     <span class="divier-dot">.</span>
                   </div>
@@ -797,7 +797,7 @@
                     <div v-else>
                       <button
                         v-if="!article.summary"
-                        @click="getArticleSummary(article.url)"
+                        @click="getArticleSummary(article.link)"
                         class="tertiary-button summarize-button"
                         style="margin: 0"
                         :disabled="
@@ -805,7 +805,7 @@
                         "
                       >
                         <img
-                          v-if="articleSummaryLoading && loadingUrl === article.url"
+                          v-if="articleSummaryLoading && loadingUrl === article.link"
                           class="rotate"
                           height="14px"
                           src="@/assets/images/loading.svg"
@@ -813,7 +813,7 @@
                         />
                         <img v-else src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
                         {{
-                          articleSummaryLoading && loadingUrl === article.url
+                          articleSummaryLoading && loadingUrl === article.link
                             ? 'Summarizing'
                             : 'Summarize'
                         }}
@@ -887,7 +887,7 @@
                               v-for="(option, i) in generateOptions"
                               :key="option.value"
                             >
-                              <p @click="selectArticleOption(article.url, option.value, i)">
+                              <p @click="selectArticleOption(article.link, option.value, i)">
                                 {{ option.name }}
                               </p>
 
@@ -924,7 +924,7 @@
                         <button
                           @click="
                             regenerateArticleSummary(
-                              article.url,
+                              article.link,
                               article.summary,
                               articleInstructions,
                             )
@@ -935,14 +935,14 @@
                           class="primary-button"
                         >
                           <img
-                            v-if="articleSummaryLoading && loadingUrl === article.url"
+                            v-if="articleSummaryLoading && loadingUrl === article.link"
                             class="rotate"
                             height="14px"
                             src="@/assets/images/loading.svg"
                             alt=""
                           />
                           {{
-                            articleSummaryLoading && loadingUrl === article.url
+                            articleSummaryLoading && loadingUrl === article.link
                               ? 'Submitting'
                               : 'Submit'
                           }}
@@ -963,7 +963,7 @@
                       <!-- <img :src="article.icon" /> -->
                       <span>{{ article.source.name || article.source }}</span>
                     </div>
-                    <h1 class="article-title" @click="goToArticle(article.url)">
+                    <h1 class="article-title" @click="goToArticle(article.link)">
                       {{ article.title }}
                     </h1>
                     <p class="article-preview">
@@ -971,10 +971,10 @@
                     </p>
                   </div>
 
-                  <!-- <div @click="goToArticle(article.url)"> -->
+                  <!-- <div @click="goToArticle(article.link)"> -->
                   <img
-                    @click="goToArticle(article.url)"
-                    :src="article.urlToImage"
+                    @click="goToArticle(article.link)"
+                    :src="article.image_url"
                     class="cover-photo"
                   />
                   <!-- </div> -->
@@ -985,7 +985,7 @@
                     <span class="author">{{ article.author }}</span>
                     <span class="divier-dot">.</span>
                     <span class="off-gray time">{{
-                      getTimeDifferenceInMinutes(article.publishedAt)
+                      getTimeDifferenceInMinutes(article.publish_date)
                     }}</span>
                     <span class="divier-dot">.</span>
                   </div>
@@ -1004,7 +1004,7 @@
                     <div v-else>
                       <button
                         v-if="!article.summary"
-                        @click="getArticleSummary(article.url)"
+                        @click="getArticleSummary(article.link)"
                         class="tertiary-button summarize-button"
                         style="margin: 0"
                         :disabled="
@@ -1012,7 +1012,7 @@
                         "
                       >
                         <img
-                          v-if="articleSummaryLoading && loadingUrl === article.url"
+                          v-if="articleSummaryLoading && loadingUrl === article.link"
                           class="rotate"
                           height="14px"
                           src="@/assets/images/loading.svg"
@@ -1020,7 +1020,7 @@
                         />
                         <img v-else src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
                         {{
-                          articleSummaryLoading && loadingUrl === article.url
+                          articleSummaryLoading && loadingUrl === article.link
                             ? 'Summarizing'
                             : 'Summarize'
                         }}
@@ -1094,7 +1094,7 @@
                               v-for="(option, i) in generateOptions"
                               :key="option.value"
                             >
-                              <p @click="selectArticleOption(article.url, option.value, i)">
+                              <p @click="selectArticleOption(article.link, option.value, i)">
                                 {{ option.name }}
                               </p>
 
@@ -1131,7 +1131,7 @@
                         <button
                           @click="
                             regenerateArticleSummary(
-                              article.url,
+                              article.link,
                               article.summary,
                               articleInstructions,
                             )
@@ -1142,14 +1142,14 @@
                           class="primary-button"
                         >
                           <img
-                            v-if="articleSummaryLoading && loadingUrl === article.url"
+                            v-if="articleSummaryLoading && loadingUrl === article.link"
                             class="rotate"
                             height="14px"
                             src="@/assets/images/loading.svg"
                             alt=""
                           />
                           {{
-                            articleSummaryLoading && loadingUrl === article.url
+                            articleSummaryLoading && loadingUrl === article.link
                               ? 'Submitting'
                               : 'Submit'
                           }}
@@ -1262,18 +1262,20 @@ export default {
       searchSuggestions: [
         'XXX',
         'XXX no exclusions',
+        'Articles written or about [JOURNALIST NAME] AND XXX',
         'List out XXX competitors, by name',
         `List out topics XXX would care about`,
         'XXX no stock related news',
         'University of XXX no sports related news',
         'XXX Hospital no ER related stories',
-        'Articles written or about [JOURNALIST NAME]',
       ],
       promptSuggestions: [
         `Summarize the news`,
         'Select the 5 most impactful news stories',
+        'List the top 5 sources based on size & popularity',
+        `Provide pitch ideas and background on [JOURNALIST NAME]`,
         'Convert the most entertaining news story about XXX into a blog post',
-        "As XXX's PR agency, provide suggestions based on this news",
+        `As XXX PR agency, provide creative suggestions per this news, think outside the box`,
         'Craft short responses on behalf of XXX to the stories that need it',
         `Write a highly engaging LinkedIn post based on this coverage for XXX`,
         `Draft an entertaining Twitter post based on this coverage for XXX`,
@@ -1407,6 +1409,16 @@ export default {
       this.addedArticles = newArticles
     },
     removeClip(title) {
+      const cats = this.$store.state.categories
+      if (Object.keys(cats).length) {
+        const newCats = { ...cats }
+        for (let key in cats) {
+          const clips = cats[key]
+          const filteredClips = clips.filter((clip) => clip.title !== title && clip.text !== title)
+          newCats[key] = filteredClips
+        }
+        this.$store.dispatch('updateCategories', newCats)
+      }
       const newClips = this.addedClips.filter((clip) => clip.title !== title && clip.text !== title)
       this.addedClips = newClips
       this.$store.dispatch('updateCurrentReportClips', this.addedClips)
@@ -1461,7 +1473,7 @@ export default {
       }
       clip['search'] = this.newSearch
       if (this.addedClips && this.addedClips.length < 20) {
-        if (!clip.urlToImage && (clip.attachments || clip.edit_history_tweet_ids)) {
+        if (!clip.image_url && (clip.attachments || clip.edit_history_tweet_ids)) {
           let tweetImg = ''
           if (clip.attachments) {
             for (let i = 0; i < this.tweetMedia.length; i++) {
@@ -1483,7 +1495,7 @@ export default {
           if (!tweetImg) {
             tweetImg = clip.user.profile_image_url
           }
-          clip.urlToImage = tweetImg
+          clip.image_url = tweetImg
         }
         if (clip.attachments) {
           const mediaURLs = []
@@ -1504,8 +1516,17 @@ export default {
           }
           clip.attachments.mediaURLs = mediaURLs
         }
-        this.addedClips.push(clip)
-        this.$store.dispatch('updateCurrentReportClips', this.addedClips)
+        const categories = this.$store.state.categories
+        const categoryNames = Object.keys(categories)
+        if (categoryNames.length) {
+          clip.category = categoryNames[categoryNames.length - 1]
+          categories[categoryNames[categoryNames.length - 1]].push(clip)
+          this.$store.dispatch('updateCategories', categories)
+        } else {
+          clip.category = null
+          this.addedClips.push(clip)
+          this.$store.dispatch('updateCurrentReportClips', this.addedClips)
+        }
         if (this.currentSearch) {
           this.metaData = { ...this.currentSearch.meta_data, clips: this.addedClips }
           // this.updateMetaData()
@@ -1800,7 +1821,7 @@ export default {
       try {
         let response
         if (this.addedArticles.length === 1) {
-          response = await this.getArticleSummary(this.addedArticles[0].url, this.newTemplate)
+          response = await this.getArticleSummary(this.addedArticles[0].link, this.newTemplate)
           this.summary = response
         } else {
           response = await this.getSummary(this.addedArticles, this.newTemplate)
@@ -1921,6 +1942,7 @@ export default {
             user_id: this.user.id,
           })
           .then((response) => {
+            console.log(response)
             this.filteredArticles = response.articles
             this.booleanString = response.string
           })
@@ -1980,7 +2002,7 @@ export default {
     getArticleDescriptions(articles) {
       return articles.map(
         (a) =>
-          `Content:${a.description} Date:${a.publishedAt}, Source:${a.source.name}, Author:${a.author}`,
+          `Content:${a.description} Date:${a.publish_date}, Source:${a.source.name}, Author:${a.author}`,
       )
     },
     async getTweetSummary(instructions = '') {
@@ -2040,8 +2062,8 @@ export default {
     },
     async regenerateArticleSummary(url, summary, instructions) {
       let selectedClip = this.addedArticles.length
-        ? this.addedArticles.filter((art) => art.url === url)[0]
-        : this.filteredArticles.filter((art) => art.url === url)[0]
+        ? this.addedArticles.filter((art) => art.link === url)[0]
+        : this.filteredArticles.filter((art) => art.link === url)[0]
 
       this.articleSummaryLoading = true
       this.loadingUrl = url
@@ -2077,8 +2099,8 @@ export default {
     },
     async getArticleSummary(url, instructions = null, length = 1000) {
       let selectedClip = this.addedArticles.length
-        ? this.addedArticles.filter((art) => art.url === url)[0]
-        : this.filteredArticles.filter((art) => art.url === url)[0]
+        ? this.addedArticles.filter((art) => art.link === url)[0]
+        : this.filteredArticles.filter((art) => art.link === url)[0]
 
       this.articleSummaryLoading = true
       this.loadingUrl = url
@@ -2124,8 +2146,8 @@ export default {
     async generateContent() {
       this.contentLoading = true
       let selectedClip = this.addedArticles.length
-        ? this.addedArticles.filter((art) => art.url === this.contentUrl)[0]
-        : this.filteredArticles.filter((art) => art.url === this.contentUrl)[0]
+        ? this.addedArticles.filter((art) => art.link === this.contentUrl)[0]
+        : this.filteredArticles.filter((art) => art.link === this.contentUrl)[0]
 
       try {
         await Comms.api
@@ -2178,9 +2200,9 @@ export default {
       this.changeNew()
     },
     addRemoveSelectedArticles(article) {
-      const existingArticle = this.selectedArticles.filter((ar) => ar.url === article.url)[0]
+      const existingArticle = this.selectedArticles.filter((ar) => ar.link === article.link)[0]
       if (existingArticle) {
-        this.selectedArticles = this.selectedArticles.filter((ar) => ar.url !== article.url)
+        this.selectedArticles = this.selectedArticles.filter((ar) => ar.link !== article.link)
       } else {
         this.selectedArticles.push(article)
       }
@@ -2222,9 +2244,25 @@ export default {
   },
   computed: {
     clipTitles() {
-      return this.addedClips
-        ? this.addedClips.map((clip) => (clip.title ? clip.title : clip.id))
-        : []
+      if (Object.keys(this.$store.state.categories).length) {
+        return this.allCategoryClips
+          ? this.allCategoryClips.map((clip) => (clip.title ? clip.title : clip.id))
+          : []
+      } else {
+        return this.addedClips
+          ? this.addedClips.map((clip) => (clip.title ? clip.title : clip.id))
+          : []
+      }
+    },
+    allCategoryClips() {
+      const cats = this.$store.state.categories
+      if (Object.keys(cats).length) {
+        let addedClips = []
+        for (let key in cats) {
+          addedClips = [...addedClips, ...cats[key]]
+        }
+        return addedClips
+      } else return this.addedClips
     },
     messages() {
       return this.$store.state.messages

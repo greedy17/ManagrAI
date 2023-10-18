@@ -122,7 +122,6 @@ def OPEN_AI_PITCH(date, type, output, persona, briefing, style=False):
         style = "Professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Direct, to the point."
     body = f"""f"Today's {date}. As the VP of Communications, I need a {type} tailored for {persona}. 
     Writing Style: {style}. Take into account the information from: {briefing}. Adhere to the given output parameters: {output}."""
-
     return body
 
 
@@ -153,3 +152,5 @@ Below is some AI generated content based on this article: {article}. Adjust and 
 Content: {content}\n
 Instructions: {instructions}"""
 )
+
+DO_NOT_TRACK_LIST = ["www.wsj.com", "www.nytimes.com", "www.bizjournals.com"]

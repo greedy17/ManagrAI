@@ -256,7 +256,6 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # fixtures
 FIXTURE_DIRS = ["organization/fixtures/"]
 
-
 # Django Storages configuration
 USE_AWS_STORAGE = os.environ.get("USE_AWS_STORAGE") == "True" or False
 if USE_AWS_STORAGE:
@@ -513,3 +512,13 @@ if USE_TWITTER_API:
     TWITTER_REDIRECT_URI = _env_get_required("TWITTER_REDIRECT_URI")
 
 MAX_ATTEMPTS = 5
+
+# Scrapy settings
+HTTPCACHE_ENABLED = True
+HTTPCACHE_IGNORE_HTTP_CODES = [404, 500]
+HTTPCACHE_IGNORE_MISSING = True
+ROBOTSTXT_OBEY = True
+USE_ELASTICACHE = os.environ.get("USE_ELASTICACHE") == "True" or False
+HTTPCACHE_DIR = "/scrapy_cache/"
+if USE_ELASTICACHE:
+    HTTPCACHE_DIR = "/scrapy_cache/"

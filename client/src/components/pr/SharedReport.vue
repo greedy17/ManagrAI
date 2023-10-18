@@ -39,12 +39,102 @@
     </div>
 
     <div class="main main-mobile white-bg">
-      <section>
+      <section v-if="categoryClips">
+        <div v-for="(category, catName) in categoryClips" :key="catName">
+          <h2 class="category-name">{{ catName }}</h2>
+          <div v-for="(clip, i) in category" :key="i" class="news-card">
+            <header>
+              <!-- <div>{{ categoryClips }}</div> -->
+              <div class="card-col">
+                <div class="card-top-left">
+                  <span>{{
+                    clip.source ? (clip.source.name ? clip.source.name : clip.source) : 'Tweet'
+                  }}</span>
+                </div>
+                <div class="article-title-container">
+                  <img
+                    v-if="clip.user"
+                    class="user-profile-img"
+                    :src="clip.user.profile_image_url"
+                  />
+                  <h1 class="article-title" @click="goToArticle(clip.url)">
+                    {{ clip.title ? clip.title : clip.user.name }}
+                  </h1>
+                </div>
+                <p class="article-preview">
+                  {{ clip.description ? clip.description : clip.text }}
+                </p>
+                <div
+                  v-if="clip.attachments && clip.attachments.mediaURLs"
+                  class="tweet-attachement display-flex"
+                >
+                  <div
+                    style="margin-bottom: 16px"
+                    v-for="mediaURL in clip.attachments.mediaURLs"
+                    :key="mediaURL.url"
+                    class="mar-right"
+                  >
+                    <div v-if="mediaURL.type === 'video'">
+                      <video style="margin-top: 1rem" width="400" controls>
+                        <source :src="mediaURL.url" type="video/mp4" />
+                      </video>
+                    </div>
+                    <div v-else-if="mediaURL.type === 'animated_gif'">
+                      <video style="margin-top: 1rem" width="400" autoplay loop muted playsinline>
+                        <source :src="mediaURL.url" type="video/mp4" />
+                      </video>
+                    </div>
+                    <div v-else>
+                      <img :src="mediaURL.url" class="cover-photo-no-l-margin" alt="" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="!clip.edit_history_tweet_ids" @click="goToArticle(clip.url)">
+                <img :src="clip.image_url" class="cover-photo" />
+              </div>
+            </header>
+
+            <div class="card-footer">
+              <div class="author-time">
+                <span class="author"
+                  >@{{
+                    clip.author
+                      ? clip.author
+                      : clip.user && clip.user.username
+                      ? clip.user.username
+                      : ''
+                  }}</span
+                >
+                <span class="divier-dot">.</span>
+                <small v-if="clip.user && clip.user.public_metrics" class="bold-text"
+                  >{{ formatNumber(clip.user.public_metrics.followers_count) }}
+                  <span>Followers</span>
+                </small>
+                <span class="divier-dot">.</span>
+                <span class="off-gray">{{
+                  getTimeDifferenceInMinutes(
+                    clip.publish_date ? clip.publish_date : clip.created_at,
+                  )
+                }}</span>
+              </div>
+            </div>
+            <div v-if="clip.summary">
+              <pre v-html="clip.summary" class="pre-text blue-bg"></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section v-else>
         <div v-for="(clip, i) in report.meta_data.clips" :key="i" class="news-card">
           <header>
+            <!-- <div>{{ categoryClips }}</div> -->
             <div class="card-col">
               <div class="card-top-left">
-                <span>{{ clip.source ? (clip.source.name ? clip.source.name : clip.source) : 'Tweet' }}</span>
+                <span>{{
+                  clip.source ? (clip.source.name ? clip.source.name : clip.source) : 'Tweet'
+                }}</span>
               </div>
               <div class="article-title-container">
                 <img v-if="clip.user" class="user-profile-img" :src="clip.user.profile_image_url" />
@@ -55,7 +145,10 @@
               <p class="article-preview">
                 {{ clip.description ? clip.description : clip.text }}
               </p>
-              <div v-if="clip.attachments && clip.attachments.mediaURLs" class="tweet-attachement display-flex">
+              <div
+                v-if="clip.attachments && clip.attachments.mediaURLs"
+                class="tweet-attachement display-flex"
+              >
                 <div
                   style="margin-bottom: 16px"
                   v-for="mediaURL in clip.attachments.mediaURLs"
@@ -63,52 +156,47 @@
                   class="mar-right"
                 >
                   <div v-if="mediaURL.type === 'video'">
-                    <video
-                      style="margin-top: 1rem"
-                      width="400"
-                      controls
-                    >
+                    <video style="margin-top: 1rem" width="400" controls>
                       <source :src="mediaURL.url" type="video/mp4" />
                     </video>
                   </div>
                   <div v-else-if="mediaURL.type === 'animated_gif'">
-                    <video
-                      style="margin-top: 1rem"
-                      width="400"
-                      autoplay
-                      loop
-                      muted
-                      playsinline
-                    >
+                    <video style="margin-top: 1rem" width="400" autoplay loop muted playsinline>
                       <source :src="mediaURL.url" type="video/mp4" />
                     </video>
                   </div>
                   <div v-else>
-                    <img
-                      :src="mediaURL.url"
-                      class="cover-photo-no-l-margin"
-                      alt=""
-                    />
+                    <img :src="mediaURL.url" class="cover-photo-no-l-margin" alt="" />
                   </div>
                 </div>
               </div>
             </div>
 
             <div v-if="!clip.edit_history_tweet_ids" @click="goToArticle(clip.url)">
-              <img :src="clip.urlToImage" class="cover-photo" />
+              <img :src="clip.image_url" class="cover-photo" />
             </div>
           </header>
 
           <div class="card-footer">
             <div class="author-time">
-              <span class="author">@{{ clip.author ? clip.author : (clip.user && clip.user.username ? clip.user.username : '') }}</span>
+              <span class="author"
+                >@{{
+                  clip.author
+                    ? clip.author
+                    : clip.user && clip.user.username
+                    ? clip.user.username
+                    : ''
+                }}</span
+              >
               <span class="divier-dot">.</span>
               <small v-if="clip.user && clip.user.public_metrics" class="bold-text"
                 >{{ formatNumber(clip.user.public_metrics.followers_count) }}
                 <span>Followers</span>
               </small>
               <span class="divier-dot">.</span>
-              <span class="off-gray">{{ getTimeDifferenceInMinutes(clip.publishedAt ? clip.publishedAt : clip.created_at) }}</span>
+              <span class="off-gray">{{
+                getTimeDifferenceInMinutes(clip.publish_date ? clip.publish_date : clip.created_at)
+              }}</span>
             </div>
           </div>
           <div v-if="clip.summary">
@@ -245,6 +333,24 @@ export default {
     goToArticle(link) {
       if (link) {
         window.open(link, '_blank')
+      }
+    },
+  },
+  computed: {
+    categoryClips() {
+      const clips = this.report.meta_data.clips
+      if (clips[0].category) {
+        const categories = {}
+        for (let i = 0; i < clips.length; i++) {
+          console.log('clips[i]', clips[i])
+          console.log('categories', categories)
+          if (categories[clips[i].category]) {
+            categories[clips[i].category] = [...categories[clips[i].category], clips[i]]
+          } else {
+            categories[clips[i].category] = [clips[i]]
+          }
+        }
+        return categories
       }
     },
   },
@@ -618,5 +724,10 @@ header {
 }
 .mar-right {
   margin-right: 1rem;
+}
+.category-name {
+  font-family: $thin-font-family;
+  font-size: 22px;
+  margin-left: -0.5rem;
 }
 </style>

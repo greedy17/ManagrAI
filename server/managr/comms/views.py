@@ -33,7 +33,7 @@ from rest_framework.decorators import (
     api_view,
     permission_classes,
 )
-from managr.comms.utils import generate_config
+from managr.comms.utils import generate_config, normalize_newsapi_to_model
 
 
 logger = logging.getLogger("managr")
@@ -116,6 +116,7 @@ class PRSearchViewSet(
                     articles = news_res["articles"]
                     query_input = boolean
                 articles = [article for article in articles if article["title"] != "[Removed]"]
+                articles = normalize_newsapi_to_model(articles)
                 break
             except Exception as e:
                 has_error = True
@@ -227,7 +228,6 @@ class PRSearchViewSet(
                 message = r.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("article_summaries")
                 task = emit_process_website_domain(url, user.organization.name)
-                print(task)
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -474,7 +474,6 @@ class PRSearchViewSet(
                 message = r.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("article_summaries")
                 task = emit_process_website_domain(url, user.organization.name)
-                print(task)
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -740,20 +739,17 @@ def upload_link(request):
         date = article_res.publish_date
         text = article_res.meta_description
         domain = get_domain(url)
-
-
         article = {}
         article = {
             "title": title,
             "source": domain,
             "author": author,
-            "urlToImage": image,
-            "publishedAt": date,
+            "image_url": image,
+            "publish_date": date,
             "description": text,
-            "url": url,
+            "link": url,
         }
-        task = emit_process_website_domain(url, request.user.organization.name)
-
+        emit_process_website_domain(url, request.user.organization.name)
     except Exception as e:
         logger.exception(e)
     return Response(data=article)
@@ -818,8 +814,6 @@ class PitchViewSet(
         attempts = 1
         token_amount = 1000
         timeout = 60.0
-
-
         while True:
             try:
                 res = Pitch.generate_pitch(
@@ -997,7 +991,7 @@ class PitchViewSet(
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
         return Response({"style": style})
-    
+
     @action(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],

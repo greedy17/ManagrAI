@@ -18,6 +18,7 @@ package-lock.json
 # Ignore local static files and media
 server/static-files/
 server/media-files/
+server/scrapy_cache/
 node_modules/
 logs/
 
