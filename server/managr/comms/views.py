@@ -137,7 +137,6 @@ class PRSearchViewSet(
         if user.has_hit_summary_limit:
             return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         clips = request.data.get("clips")
-        print('CLIPS:: ',clips)
         search = request.data.get("search")
         instructions = request.data.get("instructions", False)
         has_error = False
