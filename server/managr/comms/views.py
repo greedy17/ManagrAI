@@ -137,7 +137,6 @@ class PRSearchViewSet(
         if user.has_hit_summary_limit:
             return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         clips = request.data.get("clips")
-        print('CLIPS:: ',clips)
         search = request.data.get("search")
         instructions = request.data.get("instructions", False)
         has_error = False
@@ -742,7 +741,6 @@ def upload_link(request):
         text = article_res.meta_description
         domain = get_domain(url)
 
-        print("DATE IS HERE", date)
 
         article = {}
         article = {
@@ -821,7 +819,6 @@ class PitchViewSet(
         token_amount = 1000
         timeout = 60.0
 
-        print(style)
 
         while True:
             try:
