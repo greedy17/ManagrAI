@@ -57,7 +57,7 @@
                     class="user-profile-img"
                     :src="clip.user.profile_image_url"
                   />
-                  <h1 class="article-title" @click="goToArticle(clip.url)">
+                  <h1 class="article-title" @click="goToArticle(clip.link)">
                     {{ clip.title ? clip.title : clip.user.name }}
                   </h1>
                 </div>
@@ -91,7 +91,7 @@
                 </div>
               </div>
 
-              <div v-if="!clip.edit_history_tweet_ids" @click="goToArticle(clip.url)">
+              <div v-if="!clip.edit_history_tweet_ids" @click="goToArticle(clip.link)">
                 <img :src="clip.image_url" class="cover-photo" />
               </div>
             </header>
@@ -138,7 +138,7 @@
               </div>
               <div class="article-title-container">
                 <img v-if="clip.user" class="user-profile-img" :src="clip.user.profile_image_url" />
-                <h1 class="article-title" @click="goToArticle(clip.url)">
+                <h1 class="article-title" @click="goToArticle(clip.link)">
                   {{ clip.title ? clip.title : clip.user.name }}
                 </h1>
               </div>
@@ -172,7 +172,7 @@
               </div>
             </div>
 
-            <div v-if="!clip.edit_history_tweet_ids" @click="goToArticle(clip.url)">
+            <div v-if="!clip.edit_history_tweet_ids" @click="goToArticle(clip.link)">
               <img :src="clip.image_url" class="cover-photo" />
             </div>
           </header>
