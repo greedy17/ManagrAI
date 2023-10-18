@@ -131,7 +131,11 @@
         </div>
 
         <div v-if="showRegenerate" class="category-input">
-          <input v-model="instructions" class="text-input category-name-input" placeholder="Instructions (optional)..." />
+          <input
+            v-model="instructions"
+            class="text-input category-name-input"
+            placeholder="Instructions (optional)..."
+          />
           <button @click="getSummary" class="primary-button category-button">Regenerate</button>
           <button @click="toggleShowRegenerate" class="secondary-button category-button">X</button>
         </div>
@@ -194,28 +198,28 @@
         </div>
 
         <div v-if="addCategory" class="category-input">
-          <input v-model="categoryName" class="text-input category-name-input" placeholder="Category name" />
+          <input
+            v-model="categoryName"
+            class="text-input category-name-input"
+            placeholder="Category name"
+          />
           <button @click="saveCategory" class="primary-button category-button">Add</button>
           <button @click="hideAddCategory" class="secondary-button category-button">X</button>
         </div>
 
         <div v-if="Object.keys(storeCategories).length">
           <div v-for="(category, catName, j) in storeCategories" :key="catName">
-            <div
-              @mouseenter="setCatRow(j, catName)"
-              @mouseleave="removeRow"
-              class="relative"
-            >
+            <div @mouseenter="setCatRow(j, catName)" @mouseleave="removeRow" class="relative">
               <div class="category-name">{{ catName }}</div>
               <div
                 v-show="currentCatRow === j"
                 class="row absolute-right actions"
-                style="padding-top: 0;"
+                style="padding-top: 0"
               >
                 <img
                   @click="removeCategory(catName)"
                   class="danger trash-filter"
-                  style="margin-right: 12px; margin-top: 2px;"
+                  style="margin-right: 12px; margin-top: 2px"
                   src="@/assets/images/trash2.svg"
                   height="16px"
                 />
@@ -237,17 +241,20 @@
               >
                 <div class="clip-header">
                   <div :data-name="catName" class="invisible">{{ catName }}</div>
-                  <img :src="clip.urlToImage" class="clip-photo" />
+                  <img :src="clip.image_url" class="clip-photo" />
                   <small>{{ clip.title ? clip.title : clip.text }}</small>
                 </div>
-                
+
                 <div v-if="clip.summary" class="summary-box">
                   <pre v-html="clip.summary" class="pre-text-small"></pre>
                 </div>
-                
+
                 <div
                   :class="{ 'blue-bg': clip.summary }"
-                  v-show="(currentRow === i && clip.category === currentCategoryName) || loadingUrl === clip.url"
+                  v-show="
+                    (currentRow === i && clip.category === currentCategoryName) ||
+                    loadingUrl === clip.link
+                  "
                   class="row absolute-right actions"
                 >
                   <!-- <img 
@@ -257,7 +264,7 @@
                   /> -->
 
                   <img
-                    @click="getArticleSummary(clip.title, clip.url, clip.search)"
+                    @click="getArticleSummary(clip.title, clip.link, clip.search)"
                     style="margin-right: 12px"
                     class="blue"
                     v-if="!summaryLoading && !clip.summary && clip.title"
@@ -268,7 +275,7 @@
 
                   <img
                     style="margin-right: 12px"
-                    v-else-if="loadingUrl === clip.url && clip.title"
+                    v-else-if="loadingUrl === clip.link && clip.title"
                     class="rotate"
                     height="16px"
                     src="@/assets/images/loading.svg"
@@ -283,24 +290,14 @@
                     height="16px"
                   />
 
-                  <img 
-                    src="@/assets/images/grip-dots-vertical.svg"
-                    height="16px"
-                    class="gray"
-                  />
+                  <img src="@/assets/images/grip-dots-vertical.svg" height="16px" class="gray" />
                 </div>
               </div>
             </draggable>
           </div>
         </div>
-        
-        <draggable
-          v-model="clips"
-          group="fields"
-          @start="drag = true"
-          @end="endDrag"
-          v-else
-        >
+
+        <draggable v-model="clips" group="fields" @start="drag = true" @end="endDrag" v-else>
           <div
             @mouseenter="setRow(i)"
             @mouseleave="removeRow"
@@ -310,7 +307,7 @@
             :key="i"
           >
             <div class="clip-header">
-              <img :src="clip.urlToImage" class="clip-photo" />
+              <img :src="clip.image_url" class="clip-photo" />
               <small>{{ clip.title ? clip.title : clip.text }}</small>
             </div>
 
@@ -320,7 +317,7 @@
 
             <div
               :class="{ 'blue-bg': clip.summary }"
-              v-show="currentRow === i || loadingUrl === clip.url"
+              v-show="currentRow === i || loadingUrl === clip.link"
               class="row absolute-right actions"
             >
               <!-- <img 
@@ -330,7 +327,7 @@
               /> -->
 
               <img
-                @click="getArticleSummary(clip.title, clip.url, clip.search)"
+                @click="getArticleSummary(clip.title, clip.link, clip.search)"
                 style="margin-right: 12px"
                 class="blue"
                 v-if="!summaryLoading && !clip.summary && clip.title"
@@ -341,7 +338,7 @@
 
               <img
                 style="margin-right: 12px"
-                v-else-if="loadingUrl === clip.url && clip.title"
+                v-else-if="loadingUrl === clip.link && clip.title"
                 class="rotate"
                 height="16px"
                 src="@/assets/images/loading.svg"
@@ -561,21 +558,21 @@ export default {
     endDrag(event, catName, category) {
       const catIDs = []
       if (catName) {
-        const droppedCategory = event.to.querySelector('[data-name]').getAttribute('data-name');
+        const droppedCategory = event.to.querySelector('[data-name]').getAttribute('data-name')
         const droppedCategoryObj = this.$store.state.categories[droppedCategory]
         for (let i = 0; i < droppedCategoryObj.length; i++) {
           if (droppedCategoryObj[i].category !== droppedCategory) {
             droppedCategoryObj[i].category = droppedCategory
-            catIDs.push(droppedCategoryObj[i].url)
+            catIDs.push(droppedCategoryObj[i].link)
           }
         }
         for (let j = 0; j < this.clips.length; j++) {
           const clip = this.clips[j]
-          if (catIDs.includes(clip.url)) {
+          if (catIDs.includes(clip.link)) {
             clip.category = droppedCategory
           }
         }
-        const catCopy = {...this.$store.state.categories}
+        const catCopy = { ...this.$store.state.categories }
         catCopy[catName] = category
         this.$store.dispatch('updateCategories', catCopy)
       }
@@ -711,12 +708,12 @@ export default {
       this.$emit('remove-clip', clip.title ? clip.title : clip.text)
     },
     removeCategory(catName) {
-      const categories = {...this.storeCategories}
+      const categories = { ...this.storeCategories }
       const savedClips = categories[catName]
       delete categories[catName]
       const catKeys = Object.keys(categories)
       if (catKeys.length) {
-        const lastKey = catKeys[catKeys.length-1]
+        const lastKey = catKeys[catKeys.length - 1]
         // for (let key in categories) {
         //   categories[key] = [...categories[key], ...savedClips]
         //   break;
