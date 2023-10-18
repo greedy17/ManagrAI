@@ -33,7 +33,7 @@ from rest_framework.decorators import (
     api_view,
     permission_classes,
 )
-from managr.comms.utils import generate_config
+from managr.comms.utils import generate_config, normalize_newsapi_to_model
 
 
 logger = logging.getLogger("managr")
@@ -116,6 +116,7 @@ class PRSearchViewSet(
                     articles = news_res["articles"]
                     query_input = boolean
                 articles = [article for article in articles if article["title"] != "[Removed]"]
+                articles = normalize_newsapi_to_model(articles)
                 break
             except Exception as e:
                 has_error = True
@@ -580,10 +581,10 @@ def upload_link(request):
             "title": title,
             "source": domain,
             "author": author,
-            "urlToImage": image,
-            "publishedAt": date,
+            "image_url": image,
+            "publish_date": date,
             "description": text,
-            "url": url,
+            "link": url,
         }
         emit_process_website_domain(url, request.user.organization.name)
     except Exception as e:
