@@ -47,10 +47,16 @@
               <!-- <div>{{ categoryClips }}</div> -->
               <div class="card-col">
                 <div class="card-top-left">
-                  <span>{{ clip.source ? (clip.source.name ? clip.source.name : clip.source) : 'Tweet' }}</span>
+                  <span>{{
+                    clip.source ? (clip.source.name ? clip.source.name : clip.source) : 'Tweet'
+                  }}</span>
                 </div>
                 <div class="article-title-container">
-                  <img v-if="clip.user" class="user-profile-img" :src="clip.user.profile_image_url" />
+                  <img
+                    v-if="clip.user"
+                    class="user-profile-img"
+                    :src="clip.user.profile_image_url"
+                  />
                   <h1 class="article-title" @click="goToArticle(clip.url)">
                     {{ clip.title ? clip.title : clip.user.name }}
                   </h1>
@@ -58,7 +64,10 @@
                 <p class="article-preview">
                   {{ clip.description ? clip.description : clip.text }}
                 </p>
-                <div v-if="clip.attachments && clip.attachments.mediaURLs" class="tweet-attachement display-flex">
+                <div
+                  v-if="clip.attachments && clip.attachments.mediaURLs"
+                  class="tweet-attachement display-flex"
+                >
                   <div
                     style="margin-bottom: 16px"
                     v-for="mediaURL in clip.attachments.mediaURLs"
@@ -66,52 +75,49 @@
                     class="mar-right"
                   >
                     <div v-if="mediaURL.type === 'video'">
-                      <video
-                        style="margin-top: 1rem"
-                        width="400"
-                        controls
-                      >
+                      <video style="margin-top: 1rem" width="400" controls>
                         <source :src="mediaURL.url" type="video/mp4" />
                       </video>
                     </div>
                     <div v-else-if="mediaURL.type === 'animated_gif'">
-                      <video
-                        style="margin-top: 1rem"
-                        width="400"
-                        autoplay
-                        loop
-                        muted
-                        playsinline
-                      >
+                      <video style="margin-top: 1rem" width="400" autoplay loop muted playsinline>
                         <source :src="mediaURL.url" type="video/mp4" />
                       </video>
                     </div>
                     <div v-else>
-                      <img
-                        :src="mediaURL.url"
-                        class="cover-photo-no-l-margin"
-                        alt=""
-                      />
+                      <img :src="mediaURL.url" class="cover-photo-no-l-margin" alt="" />
                     </div>
                   </div>
                 </div>
               </div>
-  
+
               <div v-if="!clip.edit_history_tweet_ids" @click="goToArticle(clip.url)">
-                <img :src="clip.urlToImage" class="cover-photo" />
+                <img :src="clip.image_url" class="cover-photo" />
               </div>
             </header>
-  
+
             <div class="card-footer">
               <div class="author-time">
-                <span class="author">@{{ clip.author ? clip.author : (clip.user && clip.user.username ? clip.user.username : '') }}</span>
+                <span class="author"
+                  >@{{
+                    clip.author
+                      ? clip.author
+                      : clip.user && clip.user.username
+                      ? clip.user.username
+                      : ''
+                  }}</span
+                >
                 <span class="divier-dot">.</span>
                 <small v-if="clip.user && clip.user.public_metrics" class="bold-text"
                   >{{ formatNumber(clip.user.public_metrics.followers_count) }}
                   <span>Followers</span>
                 </small>
                 <span class="divier-dot">.</span>
-                <span class="off-gray">{{ getTimeDifferenceInMinutes(clip.publishedAt ? clip.publishedAt : clip.created_at) }}</span>
+                <span class="off-gray">{{
+                  getTimeDifferenceInMinutes(
+                    clip.publish_date ? clip.publish_date : clip.created_at,
+                  )
+                }}</span>
               </div>
             </div>
             <div v-if="clip.summary">
@@ -126,7 +132,9 @@
             <!-- <div>{{ categoryClips }}</div> -->
             <div class="card-col">
               <div class="card-top-left">
-                <span>{{ clip.source ? (clip.source.name ? clip.source.name : clip.source) : 'Tweet' }}</span>
+                <span>{{
+                  clip.source ? (clip.source.name ? clip.source.name : clip.source) : 'Tweet'
+                }}</span>
               </div>
               <div class="article-title-container">
                 <img v-if="clip.user" class="user-profile-img" :src="clip.user.profile_image_url" />
@@ -137,7 +145,10 @@
               <p class="article-preview">
                 {{ clip.description ? clip.description : clip.text }}
               </p>
-              <div v-if="clip.attachments && clip.attachments.mediaURLs" class="tweet-attachement display-flex">
+              <div
+                v-if="clip.attachments && clip.attachments.mediaURLs"
+                class="tweet-attachement display-flex"
+              >
                 <div
                   style="margin-bottom: 16px"
                   v-for="mediaURL in clip.attachments.mediaURLs"
@@ -145,52 +156,47 @@
                   class="mar-right"
                 >
                   <div v-if="mediaURL.type === 'video'">
-                    <video
-                      style="margin-top: 1rem"
-                      width="400"
-                      controls
-                    >
+                    <video style="margin-top: 1rem" width="400" controls>
                       <source :src="mediaURL.url" type="video/mp4" />
                     </video>
                   </div>
                   <div v-else-if="mediaURL.type === 'animated_gif'">
-                    <video
-                      style="margin-top: 1rem"
-                      width="400"
-                      autoplay
-                      loop
-                      muted
-                      playsinline
-                    >
+                    <video style="margin-top: 1rem" width="400" autoplay loop muted playsinline>
                       <source :src="mediaURL.url" type="video/mp4" />
                     </video>
                   </div>
                   <div v-else>
-                    <img
-                      :src="mediaURL.url"
-                      class="cover-photo-no-l-margin"
-                      alt=""
-                    />
+                    <img :src="mediaURL.url" class="cover-photo-no-l-margin" alt="" />
                   </div>
                 </div>
               </div>
             </div>
 
             <div v-if="!clip.edit_history_tweet_ids" @click="goToArticle(clip.url)">
-              <img :src="clip.urlToImage" class="cover-photo" />
+              <img :src="clip.image_url" class="cover-photo" />
             </div>
           </header>
 
           <div class="card-footer">
             <div class="author-time">
-              <span class="author">@{{ clip.author ? clip.author : (clip.user && clip.user.username ? clip.user.username : '') }}</span>
+              <span class="author"
+                >@{{
+                  clip.author
+                    ? clip.author
+                    : clip.user && clip.user.username
+                    ? clip.user.username
+                    : ''
+                }}</span
+              >
               <span class="divier-dot">.</span>
               <small v-if="clip.user && clip.user.public_metrics" class="bold-text"
                 >{{ formatNumber(clip.user.public_metrics.followers_count) }}
                 <span>Followers</span>
               </small>
               <span class="divier-dot">.</span>
-              <span class="off-gray">{{ getTimeDifferenceInMinutes(clip.publishedAt ? clip.publishedAt : clip.created_at) }}</span>
+              <span class="off-gray">{{
+                getTimeDifferenceInMinutes(clip.publish_date ? clip.publish_date : clip.created_at)
+              }}</span>
             </div>
           </div>
           <div v-if="clip.summary">
