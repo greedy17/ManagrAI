@@ -1,6 +1,9 @@
 <template>
   <div class="reports">
     <header class="blur-bottom">
+      <!-- <div class="reports-lip-container">
+        Lip
+      </div> -->
       <div>
         <h3>{{ reportSuccess ? 'Successfully created digest!' : 'Digest' }}</h3>
         <small class="subtext">{{
@@ -420,6 +423,12 @@
         </div>
       </footer>
     </div>
+
+    <!-- <div class="reports-lip-container">
+      <div class="reports-lip">
+        Lip
+      </div>
+    </div> -->
   </div>
 </template>
 <script>
@@ -816,21 +825,21 @@ pre[contenteditable]:focus {
 }
 
 .reports {
-  width: 500px;
-  height: 100vh;
-  overflow-y: auto;
-  font-family: $thin-font-family;
-  padding: 0 8px 0 16px;
-  background-color: $offer-white;
-  border-left: 1px solid rgba(0, 0, 0, 0.1);
-  position: fixed;
-  z-index: 3000;
-  right: 0;
-  top: 0;
-  box-shadow: 30px 30px 40px;
-  @media only screen and (max-width: 600px) {
-    width: 100vw;
-  }
+  // width: 500px;
+  // height: 100vh;
+  // overflow-y: auto;
+  // font-family: $thin-font-family;
+  // padding: 0 8px 0 16px;
+  // background-color: $offer-white;
+  // border-left: 1px solid rgba(0, 0, 0, 0.1);
+  // position: fixed;
+  // z-index: 3000;
+  // right: 0;
+  // top: 0;
+  // box-shadow: 30px 30px 40px;
+  // @media only screen and (max-width: 600px) {
+  //   width: 100vw;
+  // }
 }
 .plus-input {
   @media only screen and (max-width: 600px) {
@@ -1015,7 +1024,7 @@ h3 {
   // left: 240px;
   height: 2rem;
   width: 5.5rem;
-  z-index: 5000;
+  z-index: 3275;
 }
 .absolute-button-input-large {
   position: absolute;
@@ -1341,7 +1350,7 @@ footer {
   left: 0;
   padding: 2px 8px;
   border-radius: 5px;
-  z-index: 5000;
+  z-index: 3275;
   background-color: white;
 }
 
@@ -1617,5 +1626,10 @@ a {
 }
 .category-spacing {
   margin-left: 0.5rem;
+}
+.reports-lip-container {
+  position: absolute;
+  top: 535%;
+  left: -25px;
 }
 </style>
