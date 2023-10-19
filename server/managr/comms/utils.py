@@ -98,7 +98,7 @@ def normalize_newsapi_to_model(api_data):
             author=article.get("author", ""),
             publish_date=article.get("publishedAt", ""),
             link=article.get("url", ""),
-            image_url=article.get("urlToImagg"),
+            image_url=article.get("urlToImage"),
             source=article.get("source", {}).get("name", ""),
         )
         for article in api_data
