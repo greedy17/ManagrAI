@@ -134,10 +134,13 @@
     </Modal>
 
     <Transition name="slide-left">
-      <div v-if="selectedSearch && ShowReport" class="reports-width-height"> 
+      <div v-if="selectedSearch && ShowReport" class="reports-width-height">
         <div class="reports-lip-container" @click="toggleReport">
           <div class="reports-lip">
-            <img src="@/assets/images/angle-double-small-right.svg" class="lip-img invert-dark-blue" />
+            <img
+              src="@/assets/images/angle-double-small-right.svg"
+              class="lip-img invert-dark-blue"
+            />
           </div>
         </div>
         <Reports
@@ -154,12 +157,15 @@
     </Transition>
 
     <div @click="toggleReport" v-if="selectedSearch && !ShowReport" class="floating-action-bar">
-      <div class="reports-lip-container-bar">
+      <!-- <div class="reports-lip-container-bar">
         <div class="reports-lip-bar">
-          <img src="@/assets/images/angle-double-small-right.svg" class="lip-img invert-dark-blue flip" />
+          <img
+            src="@/assets/images/angle-double-small-right.svg"
+            class="lip-img invert-dark-blue flip"
+          />
           <div class="blue-box" />
         </div>
-      </div>
+      </div> -->
 
       <div class="main-slot">
         <img src="@/assets/images/share.svg" height="10px" alt="" />
@@ -181,6 +187,7 @@
         <small>{{ allCategoryClips ? allCategoryClips.length : 0 }}/20</small>
       </div>
     </div>
+
     <div class="center column" :class="{ fullHeight: showingDropdown }" v-if="page === 'SUMMARIES'">
       <div v-if="!selectedSearch" class="switcher">
         <div
@@ -3184,7 +3191,7 @@ button:disabled {
   background-color: $white-blue;
   position: fixed;
   z-index: 3000;
-  right: 24px;
+  right: 16px;
   top: 36vh;
   min-height: 160px;
   border-radius: 32px;
@@ -4426,11 +4433,9 @@ header {
   height: 4rem;
 }
 .reports-lip-container-bar {
-  position: fixed;
-  // top: 47%;
-  top: 50%;
-  // right: 38px;
-  right: 44px;
+  position: absolute;
+  top: 80px;
+  right: 32px;
   z-index: -1;
   cursor: pointer;
   width: 2.5rem;
@@ -4438,7 +4443,6 @@ header {
 .reports-lip-bar {
   display: flex;
   align-items: center;
-  // background-color: $white-blue;
   background-color: $white-blue;
   border-radius: 20px;
   border-left: 1px solid $white-blue;
