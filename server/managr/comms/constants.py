@@ -128,7 +128,7 @@ def OPEN_AI_PITCH(date, type, output, persona, briefing, style=False):
 def OPEN_AI_GENERATE_CONTENT(date, article, style, instructions):
     if not style:
         style = "Professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Direct, to the point."
-    body = f"Today's date is {date}. Based on this news article:\n Article: {article}\n generate the following content:\n {instructions}. Use this writing syte: {style}"
+    body = f"Today's date is {date}. Generate the following content:\n {instructions},\n based on this news article:\n {article}\n. Use this writing stye:\n {style}, output cannot exceed 1,500 characters."
     return body
 
 
@@ -147,10 +147,8 @@ The output must be short, within 200 characters, describing the writing style in
 )
 
 OPEN_AI_REGENERATE_ARTICLE = (
-    lambda article, content, instructions: f"""
-Below is some AI generated content based on this article: {article}. Adjust and rewrite the content per the instructions below:\n
-Content: {content}\n
-Instructions: {instructions}"""
+    lambda article, content, instructions: f"""Adjust and rewrite this content:\n Content: {content}\n per these Instructions: {instructions}.
+     No longer than 1,500 characters. For reference, here is the article the content is based on: Article: {article}."""
 )
 
 DO_NOT_TRACK_LIST = ["www.wsj.com", "www.nytimes.com", "www.bizjournals.com"]
