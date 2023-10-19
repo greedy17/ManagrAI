@@ -3,6 +3,47 @@
     <!-- <div class="suggestions" v-if="!selectedSearch">
       <img class="invert-dark-blue" src="@/assets/images/lightbulb.svg" height="18px" alt="" />
     </div> -->
+    <Modal v-if="contentModalOpen" class="regen-modal">
+      <div :class="{ dim: contentLoading }" class="regen-container">
+        <div class="regen-header">
+          <div>
+            <h4 class="regen-header-title">Generate Content</h4>
+            <p class="regen-header-subtitle">Provide additional instructions</p>
+          </div>
+          <div @click="closeContentModal" class="pointer"><small>X</small></div>
+        </div>
+
+        <div class="regen-body padding">
+          <textarea
+            class="area-input-outline wider"
+            v-model="contentInstructions"
+            type="text"
+            v-autoresize
+            :disabled="contentLoading"
+          />
+        </div>
+
+        <div class="regen-footer">
+          <div></div>
+          <div class="row">
+            <button :disabled="contentLoading" @click="closeContentModal" class="cancel-button">
+              Cancel
+            </button>
+            <button :disabled="contentLoading" @click="generateContent" class="save-button">
+              <img
+                v-if="contentLoading"
+                style="margin-right: 8px"
+                src="@/assets/images/loading.svg"
+                class="rotate"
+                height="12px"
+                alt=""
+              />
+              {{ contentLoading ? 'submitting' : 'submit' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Modal>
     <Modal v-if="regenModal" class="regen-modal">
       <div class="regen-container">
         <div class="regen-header">
@@ -297,7 +338,7 @@
                 v-for="(article, i) in addedArticles"
                 :key="i"
               >
-                <img :src="article.urlToImage" class="clip-photo" />
+                <img :src="article.image_url" class="clip-photo" />
                 {{ article.title }}
 
                 <img
@@ -487,17 +528,18 @@
                   </button>
                 </div>
 
-                <div class="relative">
+                <div v-if="mainView === 'website' && addedArticles.length === 1" class="relative">
                   <div @click="toggleGenerateDropdown" class="row pointer dropdownBorder">
                     Generate Content
                     <img
                       v-if="!showGenerateDropdown"
                       src="@/assets/images/downArrow.svg"
+                      class="inverted"
                       height="14px"
                       alt=""
                     />
                     <img
-                      class="rotate-img"
+                      class="rotate-img inverted"
                       v-else
                       src="@/assets/images/downArrow.svg"
                       height="14px"
@@ -506,32 +548,13 @@
                   </div>
 
                   <div v-if="showGenerateDropdown" class="search-dropdown">
-                    <!-- <div class="input">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <path
-                          fill-rule="evenodd"
-                          clip-rule="evenodd"
-                          d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
-                          fill="currentColor"
-                        ></path>
-                      </svg>
-                      <input class="search-input" placeholder="Search..." />
-                      <img
-                          v-show="searchText"
-                          @click="clearText"
-                          src="@/assets/images/close.svg"
-                          class="invert pointer"
-                          height="12px"
-                          alt=""
-                        />
-                    </div> -->
                     <div class="searches-container">
                       <div
                         class="row relative"
                         v-for="(option, i) in generateOptions"
                         :key="option.value"
                       >
-                        <p @click="selectOption(option.value, i)">
+                        <p @click="selectArticleOption(addedArticles[0].link, option.value, i)">
                           {{ option.name }}
                         </p>
 
@@ -746,9 +769,9 @@
                   <div class="card-col">
                     <div class="card-top-left">
                       <!-- <img :src="article.icon" /> -->
-                      <span>{{ article.source.name }}</span>
+                      <span>{{ article.source }}</span>
                     </div>
-                    <h1 class="article-title" @click="goToArticle(article.url)">
+                    <h1 class="article-title" @click="goToArticle(article.link)">
                       {{ article.title }}
                     </h1>
                     <p class="article-preview">
@@ -756,10 +779,10 @@
                     </p>
                   </div>
 
-                  <!-- <div @click="goToArticle(article.url)"> -->
+                  <!-- <div @click="goToArticle(article.link)"> -->
                   <img
-                    @click="goToArticle(article.url)"
-                    :src="article.urlToImage"
+                    @click="goToArticle(article.link)"
+                    :src="article.image_url"
                     class="cover-photo"
                   />
                   <!-- </div> -->
@@ -770,7 +793,7 @@
                     <span class="author">{{ article.author }}</span>
                     <span class="divier-dot">.</span>
                     <span class="off-gray time">{{
-                      getTimeDifferenceInMinutes(article.publishedAt)
+                      getTimeDifferenceInMinutes(article.publish_date)
                     }}</span>
                     <span class="divier-dot">.</span>
                   </div>
@@ -789,7 +812,7 @@
                     <div v-else>
                       <button
                         v-if="!article.summary"
-                        @click="getArticleSummary(article.url)"
+                        @click="getArticleSummary(article.link)"
                         class="tertiary-button summarize-button"
                         style="margin: 0"
                         :disabled="
@@ -797,7 +820,7 @@
                         "
                       >
                         <img
-                          v-if="articleSummaryLoading && loadingUrl === article.url"
+                          v-if="articleSummaryLoading && loadingUrl === article.link"
                           class="rotate"
                           height="14px"
                           src="@/assets/images/loading.svg"
@@ -805,7 +828,7 @@
                         />
                         <img v-else src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
                         {{
-                          articleSummaryLoading && loadingUrl === article.url
+                          articleSummaryLoading && loadingUrl === article.link
                             ? 'Summarizing'
                             : 'Summarize'
                         }}
@@ -857,14 +880,15 @@
                         >
                           Generate Content
                           <img
-                            v-if="!showArticleGenerateDropdown"
+                            v-if="!showArticleGenerateDropdown && !contentLoading"
                             src="@/assets/images/downArrow.svg"
+                            class="inverted"
                             height="14px"
                             alt=""
                           />
                           <img
-                            class="rotate-img"
-                            v-else
+                            class="rotate-img inverted"
+                            v-else-if="!contentLoading"
                             src="@/assets/images/downArrow.svg"
                             height="14px"
                             alt=""
@@ -878,7 +902,7 @@
                               v-for="(option, i) in generateOptions"
                               :key="option.value"
                             >
-                              <p @click="selectArticleOption(option.value, article.summary, i)">
+                              <p @click="selectArticleOption(article.link, option.value, i)">
                                 {{ option.name }}
                               </p>
 
@@ -913,21 +937,27 @@
                         </button>
 
                         <button
-                          @click="getArticleSummary(article.url, articleInstructions)"
+                          @click="
+                            regenerateArticleSummary(
+                              article.link,
+                              article.summary,
+                              articleInstructions,
+                            )
+                          "
                           :disabled="
                             articleSummaryLoading || loading || summaryLoading || savingSearch
                           "
                           class="primary-button"
                         >
                           <img
-                            v-if="articleSummaryLoading && loadingUrl === article.url"
+                            v-if="articleSummaryLoading && loadingUrl === article.link"
                             class="rotate"
                             height="14px"
                             src="@/assets/images/loading.svg"
                             alt=""
                           />
                           {{
-                            articleSummaryLoading && loadingUrl === article.url
+                            articleSummaryLoading && loadingUrl === article.link
                               ? 'Submitting'
                               : 'Submit'
                           }}
@@ -946,9 +976,9 @@
                   <div class="card-col">
                     <div class="card-top-left">
                       <!-- <img :src="article.icon" /> -->
-                      <span>{{ article.source.name || article.source }}</span>
+                      <span>{{ article.source }}</span>
                     </div>
-                    <h1 class="article-title" @click="goToArticle(article.url)">
+                    <h1 class="article-title" @click="goToArticle(article.link)">
                       {{ article.title }}
                     </h1>
                     <p class="article-preview">
@@ -956,10 +986,10 @@
                     </p>
                   </div>
 
-                  <!-- <div @click="goToArticle(article.url)"> -->
+                  <!-- <div @click="goToArticle(article.link)"> -->
                   <img
-                    @click="goToArticle(article.url)"
-                    :src="article.urlToImage"
+                    @click="goToArticle(article.link)"
+                    :src="article.image_url"
                     class="cover-photo"
                   />
                   <!-- </div> -->
@@ -970,7 +1000,7 @@
                     <span class="author">{{ article.author }}</span>
                     <span class="divier-dot">.</span>
                     <span class="off-gray time">{{
-                      getTimeDifferenceInMinutes(article.publishedAt)
+                      getTimeDifferenceInMinutes(article.publish_date)
                     }}</span>
                     <span class="divier-dot">.</span>
                   </div>
@@ -989,7 +1019,7 @@
                     <div v-else>
                       <button
                         v-if="!article.summary"
-                        @click="getArticleSummary(article.url)"
+                        @click="getArticleSummary(article.link)"
                         class="tertiary-button summarize-button"
                         style="margin: 0"
                         :disabled="
@@ -997,7 +1027,7 @@
                         "
                       >
                         <img
-                          v-if="articleSummaryLoading && loadingUrl === article.url"
+                          v-if="articleSummaryLoading && loadingUrl === article.link"
                           class="rotate"
                           height="14px"
                           src="@/assets/images/loading.svg"
@@ -1005,7 +1035,7 @@
                         />
                         <img v-else src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
                         {{
-                          articleSummaryLoading && loadingUrl === article.url
+                          articleSummaryLoading && loadingUrl === article.link
                             ? 'Summarizing'
                             : 'Summarize'
                         }}
@@ -1059,11 +1089,12 @@
                           <img
                             v-if="!showArticleGenerateDropdown"
                             src="@/assets/images/downArrow.svg"
+                            class="inverted"
                             height="14px"
                             alt=""
                           />
                           <img
-                            class="rotate-img"
+                            class="rotate-img inverted"
                             v-else
                             src="@/assets/images/downArrow.svg"
                             height="14px"
@@ -1078,7 +1109,7 @@
                               v-for="(option, i) in generateOptions"
                               :key="option.value"
                             >
-                              <p @click="selectArticleOption(option.value, article.summary, i)">
+                              <p @click="selectArticleOption(article.link, option.value, i)">
                                 {{ option.name }}
                               </p>
 
@@ -1113,21 +1144,27 @@
                         </button>
 
                         <button
-                          @click="getArticleSummary(article.url, articleInstructions)"
+                          @click="
+                            regenerateArticleSummary(
+                              article.link,
+                              article.summary,
+                              articleInstructions,
+                            )
+                          "
                           :disabled="
                             articleSummaryLoading || loading || summaryLoading || savingSearch
                           "
                           class="primary-button"
                         >
                           <img
-                            v-if="articleSummaryLoading && loadingUrl === article.url"
+                            v-if="articleSummaryLoading && loadingUrl === article.link"
                             class="rotate"
                             height="14px"
                             src="@/assets/images/loading.svg"
                             alt=""
                           />
                           {{
-                            articleSummaryLoading && loadingUrl === article.url
+                            articleSummaryLoading && loadingUrl === article.link
                               ? 'Submitting'
                               : 'Submit'
                           }}
@@ -1168,6 +1205,9 @@ export default {
   },
   data() {
     return {
+      contentModalOpen: false,
+      contentInstructions: null,
+      contentUrl: null,
       showExpireModal: false,
       checkInterval: null,
       currentRow: null,
@@ -1281,6 +1321,13 @@ export default {
     window.removeEventListener('scroll', this.checkScroll)
   },
   methods: {
+    closeContentModal() {
+      if (!this.contentLoading) {
+        this.contentModalOpen = false
+      } else {
+        return
+      }
+    },
     setRow(i) {
       this.currentRow = i
     },
@@ -1304,12 +1351,16 @@ export default {
         this.setPitchContent()
       }
     },
-    selectArticleOption(val, sum, index) {
+    selectArticleOption(url, val, index) {
       if (!this.contentLoading) {
+        this.showGenerateDropdown = false
+        this.showArticleGenerateDropdown = false
+        this.contentModalOpen = true
         this.optionIndex = index
-        this.contentLoading = true
-        this.selectedOption = val
-        this.setArticlePitchContent(sum)
+        this.contentUrl = url
+        this.contentType = val
+        this.contentInstructions = `Turn this article into a ${val} for ${this.newSearch}`
+        // this.setArticlePitchContent(url,sum)
       }
     },
     setPitchContent() {
@@ -1376,10 +1427,10 @@ export default {
     removeClip(title) {
       const cats = this.$store.state.categories
       if (Object.keys(cats).length) {
-        const newCats = {...cats}
+        const newCats = { ...cats }
         for (let key in cats) {
           const clips = cats[key]
-          const filteredClips = clips.filter(clip => clip.title !== title && clip.text !== title)
+          const filteredClips = clips.filter((clip) => clip.title !== title && clip.text !== title)
           newCats[key] = filteredClips
         }
         this.$store.dispatch('updateCategories', newCats)
@@ -1438,7 +1489,7 @@ export default {
       }
       clip['search'] = this.newSearch
       if (this.addedClips && this.addedClips.length < 20) {
-        if (!clip.urlToImage && (clip.attachments || clip.edit_history_tweet_ids)) {
+        if (!clip.image_url && (clip.attachments || clip.edit_history_tweet_ids)) {
           let tweetImg = ''
           if (clip.attachments) {
             for (let i = 0; i < this.tweetMedia.length; i++) {
@@ -1460,7 +1511,7 @@ export default {
           if (!tweetImg) {
             tweetImg = clip.user.profile_image_url
           }
-          clip.urlToImage = tweetImg
+          clip.image_url = tweetImg
         }
         if (clip.attachments) {
           const mediaURLs = []
@@ -1484,8 +1535,8 @@ export default {
         const categories = this.$store.state.categories
         const categoryNames = Object.keys(categories)
         if (categoryNames.length) {
-          clip.category = categoryNames[categoryNames.length-1]
-          categories[categoryNames[categoryNames.length-1]].push(clip)
+          clip.category = categoryNames[categoryNames.length - 1]
+          categories[categoryNames[categoryNames.length - 1]].push(clip)
           this.$store.dispatch('updateCategories', categories)
         } else {
           clip.category = null
@@ -1786,7 +1837,7 @@ export default {
       try {
         let response
         if (this.addedArticles.length === 1) {
-          response = await this.getArticleSummary(this.addedArticles[0].url, this.newTemplate)
+          response = await this.getArticleSummary(this.addedArticles[0].link, this.newTemplate)
           this.summary = response
         } else {
           response = await this.getSummary(this.addedArticles, this.newTemplate)
@@ -1907,6 +1958,7 @@ export default {
             user_id: this.user.id,
           })
           .then((response) => {
+            console.log(response)
             this.filteredArticles = response.articles
             this.booleanString = response.string
           })
@@ -1966,7 +2018,7 @@ export default {
     getArticleDescriptions(articles) {
       return articles.map(
         (a) =>
-          `Content:${a.description} Date:${a.publishedAt}, Source:${a.source.name}, Author:${a.author}`,
+          `Content:${a.description} Date:${a.publish_date}, Source:${a.source}, Author:${a.author}`,
       )
     },
     async getTweetSummary(instructions = '') {
@@ -2024,10 +2076,47 @@ export default {
         this.scrollToTop()
       }
     },
+    async regenerateArticleSummary(url, summary, instructions) {
+      let selectedClip = this.addedArticles.length
+        ? this.addedArticles.filter((art) => art.link === url)[0]
+        : this.filteredArticles.filter((art) => art.link === url)[0]
+
+      this.articleSummaryLoading = true
+      this.loadingUrl = url
+
+      try {
+        const response = await Comms.api.regenerateArticleSummary({
+          url,
+          summary: summary,
+          instructions: instructions,
+        })
+        selectedClip['summary'] = response.summary
+        if (!this.addedArticles.length) {
+          this.filteredArticles = this.filteredArticles.filter(
+            (clip) => clip.title !== selectedClip.title,
+          )
+          this.filteredArticles.unshift(selectedClip)
+        } else {
+          this.addedArticles = this.addedArticles = this.addedArticles.filter(
+            (clip) => clip.title !== selectedClip.title,
+          )
+          this.addedArticles.unshift(selectedClip)
+        }
+
+        this.refreshUser()
+        this.scrollToTopDivider()
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.showArticleRegenerate = false
+        this.articleSummaryLoading = false
+        this.loadingUrl = null
+      }
+    },
     async getArticleSummary(url, instructions = null, length = 1000) {
       let selectedClip = this.addedArticles.length
-        ? this.addedArticles.filter((art) => art.url === url)[0]
-        : this.filteredArticles.filter((art) => art.url === url)[0]
+        ? this.addedArticles.filter((art) => art.link === url)[0]
+        : this.filteredArticles.filter((art) => art.link === url)[0]
 
       this.articleSummaryLoading = true
       this.loadingUrl = url
@@ -2070,6 +2159,50 @@ export default {
         this.loadingUrl = null
       }
     },
+    async generateContent() {
+      this.contentLoading = true
+      let selectedClip = this.addedArticles.length
+        ? this.addedArticles.filter((art) => art.link === this.contentUrl)[0]
+        : this.filteredArticles.filter((art) => art.link === this.contentUrl)[0]
+
+      try {
+        await Comms.api
+          .generateContent({
+            url: this.contentUrl,
+            instructions: this.contentInstructions,
+            style: this.user.writingStyle ? this.user.writingStyle : null,
+          })
+          .then((response) => {
+            if (this.mainView === 'website' && this.addedArticles.length === 1) {
+              this.summary = response.content
+            } else {
+              selectedClip['summary'] = response.content
+              if (!this.addedArticles.length) {
+                this.filteredArticles = this.filteredArticles.filter(
+                  (clip) => clip.title !== selectedClip.title,
+                )
+                this.filteredArticles.unshift(selectedClip)
+              } else {
+                this.addedArticles = this.addedArticles = this.addedArticles.filter(
+                  (clip) => clip.title !== selectedClip.title,
+                )
+                this.addedArticles.unshift(selectedClip)
+              }
+            }
+
+            this.refreshUser()
+            this.scrollToTopDivider()
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.contentLoading = false
+        this.contentInstructions = null
+        this.contentType = null
+        this.contentUrl = null
+        this.contentModalOpen = false
+      }
+    },
     changeSummaryChat(type) {
       this.summaryChat = type
       this.scrollToBottom()
@@ -2083,9 +2216,9 @@ export default {
       this.changeNew()
     },
     addRemoveSelectedArticles(article) {
-      const existingArticle = this.selectedArticles.filter((ar) => ar.url === article.url)[0]
+      const existingArticle = this.selectedArticles.filter((ar) => ar.link === article.link)[0]
       if (existingArticle) {
-        this.selectedArticles = this.selectedArticles.filter((ar) => ar.url !== article.url)
+        this.selectedArticles = this.selectedArticles.filter((ar) => ar.link !== article.link)
       } else {
         this.selectedArticles.push(article)
       }
@@ -2129,8 +2262,8 @@ export default {
     clipTitles() {
       if (Object.keys(this.$store.state.categories).length) {
         return this.allCategoryClips
-        ? this.allCategoryClips.map((clip) => (clip.title ? clip.title : clip.id))
-        : []
+          ? this.allCategoryClips.map((clip) => (clip.title ? clip.title : clip.id))
+          : []
       } else {
         return this.addedClips
           ? this.addedClips.map((clip) => (clip.title ? clip.title : clip.id))
@@ -2610,6 +2743,9 @@ export default {
 .invert-dark-blue {
   filter: invert(22%) sepia(51%) saturate(390%) hue-rotate(161deg) brightness(92%) contrast(87%);
 }
+.inverted {
+  filter: invert(100%);
+}
 
 // .img-border {
 //   border: 1px solid #416177;
@@ -2806,6 +2942,10 @@ button:disabled {
   @media only screen and (max-width: 350px) {
     // width: 30%;
   }
+}
+
+.dim {
+  opacity: 0.7;
 }
 .input-container {
   flex-wrap: nowrap;
@@ -3660,6 +3800,9 @@ header {
 .regen-body-title {
   margin: 0 0 0 0;
 }
+.padding {
+  padding: 1rem 0;
+}
 .regen-body-text {
   resize: none;
   outline: none;
@@ -4166,12 +4309,9 @@ header {
 }
 
 .dropdownBorder {
-  border: 1px solid $dark-black-blue;
-  color: $dark-black-blue;
+  color: white;
   border-radius: 4px;
-  // padding-left: 8px;
-  // padding-right: 8px;
-  background-color: white;
+  background-color: $dark-black-blue;
   font-size: 12px;
   padding: 8px;
   // @media only screen and (max-width: 600px) {

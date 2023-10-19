@@ -87,10 +87,10 @@ OPEN_AI_TWITTER_SEARCH_CONVERSION = (
 )
 
 DEFAULT_ARTICLE_INSTRUCTIONS = (
-    lambda search: f"*Context, Sentiment and Impact pertaining to {search}. Keep it under 500 characters:*\n*"
+    lambda search: f"*Context: Sentiment: Impact: as it pertains to {search}*"
 )
 DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS = (
-    lambda search: f"<strong>Context, Sentiment and Impact pertaining to {search}. Keep it under 500 characters:</strong>"
+    lambda search: f"<strong>Context: Sentiment: Impact: as it pertains to {search}</strong>"
 )
 
 
@@ -104,7 +104,7 @@ def OPEN_AI_WEB_SUMMARY(
 
 
 def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, for_client=False):
-    body = f"Today's date is {date}  Summarize this news article:\n Article: {article}\n As it relates to {search} It cannot be longer than {length} characters. Output format must be:\n"
+    body = f"Today's date is {date}. Summarize this news article:\n Article: {article}\n As it relates to {search}. It cannot be longer than 500 characters. Output format must be:\n"
     if instructions:
         body += instructions
     else:
@@ -122,14 +122,19 @@ def OPEN_AI_PITCH(date, type, output, persona, briefing, style=False):
         style = "Professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Direct, to the point."
     body = f"""f"Today's {date}. As the VP of Communications, I need a {type} tailored for {persona}. 
     Writing Style: {style}. Take into account the information from: {briefing}. Adhere to the given output parameters: {output}."""
+    return body
 
-    print("BODY IS HERE", body)
+
+def OPEN_AI_GENERATE_CONTENT(date, article, style, instructions):
+    if not style:
+        style = "Professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Direct, to the point."
+    body = f"Today's date is {date}. Generate the following content:\n {instructions},\n based on this news article:\n {article}\n. Use this writing stye:\n {style}, output cannot exceed 1,500 characters."
     return body
 
 
 OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS = (
     lambda pitch, instructions: f"""
-Below is an AI generated content. Adjust and rewrite the pitch per instructions below:\n
+Below is some AI generated content. Adjust and rewrite the content per instructions below:\n
 Content: {pitch}\n
 Instructions: {instructions}"""
 )
@@ -139,6 +144,11 @@ OPEN_AI_LEARN_WRITING_STYLE_PROMPT = (
 Analyze this writing sample {sample} and summarize its key writing style characteristics in a concise manner,
 focusing on tone, vocabulary, structure, and any unique stylistic elements. 
 The output must be short, within 200 characters, describing the writing style in a concise manner."""
+)
+
+OPEN_AI_REGENERATE_ARTICLE = (
+    lambda article, content, instructions: f"""Adjust and rewrite this content:\n Content: {content}\n per these Instructions: {instructions}.
+     No longer than 1,500 characters. For reference, here is the article the content is based on: Article: {article}."""
 )
 
 DO_NOT_TRACK_LIST = ["www.wsj.com", "www.nytimes.com", "www.bizjournals.com"]

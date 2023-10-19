@@ -33,7 +33,7 @@ from rest_framework.decorators import (
     api_view,
     permission_classes,
 )
-from managr.comms.utils import generate_config
+from managr.comms.utils import generate_config, normalize_newsapi_to_model
 
 
 logger = logging.getLogger("managr")
@@ -116,6 +116,7 @@ class PRSearchViewSet(
                     articles = news_res["articles"]
                     query_input = boolean
                 articles = [article for article in articles if article["title"] != "[Removed]"]
+                articles = normalize_newsapi_to_model(articles)
                 break
             except Exception as e:
                 has_error = True
@@ -137,7 +138,6 @@ class PRSearchViewSet(
         if user.has_hit_summary_limit:
             return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         clips = request.data.get("clips")
-        print('CLIPS:: ',clips)
         search = request.data.get("search")
         instructions = request.data.get("instructions", False)
         has_error = False
@@ -265,6 +265,169 @@ class PRSearchViewSet(
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
 
         return Response(data={"summary": message})
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="regenerate-article-summary",
+    )
+    def regenerate_article_summary(self, request, *args, **kwargs):
+        user = request.user
+        if user.has_hit_summary_limit:
+            return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
+        url = request.data["params"]["url"]
+        original_summary = request.data["params"]["summary"]
+        instructions = request.data["params"]["instructions"]
+        has_error = False
+        attempts = 1
+        token_amount = 1000
+        timeout = 60.0
+        while True:
+            try:
+                article_res = Article(url, config=generate_config())
+                article_res.download()
+                article_res.parse()
+                text = article_res.text
+                open_ai_url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.OPEN_AI_REGENERATE_ARTICLE(
+                   text, original_summary, instructions,
+                )
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    "You are a VP of Communications",
+                    token_amount=token_amount,
+                    top_p=0.1,
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        open_ai_url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                r = open_ai_exceptions._handle_response(r)
+                message = r.get("choices")[0].get("message").get("content").replace("**", "*")
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount <= 2000:
+                    has_error = True
+
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 500
+                    continue
+            except httpx.ReadTimeout as e:
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except ArticleException:
+                return Response(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    data={"error": "We could not access that url"},
+                )
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+        if has_error:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
+
+        return Response(data={"summary": message}) 
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="generate-content",
+    )
+    def generate_content(self, request, *args, **kwargs):
+        user = request.user
+        if user.has_hit_summary_limit:
+            return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
+        url = request.data["params"]["url"]
+        instructions = request.data["params"]["instructions"]
+        style = request.data["params"]["style"]
+        has_error = False
+        attempts = 1
+        token_amount = 1000
+        timeout = 60.0
+        while True:
+            try:
+                article_res = Article(url, config=generate_config())
+                article_res.download()
+                article_res.parse()
+                article = article_res.text
+
+                open_ai_url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.OPEN_AI_GENERATE_CONTENT(
+                    datetime.now().date(), article, '', instructions
+                )
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    "You are a VP of Communications",
+                    token_amount=token_amount,
+                    top_p=0.1,
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        open_ai_url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                r = open_ai_exceptions._handle_response(r)
+                message = r.get("choices")[0].get("message").get("content").replace("**", "*")
+               
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount <= 2000:
+                    has_error = True
+
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 500
+                    continue
+            except httpx.ReadTimeout as e:
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except ArticleException:
+                return Response(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    data={"error": "We could not access that url"},
+                )
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+        if has_error:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
+
+        return Response(data={"content": message})
+
 
     @action(
         methods=["post"],
@@ -581,10 +744,10 @@ def upload_link(request):
             "title": title,
             "source": domain,
             "author": author,
-            "urlToImage": image,
-            "publishedAt": date,
+            "image_url": image,
+            "publish_date": date,
             "description": text,
-            "url": url,
+            "link": url,
         }
         emit_process_website_domain(url, request.user.organization.name)
     except Exception as e:

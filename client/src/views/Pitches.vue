@@ -44,9 +44,7 @@
           <div>
             <div class="paid-center">
               <h3 class="paid-title">Are you sure?</h3>
-              <h5 class="regen-body-title">
-                Writing style will reset to the default model.
-              </h5>
+              <h5 class="regen-body-title">Writing style will reset to the default model.</h5>
             </div>
             <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
           </div>
@@ -558,19 +556,19 @@ export default {
     },
   },
   created() {
-    if (this.$store.state.generatedContent) {
-      this.briefing = this.$store.state.generatedContent.summary
-        .split('<strong>')
-        .filter((item) => item !== '<strong>')
-        .join('')
-        .split('</strong>')
-        .filter((item) => item !== '</strong>')
-        .join('')
-      this.output = `Create a ${
-        this.$store.state.generatedContent.type + ` for ` + this.$store.state.generatedContent.term
-      }`
-      this.type = this.$store.state.generatedContent.type
-    }
+    // if (this.$store.state.generatedContent) {
+    //   this.briefing = this.$store.state.generatedContent.summary
+    //     .split('<strong>')
+    //     .filter((item) => item !== '<strong>')
+    //     .join('')
+    //     .split('</strong>')
+    //     .filter((item) => item !== '</strong>')
+    //     .join('')
+    //   this.output = `Create a ${
+    //     this.$store.state.generatedContent.type + ` for ` + this.$store.state.generatedContent.term
+    //   }`
+    //   this.type = this.$store.state.generatedContent.type
+    // }
   },
   beforeDestroy() {
     this.$store.commit('setGeneratedContent', null)
