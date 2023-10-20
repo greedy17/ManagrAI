@@ -20,7 +20,7 @@ from urllib.parse import urlencode, urlparse
 from django.shortcuts import redirect
 from rest_framework.decorators import action
 from . import constants as comms_consts
-from .models import Search, TwitterAuthAccount, Pitch
+from .models import Search, TwitterAuthAccount, Pitch, Article
 from managr.core.models import User
 from managr.comms import exceptions as comms_exceptions
 from .tasks import emit_process_website_domain

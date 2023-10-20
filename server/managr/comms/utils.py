@@ -1,10 +1,16 @@
 import re
 import json
+import boto3
+import csv
+from datetime import datetime
 from managr.core.utils import Variable_Client
 from newspaper import Config
 from django.db.models import Q
 from .constants import DO_NOT_TRACK_LIST
 from dateutil import parser
+from django.conf import settings
+
+s3 = boto3.client("s3")
 
 user_agents = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
@@ -143,3 +149,51 @@ def normalize_article_data(api_data, article_models):
     normalized_list.extend(normalized_model_list)
     sorted_arr = merge_sort_dates(normalized_list)
     return sorted_arr
+
+
+def create_and_upload_csv(data):
+    file_name = "content_data.csv"
+
+    with open(file_name, "w", newline="") as csv_file:
+        writer = csv.writer(csv_file)
+        if s3.head_object(Bucket="your-s3-bucket-name", Key=file_name, DefaultResponseHeaders={}):
+            writer.writerow(["Organization Name", "User Email", "Type", "Content"])
+        writer.writerow(data)
+
+    s3.upload_file(file_name, "your-s3-bucket-name", file_name)
+
+
+def append_data_to_daily_file(data):
+    bucket_name = settings.AWS_STORAGE_BUCKET_NAME
+    today = datetime.now().strftime("%Y-%m-%d")
+    file_name = f"{settings.ENVIRONMENT}/current week/data_{today}.csv"
+
+    with open(file_name, "a", newline="") as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerow(data)
+
+    s3.upload_file(file_name, bucket_name, file_name)
+
+
+def combine_weekly_data():
+    bucket_name = settings.AWS_STORAGE_BUCKET_NAME
+    prefix = f"{settings.ENVIRONMENT}/current week/"
+    objects = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+
+    combined_data = []
+
+    for obj in objects.get("Contents", []):
+        key = obj["Key"]
+        response = s3.get_object(Bucket=bucket_name, Key=key)
+        data = response["Body"].read().decode("utf-8").splitlines()
+        combined_data.extend(data)
+
+    # Append the combined data to the primary CSV file
+    primary_file_key = "Content Data.csv"
+    response = s3.get_object(Bucket=bucket_name, Key=primary_file_key)
+    primary_data = response["Body"].read().decode("utf-8").splitlines()
+
+    combined_data.extend(primary_data)
+
+    # Upload the updated data to the primary CSV file
+    s3.put_object(Bucket=bucket_name, Key=primary_file_key, Body="\n".join(combined_data))
