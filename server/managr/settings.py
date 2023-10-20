@@ -522,3 +522,6 @@ USE_ELASTICACHE = os.environ.get("USE_ELASTICACHE") == "True" or False
 HTTPCACHE_DIR = "/scrapy_cache/"
 if USE_ELASTICACHE:
     HTTPCACHE_DIR = "/scrapy_cache/"
+
+
+BACKGROUND_TASK_RUN_ASYNC = True

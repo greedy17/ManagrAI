@@ -106,15 +106,6 @@ def normalize_newsapi_to_model(api_data):
     return normalized_data
 
 
-def normalize_article_data(api_data, article_models):
-    normalized_list = []
-    normalized_api_list = normalize_newsapi_to_model(api_data)
-    normalized_list.extend(normalized_api_list)
-    normalized_model_list = [article.fields_to_dict() for article in article_models]
-    normalized_list.extend(normalized_model_list)
-    return normalized_list
-
-
 def merge_sort_dates(arr):
     if len(arr) > 1:
         mid = len(arr) // 2
@@ -142,3 +133,13 @@ def merge_sort_dates(arr):
             j += 1
             k += 1
     return arr
+
+
+def normalize_article_data(api_data, article_models):
+    normalized_list = []
+    normalized_api_list = normalize_newsapi_to_model(api_data)
+    normalized_list.extend(normalized_api_list)
+    normalized_model_list = [article.fields_to_dict() for article in article_models]
+    normalized_list.extend(normalized_model_list)
+    sorted_arr = merge_sort_dates(normalized_list)
+    return sorted_arr

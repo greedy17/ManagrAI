@@ -35,7 +35,7 @@ nylas = "==5.14.1"
 ddtrace = "==0.48.0"
 httpx = "==0.24.1"
 newspaper3k = "*"
-scrapy = "==2.9.0"
+scrapy = "*"
 typing-extensions = "==4.7.1"
 cryptography = "*"
 
