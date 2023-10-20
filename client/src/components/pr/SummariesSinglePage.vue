@@ -1256,6 +1256,7 @@ export default {
       outputInstructions: '',
       loading: false,
       summaryLoading: false,
+      shouldCancel: false,
       regenModal: false,
       filteredArticles: [],
       summary: '',
@@ -1293,7 +1294,7 @@ export default {
       ],
       promptSuggestions: [
         `Summarize the news`,
-        'Select the 5 most impactful news stories',
+        'Summarize the news for XXX and its impact',
         'List the top 5 sources based on size & popularity',
         `Provide pitch ideas and background on [JOURNALIST NAME]`,
         `As XXX PR agency, provide creative suggestions per this news, think outside the box`,
@@ -1805,6 +1806,10 @@ export default {
     goToContact() {
       window.open('https://managr.ai/contact', '_blank')
     },
+    stopLoading() {
+      this.loading = false
+      this.summaryLoading = false
+    },
     async generateNewSearch() {
       if (!this.isPaid && this.searchesUsed >= 10) {
         this.openPaidModal(
@@ -1824,14 +1829,21 @@ export default {
         this.summaryLoading = true
         this.changeSearch({ search: this.newSearch, template: this.newTemplate })
         try {
-          this.getClips().then((response) => {
-            this.getSummary(this.filteredArticles, this.newTemplate).then((response) => {
-              if (this.searchSaved) {
-                this.updateSearch()
-              }
-              this.refreshUser()
-            })
-          })
+          if (this.shouldCancel) {
+            return this.stopLoading()
+          }
+          await this.getClips()
+          if (this.shouldCancel) {
+            return this.stopLoading()
+          }
+          await this.getSummary(this.filteredArticles, this.newTemplate)
+          if (this.shouldCancel) {
+            return this.stopLoading()
+          }
+          if (this.searchSaved) {
+            this.updateSearch()
+          }
+          this.refreshUser()
         } catch (e) {
           console.log(e)
         }
