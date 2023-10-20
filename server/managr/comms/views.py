@@ -116,8 +116,8 @@ class PRSearchViewSet(
                     articles = news_res["articles"]
                     query_input = boolean
                 articles = [article for article in articles if article["title"] != "[Removed]"]
-                internal_articles = Article.search_by_query(query_input)
-                articles = normalize_article_data(articles, internal_articles)
+                # internal_articles = Article.search_by_query(query_input)
+                # articles = normalize_article_data(articles, internal_articles)
                 break
             except Exception as e:
                 has_error = True
