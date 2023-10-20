@@ -33,7 +33,7 @@ from rest_framework.decorators import (
     api_view,
     permission_classes,
 )
-from managr.comms.utils import generate_config, normalize_article_data
+from managr.comms.utils import generate_config, normalize_article_data, normalize_newsapi_to_model
 
 
 logger = logging.getLogger("managr")
@@ -118,6 +118,7 @@ class PRSearchViewSet(
                 articles = [article for article in articles if article["title"] != "[Removed]"]
                 # internal_articles = Article.search_by_query(query_input)
                 # articles = normalize_article_data(articles, internal_articles)
+                articles = normalize_newsapi_to_model(articles)
                 break
             except Exception as e:
                 has_error = True
