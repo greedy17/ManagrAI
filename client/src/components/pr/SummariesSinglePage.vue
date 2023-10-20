@@ -134,38 +134,60 @@
     </Modal>
 
     <Transition name="slide-left">
-      <Reports
-        v-if="selectedSearch && ShowReport"
-        @toggle-report="toggleReport"
-        @clear-clips="clearClips"
-        @remove-clip="removeClip"
-        @edit-clip="editClip"
-        @add-clip="addClip"
-        @set-added-clips="setAddedClips"
-        :clips="allCategoryClips"
-        :defaultSearch="newSearch"
-      />
+      <div v-if="selectedSearch && ShowReport" class="reports-width-height">
+        <div class="reports-lip-container" @click="toggleReport">
+          <div class="reports-lip">
+            <img
+              src="@/assets/images/angle-double-small-right.svg"
+              class="lip-img invert-dark-blue"
+            />
+          </div>
+        </div>
+        <Reports
+          @toggle-report="toggleReport"
+          @clear-clips="clearClips"
+          @remove-clip="removeClip"
+          @edit-clip="editClip"
+          @add-clip="addClip"
+          @set-added-clips="setAddedClips"
+          :clips="allCategoryClips"
+          :defaultSearch="newSearch"
+        />
+      </div>
     </Transition>
 
     <div @click="toggleReport" v-if="selectedSearch && !ShowReport" class="floating-action-bar">
+      <!-- <div class="reports-lip-container-bar">
+        <div class="reports-lip-bar">
+          <img
+            src="@/assets/images/angle-double-small-right.svg"
+            class="lip-img invert-dark-blue flip"
+          />
+          <div class="blue-box" />
+        </div>
+      </div> -->
+
       <div class="main-slot">
         <img src="@/assets/images/share.svg" height="10px" alt="" />
       </div>
 
       <div class="slot-container">
         <div v-for="(clip, i) in allCategoryClips" :key="i">
-          <img v-if="i < 3" :src="clip.image_url" class="small-photo" />
+          <img v-if="i < 5" :src="clip.urlToImage" class="small-photo" />
         </div>
 
         <div v-if="!allCategoryClips || allCategoryClips.length < 1" class="empty-slot"></div>
         <div v-if="!allCategoryClips || allCategoryClips.length < 2" class="empty-slot"></div>
         <div v-if="!allCategoryClips || allCategoryClips.length < 3" class="empty-slot"></div>
+        <div v-if="!allCategoryClips || allCategoryClips.length < 4" class="empty-slot"></div>
+        <div v-if="!allCategoryClips || allCategoryClips.length < 5" class="empty-slot"></div>
       </div>
 
       <div class="slot-count">
         <small>{{ allCategoryClips ? allCategoryClips.length : 0 }}/20</small>
       </div>
     </div>
+
     <div class="center column" :class="{ fullHeight: showingDropdown }" v-if="page === 'SUMMARIES'">
       <div v-if="!selectedSearch" class="switcher">
         <div
@@ -754,7 +776,7 @@
                   <div class="card-col">
                     <div class="card-top-left">
                       <!-- <img :src="article.icon" /> -->
-                      <span>{{ article.source.name }}</span>
+                      <span>{{ article.source }}</span>
                     </div>
                     <h1 class="article-title" @click="goToArticle(article.link)">
                       {{ article.title }}
@@ -961,7 +983,7 @@
                   <div class="card-col">
                     <div class="card-top-left">
                       <!-- <img :src="article.icon" /> -->
-                      <span>{{ article.source.name || article.source }}</span>
+                      <span>{{ article.source }}</span>
                     </div>
                     <h1 class="article-title" @click="goToArticle(article.link)">
                       {{ article.title }}
@@ -1274,14 +1296,15 @@ export default {
         'Select the 5 most impactful news stories',
         'List the top 5 sources based on size & popularity',
         `Provide pitch ideas and background on [JOURNALIST NAME]`,
-        'Convert the most entertaining news story about XXX into a blog post',
         `As XXX PR agency, provide creative suggestions per this news, think outside the box`,
+        'Convert the most entertaining news story about XXX into a blog post',
         'Craft short responses on behalf of XXX to the stories that need it',
         `Write a highly engaging LinkedIn post based on this coverage for XXX`,
         `Draft an entertaining Twitter post based on this coverage for XXX`,
         `Based on recent news & your knowledge base ...`,
         'Generate 5 questions & answers journlists would ask based on this news',
         'Suggest a strategy to combat this negative coverage',
+        'Find a short, fun fact from the news about XXX',
       ],
     }
   },
@@ -1343,7 +1366,7 @@ export default {
         this.optionIndex = index
         this.contentUrl = url
         this.contentType = val
-        this.contentInstructions = `Create a ${val} for ${this.newSearch}`
+        this.contentInstructions = `Turn this article into a ${val} for ${this.newSearch}`
         // this.setArticlePitchContent(url,sum)
       }
     },
@@ -2002,7 +2025,7 @@ export default {
     getArticleDescriptions(articles) {
       return articles.map(
         (a) =>
-          `Content:${a.description} Date:${a.publish_date}, Source:${a.source.name}, Author:${a.author}`,
+          `Content:${a.description} Date:${a.publish_date}, Source:${a.source}, Author:${a.author}`,
       )
     },
     async getTweetSummary(instructions = '') {
@@ -2724,13 +2747,12 @@ export default {
   filter: invert(70%);
 }
 
+.invert-dark-blue {
+  filter: invert(22%) sepia(51%) saturate(390%) hue-rotate(161deg) brightness(92%) contrast(87%);
+}
 .inverted {
   filter: invert(100%);
 }
-
-// .invert-dark-blue {
-//   filter: invert(22%) sepia(51%) saturate(390%) hue-rotate(161deg) brightness(92%) contrast(87%);
-// }
 
 // .img-border {
 //   border: 1px solid #416177;
@@ -3169,12 +3191,13 @@ button:disabled {
   background-color: $white-blue;
   position: fixed;
   z-index: 3000;
-  right: 24px;
-  top: 40vh;
+  right: 16px;
+  top: 36vh;
   min-height: 160px;
   border-radius: 32px;
   border: 1px solid $white-blue;
-  width: 34px;
+  // width: 34px;
+  width: 46px;
   display: flex;
   padding: 4px 0 8px 0;
   flex-direction: column;
@@ -4390,6 +4413,76 @@ header {
     @media only screen and (max-width: 600px) {
       width: 80vw;
     }
+  }
+}
+.reports-lip-container {
+  position: fixed;
+  // top: 535%;
+  top: 50%;
+  right: 488px;
+  z-index: 5500;
+  cursor: pointer;
+  width: 1.5rem;
+}
+.reports-lip {
+  display: flex;
+  align-items: center;
+  background-color: $offer-white;
+  border-radius: 20px;
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+  height: 4rem;
+}
+.reports-lip-container-bar {
+  position: absolute;
+  top: 80px;
+  right: 32px;
+  z-index: -1;
+  cursor: pointer;
+  width: 2.5rem;
+}
+.reports-lip-bar {
+  display: flex;
+  align-items: center;
+  background-color: $white-blue;
+  border-radius: 20px;
+  border-left: 1px solid $white-blue;
+  border-top: 1px solid $white-blue;
+  border-bottom: 1px solid $white-blue;
+  // height: 7rem;
+  height: 4rem;
+  z-index: -1;
+}
+.blue-box {
+  background-color: $white-blue;
+  height: 4rem;
+  width: 21px;
+  position: absolute;
+  right: -1px;
+  // border-left: 5px solid $white-blue;
+}
+.lip-img {
+  height: 16px;
+  margin-left: 1px;
+  z-index: 5500;
+}
+.flip {
+  transform: rotate(180deg);
+}
+.reports-width-height {
+  width: 500px;
+  height: 100vh;
+  overflow-y: auto;
+  font-family: $thin-font-family;
+  padding: 0 8px 0 16px;
+  background-color: $offer-white;
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+  position: fixed;
+  z-index: 3000;
+  right: 0;
+  top: 0;
+  box-shadow: 30px 30px 40px;
+  @media only screen and (max-width: 600px) {
+    width: 100vw;
   }
 }
 </style>
