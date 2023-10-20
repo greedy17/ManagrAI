@@ -33,7 +33,7 @@ from rest_framework.decorators import (
     api_view,
     permission_classes,
 )
-from managr.comms.utils import generate_config, normalize_newsapi_to_model
+from managr.comms.utils import generate_config, normalize_article_data
 
 
 logger = logging.getLogger("managr")
@@ -116,12 +116,13 @@ class PRSearchViewSet(
                     articles = news_res["articles"]
                     query_input = boolean
                 articles = [article for article in articles if article["title"] != "[Removed]"]
-                articles = normalize_newsapi_to_model(articles)
+                internal_articles = Article.search_by_query(query_input)
+                articles = normalize_article_data(articles, internal_articles)
                 break
             except Exception as e:
                 has_error = True
                 logger.exception(e)
-                articles = e
+                articles = str(e)
                 break
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": articles})
@@ -291,7 +292,9 @@ class PRSearchViewSet(
                 text = article_res.text
                 open_ai_url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_REGENERATE_ARTICLE(
-                   text, original_summary, instructions,
+                    text,
+                    original_summary,
+                    instructions,
                 )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
@@ -344,7 +347,7 @@ class PRSearchViewSet(
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
 
-        return Response(data={"summary": message}) 
+        return Response(data={"summary": message})
 
     @action(
         methods=["post"],
@@ -372,7 +375,7 @@ class PRSearchViewSet(
 
                 open_ai_url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_GENERATE_CONTENT(
-                    datetime.now().date(), article, '', instructions
+                    datetime.now().date(), article, "", instructions
                 )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
@@ -389,7 +392,7 @@ class PRSearchViewSet(
                     )
                 r = open_ai_exceptions._handle_response(r)
                 message = r.get("choices")[0].get("message").get("content").replace("**", "*")
-               
+
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -427,7 +430,6 @@ class PRSearchViewSet(
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
 
         return Response(data={"content": message})
-
 
     @action(
         methods=["post"],

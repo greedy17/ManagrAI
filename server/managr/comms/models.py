@@ -398,4 +398,6 @@ class Article(TimeStampModel):
             .filter(rank__gt=0)
             .order_by("-publish_date")
         )
+        if len(articles):
+            articles[:20]
         return list(articles)
