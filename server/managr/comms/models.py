@@ -354,6 +354,12 @@ class NewsSource(TimeStampModel):
             is_active=self.is_active,
         )
 
+    @classmethod
+    def domain_list(cls):
+        active_sources = cls.objects.filter(is_active=True)
+        source_list = [source.domain for source in active_sources]
+        return source_list
+
 
 class Article(TimeStampModel):
     title = models.CharField(max_length=150)
