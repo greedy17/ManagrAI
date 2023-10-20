@@ -399,5 +399,5 @@ class Article(TimeStampModel):
             .order_by("-publish_date")
         )
         if len(articles):
-            articles[:20]
+            articles = articles[:20]
         return list(articles)
