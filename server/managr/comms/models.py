@@ -277,6 +277,7 @@ class Pitch(TimeStampModel):
 
 class NewsSource(TimeStampModel):
     domain = models.CharField(max_length=255, unique=True)
+    site_name = models.CharField(max_length=255, blank=True, null=True)
     rss_feed_url = models.URLField(blank=True, null=True)
     last_scraped = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)

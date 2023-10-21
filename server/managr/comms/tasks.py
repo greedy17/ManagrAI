@@ -330,7 +330,7 @@ def _process_article_summary(payload, context):
 @background()
 def _process_website_domain(url, organization_name):
     base_domain = extract_base_domain(url)
-    full_domain = "https://{base_domain}"
+    full_domain = f"https://{base_domain}"
     if base_domain:
         try:
             database_check = NewsSource.objects.get(domain=full_domain)
