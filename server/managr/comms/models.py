@@ -313,7 +313,7 @@ class NewsSource(TimeStampModel):
         if selector_type == "year":
             selector = f"contains(@href, '{str(datetime.now().year)}')"
         if selector_type == "value":
-            selector = selector_split[1]
+            selector = f"contains(@href, '{selector_split[1]}')"
         if selector_type == "class":
             selector = f"contains(@class, '{selector_split[1]}')"
         return selector

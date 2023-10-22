@@ -53,22 +53,36 @@ def boolean_search_to_query(search_string):
     query = Q()
     current_query = Q()
     is_negative = False
+    operator_last = False
+    current_query_string = ""
     for term in terms:
-        if term == "AND":
-            query &= current_query
-            current_query = Q()
-        elif term == "OR":
-            pass
-        elif term == "NOT":
-            is_negative = True
-        else:
-            term = term.replace('"', "")
-            term_query = Q(search_vector_field__icontains=term)
+        if term in ["AND", "OR", "NOT"] and len(current_query_string):
+            current_query_string = current_query_string.replace('"', "")
+            term_query = Q(search_vector_field__icontains=current_query_string)
             if is_negative:
                 current_query &= ~term_query
                 is_negative = False
             else:
                 current_query |= term_query
+        if term == "AND":
+            operator_last = True
+            current_query_string = ""
+            query &= current_query
+            current_query = Q()
+        elif term == "OR":
+            operator_last = True
+            current_query_string = ""
+            pass
+        elif term == "NOT":
+            operator_last = True
+            current_query_string = ""
+            is_negative = True
+        else:
+            if operator_last:
+                operator_last = False
+                current_query_string = term
+            else:
+                current_query_string += f" {term}"
     query &= current_query
     return query
 
