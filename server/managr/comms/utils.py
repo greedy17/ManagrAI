@@ -55,9 +55,11 @@ def boolean_search_to_query(search_string):
     is_negative = False
     operator_last = False
     current_query_string = ""
-    for term in terms:
-        if term in ["AND", "OR", "NOT"] and len(current_query_string):
-            current_query_string = current_query_string.replace('"', "")
+    for idx, term in enumerate(terms):
+        if (term in ["AND", "OR", "NOT"] and len(current_query_string)) or idx == len(terms) - 1:
+            current_query_string = (
+                current_query_string.replace('"', "").replace("(", "").replace(")", "")
+            )
             term_query = Q(search_vector_field__icontains=current_query_string)
             if is_negative:
                 current_query &= ~term_query
@@ -82,7 +84,10 @@ def boolean_search_to_query(search_string):
                 operator_last = False
                 current_query_string = term
             else:
-                current_query_string += f" {term}"
+                if len(current_query_string):
+                    current_query_string += f" {term}"
+                else:
+                    current_query_string += f"{term}"
     query &= current_query
     return query
 
