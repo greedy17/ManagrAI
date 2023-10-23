@@ -55,29 +55,42 @@ def boolean_search_to_query(search_string):
     is_negative = False
     operator_last = False
     current_query_string = ""
+    current_operator = None
     for idx, term in enumerate(terms):
-        if (term in ["AND", "OR", "NOT"] and len(current_query_string)) or idx == len(terms) - 1:
+        if (term in ["AND", "OR", "NOT"] and len(current_query_string) > 0) or idx == len(
+            terms
+        ) - 1:
+            if idx == (len(terms) - 1):
+                if len(current_query_string):
+                    current_query_string += f" {term}"
+                else:
+                    current_query_string += f"{term}"
             current_query_string = (
                 current_query_string.replace('"', "").replace("(", "").replace(")", "")
             )
             term_query = Q(search_vector_field__icontains=current_query_string)
             if is_negative:
-                current_query &= ~term_query
+                if len(current_query):
+                    query &= current_query
+                query &= ~term_query
+                current_query = Q()
                 is_negative = False
             else:
-                current_query |= term_query
+                if current_operator == "AND" or current_operator is None:
+                    query &= current_query
+                    current_query = term_query
+                else:
+                    current_query |= term_query
+            current_query_string = ""
+            current_operator = None
         if term == "AND":
             operator_last = True
-            current_query_string = ""
-            query &= current_query
-            current_query = Q()
+            current_operator = "AND"
         elif term == "OR":
             operator_last = True
-            current_query_string = ""
-            pass
+            current_operator = "OR"
         elif term == "NOT":
             operator_last = True
-            current_query_string = ""
             is_negative = True
         else:
             if operator_last:
