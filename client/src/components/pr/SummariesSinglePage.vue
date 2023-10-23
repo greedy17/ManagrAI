@@ -1271,6 +1271,7 @@ export default {
       showingDropdown: false,
       showGenerateDropdown: false,
       selectedOption: null,
+      controller: new AbortController(),
       generateOptions: [
         { name: 'Press Release', value: `Press Release` },
         { name: 'Statement', value: 'Statement' },
@@ -1295,9 +1296,9 @@ export default {
       promptSuggestions: [
         `Summarize the news`,
         'Summarize the news for XXX and its impact',
-        'List the top 5 sources based on size & popularity',
-        `Provide pitch ideas and background on [JOURNALIST NAME]`,
         `As XXX PR agency, provide creative suggestions per this news, think outside the box`,
+        `Create a media monitoring report for XXX. Include top sources (based on popularity and size), number of articles, sentiment, and any other important metrics`,
+        `Provide pitch ideas and background on [JOURNALIST NAME]`,
         'Convert the most entertaining news story about XXX into a blog post',
         'Craft short responses on behalf of XXX to the stories that need it',
         `Write a highly engaging LinkedIn post based on this coverage for XXX`,
@@ -1312,6 +1313,7 @@ export default {
   created() {
     // this.checkInterval = setInterval(this.checkTokenExpiry, 60000)
     this.addedClips = this.$store.state.currentReportClips
+    this.shouldCancel = false
   },
   watch: {
     typedMessage: 'changeIndex',
@@ -1639,6 +1641,7 @@ export default {
       this.showingPromptDropdown = false
     },
     resetSearch() {
+      this.abortFunctions()
       this.clearNewSearch()
       this.addedClips = []
       // this.$store.dispatch('updateCurrentReportClips', this.addedClips)
@@ -1818,6 +1821,9 @@ export default {
         return
       }
       this.addedClips = this.$store.state.currentReportClips
+      if (this.shouldCancel) {
+        return this.stopLoading()
+      }
       if (this.mainView !== 'website' && (!this.newSearch || this.newSearch.length < 3)) {
         return
       } else if (this.mainView === 'social') {
@@ -1854,12 +1860,18 @@ export default {
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       this.summaryLoading = true
       try {
+        if (this.shouldCancel) {
+          return this.stopLoading()
+        }
         let response
         if (this.addedArticles.length === 1) {
           response = await this.getArticleSummary(this.addedArticles[0].link, this.newTemplate)
           this.summary = response
         } else {
           response = await this.getSummary(this.addedArticles, this.newTemplate)
+        }
+        if (this.shouldCancel) {
+          return this.stopLoading()
         }
         if (this.searchSaved) {
           this.updateSearch()
@@ -1968,6 +1980,10 @@ export default {
         }, 2000)
       }
     },
+    abortFunctions() {
+      this.shouldCancel = true
+      this.controller.abort()
+    },
     async getClips() {
       try {
         await Comms.api
@@ -1975,9 +1991,8 @@ export default {
             search: this.newSearch,
             boolean: this.searchSaved ? this.booleanString : null,
             user_id: this.user.id,
-          })
+          }, this.controller.signal)
           .then((response) => {
-            console.log(response)
             this.filteredArticles = response.articles
             this.booleanString = response.string
           })
@@ -1994,12 +2009,18 @@ export default {
       this.summaryLoading = true
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       try {
+        if (this.shouldCancel) {
+          return this.stopLoading()
+        }
         await Comms.api
           .getTweets({
             search: this.newSearch,
             user_id: this.user.id,
           })
           .then((response) => {
+            if (this.shouldCancel) {
+              return this.stopLoading()
+            }
             if (response.tweets) {
               this.tweets = response.tweets
               this.tweetMedia = response.includes.media
@@ -2044,6 +2065,9 @@ export default {
       let tweets = this.prepareTweetSummary(this.tweets)
       this.summaryLoading = true
       try {
+        if (this.shouldCancel) {
+          return this.stopLoading()
+        }
         await Comms.api
           .getTweetSummary({
             tweets: tweets,
@@ -2051,6 +2075,9 @@ export default {
             instructions: this.newTemplate,
           })
           .then((response) => {
+            if (this.shouldCancel) {
+              return this.stopLoading()
+            }
             this.summary = response.summary
             this.refreshUser()
           })
@@ -2072,13 +2099,19 @@ export default {
       const allClips = this.getArticleDescriptions(clips)
       this.summaryLoading = true
       try {
+        if (this.shouldCancel) {
+          return this.stopLoading()
+        }
         await Comms.api
           .getSummary({
             clips: allClips,
             search: this.newSearch,
             instructions: instructions,
-          })
+          }, this.controller.signal)
           .then((response) => {
+            if (this.shouldCancel) {
+              return this.stopLoading()
+            }
             this.summary = response.summary
           })
       } catch (e) {
@@ -2141,12 +2174,18 @@ export default {
       this.loadingUrl = url
 
       try {
+        if (this.shouldCancel) {
+          return this.stopLoading()
+        }
         const response = await Comms.api.getArticleSummary({
           url: url,
           search: this.newSearch,
           instructions: instructions,
           length: length,
         })
+        if (this.shouldCancel) {
+          return this.stopLoading()
+        }
         selectedClip['summary'] = response.summary
         if (!this.addedArticles.length) {
           this.filteredArticles = this.filteredArticles.filter(
@@ -2160,6 +2199,9 @@ export default {
           this.addedArticles.unshift(selectedClip)
         }
 
+        if (this.shouldCancel) {
+          return this.stopLoading()
+        }
         this.refreshUser()
         this.scrollToTopDivider()
         return response.summary
@@ -2362,6 +2404,9 @@ export default {
     fromNav() {
       return this.$store.state.fromNav
     },
+  },
+  beforeDestroy() {
+    this.abortFunctions()
   },
   directives: {
     autoresize: {
