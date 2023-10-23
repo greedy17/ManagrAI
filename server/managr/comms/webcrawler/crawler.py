@@ -61,7 +61,6 @@ class NewsSpider(scrapy.Spider):
     def parse(self, response):
         url = response.url
         source = NewsSource.objects.get(domain=url)
-        print(source)
         if source.last_scraped:
             regex = source.create_search_regex()
             article_links = response.xpath(regex)
@@ -77,7 +76,6 @@ class NewsSpider(scrapy.Spider):
                         cb_kwargs={"source": source},
                     )
         else:
-            print("here")
             self.process_new_url(source, response)
         self.urls_processed += 1
 
@@ -109,6 +107,7 @@ class NewsSpider(scrapy.Spider):
 
     def process_new_url(self, source, response):
         anchor_tags = response.css("a")
+        site_name = response.xpath("//meta[contains(@property, 'site_name')]/@content")
         scrape_dict = {}
         for idx, link in enumerate(anchor_tags):
             href = link.css("::attr(href)").get()
@@ -123,6 +122,7 @@ class NewsSpider(scrapy.Spider):
                 "classes": classes,
             }
         source.scrape_data = scrape_dict
+        source.site_name = site_name
         source.last_scraped = datetime.datetime.now()
         source.save()
         return

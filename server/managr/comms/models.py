@@ -277,6 +277,7 @@ class Pitch(TimeStampModel):
 
 class NewsSource(TimeStampModel):
     domain = models.CharField(max_length=255, unique=True)
+    site_name = models.CharField(max_length=255, blank=True, null=True)
     rss_feed_url = models.URLField(blank=True, null=True)
     last_scraped = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
@@ -312,7 +313,7 @@ class NewsSource(TimeStampModel):
         if selector_type == "year":
             selector = f"contains(@href, '{str(datetime.now().year)}')"
         if selector_type == "value":
-            selector = selector_split[1]
+            selector = f"contains(@href, '{selector_split[1]}')"
         if selector_type == "class":
             selector = f"contains(@class, '{selector_split[1]}')"
         return selector
@@ -392,12 +393,15 @@ class Article(TimeStampModel):
 
     @classmethod
     def search_by_query(cls, boolean_string):
-        query = SearchQuery(boolean_string)
+        from managr.comms.utils import boolean_search_to_query
+
+        converted_boolean = boolean_search_to_query(boolean_string)
+        query = SearchQuery(str(converted_boolean))
         articles = (
             cls.objects.annotate(rank=SearchRank(F("content_search_vector"), query))
             .filter(rank__gt=0)
             .order_by("-publish_date")
         )
         if len(articles):
-            articles[:20]
+            articles = articles[:20]
         return list(articles)

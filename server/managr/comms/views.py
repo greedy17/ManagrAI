@@ -20,7 +20,8 @@ from urllib.parse import urlencode, urlparse
 from django.shortcuts import redirect
 from rest_framework.decorators import action
 from . import constants as comms_consts
-from .models import Search, TwitterAuthAccount, Pitch, Article
+from .models import Search, TwitterAuthAccount, Pitch
+from .models import Article as InternalArticle
 from managr.core.models import User
 from managr.comms import exceptions as comms_exceptions
 from .tasks import emit_process_website_domain
@@ -116,9 +117,10 @@ class PRSearchViewSet(
                     articles = news_res["articles"]
                     query_input = boolean
                 articles = [article for article in articles if article["title"] != "[Removed]"]
-                # internal_articles = Article.search_by_query(query_input)
-                # articles = normalize_article_data(articles, internal_articles)
-                articles = normalize_newsapi_to_model(articles)
+                internal_articles = InternalArticle.search_by_query(query_input)
+                articles = normalize_article_data(articles, internal_articles)
+                print(articles)
+                # articles = normalize_newsapi_to_model(articles)
                 break
             except Exception as e:
                 has_error = True
