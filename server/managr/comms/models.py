@@ -393,7 +393,10 @@ class Article(TimeStampModel):
 
     @classmethod
     def search_by_query(cls, boolean_string):
-        query = SearchQuery(boolean_string)
+        from managr.comms.utils import boolean_search_to_query
+
+        converted_boolean = boolean_search_to_query(boolean_string)
+        query = SearchQuery(str(converted_boolean))
         articles = (
             cls.objects.annotate(rank=SearchRank(F("content_search_vector"), query))
             .filter(rank__gt=0)
