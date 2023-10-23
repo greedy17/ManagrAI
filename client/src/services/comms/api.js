@@ -133,17 +133,17 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
-    async getClips(data) {
+    async getClips(data, signal) {
         try {
-            const res = await this.client.get(CommsApi.ENDPOINT + 'clips/', { params: data })
+            const res = await this.client.get(CommsApi.ENDPOINT + 'clips/', { signal, params: data })
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
-    async getSummary(data) {
+    async getSummary(data, signal) {
         try {
-            const res = await this.client.post(CommsApi.ENDPOINT + 'summary/', data)
+            const res = await this.client.post(CommsApi.ENDPOINT + 'summary/', data, { signal })
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
