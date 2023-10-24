@@ -1827,10 +1827,13 @@ export default {
       if (this.mainView !== 'website' && (!this.newSearch || this.newSearch.length < 3)) {
         return
       } else if (this.mainView === 'social') {
+        this.closeRegenModal()
         this.getTweets()
       } else if (this.mainView === 'website') {
+        this.closeRegenModal()
         this.getSourceSummary()
       } else {
+        this.closeRegenModal()
         this.loading = true
         this.summaryLoading = true
         this.changeSearch({ search: this.newSearch, template: this.newTemplate })
@@ -1854,7 +1857,6 @@ export default {
           console.log(e)
         }
       }
-      this.closeRegenModal()
     },
     async getSourceSummary() {
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
