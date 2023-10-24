@@ -3,6 +3,7 @@ import json
 import boto3
 import csv
 from datetime import datetime
+from functools import reduce
 from managr.core.utils import Variable_Client
 from newspaper import Config
 from django.db.models import Q
@@ -48,60 +49,131 @@ def extract_base_domain(article_link):
     return None
 
 
-def boolean_search_to_query(search_string):
-    terms = search_string.split()
-    query = Q()
-    current_query = Q()
-    is_negative = False
-    operator_last = False
-    current_query_string = ""
-    current_operator = None
+def split_and_combine_terms(string):
+    terms = string.replace('"', "").replace("(", "").replace(")", "").split()
+    corrected_terms = []
+    current_term = ""
     for idx, term in enumerate(terms):
-        if (term in ["AND", "OR", "NOT"] and len(current_query_string) > 0) or idx == len(
-            terms
-        ) - 1:
-            if idx == (len(terms) - 1):
-                if len(current_query_string):
-                    current_query_string += f" {term}"
-                else:
-                    current_query_string += f"{term}"
-            current_query_string = (
-                current_query_string.replace('"', "").replace("(", "").replace(")", "")
-            )
-            term_query = Q(content_search_vector__icontains=current_query_string)
-            if is_negative:
-                if len(current_query):
-                    query &= current_query
-                query &= ~term_query
-                current_query = Q()
-                is_negative = False
+        if term in ["AND", "OR", "NOT"]:
+            corrected_terms.append(current_term)
+            current_term = ""
+            corrected_terms.append(term)
+        elif idx == len(terms) - 1:
+            if len(current_term):
+                current_term += f" {term}"
             else:
-                if current_operator == "AND" or current_operator is None:
-                    query &= current_query
-                    current_query = term_query
-                else:
-                    current_query |= term_query
-            current_query_string = ""
-            current_operator = None
-        if term == "AND":
-            operator_last = True
-            current_operator = "AND"
+                current_term = term
+            corrected_terms.append(current_term)
+        else:
+            if len(current_term):
+                current_term += f" {term}"
+            else:
+                current_term = term
+    return corrected_terms
+
+
+# def boolean_search_to_query(search_string):
+#     terms = search_string.split()
+#     query = Q()
+#     current_query = Q()
+#     is_negative = False
+#     operator_last = False
+#     current_query_string = ""
+#     current_operator = None
+#     for idx, term in enumerate(terms):
+#         if (term in ["AND", "OR", "NOT"] and len(current_query_string) > 0) or idx == len(
+#             terms
+#         ) - 1:
+#             if idx == (len(terms) - 1):
+#                 if len(current_query_string):
+#                     current_query_string += f" {term}"
+#                 else:
+#                     current_query_string += f"{term}"
+#             current_query_string = (
+#                 current_query_string.replace('"', "").replace("(", "").replace(")", "")
+#             )
+#             term_query = Q(content_search_vector__icontains=current_query_string)
+#             if is_negative:
+#                 if len(current_query):
+#                     query &= current_query
+#                 query &= ~term_query
+#                 current_query = Q()
+#                 is_negative = False
+#             else:
+#                 if current_operator == "AND" or current_operator is None:
+#                     query &= current_query
+#                     current_query = term_query
+#                 else:
+#                     current_query |= term_query
+#             current_query_string = ""
+#             current_operator = None
+#         if term == "AND":
+#             operator_last = True
+#             current_operator = "AND"
+#         elif term == "OR":
+#             operator_last = True
+#             current_operator = "OR"
+#         elif term == "NOT":
+#             current_operator = "NOT"
+#             operator_last = True
+#             is_negative = True
+#         else:
+#             if operator_last:
+#                 operator_last = False
+#                 current_query_string = term
+#             else:
+#                 if len(current_query_string):
+#                     current_query_string += f" {term}"
+#                 else:
+#                     current_query_string += f"{term}"
+#     query &= current_query
+#     return query
+
+
+def boolean_search_to_query(search_string):
+    term_list = split_and_combine_terms(search_string)
+    query = Q()
+    current_q_objects = []
+    current_query = None
+    is_negative = False
+    for idx, term in enumerate(term_list):
+        if idx == len(term_list) - 1:
+            current_query = Q(content_search_vector__icontains=term)
+            if len(current_q_objects):
+                if current_query is not None:
+                    current_q_objects.append(current_query)
+                current_query = reduce(lambda q1, q2: q1 | q2, current_q_objects)
+                current_q_objects = []
+            if is_negative:
+                query &= ~current_query
+            else:
+                query &= current_query
+        elif term == "AND":
+            if len(current_q_objects):
+                current_query = reduce(lambda q1, q2: q1 | q2, current_q_objects)
+                current_q_objects = []
+            query &= current_query
+            current_query = None
+            is_negative = False
         elif term == "OR":
-            operator_last = True
-            current_operator = "OR"
+            if current_query is not None:
+                current_q_objects.append(current_query)
+            current_query = None
         elif term == "NOT":
-            operator_last = True
+            if len(current_q_objects):
+                if current_query is not None:
+                    current_q_objects.append(current_query)
+                current_query = reduce(lambda q1, q2: q1 | q2, current_q_objects)
+                current_q_objects = []
+            if current_query:
+                if is_negative:
+                    query &= ~current_query
+                else:
+                    query &= current_query
+            current_query = None
             is_negative = True
         else:
-            if operator_last:
-                operator_last = False
-                current_query_string = term
-            else:
-                if len(current_query_string):
-                    current_query_string += f" {term}"
-                else:
-                    current_query_string += f"{term}"
-    query &= current_query
+            current_query = Q(content_search_vector__icontains=term)
     return query
 
 
@@ -180,6 +252,7 @@ def normalize_article_data(api_data, article_models):
     normalized_model_list = [article.fields_to_dict() for article in article_models]
     normalized_list.extend(normalized_model_list)
     sorted_arr = merge_sort_dates(normalized_list)
+    sorted_arr.reverse()
     return sorted_arr
 
 
