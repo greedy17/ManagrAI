@@ -16,7 +16,7 @@ from urllib.parse import urlencode
 import base64
 import hashlib
 from django.contrib.postgres.fields import JSONField, ArrayField
-from django.contrib.postgres.search import SearchVectorField, SearchQuery, SearchRank
+from django.contrib.postgres.search import SearchVectorField, SearchQuery, SearchRank, SearchVector
 from django.contrib.postgres.indexes import GinIndex
 
 logger = logging.getLogger("managr")
@@ -380,6 +380,10 @@ class Article(TimeStampModel):
             GinIndex(fields=["content_search_vector"]),
         ]
 
+    def save(self, *args, **kwargs):
+        self.content_search_vector = SearchVector("content")
+        super().save(*args, **kwargs)
+
     def fields_to_dict(self):
         return dict(
             title=self.title,
@@ -396,12 +400,8 @@ class Article(TimeStampModel):
         from managr.comms.utils import boolean_search_to_query
 
         converted_boolean = boolean_search_to_query(boolean_string)
-        query = SearchQuery(str(converted_boolean))
-        articles = (
-            cls.objects.annotate(rank=SearchRank(F("content_search_vector"), query))
-            .filter(rank__gt=0)
-            .order_by("-publish_date")
-        )
+        query = converted_boolean
+        articles = Article.objects.filter(query)
         if len(articles):
             articles = articles[:20]
         return list(articles)

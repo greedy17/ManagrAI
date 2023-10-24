@@ -68,7 +68,7 @@ def boolean_search_to_query(search_string):
             current_query_string = (
                 current_query_string.replace('"', "").replace("(", "").replace(")", "")
             )
-            term_query = Q(search_vector_field__icontains=current_query_string)
+            term_query = Q(content_search_vector__icontains=current_query_string)
             if is_negative:
                 if len(current_query):
                     query &= current_query
