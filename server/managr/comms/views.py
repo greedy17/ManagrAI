@@ -809,10 +809,10 @@ class PitchViewSet(
         if user.has_hit_summary_limit:
             return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         type = request.data.get("type")
-        audience = request.data.get("audience")
-        content = request.data.get("content")
+        audience = request.data.get("audience")       
         instructions = request.data.get("instructions")
         style = request.data.get("style")
+        chars = request.data.get("chars") 
         pitch_id = request.data.get("pitch_id", False)
         has_error = False
         attempts = 1
@@ -821,7 +821,7 @@ class PitchViewSet(
         while True:
             try:
                 res = Pitch.generate_pitch(
-                    user, type, instructions, audience, content, style, token_amount, timeout
+                    user, type, instructions, audience, chars, style, token_amount, timeout
                 )
                 pitch = res.get("choices")[0].get("message").get("content")
                 if pitch_id:

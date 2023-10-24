@@ -81,7 +81,7 @@
         <button
           @mouseenter="changeStyleText"
           @mouseleave="defaultStyleText"
-          style="margin-top: -8px; width: 280px"
+          style="margin-top: -8px; width: 160px"
           v-if="!showInput"
           @click="toggleLearnInput"
           class="primary-button extra-padding"
@@ -191,7 +191,7 @@
 
           <textarea
             :disabled="loading"
-            maxlength="1000"
+            maxlength="1500"
             class="area-input text-area-input"
             :placeholder="instructionsPlaceholder"
             v-model="output"
@@ -218,13 +218,45 @@
         </div>
       </div>
 
-      <div class="divider">
+      <!-- <div class="divider">
         <p class="divider-text">
           {{ 'Optional' }}
         </p>
+      </div> -->
+
+      <div class="input-container" v-clickOutsideCharacterMenu>
+        <div class="input-row">
+          <div class="main-text">
+            <img src="@/assets/images/a.svg" height="12px" alt="" />
+            Characters
+          </div>
+
+          <input
+            :disabled="loading"
+            class="area-input"
+            placeholder="Character count..."
+            v-model="characters"
+            type="number"
+            max="1500"
+            @focus="showCharacterDropdown($event)"
+          />
+        </div>
+        <div v-if="showingCharacterDropdown" class="dropdown">
+          <small style="padding-top: 8px" class="gray-text">Character Suggestions</small>
+          <div
+            @click="addCharacterSuggestion(suggestion)"
+            class="dropdown-item"
+            v-for="(suggestion, i) in filteredCharacterSuggestions"
+            :key="i"
+          >
+            <p>
+              {{ suggestion }}
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div class="input-container mar-top" v-clickOutsideTypeMenu>
+      <!-- <div class="input-container mar-top" v-clickOutsideTypeMenu>
         <div class="input-row">
           <div class="main-text">
             <img src="@/assets/images/document.svg" height="14px" alt="" />
@@ -234,7 +266,7 @@
           <input
             :disabled="loading"
             class="area-input"
-            placeholder="Optional"
+            placeholder="Content type..."
             v-model="type"
             @focus="showTypeDropdown"
           />
@@ -252,9 +284,9 @@
             </p>
           </div>
         </div>
-      </div>
+      </div> -->
 
-      <div class="input-container" v-clickOutsideAudienceMenu>
+      <!-- <div class="input-container" v-clickOutsideAudienceMenu>
         <div class="input-row">
           <div class="main-text">
             <img src="@/assets/images/target.svg" height="14px" alt="" />
@@ -264,7 +296,7 @@
           <input
             :disabled="loading"
             class="area-input"
-            placeholder="Optional"
+            placeholder="Target audience..."
             v-model="persona"
             @focus="showAudienceDropdown"
           />
@@ -282,9 +314,9 @@
             </p>
           </div>
         </div>
-      </div>
+      </div> -->
 
-      <div class="input-container" v-clickOutsideBriefingMenu>
+      <!-- <div class="input-container" v-clickOutsideCharacterMenu>
         <div class="input-row relative">
           <div class="main-text">
             <img src="@/assets/images/file-word.svg" height="14px" alt="" />
@@ -298,19 +330,19 @@
             :placeholder="optionalPlaceholder"
             v-model="briefing"
             v-autoresize
-            @focus="showBriefingDropdown($event)"
+            @focus="showCharacterDropdown($event)"
           />
 
           <div class="absolute-count">
             <small>{{ remainingCharsBrief }}</small>
           </div>
         </div>
-        <div v-if="showingBriefingDropdown" class="dropdown">
+        <div v-if="showingCharacterDropdown" class="dropdown">
           <small style="padding-top: 8px" class="gray-text">Example Content</small>
           <div
-            @click="addBriefingSuggestion(suggestion)"
+            @click="addCharacterSuggestion(suggestion)"
             class="dropdown-item"
-            v-for="(suggestion, i) in filteredBriefingSuggestions"
+            v-for="(suggestion, i) in filteredCharacterSuggestions"
             :key="i"
           >
             <p>
@@ -318,7 +350,7 @@
             </p>
           </div>
         </div>
-      </div>
+      </div> -->
 
       <!-- <div class="input-container">
         <div class="input-row relative">
@@ -370,9 +402,7 @@
             <img src="@/assets/images/back.svg" height="18px" width="18px" alt="" />
           </div>
           <h1 class="no-text-margin">{{ type }}</h1>
-          <p class="sub-text">
-            Target Audience: <span>{{ persona }}</span>
-          </p>
+          <p class="sub-text">"{{ output.substring(0, 80) + '...' }}"</p>
         </div>
 
         <div class="title-bar">
@@ -486,7 +516,7 @@ export default {
   },
   data() {
     return {
-      styleText: 'Personalized AI: Learn my writing style',
+      styleText: 'Learn writing style',
       type: '',
       output: '',
       persona: '',
@@ -497,7 +527,7 @@ export default {
       paidModal: false,
       showingTypeDropdown: false,
       showingAudienceDropdown: false,
-      showingBriefingDropdown: false,
+      showingCharacterDropdown: false,
       showingInstructionsDropdown: false,
       storedEvent: null,
       storedPlaceholder: '',
@@ -519,12 +549,7 @@ export default {
         `Gen Z`,
         `Health and wellness enthusiast`,
       ],
-      briefingSuggestions: [
-        `XXX is launching a ...`,
-        `XXX's professor, an expert in ...`,
-        `Call summary: XXX ...`,
-        `Email exchange: XXX ...`,
-      ],
+      characterSuggestions: [`250`, `500`, `750`, `1000`, `1500`],
       instructionsSuggestions: [
         `A concise blog post targeting millennial moms about ...`,
         `Media pitch, concise, on behalf of XXX, tailored to a tech beat writer at the NYTs about ...`,
@@ -621,7 +646,7 @@ export default {
     },
     defaultStyleText() {
       if (!this.isPaid) {
-        this.styleText = 'Personalized AI: Learn my writing style'
+        this.styleText = 'Learn writing style'
       } else {
         return
       }
@@ -672,18 +697,18 @@ export default {
     hideAudienceDropdown() {
       this.showingAudienceDropdown = false
     },
-    showBriefingDropdown(e) {
+    showCharacterDropdown(e) {
       // this.storedEvent = e
       // this.storedPlaceholder = e.target.placeholder
       // e.target.placeholder = ''
       this.optionalPlaceholder = ''
-      this.showingBriefingDropdown = true
+      this.showingCharacterDropdown = true
     },
-    hideBriefingDropdown() {
+    hideCharacterDropdown() {
       this.optionalPlaceholder = 'Optional'
       // this.storedEvent.target.placeholder = this.storedPlaceholder
       // this.storedPlaceholder = ''
-      this.showingBriefingDropdown = false
+      this.showingCharacterDropdown = false
     },
     showInstructionsDropdown(e) {
       // this.storedEvent = e
@@ -706,9 +731,9 @@ export default {
       this.persona = ex
       this.hideAudienceDropdown()
     },
-    addBriefingSuggestion(ex) {
-      this.briefing = ex
-      this.hideBriefingDropdown()
+    addCharacterSuggestion(ex) {
+      this.characters = ex
+      this.hideCharacterDropdown()
     },
     addInstructionsSuggestion(ex) {
       this.output = ex
@@ -741,7 +766,7 @@ export default {
           type: this.type,
           audience: this.persona,
           generated_pitch: this.pitch,
-          content: this.briefing,
+
           instructions: this.output,
         })
         if (response.id) {
@@ -753,7 +778,7 @@ export default {
             type: this.type,
             audience: this.persona,
             generated_pitch: this.pitch,
-            content: this.briefing,
+
             instructions: this.output,
           }
           await this.$store.dispatch('getPitches')
@@ -801,8 +826,8 @@ export default {
             type: this.type,
             instructions: this.output,
             audience: this.persona,
-            content: this.briefing,
             style: this.user.writingStyle || this.writingStyle,
+            chars: this.characters,
           })
           .then((response) => {
             this.pitch = response.pitch
@@ -828,7 +853,7 @@ export default {
       this.type = pitch.type
       this.output = pitch.instructions
       this.persona = pitch.audience
-      this.briefing = pitch.content
+
       // this.generatePitch()
     },
     refreshUser() {
@@ -853,7 +878,7 @@ export default {
   },
   computed: {
     remainingChars() {
-      return 1000 - this.output.length
+      return 1500 - this.output.length
     },
     remainingCharsBrief() {
       return 1500 - this.briefing.length
@@ -876,10 +901,10 @@ export default {
         suggestions.toLowerCase().includes(this.persona.toLowerCase()),
       )
     },
-    filteredBriefingSuggestions() {
-      if (!this.briefing) return this.briefingSuggestions
-      return this.briefingSuggestions.filter((suggestions) =>
-        suggestions.toLowerCase().includes(this.briefing.toLowerCase()),
+    filteredCharacterSuggestions() {
+      if (!this.characters) return this.characterSuggestions
+      return this.characterSuggestions.filter((suggestions) =>
+        suggestions.toLowerCase().includes(this.characters.toLowerCase()),
       )
     },
     filteredInstructionsSuggestions() {
@@ -1007,14 +1032,14 @@ export default {
         document.body.removeEventListener('click', el._clickOutsideHandler)
       },
     },
-    clickOutsideBriefingMenu: {
+    clickOutsideCharacterMenu: {
       bind(el, binding, vnode) {
         // Define a function to handle click events
         function clickOutsideHandler(e) {
           // Check if the clicked element is outside the target element
           if (!el.contains(e.target)) {
             // Trigger the provided method from the binding value
-            vnode.context.hideBriefingDropdown()
+            vnode.context.hideCharacterDropdown()
           }
         }
 
