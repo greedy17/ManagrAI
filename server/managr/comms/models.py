@@ -400,8 +400,7 @@ class Article(TimeStampModel):
         from managr.comms.utils import boolean_search_to_query
 
         converted_boolean = boolean_search_to_query(boolean_string)
-        query = converted_boolean
-        articles = Article.objects.filter(query)
+        articles = Article.objects.filter(converted_boolean)
         if len(articles):
             articles = articles[:20]
         return list(articles)
