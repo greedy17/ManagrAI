@@ -1641,7 +1641,6 @@ export default {
       this.showingPromptDropdown = false
     },
     resetSearch() {
-      this.abortFunctions()
       this.clearNewSearch()
       this.addedClips = []
       // this.$store.dispatch('updateCurrentReportClips', this.addedClips)
