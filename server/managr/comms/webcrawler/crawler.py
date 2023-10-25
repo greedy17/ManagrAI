@@ -93,7 +93,6 @@ class NewsSpider(scrapy.Spider):
         article_tags = None
         for tag in article_tag_list:
             tags = response.xpath(f"(//*[contains(@class, '{tag}')])[1]//p/text()").getall()
-            print(tags)
             if len(tags):
                 article_tags = tags
                 break
