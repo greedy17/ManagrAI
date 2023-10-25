@@ -68,7 +68,7 @@ describe('Log In Test', () => {
 
 describe('Summarize Page Test', () => {
   it('be PRO', () => {
-    cy.get('#pro-free-version').should('eq', 'PRO');
+    cy.get('#pro-free-version').should('have.text', 'PRO');
   })
   it('have Summarize, Pitch, and Transcribe options', () => {
     cy.get('#router-summarize').should('exist');
@@ -91,8 +91,8 @@ describe('Summarize Page Test', () => {
   })
   it('selects an instruction', () => {
     cy.get('#instructions-text-area').click();
-    cy.get('.dropdown-item').click();
-    cy.get('#instructions-text-area').should('eq', 'Summarize the news');
+    cy.get('.dropdown-item:first').click();
+    cy.get('#instructions-text-area').should('have.value', 'Summarize the news');
   })
   it('has generate button', () => {
     cy.get('#generate-summary').should('exist');
