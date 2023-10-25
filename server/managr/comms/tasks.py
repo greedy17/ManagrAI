@@ -330,9 +330,10 @@ def _process_article_summary(payload, context):
 @background()
 def _process_website_domain(url, organization_name):
     base_domain = extract_base_domain(url)
+    full_domain = f"https://{base_domain}"
     if base_domain:
         try:
-            database_check = NewsSource.objects.get(domain=base_domain)
+            database_check = NewsSource.objects.get(domain=full_domain)
             if organization_name in database_check.access_count.keys():
                 database_check.access_count[organization_name] += 1
             else:
@@ -341,7 +342,10 @@ def _process_website_domain(url, organization_name):
         except NewsSource.DoesNotExist:
             try:
                 serializer = NewsSourceSerializer(
-                    data={"domain": base_domain, "access_count": {organization_name: 1}}
+                    data={
+                        "domain": full_domain,
+                        "access_count": {organization_name: 1},
+                    }
                 )
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
@@ -350,3 +354,13 @@ def _process_website_domain(url, organization_name):
                     f"Failed to save new NewsSource for domain: {base_domain} because of {e}"
                 )
     return
+
+
+@background()
+def run_spider(url):
+    from django.core.management import call_command
+    import time
+
+    # Delay the start of the Scrapy spider within the main thread
+    time.sleep(5)
+    call_command("crawl_spider", url)

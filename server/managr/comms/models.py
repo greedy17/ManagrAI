@@ -1,6 +1,7 @@
 import json
 import os
 import logging
+from django.db.models import F
 from datetime import datetime
 from django.db import models
 from managr.core.models import TimeStampModel
@@ -14,7 +15,9 @@ from managr.utils.misc import encrypt_dict
 from urllib.parse import urlencode
 import base64
 import hashlib
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.search import SearchVectorField, SearchQuery, SearchRank, SearchVector
+from django.contrib.postgres.indexes import GinIndex
 
 logger = logging.getLogger("managr")
 
@@ -274,10 +277,11 @@ class Pitch(TimeStampModel):
 
 class NewsSource(TimeStampModel):
     domain = models.CharField(max_length=255, unique=True)
+    site_name = models.CharField(max_length=255, blank=True, null=True)
     rss_feed_url = models.URLField(blank=True, null=True)
     last_scraped = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
-    access_count = JSONField(null=True, blank=True)
+    access_count = JSONField(default=dict, null=True, blank=True)
     # Web Scraping Fields
     category_link_selector = models.CharField(max_length=255, blank=True, null=True)
     category_name_attribute = models.CharField(max_length=50, blank=True, null=True)
@@ -290,11 +294,114 @@ class NewsSource(TimeStampModel):
     article_link_attribute = models.CharField(max_length=50, blank=True, null=True)
     article_link_prefix = models.URLField(blank=True, null=True)
     article_link_regex = models.CharField(max_length=255, blank=True, null=True)
+    data_attribute_key = models.CharField(max_length=255, blank=True, null=True)
+    data_attribute_value = models.CharField(max_length=255, blank=True, null=True)
     date_published_selector = models.CharField(max_length=255, blank=True, null=True)
     date_published_format = models.CharField(max_length=255, blank=True, null=True)
     article_title_selector = models.CharField(max_length=255, blank=True, null=True)
     article_content_selector = models.CharField(max_length=255, blank=True, null=True)
     author_selector = models.CharField(max_length=255, blank=True, null=True)
+    scrape_data = JSONField(default=dict, null=True, blank=True)
+    error_log = ArrayField(models.CharField(max_length=255), default=list, blank=True)
 
     def __str__(self):
         return self.domain
+
+    def selector_processor(self):
+        selector_split = self.article_link_selector.split(",")
+        selector_type = selector_split[0]
+        if selector_type == "year":
+            selector = f"contains(@href, '{str(datetime.now().year)}')"
+        if selector_type == "value":
+            selector = f"contains(@href, '{selector_split[1]}')"
+        if selector_type == "class":
+            selector = f"contains(@class, '{selector_split[1]}')"
+        return selector
+
+    def create_search_regex(self):
+        # TODO: add a check for year if its still current or not
+        if self.article_link_regex:
+            return self.article_link_regex
+        # add the link selector
+        attribute_list = self.article_link_attribute.split(",")
+        regex = "//" + attribute_list[0] + "["
+        # check for data attribute
+        if self.data_attribute_key:
+            regex += f"@{self.data_attribute_key}='{self.data_attribute_value}'"
+        # check for link attribute
+        if self.article_link_selector:
+            selector = self.selector_processor()
+            if "@data" in regex:
+                regex += f"and {selector}"
+            else:
+                regex += selector
+        regex += "]"
+        if len(attribute_list) > 1:
+            regex += f"/{attribute_list[1]}[1]"
+        self.article_link_regex = regex
+        self.save()
+        return regex
+
+    def transfer_dict(self):
+        return dict(
+            domain=self.domain,
+            last_scraped=self.last_scraped,
+            access_count=self.access_count,
+            article_link_selector=self.article_link_selector,
+            article_link_attribute=self.article_link_attribute,
+            article_link_regex=self.article_link_regex,
+            data_attribute_key=self.data_attribute_key,
+            data_attribute_value=self.data_attribute_value,
+            is_active=self.is_active,
+        )
+
+    @classmethod
+    def domain_list(cls):
+        active_sources = cls.objects.filter(is_active=True)
+        source_list = [source.domain for source in active_sources]
+        return source_list
+
+
+class Article(TimeStampModel):
+    title = models.CharField(max_length=150)
+    description = models.TextField(null=True)
+    author = models.CharField(max_length=150)
+    publish_date = models.DateTimeField()
+    link = models.CharField(max_length=255)
+    image_url = models.CharField(max_length=255)
+    source = models.ForeignKey(
+        "comms.NewsSource", on_delete=models.CASCADE, related_name="articles"
+    )
+    content = models.TextField()
+    content_search_vector = SearchVectorField(null=True)
+
+    class Meta:
+        indexes = [
+            GinIndex(fields=["content_search_vector"]),
+        ]
+
+    def save(self, *args, **kwargs):
+        self.content_search_vector = SearchVector("content")
+        super().save(*args, **kwargs)
+
+    def fields_to_dict(self):
+        return dict(
+            title=self.title,
+            description=self.description,
+            author=self.author,
+            publish_date=str(self.publish_date),
+            link=self.link,
+            image_url=self.image_url,
+            source=self.source.domain,
+        )
+
+    @classmethod
+    def search_by_query(cls, boolean_string):
+        from managr.comms.utils import boolean_search_to_query
+
+        converted_boolean = boolean_search_to_query(boolean_string)
+        query = converted_boolean
+        articles = Article.objects.filter(query)
+        if len(articles):
+            articles = articles[:20]
+        return list(articles)

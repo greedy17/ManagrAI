@@ -133,17 +133,17 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
-    async getClips(data) {
+    async getClips(data, signal) {
         try {
-            const res = await this.client.get(CommsApi.ENDPOINT + 'clips/', { params: data })
+            const res = await this.client.get(CommsApi.ENDPOINT + 'clips/', { signal, params: data })
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
-    async getSummary(data) {
+    async getSummary(data, signal) {
         try {
-            const res = await this.client.post(CommsApi.ENDPOINT + 'summary/', data)
+            const res = await this.client.post(CommsApi.ENDPOINT + 'summary/', data, { signal })
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
@@ -162,6 +162,24 @@ class CommsApi extends ModelAPI {
     async getArticleSummary(url, search, instructions) {
         try {
             const res = await this.client.post(CommsApi.ENDPOINT + 'article-summary/', { params: url, search, instructions })
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
+    async regenerateArticleSummary(url, summary, instructions) {
+        try {
+            const res = await this.client.post(CommsApi.ENDPOINT + 'regenerate-article-summary/', { params: url, summary, instructions })
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
+    async generateContent(url, instructions, style) {
+        try {
+            const res = await this.client.post(CommsApi.ENDPOINT + 'generate-content/', { params: url, instructions, style })
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
