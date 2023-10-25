@@ -89,11 +89,10 @@ class NewsSpider(scrapy.Spider):
                 if selector is not None:
                     meta_tag_data[key] = selector
                     break
-        article_tag_list = ["article", "story"]
+        article_tag_list = ["article", "story", "content"]
         article_tags = None
         for tag in article_tag_list:
             tags = response.xpath(f"(//*[contains(@class, '{tag}')])[1]//p/text()").getall()
-            print(tags)
             if len(tags):
                 article_tags = tags
                 break
@@ -111,7 +110,8 @@ class NewsSpider(scrapy.Spider):
             else:
                 return
         except Exception as e:
-            source.error_log.append(str(e))
+            cleaned_data.pop("content")
+            source.error_log.append(f"{str(e)} - data: {cleaned_data}")
             source.save()
         return
 

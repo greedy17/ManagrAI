@@ -194,6 +194,7 @@
           @click="switchMainView('news')"
           :class="{ activeswitch: mainView === 'news' }"
           class="switch-item"
+          id="news-tab"
         >
           <img src="@/assets/images/memo.svg" height="12px" alt="" />
           News
@@ -202,6 +203,7 @@
           @click="switchMainView('social')"
           :class="{ activeswitch: mainView === 'social' }"
           class="switch-item"
+          id="social-tab"
         >
           <img src="@/assets/images/comment.svg" height="12px" alt="" />
           Social
@@ -210,6 +212,7 @@
           @click="switchMainView('website')"
           :class="{ activeswitch: mainView === 'website' }"
           class="switch-item"
+          id="articles-tab"
         >
           <img src="@/assets/images/globe.svg" height="16px" alt="" />
           Articles
@@ -307,6 +310,7 @@
               <textarea
                 @focus="showPromptDropdown"
                 class="area-input text-area-input"
+                id="instructions-text-area"
                 placeholder="Summary details..."
                 v-model="newTemplate"
                 v-autoresize
@@ -324,6 +328,25 @@
                 <p>
                   {{ suggestion }}
                 </p>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 1rem" class="input-container" v-if="mainView === 'news'">
+            <div class="input-row-start">
+              <div class="main-text">
+                <img
+                  style="margin-right: 10px; opacity: 0.7"
+                  src="@/assets/images/calendar.svg"
+                  height="14px"
+                />
+                Date Range
+              </div>
+
+              <div style="width: 100%">
+                <input class="area-input-smallest" type="date" v-model="dateStart" />
+                -
+                <input class="area-input-smallest" type="date" v-model="dateEnd" />
               </div>
             </div>
           </div>
@@ -411,6 +434,7 @@
               @click="generateNewSearch(null)"
               :disabled="!newSearch"
               class="primary-button"
+              id="generate-summary"
             >
               Generate Summary
             </button>
@@ -420,6 +444,7 @@
               @click="generateNewSearch"
               :disabled="!addedArticles.length"
               class="primary-button"
+              id="generate-summary"
             >
               Generate Summary
             </button>
@@ -1212,6 +1237,8 @@ export default {
   },
   data() {
     return {
+      dateStart: null,
+      dateEnd: null,
       contentModalOpen: false,
       contentInstructions: null,
       contentUrl: null,
@@ -1296,6 +1323,7 @@ export default {
       promptSuggestions: [
         `Summarize the news`,
         'Summarize the news for XXX and its impact',
+        `Select 3 articles XXX can turn into creative PR content such as a media pitch or a blog post, provide content suggestions. Identify articles that need a response due to concerns, complaints, or safety.`,
         `As XXX PR agency, provide creative suggestions per this news, think outside the box`,
         `Create a media monitoring report for XXX. Include top sources (based on popularity and size), number of articles, sentiment, and any other important metrics`,
         `Provide pitch ideas and background on [JOURNALIST NAME]`,
@@ -1314,6 +1342,14 @@ export default {
     // this.checkInterval = setInterval(this.checkTokenExpiry, 60000)
     this.addedClips = this.$store.state.currentReportClips
     this.shouldCancel = false
+
+    const today = new Date()
+    const sevenDaysAgo = new Date(today)
+    sevenDaysAgo.setDate(today.getDate() - 7)
+
+    // Format the dates as YYYY-MM-DD strings (required for <input type="date">)
+    this.dateStart = sevenDaysAgo.toISOString().split('T')[0]
+    this.dateEnd = today.toISOString().split('T')[0]
   },
   watch: {
     typedMessage: 'changeIndex',
@@ -1988,11 +2024,16 @@ export default {
     async getClips() {
       try {
         await Comms.api
-          .getClips({
-            search: this.newSearch,
-            boolean: this.searchSaved ? this.booleanString : null,
-            user_id: this.user.id,
-          }, this.controller.signal)
+          .getClips(
+            {
+              search: this.newSearch,
+              boolean: this.searchSaved ? this.booleanString : null,
+              user_id: this.user.id,
+              date_to: this.dateStart,
+              date_from: this.dateEnd,
+            },
+            this.controller.signal,
+          )
           .then((response) => {
             this.filteredArticles = response.articles
             this.booleanString = response.string
@@ -2104,11 +2145,14 @@ export default {
           return this.stopLoading()
         }
         await Comms.api
-          .getSummary({
-            clips: allClips,
-            search: this.newSearch,
-            instructions: instructions,
-          }, this.controller.signal)
+          .getSummary(
+            {
+              clips: allClips,
+              search: this.newSearch,
+              instructions: instructions,
+            },
+            this.controller.signal,
+          )
           .then((response) => {
             if (this.shouldCancel) {
               return this.stopLoading()
@@ -3130,6 +3174,26 @@ button:disabled {
   color: $dark-black-blue;
 }
 
+.area-input-smallest {
+  background-color: $offer-white;
+  margin-bottom: 0.25rem;
+  max-height: 250px;
+  padding: 0 1.25rem;
+  line-height: 1.75;
+  outline: none;
+  border: none;
+  letter-spacing: 0.5px;
+  font-size: 14px;
+  font-family: $base-font-family;
+  font-weight: 400;
+  border: none !important;
+  resize: none;
+  text-align: left;
+  overflow: auto;
+  scroll-behavior: smooth;
+  color: $dark-black-blue;
+}
+
 .area-input {
   width: 100%;
   background-color: $offer-white;
@@ -3190,7 +3254,7 @@ button:disabled {
 }
 
 .main-text {
-  width: 148px;
+  width: 148px !important;
   display: flex;
   flex-direction: row;
   align-items: center;

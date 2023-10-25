@@ -95,12 +95,14 @@ class Search(TimeStampModel):
         return open_ai_exceptions._handle_response(r)
 
     @classmethod
-    def get_clips(cls, search_boolean):
-        news_url = (
-            comms_consts.NEW_API_URI
-            + "/"
-            + comms_consts.NEW_API_EVERYTHING_URI(urlencode({"q": search_boolean}))
-        )
+    def get_clips(cls, search_boolean, date_to=False, date_from=False):
+        query = {"q": search_boolean}
+        if date_to:
+            query["to"] = date_to
+            query["from"] = date_from
+        endpoint = comms_consts.NEW_API_EVERYTHING_QUERY_URI(urlencode(query))
+        news_url = comms_consts.NEW_API_URI + "/" + endpoint
+        print('URL IS RIGHT HERE: ---- >' , news_url)
         with Variable_Client() as client:
             new_res = client.get(news_url, headers=comms_consts.NEWS_API_HEADERS)
         return _handle_news_response(new_res)
@@ -368,7 +370,7 @@ class Article(TimeStampModel):
     author = models.CharField(max_length=150, blank=True, null=True)
     publish_date = models.DateTimeField()
     link = models.CharField(max_length=255)
-    image_url = models.CharField(max_length=255)
+    image_url = models.CharField(max_length=500)
     source = models.ForeignKey(
         "comms.NewsSource", on_delete=models.CASCADE, related_name="articles"
     )
@@ -385,6 +387,9 @@ class Article(TimeStampModel):
         return self.save()
 
     def fields_to_dict(self):
+        site_name = (
+            self.source.site_name if hasattr(self.source, "site_name") else self.source.domain
+        )
         return dict(
             title=self.title,
             description=self.description,
@@ -392,15 +397,17 @@ class Article(TimeStampModel):
             publish_date=str(self.publish_date),
             link=self.link,
             image_url=self.image_url,
-            source=self.source.domain,
+            source=site_name,
         )
 
     @classmethod
-    def search_by_query(cls, boolean_string):
+    def search_by_query(cls, boolean_string, date_to=False, date_from=False):
         from managr.comms.utils import boolean_search_to_query
 
         converted_boolean = boolean_search_to_query(boolean_string)
         articles = Article.objects.filter(converted_boolean)
+        if date_to:
+            articles = articles.filter(publish_date__range=(date_from, date_to))
         if len(articles):
             articles = articles[:20]
         return list(articles)

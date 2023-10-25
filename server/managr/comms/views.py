@@ -90,7 +90,9 @@ class PRSearchViewSet(
         user = User.objects.get(id=request.GET.get("user_id"))
         has_error = False
         search = request.GET.get("search")
-        boolean = request.GET.get("boolean", None)
+        boolean = request.GET.get("boolean", False)
+        date_to = request.GET.get("date_to", False)
+        date_from = request.GET.get("date_from", False)
         while True:
             try:
                 if not boolean:
@@ -110,14 +112,15 @@ class PRSearchViewSet(
                         )
                     r = open_ai_exceptions._handle_response(r)
                     query_input = r.get("choices")[0].get("message").get("content")
-                    news_res = Search.get_clips(query_input)
+                    news_res = Search.get_clips(query_input, date_to, date_from)
                     articles = news_res["articles"]
                 else:
-                    news_res = Search.get_clips(boolean)
+                    news_res = Search.get_clips(boolean, date_to, date_from)
                     articles = news_res["articles"]
                     query_input = boolean
                 articles = [article for article in articles if article["title"] != "[Removed]"]
-                internal_articles = InternalArticle.search_by_query(query_input)
+                internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
+                print(len(internal_articles))
                 articles = normalize_article_data(articles, internal_articles)
                 # articles = normalize_newsapi_to_model(articles)
                 break
@@ -800,10 +803,10 @@ class PitchViewSet(
         if user.has_hit_summary_limit:
             return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         type = request.data.get("type")
-        audience = request.data.get("audience")       
+        audience = request.data.get("audience")
         instructions = request.data.get("instructions")
         style = request.data.get("style")
-        chars = request.data.get("chars") 
+        chars = request.data.get("chars")
         pitch_id = request.data.get("pitch_id", False)
         has_error = False
         attempts = 1

@@ -7,9 +7,9 @@
     <div class="leadership-card">
       <h2>Enter Access code</h2>
       <div class="input__container">
-        <input placeholder="Enter Code" autofocus v-model="code" type="text" />
+        <input id="access-code" placeholder="Enter Code" autofocus v-model="code" type="text" />
       </div>
-      <button :disabled="!code" type="submit" @click="handleApplyCode">Apply Code</button>
+      <button id="access-code-button" :disabled="!code" type="submit" @click="handleApplyCode">Apply Code</button>
     </div>
 
     <div></div>
