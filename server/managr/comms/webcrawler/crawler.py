@@ -110,7 +110,8 @@ class NewsSpider(scrapy.Spider):
             else:
                 return
         except Exception as e:
-            source.error_log.append(str(e))
+            cleaned_data.pop("content")
+            source.error_log.append(f"{str(e)} - data: {cleaned_data}")
             source.save()
         return
 
