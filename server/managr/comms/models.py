@@ -95,12 +95,12 @@ class Search(TimeStampModel):
         return open_ai_exceptions._handle_response(r)
 
     @classmethod
-    def get_clips(cls, search_boolean=False, date_to=False, date_from=False):
-        endpoint = (
-            comms_consts.NEW_API_EVERYTHING_QUERY_URI(urlencode({"q": search_boolean}))
-            if search_boolean
-            else comms_consts.NEW_API_EVERYTHING_DATE_URI(date_from, date_to)
-        )
+    def get_clips(cls, search_boolean, date_to=False, date_from=False):
+        query = {"q": search_boolean}
+        if date_to:
+            query["to"] = date_to
+            query["from"] = date_from
+        endpoint = comms_consts.NEW_API_EVERYTHING_QUERY_URI(urlencode(query))
         news_url = comms_consts.NEW_API_URI + "/" + endpoint
         print('URL IS RIGHT HERE: ---- >' , news_url)
         with Variable_Client() as client:
@@ -401,11 +401,13 @@ class Article(TimeStampModel):
         )
 
     @classmethod
-    def search_by_query(cls, boolean_string):
+    def search_by_query(cls, boolean_string, date_to=False, date_from=False):
         from managr.comms.utils import boolean_search_to_query
 
         converted_boolean = boolean_search_to_query(boolean_string)
         articles = Article.objects.filter(converted_boolean)
+        if date_to:
+            articles = articles.objects.filter(publish_date__range=(date_from, date_to))
         if len(articles):
             articles = articles[:20]
         return list(articles)
