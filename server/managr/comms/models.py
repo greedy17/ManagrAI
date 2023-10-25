@@ -365,7 +365,7 @@ class NewsSource(TimeStampModel):
 class Article(TimeStampModel):
     title = models.CharField(max_length=150)
     description = models.TextField(null=True)
-    author = models.CharField(max_length=150)
+    author = models.CharField(max_length=150, blank=True, null=True)
     publish_date = models.DateTimeField()
     link = models.CharField(max_length=255)
     image_url = models.CharField(max_length=255)
@@ -380,9 +380,9 @@ class Article(TimeStampModel):
             GinIndex(fields=["content_search_vector"]),
         ]
 
-    def save(self, *args, **kwargs):
+    def update_search_vector(self):
         self.content_search_vector = SearchVector("content")
-        super().save(*args, **kwargs)
+        return self.save()
 
     def fields_to_dict(self):
         return dict(

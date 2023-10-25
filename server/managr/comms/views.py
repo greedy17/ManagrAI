@@ -16,7 +16,7 @@ from rest_framework import (
     status,
     viewsets,
 )
-from urllib.parse import urlencode, urlparse
+from urllib.parse import urlencode
 from django.shortcuts import redirect
 from rest_framework.decorators import action
 from . import constants as comms_consts
@@ -34,7 +34,7 @@ from rest_framework.decorators import (
     api_view,
     permission_classes,
 )
-from managr.comms.utils import generate_config, normalize_article_data, normalize_newsapi_to_model
+from managr.comms.utils import generate_config, normalize_article_data, get_domain
 
 
 logger = logging.getLogger("managr")
@@ -717,15 +717,6 @@ def redirect_from_twitter(request):
         err = urlencode(err)
         return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{err}")
     return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{q}")
-
-
-def get_domain(url):
-    parsed_url = urlparse(url)
-    netloc = parsed_url.netloc
-    domain_parts = netloc.split(".")
-    if "www" in domain_parts:
-        domain_parts.remove("www")
-    return domain_parts[0]
 
 
 @api_view(["POST"])
