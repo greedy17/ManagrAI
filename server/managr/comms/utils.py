@@ -10,6 +10,7 @@ from django.db.models import Q
 from .constants import DO_NOT_TRACK_LIST
 from dateutil import parser
 from django.conf import settings
+from urllib.parse import urlparse
 
 s3 = boto3.client("s3")
 
@@ -23,6 +24,15 @@ user_agents = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.1234.567 Safari/537.36 OPR/100.0.1234.567"
     # add more User-Agents if you want
 ]
+
+
+def get_domain(url):
+    parsed_url = urlparse(url)
+    netloc = parsed_url.netloc
+    domain_parts = netloc.split(".")
+    if "www" in domain_parts:
+        domain_parts.remove("www")
+    return domain_parts[0]
 
 
 def generate_config():

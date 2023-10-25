@@ -5,6 +5,7 @@ from ..models import NewsSource
 from ..serializers import ArticleSerializer
 from scrapy.crawler import CrawlerProcess
 from dateutil import parser
+from ..utils import get_domain
 from scrapy.utils.project import get_project_settings
 
 
@@ -60,11 +61,12 @@ class NewsSpider(scrapy.Spider):
 
     def parse(self, response):
         url = response.url
-        source = NewsSource.objects.get(domain=url)
+        domain = get_domain(url)
+        source = NewsSource.objects.get(domain__contains=domain)
         if source.last_scraped:
             regex = source.create_search_regex()
             article_links = response.xpath(regex)
-            if source.last_scraped:
+            if source.last_scraped and source.article_link_attribute:
                 for anchor in article_links:
                     article_url = anchor.xpath("@href").extract_first()
                     if "https" not in article_url:
@@ -87,11 +89,19 @@ class NewsSpider(scrapy.Spider):
                 if selector is not None:
                     meta_tag_data[key] = selector
                     break
-        article_tags = response.xpath("(//*[contains(@class, 'article')])[1]//p/text()").getall()
+        article_tag_list = ["article", "story"]
+        article_tags = None
+        for tag in article_tag_list:
+            tags = response.xpath(f"(//*[contains(@class, '{tag}')])[1]//p/text()").getall()
+            print(tags)
+            if len(tags):
+                article_tags = tags
+                break
         full_article = ""
-        for article in article_tags:
-            full_article += article
-        meta_tag_data["content"] = full_article
+        if article_tags is not None:
+            for article in article_tags:
+                full_article += article
+            meta_tag_data["content"] = full_article
         try:
             cleaned_data = data_cleaner(meta_tag_data)
             if cleaned_data:
@@ -107,7 +117,7 @@ class NewsSpider(scrapy.Spider):
 
     def process_new_url(self, source, response):
         anchor_tags = response.css("a")
-        site_name = response.xpath("//meta[contains(@property, 'site_name')]/@content")
+        site_name = response.xpath("//meta[contains(@property, 'site_name')]/@content").get()
         scrape_dict = {}
         for idx, link in enumerate(anchor_tags):
             href = link.css("::attr(href)").get()
