@@ -27,8 +27,12 @@ NEWS_API_HEADERS = {
 
 NEW_API_URI = "https://newsapi.org/v2"
 
-NEW_API_EVERYTHING_URI = (
+NEW_API_EVERYTHING_QUERY_URI = (
     lambda query: f"everything?{query}&language=en&sortBy=publishedAt&pageSize=20"
+)
+
+NEW_API_EVERYTHING_DATE_URI = (
+    lambda date_from, date_to: f"everything?from={date_from}&to={date_to}&language=en&sortBy=publishedAt&pageSize=20"
 )
 
 SEARCH_TYPE_CHOICES = (("NEWS", "News"), ("SOCIAL_MEDIA", "Social Media"), ("MIXED", "Mixed"))

@@ -95,12 +95,13 @@ class Search(TimeStampModel):
         return open_ai_exceptions._handle_response(r)
 
     @classmethod
-    def get_clips(cls, search_boolean):
-        news_url = (
-            comms_consts.NEW_API_URI
-            + "/"
-            + comms_consts.NEW_API_EVERYTHING_URI(urlencode({"q": search_boolean}))
+    def get_clips(cls, search_boolean=False, date_to=False, date_from=False):
+        endpoint = (
+            comms_consts.NEW_API_EVERYTHING_QUERY_URI(urlencode({"q": search_boolean}))
+            if search_boolean
+            else comms_consts.NEW_API_EVERYTHING_DATE_URI(date_from, date_to)
         )
+        news_url = comms_consts.NEW_API_URI + "/" + endpoint
         with Variable_Client() as client:
             new_res = client.get(news_url, headers=comms_consts.NEWS_API_HEADERS)
         return _handle_news_response(new_res)
