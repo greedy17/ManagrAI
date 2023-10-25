@@ -134,38 +134,60 @@
     </Modal>
 
     <Transition name="slide-left">
-      <Reports
-        v-if="selectedSearch && ShowReport"
-        @toggle-report="toggleReport"
-        @clear-clips="clearClips"
-        @remove-clip="removeClip"
-        @edit-clip="editClip"
-        @add-clip="addClip"
-        @set-added-clips="setAddedClips"
-        :clips="allCategoryClips"
-        :defaultSearch="newSearch"
-      />
+      <div v-if="selectedSearch && ShowReport" class="reports-width-height">
+        <div class="reports-lip-container" @click="toggleReport">
+          <div class="reports-lip">
+            <img
+              src="@/assets/images/angle-double-small-right.svg"
+              class="lip-img invert-dark-blue"
+            />
+          </div>
+        </div>
+        <Reports
+          @toggle-report="toggleReport"
+          @clear-clips="clearClips"
+          @remove-clip="removeClip"
+          @edit-clip="editClip"
+          @add-clip="addClip"
+          @set-added-clips="setAddedClips"
+          :clips="allCategoryClips"
+          :defaultSearch="newSearch"
+        />
+      </div>
     </Transition>
 
     <div @click="toggleReport" v-if="selectedSearch && !ShowReport" class="floating-action-bar">
+      <!-- <div class="reports-lip-container-bar">
+        <div class="reports-lip-bar">
+          <img
+            src="@/assets/images/angle-double-small-right.svg"
+            class="lip-img invert-dark-blue flip"
+          />
+          <div class="blue-box" />
+        </div>
+      </div> -->
+
       <div class="main-slot">
         <img src="@/assets/images/share.svg" height="10px" alt="" />
       </div>
 
       <div class="slot-container">
         <div v-for="(clip, i) in allCategoryClips" :key="i">
-          <img v-if="i < 3" :src="clip.image_url" class="small-photo" />
+          <img v-if="i < 5" :src="clip.urlToImage" class="small-photo" />
         </div>
 
         <div v-if="!allCategoryClips || allCategoryClips.length < 1" class="empty-slot"></div>
         <div v-if="!allCategoryClips || allCategoryClips.length < 2" class="empty-slot"></div>
         <div v-if="!allCategoryClips || allCategoryClips.length < 3" class="empty-slot"></div>
+        <div v-if="!allCategoryClips || allCategoryClips.length < 4" class="empty-slot"></div>
+        <div v-if="!allCategoryClips || allCategoryClips.length < 5" class="empty-slot"></div>
       </div>
 
       <div class="slot-count">
         <small>{{ allCategoryClips ? allCategoryClips.length : 0 }}/20</small>
       </div>
     </div>
+
     <div class="center column" :class="{ fullHeight: showingDropdown }" v-if="page === 'SUMMARIES'">
       <div v-if="!selectedSearch" class="switcher">
         <div
@@ -1234,6 +1256,7 @@ export default {
       outputInstructions: '',
       loading: false,
       summaryLoading: false,
+      shouldCancel: false,
       regenModal: false,
       filteredArticles: [],
       summary: '',
@@ -1248,6 +1271,7 @@ export default {
       showingDropdown: false,
       showGenerateDropdown: false,
       selectedOption: null,
+      controller: new AbortController(),
       generateOptions: [
         { name: 'Press Release', value: `Press Release` },
         { name: 'Statement', value: 'Statement' },
@@ -1271,23 +1295,25 @@ export default {
       ],
       promptSuggestions: [
         `Summarize the news`,
-        'Select the 5 most impactful news stories',
-        'List the top 5 sources based on size & popularity',
+        'Summarize the news for XXX and its impact',
+        `As XXX PR agency, provide creative suggestions per this news, think outside the box`,
+        `Create a media monitoring report for XXX. Include top sources (based on popularity and size), number of articles, sentiment, and any other important metrics`,
         `Provide pitch ideas and background on [JOURNALIST NAME]`,
         'Convert the most entertaining news story about XXX into a blog post',
-        `As XXX PR agency, provide creative suggestions per this news, think outside the box`,
         'Craft short responses on behalf of XXX to the stories that need it',
         `Write a highly engaging LinkedIn post based on this coverage for XXX`,
         `Draft an entertaining Twitter post based on this coverage for XXX`,
         `Based on recent news & your knowledge base ...`,
         'Generate 5 questions & answers journlists would ask based on this news',
         'Suggest a strategy to combat this negative coverage',
+        'Find a short, fun fact from the news about XXX',
       ],
     }
   },
   created() {
     // this.checkInterval = setInterval(this.checkTokenExpiry, 60000)
     this.addedClips = this.$store.state.currentReportClips
+    this.shouldCancel = false
   },
   watch: {
     typedMessage: 'changeIndex',
@@ -1782,6 +1808,10 @@ export default {
     goToContact() {
       window.open('https://managr.ai/contact', '_blank')
     },
+    stopLoading() {
+      this.loading = false
+      this.summaryLoading = false
+    },
     async generateNewSearch() {
       if (!this.isPaid && this.searchesUsed >= 10) {
         this.openPaidModal(
@@ -1790,41 +1820,59 @@ export default {
         return
       }
       this.addedClips = this.$store.state.currentReportClips
+      if (this.shouldCancel) {
+        return this.stopLoading()
+      }
       if (this.mainView !== 'website' && (!this.newSearch || this.newSearch.length < 3)) {
         return
       } else if (this.mainView === 'social') {
+        this.closeRegenModal()
         this.getTweets()
       } else if (this.mainView === 'website') {
+        this.closeRegenModal()
         this.getSourceSummary()
       } else {
+        this.closeRegenModal()
         this.loading = true
         this.summaryLoading = true
         this.changeSearch({ search: this.newSearch, template: this.newTemplate })
         try {
-          this.getClips().then((response) => {
-            this.getSummary(this.filteredArticles, this.newTemplate).then((response) => {
-              if (this.searchSaved) {
-                this.updateSearch()
-              }
-              this.refreshUser()
-            })
-          })
+          if (this.shouldCancel) {
+            return this.stopLoading()
+          }
+          await this.getClips()
+          if (this.shouldCancel) {
+            return this.stopLoading()
+          }
+          await this.getSummary(this.filteredArticles, this.newTemplate)
+          if (this.shouldCancel) {
+            return this.stopLoading()
+          }
+          if (this.searchSaved) {
+            this.updateSearch()
+          }
+          this.refreshUser()
         } catch (e) {
           console.log(e)
         }
       }
-      this.closeRegenModal()
     },
     async getSourceSummary() {
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       this.summaryLoading = true
       try {
+        if (this.shouldCancel) {
+          return this.stopLoading()
+        }
         let response
         if (this.addedArticles.length === 1) {
           response = await this.getArticleSummary(this.addedArticles[0].link, this.newTemplate)
           this.summary = response
         } else {
           response = await this.getSummary(this.addedArticles, this.newTemplate)
+        }
+        if (this.shouldCancel) {
+          return this.stopLoading()
         }
         if (this.searchSaved) {
           this.updateSearch()
@@ -1933,6 +1981,10 @@ export default {
         }, 2000)
       }
     },
+    abortFunctions() {
+      this.shouldCancel = true
+      this.controller.abort()
+    },
     async getClips() {
       try {
         await Comms.api
@@ -1940,9 +1992,8 @@ export default {
             search: this.newSearch,
             boolean: this.searchSaved ? this.booleanString : null,
             user_id: this.user.id,
-          })
+          }, this.controller.signal)
           .then((response) => {
-            console.log(response)
             this.filteredArticles = response.articles
             this.booleanString = response.string
           })
@@ -1959,12 +2010,18 @@ export default {
       this.summaryLoading = true
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       try {
+        if (this.shouldCancel) {
+          return this.stopLoading()
+        }
         await Comms.api
           .getTweets({
             search: this.newSearch,
             user_id: this.user.id,
           })
           .then((response) => {
+            if (this.shouldCancel) {
+              return this.stopLoading()
+            }
             if (response.tweets) {
               this.tweets = response.tweets
               this.tweetMedia = response.includes.media
@@ -2009,6 +2066,9 @@ export default {
       let tweets = this.prepareTweetSummary(this.tweets)
       this.summaryLoading = true
       try {
+        if (this.shouldCancel) {
+          return this.stopLoading()
+        }
         await Comms.api
           .getTweetSummary({
             tweets: tweets,
@@ -2016,6 +2076,9 @@ export default {
             instructions: this.newTemplate,
           })
           .then((response) => {
+            if (this.shouldCancel) {
+              return this.stopLoading()
+            }
             this.summary = response.summary
             this.refreshUser()
           })
@@ -2037,13 +2100,19 @@ export default {
       const allClips = this.getArticleDescriptions(clips)
       this.summaryLoading = true
       try {
+        if (this.shouldCancel) {
+          return this.stopLoading()
+        }
         await Comms.api
           .getSummary({
             clips: allClips,
             search: this.newSearch,
             instructions: instructions,
-          })
+          }, this.controller.signal)
           .then((response) => {
+            if (this.shouldCancel) {
+              return this.stopLoading()
+            }
             this.summary = response.summary
           })
       } catch (e) {
@@ -2106,12 +2175,18 @@ export default {
       this.loadingUrl = url
 
       try {
+        if (this.shouldCancel) {
+          return this.stopLoading()
+        }
         const response = await Comms.api.getArticleSummary({
           url: url,
           search: this.newSearch,
           instructions: instructions,
           length: length,
         })
+        if (this.shouldCancel) {
+          return this.stopLoading()
+        }
         selectedClip['summary'] = response.summary
         if (!this.addedArticles.length) {
           this.filteredArticles = this.filteredArticles.filter(
@@ -2125,6 +2200,9 @@ export default {
           this.addedArticles.unshift(selectedClip)
         }
 
+        if (this.shouldCancel) {
+          return this.stopLoading()
+        }
         this.refreshUser()
         this.scrollToTopDivider()
         return response.summary
@@ -2327,6 +2405,9 @@ export default {
     fromNav() {
       return this.$store.state.fromNav
     },
+  },
+  beforeDestroy() {
+    this.abortFunctions()
   },
   directives: {
     autoresize: {
@@ -2724,13 +2805,12 @@ export default {
   filter: invert(70%);
 }
 
+.invert-dark-blue {
+  filter: invert(22%) sepia(51%) saturate(390%) hue-rotate(161deg) brightness(92%) contrast(87%);
+}
 .inverted {
   filter: invert(100%);
 }
-
-// .invert-dark-blue {
-//   filter: invert(22%) sepia(51%) saturate(390%) hue-rotate(161deg) brightness(92%) contrast(87%);
-// }
 
 // .img-border {
 //   border: 1px solid #416177;
@@ -3169,12 +3249,13 @@ button:disabled {
   background-color: $white-blue;
   position: fixed;
   z-index: 3000;
-  right: 24px;
-  top: 40vh;
+  right: 16px;
+  top: 36vh;
   min-height: 160px;
   border-radius: 32px;
   border: 1px solid $white-blue;
-  width: 34px;
+  // width: 34px;
+  width: 46px;
   display: flex;
   padding: 4px 0 8px 0;
   flex-direction: column;
@@ -4390,6 +4471,76 @@ header {
     @media only screen and (max-width: 600px) {
       width: 80vw;
     }
+  }
+}
+.reports-lip-container {
+  position: fixed;
+  // top: 535%;
+  top: 50%;
+  right: 488px;
+  z-index: 5500;
+  cursor: pointer;
+  width: 1.5rem;
+}
+.reports-lip {
+  display: flex;
+  align-items: center;
+  background-color: $offer-white;
+  border-radius: 20px;
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+  height: 4rem;
+}
+.reports-lip-container-bar {
+  position: absolute;
+  top: 80px;
+  right: 32px;
+  z-index: -1;
+  cursor: pointer;
+  width: 2.5rem;
+}
+.reports-lip-bar {
+  display: flex;
+  align-items: center;
+  background-color: $white-blue;
+  border-radius: 20px;
+  border-left: 1px solid $white-blue;
+  border-top: 1px solid $white-blue;
+  border-bottom: 1px solid $white-blue;
+  // height: 7rem;
+  height: 4rem;
+  z-index: -1;
+}
+.blue-box {
+  background-color: $white-blue;
+  height: 4rem;
+  width: 21px;
+  position: absolute;
+  right: -1px;
+  // border-left: 5px solid $white-blue;
+}
+.lip-img {
+  height: 16px;
+  margin-left: 1px;
+  z-index: 5500;
+}
+.flip {
+  transform: rotate(180deg);
+}
+.reports-width-height {
+  width: 500px;
+  height: 100vh;
+  overflow-y: auto;
+  font-family: $thin-font-family;
+  padding: 0 8px 0 16px;
+  background-color: $offer-white;
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+  position: fixed;
+  z-index: 3000;
+  right: 0;
+  top: 0;
+  box-shadow: 30px 30px 40px;
+  @media only screen and (max-width: 600px) {
+    width: 100vw;
   }
 }
 </style>

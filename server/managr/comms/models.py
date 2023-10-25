@@ -16,7 +16,7 @@ from urllib.parse import urlencode
 import base64
 import hashlib
 from django.contrib.postgres.fields import JSONField, ArrayField
-from django.contrib.postgres.search import SearchVectorField, SearchQuery, SearchRank
+from django.contrib.postgres.search import SearchVectorField, SearchQuery, SearchRank, SearchVector
 from django.contrib.postgres.indexes import GinIndex
 
 logger = logging.getLogger("managr")
@@ -254,11 +254,11 @@ class Pitch(TimeStampModel):
         return f"{self.user.email} - {self.name}"
 
     @classmethod
-    def generate_pitch(cls, user, type, instructions, audience, content, style, tokens, timeout):
+    def generate_pitch(cls, user, type, instructions, audience, chars, style, tokens, timeout):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
         style = user.writing_style if user.writing_style else False
         prompt = comms_consts.OPEN_AI_PITCH(
-            datetime.now().date(), type, instructions, audience, content, style
+            datetime.now().date(), type, instructions, audience, chars, style
         )
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
             user.email,
@@ -277,6 +277,7 @@ class Pitch(TimeStampModel):
 
 class NewsSource(TimeStampModel):
     domain = models.CharField(max_length=255, unique=True)
+    site_name = models.CharField(max_length=255, blank=True, null=True)
     rss_feed_url = models.URLField(blank=True, null=True)
     last_scraped = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
@@ -312,7 +313,7 @@ class NewsSource(TimeStampModel):
         if selector_type == "year":
             selector = f"contains(@href, '{str(datetime.now().year)}')"
         if selector_type == "value":
-            selector = selector_split[1]
+            selector = f"contains(@href, '{selector_split[1]}')"
         if selector_type == "class":
             selector = f"contains(@class, '{selector_split[1]}')"
         return selector
@@ -354,6 +355,12 @@ class NewsSource(TimeStampModel):
             is_active=self.is_active,
         )
 
+    @classmethod
+    def domain_list(cls):
+        active_sources = cls.objects.filter(is_active=True)
+        source_list = [source.domain for source in active_sources]
+        return source_list
+
 
 class Article(TimeStampModel):
     title = models.CharField(max_length=150)
@@ -373,6 +380,10 @@ class Article(TimeStampModel):
             GinIndex(fields=["content_search_vector"]),
         ]
 
+    def save(self, *args, **kwargs):
+        self.content_search_vector = SearchVector("content")
+        super().save(*args, **kwargs)
+
     def fields_to_dict(self):
         return dict(
             title=self.title,
@@ -386,10 +397,10 @@ class Article(TimeStampModel):
 
     @classmethod
     def search_by_query(cls, boolean_string):
-        query = SearchQuery(boolean_string)
-        articles = (
-            cls.objects.annotate(rank=SearchRank(F("content_search_vector"), query))
-            .filter(rank__gt=0)
-            .order_by("-publish_date")
-        )
+        from managr.comms.utils import boolean_search_to_query
+
+        converted_boolean = boolean_search_to_query(boolean_string)
+        articles = Article.objects.filter(converted_boolean)
+        if len(articles):
+            articles = articles[:20]
         return list(articles)

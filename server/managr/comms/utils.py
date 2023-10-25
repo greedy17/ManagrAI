@@ -1,10 +1,18 @@
 import re
 import json
+import boto3
+import csv
+from datetime import datetime
+from functools import reduce
 from managr.core.utils import Variable_Client
 from newspaper import Config
 from django.db.models import Q
 from .constants import DO_NOT_TRACK_LIST
 from dateutil import parser
+from django.conf import settings
+from django.contrib.postgres.search import SearchQuery
+
+s3 = boto3.client("s3")
 
 user_agents = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
@@ -42,28 +50,75 @@ def extract_base_domain(article_link):
     return None
 
 
+def split_and_combine_terms(string):
+    terms = string.replace('"', "").replace("(", "").replace(")", "").split()
+    corrected_terms = []
+    current_term = ""
+    for idx, term in enumerate(terms):
+        if term in ["AND", "OR", "NOT"]:
+            corrected_terms.append(current_term)
+            current_term = ""
+            corrected_terms.append(term)
+        elif idx == len(terms) - 1:
+            if len(current_term):
+                current_term += f" {term}"
+            else:
+                current_term = term
+            corrected_terms.append(current_term)
+        else:
+            if len(current_term):
+                current_term += f" {term}"
+            else:
+                current_term = term
+    return corrected_terms
+
+
 def boolean_search_to_query(search_string):
-    terms = search_string.split()
+    term_list = split_and_combine_terms(search_string)
     query = Q()
-    current_query = Q()
+    current_q_objects = []
+    current_query = None
     is_negative = False
-    for term in terms:
-        if term == "AND":
+    for idx, term in enumerate(term_list):
+        if idx == len(term_list) - 1:
+            search_q = SearchQuery(term)
+            current_query = Q(content_search_vector=search_q)
+            if len(current_q_objects):
+                if current_query is not None:
+                    current_q_objects.append(current_query)
+                current_query = reduce(lambda q1, q2: q1 | q2, current_q_objects)
+                current_q_objects = []
+            if is_negative:
+                query &= ~current_query
+            else:
+                query &= current_query
+        elif term == "AND":
+            if len(current_q_objects):
+                current_query = reduce(lambda q1, q2: q1 | q2, current_q_objects)
+                current_q_objects = []
             query &= current_query
-            current_query = Q()
+            current_query = None
+            is_negative = False
         elif term == "OR":
-            pass
+            if current_query is not None:
+                current_q_objects.append(current_query)
+            current_query = None
         elif term == "NOT":
+            if len(current_q_objects):
+                if current_query is not None:
+                    current_q_objects.append(current_query)
+                current_query = reduce(lambda q1, q2: q1 | q2, current_q_objects)
+                current_q_objects = []
+            if current_query:
+                if is_negative:
+                    query &= ~current_query
+                else:
+                    query &= current_query
+            current_query = None
             is_negative = True
         else:
-            term = term.replace('"', "")
-            term_query = Q(search_vector_field__icontains=term)
-            if is_negative:
-                current_query &= ~term_query
-                is_negative = False
-            else:
-                current_query |= term_query
-    query &= current_query
+            search_q = SearchQuery(term)
+            current_query = Q(content_search_vector=search_q)
     return query
 
 
@@ -106,15 +161,6 @@ def normalize_newsapi_to_model(api_data):
     return normalized_data
 
 
-def normalize_article_data(api_data, article_models):
-    normalized_list = []
-    normalized_api_list = normalize_newsapi_to_model(api_data)
-    normalized_list.extend(normalized_api_list)
-    normalized_model_list = [article.fields_to_dict() for article in article_models]
-    normalized_list.extend(normalized_model_list)
-    return normalized_list
-
-
 def merge_sort_dates(arr):
     if len(arr) > 1:
         mid = len(arr) // 2
@@ -142,3 +188,62 @@ def merge_sort_dates(arr):
             j += 1
             k += 1
     return arr
+
+
+def normalize_article_data(api_data, article_models):
+    normalized_list = []
+    normalized_api_list = normalize_newsapi_to_model(api_data)
+    normalized_list.extend(normalized_api_list)
+    normalized_model_list = [article.fields_to_dict() for article in article_models]
+    normalized_list.extend(normalized_model_list)
+    sorted_arr = merge_sort_dates(normalized_list)
+    sorted_arr.reverse()
+    return sorted_arr
+
+
+def create_and_upload_csv(data):
+    file_name = "content_data.csv"
+
+    with open(file_name, "w", newline="") as csv_file:
+        writer = csv.writer(csv_file)
+        if s3.head_object(Bucket="your-s3-bucket-name", Key=file_name, DefaultResponseHeaders={}):
+            writer.writerow(["Organization Name", "User Email", "Type", "Content"])
+        writer.writerow(data)
+
+    s3.upload_file(file_name, "your-s3-bucket-name", file_name)
+
+
+def append_data_to_daily_file(data):
+    bucket_name = settings.AWS_STORAGE_BUCKET_NAME
+    today = datetime.now().strftime("%Y-%m-%d")
+    file_name = f"{settings.ENVIRONMENT}/current week/data_{today}.csv"
+
+    with open(file_name, "a", newline="") as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerow(data)
+
+    s3.upload_file(file_name, bucket_name, file_name)
+
+
+def combine_weekly_data():
+    bucket_name = settings.AWS_STORAGE_BUCKET_NAME
+    prefix = f"{settings.ENVIRONMENT}/current week/"
+    objects = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+
+    combined_data = []
+
+    for obj in objects.get("Contents", []):
+        key = obj["Key"]
+        response = s3.get_object(Bucket=bucket_name, Key=key)
+        data = response["Body"].read().decode("utf-8").splitlines()
+        combined_data.extend(data)
+
+    # Append the combined data to the primary CSV file
+    primary_file_key = "Content Data.csv"
+    response = s3.get_object(Bucket=bucket_name, Key=primary_file_key)
+    primary_data = response["Body"].read().decode("utf-8").splitlines()
+
+    combined_data.extend(primary_data)
+
+    # Upload the updated data to the primary CSV file
+    s3.put_object(Bucket=bucket_name, Key=primary_file_key, Body="\n".join(combined_data))

@@ -21,6 +21,7 @@ from django.shortcuts import redirect
 from rest_framework.decorators import action
 from . import constants as comms_consts
 from .models import Search, TwitterAuthAccount, Pitch
+from .models import Article as InternalArticle
 from managr.core.models import User
 from managr.comms import exceptions as comms_exceptions
 from .tasks import emit_process_website_domain
@@ -33,7 +34,7 @@ from rest_framework.decorators import (
     api_view,
     permission_classes,
 )
-from managr.comms.utils import generate_config, normalize_newsapi_to_model
+from managr.comms.utils import generate_config, normalize_article_data, normalize_newsapi_to_model
 
 
 logger = logging.getLogger("managr")
@@ -116,12 +117,14 @@ class PRSearchViewSet(
                     articles = news_res["articles"]
                     query_input = boolean
                 articles = [article for article in articles if article["title"] != "[Removed]"]
-                articles = normalize_newsapi_to_model(articles)
+                internal_articles = InternalArticle.search_by_query(query_input)
+                articles = normalize_article_data(articles, internal_articles)
+                # articles = normalize_newsapi_to_model(articles)
                 break
             except Exception as e:
                 has_error = True
                 logger.exception(e)
-                articles = e
+                articles = str(e)
                 break
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": articles})
@@ -291,7 +294,9 @@ class PRSearchViewSet(
                 text = article_res.text
                 open_ai_url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_REGENERATE_ARTICLE(
-                   text, original_summary, instructions,
+                    text,
+                    original_summary,
+                    instructions,
                 )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
@@ -344,7 +349,7 @@ class PRSearchViewSet(
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
 
-        return Response(data={"summary": message}) 
+        return Response(data={"summary": message})
 
     @action(
         methods=["post"],
@@ -372,7 +377,7 @@ class PRSearchViewSet(
 
                 open_ai_url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_GENERATE_CONTENT(
-                    datetime.now().date(), article, '', instructions
+                    datetime.now().date(), article, "", instructions
                 )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
@@ -389,7 +394,7 @@ class PRSearchViewSet(
                     )
                 r = open_ai_exceptions._handle_response(r)
                 message = r.get("choices")[0].get("message").get("content").replace("**", "*")
-               
+
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -427,7 +432,6 @@ class PRSearchViewSet(
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
 
         return Response(data={"content": message})
-
 
     @action(
         methods=["post"],
@@ -805,10 +809,10 @@ class PitchViewSet(
         if user.has_hit_summary_limit:
             return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         type = request.data.get("type")
-        audience = request.data.get("audience")
-        content = request.data.get("content")
+        audience = request.data.get("audience")       
         instructions = request.data.get("instructions")
         style = request.data.get("style")
+        chars = request.data.get("chars") 
         pitch_id = request.data.get("pitch_id", False)
         has_error = False
         attempts = 1
@@ -817,7 +821,7 @@ class PitchViewSet(
         while True:
             try:
                 res = Pitch.generate_pitch(
-                    user, type, instructions, audience, content, style, token_amount, timeout
+                    user, type, instructions, audience, chars, style, token_amount, timeout
                 )
                 pitch = res.get("choices")[0].get("message").get("content")
                 if pitch_id:

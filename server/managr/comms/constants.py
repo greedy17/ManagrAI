@@ -87,10 +87,10 @@ OPEN_AI_TWITTER_SEARCH_CONVERSION = (
 )
 
 DEFAULT_ARTICLE_INSTRUCTIONS = (
-    lambda search: f"*Context: Sentiment: Impact: as it pertains to {search}*"
+    lambda search: f"*Context: \n Sentiment: \n Impact: as it pertains to {search}.* Output can not exceed 400 characters"
 )
 DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS = (
-    lambda search: f"<strong>Context: Sentiment: Impact: as it pertains to {search}</strong>"
+    lambda search: f"<strong>Context: \n Sentiment: \n Impact: as it pertains to {search}</strong>. Output can not exceed 400 characters"
 )
 
 
@@ -104,7 +104,7 @@ def OPEN_AI_WEB_SUMMARY(
 
 
 def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, for_client=False):
-    body = f"Today's date is {date}. Summarize this news article:\n Article: {article}\n As it relates to {search}. It cannot be longer than 500 characters. Output format must be:\n"
+    body = f"Today's date is {date}. Summarize this news article {article}, as it relates to {search}. \n Output format must be:\n"
     if instructions:
         body += instructions
     else:
@@ -117,18 +117,18 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
     return body
 
 
-def OPEN_AI_PITCH(date, type, output, persona, briefing, style=False):
+def OPEN_AI_PITCH(date, type, output, persona, chars, style=False):
     if not style:
-        style = "Professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Direct, to the point."
-    body = f"""f"Today's {date}. As the VP of Communications, I need a {type} tailored for {persona}. 
-    Writing Style: {style}. Take into account the information from: {briefing}. Adhere to the given output parameters: {output}."""
+        style = "Maintain an objective and factual tone throughout. Begin with a precise introduction, without informal salutations. Establish authority using a formal style and cite reputable sources where relevant. Strive for clear and succinct communication, avoiding metaphors and ornate language. Present information in a coherent manner, providing necessary context and reliable data, while refraining from persuasive elements. Focus on depth of content to engage readers, rather than using sensationalism. The goal is to inform and respect the reader’s intelligence, suitable for educational or professional environments. Refrain from commercial commentary or emotional bias. Conclude without relying on standard transition phrases like 'In conclusion' or 'In summary'."
+    body = f"""Today's {date}. As the VP of Communications, generate content follow these instructions carefully {output}. You must Mirror this writing {style}. Lastly, this content must adhere to a strict {chars} character limit."""
+    print(body)
     return body
 
 
 def OPEN_AI_GENERATE_CONTENT(date, article, style, instructions):
     if not style:
-        style = "Professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Direct, to the point."
-    body = f"Today's date is {date}. Generate the following content:\n {instructions},\n based on this news article:\n {article}\n. Use this writing stye:\n {style}, output cannot exceed 1,500 characters."
+        style = "Maintain an objective and factual tone throughout. Begin with a precise introduction, without informal salutations. Establish authority using a formal style and cite reputable sources where relevant. Strive for clear and succinct communication, avoiding metaphors and ornate language. Present information in a coherent manner, providing necessary context and reliable data, while refraining from persuasive elements. Focus on depth of content to engage readers, rather than using sensationalism. The goal is to inform and respect the reader’s intelligence, suitable for educational or professional environments. Refrain from commercial commentary or emotional bias. Conclude without relying on standard transition phrases like 'In conclusion' or 'In summary'."
+    body = f"Today's date is {date}. Generate the following content:\n {instructions},\n based on this news article:\n {article}\n. Use this writing stye:\n {style}. Output cannot exceed 1,500 characters."
     return body
 
 
@@ -140,10 +140,7 @@ Instructions: {instructions}"""
 )
 
 OPEN_AI_LEARN_WRITING_STYLE_PROMPT = (
-    lambda sample: f"""Your task is to emulate this users writing style.
-Analyze this writing sample {sample} and summarize its key writing style characteristics in a concise manner,
-focusing on tone, vocabulary, structure, and any unique stylistic elements. 
-The output must be short, within 200 characters, describing the writing style in a concise manner."""
+    lambda sample: f"""Perform a detailed analysis of {sample}, focusing on discerning the author's unique style apart from content. Evaluate tone, formality, structure, and linguistic idiosyncrasies, ensuring an objective stance. Investigate the mechanisms used for establishing credibility, engaging readers informatively, avoiding persuasive or sales-oriented language. Task: Formulate concise guidelines capturing the essence of the author's style, enabling its replication across various themes. Emphasize a clear, informative, non-promotional communication style, highlighting specific stylistic techniques contributing to effective and trustworthy discourse. Output cannot exceed 1,200 characters."""
 )
 
 OPEN_AI_REGENERATE_ARTICLE = (

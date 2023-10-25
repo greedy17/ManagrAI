@@ -4,14 +4,8 @@ import datetime
 from ..models import NewsSource
 from ..serializers import ArticleSerializer
 from scrapy.crawler import CrawlerProcess
-from scrapy import signals
-from scrapy.signalmanager import dispatcher
 from dateutil import parser
 from scrapy.utils.project import get_project_settings
-from twisted.internet import reactor
-
-settings = get_project_settings()
-process = CrawlerProcess()
 
 
 logger = logging.getLogger("managr")
@@ -33,12 +27,15 @@ XPATH_STRING_OBJ = {
 
 
 def data_cleaner(data):
-    content = data.pop("content")
-    date = data.pop("publish_date")
-    parsed_date = parser.parse(date)
-    content = content.replace("\n", " ").replace("\t", " ").replace("  ", "")
-    data["content"] = content
-    data["publish_date"] = parsed_date
+    try:
+        content = data.pop("content")
+        date = data.pop("publish_date")
+        parsed_date = parser.parse(date)
+        content = content.replace("\n", " ").replace("\t", " ").replace("  ", "")
+        data["content"] = content
+        data["publish_date"] = parsed_date
+    except KeyError:
+        return False
     return data
 
 
@@ -57,9 +54,9 @@ class NewsSpider(scrapy.Spider):
 
     def __init__(self, *args, **kwargs):
         super(NewsSpider, self).__init__(*args, **kwargs)
-        self.start_urls = kwargs.get("start_urls").split(",")
+        self.start_urls = kwargs.get("start_urls")
         self.urls_processed = 0
-        dispatcher.connect(self.spider_closed_handler, signal=signals.spider_closed)
+        # dispatcher.connect(self.spider_closed_handler, signal=signals.spider_closed)
 
     def parse(self, response):
         url = response.url
@@ -97,15 +94,20 @@ class NewsSpider(scrapy.Spider):
         meta_tag_data["content"] = full_article
         try:
             cleaned_data = data_cleaner(meta_tag_data)
-            serializer = ArticleSerializer(data=cleaned_data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
+            if cleaned_data:
+                serializer = ArticleSerializer(data=cleaned_data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+            else:
+                return
         except Exception as e:
-            logger.exception(f"Failed to save article :{e}\nData: {meta_tag_data}")
+            source.error_log.append(str(e))
+            source.save()
         return
 
     def process_new_url(self, source, response):
         anchor_tags = response.css("a")
+        site_name = response.xpath("//meta[contains(@property, 'site_name')]/@content")
         scrape_dict = {}
         for idx, link in enumerate(anchor_tags):
             href = link.css("::attr(href)").get()
@@ -120,6 +122,7 @@ class NewsSpider(scrapy.Spider):
                 "classes": classes,
             }
         source.scrape_data = scrape_dict
+        source.site_name = site_name
         source.last_scraped = datetime.datetime.now()
         source.save()
         return
@@ -130,15 +133,21 @@ class NewsSpider(scrapy.Spider):
                 url, headers={"Referer": "https://www.google.com"}, callback=self.parse
             )
 
-    def spider_closed_handler(self, spider, reason):
-        if self.urls_processed == len(self.start_urls):
-            self.logger.info("All URLs processed. Stopping the spider.")
-            self.crawler.engine.close_spider(spider, "All URLs processed")
-        else:
-            self.logger.info(
-                f"Not all URLs processed. ({self.urls_processed}/{len(self.start_urls)})"
-            )
+    # def spider_closed_handler(self, spider, reason):
+    #     if self.urls_processed == len(self.start_urls):
+    #         self.logger.info("All URLs processed. Stopping the spider.")
+    #         self.crawler.engine.close_spider(spider, "All URLs processed")
+    #     else:
+    #         self.logger.info(
+    #             f"Not all URLs processed. ({self.urls_processed}/{len(self.start_urls)})"
+    #         )
+
+
+settings = get_project_settings()
+process = CrawlerProcess(settings=settings)
 
 
 def run_spider(url):
-    process.crawl(NewsSpider, start_urls=url)
+    process.crawl(NewsSpider, start_urls=[url])
+    process.start()
+    return
