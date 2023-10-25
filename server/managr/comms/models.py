@@ -370,7 +370,7 @@ class Article(TimeStampModel):
     author = models.CharField(max_length=150, blank=True, null=True)
     publish_date = models.DateTimeField()
     link = models.CharField(max_length=255)
-    image_url = models.CharField(max_length=255)
+    image_url = models.CharField(max_length=500)
     source = models.ForeignKey(
         "comms.NewsSource", on_delete=models.CASCADE, related_name="articles"
     )
@@ -387,6 +387,9 @@ class Article(TimeStampModel):
         return self.save()
 
     def fields_to_dict(self):
+        site_name = (
+            self.source.site_name if hasattr(self.source, "site_name") else self.source.domain
+        )
         return dict(
             title=self.title,
             description=self.description,
@@ -394,7 +397,7 @@ class Article(TimeStampModel):
             publish_date=str(self.publish_date),
             link=self.link,
             image_url=self.image_url,
-            source=self.source.domain,
+            source=site_name,
         )
 
     @classmethod
