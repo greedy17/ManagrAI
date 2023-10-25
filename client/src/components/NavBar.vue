@@ -300,7 +300,7 @@
               </p>
               <p class="dropdown-item" @click="goToReports">
                 <img class="mar-right" src="@/assets/images/report.svg" height="14px" alt="" />
-                Reports
+                Digest
               </p>
               <p @click="logOut" class="dropdown-item dropdown-border">
                 <img class="mar-right" src="@/assets/images/logout.svg" height="14px" alt="" /> Sign

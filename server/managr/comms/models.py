@@ -254,11 +254,11 @@ class Pitch(TimeStampModel):
         return f"{self.user.email} - {self.name}"
 
     @classmethod
-    def generate_pitch(cls, user, type, instructions, audience, content, style, tokens, timeout):
+    def generate_pitch(cls, user, type, instructions, audience, chars, style, tokens, timeout):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
         style = user.writing_style if user.writing_style else False
         prompt = comms_consts.OPEN_AI_PITCH(
-            datetime.now().date(), type, instructions, audience, content, style
+            datetime.now().date(), type, instructions, audience, chars, style
         )
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
             user.email,
@@ -365,7 +365,7 @@ class NewsSource(TimeStampModel):
 class Article(TimeStampModel):
     title = models.CharField(max_length=150)
     description = models.TextField(null=True)
-    author = models.CharField(max_length=150)
+    author = models.CharField(max_length=150, blank=True, null=True)
     publish_date = models.DateTimeField()
     link = models.CharField(max_length=255)
     image_url = models.CharField(max_length=255)
@@ -380,9 +380,9 @@ class Article(TimeStampModel):
             GinIndex(fields=["content_search_vector"]),
         ]
 
-    def save(self, *args, **kwargs):
+    def update_search_vector(self):
         self.content_search_vector = SearchVector("content")
-        super().save(*args, **kwargs)
+        return self.save()
 
     def fields_to_dict(self):
         return dict(
@@ -400,8 +400,7 @@ class Article(TimeStampModel):
         from managr.comms.utils import boolean_search_to_query
 
         converted_boolean = boolean_search_to_query(boolean_string)
-        query = converted_boolean
-        articles = Article.objects.filter(query)
+        articles = Article.objects.filter(converted_boolean)
         if len(articles):
             articles = articles[:20]
         return list(articles)
