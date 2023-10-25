@@ -369,7 +369,7 @@ class Article(TimeStampModel):
     author = models.CharField(max_length=150, blank=True, null=True)
     publish_date = models.DateTimeField()
     link = models.CharField(max_length=255)
-    image_url = models.CharField(max_length=255)
+    image_url = models.CharField(max_length=500)
     source = models.ForeignKey(
         "comms.NewsSource", on_delete=models.CASCADE, related_name="articles"
     )
