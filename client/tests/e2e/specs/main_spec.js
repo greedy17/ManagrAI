@@ -43,7 +43,7 @@ describe('Web Load Test', () => {
 // })
 
 describe('Log In Test', () => {
-  it('it visits the webapp', () => {
+  it('visits the webapp', () => {
     cy.visit('localhost:8080/');
   })
   it('visits the login page', () => {
@@ -63,5 +63,38 @@ describe('Log In Test', () => {
   })
   it('should redirect to summaires', () => {
     cy.url().should('eq', 'http://localhost:8080/summaries');
+  })
+})
+
+describe('Summarize Page Test', () => {
+  it('be PRO', () => {
+    cy.get('#pro-free-version').should('eq', 'PRO');
+  })
+  it('have Summarize, Pitch, and Transcribe options', () => {
+    cy.get('#router-summarize').should('exist');
+    cy.get('#router-pitch').should('exist');
+    cy.get('#router-transcribe1').should('exist');
+  })
+  it('has News, Social, and Articles tabs', () => {
+    cy.get('#news-tab').should('exist');
+    cy.get('#social-tab').should('exist');
+    cy.get('#articles-tab').should('exist');
+  })
+  it('has search input', () => {
+    cy.get('#search-input').should('exist');
+  })
+  it('uses the search input', () => {
+    cy.get('#search-input').type('Bread');
+  })
+  it('has instructions input', () => {
+    cy.get('#instructions').should('exist');
+  })
+  it('selects an instruction', () => {
+    cy.get('#instructions-text-area').click();
+    cy.get('.dropdown-item').click();
+    cy.get('#instructions-text-area').should('eq', 'Summarize the news');
+  })
+  it('has generate button', () => {
+    cy.get('#generate-summary').should('exist');
   })
 })
