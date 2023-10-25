@@ -328,6 +328,25 @@
             </div>
           </div>
 
+          <div style="margin-top: 1rem" class="input-container" v-if="mainView === 'news'">
+            <div class="input-row-start">
+              <div class="main-text">
+                <img
+                  style="margin-right: 10px; opacity: 0.7"
+                  src="@/assets/images/calendar.svg"
+                  height="14px"
+                />
+                Date Range
+              </div>
+
+              <div style="width: 100%">
+                <input class="area-input-smallest" type="date" v-model="dateStart" />
+                -
+                <input class="area-input-smallest" type="date" v-model="dateEnd" />
+              </div>
+            </div>
+          </div>
+
           <div style="margin-top: 40px" v-if="mainView === 'website'" class="divider">
             <p style="left: 40%; font-size: 13px" class="divider-text">Articles</p>
           </div>
@@ -1212,6 +1231,8 @@ export default {
   },
   data() {
     return {
+      dateStart: null,
+      dateEnd: null,
       contentModalOpen: false,
       contentInstructions: null,
       contentUrl: null,
@@ -1314,6 +1335,14 @@ export default {
     // this.checkInterval = setInterval(this.checkTokenExpiry, 60000)
     this.addedClips = this.$store.state.currentReportClips
     this.shouldCancel = false
+
+    const today = new Date()
+    const sevenDaysAgo = new Date(today)
+    sevenDaysAgo.setDate(today.getDate() - 7)
+
+    // Format the dates as YYYY-MM-DD strings (required for <input type="date">)
+    this.dateStart = sevenDaysAgo.toISOString().split('T')[0]
+    this.dateEnd = today.toISOString().split('T')[0]
   },
   watch: {
     typedMessage: 'changeIndex',
@@ -1988,11 +2017,16 @@ export default {
     async getClips() {
       try {
         await Comms.api
-          .getClips({
-            search: this.newSearch,
-            boolean: this.searchSaved ? this.booleanString : null,
-            user_id: this.user.id,
-          }, this.controller.signal)
+          .getClips(
+            {
+              search: this.newSearch,
+              boolean: this.searchSaved ? this.booleanString : null,
+              user_id: this.user.id,
+              date_to: this.dateStart,
+              date_from: this.dateEnd,
+            },
+            this.controller.signal,
+          )
           .then((response) => {
             this.filteredArticles = response.articles
             this.booleanString = response.string
@@ -2104,11 +2138,14 @@ export default {
           return this.stopLoading()
         }
         await Comms.api
-          .getSummary({
-            clips: allClips,
-            search: this.newSearch,
-            instructions: instructions,
-          }, this.controller.signal)
+          .getSummary(
+            {
+              clips: allClips,
+              search: this.newSearch,
+              instructions: instructions,
+            },
+            this.controller.signal,
+          )
           .then((response) => {
             if (this.shouldCancel) {
               return this.stopLoading()
@@ -3130,6 +3167,26 @@ button:disabled {
   color: $dark-black-blue;
 }
 
+.area-input-smallest {
+  background-color: $offer-white;
+  margin-bottom: 0.25rem;
+  max-height: 250px;
+  padding: 0 1.25rem;
+  line-height: 1.75;
+  outline: none;
+  border: none;
+  letter-spacing: 0.5px;
+  font-size: 14px;
+  font-family: $base-font-family;
+  font-weight: 400;
+  border: none !important;
+  resize: none;
+  text-align: left;
+  overflow: auto;
+  scroll-behavior: smooth;
+  color: $dark-black-blue;
+}
+
 .area-input {
   width: 100%;
   background-color: $offer-white;
@@ -3190,7 +3247,7 @@ button:disabled {
 }
 
 .main-text {
-  width: 148px;
+  width: 148px !important;
   display: flex;
   flex-direction: row;
   align-items: center;
