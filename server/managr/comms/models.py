@@ -407,7 +407,7 @@ class Article(TimeStampModel):
         converted_boolean = boolean_search_to_query(boolean_string)
         articles = Article.objects.filter(converted_boolean)
         if date_to:
-            articles = articles.objects.filter(publish_date__range=(date_from, date_to))
+            articles = articles.filter(publish_date__range=(date_from, date_to))
         if len(articles):
             articles = articles[:20]
         return list(articles)
