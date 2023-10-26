@@ -365,11 +365,11 @@
             </div>
           </div>
 
-          <div style="margin-top: 1rem" class="input-container" v-if="mainView === 'news'">
+          <div style="margin-top: 2rem" class="input-container" v-if="mainView === 'news'">
             <div class="input-row-start">
               <div class="main-text">
                 <img
-                  style="margin-right: 10px; opacity: 0.7"
+                  style="margin-right: 10px; opacity: 0.7; margin-top: -1px"
                   src="@/assets/images/calendar.svg"
                   height="14px"
                 />
@@ -384,9 +384,9 @@
             </div>
           </div>
 
-          <div style="margin-top: 40px" v-if="mainView === 'website'" class="divider">
+          <!-- <div style="margin-top: 40px" v-if="mainView === 'website'" class="divider">
             <p style="left: 40%; font-size: 13px" class="divider-text">Articles</p>
-          </div>
+          </div> -->
 
           <div
             class="article-container"
@@ -676,7 +676,7 @@
           <p class="divider-text">
             {{
               mainView === 'news'
-                ? 'News Clips'
+                ? `News Clips - ${filteredArticles.length}`
                 : mainView === 'website'
                 ? 'Articles'
                 : 'Social Media'
