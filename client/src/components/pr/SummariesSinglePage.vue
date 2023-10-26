@@ -1326,6 +1326,7 @@ export default {
         `Summarize the news, provide sentiment, and creative ways to newsjack this coverage for XXX`,
         `As XXX PR agency, provide creative suggestions per this news, think outside the box`,
         `Create a media monitoring report for XXX. Include top sources (based on popularity and size), number of articles, sentiment, and any other important metrics`,
+        `List up to 5 journalists from tier one publications writing about this topic`,
         `Provide pitch ideas and background on [JOURNALIST NAME]`,
         'Convert the most entertaining news story about XXX into a blog post',
         'Craft short responses on behalf of XXX to the stories that need it',
