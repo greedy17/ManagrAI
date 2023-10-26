@@ -87,6 +87,7 @@ class UserClientSerializer(serializers.ModelSerializer):
             "meta_data",
             "activation_link_ref",
             "writing_style",
+            "writing_styles",
         )
 
     def get_activation_link(self, instance):

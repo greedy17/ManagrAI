@@ -22,6 +22,7 @@ XPATH_STRING_OBJ = {
     "publish_date": [
         "//meta[contains(@property, 'published')]/@content",
         "//meta[contains(@name, 'date')]/@content",
+        "//*[contains(., 'publish')]/text()",
     ],
     "image_url": ["//meta[@property='og:image']/@content"],
 }
@@ -110,7 +111,8 @@ class NewsSpider(scrapy.Spider):
             else:
                 return
         except Exception as e:
-            cleaned_data.pop("content")
+            logger.info(str(e))
+            cleaned_data = cleaned_data.pop("content") if cleaned_data is not None else "No data"
             source.error_log.append(f"{str(e)} - data: {cleaned_data}")
             source.save()
         return

@@ -410,3 +410,14 @@ class Article(TimeStampModel):
         if len(articles):
             articles = articles[:20]
         return list(articles)
+
+
+class WritingStyle(models.Model):
+    style = models.TextField()
+    user = models.ForeignKey(
+        "core.User",
+        related_name="writing_styles",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
+    )
