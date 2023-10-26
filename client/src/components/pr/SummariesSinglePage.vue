@@ -2029,8 +2029,8 @@ export default {
               search: this.newSearch,
               boolean: this.searchSaved ? this.booleanString : null,
               user_id: this.user.id,
-              date_to: this.dateStart,
-              date_from: this.dateEnd,
+              date_from: this.dateStart,
+              date_to: this.dateEnd,
             },
             this.controller.signal,
           )
