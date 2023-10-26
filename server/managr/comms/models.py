@@ -102,7 +102,6 @@ class Search(TimeStampModel):
             query["from"] = date_from
         endpoint = comms_consts.NEW_API_EVERYTHING_QUERY_URI(urlencode(query))
         news_url = comms_consts.NEW_API_URI + "/" + endpoint
-        print('URL IS RIGHT HERE: ---- >' , news_url)
         with Variable_Client() as client:
             new_res = client.get(news_url, headers=comms_consts.NEWS_API_HEADERS)
         return _handle_news_response(new_res)
