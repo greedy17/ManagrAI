@@ -29,7 +29,7 @@
       <!-- <div class="seperator">
               <span> OR </span>
             </div> -->
-      <button class="primary-button" @click="goToRegister">Register with company email</button>
+      <button id="register-button" class="primary-button" @click="goToRegister">Register with company email</button>
     </div>
     <div class="links">
       <p>

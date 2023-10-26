@@ -2,13 +2,13 @@
   <div class="reports">
     <div>
       <!-- <h1>Settings</h1> -->
-      <h1 class="sticky-top">{{ user.fullName }} - Reports</h1>
+      <h1 class="sticky-top">{{ user.fullName }} - Digest</h1>
       <div class="bar-header">
         <small
           @click="changeActivePage('reports')"
           class="pointer"
           :class="{ active: page === 'reports' }"
-          >Reports</small
+          >Digest</small
         >
         <!-- <small @click="changeActivePage('profile')" class="pointer" :class="{ active: page === 'profile' }">Profile</small> -->
       </div>

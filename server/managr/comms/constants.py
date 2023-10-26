@@ -27,8 +27,12 @@ NEWS_API_HEADERS = {
 
 NEW_API_URI = "https://newsapi.org/v2"
 
-NEW_API_EVERYTHING_URI = (
+NEW_API_EVERYTHING_QUERY_URI = (
     lambda query: f"everything?{query}&language=en&sortBy=publishedAt&pageSize=20"
+)
+
+NEW_API_EVERYTHING_DATE_URI = (
+    lambda date_from, date_to: f"everything?from={date_from}&to={date_to}&language=en&sortBy=publishedAt&pageSize=20"
 )
 
 SEARCH_TYPE_CHOICES = (("NEWS", "News"), ("SOCIAL_MEDIA", "Social Media"), ("MIXED", "Mixed"))
@@ -134,7 +138,7 @@ def OPEN_AI_GENERATE_CONTENT(date, article, style, instructions):
 
 OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS = (
     lambda pitch, instructions: f"""
-Below is some AI generated content. Adjust and rewrite the content per instructions below:\n
+Adjust and rewrite the content per the instructions, while maintaining the existing writing style.\n
 Content: {pitch}\n
 Instructions: {instructions}"""
 )

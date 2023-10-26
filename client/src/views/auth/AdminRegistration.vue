@@ -110,6 +110,7 @@
           class="primary-button"
           type="submit"
           @click="onSubmit"
+          id="sign-up"
         >
           Sign Up
         </button>

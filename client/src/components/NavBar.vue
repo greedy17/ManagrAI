@@ -43,27 +43,27 @@
           <div @click="goHome" class="logo">
             <img style="height: 28px" src="@/assets/images/logo.png" />
             <div class="beta-tag">
-              <p>{{ isPaid ? 'PRO' : 'FREE' }}</p>
+              <p id="pro-free-version">{{ isPaid ? 'PRO' : 'FREE' }}</p>
             </div>
           </div>
         </router-link>
 
-        <router-link active-class="active" :to="{ name: 'PRSummaries' }">
+        <router-link active-class="active" :to="{ name: 'PRSummaries' }" id="router-summarize">
           <p>Summarize</p>
         </router-link>
 
-        <router-link active-class="active" :to="{ name: 'Pitches' }">
+        <router-link active-class="active" :to="{ name: 'Pitches' }" id="router-pitch">
           <p>Pitch</p>
         </router-link>
 
-        <router-link v-if="!hasZoomIntegration" :to="{ name: 'PRIntegrations' }">
+        <router-link v-if="!hasZoomIntegration" :to="{ name: 'PRIntegrations' }" id="router-transcribe1">
           <div class="wrapper">
             <p>Transcribe</p>
             <div style="margin-left: -20px" class="tooltip">Connect Zoom</div>
           </div>
         </router-link>
 
-        <router-link v-else active-class="active" :to="{ name: 'PRTranscripts' }">
+        <router-link v-else active-class="active" :to="{ name: 'PRTranscripts' }" id="router-transcribe2">
           <p>Transcribe</p>
         </router-link>
 
@@ -300,7 +300,7 @@
               </p>
               <p class="dropdown-item" @click="goToReports">
                 <img class="mar-right" src="@/assets/images/report.svg" height="14px" alt="" />
-                Reports
+                Digest
               </p>
               <p @click="logOut" class="dropdown-item dropdown-border">
                 <img class="mar-right" src="@/assets/images/logout.svg" height="14px" alt="" /> Sign
