@@ -69,6 +69,7 @@
             </div>
             <textarea v-autoresize v-model="newSearch" class="regen-body-text" />
           </div>
+
           <div v-if="mainView !== 'website'">
             <div>
               <h5 class="regen-body-title">
@@ -85,6 +86,38 @@
               </h5>
             </div>
             <textarea v-autoresize v-model="newTemplate" class="regen-body-text" />
+          </div>
+
+          <div v-if="mainView === 'news'">
+            <div>
+              <h5 class="regen-body-title">Date Range</h5>
+            </div>
+            <div class="input-row-start regen-body-text">
+              <!-- <div class="main-text">
+                <img
+                  style="margin-right: 10px; opacity: 0.7"
+                  src="@/assets/images/calendar.svg"
+                  height="14px"
+                />
+                Date Range
+              </div> -->
+
+              <div>
+                <input
+                  style="padding-left: 0; background: transparent"
+                  class="area-input-smallest"
+                  type="date"
+                  v-model="dateStart"
+                />
+                -
+                <input
+                  style="background: transparent"
+                  class="area-input-smallest"
+                  type="date"
+                  v-model="dateEnd"
+                />
+              </div>
+            </div>
           </div>
         </div>
         <div class="regen-footer">
@@ -332,11 +365,11 @@
             </div>
           </div>
 
-          <div style="margin-top: 1rem" class="input-container" v-if="mainView === 'news'">
+          <div style="margin-top: 2rem" class="input-container" v-if="mainView === 'news'">
             <div class="input-row-start">
               <div class="main-text">
                 <img
-                  style="margin-right: 10px; opacity: 0.7"
+                  style="margin-right: 10px; opacity: 0.7; margin-top: -1px"
                   src="@/assets/images/calendar.svg"
                   height="14px"
                 />
@@ -351,9 +384,9 @@
             </div>
           </div>
 
-          <div style="margin-top: 40px" v-if="mainView === 'website'" class="divider">
+          <!-- <div style="margin-top: 40px" v-if="mainView === 'website'" class="divider">
             <p style="left: 40%; font-size: 13px" class="divider-text">Articles</p>
-          </div>
+          </div> -->
 
           <div
             class="article-container"
@@ -643,7 +676,7 @@
           <p class="divider-text">
             {{
               mainView === 'news'
-                ? 'News Clips'
+                ? `News Clips - ${filteredArticles.length}`
                 : mainView === 'website'
                 ? 'Articles'
                 : 'Social Media'
@@ -3184,7 +3217,7 @@ button:disabled {
   outline: none;
   border: none;
   letter-spacing: 0.5px;
-  font-size: 14px;
+  font-size: 13px;
   font-family: $base-font-family;
   font-weight: 400;
   border: none !important;
