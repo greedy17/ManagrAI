@@ -521,6 +521,7 @@ export default {
       output: '',
       persona: '',
       briefing: '',
+      characters: null,
       pitch: null,
       loading: false,
       regenerating: false,
