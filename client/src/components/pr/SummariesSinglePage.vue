@@ -676,10 +676,10 @@
           <p class="divider-text">
             {{
               mainView === 'news'
-                ? `News Clips - ${filteredArticles.length}`
+                ? `${filteredArticles.length} News Clips`
                 : mainView === 'website'
                 ? 'Articles'
-                : 'Social Media'
+                : `${tweets.length} Tweets`
             }}
           </p>
         </div>
