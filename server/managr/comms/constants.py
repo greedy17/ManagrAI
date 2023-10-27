@@ -109,8 +109,10 @@ def OPEN_AI_WEB_SUMMARY(
 def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, for_client=False):
     if not instructions:
         instructions = DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS
-    body = f"Today's date is {date}. Summarize this news article: {article}. \n You must follow these instructions: {instructions}"
-    
+    if not search:    
+        body = f"Today's date is {date}. Summarize this news article: {article} \n You must follow these instructions: {instructions}."
+    else:
+        body = f"Today's date is {date}. Summarize this news article: {article}, as it relates to {search}. \n You must follow these instructions: {instructions}."
     return body
 
 
@@ -141,8 +143,8 @@ OPEN_AI_LEARN_WRITING_STYLE_PROMPT = (
 )
 
 OPEN_AI_REGENERATE_ARTICLE = (
-    lambda article, content, instructions: f"""Adjust and rewrite this content:\n Content: {content}\n per these Instructions: {instructions}.
-     No longer than 1,500 characters. For reference, here is the article the content is based on: Article: {article}."""
+    lambda article, content, instructions: f"""Rewrite this content:{content} following these Instructions carefully: {instructions}.
+     Output cannot be longer than 1,500 characters."""
 )
 
 DO_NOT_TRACK_LIST = ["www.wsj.com", "www.nytimes.com", "www.bizjournals.com"]
