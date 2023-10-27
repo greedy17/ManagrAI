@@ -91,9 +91,9 @@ DEFAULT_ARTICLE_INSTRUCTIONS = (
     lambda search: f"*Context: \n Sentiment: \n Impact: as it pertains to {search}.* Output can not exceed 400 characters"
 )
 DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS = (
-    """<strong>Summary of the Article:</strong>\n
+    """<strong>Summary:</strong>\n
     <strong>Sentiment:</strong>\n
-    <strong>Creative ways to newsjack this coverage:</strong>\n"""
+    <strong>Creative ways to newsjack this article:</strong>\n"""
 )
 
 
@@ -110,16 +110,16 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
     if not instructions:
         instructions = DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS
     if not search:    
-        body = f"Today's date is {date}. Summarize this news article: {article} \n You must follow these instructions: {instructions}."
+        body = f"Today's date is {date}. Summarize this news article: {article} \n You must follow these instructions: {instructions}. Output cannot exceed 700 characters."
     else:
-        body = f"Today's date is {date}. Summarize this news article: {article}, as it relates to {search}. \n You must follow these instructions: {instructions}."
+        body = f"Today's date is {date}. Summarize this news article: {article} and how it relates to {search}. You must follow these instructions: {instructions}. Output cannot exceed 700 characters."
     return body
 
 
 def OPEN_AI_PITCH(date, type, output, persona, chars, style=False):
     if not style:
         style = "Maintain an objective and factual tone throughout. Begin with a precise introduction, without informal salutations. Establish authority using a formal style and cite reputable sources where relevant. Strive for clear and succinct communication, avoiding metaphors and ornate language. Present information in a coherent manner, providing necessary context and reliable data, while refraining from persuasive elements. Focus on depth of content to engage readers, rather than using sensationalism. The goal is to inform and respect the reader’s intelligence, suitable for educational or professional environments. Refrain from commercial commentary or emotional bias. Conclude without relying on standard transition phrases like 'In conclusion' or 'In summary'."
-    body = f"""Today's {date}. As the VP of Communications, generate content follow these instructions carefully {output}. You must Mirror this writing {style}. Lastly, this content must adhere to a strict {chars} character limit."""
+    body = f"""Today's date is {date}. As the VP of Communications, generate content following these instructions carefully: {output}. \n You must Mirror this writing style: {style}. \n Lastly, this content must adhere to a strict {chars} character limit."""
     print(body)
     return body
 
