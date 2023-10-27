@@ -365,11 +365,11 @@
             </div>
           </div>
 
-          <div style="margin-top: 1rem" class="input-container" v-if="mainView === 'news'">
+          <div style="margin-top: 2rem" class="input-container" v-if="mainView === 'news'">
             <div class="input-row-start">
               <div class="main-text">
                 <img
-                  style="margin-right: 10px; opacity: 0.7"
+                  style="margin-right: 10px; opacity: 0.7; margin-top: -1px"
                   src="@/assets/images/calendar.svg"
                   height="14px"
                 />
@@ -384,9 +384,9 @@
             </div>
           </div>
 
-          <div style="margin-top: 40px" v-if="mainView === 'website'" class="divider">
+          <!-- <div style="margin-top: 40px" v-if="mainView === 'website'" class="divider">
             <p style="left: 40%; font-size: 13px" class="divider-text">Articles</p>
-          </div>
+          </div> -->
 
           <div
             class="article-container"
@@ -676,10 +676,10 @@
           <p class="divider-text">
             {{
               mainView === 'news'
-                ? 'News Clips'
+                ? `${filteredArticles.length} News Clips`
                 : mainView === 'website'
                 ? 'Articles'
-                : 'Social Media'
+                : `${tweets.length} Tweets`
             }}
           </p>
         </div>
@@ -1356,9 +1356,10 @@ export default {
       promptSuggestions: [
         `Summarize the news`,
         'Summarize the news for XXX and its impact',
-        `Select 3 articles XXX can turn into creative PR content such as a media pitch or a blog post, provide content suggestions. Identify articles that need a response due to concerns, complaints, or safety.`,
+        `Summarize the news, provide sentiment, and creative ways to newsjack this coverage for XXX`,
         `As XXX PR agency, provide creative suggestions per this news, think outside the box`,
         `Create a media monitoring report for XXX. Include top sources (based on popularity and size), number of articles, sentiment, and any other important metrics`,
+        `List up to 5 journalists from tier one publications writing about this topic`,
         `Provide pitch ideas and background on [JOURNALIST NAME]`,
         'Convert the most entertaining news story about XXX into a blog post',
         'Craft short responses on behalf of XXX to the stories that need it',

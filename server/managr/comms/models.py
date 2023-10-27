@@ -346,7 +346,7 @@ class NewsSource(TimeStampModel):
     def transfer_dict(self):
         return dict(
             domain=self.domain,
-            last_scraped=self.last_scraped,
+            last_scraped=str(self.last_scraped),
             access_count=self.access_count,
             article_link_selector=self.article_link_selector,
             article_link_attribute=self.article_link_attribute,
