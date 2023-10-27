@@ -651,7 +651,11 @@ export default {
     getInitials() {
       const fullSplit = this.fullName.split(' ')
       let initials = ''
-      fullSplit.forEach((word) => (initials += word[0]))
+      fullSplit.forEach((word) => {
+        if (word[0]) {
+          return initials += word[0]
+        }
+      })
       return initials
     },
     selectSearch(search) {
