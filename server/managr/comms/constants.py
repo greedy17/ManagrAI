@@ -45,40 +45,37 @@ DEFAULT_TWITTER_INSTRUCTIONS = """*Executive summary:*\n Highlighting 5 key poin
 *Sentiment*\n Evaluate the overall tone or sentiment of the coverage. Is it primarily positive, neutral, or negative and why.\n
 *Influencers:*\n Identify key influencers based on follower count"""
 
-DEFAULT_CLIENT_INSTRUCTIONS = """<strong>Executive summary:</strong>\n Highlighting 5 key points from today's clips.\n
-<strong>Sentiment:</stong>\n Evaluate the overall tone or sentiment of the coverage. Is it primarily positive, neutral, or negative and why.\n
-<strong>Key Messages:</strong>\n Determine whether the coverage communicates the company's key messages effectively."""
+DEFAULT_CLIENT_INSTRUCTIONS = """<strong>Summary of the news:</strong>\n
+<strong>Sentiment:</strong>\n
+<strong>Creative ways to newsjack this coverage:</strong>\n"""
 
-DEFAULT_TWITTER_CLIENT_INSTRUCTIONS = """<strong>Executive summary:</strong>\n Highlighting 5 key points from today's clips.\n
-<strong>Sentiment:</stong>\n Evaluate the overall tone or sentiment of the coverage. Is it primarily positive, neutral, or negative and why.\n
-<strong>Influencers:</strong>\n Identify key influencers based on follower count"""
+DEFAULT_TWITTER_CLIENT_INSTRUCTIONS = """<strong>Summary of the Tweets:</strong>\n
+<strong>Sentiment:</strong>\n
+<strong>Top Influencers:</strong>\n Identify key influencers based on follower count"""
 
 DEFAULT_WRITING_STYLE = "Aim for a professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Get right to the point"
 
 
 def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_client=False):
-    body = f"""Today's date is {date}.Summarize the news coverage for {search} based on these news clips.\n Clips: {clips}\n
-Summary cannot be longer than 1,000 characters.
-Output format must be:\n"""
-    if instructions:
-        body += instructions
-    else:
-        default = DEFAULT_CLIENT_INSTRUCTIONS if for_client else DEFAULT_INSTRUCTIONS
-        body += default
+    if not instructions:
+        instructions = DEFAULT_CLIENT_INSTRUCTIONS
+    body = f"""Today's date is {date}. Summarize the news coverage based on these news clips.\n Clips: {clips}\n
+    You must follow these instructions: {instructions}. Output cannot be longer than 1,500 characters.
+    """
+    # if instructions:
+    #     body += instructions
+    # else:
+    #     default = DEFAULT_CLIENT_INSTRUCTIONS if for_client else DEFAULT_INSTRUCTIONS
+    #     body += default
     return body
 
 
 def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, instructions, for_client=False):
-    body = f"""Today's date is {date}.Summarize the twitter coverage for {search} based on these tweets.\n Tweets: {tweets}\n
-    Summary cannot be longer than 1,000 characters.
-    Output format must be:\n"""
-    if instructions:
-        body += instructions
-    else:
-        default = (
-            DEFAULT_TWITTER_CLIENT_INSTRUCTIONS if for_client else DEFAULT_TWITTER_INSTRUCTIONS
-        )
-        body += default
+    if not instructions:
+        instructions = DEFAULT_TWITTER_CLIENT_INSTRUCTIONS
+    body = f"""Today's date is {date}.Summarize the twitter coverage based on these tweets.\n Tweets: {tweets}\n
+    You must follow these instructions: {instructions}. Summary cannot be longer than 1,000 characters.
+    """
     return body
 
 
@@ -94,7 +91,9 @@ DEFAULT_ARTICLE_INSTRUCTIONS = (
     lambda search: f"*Context: \n Sentiment: \n Impact: as it pertains to {search}.* Output can not exceed 400 characters"
 )
 DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS = (
-    lambda search: f"<strong>Context: \n Sentiment: \n Impact: as it pertains to {search}</strong>. Output can not exceed 400 characters"
+    """<strong>Summary of the Article:</strong>\n
+    <strong>Sentiment:</strong>\n
+    <strong>Creative ways to newsjack this coverage:</strong>\n"""
 )
 
 
@@ -108,16 +107,12 @@ def OPEN_AI_WEB_SUMMARY(
 
 
 def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, for_client=False):
-    body = f"Today's date is {date}. Summarize this news article {article}, as it relates to {search}. \n Output format must be:\n"
-    if instructions:
-        body += instructions
+    if not instructions:
+        instructions = DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS
+    if not search:    
+        body = f"Today's date is {date}. Summarize this news article: {article} \n You must follow these instructions: {instructions}."
     else:
-        default = (
-            DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS(search)
-            if for_client
-            else DEFAULT_ARTICLE_INSTRUCTIONS(search)
-        )
-        body += default
+        body = f"Today's date is {date}. Summarize this news article: {article}, as it relates to {search}. \n You must follow these instructions: {instructions}."
     return body
 
 
@@ -148,8 +143,8 @@ OPEN_AI_LEARN_WRITING_STYLE_PROMPT = (
 )
 
 OPEN_AI_REGENERATE_ARTICLE = (
-    lambda article, content, instructions: f"""Adjust and rewrite this content:\n Content: {content}\n per these Instructions: {instructions}.
-     No longer than 1,500 characters. For reference, here is the article the content is based on: Article: {article}."""
+    lambda article, content, instructions: f"""Rewrite this content:{content} following these Instructions carefully: {instructions}.
+     Output cannot be longer than 1,500 characters."""
 )
 
 DO_NOT_TRACK_LIST = ["www.wsj.com", "www.nytimes.com", "www.bizjournals.com"]
