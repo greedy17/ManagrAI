@@ -999,10 +999,10 @@ class PitchViewSet(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
-        url_path="unlearn",
+        url_path="delete-style",
     )
-    def reset_writing_style(self, request, *args, **kwargs):
-        user = request.user
-        user.writing_style = None
-        user.save()
+    def delete_writing_style(self, request, *args, **kwargs):
+        style_id = request.data.get("style_id")
+        style = WritingStyle.objects.get(id=style_id)
+        style.delete()
         return Response(status=status.HTTP_200_OK)
