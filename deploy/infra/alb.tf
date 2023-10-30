@@ -27,7 +27,7 @@ resource "aws_alb_target_group" "app" {
     interval            = "60"
     protocol            = "HTTP"
     matcher             = "301"
-    timeout             = "10"
+    timeout             = "30"
     path                = var.health_check_path
     unhealthy_threshold = "2"
   }
