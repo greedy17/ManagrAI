@@ -64,7 +64,7 @@ class NewsSpider(scrapy.Spider):
         url = response.url
         domain = get_domain(url)
         source = NewsSource.objects.get(domain__contains=domain)
-        if source.last_scraped:
+        if source.last_scraped and source.article_link_attribute is not None:
             regex = source.create_search_regex()
             article_links = response.xpath(regex)
             if source.last_scraped and source.article_link_attribute:
