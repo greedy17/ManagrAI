@@ -320,9 +320,10 @@ class NewsSource(TimeStampModel):
         return selector
 
     def create_search_regex(self):
-        # TODO: add a check for year if its still current or not
+        current_year = datetime.year
         if self.article_link_regex:
-            return self.article_link_regex
+            if self.article_link_selector == "year" and current_year in self.article_link_regex:
+                return self.article_link_regex
         # add the link selector
         attribute_list = self.article_link_attribute.split(",")
         regex = "//" + attribute_list[0] + "["
