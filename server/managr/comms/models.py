@@ -1,8 +1,7 @@
 import json
 import os
 import logging
-from django.db.models import F
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.db import models
 from managr.core.models import TimeStampModel
 from managr.core import constants as core_consts
@@ -11,12 +10,13 @@ from .exceptions import _handle_response as _handle_news_response, TwitterApiExc
 from managr.utils.client import Variable_Client
 from managr.utils.sites import get_site_url
 from managr.core import exceptions as open_ai_exceptions
+from dateutil import parser
 from managr.utils.misc import encrypt_dict
 from urllib.parse import urlencode
 import base64
 import hashlib
 from django.contrib.postgres.fields import JSONField, ArrayField
-from django.contrib.postgres.search import SearchVectorField, SearchQuery, SearchRank, SearchVector
+from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.indexes import GinIndex
 
 logger = logging.getLogger("managr")
@@ -406,7 +406,10 @@ class Article(TimeStampModel):
         converted_boolean = boolean_search_to_query(boolean_string)
         articles = Article.objects.filter(converted_boolean)
         if date_to:
-            articles = articles.filter(publish_date__range=(date_from, date_to))
+            date_to_date_obj = parser.parse(date_to)
+            day_incremented = date_to_date_obj + timedelta(days=1)
+            day_incremented_str = str(day_incremented)
+            articles = articles.filter(publish_date__range=(date_from, day_incremented_str))
         if len(articles):
             articles = articles[:20]
         return list(articles)

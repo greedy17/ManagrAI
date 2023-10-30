@@ -960,7 +960,8 @@ class PitchViewSet(
                     )
                 r = open_ai_exceptions._handle_response(r)
                 style = r.get("choices")[0].get("message").get("content")
-                WritingStyle.objects.create({"style": style, "user": request.user.id})
+                writing_dict = {"style": style, "user": request.user.id}
+                WritingStyle.objects.create(**writing_dict)
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
