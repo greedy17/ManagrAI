@@ -53,7 +53,7 @@ class UserClientSerializer(serializers.ModelSerializer):
         source="slack_integration", read_only=True
     )
     activation_link_ref = serializers.SerializerMethodField("get_activation_link")
-    writing_style_ref = WritingStyleSerializer(source="writing_style", read_only=True)
+    writing_style_ref = WritingStyleSerializer(many=True, source="writing_style", read_only=True)
 
     class Meta:
         model = User
