@@ -266,6 +266,7 @@ export default class UserAPI {
       .catch(
         apiErrorHandler({ apiName: 'UserAPI.login', enable400Alert: false, enable500Alert: false }),
       )
+    console.log('promise', promise)
     return promise
   }
   loginSSO(d) {

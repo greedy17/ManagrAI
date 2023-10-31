@@ -1314,6 +1314,7 @@ export default {
         'XXX',
         'XXX no exclusions',
         'Articles written or about [JOURNALIST NAME] AND XXX',
+        `XXX and viral and TikTok`,
         'List out XXX competitors, by name',
         `List out topics XXX would care about`,
         'XXX no stock related news',
