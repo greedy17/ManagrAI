@@ -57,7 +57,7 @@ DEFAULT_WRITING_STYLE = "Aim for a professional, informative, yet concise style,
 def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_client=False):
     if not instructions:
         instructions = DEFAULT_CLIENT_INSTRUCTIONS(search)
-    body = f"""Today's date is {date}. Read the news coverage below and carefully follow these instructions: {instructions}. Output cannot be longer than 1200 characters. \n Here is the news coverage: {clips}.
+    body = f"""Today's date is {date}. Read the news coverage below and carefully follow these instructions, output has to be less than 1000 characters: \n Here are the instructions:{instructions}. \n Here is the news coverage: {clips}.
     """
     # if instructions:
     #     body += instructions
