@@ -106,7 +106,7 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
     if not instructions:
         instructions = DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS(search)
     if not search:    
-        body = f"Today's date is {date}. Summarize this news article: \n {article} \n in 750 characters or less."
+        body = f"Today's date is {date}. Read the article below, then follow these instructions: {instructions}. Output cannot exceed 800 characters.\n Article: {article} \n"
     else:
         body = f"Today's date is {date}. {search} was mentioned in this news article {article}. Summarize the article and how it talks about {search}. You must follow these instructions: {instructions}. Output cannot exceed 500 characters."
     return body
