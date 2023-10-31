@@ -960,7 +960,8 @@ class PitchViewSet(
                     )
                 r = open_ai_exceptions._handle_response(r)
                 style = r.get("choices")[0].get("message").get("content")
-                WritingStyle.objects.create({"style": style, "user": request.user.id})
+                writing_dict = {"style": style, "user": request.user.id}
+                WritingStyle.objects.create(**writing_dict)
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -998,10 +999,10 @@ class PitchViewSet(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
-        url_path="unlearn",
+        url_path="delete-style",
     )
-    def reset_writing_style(self, request, *args, **kwargs):
-        user = request.user
-        user.writing_style = None
-        user.save()
+    def delete_writing_style(self, request, *args, **kwargs):
+        style_id = request.data.get("style_id")
+        style = WritingStyle.objects.get(id=style_id)
+        style.delete()
         return Response(status=status.HTTP_200_OK)
