@@ -320,7 +320,7 @@ class NewsSource(TimeStampModel):
         return selector
 
     def create_search_regex(self):
-        current_year = datetime.year
+        current_year = str(datetime.now().year)
         if self.article_link_regex:
             if self.article_link_selector == "year" and current_year in self.article_link_regex:
                 return self.article_link_regex

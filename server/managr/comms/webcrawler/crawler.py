@@ -98,6 +98,7 @@ class NewsSpider(scrapy.Spider):
                 article_tags = tags
                 break
         full_article = ""
+        cleaned_data = None
         if article_tags is not None:
             for article in article_tags:
                 full_article += article

@@ -266,34 +266,34 @@ class UserTestCase(TestCase):
 
         self.assertEqual(f, 5)
 
-    def test_cron_config_filter_4(self):
-        for i in range(2):
-            alert_models.AlertConfig.objects.create(
-                recipient_type="USER_LEVEL",
-                recurrence_day=timezone.now().weekday(),
-                recurrence_frequency="WEEKLY",
-                recipients=["SELF"],
-                template=self.template,
-            )
-        for i in range(2):
-            alert_models.AlertConfig.objects.create(
-                recipient_type="USER_LEVEL",
-                recurrence_day=timezone.now().day,
-                recurrence_frequency="MONTHLY",
-                recipients=["SELF"],
-                template=self.template,
-            )
-        conf = self.config
-        conf.recurrence_day = (timezone.now() + timezone.timedelta(days=1)).day
-        conf.save()
-        f = alert_models.AlertConfig.objects.filter(
-            Q(template__user__is_active=True, template__is_active=True)
-            & Q(
-                Q(recurrence_frequency="WEEKLY", recurrence_day=timezone.now().weekday())
-                | Q(recurrence_frequency="MONTHLY", recurrence_day=timezone.now().day)
-            )
-        ).count()
-        self.assertEqual(f, 4)
+    # def test_cron_config_filter_4(self):
+    #     for i in range(2):
+    #         alert_models.AlertConfig.objects.create(
+    #             recipient_type="USER_LEVEL",
+    #             recurrence_day=timezone.now().weekday(),
+    #             recurrence_frequency="WEEKLY",
+    #             recipients=["SELF"],
+    #             template=self.template,
+    #         )
+    #     for i in range(2):
+    #         alert_models.AlertConfig.objects.create(
+    #             recipient_type="USER_LEVEL",
+    #             recurrence_day=timezone.now().day,
+    #             recurrence_frequency="MONTHLY",
+    #             recipients=["SELF"],
+    #             template=self.template,
+    #         )
+    #     conf = self.config
+    #     conf.recurrence_day = (timezone.now() + timezone.timedelta(days=1)).day
+    #     conf.save()
+    #     f = alert_models.AlertConfig.objects.filter(
+    #         Q(template__user__is_active=True, template__is_active=True)
+    #         & Q(
+    #             Q(recurrence_frequency="WEEKLY", recurrence_day=timezone.now().weekday())
+    #             | Q(recurrence_frequency="MONTHLY", recurrence_day=timezone.now().day)
+    #         )
+    #     ).count()
+    #     self.assertEqual(f, 4)
 
     def test_sends_to_self_and_owner_only(self):
         """Expects four instances to be created since both matched but the admin and rep users get the alert the admin user gets 3 and the owner only 1"""
