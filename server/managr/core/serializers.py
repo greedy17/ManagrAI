@@ -88,7 +88,6 @@ class UserClientSerializer(serializers.ModelSerializer):
             "crm",
             "meta_data",
             "activation_link_ref",
-            "writing_style",
             "writing_styles",
             "writing_styles_ref",
         )
