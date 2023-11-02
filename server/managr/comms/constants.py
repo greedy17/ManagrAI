@@ -122,7 +122,7 @@ def OPEN_AI_PITCH(date, type, output, persona, chars, style=False):
 def OPEN_AI_GENERATE_CONTENT(date, article, style, instructions):
     if not style:
         style = "Maintain an objective and factual tone throughout. Begin with a precise introduction, without informal salutations. Establish authority using a formal style and cite reputable sources where relevant. Strive for clear and succinct communication, avoiding metaphors and ornate language. Present information in a coherent manner, providing necessary context and reliable data, while refraining from persuasive elements. Focus on depth of content to engage readers, rather than using sensationalism. The goal is to inform and respect the reader’s intelligence, suitable for educational or professional environments. Refrain from commercial commentary or emotional bias. Conclude without relying on standard transition phrases like 'In conclusion' or 'In summary'."
-    body = f"Today's date is {date}. Generate the following content:\n {instructions},\n based on this news article:\n {article}\n. Use this writing stye:\n {style}. Output cannot exceed 1,500 characters."
+    body = f"Today's date is {date}. Read the news article below then follow these instructions carefully: {instructions}. Output cannot be longer than 1,000 characters. \n Here is the article {article}.\n You must use this writing stye: {style}."
     return body
 
 

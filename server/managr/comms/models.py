@@ -257,7 +257,7 @@ class Pitch(TimeStampModel):
     @classmethod
     def generate_pitch(cls, user, type, instructions, audience, chars, style, tokens, timeout):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-        style = user.writing_style if user.writing_style else False
+        # style = user.writing_style if user.writing_style else False
         prompt = comms_consts.OPEN_AI_PITCH(
             datetime.now().date(), type, instructions, audience, chars, style
         )
@@ -420,6 +420,7 @@ class Article(TimeStampModel):
 
 class WritingStyle(models.Model):
     style = models.TextField()
+    title = models.TextField()
     user = models.ForeignKey(
         "core.User",
         related_name="writing_styles",

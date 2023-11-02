@@ -817,6 +817,8 @@ class PitchViewSet(
         attempts = 1
         token_amount = 1000
         timeout = 60.0
+
+        print('WRITING STYLE IS RIGHT HERE --- >', style)
         while True:
             try:
                 res = Pitch.generate_pitch(
@@ -937,6 +939,7 @@ class PitchViewSet(
     def learn_writing_style(self, request, *args, **kwargs):
         user = request.user
         example = request.data["params"]["example"]
+        title = request.data["params"]["title"]
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -960,7 +963,7 @@ class PitchViewSet(
                     )
                 r = open_ai_exceptions._handle_response(r)
                 style = r.get("choices")[0].get("message").get("content")
-                writing_dict = {"style": style, "user": request.user}
+                writing_dict = {"title": title,"style": style, "user": request.user}
                 WritingStyle.objects.create(**writing_dict)
                 break
             except open_ai_exceptions.StopReasonLength:
@@ -1002,7 +1005,7 @@ class PitchViewSet(
         url_path="delete-style",
     )
     def delete_writing_style(self, request, *args, **kwargs):
-        style_id = request.data.get("style_id")
+        style_id = request.data["params"]["style_id"]
         style = WritingStyle.objects.get(id=style_id)
         style.delete()
         return Response(status=status.HTTP_200_OK)

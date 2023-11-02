@@ -65,4 +65,4 @@ class ArticleSerializer(serializers.ModelSerializer):
 class WritingStyleSerializer(serializers.ModelSerializer):
     class Meta:
         model = WritingStyle
-        fields = ("id", "style", "user")
+        fields = ("id", "style", "user", "title")

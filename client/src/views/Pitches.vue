@@ -44,7 +44,7 @@
           <div>
             <div class="paid-center">
               <h3 class="paid-title">Are you sure?</h3>
-              <h5 class="regen-body-title">Writing style will reset to the default model.</h5>
+              <h5 class="regen-body-title">This writing style will be permanently removed.</h5>
             </div>
             <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
           </div>
@@ -53,15 +53,83 @@
           <!-- <div></div> -->
           <div class="row">
             <div class="cancel-button" @click="closeResetModal">Cancel</div>
-            <div class="reset-button mar-left gray-border" @click="resetWritingStyle">Reset</div>
+            <div class="reset-button mar-left gray-border" @click="resetWritingStyle">Delete</div>
           </div>
         </div>
       </div>
     </Modal>
+    <Modal v-if="inputModalOpen" class="paid-modal">
+      <div style="width: 600px; min-height: 275px" class="regen-container">
+        <div class="paid-header">
+          <div>
+            <h4 class="regen-header-title">Add Writing Style</h4>
+            <p class="regen-header-subtitle">
+              Provide a sample of the writing style you want to emulate
+            </p>
+          </div>
+          <div v-if="!savingStyle" class="pointer" @click="toggleLearnInputModal">
+            <small>X</small>
+          </div>
+          <div v-else><small>X</small></div>
+        </div>
+        <div class="paid-body">
+          <input
+            class="input-text"
+            placeholder="Name your writing style..."
+            type="text"
+            v-model="styleName"
+            :disabled="savingStyle"
+          />
+          <div class="sample-row">
+            <div style="width: 600px" class="input-container">
+              <div class="input-row relative">
+                <textarea
+                  :disabled="savingStyle"
+                  maxlength="8000"
+                  class="area-input text-area-input"
+                  style="padding: 0"
+                  placeholder="Paste sample here..."
+                  v-model="sample"
+                  v-autoresize
+                />
+
+                <div class="absolute-count">
+                  <small>{{ remainingCharsSample }}</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="paid-footer">
+          <div class="input-row">
+            <button :disabled="savingStyle" @click="toggleLearnInputModal" class="secondary-button">
+              Cancel
+            </button>
+            <button :disabled="savingStyle" @click="saveWritingStyle" class="primary-button">
+              <img
+                v-if="savingStyle"
+                class="rotate"
+                height="12px"
+                src="@/assets/images/loading.svg"
+                alt=""
+              />
+              {{ savingStyle ? 'Learning' : 'Learn' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+
     <div :class="loading ? 'opaque' : 'extra-margin-top'" v-if="!pitch" class="center">
-      <p @click="test" v-if="!loading">
-        Generate a pitch, blog post or press release based on any persona.
-      </p>
+      <div class="relative">
+        <Transition name="slide-fade">
+          <div v-if="showBanner" style="left: -64px; top: 0; width: 120px" class="templates">
+            <p>Saved Successfully!</p>
+          </div>
+        </Transition>
+      </div>
+
+      <p @click="test" v-if="!loading">Generate content using AI.</p>
 
       <div class="centered blue-bg" v-else>
         <div style="width: 675px" class="row">
@@ -73,111 +141,6 @@
             <div class="meta-wide"></div>
             <div class="meta-shorter"></div>
             <div class="meta-shortest"></div>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="!user.writingStyle && !writingStyle">
-        <button
-          @mouseenter="changeStyleText"
-          @mouseleave="defaultStyleText"
-          style="margin-top: -8px; width: 160px"
-          v-if="!showInput"
-          @click="toggleLearnInput"
-          class="primary-button extra-padding"
-        >
-          <img class="invert" src="@/assets/images/sparkle.svg" height="12px" alt="" />
-          {{ styleText }}
-        </button>
-
-        <div v-else class="sample-row">
-          <div class="input-container">
-            <div class="input-row relative">
-              <div class="main-text">
-                <img src="@/assets/images/sparkle.svg" height="14px" alt="" />
-                Sample
-              </div>
-
-              <textarea
-                :disabled="savingStyle"
-                maxlength="8000"
-                class="area-input text-area-input"
-                placeholder="Provide a sample of your writing..."
-                v-model="sample"
-                v-autoresize
-              />
-
-              <div class="absolute-count">
-                <small>{{ remainingCharsSample }}</small>
-              </div>
-            </div>
-          </div>
-
-          <div class="input-row">
-            <button :disabled="savingStyle" @click="toggleLearnInput" class="secondary-button">
-              Cancel
-            </button>
-            <button :disabled="savingStyle" @click="saveWritingStyle" class="primary-button">
-              <img
-                v-if="savingStyle"
-                class="rotate"
-                height="12px"
-                src="@/assets/images/loading.svg"
-                alt=""
-              />
-              Learn
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div style="margin-top: -1.5rem" v-else>
-        <p v-if="!showInput" @click="toggleLearnInput" class="thin-font row pointer img-margin">
-          <img class="green-filter" src="@/assets/images/check.svg" height="12px" alt="" />
-          Trained on your writing style
-          <img src="@/assets/images/pencil.svg" height="10px" alt="" />
-        </p>
-
-        <div v-else class="sample-row">
-          <div class="input-container">
-            <div class="input-row relative">
-              <div class="main-text">
-                <img src="@/assets/images/sparkle.svg" height="14px" alt="" />
-                Sample
-              </div>
-
-              <textarea
-                :disabled="savingStyle"
-                maxlength="8000"
-                class="area-input text-area-input"
-                placeholder="Provide a sample of your writing..."
-                v-model="sample"
-                v-autoresize
-              />
-
-              <div class="absolute-count">
-                <small>{{ remainingCharsSample }}</small>
-              </div>
-            </div>
-          </div>
-
-          <div class="input-row">
-            <button :disabled="savingStyle" @click="toggleLearnInput" class="secondary-button">
-              Cancel
-            </button>
-            <button :disabled="savingStyle" @click="openResetModal" class="reset-button mar-left">
-              Reset
-            </button>
-            <button :disabled="savingStyle" @click="saveWritingStyle" class="primary-button">
-              <img
-                v-if="savingStyle"
-                class="rotate"
-                height="12px"
-                src="@/assets/images/loading.svg"
-                alt=""
-              />
-              Learn
-            </button>
           </div>
         </div>
       </div>
@@ -218,12 +181,6 @@
         </div>
       </div>
 
-      <!-- <div class="divider">
-        <p class="divider-text">
-          {{ 'Optional' }}
-        </p>
-      </div> -->
-
       <div class="input-container" v-clickOutsideCharacterMenu>
         <div class="input-row">
           <div class="main-text">
@@ -256,124 +213,76 @@
         </div>
       </div>
 
-      <!-- <div class="input-container mar-top" v-clickOutsideTypeMenu>
+      <div class="input-container" v-clickOutsideTypeMenu>
         <div class="input-row">
           <div class="main-text">
-            <img src="@/assets/images/document.svg" height="14px" alt="" />
-            Type
+            <img src="@/assets/images/blog-text.svg" height="14px" alt="" />
+            Style
           </div>
 
           <input
             :disabled="loading"
+            style="overflow-x: hidden"
             class="area-input"
-            placeholder="Content type..."
-            v-model="type"
+            placeholder="Select a writing style..."
+            v-model="writingStyleTitle"
             @focus="showTypeDropdown"
           />
         </div>
         <div v-if="showingTypeDropdown" class="dropdown">
-          <small style="padding-top: 8px" class="gray-text">Example Type</small>
-          <div
-            @click="addTypeSuggestion(suggestion)"
-            class="dropdown-item"
-            v-for="(suggestion, i) in filteredTypeSuggestions"
-            :key="i"
-          >
-            <p>
-              {{ suggestion }}
-            </p>
-          </div>
+          <small style="padding-top: 8px" class="gray-text"
+            >{{
+              userWritingStyles.length
+                ? `Saved writing styles: ${userWritingStyles.length}`
+                : 'Saved writing styles will appear here:'
+            }}
+          </small>
+          <section v-if="userWritingStyles.length">
+            <div
+              @mouseenter="setIndex(i)"
+              @mouseLeave="removeIndex"
+              @click="addWritingStyle(style.style, style.title)"
+              class="dropdown-item"
+              v-for="(style, i) in userWritingStyles"
+              :key="i"
+            >
+              <p>
+                {{ style.title }}
+              </p>
+
+              <div @click="openResetModal(style.id)" class="absolute-icon">
+                <img v-if="hoverIndex === i" src="@/assets/images/trash.svg" height="12px" alt="" />
+              </div>
+            </div>
+            <div style="padding: 16px 0" class="centered">
+              <button
+                @mouseenter="changeStyleText"
+                @mouseleave="defaultStyleText"
+                style="margin-bottom: 8px; width: 160px"
+                @click="toggleLearnInputModal"
+                class="primary-button extra-padding"
+              >
+                <img class="invert" src="@/assets/images/sparkle.svg" height="12px" alt="" />
+                {{ styleText }}
+              </button>
+            </div>
+          </section>
+          <section v-else>
+            <div class="dropdown-footer">
+              <button
+                @mouseenter="changeStyleText"
+                @mouseleave="defaultStyleText"
+                style="margin-bottom: 8px; width: 160px"
+                @click="toggleLearnInputModal"
+                class="primary-button extra-padding"
+              >
+                <img class="invert" src="@/assets/images/sparkle.svg" height="12px" alt="" />
+                {{ styleText }}
+              </button>
+            </div>
+          </section>
         </div>
-      </div> -->
-
-      <!-- <div class="input-container" v-clickOutsideAudienceMenu>
-        <div class="input-row">
-          <div class="main-text">
-            <img src="@/assets/images/target.svg" height="14px" alt="" />
-            Audience
-          </div>
-
-          <input
-            :disabled="loading"
-            class="area-input"
-            placeholder="Target audience..."
-            v-model="persona"
-            @focus="showAudienceDropdown"
-          />
-        </div>
-        <div v-if="showingAudienceDropdown" class="dropdown">
-          <small style="padding-top: 8px" class="gray-text">Example Audience</small>
-          <div
-            @click="addAudienceSuggestion(suggestion)"
-            class="dropdown-item"
-            v-for="(suggestion, i) in filteredAudienceSuggestions"
-            :key="i"
-          >
-            <p>
-              {{ suggestion }}
-            </p>
-          </div>
-        </div>
-      </div> -->
-
-      <!-- <div class="input-container" v-clickOutsideCharacterMenu>
-        <div class="input-row relative">
-          <div class="main-text">
-            <img src="@/assets/images/file-word.svg" height="14px" alt="" />
-            Content
-          </div>
-
-          <textarea
-            :disabled="loading"
-            maxlength="1500"
-            class="area-input text-area-input"
-            :placeholder="optionalPlaceholder"
-            v-model="briefing"
-            v-autoresize
-            @focus="showCharacterDropdown($event)"
-          />
-
-          <div class="absolute-count">
-            <small>{{ remainingCharsBrief }}</small>
-          </div>
-        </div>
-        <div v-if="showingCharacterDropdown" class="dropdown">
-          <small style="padding-top: 8px" class="gray-text">Example Content</small>
-          <div
-            @click="addCharacterSuggestion(suggestion)"
-            class="dropdown-item"
-            v-for="(suggestion, i) in filteredCharacterSuggestions"
-            :key="i"
-          >
-            <p>
-              {{ suggestion }}
-            </p>
-          </div>
-        </div>
-      </div> -->
-
-      <!-- <div class="input-container">
-        <div class="input-row relative">
-          <div class="main-text">
-            <img src="@/assets/images/note.svg" height="14px" alt="" />
-            Style
-          </div>
-
-          <textarea
-            :disabled="loading"
-            autofocus
-            maxlength="1000"
-            class="area-input"
-            placeholder="Provide a sample of your writing style..."
-            v-model="sample"
-            v-autoresize
-          />
-
-          <div class="absolute-count">
-            <small>{{ remainingChars }}</small>
-          </div>
-        </div>
-      </div> -->
+      </div>
 
       <footer>
         <button :disabled="loading" @click="clearData" class="secondary-button">Clear</button>
@@ -394,7 +303,7 @@
       <div class="pitch-container">
         <Transition name="slide-fade">
           <div v-if="showUpdateBanner" class="templates">
-            <p>Search saved successfully!</p>
+            <p>Pitch saved successfully!</p>
           </div>
         </Transition>
         <div class="title-container">
@@ -516,7 +425,13 @@ export default {
   },
   data() {
     return {
-      styleText: 'Learn writing style',
+      styleName: null,
+      hoverIndex: null,
+      styleText: 'Add writing style',
+      deleteId: null,
+      inputModalOpen: false,
+      showBanner: false,
+      writingStyleTitle: null,
       type: '',
       output: '',
       persona: '',
@@ -581,27 +496,18 @@ export default {
       }
     },
   },
-  created() {
-    // if (this.$store.state.generatedContent) {
-    //   this.briefing = this.$store.state.generatedContent.summary
-    //     .split('<strong>')
-    //     .filter((item) => item !== '<strong>')
-    //     .join('')
-    //     .split('</strong>')
-    //     .filter((item) => item !== '</strong>')
-    //     .join('')
-    //   this.output = `Create a ${
-    //     this.$store.state.generatedContent.type + ` for ` + this.$store.state.generatedContent.term
-    //   }`
-    //   this.type = this.$store.state.generatedContent.type
-    // }
-  },
   beforeDestroy() {
     this.$store.commit('setGeneratedContent', null)
   },
   methods: {
     test() {
-      console.log(this.user)
+      console.log(this.userWritingStyles)
+    },
+    setIndex(i) {
+      this.hoverIndex = i
+    },
+    removeIndex() {
+      this.hoverIndex = null
     },
     async saveWritingStyle() {
       this.savingStyle = true
@@ -609,18 +515,24 @@ export default {
         await Comms.api
           .saveWritingStyle({
             example: this.sample,
+            title: this.styleName,
           })
           .then((response) => {
             console.log('response.style', response.style)
-            this.writingStyle = response.style
+            this.showBanner = true
+            setTimeout(() => {
+              this.showBanner = false
+            }, 2000)
           })
       } catch (e) {
         console.log(e)
       } finally {
         this.sample = ''
+        this.styleName = ''
         this.toggleLearnInput()
         this.savingStyle = false
         this.refreshUser()
+        this.toggleLearnInputModal()
       }
     },
     async resetWritingStyle() {
@@ -628,13 +540,14 @@ export default {
       this.sample = ''
       this.closeResetModal()
       try {
-        await Comms.api.deleteWritingStyle()
-        this.writingStyle = this.sample
+        await Comms.api.deleteWritingStyle({ style_id: this.deleteId })
         this.toggleLearnInput()
       } catch (e) {
         console.log(e)
       } finally {
         this.savingStyle = false
+        this.deleteId = null
+        this.writingStyle = null
         this.refreshUser()
       }
     },
@@ -652,8 +565,9 @@ export default {
         return
       }
     },
-    openResetModal() {
+    openResetModal(id) {
       this.resetModal = true
+      this.deleteId = id
     },
     closeResetModal() {
       this.resetModal = false
@@ -662,6 +576,9 @@ export default {
       if (this.isPaid) {
         this.showInput = !this.showInput
       }
+    },
+    toggleLearnInputModal() {
+      this.inputModalOpen = !this.inputModalOpen
     },
     async copyText() {
       try {
@@ -680,7 +597,8 @@ export default {
     },
     resetSearch() {
       this.pitch = null
-      this.type = ''
+      this.writingStyle = ''
+      this.writingStyleTitle = ''
       this.output = ''
       this.persona = ''
       this.briefing = ''
@@ -724,8 +642,9 @@ export default {
       this.instructionsPlaceholder = 'What would you like written?'
       this.showingInstructionsDropdown = false
     },
-    addTypeSuggestion(ex) {
-      this.type = ex
+    addWritingStyle(ex, title) {
+      this.writingStyle = ex
+      this.writingStyleTitle = title
       this.hideTypeDropdown()
     },
     addAudienceSuggestion(ex) {
@@ -827,7 +746,7 @@ export default {
             type: this.type,
             instructions: this.output,
             audience: this.persona,
-            style: this.user.writingStyle || this.writingStyle,
+            style: this.writingStyle,
             chars: this.characters,
           })
           .then((response) => {
@@ -875,9 +794,13 @@ export default {
       this.persona = ''
       this.briefing = ''
       this.sample = ''
+      this.writingStyle = ''
     },
   },
   computed: {
+    userWritingStyles() {
+      return this.$store.state.user.writingStylesRef
+    },
     remainingChars() {
       return 1500 - this.output.length
     },
@@ -1226,7 +1149,7 @@ export default {
   border: none;
   letter-spacing: 0.5px;
   font-size: 13px;
-  font-family: $base-font-family;
+  font-family: $thin-font-family;
   font-weight: 400;
   border: none !important;
   resize: none;
@@ -1319,6 +1242,22 @@ footer {
   color: $dark-black-blue;
   background-color: white;
   margin-right: -2px;
+}
+
+.input-text {
+  width: 600px;
+  margin: 1rem 0;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-family: $thin-font-family !important;
+  background-color: $offer-white;
+  font-size: 13px;
+  padding: 10px 20px 10px 18px;
+  outline: none;
+}
+
+.input-text ::placeholder {
+  color: red !important;
 }
 
 .reset-button {
@@ -1702,10 +1641,34 @@ footer {
   display: block;
 }
 
+.dropdown-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 8px;
+  width: 100%;
+  min-height: 100px;
+  margin: 0;
+  cursor: pointer;
+  color: $dark-black-blue;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 400;
+  font-size: 13px;
+  z-index: 2300;
+
+  p {
+    margin: 0;
+  }
+}
+
 .dropdown-item {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: flex-start;
+  flex-direction: row;
   padding: 8px 0;
   width: 100%;
   margin: 0;
@@ -1716,7 +1679,7 @@ footer {
   text-overflow: ellipsis;
   font-weight: 400;
   font-size: 13px;
-  z-index: 2300;
+  // z-index: 2300;
 
   p {
     margin: 0;
@@ -1731,6 +1694,24 @@ footer {
     opacity: 0.7;
   }
 }
+
+.absolute-icon {
+  position: absolute;
+  padding-left: 4px;
+  background: transparent;
+  background-color: white;
+  // opacity: 0;
+  right: 0;
+  cursor: pointer;
+
+  img {
+    &:hover {
+      filter: invert(66%) sepia(47%) saturate(6468%) hue-rotate(322deg) brightness(85%)
+        contrast(96%);
+    }
+  }
+}
+
 .gray-text {
   color: $mid-gray;
 }
