@@ -20,8 +20,8 @@ XPATH_STRING_OBJ = {
     ],
     "description": ["//meta[contains(@property, 'description')]/@content"],
     "publish_date": [
-        "//meta[contains(@property, 'published')]/@content",
-        "//meta[contains(@name, 'date')]/@content",
+        "//meta[contains(@property, 'publish')]/@content",
+        "//meta[contains(@name, '-date')]/@content",
         "//*[contains(., 'publish')]/text()",
     ],
     "image_url": ["//meta[@property='og:image']/@content"],

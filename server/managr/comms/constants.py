@@ -45,7 +45,9 @@ DEFAULT_TWITTER_INSTRUCTIONS = """*Executive summary:*\n Highlighting 5 key poin
 *Sentiment*\n Evaluate the overall tone or sentiment of the coverage. Is it primarily positive, neutral, or negative and why.\n
 *Influencers:*\n Identify key influencers based on follower count"""
 
-DEFAULT_CLIENT_INSTRUCTIONS = lambda search: f"Summary: summarize the articles and their relation to {search}. Sentiment: what is the sentiment of {search} within the articles"
+DEFAULT_CLIENT_INSTRUCTIONS = (
+    lambda search: f"Summary: summarize the articles and their relation to {search}. Sentiment: what is the sentiment of {search} within the articles"
+)
 
 DEFAULT_TWITTER_CLIENT_INSTRUCTIONS = """<strong>Summary of the Tweets:</strong>\n
 <strong>Sentiment:</strong>\n
@@ -57,7 +59,7 @@ DEFAULT_WRITING_STYLE = "Aim for a professional, informative, yet concise style,
 def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_client=False):
     if not instructions:
         instructions = DEFAULT_CLIENT_INSTRUCTIONS(search)
-    body = f"""Today's date is {date}. Read the news coverage below and carefully follow these instructions: {instructions}. Output cannot be longer than 1200 characters. \n Here is the news coverage: {clips}.
+    body = f"""Today's date is {date}. Read the news coverage below and carefully follow these instructions, output has to be less than 1000 characters: \n Here are the instructions:{instructions}. \n Here is the news coverage: {clips}.
     """
     # if instructions:
     #     body += instructions
@@ -88,7 +90,7 @@ DEFAULT_ARTICLE_INSTRUCTIONS = (
     lambda search: f"*Context: \n Sentiment: \n Impact: as it pertains to {search}.* Output can not exceed 400 characters"
 )
 DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS = (
-  lambda search: f"Summary: summarize the article and its relation to {search} \n Sentiment: what is the sentiment of {search} within the article"
+    lambda search: f"Summary: summarize the article and its relation to {search} \n Sentiment: what is the sentiment of {search} within the article"
 )
 
 
@@ -104,7 +106,7 @@ def OPEN_AI_WEB_SUMMARY(
 def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, for_client=False):
     if not instructions:
         instructions = DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS(search)
-    if not search:    
+    if not search:
         body = f"Today's date is {date}. Read the article below, then follow these instructions: {instructions}. Output cannot exceed 800 characters.\n Article: {article} \n"
     else:
         body = f"Today's date is {date}. {search} was mentioned in this news article {article}. Summarize the article and how it talks about {search}. You must follow these instructions: {instructions}. Output cannot exceed 500 characters."
