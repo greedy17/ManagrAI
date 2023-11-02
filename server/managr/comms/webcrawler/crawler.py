@@ -20,8 +20,9 @@ XPATH_STRING_OBJ = {
     ],
     "description": ["//meta[contains(@property, 'description')]/@content"],
     "publish_date": [
-        "//meta[contains(@property, 'published')]/@content",
-        "//meta[contains(@name, 'date')]/@content",
+        "//meta[contains(@property, 'publish')]/@content",
+        "//meta[contains(@name, '-date')]/@content",
+        "//*[contains(., 'publish')]/text()",
     ],
     "image_url": ["//meta[@property='og:image']/@content"],
 }
@@ -63,7 +64,7 @@ class NewsSpider(scrapy.Spider):
         url = response.url
         domain = get_domain(url)
         source = NewsSource.objects.get(domain__contains=domain)
-        if source.last_scraped:
+        if source.last_scraped and source.article_link_attribute is not None:
             regex = source.create_search_regex()
             article_links = response.xpath(regex)
             if source.last_scraped and source.article_link_attribute:
@@ -97,6 +98,7 @@ class NewsSpider(scrapy.Spider):
                 article_tags = tags
                 break
         full_article = ""
+        cleaned_data = None
         if article_tags is not None:
             for article in article_tags:
                 full_article += article
@@ -110,7 +112,8 @@ class NewsSpider(scrapy.Spider):
             else:
                 return
         except Exception as e:
-            cleaned_data.pop("content")
+            logger.info(str(e))
+            cleaned_data = cleaned_data.pop("content") if cleaned_data is not None else "No data"
             source.error_log.append(f"{str(e)} - data: {cleaned_data}")
             source.save()
         return

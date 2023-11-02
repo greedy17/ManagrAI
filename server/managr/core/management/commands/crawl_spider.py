@@ -9,13 +9,19 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("url", nargs="?", type=str, help="The URL to scrape (optional)")
+        parser.add_argument(
+            "--active",
+            action="store_true",
+            help="Scrape only the sources that are fully filled out",
+        )
 
     def handle(self, *args, **options):
         url = options.get("url", False)
         if url:
             urls = [url]
         else:
-            urls = NewsSource.domain_list()
+            scrape_ready = True if options["active"] else False
+            urls = NewsSource.domain_list(scrape_ready)
         process = CrawlerProcess()
         process.crawl(NewsSpider, start_urls=urls)
         process.start()

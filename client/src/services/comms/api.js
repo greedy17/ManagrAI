@@ -213,9 +213,9 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
-    async deleteWritingStyle() {
+    async deleteWritingStyle(data) {
         try {
-            const res = await this.client.post('pitches/unlearn/')
+            const res = await this.client.post('pitches/delete-style/', { params: data })
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)

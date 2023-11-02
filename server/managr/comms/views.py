@@ -22,6 +22,7 @@ from rest_framework.decorators import action
 from . import constants as comms_consts
 from .models import Search, TwitterAuthAccount, Pitch
 from .models import Article as InternalArticle
+from .models import WritingStyle
 from managr.core.models import User
 from managr.comms import exceptions as comms_exceptions
 from .tasks import emit_process_website_domain
@@ -386,6 +387,7 @@ class PRSearchViewSet(
                 prompt = comms_consts.OPEN_AI_GENERATE_CONTENT(
                     datetime.now().date(), article, "", instructions
                 )
+                print('PROMPT IS HERE =---- >', prompt)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
@@ -816,6 +818,8 @@ class PitchViewSet(
         attempts = 1
         token_amount = 1000
         timeout = 60.0
+
+        print('WRITING STYLE IS RIGHT HERE --- >', style)
         while True:
             try:
                 res = Pitch.generate_pitch(
@@ -936,6 +940,7 @@ class PitchViewSet(
     def learn_writing_style(self, request, *args, **kwargs):
         user = request.user
         example = request.data["params"]["example"]
+        title = request.data["params"]["title"]
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -959,8 +964,8 @@ class PitchViewSet(
                     )
                 r = open_ai_exceptions._handle_response(r)
                 style = r.get("choices")[0].get("message").get("content")
-                user.writing_style = style
-                user.save()
+                writing_dict = {"title": title,"style": style, "user": request.user}
+                WritingStyle.objects.create(**writing_dict)
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -998,10 +1003,10 @@ class PitchViewSet(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
-        url_path="unlearn",
+        url_path="delete-style",
     )
-    def reset_writing_style(self, request, *args, **kwargs):
-        user = request.user
-        user.writing_style = None
-        user.save()
+    def delete_writing_style(self, request, *args, **kwargs):
+        style_id = request.data["params"]["style_id"]
+        style = WritingStyle.objects.get(id=style_id)
+        style.delete()
         return Response(status=status.HTTP_200_OK)
