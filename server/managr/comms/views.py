@@ -387,6 +387,7 @@ class PRSearchViewSet(
                 prompt = comms_consts.OPEN_AI_GENERATE_CONTENT(
                     datetime.now().date(), article, "", instructions
                 )
+                print('PROMPT IS HERE =---- >', prompt)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,

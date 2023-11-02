@@ -90,7 +90,7 @@ DEFAULT_ARTICLE_INSTRUCTIONS = (
     lambda search: f"*Context: \n Sentiment: \n Impact: as it pertains to {search}.* Output can not exceed 400 characters"
 )
 DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS = (
-    lambda search: f"Summary: summarize the article and its relation to {search} \n Sentiment: what is the sentiment of {search} within the article"
+    lambda search: f"Summary: summarize the article and its relation to {search} in under 250 characters. \n Sentiment: what is the sentiment of {search} within the article, keep under 200 characters"
 )
 
 
@@ -109,13 +109,13 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
     if not search:
         body = f"Today's date is {date}. Read the article below, then follow these instructions: {instructions}. Output cannot exceed 800 characters.\n Article: {article} \n"
     else:
-        body = f"Today's date is {date}. {search} was mentioned in this news article {article}. Summarize the article and how it talks about {search}. You must follow these instructions: {instructions}. Output cannot exceed 500 characters."
+        body = f"Today's date is {date}. {search} was mentioned in a news article. Follow the instructions carefully. \n Instructions: {instructions} \n News Article: {article}"
     return body
 
 
 def OPEN_AI_PITCH(date, type, output, persona, chars, style=False):
     if not style:
-        style = "Maintain an objective and factual tone throughout. Begin with a precise introduction, without informal salutations. Establish authority using a formal style and cite reputable sources where relevant. Strive for clear and succinct communication, avoiding metaphors and ornate language. Present information in a coherent manner, providing necessary context and reliable data, while refraining from persuasive elements. Focus on depth of content to engage readers, rather than using sensationalism. The goal is to inform and respect the reader’s intelligence, suitable for educational or professional environments. Refrain from commercial commentary or emotional bias. Conclude without relying on standard transition phrases like 'In conclusion' or 'In summary'."
+        style = "Be clear, concise, and informative, avoiding metaphors. Offer coherent data without persuasion. Aim for depth, not sensationalism and avoid commercial bias."
     body = f"""Today's date is {date}. As the VP of Communications, generate content following these instructions carefully: {output}. \n You must Mirror this writing style: {style}. \n Lastly, this content must adhere to a strict {chars} character limit."""
     print(body)
     return body
@@ -123,8 +123,9 @@ def OPEN_AI_PITCH(date, type, output, persona, chars, style=False):
 
 def OPEN_AI_GENERATE_CONTENT(date, article, style, instructions):
     if not style:
-        style = "Maintain an objective and factual tone throughout. Begin with a precise introduction, without informal salutations. Establish authority using a formal style and cite reputable sources where relevant. Strive for clear and succinct communication, avoiding metaphors and ornate language. Present information in a coherent manner, providing necessary context and reliable data, while refraining from persuasive elements. Focus on depth of content to engage readers, rather than using sensationalism. The goal is to inform and respect the reader’s intelligence, suitable for educational or professional environments. Refrain from commercial commentary or emotional bias. Conclude without relying on standard transition phrases like 'In conclusion' or 'In summary'."
-    body = f"Today's date is {date}. Read the news article below then follow these instructions carefully: {instructions}. Output cannot be longer than 1,000 characters. \n Here is the article {article}.\n You must use this writing stye: {style}."
+        style = "Be clear, concise, and informative, avoiding metaphors. Offer coherent data without persuasion. Aim for depth, not sensationalism and avoid commercial bias."
+    body = f"""Today's date is {date}. Read the news article below and generate content in less than 800 characters, mirroring a custom writing style. Here are the instructions: {instructions}. Here is the writing style {style}. \n Here is the news article {article}.
+    """
     return body
 
 
@@ -140,8 +141,9 @@ OPEN_AI_LEARN_WRITING_STYLE_PROMPT = (
 )
 
 OPEN_AI_REGENERATE_ARTICLE = (
-    lambda article, content, instructions: f"""Rewrite this content:{content} following these Instructions carefully: {instructions}.
-     Output cannot be longer than 1,500 characters."""
+    lambda article, content, instructions: f"""Adjust the content below following these instructions carefully:{instructions}. Output must be less than 1000 characters. \n
+    here is the content:{content}
+    """
 )
 
 DO_NOT_TRACK_LIST = ["www.wsj.com", "www.nytimes.com", "www.bizjournals.com"]

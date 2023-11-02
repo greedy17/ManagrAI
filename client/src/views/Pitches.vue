@@ -538,6 +538,7 @@ export default {
     async resetWritingStyle() {
       this.savingStyle = true
       this.sample = ''
+      this.writingStyleTitle = ''
       this.closeResetModal()
       try {
         await Comms.api.deleteWritingStyle({ style_id: this.deleteId })
