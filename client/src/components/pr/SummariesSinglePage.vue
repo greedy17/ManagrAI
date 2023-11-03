@@ -1331,7 +1331,6 @@ export default {
       showingDropdown: false,
       showGenerateDropdown: false,
       selectedOption: null,
-      controller: new AbortController(),
       generateOptions: [
         { name: 'Press Release', value: `Press Release` },
         { name: 'Statement', value: 'Statement' },
@@ -1396,10 +1395,18 @@ export default {
   },
   mounted() {
     window.addEventListener('scroll', this.checkScroll)
+    // window.addEventListener('beforeunload', () => {
+    //   // Abort the Axios request when the user leaves the page
+    //   this.controller.abort();
+    // });
     // this.updateMessage()
   },
   beforeDestroy() {
     window.removeEventListener('scroll', this.checkScroll)
+    // window.removeEventListener('beforeunload', () => {
+    //   this.controller.abort();
+    // });
+    this.abortFunctions()
   },
   methods: {
     closeContentModal() {
@@ -2054,10 +2061,18 @@ export default {
     },
     abortFunctions() {
       this.shouldCancel = true
-      this.controller.abort()
+      console.log('this.controllers before', this.controllers)
+      for (let key in this.controllers) {
+        this.controllers[key].controller.abort()
+      }
+      // update controllers here
+      this.$store.dispatch('updateAbortController', {})
+      console.log('controllers after', this.controllers)
     },
     async getClips() {
       try {
+        // update controllers here
+        this.$store.dispatch('updateAbortController', {...this.$store.state.abortControllers, getClips: {name: 'getClips', controller: new AbortController()}})
         await Comms.api
           .getClips(
             {
@@ -2067,9 +2082,10 @@ export default {
               date_from: this.dateStart,
               date_to: this.dateEnd,
             },
-            this.controller.signal,
+            this.controllers.getClips.controller.signal,
           )
           .then((response) => {
+            console.log('clips res', response)
             this.filteredArticles = response.articles
             this.booleanString = response.string
           })
@@ -2078,6 +2094,9 @@ export default {
         this.filteredArticles = []
         console.log(e)
       } finally {
+        const newAbortControllers = { ...this.$store.state.abortControllers }
+        delete newAbortControllers.getClips
+        this.$store.dispatch('updateAbortController', newAbortControllers)
         this.loading = false
       }
     },
@@ -2179,6 +2198,7 @@ export default {
         if (this.shouldCancel) {
           return this.stopLoading()
         }
+        this.$store.dispatch('updateAbortController', {...this.$store.state.abortControllers, getSummary: {name: 'getSummary', controller: new AbortController()}})
         await Comms.api
           .getSummary(
             {
@@ -2186,9 +2206,10 @@ export default {
               search: this.newSearch,
               instructions: instructions,
             },
-            this.controller.signal,
+            this.controllers.getSummary.controller.signal,
           )
           .then((response) => {
+            console.log('getSummary res', response)
             if (this.shouldCancel) {
               return this.stopLoading()
             }
@@ -2204,6 +2225,9 @@ export default {
           bodyClassName: ['custom'],
         })
       } finally {
+        const newAbortControllers = { ...this.$store.state.abortControllers }
+        delete newAbortControllers.getClips
+        this.$store.dispatch('updateAbortController', newAbortControllers)
         this.summaryLoading = false
         this.scrollToTop()
       }
@@ -2411,6 +2435,9 @@ export default {
           : []
       }
     },
+    controllers() {
+      return this.$store.state.abortControllers
+    },
     allCategoryClips() {
       const cats = this.$store.state.categories
       if (Object.keys(cats).length) {
@@ -2484,9 +2511,6 @@ export default {
     fromNav() {
       return this.$store.state.fromNav
     },
-  },
-  beforeDestroy() {
-    this.abortFunctions()
   },
   directives: {
     autoresize: {

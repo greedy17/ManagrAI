@@ -66,6 +66,7 @@ const state = {
   reportSummary: null,
   tempRefreshUser: null,
   generatedContent: null,
+  abortControllers: {},
 }
 
 const mutations = {
@@ -80,6 +81,9 @@ const mutations = {
   },
   UPDATE_TEMP_REFRESH_USER: (state, payload) => {
     state.tempRefreshUser = payload
+  },
+  UPDATE_ABORT_CONTROLLER: (state, payload) => {
+    state.abortControllers = payload
   },
   UPDATE_CURRENT_REPORT_CLIPS: (state, payload) => {
     state.currentReportClips = payload
@@ -547,6 +551,9 @@ const actions = {
   },
   updateTempRefreshUser({ commit }, payload) {
     commit('UPDATE_TEMP_REFRESH_USER', payload)
+  },
+  updateAbortController({ commit }, payload) {
+    commit('UPDATE_ABORT_CONTROLLER', payload)
   },
   updateCurrentReportClips({ commit }, payload) {
     commit('UPDATE_CURRENT_REPORT_CLIPS', payload)
