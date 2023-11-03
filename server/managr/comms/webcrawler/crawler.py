@@ -5,7 +5,7 @@ from ..models import NewsSource
 from ..serializers import ArticleSerializer
 from scrapy.crawler import CrawlerProcess
 from dateutil import parser
-from ..utils import get_domain
+from ..utils import get_domain, extract_date_from_text
 from scrapy.utils.project import get_project_settings
 
 
@@ -20,8 +20,10 @@ XPATH_STRING_OBJ = {
     ],
     "description": ["//meta[contains(@property, 'description')]/@content"],
     "publish_date": [
-        "//meta[contains(@property, 'published')]/@content",
-        "//meta[contains(@name, 'date')]/@content",
+        "//meta[contains(@property, 'publish')]/@content",
+        "//meta[contains(@name, '-date')]/@content",
+        "//time/@datetime",
+        "//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'publish')]/text()",
     ],
     "image_url": ["//meta[@property='og:image']/@content"],
 }
@@ -63,7 +65,7 @@ class NewsSpider(scrapy.Spider):
         url = response.url
         domain = get_domain(url)
         source = NewsSource.objects.get(domain__contains=domain)
-        if source.last_scraped:
+        if source.last_scraped and source.article_link_attribute is not None:
             regex = source.create_search_regex()
             article_links = response.xpath(regex)
             if source.last_scraped and source.article_link_attribute:
@@ -86,6 +88,8 @@ class NewsSpider(scrapy.Spider):
         for key in XPATH_STRING_OBJ.keys():
             for path in XPATH_STRING_OBJ[key]:
                 selector = response.xpath(path).get()
+                if key == "publish_date" and "text" in path:
+                    selector = extract_date_from_text(selector)
                 if selector is not None:
                     meta_tag_data[key] = selector
                     break
@@ -97,6 +101,7 @@ class NewsSpider(scrapy.Spider):
                 article_tags = tags
                 break
         full_article = ""
+        cleaned_data = None
         if article_tags is not None:
             for article in article_tags:
                 full_article += article
@@ -110,7 +115,8 @@ class NewsSpider(scrapy.Spider):
             else:
                 return
         except Exception as e:
-            cleaned_data.pop("content")
+            logger.info(str(e))
+            cleaned_data = cleaned_data.pop("content") if cleaned_data is not None else "No data"
             source.error_log.append(f"{str(e)} - data: {cleaned_data}")
             source.save()
         return

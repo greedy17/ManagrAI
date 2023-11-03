@@ -36,6 +36,17 @@ def get_domain(url):
     return domain_parts[0]
 
 
+def extract_date_from_text(text):
+    pattern = r"([A-Za-z]{3,} \d{1,2}, \d{4})"
+    match = re.search(pattern, text)
+    if match:
+        date_str = match.group(1)
+        date_obj = datetime.strptime(date_str, "%b. %d, %Y")
+        return date_obj
+    else:
+        return None
+
+
 def generate_config():
     config = Config()
     # config.browser_user_agent = random.choice(user_agents)

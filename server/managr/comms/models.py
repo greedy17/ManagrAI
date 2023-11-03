@@ -1,8 +1,7 @@
 import json
 import os
 import logging
-from django.db.models import F
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.db import models
 from managr.core.models import TimeStampModel
 from managr.core import constants as core_consts
@@ -11,12 +10,13 @@ from .exceptions import _handle_response as _handle_news_response, TwitterApiExc
 from managr.utils.client import Variable_Client
 from managr.utils.sites import get_site_url
 from managr.core import exceptions as open_ai_exceptions
+from dateutil import parser
 from managr.utils.misc import encrypt_dict
 from urllib.parse import urlencode
 import base64
 import hashlib
 from django.contrib.postgres.fields import JSONField, ArrayField
-from django.contrib.postgres.search import SearchVectorField, SearchQuery, SearchRank, SearchVector
+from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.indexes import GinIndex
 
 logger = logging.getLogger("managr")
@@ -257,7 +257,7 @@ class Pitch(TimeStampModel):
     @classmethod
     def generate_pitch(cls, user, type, instructions, audience, chars, style, tokens, timeout):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-        style = user.writing_style if user.writing_style else False
+        # style = user.writing_style if user.writing_style else False
         prompt = comms_consts.OPEN_AI_PITCH(
             datetime.now().date(), type, instructions, audience, chars, style
         )
@@ -320,9 +320,10 @@ class NewsSource(TimeStampModel):
         return selector
 
     def create_search_regex(self):
-        # TODO: add a check for year if its still current or not
+        current_year = str(datetime.now().year)
         if self.article_link_regex:
-            return self.article_link_regex
+            if self.article_link_selector == "year" and current_year in self.article_link_regex:
+                return self.article_link_regex
         # add the link selector
         attribute_list = self.article_link_attribute.split(",")
         regex = "//" + attribute_list[0] + "["
@@ -357,8 +358,10 @@ class NewsSource(TimeStampModel):
         )
 
     @classmethod
-    def domain_list(cls):
+    def domain_list(cls, scrape_ready=False):
         active_sources = cls.objects.filter(is_active=True)
+        if scrape_ready:
+            active_sources = active_sources.filter(article_link_selector__isnull=False)
         source_list = [source.domain for source in active_sources]
         return source_list
 
@@ -406,7 +409,22 @@ class Article(TimeStampModel):
         converted_boolean = boolean_search_to_query(boolean_string)
         articles = Article.objects.filter(converted_boolean)
         if date_to:
-            articles = articles.filter(publish_date__range=(date_from, date_to))
+            date_to_date_obj = parser.parse(date_to)
+            day_incremented = date_to_date_obj + timedelta(days=1)
+            day_incremented_str = str(day_incremented)
+            articles = articles.filter(publish_date__range=(date_from, day_incremented_str))
         if len(articles):
             articles = articles[:20]
         return list(articles)
+
+
+class WritingStyle(models.Model):
+    style = models.TextField()
+    title = models.TextField()
+    user = models.ForeignKey(
+        "core.User",
+        related_name="writing_styles",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
+    )

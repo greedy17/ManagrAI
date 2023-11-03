@@ -56,14 +56,23 @@
           <p>Pitch</p>
         </router-link>
 
-        <router-link v-if="!hasZoomIntegration" :to="{ name: 'PRIntegrations' }" id="router-transcribe1">
+        <router-link
+          v-if="!hasZoomIntegration"
+          :to="{ name: 'PRIntegrations' }"
+          id="router-transcribe1"
+        >
           <div class="wrapper">
             <p>Transcribe</p>
             <div style="margin-left: -20px" class="tooltip">Connect Zoom</div>
           </div>
         </router-link>
 
-        <router-link v-else active-class="active" :to="{ name: 'PRTranscripts' }" id="router-transcribe2">
+        <router-link
+          v-else
+          active-class="active"
+          :to="{ name: 'PRTranscripts' }"
+          id="router-transcribe2"
+        >
           <p>Transcribe</p>
         </router-link>
 
@@ -578,15 +587,15 @@ export default {
     setIndex(i) {
       this.hoverIndex = i
     },
+    removeIndex() {
+      this.hoverIndex = null
+    },
     showMobileMenu() {
       this.hamburgerClicked = true
       this.mobileMenuOpen = true
     },
     hideMobileMenu() {
       this.mobileMenuOpen = false
-    },
-    removeIndex() {
-      this.hoverIndex = null
     },
     textSoonOn() {
       this.soonText = 'Coming Soon!'
@@ -653,7 +662,7 @@ export default {
       let initials = ''
       fullSplit.forEach((word) => {
         if (word[0]) {
-          return initials += word[0]
+          return (initials += word[0])
         }
       })
       return initials

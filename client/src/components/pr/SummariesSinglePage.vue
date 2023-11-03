@@ -1447,7 +1447,7 @@ export default {
         this.optionIndex = index
         this.contentUrl = url
         this.contentType = val
-        this.contentInstructions = `Turn this article into a ${val} for ${this.newSearch}`
+        this.contentInstructions = `Create a ${val} for XXX, newsjacking this article`
         // this.setArticlePitchContent(url,sum)
       }
     },
@@ -2335,7 +2335,7 @@ export default {
           .generateContent({
             url: this.contentUrl,
             instructions: this.contentInstructions,
-            style: this.user.writingStyle ? this.user.writingStyle : null,
+            style: '',
           })
           .then((response) => {
             if (this.mainView === 'website' && this.addedArticles.length === 1) {

@@ -57,6 +57,8 @@ export default class User extends Model {
   static isTeamLead = new fields.Field({ readOnly: true })
   static metaData = new fields.Field()
   static writingStyle = new fields.CharField()
+  static writingStyles = new fields.Field()
+  static writingStylesRef = new fields.Field()
 
 
   static fromAPI(json = {}) {
