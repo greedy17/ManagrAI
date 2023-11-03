@@ -45,9 +45,8 @@ DEFAULT_TWITTER_INSTRUCTIONS = """*Executive summary:*\n Highlighting 5 key poin
 *Sentiment*\n Evaluate the overall tone or sentiment of the coverage. Is it primarily positive, neutral, or negative and why.\n
 *Influencers:*\n Identify key influencers based on follower count"""
 
-DEFAULT_CLIENT_INSTRUCTIONS = (
-    lambda search: f"Summary: summarize the articles and their relation to {search}. Sentiment: what is the sentiment of {search} within the articles"
-)
+DEFAULT_CLIENT_INSTRUCTIONS = "Summary: Summarize the news in paragraph format, in less than 600 characters. \n Top Sources: List top 10 sources (based on popularity and size, no newswire sources)"
+
 
 DEFAULT_TWITTER_CLIENT_INSTRUCTIONS = """<strong>Summary of the Tweets:</strong>\n
 <strong>Sentiment:</strong>\n
@@ -58,7 +57,7 @@ DEFAULT_WRITING_STYLE = "Aim for a professional, informative, yet concise style,
 
 def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_client=False):
     if not instructions:
-        instructions = DEFAULT_CLIENT_INSTRUCTIONS(search)
+        instructions = DEFAULT_CLIENT_INSTRUCTIONS
     body = f"""Today's date is {date}. Read the news coverage below and carefully follow these instructions, output has to be less than 1000 characters: \n Here are the instructions:{instructions}. \n Here is the news coverage: {clips}.
     """
     # if instructions:
