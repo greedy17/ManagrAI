@@ -5,7 +5,7 @@ from ..models import NewsSource
 from ..serializers import ArticleSerializer
 from scrapy.crawler import CrawlerProcess
 from dateutil import parser
-from ..utils import get_domain
+from ..utils import get_domain, extract_date_from_text
 from scrapy.utils.project import get_project_settings
 
 
@@ -22,7 +22,8 @@ XPATH_STRING_OBJ = {
     "publish_date": [
         "//meta[contains(@property, 'publish')]/@content",
         "//meta[contains(@name, '-date')]/@content",
-        "//*[contains(., 'publish')]/text()",
+        "//time/@datetime",
+        "//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'publish')]/text()",
     ],
     "image_url": ["//meta[@property='og:image']/@content"],
 }
@@ -87,6 +88,8 @@ class NewsSpider(scrapy.Spider):
         for key in XPATH_STRING_OBJ.keys():
             for path in XPATH_STRING_OBJ[key]:
                 selector = response.xpath(path).get()
+                if key == "publish_date" and "text" in path:
+                    selector = extract_date_from_text(selector)
                 if selector is not None:
                     meta_tag_data[key] = selector
                     break

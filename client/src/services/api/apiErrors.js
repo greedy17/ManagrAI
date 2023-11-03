@@ -38,6 +38,10 @@ export function apiErrorHandler({
     // eslint-disable-next-line no-console
     console.log(`${apiName} Error:`, error)
 
+    if (error.name === 'CanceledError') {
+      return
+    }
+
     // Show error to user
     if (response && response.status >= 400 && response.status < 500 && response.status != 401) {
       // Handle 4xx errors (probably bad user input)
