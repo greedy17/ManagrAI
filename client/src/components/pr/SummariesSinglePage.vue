@@ -1899,7 +1899,7 @@ export default {
       }
       this.addedClips = this.$store.state.currentReportClips
       if (this.shouldCancel) {
-        // return this.stopLoading()
+        return this.stopLoading()
       }
       if (this.mainView !== 'website' && (!this.newSearch || this.newSearch.length < 3)) {
         return
@@ -1916,15 +1916,15 @@ export default {
         this.changeSearch({ search: this.newSearch, template: this.newTemplate })
         try {
           if (this.shouldCancel) {
-            // return this.stopLoading()
+            return this.stopLoading()
           }
           await this.getClips()
           if (this.shouldCancel) {
-            // return this.stopLoading()
+            return this.stopLoading()
           }
           await this.getSummary(this.filteredArticles, this.newTemplate)
           if (this.shouldCancel) {
-            // return this.stopLoading()
+            return this.stopLoading()
           }
           if (this.searchSaved) {
             this.updateSearch()
@@ -1940,7 +1940,7 @@ export default {
       this.summaryLoading = true
       try {
         if (this.shouldCancel) {
-          // return this.stopLoading()
+          return this.stopLoading()
         }
         let response
         if (this.addedArticles.length === 1) {
@@ -1950,7 +1950,7 @@ export default {
           response = await this.getSummary(this.addedArticles, this.newTemplate)
         }
         if (this.shouldCancel) {
-          // return this.stopLoading()
+          return this.stopLoading()
         }
         if (this.searchSaved) {
           this.updateSearch()
@@ -2106,7 +2106,7 @@ export default {
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       try {
         if (this.shouldCancel) {
-          // return this.stopLoading()
+          return this.stopLoading()
         }
         await Comms.api
           .getTweets({
@@ -2115,7 +2115,7 @@ export default {
           })
           .then((response) => {
             if (this.shouldCancel) {
-              // return this.stopLoading()
+              return this.stopLoading()
             }
             if (response.tweets) {
               this.tweets = response.tweets
@@ -2162,7 +2162,7 @@ export default {
       this.summaryLoading = true
       try {
         if (this.shouldCancel) {
-          // return this.stopLoading()
+          return this.stopLoading()
         }
         await Comms.api
           .getTweetSummary({
@@ -2172,7 +2172,7 @@ export default {
           })
           .then((response) => {
             if (this.shouldCancel) {
-              // return this.stopLoading()
+              return this.stopLoading()
             }
             this.summary = response.summary
             this.refreshUser()
@@ -2196,9 +2196,8 @@ export default {
       this.summaryLoading = true
       try {
         if (this.shouldCancel) {
-          // return this.stopLoading()
+          return this.stopLoading()
         }
-        // update controllers here
         this.$store.dispatch('updateAbortController', {...this.$store.state.abortControllers, getSummary: {name: 'getSummary', controller: new AbortController()}})
         await Comms.api
           .getSummary(
@@ -2212,7 +2211,7 @@ export default {
           .then((response) => {
             console.log('getSummary res', response)
             if (this.shouldCancel) {
-              // return this.stopLoading()
+              return this.stopLoading()
             }
             this.summary = response.summary
           })
@@ -2280,7 +2279,7 @@ export default {
 
       try {
         if (this.shouldCancel) {
-          // return this.stopLoading()
+          return this.stopLoading()
         }
         const response = await Comms.api.getArticleSummary({
           url: url,
@@ -2289,7 +2288,7 @@ export default {
           length: length,
         })
         if (this.shouldCancel) {
-          // return this.stopLoading()
+          return this.stopLoading()
         }
         selectedClip['summary'] = response.summary
         if (!this.addedArticles.length) {
@@ -2305,7 +2304,7 @@ export default {
         }
 
         if (this.shouldCancel) {
-          // return this.stopLoading()
+          return this.stopLoading()
         }
         this.refreshUser()
         this.scrollToTopDivider()
