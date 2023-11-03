@@ -24,6 +24,7 @@ from .models import (
     Conversation,
     Report,
 )
+from managr.comms.serializers import WritingStyleSerializer
 
 
 class NylasAuthAccountSerializer(serializers.ModelSerializer):
@@ -52,6 +53,7 @@ class UserClientSerializer(serializers.ModelSerializer):
         source="slack_integration", read_only=True
     )
     activation_link_ref = serializers.SerializerMethodField("get_activation_link")
+    writing_styles_ref = WritingStyleSerializer(many=True, source="writing_styles", read_only=True)
 
     class Meta:
         model = User
@@ -86,7 +88,8 @@ class UserClientSerializer(serializers.ModelSerializer):
             "crm",
             "meta_data",
             "activation_link_ref",
-            "writing_style",
+            "writing_styles",
+            "writing_styles_ref",
         )
 
     def get_activation_link(self, instance):
