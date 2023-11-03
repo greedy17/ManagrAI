@@ -1,6 +1,7 @@
 import { ModelAPI, ApiFilter } from '@thinknimble/tn-models'
 import { apiClient, apiErrorHandler } from '@/services/api'
 import { objectToSnakeCase } from '@/services/utils'
+import store from '../../store'
 
 class CommsApi extends ModelAPI {
     static ENDPOINT = 'prsearch/'
@@ -11,6 +12,7 @@ class CommsApi extends ModelAPI {
     }
 
     get client() {
+        // store.dispatch('updateAbortController', new AbortController())
         return apiClient()
     }
 
@@ -230,7 +232,8 @@ class TwitterAccountAPI extends ModelAPI {
         pageSize: ApiFilter.create({ key: 'page_size' }),
     }
     get client() {
-        return apiClient()
+        // store.dispatch('updateAbortController', new AbortController())
+        return apiClient(store.state.abortController)
     }
     static create(cls) {
         return new TwitterAccountAPI(cls)
