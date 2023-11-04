@@ -113,7 +113,7 @@ data "template_file" "managr_app" {
     smtp_port                  = each.value.smtp_port
     smtp_valid_testing_domains = each.value.smtp_valid_testing_domains
 
-    use_aws_storage = each.value.use_aws_storage
+    use_aws_storage = title(each.value.use_aws_storage)
     aws_location = each.value.s3_bucket_location
 
     use_nylas      = title(each.value.use_nylas)
@@ -165,7 +165,7 @@ data "template_file" "managr_app_scheduled_tasks" {
     smtp_port                  = each.value.env.smtp_port
     smtp_valid_testing_domains = each.value.env.smtp_valid_testing_domains
 
-    use_aws_storage = each.value.use_aws_storage
+    use_aws_storage = title(each.value.env.use_aws_storage)
     aws_location = each.value.env.s3_bucket_location
 
     use_nylas      = title(each.value.env.use_nylas)

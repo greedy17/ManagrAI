@@ -6,6 +6,7 @@ resource "aws_alb" "main" {
     "app" = "managr"
   }
   enable_http2 = true
+  idle_timeout = 600
 }
 
 resource "random_string" "alb_prefix" {
