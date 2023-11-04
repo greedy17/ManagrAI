@@ -428,3 +428,27 @@ class WritingStyle(models.Model):
         null=False,
         on_delete=models.CASCADE,
     )
+
+
+class EmailAlert(TimeStampModel):
+    user = models.ForeignKey(
+        "core.User",
+        related_name="news_alert",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
+    )
+    title = models.CharField(max_length=255)
+    run_at = models.DateTimeField()
+    search = models.ForeignKey(
+        "Search",
+        related_name="alerts",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
+    )
+    meta_data = JSONField(
+        default=dict,
+        null=True,
+        blank=True,
+    )

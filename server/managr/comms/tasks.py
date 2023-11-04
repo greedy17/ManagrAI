@@ -3,12 +3,13 @@ import json
 import uuid
 import httpx
 import datetime
+from django.conf import settings
 from background_task import background
 from managr.utils.client import Variable_Client
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_clips_paginator_block
 from . import constants as comms_consts
-from .models import Search, NewsSource
+from .models import Search, NewsSource, EmailAlert
 from .serializers import SearchSerializer, NewsSourceSerializer
 from managr.core import constants as core_consts
 from managr.core.models import User
@@ -21,6 +22,7 @@ from managr.slack.models import UserSlackIntegration
 from newspaper import Article
 from managr.slack.helpers.utils import block_finder
 from managr.comms.utils import generate_config, extract_base_domain
+from managr.api.emails import send_html_email
 
 logger = logging.getLogger("managr")
 
@@ -39,6 +41,10 @@ def emit_process_article_summary(payload, context):
 
 def emit_process_website_domain(url, organization_name):
     return _process_website_domain(url, organization_name)
+
+
+def emit_send_news_summary(news_alert_id):
+    return _send_news_summary(news_alert_id)
 
 
 def create_new_search(payload, user_id):
@@ -357,10 +363,15 @@ def _process_website_domain(url, organization_name):
 
 
 @background()
-def run_spider(url):
-    from django.core.management import call_command
-    import time
+def _send_news_summary(news_alert_id):
+    alert = EmailAlert.objects.get(id=news_alert_id)
+    recipient = [alert.user.email]
 
-    # Delay the start of the Scrapy spider within the main thread
-    time.sleep(5)
-    call_command("crawl_spider", url)
+    send_html_email(
+        "News Summary",
+        "core/email-templates/news-email.html",
+        settings.SERVER_EMAIL,
+        recipient,
+        context={**alert.meta_data, "name": alert.user.organization.name},
+    )
+    return

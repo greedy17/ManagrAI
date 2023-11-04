@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Search, Pitch, NewsSource, Article, WritingStyle
+from .models import Search, Pitch, NewsSource, Article, WritingStyle, EmailAlert
 from django.contrib.postgres.search import SearchVector
 
 
@@ -66,3 +66,9 @@ class WritingStyleSerializer(serializers.ModelSerializer):
     class Meta:
         model = WritingStyle
         fields = ("id", "style", "user", "title")
+
+
+class EmailAlertSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmailAlert
+        fields = ("id", "user", "title", "search", "meta_data")
