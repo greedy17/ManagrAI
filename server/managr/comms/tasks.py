@@ -21,7 +21,7 @@ from managr.slack import constants as slack_const
 from managr.slack.models import UserSlackIntegration
 from newspaper import Article
 from managr.slack.helpers.utils import block_finder
-from managr.comms.utils import generate_config, extract_base_domain
+from managr.comms.utils import generate_config, extract_base_domain, normalize_newsapi_to_model
 from managr.api.emails import send_html_email
 
 logger = logging.getLogger("managr")
@@ -43,8 +43,8 @@ def emit_process_website_domain(url, organization_name):
     return _process_website_domain(url, organization_name)
 
 
-def emit_send_news_summary(news_alert_id):
-    return _send_news_summary(news_alert_id)
+def emit_send_news_summary(news_alert_id, schedule):
+    return _send_news_summary(news_alert_id, schedule={"run_at": schedule})
 
 
 def create_new_search(payload, user_id):
@@ -365,13 +365,19 @@ def _process_website_domain(url, organization_name):
 @background()
 def _send_news_summary(news_alert_id):
     alert = EmailAlert.objects.get(id=news_alert_id)
-    recipient = [alert.user.email]
-
+    boolean = alert.search.search_boolean
+    clips = alert.search.get_clips(boolean)["articles"]
+    normalized_clips = normalize_newsapi_to_model(clips)[:5]
+    content = {
+        "clips": normalized_clips,
+        "username": alert.user.full_name,
+        "search_name": alert.search.name,
+    }
     send_html_email(
-        "News Summary",
+        "Managr News Summary",
         "core/email-templates/news-email.html",
-        settings.SERVER_EMAIL,
-        recipient,
-        context={**alert.meta_data, "name": alert.user.organization.name},
+        settings.DEFAULT_FROM_EMAIL,
+        [alert.user.email],
+        context=content,
     )
     return

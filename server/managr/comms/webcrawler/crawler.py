@@ -46,7 +46,7 @@ class NewsSpider(scrapy.Spider):
     name = "news_spider"
 
     custom_settings = {
-        "DOWNLOAD_DELAY_RANDOMIZE": True,  # Enable randomization
+        "DOWNLOAD_DELAY_RANDOMIZE": True,
         "DOWNLOAD_DELAY": 2,
         "DOWNLOADER_MIDDLEWARES": {
             "scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware": 100,
@@ -59,7 +59,6 @@ class NewsSpider(scrapy.Spider):
         super(NewsSpider, self).__init__(*args, **kwargs)
         self.start_urls = kwargs.get("start_urls")
         self.urls_processed = 0
-        # dispatcher.connect(self.spider_closed_handler, signal=signals.spider_closed)
 
     def parse(self, response):
         url = response.url
@@ -148,22 +147,3 @@ class NewsSpider(scrapy.Spider):
             yield scrapy.Request(
                 url, headers={"Referer": "https://www.google.com"}, callback=self.parse
             )
-
-    # def spider_closed_handler(self, spider, reason):
-    #     if self.urls_processed == len(self.start_urls):
-    #         self.logger.info("All URLs processed. Stopping the spider.")
-    #         self.crawler.engine.close_spider(spider, "All URLs processed")
-    #     else:
-    #         self.logger.info(
-    #             f"Not all URLs processed. ({self.urls_processed}/{len(self.start_urls)})"
-    #         )
-
-
-settings = get_project_settings()
-process = CrawlerProcess(settings=settings)
-
-
-def run_spider(url):
-    process.crawl(NewsSpider, start_urls=[url])
-    process.start()
-    return

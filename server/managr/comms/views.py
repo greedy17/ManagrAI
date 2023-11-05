@@ -35,7 +35,11 @@ from rest_framework.decorators import (
     api_view,
     permission_classes,
 )
-from managr.comms.utils import generate_config, normalize_article_data, get_domain
+from managr.comms.utils import (
+    generate_config,
+    normalize_article_data,
+    get_domain,
+)
 
 
 logger = logging.getLogger("managr")
