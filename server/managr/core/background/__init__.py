@@ -1,6 +1,5 @@
 import logging
 import time
-import random
 import pytz
 import uuid
 import requests
