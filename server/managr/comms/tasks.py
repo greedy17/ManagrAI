@@ -373,6 +373,7 @@ def _send_news_summary(news_alert_id):
         "username": alert.user.full_name,
         "search_name": alert.search.name,
     }
+    print(content)
     send_html_email(
         "Managr News Summary",
         "core/email-templates/news-email.html",

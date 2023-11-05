@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<html>
     <head>
         <style>
             header {
@@ -104,50 +104,75 @@
                 position: relative;
                 bottom: 0.2rem;
                 }
+
+            .cover-photo {
+                height: 112px;
+                width: 116px;
+                margin-left: 1rem;
+                margin-top: 1.25rem;
+                object-fit: cover;
+                
+                cursor: pointer;
+                }
+
+            .off-gray {
+                color: #6b6b6b;
+                }
+            .author {
+                display: inline-block;
+                overflow: hidden;
+                max-width: 150px;
+                height: 26px;
+                text-overflow: ellipsis;
+                background-color: $soft-gray;
+                padding: 4px 12px;
+                color: $base-gray;
+                border-radius: 12px;
+                }
         </style>
     </head>
     <body>
-        <h3>Hey {{ data.username }}, your clips for {{ data.search_name }} is ready</h3>
+        <h3>Hey {{ username }}, your clips for {{ search_name }} is ready</h3>
         <p>Here's a sneak peak:</p>
-    {% for key,article in data.clips %}
         <div class="news-container">
+            {% for value in clips %}
             <div class="news-card">
-            <header>
-                <div class="card-col">
-                <div class="card-top-left">
-                    <span>{{ article.source.name }}</span>
-                </div>
-                <h1 class="article-title">
-                    {{ article.title }}
-                </h1>
-                <p class="article-preview">
-                    {{ article.description }}
-                </p>
-                </div>
+                <header>
+                    <div class="card-col">
+                        <div class="card-top-left">
+                            <span>{{ value.source.name }}</span>
+                        </div>
+                        <h1 class="article-title">
+                            {{ value.title }}
+                        </h1>
+                        <p class="article-preview">
+                            {{ value.description }}
+                        </p>
+                    </div>
 
-                <div>
-                <img src="article.urlToImage" class="cover-photo" />
-                </div>
-            </header>
+                    <div>
+                        <img src="value.image_url" class="cover-photo" />
+                    </div>
+                </header>
 
-            <div class="card-footer">
-                <div class="author-time">
-                <span class="author">{{ article.author }}</span>
-                <span class="divier-dot">.</span>
-                <span class="off-gray">{{ article.publishedAt }}</span>
-                </div>
-                <div class="footer-icon-container">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="left-mar">
-                    <path
-                    d="M17.5 1.25a.5.5 0 0 1 1 0v2.5H21a.5.5 0 0 1 0 1h-2.5v2.5a.5.5 0 0 1-1 0v-2.5H15a.5.5 0 0 1 0-1h2.5v-2.5zm-11 4.5a1 1 0 0 1 1-1H11a.5.5 0 0 0 0-1H7.5a2 2 0 0 0-2 2v14a.5.5 0 0 0 .8.4l5.7-4.4 5.7 4.4a.5.5 0 0 0 .8-.4v-8.5a.5.5 0 0 0-1 0v7.48l-5.2-4a.5.5 0 0 0-.6 0l-5.2 4V5.75z"
-                    fill="#000"
-                    ></path>
-                </svg>
+                <div class="card-footer">
+                    <div class="author-time">
+                        <span class="author">{{ value.author }}</span>
+                        <span class="divier-dot">.</span>
+                        <span class="off-gray">{{ value.publish_date }}</span>
+                    </div>
+                    <div class="footer-icon-container">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="left-mar">
+                            <path
+                            d="M17.5 1.25a.5.5 0 0 1 1 0v2.5H21a.5.5 0 0 1 0 1h-2.5v2.5a.5.5 0 0 1-1 0v-2.5H15a.5.5 0 0 1 0-1h2.5v-2.5zm-11 4.5a1 1 0 0 1 1-1H11a.5.5 0 0 0 0-1H7.5a2 2 0 0 0-2 2v14a.5.5 0 0 0 .8.4l5.7-4.4 5.7 4.4a.5.5 0 0 0 .8-.4v-8.5a.5.5 0 0 0-1 0v7.48l-5.2-4a.5.5 0 0 0-.6 0l-5.2 4V5.75z"
+                            fill="#000"
+                            ></path>
+                        </svg>
+                    </div>
                 </div>
             </div>
-            </div>
+            {% endfor %}
         </div>
-        </div>
-    {% endfor %}
+        
     </body>
 </html>
