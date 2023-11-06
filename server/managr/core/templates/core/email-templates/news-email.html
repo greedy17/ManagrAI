@@ -12,6 +12,16 @@
                 margin-bottom: 2rem;
             }
 
+            .pre-text {
+                color: $base-gray;
+                font-family: $thin-font-family;
+                font-size: 16px;
+                line-height: 32px;
+                word-wrap: break-word;
+                white-space: pre-wrap;
+                padding: 0;
+              }
+
             .news-container {
                 display: flex;
                 align-items: center;
@@ -134,6 +144,10 @@
     <body>
         <h1>Hey {{ username }}, your clips for {{ search_name }} is ready</h3>
         <h3>Here's a sneak peak:</h3>
+        <div style="margin-top: 36px;" class="pre-text">
+            {{summary}}
+        </div>
+        <hr class="solid">
         <div class="news-container">
             {% for value in clips %}
             <div class="news-card">
@@ -142,9 +156,11 @@
                         <div class="card-top-left">
                             <span>{{ value.source.name }}</span>
                         </div>
-                        <h3 class="article-title">
-                            {{ value.title }}
-                        </h3>
+                        <a src={{value.link}}>
+                            <h3 class="article-title">
+                                {{ value.title }}
+                            </h3>
+                        </a>
                         <p class="article-preview">
                             {{ value.description }}
                         </p>
@@ -174,6 +190,6 @@
             </div>
             {% endfor %}
         </div>
-        
+        <a src="https://staging.managr.ai/login">Get your full report here</a>
     </body>
 </html>
