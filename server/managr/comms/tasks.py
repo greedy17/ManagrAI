@@ -378,6 +378,7 @@ def _send_news_summary(news_alert_id):
         "clips": normalized_clips[:5],
         "username": alert.user.first_name,
         "search_name": alert.search.name,
+        "website_url": f"{settings.MANAGR_URL}/login",
     }
     send_html_email(
         "Managr News Summary",
