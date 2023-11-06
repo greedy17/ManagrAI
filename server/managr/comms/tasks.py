@@ -367,10 +367,16 @@ def _send_news_summary(news_alert_id):
     alert = EmailAlert.objects.get(id=news_alert_id)
     boolean = alert.search.search_boolean
     clips = alert.search.get_clips(boolean)["articles"]
-    normalized_clips = normalize_newsapi_to_model(clips)[:5]
+    normalized_clips = normalize_newsapi_to_model(clips)
+    descriptions = [clip["description"] for clip in normalized_clips]
+    res = Search.get_summary(
+        alert.user, 2000, 60.0, descriptions, alert.search.search_boolean, False, False
+    )
+    message = res.get("choices")[0].get("message").get("content").replace("**", "*")
     content = {
-        "clips": normalized_clips,
-        "username": alert.user.full_name,
+        "summary": message,
+        "clips": normalized_clips[:5],
+        "username": alert.user.first_name,
         "search_name": alert.search.name,
     }
     send_html_email(
