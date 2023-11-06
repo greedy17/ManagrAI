@@ -366,25 +366,26 @@ def _process_website_domain(url, organization_name):
 def _send_news_summary(news_alert_id):
     alert = EmailAlert.objects.get(id=news_alert_id)
     boolean = alert.search.search_boolean
-    clips = alert.search.get_clips(boolean)["articles"]
-    normalized_clips = normalize_newsapi_to_model(clips)
-    descriptions = [clip["description"] for clip in normalized_clips]
-    res = Search.get_summary(
-        alert.user, 2000, 60.0, descriptions, alert.search.search_boolean, False, False
-    )
-    message = res.get("choices")[0].get("message").get("content").replace("**", "*")
-    content = {
-        "summary": message,
-        "clips": normalized_clips[:5],
-        "username": alert.user.first_name,
-        "search_name": alert.search.name,
-        "website_url": f"{settings.MANAGR_URL}/login",
-    }
-    send_html_email(
-        "Managr News Summary",
-        "core/email-templates/news-email.html",
-        settings.DEFAULT_FROM_EMAIL,
-        [alert.user.email],
-        context=content,
-    )
+    end_time = datetime.datetime.now()
+    start_time = end_time - datetime.timedelta(hours=24)
+    clips = alert.search.get_clips(boolean, end_time, start_time)["articles"]
+    if len(clips):
+        normalized_clips = normalize_newsapi_to_model(clips)
+        descriptions = [clip["description"] for clip in normalized_clips]
+        res = Search.get_summary(
+            alert.user, 2000, 60.0, descriptions, alert.search.search_boolean, False, False
+        )
+        message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+        content = {
+            "summary": message,
+            "clips": normalized_clips[:5],
+            "website_url": f"{settings.MANAGR_URL}/login",
+        }
+        send_html_email(
+            "Managr News Summary",
+            "core/email-templates/news-email.html",
+            settings.DEFAULT_FROM_EMAIL,
+            [alert.user.email],
+            context=content,
+        )
     return
