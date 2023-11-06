@@ -1356,10 +1356,11 @@ export default {
       promptSuggestions: [
         `Summarize the news`,
         'Summarize the news for XXX and its impact',
-        `Summarize the news for XXX, provide sentiment, and creative ways they can newsjack this coverage`,
+        `Summarize the news for XXX, provide sentiment, creative ways they can newsjack this coverage, and list 5 journalist from Tier 1 publications that will write about this, along with creative pitching tips`,
+        `List 10 journalists from Tier 1 publications and creative tips to pitch them`,
+        `List 10 journalists from Tier 1 publications that will write about XXX, along with creative pitching tips`,
         `As XXX PR agency, provide creative suggestions per this news, think outside the box`,
         `Create a media monitoring report for XXX. Include top sources (based on popularity and size), number of articles, sentiment, and any other important metrics`,
-        `List up to 5 journalists from tier one publications writing about this topic`,
         `Provide pitch ideas and background on [JOURNALIST NAME]`,
         'Convert the most entertaining news story about XXX into a blog post',
         'Craft short responses on behalf of XXX to the stories that need it',
