@@ -156,9 +156,11 @@
                         <div class="card-top-left">
                             <span>{{ value.source.name }}</span>
                         </div>
-                        <h3 class="article-title">
-                            {{ value.title }}
-                        </h3>
+                        <a src={{value.link}}>
+                            <h3 class="article-title">
+                                {{ value.title }}
+                            </h3>
+                        </a>
                         <p class="article-preview">
                             {{ value.description }}
                         </p>
@@ -188,6 +190,6 @@
             </div>
             {% endfor %}
         </div>
-        
+        <a src="https://staging.managr.ai/login">Get your full report here</a>
     </body>
 </html>
