@@ -1,203 +1,79 @@
 <html>
-    <head>
-        <style>
-            header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 32px;
-                height: 120px;
-                overflow: none;
-                text-overflow: ellipsis;
-                margin-bottom: 2rem;
-            }
-
-            .pre-text {
-                color: $base-gray;
-                font-family: $thin-font-family;
-                font-size: 16px;
-                line-height: 32px;
-                word-wrap: break-word;
-                white-space: pre-wrap;
-                padding: 0;
-              }
-
-            .news-container {
-                display: flex;
-                align-items: center;
-                padding-top: 0.5rem;
-            }
-
-            .news-card {
-                position: relative;
-                min-height: 220px;
-                width: 100%;
-                border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-                transition: all 0.3s;
-                padding: 1rem;
-                }
-
-            .card-col {
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-                }
-
-            .card-top-left {
-                display: flex;
-                font-size: 12px;
-                img {
-                    height: 12px;
-                    margin-right: 0.5rem;
-                    }
-                }
-
-            .article-title {
-                font-size: 20px;
-                font-weight: 1000;
-                line-height: 24px;
-                letter-spacing: 0;
-                color: $base-gray;
-                margin: 12px 0;
-                }
-            
-            .article-preview {
-                color: $base-gray;
-                font-size: 16px;
-                max-height: 72px;
-                text-overflow: ellipsis;
-                overflow: hidden;
-                font-weight: 400;
-                margin: 0;
-                }
-
-            .card-footer {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 16px 0;
-                margin-top: 1rem;
-                span {
-                    font-size: 12px;
-                    margin-right: 0.5rem;
-                    }
-                }
-            .footer-icon-container {
-                display: flex;
-                align-items: center;
-                margin-right: 8px;
-                }
-
-            .right-arrow-footer {
-                height: 16px;
-                margin-left: 1rem;
-                cursor: pointer;
-                }
-
-            .left-mar {
-                margin-left: 1rem;
-                }
-
-            .footer-icon {
-                height: 24px;
-                margin-left: 1rem;
-                cursor: pointer;
-                }
-
-            .author-time {
-                display: flex;
-                align-items: center;
-                color: $light-gray-blue;
-                }
-
-            .divier-dot {
-                position: relative;
-                bottom: 0.2rem;
-                }
-
-            .cover-photo {
-                height: 112px;
-                width: 116px;
-                margin-left: 1rem;
-                margin-top: 1.25rem;
-                object-fit: cover;
-                cursor: pointer;
-              
-                &:hover {
-                  opacity: 0.7;
-                }
-                @media only screen and (max-width: 600px) {
-                  margin-left: 0.25rem;
-                  width: 100%;
-                  object-fit: cover;
-                }
-            }
-
-            .off-gray {
-                color: #6b6b6b;
-                }
-            .author {
-                display: inline-block;
-                overflow: hidden;
-                max-width: 150px;
-                height: 26px;
-                text-overflow: ellipsis;
-                background-color: $soft-gray;
-                padding: 4px 12px;
-                color: $base-gray;
-                border-radius: 12px;
-                }
-        </style>
-    </head>
-    <body>
-        <h1>Hey {{ username }}, your clips for {{ search_name }} is ready</h3>
-        <h3>Here's a sneak peak:</h3>
-        <div style="margin-top: 36px;" class="pre-text">
-            {{summary}}
+  <body style="padding-top: 16px; display: flex; justify-content: flex-start; width: 100%; background-color: white;">
+    <img
+      src="https://managr-images.s3.amazonaws.com/slack/logo_loading.gif"
+      style="height: auto; max-width: 100%;"
+    />
+    <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 16px;">
+      Managr Daily Digest
+    </h1>
+    <h3 style="font-size: 18px;">Today's Highlights</h3>
+    <div style="margin-top: 36px; color: #27292c; font-family: Lato-Light; font-size: 16px; line-height: 32px; word-wrap: break-word; white-space: pre-wrap; padding: 0;">
+      {{summary}}
+    </div>
+    <hr style="border-top: 1px solid #000; margin: 24px 0;" />
+    <div style="display: flex; align-items: center; padding-top: 0.5rem;">
+      {% for value in clips %}
+      <div
+        style="position: relative; min-height: 220px; width: 100%; border-bottom: 1px solid rgba(0, 0, 0, 0.1); transition: all 0.3s; padding: 1rem; display: flex; flex-direction: column; align-items: flex-start; font-size: 12px;"
+      >
+        <div style="display: flex; align-items: center; font-size: 12px;">
+          <img
+            src="{{value.source.logo_url}}"
+            style="height: 12px; margin-right: 0.5rem;"
+          />
+          <span style="color: #27292c;">{{ value.source.name }}</span>
         </div>
-        <hr class="solid">
-        <div class="news-container">
-            {% for value in clips %}
-            <div class="news-card">
-                <header>
-                    <div class="card-col">
-                        <div class="card-top-left">
-                            <span>{{ value.source.name }}</span>
-                        </div>
-                        <a href="{{value.link}}">
-                            <h3 class="article-title">
-                                {{ value.title }}
-                            </h3>
-                        </a>
-                        <p class="article-preview">
-                            {{ value.description }}
-                        </p>
-                    </div>
-
-                    <div>
-                        <img src="{{value.image_url}}" class="cover-photo" style="height: 112px; width: 116px; margin-left: 1rem; margin-top: 1.25rem; object-fit: cover; cursor: pointer;" />
-                    </div>
-                </header>
-
-                <div class="card-footer">
-                    <div class="author-time">
-                        <span class="author">{{ value.author }}</span>
-                        <span class="divier-dot">.</span>
-                        <span class="off-gray">{{ value.publish_date|slice:":10" }}</span>
-                    </div>
-                    <div class="footer-icon-container">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="left-mar">
-                            <path
-                            d="M17.5 1.25a.5.5 0 0 1 1 0v2.5H21a.5.5 0 0 1 0 1h-2.5v2.5a.5.5 0 0 1-1 0v-2.5H15a.5.5 0 0 1 0-1h2.5v-2.5zm-11 4.5a1 1 0 0 1 1-1H11a.5.5 0 0 0 0-1H7.5a2 2 0 0 0-2 2v14a.5.5 0 0 0 .8.4l5.7-4.4 5.7 4.4a.5.5 0 0 0 .8-.4v-8.5a.5.5 0 0 0-1 0v7.48l-5.2-4a.5.5 0 0 0-.6 0l-5.2 4V5.75z"
-                            fill="#000"
-                            ></path>
-                        </svg>
-                    </div>
-                    <hr class="solid">
-                </div>
-            </div>
-            {% endfor %}
+        <a
+          href="{{value.link}}"
+          style="text-decoration: none; color: #27292c;"
+        >
+          <h3
+            style="font-size: 20px; font-weight: 1000; line-height: 24px; letter-spacing: 0; color: #27292c; margin: 12px 0; text-decoration: none;"
+          >
+            {{ value.title }}
+          </h3>
+        </a>
+        <p
+          style="color: #27292c; font-size: 16px; max-height: 72px; text-overflow: ellipsis; overflow: hidden; font-weight: 400; margin: 0;"
+        >
+          {{ value.description }}
+        </p>
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0; margin-top: 1rem; color: #9596b4; position: relative; bottom: 0.2rem;"
+        >
+          <span style="font-size: 12px; margin-right: 0.5rem;">
+            {{ value.author }}
+          </span>
+          <span style="font-size: 12px; margin-right: 0.5rem;">.</span>
+          <span style="font-size: 12px; margin-right: 0.5rem;">
+            {{ value.publish_date|slice:":10" }}
+          </span>
+          <div
+            style="display: flex; align-items: center; margin-right: 8px;"
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              style="height: 16px; margin-left: 1rem; cursor: pointer;"
+            >
+              <path
+                d="M17.5 1.25a.5.5 0 0 1 1 0v2.5H21a.5.5 0 0 1 0 1h-2.5v2.5a.5.5 0 0 1-1 0v-2.5H15a.5.5 0 0 1 0-1h2.5v-2.5zm-11 4.5a1 1 0 0 1 1-1H11a.5.5 0 0 0 0-1H7.5a2 2 0 0 0-2 2v14a.5.5 0 0 0 .8.4l5.7-4.4 5.7 4.4a.5.5 0 0 0 .8-.4v-8.5a.5.5 0 0 0-1 0v7.48l-5.2-4a.5.5 0 0 0-.6 0l-5.2 4V5.75z"
+                fill="#000"
+              ></path>
+            </svg>
+          </div>
         </div>
-        <a href="{{website_link}}">Get your full report here</a>
-    </body>
+      </div>
+      {% endfor %}
+    </div>
+    <a
+      href="{{website_url}}"
+      style="text-decoration: none; color: #000; font-size: 18px; font-weight: bold; margin-top: 24px; display: inline-block;"
+    >
+      Get your full report here
+    </a>
+  </body>
 </html>
