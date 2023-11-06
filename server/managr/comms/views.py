@@ -22,11 +22,11 @@ from rest_framework.decorators import action
 from . import constants as comms_consts
 from .models import Search, TwitterAuthAccount, Pitch
 from .models import Article as InternalArticle
-from .models import WritingStyle
+from .models import WritingStyle, EmailAlert
 from managr.core.models import User
 from managr.comms import exceptions as comms_exceptions
 from .tasks import emit_process_website_domain
-from .serializers import SearchSerializer, PitchSerializer
+from .serializers import SearchSerializer, PitchSerializer, EmailAlertSerializer
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
 from managr.utils.misc import decrypt_dict
@@ -35,7 +35,11 @@ from rest_framework.decorators import (
     api_view,
     permission_classes,
 )
-from managr.comms.utils import generate_config, normalize_article_data, get_domain
+from managr.comms.utils import (
+    generate_config,
+    normalize_article_data,
+    get_domain,
+)
 
 
 logger = logging.getLogger("managr")
@@ -387,7 +391,7 @@ class PRSearchViewSet(
                 prompt = comms_consts.OPEN_AI_GENERATE_CONTENT(
                     datetime.now().date(), article, "", instructions
                 )
-                print('PROMPT IS HERE =---- >', prompt)
+                print("PROMPT IS HERE =---- >", prompt)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
@@ -819,7 +823,7 @@ class PitchViewSet(
         token_amount = 1000
         timeout = 60.0
 
-        print('WRITING STYLE IS RIGHT HERE --- >', style)
+        print("WRITING STYLE IS RIGHT HERE --- >", style)
         while True:
             try:
                 res = Pitch.generate_pitch(
@@ -964,7 +968,7 @@ class PitchViewSet(
                     )
                 r = open_ai_exceptions._handle_response(r)
                 style = r.get("choices")[0].get("message").get("content")
-                writing_dict = {"title": title,"style": style, "user": request.user}
+                writing_dict = {"title": title, "style": style, "user": request.user}
                 WritingStyle.objects.create(**writing_dict)
                 break
             except open_ai_exceptions.StopReasonLength:
@@ -1009,4 +1013,44 @@ class PitchViewSet(
         style_id = request.data["params"]["style_id"]
         style = WritingStyle.objects.get(id=style_id)
         style.delete()
+        return Response(status=status.HTTP_200_OK)
+
+
+class EmailAlertViewSet(
+    viewsets.GenericViewSet,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.ListModelMixin,
+):
+    serializer_class = EmailAlertSerializer
+
+    def get_queryset(self):
+        return EmailAlert.objects.filter(user=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            readSerializer = self.serializer_class(instance=serializer.instance)
+        except Exception as e:
+            logger.exception(f"Error validating data for email alert <{e}>")
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = self.request.data
+        serializer = self.serializer_class(instance=instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            instance.delete()
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)

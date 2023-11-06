@@ -29,11 +29,14 @@ SECRET_KEY = _env_get_required("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = _env_get_required("DEBUG") == "True"
 if IN_DEV:
+    MANAGR_URL = "http://localhost:8080"
     SERVER_EMAIL = "Managr Support <support@mg.managr.ai>"
 elif IN_STAGING:
-    SERVER_EMAIL = "Managr <no-reply-staging@managr.ai>"
+    SERVER_EMAIL = "Managr <no-reply-staging@mymanagr.ai>"
+    MANAGR_URL = "https://staging.managr.ai"
 else:
-    SERVER_EMAIL = "Managr <no-reply@mg.managr.ai>"
+    MANAGR_URL = "https://app.managr.ai"
+    SERVER_EMAIL = "Managr <no-reply@app.mymanagr.ai>"
 
 DEFAULT_FROM_EMAIL = SERVER_EMAIL
 

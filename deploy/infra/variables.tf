@@ -211,26 +211,8 @@ variable "scheduled_tasks" {
     },
     {
       name       = "runalerts"
-      command    = "triggeralerts"
+      command    = "crawl_spider --active"
       cron       = "cron(0 5 * * ? *)"
-      task_count = 1
-    },
-    {
-      name       = "syncsalesloftaccounts"
-      command    = "initsalesloftsync"
-      cron       = "cron(0 23 * * ? *)"
-      task_count = 1
-    },
-    {
-      name       = "syncgongcalls"
-      command    = "initgongsync"
-      cron       = "cron(0 23 * * ? *)"
-      task_count = 1
-    },
-    {
-      name       = "syncoutreachaccounts"
-      command    = "initoutreachsync"
-      cron       = "cron(0 23 * * ? *)"
       task_count = 1
     },
   ]

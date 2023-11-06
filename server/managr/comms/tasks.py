@@ -3,12 +3,13 @@ import json
 import uuid
 import httpx
 import datetime
+from django.conf import settings
 from background_task import background
 from managr.utils.client import Variable_Client
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_clips_paginator_block
 from . import constants as comms_consts
-from .models import Search, NewsSource
+from .models import Search, NewsSource, EmailAlert
 from .serializers import SearchSerializer, NewsSourceSerializer
 from managr.core import constants as core_consts
 from managr.core.models import User
@@ -20,7 +21,8 @@ from managr.slack import constants as slack_const
 from managr.slack.models import UserSlackIntegration
 from newspaper import Article
 from managr.slack.helpers.utils import block_finder
-from managr.comms.utils import generate_config, extract_base_domain
+from managr.comms.utils import generate_config, extract_base_domain, normalize_newsapi_to_model
+from managr.api.emails import send_html_email
 
 logger = logging.getLogger("managr")
 
@@ -39,6 +41,10 @@ def emit_process_article_summary(payload, context):
 
 def emit_process_website_domain(url, organization_name):
     return _process_website_domain(url, organization_name)
+
+
+def emit_send_news_summary(news_alert_id, schedule):
+    return _send_news_summary(news_alert_id, schedule={"run_at": schedule})
 
 
 def create_new_search(payload, user_id):
@@ -357,10 +363,29 @@ def _process_website_domain(url, organization_name):
 
 
 @background()
-def run_spider(url):
-    from django.core.management import call_command
-    import time
-
-    # Delay the start of the Scrapy spider within the main thread
-    time.sleep(5)
-    call_command("crawl_spider", url)
+def _send_news_summary(news_alert_id):
+    alert = EmailAlert.objects.get(id=news_alert_id)
+    boolean = alert.search.search_boolean
+    end_time = datetime.datetime.now()
+    start_time = end_time - datetime.timedelta(hours=24)
+    clips = alert.search.get_clips(boolean, end_time, start_time)["articles"]
+    if len(clips):
+        normalized_clips = normalize_newsapi_to_model(clips)
+        descriptions = [clip["description"] for clip in normalized_clips]
+        res = Search.get_summary(
+            alert.user, 2000, 60.0, descriptions, alert.search.search_boolean, False, False
+        )
+        message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+        content = {
+            "summary": message,
+            "clips": normalized_clips[:5],
+            "website_url": f"{settings.MANAGR_URL}/login",
+        }
+        send_html_email(
+            "Managr News Summary",
+            "core/email-templates/news-email.html",
+            settings.DEFAULT_FROM_EMAIL,
+            [alert.user.email],
+            context=content,
+        )
+    return
