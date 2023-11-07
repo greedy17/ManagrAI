@@ -71,4 +71,4 @@ class WritingStyleSerializer(serializers.ModelSerializer):
 class EmailAlertSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmailAlert
-        fields = ("id", "user", "title", "search", "meta_data")
+        fields = ("id", "user", "title", "search", "run_at", "meta_data")

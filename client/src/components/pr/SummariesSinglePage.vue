@@ -166,53 +166,58 @@
       </div>
     </Modal>
 
-    <!-- <Modal v-if="saveModalOpen" class="paid-modal">
+    <Modal v-if="notifyModalOpen" class="paid-modal">
       <div class="regen-container">
         <div class="paid-header">
           <div>
-            <h3 class="regen-header-title">Email notification</h3>
-            <p class="regen-header-subtitle">Save your search & set up email notifications</p>
+            <h4 class="regen-header-title">Email Alerts</h4>
+            <p class="regen-header-subtitle">Select delivery time</p>
           </div>
-          <div class="pointer" @click="closePaidModal"><small>X</small></div>
+          <div class="pointer" @click="toggleNotifyModal"><small>X</small></div>
         </div>
         <div class="paid-body">
           <div>
-            <h5 style="margin-bottom: 4px" class="paid-title">Name:</h5>
-            <input
-              autofocus
-              class="area-input-outline"
-              placeholder="Name your search..."
-              style="width: 100%"
-              v-model="searchName"
-              :disabled="searchSaved"
-            />
-          </div>
-
-          <div style="margin-top: 1rem">
-            <h5 style="margin-bottom: 4px" class="paid-title">Notification time:</h5>
-
-            <input
-              class="area-input-outline"
-              style="width: 100%"
-              v-model="selectedDateTime"
-              type="time"
-            />
+            <div>
+              <label for="time-select">Delivery time:</label>
+              <input
+                id="time-select"
+                style="width: 100%"
+                class="area-input-outline"
+                required
+                @input="calculateDate(alertTIme)"
+                type="time"
+                v-model="alertTIme"
+              />
+              <small style="font-size: 12px">Recieve a daily email when there is new content</small>
+            </div>
           </div>
         </div>
         <div class="paid-footer">
           <div class="row">
-            <div
+            <button
               style="padding-top: 9px; padding-bottom: 9px"
               class="cancel-button"
-              @click="closePaidModal"
+              @click="toggleNotifyModal"
             >
-              Close
-            </div>
-            <div class="save-button">Save</div>
+              Cancel
+            </button>
+            <button
+              @click="addEmailAlert"
+              :disabled="savingAlert || !alertTIme"
+              class="save-button"
+            >
+              <img
+                v-if="savingAlert"
+                class="rotate"
+                height="12px"
+                src="@/assets/images/loading.svg"
+                alt=""
+              />Submit
+            </button>
           </div>
         </div>
       </div>
-    </Modal> -->
+    </Modal>
 
     <Transition name="slide-left">
       <div v-if="selectedSearch && ShowReport" class="reports-width-height">
@@ -550,7 +555,12 @@
         <div v-else class="summaries-container">
           <Transition name="slide-fade">
             <div v-if="showUpdateBanner" class="templates">
-              <p>Search saved successfully!</p>
+              <p>Success!</p>
+            </div>
+          </Transition>
+          <Transition name="slide-fade">
+            <div v-if="showNotifyBanner" class="templates">
+              <p>Success!</p>
             </div>
           </Transition>
           <div class="content-width">
@@ -612,21 +622,43 @@
                     {{ savingSearch ? 'Saving' : 'Save' }}
                   </button>
 
-                  <button v-else-if="searchSaved" class="secondary-button">
+                  <button
+                    @click="toggleNotifyModal"
+                    v-if="searchSaved && !notifiedList.includes(searchId)"
+                    class="secondary-button"
+                  >
                     <img height="12px" src="@/assets/images/cowbell-more.svg" alt="" />
-                    Notify
+
+                    Enable
+                  </button>
+
+                  <button
+                    @click="removeEmailAlert"
+                    v-else-if="searchSaved && notifiedList.includes(searchId)"
+                    class="secondary-button"
+                  >
+                    <img
+                      height="12px"
+                      src="@/assets/images/bell-slash.svg"
+                      alt=""
+                      class="filter-green"
+                    />
+                    Disable
                   </button>
                 </div>
 
                 <div v-else class="row">
-                  <!-- <input
+                  <input
                     autofocus
                     class="area-input-outline"
                     placeholder="Name your search"
                     v-model="searchName"
-                  /> -->
+                  />
+
+                  <button @click="toggleSaveName" class="secondary-button">Cancel</button>
 
                   <button
+                    style="margin-left: -2px"
                     @click="createSearch"
                     :disabled="
                       articleSummaryLoading ||
@@ -1318,7 +1350,14 @@ export default {
   },
   data() {
     return {
-      saveModalOpen: false,
+      showNotifyBanner: false,
+      currentAlert: null,
+      emailAlerts: [],
+      alertTIme: '',
+      notifiedList: [],
+      savingAlert: false,
+      notifyModalOpen: false,
+      formattedDate: '',
       dateStart: null,
       dateEnd: null,
       contentModalOpen: false,
@@ -1407,10 +1446,9 @@ export default {
         `Summarize the news`,
         'Summarize the news for XXX and its impact',
         `Summarize the news for XXX, provide sentiment, and creative ways they can newsjack this coverage`,
-        `As XXX PR agency, provide creative suggestions per this news, think outside the box`,
-        `Create a media monitoring report for XXX. Include top sources (based on popularity and size), number of articles, sentiment, and any other important metrics`,
-        `List up to 5 journalists from tier one publications writing about this topic`,
+        `List 10 journalist from Tier 1 publications that will write about XXX, along with pitching tips`,
         `Provide pitch ideas and background on [JOURNALIST NAME]`,
+        `As XXX PR agency, provide creative suggestions per this news, think outside the box`,
         'Convert the most entertaining news story about XXX into a blog post',
         'Craft short responses on behalf of XXX to the stories that need it',
         `Write a highly engaging LinkedIn post based on this coverage for XXX`,
@@ -1448,6 +1486,7 @@ export default {
     },
   },
   mounted() {
+    this.getEmailAlerts()
     window.addEventListener('scroll', this.checkScroll)
     // window.addEventListener('beforeunload', () => {
     //   // Abort the Axios request when the user leaves the page
@@ -1463,6 +1502,101 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    setCurrentAlert() {
+      this.currentAlert = this.emailAlerts.filter((alert) => alert.search === this.searchId)[0]
+    },
+    async removeEmailAlert() {
+      console.log(this.currentAlert.id)
+      try {
+        Comms.api.removeEmailAlert({ id: this.currentAlert.id }).then((response) => {
+          console.log(response)
+          this.toggleShowNotifyBanner()
+        })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.getEmailAlerts()
+      }
+    },
+    async getEmailAlerts() {
+      try {
+        Comms.api.getEmailAlerts().then((response) => {
+          this.emailAlerts = response.results
+          this.notifiedList = response.results.map((alert) => alert.search)
+          console.log(this.notifiedList)
+        })
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    async addEmailAlert() {
+      this.savingAlert = true
+      try {
+        Comms.api
+          .addEmailAlert({
+            search: this.searchId,
+            run_at: this.formattedDate,
+            user: this.user.id,
+            title: this.searchName,
+          })
+          .then((response) => {
+            this.getEmailAlerts()
+            this.toggleShowNotifyBanner()
+            console.log(response)
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+      }
+      setTimeout(() => {
+        this.savingAlert = false
+        this.notifyModalOpen = false
+      }, 1000)
+    },
+    toggleShowNotifyBanner() {
+      setTimeout(() => {
+        this.showNotifyBanner = true
+      }, 500)
+      setTimeout(() => {
+        this.showNotifyBanner = false
+      }, 2500)
+    },
+    calculateDate(selectedTime) {
+      console.log('timeishere', selectedTime)
+      // Parse the selected time in the format "hh:mm" (e.g., "14:30")
+      const [hours, minutes] = selectedTime.split(':').map(Number)
+
+      if (
+        isNaN(hours) ||
+        isNaN(minutes) ||
+        hours < 0 ||
+        hours > 23 ||
+        minutes < 0 ||
+        minutes > 59
+      ) {
+        // Handle invalid user input for time
+        this.formattedDate = 'Invalid time input'
+        return
+      }
+
+      const currentDate = new Date()
+      currentDate.setHours(hours, minutes, 0, 0)
+
+      const year = currentDate.getFullYear()
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0')
+      const day = String(currentDate.getDate()).padStart(2, '0')
+      const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
+        2,
+        '0',
+      )}:00.000000`
+
+      this.formattedDate = `${year}-${month}-${day}T${formattedTime}`
+      console.log(this.formattedDate)
+    },
+
+    toggleNotifyModal() {
+      this.notifyModalOpen = !this.notifyModalOpen
+    },
     closeContentModal() {
       if (!this.contentLoading) {
         this.contentModalOpen = false
@@ -1836,6 +1970,7 @@ export default {
       this.showSaveName = !this.showSaveName
     },
     setSearch(search) {
+      console.log(search.id)
       this.summary = ''
       this.searchId = search.id
       this.searchName = search.name
@@ -1847,6 +1982,7 @@ export default {
       // this.addedClips = search.meta_data.clips ? search.meta_data.clips : []
       this.mainView = search.type === 'SOCIAL_MEDIA' ? 'social' : 'news'
       this.generateNewSearch()
+      this.setCurrentAlert()
     },
     changeIndex() {
       setTimeout(() => {

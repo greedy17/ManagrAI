@@ -32,11 +32,11 @@ if IN_DEV:
     MANAGR_URL = "http://localhost:8080"
     SERVER_EMAIL = "Managr Support <support@mg.managr.ai>"
 elif IN_STAGING:
-    SERVER_EMAIL = "Managr <no-reply-staging@managr.ai>"
+    SERVER_EMAIL = "Managr <no-reply-staging@mymanagr.ai>"
     MANAGR_URL = "https://staging.managr.ai"
 else:
     MANAGR_URL = "https://app.managr.ai"
-    SERVER_EMAIL = "Managr <no-reply@mg.managr.ai>"
+    SERVER_EMAIL = "Managr <no-reply@app.mymanagr.ai>"
 
 DEFAULT_FROM_EMAIL = SERVER_EMAIL
 
