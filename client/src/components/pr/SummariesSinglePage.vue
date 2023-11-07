@@ -166,6 +166,54 @@
       </div>
     </Modal>
 
+    <!-- <Modal v-if="saveModalOpen" class="paid-modal">
+      <div class="regen-container">
+        <div class="paid-header">
+          <div>
+            <h3 class="regen-header-title">Email notification</h3>
+            <p class="regen-header-subtitle">Save your search & set up email notifications</p>
+          </div>
+          <div class="pointer" @click="closePaidModal"><small>X</small></div>
+        </div>
+        <div class="paid-body">
+          <div>
+            <h5 style="margin-bottom: 4px" class="paid-title">Name:</h5>
+            <input
+              autofocus
+              class="area-input-outline"
+              placeholder="Name your search..."
+              style="width: 100%"
+              v-model="searchName"
+              :disabled="searchSaved"
+            />
+          </div>
+
+          <div style="margin-top: 1rem">
+            <h5 style="margin-bottom: 4px" class="paid-title">Notification time:</h5>
+
+            <input
+              class="area-input-outline"
+              style="width: 100%"
+              v-model="selectedDateTime"
+              type="time"
+            />
+          </div>
+        </div>
+        <div class="paid-footer">
+          <div class="row">
+            <div
+              style="padding-top: 9px; padding-bottom: 9px"
+              class="cancel-button"
+              @click="closePaidModal"
+            >
+              Close
+            </div>
+            <div class="save-button">Save</div>
+          </div>
+        </div>
+      </div>
+    </Modal> -->
+
     <Transition name="slide-left">
       <div v-if="selectedSearch && ShowReport" class="reports-width-height">
         <div class="reports-lip-container" @click="toggleReport">
@@ -527,6 +575,7 @@
                     @click="openRegenModal"
                     class="secondary-button"
                   >
+                    <img height="10px" src="@/assets/images/refresh-pr.svg" alt="" />
                     {{
                       (filteredArticles && filteredArticles.length) || mainView === 'website'
                         ? 'Regenerate'
@@ -538,15 +587,19 @@
 
                   <button
                     @click="toggleSaveName"
-                    v-if="(filteredArticles && filteredArticles.length) || tweets.length"
+                    v-if="
+                      !savedSearch &&
+                      ((filteredArticles && filteredArticles.length) || tweets.length)
+                    "
                     :disabled="
                       articleSummaryLoading ||
                       loading ||
                       summaryLoading ||
                       savingSearch ||
-                      searchSaved ||
+                      savedSearch ||
                       mainView === 'website'
                     "
+                    style="margin-left: -2px"
                     class="primary-button"
                   >
                     <img
@@ -558,25 +611,20 @@
                     />
                     {{ savingSearch ? 'Saving' : 'Save' }}
                   </button>
-                  <!-- <button @click="setPitchContent" class="lightblue-button">
-                    Generate Content
-                    <img
-                      v-if="contentLoading"
-                      src="@/assets/images/loading.svg"
-                      class="rotate"
-                      height="12px"
-                      alt=""
-                    />
-                  </button> -->
+
+                  <button v-else-if="searchSaved" class="secondary-button">
+                    <img height="12px" src="@/assets/images/cowbell-more.svg" alt="" />
+                    Notify
+                  </button>
                 </div>
 
                 <div v-else class="row">
-                  <input
+                  <!-- <input
                     autofocus
                     class="area-input-outline"
                     placeholder="Name your search"
                     v-model="searchName"
-                  />
+                  /> -->
 
                   <button
                     @click="createSearch"
@@ -657,7 +705,7 @@
                   />
                   <div style="margin-left: -22px" class="tooltip">{{ copyTip }}</div>
                 </div>
-                <pre style="margin-top: 36px" class="pre-text" v-html="summary"></pre>
+                <pre style="margin-top: 44px" class="pre-text" v-html="summary"></pre>
               </div>
             </div>
           </div>
@@ -1270,6 +1318,7 @@ export default {
   },
   data() {
     return {
+      saveModalOpen: false,
       dateStart: null,
       dateEnd: null,
       contentModalOpen: false,
@@ -1331,6 +1380,7 @@ export default {
       showingDropdown: false,
       showGenerateDropdown: false,
       selectedOption: null,
+      selectedDateTime: '',
       generateOptions: [
         { name: 'Press Release', value: `Press Release` },
         { name: 'Statement', value: 'Statement' },
@@ -1384,6 +1434,10 @@ export default {
     // Format the dates as YYYY-MM-DD strings (required for <input type="date">)
     this.dateStart = sevenDaysAgo.toISOString().split('T')[0]
     this.dateEnd = today.toISOString().split('T')[0]
+
+    const defaultTime = new Date()
+    defaultTime.setHours(8, 0)
+    this.selectedTime = defaultTime.toISOString().slice(0, 16)
   },
   watch: {
     typedMessage: 'changeIndex',
@@ -2072,7 +2126,10 @@ export default {
     async getClips() {
       try {
         // update controllers here
-        this.$store.dispatch('updateAbortController', {...this.$store.state.abortControllers, getClips: {name: 'getClips', controller: new AbortController()}})
+        this.$store.dispatch('updateAbortController', {
+          ...this.$store.state.abortControllers,
+          getClips: { name: 'getClips', controller: new AbortController() },
+        })
         await Comms.api
           .getClips(
             {
@@ -2198,7 +2255,10 @@ export default {
         if (this.shouldCancel) {
           return this.stopLoading()
         }
-        this.$store.dispatch('updateAbortController', {...this.$store.state.abortControllers, getSummary: {name: 'getSummary', controller: new AbortController()}})
+        this.$store.dispatch('updateAbortController', {
+          ...this.$store.state.abortControllers,
+          getSummary: { name: 'getSummary', controller: new AbortController() },
+        })
         await Comms.api
           .getSummary(
             {
@@ -3194,7 +3254,7 @@ button:disabled {
   outline: none;
   letter-spacing: 0.5px;
   font-size: 14px;
-  font-family: $base-font-family;
+  font-family: $thin-font-family;
   font-weight: 400;
   text-align: left;
   overflow: auto;
