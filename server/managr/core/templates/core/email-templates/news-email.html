@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -187,6 +188,12 @@
     .blue-bg {
         background-color: #2f4656;
     }
+
+    .row {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+    }
 </style>
 </head>
 
@@ -195,7 +202,10 @@
         <h1>Managr Daily Digest</h1>
     </div>
 
-    <div class="bottom-border">
+    <div class="bottom-border row">
+        <img src="https://managr-images.s3.amazonaws.com/slack/logo_loading.gif"
+            style="height: 20px; filter:brightness(0) invert(48%) sepia(33%) saturate(348%) hue-rotate(161deg) brightness(91%) contrast(90%)"
+            alt="Managr Logo">
         <h3>Today's highlights</h3>
     </div>
 
@@ -239,7 +249,7 @@
         </div>
         {% endfor %}
     </div>
-    <a href="{{website_link}}" style="color: #27292c;">Get your full report here</a>
+    <a href="{{website_link}}" style="color: #27292c;">Go to search</a>
 </body>
 
 </html>
