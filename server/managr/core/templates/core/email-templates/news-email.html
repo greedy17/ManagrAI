@@ -1,73 +1,54 @@
+<!DOCTYPE html>
 <html>
-  <body style="width: 100%; background-color: white;">
-    <div style="display: flex; align-items: center">
-        <img
-        src="https://managr-images.s3.amazonaws.com/slack/logo_loading.gif"
-        style="height: 24px; width: 32px;"
-      />
-      <h1 style="font-size: 24px; font-weight: bold;">
-        Managr Daily Digest
-      </h1>
-    </div>
-    <h3 style="font-size: 18px;">Today's Highlights</h3>
-    <div style="color: #27292c; font-family: Lato-Light; font-size: 16px; line-height: 32px; word-wrap: break-word; white-space: pre-wrap; padding: 0;">
-      {{summary}}
-    </div>
-    <hr style="border-top: 1px solid #000; margin: 24px 0;" />
-    <div style="display: flex; flex-direction: column; align-items: center; padding-top: 0.5rem;">
-    {% for value in clips %}
-        <div
-        style="position: relative; min-height: 220px; width: 100%; border-bottom: 1px solid rgba(0, 0, 0, 0.1); transition: all 0.3s; padding: 1rem; display: flex; flex-direction: column; align-items: flex-start; font-size: 12px;"
-        >
-            <header style="display: flex; align-items: center; justify-content: space-between; gap: 32px; overflow: none; text-overflow: ellipsis; margin-bottom: 2rem;">
-                <div class="display: flex; flex-direction: column; align-items: flex-start;">
-                    <div style="display: flex; align-items: center; font-size: 12px;">
-                        <span style="color: #27292c;">{{ value.source.name }}</span>
-                    </div>
-                    <a
-                    href="{{value.link}}"
-                    style="text-decoration: none; color: #27292c;"
-                    >
-                        <h3
-                        style="font-size: 20px; font-weight: 1000; line-height: 24px; letter-spacing: 0; color: #27292c; margin: 12px 0; text-decoration: none;"
-                        >
-                        {{ value.title }}
-                        </h3>
-                    </a>
-                    <p
-                        style="color: #27292c; font-size: 16px; max-height: 72px; text-overflow: ellipsis; overflow: hidden; font-weight: 400; margin: 0;"
-                    >
-                        {{ value.description }}
-                    </p>    
-                </div>
-                <img
-                src="{{value.image_url}}"
-                style="height: 112px; width: 116px; margin-left: 1rem; margin-top: 1.25rem; object-fit: cover; cursor: pointer;"
-                />
-            </header>
-            <div
-            style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0; margin-top: 1rem; color: #9596b4; position: relative; bottom: 0.2rem;"
-            >
-                <span style="font-size: 12px; margin-right: 0.5rem;">
-                    {{ value.author }}
-                </span>
-                <span style="font-size: 12px; margin-right: 0.5rem;">.</span>
-                <span style="font-size: 12px; margin-right: 0.5rem;">
-                    {{ value.publish_date|slice:":10" }}
-                </span>
-                <div
-                    style="display: flex; align-items: center; margin-right: 8px;"
-                >
-                </div>
+<head>
+  <style>
+    /* Add any additional global styles here */
+  </style>
+</head>
+<body style="width: 100%; background-color: white; font-family: Arial, sans-serif;">
+
+  <!-- Header -->
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+    <tr>
+        <td>
+            <div style="display: flex; align-items: center;">
+                <img src="https://managr-images.s3.amazonaws.com/slack/logo_loading.gif" style="height: 24px; width: 32px;" alt="Logo">
+                <h1 style="font-size: 24px; font-weight: bold; margin: 0; padding-left: 10px;">Managr Daily Digest</h1>
             </div>
-        </div>
-      {% endfor %}
-    </div>
-    <a
-      href="{{website_url}}"
-      style="text-decoration: none; color: #000; font-size: 18px; font-weight: bold; margin-top: 24px; display: inline-block;"
-    >
-      Get your full report here
-    </a>
-  </body>
+        </td>
+    </tr>
+  </table>
+  <h3 style="font-size: 18px; padding: 20px 20px 0px 20px; margin: 0px;">Today's Highlights</h3>
+  <div style="color: #27292c; font-size: 16px; line-height: 28px; word-wrap: break-word; white-space: pre-wrap; padding: 0px 20px 0px 20px;
+  margin:0px;">
+    {{summary}}
+  </div>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    {% for value in clips %}
+    <tr>
+      <td style="padding: 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
+        <a href="{{value.link}}" style="text-decoration: none; color: #27292c;">
+          <h3 style="font-size: 20px; font-weight: 600; line-height: 24px; letter-spacing: 0; color: #27292c; margin: 12px 0;">
+            {{ value.title }}
+          </h3>
+        </a>
+        <p style="color: #27292c; font-size: 16px; max-height: 72px; text-overflow: ellipsis; overflow: hidden; font-weight: 400; margin: 0;">
+          {{ value.description }}
+        </p>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0; margin-top: 1rem; color: #9596b4;">
+          <span style="font-size: 12px;">{{ value.source.name }}</span>
+          <span style="font-size: 12px;">{{ value.author }} &middot; {{ value.publish_date|slice:":10" }}</span>
+        </div>  
+      </td>
+      <td align="right">
+        <img src="{{value.image_url}}" style="height: 112px; width: 116px; margin-left: 1rem; margin-top: 1.25rem; object-fit: cover; cursor: pointer;" alt="Image">
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  <div style="text-align: center; margin: 20px;">
+    <a href="{{website_url}}" style="text-decoration: none; color: #000; font-size: 18px; font-weight: bold;">Get your full report here</a>
+  </div>
+
+</body>
 </html>
