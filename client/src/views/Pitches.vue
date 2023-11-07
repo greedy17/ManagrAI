@@ -468,9 +468,9 @@ export default {
       characterSuggestions: [`250`, `500`, `750`, `1000`, `1500`],
       instructionsSuggestions: [
         `Create a media pitch for XXX about ...`,
-        `Issue a statement on behalf of XXX about...`,
-        `Craft an informative LinkedIn Post on behalf of XXX ...`,
+        `Issue a press release on behalf of XXX about ...`,
         `Use the text below to generate XXX for XXX ...`,
+        `List 10 journalists from Tier 1 publications that will write about XXX, along with creative pitching tips & a short bio`,
       ],
       instructions: '',
       copyTip: 'Copy',
@@ -577,7 +577,9 @@ export default {
       }
     },
     toggleLearnInputModal() {
-      this.inputModalOpen = !this.inputModalOpen
+      if (this.isPaid) {
+        this.inputModalOpen = !this.inputModalOpen
+      }
     },
     async copyText() {
       try {
