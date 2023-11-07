@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Search, Pitch, NewsSource, Article, EmailAlert
+from .models import Search, Pitch, NewsSource, Article, EmailAlert, WritingStyle
 
 # Register your models here.
 
@@ -17,7 +17,13 @@ class CustomPitch(admin.ModelAdmin):
 
 
 class CustomNewsSource(admin.ModelAdmin):
-    list_display = ("domain", "is_active", "last_scraped")
+    list_display = (
+        "domain",
+        "is_active",
+        "last_scraped",
+        "article_link_attribute",
+        "article_link_selector",
+    )
     ordering = ("-datetime_created",)
     readonly_fields = ("access_count",)
 
@@ -33,3 +39,4 @@ admin.site.register(Pitch, CustomPitch)
 admin.site.register(NewsSource, CustomNewsSource)
 admin.site.register(Article, CustomArticle)
 admin.site.register(EmailAlert)
+admin.site.register(WritingStyle)
