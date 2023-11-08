@@ -212,6 +212,7 @@
                 height="12px"
                 src="@/assets/images/loading.svg"
                 alt=""
+                style="margin-right: 8px"
               />Submit
             </button>
           </div>
@@ -623,13 +624,16 @@
                   </button>
 
                   <button
+                    @mouseenter="changeEmailText"
+                    @mouseleave="defaultEmailText"
                     @click="toggleNotifyModal"
                     v-if="searchSaved && !notifiedList.includes(searchId)"
                     class="secondary-button"
+                    :disabled="!isPaid"
                   >
-                    <img height="12px" src="@/assets/images/cowbell-more.svg" alt="" />
+                    <img height="12px" src="@/assets/images/bell.svg" alt="" />
 
-                    Enable
+                    {{ emailText }}
                   </button>
 
                   <button
@@ -1350,6 +1354,7 @@ export default {
   },
   data() {
     return {
+      emailText: 'Enable',
       showNotifyBanner: false,
       currentAlert: null,
       emailAlerts: [],
@@ -1504,6 +1509,20 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    changeEmailText() {
+      if (!this.isPaid) {
+        this.emailText = 'Upgrade to Pro!'
+      } else {
+        return
+      }
+    },
+    defaultEmailText() {
+      if (!this.isPaid) {
+        this.emailText = 'Enable'
+      } else {
+        return
+      }
+    },
     setCurrentAlert() {
       this.currentAlert = this.emailAlerts.filter((alert) => alert.search === this.searchId)[0]
     },
@@ -1549,19 +1568,19 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
+        setTimeout(() => {
+          this.savingAlert = false
+          this.notifyModalOpen = false
+        }, 1000)
       }
-      setTimeout(() => {
-        this.savingAlert = false
-        this.notifyModalOpen = false
-      }, 1000)
     },
     toggleShowNotifyBanner() {
       setTimeout(() => {
         this.showNotifyBanner = true
-      }, 500)
+      }, 1000)
       setTimeout(() => {
         this.showNotifyBanner = false
-      }, 2500)
+      }, 3000)
     },
     calculateDate(selectedTime) {
       console.log('timeishere', selectedTime)
