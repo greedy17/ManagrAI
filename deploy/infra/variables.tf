@@ -210,9 +210,15 @@ variable "scheduled_tasks" {
       task_count = 1
     },
     {
-      name       = "runalerts"
+      name       = "crawlspider"
       command    = "crawl_spider --active"
-      cron       = "cron(0 5 * * ? *)"
+      cron       = "cron(0 7 * * ? *)"
+      task_count = 1
+    },
+    {
+      name       = "runalerts"
+      command    = "triggeralerts"
+      cron       = "cron(0 8 * * ? *)"
       task_count = 1
     },
   ]
