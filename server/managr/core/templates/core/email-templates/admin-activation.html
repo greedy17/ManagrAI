@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        button {
+            font-family: Lato-Regular, sans-serif;
+            font-weight: normal;
+            font-stretch: normal;
+            font-style: normal;
+            letter-spacing: normal;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            border-radius: 0.3rem;
+            line-height: 1.14;
+            text-indent: none;
+            border-style: none;
+            letter-spacing: 0.03rem;
+            cursor: not-allowed;
+            background-color: #2f4656;
+            border: 1px solid #2f4656;
+            color: white;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        button:hover {
+        box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.2);
+        scale: 1.025;
+        }
+        button:focus {
+            outline: none;
+        }
+    </style>
+</head>
+<body style="width: 100%; background-color: white; font-family: Arial, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+        <tr>
+            <td>
+                <div style="display: flex; align-items: center;">
+                    <img src="https://managr-images.s3.amazonaws.com/slack/logo_loading.gif" style="height: 24px; width: 32px;" alt="Logo">
+                    <h1 style="font-size: 24px; font-weight: bold; margin: 0; padding-left: 10px;">Managr Activation</h1>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <p>Hello, {{first_name}}, activate your Managr account here:</p>
+        </tr>
+        <tr>
+            <button>Activate Account</button>
+        </tr>
+      </table>
+</body>
+
+</html>

@@ -17,7 +17,13 @@ class CustomPitch(admin.ModelAdmin):
 
 
 class CustomNewsSource(admin.ModelAdmin):
-    list_display = ("domain", "is_active", "last_scraped")
+    list_display = (
+        "domain",
+        "is_active",
+        "last_scraped",
+        "article_link_attribute",
+        "article_link_selector",
+    )
     ordering = ("-datetime_created",)
     readonly_fields = ("access_count",)
 

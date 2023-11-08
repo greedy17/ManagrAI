@@ -65,7 +65,7 @@ def extract_base_domain(article_link):
         return None
     match = re.search(r"https?://([^/]+)", article_link)
     if match:
-        if match.group(1) in DO_NOT_TRACK_LIST:
+        if match.group(1) in ",".join(DO_NOT_TRACK_LIST):
             return None
         return match.group(1)
     return None
