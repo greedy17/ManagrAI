@@ -2,10 +2,12 @@ import json
 import httpx
 import time
 import logging
+import pytz
 from rest_framework import (
     mixins,
     viewsets,
 )
+from pytz import timezone
 from datetime import datetime, timedelta
 from newspaper import Article, ArticleException
 from managr.api.models import ExpiringTokenAuthentication
@@ -43,6 +45,16 @@ from managr.comms.utils import (
 
 
 logger = logging.getLogger("managr")
+
+
+def add_timezone_and_convert_to_utc(datetime_str, user_timezone):
+    user_timezone_obj = timezone(user_timezone)
+    localized_datetime = user_timezone_obj.localize(
+        datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M:%S.%f")
+    )
+    utc_time = pytz.utc
+    converted_datetime = localized_datetime.astimezone(utc_time)
+    return converted_datetime
 
 
 class PRSearchViewSet(
@@ -1029,6 +1041,9 @@ class EmailAlertViewSet(
         return EmailAlert.objects.filter(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
+        datetime = request.data.pop("run_at")
+        converted_datetime = add_timezone_and_convert_to_utc(datetime, request.user.timezone)
+        request.data["run_at"] = converted_datetime
         try:
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
