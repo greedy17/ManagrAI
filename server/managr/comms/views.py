@@ -2,10 +2,12 @@ import json
 import httpx
 import time
 import logging
+import pytz
 from rest_framework import (
     mixins,
     viewsets,
 )
+from pytz import timezone
 from datetime import datetime, timedelta
 from newspaper import Article, ArticleException
 from managr.api.models import ExpiringTokenAuthentication
@@ -25,7 +27,7 @@ from .models import Article as InternalArticle
 from .models import WritingStyle, EmailAlert
 from managr.core.models import User
 from managr.comms import exceptions as comms_exceptions
-from .tasks import emit_process_website_domain
+from .tasks import emit_process_website_domain, emit_send_news_summary
 from .serializers import SearchSerializer, PitchSerializer, EmailAlertSerializer
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
@@ -43,6 +45,16 @@ from managr.comms.utils import (
 
 
 logger = logging.getLogger("managr")
+
+
+def add_timezone_and_convert_to_utc(datetime_str, user_timezone):
+    user_timezone_obj = timezone(user_timezone)
+    localized_datetime = user_timezone_obj.localize(
+        datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M:%S.%f")
+    )
+    utc_time = pytz.utc
+    converted_datetime = localized_datetime.astimezone(utc_time)
+    return converted_datetime
 
 
 class PRSearchViewSet(
@@ -1029,6 +1041,9 @@ class EmailAlertViewSet(
         return EmailAlert.objects.filter(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
+        datetime = request.data.pop("run_at")
+        converted_datetime = add_timezone_and_convert_to_utc(datetime, request.user.timezone)
+        request.data["run_at"] = converted_datetime
         try:
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -1053,4 +1068,15 @@ class EmailAlertViewSet(
             instance.delete()
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="test-alert",
+    )
+    def test_email_alert(self, request, *args, **kwargs):
+        alert_id = request.data.get("alert_id")
+        emit_send_news_summary(alert_id, str(datetime.now()))
         return Response(status=status.HTTP_200_OK)
