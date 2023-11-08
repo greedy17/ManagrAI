@@ -37,6 +37,7 @@ const DELETE_MESSAGE_ACCOUNT_URI = '/users/remove-twilio-account/'
 const PASSWORD_RESET_EMAIL_ENDPOINT = `${USERS_ENDPOINT}password/reset/link/`
 const PASSWORD_RESET_ENDPOINT = `${USERS_ENDPOINT}password/reset/`
 const FORECAST_ENDPOINT = '/users/modify-forecast/'
+const SEND_EMAIL_ENDPOINT = '/users/send-activation-email/'
 const PULL_USAGE_DATA = '/users/pull-usage-data/'
 const PERFORMANCE_REPORT_ENDPOINT = '/users/performance-report/'
 const TRIAL_USERS_ENDPOINT = '/users/get-trial-users/'
@@ -556,6 +557,15 @@ export default class UserAPI {
       await this.client.post(url)
     } catch {
       apiErrorHandler({ apiName: 'UserAPI.Messaging' })
+    }
+  }
+
+  async sendEmail(data) {
+    try {
+      const res = await this.client.post(SEND_EMAIL_ENDPOINT, data)
+      return res
+    } catch(e) {
+      apiErrorHandler({ apiName: 'UserAPI.sendEmail' })
     }
   }
 
