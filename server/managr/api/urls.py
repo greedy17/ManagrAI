@@ -409,4 +409,5 @@ router.register("alerts/instances", alert_views.AlertInstanceViewSet, "alert-ins
 router.register("alerts/real-time", alert_views.RealTimeAlertViewSet, "real-time-alerts")
 router.register("prsearch", comms_views.PRSearchViewSet, "prsearch")
 router.register("pitches", comms_views.PitchViewSet, "pitches")
+router.register("email-alerts", comms_views.EmailAlertViewSet, "email-alerts")
 urlpatterns += router.urls

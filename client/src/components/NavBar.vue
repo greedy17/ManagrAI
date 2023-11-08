@@ -300,19 +300,19 @@
             <div v-if="menuOpen" class="avatar-dropdown">
               <p class="dropdown-item" @click="goToSettings">
                 <!-- <img class="mar-right" src="@/assets/images/settings.svg" height="14px" alt="" /> -->
-                <img class="mar-right" src="@/assets/images/profile.svg" height="14px" alt="" />
+                <img class="mar-right" src="@/assets/images/profile.svg" height="13px" alt="" />
                 Users
               </p>
               <p class="dropdown-item" @click="goToIntegrations">
-                <img class="mar-right" src="@/assets/images/apps.svg" height="14px" alt="" />
+                <img class="mar-right" src="@/assets/images/apps.svg" height="13px" alt="" />
                 Integrations
               </p>
               <p class="dropdown-item" @click="goToReports">
-                <img class="mar-right" src="@/assets/images/report.svg" height="14px" alt="" />
+                <img class="mar-right" src="@/assets/images/report.svg" height="13px" alt="" />
                 Digest
               </p>
               <p @click="logOut" class="dropdown-item dropdown-border">
-                <img class="mar-right" src="@/assets/images/logout.svg" height="14px" alt="" /> Sign
+                <img class="mar-right" src="@/assets/images/logout.svg" height="13px" alt="" /> Sign
                 out
               </p>
             </div>
@@ -925,7 +925,7 @@ export default {
   margin: 1.5rem 0 0.5rem 1rem;
   border-radius: 20px;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  font-family: $base-font-family;
+  font-family: $thin-font-family;
   font-size: 13px;
   display: flex;
   align-items: center;
@@ -1065,7 +1065,7 @@ export default {
   position: relative;
   width: 100%;
   img {
-    margin: 0 1.5rem 0 1.5rem;
+    margin: 0 0.5rem 0 1.5rem;
     filter: invert(40%);
   }
 
@@ -1206,7 +1206,7 @@ nav {
   flex-direction: row;
   gap: 36px;
   font-weight: 300 !important;
-  font-family: $base-font-family;
+  font-family: $thin-font-family;
   font-size: 14px;
   @media only screen and (max-width: 600px) {
     gap: 4px;
@@ -1219,7 +1219,7 @@ nav {
 
 .nav-text {
   font-weight: 400;
-  font-family: $base-font-family;
+  font-family: $thin-font-family;
   color: #6b6b6b;
   font-size: 13px;
   padding: 6px 0;
@@ -1244,7 +1244,7 @@ nav {
 a {
   text-decoration: none;
   font-weight: 400;
-  font-family: $base-font-family;
+  font-family: $thin-font-family;
   // color: #6b6b6b;
   color: $light-gray-blue;
   font-size: 14px;
