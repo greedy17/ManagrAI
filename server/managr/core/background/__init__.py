@@ -25,19 +25,14 @@ from managr.core.utils import (
     convert_date_string,
 )
 from managr.salesforce.models import MeetingWorkflow
-from managr.salesforce.adapter.models import ContactAdapter
-from managr.hubspot.adapter.models import HubspotContactAdapter
-from managr.crm.models import BaseAccount, BaseOpportunity, BaseContact, ObjectField
+from managr.crm.models import BaseAccount, BaseOpportunity, ObjectField
 from managr.meetings.models import Meeting
 from managr.meetings.serializers import MeetingSerializer
 from managr.slack.helpers import requests as slack_requests
-from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
+from managr.slack.models import OrgCustomSlackFormInstance
 from managr.slack import constants as slack_consts
 from managr.slack.helpers import block_builders
-from managr.opportunity.models import Lead
-from managr.zoom.background import _split_first_name, _split_last_name
 from managr.zoom.background import emit_kick_off_slack_interaction
-from managr.crm.exceptions import TokenExpired as CRMTokenExpired
 from managr.slack.helpers.block_sets import get_block_set
 from managr.utils.client import Variable_Client
 from managr.salesforce.routes import routes as sf_routes
@@ -186,6 +181,10 @@ def emit_process_send_call_summary_to_dm(payload, context):
 
 def emit_process_send_ask_managr_to_dm(payload, context):
     return _process_send_ask_managr_to_dm(payload, context)
+
+
+def emit_send_activation_email(user_id):
+    return _send_activation_email(user_id)
 
 
 #########################################################
@@ -1955,4 +1954,21 @@ def _process_send_ask_managr_to_dm(payload, context):
         logger.exception(
             f"ERROR sending update channel message for chat submittion because of <{e}>"
         )
+    return
+
+
+@background()
+def _send_activation_email(user_id):
+    user = User.objects.get(id=user_id)
+    content = {
+        "first_name": user.first_name,
+        "activation_link": user.activation_link,
+    }
+    send_html_email(
+        "Managr Activation",
+        "core/email-templates/admin-activation.html",
+        settings.DEFAULT_FROM_EMAIL,
+        [user.email],
+        context=content,
+    )
     return

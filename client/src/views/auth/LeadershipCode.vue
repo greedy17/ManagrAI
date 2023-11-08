@@ -4,12 +4,31 @@
       <img class="blue-filter" src="@/assets/images/logo.png" height="36px" alt="" />
     </header> -->
 
-    <div class="leadership-card">
-      <h2>Enter Access code</h2>
+    <div v-if="!sentEmail" class="leadership-card">
+      <h2 class="h2-text" style="margin-bottom: -0.5rem;">Sign up for Managr</h2>
+      <p class="small-text">Fill in the information below to get started</p>
       <div class="input__container">
-        <input id="access-code" placeholder="Enter Code" autofocus v-model="code" type="text" />
+        <p class="input__container_label">Company Name:</p>
+        <input id="access-code" autofocus v-model="orgName" type="text" />
       </div>
-      <button id="access-code-button" :disabled="!code" type="submit" @click="handleApplyCode">Apply Code</button>
+      <div class="input__container">
+        <p class="input__container_label">Full Name:</p>
+        <input id="access-code" v-model="name" type="text" />
+      </div>
+      <div class="input__container">
+        <p class="input__container_label">Email (company email only):</p>
+        <input id="access-code" v-model="email" type="text" />
+      </div>
+      <button id="access-code-button" :disabled="!email || !name || !orgName" type="submit" @click="handleSendEmail">Email Registration Link</button>
+    </div>
+
+    <div v-else class="leadership-card">
+      <h2>Registeration link sent!</h2>
+      <div class="input__container">
+        <p style="margin-top: 0;">Please check your email and spam folder</p>
+      </div>
+      <!-- <button @click="returnHome">Back</button> -->
+      <button @click="resendEmail">Resend Email</button>
     </div>
 
     <div></div>
@@ -17,31 +36,93 @@
 </template>
 
 <script>
+import User from '@/services/users'
+
 export default {
   name: 'LeadershipCode',
   data() {
     const LEADERSHIP_CODE = 'M@n@gr!200'
     return {
-      code: '',
+      email: '',
+      name: '',
+      orgName: '',
+      userID: null,
       leadershipCode: LEADERSHIP_CODE,
+      sentEmail: false,
     }
   },
+  created() {
+    // this.$router.push({ name: 'AdminRegistration', params: { validCode: true } })
+  },
   methods: {
-    handleApplyCode() {
-      if (Object.keys(this.$store.state.googleSignIn).length) {
-        this.$router.push({ name: 'GoogleRegister', params: { validCode: true } })
-      } else {
-        if (this.code === this.leadershipCode) {
-          this.$router.push({ name: 'AdminRegistration', params: { validCode: true } })
-        } else {
-          this.$toast('Invalid Leadership code. please try again', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'error',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-        }
+    returnHome() {
+      this.$router.go()
+    },
+    async resendEmail() {
+      try {
+        await User.api.sendEmail({ user_id: this.userID })
+        this.$toast('Email sent! Please check your inbox and spam.', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch(e) {
+        console.log('error in resend email', e)
+      }
+    },
+    async handleSendEmail() {
+      if (!this.email || !this.name || !this.orgName) {
+        return
+      }
+
+      if (!this.email.includes('@') || !this.email.includes('.')) {
+        
+      }
+      if (!this.name.split(' ')[1]) {
+        this.$toast('Please enter your full name', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        return
+      }
+      if (this.email.includes('@gmail.com')) {
+        this.$toast('Please use a company email', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        return
+      }
+      const nameSplit = this.name.split(' ')
+      const firstName = nameSplit[0]
+      const lastName = nameSplit.slice(1, nameSplit.length).join(' ')
+      const data = {
+        role: 'PR',
+        first_name: firstName,
+        last_name: lastName,
+        email: this.email,
+        organization_name: this.orgName,
+        is_paid: false,
+      }
+      try {
+        const invite = await User.api.adminInvite(data)
+        console.log('invite', invite)
+        // const invitedAdminLink = invite.data.activation_link_ref
+        // const subject = 'Managr Free Account'
+        // const body = `Hey ${firstName},\n\nYour account is ready!\n\nClick here to get started: [Managr Account](${invitedAdminLink})\n\nIf you have questions or need help email: customers@managr.ai`
+        // await User.api.sendEmail({ subject, body, to: this.email })
+        this.userID = invite.data.id
+        await User.api.sendEmail({ user_id: invite.data.id })
+        this.sentEmail = true
+      } catch(e) {
+        console.log('error in handleSendEmail', e)
       }
     },
   },
@@ -188,5 +269,24 @@ header {
   font-family: $thin-font-family;
   font-size: 16px;
   padding-top: 12px;
+}
+.h2-text {
+  font-size: 1.4rem;
+  color: $dark-black-blue;
+}
+.small-text {
+  font-size: 12px;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: $base-gray;
+}
+.input__container {
+  display: flex;
+  flex-direction: column;
+}
+.input__container_label {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 13px;
 }
 </style>

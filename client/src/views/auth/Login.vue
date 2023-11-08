@@ -130,7 +130,10 @@ export default {
   },
   async created() {
     this.$store.dispatch('updateGoogleSignIn', {})
-    if (this.$route.query.code) {
+    if (this.$route.query.free) {
+      this.showFreeSignup = true
+    }
+    else if (this.$route.query.code) {
       this.selectedCrm = this.$route.query.state
       let modelClass = this.selectedCrmSwitcher
       this.loggingIn = true

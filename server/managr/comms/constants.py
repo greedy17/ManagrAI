@@ -144,4 +144,8 @@ OPEN_AI_REGENERATE_ARTICLE = (
     """
 )
 
-DO_NOT_TRACK_LIST = ["www.wsj.com", "www.nytimes.com", "www.bizjournals.com"]
+DO_NOT_TRACK_LIST = [
+    "https://www.wsj.com",
+    "https://www.nytimes.com",
+    "https://www.bizjournals.com",
+]

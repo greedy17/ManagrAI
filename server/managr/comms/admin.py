@@ -34,9 +34,14 @@ class CustomArticle(admin.ModelAdmin):
     ordering = ("-publish_date",)
 
 
+class CustomEmailAlertAdmin(admin.ModelAdmin):
+    list_display = ("user", "search", "run_at")
+    ordering = ("run_at",)
+
+
 admin.site.register(Search, CustomSearch)
 admin.site.register(Pitch, CustomPitch)
 admin.site.register(NewsSource, CustomNewsSource)
 admin.site.register(Article, CustomArticle)
-admin.site.register(EmailAlert)
+admin.site.register(EmailAlert, CustomEmailAlertAdmin)
 admin.site.register(WritingStyle)

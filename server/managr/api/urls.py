@@ -121,9 +121,9 @@ urlpatterns = [
         name="revoke_email_auth",
     ),
     path(
-        "users/nylas/send-new-email/",
-        core_views.send_new_email,
-        name="send_new_email",
+        "users/send-activation-email/",
+        core_views.send_activation_email,
+        name="send_activation_email",
     ),
     path(
         "users/nylas/reply-to-email/",
