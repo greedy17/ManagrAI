@@ -14,8 +14,8 @@
   
   
       <div v-if="!sentEmail" class="leadership-card">
-        <h2 class="h2-text" style="margin-bottom: -0.5rem;">Sign up for Managr</h2>
-        <p class="small-text">Fill in the information below to get started</p>
+        <h2 class="h2-text" style="margin-bottom: -0.5rem;">Sign up for a free account</h2>
+        <p class="small-text">Fill in the information below to get started with Managr</p>
         <div class="input__container">
           <p class="input__container_label">Company Name:</p>
           <input id="access-code" autofocus v-model="orgName" type="text" />
