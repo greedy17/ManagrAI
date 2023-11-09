@@ -1552,7 +1552,7 @@ def revoke_access_token(request):
 
 
 @api_view(["POST"])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([])
 def send_activation_email(request):
     user_id = request.data.get("user_id")
     emit_send_activation_email(user_id)

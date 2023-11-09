@@ -2389,6 +2389,7 @@ export default {
     async getSummary(clips, instructions = '') {
       const allClips = this.getArticleDescriptions(clips)
       this.summaryLoading = true
+      let openAiDown = false
       try {
         if (this.shouldCancel) {
           return this.stopLoading()
@@ -2415,14 +2416,32 @@ export default {
           })
       } catch (e) {
         console.log('Error in getSummary', e)
-        this.$toast('Something went wrong, please try again.', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        if (e.data && e.data.summary === "Unknown exception: 'NoneType' object is not subscriptable") {
+          this.$toast('OpenAI is down, please try again later.', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          openAiDown = true
+        } else {
+          this.$toast('Something went wrong, please try again.', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }
       } finally {
+        console.log('openAiDown', openAiDown)
+        if (openAiDown) {
+          // this.changeSearch({ search: null, template: null })
+          this.resetSearch()
+          this.abortFunctions()
+          return this.stopLoading()
+        }
         const newAbortControllers = { ...this.$store.state.abortControllers }
         delete newAbortControllers.getClips
         this.$store.dispatch('updateAbortController', newAbortControllers)
