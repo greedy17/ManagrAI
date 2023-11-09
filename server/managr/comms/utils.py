@@ -229,11 +229,22 @@ def create_and_upload_csv(data):
 
     with open(file_name, "w", newline="") as csv_file:
         writer = csv.writer(csv_file)
-        if s3.head_object(Bucket="your-s3-bucket-name", Key=file_name, DefaultResponseHeaders={}):
-            writer.writerow(["Organization Name", "User Email", "Type", "Content"])
+        if s3.head_object(
+            Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=file_name, DefaultResponseHeaders={}
+        ):
+            writer.writerow(
+                [
+                    "Organization Name",
+                    "User Email",
+                    "Type",
+                    "Content",
+                    "Action Integer",
+                    "Postiive/Negative",
+                ]
+            )
         writer.writerow(data)
 
-    s3.upload_file(file_name, "your-s3-bucket-name", file_name)
+    s3.upload_file(file_name, settings.AWS_STORAGE_BUCKET_NAME, file_name)
 
 
 def append_data_to_daily_file(data):
