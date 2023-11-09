@@ -129,7 +129,7 @@
         </Transition>
       </div>
 
-      <p @click="test" v-if="!loading">Generate content using AI.</p>
+      <p v-if="!loading">Generate content using AI.</p>
 
       <div class="centered blue-bg" v-else>
         <div style="width: 675px" class="row">
@@ -334,14 +334,22 @@
             <div style="width: 600px" class="row" v-else>
               <input
                 :disabled="loading"
-                placeholder="provide instructions..."
+                placeholder="provide additional instructions..."
                 autofocus
                 class="regen-input"
                 type="textarea"
                 v-model="instructions"
               />
-
-              <button @click="regeneratePitch" class="primary-button">Regenerate</button>
+              <button style="margin-left: 16px" @click="toggleRegenerate" class="secondary-button">
+                Cancel
+              </button>
+              <button
+                style="margin-left: 8px"
+                @click="regeneratePitch"
+                class="primary-button no-mar"
+              >
+                Regenerate
+              </button>
             </div>
             <div class="save-wrapper" v-if="!loading && !savingPitch && !pitchSaved">
               <button
@@ -1273,7 +1281,7 @@ footer {
 }
 
 .blue-bg {
-  padding-top: 66px;
+  margin-top: 32px;
   background-color: $white-blue;
 }
 
