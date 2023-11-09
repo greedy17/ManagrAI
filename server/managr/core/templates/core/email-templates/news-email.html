@@ -23,14 +23,14 @@
             <tr>
                 <td style="padding: 30px;">
                     <div style="border-bottom: 1px solid #DDDDDD;margin-bottom:16px;padding-bottom:16px;">
-                        <p>
+                        <p style="padding:16px;background-color:#e9f3fa;">
                             {{summary}}
                         </p>
                     </div>
                     {% for value in clips %}
                     <div>
-                        <img src="{{value.image_url}}" style="height: 12px;width:12px; margin-right: 8px;">
-                        <span>{{ value.source.name }}</span>
+                        <!-- <img src="{{value.image_url}}" style="height: 12px;width:12px; margin-right: 8px;"> -->
+                        <span>{{ value.source }}</span>
                         <div style="border-bottom: 1px solid #DDDDDD; padding-bottom: 15px; margin-bottom: 15px;">
                             <div
                                 style="display:flex;flex-direction:row;justify-content:space-between;align-items:flex-start;width:100%;">
@@ -52,8 +52,7 @@
                                 <span
                                     style="position: relative;bottom: 0;font-size: 12px;margin-right: 0.5rem;">.</span>
                                 <span
-                                    style="color: #6b6b6b;font-size: 12px;margin-right: 8px;padding-top:2px;">{{value.publish_date|slice:":10"
-                                    }}</span>
+                                    style="color: #6b6b6b;font-size: 12px;margin-right: 8px;padding-top:2px;">{{value.publish_date}}</span>
                             </div>
                         </div>
                     </div>
