@@ -271,7 +271,7 @@
 
       <div class="slot-container">
         <div v-for="(clip, i) in allCategoryClips" :key="i">
-          <img v-if="i < 5" :src="clip.urlToImage" class="small-photo" />
+          <img v-if="i < 5" :src="clip.image_url" class="small-photo" />
         </div>
 
         <div v-if="!allCategoryClips || allCategoryClips.length < 1" class="empty-slot"></div>
@@ -929,7 +929,7 @@
                   <div class="card-col">
                     <div class="card-top-left">
                       <!-- <img :src="article.icon" /> -->
-                      <span>{{ article.source }}</span>
+                      <span>{{ article.source.name }}</span>
                     </div>
                     <h1 class="article-title" @click="goToArticle(article.link)">
                       {{ article.title }}
@@ -1136,7 +1136,7 @@
                   <div class="card-col">
                     <div class="card-top-left">
                       <!-- <img :src="article.icon" /> -->
-                      <span>{{ article.source }}</span>
+                      <span>{{ article.source.name }}</span>
                     </div>
                     <h1 class="article-title" @click="goToArticle(article.link)">
                       {{ article.title }}
@@ -2380,7 +2380,7 @@ export default {
     getArticleDescriptions(articles) {
       return articles.map(
         (a) =>
-          `Content:${a.description} Date:${a.publish_date}, Source:${a.source}, Author:${a.author}`,
+          `Content:${a.description} Date:${a.publish_date}, Source:${a.source.name}, Author:${a.author}`,
       )
     },
     async getTweetSummary(instructions = '') {
