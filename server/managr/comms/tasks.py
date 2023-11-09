@@ -385,7 +385,6 @@ def _send_news_summary(news_alert_id):
             "clips": clip_short_list,
             "website_url": f"{settings.MANAGR_URL}/login",
         }
-        print(clip_short_list)
         send_html_email(
             f"Managr {alert.search.name} Summary",
             "core/email-templates/news-email.html",
