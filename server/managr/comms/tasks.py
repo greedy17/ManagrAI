@@ -376,13 +376,17 @@ def _send_news_summary(news_alert_id):
             alert.user, 2000, 60.0, descriptions, alert.search.search_boolean, False, False
         )
         message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+        clip_short_list = normalized_clips[:5]
+        for clip in clip_short_list:
+            if clip["author"] is None:
+                clip["author"] = "N/A"
         content = {
             "summary": message,
-            "clips": normalized_clips[:5],
+            "clips": clip_short_list,
             "website_url": f"{settings.MANAGR_URL}/login",
         }
         send_html_email(
-            "Managr News Summary",
+            f"Managr {alert.search.name} Summary",
             "core/email-templates/news-email.html",
             settings.DEFAULT_FROM_EMAIL,
             [alert.user.email],

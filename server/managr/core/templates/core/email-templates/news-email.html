@@ -10,80 +10,47 @@
 <body
     style="margin: 0; padding: 0; background-color: #FAFAFA; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; font-weight:200">
     <center>
-        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"
-            style="margin: auto; max-width: 600px; background-color: #FFFFFF; color:#27292c">
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: auto; max-width: 600px; background-color: #FFFFFF; color:#27292c">
             <tr>
                 <td style="padding: 30px; text-align: start;border-bottom: 1px solid #DDDDDD; ">
                     <p style="font-size:40px;font-weight:200;margin:8px 0;color: #2f4656"> Managr Daily Digest</p>
-                    <p
-                        style="margin-top: 0; color: #333333; font-size: 24px; line-height: 1.4; margin:8px 0; color:#9b9b9b">
-                        Today's Highlights</p>
+                    <p style="margin-top: 0; color: #333333; font-size: 24px; line-height: 1.4; margin:8px 0; color:#9b9b9b">Today's Highlights</p>
                 </td>
             </tr>
             <tr>
-
                 <td style="padding: 30px;">
-
-
                     <div style="border-bottom: 1px solid #DDDDDD;margin-bottom:16px;padding-bottom:16px">
                         <p>
                             {{summary}}
                         </p>
                     </div>
-
                     {% for value in clips %}
-
                     <div>
                         <img src="{{value.source.logo_url}}" style="height: 12px;width:12px; margin-right: 8px;">
                         <span>{{ value.source.name }}</span>
-
-
                         <div style="border-bottom: 1px solid #DDDDDD; padding-bottom: 15px; margin-bottom: 15px;">
-
-
-                            <div
-                                style="display:flex;flex-direction:row;justify-content:space-between;align-items:flex-start;width:100%">
-
-                                <div style="height: 120px;width:400px;text-overflow: ellipsis;overflow: hidden;">
-                                    <p
-                                        style="font-size: 20px; color: #333333; font-weight: 300; margin-top: 0;text-overflow: ellipsis;overflow: hidden;">
-                                        {{ value.title }}</p>
-
-                                    <p style="margin: 10px 0; color: #555555;text-overflow: ellipsis;overflow: hidden;">
-                                        {{ value.description }}</p>
+                            <div style="display:flex;flex-direction:row;justify-content:space-between;align-items:flex-start;width:100%">
+                                <div style="width:400px;text-overflow: ellipsis;">
+                                    <p style="font-size: 20px; color: #333333; font-weight: 300; margin-top: 0;text-overflow: ellipsis;">{{ value.title }}</p>
+                                    <p style="margin: 10px 0; color: #555555;text-overflow: ellipsis;">{{ value.description }}</p>
                                 </div>
-
-                                <img src="{{value.image_url}}"
-                                    style="height: 120px;width: 120px;margin-left: 16px;margin-top: 16px;object-fit: cover;cursor: pointer;">
+                                <img src={{value.image_url}} style="height: 120px;width: 120px;margin-left: 16px;margin-top: 16px;object-fit: cover;cursor: pointer;">
                             </div>
-
-
-
-
-
                             <div style="display: flex;align-items: center;color: #9596b4;">
-                                <span
-                                    style="display: inline-block;overflow: hidden;max-width: 150px;height: 18px;text-overflow: ellipsis;background-color: #eeeeee;padding: 6px 12px;color: #27292c;border-radius: 12px;font-size: 12px;margin-right: 0.5rem;">{{
-                                    value.author }}</span>
-                                <span
-                                    style="position: relative;bottom: 0;font-size: 12px;margin-right: 0.5rem;">.</span>
-                                <span style="color: #6b6b6b;font-size: 12px;margin-right: 8px;padding-top:2px">{{
-                                    value.publish_date|slice:":10" }}</span>
+                                <span style="display: inline-block; max-width: 150px;height: 18px;text-overflow: ellipsis;overflow:hidden;background-color: #eeeeee;padding: 6px 12px;color: #27292c;border-radius: 12px;font-size: 12px;margin-right: 0.5rem;">{{value.author}}</span>
+                                <span style="position: relative;bottom: 0;font-size: 12px;margin-right: 0.5rem;">.</span>
+                                <span style="color: #6b6b6b;font-size: 12px;margin-right: 8px;padding-top:2px">{{value.publish_date|slice:":10" }}</span>
                             </div>
-
-
-
                         </div>
                     </div>
                     {% endfor %}
-
                 </td>
             </tr>
             <tr>
                 <td style="padding: 20px 30px 40px 30px; text-align: center; color: #999999;">
                     <p style="font-size: 14px;">You're receiving this email because you subscribed to our email
                         notifications.</p>
-                    <a href="{{website_link}}" style="text-decoration: none; color: #2f4656;">Go to search →</a>
+                    <a href={{website_link}} style="text-decoration: none; color: #2f4656;">Go to search →</a>
                 </td>
             </tr>
         </table>
