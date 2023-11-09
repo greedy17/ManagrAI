@@ -171,13 +171,15 @@
         <div class="paid-header">
           <div>
             <h4 class="regen-header-title">Email Alerts</h4>
-            <p class="regen-header-subtitle">Select delivery time</p>
+            <p class="regen-header-subtitle">
+              {{ !alertSet ? 'Select delivery time' : 'Preview your alert' }}
+            </p>
           </div>
           <div class="pointer" @click="toggleNotifyModal"><small>X</small></div>
         </div>
         <div class="paid-body">
           <div>
-            <div>
+            <div v-if="!alertSet">
               <label for="time-select">Delivery time:</label>
               <input
                 id="time-select"
@@ -190,10 +192,19 @@
               />
               <small style="font-size: 12px">Recieve a daily email when there is new content</small>
             </div>
+
+            <div class="paid-center" v-else>
+              <p>Email Notifications enabled.</p>
+
+              <div class="row">
+                <button @click="toggleNotifyModal" class="secondary-button">Close</button>
+                <button class="primary-button" @click="testEmailAlert">Send Preview</button>
+              </div>
+            </div>
           </div>
         </div>
         <div class="paid-footer">
-          <div class="row">
+          <div v-if="!alertSet" class="row">
             <button
               style="padding-top: 9px; padding-bottom: 9px"
               class="cancel-button"
@@ -1354,6 +1365,8 @@ export default {
   },
   data() {
     return {
+      currentAlertId: null,
+      alertSet: false,
       emailText: 'Enable',
       showNotifyBanner: false,
       currentAlert: null,
@@ -1526,17 +1539,25 @@ export default {
     setCurrentAlert() {
       this.currentAlert = this.emailAlerts.filter((alert) => alert.search === this.searchId)[0]
     },
+    async testEmailAlert() {
+      try {
+        Comms.api.testEmailAlert({ id: this.currentAlertId }).then((response) => {
+          console.log(response)
+          this.toggleShowNotifyBanner()
+          this.toggleNotifyModal()
+        })
+      } catch (e) {
+        console.log(e)
+      }
+    },
     async removeEmailAlert() {
-      console.log(this.currentAlert.id)
       try {
         Comms.api.removeEmailAlert({ id: this.currentAlert.id }).then((response) => {
-          console.log(response)
+          this.getEmailAlerts()
           this.toggleShowNotifyBanner()
         })
       } catch (e) {
         console.log(e)
-      } finally {
-        this.getEmailAlerts()
       }
     },
     async getEmailAlerts() {
@@ -1561,16 +1582,17 @@ export default {
             title: this.searchName,
           })
           .then((response) => {
+            console.log(response)
+            this.currentAlertId = response.id
             this.getEmailAlerts()
             this.toggleShowNotifyBanner()
-            console.log(response)
           })
       } catch (e) {
         console.log(e)
       } finally {
         setTimeout(() => {
           this.savingAlert = false
-          this.notifyModalOpen = false
+          this.alertSet = true
         }, 1000)
       }
     },
@@ -1614,8 +1636,8 @@ export default {
       this.formattedDate = `${year}-${month}-${day}T${formattedTime}`
       console.log(this.formattedDate)
     },
-
     toggleNotifyModal() {
+      this.alertSet = false
       this.notifyModalOpen = !this.notifyModalOpen
     },
     closeContentModal() {

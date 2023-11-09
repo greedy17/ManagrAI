@@ -5,11 +5,11 @@
     </header> -->
 
     <div class="leadership-card">
-      <h2>Enter Access code</h2>
+      <h2>Enter Email</h2>
       <div class="input__container">
         <input id="access-code" placeholder="Enter Code" autofocus v-model="code" type="text" />
       </div>
-      <button id="access-code-button" :disabled="!code" type="submit" @click="handleApplyCode">Apply Code</button>
+      <button id="access-code-button" :disabled="!code" type="submit" @click="handleSendEmail">Send Email</button>
     </div>
 
     <div></div>
@@ -26,23 +26,40 @@ export default {
       leadershipCode: LEADERSHIP_CODE,
     }
   },
+  created() {
+    // this.$router.push({ name: 'AdminRegistration', params: { validCode: true } })
+  },
   methods: {
-    handleApplyCode() {
-      if (Object.keys(this.$store.state.googleSignIn).length) {
-        this.$router.push({ name: 'GoogleRegister', params: { validCode: true } })
-      } else {
-        if (this.code === this.leadershipCode) {
-          this.$router.push({ name: 'AdminRegistration', params: { validCode: true } })
-        } else {
-          this.$toast('Invalid Leadership code. please try again', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'error',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
+    // handleApplyCode() {
+    //   if (Object.keys(this.$store.state.googleSignIn).length) {
+    //     this.$router.push({ name: 'GoogleRegister', params: { validCode: true } })
+    //   } else {
+    //     if (this.code === this.leadershipCode) {
+    //       this.$router.push({ name: 'AdminRegistration', params: { validCode: true } })
+    //     } else {
+    //       this.$toast('Invalid Leadership code. please try again', {
+    //         timeout: 2000,
+    //         position: 'top-left',
+    //         type: 'error',
+    //         toastClassName: 'custom',
+    //         bodyClassName: ['custom'],
+    //       })
+    //     }
+    //   }
+    // },
+    async handleSendEmail() {
+      // send email here
+      console.log('this.code', this.code)
+        const data = {
+          role: 'PR',
+          first_name: '[NAME',
+          last_name: 'HERE]',
+          email: this.code,
+          organization_name: '[ORGANIZATION HERE]',
+          is_paid: false,
         }
-      }
+      //   const res = await User.api.adminInvite(data)
+      //   this.invitedAdminLink = res.data.activation_link_ref
     },
   },
 }

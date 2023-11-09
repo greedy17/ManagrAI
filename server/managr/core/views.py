@@ -63,7 +63,7 @@ from .serializers import (
 )
 from managr.organization.models import Team
 from .permissions import IsStaff
-from managr.core.background import emit_process_calendar_meetings
+from managr.core.background import emit_process_calendar_meetings, emit_send_activation_email
 
 from nylas.client import APIClient
 from .nylas.emails import (
@@ -1553,34 +1553,10 @@ def revoke_access_token(request):
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
-def send_new_email(request):
-    subject = request.data.get("subject")
-    body = request.data.get("body")
-    to = request.data.get("to")
-    # Do nothing if the user hasn't connected Nylas
-    try:
-        nylas = request.user.nylas
-    except NylasAuthAccount.DoesNotExist:
-        logger.warning(
-            "Attempted to send an email via Nylas "
-            "but the user does not have an active Nylas integration."
-        )
-        return Response(status=status.HTTP_403_FORBIDDEN)
-
-    # Otherwise, init the Nylas Variable_Client()
-    try:
-        nylas = APIClient(
-            settings.NYLAS_CLIENT_ID, settings.NYLAS_CLIENT_SECRET, nylas.access_token
-        )
-        draft = nylas.drafts.create()
-        draft.subject = subject
-        draft.body = body
-        draft.to = to
-        draft.send()
-        return Response(status=status.HTTP_200_OK)
-    except Exception as e:
-        logger.exception(f"Error sending new draft to Nylas <{e}>")
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+def send_activation_email(request):
+    user_id = request.data.get("user_id")
+    emit_send_activation_email(user_id)
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(["POST"])
@@ -1680,7 +1656,8 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
     @action(
         methods=["post"],
-        permission_classes=[IsStaff],
+        permission_classes=[],
+        authentication_classes=[],
         detail=False,
         url_path="admin",
     )
