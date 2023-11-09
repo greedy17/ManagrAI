@@ -1541,8 +1541,7 @@ export default {
     },
     async testEmailAlert() {
       try {
-        Comms.api.testEmailAlert({ id: this.currentAlertId }).then((response) => {
-          console.log(response)
+        Comms.api.testEmailAlert({ alert_id: this.currentAlertId }).then((response) => {
           this.toggleShowNotifyBanner()
           this.toggleNotifyModal()
         })
@@ -1565,7 +1564,6 @@ export default {
         Comms.api.getEmailAlerts().then((response) => {
           this.emailAlerts = response.results
           this.notifiedList = response.results.map((alert) => alert.search)
-          console.log(this.notifiedList)
         })
       } catch (e) {
         console.log(e)
@@ -1582,7 +1580,6 @@ export default {
             title: this.searchName,
           })
           .then((response) => {
-            console.log(response)
             this.currentAlertId = response.id
             this.getEmailAlerts()
             this.toggleShowNotifyBanner()
@@ -1605,8 +1602,6 @@ export default {
       }, 3000)
     },
     calculateDate(selectedTime) {
-      console.log('timeishere', selectedTime)
-      // Parse the selected time in the format "hh:mm" (e.g., "14:30")
       const [hours, minutes] = selectedTime.split(':').map(Number)
 
       if (
@@ -1617,7 +1612,6 @@ export default {
         minutes < 0 ||
         minutes > 59
       ) {
-        // Handle invalid user input for time
         this.formattedDate = 'Invalid time input'
         return
       }
@@ -1634,7 +1628,6 @@ export default {
       )}:00.000000`
 
       this.formattedDate = `${year}-${month}-${day}T${formattedTime}`
-      console.log(this.formattedDate)
     },
     toggleNotifyModal() {
       this.alertSet = false
@@ -2013,7 +2006,6 @@ export default {
       this.showSaveName = !this.showSaveName
     },
     setSearch(search) {
-      console.log(search.id)
       this.summary = ''
       this.searchId = search.id
       this.searchName = search.name
@@ -2294,13 +2286,12 @@ export default {
     },
     abortFunctions() {
       this.shouldCancel = true
-      console.log('this.controllers before', this.controllers)
+
       for (let key in this.controllers) {
         this.controllers[key].controller.abort()
       }
       // update controllers here
       this.$store.dispatch('updateAbortController', {})
-      console.log('controllers after', this.controllers)
     },
     async getClips() {
       try {
@@ -2321,7 +2312,6 @@ export default {
             this.controllers.getClips.controller.signal,
           )
           .then((response) => {
-            console.log('clips res', response)
             this.filteredArticles = response.articles
             this.booleanString = response.string
           })
@@ -2449,7 +2439,6 @@ export default {
             this.controllers.getSummary.controller.signal,
           )
           .then((response) => {
-            console.log('getSummary res', response)
             if (this.shouldCancel) {
               return this.stopLoading()
             }
@@ -2457,7 +2446,10 @@ export default {
           })
       } catch (e) {
         console.log('Error in getSummary', e)
-        if (e.data && e.data.summary === "Unknown exception: 'NoneType' object is not subscriptable") {
+        if (
+          e.data &&
+          e.data.summary === "Unknown exception: 'NoneType' object is not subscriptable"
+        ) {
           this.$toast('OpenAI is down, please try again later.', {
             timeout: 2000,
             position: 'top-left',
@@ -2476,7 +2468,6 @@ export default {
           })
         }
       } finally {
-        console.log('openAiDown', openAiDown)
         if (openAiDown) {
           // this.changeSearch({ search: null, template: null })
           this.resetSearch()
