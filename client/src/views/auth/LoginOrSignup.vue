@@ -42,7 +42,7 @@ export default {
   },
   methods: {
     goToRegister() {
-      this.$router.push({ name: 'RegisterSelection' })
+      this.$router.push({ name: 'Register' })
     },
     goToLogin() {
       this.$router.push({ name: 'Login' })

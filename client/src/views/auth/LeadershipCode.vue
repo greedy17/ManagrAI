@@ -1,37 +1,47 @@
 <template>
-  <div class="leadership-code">
-    <!-- <header>
+  <div class="leadership">
+    <header>
       <img class="blue-filter" src="@/assets/images/logo.png" height="36px" alt="" />
-    </header> -->
-
-    <div v-if="!sentEmail" class="leadership-card">
-      <h2 class="h2-text" style="margin-bottom: -0.5rem;">Sign up for Managr</h2>
-      <p class="small-text">Fill in the information below to get started</p>
-      <div class="input__container">
-        <p class="input__container_label">Company Name:</p>
-        <input id="access-code" autofocus v-model="orgName" type="text" />
+      <div class="header">
+        <small>Already a member ?</small>
+        <router-link class="secondary-button" :to="{ name: 'Login' }">Log in</router-link>
       </div>
-      <div class="input__container">
-        <p class="input__container_label">Full Name:</p>
-        <input id="access-code" v-model="name" type="text" />
+    </header>
+    <div class="leadership-code">
+      <!-- <header>
+        <img class="blue-filter" src="@/assets/images/logo.png" height="36px" alt="" />
+      </header> -->
+  
+  
+      <div v-if="!sentEmail" class="leadership-card">
+        <h2 class="h2-text" style="margin-bottom: -0.5rem;">Sign up for a free account</h2>
+        <p class="small-text">Fill in the information below to get started with Managr</p>
+        <div class="input__container">
+          <p class="input__container_label">Company Name:</p>
+          <input id="access-code" autofocus v-model="orgName" type="text" />
+        </div>
+        <div class="input__container">
+          <p class="input__container_label">Full Name:</p>
+          <input id="access-code" v-model="name" type="text" />
+        </div>
+        <div class="input__container">
+          <p class="input__container_label">Email (company email only):</p>
+          <input id="access-code" v-model="email" type="text" />
+        </div>
+        <button id="access-code-button" class="submit-button" :disabled="!email || !name || !orgName" type="submit" @click="handleSendEmail">Email Registration Link</button>
       </div>
-      <div class="input__container">
-        <p class="input__container_label">Email (company email only):</p>
-        <input id="access-code" v-model="email" type="text" />
+  
+      <div v-else class="leadership-card">
+        <h2>Registeration link sent!</h2>
+        <div class="input__container">
+          <p style="margin-top: 0;">Please check your email and spam folder</p>
+        </div>
+        <!-- <button @click="returnHome">Back</button> -->
+        <button @click="resendEmail">Resend Email</button>
       </div>
-      <button id="access-code-button" :disabled="!email || !name || !orgName" type="submit" @click="handleSendEmail">Email Registration Link</button>
+  
+      <div></div>
     </div>
-
-    <div v-else class="leadership-card">
-      <h2>Registeration link sent!</h2>
-      <div class="input__container">
-        <p style="margin-top: 0;">Please check your email and spam folder</p>
-      </div>
-      <!-- <button @click="returnHome">Back</button> -->
-      <button @click="resendEmail">Resend Email</button>
-    </div>
-
-    <div></div>
   </div>
 </template>
 
@@ -123,6 +133,27 @@ export default {
         this.sentEmail = true
       } catch(e) {
         console.log('error in handleSendEmail', e)
+        if (e.response && e.response.data) {
+          const data = e.response.data
+          console.log('data', data)
+          for (let key in data) {
+            this.$toast(data[key][0], {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+          }
+        } else {
+          this.$toast('Error sending email', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }
       }
     },
   },
@@ -135,6 +166,9 @@ export default {
 @import '@/styles/mixins/buttons';
 @import '@/styles/mixins/utils';
 
+.leadership {
+  padding: 0 32px 32px 32px;
+}
 .leadership-card {
   display: flex;
   flex-flow: column;
@@ -288,5 +322,16 @@ header {
   margin-top: 0;
   margin-bottom: 8px;
   font-size: 13px;
+}
+.submit-button {
+  font-family: $thin-font-family;
+}
+.secondary-button {
+  @include chat-button();
+  text-align: center !important;
+  width: 75px;
+  padding: 8px 16px;
+  font-family: $thin-font-family;
+  text-decoration: none;
 }
 </style>
