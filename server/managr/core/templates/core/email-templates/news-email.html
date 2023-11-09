@@ -8,22 +8,22 @@
 </head>
 
 <body
-    style="margin: 0; padding: 0; background-color: #FAFAFA; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; font-weight:200">
+    style="margin: 0; padding: 0; background-color: #FAFAFA; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; font-weight:200;">
     <center>
         <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"
-            style="margin: auto; max-width: 600px; background-color: #FFFFFF; color:#27292c">
+            style="margin: auto; max-width: 600px; background-color: #FFFFFF; color:#27292c;">
             <tr>
-                <td style="padding: 30px; text-align: start;border-bottom: 1px solid #DDDDDD; ">
-                    <p style="font-size:40px;font-weight:200;margin:8px 0;color: #2f4656"> Managr Daily Digest</p>
+                <td style="padding: 30px; text-align: start;border-bottom: 1px solid #DDDDDD;">
+                    <p style="font-size:40px;font-weight:200;margin:8px 0;color: #2f4656;"> Managr Daily Digest</p>
                     <p
-                        style="margin-top: 0; color: #333333; font-size: 24px; line-height: 1.4; margin:8px 0; color:#9b9b9b">
+                        style="margin-top: 0; color: #333333; font-size: 24px; line-height: 1.4; margin:8px 0; color:#9b9b9b;">
                         Today's Highlights</p>
                 </td>
             </tr>
             <tr>
                 <td style="padding: 30px;">
-                    <div style="border-bottom: 1px solid #DDDDDD;margin-bottom:16px;padding-bottom:16px">
-                        <p style="padding: 16px; background-color: #e9f3fa;">
+                    <div style="border-bottom: 1px solid #DDDDDD;margin-bottom:16px;padding-bottom:16px;">
+                        <p>
                             {{summary}}
                         </p>
                     </div>
@@ -33,11 +33,11 @@
                         <span>{{ value.source.name }}</span>
                         <div style="border-bottom: 1px solid #DDDDDD; padding-bottom: 15px; margin-bottom: 15px;">
                             <div
-                                style="display:flex;flex-direction:row;justify-content:space-between;align-items:flex-start;width:100%">
+                                style="display:flex;flex-direction:row;justify-content:space-between;align-items:flex-start;width:100%;">
                                 <div style="width:400px;text-overflow: ellipsis;">
-                                    <a href="{{value.link}}"
+                                    <a href={{value.link}}
                                         style="text-decoration: none; cursor:pointer;font-size: 20px; color: #333333; font-weight: 300; margin-top: 0;text-overflow: ellipsis;">
-                                        {{ value.title }}}
+                                        {{ value.title }}
                                     </a>
 
                                     <p style="margin: 10px 0; color: #555555;text-overflow: ellipsis;">
@@ -52,7 +52,7 @@
                                 <span
                                     style="position: relative;bottom: 0;font-size: 12px;margin-right: 0.5rem;">.</span>
                                 <span
-                                    style="color: #6b6b6b;font-size: 12px;margin-right: 8px;padding-top:2px">{{value.publish_date|slice:":10"
+                                    style="color: #6b6b6b;font-size: 12px;margin-right: 8px;padding-top:2px;">{{value.publish_date|slice:":10"
                                     }}</span>
                             </div>
                         </div>
@@ -64,8 +64,7 @@
                 <td style="padding: 20px 30px 40px 30px; text-align: center; color: #999999;">
                     <p style="font-size: 14px;">You're receiving this email because you subscribed to our email
                         notifications.</p>
-                    <a href={{website_url}} style="text-decoration: none; color: #2f4656; cursor:pointer">Go to search
-                        →</a>
+                    <a href={{website_url}} style="text-decoration: none; color: #2f4656;">Go to search →</a>
                 </td>
             </tr>
         </table>
