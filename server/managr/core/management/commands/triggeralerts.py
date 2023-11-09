@@ -17,10 +17,14 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         alerts = EmailAlert.objects.all()
+        current_day = datetime.datetime.now()
         for alert in alerts:
             if settings.IN_DEV or options["test"]:
                 run_at = str(datetime.datetime.now())
             else:
-                run_at = str(alert.run_at)
+                run_at = alert.run_at.replace(
+                    year=current_day.year, month=current_day.month, day=current_day.day
+                )
+                run_at = str(run_at)
             emit_send_news_summary(str(alert.id), run_at)
         return
