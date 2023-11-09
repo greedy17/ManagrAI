@@ -19,7 +19,7 @@
         <p class="input__container_label">Email (company email only):</p>
         <input id="access-code" v-model="email" type="text" />
       </div>
-      <button id="access-code-button" :disabled="!email || !name || !orgName" type="submit" @click="handleSendEmail">Email Registration Link</button>
+      <button id="access-code-button" class="submit-button" :disabled="!email || !name || !orgName" type="submit" @click="handleSendEmail">Email Registration Link</button>
     </div>
 
     <div v-else class="leadership-card">
@@ -123,6 +123,27 @@ export default {
         this.sentEmail = true
       } catch(e) {
         console.log('error in handleSendEmail', e)
+        if (e.response && e.response.data) {
+          const data = e.response.data
+          console.log('data', data)
+          for (let key in data) {
+            this.$toast(data[key][0], {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'error',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+          }
+        } else {
+          this.$toast('Error sending email', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }
       }
     },
   },
@@ -288,5 +309,8 @@ header {
   margin-top: 0;
   margin-bottom: 8px;
   font-size: 13px;
+}
+.submit-button {
+  font-family: $thin-font-family;
 }
 </style>
