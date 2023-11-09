@@ -4,7 +4,7 @@
       <img class="blue-filter" src="@/assets/images/logo.png" height="36px" alt="" />
       <div class="header">
         <small>New to Managr ?</small>
-        <router-link class="secondary-button" :to="{ name: 'RegisterSelection' }"
+        <router-link class="secondary-button" :to="{ name: 'Register' }"
           >Create Account
         </router-link>
       </div>
