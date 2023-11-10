@@ -72,6 +72,8 @@ class NewsSpider(scrapy.Spider):
                     article_url = anchor.xpath("@href").extract_first()
                     if "https" not in article_url:
                         article_url = url + article_url
+                    source.last_scraped = datetime.datetime.now()
+                    source.save()
                     yield scrapy.Request(
                         article_url,
                         callback=self.parse_article,
@@ -112,7 +114,7 @@ class NewsSpider(scrapy.Spider):
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
             else:
-                return
+                raise Exception("Issue with data cleaner")
         except Exception as e:
             logger.info(str(e))
             cleaned_data = cleaned_data.pop("content") if cleaned_data is not None else "No data"
