@@ -154,7 +154,7 @@
 
           <textarea
             :disabled="loading"
-            maxlength="1500"
+            maxlength="2000"
             class="area-input text-area-input"
             :placeholder="instructionsPlaceholder"
             v-model="output"
@@ -811,10 +811,10 @@ export default {
       return this.$store.state.user.writingStylesRef
     },
     remainingChars() {
-      return 1500 - this.output.length
+      return 2000 - this.output.length
     },
     remainingCharsBrief() {
-      return 1500 - this.briefing.length
+      return 2000 - this.briefing.length
     },
     remainingCharsSample() {
       return 8000 - this.sample.length
