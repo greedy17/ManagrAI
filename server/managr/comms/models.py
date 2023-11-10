@@ -399,7 +399,7 @@ class Article(TimeStampModel):
             publish_date=str(self.publish_date),
             link=self.link,
             image_url=self.image_url,
-            source=site_name,
+            source={"name": site_name},
         )
 
     @classmethod
