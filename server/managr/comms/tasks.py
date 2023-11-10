@@ -380,6 +380,7 @@ def _send_news_summary(news_alert_id):
         for clip in clip_short_list:
             if clip["author"] is None:
                 clip["author"] = "N/A"
+            clip["publish_date"] = clip["publish_date"][:10]
         content = {
             "summary": message,
             "clips": clip_short_list,

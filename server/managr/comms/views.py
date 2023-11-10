@@ -143,6 +143,7 @@ class PRSearchViewSet(
                 else:
                     articles = articles[:20]
                 articles = normalize_article_data(articles, internal_articles)
+                print(normalize_article_data)
                 # articles = normalize_newsapi_to_model(articles)
                 break
             except Exception as e:

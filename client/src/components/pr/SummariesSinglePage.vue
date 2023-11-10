@@ -929,7 +929,7 @@
                   <div class="card-col">
                     <div class="card-top-left">
                       <!-- <img :src="article.icon" /> -->
-                      <span>{{ article.source.name }}</span>
+                      <span>{{ article.source }}</span>
                     </div>
                     <h1 class="article-title" @click="goToArticle(article.link)">
                       {{ article.title }}
@@ -1136,7 +1136,7 @@
                   <div class="card-col">
                     <div class="card-top-left">
                       <!-- <img :src="article.icon" /> -->
-                      <span>{{ article.source.name }}</span>
+                      <span>{{ article.source }}</span>
                     </div>
                     <h1 class="article-title" @click="goToArticle(article.link)">
                       {{ article.title }}
@@ -2380,7 +2380,7 @@ export default {
     getArticleDescriptions(articles) {
       return articles.map(
         (a) =>
-          `Content:${a.description} Date:${a.publish_date}, Source:${a.source.name}, Author:${a.author}`,
+          `Content:${a.description} Date:${a.publish_date}, Source:${a.source}, Author:${a.author}`,
       )
     },
     async getTweetSummary(instructions = '') {
