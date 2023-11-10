@@ -223,6 +223,39 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+
+    async getEmailAlerts() {
+        try {
+            const res = await this.client.get('email-alerts/')
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async addEmailAlert(data) {
+        try {
+            const res = await this.client.post('email-alerts/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async testEmailAlert(data) {
+        try {
+            const res = await this.client.post('email-alerts/test-alert/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async removeEmailAlert(data) {
+        try {
+            const res = await this.client.delete(`email-alerts/${data.id}/`)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
 }
 
 class TwitterAccountAPI extends ModelAPI {

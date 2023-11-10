@@ -9,7 +9,8 @@
     </header>
 
     <div :class="{ disable: generatingToken }" class="form-card">
-      <h2>Account Registration</h2>
+      <h2 style="margin-bottom: -0.5rem;">Account Registration</h2>
+      <p class="small-text">Create a password to get started</p>
       <div class="col full-width">
         <label for="company">Company Name</label>
         <input
@@ -19,6 +20,7 @@
           v-model="registrationForm.field.organizationName.value"
           placeholder="Enter Company Name"
           id="company"
+          disabled="true"
         />
       </div>
 
@@ -50,6 +52,7 @@
             :errors="registrationForm.field.fullName.errors"
             v-model="registrationForm.field.fullName.value"
             placeholder="Enter Full Name"
+            disabled="true"
             id="name"
           />
         </div>
@@ -60,6 +63,7 @@
             @blur="registrationForm.field.email.validate()"
             :errors="registrationForm.field.email.errors"
             v-model="registrationForm.field.email.value"
+            disabled="true"
             type="email"
             id="email"
             placeholder="Enter Email"
@@ -545,6 +549,12 @@ a {
 
   font-size: 13px;
   margin: 0 4px;
+}
+.small-text {
+  font-size: 12px;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: $base-gray;
 }
 .disabled {
   background-color: $soft-gray !important;

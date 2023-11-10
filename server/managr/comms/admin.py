@@ -17,7 +17,13 @@ class CustomPitch(admin.ModelAdmin):
 
 
 class CustomNewsSource(admin.ModelAdmin):
-    list_display = ("domain", "is_active", "last_scraped")
+    list_display = (
+        "domain",
+        "is_active",
+        "last_scraped",
+        "article_link_attribute",
+        "article_link_selector",
+    )
     ordering = ("-datetime_created",)
     readonly_fields = ("access_count",)
 
@@ -28,9 +34,14 @@ class CustomArticle(admin.ModelAdmin):
     ordering = ("-publish_date",)
 
 
+class CustomEmailAlertAdmin(admin.ModelAdmin):
+    list_display = ("user", "search", "run_at")
+    ordering = ("run_at",)
+
+
 admin.site.register(Search, CustomSearch)
 admin.site.register(Pitch, CustomPitch)
 admin.site.register(NewsSource, CustomNewsSource)
 admin.site.register(Article, CustomArticle)
-admin.site.register(EmailAlert)
+admin.site.register(EmailAlert, CustomEmailAlertAdmin)
 admin.site.register(WritingStyle)

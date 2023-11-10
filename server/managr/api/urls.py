@@ -121,9 +121,9 @@ urlpatterns = [
         name="revoke_email_auth",
     ),
     path(
-        "users/nylas/send-new-email/",
-        core_views.send_new_email,
-        name="send_new_email",
+        "users/send-activation-email/",
+        core_views.send_activation_email,
+        name="send_activation_email",
     ),
     path(
         "users/nylas/reply-to-email/",
@@ -409,4 +409,5 @@ router.register("alerts/instances", alert_views.AlertInstanceViewSet, "alert-ins
 router.register("alerts/real-time", alert_views.RealTimeAlertViewSet, "real-time-alerts")
 router.register("prsearch", comms_views.PRSearchViewSet, "prsearch")
 router.register("pitches", comms_views.PitchViewSet, "pitches")
+router.register("email-alerts", comms_views.EmailAlertViewSet, "email-alerts")
 urlpatterns += router.urls

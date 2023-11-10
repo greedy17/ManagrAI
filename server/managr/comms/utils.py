@@ -7,11 +7,13 @@ from functools import reduce
 from managr.core.utils import Variable_Client
 from newspaper import Config
 from django.db.models import Q
-from .constants import DO_NOT_TRACK_LIST
+from . import constants as comms_consts
 from dateutil import parser
 from django.conf import settings
 from urllib.parse import urlparse
 from django.contrib.postgres.search import SearchQuery
+from .exceptions import _handle_response
+from .models import NewsSource
 
 s3 = boto3.client("s3")
 
@@ -65,7 +67,7 @@ def extract_base_domain(article_link):
         return None
     match = re.search(r"https?://([^/]+)", article_link)
     if match:
-        if match.group(1) in DO_NOT_TRACK_LIST:
+        if match.group(1) in ",".join(comms_consts.DO_NOT_TRACK_LIST):
             return None
         return match.group(1)
     return None
@@ -175,7 +177,7 @@ def normalize_newsapi_to_model(api_data):
             publish_date=article.get("publishedAt", ""),
             link=article.get("url", ""),
             image_url=article.get("urlToImage"),
-            source=article.get("source", {}).get("name", ""),
+            source=article.get("source", {}),
         )
         for article in api_data
     ]
@@ -227,11 +229,22 @@ def create_and_upload_csv(data):
 
     with open(file_name, "w", newline="") as csv_file:
         writer = csv.writer(csv_file)
-        if s3.head_object(Bucket="your-s3-bucket-name", Key=file_name, DefaultResponseHeaders={}):
-            writer.writerow(["Organization Name", "User Email", "Type", "Content"])
+        if s3.head_object(
+            Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=file_name, DefaultResponseHeaders={}
+        ):
+            writer.writerow(
+                [
+                    "Organization Name",
+                    "User Email",
+                    "Type",
+                    "Content",
+                    "Action Integer",
+                    "Postiive/Negative",
+                ]
+            )
         writer.writerow(data)
 
-    s3.upload_file(file_name, "your-s3-bucket-name", file_name)
+    s3.upload_file(file_name, settings.AWS_STORAGE_BUCKET_NAME, file_name)
 
 
 def append_data_to_daily_file(data):
@@ -268,3 +281,25 @@ def combine_weekly_data():
 
     # Upload the updated data to the primary CSV file
     s3.put_object(Bucket=bucket_name, Key=primary_file_key, Body="\n".join(combined_data))
+
+
+def get_news_api_sources():
+    news_url = comms_consts.NEW_API_URI + "/" + "sources"
+    with Variable_Client() as client:
+        new_res = client.get(news_url, headers=comms_consts.NEWS_API_HEADERS)
+    return _handle_response(new_res)
+
+
+def remove_api_sources():
+    all_sources = NewsSource.objects.all()
+    try:
+        news_api_source_res = get_news_api_sources()
+        r = news_api_source_res["sources"]
+        source_list = [source["url"] for source in r]
+    except Exception as e:
+        print(str(e))
+    for url in source_list:
+        database_check = all_sources.filter(domain=url).first()
+        if database_check:
+            database_check.delete()
+    return

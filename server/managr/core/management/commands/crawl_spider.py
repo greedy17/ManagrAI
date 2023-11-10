@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand
 from scrapy.crawler import CrawlerProcess
 from managr.comms.webcrawler.crawler import NewsSpider
 from managr.comms.models import NewsSource
+from managr.comms.utils import remove_api_sources
 
 
 class Command(BaseCommand):
@@ -20,6 +21,7 @@ class Command(BaseCommand):
         if url:
             urls = [url]
         else:
+            remove_api_sources()
             scrape_ready = True if options["active"] else False
             urls = NewsSource.domain_list(scrape_ready)
         process = CrawlerProcess()
