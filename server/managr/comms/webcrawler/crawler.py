@@ -3,10 +3,8 @@ import logging
 import datetime
 from ..models import NewsSource
 from ..serializers import ArticleSerializer
-from scrapy.crawler import CrawlerProcess
 from dateutil import parser
 from ..utils import get_domain, extract_date_from_text
-from scrapy.utils.project import get_project_settings
 
 
 logger = logging.getLogger("managr")
@@ -106,16 +104,20 @@ class NewsSpider(scrapy.Spider):
                 full_article += article
             meta_tag_data["content"] = full_article
         try:
-            cleaned_data = data_cleaner(meta_tag_data)
-            if cleaned_data:
-                serializer = ArticleSerializer(data=cleaned_data)
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
+            if "content" in meta_tag_data.keys():
+                cleaned_data = data_cleaner(meta_tag_data)
+                if cleaned_data:
+                    serializer = ArticleSerializer(data=cleaned_data)
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
+                else:
+                    raise Exception()
             else:
+                logger.info(f"No content for article: {response.url}")
                 return
         except Exception as e:
             logger.info(str(e))
-            cleaned_data = cleaned_data.pop("content") if cleaned_data is not None else "No data"
+            cleaned_data = cleaned_data.pop("content") if cleaned_data else "No data"
             source.error_log.append(f"{str(e)} - data: {cleaned_data}")
             source.save()
         return
