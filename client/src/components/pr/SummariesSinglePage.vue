@@ -683,7 +683,7 @@
                       alt=""
                       class="filter-green"
                     />
-                    <span>{{ sendSummaryEmailText }}</span>
+                    <span class="summary-email-span">{{ sendSummaryEmailText }}</span>
                     <div v-if="sendSummaryEmailText !== 'Sent!'" style="margin-left: 0px" class="tooltip">Send Email</div>
                   </button>
                 </div>
@@ -4993,5 +4993,9 @@ header {
   @media only screen and (max-width: 600px) {
     width: 100vw;
   }
+}
+.summary-email-span {
+  font-size: 12px;
+  font-family: $base-font-family;
 }
 </style>
