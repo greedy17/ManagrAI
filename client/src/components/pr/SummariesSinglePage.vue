@@ -591,74 +591,100 @@
                 <p v-if="mainView === 'website'" class="sub-text">Summary for uploaded articles</p>
               </div>
               <div class="title-bar">
-                <div v-if="!showSaveName" class="row">
-                  <button
-                    :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
-                    @click="openRegenModal"
-                    class="secondary-button"
-                  >
-                    <img height="10px" src="@/assets/images/refresh-pr.svg" alt="" />
-                    {{
-                      (filteredArticles && filteredArticles.length) || mainView === 'website'
-                        ? 'Regenerate'
-                        : tweets.length
-                        ? 'Regenerate'
-                        : 'New Search'
-                    }}
-                  </button>
+                <div v-if="!showSaveName" class="row-container">
+                  <div class="row">
+                    <button
+                      :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
+                      @click="openRegenModal"
+                      class="secondary-button"
+                    >
+                      <img height="10px" src="@/assets/images/refresh-pr.svg" alt="" />
+                      {{
+                        (filteredArticles && filteredArticles.length) || mainView === 'website'
+                          ? 'Regenerate'
+                          : tweets.length
+                          ? 'Regenerate'
+                          : 'New Search'
+                      }}
+                    </button>
+  
+                    <button
+                      @click="toggleSaveName"
+                      v-if="
+                        !savedSearch &&
+                        ((filteredArticles && filteredArticles.length) || tweets.length)
+                      "
+                      :disabled="
+                        articleSummaryLoading ||
+                        loading ||
+                        summaryLoading ||
+                        savingSearch ||
+                        savedSearch ||
+                        mainView === 'website'
+                      "
+                      style="margin-left: -2px"
+                      class="primary-button"
+                    >
+                      <img
+                        v-if="savingSearch"
+                        class="rotate"
+                        height="12px"
+                        src="@/assets/images/loading.svg"
+                        alt=""
+                      />
+                      {{ savingSearch ? 'Saving' : 'Save' }}
+                    </button>
+  
+                    <button
+                      @mouseenter="changeEmailText"
+                      @mouseleave="defaultEmailText"
+                      @click="toggleNotifyModal"
+                      v-if="searchSaved && !notifiedList.includes(searchId)"
+                      class="secondary-button"
+                      :disabled="!isPaid"
+                    >
+                      <img height="12px" src="@/assets/images/bell.svg" alt="" />
+  
+                      {{ emailText }}
+                    </button>
+  
+                    <button
+                      @click="removeEmailAlert"
+                      v-else-if="searchSaved && notifiedList.includes(searchId)"
+                      class="secondary-button"
+                    >
+                      <img
+                        height="12px"
+                        src="@/assets/images/bell-slash.svg"
+                        alt=""
+                        class="filter-green"
+                      />
+                      Disable
+                    </button>
+                  </div>
 
                   <button
-                    @click="toggleSaveName"
-                    v-if="
-                      !savedSearch &&
-                      ((filteredArticles && filteredArticles.length) || tweets.length)
-                    "
-                    :disabled="
-                      articleSummaryLoading ||
-                      loading ||
-                      summaryLoading ||
-                      savingSearch ||
-                      savedSearch ||
-                      mainView === 'website'
-                    "
-                    style="margin-left: -2px"
-                    class="primary-button"
+                    @click="sendSummaryEmail"
+                    class="secondary-button wrapper"
+                    style="margin-right: 0;"
+                    :disabled="sentSummaryEmail"
                   >
                     <img
-                      v-if="savingSearch"
+                      v-if="sendingSummaryEmail"
                       class="rotate"
                       height="12px"
                       src="@/assets/images/loading.svg"
                       alt=""
                     />
-                    {{ savingSearch ? 'Saving' : 'Save' }}
-                  </button>
-
-                  <button
-                    @mouseenter="changeEmailText"
-                    @mouseleave="defaultEmailText"
-                    @click="toggleNotifyModal"
-                    v-if="searchSaved && !notifiedList.includes(searchId)"
-                    class="secondary-button"
-                    :disabled="!isPaid"
-                  >
-                    <img height="12px" src="@/assets/images/bell.svg" alt="" />
-
-                    {{ emailText }}
-                  </button>
-
-                  <button
-                    @click="removeEmailAlert"
-                    v-else-if="searchSaved && notifiedList.includes(searchId)"
-                    class="secondary-button"
-                  >
                     <img
+                      v-else
                       height="12px"
-                      src="@/assets/images/bell-slash.svg"
+                      src="@/assets/images/email-round.svg"
                       alt=""
                       class="filter-green"
                     />
-                    Disable
+                    <span>{{ sendSummaryEmailText }}</span>
+                    <div v-if="sendSummaryEmailText !== 'Sent!'" style="margin-left: 0px" class="tooltip">Send Email</div>
                   </button>
                 </div>
 
@@ -1395,6 +1421,9 @@ export default {
       contentLoading: false,
       addedClips: [],
       ShowReport: false,
+      sentSummaryEmail: false,
+      sendingSummaryEmail: false,
+      sendSummaryEmailText: 'Email',
       showingPromptDropdown: false,
       sourceSummary: null,
       buttonText: 'Article Summary',
@@ -1452,7 +1481,6 @@ export default {
       searchSuggestions: [
         'XXX',
         'XXX no exclusions',
-        'Articles written or about [JOURNALIST NAME] AND XXX',
         `XXX and viral and TikTok`,
         'List out XXX competitors, by name',
         `List out topics XXX would care about`,
@@ -2132,6 +2160,8 @@ export default {
         )
         return
       }
+      this.sendSummaryEmailText = 'Email'
+      this.sentSummaryEmail = false
       this.addedClips = this.$store.state.currentReportClips
       if (this.shouldCancel) {
         return this.stopLoading()
@@ -2292,6 +2322,38 @@ export default {
         setTimeout(() => {
           this.showUpdateBanner = false
         }, 2000)
+      }
+    },
+    async sendSummaryEmail() {
+      this.sendingSummaryEmail = true
+      try {
+        this.sentSummaryEmail = true
+        const clips = this.filteredArticles.filter((clip, i) => {
+          if (i < 10) {
+            return clip
+          }
+        })
+        await Comms.api.sendSummaryEmail({ summary: this.summary, clips })
+        this.sendSummaryEmailText = 'Sent!'
+        this.$toast('Email sent!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch(e) {
+        console.log('Error in sendSummaryEmail:', e)
+        this.sentSummaryEmail = false
+        this.$toast('Something went wrong, please try again.', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.sendingSummaryEmail = false
       }
     },
     abortFunctions() {
@@ -3338,6 +3400,13 @@ button:disabled {
   display: flex;
   align-items: center;
   flex-direction: row;
+}
+
+.row-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .column {

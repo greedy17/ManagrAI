@@ -5,7 +5,7 @@ from django.utils import timezone
 from ..models import NewsSource
 from ..serializers import ArticleSerializer
 from dateutil import parser
-from ..utils import get_domain, extract_date_from_text
+from ..utils import get_domain, extract_date_from_text, news_aggregator_check
 
 
 logger = logging.getLogger("managr")
@@ -132,6 +132,7 @@ class NewsSpider(scrapy.Spider):
         anchor_tags = response.css("a")
         site_name = response.xpath("//meta[contains(@property, 'site_name')]/@content").get()
         scrape_dict = {}
+        is_news_aggregator = news_aggregator_check(anchor_tags, source.domain)
         for idx, link in enumerate(anchor_tags):
             href = link.css("::attr(href)").get()
             classes = link.css("::attr(class)").get()
@@ -146,6 +147,7 @@ class NewsSpider(scrapy.Spider):
             }
         source.scrape_data = scrape_dict
         source.site_name = site_name
+        source.is_active = is_news_aggregator
         source.last_scraped = datetime.datetime.now()
         source.save()
         return
