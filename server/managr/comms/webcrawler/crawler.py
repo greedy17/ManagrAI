@@ -5,7 +5,12 @@ from django.utils import timezone
 from ..models import NewsSource
 from ..serializers import ArticleSerializer
 from dateutil import parser
+<<<<<<< Updated upstream
 from ..utils import get_domain, extract_date_from_text, news_aggregator_check
+=======
+from .. import constants as comms_consts
+from ..utils import get_domain, extract_date_from_text
+>>>>>>> Stashed changes
 
 
 logger = logging.getLogger("managr")
@@ -66,6 +71,7 @@ class NewsSpider(scrapy.Spider):
         if source.last_scraped and source.article_link_attribute is not None:
             regex = source.create_search_regex()
             article_links = response.xpath(regex)
+            do_not_track_str = ",".join(comms_consts.DO_NOT_TRACK_LIST)
             if source.last_scraped and source.article_link_attribute:
                 for anchor in article_links:
                     article_url = anchor.xpath("@href").extract_first()
