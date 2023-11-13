@@ -256,6 +256,14 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    async sendSummaryEmail(data) {
+        try {
+            const res = await this.client.post(CommsApi.ENDPOINT + 'email-summary/', data)
+            return res
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
 }
 
 class TwitterAccountAPI extends ModelAPI {

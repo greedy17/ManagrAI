@@ -701,9 +701,9 @@ class PRSearchViewSet(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
-        url_path="generate-link",
+        url_path="email-summary",
     )
-    def generate_link(self, request, *args, **kwargs):
+    def share_email_summary(self, request, *args, **kwargs):
         summary = request.data.get("summary", "N/A")
         clips = request.data.get("clips", [])
         emit_share_client_summary(summary, clips, request.user.email)
