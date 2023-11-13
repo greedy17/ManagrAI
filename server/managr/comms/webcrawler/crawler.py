@@ -5,13 +5,8 @@ from django.utils import timezone
 from ..models import NewsSource
 from ..serializers import ArticleSerializer
 from dateutil import parser
-<<<<<<< Updated upstream
 from ..utils import get_domain, extract_date_from_text, news_aggregator_check
-=======
 from .. import constants as comms_consts
-from ..utils import get_domain, extract_date_from_text
->>>>>>> Stashed changes
-
 
 logger = logging.getLogger("managr")
 
@@ -77,7 +72,7 @@ class NewsSpider(scrapy.Spider):
                     article_url = anchor.xpath("@href").extract_first()
                     if "https" not in article_url:
                         article_url = url + article_url
-                        current_datetime = datetime.datetime.now()
+                    current_datetime = datetime.datetime.now()
                     source.last_scraped = timezone.make_aware(
                         current_datetime, timezone.get_current_timezone()
                     )
