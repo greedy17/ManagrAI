@@ -1,6 +1,7 @@
 import scrapy
 import logging
 import datetime
+from django.utils import timezone
 from ..models import NewsSource
 from ..serializers import ArticleSerializer
 from dateutil import parser
@@ -76,7 +77,10 @@ class NewsSpider(scrapy.Spider):
                     article_url = anchor.xpath("@href").extract_first()
                     if "https" not in article_url:
                         article_url = url + article_url
-                    source.last_scraped = datetime.datetime.now()
+                        current_datetime = datetime.datetime.now()
+                    source.last_scraped = timezone.make_aware(
+                        current_datetime, timezone.get_current_timezone()
+                    )
                     source.save()
                     yield scrapy.Request(
                         article_url,

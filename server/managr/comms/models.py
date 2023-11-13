@@ -363,7 +363,7 @@ class NewsSource(TimeStampModel):
         if scrape_ready:
             active_sources = active_sources.filter(article_link_selector__isnull=False)
         elif new:
-            active_sources = active_sources.filter(last_scrape__isnull=True)
+            active_sources = active_sources.filter(last_scraped__isnull=True)
         source_list = [source.domain for source in active_sources]
         return source_list
 

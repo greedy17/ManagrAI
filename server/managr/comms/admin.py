@@ -24,7 +24,7 @@ class CustomNewsSource(admin.ModelAdmin):
         "article_link_attribute",
         "article_link_selector",
     )
-    ordering = ("-datetime_created",)
+    ordering = ("-last_scraped", "is_active")
     readonly_fields = ("access_count",)
 
 
