@@ -578,7 +578,7 @@
           <div class="content-width">
             <div class="news-container">
               <div class="title-container">
-                <div @click="resetSearch" class="back">
+                <div @click="resetAll" class="back">
                   <img src="@/assets/images/back.svg" height="18px" width="18px" alt="" />
                 </div>
                 <h1 class="no-text-margin">
@@ -1941,6 +1941,16 @@ export default {
     },
     hidePromptDropdown() {
       this.showingPromptDropdown = false
+    },
+    resetAll() {
+      this.savedSearch = null
+      this.clearNewSearch()
+      this.addedClips = []
+      // this.$store.dispatch('updateCurrentReportClips', this.addedClips)
+      this.metaData = { clips: [] }
+      this.$emit('change-search', null)
+      this.$store.dispatch('setSearch', null)
+      this.summary = ''
     },
     resetSearch() {
       this.clearNewSearch()
