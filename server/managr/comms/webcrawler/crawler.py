@@ -4,7 +4,12 @@ import datetime
 from ..models import NewsSource
 from ..serializers import ArticleSerializer
 from dateutil import parser
+<<<<<<< Updated upstream
 from ..utils import get_domain, extract_date_from_text, news_aggregator_check
+=======
+from .. import constants as comms_consts
+from ..utils import get_domain, extract_date_from_text
+>>>>>>> Stashed changes
 
 
 logger = logging.getLogger("managr")
@@ -65,9 +70,11 @@ class NewsSpider(scrapy.Spider):
         if source.last_scraped and source.article_link_attribute is not None:
             regex = source.create_search_regex()
             article_links = response.xpath(regex)
+            do_not_track_str = ",".join(comms_consts.DO_NOT_TRACK_LIST)
             if source.last_scraped and source.article_link_attribute:
                 for anchor in article_links:
                     article_url = anchor.xpath("@href").extract_first()
+<<<<<<< Updated upstream
                     if "https" not in article_url:
                         article_url = url + article_url
                     source.last_scraped = datetime.datetime.now()
@@ -78,6 +85,25 @@ class NewsSpider(scrapy.Spider):
                         headers={"Referer": "https://www.google.com"},
                         cb_kwargs={"source": source},
                     )
+=======
+                    article_domain = get_domain(article_url)
+                    if (len(article_domain) and article_domain not in do_not_track_str) or not len(
+                        article_domain
+                    ):
+                        if "https" not in article_url:
+                            article_url = url + article_url
+                        current_datetime = datetime.datetime.now()
+                        source.last_scraped = timezone.make_aware(
+                            current_datetime, timezone.get_current_timezone()
+                        )
+                        source.save()
+                        yield scrapy.Request(
+                            article_url,
+                            callback=self.parse_article,
+                            headers={"Referer": "https://www.google.com"},
+                            cb_kwargs={"source": source},
+                        )
+>>>>>>> Stashed changes
         else:
             self.process_new_url(source, response)
         self.urls_processed += 1
