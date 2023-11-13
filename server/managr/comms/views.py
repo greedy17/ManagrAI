@@ -27,7 +27,7 @@ from .models import Article as InternalArticle
 from .models import WritingStyle, EmailAlert
 from managr.core.models import User
 from managr.comms import exceptions as comms_exceptions
-from .tasks import emit_process_website_domain, emit_send_news_summary
+from .tasks import emit_process_website_domain, emit_send_news_summary, emit_share_client_summary
 from .serializers import SearchSerializer, PitchSerializer, EmailAlertSerializer
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
@@ -696,6 +696,18 @@ class PRSearchViewSet(
         search = Search.objects.get(id=request.GET.get("id"))
         link = search.generate_shareable_link()
         return Response(data={"link": link})
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="generate-link",
+    )
+    def generate_link(self, request, *args, **kwargs):
+        summary = request.data.get("summary", "N/A")
+        clips = request.data.get("clips", [])
+        emit_share_client_summary(summary, clips, request.user.email)
+        return Response(status=status.HTTP_200_OK)
 
 
 @api_view(["get"])
