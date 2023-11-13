@@ -15,6 +15,11 @@ class Command(BaseCommand):
             action="store_true",
             help="Scrape only the sources that are fully filled out",
         )
+        parser.add_argument(
+            "--new",
+            action="store_true",
+            help="Scrape only the sources that are fully filled out",
+        )
 
     def handle(self, *args, **options):
         url = options.get("url", False)
@@ -23,7 +28,8 @@ class Command(BaseCommand):
         else:
             remove_api_sources()
             scrape_ready = True if options["active"] else False
-            urls = NewsSource.domain_list(scrape_ready)
+            new = True if options["new"] else False
+            urls = NewsSource.domain_list(scrape_ready, new)
         process = CrawlerProcess()
         process.crawl(NewsSpider, start_urls=urls)
         process.start()

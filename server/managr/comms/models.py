@@ -358,10 +358,12 @@ class NewsSource(TimeStampModel):
         )
 
     @classmethod
-    def domain_list(cls, scrape_ready=False):
+    def domain_list(cls, scrape_ready=False, new=False):
         active_sources = cls.objects.filter(is_active=True)
         if scrape_ready:
             active_sources = active_sources.filter(article_link_selector__isnull=False)
+        elif new:
+            active_sources = active_sources.filter(last_scraped__isnull=True)
         source_list = [source.domain for source in active_sources]
         return source_list
 

@@ -373,7 +373,13 @@ def _send_news_summary(news_alert_id):
         normalized_clips = normalize_newsapi_to_model(clips)
         descriptions = [clip["description"] for clip in normalized_clips]
         res = Search.get_summary(
-            alert.user, 2000, 60.0, descriptions, alert.search.search_boolean, False, False
+            alert.user,
+            2000,
+            60.0,
+            descriptions,
+            alert.search.search_boolean,
+            alert.search.instructions,
+            False,
         )
         message = res.get("choices")[0].get("message").get("content").replace("**", "*")
         clip_short_list = normalized_clips[:5]
