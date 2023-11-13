@@ -303,3 +303,14 @@ def remove_api_sources():
         if database_check:
             database_check.delete()
     return
+
+
+def news_aggregator_check(tag_list, website_url):
+    for tag in tag_list:
+        href = tag.attrib.get("href", "")
+        if "https" in href:
+            if website_url in href:
+                continue
+            else:
+                return False
+    return True

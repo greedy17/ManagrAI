@@ -148,4 +148,7 @@ DO_NOT_TRACK_LIST = [
     "https://www.wsj.com",
     "https://www.nytimes.com",
     "https://www.bizjournals.com",
+    "https://www.tiktok.com",
+    "https://www.instagram.com",
+    "https://www.facebook.com",
 ]
