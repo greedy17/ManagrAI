@@ -80,8 +80,9 @@ def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, instructions, for_client=False
 OPEN_AI_TWITTER_SEARCH_CONVERSION = (
     lambda search: f"""Convert the Search Term below into a valid Twitter API query.
     Follow these steps in order to create the best possible search:
-    1: Only use hashtag terms when given
-    2: Only do user search when instructed
+    1: Concentrate on the primary keywords or key concepts of the search term. For example, from 'why is Michael Jordan trending', extract just 'Michael Jordan'.
+    2:Only use hashtag terms when given
+    3: Only do user search when instructed
     Search Term: {search}"""
 )
 
