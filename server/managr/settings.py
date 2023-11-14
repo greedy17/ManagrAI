@@ -518,11 +518,11 @@ MAX_ATTEMPTS = 5
 
 # Scrapy settings
 HTTPCACHE_ENABLED = True
+HTTPCACHE_DIR = os.path.join(os.getcwd(), "server", "scrapy_cache")
 HTTPCACHE_IGNORE_HTTP_CODES = [404, 500]
 HTTPCACHE_IGNORE_MISSING = True
 ROBOTSTXT_OBEY = True
-USE_ELASTICACHE = os.environ.get("USE_ELASTICACHE") == "True" or False
-HTTPCACHE_DIR = "/scrapy_cache/"
+USE_ELASTICACHE = False
 if USE_ELASTICACHE:
     HTTPCACHE_DIR = "/scrapy_cache/"
 

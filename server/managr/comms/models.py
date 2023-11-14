@@ -1,9 +1,12 @@
 import json
 import os
 import logging
+import base64
+import hashlib
 from datetime import datetime, timedelta
 from django.db import models
 from managr.core.models import TimeStampModel
+from django.db.models.constraints import UniqueConstraint
 from managr.core import constants as core_consts
 from . import constants as comms_consts
 from .exceptions import _handle_response as _handle_news_response, TwitterApiException
@@ -13,8 +16,6 @@ from managr.core import exceptions as open_ai_exceptions
 from dateutil import parser
 from managr.utils.misc import encrypt_dict
 from urllib.parse import urlencode
-import base64
-import hashlib
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.indexes import GinIndex
@@ -385,6 +386,7 @@ class Article(TimeStampModel):
         indexes = [
             GinIndex(fields=["content_search_vector"]),
         ]
+        constraints = [UniqueConstraint(fields=["source", "title"], name="unique_article")]
 
     def update_search_vector(self):
         self.content_search_vector = SearchVector("content")

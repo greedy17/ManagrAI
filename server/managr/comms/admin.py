@@ -32,6 +32,7 @@ class CustomArticle(admin.ModelAdmin):
     list_display = ("title", "publish_date", "source")
     list_filter = ("source",)
     ordering = ("-publish_date",)
+    search_fields = ("title",)
 
 
 class CustomEmailAlertAdmin(admin.ModelAdmin):

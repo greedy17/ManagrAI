@@ -2,6 +2,7 @@ import scrapy
 import logging
 import datetime
 from django.utils import timezone
+from django.conf import settings
 from ..models import NewsSource
 from ..serializers import ArticleSerializer
 from dateutil import parser
@@ -53,6 +54,8 @@ class NewsSpider(scrapy.Spider):
         },
         "AUTOTHROTTLE_ENABLED": True,
         "USER_AGENT": "Mozilla/5.0 (compatible; managr-webcrawler/1.0; +https://managr.ai/documentation)",
+        "HTTPCACHE_ENABLED": True,
+        "HTTPCACHE_DIR": settings.HTTPCACHE_DIR,
     }
 
     def __init__(self, *args, **kwargs):
@@ -71,6 +74,9 @@ class NewsSpider(scrapy.Spider):
             if source.last_scraped and source.article_link_attribute:
                 for anchor in article_links:
                     article_url = anchor.xpath("@href").extract_first()
+                    for word in comms_consts.DO_NOT_INCLUDE_WORDS:
+                        if word in article_url:
+                            continue
                     article_domain = get_domain(article_url)
                     if (len(article_domain) and article_domain not in do_not_track_str) or not len(
                         article_domain
@@ -105,7 +111,7 @@ class NewsSpider(scrapy.Spider):
         article_tag_list = ["article", "story", "content"]
         article_tags = None
         for tag in article_tag_list:
-            tags = response.xpath(f"(//*[contains(@class, '{tag}')])[1]//p/text()").getall()
+            tags = response.xpath(f"(//*[contains(@class, '{tag}')])//p//text()").getall()
             if len(tags):
                 article_tags = tags
                 break
@@ -129,8 +135,7 @@ class NewsSpider(scrapy.Spider):
                 return
         except Exception as e:
             logger.info(str(e))
-            cleaned_data = cleaned_data.pop("content") if cleaned_data else "No data"
-            source.error_log.append(f"{str(e)} - data: {cleaned_data}")
+            source.error_log.append(f"{str(e)} - data: {meta_tag_data}")
             source.save()
         return
 

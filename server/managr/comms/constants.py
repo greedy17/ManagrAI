@@ -153,3 +153,6 @@ DO_NOT_TRACK_LIST = [
     "https://www.instagram.com",
     "https://www.facebook.com",
 ]
+
+
+DO_NOT_INCLUDE_WORDS = ["photos", "sex"]
