@@ -1,7 +1,7 @@
 <template>
   <div class="leadership">
     <header>
-      <img class="blue-filter" src="@/assets/images/logo.png" height="36px" alt="" />
+      <img @click="goToManagr" class="blue-filter pointer" src="@/assets/images/logo.png" height="36px" alt="" />
       <div class="header">
         <small>Already a member ?</small>
         <router-link class="secondary-button" :to="{ name: 'Login' }">Log in</router-link>
@@ -67,6 +67,9 @@ export default {
   methods: {
     returnHome() {
       this.$router.go()
+    },
+    goToManagr() {
+      window.location.href = 'https://managr.ai/'
     },
     async resendEmail() {
       try {
@@ -333,5 +336,8 @@ header {
   padding: 8px 16px;
   font-family: $thin-font-family;
   text-decoration: none;
+}
+.pointer {
+  cursor: pointer;
 }
 </style>
