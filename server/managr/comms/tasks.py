@@ -47,6 +47,10 @@ def emit_send_news_summary(news_alert_id, schedule):
     return _send_news_summary(news_alert_id, schedule={"run_at": schedule})
 
 
+def emit_share_client_summary(summary, clips, user_email):
+    return _share_client_summary(summary, clips, user_email)
+
+
 def create_new_search(payload, user_id):
     state = payload["view"]["state"]["values"]
     input_text = state["SEARCH"]["plain_input"]["value"]
@@ -399,4 +403,25 @@ def _send_news_summary(news_alert_id):
             [alert.user.email],
             context=content,
         )
+    return
+
+
+@background()
+def _share_client_summary(summary, clips, user_email):
+    for clip in clips:
+        if clip["author"] is None:
+            clip["author"] = "N/A"
+        clip["publish_date"] = clip["publish_date"][:10]
+    content = {
+        "summary": summary,
+        "clips": clips,
+        "website_url": f"{settings.MANAGR_URL}/login",
+    }
+    send_html_email(
+        f"Managr Summary",
+        "core/email-templates/news-email.html",
+        settings.DEFAULT_FROM_EMAIL,
+        [user_email],
+        context=content,
+    )
     return

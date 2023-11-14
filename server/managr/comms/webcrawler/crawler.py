@@ -5,8 +5,8 @@ from django.utils import timezone
 from ..models import NewsSource
 from ..serializers import ArticleSerializer
 from dateutil import parser
-from ..utils import get_domain, extract_date_from_text
-
+from ..utils import get_domain, extract_date_from_text, news_aggregator_check
+from .. import constants as comms_consts
 
 logger = logging.getLogger("managr")
 
@@ -19,6 +19,7 @@ XPATH_STRING_OBJ = {
     ],
     "description": ["//meta[contains(@property, 'description')]/@content"],
     "publish_date": [
+        "//meta[contains(@itemprop,'date')]/@content",
         "//meta[contains(@property, 'publish')]/@content",
         "//meta[contains(@name, '-date')]/@content",
         "//time/@datetime",
@@ -66,22 +67,27 @@ class NewsSpider(scrapy.Spider):
         if source.last_scraped and source.article_link_attribute is not None:
             regex = source.create_search_regex()
             article_links = response.xpath(regex)
+            do_not_track_str = ",".join(comms_consts.DO_NOT_TRACK_LIST)
             if source.last_scraped and source.article_link_attribute:
                 for anchor in article_links:
                     article_url = anchor.xpath("@href").extract_first()
-                    if "https" not in article_url:
-                        article_url = url + article_url
+                    article_domain = get_domain(article_url)
+                    if (len(article_domain) and article_domain not in do_not_track_str) or not len(
+                        article_domain
+                    ):
+                        if "https" not in article_url:
+                            article_url = url + article_url
                         current_datetime = datetime.datetime.now()
-                    source.last_scraped = timezone.make_aware(
-                        current_datetime, timezone.get_current_timezone()
-                    )
-                    source.save()
-                    yield scrapy.Request(
-                        article_url,
-                        callback=self.parse_article,
-                        headers={"Referer": "https://www.google.com"},
-                        cb_kwargs={"source": source},
-                    )
+                        source.last_scraped = timezone.make_aware(
+                            current_datetime, timezone.get_current_timezone()
+                        )
+                        source.save()
+                        yield scrapy.Request(
+                            article_url,
+                            callback=self.parse_article,
+                            headers={"Referer": "https://www.google.com"},
+                            cb_kwargs={"source": source},
+                        )
         else:
             self.process_new_url(source, response)
         self.urls_processed += 1
@@ -132,6 +138,7 @@ class NewsSpider(scrapy.Spider):
         anchor_tags = response.css("a")
         site_name = response.xpath("//meta[contains(@property, 'site_name')]/@content").get()
         scrape_dict = {}
+        is_news_aggregator = news_aggregator_check(anchor_tags, source.domain)
         for idx, link in enumerate(anchor_tags):
             href = link.css("::attr(href)").get()
             classes = link.css("::attr(class)").get()
@@ -146,6 +153,7 @@ class NewsSpider(scrapy.Spider):
             }
         source.scrape_data = scrape_dict
         source.site_name = site_name
+        source.is_active = is_news_aggregator
         source.last_scraped = datetime.datetime.now()
         source.save()
         return
