@@ -668,6 +668,7 @@
                     class="secondary-button wrapper"
                     style="margin-right: 0;"
                     :disabled="sentSummaryEmail"
+                    v-if="mainView !== 'social'"
                   >
                     <img
                       v-if="sendingSummaryEmail"
@@ -715,7 +716,7 @@
                 </div>
 
                 <div v-if="mainView === 'website' && addedArticles.length === 1" class="relative">
-                  <div @click="toggleGenerateDropdown" class="row pointer dropdownBorder">
+                  <div @click="toggleGenerateDropdown" class="row pointer dropdownBorder gen-content-button">
                     Generate Content
                     <img
                       v-if="!showGenerateDropdown"
@@ -1480,11 +1481,11 @@ export default {
       copyTip: 'Copy',
       searchSuggestions: [
         'XXX',
-        'XXX no exclusions',
+        `XXX competitors (list them out) not XXX`,
         `XXX and viral and TikTok`,
-        'List out XXX competitors, by name',
         `List out topics XXX would care about`,
         'XXX no stock related news',
+        'XXX no exclusions',
         'University of XXX no sports related news',
         'XXX Hospital no ER related stories',
       ],
@@ -1492,9 +1493,9 @@ export default {
         `Summarize the news`,
         'Summarize the news for XXX and its impact',
         `Summarize the news for XXX, provide sentiment, creative ways they can newsjack this coverage, and list 5 journalists from Tier 1 publications that will write about this, along with creative pitching tips`,
+        `As XXX PR agency, provide an update on what the competition is doing along with super creative ways to newsjack this coverage`,
         `List 10 journalists from Tier 1 publications and creative tips to pitch them`,
         `List 10 journalists from Tier 1 publications that will write about XXX, along with creative pitching tips`,
-        `As XXX PR agency, provide creative suggestions per this news, think outside the box`,
         `Create a media monitoring report for XXX. Include top sources (based on popularity and size), number of articles, sentiment, and any other important metrics`,
         `Provide pitch ideas and background on [JOURNALIST NAME]`,
         'Convert the most entertaining news story about XXX into a blog post',
@@ -2328,11 +2329,23 @@ export default {
       this.sendingSummaryEmail = true
       try {
         this.sentSummaryEmail = true
-        const clips = this.filteredArticles.filter((clip, i) => {
-          if (i < 10) {
-            return clip
-          }
-        })
+        console.log('this.filteredArticles', this.filteredArticles)
+        let clips
+        if (this.mainView === 'social') {
+          clips = this.tweets.filter((clip, i) => {
+            if (i < 10) {
+              return clip
+            }
+          })
+        } else if (this.mainView === 'news') {
+          clips = this.filteredArticles.filter((clip, i) => {
+            if (i < 10) {
+              return clip
+            }
+          })
+        } else {
+          clips = this.addedArticles
+        }
         await Comms.api.sendSummaryEmail({ summary: this.summary, clips })
         this.sendSummaryEmailText = 'Sent!'
         this.$toast('Email sent!', {
@@ -4997,5 +5010,10 @@ header {
 .summary-email-span {
   font-size: 12px;
   font-family: $base-font-family;
+}
+.gen-content-button {
+  // height: 2rem;
+  margin-left: 1rem;
+  width: 8.25rem;
 }
 </style>
