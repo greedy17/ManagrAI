@@ -169,9 +169,6 @@ export default {
     // selectZone() {
     //   this.changeZone = !this.changeZone
     // },
-    test(n) {
-      this.registrationForm.field.timezone.value = n.value
-    },
     async retrieveEmail(code) {
       this.isLoading = true
       try {
