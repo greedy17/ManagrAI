@@ -108,6 +108,8 @@ class NewsSpider(scrapy.Spider):
                 if selector is not None:
                     meta_tag_data[key] = selector
                     break
+            if not len(meta_tag_data[key]):
+                meta_tag_data[key] = "N/A"
         article_tag_list = ["article", "story", "content"]
         article_tags = None
         for tag in article_tag_list:
