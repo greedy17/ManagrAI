@@ -65,8 +65,11 @@ class NewsSpider(scrapy.Spider):
 
     def parse(self, response):
         url = response.url
-        domain = get_domain(url)
-        source = NewsSource.objects.get(domain__contains=domain)
+        try:
+            domain = get_domain(url)
+            source = NewsSource.objects.get(domain__contains=domain)
+        except Exception:
+            logger.exception(domain)
         if source.last_scraped and source.article_link_attribute is not None:
             regex = source.create_search_regex()
             article_links = response.xpath(regex)
@@ -108,7 +111,7 @@ class NewsSpider(scrapy.Spider):
                 if selector is not None:
                     meta_tag_data[key] = selector
                     break
-            if not len(meta_tag_data[key]):
+            if key not in meta_tag_data.keys() or not len(meta_tag_data[key]):
                 meta_tag_data[key] = "N/A"
         article_tag_list = ["article", "story", "content"]
         article_tags = None
