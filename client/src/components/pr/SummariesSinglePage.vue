@@ -1491,7 +1491,7 @@ export default {
       ],
       promptSuggestions: [
         `Summarize the news`,
-        'Summarize the news for XXX and its impact',
+        'List 5 of the most important headlines ( include source name + journalist) and the impact on XXX',
         `Summarize the news for XXX, provide sentiment, creative ways they can newsjack this coverage, and list 5 journalists from Tier 1 publications that will write about this, along with creative pitching tips`,
         `As XXX PR agency, provide an update on what the competition is doing along with super creative ways to newsjack this coverage`,
         `List 10 journalists from Tier 1 publications and creative tips to pitch them`,
