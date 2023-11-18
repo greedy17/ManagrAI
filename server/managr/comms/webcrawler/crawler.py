@@ -6,7 +6,7 @@ from django.conf import settings
 from ..models import NewsSource
 from ..serializers import ArticleSerializer
 from dateutil import parser
-from ..utils import get_domain, extract_date_from_text, news_aggregator_check
+from ..utils import get_domain, extract_date_from_text, news_aggregator_check, extract_base_domain
 from .. import constants as comms_consts
 
 logger = logging.getLogger("managr")
@@ -66,7 +66,7 @@ class NewsSpider(scrapy.Spider):
     def parse(self, response):
         url = response.url
         try:
-            domain = get_domain(url)
+            domain = extract_base_domain(url)
             source = NewsSource.objects.get(domain__contains=domain)
         except Exception:
             logger.exception(domain)
