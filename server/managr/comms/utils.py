@@ -308,12 +308,11 @@ def remove_api_sources():
     return
 
 
-def news_aggregator_check(tag_list, website_url):
-    for tag in tag_list:
-        href = tag.attrib.get("href", "")
-        if "https" in href:
-            if website_url in href:
-                return False
-            else:
-                return True
-        return False
+def news_aggregator_check(tag, website_url):
+    href = tag.attrib.get("href", "")
+    if "https" in href:
+        if website_url in href:
+            return False
+        else:
+            return True
+    return False
