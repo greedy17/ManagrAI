@@ -23,9 +23,10 @@ XPATH_STRING_OBJ = {
         "//meta[contains(@itemprop,'date')]/@content",
         "//meta[contains(@property, 'publish')]/@content",
         "//meta[contains(@name, '-date')]/@content",
-        "//time/@dateTime",
-        "//body//*[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'publish')]/text()",
-        "//body//*[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'updated on')]/text()",
+        "//*[contains(@class, 'date')]/text()",
+        "//time/@datetime | //time/@dateTime",
+        f"//body//*[not(self::script) and contains(text(),', {datetime.datetime.now().year}')]",
+        "//body//*[not(self::script) and contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'publish')]/text()",
     ],
     "image_url": ["//meta[@property='og:image']/@content"],
 }
@@ -71,6 +72,7 @@ class NewsSpider(scrapy.Spider):
             source = NewsSource.objects.get(domain__contains=domain)
         except Exception:
             logger.exception(domain)
+            return
         if source.last_scraped and source.article_link_attribute is not None:
             regex = source.create_search_regex()
             article_links = response.xpath(regex)
