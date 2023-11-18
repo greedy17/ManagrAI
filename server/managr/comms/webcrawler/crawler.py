@@ -24,7 +24,8 @@ XPATH_STRING_OBJ = {
         "//meta[contains(@property, 'publish')]/@content",
         "//meta[contains(@name, '-date')]/@content",
         "//time/@dateTime",
-        "//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'publish')]/text()",
+        "//body//*[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'publish')]/text()",
+        "//body//*[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'updated on')]/text()",
     ],
     "image_url": ["//meta[@property='og:image']/@content"],
 }
@@ -106,7 +107,8 @@ class NewsSpider(scrapy.Spider):
         for key in XPATH_STRING_OBJ.keys():
             for path in XPATH_STRING_OBJ[key]:
                 selector = response.xpath(path).get()
-                if key == "publish_date" and "text" in path:
+                if key == "publish_date":
+                if key == "publish_date" and "text" in path and selector is not None:
                     selector = extract_date_from_text(selector)
                 if selector is not None:
                     meta_tag_data[key] = selector

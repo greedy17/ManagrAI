@@ -47,7 +47,7 @@ def extract_date_from_text(text):
         except ValueError:
             # If the full month name format fails, try with the abbreviated format
             date_obj = datetime.strptime(date_str, "%b %d, %Y")
-        return date_obj
+        return str(date_obj)
     else:
         return None
 
