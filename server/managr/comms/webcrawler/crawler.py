@@ -20,11 +20,11 @@ XPATH_STRING_OBJ = {
     ],
     "description": ["//meta[contains(@property, 'description')]/@content"],
     "publish_date": [
+        "//time/@datetime | //time/@dateTime",
         "//meta[contains(@itemprop,'date')]/@content",
         "//meta[contains(@property, 'publish')]/@content",
         "//meta[contains(@name, '-date')]/@content",
         "//*[contains(@class, 'date')]/text()",
-        "//time/@datetime | //time/@dateTime",
         f"//body//*[not(self::script) and contains(text(),', {datetime.datetime.now().year}')]",
         "//body//*[not(self::script) and contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'publish')]/text()",
     ],
@@ -97,7 +97,7 @@ class NewsSpider(scrapy.Spider):
                         article_domain
                     ):
                         if "https" not in article_url:
-                            article_url = url + article_url
+                            article_url = source.domain + article_url
                         current_datetime = datetime.datetime.now()
                         source.last_scraped = timezone.make_aware(
                             current_datetime, timezone.get_current_timezone()
@@ -126,9 +126,12 @@ class NewsSpider(scrapy.Spider):
             if key not in meta_tag_data.keys() or not len(meta_tag_data[key]):
                 meta_tag_data[key] = "N/A"
         article_tag_list = ["article", "story", "content"]
+        article_xpaths = ["//article//p//text()"]
+        for a in article_tag_list:
+            article_xpaths.append(f"(//*[contains(@class, '{a}')])//p//text()")
         article_tags = None
-        for tag in article_tag_list:
-            tags = response.xpath(f"(//*[contains(@class, '{tag}')])//p//text()").getall()
+        for tag in article_xpaths:
+            tags = response.xpath(tag).getall()
             if len(tags):
                 article_tags = tags
                 break
