@@ -313,7 +313,7 @@ def news_aggregator_check(tag_list, website_url):
         href = tag.attrib.get("href", "")
         if "https" in href:
             if website_url in href:
-                continue
-            else:
                 return False
-    return True
+            else:
+                return True
+        return False
