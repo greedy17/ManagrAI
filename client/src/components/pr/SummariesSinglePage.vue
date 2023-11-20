@@ -353,14 +353,14 @@
                     fill="currentColor"
                   ></path>
                 </svg>
-                Search
+                Keywords
               </div>
               <!-- @keydown.enter.exact.prevent="generateNewSearch(null)" -->
               <input
                 @click.stop
                 id="search-input"
                 class="area-input"
-                placeholder="Enter keywords or phrase..."
+                placeholder="Summary instructions..."
                 @focus="showDropdown"
                 autocomplete="off"
                 v-model="newSearch"
