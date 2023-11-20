@@ -10,7 +10,7 @@ from django.db.models import Q
 from . import constants as comms_consts
 from dateutil import parser
 from django.conf import settings
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 from django.contrib.postgres.search import SearchQuery
 from .exceptions import _handle_response
 from .models import NewsSource
@@ -316,3 +316,20 @@ def news_aggregator_check(tag, website_url):
         else:
             return True
     return False
+
+
+def complete_url(url, default_domain, default_scheme="https"):
+    parsed_url = urlparse(url)
+    parsed_source_domain = urlparse(default_domain)
+    netloc = parsed_url.netloc if parsed_url.netloc else parsed_source_domain.netloc
+    complete_url = urlunparse(
+        (
+            default_scheme,
+            netloc,
+            parsed_url.path,
+            parsed_url.params,
+            parsed_url.query,
+            parsed_url.fragment,
+        )
+    )
+    return complete_url
