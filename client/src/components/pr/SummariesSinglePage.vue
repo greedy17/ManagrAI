@@ -353,7 +353,7 @@
                     fill="currentColor"
                   ></path>
                 </svg>
-                Search
+                Keywords
               </div>
               <!-- @keydown.enter.exact.prevent="generateNewSearch(null)" -->
               <input
@@ -409,7 +409,7 @@
                 @focus="showPromptDropdown"
                 class="area-input text-area-input"
                 id="instructions-text-area"
-                placeholder="Summary details..."
+                placeholder="Summary instructions..."
                 v-model="newTemplate"
                 v-autoresize
               />
@@ -3631,6 +3631,10 @@ button:disabled {
   background-color: $soft-gray;
   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
   border-radius: 6px;
+}
+
+.area-input::placeholder {
+  font-family: $thin-font-family;
 }
 
 .text-area-input::placeholder {
