@@ -6,7 +6,13 @@ from django.conf import settings
 from ..models import NewsSource
 from ..serializers import ArticleSerializer
 from dateutil import parser
-from ..utils import get_domain, extract_date_from_text, news_aggregator_check
+from ..utils import (
+    get_domain,
+    extract_date_from_text,
+    news_aggregator_check,
+    extract_base_domain,
+    complete_url,
+)
 from .. import constants as comms_consts
 
 logger = logging.getLogger("managr")
@@ -20,11 +26,14 @@ XPATH_STRING_OBJ = {
     ],
     "description": ["//meta[contains(@property, 'description')]/@content"],
     "publish_date": [
+        "//time/@datetime | //time/@dateTime",
         "//meta[contains(@itemprop,'date')]/@content",
-        "//meta[contains(@property, 'publish')]/@content",
+        "//meta[contains(translate(@property, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'modified') or contains(translate(@property, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'published')]/@content",
+        "//meta[contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'modified') or contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'published')]/@content",
         "//meta[contains(@name, '-date')]/@content",
-        "//time/@dateTime",
-        "//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'publish')]/text()",
+        "//*[contains(@class, 'date')]/text()",
+        f"//body//*[not(self::script) and contains(text(),', {datetime.datetime.now().year}')]",
+        "//body//*[not(self::script) and contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'publish')]/text()",
     ],
     "image_url": ["//meta[@property='og:image']/@content"],
 }
@@ -56,6 +65,7 @@ class NewsSpider(scrapy.Spider):
         "USER_AGENT": "Mozilla/5.0 (compatible; managr-webcrawler/1.0; +https://managr.ai/documentation)",
         "HTTPCACHE_ENABLED": True,
         "HTTPCACHE_DIR": settings.HTTPCACHE_DIR,
+        "HTTPCACHE_EXPIRATION_SECS": 604800,
     }
 
     def __init__(self, *args, **kwargs):
@@ -65,14 +75,27 @@ class NewsSpider(scrapy.Spider):
 
     def parse(self, response):
         url = response.url
-        domain = get_domain(url)
-        source = NewsSource.objects.get(domain__contains=domain)
+        try:
+            domain = extract_base_domain(url)
+            source = NewsSource.objects.get(domain__contains=domain)
+        except Exception:
+            logger.exception(domain)
+            return
         if source.last_scraped and source.article_link_attribute is not None:
             regex = source.create_search_regex()
             article_links = response.xpath(regex)
             do_not_track_str = ",".join(comms_consts.DO_NOT_TRACK_LIST)
             if source.last_scraped and source.article_link_attribute:
                 for anchor in article_links:
+                    is_news_aggregator = news_aggregator_check(anchor, source.domain)
+                    if is_news_aggregator:
+                        current_datetime = datetime.datetime.now()
+                        source.last_scraped = timezone.make_aware(
+                            current_datetime, timezone.get_current_timezone()
+                        )
+                        source.is_active = False
+                        source.save()
+                        break
                     article_url = anchor.xpath("@href").extract_first()
                     for word in comms_consts.DO_NOT_INCLUDE_WORDS:
                         if word in article_url:
@@ -81,8 +104,7 @@ class NewsSpider(scrapy.Spider):
                     if (len(article_domain) and article_domain not in do_not_track_str) or not len(
                         article_domain
                     ):
-                        if "https" not in article_url:
-                            article_url = url + article_url
+                        article_url = complete_url(article_url, source.domain)
                         current_datetime = datetime.datetime.now()
                         source.last_scraped = timezone.make_aware(
                             current_datetime, timezone.get_current_timezone()
@@ -103,17 +125,22 @@ class NewsSpider(scrapy.Spider):
         for key in XPATH_STRING_OBJ.keys():
             for path in XPATH_STRING_OBJ[key]:
                 selector = response.xpath(path).get()
-                if key == "publish_date" and "text" in path:
+                if key == "publish_date" and "text" in path and selector is not None:
                     selector = extract_date_from_text(selector)
                 if selector is not None:
                     meta_tag_data[key] = selector
                     break
-            if not len(meta_tag_data[key]):
+            if key not in meta_tag_data.keys() or not len(meta_tag_data[key]):
                 meta_tag_data[key] = "N/A"
         article_tag_list = ["article", "story", "content"]
+        article_xpaths = ["//article//p//text()"]
+        for a in article_tag_list:
+            article_xpaths.append(
+                f"//*[contains(@class, '{a}') or contains(@id, '{a}') and .//p]//p//text()"
+            )
         article_tags = None
-        for tag in article_tag_list:
-            tags = response.xpath(f"(//*[contains(@class, '{tag}')])//p//text()").getall()
+        for tag in article_xpaths:
+            tags = response.xpath(tag).getall()
             if len(tags):
                 article_tags = tags
                 break
@@ -145,7 +172,6 @@ class NewsSpider(scrapy.Spider):
         anchor_tags = response.css("a")
         site_name = response.xpath("//meta[contains(@property, 'site_name')]/@content").get()
         scrape_dict = {}
-        is_news_aggregator = news_aggregator_check(anchor_tags, source.domain)
         for idx, link in enumerate(anchor_tags):
             href = link.css("::attr(href)").get()
             classes = link.css("::attr(class)").get()
@@ -160,7 +186,6 @@ class NewsSpider(scrapy.Spider):
             }
         source.scrape_data = scrape_dict
         source.site_name = site_name
-        source.is_active = is_news_aggregator
         source.last_scraped = datetime.datetime.now()
         source.save()
         return
