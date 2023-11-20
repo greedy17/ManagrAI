@@ -11,7 +11,7 @@ from . import constants as comms_consts
 from dateutil import parser
 from django.conf import settings
 from urllib.parse import urlparse, urlunparse
-from django.contrib.postgres.search import SearchQuery
+from collections import OrderedDict
 from .exceptions import _handle_response
 from .models import NewsSource
 
@@ -107,8 +107,7 @@ def boolean_search_to_query(search_string):
     is_negative = False
     for idx, term in enumerate(term_list):
         if idx == len(term_list) - 1:
-            search_q = SearchQuery(term)
-            current_query = Q(content_search_vector=search_q)
+            current_query = Q(content__contains=term)
             if len(current_q_objects):
                 if current_query is not None:
                     current_q_objects.append(current_query)
@@ -143,8 +142,7 @@ def boolean_search_to_query(search_string):
             current_query = None
             is_negative = True
         else:
-            search_q = SearchQuery(term)
-            current_query = Q(content_search_vector=search_q)
+            current_query = Q(content__contains=term)
     return query
 
 
@@ -223,8 +221,13 @@ def normalize_article_data(api_data, article_models):
     normalized_model_list = [article.fields_to_dict() for article in article_models]
     normalized_list.extend(normalized_model_list)
     sorted_arr = merge_sort_dates(normalized_list)
+    ordered_dict = OrderedDict()
     sorted_arr.reverse()
-    return sorted_arr
+    for obj in sorted_arr:
+        if obj["title"] not in ordered_dict.keys():
+            ordered_dict[obj["title"]] = obj
+    duplicates_removed_list = list(ordered_dict.values())[:40]
+    return duplicates_removed_list
 
 
 def create_and_upload_csv(data):
