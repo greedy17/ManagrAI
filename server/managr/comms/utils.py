@@ -311,14 +311,13 @@ def remove_api_sources():
     return
 
 
-def news_aggregator_check(tag, website_url):
-    href = tag.attrib.get("href", "")
+def potential_link_check(href, website_url):
     if "https" in href:
         if website_url in href:
-            return False
-        else:
             return True
-    return False
+        else:
+            return False
+    return True
 
 
 def complete_url(url, default_domain, default_scheme="https"):

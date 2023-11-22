@@ -3,13 +3,14 @@ import logging
 import datetime
 from django.utils import timezone
 from django.conf import settings
+from django.db import IntegrityError
 from ..models import NewsSource
 from ..serializers import ArticleSerializer
 from dateutil import parser
 from ..utils import (
     get_domain,
     extract_date_from_text,
-    news_aggregator_check,
+    potential_link_check,
     extract_base_domain,
     complete_url,
 )
@@ -87,15 +88,6 @@ class NewsSpider(scrapy.Spider):
             do_not_track_str = ",".join(comms_consts.DO_NOT_TRACK_LIST)
             if source.last_scraped and source.article_link_attribute:
                 for anchor in article_links:
-                    is_news_aggregator = news_aggregator_check(anchor, source.domain)
-                    if is_news_aggregator:
-                        current_datetime = datetime.datetime.now()
-                        source.last_scraped = timezone.make_aware(
-                            current_datetime, timezone.get_current_timezone()
-                        )
-                        source.is_active = False
-                        source.save()
-                        break
                     article_url = anchor.xpath("@href").extract_first()
                     for word in comms_consts.DO_NOT_INCLUDE_WORDS:
                         if word in article_url:
@@ -162,28 +154,33 @@ class NewsSpider(scrapy.Spider):
             else:
                 logger.info(f"No content for article: {response.url}")
                 return
+        except IntegrityError:
+            return
         except Exception as e:
-            logger.info(str(e))
             source.error_log.append(f"{str(e)} - data: {meta_tag_data}")
             source.save()
         return
 
     def process_new_url(self, source, response):
-        anchor_tags = response.css("a")
+        anchor_tags = response.xpath(
+            "//body//a[starts-with(@href, '/') or starts-with(@href, 'https')]"
+        )
         site_name = response.xpath("//meta[contains(@property, 'site_name')]/@content").get()
         scrape_dict = {}
         for idx, link in enumerate(anchor_tags):
             href = link.css("::attr(href)").get()
-            classes = link.css("::attr(class)").get()
-            data_attributes = {}
-            for key, value in link.attrib.items():
-                if key.startswith("data-"):
-                    data_attributes[key] = value
-            scrape_dict[idx] = {
-                "href": href,
-                "data_attributes": data_attributes,
-                "classes": classes,
-            }
+            is_potential_link = potential_link_check(href, source.domain)
+            if is_potential_link:
+                classes = link.css("::attr(class)").get()
+                data_attributes = {}
+                for key, value in link.attrib.items():
+                    if key.startswith("data-"):
+                        data_attributes[key] = value
+                scrape_dict[idx] = {
+                    "href": href,
+                    "data_attributes": data_attributes,
+                    "classes": classes,
+                }
         source.scrape_data = scrape_dict
         source.site_name = site_name
         source.last_scraped = datetime.datetime.now()
