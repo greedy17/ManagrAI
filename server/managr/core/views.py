@@ -2101,3 +2101,43 @@ class ReportViewSet(
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK, data={"data": serializer.data, "date": date})
+
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def create_checkout_session(request):
+    if request.method == "POST":
+        SUCCESS_URL = f"{settings.MANAGR_URL}/summaries?success=true"
+        CANCEL_URL = f"{settings.MANAGR_URL}/summaries?success=false"
+        quantity = request.data.get("quantity")
+        # You may customize the following parameters based on your needs
+        session_data = {
+            "payment_method_types": ["card"],
+            "line_items": [
+                {
+                    "price": "price_1OFKqiHvb6ZAgKwkMSTAtm73",
+                    "quantity": quantity,
+                }
+            ],
+            "mode": "payment",
+            "success_url": SUCCESS_URL,
+            "cancel_url": CANCEL_URL,
+            "customer_email": request.user.email,
+        }
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {settings.STRIPE_API_KEY}",
+        }
+        with Variable_Client() as client:
+            r = client.post(
+                "https://api.stripe.com/v1/checkout/sessions",
+                data=json.dumps(session_data),
+                headers=headers,
+            )
+            if r.status_code == 200:
+                session_id = r.json().get("id")
+                return Response({"session_id": session_id})
+            else:
+                return Response({"error": "Failed to create Checkout session"}, status=500)
+    return Response({"error": "Invalid request method"}, status=400)

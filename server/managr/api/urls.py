@@ -367,6 +367,7 @@ urlpatterns = [
         name="trigger-alerts",
     ),
     path("shared/<str:encrypted_param>", comms_views.get_shared_summary, "shared"),
+    path("upgrade", core_views.create_checkout_session, "upgrade"),
 ]
 
 router.register("users/reports", core_views.ReportViewSet, "reports"),

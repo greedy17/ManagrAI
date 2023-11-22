@@ -514,6 +514,7 @@ if USE_TWITTER_API:
     TWITTER_CLIENT_ID = _env_get_required("TWITTER_CLIENT_ID")
     TWITTER_REDIRECT_URI = _env_get_required("TWITTER_REDIRECT_URI")
 
+STRIPE_API_KEY = os.environ.get("STRIPE_API_KEY")
 MAX_ATTEMPTS = 5
 
 # Scrapy settings
