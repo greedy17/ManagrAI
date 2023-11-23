@@ -24,11 +24,11 @@ from rest_framework.decorators import action
 from . import constants as comms_consts
 from .models import Search, TwitterAuthAccount, Pitch
 from .models import Article as InternalArticle
-from .models import WritingStyle, EmailAlert, Detail
+from .models import WritingStyle, EmailAlert
 from managr.core.models import User
 from managr.comms import exceptions as comms_exceptions
 from .tasks import emit_process_website_domain, emit_send_news_summary, emit_share_client_summary
-from .serializers import SearchSerializer, PitchSerializer, EmailAlertSerializer,
+from .serializers import SearchSerializer, PitchSerializer, EmailAlertSerializer
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
 from managr.utils.misc import decrypt_dict
