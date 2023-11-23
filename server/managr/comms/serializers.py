@@ -72,3 +72,9 @@ class EmailAlertSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmailAlert
         fields = ("id", "user", "title", "search", "run_at", "meta_data")
+
+
+class DetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmailAlert
+        fields = ("title", "text", "user")

@@ -456,3 +456,15 @@ class EmailAlert(TimeStampModel):
         null=True,
         blank=True,
     )
+
+
+class Detail(models.Model):
+    title = models.TextField()
+    text = models.TextField()
+    user = models.ForeignKey(
+        "core.User",
+        related_name="details",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
+    )
