@@ -137,13 +137,7 @@ class PRSearchViewSet(
                     query_input = boolean
                 articles = [article for article in articles if article["title"] != "[Removed]"]
                 internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
-                if len(internal_articles) < 20:
-                    needed_articles = 40 - len(internal_articles)
-                    articles = articles[:needed_articles]
-                else:
-                    articles = articles[:20]
                 articles = normalize_article_data(articles, internal_articles)
-                # articles = normalize_newsapi_to_model(articles)
                 break
             except Exception as e:
                 has_error = True
@@ -403,7 +397,6 @@ class PRSearchViewSet(
                 prompt = comms_consts.OPEN_AI_GENERATE_CONTENT(
                     datetime.now().date(), article, "", instructions
                 )
-                print("PROMPT IS HERE =---- >", prompt)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,

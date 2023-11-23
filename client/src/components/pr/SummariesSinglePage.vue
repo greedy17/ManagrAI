@@ -1695,9 +1695,9 @@ export default {
       ],
       promptSuggestions: [
         `Summarize the news`,
-        'Summarize the news for XXX and its impact',
         `Summarize the news for XXX, provide sentiment, creative ways they can newsjack this coverage, and list 5 journalists from Tier 1 publications that will write about this, along with creative pitching tips`,
         `As XXX PR agency, provide an update on what the competition is doing along with super creative ways to newsjack this coverage`,
+        'List 5 of the most important headlines ( include source name + journalist) and the impact on XXX',
         `List 10 journalists from Tier 1 publications and creative tips to pitch them`,
         `List 10 journalists from Tier 1 publications that will write about XXX, along with creative pitching tips`,
         `Create a media monitoring report for XXX. Include top sources (based on popularity and size), number of articles, sentiment, and any other important metrics`,
@@ -3871,6 +3871,10 @@ button:disabled {
   background-color: $soft-gray;
   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
   border-radius: 6px;
+}
+
+.area-input::placeholder {
+  font-family: $thin-font-family;
 }
 
 .text-area-input::placeholder {

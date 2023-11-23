@@ -10,8 +10,8 @@ from django.db.models import Q
 from . import constants as comms_consts
 from dateutil import parser
 from django.conf import settings
-from urllib.parse import urlparse
-from django.contrib.postgres.search import SearchQuery
+from urllib.parse import urlparse, urlunparse
+from collections import OrderedDict
 from .exceptions import _handle_response
 from .models import NewsSource
 
@@ -47,7 +47,7 @@ def extract_date_from_text(text):
         except ValueError:
             # If the full month name format fails, try with the abbreviated format
             date_obj = datetime.strptime(date_str, "%b %d, %Y")
-        return date_obj
+        return str(date_obj)
     else:
         return None
 
@@ -107,8 +107,7 @@ def boolean_search_to_query(search_string):
     is_negative = False
     for idx, term in enumerate(term_list):
         if idx == len(term_list) - 1:
-            search_q = SearchQuery(term)
-            current_query = Q(content_search_vector=search_q)
+            current_query = Q(content__contains=term)
             if len(current_q_objects):
                 if current_query is not None:
                     current_q_objects.append(current_query)
@@ -143,8 +142,7 @@ def boolean_search_to_query(search_string):
             current_query = None
             is_negative = True
         else:
-            search_q = SearchQuery(term)
-            current_query = Q(content_search_vector=search_q)
+            current_query = Q(content__contains=term)
     return query
 
 
@@ -223,8 +221,13 @@ def normalize_article_data(api_data, article_models):
     normalized_model_list = [article.fields_to_dict() for article in article_models]
     normalized_list.extend(normalized_model_list)
     sorted_arr = merge_sort_dates(normalized_list)
+    ordered_dict = OrderedDict()
     sorted_arr.reverse()
-    return sorted_arr
+    for obj in sorted_arr:
+        if obj["title"] not in ordered_dict.keys():
+            ordered_dict[obj["title"]] = obj
+    duplicates_removed_list = list(ordered_dict.values())[:40]
+    return duplicates_removed_list
 
 
 def create_and_upload_csv(data):
@@ -308,12 +311,27 @@ def remove_api_sources():
     return
 
 
-def news_aggregator_check(tag_list, website_url):
-    for tag in tag_list:
-        href = tag.attrib.get("href", "")
-        if "https" in href:
-            if website_url in href:
-                continue
-            else:
-                return False
+def potential_link_check(href, website_url):
+    if "https" in href:
+        if website_url in href:
+            return True
+        else:
+            return False
     return True
+
+
+def complete_url(url, default_domain, default_scheme="https"):
+    parsed_url = urlparse(url)
+    parsed_source_domain = urlparse(default_domain)
+    netloc = parsed_url.netloc if parsed_url.netloc else parsed_source_domain.netloc
+    complete_url = urlunparse(
+        (
+            default_scheme,
+            netloc,
+            parsed_url.path,
+            parsed_url.params,
+            parsed_url.query,
+            parsed_url.fragment,
+        )
+    )
+    return complete_url

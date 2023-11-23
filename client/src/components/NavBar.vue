@@ -96,7 +96,7 @@
             class="row wrapper-count"
           >
             <p class="searches-used-text">{{ searchesUsed }} / 10</p>
-            <div style="margin-left: -20px" class="tooltip-count">Remaining credits</div>
+            <div style="margin-left: -40px" class="tooltip-count">Remaining monthly credits</div>
           </div>
           <div class="relative">
             <div
@@ -1444,7 +1444,7 @@ a:hover {
   padding: 8px;
   pointer-events: none;
   position: absolute;
-  width: 125px;
+  width: 175px;
   -webkit-transform: translateY(10px);
   -moz-transform: translateY(10px);
   -ms-transform: translateY(10px);
