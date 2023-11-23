@@ -28,7 +28,7 @@ from .models import WritingStyle, EmailAlert, Detail
 from managr.core.models import User
 from managr.comms import exceptions as comms_exceptions
 from .tasks import emit_process_website_domain, emit_send_news_summary, emit_share_client_summary
-from .serializers import SearchSerializer, PitchSerializer, EmailAlertSerializer, DetailSerializer
+from .serializers import SearchSerializer, PitchSerializer, EmailAlertSerializer,
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
 from managr.utils.misc import decrypt_dict
@@ -1086,42 +1086,41 @@ class EmailAlertViewSet(
         emit_send_news_summary(alert_id, str(datetime.now()))
         return Response(status=status.HTTP_200_OK)
 
+# class DetailViewSet(
+#     viewsets.GenericViewSet,
+#     mixins.CreateModelMixin,
+#     mixins.RetrieveModelMixin,
+#     mixins.UpdateModelMixin,
+#     mixins.ListModelMixin,
+# ):
+#     serializer_class = DetailSerializer
 
-class DetailViewSet(
-    viewsets.GenericViewSet,
-    mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.ListModelMixin,
-):
-    serializer_class = DetailSerializer
+#     def get_queryset(self):
+#         return Detail.objects.filter(user=self.request.user)
 
-    def get_queryset(self):
-        return Detail.objects.filter(user=self.request.user)
+#     def create(self, request, *args, **kwargs):
+#         try:
+#             serializer = self.serializer_class(data=request.data)
+#             serializer.is_valid(raise_exception=True)
+#             serializer.save()
+#             readSerializer = self.serializer_class(instance=serializer.instance)
+#         except Exception as e:
+#             logger.exception(f"Error validating data for detials <{e}>")
+#             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+#         return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
 
-    def create(self, request, *args, **kwargs):
-        try:
-            serializer = self.serializer_class(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            readSerializer = self.serializer_class(instance=serializer.instance)
-        except Exception as e:
-            logger.exception(f"Error validating data for detials <{e}>")
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
-        return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
+#     def partial_update(self, request, *args, **kwargs):
+#         instance = self.get_object()
+#         data = self.request.data
+#         serializer = self.serializer_class(instance=instance, data=data, partial=True)
+#         serializer.is_valid(raise_exception=True)
+#         serializer.save()
+#         return Response(status=status.HTTP_200_OK, data=serializer.data)
 
-    def partial_update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        data = self.request.data
-        serializer = self.serializer_class(instance=instance, data=data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(status=status.HTTP_200_OK, data=serializer.data)
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        try:
-            instance.delete()
-        except Exception as e:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
-        return Response(status=status.HTTP_200_OK)
+#     def destroy(self, request, *args, **kwargs):
+#         instance = self.get_object()
+#         try:
+#             instance.delete()
+#         except Exception as e:
+#             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+#         return Response(status=status.HTTP_200_OK)
