@@ -167,8 +167,7 @@ class TwitterAuthAccountAdapter:
         headers = comms_consts.TWITTER_API_HEADERS
         with Variable_Client() as client:
             response = client.get(url, headers=headers, params=params)
-            res = self._handle_response(response)
-        return res
+            return self._handle_response(response)
 
     def get_summary(
         self, user, tokens, timeout, tweets, input_text, instructions=False, for_client=False
@@ -365,6 +364,13 @@ class NewsSource(TimeStampModel):
             data_attribute_value=self.data_attribute_value,
             is_active=self.is_active,
         )
+
+    @property
+    def crawling(self):
+        article_check = Article.objects.filter(source=self)
+        if len(article_check):
+            return True
+        return False
 
     @classmethod
     def domain_list(cls, scrape_ready=False, new=False):

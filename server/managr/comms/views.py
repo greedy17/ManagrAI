@@ -578,7 +578,7 @@ class PRSearchViewSet(
                         next_token = tweet_res["meta"]["next_token"]
                     user_data = tweet_res["includes"].get("users")
                     for tweet in tweets:
-                        if len(tweet_list) > 20:
+                        if len(tweet_list) > 39:
                             break
                         for user in user_data:
                             if user["id"] == tweet["author_id"]:
@@ -591,8 +591,7 @@ class PRSearchViewSet(
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         data={"error": f"No results for {query_input}", "string": query_input},
                     )
-
-                if len(tweet_list) < 41 and tweets:
+                if len(tweet_list) < 40 and tweets:
                     continue
                 break
             except KeyError as e:
