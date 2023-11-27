@@ -839,13 +839,13 @@
                   v-clickOutsidePromptMenu
                 >
                   <div class="input-row">
-                    <div class="main-text">Summarize</div>
+                    <div class="main-text">Summary</div>
 
                     <textarea
                       @focus="showPromptDropdown"
                       class="area-input text-area-input"
                       id="instructions-text-area"
-                      placeholder="Provide summary instructions..."
+                      placeholder="Provide summary instructions, or just click generate..."
                       v-model="newTemplate"
                       v-autoresize
                     />
