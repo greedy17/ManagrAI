@@ -1248,7 +1248,7 @@ a {
   // color: #6b6b6b;
   color: $light-gray-blue;
   font-size: 14px;
-  padding: 6px 0;
+  padding: 6px 0px 2px 0;
   margin: 0 16px;
   @media only screen and (max-width: 600px) {
     margin: 0px 16px;
@@ -1266,7 +1266,7 @@ a:hover {
 .active {
   color: #6b6b6b;
   position: relative;
-  border-bottom: 1px solid $mid-gray;
+  border-bottom: 1.5px solid $dark-black-blue;
 }
 
 .primary-button {
