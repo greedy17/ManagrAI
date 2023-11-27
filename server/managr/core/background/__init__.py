@@ -16,7 +16,7 @@ from managr.slack.helpers.utils import action_with_params
 from django.db.models import Q
 from managr.alerts.models import AlertConfig, AlertInstance, AlertTemplate
 from managr.core import constants as core_consts
-from managr.core.models import User
+from managr.core.models import User, StripeAdapter
 from managr.core.utils import (
     get_summary_completion,
     swap_submitted_data_labels,
@@ -185,6 +185,10 @@ def emit_process_send_ask_managr_to_dm(payload, context):
 
 def emit_send_activation_email(user_id):
     return _send_activation_email(user_id)
+
+
+def emit_process_check_subscription_status(session_id, user_id):
+    return _process_check_subscription_status(session_id, user_id)
 
 
 #########################################################
@@ -1971,4 +1975,26 @@ def _send_activation_email(user_id):
         [user.email],
         context=content,
     )
+    return
+
+
+@background(schedule=300)
+def _process_check_subscription_status(session_id, user_id):
+    user = User.objects.get(id=user_id)
+    url = core_consts.STRIPE_API_BASE_URL + core_consts.STRIPE_CHECKOUT_SESSION + f"/{session_id}"
+    while True:
+        try:
+            with Variable_Client() as client:
+                res = client.get(url, headers=core_consts.STRIPE_HEADERS)
+                res = StripeAdapter._handle_response(res)
+
+            if res["payment_status"] == "paid":
+                sub_id = res["subscription"]
+                user.private_meta_data["stripe_sub_id"] = sub_id
+                user.save()
+                break
+            else:
+                time.sleep(30)
+        except Exception as e:
+            logger.exception(str(e))
     return

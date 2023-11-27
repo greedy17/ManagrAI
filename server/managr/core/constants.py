@@ -13,6 +13,14 @@ SEND_EMAIL_URI = "send"
 CALENDAR_URI = "calendars"
 EVENT_POST = "events"
 
+STRIPE_API_BASE_URL = "https://api.stripe.com/v1"
+STRIPE_CHECKOUT_SESSION = "/checkout/sessions"
+STRIPE_SUBSCIPTIONS = "/subscriptions"
+STRIPE_HEADERS = {
+    "Authorization": settings.STRIPE_API_KEY,
+    "Content-Type": "application/x-www-form-urlencoded",
+}
+
 if settings.USE_OPEN_AI:
     OPEN_AI_SECRET = settings.OPEN_AI_SECRET
     OPEN_AI_HEADERS = {

@@ -20,8 +20,6 @@ from django.conf import settings
 from django_filters.rest_framework import DjangoFilterBackend
 from background_task.models import CompletedTask
 from datetime import datetime
-import base64
-
 from rest_framework.views import APIView
 from rest_framework import (
     filters,
@@ -35,9 +33,8 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-
 from managr.api.emails import send_html_email
-from managr.api.models import ManagrToken, ExpiringTokenAuthentication
+from managr.api.models import ManagrToken
 from managr.utils import sites as site_utils
 from managr.core.utils import (
     pull_usage_data,
@@ -63,9 +60,11 @@ from .serializers import (
 )
 from managr.organization.models import Team
 from .permissions import IsStaff
-from managr.core.background import emit_process_calendar_meetings, emit_send_activation_email
-
-from nylas.client import APIClient
+from managr.core.background import (
+    emit_process_calendar_meetings,
+    emit_send_activation_email,
+    emit_process_check_subscription_status,
+)
 from .nylas.emails import (
     return_file_id_from_nylas,
     download_file_from_nylas,
@@ -2119,10 +2118,11 @@ def create_checkout_session(request):
                     "quantity": quantity,
                 }
             ],
-            "mode": "payment",
+            "mode": "subscription",
             "success_url": SUCCESS_URL,
             "cancel_url": CANCEL_URL,
             "customer_email": request.user.email,
+            "meta_data": {"email": request.user.email},
         }
 
         headers = {
@@ -2136,7 +2136,52 @@ def create_checkout_session(request):
                 headers=headers,
             )
             if r.status_code == 200:
-                session_id = r.json().get("id")
+                data = r.json()
+                session_id = data.get("id")
+
+                return Response({"session_id": session_id})
+            else:
+                return Response({"error": "Failed to create Checkout session"}, status=500)
+    return Response({"error": "Invalid request method"}, status=400)
+
+
+@api_view(["post"])
+@permission_classes([permissions.IsAuthenticated])
+def create_checkout_session(request):
+    if request.method == "POST":
+        SUCCESS_URL = f"{settings.MANAGR_URL}/summaries?success=true"
+        CANCEL_URL = f"{settings.MANAGR_URL}/summaries?success=false"
+        quantity = request.data.get("quantity")
+        # You may customize the following parameters based on your needs
+        session_data = {
+            "payment_method_types": ["card"],
+            "line_items": [
+                {
+                    "price": settings.STRIPE_PRICE_ID,
+                    "quantity": quantity,
+                }
+            ],
+            "mode": "subscription",
+            "success_url": SUCCESS_URL,
+            "cancel_url": CANCEL_URL,
+            "customer_email": request.user.email,
+            "meta_data": {"email": request.user.email},
+        }
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {settings.STRIPE_API_KEY}",
+        }
+        with Variable_Client() as client:
+            r = client.post(
+                "https://api.stripe.com/v1/checkout/sessions",
+                data=json.dumps(session_data),
+                headers=headers,
+            )
+            if r.status_code == 200:
+                data = r.json()
+                session_id = data.get("id")
+                emit_process_check_subscription_status(session_id, str(request.user.id))
                 return Response({"session_id": session_id})
             else:
                 return Response({"error": "Failed to create Checkout session"}, status=500)
