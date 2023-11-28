@@ -77,10 +77,9 @@ class NewsSpider(scrapy.Spider):
     def parse(self, response):
         url = response.url
         try:
-            domain = extract_base_domain(url)
-            source = NewsSource.objects.get(domain__contains=domain)
+            source = NewsSource.objects.get(domain=url)
         except Exception:
-            logger.exception(domain)
+            logger.exception(url)
             return
         if source.last_scraped and source.article_link_attribute is not None:
             regex = source.create_search_regex()
