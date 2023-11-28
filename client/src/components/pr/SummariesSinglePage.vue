@@ -1891,7 +1891,7 @@ export default {
     setPitchContent() {
       let content = {
         summary: this.summary,
-        term: this.newSearch,
+        term: this.savedSearchTerm,
         type: this.selectedOption,
       }
       this.$store.commit('setGeneratedContent', content)
@@ -2827,7 +2827,7 @@ export default {
         }
         const response = await Comms.api.getArticleSummary({
           url: url,
-          search: this.newSearch,
+          search: this.savedSearchTerm,
           instructions: instructions,
           length: length,
         })
