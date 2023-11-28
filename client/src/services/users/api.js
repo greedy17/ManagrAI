@@ -29,7 +29,7 @@ const CHECK_TASKS_ENDPOINT = '/task-status/'
 const SSO_DATA_ENDPOINT = '/sso-data/'
 const TWITTER_AUTHORIZATION = '/users/twitter/authorization'
 const TWITTER_AUTHENTICATION = '/users/twitter/authenticate'
-const UPGRADE = '/upgrade'
+const UPGRADE = '/upgrade/'
 const NYLAS_AUTH_EMAIL_LINK = '/users/email-auth-link/'
 const NYLAS_SEND_EMAIL = '/users/nylas/send-new-email/'
 const NYLAS_REPLY_EMAIL = '/users/nylas/reply-to-email/'
@@ -565,7 +565,7 @@ export default class UserAPI {
     try {
       const res = await this.client.post(SEND_EMAIL_ENDPOINT, data)
       return res
-    } catch(e) {
+    } catch (e) {
       apiErrorHandler({ apiName: 'UserAPI.sendEmail' })
     }
   }
