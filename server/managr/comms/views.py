@@ -840,7 +840,6 @@ class PitchViewSet(
         token_amount = 1000
         timeout = 60.0
 
-        print("WRITING STYLE IS RIGHT HERE --- >", style)
         while True:
             try:
                 res = Pitch.generate_pitch(

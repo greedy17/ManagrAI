@@ -116,7 +116,7 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
 def OPEN_AI_PITCH(date, type, output, persona, chars, style=False):
     if not style:
         style = "Begin with a precise introduction, without informal salutations. Be clear, concise, and informative, avoiding metaphors. Offer coherent data without persuasion. Aim for depth, not sensationalism and avoid commercial bias."
-    body = f"""Today's date is {date}. As the VP of Communications, generate content following these instructions carefully: {output}. \n You must Mirror this writing style: {style}. \n Lastly, this content must adhere to a strict {chars} character limit."""
+    body = f"""Today's date is {date}. As the VP of Communications, generate content following these instructions carefully: {output}. \n You must Mirror this writing style: {style}. \n Lastly, this content must adhere to a strict {chars} word limit."""
     return body
 
 
