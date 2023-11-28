@@ -852,7 +852,7 @@
                   class="wrapper absolute-right circle-border white-bg"
                   style="margin-right: 0; right: 88px"
                   :disabled="sentSummaryEmail"
-                  v-if="mainView === 'news' && summarizing"
+                  v-if="mainView === 'news' && summarizing && !notifiedList.includes(searchId)"
                 >
                   <img
                     height="14px"
@@ -862,13 +862,32 @@
                     :class="{ dim: !(searchSaved || savedSearch) }"
                   />
                   <div
-                    v-if="sendSummaryEmailText !== 'Sent!'"
                     class="tooltip"
                     style="margin-left: -22px"
                     :class="{ 'tooltip-wide': !(searchSaved || savedSearch) }"
                   >
                     {{ searchSaved || savedSearch ? emailText : 'Save search to enable alerts' }}
                   </div>
+                </div>
+
+                <div
+                  @click="removeEmailAlert"
+                  class="wrapper absolute-right circle-border white-bg"
+                  style="margin-right: 0; right: 88px"
+                  v-else-if="
+                    mainView === 'news' &&
+                    summarizing &&
+                    (searchSaved || savedSearch) &&
+                    notifiedList.includes(searchId)
+                  "
+                >
+                  <img
+                    height="14px"
+                    src="@/assets/images/bell-slash.svg"
+                    alt=""
+                    class="img-highlight"
+                  />
+                  <div class="tooltip" style="margin-left: -22px">Disable</div>
                 </div>
 
                 <div
@@ -1822,7 +1841,7 @@ export default {
       this.formattedDate = `${year}-${month}-${day}T${formattedTime}`
     },
     toggleNotifyModal() {
-      if (this.searchSaved || savedSearch) {
+      if ((this.searchSaved || this.savedSearch) && this.isPaid) {
         this.alertSet = false
         this.notifyModalOpen = !this.notifyModalOpen
       }
@@ -2444,7 +2463,7 @@ export default {
       this.summary = null
       this.summarizing = false
       this.newSearch = ''
-      this.searchName = ''
+      // this.searchName = ''
       this.metaData = { clips: [] }
       this.addedArticles = []
     },
