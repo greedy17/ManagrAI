@@ -569,6 +569,7 @@ class PRSearchViewSet(
                     r = open_ai_exceptions._handle_response(r)
                     query_input = r.get("choices")[0].get("message").get("content")
                     query_input = query_input.replace("AND", " ")
+                    query_input = query_input + " lang:en"
                 tweet_res = TwitterAuthAccount.get_tweets(query_input, next_token)
                 tweets = tweet_res.get("data", None)
                 includes = tweet_res.get("includes", None)
@@ -577,11 +578,11 @@ class PRSearchViewSet(
                         next_token = tweet_res["meta"]["next_token"]
                     user_data = tweet_res["includes"].get("users")
                     for tweet in tweets:
-                        if len(tweet_list) > 20:
+                        if len(tweet_list) > 39:
                             break
                         for user in user_data:
                             if user["id"] == tweet["author_id"]:
-                                if user["public_metrics"]["followers_count"] > 100:
+                                if user["public_metrics"]["followers_count"] > 1000:
                                     tweet["user"] = user
                                     tweet_list.append(tweet)
                                 break
@@ -590,8 +591,7 @@ class PRSearchViewSet(
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         data={"error": f"No results for {query_input}", "string": query_input},
                     )
-
-                if len(tweet_list) < 20 and tweets:
+                if len(tweet_list) < 40 and tweets:
                     continue
                 break
             except KeyError as e:
@@ -840,7 +840,6 @@ class PitchViewSet(
         token_amount = 1000
         timeout = 60.0
 
-        print("WRITING STYLE IS RIGHT HERE --- >", style)
         while True:
             try:
                 res = Pitch.generate_pitch(
@@ -1085,6 +1084,7 @@ class EmailAlertViewSet(
         alert_id = request.data.get("alert_id")
         emit_send_news_summary(alert_id, str(datetime.now()))
         return Response(status=status.HTTP_200_OK)
+
 
 # class DetailViewSet(
 #     viewsets.GenericViewSet,

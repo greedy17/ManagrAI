@@ -1248,8 +1248,8 @@ a {
   // color: #6b6b6b;
   color: $light-gray-blue;
   font-size: 14px;
-  padding: 6px 0;
-  margin: 0 16px;
+  padding: 6px 4px;
+  margin: 0 12px;
   @media only screen and (max-width: 600px) {
     margin: 0px 16px;
     padding: 14px 0;
@@ -1264,9 +1264,10 @@ a:hover {
   color: rgba(0, 0, 0, 0.5);
 }
 .active {
-  color: #6b6b6b;
+  color: $dark-black-blue;
   position: relative;
-  border-bottom: 1px solid $mid-gray;
+  border-bottom: 2px solid $dark-black-blue;
+  // background-color: $white-blue;
 }
 
 .primary-button {

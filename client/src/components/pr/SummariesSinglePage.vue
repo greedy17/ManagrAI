@@ -44,91 +44,7 @@
         </div>
       </div>
     </Modal>
-    <Modal v-if="regenModal" class="regen-modal">
-      <div class="regen-container">
-        <div class="regen-header">
-          <div>
-            <h4 class="regen-header-title">Regenerate Search</h4>
-            <p v-if="!searchSaved && mainView !== 'website'" class="regen-header-subtitle">
-              Create a new search using conversational AI
-            </p>
-            <p v-else-if="mainView === 'website'" class="regen-header-subtitle">
-              Create a new summary
-            </p>
-            <p class="regen-header-subtitle" v-else>Create a new summary</p>
-          </div>
-          <div class="pointer" @click="closeRegenModal"><small>X</small></div>
-        </div>
-        <div class="regen-body">
-          <div v-if="!searchSaved && mainView !== 'website'">
-            <div>
-              <h5 class="regen-body-title">Search term</h5>
-              <!-- <span class="regen-header-subtitle"
-                >Use conversation text. AI will convert it to a boolean.</span
-              > -->
-            </div>
-            <textarea v-autoresize v-model="newSearch" class="regen-body-text" />
-          </div>
 
-          <div v-if="mainView !== 'website'">
-            <div>
-              <h5 class="regen-body-title">
-                Summary Instructions <span class="regen-header-subtitle">(optional)</span>
-              </h5>
-            </div>
-            <textarea v-autoresize v-model="newTemplate" class="regen-body-text" />
-          </div>
-
-          <div v-else>
-            <div>
-              <h5 class="regen-body-title">
-                Summary instructions <span class="regen-header-subtitle"></span>
-              </h5>
-            </div>
-            <textarea v-autoresize v-model="newTemplate" class="regen-body-text" />
-          </div>
-
-          <div v-if="mainView === 'news'">
-            <div>
-              <h5 class="regen-body-title">Date Range</h5>
-            </div>
-            <div class="input-row-start regen-body-text">
-              <!-- <div class="main-text">
-                <img
-                  style="margin-right: 10px; opacity: 0.7"
-                  src="@/assets/images/calendar.svg"
-                  height="14px"
-                />
-                Date Range
-              </div> -->
-
-              <div>
-                <input
-                  style="padding-left: 0; background: transparent"
-                  class="area-input-smallest"
-                  type="date"
-                  v-model="dateStart"
-                />
-                -
-                <input
-                  style="background: transparent"
-                  class="area-input-smallest"
-                  type="date"
-                  v-model="dateEnd"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="regen-footer">
-          <div></div>
-          <div class="row">
-            <div class="cancel-button" @click="closeRegenModal">Cancel</div>
-            <div class="save-button" @click="generateNewSearch(null)">Submit</div>
-          </div>
-        </div>
-      </div>
-    </Modal>
     <!-- paidModal -->
     <Modal v-if="paidModal" class="paid-modal">
       <div class="regen-container">
@@ -619,6 +535,7 @@
                   style="margin-top: 8px"
                   v-if="mainView !== 'website'"
                   class="no-text-margin ellipsis-text"
+                  :title="selectedSearch.search"
                 >
                   {{ selectedSearch.search }}
                 </h2>
@@ -627,7 +544,7 @@
 
                 <div class="space-between">
                   <p v-if="mainView !== 'website'" class="sub-text ellipsis-text">
-                    AI-generated boolean: <span>{{ booleanString }}</span>
+                    AI-generated boolean: <span :title="booleanString">{{ booleanString }}</span>
                   </p>
                   <p v-else class="sub-text">Generate a summary for the uploaded article</p>
 
@@ -689,7 +606,7 @@
                       {{ savingSearch ? 'Saving' : 'Save' }}
                     </button>
 
-                    <button
+                    <!-- <button
                       @mouseenter="changeEmailText"
                       @mouseleave="defaultEmailText"
                       @click="toggleNotifyModal"
@@ -714,39 +631,8 @@
                         class="filter-green"
                       />
                       Disable
-                    </button>
+                    </button> -->
                   </div>
-
-                  <!-- <button
-                    @click="sendSummaryEmail"
-                    class="secondary-button wrapper"
-                    style="margin-right: 0"
-                    :disabled="sentSummaryEmail"
-                    v-if="mainView !== 'social'"
-                  >
-                    <img
-                      v-if="sendingSummaryEmail"
-                      class="rotate"
-                      height="12px"
-                      src="@/assets/images/loading.svg"
-                      alt=""
-                    />
-                    <img
-                      v-else
-                      height="12px"
-                      src="@/assets/images/email-round.svg"
-                      alt=""
-                      class="filter-green"
-                    />
-                    <span class="summary-email-span">{{ sendSummaryEmailText }}</span>
-                    <div
-                      v-if="sendSummaryEmailText !== 'Sent!'"
-                      style="margin-left: 0px"
-                      class="tooltip"
-                    >
-                      Send Email
-                    </div>
-                  </button> -->
                 </div>
 
                 <div v-else class="row">
@@ -831,77 +717,94 @@
                 "
                 style="width: 100%"
               >
-                <div
-                  v-if="!summaryLoading"
-                  style="margin: 1rem 0 0 0; width: 100%"
-                  id="instructions"
-                  class="input-container"
-                  v-clickOutsidePromptMenu
-                >
-                  <div class="input-row">
-                    <div class="main-text">Summarize</div>
+                <div v-if="!summaryLoading">
+                  <div
+                    style="margin: 1rem 0 0 0; width: 100%; padding-top: 0; padding-bottom: 0"
+                    id="instructions"
+                    class="input-container"
+                    v-clickOutsidePromptMenu
+                    v-if="showSummaryInstructions"
+                  >
+                    <div class="input-row">
+                      <div class="main-text">Summary</div>
 
-                    <textarea
-                      @focus="showPromptDropdown"
-                      class="area-input text-area-input"
-                      id="instructions-text-area"
-                      placeholder="Provide summary instructions..."
-                      v-model="newTemplate"
-                      v-autoresize
-                    />
+                      <textarea
+                        style="margin: 0"
+                        @focus="showPromptDropdown"
+                        class="area-input text-area-input"
+                        id="instructions-text-area"
+                        placeholder="Provide instructions, or just click generate..."
+                        v-model="newTemplate"
+                        v-autoresize
+                      />
 
-                    <button
-                      @click="summarizing = true"
-                      v-if="mainView !== 'website' && summary"
-                      class="secondary-button"
-                      style="margin-right: 0"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      @click="getSummary(filteredArticles, newTemplate)"
-                      v-if="mainView === 'news'"
-                      class="primary-button"
-                      style="margin-right: 0"
-                    >
-                      <img src="@/assets/images/sparkle.svg" height="14px" alt="" />
-                      Generate
-                    </button>
-                    <button
-                      @click="getTweetSummary(filteredArticles, newTemplate)"
-                      v-else-if="mainView === 'social'"
-                      class="primary-button"
-                      style="margin-right: 0"
-                    >
-                      <img src="@/assets/images/sparkle.svg" height="14px" alt="" />
-                      Generate
-                    </button>
-                    <button
-                      @click="getSourceSummary"
-                      v-else
-                      class="primary-button"
-                      style="margin-right: 0"
-                    >
-                      <img src="@/assets/images/sparkle.svg" height="14px" alt="" />
-                      Generate
-                    </button>
+                      <button
+                        @click="summarizing = true"
+                        v-if="mainView !== 'website' && summary"
+                        class="secondary-button"
+                        style="margin-right: 0"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        @click="getSummary(filteredArticles, newTemplate)"
+                        v-if="mainView === 'news'"
+                        class="primary-button"
+                        style="margin-right: 0"
+                      >
+                        <img src="@/assets/images/sparkle.svg" height="14px" alt="" />
+                        Generate
+                      </button>
+                      <button
+                        @click="getTweetSummary(filteredArticles, newTemplate)"
+                        v-else-if="mainView === 'social'"
+                        class="primary-button"
+                        style="margin-right: 0"
+                      >
+                        <img src="@/assets/images/sparkle.svg" height="14px" alt="" />
+                        Generate
+                      </button>
+                      <button
+                        @click="getSourceSummary"
+                        v-else
+                        class="primary-button"
+                        style="margin-right: 0"
+                      >
+                        <img src="@/assets/images/sparkle.svg" height="14px" alt="" />
+                        Generate
+                      </button>
+                    </div>
+
+                    <div v-if="showingPromptDropdown" class="dropdown">
+                      <div style="padding-top: 4px; padding-bottom: 4px">
+                        <small class="gray-text">Popular Prompts</small>
+                      </div>
+
+                      <div
+                        class="dropdown-item"
+                        v-for="(suggestion, i) in filteredPromptSuggestions"
+                        :key="i"
+                        @click="addPromptSuggestion(suggestion)"
+                      >
+                        <p>
+                          {{ suggestion }}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
-                  <div v-if="showingPromptDropdown" class="dropdown">
-                    <div style="padding-top: 4px">
-                      <small class="gray-text">Popular Prompts</small>
-                    </div>
-
-                    <div
-                      class="dropdown-item"
-                      v-for="(suggestion, i) in filteredPromptSuggestions"
-                      :key="i"
-                      @click="addPromptSuggestion(suggestion)"
+                  <div style="margin-top: 16px" class="row" v-else>
+                    <!-- <button class="secondary-button">
+                      <img src="@/assets/images/sparkle.svg" height="14px" alt="" />Provide Summary
+                      Instructions
+                    </button> -->
+                    <button
+                      @click="showSummaryInstructions = true"
+                      style="margin-left: 0"
+                      class="primary-button"
                     >
-                      <p>
-                        {{ suggestion }}
-                      </p>
-                    </div>
+                      <img src="@/assets/images/sparkle.svg" height="14px" alt="" />Generate Summary
+                    </button>
                   </div>
                 </div>
 
@@ -917,6 +820,76 @@
               </div>
 
               <div v-if="summary" style="width: 100%" class="relative">
+                <!-- <button
+                     
+                      v-if="(searchSaved || savedSearch) && !notifiedList.includes(searchId)"
+                      class="secondary-button"
+                      :disabled="!isPaid"
+                    >
+                      <img height="12px" src="@/assets/images/bell.svg" alt="" />
+
+                      {{ emailText }}
+                    </button>
+
+                    <button
+                      @click="removeEmailAlert"
+                      v-else-if="(searchSaved || savedSearch) && notifiedList.includes(searchId)"
+                      class="secondary-button"
+                    >
+                      <img
+                        height="12px"
+                        src="@/assets/images/bell-slash.svg"
+                        alt=""
+                        class="filter-green"
+                      />
+                      Disable
+                    </button> -->
+
+                <div
+                  @mouseenter="changeEmailText"
+                  @mouseleave="defaultEmailText"
+                  @click="toggleNotifyModal"
+                  class="wrapper absolute-right circle-border white-bg"
+                  style="margin-right: 0; right: 88px"
+                  :disabled="sentSummaryEmail"
+                  v-if="mainView === 'news' && summarizing && !notifiedList.includes(searchId)"
+                >
+                  <img
+                    height="14px"
+                    src="@/assets/images/bell.svg"
+                    alt=""
+                    class="filter-green img-highlight"
+                    :class="{ dim: !(searchSaved || savedSearch) }"
+                  />
+                  <div
+                    class="tooltip"
+                    style="margin-left: -22px"
+                    :class="{ 'tooltip-wide': !(searchSaved || savedSearch) }"
+                  >
+                    {{ searchSaved || savedSearch ? emailText : 'Save search to enable alerts' }}
+                  </div>
+                </div>
+
+                <div
+                  @click="removeEmailAlert"
+                  class="wrapper absolute-right circle-border white-bg"
+                  style="margin-right: 0; right: 88px"
+                  v-else-if="
+                    mainView === 'news' &&
+                    summarizing &&
+                    (searchSaved || savedSearch) &&
+                    notifiedList.includes(searchId)
+                  "
+                >
+                  <img
+                    height="14px"
+                    src="@/assets/images/bell-slash.svg"
+                    alt=""
+                    class="img-highlight"
+                  />
+                  <div class="tooltip" style="margin-left: -22px">Disable</div>
+                </div>
+
                 <div
                   @click="sendSummaryEmail"
                   class="wrapper absolute-right circle-border white-bg"
@@ -962,6 +935,7 @@
                   />
                   <div style="margin-left: -22px" class="tooltip">{{ copyTip }}</div>
                 </div>
+
                 <pre
                   style="
                     margin-top: -4px;
@@ -1590,6 +1564,7 @@ export default {
   },
   data() {
     return {
+      showSummaryInstructions: false,
       showingViews: false,
       savedSearchTerm: '',
       summarizing: false,
@@ -1866,8 +1841,10 @@ export default {
       this.formattedDate = `${year}-${month}-${day}T${formattedTime}`
     },
     toggleNotifyModal() {
-      this.alertSet = false
-      this.notifyModalOpen = !this.notifyModalOpen
+      if ((this.searchSaved || this.savedSearch) && this.isPaid) {
+        this.alertSet = false
+        this.notifyModalOpen = !this.notifyModalOpen
+      }
     },
     closeContentModal() {
       if (!this.contentLoading) {
@@ -1914,7 +1891,7 @@ export default {
     setPitchContent() {
       let content = {
         summary: this.summary,
-        term: this.newSearch,
+        term: this.savedSearchTerm,
         type: this.selectedOption,
       }
       this.$store.commit('setGeneratedContent', content)
@@ -2256,6 +2233,7 @@ export default {
       this.showSaveName = !this.showSaveName
     },
     setSearch(search) {
+      this.showSummaryInstructions = true
       this.summarizing = false
       this.savedSearch = search
       this.summary = ''
@@ -2268,7 +2246,7 @@ export default {
       this.addedClips = this.$store.state.currentReportClips
       // this.addedClips = search.meta_data.clips ? search.meta_data.clips : []
       this.mainView = search.type === 'SOCIAL_MEDIA' ? 'social' : 'news'
-      this.generateNewSearch()
+      this.generateNewSearch(true)
       this.setCurrentAlert()
     },
     changeIndex() {
@@ -2367,7 +2345,7 @@ export default {
       this.loading = false
       this.summaryLoading = false
     },
-    async generateNewSearch() {
+    async generateNewSearch(saved = false) {
       if (!this.isPaid && this.searchesUsed >= 10) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
@@ -2396,7 +2374,7 @@ export default {
           if (this.shouldCancel) {
             return this.stopLoading()
           }
-          await this.getClips()
+          await this.getClips(saved)
           if (this.shouldCancel) {
             return this.stopLoading()
           }
@@ -2481,6 +2459,14 @@ export default {
         console.log('ERROR UPDATING SEARCH', e)
       }
     },
+    clearSearch() {
+      this.summary = null
+      this.summarizing = false
+      this.newSearch = ''
+      // this.searchName = ''
+      this.metaData = { clips: [] }
+      this.addedArticles = []
+    },
     clearNewSearch() {
       this.summary = null
       this.summarizing = false
@@ -2506,7 +2492,7 @@ export default {
         const response = await Comms.api
           .createSearch({
             name: this.searchName || this.newSearch.slice(0, 60),
-            input_text: this.newSearch,
+            input_text: this.savedSearchTerm,
             search_boolean: this.booleanString,
             instructions: this.newTemplate,
             meta_data: this.metaData,
@@ -2588,7 +2574,7 @@ export default {
       // update controllers here
       this.$store.dispatch('updateAbortController', {})
     },
-    async getClips() {
+    async getClips(saved = false) {
       this.summary = null
       this.showingDropdown = false
       this.savedSearchTerm = this.newSearch
@@ -2612,7 +2598,11 @@ export default {
           .then((response) => {
             this.filteredArticles = response.articles
             this.booleanString = response.string
-            this.clearNewSearch()
+            if (saved) {
+              this.clearSearch()
+            } else {
+              this.clearNewSearch()
+            }
           })
       } catch (e) {
         this.clearNewSearch()
@@ -2687,6 +2677,7 @@ export default {
     async getTweetSummary(instructions = '') {
       let tweets = this.prepareTweetSummary(this.tweets)
       this.summaryLoading = true
+      this.summary = ''
       try {
         if (this.shouldCancel) {
           return this.stopLoading()
@@ -2723,6 +2714,7 @@ export default {
       const allClips = this.getArticleDescriptions(clips)
       this.summaryLoading = true
       let openAiDown = false
+      this.summary = ''
       try {
         if (this.shouldCancel) {
           return this.stopLoading()
@@ -2835,7 +2827,7 @@ export default {
         }
         const response = await Comms.api.getArticleSummary({
           url: url,
-          search: this.newSearch,
+          search: this.savedSearchTerm,
           instructions: instructions,
           length: length,
         })
@@ -3877,8 +3869,12 @@ button:disabled {
   font-family: $thin-font-family;
 }
 
-.text-area-input::placeholder {
-  padding-top: 0.9rem;
+// .text-area-input {
+//   line-height: 98.5px !important;
+// }
+
+.text-area-input {
+  padding-top: 1.25rem;
 }
 .input-row {
   display: flex;
@@ -4928,6 +4924,11 @@ header {
   -ms-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
   -o-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
   box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+}
+
+.tooltip-wide {
+  width: 200px !important;
+  left: -62px !important;
 }
 
 /* This bridges the gap so you can mouse into the tooltip without it disappearing */
