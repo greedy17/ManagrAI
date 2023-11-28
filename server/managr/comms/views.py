@@ -216,8 +216,8 @@ class PRSearchViewSet(
         if user.has_hit_summary_limit:
             return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         url = request.data["params"]["url"]
-        # search = request.data["params"]["search"]
-        search = '("Under Armour" OR "Nike" OR "Adidas" OR "Puma" OR "Reebok" OR "Fabletics" OR "Athleta") NOT "Lululemon"'
+        search = request.data["params"]["search"]
+        # search = '("Under Armour" OR "Nike" OR "Adidas" OR "Puma" OR "Reebok" OR "Fabletics" OR "Athleta") NOT "Lululemon"'
         instructions = request.data["params"]["instructions"]
         length = request.data["params"]["length"]
         has_error = False
