@@ -857,8 +857,7 @@ export default {
     },
     async purchasePro() {
       try {
-        const user = this.$store.state.user
-        const response = await User.api.upgrade({ users: this.numberOfUsers })
+        const response = await User.api.upgrade({ quantity: this.numberOfUsers })
         const sessionId = response.data.id;
 
         const stripe = await this.$stripe();
