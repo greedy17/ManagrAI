@@ -247,12 +247,6 @@ class User(AbstractUser, TimeStampModel):
         upload_to=datetime_appended_filepath, max_length=255, null=True, blank=True
     )
     timezone = models.CharField(default="UTC", max_length=255)
-    activated_managr_configs = ArrayField(
-        models.CharField(max_length=255),
-        default=list,
-        help_text="List of activated Managr templates",
-        blank=True,
-    )
     reminders = JSONField(
         default=core_consts.REMINDERS,
         null=True,
@@ -270,6 +264,11 @@ class User(AbstractUser, TimeStampModel):
     )
     make_team_lead = models.BooleanField(default=False)
     meta_data = JSONField(
+        default=dict,
+        null=True,
+        blank=True,
+    )
+    private_meta_data = JSONField(
         default=dict,
         null=True,
         blank=True,

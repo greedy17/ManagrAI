@@ -185,13 +185,13 @@
         <div class="input-row">
           <div class="main-text">
             <img src="@/assets/images/a.svg" height="12px" alt="" />
-            Characters
+            Word Count
           </div>
 
           <input
             :disabled="loading"
             class="area-input"
-            placeholder="Character count..."
+            placeholder="Word count..."
             v-model="characters"
             type="number"
             max="1500"
@@ -695,7 +695,6 @@ export default {
           type: this.type,
           audience: this.persona,
           generated_pitch: this.pitch,
-
           instructions: this.output,
         })
         if (response.id) {
