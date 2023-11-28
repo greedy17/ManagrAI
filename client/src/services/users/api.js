@@ -29,6 +29,7 @@ const CHECK_TASKS_ENDPOINT = '/task-status/'
 const SSO_DATA_ENDPOINT = '/sso-data/'
 const TWITTER_AUTHORIZATION = '/users/twitter/authorization'
 const TWITTER_AUTHENTICATION = '/users/twitter/authenticate'
+const UPGRADE = '/users/upgrade'
 const NYLAS_AUTH_EMAIL_LINK = '/users/email-auth-link/'
 const NYLAS_SEND_EMAIL = '/users/nylas/send-new-email/'
 const NYLAS_REPLY_EMAIL = '/users/nylas/reply-to-email/'
@@ -744,6 +745,15 @@ export default class UserAPI {
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'User.getTwiiterAuthentication' })
+    }
+  }
+
+  async upgrade(data) {
+    try {
+      const res = await this.client.post(UPGRADE, data)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'User.upgrade' })
     }
   }
 }

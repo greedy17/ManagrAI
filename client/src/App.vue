@@ -1,7 +1,7 @@
 <template>
   <div id="app">
-    <Modal v-if="showExpireModal" class="delete-modal">
-      <div class="delete-container">
+    <Modal v-if="showExpireModal" class="session-expiring-modal">
+      <div class="session-expiring-container">
         <header>
           <p>X</p>
         </header>
@@ -246,13 +246,13 @@ input {
   z-index: -1;
 }
 
-.delete-modal {
+.session-expiring-modal {
   margin-top: 120px;
   width: 100%;
   height: 100%;
 }
 
-.delete-container {
+.session-expiring-container {
   width: 500px;
   height: 220px;
   color: $base-gray;
