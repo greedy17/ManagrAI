@@ -1381,7 +1381,7 @@ class UserViewSet(
                 if r.status_code == 200:
                     data = r.json()
                     session_id = data.get("id")
-                    emit_process_check_subscription_status(session_id, str(request.user.id))
+                    # emit_process_check_subscription_status(session_id, str(request.user.id))
                     return Response(data={"session_id": session_id})
                 else:
                     return Response(data={"error": "Failed to create Checkout session"}, status=500)
@@ -2144,3 +2144,27 @@ class ReportViewSet(
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK, data={"data": serializer.data, "date": date})
+
+
+@api_view(["post"])
+@permission_classes([permissions.AllowAny])
+@authentication_classes([])
+def session_complete_webhook(request):
+    data = request.data.get("data", None).get("object", None)
+    event = data.get("object", None)
+
+    if event == core_consts.STRIPE_CHECKOUT_WEBHOOK:
+        user_email = data.get("metadata").get("email")
+        user = User.objects.get(email=user_email)
+
+        while True:
+            if data["payment_status"] == "paid":
+                sub_id = data["subscription"]
+                user.private_meta_data["stripe_sub_id"] = sub_id
+                user.save()
+                user.organization.is_paid = True
+                user.organization.save()
+                break
+            else:
+                time.sleep(30)
+    return Response()
