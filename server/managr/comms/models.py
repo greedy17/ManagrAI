@@ -97,7 +97,7 @@ class Search(TimeStampModel):
 
     @classmethod
     def get_clips(cls, search_boolean, date_to=False, date_from=False):
-        query = {"q": search_boolean}
+        query = {"q": search_boolean, "excludeDomains": comms_consts.EXCLUDE_DOMAINS}
         if date_to:
             query["to"] = date_to
             query["from"] = date_from
