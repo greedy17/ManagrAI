@@ -1994,6 +1994,8 @@ def _process_check_subscription_status(session_id, user_id):
                 sub_id = res["subscription"]
                 user.private_meta_data["stripe_sub_id"] = sub_id
                 user.save()
+                user.organization.is_paid = True
+                user.organization.save()
                 break
             else:
                 time.sleep(30)
