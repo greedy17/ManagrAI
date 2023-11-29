@@ -5,6 +5,8 @@ import json
 import uuid
 import httpx
 import time
+from urllib.parse import urlencode
+from django.http import QueryDict
 from django.utils import timezone
 from django.core import serializers
 from managr.utils.misc import get_site_url, decrypt_dict
@@ -1343,6 +1345,48 @@ class UserViewSet(
             {"detail": "User token has been successfully refreshed", "token": str(token.key)}
         )
 
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="upgrade-user",
+    )
+    def upgrade_user(self, request, *args, **kwargs):
+        if request.method == "POST":
+            SUCCESS_URL = f"{settings.MANAGR_URL}/summaries?success=true"
+            CANCEL_URL = f"{settings.MANAGR_URL}/summaries?success=false"
+            quantity = request.data.get("quantity")
+            session_data = {
+                "payment_method_types[0]": "card",
+                "line_items[0][price]": settings.STRIPE_PRICE_ID,
+                "line_items[0][quantity]": int(quantity),
+                "mode": "subscription",
+                "success_url": SUCCESS_URL,
+                "cancel_url": CANCEL_URL,
+                "customer_email": request.user.email,
+                "metadata[email]": request.user.email,
+            }
+            encoded_data = QueryDict("", mutable=True)
+            encoded_data.update(session_data)
+            headers = {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Authorization": f"Bearer {settings.STRIPE_API_KEY}",
+            }
+            with Variable_Client() as client:
+                r = client.post(
+                    f"https://api.stripe.com/v1/checkout/sessions",
+                    data=encoded_data,
+                    headers=headers,
+                )
+                if r.status_code == 200:
+                    data = r.json()
+                    session_id = data.get("id")
+                    emit_process_check_subscription_status(session_id, str(request.user.id))
+                    return Response(data={"session_id": session_id})
+                else:
+                    return Response(data={"error": "Failed to create Checkout session"}, status=500)
+        return Response(data={"error": "Invalid request method"}, status=400)
+
 
 class ActivationLinkView(APIView):
     permission_classes = (permissions.AllowAny,)
@@ -2100,46 +2144,3 @@ class ReportViewSet(
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK, data={"data": serializer.data, "date": date})
-
-
-@api_view(["post"])
-@permission_classes([permissions.IsAuthenticated])
-def create_checkout_session(request):
-    if request.method == "POST":
-        SUCCESS_URL = f"{settings.MANAGR_URL}/summaries?success=true"
-        CANCEL_URL = f"{settings.MANAGR_URL}/summaries?success=false"
-        quantity = request.data.get("quantity")
-        # You may customize the following parameters based on your needs
-        session_data = {
-            "payment_method_types": ["card"],
-            "line_items": [
-                {
-                    "price": settings.STRIPE_PRICE_ID,
-                    "quantity": quantity,
-                }
-            ],
-            "mode": "subscription",
-            "success_url": SUCCESS_URL,
-            "cancel_url": CANCEL_URL,
-            "customer_email": request.user.email,
-            "meta_data": {"email": request.user.email},
-        }
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {settings.STRIPE_API_KEY}",
-        }
-        with Variable_Client() as client:
-            r = client.post(
-                "https://api.stripe.com/v1/checkout/sessions",
-                data=json.dumps(session_data),
-                headers=headers,
-            )
-            if r.status_code == 200:
-                data = r.json()
-                session_id = data.get("id")
-                emit_process_check_subscription_status(session_id, str(request.user.id))
-                return Response({"session_id": session_id})
-            else:
-                return Response({"error": "Failed to create Checkout session"}, status=500)
-    return Response({"error": "Invalid request method"}, status=400)
