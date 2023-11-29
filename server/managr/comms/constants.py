@@ -90,7 +90,7 @@ DEFAULT_ARTICLE_INSTRUCTIONS = (
     lambda search: f"*Context: \n Sentiment: \n Impact: as it pertains to {search}.* Output can not exceed 400 characters"
 )
 DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS = (
-    lambda search: f"Summary: summarize the article and its relation to any of the terms in this boolean search in under 250 characters. \n Sentiment: what is the sentiment of any of the boolean search terms within the article, keep under 200 characters"
+    lambda boolean: f"Summary: summarize the article and its relation to any of these terms {boolean} in under 250 characters. \n Sentiment: what is the sentiment of any of these terms {boolean} within the article, keep under 200 characters"
 )
 
 
@@ -156,3 +156,16 @@ DO_NOT_TRACK_LIST = [
 
 
 DO_NOT_INCLUDE_WORDS = ["photos", "sex", "review"]
+
+EXCLUDE_DOMAINS = [
+    "globenewswire.com",
+    "marketscreener.com",
+    "zacjohnson.com",
+    "allafrica.com",
+    "prnewswire.com",
+    "prnewswire.co.uk",
+    "gov.uk",
+    "pulse.ug",
+    "timesofindia.indiatimes.com",
+    "ibtimes.com.au",
+]
