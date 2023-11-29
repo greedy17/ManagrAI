@@ -1982,12 +1982,14 @@ def _send_activation_email(user_id):
 def _process_check_subscription_status(session_id, user_id):
     user = User.objects.get(id=user_id)
     url = core_consts.STRIPE_API_BASE_URL + core_consts.STRIPE_CHECKOUT_SESSION + f"/{session_id}"
+    adapter = StripeAdapter(**{"user": user})
     while True:
         try:
             with Variable_Client() as client:
-                res = client.get(url, headers=core_consts.STRIPE_HEADERS)
-                res = StripeAdapter._handle_response(res)
-
+                res = client.get(
+                    url, headers={"Authorization": f"Bearer {settings.STRIPE_API_KEY}"}
+                )
+                res = adapter._handle_response(response=res)
             if res["payment_status"] == "paid":
                 sub_id = res["subscription"]
                 user.private_meta_data["stripe_sub_id"] = sub_id

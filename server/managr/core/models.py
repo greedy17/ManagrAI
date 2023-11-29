@@ -900,7 +900,7 @@ class StripeAdapter:
             None
 
     @staticmethod
-    def _handle_response(self, response, fn_name=None):
+    def _handle_response(response, fn_name=None):
         if not hasattr(response, "status_code"):
             raise ValueError
 

@@ -21,6 +21,7 @@ STRIPE_HEADERS = {
     "Content-Type": "application/x-www-form-urlencoded",
 }
 
+
 if settings.USE_OPEN_AI:
     OPEN_AI_SECRET = settings.OPEN_AI_SECRET
     OPEN_AI_HEADERS = {
