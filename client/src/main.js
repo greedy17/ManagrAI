@@ -43,6 +43,7 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { faBars, faCircleUser, faRocket, faCog, faHeadphones, faUser, faSquareXmark, faShuffle, faRotate, faFilter, faSquareCaretLeft, faBolt, faAt, faUserGroup, faUserPlus, faCalendarPlus, faStairs, faSackDollar, faSignature, faLayerGroup, faAnglesRight, } from '@fortawesome/free-solid-svg-icons'
 import { faEnvelope, faFileLines, faPaperPlane, faSquarePlus, faCalendar } from '@fortawesome/free-regular-svg-icons'
 import { faSalesforce, faHubspot } from '@fortawesome/free-brands-svg-icons'
+import { loadStripe } from '@stripe/stripe-js';
 
 
 let defaults = VueSanitize.defaults;
@@ -80,6 +81,23 @@ Vue.component('datetime', Datetime)
 Vue.component('vue-multiselect')
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 Vue.use(vmodal)
+
+let stripePromise = null;
+
+export async function getStripe() {
+  if (!stripePromise) {
+    stripePromise = loadStripe('pk_test_51OF1jYHvb6ZAgKwkO0KoHU5ot5GFfQ0WuNrUoNgckY2tyPySEUp5N7Y3Azi6wm6R1wGQfq2focNjDLy8s88va8bA009mfAMaBK');
+  }
+  return stripePromise;
+}
+
+const StripePlugin = {
+  install(VueInstance) {
+    VueInstance.prototype.$stripe = getStripe;
+  },
+};
+
+Vue.use(StripePlugin);
 
 
 /* eslint-disable no-new */

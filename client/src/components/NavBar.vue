@@ -23,14 +23,15 @@
         </header>
         <main>
           <h2 class="pricing-header">Upgrade to PRO</h2>
+          <p>This plan includes unlimited usage, email alerts, and premium support</p>
           <div class="pricing-box">
-            <h2 class="pricing-box__header">PRO</h2>
+            <!-- <h2 class="pricing-box__header">PRO</h2> -->
             <!-- <p>Self-serve plan with unlimited usage, automated email summaries, and the ability to learn your writing style.</p> -->
-            <p>Upgrade to unlimited usage and additional AI automations</p>
+            <!-- <p>Upgrade to unlimited usage and additional AI automations</p> -->
             <h1 class="pricing-price">$80 <span class="pricing-smaller-text">per user / month</span></h1>
             <div>
               <div class="pricing-list-container">
-                <h3 class="pricing-list-header">Everything in Free, plus:</h3>
+                <h3 class="pricing-list-header">Everything in free, plus:</h3>
                 <ul class="pricing-list">
                   <li>Unlimited usage</li>
                   <li>Daily email alerts</li>
@@ -117,7 +118,7 @@
           <div class="logo">
             <img @click="goHome" style="height: 28px" src="@/assets/images/logo.png" />
             <div class="beta-tag">
-              <p id="pro-free-version" @click="openPlansModal">{{ isPaid ? 'PRO' : 'FREE' }}</p>
+              <p id="pro-free-version" :class="!isPaid ? 'pointer' : ''" @click="openPlansModal">{{ isPaid ? 'PRO' : 'Upgrade Plan' }}</p>
             </div>
           </div>
         </router-link>
@@ -858,7 +859,7 @@ export default {
     async purchasePro() {
       try {
         const response = await User.api.upgrade({ quantity: this.numberOfUsers })
-        const sessionId = response.data.id;
+        const sessionId = response.session_id;
 
         const stripe = await this.$stripe();
 
@@ -1084,7 +1085,8 @@ export default {
 .pricing-container {
   width: 45vw;
   height: 80vh;
-  color: $base-gray;
+  // color: $base-gray;
+  color: $dark-black-blue;
   font-family: $thin-font-family;
   font-size: 14px;
   line-height: 24px;
@@ -1134,13 +1136,13 @@ export default {
 
 .beta-tag {
   letter-spacing: 1px;
-  margin-left: 8px;
+  margin-left: 32px;
 
   p {
     background-color: $dark-black-blue;
     color: white;
     border-radius: 8px;
-    padding: 2px 8px;
+    padding: 2px 8px 4px 8px;
     font-size: 12px;
     cursor: text;
 
@@ -1358,7 +1360,7 @@ export default {
 }
 
 .pointer {
-  cursor: pointer;
+  cursor: pointer !important;
 }
 
 .avatar {
@@ -1889,7 +1891,8 @@ a:hover {
   }
 }
 .pricing-price {
-  margin-bottom: 0.5rem;
+  // margin-top: 0.5rem;
+  // margin-bottom: 0.5rem;
 }
 .pricing-smaller-text {
   font-size: 13px;
