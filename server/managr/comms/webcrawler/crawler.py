@@ -75,7 +75,9 @@ class NewsSpider(scrapy.Spider):
         self.urls_processed = 0
 
     def parse(self, response):
-        url = response.url
+        url = response.request.url
+        if url[len(url) - 1] == "/":
+            url = url[: len(url) - 1]
         try:
             source = NewsSource.objects.get(domain=url)
         except Exception:
