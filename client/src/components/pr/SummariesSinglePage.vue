@@ -173,7 +173,7 @@
             <h4 class="regen-header-title"></h4>
             <p class="regen-header-subtitle"></p>
           </div>
-          <div class="pointer" @click="() => successModal = false"><small>X</small></div>
+          <div class="pointer" @click="closeSuccessModal"><small>X</small></div>
         </div>
         <div class="paid-body">
           <div>
@@ -192,7 +192,7 @@
             <div
               style="padding-top: 9px; padding-bottom: 9px"
               class="cancel-button"
-              @click="() => successModal = false"
+              @click="closeSuccessModal"
             >
               Close
             </div>
@@ -1787,6 +1787,11 @@ export default {
         this.contentInstructions = `Create a ${val} for XXX, newsjacking this article`
         // this.setArticlePitchContent(url,sum)
       }
+    },
+    closeSuccessModal() {
+      this.$router.push({name: 'PRSummaries'})
+      this.$router.go()
+      this.successModal = false
     },
     setPitchContent() {
       let content = {
