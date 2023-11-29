@@ -129,6 +129,7 @@ class PRSearchViewSet(
                         )
                     r = open_ai_exceptions._handle_response(r)
                     query_input = r.get("choices")[0].get("message").get("content")
+                    print(query_input)
                     news_res = Search.get_clips(query_input, date_to, date_from)
                     articles = news_res["articles"]
                 else:
@@ -216,18 +217,20 @@ class PRSearchViewSet(
             return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         url = request.data["params"]["url"]
         search = request.data["params"]["search"]
+        # search = '("Under Armour" OR "Nike" OR "Adidas" OR "Puma" OR "Reebok" OR "Fabletics" OR "Athleta") NOT "Lululemon"'
         instructions = request.data["params"]["instructions"]
         length = request.data["params"]["length"]
         has_error = False
         attempts = 1
-        token_amount = 1000
+        token_amount = 2000
         timeout = 60.0
         while True:
             try:
                 article_res = Article(url, config=generate_config())
                 article_res.download()
                 article_res.parse()
-                text = article_res.text
+                text = article_res.text.replace("\n", "")
+                print(text)
                 open_ai_url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_ARTICLE_SUMMARY(
                     datetime.now().date(), text, search, length, instructions, True
@@ -239,6 +242,7 @@ class PRSearchViewSet(
                     token_amount=token_amount,
                     top_p=0.1,
                 )
+                print(body)
                 with Variable_Client(timeout) as client:
                     r = client.post(
                         open_ai_url,
@@ -246,6 +250,7 @@ class PRSearchViewSet(
                         headers=core_consts.OPEN_AI_HEADERS,
                     )
                 r = open_ai_exceptions._handle_response(r)
+                print(r)
                 message = r.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("article_summaries")
                 task = emit_process_website_domain(url, user.organization.name)
@@ -254,7 +259,7 @@ class PRSearchViewSet(
                 logger.exception(
                     f"Retrying again due to token amount, amount currently at: {token_amount}"
                 )
-                if token_amount <= 2000:
+                if token_amount <= 2500:
                     has_error = True
 
                     message = "Token amount error"

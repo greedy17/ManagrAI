@@ -2369,7 +2369,7 @@ export default {
       } else {
         this.closeRegenModal()
         this.loading = true
-        this.changeSearch({ search: this.newSearch, template: this.newTemplate })
+        this.changeSearch({ search: this.booleanString, template: this.newTemplate })
         try {
           if (this.shouldCancel) {
             return this.stopLoading()
