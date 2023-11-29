@@ -49,7 +49,7 @@
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'PRSummaries' }" id="router-summarize">
-          <p>Summarize</p>
+          <p>News</p>
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'Pitches' }" id="router-pitch">
@@ -328,7 +328,7 @@
         </div>
 
         <router-link active-class="active" :to="{ name: 'PRSummaries' }">
-          <p class="small-margin">Digest</p>
+          <p class="small-margin">News</p>
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'Pitches' }">
