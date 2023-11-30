@@ -156,3 +156,17 @@ DO_NOT_TRACK_LIST = [
 
 
 DO_NOT_INCLUDE_WORDS = ["photos", "sex", "review"]
+
+EXCLUDE_DOMAINS = [
+    "globenewswire.com",
+    "marketscreener.com",
+    "zacjohnson.com",
+    "allafrica.com",
+    "prnewswire.com",
+    "prnewswire.co.uk",
+    "gov.uk",
+    "pulse.ug",
+    "timesofindia.indiatimes.com",
+    "indiatimes.com",
+    "ibtimes.com.au",
+]

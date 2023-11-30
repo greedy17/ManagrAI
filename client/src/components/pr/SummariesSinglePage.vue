@@ -323,7 +323,7 @@
               <div style="margin-right: -8px" class="input-row">
                 <div class="main-text">Keywords</div>
                 <input
-                  @keyup.enter="generateNewSearch"
+                  @keyup.enter="generateNewSearch(false)"
                   id="search-input"
                   class="area-input"
                   placeholder="Enter keywords to find relevant news clips..."
@@ -361,7 +361,7 @@
                 </div>
 
                 <button
-                  @click="generateNewSearch"
+                  @click="generateNewSearch(false)"
                   :disabled="!newSearch || loading || summaryLoading"
                   style="
                     margin: 0;
@@ -501,7 +501,9 @@
                   >
                     AI-generated boolean: <span :title="booleanString">{{ booleanString }}</span>
                   </p>
-                  <p v-else class="sub-text">Generate a summary for the uploaded article</p>
+                  <p v-else style="margin: 16px 0" class="sub-text">
+                    Generate a summary for the uploaded article
+                  </p>
 
                   <p v-if="selectedSearch" style="margin-right: 4px; font-size: 14px">
                     {{
@@ -523,7 +525,11 @@
                 <div
                   v-if="
                     !selectedSearch ||
-                    !((filteredArticles && filteredArticles.length) || tweets.length)
+                    !(
+                      (filteredArticles && filteredArticles.length) ||
+                      tweets.length ||
+                      addedArticles.length
+                    )
                   "
                   class="space-between"
                   style="position: relative"
@@ -532,7 +538,7 @@
                     Generate Content
                   </button>
 
-                  <div>
+                  <div v-if="mainView !== 'website'">
                     <div
                       style="margin-right: 0; right: 80px"
                       class="wrapper absolute-right-bottom circle-border white-bg dim"
@@ -684,7 +690,7 @@
                       <div class="searches-container">
                         <div
                           class="row relative"
-                          v-for="(option, i) in generateOptions"
+                          v-for="(option, i) in articleGenerateOptions"
                           :key="option.value"
                         >
                           <p @click="selectArticleOption(addedArticles[0].link, option.value, i)">
@@ -763,9 +769,9 @@
                           />
                         </div>
                         <!-- v-if="showSummaryInput" -->
+                        <!-- @focus="showPromptDropdown" -->
                         <textarea
                           style="margin: 0"
-                          @focus="showPromptDropdown"
                           class="area-input text-area-input"
                           id="instructions-text-area"
                           placeholder="Provide instructions, or just click generate..."
@@ -849,7 +855,7 @@
                         Content
                       </button>
 
-                      <div style="margin-right: -8px">
+                      <div v-if="mainView !== 'website'">
                         <div
                           style="margin-right: 0; right: 80px"
                           class="wrapper absolute-right-bottom circle-border white-bg dim"
@@ -1157,7 +1163,7 @@
                       getTimeDifferenceInMinutes(tweet.created_at)
                     }}</span>
                   </div>
-                  <button
+                  <!-- <button
                     :disabled="clipTitles.includes(tweet.id)"
                     class="tertiary-button"
                     @click="addClip(tweet)"
@@ -1165,12 +1171,6 @@
                     <img height="10px" src="@/assets/images/share.svg" alt="" />
 
                     {{ clipTitles.includes(tweet.id) ? 'Shared' : 'Share' }}
-                  </button>
-
-                  <!-- <button class="tertiary-button" @click="addClip(tweet)">
-                    <img height="10px" src="@/assets/images/share.svg" alt="" />
-
-                    Share
                   </button> -->
                 </div>
               </div>
@@ -1219,7 +1219,7 @@
                     <span class="divier-dot">.</span>
                   </div>
                   <div class="footer-icon-container">
-                    <button
+                    <!-- <button
                       :disabled="clipTitles.includes(article.title)"
                       class="tertiary-button"
                       @click="addClip(article)"
@@ -1227,7 +1227,7 @@
                       <img height="10px" src="@/assets/images/share.svg" alt="" />
 
                       {{ clipTitles.includes(article.title) ? 'Shared' : 'Share' }}
-                    </button>
+                    </button> -->
 
                     <div v-if="mainView === 'website' && addedArticles.length === 1"></div>
                     <div v-else>
@@ -1320,7 +1320,7 @@
                           <div class="searches-container">
                             <div
                               class="row relative"
-                              v-for="(option, i) in generateOptions"
+                              v-for="(option, i) in articleGenerateOptions"
                               :key="option.value"
                             >
                               <p @click="selectArticleOption(article.link, option.value, i)">
@@ -1430,7 +1430,7 @@
                     <span class="divier-dot">.</span>
                   </div>
                   <div class="footer-icon-container">
-                    <button
+                    <!-- <button
                       :disabled="clipTitles.includes(article.title)"
                       class="tertiary-button"
                       @click="addClip(article)"
@@ -1438,7 +1438,7 @@
                       <img height="10px" src="@/assets/images/share.svg" alt="" />
 
                       {{ clipTitles.includes(article.title) ? 'Shared' : 'Share' }}
-                    </button>
+                    </button> -->
 
                     <div v-if="mainView === 'website' && addedArticles.length === 1"></div>
                     <div v-else>
@@ -1531,7 +1531,7 @@
                           <div class="searches-container">
                             <div
                               class="row relative"
-                              v-for="(option, i) in generateOptions"
+                              v-for="(option, i) in articleGenerateOptions"
                               :key="option.value"
                             >
                               <p @click="selectArticleOption(article.link, option.value, i)">
@@ -1714,6 +1714,15 @@ export default {
       showGenerateDropdown: false,
       selectedOption: null,
       selectedDateTime: '',
+      articleGenerateOptions: [
+        { name: 'Press Release', value: `Press Release` },
+        { name: 'Statement', value: 'Statement' },
+        { name: `Media Pitch`, value: `Media Pitch` },
+        { name: `Blog Post`, value: `Blog Post` },
+        { name: `LinkedIn Post`, value: `LinkedIn Post` },
+        { name: `Twitter Post`, value: `Twitter Post` },
+        { name: 'Email', value: 'Email' },
+      ],
       generateOptions: [
         { name: 'Basic summary', value: 'Summarize the news' },
         {
@@ -1849,8 +1858,13 @@ export default {
         return
       }
     },
-    setCurrentAlert() {
-      this.currentAlert = this.emailAlerts.filter((alert) => alert.search === this.searchId)[0]
+    setCurrentAlert(id = null) {
+      if (id) {
+        this.currentAlert = this.emailAlerts.filter((alert) => alert.search === id)[0]
+      } else {
+        this.currentAlert = this.emailAlerts.filter((alert) => alert.search === this.searchId)[0]
+      }
+      this.getEmailAlerts()
     },
     async testEmailAlert() {
       try {
@@ -1863,6 +1877,7 @@ export default {
       }
     },
     async removeEmailAlert() {
+      console.log(this.currentAlert)
       try {
         Comms.api.removeEmailAlert({ id: this.currentAlert.id }).then((response) => {
           this.getEmailAlerts()
@@ -1896,6 +1911,9 @@ export default {
             this.currentAlertId = response.id
             this.getEmailAlerts()
             this.toggleShowNotifyBanner()
+            setTimeout(() => {
+              this.setCurrentAlert(id)
+            }, 1000)
           })
       } catch (e) {
         console.log(e)
@@ -2087,6 +2105,7 @@ export default {
       this.summary = null
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       this.clipLoading = true
+      this.showSummaryInstructions = false
       try {
         await Comms.api
           .uploadLink({
@@ -2269,7 +2288,9 @@ export default {
     },
     resetAll() {
       this.clearNewSearch()
+      this.newSearch = ''
       this.addedClips = []
+      this.filteredArticles = []
       this.metaData = { clips: [] }
       this.$emit('change-search', null)
       this.$store.dispatch('setSearch', null)
@@ -2353,7 +2374,7 @@ export default {
       this.addedClips = this.$store.state.currentReportClips
       // this.addedClips = search.meta_data.clips ? search.meta_data.clips : []
       this.mainView = search.type === 'SOCIAL_MEDIA' ? 'social' : 'news'
-      this.generateNewSearch()
+      this.generateNewSearch(true)
       this.setCurrentAlert()
     },
     changeIndex() {
@@ -2454,7 +2475,8 @@ export default {
     },
     async generateNewSearch(saved = false) {
       this.changeSearch({ search: null, template: null })
-      this.savedSearch = {}
+      this.savedSearch = null
+      this.showGenerateDropdown = false
       if (!this.isPaid && this.searchesUsed >= 10) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
@@ -2701,7 +2723,9 @@ export default {
           .then((response) => {
             this.filteredArticles = response.articles
             this.booleanString = response.string
-            this.clearNewSearch()
+            if (!saved) {
+              this.clearNewSearch()
+            }
           })
       } catch (e) {
         this.clearNewSearch()

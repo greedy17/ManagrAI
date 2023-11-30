@@ -97,10 +97,11 @@ class Search(TimeStampModel):
 
     @classmethod
     def get_clips(cls, search_boolean, date_to=False, date_from=False):
-        query = {"q": search_boolean}
+        query = {"q": search_boolean, "excludeDomains": ",".join(comms_consts.EXCLUDE_DOMAINS)}
         if date_to:
             query["to"] = date_to
             query["from"] = date_from
+        print(query)
         endpoint = comms_consts.NEW_API_EVERYTHING_QUERY_URI(urlencode(query))
         news_url = comms_consts.NEW_API_URI + "/" + endpoint
         with Variable_Client() as client:
