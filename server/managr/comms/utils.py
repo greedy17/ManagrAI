@@ -107,7 +107,7 @@ def boolean_search_to_query(search_string):
     is_negative = False
     for idx, term in enumerate(term_list):
         if idx == len(term_list) - 1:
-            current_query = Q(content__contains=term)
+            current_query = Q(content__icontains=term)
             if len(current_q_objects):
                 if current_query is not None:
                     current_q_objects.append(current_query)
@@ -142,7 +142,8 @@ def boolean_search_to_query(search_string):
             current_query = None
             is_negative = True
         else:
-            current_query = Q(content__contains=term)
+            current_query = Q(content__icontains=term)
+    print(query)
     return query
 
 

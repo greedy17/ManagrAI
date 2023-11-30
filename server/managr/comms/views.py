@@ -216,18 +216,19 @@ class PRSearchViewSet(
             return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         url = request.data["params"]["url"]
         search = request.data["params"]["search"]
+        # search = '("Under Armour" OR "Nike" OR "Adidas" OR "Puma" OR "Reebok" OR "Fabletics" OR "Athleta") NOT "Lululemon"'
         instructions = request.data["params"]["instructions"]
         length = request.data["params"]["length"]
         has_error = False
         attempts = 1
-        token_amount = 1000
+        token_amount = 2000
         timeout = 60.0
         while True:
             try:
                 article_res = Article(url, config=generate_config())
                 article_res.download()
                 article_res.parse()
-                text = article_res.text
+                text = article_res.text.replace("\n", "")
                 open_ai_url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_ARTICLE_SUMMARY(
                     datetime.now().date(), text, search, length, instructions, True
@@ -254,7 +255,7 @@ class PRSearchViewSet(
                 logger.exception(
                     f"Retrying again due to token amount, amount currently at: {token_amount}"
                 )
-                if token_amount <= 2000:
+                if token_amount <= 2500:
                     has_error = True
 
                     message = "Token amount error"
