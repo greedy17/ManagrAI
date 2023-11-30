@@ -167,5 +167,6 @@ EXCLUDE_DOMAINS = [
     "gov.uk",
     "pulse.ug",
     "timesofindia.indiatimes.com",
+    "indiatimes.com",
     "ibtimes.com.au",
 ]

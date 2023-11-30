@@ -185,13 +185,13 @@
         <div class="input-row">
           <div class="main-text">
             <img src="@/assets/images/a.svg" height="12px" alt="" />
-            Word Count
+            Words
           </div>
 
           <input
             :disabled="loading"
             class="area-input"
-            placeholder="Word count..."
+            placeholder="Provide word count..."
             v-model="characters"
             type="number"
             max="1500"
