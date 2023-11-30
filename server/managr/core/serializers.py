@@ -92,6 +92,16 @@ class UserClientSerializer(serializers.ModelSerializer):
             "writing_styles_ref",
         )
 
+    read_only_fields = (
+        "email",
+        "organization",
+        "is_active",
+        "is_invited",
+        "full_name",
+        "is_admin",
+        "is_superuser",
+    )
+
     def get_activation_link(self, instance):
         return instance.activation_link
 

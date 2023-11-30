@@ -169,4 +169,7 @@ EXCLUDE_DOMAINS = [
     "timesofindia.indiatimes.com",
     "indiatimes.com",
     "ibtimes.com.au",
+    "etfdailynews.com",
+    "dealnews.com",
+    "slickdeals.net",
 ]

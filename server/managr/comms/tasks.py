@@ -399,7 +399,7 @@ def _send_news_summary(news_alert_id):
             "website_url": f"{settings.MANAGR_URL}/login",
         }
         send_html_email(
-            f"Managr {alert.search.name} Summary",
+            f"Managr {alert.search.name} Digest",
             "core/email-templates/news-email.html",
             settings.DEFAULT_FROM_EMAIL,
             [alert.user.email],

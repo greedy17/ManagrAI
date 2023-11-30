@@ -235,8 +235,11 @@ def normalize_article_data(api_data, article_models):
 def create_and_upload_csv(data):
     file_name = "content_data.csv"
     s3 = boto3.client("s3")
+    location = "staging" if settings.IN_STAGING else "prod"
+    key = f"{location}/{file_name}"
+
     try:
-        s3.head_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=file_name)
+        s3.head_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=key)
     except ClientError as e:
         if e.response["Error"]["Code"] == "404":
             with open(file_name, "w", newline="") as csv_file:
@@ -251,17 +254,16 @@ def create_and_upload_csv(data):
                         "Positive/Negative",
                     ]
                 )
-                writer.writerow(data)
-            s3.upload_file(file_name, settings.AWS_STORAGE_BUCKET_NAME, file_name)
+            s3.upload_file(file_name, settings.AWS_STORAGE_BUCKET_NAME, key)
         else:
-            raise Exception
-    except Exception as e:
-        print(str(e))
+            raise  # Re-raise the caught exception
     else:
-        with open(file_name, "a", newline="") as csv_file:
+        mode = "a" if data[0] != "Organization Name" else "w"
+        with open(file_name, mode, newline="") as csv_file:
             writer = csv.writer(csv_file)
             writer.writerow(data)
-        s3.upload_file(file_name, settings.AWS_STORAGE_BUCKET_NAME, file_name)
+
+        s3.upload_file(file_name, settings.AWS_STORAGE_BUCKET_NAME, key)
 
 
 def append_data_to_daily_file(data):
