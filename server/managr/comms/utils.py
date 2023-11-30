@@ -234,7 +234,7 @@ def normalize_article_data(api_data, article_models):
 
 def create_and_upload_csv(data):
     file_name = "content_data.csv"
-
+    s3 = boto3.client("s3")
     try:
         s3.head_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=file_name)
     except ClientError as e:
@@ -252,19 +252,15 @@ def create_and_upload_csv(data):
                     ]
                 )
                 writer.writerow(data)
-
             s3.upload_file(file_name, settings.AWS_STORAGE_BUCKET_NAME, file_name)
         else:
             raise Exception
     except Exception as e:
         print(str(e))
     else:
-        # Object exists, just write the data
         with open(file_name, "a", newline="") as csv_file:
             writer = csv.writer(csv_file)
             writer.writerow(data)
-
-        # Upload the file to S3
         s3.upload_file(file_name, settings.AWS_STORAGE_BUCKET_NAME, file_name)
 
 
