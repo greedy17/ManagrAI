@@ -389,7 +389,7 @@ class NewsSource(TimeStampModel):
             active_sources = active_sources.filter(article_link_regex__isnull=False)
         # filters sources that were just added and don't have scrape data yet
         elif not scrape_ready and new:
-            active_sources = active_sources.filter(last_scraped__isnull=True)
+            active_sources = active_sources.filter(article_link_attribute__isnull=True)
         source_list = [source.domain for source in active_sources]
         return source_list
 

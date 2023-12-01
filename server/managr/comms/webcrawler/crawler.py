@@ -83,7 +83,7 @@ class NewsSpider(scrapy.Spider):
         except Exception:
             logger.exception(url)
             return
-        if source.last_scraped and source.article_link_attribute is not None:
+        if source.article_link_attribute is not None:
             regex = source.create_search_regex()
             article_links = response.xpath(regex)
             do_not_track_str = ",".join(comms_consts.DO_NOT_TRACK_LIST)
