@@ -355,6 +355,7 @@ class NewsSource(TimeStampModel):
     def transfer_dict(self):
         return dict(
             domain=self.domain,
+            site_name=self.site_name,
             last_scraped=str(self.last_scraped),
             access_count=self.access_count,
             article_link_selector=self.article_link_selector,
@@ -375,9 +376,16 @@ class NewsSource(TimeStampModel):
     @classmethod
     def domain_list(cls, scrape_ready=False, new=False):
         active_sources = cls.objects.filter(is_active=True)
-        if scrape_ready:
-            active_sources = active_sources.filter(article_link_selector__isnull=False)
-        elif new:
+        # filters sources that have been filled out but haven't been run yet to create the regex and scrape for the first time
+        if scrape_ready and new:
+            active_sources = active_sources.filter(
+                article_link_selector__isnull=False, article_link_regex__isnull=True
+            )
+        # filters sources that are already scrapping
+        elif scrape_ready and not new:
+            active_sources = active_sources.filter(article_link_regex__isnull=False)
+        # filters sources that were just added and don't have scrape data yet
+        elif not scrape_ready and new:
             active_sources = active_sources.filter(last_scraped__isnull=True)
         source_list = [source.domain for source in active_sources]
         return source_list

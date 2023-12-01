@@ -172,4 +172,5 @@ EXCLUDE_DOMAINS = [
     "etfdailynews.com",
     "dealnews.com",
     "slickdeals.net",
+    "prtimes.jp",
 ]
