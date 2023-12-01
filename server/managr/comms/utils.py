@@ -144,7 +144,6 @@ def boolean_search_to_query(search_string):
             is_negative = True
         else:
             current_query = Q(content__icontains=term)
-    print(query)
     return query
 
 
