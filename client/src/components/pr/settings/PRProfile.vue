@@ -1,5 +1,113 @@
 <template>
   <div class="settings">
+    <!-- deleteUserModal -->
+    <Modal v-if="deleteUserModal" class="paid-modal">
+      <div class="regen-container">
+        <div class="paid-header">
+          <div>
+            <h4 class="regen-header-title"></h4>
+            <p class="regen-header-subtitle"></p>
+          </div>
+          <div class="pointer" @click="() => deleteUserModal = false"><small>X</small></div>
+        </div>
+        <div class="paid-body">
+          <div>
+            <div class="paid-center">
+              <h3 class="paid-title">Are you sure?</h3>
+              <h5 class="regen-body-title">
+                {{ `By clicking Remove, you will be removing this person from your organization.` }}
+              </h5>
+            </div>
+            <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
+          </div>
+        </div>
+        <div class="paid-footer">
+          <!-- <div></div> -->
+          <div class="row">
+            <div
+              style="padding-top: 9px; padding-bottom: 9px"
+              class="cancel-button"
+              @click="() => deleteUserModal = false"
+            >
+              Cancel
+            </div>
+            <div class="save-button" @click="deactivateUser">Remove</div>
+          </div>
+        </div>
+      </div>
+    </Modal>
+    <!-- paidWarningModal -->
+    <Modal v-if="paidWarningModal" class="paid-modal">
+      <div class="regen-container">
+        <div class="paid-header">
+          <div>
+            <h4 class="regen-header-title"></h4>
+            <p class="regen-header-subtitle"></p>
+          </div>
+          <div class="pointer" @click="() => paidWarningModal = false"><small>X</small></div>
+        </div>
+        <div class="paid-body">
+          <div>
+            <div class="paid-center">
+              <h3 class="paid-title">Warning: Inviting more users will charge you</h3>
+              <h5 class="regen-body-title">
+                {{ `Your organization only allows ${user.organizationRef.numberOfAllowedUsers} users. If you invite more, your subscription will change, and you will be charged accordingly.` }}
+              </h5>
+            </div>
+            <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
+          </div>
+        </div>
+        <div class="paid-footer">
+          <!-- <div></div> -->
+          <div class="row">
+            <div
+              style="padding-top: 9px; padding-bottom: 9px"
+              class="cancel-button"
+              @click="() => paidWarningModal = false"
+            >
+              Cancel
+            </div>
+            <div class="save-button" @click="handleInviteNonSlack">Confirm</div>
+          </div>
+        </div>
+      </div>
+    </Modal>
+    <!-- reactivateUserModal -->
+    <Modal v-if="reactivateUserModal" class="paid-modal">
+      <div class="regen-container">
+        <div class="paid-header">
+          <div>
+            <h4 class="regen-header-title"></h4>
+            <p class="regen-header-subtitle"></p>
+          </div>
+          <div class="pointer" @click="() => reactivateUserModal = false"><small>X</small></div>
+        </div>
+        <div class="paid-body">
+          <div>
+            <div class="paid-center">
+              <h3 class="paid-title">Are you sure?</h3>
+              <h5 class="regen-body-title">
+                {{ `By clicking Confirm, you will be reactivating this person's account, and will be charged.` }}
+              </h5>
+            </div>
+            <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
+          </div>
+        </div>
+        <div class="paid-footer">
+          <!-- <div></div> -->
+          <div class="row">
+            <div
+              style="padding-top: 9px; padding-bottom: 9px"
+              class="cancel-button"
+              @click="() => reactivateUserModal = false"
+            >
+              Cancel
+            </div>
+            <div class="save-button" @click="reactivate">Confirm</div>
+          </div>
+        </div>
+      </div>
+    </Modal>
     <div>
       <!-- <h1>Settings</h1> -->
       <h1>{{ user.organizationRef.name }} - Users</h1>
@@ -39,7 +147,7 @@
           <PulseLoadingSpinnerButton
             class="primary-button"
             v-if="!activationLink"
-            @click="handleInviteNonSlack"
+            @click="aboveInviteLimit ? handleInviteNonSlack() : openPaidWarningModal()"
             text="Generate Link"
             :loading="loading"
             :disabled="!userInviteForm.field.email.value || loading"
@@ -81,7 +189,8 @@
         <div class="row margin-top margin-bottom">
           <h3 class="team-width thin-font">Name</h3>
           <h3 class="team-width thin-font">Email</h3>
-          <h3 class="team-width thin-font extra-mar-left">Invite</h3>
+          <h3 class="less-team-width thin-font extra-mar-left">Invite</h3>
+          <h3 v-if="user.isAdmin" class="less-team-width thin-font">Actions</h3>
         </div>
 
         <div class="users-container">
@@ -89,11 +198,12 @@
             <div class="team-width">{{ user.fullName.trim() ? user.fullName : '[NO NAME]' }}</div>
             <div class="team-width">{{ user.email }}</div>
             <div class="team-width">{{  }}</div>
+            <div class="team-width">{{  }}</div>
           </div>
   
           <div v-for="teamUser in team.list" :key="teamUser.id" class="row smaller-text">
             <div v-if="teamUser.id !== user.id" class="team-width thin-font">
-              {{ teamUser.fullName.trim() ? teamUser.fullName : '[NO NAME]' }}
+              {{ !teamUser.isActive && teamUser.fullName.trim() ? '[INACTIVE]' : (teamUser.fullName.trim() ? teamUser.fullName : '[NO NAME]') }}
             </div>
             <div v-if="teamUser.id !== user.id" class="team-width thin-font">
               {{ teamUser.email }}
@@ -106,7 +216,22 @@
               <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
             </div>
             <div v-else-if="teamUser.id !== user.id" class="invite-link-button-container-nothing wrapper thin-font"></div>
-            <!-- {{ teamUser.activationLinkRef }} hi -->
+            <div v-if="user.isAdmin">
+              <div v-if="(teamUser.id !== user.id) && teamUser.isActive" @click="openDeleteModal(teamUser)" class="invite-link-button-container wrapper thin-font">
+                <img 
+                  src="@/assets/images/trash.svg"
+                  class="invite-link-button"
+                />
+                <div style="margin-left: -20px" class="tooltip">{{ 'Remove' }}</div>
+              </div>
+              <!-- <div v-else-if="teamUser.id !== user.id && !teamUser.isActive" @click="openReactivateeModal(teamUser)" class="invite-link-button-container wrapper thin-font">
+                <img 
+                  src="@/assets/images/arrow-small-right.svg"
+                  class="invite-link-button"
+                />
+                <div style="margin-left: -20px" class="tooltip">{{ 'Reactivate' }}</div>
+              </div> -->
+            </div>
           </div>
         </div>
       </div>
@@ -165,6 +290,7 @@ export default {
   components: {
     FormField,
     PulseLoadingSpinnerButton,
+    Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   data() {
@@ -192,6 +318,11 @@ export default {
       loading: false,
       userInviteForm: {},
       activationLink: '',
+      deleteUserModal: false,
+      deleteUserId: null,
+      reactivateUserModal: false,
+      reactivateUserId: null,
+      paidWarningModal: false,
     }
   },
   async created() {
@@ -232,6 +363,17 @@ export default {
   methods: {
     test(log) {
       console.log('log', log)
+    },
+    openPaidWarningModal() {
+      this.paidWarningModal = true
+    },
+    openReactivateeModal(user) {
+      this.reactivateUserModal = true
+      this.reactivateUser = user
+    },
+    openDeleteModal(user) {
+      this.deleteUserModal = true
+      this.deleteUserId = user.id
     },
     async copyUserLink(link) {
       try {
@@ -303,6 +445,62 @@ export default {
       this.selectedLevel = null
       this.selectedTeam = null
       this.selectedTeamLead = false
+    },
+    async reactivate() {
+      try {
+        const data = {...this.reactivateUser, isActive: true}
+        console.log('data', data)
+        const res = await User.api.update(this.reactivateUser.id, data)
+        console.log('reactivate res', res)
+        this.team.refresh()
+      } catch(e) {
+        console.log('Error in reactivate: ', e)
+        this.$toast('Something went wrong. Please try again later', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.reactivateUserModal = false
+      }
+    },
+    async deactivateUser() {
+      try {
+        const res = await User.api.uninvite(this.deleteUserId)
+        console.log('deactivate res', res)
+        this.team.refresh()
+      } catch(e) {
+        console.log('Error in deactivateUser: ', e)
+        this.$toast('Something went wrong. Please try again later', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.deleteUserModal = false
+      }
+    },
+    async deleteUser() {
+      try {
+        const res = await User.api.uninvite(this.deleteUserId)
+        console.log('delete res', res)
+        this.team.refresh()
+      } catch(e) {
+        console.log('Error in deleteUser: ', e)
+        this.$toast('Something went wrong. Please try again later', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.deleteUserModal = false
+      }
     },
     async handleInvite() {
       // reset component data when submission begins, in case of prior request
@@ -380,6 +578,7 @@ export default {
     async handleInviteNonSlack() {
       // reset component data when submission begins, in case of prior request
       this.loading = true
+      this.paidWarningModal = false
       this.userInviteForm.validate()
       if (!this.userInviteForm.isValid) {
         this.loading = false
@@ -409,6 +608,7 @@ export default {
         this.disableInput = true
       } catch (e) {
         if (e.response.status === 426) {
+          // Upgrade modal here
           this.$toast('Max users reached, upgrade to add more', {
             timeout: 2500,
             position: 'top-left',
@@ -465,6 +665,12 @@ export default {
     isAdmin() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return this.$store.state.user.isAdmin
+    },
+    activeUsers() {
+      return this.team.list.filter(user => user.isActive)
+    },
+    aboveInviteLimit() {
+      return this.activeUsers >= this.user.organizationRef.numberOfAllowedUsers
     },
   },
 }
@@ -586,6 +792,14 @@ h3 {
 
 .team-width {
   width: 10rem;
+  padding: 8px 0;
+  overflow-x: auto;
+  @media only screen and (max-width: 600px) {
+    width: 4.5rem;
+  }
+}
+.less-team-width {
+  width: 5rem;
   padding: 8px 0;
   overflow-x: auto;
   @media only screen and (max-width: 600px) {
@@ -780,5 +994,79 @@ h3 {
 .users-container {
   overflow-y: auto;
   height: 64vh;
+}
+.paid-modal {
+  margin-top: 132px;
+  font-family: $thin-font-family;
+}
+.regen-container {
+  width: 500px;
+  max-height: 500px;
+  position: relative;
+  overflow-y: scroll;
+  @media only screen and (max-width: 600px) {
+    width: 100%;
+  }
+}
+.paid-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.paid-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.regen-header-title {
+  margin: 0.25rem 0;
+}
+.regen-header-subtitle {
+  font-size: 12px;
+  color: $light-gray-blue;
+  margin: 0.5rem 0;
+}
+.regen-body {
+  margin: 0.5rem 0;
+  border-bottom: 1px solid $soft-gray;
+}
+.paid-body {
+  margin: 0.5rem 0;
+}
+.regen-body-title {
+  margin: 0 0 0 0;
+}
+.paid-title {
+  margin-top: 0;
+  margin-bottom: 2rem;
+}
+.paid-footer {
+  position: sticky;
+  background: white;
+  width: 100%;
+  bottom: 0;
+  padding-top: 16px;
+  padding-bottom: 8px;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cancel-button {
+  @include gray-text-button();
+  &:hover {
+    scale: 1;
+    opacity: 0.7;
+    box-shadow: none;
+  }
+}
+.save-button {
+  @include dark-blue-button();
+  &:hover {
+    scale: 1;
+    opacity: 0.9;
+    box-shadow: none;
+  }
+  margin-left: 0.5rem;
 }
 </style>

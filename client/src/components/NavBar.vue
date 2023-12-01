@@ -620,6 +620,7 @@ export default {
       mobileMenuOpen: false,
       hamburgerClicked: false,
       plansModal: false,
+      team: CollectionManager.create({ ModelClass: User }),
       numberOfUsers: 5,
       amountList: [
           1,
@@ -725,9 +726,12 @@ export default {
       ],
     }
   },
-  created() {
+  async created() {
     this.getSearches()
     this.getPitches()
+    await this.team.refresh()
+    this.amountList = this.amountList.filter(item => item >= this.activeUsers.length)
+    this.numberOfUsers = this.activeUsers.length
   },
   directives: {
     clickOutsideMobileNav: {
@@ -932,6 +936,9 @@ export default {
   computed: {
     unfilteredSearches() {
       return this.$store.state.allSearches
+    },
+    activeUsers() {
+      return this.team.list.filter(user => user.isActive)
     },
     unfilteredPitches() {
       return this.$store.state.allPitches
