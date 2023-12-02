@@ -31,8 +31,8 @@ XPATH_STRING_OBJ = {
         "//meta[contains(translate(@property, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'modified') or contains(translate(@property, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'published')]/@content",
         "//meta[contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'modified') or contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'published')]/@content",
         "//time/@datetime | //time/@dateTime",
-        "//meta[contains(@name, '-date')]/@content",
-        "//*[contains(@class, 'date')]/text()",
+        "//meta[contains(@name, 'date')]/@content",
+        "(//*[contains(translate(@class, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'date')])[last()]//text()",
         f"//body//*[not(self::script) and contains(text(),', {datetime.datetime.now().year}')]",
         "//body//*[not(self::script) and contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'publish')]/text()",
     ],
@@ -41,6 +41,7 @@ XPATH_STRING_OBJ = {
 
 
 def data_cleaner(data):
+    print(data)
     try:
         content = data.pop("content")
         date = data.pop("publish_date")

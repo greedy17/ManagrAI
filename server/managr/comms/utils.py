@@ -39,18 +39,20 @@ def get_domain(url):
 
 
 def extract_date_from_text(text):
-    pattern = r"([A-Za-z]+(?: \d{1,2},)? \d{4})"
-    match = re.search(pattern, text)
-    if match:
-        date_str = match.group(1)
-        try:
-            date_obj = datetime.strptime(date_str, "%B %d, %Y")
-        except ValueError:
-            # If the full month name format fails, try with the abbreviated format
-            date_obj = datetime.strptime(date_str, "%b %d, %Y")
-        return str(date_obj)
-    else:
-        return None
+    text = text.replace("\n", "").strip()
+    patterns = [r"(\d{1,2} [A-Za-z]+ \d{4})", r"([A-Za-z]+(?: \d{1,2},)? \d{4})"]
+    strptime_formats = ["%d %B %Y", "%B %d, %Y", "%b %d, %Y"]
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            date_str = match.group(1)
+            for format in strptime_formats:
+                try:
+                    date_obj = datetime.strptime(date_str, format)
+                except ValueError:
+                    continue
+                return str(date_obj)
+    return None
 
 
 def generate_config():
