@@ -41,7 +41,6 @@ XPATH_STRING_OBJ = {
 
 
 def data_cleaner(data):
-    print(data)
     try:
         content = data.pop("content")
         date = data.pop("publish_date")
