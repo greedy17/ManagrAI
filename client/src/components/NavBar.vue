@@ -49,14 +49,14 @@
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'PRSummaries' }" id="router-summarize">
-          <p>News</p>
+          <p>Search</p>
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'Pitches' }" id="router-pitch">
           <p>Pitch</p>
         </router-link>
 
-        <router-link
+        <!-- <router-link
           v-if="!hasZoomIntegration"
           :to="{ name: 'PRIntegrations' }"
           id="router-transcribe1"
@@ -74,7 +74,7 @@
           id="router-transcribe2"
         >
           <p>Transcribe</p>
-        </router-link>
+        </router-link> -->
 
         <!-- <a @mouseenter="textSoonOn" @mouseleave="textSoonOff">{{ soonText }}</a> -->
 
@@ -328,14 +328,14 @@
         </div>
 
         <router-link active-class="active" :to="{ name: 'PRSummaries' }">
-          <p class="small-margin">News</p>
+          <p class="small-margin">Search</p>
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'Pitches' }">
           <p class="small-margin">Pitch</p>
         </router-link>
 
-        <div v-if="!hasZoomIntegration" :to="{ name: 'PRIntegrations' }">
+        <!-- <div v-if="!hasZoomIntegration" :to="{ name: 'PRIntegrations' }">
           <div class="wrapper-mobile">
             <p class="small-margin light-gray-blue">Transcribe</p>
             <div style="margin-left: -20px" class="tooltip-mobile">Connect Zoom</div>
@@ -344,7 +344,7 @@
 
         <router-link v-else active-class="active" :to="{ name: 'PRTranscripts' }">
           <p class="small-margin">Transcribe</p>
-        </router-link>
+        </router-link> -->
 
         <div class="relative mar-left">
           <div
