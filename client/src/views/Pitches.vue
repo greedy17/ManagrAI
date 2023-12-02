@@ -151,7 +151,7 @@
 
               <div @click="toggleStyleDropdown" class="drop-text pointer">
                 <p class="ellipsis-text" style="margin: 0">
-                  {{ writingStyleTitle ? writingStyleTitle : 'style' }}
+                  {{ writingStyleTitle ? writingStyleTitle : 'Style' }}
                 </p>
                 <img
                   v-if="!showStyleDropdown"
@@ -175,13 +175,13 @@
                     <p
                       style="
                         margin-bottom: 0;
-                        padding-bottom: 0;
+                        padding-bottom: 8px;
                         cursor: text;
                         color: #2f4656;
                         font-size: 15px;
                       "
                     >
-                      Select or add style:
+                      Select writing style
                     </p>
                     <div
                       @mouseenter="setIndex(i)"
@@ -190,8 +190,9 @@
                       class="dropdown-item"
                       v-for="(style, i) in userWritingStyles"
                       :key="i"
+                      style="padding: 4px 0"
                     >
-                      <p style="padding: 0 16px">
+                      <p style="padding: 0 16px; margin: 0">
                         {{ style.title }}
                       </p>
 
@@ -254,16 +255,17 @@
                   src="@/assets/images/paper-plane-top.svg"
                   height="14px"
                   alt=""
+                  class="grow"
                 />
               </button>
             </div>
             <div v-if="showingInstructionsDropdown" class="dropdown">
-              <small style="padding: 8px 0" class="gray-text">Content length:</small>
+              <small style="padding: 8px 0" class="gray-text">Word count:</small>
               <div style="padding: 0 0 4px 0; margin-bottom: 8px">
                 <input
                   :disabled="loading"
                   class="number-input"
-                  placeholder="Provide word count (Optional)..."
+                  placeholder="Optional..."
                   v-model="characters"
                   type="number"
                   max="1500"
@@ -1218,7 +1220,7 @@ export default {
   color: $light-gray-blue;
   margin: 8px 0 16px 0;
   font-size: 14px;
-  font-weight: bold;
+
   font-family: $thin-font-family;
   span {
     font-weight: normal;
@@ -1337,7 +1339,7 @@ export default {
   font-weight: 400;
   margin-top: 8px;
   border-radius: 4px;
-  width: 200px;
+  width: 80px;
 }
 
 .number-input::placeholder {
@@ -1434,6 +1436,10 @@ export default {
     margin-left: 4px;
     filter: invert(40%);
   }
+}
+
+.drop-text:hover {
+  opacity: 0.7;
 }
 
 footer {
@@ -2134,5 +2140,14 @@ footer {
   p:hover {
     color: $dark-black-blue;
   }
+}
+
+.grow:hover {
+  transform: scale(1.2);
+  box-shadow: 2px 4px 32px rgba($color: $black, $alpha: 0.3);
+  opacity: 0.7;
+}
+.grow {
+  transition: all 0.2s;
 }
 </style>

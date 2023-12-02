@@ -377,6 +377,7 @@
                     src="@/assets/images/paper-plane-top.svg"
                     height="14px"
                     alt=""
+                    class="grow"
                   />
                 </button>
               </div>
@@ -460,6 +461,7 @@
                     src="@/assets/images/paper-plane-top.svg"
                     height="14px"
                     alt=""
+                    class="grow"
                   />
                 </button>
               </div>
@@ -752,7 +754,9 @@
                     >
                       <div class="input-row">
                         <div @click="toggleGenerateDropdown" class="main-text pointer">
-                          <p style="margin-left: -10px; font-size: 12px" class="">Instructions</p>
+                          <p class="shadow-hover" style="margin-left: -10px; font-size: 12px">
+                            Instructions
+                          </p>
                           <img
                             v-if="!showGenerateDropdown"
                             src="@/assets/images/downArrow.svg"
@@ -4590,6 +4594,24 @@ header {
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
+}
+
+.grow:hover {
+  transform: scale(1.2);
+  box-shadow: 2px 4px 32px rgba($color: $black, $alpha: 0.3);
+  opacity: 0.7;
+}
+.grow {
+  transition: all 0.2s;
+}
+
+.shadow-hover:hover {
+  // transform: scale(1.01);
+  // padding: 2px;
+  opacity: 0.5;
+}
+.shadow-hover {
+  transition: all 0.1s;
 }
 
 .ellipsis-text-small {
