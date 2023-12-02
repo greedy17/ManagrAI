@@ -27,10 +27,10 @@ XPATH_STRING_OBJ = {
     ],
     "description": ["//meta[contains(@property, 'description')]/@content"],
     "publish_date": [
-        "//time/@datetime | //time/@dateTime",
         "//meta[contains(@itemprop,'date')]/@content",
         "//meta[contains(translate(@property, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'modified') or contains(translate(@property, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'published')]/@content",
         "//meta[contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'modified') or contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'published')]/@content",
+        "//time/@datetime | //time/@dateTime",
         "//meta[contains(@name, '-date')]/@content",
         "//*[contains(@class, 'date')]/text()",
         f"//body//*[not(self::script) and contains(text(),', {datetime.datetime.now().year}')]",
@@ -83,7 +83,7 @@ class NewsSpider(scrapy.Spider):
         except Exception:
             logger.exception(url)
             return
-        if source.last_scraped and source.article_link_attribute is not None:
+        if source.article_link_attribute is not None:
             regex = source.create_search_regex()
             article_links = response.xpath(regex)
             do_not_track_str = ",".join(comms_consts.DO_NOT_TRACK_LIST)
@@ -163,8 +163,26 @@ class NewsSpider(scrapy.Spider):
         return
 
     def process_new_url(self, source, response):
+        exclude_classes_list = ["menu", "-nav"]
+        exclude_classes = " or ".join(
+            f"contains(@class, '{word}')" for word in exclude_classes_list
+        )
+        exclude_word_list = [
+            "/about",
+            "/terms",
+            "-policy",
+            "/privacy",
+            "/careers",
+            "/accessibility",
+            "/category",
+        ]
+        exclude_words = " or ".join(f"contains(@href, '{word}')" for word in exclude_word_list)
         anchor_tags = response.xpath(
-            "//body//a[starts-with(@href, '/') or starts-with(@href, 'https')]"
+            "//body//a["
+            "(starts-with(@href, '/') or starts-with(@href, 'https'))"
+            f" and not({exclude_classes})"
+            f" and not({exclude_words})"
+            "]"
         )
         site_name = response.xpath("//meta[contains(@property, 'site_name')]/@content").get()
         scrape_dict = {}

@@ -14,6 +14,7 @@ from urllib.parse import urlparse, urlunparse
 from collections import OrderedDict
 from .exceptions import _handle_response
 from .models import NewsSource
+from botocore.exceptions import ClientError
 
 s3 = boto3.client("s3")
 
@@ -143,7 +144,6 @@ def boolean_search_to_query(search_string):
             is_negative = True
         else:
             current_query = Q(content__icontains=term)
-    print(query)
     return query
 
 
@@ -233,25 +233,36 @@ def normalize_article_data(api_data, article_models):
 
 def create_and_upload_csv(data):
     file_name = "content_data.csv"
+    s3 = boto3.client("s3")
+    location = "staging" if settings.IN_STAGING else "prod"
+    key = f"{location}/{file_name}"
 
-    with open(file_name, "w", newline="") as csv_file:
-        writer = csv.writer(csv_file)
-        if s3.head_object(
-            Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=file_name, DefaultResponseHeaders={}
-        ):
-            writer.writerow(
-                [
-                    "Organization Name",
-                    "User Email",
-                    "Type",
-                    "Content",
-                    "Action Integer",
-                    "Postiive/Negative",
-                ]
-            )
-        writer.writerow(data)
+    try:
+        s3.head_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=key)
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "404":
+            with open(file_name, "w", newline="") as csv_file:
+                writer = csv.writer(csv_file)
+                writer.writerow(
+                    [
+                        "Organization Name",
+                        "User Email",
+                        "Type",
+                        "Content",
+                        "Action Integer",
+                        "Positive/Negative",
+                    ]
+                )
+            s3.upload_file(file_name, settings.AWS_STORAGE_BUCKET_NAME, key)
+        else:
+            raise  # Re-raise the caught exception
+    else:
+        mode = "a" if data[0] != "Organization Name" else "w"
+        with open(file_name, mode, newline="") as csv_file:
+            writer = csv.writer(csv_file)
+            writer.writerow(data)
 
-    s3.upload_file(file_name, settings.AWS_STORAGE_BUCKET_NAME, file_name)
+        s3.upload_file(file_name, settings.AWS_STORAGE_BUCKET_NAME, key)
 
 
 def append_data_to_daily_file(data):
