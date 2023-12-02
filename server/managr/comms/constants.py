@@ -155,7 +155,7 @@ DO_NOT_TRACK_LIST = [
 ]
 
 
-DO_NOT_INCLUDE_WORDS = ["photos", "sex", "review"]
+DO_NOT_INCLUDE_WORDS = ["photos", "sex", "review", "linkedin"]
 
 EXCLUDE_DOMAINS = [
     "globenewswire.com",
@@ -172,4 +172,5 @@ EXCLUDE_DOMAINS = [
     "etfdailynews.com",
     "dealnews.com",
     "slickdeals.net",
+    "prtimes.jp",
 ]

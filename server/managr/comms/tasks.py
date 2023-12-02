@@ -399,7 +399,7 @@ def _send_news_summary(news_alert_id):
             "website_url": f"{settings.MANAGR_URL}/login",
         }
         send_html_email(
-            f"Managr {alert.search.name} Digest",
+            f"Managr Digest: {alert.search.name}",
             "core/email-templates/news-email.html",
             settings.DEFAULT_FROM_EMAIL,
             [alert.user.email],
@@ -420,7 +420,7 @@ def _share_client_summary(summary, clips, user_email):
         "website_url": f"{settings.MANAGR_URL}/login",
     }
     send_html_email(
-        f"Managr Summary",
+        f"Managr Digest",
         "core/email-templates/news-email.html",
         settings.DEFAULT_FROM_EMAIL,
         [user_email],
