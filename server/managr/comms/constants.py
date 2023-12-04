@@ -32,7 +32,7 @@ NEW_API_EVERYTHING_QUERY_URI = (
 )
 
 NEW_API_EVERYTHING_DATE_URI = (
-    lambda date_from, date_to: f"everything?from={date_from}&to={date_to}&language=en&sortBy=publishedAt&pageSize=20"
+    lambda date_from, date_to: f"everything?from={date_from}&to={date_to}&language=en&sortBy=publishedAt&pageSize=40"
 )
 
 SEARCH_TYPE_CHOICES = (("NEWS", "News"), ("SOCIAL_MEDIA", "Social Media"), ("MIXED", "Mixed"))
@@ -173,4 +173,7 @@ EXCLUDE_DOMAINS = [
     "dealnews.com",
     "slickdeals.net",
     "prtimes.jp",
+    "doctorofcredit.com",
+    "ozbargain.com.au",
+    "politicalwire.com",
 ]

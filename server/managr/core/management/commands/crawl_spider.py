@@ -30,6 +30,7 @@ class Command(BaseCommand):
             scrape_ready = True if options["active"] else False
             new = True if options["new"] else False
             urls = NewsSource.domain_list(scrape_ready, new)
+        first_only = True if (options["active"] and options["new"]) else False
         process = CrawlerProcess()
-        process.crawl(NewsSpider, start_urls=urls)
+        process.crawl(NewsSpider, start_urls=urls, first_only=first_only)
         process.start()

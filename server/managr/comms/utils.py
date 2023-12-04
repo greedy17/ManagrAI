@@ -229,7 +229,7 @@ def normalize_article_data(api_data, article_models):
     for obj in sorted_arr:
         if obj["title"] not in ordered_dict.keys():
             ordered_dict[obj["title"]] = obj
-    duplicates_removed_list = list(ordered_dict.values())[:40]
+    duplicates_removed_list = list(ordered_dict.values())[:50]
     return duplicates_removed_list
 
 
