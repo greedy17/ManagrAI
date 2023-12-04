@@ -372,12 +372,21 @@
                   id="generate-summary"
                 >
                   <img
-                    :class="{ faded: !newSearch || loading || summaryLoading }"
+                    v-if="!newSearch || loading || summaryLoading"
                     style="margin: 0"
                     src="@/assets/images/paper-plane-top.svg"
                     height="14px"
                     alt=""
-                    class="grow"
+                    class="faded"
+                  />
+
+                  <img
+                    v-else
+                    style="margin: 0"
+                    src="@/assets/images/paper-plane-full.svg"
+                    height="13px"
+                    alt=""
+                    class="grow filtered-blue"
                   />
                 </button>
               </div>
@@ -456,12 +465,21 @@
                   id="generate-summary"
                 >
                   <img
-                    :class="{ faded: !uploadLink || clipLoading }"
+                    v-if="!uploadLink || clipLoading"
                     style="margin: 0"
                     src="@/assets/images/paper-plane-top.svg"
                     height="14px"
                     alt=""
-                    class="grow"
+                    class="faded"
+                  />
+
+                  <img
+                    v-else
+                    style="margin: 0"
+                    src="@/assets/images/paper-plane-full.svg"
+                    height="13px"
+                    alt=""
+                    class="grow filtered-blue"
                   />
                 </button>
               </div>
@@ -666,7 +684,7 @@
                     </button>
                   </div>
 
-                  <div v-if="mainView === 'website' && addedArticles.length === 1" class="relative">
+                  <!-- <div v-if="mainView === 'website' && addedArticles.length === 1" class="relative">
                     <div
                       @click="toggleGenerateDropdown"
                       class="row pointer dropdownBorder gen-content-button"
@@ -709,7 +727,7 @@
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </div> -->
                 </div>
 
                 <div
@@ -795,7 +813,7 @@
 
                         <button
                           @click="summarizing = true"
-                          v-if="mainView !== 'website' && summary"
+                          v-if="summary"
                           class="secondary-button"
                           style="margin-right: 0"
                         >
@@ -970,7 +988,7 @@
                     class="wrapper absolute-right circle-border white-bg"
                     style="margin-right: 0; right: 48px"
                     :disabled="sentSummaryEmail"
-                    v-if="mainView !== 'social' && summarizing"
+                    v-if="mainView !== 'social' && mainView !== 'website' && summarizing"
                   >
                     <img
                       v-if="sendingSummaryEmail"
@@ -1401,7 +1419,7 @@
                   <div class="card-col">
                     <div class="card-top-left">
                       <!-- <img :src="article.icon" /> -->
-                      <span>{{ article.source.name }}</span>
+                      <span>{{ article.source }}</span>
                     </div>
                     <h1 class="article-title" @click="goToArticle(article.link)">
                       {{ article.title ? article.title : 'Error uploading article' }}
@@ -2549,6 +2567,8 @@ export default {
         this.summaryLoading = false
       } catch (e) {
         console.log(e)
+      } finally {
+        this.summarizing = true
       }
     },
     async updateMetaData() {
@@ -5570,5 +5590,9 @@ input::-webkit-calendar-picker-indicator {
 input[type='date']::-webkit-input-placeholder {
   margin-left: -8px;
   // visibility: hidden !important;
+}
+
+.filtered-blue {
+  filter: invert(20%) sepia(28%) saturate(811%) hue-rotate(162deg) brightness(94%) contrast(81%);
 }
 </style>
