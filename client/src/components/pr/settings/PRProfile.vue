@@ -13,9 +13,9 @@
         <div class="paid-body">
           <div>
             <div class="paid-center">
-              <h3 class="paid-title">Are you sure?</h3>
+              <h3 class="paid-title">Deactivate</h3>
               <h5 class="regen-body-title">
-                {{ `By clicking Remove, you will be removing this person from your organization.` }}
+                {{ `Are you sure you want to deactivate ${deleteUserName && deleteUserName.email ? deleteUserName.email : `this user`}?` }}
               </h5>
             </div>
             <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
@@ -31,7 +31,7 @@
             >
               Cancel
             </div>
-            <div class="save-button" @click="deactivateUser">Remove</div>
+            <div class="red-button" @click="deactivateUser">Deactivate</div>
           </div>
         </div>
       </div>
@@ -49,9 +49,9 @@
         <div class="paid-body">
           <div>
             <div class="paid-center">
-              <h3 class="paid-title">Warning: Inviting more users will charge you</h3>
+              <h3 class="paid-title">Purchase additional user</h3>
               <h5 class="regen-body-title">
-                {{ `Your organization only allows ${user.organizationRef.numberOfAllowedUsers} users. If you invite more, your subscription will change, and you will be charged accordingly.` }}
+                {{ `By clicking purchase you agree to be charged for an additional user.` }}
               </h5>
             </div>
             <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
@@ -67,7 +67,7 @@
             >
               Cancel
             </div>
-            <div class="save-button" @click="handleInviteNonSlack">Confirm</div>
+            <div class="save-button" @click="handleInviteNonSlack">Purchase</div>
           </div>
         </div>
       </div>
@@ -85,9 +85,9 @@
         <div class="paid-body">
           <div>
             <div class="paid-center">
-              <h3 class="paid-title">Are you sure?</h3>
+              <h3 class="paid-title">Reactivate User</h3>
               <h5 class="regen-body-title">
-                {{ `By clicking Confirm, you will be reactivating this person's account, and will be charged.` }}
+                {{ `By clicking Reactivate you are enabling ${reactivateUser.email} to access Managr` }}
               </h5>
             </div>
             <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
@@ -103,7 +103,43 @@
             >
               Cancel
             </div>
-            <div class="save-button" @click="reactivate">Confirm</div>
+            <div class="save-button" @click="reactivate">Reactivate</div>
+          </div>
+        </div>
+      </div>
+    </Modal>
+    <!-- reactivatePaidUserModal -->
+    <Modal v-if="reactivatePaidUserModal" class="paid-modal">
+      <div class="regen-container">
+        <div class="paid-header">
+          <div>
+            <h4 class="regen-header-title"></h4>
+            <p class="regen-header-subtitle"></p>
+          </div>
+          <div class="pointer" @click="() => reactivatePaidUserModal = false"><small>X</small></div>
+        </div>
+        <div class="paid-body">
+          <div>
+            <div class="paid-center">
+              <h3 class="paid-title">Purchase additional user</h3>
+              <h5 class="regen-body-title">
+                {{ `By clicking purchase you agree to be charged for an additional user.` }}
+              </h5>
+            </div>
+            <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
+          </div>
+        </div>
+        <div class="paid-footer">
+          <!-- <div></div> -->
+          <div class="row">
+            <div
+              style="padding-top: 9px; padding-bottom: 9px"
+              class="cancel-button"
+              @click="() => reactivatePaidUserModal = false"
+            >
+              Cancel
+            </div>
+            <div class="save-button" @click="reactivatePaid">Purchase</div>
           </div>
         </div>
       </div>
@@ -190,7 +226,7 @@
           <h3 class="team-width thin-font">Name</h3>
           <h3 class="team-width thin-font">Email</h3>
           <h3 class="less-team-width thin-font extra-mar-left">Invite</h3>
-          <h3 v-if="user.isAdmin" class="less-team-width thin-font">Actions</h3>
+          <h3 v-if="user.isAdmin" class="team-width thin-font">Deactivate</h3>
         </div>
 
         <div class="users-container">
@@ -201,7 +237,7 @@
             <div class="team-width">{{  }}</div>
           </div>
   
-          <div v-for="teamUser in team.list" :key="teamUser.id" class="row smaller-text">
+          <div v-for="teamUser in orderedActive" :key="teamUser.id" class="row smaller-text">
             <div v-if="teamUser.id !== user.id" class="team-width thin-font">
               {{ !teamUser.isActive && teamUser.fullName.trim() ? '[INACTIVE]' : (teamUser.fullName.trim() ? teamUser.fullName : '[NO NAME]') }}
             </div>
@@ -222,15 +258,15 @@
                   src="@/assets/images/trash.svg"
                   class="invite-link-button"
                 />
-                <div style="margin-left: -20px" class="tooltip">{{ 'Remove' }}</div>
+                <div style="margin-left: -20px" class="tooltip">{{ 'Deactivate' }}</div>
               </div>
-              <!-- <div v-else-if="teamUser.id !== user.id && !teamUser.isActive" @click="openReactivateeModal(teamUser)" class="invite-link-button-container wrapper thin-font">
+              <div v-else-if="teamUser.id !== user.id && !teamUser.isActive && teamUser.fullName.trim()" @click="openReactivateeModal(teamUser)" class="invite-link-button-container wrapper thin-font">
                 <img 
                   src="@/assets/images/arrow-small-right.svg"
                   class="invite-link-button"
                 />
                 <div style="margin-left: -20px" class="tooltip">{{ 'Reactivate' }}</div>
-              </div> -->
+              </div>
             </div>
           </div>
         </div>
@@ -319,8 +355,9 @@ export default {
       userInviteForm: {},
       activationLink: '',
       deleteUserModal: false,
-      deleteUserId: null,
+      deleteUserName: null,
       reactivateUserModal: false,
+      reactivatePaidUserModal: false,
       reactivateUserId: null,
       paidWarningModal: false,
     }
@@ -373,7 +410,7 @@ export default {
     },
     openDeleteModal(user) {
       this.deleteUserModal = true
-      this.deleteUserId = user.id
+      this.deleteUserName = user
     },
     async copyUserLink(link) {
       try {
@@ -449,9 +486,7 @@ export default {
     async reactivate() {
       try {
         const data = {...this.reactivateUser, isActive: true}
-        console.log('data', data)
         const res = await User.api.update(this.reactivateUser.id, data)
-        console.log('reactivate res', res)
         this.team.refresh()
       } catch(e) {
         console.log('Error in reactivate: ', e)
@@ -466,10 +501,27 @@ export default {
         this.reactivateUserModal = false
       }
     },
+    async reactivatePaid() {
+      try {
+        const data = {...this.reactivateUser, isActive: true}
+        const res = await User.api.update(this.reactivateUser.id, data)
+        this.team.refresh()
+      } catch(e) {
+        console.log('Error in reactivatePaid: ', e)
+        this.$toast('Something went wrong. Please try again later', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.reactivatePaidUserModal = false
+      }
+    },
     async deactivateUser() {
       try {
-        const res = await User.api.uninvite(this.deleteUserId)
-        console.log('deactivate res', res)
+        const res = await User.api.uninvite(this.deleteUserName.id)
         this.team.refresh()
       } catch(e) {
         console.log('Error in deactivateUser: ', e)
@@ -486,8 +538,7 @@ export default {
     },
     async deleteUser() {
       try {
-        const res = await User.api.uninvite(this.deleteUserId)
-        console.log('delete res', res)
+        const res = await User.api.uninvite(this.deleteUserName.id)
         this.team.refresh()
       } catch(e) {
         console.log('Error in deleteUser: ', e)
@@ -671,6 +722,23 @@ export default {
     },
     aboveInviteLimit() {
       return this.activeUsers >= this.user.organizationRef.numberOfAllowedUsers
+    },
+    orderedActive() {
+      const active = []
+      const noName = []
+      const inactive = []
+      for (let i = 0; i < this.team.list.length; i++) {
+        const el = this.team.list[i]
+        console.log('el', el)
+        if (el.isActive) {
+          active.push(el)
+        } else if (!el.isActive && el.fullName.trim()) {
+          inactive.push(el)
+        } else {
+          noName.push(el)
+        }
+      }
+      return [...active, ...noName, ...inactive]
     },
   },
 }
@@ -1062,6 +1130,15 @@ h3 {
 }
 .save-button {
   @include dark-blue-button();
+  &:hover {
+    scale: 1;
+    opacity: 0.9;
+    box-shadow: none;
+  }
+  margin-left: 0.5rem;
+}
+.red-button {
+  @include button-danger();
   &:hover {
     scale: 1;
     opacity: 0.9;
