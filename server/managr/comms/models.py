@@ -348,6 +348,7 @@ class NewsSource(TimeStampModel):
         if self.article_link_regex:
             if self.article_link_selector == "year" and current_year in self.article_link_regex:
                 return self.article_link_regex
+            return self.article_link_regex
         # add the link selector
         attribute_list = self.article_link_attribute.split(",")
         regex = "//body//" + attribute_list[0] + "["
@@ -361,7 +362,7 @@ class NewsSource(TimeStampModel):
         if self.article_link_selector:
             selector = self.selector_processor()
             if "@data" in regex:
-                regex += f"and {selector}"
+                regex += f" and {selector}"
             else:
                 regex += selector
         regex += "]"

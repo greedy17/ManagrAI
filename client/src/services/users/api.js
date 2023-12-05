@@ -564,7 +564,7 @@ export default class UserAPI {
     try {
       const res = await this.client.post(SEND_EMAIL_ENDPOINT, data)
       return res
-    } catch(e) {
+    } catch (e) {
       apiErrorHandler({ apiName: 'UserAPI.sendEmail' })
     }
   }
