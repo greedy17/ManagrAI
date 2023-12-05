@@ -18,19 +18,24 @@ class Command(BaseCommand):
         parser.add_argument(
             "--new",
             action="store_true",
-            help="Scrape only the sources that are fully filled out",
+            help="Used for articles that have no attribute yet. Combine with active flag to run only active sources with their attribute filled in.",
+        )
+        parser.add_argument(
+            "--test",
+            action="store_true",
+            help="Combine with active flag, this will only run the first anchor tag pulled to test all of the active sources quickly.",
         )
 
     def handle(self, *args, **options):
         url = options.get("url", False)
+        new = options["new"]
         if url:
             urls = [url]
         else:
             remove_api_sources()
             scrape_ready = True if options["active"] else False
-            new = True if options["new"] else False
             urls = NewsSource.domain_list(scrape_ready, new)
         first_only = True if (options["active"] and options["new"]) else False
         process = CrawlerProcess()
-        process.crawl(NewsSpider, start_urls=urls, first_only=first_only)
+        process.crawl(NewsSpider, start_urls=urls, first_only=first_only, test=options["test"])
         process.start()
