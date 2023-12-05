@@ -324,7 +324,23 @@ class NewsSource(TimeStampModel):
             else:
                 selector = f"contains(@href, '{selector_split[1]}')"
         if selector_type == "class":
-            selector = f"contains(@class, '{selector_split[1]}')"
+            if "|" in selector_split[1]:
+                selector = ""
+                values = selector_split[1].split("|")
+                for idx, value in enumerate(values):
+                    if "=" in value:
+                        value = value.replace("=", "")
+                        selector = f"@class='{value}'"
+                    else:
+                        selector = f"contains(@class, '{value}')"
+                    if idx != len(values) - 1:
+                        selector += "or"
+            else:
+                if "=" in value:
+                    value = value.replace("=", "")
+                    selector = f"@class='{value}'"
+                else:
+                    selector = f"contains(@class, '{selector_split[1]}')"
         return selector
 
     def create_search_regex(self):

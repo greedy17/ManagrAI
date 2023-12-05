@@ -72,6 +72,7 @@ class NewsSpider(scrapy.Spider):
     def __init__(self, *args, **kwargs):
         super(NewsSpider, self).__init__(*args, **kwargs)
         self.start_urls = kwargs.get("start_urls")
+        self.first_only = kwargs.get("first_only")
         self.urls_processed = 0
 
     def parse(self, response):
@@ -88,6 +89,8 @@ class NewsSpider(scrapy.Spider):
             article_links = response.xpath(regex)
             do_not_track_str = ",".join(comms_consts.DO_NOT_TRACK_LIST)
             if source.last_scraped and source.article_link_attribute:
+                if len(article_links) and self.first_only:
+                    article_links = [article_links[0]]
                 for anchor in article_links:
                     article_url = anchor.xpath("@href").extract_first()
                     for word in comms_consts.DO_NOT_INCLUDE_WORDS:
