@@ -683,6 +683,7 @@ export default {
           summary: this.summary,
         }),
       )
+      console.log(this.imageFile)
       try {
         await User.api.createReport(formData).then((response) => {
           this.getReports()
