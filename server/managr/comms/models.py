@@ -328,11 +328,19 @@ class NewsSource(TimeStampModel):
                 selector = ""
                 values = selector_split[1].split("|")
                 for idx, value in enumerate(values):
-                    selector = f"contains(@class, '{value}')"
+                    if "=" in value:
+                        value = value.replace("=", "")
+                        selector = f"@class='{value}'"
+                    else:
+                        selector = f"contains(@class, '{value}')"
                     if idx != len(values) - 1:
                         selector += "or"
             else:
-                selector = f"contains(@class, '{selector_split[1]}')"
+                if "=" in value:
+                    value = value.replace("=", "")
+                    selector = f"@class='{value}'"
+                else:
+                    selector = f"contains(@class, '{selector_split[1]}')"
         return selector
 
     def create_search_regex(self):

@@ -51,6 +51,8 @@ def extract_date_from_text(text):
                     date_obj = datetime.strptime(date_str, format)
                 except ValueError:
                     continue
+                except Exception:
+                    continue
                 return str(date_obj)
     return None
 
