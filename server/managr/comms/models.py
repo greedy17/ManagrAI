@@ -336,8 +336,8 @@ class NewsSource(TimeStampModel):
                     if idx != len(values) - 1:
                         selector += "or"
             else:
-                if "=" in value:
-                    value = value.replace("=", "")
+                if "=" in selector_split[1]:
+                    value = selector_split[1].replace("=", "")
                     selector = f"@class='{value}'"
                 else:
                     selector = f"contains(@class, '{selector_split[1]}')"
