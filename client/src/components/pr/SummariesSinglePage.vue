@@ -200,7 +200,7 @@
       </div>
     </Modal>
 
-    <!-- <Transition name="slide-left">
+    <Transition name="slide-left">
       <div v-if="selectedSearch && ShowReport" class="reports-width-height">
         <div class="reports-lip-container" @click="toggleReport">
           <div class="reports-lip">
@@ -224,8 +224,6 @@
     </Transition>
 
     <div @click="toggleReport" v-if="selectedSearch && !ShowReport" class="floating-action-bar">
-  
-
       <div class="main-slot">
         <img src="@/assets/images/share.svg" height="10px" alt="" />
       </div>
@@ -245,7 +243,7 @@
       <div class="slot-count">
         <small>{{ allCategoryClips ? allCategoryClips.length : 0 }}/20</small>
       </div>
-    </div> -->
+    </div>
 
     <div class="center column" :class="{ fullHeight: showingDropdown }" v-if="page === 'SUMMARIES'">
       <!-- <div v-if="!selectedSearch" class="switcher">
@@ -555,7 +553,7 @@
                   style="position: relative"
                 >
                   <button disabled style="margin-left: 0" class="primary-button">
-                    Generate Content
+                    Generate Report
                   </button>
 
                   <div v-if="mainView !== 'website'">
@@ -571,7 +569,7 @@
                         alt=""
                       />
                       <div style="margin-left: -22px" class="tooltip tooltip-wide full">
-                        Generate content first
+                        Generate report first
                       </div>
                     </div>
 
@@ -587,7 +585,7 @@
                         alt=""
                       />
                       <div style="margin-left: -22px" class="tooltip tooltip-wide full">
-                        Generate content first
+                        Generate report first
                       </div>
                     </div>
 
@@ -600,7 +598,7 @@
                         alt=""
                       />
                       <div style="margin-left: -22px" class="tooltip tooltip-wide full">
-                        Generate content first
+                        Generate report first
                       </div>
                     </div>
                   </div>
@@ -874,7 +872,7 @@
                         class="primary-button"
                       >
                         <img src="@/assets/images/sparkle.svg" height="14px" alt="" />Generate
-                        Content
+                        Report
                       </button>
 
                       <div v-if="mainView !== 'website'">
@@ -890,7 +888,7 @@
                             alt=""
                           />
                           <div style="margin-left: -22px" class="tooltip tooltip-wide full">
-                            Generate content first
+                            Generate report first
                           </div>
                         </div>
 
@@ -906,7 +904,7 @@
                             alt=""
                           />
                           <div style="margin-left: -22px" class="tooltip tooltip-wide full">
-                            Generate content first
+                            Generate report first
                           </div>
                         </div>
 
@@ -919,7 +917,7 @@
                             alt=""
                           />
                           <div style="margin-left: -22px" class="tooltip tooltip-wide full">
-                            Generate content first
+                            Generate report first
                           </div>
                         </div>
                       </div>
@@ -1185,7 +1183,7 @@
                       getTimeDifferenceInMinutes(tweet.created_at)
                     }}</span>
                   </div>
-                  <!-- <button
+                  <button
                     :disabled="clipTitles.includes(tweet.id)"
                     class="tertiary-button"
                     @click="addClip(tweet)"
@@ -1193,7 +1191,7 @@
                     <img height="10px" src="@/assets/images/share.svg" alt="" />
 
                     {{ clipTitles.includes(tweet.id) ? 'Shared' : 'Share' }}
-                  </button> -->
+                  </button>
                 </div>
               </div>
             </div>
@@ -1241,7 +1239,7 @@
                     <span class="divier-dot">.</span>
                   </div>
                   <div class="footer-icon-container">
-                    <!-- <button
+                    <button
                       :disabled="clipTitles.includes(article.title)"
                       class="tertiary-button"
                       @click="addClip(article)"
@@ -1249,7 +1247,7 @@
                       <img height="10px" src="@/assets/images/share.svg" alt="" />
 
                       {{ clipTitles.includes(article.title) ? 'Shared' : 'Share' }}
-                    </button> -->
+                    </button>
 
                     <div v-if="mainView === 'website' && addedArticles.length === 1"></div>
                     <div v-else>
