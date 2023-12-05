@@ -155,7 +155,7 @@ DO_NOT_TRACK_LIST = [
 ]
 
 
-DO_NOT_INCLUDE_WORDS = ["photos", "sex", "review", "linkedin"]
+DO_NOT_INCLUDE_WORDS = ["photos", "sex", "review", "linkedin", ".pdf", "facebook", "instagram"]
 
 EXCLUDE_DOMAINS = [
     "globenewswire.com",
