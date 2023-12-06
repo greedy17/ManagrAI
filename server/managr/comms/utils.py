@@ -40,12 +40,26 @@ def get_domain(url):
 
 def extract_date_from_text(text):
     text = text.replace("\n", "").strip()
-    patterns = [r"(\d{1,2} [A-Za-z]+ \d{4})", r"([A-Za-z]+(?: \d{1,2},)? \d{4})"]
-    strptime_formats = ["%d %B %Y", "%B %d, %Y", "%b %d, %Y"]
+    patterns = [
+        r"(\d{1,2} [A-Za-z]+ \d{4})",
+        r"([A-Za-z]+(?: \d{1,2},)? \d{4})",
+        r"([A-Za-z]{3}\. \d{1,2}, \d{4} \d{1,2}:\d{2} [apAP]\.m\.)",
+    ]
+    strptime_formats = ["%d %B %Y", "%B %d, %Y", "%b %d, %Y", "%b. %d, %Y %I:%M %p"]
     for pattern in patterns:
         match = re.search(pattern, text)
         if match:
             date_str = match.group(1)
+            if ":" in date_str:
+                colon_idx = date_str.index(":")
+                hour = date_str[colon_idx - 2 : colon_idx]
+                if int(hour) < 10 and " " in hour:
+                    hour = " 0" + str(int(hour))
+                    date_str = date_str[: colon_idx - 2] + hour + date_str[colon_idx:]
+            if "a.m." in date_str:
+                date_str = date_str.replace("a.m.", "AM")
+            if "p.m." in date_str:
+                date_str = date_str.replace("p.m.", "PM")
             for format in strptime_formats:
                 try:
                     date_obj = datetime.strptime(date_str, format)
