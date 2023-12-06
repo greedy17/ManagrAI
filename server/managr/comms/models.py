@@ -328,7 +328,6 @@ class NewsSource(TimeStampModel):
                 selector = ""
                 values = selector_split[1].split("|")
                 for idx, value in enumerate(values):
-                    print(selector)
                     if "=" in value:
                         value = value.replace("=", "")
                         selector = f"@class='{value}'"
