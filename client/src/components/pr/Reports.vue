@@ -644,13 +644,6 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
-        this.reportSuccess = true
-        this.summary = null
-        this.imageUrl = null
-        this.clearClips()
-        this.$store.dispatch('updateReportTitle', null)
-        this.$store.dispatch('updateReportImage', null)
-        this.$store.dispatch('updateReportSummary', null)
       }
     },
     async getArticleSummary(title, url, search, length = 500) {
@@ -690,9 +683,16 @@ export default {
           summary: this.summary,
         }),
       )
+      console.log(this.imageFile)
       try {
         await User.api.createReport(formData).then((response) => {
           this.getReports()
+          this.reportSuccess = true
+          this.imageUrl = null
+          this.clearClips()
+          this.$store.dispatch('updateReportTitle', null)
+          this.$store.dispatch('updateReportImage', null)
+          this.$store.dispatch('updateReportSummary', null)
         })
         localStorage.addedClips = null
       } catch (e) {
@@ -761,6 +761,8 @@ export default {
       return articles.map((a) => (a.description ? a.description : a.text))
     },
     clearClips() {
+      this.summary = null
+      this.$store.dispatch('updateReportSummary', null)
       this.$store.dispatch('updateCategories', {})
       this.$emit('clear-clips')
     },

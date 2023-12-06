@@ -204,10 +204,7 @@
       <div v-if="selectedSearch && ShowReport" class="reports-width-height">
         <div class="reports-lip-container" @click="toggleReport">
           <div class="reports-lip">
-            <img
-              src="@/assets/images/angle-double-small-right.svg"
-              class="lip-img invert-dark-blue"
-            />
+            <img src="@/assets/images/rightarrow.svg" class="lip-img invert-dark-blue" />
           </div>
         </div>
         <Reports
@@ -224,11 +221,16 @@
     </Transition>
 
     <div @click="toggleReport" v-if="selectedSearch && !ShowReport" class="floating-action-bar">
-      <div class="main-slot">
-        <img src="@/assets/images/share.svg" height="10px" alt="" />
+      <div :class="{ 'added-clip': addedClip }" class="reports-lip-closed">
+        <img
+          v-if="!addedClip"
+          src="@/assets/images/rightarrow.svg"
+          class="lip-img invert-dark-blue"
+        />
+        <img v-else src="@/assets/images/add.svg" class="lip-img invert-dark-blue" />
       </div>
 
-      <div class="slot-container">
+      <!-- <div class="slot-container">
         <div v-for="(clip, i) in allCategoryClips" :key="i">
           <img v-if="i < 5" :src="clip.image_url" class="small-photo" />
         </div>
@@ -242,7 +244,7 @@
 
       <div class="slot-count">
         <small>{{ allCategoryClips ? allCategoryClips.length : 0 }}/20</small>
-      </div>
+      </div> -->
     </div>
 
     <div class="center column" :class="{ fullHeight: showingDropdown }" v-if="page === 'SUMMARIES'">
@@ -1650,6 +1652,7 @@ export default {
   },
   data() {
     return {
+      addedClip: false,
       showSummaryInput: true,
       contentType: 'Instructions',
       showSummaryInstructions: false,
@@ -2165,6 +2168,10 @@ export default {
       }
       clip['search'] = this.newSearch
       if (this.addedClips && this.addedClips.length < 20) {
+        this.addedClip = true
+        setTimeout(() => {
+          this.addedClip = false
+        }, 500)
         if (!clip.image_url && (clip.attachments || clip.edit_history_tweet_ids)) {
           let tweetImg = ''
           if (clip.attachments) {
@@ -4094,20 +4101,20 @@ button:disabled {
 }
 
 .floating-action-bar {
-  background-color: $white-blue;
+  background-color: white;
   position: fixed;
   z-index: 3000;
-  right: 16px;
-  top: 36vh;
-  min-height: 160px;
-  border-radius: 32px;
-  border: 1px solid $white-blue;
+  right: 0;
+  top: 0;
+  height: 100vh;
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
   // width: 34px;
-  width: 46px;
+  width: 24px;
   display: flex;
   padding: 4px 0 8px 0;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
 }
 
 .main-content {
@@ -5454,18 +5461,45 @@ header {
   position: fixed;
   // top: 535%;
   top: 50%;
-  right: 488px;
+  right: 484px;
   z-index: 5500;
   cursor: pointer;
-  width: 1.5rem;
 }
+.reports-lip-closed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $offer-white;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 6px;
+  margin-right: 24px;
+  cursor: pointer;
+  box-shadow: 1px 1px 10px 1px rgba(0, 0, 0, 0.1);
+
+  img {
+    transform: rotate(180deg);
+  }
+  transition: all 0.2s;
+}
+
+.added-clip {
+  transform: scale(1.2);
+  background-color: $dark-black-blue;
+
+  img {
+    filter: invert(100%);
+  }
+}
+
 .reports-lip {
   display: flex;
   align-items: center;
+  justify-content: center;
   background-color: $offer-white;
-  border-radius: 20px;
-  border-left: 1px solid rgba(0, 0, 0, 0.1);
-  height: 4rem;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 6px;
 }
 .reports-lip-container-bar {
   position: absolute;
@@ -5496,8 +5530,9 @@ header {
   // border-left: 5px solid $white-blue;
 }
 .lip-img {
-  height: 16px;
-  margin-left: 1px;
+  height: 14px;
+  padding: 0;
+  margin: 0;
   z-index: 5500;
 }
 .flip {

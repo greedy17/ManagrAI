@@ -294,7 +294,7 @@ class NewsSource(TimeStampModel):
     article_link_selector = models.CharField(max_length=255, blank=True, null=True)
     article_link_attribute = models.CharField(max_length=50, blank=True, null=True)
     article_link_prefix = models.URLField(blank=True, null=True)
-    article_link_regex = models.CharField(max_length=255, blank=True, null=True)
+    article_link_regex = models.CharField(max_length=500, blank=True, null=True)
     data_attribute_key = models.CharField(max_length=255, blank=True, null=True)
     data_attribute_value = models.CharField(max_length=255, blank=True, null=True)
     date_published_selector = models.CharField(max_length=255, blank=True, null=True)
@@ -320,7 +320,7 @@ class NewsSource(TimeStampModel):
                 for idx, value in enumerate(values):
                     selector += f"contains(@href, '{value}')"
                     if idx != len(values) - 1:
-                        selector += "or"
+                        selector += " or "
             else:
                 selector = f"contains(@href, '{selector_split[1]}')"
         if selector_type == "class":
@@ -336,8 +336,8 @@ class NewsSource(TimeStampModel):
                     if idx != len(values) - 1:
                         selector += "or"
             else:
-                if "=" in value:
-                    value = value.replace("=", "")
+                if "=" in selector_split[1]:
+                    value = selector_split[1].replace("=", "")
                     selector = f"@class='{value}'"
                 else:
                     selector = f"contains(@class, '{selector_split[1]}')"
@@ -348,6 +348,7 @@ class NewsSource(TimeStampModel):
         if self.article_link_regex:
             if self.article_link_selector == "year" and current_year in self.article_link_regex:
                 return self.article_link_regex
+            return self.article_link_regex
         # add the link selector
         attribute_list = self.article_link_attribute.split(",")
         regex = "//body//" + attribute_list[0] + "["
@@ -361,7 +362,7 @@ class NewsSource(TimeStampModel):
         if self.article_link_selector:
             selector = self.selector_processor()
             if "@data" in regex:
-                regex += f"and {selector}"
+                regex += f" and {selector}"
             else:
                 regex += selector
         regex += "]"
