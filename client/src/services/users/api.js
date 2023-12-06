@@ -103,7 +103,7 @@ export default class UserAPI {
 
   async createReport(data) {
     try {
-      const response = await this.client.post(REPORTS, data, headers = { "Content-Type": "multipart/form-data" })
+      const response = await this.client.post(REPORTS, data, { headers: { "Content-Type": "multipart/form-data" } })
       return response.data
     } catch (e) {
       apiErrorHandler({ apiName: 'UsersAPI.createReports' })
