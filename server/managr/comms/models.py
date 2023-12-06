@@ -294,7 +294,7 @@ class NewsSource(TimeStampModel):
     article_link_selector = models.CharField(max_length=255, blank=True, null=True)
     article_link_attribute = models.CharField(max_length=50, blank=True, null=True)
     article_link_prefix = models.URLField(blank=True, null=True)
-    article_link_regex = models.CharField(max_length=255, blank=True, null=True)
+    article_link_regex = models.CharField(max_length=500, blank=True, null=True)
     data_attribute_key = models.CharField(max_length=255, blank=True, null=True)
     data_attribute_value = models.CharField(max_length=255, blank=True, null=True)
     date_published_selector = models.CharField(max_length=255, blank=True, null=True)
@@ -320,7 +320,7 @@ class NewsSource(TimeStampModel):
                 for idx, value in enumerate(values):
                     selector += f"contains(@href, '{value}')"
                     if idx != len(values) - 1:
-                        selector += "or"
+                        selector += " or "
             else:
                 selector = f"contains(@href, '{selector_split[1]}')"
         if selector_type == "class":
