@@ -225,13 +225,13 @@
         <div class="row margin-top margin-bottom">
           <h3 class="team-width thin-font">Name</h3>
           <h3 class="team-width thin-font">Email</h3>
-          <h3 class="less-team-width thin-font extra-mar-left">Invite</h3>
-          <h3 v-if="user.isAdmin" class="team-width thin-font">Deactivate</h3>
+          <!-- <h3 class="less-team-width thin-font extra-mar-left">Invite</h3> -->
+          <h3 v-if="user.isAdmin" class="team-width thin-font extra-mar-left">Actions</h3>
         </div>
 
         <div class="users-container">
           <div class="row smaller-text">
-            <div class="team-width">{{ user.fullName.trim() ? user.fullName : '[NO NAME]' }}</div>
+            <div class="team-width">{{ user.fullName.trim() ? user.fullName : '[INVITED]' }}</div>
             <div class="team-width">{{ user.email }}</div>
             <div class="team-width">{{  }}</div>
             <div class="team-width">{{  }}</div>
@@ -239,34 +239,42 @@
   
           <div v-for="teamUser in orderedActive" :key="teamUser.id" class="row smaller-text">
             <div v-if="teamUser.id !== user.id" class="team-width thin-font">
-              {{ !teamUser.isActive && teamUser.fullName.trim() ? '[INACTIVE]' : (teamUser.fullName.trim() ? teamUser.fullName : '[NO NAME]') }}
+              {{ !teamUser.isActive && teamUser.fullName.trim() ? '[INACTIVE]' : (teamUser.fullName.trim() ? teamUser.fullName : '[INVITED]') }}
             </div>
             <div v-if="teamUser.id !== user.id" class="team-width thin-font">
               {{ teamUser.email }}
             </div>
-            <div v-if="teamUser.id !== user.id && !teamUser.fullName.trim()" @click="copyUserLink(teamUser.activationLinkRef)" class="invite-link-button-container wrapper thin-font">
+            <!-- <div v-if="teamUser.id !== user.id && !teamUser.fullName.trim()" @click="copyUserLink(teamUser.activationLinkRef)" class="invite-link-button-container wrapper thin-font">
               <img 
                 src="@/assets/images/link.svg"
                 class="invite-link-button"
               />
               <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
             </div>
-            <div v-else-if="teamUser.id !== user.id" class="invite-link-button-container-nothing wrapper thin-font"></div>
+            <div v-else-if="teamUser.id !== user.id" class="invite-link-button-container-nothing wrapper thin-font"></div> -->
             <div v-if="user.isAdmin">
-              <div v-if="(teamUser.id !== user.id) && teamUser.isActive" @click="openDeleteModal(teamUser)" class="invite-link-button-container wrapper thin-font">
+              <div v-if="(teamUser.id !== user.id) && teamUser.isActive" @click="openDeleteModal(teamUser)" class="invite-link-button-container red-background wrapper thin-font">
                 <img 
-                  src="@/assets/images/trash.svg"
+                  src="@/assets/images/remove-user.svg"
                   class="invite-link-button"
                 />
                 <div style="margin-left: -20px" class="tooltip">{{ 'Deactivate' }}</div>
               </div>
-              <div v-else-if="teamUser.id !== user.id && !teamUser.isActive && teamUser.fullName.trim()" @click="openReactivateeModal(teamUser)" class="invite-link-button-container wrapper thin-font">
+              <div v-else-if="teamUser.id !== user.id && !teamUser.isActive && teamUser.fullName.trim()" @click="openReactivateeModal(teamUser)" class="invite-link-button-container green-background wrapper thin-font">
                 <img 
-                  src="@/assets/images/arrow-small-right.svg"
+                  src="@/assets/images/user.svg"
                   class="invite-link-button"
                 />
                 <div style="margin-left: -20px" class="tooltip">{{ 'Reactivate' }}</div>
               </div>
+              <div v-else-if="teamUser.id !== user.id && !teamUser.fullName.trim()" @click="copyUserLink(teamUser.activationLinkRef)" class="invite-link-button-container wrapper thin-font">
+                <img 
+                  src="@/assets/images/link.svg"
+                  class="invite-link-button"
+                />
+                <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
+              </div>
+              <!-- <div v-else-if="teamUser.id !== user.id" class="invite-link-button-container-nothing wrapper thin-font"></div> -->
             </div>
           </div>
         </div>
@@ -952,15 +960,28 @@ h3 {
 .invite-link-button-container {
   background-color: $dark-black-blue;
   border-radius: 100%;
-  width: 1.375rem;
-  height: 1.375rem;
-  margin-left: 4rem;
+  // width: 1.375rem;
+  // height: 1.375rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-left: 5rem;
   cursor: pointer;
+  img {
+    margin: 0 auto;
+  }
+}
+.red-background {
+  background-color: $coral !important;
+}
+.green-background {
+  background-color: $dark-green !important;
 }
 .invite-link-button-container-nothing {
-  width: 1.375rem;
-  height: 1.375rem;
-  margin-left: 4rem;
+  // width: 1.375rem;
+  // height: 1.375rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-left: 5rem;
 }
 .invite-link-button {
   height: 14px;
@@ -1054,7 +1075,7 @@ h3 {
   margin-left: 1rem;
 }
 .extra-mar-left {
-  margin-left: 3.5rem;
+  margin-left: 4.5rem;
 }
 .display-flex {
   display: flex;
