@@ -250,9 +250,18 @@
                 "
               >
                 <img
-                  :class="{ faded: loading || !this.output }"
+                  v-if="loading || !this.output"
                   style="margin: 0"
                   src="@/assets/images/paper-plane-top.svg"
+                  height="14px"
+                  alt=""
+                  class="grow faded"
+                />
+
+                <img
+                  v-else
+                  style="margin: 0"
+                  src="@/assets/images/paper-plane-full.svg"
                   height="14px"
                   alt=""
                   class="grow"
