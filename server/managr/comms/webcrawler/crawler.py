@@ -30,10 +30,10 @@ XPATH_STRING_OBJ = {
         "//meta[contains(@itemprop,'date')]/@content",
         "//meta[contains(translate(@property, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'modified') or contains(translate(@property, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'published')]/@content",
         "//meta[contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'modified') or contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'published')]/@content",
-        "//time/@datetime | //time/@dateTime",
+        "//body//time/@datetime | //body//time/@dateTime | //body//time/text()",
         "//meta[contains(@name, 'date')]/@content",
         "(//*[contains(translate(@class, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'date')])[last()]//text()",
-        f"//body//*[not(self::script) and contains(text(),', {datetime.datetime.now().year}')]",
+        f"//body//*[not(self::script) and contains(text(),', {datetime.datetime.now().year}') or contains(text(),'{datetime.datetime.now().year},')]",
         "//body//*[not(self::script) and contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'publish')]/text()",
     ],
     "image_url": ["//meta[@property='og:image']/@content"],
@@ -183,10 +183,10 @@ class NewsSpider(scrapy.Spider):
         exclude_words = " or ".join(f"contains(@href, '{word}')" for word in exclude_word_list)
         anchor_tags = response.xpath(
             "//body//a["
-            "(starts-with(@href, '/') or starts-with(@href, 'https'))"
-            f" and not({exclude_classes})"
-            f" and not({exclude_words})"
-            "]"
+            + "(starts-with(@href, '/') or starts-with(@href, 'https'))"
+            + f" and not({exclude_classes})"
+            + f" and not({exclude_words})"
+            + "]"
         )
         site_name = response.xpath("//meta[contains(@property, 'site_name')]/@content").get()
         scrape_dict = {}

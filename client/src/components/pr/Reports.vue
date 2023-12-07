@@ -639,6 +639,7 @@ export default {
     async getReports() {
       try {
         await User.api.getReports({ user: this.$store.state.user.id }).then((response) => {
+          console.log('get reports response : ', response)
           this.reportLink = response.results[0]['share_url']
         })
       } catch (e) {
@@ -672,9 +673,13 @@ export default {
       let formData = new FormData()
       formData.append('title', this.reportTitle)
       // let imageFile = document.querySelector('#imageInput').files[0]
-      if (this.imageFile) {
+
+      if (this.imageFile && this.imageFile instanceof File) {
         formData.append('main_image', this.imageFile)
+      } else {
+        console.error('The imageFile is not a File object')
       }
+
       formData.append('user', this.$store.state.user.id)
       formData.append(
         'meta_data',
