@@ -512,7 +512,7 @@
                   </div>
 
                   <p style="margin: 16px 0" v-else-if="!selectedSearch" class="sub-text">
-                    Run a search, then generate content
+                    Run a search then generate an AI report.
                   </p>
                   <p
                     v-else-if="selectedSearch && mainView !== 'website'"
@@ -1745,6 +1745,7 @@ export default {
         { name: `LinkedIn Post`, value: `LinkedIn Post` },
         { name: `Twitter Post`, value: `Twitter Post` },
         { name: 'Email', value: 'Email' },
+        { name: 'Other', value: '' },
       ],
       generateOptions: [
         { name: 'Basic summary', value: 'Summarize the news' },

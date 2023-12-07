@@ -233,9 +233,9 @@
                 </div>
               </div>
 
-              <!-- <div class="absolute-count">
+              <div class="absolute-count">
                 <small>{{ remainingChars }}</small>
-              </div> -->
+              </div>
 
               <button
                 :disabled="loading || !this.output"
@@ -1204,9 +1204,10 @@ export default {
 
 .absolute-count {
   position: absolute;
-  bottom: 6px;
-  right: 2px;
+  bottom: 4px;
+  right: 3px;
   font-size: 10px;
+  color: $light-gray-blue;
   // background-color: $white-blue;
   // border: 1px solid rgba(0, 0, 0, 0.1);
   // border-radius: 4px;
