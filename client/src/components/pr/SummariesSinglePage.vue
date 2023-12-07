@@ -82,6 +82,78 @@
       </div>
     </Modal>
 
+    <Modal v-if="successModal" class="paid-modal">
+      <div class="regen-container">
+        <div class="paid-header">
+          <div>
+            <h4 class="regen-header-title"></h4>
+            <p class="regen-header-subtitle"></p>
+          </div>
+          <div class="pointer" @click="closeSuccessModal"><small>X</small></div>
+        </div>
+        <div class="paid-body">
+          <div>
+            <div class="paid-center">
+              <h3 class="paid-title">Payment Successful!</h3>
+              <h5 class="regen-body-title">
+                If you have any questions, email us at support@mymanagr.com
+              </h5>
+            </div>
+            <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
+          </div>
+        </div>
+        <div class="paid-footer">
+          <!-- <div></div> -->
+          <div class="row">
+            <div
+              style="padding-top: 9px; padding-bottom: 9px"
+              class="cancel-button"
+              @click="closeSuccessModal"
+            >
+              Close
+            </div>
+            <div class="save-button" @click="goToContact">Contact Us</div>
+          </div>
+        </div>
+      </div>
+    </Modal>
+
+    <Modal v-if="errorModal" class="paid-modal">
+      <div class="regen-container">
+        <div class="paid-header">
+          <div>
+            <h4 class="regen-header-title"></h4>
+            <p class="regen-header-subtitle"></p>
+          </div>
+          <div class="pointer" @click="() => errorModal = false"><small>X</small></div>
+        </div>
+        <div class="paid-body">
+          <div>
+            <div class="paid-center">
+              <h3 class="paid-title">Something went wrong</h3>
+              <h5 class="regen-body-title">
+                Please try again later.
+              </h5>
+            </div>
+            <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
+          </div>
+        </div>
+        <div class="paid-footer">
+          <!-- <div></div> -->
+          <div class="row">
+            <div
+              style="padding-top: 9px; padding-bottom: 9px"
+              class="cancel-button"
+              @click="() => errorModal = false"
+            >
+              Close
+            </div>
+            <div class="save-button" @click="goToContact">Contact Us</div>
+          </div>
+        </div>
+      </div>
+    </Modal>
+
     <Modal v-if="notifyModalOpen" class="paid-modal">
       <div class="regen-container">
         <div class="paid-header">
@@ -1736,6 +1808,8 @@ export default {
       showingDropdown: false,
       showGenerateDropdown: false,
       selectedOption: null,
+      successModal: false,
+      errorModal: false,
       selectedDateTime: '',
       articleGenerateOptions: [
         { name: 'Press Release', value: `Press Release` },
@@ -1827,6 +1901,16 @@ export default {
     // this.checkInterval = setInterval(this.checkTokenExpiry, 60000)
     this.addedClips = this.$store.state.currentReportClips
     this.shouldCancel = false
+
+    console.log('this.$route', this.$route.query.success)
+
+    if (this.$route.query && this.$route.query.success) {
+      if (this.$route.query.success === 'true') {
+        this.successModal = true
+      } else {
+        this.errorModal = true
+      }
+    }
 
     const today = new Date()
     const sevenDaysAgo = new Date(today)
@@ -2037,6 +2121,11 @@ export default {
         this.contentInstructions = `Create a ${val} for XXX, newsjacking this article`
         // this.setArticlePitchContent(url,sum)
       }
+    },
+    closeSuccessModal() {
+      this.$router.push({name: 'PRSummaries'})
+      this.$router.go()
+      this.successModal = false
     },
     setPitchContent() {
       let content = {

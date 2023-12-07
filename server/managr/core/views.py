@@ -5,6 +5,8 @@ import json
 import uuid
 import httpx
 import time
+from urllib.parse import urlencode
+from django.http import QueryDict
 from django.utils import timezone
 from django.core import serializers
 from managr.utils.misc import get_site_url, decrypt_dict
@@ -20,8 +22,6 @@ from django.conf import settings
 from django_filters.rest_framework import DjangoFilterBackend
 from background_task.models import CompletedTask
 from datetime import datetime
-import base64
-
 from rest_framework.views import APIView
 from rest_framework import (
     filters,
@@ -35,9 +35,8 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-
 from managr.api.emails import send_html_email
-from managr.api.models import ManagrToken, ExpiringTokenAuthentication
+from managr.api.models import ManagrToken
 from managr.utils import sites as site_utils
 from managr.core.utils import (
     pull_usage_data,
@@ -48,7 +47,15 @@ from managr.core.utils import (
 )
 from managr.slack.helpers import requests as slack_requests, block_builders
 from .nylas.auth import get_access_token, get_account_details
-from .models import User, NylasAuthAccount, NoteTemplate, Message, Conversation, Report
+from .models import (
+    User,
+    NylasAuthAccount,
+    NoteTemplate,
+    Message,
+    Conversation,
+    Report,
+    StripeAdapter,
+)
 from .serializers import (
     UserSerializer,
     UserClientSerializer,
@@ -63,9 +70,11 @@ from .serializers import (
 )
 from managr.organization.models import Team
 from .permissions import IsStaff
-from managr.core.background import emit_process_calendar_meetings, emit_send_activation_email
-
-from nylas.client import APIClient
+from managr.core.background import (
+    emit_process_calendar_meetings,
+    emit_send_activation_email,
+    emit_process_check_subscription_status,
+)
 from .nylas.emails import (
     return_file_id_from_nylas,
     download_file_from_nylas,
@@ -1344,6 +1353,48 @@ class UserViewSet(
             {"detail": "User token has been successfully refreshed", "token": str(token.key)}
         )
 
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="upgrade-user",
+    )
+    def upgrade_user(self, request, *args, **kwargs):
+        if request.method == "POST":
+            SUCCESS_URL = f"{settings.MANAGR_URL}/summaries?success=true"
+            CANCEL_URL = f"{settings.MANAGR_URL}/summaries?success=false"
+            quantity = request.data.get("quantity")
+            session_data = {
+                "payment_method_types[0]": "card",
+                "line_items[0][price]": settings.STRIPE_PRICE_ID,
+                "line_items[0][quantity]": int(quantity),
+                "mode": "subscription",
+                "success_url": SUCCESS_URL,
+                "cancel_url": CANCEL_URL,
+                "customer_email": request.user.email,
+                "metadata[email]": request.user.email,
+            }
+            encoded_data = QueryDict("", mutable=True)
+            encoded_data.update(session_data)
+            headers = {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Authorization": f"Bearer {settings.STRIPE_API_KEY}",
+            }
+            with Variable_Client() as client:
+                r = client.post(
+                    f"https://api.stripe.com/v1/checkout/sessions",
+                    data=encoded_data,
+                    headers=headers,
+                )
+                if r.status_code == 200:
+                    data = r.json()
+                    session_id = data.get("id")
+                    # emit_process_check_subscription_status(session_id, str(request.user.id))
+                    return Response(data={"session_id": session_id})
+                else:
+                    return Response(data={"error": "Failed to create Checkout session"}, status=500)
+        return Response(data={"error": "Invalid request method"}, status=400)
+
 
 class ActivationLinkView(APIView):
     permission_classes = (permissions.AllowAny,)
@@ -2058,7 +2109,7 @@ class ReportViewSet(
         return Report.objects.for_user(self.request.user)
 
     def create(self, request, *args, **kwargs):
-        print('data is right here ------ > ', request.data)
+        print("data is right here ------ > ", request.data)
         try:
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -2102,3 +2153,31 @@ class ReportViewSet(
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK, data={"data": serializer.data, "date": date})
+
+
+@api_view(["post"])
+@permission_classes([permissions.AllowAny])
+@authentication_classes([])
+def session_complete_webhook(request):
+    data = request.data.get("data", None).get("object", None)
+    event = data.get("object", None)
+
+    if event == core_consts.STRIPE_CHECKOUT_WEBHOOK:
+        user_email = data.get("metadata").get("email")
+        user = User.objects.get(email=user_email)
+
+        while True:
+            if data["payment_status"] == "paid":
+                sub_id = data["subscription"]
+                user.private_meta_data["stripe_sub_id"] = sub_id
+                user.save()
+                stripe_account = StripeAdapter(**{"user": user})
+                subscription = stripe_account.get_sub_id()
+                user_quantity = subscription["quantity"]
+                user.organization.number_of_allowed_users = user_quantity
+                user.organization.is_paid = True
+                user.organization.save()
+                break
+            else:
+                time.sleep(30)
+    return Response()

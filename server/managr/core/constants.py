@@ -13,6 +13,15 @@ SEND_EMAIL_URI = "send"
 CALENDAR_URI = "calendars"
 EVENT_POST = "events"
 
+STRIPE_API_BASE_URL = "https://api.stripe.com/v1"
+STRIPE_CHECKOUT_SESSION = "/checkout/sessions"
+STRIPE_SUBSCIPTIONS = "/subscriptions"
+STRIPE_HEADERS = {
+    "Authorization": f"Bearer {settings.STRIPE_API_KEY}",
+    "Content-Type": "application/x-www-form-urlencoded",
+}
+
+
 if settings.USE_OPEN_AI:
     OPEN_AI_SECRET = settings.OPEN_AI_SECRET
     OPEN_AI_HEADERS = {
@@ -403,6 +412,7 @@ WORKFLOW_CONFIG_CHECK = "WORKFLOW_CONFIG_CHECK"
 MORNING_REFRESH = "MORNING_REFRESH"
 MEETING_REMINDER = "MEETING_REMINDER"
 TRIAL_STATUS = "TRIAL_STATUS"
+STRIPE_CHECKOUT_WEBHOOK = "checkout.session"
 # These times should be a half hour before the intended time
 REMINDER_CONFIG = {
     WORKFLOW_REMINDER: {"HOUR": 7, "MINUTE": 00},

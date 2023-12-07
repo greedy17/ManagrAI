@@ -43,6 +43,7 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { faBars, faCircleUser, faRocket, faCog, faHeadphones, faUser, faSquareXmark, faShuffle, faRotate, faFilter, faSquareCaretLeft, faBolt, faAt, faUserGroup, faUserPlus, faCalendarPlus, faStairs, faSackDollar, faSignature, faLayerGroup, faAnglesRight, } from '@fortawesome/free-solid-svg-icons'
 import { faEnvelope, faFileLines, faPaperPlane, faSquarePlus, faCalendar } from '@fortawesome/free-regular-svg-icons'
 import { faSalesforce, faHubspot } from '@fortawesome/free-brands-svg-icons'
+import { loadStripe } from '@stripe/stripe-js';
 
 
 let defaults = VueSanitize.defaults;
@@ -80,6 +81,24 @@ Vue.component('datetime', Datetime)
 Vue.component('vue-multiselect')
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 Vue.use(vmodal)
+
+let stripePromise = null;
+
+export async function getStripe() {
+  if (!stripePromise) {
+    const key = store.state.stripeKey
+    stripePromise = loadStripe(key);
+  }
+  return stripePromise;
+}
+
+const StripePlugin = {
+  install(VueInstance) {
+    VueInstance.prototype.$stripe = getStripe;
+  },
+};
+
+Vue.use(StripePlugin);
 
 
 /* eslint-disable no-new */

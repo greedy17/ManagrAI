@@ -1,7 +1,7 @@
 <template>
   <div class="login-page">
     <header>
-      <img class="blue-filter" src="@/assets/images/logo.png" height="36px" alt="" />
+      <img class="blue-filter pointer" src="@/assets/images/logo.png" height="36px" alt="" @click="goToManagr" />
       <div class="header">
         <small>New to Managr ?</small>
         <router-link class="secondary-button" :to="{ name: 'Register' }"
@@ -196,6 +196,9 @@ export default {
           this.loggingIn = false
         }
       }
+    },
+    goToManagr() {
+      window.location.href = 'https://managr.ai/'
     },
     async onGetAuthLink(integration) {
       this.generatingToken = true
@@ -647,5 +650,8 @@ label {
   img {
     height: 22px;
   }
+}
+.pointer {
+  cursor: pointer;
 }
 </style>
