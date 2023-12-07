@@ -101,6 +101,10 @@ export default {
     }
   },
 
+  mounted() {
+    this.checkEnvironment()
+  },
+
   beforeDestroy() {
     clearInterval(this.checkInterval)
   },
@@ -118,6 +122,18 @@ export default {
     },
     closeMenu() {
       this.menuOpen = false
+    },
+    checkEnvironment() {
+      const host = window.location.host;
+      let key
+      if (host.includes('localhost') || host.includes('127.0.0.1')) {
+        key = process.env.VUE_APP_STRIPE_LOCAL_KEY
+      } else if (host.includes('staging')) {
+        key = process.env.VUE_APP_STRIPE_STAGING_KEY
+      } else {
+        key = process.env.VUE_APP_STRIPE_PROD_KEY
+      }
+      this.$store.dispatch('updateStripeKey', key)
     },
     checkTokenExpiry() {
       if (localStorage.getItem('tokenReceivedAt')) {

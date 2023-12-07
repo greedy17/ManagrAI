@@ -86,7 +86,8 @@ let stripePromise = null;
 
 export async function getStripe() {
   if (!stripePromise) {
-    stripePromise = loadStripe('pk_test_51OF1jYHvb6ZAgKwkO0KoHU5ot5GFfQ0WuNrUoNgckY2tyPySEUp5N7Y3Azi6wm6R1wGQfq2focNjDLy8s88va8bA009mfAMaBK');
+    const key = store.state.stripeKey
+    stripePromise = loadStripe(key);
   }
   return stripePromise;
 }
