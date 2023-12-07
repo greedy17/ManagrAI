@@ -32,7 +32,7 @@ NEW_API_EVERYTHING_QUERY_URI = (
 )
 
 NEW_API_EVERYTHING_DATE_URI = (
-    lambda date_from, date_to: f"everything?from={date_from}&to={date_to}&language=en&sortBy=publishedAt&pageSize=20"
+    lambda date_from, date_to: f"everything?from={date_from}&to={date_to}&language=en&sortBy=publishedAt&pageSize=40"
 )
 
 SEARCH_TYPE_CHOICES = (("NEWS", "News"), ("SOCIAL_MEDIA", "Social Media"), ("MIXED", "Mixed"))
@@ -90,7 +90,7 @@ DEFAULT_ARTICLE_INSTRUCTIONS = (
     lambda search: f"*Context: \n Sentiment: \n Impact: as it pertains to {search}.* Output can not exceed 400 characters"
 )
 DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS = (
-    lambda search: f"Summary: summarize the article and its relation to {search} in under 250 characters. \n Sentiment: what is the sentiment of {search} within the article, keep under 200 characters"
+    lambda boolean: f"Summary: summarize the article and its relation to any of these terms {boolean} in under 250 characters. \n Sentiment: what is the sentiment of any of these terms {boolean} within the article, keep under 200 characters"
 )
 
 
@@ -109,14 +109,14 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
     if not search:
         body = f"Today's date is {date}. Read the article below, then follow these instructions: {instructions}. Output cannot exceed 800 characters.\n Article: {article} \n"
     else:
-        body = f"Today's date is {date}. {search} was mentioned in a news article. Follow the instructions carefully. \n Instructions: {instructions} \n News Article: {article}"
+        body = f"Today's date is {date}. At least one of the terms in the boolean search were mentioned in the provided news article. Follow the instructions carefully.\nBoolean Search: {search} \n Instructions: {instructions} \n News Article: {article}"
     return body
 
 
 def OPEN_AI_PITCH(date, type, output, persona, chars, style=False):
     if not style:
         style = "Begin with a precise introduction, without informal salutations. Be clear, concise, and informative, avoiding metaphors. Offer coherent data without persuasion. Aim for depth, not sensationalism and avoid commercial bias."
-    body = f"""Today's date is {date}. As the VP of Communications, generate content following these instructions carefully: {output}. \n You must Mirror this writing style: {style}. \n Lastly, this content must adhere to a strict {chars} character limit."""
+    body = f"""Today's date is {date}. As the VP of Communications, generate content following these instructions carefully: {output}. \n You must Mirror this writing style: {style}. \n Lastly, this content must adhere to a strict {chars} word limit."""
     return body
 
 
@@ -155,4 +155,25 @@ DO_NOT_TRACK_LIST = [
 ]
 
 
-DO_NOT_INCLUDE_WORDS = ["photos", "sex", "review"]
+DO_NOT_INCLUDE_WORDS = ["photos", "sex", "review", "linkedin", ".pdf", "facebook", "instagram"]
+
+EXCLUDE_DOMAINS = [
+    "globenewswire.com",
+    "marketscreener.com",
+    "zacjohnson.com",
+    "allafrica.com",
+    "prnewswire.com",
+    "prnewswire.co.uk",
+    "gov.uk",
+    "pulse.ug",
+    "timesofindia.indiatimes.com",
+    "indiatimes.com",
+    "ibtimes.com.au",
+    "etfdailynews.com",
+    "dealnews.com",
+    "slickdeals.net",
+    "prtimes.jp",
+    "doctorofcredit.com",
+    "ozbargain.com.au",
+    "politicalwire.com",
+]

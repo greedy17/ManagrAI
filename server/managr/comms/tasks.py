@@ -344,7 +344,9 @@ def _process_website_domain(url, organization_name):
     if base_domain:
         try:
             database_check = NewsSource.objects.get(domain=full_domain)
-            if organization_name in database_check.access_count.keys():
+            if database_check.access_count is None:
+                database_check.access_count = {organization_name: 1}
+            elif organization_name in database_check.access_count.keys():
                 database_check.access_count[organization_name] += 1
             else:
                 database_check.access_count[organization_name] = 1
@@ -397,7 +399,7 @@ def _send_news_summary(news_alert_id):
             "website_url": f"{settings.MANAGR_URL}/login",
         }
         send_html_email(
-            f"Managr {alert.search.name} Summary",
+            f"Managr Digest: {alert.search.name}",
             "core/email-templates/news-email.html",
             settings.DEFAULT_FROM_EMAIL,
             [alert.user.email],
@@ -418,7 +420,7 @@ def _share_client_summary(summary, clips, user_email):
         "website_url": f"{settings.MANAGR_URL}/login",
     }
     send_html_email(
-        f"Managr Summary",
+        f"Managr Digest",
         "core/email-templates/news-email.html",
         settings.DEFAULT_FROM_EMAIL,
         [user_email],

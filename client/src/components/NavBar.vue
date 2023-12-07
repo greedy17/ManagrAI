@@ -124,14 +124,14 @@
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'PRSummaries' }" id="router-summarize">
-          <p>Summarize</p>
+          <p>Search</p>
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'Pitches' }" id="router-pitch">
           <p>Pitch</p>
         </router-link>
 
-        <router-link
+        <!-- <router-link
           v-if="!hasZoomIntegration"
           :to="{ name: 'PRIntegrations' }"
           id="router-transcribe1"
@@ -149,7 +149,7 @@
           id="router-transcribe2"
         >
           <p>Transcribe</p>
-        </router-link>
+        </router-link> -->
 
         <!-- <a @mouseenter="textSoonOn" @mouseleave="textSoonOff">{{ soonText }}</a> -->
 
@@ -403,14 +403,14 @@
         </div>
 
         <router-link active-class="active" :to="{ name: 'PRSummaries' }">
-          <p class="small-margin">Digest</p>
+          <p class="small-margin">Search</p>
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'Pitches' }">
           <p class="small-margin">Pitch</p>
         </router-link>
 
-        <div v-if="!hasZoomIntegration" :to="{ name: 'PRIntegrations' }">
+        <!-- <div v-if="!hasZoomIntegration" :to="{ name: 'PRIntegrations' }">
           <div class="wrapper-mobile">
             <p class="small-margin light-gray-blue">Transcribe</p>
             <div style="margin-left: -20px" class="tooltip-mobile">Connect Zoom</div>
@@ -419,7 +419,7 @@
 
         <router-link v-else active-class="active" :to="{ name: 'PRTranscripts' }">
           <p class="small-margin">Transcribe</p>
-        </router-link>
+        </router-link> -->
 
         <div class="relative mar-left">
           <div
@@ -1502,8 +1502,8 @@ a {
   // color: #6b6b6b;
   color: $light-gray-blue;
   font-size: 14px;
-  padding: 6px 0;
-  margin: 0 16px;
+  padding: 6px 4px;
+  margin: 0 12px;
   @media only screen and (max-width: 600px) {
     margin: 0px 16px;
     padding: 14px 0;
@@ -1518,9 +1518,10 @@ a:hover {
   color: rgba(0, 0, 0, 0.5);
 }
 .active {
-  color: #6b6b6b;
+  color: $dark-black-blue;
   position: relative;
-  border-bottom: 1px solid $mid-gray;
+  border-bottom: 2px solid $dark-black-blue;
+  // background-color: $white-blue;
 }
 
 .primary-button {

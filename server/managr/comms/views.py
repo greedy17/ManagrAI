@@ -138,7 +138,6 @@ class PRSearchViewSet(
                 articles = [article for article in articles if article["title"] != "[Removed]"]
                 internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
                 articles = normalize_article_data(articles, internal_articles)
-                # articles = normalize_newsapi_to_model(articles)
                 break
             except Exception as e:
                 has_error = True
@@ -217,18 +216,19 @@ class PRSearchViewSet(
             return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         url = request.data["params"]["url"]
         search = request.data["params"]["search"]
+        # search = '("Under Armour" OR "Nike" OR "Adidas" OR "Puma" OR "Reebok" OR "Fabletics" OR "Athleta") NOT "Lululemon"'
         instructions = request.data["params"]["instructions"]
         length = request.data["params"]["length"]
         has_error = False
         attempts = 1
-        token_amount = 1000
+        token_amount = 2000
         timeout = 60.0
         while True:
             try:
                 article_res = Article(url, config=generate_config())
                 article_res.download()
                 article_res.parse()
-                text = article_res.text
+                text = article_res.text.replace("\n", "")
                 open_ai_url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_ARTICLE_SUMMARY(
                     datetime.now().date(), text, search, length, instructions, True
@@ -255,7 +255,7 @@ class PRSearchViewSet(
                 logger.exception(
                     f"Retrying again due to token amount, amount currently at: {token_amount}"
                 )
-                if token_amount <= 2000:
+                if token_amount <= 2500:
                     has_error = True
 
                     message = "Token amount error"
@@ -570,6 +570,7 @@ class PRSearchViewSet(
                     r = open_ai_exceptions._handle_response(r)
                     query_input = r.get("choices")[0].get("message").get("content")
                     query_input = query_input.replace("AND", " ")
+                    query_input = query_input + " lang:en"
                 tweet_res = TwitterAuthAccount.get_tweets(query_input, next_token)
                 tweets = tweet_res.get("data", None)
                 includes = tweet_res.get("includes", None)
@@ -578,11 +579,11 @@ class PRSearchViewSet(
                         next_token = tweet_res["meta"]["next_token"]
                     user_data = tweet_res["includes"].get("users")
                     for tweet in tweets:
-                        if len(tweet_list) > 20:
+                        if len(tweet_list) > 39:
                             break
                         for user in user_data:
                             if user["id"] == tweet["author_id"]:
-                                if user["public_metrics"]["followers_count"] > 100:
+                                if user["public_metrics"]["followers_count"] > 1000:
                                     tweet["user"] = user
                                     tweet_list.append(tweet)
                                 break
@@ -591,8 +592,7 @@ class PRSearchViewSet(
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         data={"error": f"No results for {query_input}", "string": query_input},
                     )
-
-                if len(tweet_list) < 20 and tweets:
+                if len(tweet_list) < 40 and tweets:
                     continue
                 break
             except KeyError as e:
@@ -841,7 +841,6 @@ class PitchViewSet(
         token_amount = 1000
         timeout = 60.0
 
-        print("WRITING STYLE IS RIGHT HERE --- >", style)
         while True:
             try:
                 res = Pitch.generate_pitch(
@@ -1086,3 +1085,43 @@ class EmailAlertViewSet(
         alert_id = request.data.get("alert_id")
         emit_send_news_summary(alert_id, str(datetime.now()))
         return Response(status=status.HTTP_200_OK)
+
+
+# class DetailViewSet(
+#     viewsets.GenericViewSet,
+#     mixins.CreateModelMixin,
+#     mixins.RetrieveModelMixin,
+#     mixins.UpdateModelMixin,
+#     mixins.ListModelMixin,
+# ):
+#     serializer_class = DetailSerializer
+
+#     def get_queryset(self):
+#         return Detail.objects.filter(user=self.request.user)
+
+#     def create(self, request, *args, **kwargs):
+#         try:
+#             serializer = self.serializer_class(data=request.data)
+#             serializer.is_valid(raise_exception=True)
+#             serializer.save()
+#             readSerializer = self.serializer_class(instance=serializer.instance)
+#         except Exception as e:
+#             logger.exception(f"Error validating data for detials <{e}>")
+#             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+#         return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
+
+#     def partial_update(self, request, *args, **kwargs):
+#         instance = self.get_object()
+#         data = self.request.data
+#         serializer = self.serializer_class(instance=instance, data=data, partial=True)
+#         serializer.is_valid(raise_exception=True)
+#         serializer.save()
+#         return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+#     def destroy(self, request, *args, **kwargs):
+#         instance = self.get_object()
+#         try:
+#             instance.delete()
+#         except Exception as e:
+#             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+#         return Response(status=status.HTTP_200_OK)
