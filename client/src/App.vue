@@ -127,11 +127,11 @@ export default {
       const host = window.location.host;
       let key
       if (host.includes('localhost') || host.includes('127.0.0.1')) {
-        key = process.env.VUE_APP_STRIPE_LOCAL_KEY
+        key = "pk_test_51OKmfeK7HCniMBUgPlsZADW5oDgfeqmrfxGPyMi8PMST4Vwtpx9UBArus6sL4wHXAYz2nohTtz1xg0LfOsRLDjZT00TyZn8QQe"
       } else if (host.includes('staging')) {
-        key = process.env.VUE_APP_STRIPE_STAGING_KEY
+        key = "pk_test_51OKmcnJHm94PSCW8ruuXHTjqGMAOWitNe2IbTaddNXnrutuc8qtszxyuTjcaDNw2niLCDo8AiU1ErgzEKAlOd0ep00X9rd6FNW"
       } else {
-        key = process.env.VUE_APP_STRIPE_PROD_KEY
+        key = "pk_test_51OF1jYHvb6ZAgKwkO0KoHU5ot5GFfQ0WuNrUoNgckY2tyPySEUp5N7Y3Azi6wm6R1wGQfq2focNjDLy8s88va8bA009mfAMaBK"
       }
       this.$store.dispatch('updateStripeKey', key)
     },
