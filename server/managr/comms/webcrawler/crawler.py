@@ -183,10 +183,10 @@ class NewsSpider(scrapy.Spider):
         exclude_words = " or ".join(f"contains(@href, '{word}')" for word in exclude_word_list)
         anchor_tags = response.xpath(
             "//body//a["
-            "(starts-with(@href, '/') or starts-with(@href, 'https'))"
-            f" and not({exclude_classes})"
-            f" and not({exclude_words})"
-            "]"
+            + "(starts-with(@href, '/') or starts-with(@href, 'https'))"
+            + f" and not({exclude_classes})"
+            + f" and not({exclude_words})"
+            + "]"
         )
         site_name = response.xpath("//meta[contains(@property, 'site_name')]/@content").get()
         scrape_dict = {}

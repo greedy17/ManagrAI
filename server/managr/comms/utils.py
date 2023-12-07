@@ -343,8 +343,10 @@ def remove_api_sources():
 
 
 def potential_link_check(href, website_url):
+    parsed_url = urlparse(website_url)
+    site_url = parsed_url.netloc
     if "https" in href:
-        if website_url in href:
+        if site_url in href:
             return True
         else:
             return False
