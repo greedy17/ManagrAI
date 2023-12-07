@@ -47,7 +47,15 @@ from managr.core.utils import (
 )
 from managr.slack.helpers import requests as slack_requests, block_builders
 from .nylas.auth import get_access_token, get_account_details
-from .models import User, NylasAuthAccount, NoteTemplate, Message, Conversation, Report
+from .models import (
+    User,
+    NylasAuthAccount,
+    NoteTemplate,
+    Message,
+    Conversation,
+    Report,
+    StripeAdapter,
+)
 from .serializers import (
     UserSerializer,
     UserClientSerializer,
@@ -2101,6 +2109,7 @@ class ReportViewSet(
         return Report.objects.for_user(self.request.user)
 
     def create(self, request, *args, **kwargs):
+        print("data is right here ------ > ", request.data)
         try:
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -2162,6 +2171,10 @@ def session_complete_webhook(request):
                 sub_id = data["subscription"]
                 user.private_meta_data["stripe_sub_id"] = sub_id
                 user.save()
+                stripe_account = StripeAdapter(**{"user": user})
+                subscription = stripe_account.get_sub_id()
+                user_quantity = subscription["quantity"]
+                user.organization.number_of_allowed_users = user_quantity
                 user.organization.is_paid = True
                 user.organization.save()
                 break

@@ -41,6 +41,7 @@ class OpenAIException:
             logger.error(f"An error occured decoding the json, {self.fn_name}")
             return
         elif self.status_code == 400 and "maximum context length is" in self.message:
+            print(self.message)
             raise MaximumTokenLength()
         elif self.status_code == 401:
             return

@@ -17,7 +17,7 @@ STRIPE_API_BASE_URL = "https://api.stripe.com/v1"
 STRIPE_CHECKOUT_SESSION = "/checkout/sessions"
 STRIPE_SUBSCIPTIONS = "/subscriptions"
 STRIPE_HEADERS = {
-    "Authorization": settings.STRIPE_API_KEY,
+    "Authorization": f"Bearer {settings.STRIPE_API_KEY}",
     "Content-Type": "application/x-www-form-urlencoded",
 }
 

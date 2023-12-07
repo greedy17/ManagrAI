@@ -14,6 +14,7 @@ from urllib.parse import urlparse, urlunparse
 from collections import OrderedDict
 from .exceptions import _handle_response
 from .models import NewsSource
+from botocore.exceptions import ClientError
 
 s3 = boto3.client("s3")
 
@@ -38,18 +39,36 @@ def get_domain(url):
 
 
 def extract_date_from_text(text):
-    pattern = r"([A-Za-z]+(?: \d{1,2},)? \d{4})"
-    match = re.search(pattern, text)
-    if match:
-        date_str = match.group(1)
-        try:
-            date_obj = datetime.strptime(date_str, "%B %d, %Y")
-        except ValueError:
-            # If the full month name format fails, try with the abbreviated format
-            date_obj = datetime.strptime(date_str, "%b %d, %Y")
-        return str(date_obj)
-    else:
-        return None
+    text = text.replace("\n", "").strip()
+    patterns = [
+        r"(\d{1,2} [A-Za-z]+ \d{4})",
+        r"([A-Za-z]+(?: \d{1,2},)? \d{4})",
+        r"([A-Za-z]{3}\. \d{1,2}, \d{4} \d{1,2}:\d{2} [apAP]\.m\.)",
+    ]
+    strptime_formats = ["%d %B %Y", "%B %d, %Y", "%b %d, %Y", "%b. %d, %Y %I:%M %p"]
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            date_str = match.group(1)
+            if ":" in date_str:
+                colon_idx = date_str.index(":")
+                hour = date_str[colon_idx - 2 : colon_idx]
+                if int(hour) < 10 and " " in hour:
+                    hour = " 0" + str(int(hour))
+                    date_str = date_str[: colon_idx - 2] + hour + date_str[colon_idx:]
+            if "a.m." in date_str:
+                date_str = date_str.replace("a.m.", "AM")
+            if "p.m." in date_str:
+                date_str = date_str.replace("p.m.", "PM")
+            for format in strptime_formats:
+                try:
+                    date_obj = datetime.strptime(date_str, format)
+                except ValueError:
+                    continue
+                except Exception:
+                    continue
+                return str(date_obj)
+    return None
 
 
 def generate_config():
@@ -106,8 +125,9 @@ def boolean_search_to_query(search_string):
     current_query = None
     is_negative = False
     for idx, term in enumerate(term_list):
+        escaped_term = re.escape(term)
         if idx == len(term_list) - 1:
-            current_query = Q(content__contains=term)
+            current_query = Q(content__iregex=r"\m{}\M".format(escaped_term))
             if len(current_q_objects):
                 if current_query is not None:
                     current_q_objects.append(current_query)
@@ -142,7 +162,7 @@ def boolean_search_to_query(search_string):
             current_query = None
             is_negative = True
         else:
-            current_query = Q(content__contains=term)
+            current_query = Q(content__iregex=r"\m{}\M".format(escaped_term))
     return query
 
 
@@ -226,31 +246,42 @@ def normalize_article_data(api_data, article_models):
     for obj in sorted_arr:
         if obj["title"] not in ordered_dict.keys():
             ordered_dict[obj["title"]] = obj
-    duplicates_removed_list = list(ordered_dict.values())[:40]
+    duplicates_removed_list = list(ordered_dict.values())[:50]
     return duplicates_removed_list
 
 
 def create_and_upload_csv(data):
     file_name = "content_data.csv"
+    s3 = boto3.client("s3")
+    location = "staging" if settings.IN_STAGING else "prod"
+    key = f"{location}/{file_name}"
 
-    with open(file_name, "w", newline="") as csv_file:
-        writer = csv.writer(csv_file)
-        if s3.head_object(
-            Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=file_name, DefaultResponseHeaders={}
-        ):
-            writer.writerow(
-                [
-                    "Organization Name",
-                    "User Email",
-                    "Type",
-                    "Content",
-                    "Action Integer",
-                    "Postiive/Negative",
-                ]
-            )
-        writer.writerow(data)
+    try:
+        s3.head_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=key)
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "404":
+            with open(file_name, "w", newline="") as csv_file:
+                writer = csv.writer(csv_file)
+                writer.writerow(
+                    [
+                        "Organization Name",
+                        "User Email",
+                        "Type",
+                        "Content",
+                        "Action Integer",
+                        "Positive/Negative",
+                    ]
+                )
+            s3.upload_file(file_name, settings.AWS_STORAGE_BUCKET_NAME, key)
+        else:
+            raise  # Re-raise the caught exception
+    else:
+        mode = "a" if data[0] != "Organization Name" else "w"
+        with open(file_name, mode, newline="") as csv_file:
+            writer = csv.writer(csv_file)
+            writer.writerow(data)
 
-    s3.upload_file(file_name, settings.AWS_STORAGE_BUCKET_NAME, file_name)
+        s3.upload_file(file_name, settings.AWS_STORAGE_BUCKET_NAME, key)
 
 
 def append_data_to_daily_file(data):
@@ -311,14 +342,15 @@ def remove_api_sources():
     return
 
 
-def news_aggregator_check(tag, website_url):
-    href = tag.attrib.get("href", "")
+def potential_link_check(href, website_url):
+    parsed_url = urlparse(website_url)
+    site_url = parsed_url.netloc
     if "https" in href:
-        if website_url in href:
-            return False
-        else:
+        if site_url in href:
             return True
-    return False
+        else:
+            return False
+    return True
 
 
 def complete_url(url, default_domain, default_scheme="https"):

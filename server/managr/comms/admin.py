@@ -19,13 +19,22 @@ class CustomPitch(admin.ModelAdmin):
 class CustomNewsSource(admin.ModelAdmin):
     list_display = (
         "domain",
+        "site_name",
         "is_active",
+        "crawling_display",
         "last_scraped",
         "article_link_attribute",
         "article_link_selector",
     )
     ordering = ("-last_scraped", "is_active")
     readonly_fields = ("access_count",)
+    search_fields = ("domain", "site_name")
+
+    def crawling_display(self, obj):
+        return obj.crawling
+
+    crawling_display.boolean = True
+    crawling_display.short_description = "Crawling"
 
 
 class CustomArticle(admin.ModelAdmin):

@@ -97,7 +97,7 @@ class Search(TimeStampModel):
 
     @classmethod
     def get_clips(cls, search_boolean, date_to=False, date_from=False):
-        query = {"q": search_boolean}
+        query = {"q": search_boolean, "excludeDomains": ",".join(comms_consts.EXCLUDE_DOMAINS)}
         if date_to:
             query["to"] = date_to
             query["from"] = date_from
@@ -167,8 +167,7 @@ class TwitterAuthAccountAdapter:
         headers = comms_consts.TWITTER_API_HEADERS
         with Variable_Client() as client:
             response = client.get(url, headers=headers, params=params)
-            res = self._handle_response(response)
-        return res
+            return self._handle_response(response)
 
     def get_summary(
         self, user, tokens, timeout, tweets, input_text, instructions=False, for_client=False
@@ -295,7 +294,7 @@ class NewsSource(TimeStampModel):
     article_link_selector = models.CharField(max_length=255, blank=True, null=True)
     article_link_attribute = models.CharField(max_length=50, blank=True, null=True)
     article_link_prefix = models.URLField(blank=True, null=True)
-    article_link_regex = models.CharField(max_length=255, blank=True, null=True)
+    article_link_regex = models.CharField(max_length=500, blank=True, null=True)
     data_attribute_key = models.CharField(max_length=255, blank=True, null=True)
     data_attribute_value = models.CharField(max_length=255, blank=True, null=True)
     date_published_selector = models.CharField(max_length=255, blank=True, null=True)
@@ -321,11 +320,27 @@ class NewsSource(TimeStampModel):
                 for idx, value in enumerate(values):
                     selector += f"contains(@href, '{value}')"
                     if idx != len(values) - 1:
-                        selector += "or"
+                        selector += " or "
             else:
                 selector = f"contains(@href, '{selector_split[1]}')"
         if selector_type == "class":
-            selector = f"contains(@class, '{selector_split[1]}')"
+            if "|" in selector_split[1]:
+                selector = ""
+                values = selector_split[1].split("|")
+                for idx, value in enumerate(values):
+                    if "=" in value:
+                        value = value.replace("=", "")
+                        selector = f"@class='{value}'"
+                    else:
+                        selector = f"contains(@class, '{value}')"
+                    if idx != len(values) - 1:
+                        selector += "or"
+            else:
+                if "=" in selector_split[1]:
+                    value = selector_split[1].replace("=", "")
+                    selector = f"@class='{value}'"
+                else:
+                    selector = f"contains(@class, '{selector_split[1]}')"
         return selector
 
     def create_search_regex(self):
@@ -333,17 +348,21 @@ class NewsSource(TimeStampModel):
         if self.article_link_regex:
             if self.article_link_selector == "year" and current_year in self.article_link_regex:
                 return self.article_link_regex
+            return self.article_link_regex
         # add the link selector
         attribute_list = self.article_link_attribute.split(",")
-        regex = "//" + attribute_list[0] + "["
+        regex = "//body//" + attribute_list[0] + "["
         # check for data attribute
         if self.data_attribute_key:
-            regex += f"@{self.data_attribute_key}='{self.data_attribute_value}'"
+            if self.data_attribute_value is not None:
+                regex += f"@{self.data_attribute_key}='{self.data_attribute_value}'"
+            else:
+                regex += f"@{self.data_attribute_key}"
         # check for link attribute
         if self.article_link_selector:
             selector = self.selector_processor()
             if "@data" in regex:
-                regex += f"and {selector}"
+                regex += f" and {selector}"
             else:
                 regex += selector
         regex += "]"
@@ -356,6 +375,7 @@ class NewsSource(TimeStampModel):
     def transfer_dict(self):
         return dict(
             domain=self.domain,
+            site_name=self.site_name,
             last_scraped=str(self.last_scraped),
             access_count=self.access_count,
             article_link_selector=self.article_link_selector,
@@ -366,13 +386,27 @@ class NewsSource(TimeStampModel):
             is_active=self.is_active,
         )
 
+    @property
+    def crawling(self):
+        article_check = Article.objects.filter(source=self)
+        if len(article_check):
+            return True
+        return False
+
     @classmethod
     def domain_list(cls, scrape_ready=False, new=False):
         active_sources = cls.objects.filter(is_active=True)
-        if scrape_ready:
-            active_sources = active_sources.filter(article_link_selector__isnull=False)
-        elif new:
-            active_sources = active_sources.filter(last_scraped__isnull=True)
+        # filters sources that have been filled out but haven't been run yet to create the regex and scrape for the first time
+        if scrape_ready and new:
+            active_sources = active_sources.filter(
+                article_link_selector__isnull=False, article_link_regex__isnull=True
+            )
+        # filters sources that are already scrapping
+        elif scrape_ready and not new:
+            active_sources = active_sources.filter(article_link_regex__isnull=False)
+        # filters sources that were just added and don't have scrape data yet
+        elif not scrape_ready and new:
+            active_sources = active_sources.filter(article_link_attribute__isnull=True)
         source_list = [source.domain for source in active_sources]
         return source_list
 

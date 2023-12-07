@@ -639,18 +639,12 @@ export default {
     async getReports() {
       try {
         await User.api.getReports({ user: this.$store.state.user.id }).then((response) => {
+          console.log('get reports response : ', response)
           this.reportLink = response.results[0]['share_url']
         })
       } catch (e) {
         console.log(e)
       } finally {
-        this.reportSuccess = true
-        this.summary = null
-        this.imageUrl = null
-        this.clearClips()
-        this.$store.dispatch('updateReportTitle', null)
-        this.$store.dispatch('updateReportImage', null)
-        this.$store.dispatch('updateReportSummary', null)
       }
     },
     async getArticleSummary(title, url, search, length = 500) {
@@ -679,9 +673,13 @@ export default {
       let formData = new FormData()
       formData.append('title', this.reportTitle)
       // let imageFile = document.querySelector('#imageInput').files[0]
-      if (this.imageFile) {
+
+      if (this.imageFile && this.imageFile instanceof File) {
         formData.append('main_image', this.imageFile)
+      } else {
+        console.error('The imageFile is not a File object')
       }
+
       formData.append('user', this.$store.state.user.id)
       formData.append(
         'meta_data',
@@ -690,9 +688,16 @@ export default {
           summary: this.summary,
         }),
       )
+      console.log(this.imageFile)
       try {
         await User.api.createReport(formData).then((response) => {
           this.getReports()
+          this.reportSuccess = true
+          this.imageUrl = null
+          this.clearClips()
+          this.$store.dispatch('updateReportTitle', null)
+          this.$store.dispatch('updateReportImage', null)
+          this.$store.dispatch('updateReportSummary', null)
         })
         localStorage.addedClips = null
       } catch (e) {
@@ -761,6 +766,8 @@ export default {
       return articles.map((a) => (a.description ? a.description : a.text))
     },
     clearClips() {
+      this.summary = null
+      this.$store.dispatch('updateReportSummary', null)
       this.$store.dispatch('updateCategories', {})
       this.$emit('clear-clips')
     },

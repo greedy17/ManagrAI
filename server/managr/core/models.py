@@ -929,7 +929,6 @@ class StripeAdapter:
             StripeException(HTTPError(kwargs), fn_name)
         return data
 
-    @staticmethod
     def get_sub_id(self):
         url = (
             core_consts.STRIPE_API_BASE_URL
@@ -940,7 +939,6 @@ class StripeAdapter:
             res = client.get(url, headers=core_consts.STRIPE_HEADERS)
         return self._handle_response(res)
 
-    @staticmethod
     def update_subscription(self, sub_id, quantity):
         url = core_consts.STRIPE_API_BASE_URL + core_consts.STRIPE_SUBSCIPTIONS
         with Variable_Client() as client:
