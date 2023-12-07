@@ -1745,6 +1745,7 @@ export default {
         { name: `LinkedIn Post`, value: `LinkedIn Post` },
         { name: `Twitter Post`, value: `Twitter Post` },
         { name: 'Email', value: 'Email' },
+        { name: 'Other', value: '' },
       ],
       generateOptions: [
         { name: 'Basic summary', value: 'Summarize the news' },
