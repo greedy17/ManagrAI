@@ -112,9 +112,9 @@ class PRSearchViewSet(
         date_from = request.GET.get("date_from", False)
         while True:
             try:
-                if not boolean:
+                if not boolean:        
                     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                    prompt = core_consts.OPEN_AI_NEWS_BOOLEAN_CONVERSION(search)
+                    prompt = comms_consts.OPEN_AI_QUERY_STRING(search)
                     body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                         user.email,
                         prompt,
