@@ -990,7 +990,6 @@ class UserViewSet(
         user = User.objects.get(pk=kwargs["pk"])
         serializer = self.serializer_class(user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-
         # if request.data does not include quota/commit/upside,
         # then user should not be able to update another user's data
         for field in serializer.read_only_fields:
@@ -998,10 +997,8 @@ class UserViewSet(
             serializer.validated_data.pop(field, None)
         self.perform_update(serializer)
         user = serializer.instance
-
         serializer = UserClientSerializer(user, context={"request": request})
         response_data = serializer.data
-
         return Response(response_data)
 
     @action(

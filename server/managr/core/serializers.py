@@ -95,7 +95,6 @@ class UserClientSerializer(serializers.ModelSerializer):
     read_only_fields = (
         "email",
         "organization",
-        "is_active",
         "is_invited",
         "full_name",
         "is_admin",
