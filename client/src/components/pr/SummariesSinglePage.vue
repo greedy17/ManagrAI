@@ -2259,7 +2259,6 @@ export default {
             url: this.uploadLink,
           })
           .then((response) => {
-            console.log(response)
             this.success = true
             this.addClipFromUrl(response)
             this.articleBanner('Article added!')
@@ -2526,7 +2525,7 @@ export default {
       this.addedClips = this.$store.state.currentReportClips
       // this.addedClips = search.meta_data.clips ? search.meta_data.clips : []
       this.mainView = search.type === 'SOCIAL_MEDIA' ? 'social' : 'news'
-      this.generateNewSearch(true)
+      this.generateNewSearch(true, search.search_boolean)
       this.setCurrentAlert()
     },
     changeIndex() {
@@ -2625,7 +2624,7 @@ export default {
       this.loading = false
       this.summaryLoading = false
     },
-    async generateNewSearch(saved = false) {
+    async generateNewSearch(saved = false, boolean = '') {
       this.changeSearch({ search: null, template: null })
       this.savedSearch = null
       this.showGenerateDropdown = false
@@ -2651,24 +2650,25 @@ export default {
         this.getSourceSummary()
       } else {
         this.closeRegenModal()
-        if (!saved) {
-          // this.showSummaryInstructions = false
-        }
         this.loading = true
         this.changeSearch({ search: this.booleanString, template: this.newTemplate })
         try {
           if (this.shouldCancel) {
             return this.stopLoading()
           }
-          await this.getClips(saved).then(() => {
+          await this.getClips(saved, boolean).then(() => {
             if (this.filteredArticles.length) {
-              this.getSummary(this.filteredArticles, this.newSearch)
+              if (saved) {
+                this.getSummary(this.filteredArticles, this.newTemplate)
+              } else {
+                this.getSummary(this.filteredArticles, this.newSearch)
+              }
             }
           })
           if (this.shouldCancel) {
             return this.stopLoading()
           }
-          if (this.searchSaved) {
+          if (saved) {
             this.updateSearch()
           }
           this.refreshUser()
@@ -2727,6 +2727,7 @@ export default {
       }
     },
     async updateSearch() {
+      console.log('I AM MAKING IT HERE', this.newTemplate)
       try {
         await Comms.api
           .upateSearch({
@@ -2775,10 +2776,10 @@ export default {
       try {
         const response = await Comms.api
           .createSearch({
-            name: this.searchName || this.newSearch.slice(0, 60),
+            name: this.searchName,
             input_text: this.newSearch,
             search_boolean: this.booleanString,
-            instructions: this.newTemplate,
+            instructions: this.newTemplate ? this.newTemplate : this.newSearch,
             meta_data: this.metaData,
             type: this.mainView === 'news' ? 'NEWS' : 'SOCIAL_MEDIA',
           })
@@ -2791,7 +2792,7 @@ export default {
                 input_text: this.newSearch,
                 meta_data: this.metaData,
                 search_boolean: this.booleanString,
-                instructions: this.newTemplate,
+                instructions: this.newTemplate ? this.newTemplate : this.newSearch,
               }
             }
           })
@@ -2858,7 +2859,7 @@ export default {
       // update controllers here
       this.$store.dispatch('updateAbortController', {})
     },
-    async getClips(saved = false) {
+    async getClips(saved = false, boolean = '') {
       this.summary = null
       this.showingDropdown = false
       try {
@@ -2871,7 +2872,7 @@ export default {
           .getClips(
             {
               search: this.newSearch,
-              boolean: this.searchSaved ? this.booleanString : null,
+              boolean: boolean,
               user_id: this.user.id,
               date_from: this.dateStart,
               date_to: this.dateEnd,
@@ -3017,6 +3018,9 @@ export default {
           .then((response) => {
             if (this.shouldCancel) {
               return this.stopLoading()
+            }
+            if (this.searchSaved) {
+              this.updateSearch()
             }
             this.summary = response.summary
           })

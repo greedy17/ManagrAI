@@ -80,7 +80,7 @@ class PRSearchViewSet(
             serializer.is_valid(raise_exception=True)
             serializer.save()
             response_data = serializer.data
-            serializer.instance.update_boolean()
+            # serializer.instance.update_boolean()
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_201_CREATED, data=response_data)
