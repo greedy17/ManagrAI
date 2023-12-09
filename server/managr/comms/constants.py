@@ -54,6 +54,15 @@ DEFAULT_TWITTER_CLIENT_INSTRUCTIONS = """<strong>Summary of the Tweets:</strong>
 
 DEFAULT_WRITING_STYLE = "Aim for a professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Get right to the point"
 
+OPEN_AI_QUERY_STRING = (
+    lambda search: f"""From the search query '{search}', extract only the main subject or specific topic, ignoring any contextual details about professions, actions, or additional requests. The output must be a concise key subject that can be used for a boolean query in NewsAPI. Avoid including terms that describe professions (like 'journalists') or actions (like 'providing pitching tips'), focusing only on the core subject matter (like 'CPR'). The output must be a valid boolean query that can be used by NewsAPI following the steps below:
+    1. Do not include AND or OR within quotes, unless it's part of an entity name. Example: 'AI and farming' should return as 'AI' AND 'farming'.
+    2. If the query includes negative qualifiers like 'not', transform them into appropriate boolean operators like 'NOT'. Replace general concepts with specific key terms relevant for NewsAPI boolean queries. For instance, 'not stock related' should be translated into 'NOT stocks', 'NOT shares', 'NOT Nasdaq'
+    3. When asked to write content on behalf of an organization or entity, omit the organization or entity name. Example: "Write a media pitch for Mayo Clinic about AI and Cancer" should return "AI and Cancer"
+    4. Disregard any reference to a date, like 'last night', 'yesterday', etc.
+    """
+)
+
 
 def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_client=False):
     if not instructions:
@@ -116,7 +125,7 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
 def OPEN_AI_PITCH(date, type, output, persona, chars, style=False):
     if not style:
         style = "Begin with a precise introduction, without informal salutations. Be clear, concise, and informative, avoiding metaphors. Offer coherent data without persuasion. Aim for depth, not sensationalism and avoid commercial bias."
-    body = f"""Today's date is {date}. As the VP of Communications, generate content following these instructions carefully: {output}. \n You must Mirror this writing style: {style}. \n Lastly, this content must adhere to a strict {chars} word limit."""
+    body = f"""Today's date is {date}. Generate content following these instructions carefully: {output}. \n You must Mirror this writing style: {style}. \n Lastly, this content must adhere to a strict {chars} word limit."""
     return body
 
 
