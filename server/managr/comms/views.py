@@ -80,7 +80,7 @@ class PRSearchViewSet(
             serializer.is_valid(raise_exception=True)
             serializer.save()
             response_data = serializer.data
-            serializer.instance.update_boolean()
+            # serializer.instance.update_boolean()
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_201_CREATED, data=response_data)
@@ -112,9 +112,9 @@ class PRSearchViewSet(
         date_from = request.GET.get("date_from", False)
         while True:
             try:
-                if not boolean:
+                if not boolean:        
                     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                    prompt = core_consts.OPEN_AI_NEWS_BOOLEAN_CONVERSION(search)
+                    prompt = comms_consts.OPEN_AI_QUERY_STRING(search)
                     body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                         user.email,
                         prompt,

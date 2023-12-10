@@ -82,6 +82,76 @@
       </div>
     </Modal>
 
+    <Modal v-if="successModal" class="paid-modal">
+      <div class="regen-container">
+        <div class="paid-header">
+          <div>
+            <h4 class="regen-header-title"></h4>
+            <p class="regen-header-subtitle"></p>
+          </div>
+          <div class="pointer" @click="closeSuccessModal"><small>X</small></div>
+        </div>
+        <div class="paid-body">
+          <div>
+            <div class="paid-center">
+              <h3 class="paid-title">Payment Successful!</h3>
+              <h5 class="regen-body-title">
+                If you have any questions, email us at support@mymanagr.com
+              </h5>
+            </div>
+            <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
+          </div>
+        </div>
+        <div class="paid-footer">
+          <!-- <div></div> -->
+          <div class="row">
+            <div
+              style="padding-top: 9px; padding-bottom: 9px"
+              class="cancel-button"
+              @click="closeSuccessModal"
+            >
+              Close
+            </div>
+            <div class="save-button" @click="goToContact">Contact Us</div>
+          </div>
+        </div>
+      </div>
+    </Modal>
+
+    <Modal v-if="errorModal" class="paid-modal">
+      <div class="regen-container">
+        <div class="paid-header">
+          <div>
+            <h4 class="regen-header-title"></h4>
+            <p class="regen-header-subtitle"></p>
+          </div>
+          <div class="pointer" @click="() => (errorModal = false)"><small>X</small></div>
+        </div>
+        <div class="paid-body">
+          <div>
+            <div class="paid-center">
+              <h3 class="paid-title">Something went wrong</h3>
+              <h5 class="regen-body-title">Please try again later.</h5>
+            </div>
+            <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
+          </div>
+        </div>
+        <div class="paid-footer">
+          <!-- <div></div> -->
+          <div class="row">
+            <div
+              style="padding-top: 9px; padding-bottom: 9px"
+              class="cancel-button"
+              @click="() => (errorModal = false)"
+            >
+              Close
+            </div>
+            <div class="save-button" @click="goToContact">Contact Us</div>
+          </div>
+        </div>
+      </div>
+    </Modal>
+
     <Modal v-if="notifyModalOpen" class="paid-modal">
       <div class="regen-container">
         <div class="paid-header">
@@ -281,7 +351,7 @@
       <div class="no-content">
         <div :class="{ 'neg-mar-btm': mainView === 'website' }" class="title-row main-header">
           <div style="width: 50%; padding: 0 32px">
-            <h2 style="margin-bottom: 0">Scan the news</h2>
+            <h2 style="margin-bottom: 0">Create report</h2>
 
             <!-- <div class="row">
               
@@ -306,8 +376,8 @@
                 mainView === 'social'
                   ? 'Instantly search through X (formally Twitter).'
                   : mainView === 'website'
-                  ? 'Instantly read through a news article.'
-                  : 'Instantly search through millions of news sites.'
+                  ? 'Instantly summarize a news article.'
+                  : 'Generate an AI report based on news coverage.'
               }}
             </p>
           </div>
@@ -315,21 +385,22 @@
           <div class="news-column">
             <div
               v-if="mainView !== 'website'"
-              style="margin-bottom: 30px"
+              style="margin-bottom: 30px; padding: 0 16px"
               class="input-container"
               id="prompt-search"
               v-clickOutsideMenu
             >
               <div style="margin-right: -8px" class="input-row">
-                <div class="main-text">Keywords</div>
-                <input
+                <div class="main-text">Instructions</div>
+                <textarea
                   @keyup.enter="generateNewSearch(false)"
                   id="search-input"
-                  class="area-input"
-                  placeholder="Enter keywords to find relevant news clips..."
+                  class="area-input text-area-input"
+                  placeholder="Type instructions..."
                   @focus="showDropdown"
                   autocomplete="off"
                   v-model="newSearch"
+                  v-autoresize
                   :disabled="loading || summaryLoading"
                 />
 
@@ -342,14 +413,14 @@
                   >
                     News
                   </div>
-                  <div
+                  <!-- <div
                     @click="switchMainView('social')"
                     :class="{ activeswitch: mainView === 'social' }"
                     class="switch-item"
                     id="social-tab"
                   >
                     Social
-                  </div>
+                  </div> -->
                   <div
                     @click="switchMainView('website')"
                     :class="{ activeswitch: mainView === 'website' }"
@@ -402,7 +473,7 @@
                 <div
                   @click="addSuggestion(suggestion)"
                   class="dropdown-item"
-                  v-for="(suggestion, i) in filteredSuggestions"
+                  v-for="(suggestion, i) in filteredPromptSuggestions"
                   :key="i"
                 >
                   <p>
@@ -434,14 +505,14 @@
                   >
                     News
                   </div>
-                  <div
+                  <!-- <div
                     @click="switchMainView('social')"
                     :class="{ activeswitch: mainView === 'social' }"
                     class="switch-item"
                     id="social-tab"
                   >
                     Social
-                  </div>
+                  </div> -->
                   <div
                     @click="switchMainView('website')"
                     :class="{ activeswitch: mainView === 'website' }"
@@ -512,7 +583,7 @@
                   </div>
 
                   <p style="margin: 16px 0" v-else-if="!selectedSearch" class="sub-text">
-                    Run a search then generate an AI report.
+                    Your report will appear below.
                   </p>
                   <p
                     v-else-if="selectedSearch && mainView !== 'website'"
@@ -521,9 +592,7 @@
                   >
                     AI-generated boolean: <span :title="booleanString">{{ booleanString }}</span>
                   </p>
-                  <p v-else style="margin: 16px 0" class="sub-text">
-                    Generate a summary for the uploaded article
-                  </p>
+                  <p v-else style="margin: 16px 0" class="sub-text">Article Report</p>
 
                   <p v-if="selectedSearch" style="margin-right: 4px; font-size: 14px">
                     {{
@@ -554,9 +623,7 @@
                   class="space-between"
                   style="position: relative"
                 >
-                  <button disabled style="margin-left: 0" class="primary-button">
-                    Generate Report
-                  </button>
+                  <button disabled style="margin-left: 0" class="primary-button">Save</button>
 
                   <div v-if="mainView !== 'website'">
                     <div
@@ -619,14 +686,15 @@
                         @click="summarizing = false"
                         class="secondary-button"
                       >
-                        <!-- <img height="10px" src="@/assets/images/refresh-pr.svg" alt="" /> -->
-                        {{
+                        <!-- {{
                           (filteredArticles && filteredArticles.length) || mainView === 'website'
                             ? 'New'
                             : tweets.length
                             ? 'New'
                             : 'New Search'
-                        }}
+                        }} -->
+
+                        Chat
                       </button>
 
                       <button
@@ -771,11 +839,10 @@
                       v-if="showSummaryInstructions"
                     >
                       <div class="input-row">
-                        <div @click="toggleGenerateDropdown" class="main-text pointer">
-                          <p class="shadow-hover" style="margin-left: -10px; font-size: 12px">
-                            Instructions
-                          </p>
-                          <img
+                        <!-- @click="toggleGenerateDropdown" -->
+                        <div class="main-text">
+                          <p>Chat</p>
+                          <!-- <img
                             v-if="!showGenerateDropdown"
                             src="@/assets/images/downArrow.svg"
                             class="inverted"
@@ -788,7 +855,7 @@
                             src="@/assets/images/downArrow.svg"
                             height="14px"
                             alt=""
-                          />
+                          /> -->
                         </div>
                         <!-- v-if="showSummaryInput" -->
                         <!-- @focus="showPromptDropdown" -->
@@ -796,7 +863,7 @@
                           style="margin: 0"
                           class="area-input text-area-input"
                           id="instructions-text-area"
-                          placeholder="Provide instructions, or just click generate..."
+                          placeholder="Ask me anything about this news coverage..."
                           v-model="newTemplate"
                           v-autoresize
                         />
@@ -823,29 +890,73 @@
                         <button
                           @click="getSummary(filteredArticles, newTemplate)"
                           v-if="mainView === 'news'"
-                          class="primary-button"
-                          style="margin-right: 0"
+                          :disabled="!newTemplate"
+                          style="
+                            margin: 0;
+                            margin-left: 8px;
+                            border: none !important;
+                            background-color: transparent;
+                          "
                         >
-                          <img src="@/assets/images/sparkle.svg" height="14px" alt="" />
-                          Generate
+                          <img
+                            v-if="!newTemplate"
+                            style="margin: 0"
+                            src="@/assets/images/paper-plane-top.svg"
+                            height="14px"
+                            alt=""
+                            class="faded"
+                          />
+
+                          <img
+                            v-else
+                            style="margin: 0"
+                            src="@/assets/images/paper-plane-full.svg"
+                            height="13px"
+                            alt=""
+                            class="grow filtered-blue"
+                          />
                         </button>
-                        <button
+
+                        <!-- <button
                           @click="getTweetSummary(filteredArticles, newTemplate)"
                           v-else-if="mainView === 'social'"
-                          class="primary-button"
-                          style="margin-right: 0"
+                          style="
+                            margin: 0;
+                            margin-left: 8px;
+                            border: none !important;
+                            background-color: transparent;
+                          "
                         >
                           <img src="@/assets/images/sparkle.svg" height="14px" alt="" />
-                          Generate
-                        </button>
+                        </button> -->
                         <button
                           @click="getSourceSummary"
+                          :disabled="!newTemplate"
                           v-else
-                          class="primary-button"
-                          style="margin-right: 0"
+                          style="
+                            margin: 0;
+                            margin-left: 8px;
+                            border: none !important;
+                            background-color: transparent;
+                          "
                         >
-                          <img src="@/assets/images/sparkle.svg" height="14px" alt="" />
-                          Generate
+                          <img
+                            v-if="!newTemplate"
+                            style="margin: 0"
+                            src="@/assets/images/paper-plane-top.svg"
+                            height="14px"
+                            alt=""
+                            class="faded"
+                          />
+
+                          <img
+                            v-else
+                            style="margin: 0"
+                            src="@/assets/images/paper-plane-full.svg"
+                            height="13px"
+                            alt=""
+                            class="grow filtered-blue"
+                          />
                         </button>
                       </div>
 
@@ -1655,7 +1766,7 @@ export default {
       addedClip: false,
       showSummaryInput: true,
       contentType: 'Instructions',
-      showSummaryInstructions: false,
+      showSummaryInstructions: true,
       showingViews: false,
       summarizing: false,
       detailModalOpen: false,
@@ -1736,6 +1847,8 @@ export default {
       showingDropdown: false,
       showGenerateDropdown: false,
       selectedOption: null,
+      successModal: false,
+      errorModal: false,
       selectedDateTime: '',
       articleGenerateOptions: [
         { name: 'Press Release', value: `Press Release` },
@@ -1804,22 +1917,17 @@ export default {
         'XXX Hospital no ER related stories',
       ],
       promptSuggestions: [
-        `Summarize the news`,
-        `Summarize the news for XXX, provide sentiment, creative ways they can newsjack this coverage, and list 5 journalists from Tier 1 publications that will write about this, along with creative pitching tips`,
-        `As XXX PR agency, provide an update on what the competition is doing along with super creative ways to newsjack this coverage`,
-        'List 5 of the most important headlines ( include source name + journalist) and the impact on XXX',
-        `List 10 journalists from Tier 1 publications and creative tips to pitch them`,
-        `List 10 journalists from Tier 1 publications that will write about XXX, along with creative pitching tips`,
-        `Create a media monitoring report for XXX. Include top sources (based on popularity and size), number of articles, sentiment, and any other important metrics`,
-        `Provide pitch ideas and background on [JOURNALIST NAME]`,
-        'Convert the most entertaining news story about XXX into a blog post',
-        'Craft short responses on behalf of XXX to the stories that need it',
-        `Write a highly engaging LinkedIn post based on this coverage for XXX`,
-        `Draft an entertaining Twitter post based on this coverage for XXX`,
-        `Based on recent news & your knowledge base ...`,
-        'Generate 5 questions & answers journalists would ask based on this news',
-        'Suggest a strategy to combat this negative coverage',
-        'Find a short, fun fact from the news about XXX',
+        `Summarize the news for XXX`,
+        `Summarize the news for XXX, provide sentiment analysis, and the PR impact of this coverage`,
+        `Trends about XXX`,
+        `List 5 of the most important headlines ( include source name + journalist) about XXX`,
+        `Find up to 10 journalists (from top pubs, include pitching tips) writing about XXX`,
+        `Create a media monitoring report for XXX. List top sources and journalist (based on popularity and size of publication), sentiment analysis, and any other important metrics`,
+        // `Respond to all the negative coverage about XXX on behalf of XXX`,
+        `Generate 5 questions & answers journalists would ask about XXX`,
+        `Write an informative media pitch on behalf of XXX about XXX`,
+        `Write an engaging blog post on behalf of XXX about XXX`,
+        `Issue a blunt statement on behalf of XXX about XXX`,
       ],
     }
   },
@@ -1827,6 +1935,16 @@ export default {
     // this.checkInterval = setInterval(this.checkTokenExpiry, 60000)
     this.addedClips = this.$store.state.currentReportClips
     this.shouldCancel = false
+
+    console.log('this.$route', this.$route.query.success)
+
+    if (this.$route.query && this.$route.query.success) {
+      if (this.$route.query.success === 'true') {
+        this.successModal = true
+      } else {
+        this.errorModal = true
+      }
+    }
 
     const today = new Date()
     const sevenDaysAgo = new Date(today)
@@ -2038,6 +2156,11 @@ export default {
         // this.setArticlePitchContent(url,sum)
       }
     },
+    closeSuccessModal() {
+      this.$router.push({ name: 'PRSummaries' })
+      this.$router.go()
+      this.successModal = false
+    },
     setPitchContent() {
       let content = {
         summary: this.summary,
@@ -2129,14 +2252,13 @@ export default {
       this.summary = null
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       this.clipLoading = true
-      this.showSummaryInstructions = false
+      // this.showSummaryInstructions = false
       try {
         await Comms.api
           .uploadLink({
             url: this.uploadLink,
           })
           .then((response) => {
-            console.log(response)
             this.success = true
             this.addClipFromUrl(response)
             this.articleBanner('Article added!')
@@ -2162,6 +2284,7 @@ export default {
       clip.author = clip.author[0]
       clip['search'] = this.newSearch
       this.addedArticles = [clip]
+      this.getSourceSummary()
     },
     addClip(clip) {
       if (Array.isArray(clip.author)) {
@@ -2402,7 +2525,7 @@ export default {
       this.addedClips = this.$store.state.currentReportClips
       // this.addedClips = search.meta_data.clips ? search.meta_data.clips : []
       this.mainView = search.type === 'SOCIAL_MEDIA' ? 'social' : 'news'
-      this.generateNewSearch(true)
+      this.generateNewSearch(true, search.search_boolean)
       this.setCurrentAlert()
     },
     changeIndex() {
@@ -2501,7 +2624,7 @@ export default {
       this.loading = false
       this.summaryLoading = false
     },
-    async generateNewSearch(saved = false) {
+    async generateNewSearch(saved = false, boolean = '') {
       this.changeSearch({ search: null, template: null })
       this.savedSearch = null
       this.showGenerateDropdown = false
@@ -2527,20 +2650,25 @@ export default {
         this.getSourceSummary()
       } else {
         this.closeRegenModal()
-        if (!saved) {
-          this.showSummaryInstructions = false
-        }
         this.loading = true
         this.changeSearch({ search: this.booleanString, template: this.newTemplate })
         try {
           if (this.shouldCancel) {
             return this.stopLoading()
           }
-          await this.getClips(saved)
+          await this.getClips(saved, boolean).then(() => {
+            if (this.filteredArticles.length) {
+              if (saved) {
+                this.getSummary(this.filteredArticles, this.newTemplate)
+              } else {
+                this.getSummary(this.filteredArticles, this.newSearch)
+              }
+            }
+          })
           if (this.shouldCancel) {
             return this.stopLoading()
           }
-          if (this.searchSaved) {
+          if (saved) {
             this.updateSearch()
           }
           this.refreshUser()
@@ -2599,6 +2727,7 @@ export default {
       }
     },
     async updateSearch() {
+      console.log('I AM MAKING IT HERE', this.newTemplate)
       try {
         await Comms.api
           .upateSearch({
@@ -2647,10 +2776,10 @@ export default {
       try {
         const response = await Comms.api
           .createSearch({
-            name: this.searchName || this.newSearch.slice(0, 60),
+            name: this.searchName,
             input_text: this.newSearch,
             search_boolean: this.booleanString,
-            instructions: this.newTemplate,
+            instructions: this.newTemplate ? this.newTemplate : this.newSearch,
             meta_data: this.metaData,
             type: this.mainView === 'news' ? 'NEWS' : 'SOCIAL_MEDIA',
           })
@@ -2663,7 +2792,7 @@ export default {
                 input_text: this.newSearch,
                 meta_data: this.metaData,
                 search_boolean: this.booleanString,
-                instructions: this.newTemplate,
+                instructions: this.newTemplate ? this.newTemplate : this.newSearch,
               }
             }
           })
@@ -2730,7 +2859,7 @@ export default {
       // update controllers here
       this.$store.dispatch('updateAbortController', {})
     },
-    async getClips(saved = false) {
+    async getClips(saved = false, boolean = '') {
       this.summary = null
       this.showingDropdown = false
       try {
@@ -2743,7 +2872,7 @@ export default {
           .getClips(
             {
               search: this.newSearch,
-              boolean: this.searchSaved ? this.booleanString : null,
+              boolean: boolean,
               user_id: this.user.id,
               date_from: this.dateStart,
               date_to: this.dateEnd,
@@ -2864,6 +2993,7 @@ export default {
       }
     },
     async getSummary(clips, instructions = '') {
+      console.log(instructions)
       const allClips = this.getArticleDescriptions(clips)
       this.summaryLoading = true
       let openAiDown = false
@@ -2888,6 +3018,9 @@ export default {
           .then((response) => {
             if (this.shouldCancel) {
               return this.stopLoading()
+            }
+            if (this.searchSaved) {
+              this.updateSearch()
             }
             this.summary = response.summary
           })
@@ -4028,7 +4161,7 @@ button:disabled {
 // }
 
 .text-area-input {
-  padding-top: 1.25rem;
+  padding-top: 1.5rem;
 }
 .input-row {
   display: flex;
@@ -4058,8 +4191,9 @@ button:disabled {
   color: $dark-black-blue;
   svg,
   img {
-    margin-left: 2px;
     filter: invert(40%);
+    margin: 0;
+    padding: 0;
   }
 }
 

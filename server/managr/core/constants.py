@@ -13,6 +13,15 @@ SEND_EMAIL_URI = "send"
 CALENDAR_URI = "calendars"
 EVENT_POST = "events"
 
+STRIPE_API_BASE_URL = "https://api.stripe.com/v1"
+STRIPE_CHECKOUT_SESSION = "/checkout/sessions"
+STRIPE_SUBSCIPTIONS = "/subscriptions"
+STRIPE_HEADERS = {
+    "Authorization": f"Bearer {settings.STRIPE_API_KEY}",
+    "Content-Type": "application/x-www-form-urlencoded",
+}
+
+
 if settings.USE_OPEN_AI:
     OPEN_AI_SECRET = settings.OPEN_AI_SECRET
     OPEN_AI_HEADERS = {
@@ -212,13 +221,19 @@ Limit your response to under 1,000 characters.
 
 
 OPEN_AI_NEWS_BOOLEAN_CONVERSION = (
-    lambda search: f"""Convert the Search Term below into a boolean query to be used for News API.
-    Follow these steps in order to create the best possible search:
-    1: Concentrate on the primary keywords or key concepts of the search term. Example: 'Articles written or about Lululemon' should just be 'Lululemon'. Example 2: 'Apple, exclude stock related news' shoud be "apple" NOT (stock or Nasdaq or shares...).
-    2: Do not make it a title search unless specifically instructed via the prompt.
-    3: Do not use acronyms in your search unless specifically asked to.
-    4: If the search term is a broad category such as "sports", ensure you include or exclude relevant subtopics (e.g., "football", "baseball", "basketball", "coaches", etc.), based on the nature of the query.
-    Search Term: {search}"""
+    # lambda search: f"""Convert the Search Term below into a boolean query to be used for News API.
+    # Follow these steps in order to create the best possible search:
+    # 1: Concentrate on the primary keywords or key concepts of the search term. Example: 'Articles written or about Lululemon' should just be 'Lululemon'. Example 2: 'Apple, exclude stock related news' shoud be "apple" NOT (stock or Nasdaq or shares...).
+    # 2: Do not make it a title search unless specifically instructed via the prompt.
+    # 3: Do not use acronyms in your search unless specifically asked to.
+    # 4: If the search term is a broad category such as "sports", ensure you include or exclude relevant subtopics (e.g., "football", "baseball", "basketball", "coaches", etc.), based on the nature of the query.
+    # 5: Use logical operators judiciously to balance specificity and breadth. Employ 'AND' to combine terms that are closely related or typically reported together, ensuring relevance. Opt for 'OR' when connecting terms that are less frequently associated or when one term has a low probability of appearing in news contexts. This approach broadens the search scope while maintaining focus on the primary subject.
+    # Search Term: {search}"""
+
+    lambda search: f"""Convert the term below into a boolean query to be used for News API.
+    term: {search}
+    output must only be the boolean string.
+    """
 )
 
 OPEN_AI_TRANSCRIPT_GENERATE_CONTENT = (
@@ -403,6 +418,7 @@ WORKFLOW_CONFIG_CHECK = "WORKFLOW_CONFIG_CHECK"
 MORNING_REFRESH = "MORNING_REFRESH"
 MEETING_REMINDER = "MEETING_REMINDER"
 TRIAL_STATUS = "TRIAL_STATUS"
+STRIPE_CHECKOUT_WEBHOOK = "checkout.session"
 # These times should be a half hour before the intended time
 REMINDER_CONFIG = {
     WORKFLOW_REMINDER: {"HOUR": 7, "MINUTE": 00},

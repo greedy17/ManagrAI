@@ -308,6 +308,14 @@ class NewsSource(TimeStampModel):
     def __str__(self):
         return self.domain
 
+    def article_selectors(self):
+        return {
+            "author": self.author_selector,
+            "publish_date": self.date_published_selector,
+            "title": self.article_title_selector,
+            "content": self.article_content_selector,
+        }
+
     def selector_processor(self):
         selector_split = self.article_link_selector.split(",")
         selector_type = selector_split[0]

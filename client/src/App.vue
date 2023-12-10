@@ -1,7 +1,7 @@
 <template>
   <div id="app">
-    <Modal v-if="showExpireModal" class="delete-modal">
-      <div class="delete-container">
+    <Modal v-if="showExpireModal" class="session-expiring-modal">
+      <div class="session-expiring-container">
         <header>
           <p>X</p>
         </header>
@@ -101,6 +101,10 @@ export default {
     }
   },
 
+  mounted() {
+    this.checkEnvironment()
+  },
+
   beforeDestroy() {
     clearInterval(this.checkInterval)
   },
@@ -118,6 +122,18 @@ export default {
     },
     closeMenu() {
       this.menuOpen = false
+    },
+    checkEnvironment() {
+      const host = window.location.host;
+      let key
+      if (host.includes('localhost') || host.includes('127.0.0.1')) {
+        key = "pk_test_51OKmfeK7HCniMBUgPlsZADW5oDgfeqmrfxGPyMi8PMST4Vwtpx9UBArus6sL4wHXAYz2nohTtz1xg0LfOsRLDjZT00TyZn8QQe"
+      } else if (host.includes('staging')) {
+        key = "pk_test_51OKmcnJHm94PSCW8ruuXHTjqGMAOWitNe2IbTaddNXnrutuc8qtszxyuTjcaDNw2niLCDo8AiU1ErgzEKAlOd0ep00X9rd6FNW"
+      } else {
+        key = "pk_test_51OF1jYHvb6ZAgKwkO0KoHU5ot5GFfQ0WuNrUoNgckY2tyPySEUp5N7Y3Azi6wm6R1wGQfq2focNjDLy8s88va8bA009mfAMaBK"
+      }
+      this.$store.dispatch('updateStripeKey', key)
     },
     checkTokenExpiry() {
       if (localStorage.getItem('tokenReceivedAt')) {
@@ -246,13 +262,13 @@ input {
   z-index: -1;
 }
 
-.delete-modal {
+.session-expiring-modal {
   margin-top: 120px;
   width: 100%;
   height: 100%;
 }
 
-.delete-container {
+.session-expiring-container {
   width: 500px;
   height: 220px;
   color: $base-gray;

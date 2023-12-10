@@ -67,6 +67,7 @@ const state = {
   tempRefreshUser: null,
   generatedContent: null,
   abortControllers: {},
+  stripeKey: null,
 }
 
 const mutations = {
@@ -84,6 +85,9 @@ const mutations = {
   },
   UPDATE_ABORT_CONTROLLER: (state, payload) => {
     state.abortControllers = payload
+  },
+  UPDATE_STRIPE_KEY: (state, payload) => {
+    state.stripeKey = payload
   },
   UPDATE_CURRENT_REPORT_CLIPS: (state, payload) => {
     state.currentReportClips = payload
@@ -554,6 +558,9 @@ const actions = {
   },
   updateAbortController({ commit }, payload) {
     commit('UPDATE_ABORT_CONTROLLER', payload)
+  },
+  updateStripeKey({ commit }, payload) {
+    commit('UPDATE_STRIPE_KEY', payload)
   },
   updateCurrentReportClips({ commit }, payload) {
     commit('UPDATE_CURRENT_REPORT_CLIPS', payload)

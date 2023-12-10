@@ -259,6 +259,11 @@ urlpatterns = [
         zoom_views.zoom_recordings_webhook,
         name="get_zoom_recording",
     ),
+    path(
+        "stripe/webhooks/session-complete",
+        core_views.session_complete_webhook,
+        name="session_complete",
+    ),
     path("zoom/fake-recording", zoom_views.fake_recording, name="fake-recording"),
     path("users/zoom/schedule-meeting", zoom_views.schedule_zoom_meeting, name="schedule-meeting"),
     path(

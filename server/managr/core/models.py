@@ -1,12 +1,14 @@
-from urllib.parse import urlencode
 import uuid
 import json
 import logging
 from managr.utils.sites import get_site_url
+from urllib.parse import urlencode
 from datetime import datetime
+from django.conf import settings
 from django.db.models.fields.related import ForeignKey
 from rest_framework.exceptions import ValidationError
 from managr.utils.sites import get_site_url
+from requests.exceptions import HTTPError
 from managr.utils.misc import encrypt_dict
 from django.db import models, IntegrityError
 from django.contrib.auth.models import AbstractUser, BaseUserManager, AnonymousUser
@@ -25,6 +27,7 @@ from managr.slack.helpers import block_builders
 from managr.core.nylas.auth import convert_local_time_to_unix
 from .nylas.exceptions import NylasAPIError
 from managr.core.nylas.auth import gen_auth_url, revoke_access_token
+from .exceptions import StripeException
 
 client = HttpClient().client
 logger = logging.getLogger("managr")
@@ -175,20 +178,10 @@ class Conversation(TimeStampModel):
 
 
 class User(AbstractUser, TimeStampModel):
-    # Override the Django-provided username field and replace with email
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
     username = None
     email = models.EmailField(unique=True)
-
-    # User role options
-    # LEADERSHIP = "LEADERSHIP"
-    # FRONTLINE_MANAGER = "FRONTLINE_MANAGER"
-    # ACCOUNT_EXEC = "ACCOUNT_EXEC"
-    # ACCOUNT_MANAGER = "ACCOUNT MANAGER"
-    # OPERATIONS = "OPERATIONS"
-    # ENABLEMENT = "ENABLEMENT"
-    # SDR = "SDR"
     SALES = "SALES"
     PR = "PR"
     DUAL = "DUAL"
@@ -202,16 +195,8 @@ class User(AbstractUser, TimeStampModel):
             "PR",
         ),
         (DUAL, "Dual"),
-        # (LEADERSHIP, "Leadership",),
-        # (FRONTLINE_MANAGER, "Frontline Manager",),
-        # (ACCOUNT_EXEC, "Account Executive",),
-        # (ACCOUNT_MANAGER, "Account Manager",),
-        # (OPERATIONS, "OPERATIONS",),
-        # (ENABLEMENT, "Enablement",),
-        # (SDR, "SDR",),
     ]
     role = models.CharField(max_length=32, choices=ROLE_CHOICES, blank=True)
-
     is_active = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
     onboarding = models.BooleanField(default=False)
@@ -900,3 +885,65 @@ class Report(TimeStampModel):
         encrypted_data = encrypt_dict(data)
         base_url = get_site_url()
         return f"{base_url}/shared/{encrypted_data}"
+
+
+class StripeAdapter:
+    def __init__(self, **kwargs):
+        self.user = kwargs.get("user", None)
+
+    @property
+    def subscription_id(self):
+        meta_data = self.user.private_meta_data
+        if "stripe_sub_id" in meta_data.keys():
+            return meta_data["stripe_sub_id"]
+        else:
+            None
+
+    @staticmethod
+    def _handle_response(response, fn_name=None):
+        if not hasattr(response, "status_code"):
+            raise ValueError
+
+        elif response.status_code in [200, 201, 207]:
+            if response.status_code == 204:
+                return {}
+            try:
+                data = response.json()
+            except Exception as e:
+                StripeException(e, fn_name)
+        else:
+            status_code = response.status_code
+            error_data = response.json()
+            if status_code == 400:
+                error_param = error_data.get("error", error_data.get("errorCode", None))
+                error_message = error_data.get("error_description", error_data.get("message", None))
+            else:
+                error_param = error_data.get("category", None)
+                error_message = error_data.get("message", None)
+            kwargs = {
+                "status_code": status_code,
+                "error_param": error_param,
+                "error_message": error_message,
+            }
+
+            StripeException(HTTPError(kwargs), fn_name)
+        return data
+
+    def get_sub_id(self):
+        url = (
+            core_consts.STRIPE_API_BASE_URL
+            + core_consts.STRIPE_SUBSCIPTIONS
+            + f"/{self.subscription_id}"
+        )
+        with Variable_Client() as client:
+            res = client.get(url, headers=core_consts.STRIPE_HEADERS)
+        return self._handle_response(res)
+
+    def update_subscription(self, sub_id, quantity):
+        url = core_consts.STRIPE_API_BASE_URL + core_consts.STRIPE_SUBSCIPTIONS
+        with Variable_Client() as client:
+            data = {
+                "items": [{"price": settings.STRIPE_PRICE_ID, "quantity": quantity, "id": sub_id}]
+            }
+            res = client.post(url, data=data)
+        return self._handle_response(res)

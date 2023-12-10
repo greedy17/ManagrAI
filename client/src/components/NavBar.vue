@@ -16,6 +16,81 @@
         </main>
       </div>
     </Modal>
+    <Modal v-if="plansModal" class="pricing-modal">
+      <div class="pricing-container">
+        <header @click="closePlansModal">
+          <p>X</p>
+        </header>
+        <main>
+          <h2 class="pricing-header">Upgrade to PRO</h2>
+          <p>This plan includes unlimited usage, email alerts, and premium support</p>
+          <div class="pricing-box">
+            <!-- <h2 class="pricing-box__header">PRO</h2> -->
+            <!-- <p>Self-serve plan with unlimited usage, automated email summaries, and the ability to learn your writing style.</p> -->
+            <!-- <p>Upgrade to unlimited usage and additional AI automations</p> -->
+            <h1 class="pricing-price">$80 <span class="pricing-smaller-text">per user / month</span></h1>
+            <div>
+              <div class="pricing-list-container">
+                <h3 class="pricing-list-header">Everything in free, plus:</h3>
+                <ul class="pricing-list">
+                  <li>Unlimited usage</li>
+                  <li>Daily email alerts</li>
+                  <li>Personalized writing style</li>
+                  <li>Shareable digest</li>
+                  <li>AI call summaries</li>
+                  <li>Onboarding & Training</li>
+                  <li>Dedicated Customer Success Manager</li>
+                  <li>User data does not train comercial AI models</li>
+                </ul>
+              </div>
+              <div class="display-flex display-center pricing-width pricing-users relative">
+                <p class="users-position">Select number of users: </p>
+                <Multiselect
+                  style="width: 100%; height: 0.5rem; margin-left: 0.0rem;"
+                  :options="amountList"
+                  :show-labels="false"
+                  v-model="numberOfUsers"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                </Multiselect>
+              </div>
+              <button @click="purchasePro" class="primary-button pricing-button">Upgrade to PRO <img src="@/assets/images/arrow-small-right.svg" class="pricing-arrow-right" /></button>
+              <!-- <p class="gray-text">This is a one-time fee. Training and premium support included.</p> -->
+            </div>
+          </div>
+          <p class="gray-text">Questions about PRO plan or billing? <a href="mailto:customers@managr.ai" style="font-size: 11px; margin: 0;">Contact us.</a></p>
+
+          <!-- <div class="display-flex display-center pricing-width pricing-users">
+            <p>Number of Users: </p>
+            <Multiselect
+              style="margin-left: 1rem; width: 80px; height: 0.5rem;"
+              :options="amountList"
+              :show-labels="false"
+              v-model="numberOfUsers"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+            </Multiselect>
+          </div> -->
+
+          <!-- <div class="pricing-width">
+            <p>Amount: ${{ 80 * 12 * numberOfUsers }}</p>
+          </div> -->
+
+          <!-- <div class="pricing-width">
+            <p class="gray-text">Questions about plan or billing? <a href="customers@managr.ai">Contact us.</a></p>
+          </div> -->
+
+          <!-- <div style="margin-top: 20px" class="row">
+            <button @click="closePlansModal" class="tertiary-button">Cancel</button>
+            <button @click="purchasePro" class="primary-button">Upgrade</button>
+          </div> -->
+        </main>
+      </div>
+    </Modal>
     <Modal v-if="deletePitchModelOpen" class="delete-modal">
       <div class="delete-container">
         <header @click="togglePitchDeleteModal">
@@ -40,10 +115,10 @@
     <div v-if="userIsLoggedIn">
       <nav id="nav" v-if="this.$store.state.user.role === 'PR' && !isMobile">
         <router-link :to="{ name: 'PRSummaries' }">
-          <div @click="goHome" class="logo">
-            <img style="height: 28px" src="@/assets/images/logo.png" />
+          <div class="logo">
+            <img @click="goHome" style="height: 28px" src="@/assets/images/logo.png" />
             <div class="beta-tag">
-              <p id="pro-free-version">{{ isPaid ? 'PRO' : 'FREE' }}</p>
+              <p id="pro-free-version" :class="!isPaid ? 'pointer' : ''" @click="openPlansModal">{{ isPaid ? 'PRO' : 'Upgrade Plan' }}</p>
             </div>
           </div>
         </router-link>
@@ -516,12 +591,14 @@
 import { CollectionManager } from '@thinknimble/tn-models'
 import { Comms } from '@/services/comms'
 import { Store } from 'vuex'
+import User from '@/services/users'
 
 export default {
   name: 'NavBar',
   components: {
     CollectionManager,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
+    Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
   },
   props: {
     menuOpen: { type: Boolean },
@@ -542,11 +619,119 @@ export default {
       showUpdateBanner: false,
       mobileMenuOpen: false,
       hamburgerClicked: false,
+      plansModal: false,
+      team: CollectionManager.create({ ModelClass: User }),
+      numberOfUsers: 5,
+      amountList: [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85,
+          86,
+          87,
+          88,
+          89,
+          90,
+          91,
+          92,
+          93,
+          94,
+          95,
+          96,
+          97,
+          98,
+          99,
+          100
+      ],
     }
   },
-  created() {
+  async created() {
     this.getSearches()
     this.getPitches()
+    await this.team.refresh()
+    this.amountList = this.amountList.filter(item => item >= this.activeUsers.length)
+    this.numberOfUsers = this.activeUsers.length
   },
   directives: {
     clickOutsideMobileNav: {
@@ -596,6 +781,14 @@ export default {
     },
     hideMobileMenu() {
       this.mobileMenuOpen = false
+    },
+    openPlansModal() {
+      if (!this.isPaid) {
+        this.plansModal = true
+      }
+    },
+    closePlansModal() {
+      this.plansModal = false
     },
     textSoonOn() {
       this.soonText = 'Coming Soon!'
@@ -667,6 +860,25 @@ export default {
       })
       return initials
     },
+    async purchasePro() {
+      try {
+        const response = await User.api.upgrade({ quantity: this.numberOfUsers })
+        const sessionId = response.session_id;
+
+        const stripe = await this.$stripe();
+
+        const result = await stripe.redirectToCheckout({
+          sessionId: sessionId,
+        });
+
+        if (result.error) {
+          console.log('error', result.error)
+        }
+        this.numberOfUsers = 5
+      } catch(e) {
+        console.log('Error in purchasePro: ', e)
+      }
+    },
     selectSearch(search) {
       this.toggleShowSearches()
       this.$store.dispatch('setSearch', search)
@@ -724,6 +936,9 @@ export default {
   computed: {
     unfilteredSearches() {
       return this.$store.state.allSearches
+    },
+    activeUsers() {
+      return this.team.list.filter(user => user.isActive)
     },
     unfilteredPitches() {
       return this.$store.state.allPitches
@@ -836,10 +1051,49 @@ export default {
   height: 100%;
 }
 
+.pricing-modal {
+  margin-top: 70px;
+  width: 100%;
+  height: 100%;
+}
+
 .delete-container {
   width: 500px;
   height: 220px;
   color: $base-gray;
+  font-family: $thin-font-family;
+  font-size: 14px;
+  line-height: 24px;
+  font-weight: 400;
+
+  header {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+
+    p {
+      cursor: pointer;
+      margin-top: -4px;
+    }
+  }
+
+  main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    // h2 {
+    //   margin-bottom: 0px;
+    // }
+  }
+}
+
+.pricing-container {
+  width: 45vw;
+  height: 80vh;
+  // color: $base-gray;
+  color: $dark-black-blue;
   font-family: $thin-font-family;
   font-size: 14px;
   line-height: 24px;
@@ -889,13 +1143,13 @@ export default {
 
 .beta-tag {
   letter-spacing: 1px;
-  margin-left: 8px;
+  margin-left: 32px;
 
   p {
     background-color: $dark-black-blue;
     color: white;
     border-radius: 8px;
-    padding: 2px 8px;
+    padding: 2px 8px 4px 8px;
     font-size: 12px;
     cursor: text;
 
@@ -1113,7 +1367,7 @@ export default {
 }
 
 .pointer {
-  cursor: pointer;
+  cursor: pointer !important;
 }
 
 .avatar {
@@ -1617,5 +1871,125 @@ a:hover {
   bottom: 30px;
   font-size: 14px;
   color: $dark-black-blue;
+}
+.display-flex {
+  display: flex;
+}
+.display-center {
+  align-items: center;
+}
+.gray-text {
+  color: $mid-gray;
+  font-size: 11px;
+}
+.pricing-width {
+  width: 100%;
+}
+.pricing-box {
+  border: 1px solid $soft-gray;
+  border-radius: 0.5rem;
+  width: 65%;
+  // padding: 0.5rem 0.75rem;
+  padding: 1rem 1.5rem;
+  margin: 1rem 0;
+  &__header {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 24px;
+  }
+}
+.pricing-price {
+  // margin-top: 0.5rem;
+  // margin-bottom: 0.5rem;
+}
+.pricing-smaller-text {
+  font-size: 13px;
+}
+.pricing-header {
+  margin-top: 0;
+}
+.pricing-list-header {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+.pricing-list {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-left: 1rem;
+  // padding-bottom: 1rem;
+  // border-bottom: 1px solid $soft-gray;
+}
+.pricing-users {
+  border-top: 1px solid $soft-gray;
+  margin-top: 0rem;
+  // padding-top: 1rem;
+  padding: 0.85rem 0 0.5rem 0;
+}
+.pricing-button {
+  width: 100%;
+  padding: 0.75rem;
+  margin: 0.5rem 0 !important;
+}
+.pricing-list-container {
+  height: 26vh;
+  overflow: auto;
+}
+.pricing-arrow-right {
+  height: 14px;
+  margin-left: 0.25rem;
+  filter: invert(99%) !important;
+}
+.relative {
+  position: relative;
+}
+.users-position {
+  position: absolute;
+  z-index: 9999;
+  // margin-bottom: 0;
+}
+// ::v-deep .multiselect {
+//   min-height: 30px;
+// }
+::v-deep .multiselect * {
+  font-size: 14px;
+  font-family: $thin-font-family;
+  // border-radius: 5px !important;
+}
+::v-deep .multiselect__option--highlight {
+  background-color: $off-white;
+  color: $base-gray;
+}
+::v-deep .multiselect__option--selected {
+  background-color: $soft-gray;
+}
+
+::v-deep .multiselect__content-wrapper {
+  // border-radius: 5px;
+  margin: 0.5rem 0rem;
+  border-top: 1px solid $soft-gray;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  position: absolute !important;
+}
+
+::v-deep .multiselect__tags {
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 0;
+  padding-left: 8.8rem;
+  padding-top: 0.65rem;
+  padding-bottom: 0.0rem;
+  min-height: 25px;
+}
+
+::v-deep .multiselect__select {
+  height: 32px;
+}
+
+::v-deep .multiselect__single {
+  margin-bottom: 0;
+}
+
+::v-deep .multiselect__placeholder {
+  color: $base-gray;
 }
 </style>

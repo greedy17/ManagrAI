@@ -33,7 +33,7 @@ XPATH_STRING_OBJ = {
         "//body//time/@datetime | //body//time/@dateTime | //body//time/text()",
         "//meta[contains(@name, 'date')]/@content",
         "(//*[contains(translate(@class, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'date')])[last()]//text()",
-        f"//body//*[not(self::script) and contains(text(),', {datetime.datetime.now().year}') or contains(text(),'{datetime.datetime.now().year},')]",
+        f"//body//*[not(self::script) and not(self::p) and (contains(text(),', {datetime.datetime.now().year}') or contains(text(),'{datetime.datetime.now().year},'))]",
         "//body//*[not(self::script) and contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'publish')]/text()",
     ],
     "image_url": ["//meta[@property='og:image']/@content"],
@@ -119,22 +119,41 @@ class NewsSpider(scrapy.Spider):
 
     def parse_article(self, response, source):
         meta_tag_data = {"link": response.url, "source": source.id}
+        article_selectors = source.article_selectors()
         for key in XPATH_STRING_OBJ.keys():
-            for path in XPATH_STRING_OBJ[key]:
-                selector = response.xpath(path).get()
-                if key == "publish_date" and "text" in path and selector is not None:
+            if key in article_selectors.keys() and article_selectors[key]:
+                selector = response.xpath(article_selectors[key]).getall()
+                if len(selector):
+                    selector = ",".join(selector)
+                if key == "publish_date":
                     selector = extract_date_from_text(selector)
                 if selector is not None:
                     meta_tag_data[key] = selector
-                    break
+            else:
+                for path in XPATH_STRING_OBJ[key]:
+                    selector = response.xpath(path).get()
+                    if key == "publish_date":
+                        if "text" in path and selector is not None:
+                            selector = extract_date_from_text(selector)
+                        if "text" not in path:
+                            try:
+                                parser.parse(selector)
+                            except Exception:
+                                continue
+                    if selector is not None:
+                        meta_tag_data[key] = selector
+                        break
             if key not in meta_tag_data.keys() or not len(meta_tag_data[key]):
                 meta_tag_data[key] = "N/A"
-        article_tag_list = ["article", "story", "content"]
-        article_xpaths = ["//article//p//text()"]
-        for a in article_tag_list:
-            article_xpaths.append(
-                f"//*[contains(@class, '{a}') or contains(@id, '{a}') and .//p]//p//text()"
-            )
+        if article_selectors["content"]:
+            article_xpaths = [article_selectors["content"]]
+        else:
+            article_tag_list = ["article", "story", "content"]
+            article_xpaths = ["//article//p//text()"]
+            for a in article_tag_list:
+                article_xpaths.append(
+                    f"//*[contains(@class, '{a}') or contains(@id, '{a}') and .//p]//p//text()"
+                )
         article_tags = None
         for tag in article_xpaths:
             tags = response.xpath(tag).getall()
