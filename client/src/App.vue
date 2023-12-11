@@ -131,7 +131,7 @@ export default {
       } else if (host.includes('staging')) {
         key = "pk_test_51OKmcnJHm94PSCW8ruuXHTjqGMAOWitNe2IbTaddNXnrutuc8qtszxyuTjcaDNw2niLCDo8AiU1ErgzEKAlOd0ep00X9rd6FNW"
       } else {
-        key = "pk_test_51OF1jYHvb6ZAgKwkO0KoHU5ot5GFfQ0WuNrUoNgckY2tyPySEUp5N7Y3Azi6wm6R1wGQfq2focNjDLy8s88va8bA009mfAMaBK"
+        key = "pk_live_51OF1jYHvb6ZAgKwka9s7I7e3dBWwE6ettoQvdUsqLOyFKCeJARsy9J06bLSWfOkEikTihykhUNNTJ4wvGGUetH4z00TlvK5vKy"
       }
       this.$store.dispatch('updateStripeKey', key)
     },

@@ -167,6 +167,9 @@ variable "environments" {
     twitter_client_id      = string
     twitter_redirect_uri   = string
     twitter_access_token   = string
+
+    stripe_api_key         = string
+    stripe_price_id        = string
   }))
 }
 
@@ -218,7 +221,7 @@ variable "scheduled_tasks" {
     {
       name       = "runalerts"
       command    = "triggeralerts"
-      cron       = "cron(0 8 * * ? *)"
+      cron       = "cron(0 8 ? * MON-FRI *)"
       task_count = 1
     },
   ]

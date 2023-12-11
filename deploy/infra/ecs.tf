@@ -378,5 +378,8 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     twitterClientId      = each.value.twitter_client_id
     twitterRedirectUri   = each.value.twitter_redirect_uri
     twitterAccessToken   = each.value.twitter_access_token
+
+    stripeApiKey         = each.value.stripe_api_key
+    stripePriceId        = each.value.stripe_price_id
   })
 }
