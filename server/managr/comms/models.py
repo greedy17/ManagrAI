@@ -391,6 +391,9 @@ class NewsSource(TimeStampModel):
             article_link_regex=self.article_link_regex,
             data_attribute_key=self.data_attribute_key,
             data_attribute_value=self.data_attribute_value,
+            date_published_selector=self.date_published_selector,
+            author_selector=self.author_selector,
+            article_content_selector=self.article_content_selector,
             is_active=self.is_active,
         )
 
