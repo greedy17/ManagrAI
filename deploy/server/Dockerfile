@@ -125,7 +125,7 @@ ENV SECRET_KEY='secret123' \
   TWITTER_REDIRECT_URI='' \
   TWITTER_ACCESS_TOKEN='' \
   STRIPE_API_KEY='' \
-  STRIPE_PRICE_ID='' \
+  STRIPE_PRICE_ID='' 
 
 
 # Set the name of the working directory inside the docker container
