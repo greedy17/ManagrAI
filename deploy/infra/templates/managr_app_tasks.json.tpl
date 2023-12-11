@@ -285,6 +285,14 @@
       {
         "name": "TWITTER_ACCESS_TOKEN",
         "valueFrom": "${config_secret_arn}:twitterAccessToken::"
+      },
+      {
+        "name": "STRIPE_API_KEY",
+        "valueFrom": "${config_secret_arn}:stripeApiKey::"
+      },
+      {
+        "name": "STRIPE_PRICE_ID",
+        "valueFrom": "${config_secret_arn}:stripePriceId::"
       }
     ],
     "logConfiguration": {

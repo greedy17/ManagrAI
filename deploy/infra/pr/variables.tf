@@ -158,6 +158,9 @@ variable "app_config" {
     twitter_client_id      = string
     twitter_redirect_uri   = string
     twitter_access_token   = string
+
+    stripe_api_key         = string
+    stripe_price_id        = string
   })
 }
 
