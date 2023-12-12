@@ -8,14 +8,18 @@
             <h4 class="regen-header-title"></h4>
             <p class="regen-header-subtitle"></p>
           </div>
-          <div class="pointer" @click="() => deleteUserModal = false"><small>X</small></div>
+          <div class="pointer" @click="() => (deleteUserModal = false)"><small>X</small></div>
         </div>
         <div class="paid-body">
           <div>
             <div class="paid-center">
               <h3 class="paid-title">Deactivate</h3>
               <h5 class="regen-body-title">
-                {{ `Are you sure you want to deactivate ${deleteUserName && deleteUserName.email ? deleteUserName.email : `this user`}?` }}
+                {{
+                  `Are you sure you want to deactivate ${
+                    deleteUserName && deleteUserName.email ? deleteUserName.email : `this user`
+                  }?`
+                }}
               </h5>
             </div>
             <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
@@ -27,7 +31,7 @@
             <div
               style="padding-top: 9px; padding-bottom: 9px"
               class="cancel-button"
-              @click="() => deleteUserModal = false"
+              @click="() => (deleteUserModal = false)"
             >
               Cancel
             </div>
@@ -44,12 +48,12 @@
             <h4 class="regen-header-title"></h4>
             <p class="regen-header-subtitle"></p>
           </div>
-          <div class="pointer" @click="() => paidWarningModal = false"><small>X</small></div>
+          <div class="pointer" @click="() => (paidWarningModal = false)"><small>X</small></div>
         </div>
         <div class="paid-body">
           <div>
             <div class="paid-center">
-              <h3 class="paid-title">Purchase additional user</h3>
+              <h3 class="paid-title">Upgrade to PRO!</h3>
               <h5 class="regen-body-title">
                 {{ `By clicking purchase you agree to be charged for an additional user.` }}
               </h5>
@@ -63,7 +67,7 @@
             <div
               style="padding-top: 9px; padding-bottom: 9px"
               class="cancel-button"
-              @click="() => paidWarningModal = false"
+              @click="() => (paidWarningModal = false)"
             >
               Cancel
             </div>
@@ -80,14 +84,16 @@
             <h4 class="regen-header-title"></h4>
             <p class="regen-header-subtitle"></p>
           </div>
-          <div class="pointer" @click="() => reactivateUserModal = false"><small>X</small></div>
+          <div class="pointer" @click="() => (reactivateUserModal = false)"><small>X</small></div>
         </div>
         <div class="paid-body">
           <div>
             <div class="paid-center">
               <h3 class="paid-title">Reactivate User</h3>
               <h5 class="regen-body-title">
-                {{ `By clicking Reactivate you are enabling ${reactivateUser.email} to access Managr` }}
+                {{
+                  `By clicking Reactivate you are enabling ${reactivateUser.email} to access Managr`
+                }}
               </h5>
             </div>
             <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
@@ -99,7 +105,7 @@
             <div
               style="padding-top: 9px; padding-bottom: 9px"
               class="cancel-button"
-              @click="() => reactivateUserModal = false"
+              @click="() => (reactivateUserModal = false)"
             >
               Cancel
             </div>
@@ -116,12 +122,14 @@
             <h4 class="regen-header-title"></h4>
             <p class="regen-header-subtitle"></p>
           </div>
-          <div class="pointer" @click="() => reactivatePaidUserModal = false"><small>X</small></div>
+          <div class="pointer" @click="() => (reactivatePaidUserModal = false)">
+            <small>X</small>
+          </div>
         </div>
         <div class="paid-body">
           <div>
             <div class="paid-center">
-              <h3 class="paid-title">Purchase additional user</h3>
+              <h3 class="paid-title">Upgrade to PRO!</h3>
               <h5 class="regen-body-title">
                 {{ `By clicking purchase you agree to be charged for an additional user.` }}
               </h5>
@@ -135,7 +143,7 @@
             <div
               style="padding-top: 9px; padding-bottom: 9px"
               class="cancel-button"
-              @click="() => reactivatePaidUserModal = false"
+              @click="() => (reactivatePaidUserModal = false)"
             >
               Cancel
             </div>
@@ -233,13 +241,19 @@
           <div class="row smaller-text">
             <div class="team-width">{{ user.fullName.trim() ? user.fullName : '[INVITED]' }}</div>
             <div class="team-width">{{ user.email }}</div>
-            <div class="team-width">{{  }}</div>
-            <div class="team-width">{{  }}</div>
+            <div class="team-width"></div>
+            <div class="team-width"></div>
           </div>
-  
+
           <div v-for="teamUser in orderedActive" :key="teamUser.id" class="row smaller-text">
             <div v-if="teamUser.id !== user.id" class="team-width thin-font">
-              {{ !teamUser.isActive && teamUser.fullName.trim() ? '[INACTIVE]' : (teamUser.fullName.trim() ? teamUser.fullName : '[INVITED]') }}
+              {{
+                !teamUser.isActive && teamUser.fullName.trim()
+                  ? '[INACTIVE]'
+                  : teamUser.fullName.trim()
+                  ? teamUser.fullName
+                  : '[INVITED]'
+              }}
             </div>
             <div v-if="teamUser.id !== user.id" class="team-width thin-font">
               {{ teamUser.email }}
@@ -253,25 +267,30 @@
             </div>
             <div v-else-if="teamUser.id !== user.id" class="invite-link-button-container-nothing wrapper thin-font"></div> -->
             <div v-if="user.isAdmin">
-              <div v-if="(teamUser.id !== user.id) && teamUser.isActive" @click="openDeleteModal(teamUser)" class="invite-link-button-container red-background wrapper thin-font">
-                <img 
-                  src="@/assets/images/remove-user.svg"
-                  class="invite-link-button"
-                />
+              <div
+                v-if="teamUser.id !== user.id && teamUser.isActive"
+                @click="openDeleteModal(teamUser)"
+                class="invite-link-button-container red-background wrapper thin-font"
+              >
+                <img src="@/assets/images/remove-user.svg" class="invite-link-button" />
                 <div style="margin-left: -20px" class="tooltip">{{ 'Deactivate' }}</div>
               </div>
-              <div v-else-if="teamUser.id !== user.id && !teamUser.isActive && teamUser.fullName.trim()" @click="openReactivateeModal(teamUser)" class="invite-link-button-container green-background wrapper thin-font">
-                <img 
-                  src="@/assets/images/user.svg"
-                  class="invite-link-button"
-                />
+              <div
+                v-else-if="
+                  teamUser.id !== user.id && !teamUser.isActive && teamUser.fullName.trim()
+                "
+                @click="openReactivateeModal(teamUser)"
+                class="invite-link-button-container green-background wrapper thin-font"
+              >
+                <img src="@/assets/images/user.svg" class="invite-link-button" />
                 <div style="margin-left: -20px" class="tooltip">{{ 'Reactivate' }}</div>
               </div>
-              <div v-else-if="teamUser.id !== user.id && !teamUser.fullName.trim()" @click="copyUserLink(teamUser.activationLinkRef)" class="invite-link-button-container wrapper thin-font">
-                <img 
-                  src="@/assets/images/link.svg"
-                  class="invite-link-button"
-                />
+              <div
+                v-else-if="teamUser.id !== user.id && !teamUser.fullName.trim()"
+                @click="copyUserLink(teamUser.activationLinkRef)"
+                class="invite-link-button-container wrapper thin-font"
+              >
+                <img src="@/assets/images/link.svg" class="invite-link-button" />
                 <div style="margin-left: -20px" class="tooltip">{{ copyTip }}</div>
               </div>
               <!-- <div v-else-if="teamUser.id !== user.id" class="invite-link-button-container-nothing wrapper thin-font"></div> -->
@@ -493,10 +512,10 @@ export default {
     },
     async reactivate() {
       try {
-        const data = {...this.reactivateUser, isActive: true}
+        const data = { ...this.reactivateUser, isActive: true }
         const res = await User.api.update(this.reactivateUser.id, data)
         this.team.refresh()
-      } catch(e) {
+      } catch (e) {
         console.log('Error in reactivate: ', e)
         this.$toast('Something went wrong. Please try again later', {
           timeout: 2000,
@@ -511,10 +530,10 @@ export default {
     },
     async reactivatePaid() {
       try {
-        const data = {...this.reactivateUser, isActive: true}
+        const data = { ...this.reactivateUser, isActive: true }
         const res = await User.api.update(this.reactivateUser.id, data)
         this.team.refresh()
-      } catch(e) {
+      } catch (e) {
         console.log('Error in reactivatePaid: ', e)
         this.$toast('Something went wrong. Please try again later', {
           timeout: 2000,
@@ -531,7 +550,7 @@ export default {
       try {
         const res = await User.api.uninvite(this.deleteUserName.id)
         this.team.refresh()
-      } catch(e) {
+      } catch (e) {
         console.log('Error in deactivateUser: ', e)
         this.$toast('Something went wrong. Please try again later', {
           timeout: 2000,
@@ -548,7 +567,7 @@ export default {
       try {
         const res = await User.api.uninvite(this.deleteUserName.id)
         this.team.refresh()
-      } catch(e) {
+      } catch (e) {
         console.log('Error in deleteUser: ', e)
         this.$toast('Something went wrong. Please try again later', {
           timeout: 2000,
@@ -676,6 +695,8 @@ export default {
             bodyClassName: ['custom'],
           })
         } else {
+          console.log('FULL ERROR :', e.response)
+          console.log(e.response.message)
           this.$toast('Error creating link, try again', {
             timeout: 2000,
             position: 'top-left',
@@ -726,7 +747,7 @@ export default {
       return this.$store.state.user.isAdmin
     },
     activeUsers() {
-      return this.team.list.filter(user => user.isActive)
+      return this.team.list.filter((user) => user.isActive)
     },
     aboveInviteLimit() {
       return this.activeUsers >= this.user.organizationRef.numberOfAllowedUsers

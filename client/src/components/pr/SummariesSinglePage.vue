@@ -623,7 +623,12 @@
                   class="space-between"
                   style="position: relative"
                 >
-                  <button disabled style="margin-left: 0" class="primary-button">Save</button>
+                  <div class="wrapper">
+                    <button disabled style="margin-left: 0" class="primary-button">Save</button>
+                    <div style="margin-left: -8px" class="tooltip tooltip-wide full">
+                      Generate report first
+                    </div>
+                  </div>
 
                   <div v-if="mainView !== 'website'">
                     <div
@@ -832,16 +837,23 @@
 
                   <div v-if="!summaryLoading">
                     <div
-                      style="margin: 1rem 0 0 0; width: 100%; padding-top: 0; padding-bottom: 0"
+                      style="
+                        margin: 1rem 0 0 0;
+                        width: 100%;
+                        padding-top: 0;
+                        padding-bottom: 0;
+                        border-radius: 28px;
+                      "
                       id="instructions"
                       class="input-container"
                       v-clickOutsidePromptMenu
                       v-if="showSummaryInstructions"
                     >
-                      <div class="input-row">
+                      <div style="padding-top: 0" class="input-row">
                         <!-- @click="toggleGenerateDropdown" -->
-                        <div class="main-text">
-                          <p>Chat</p>
+                        <div class="main-text-img">
+                          <img src="@/assets/images/comment.svg" height="16px" alt="" />
+                          <!-- <p>Chat</p> -->
                           <!-- <img
                             v-if="!showGenerateDropdown"
                             src="@/assets/images/downArrow.svg"
@@ -863,7 +875,7 @@
                           style="margin: 0"
                           class="area-input text-area-input"
                           id="instructions-text-area"
-                          placeholder="Ask me anything about this news coverage..."
+                          placeholder="Ask me anything about this coverage..."
                           v-model="newTemplate"
                           v-autoresize
                         />
@@ -3970,7 +3982,7 @@ button:disabled {
 .input-container {
   flex-wrap: nowrap;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 0.75rem 1.2rem 0.75rem 1.2rem;
+  padding: 0.75rem 1.2rem;
   border-radius: 6px;
   width: 50%;
   background-color: $offer-white;
@@ -4195,6 +4207,16 @@ button:disabled {
     margin: 0;
     padding: 0;
   }
+}
+
+.main-text-img {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  filter: invert(40%);
+  margin: 0;
+  padding-right: 1rem;
 }
 
 .neg-mar-btm {
