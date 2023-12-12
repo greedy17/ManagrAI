@@ -23,7 +23,18 @@ class OrganizationSlackIntegrationInline(admin.StackedInline):
 class CustomOrganization(admin.ModelAdmin):
     model = Organization
     inlines = (OrganizationSlackIntegrationInline,)
-    list_display = ("name",)
+    list_display = ("name", "is_paid", "datetime_created", "admin_display", "user_count_display")
+
+    def admin_display(self, obj):
+        user = obj.users.all().filter(is_admin=True).first()
+        return user
+
+    admin_display.short_description = "Admin"
+
+    def user_count_display(self, obj):
+        return len(obj.users.all())
+
+    user_count_display.short_description = "Current User Count"
 
 
 class CustomAccount(admin.ModelAdmin):
