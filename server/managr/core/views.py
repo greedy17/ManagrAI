@@ -1224,7 +1224,7 @@ class UserViewSet(
         remove_id = request.data.get("remove_id")
         try:
             remove_user = User.objects.get(id=remove_id)
-            remove_user.deactivate_user()
+            remove_user.delete()
             return Response(status=status.HTTP_200_OK)
         except Exception as e:
             logger.exception(f"Remove user error: {e}")
