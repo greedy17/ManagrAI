@@ -567,14 +567,20 @@
     <div class="centered" style="width: 100%; padding: 16px 32px 16px 56px">
       <div v-if="loading" style="width: 50%">
         <div style="width: 100%" class="row">
-          <p class="summary-load-text">Generating {{ type }}...</p>
+          <!-- <p class="summary-load-text">Generating {{ type }}...</p> -->
+          <p class="summary-load-text">Generating content...</p>
         </div>
 
         <div class="summary-preview-skeleton shimmer">
-          <div class="content">
+          <!-- <div class="content">
             <div class="meta-wide"></div>
             <div class="meta-shorter"></div>
             <div class="meta-shortest"></div>
+          </div> -->
+          <div class="loading">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
           </div>
         </div>
       </div>
@@ -2159,5 +2165,41 @@ footer {
 }
 .grow {
   transition: all 0.2s;
+}
+.loading {
+  display: flex;
+  // justify-content: center;
+  align-items: center;
+  border-radius: 6px;
+  // padding: 1.5rem 0.75rem;
+  padding: 1.5rem 0;
+}
+.dot {
+  width: 4px;
+  height: 4px;
+  margin: 0 5px;
+  background: rgb(97, 96, 96);
+  border-radius: 50%;
+  animation: bounce 1.2s infinite ease-in-out;
+}
+
+.dot:nth-child(2) {
+  animation-delay: -0.4s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: -0.2s;
+}
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 </style>
