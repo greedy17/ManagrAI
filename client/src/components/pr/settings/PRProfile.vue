@@ -53,7 +53,7 @@
         <div class="paid-body">
           <div>
             <div class="paid-center">
-              <h3 class="paid-title">Upgrade to PRO!</h3>
+              <h3 class="paid-title">Add User</h3>
               <h5 class="regen-body-title">
                 {{ `By clicking purchase you agree to be charged for an additional user.` }}
               </h5>
@@ -129,7 +129,7 @@
         <div class="paid-body">
           <div>
             <div class="paid-center">
-              <h3 class="paid-title">Upgrade to PRO!</h3>
+              <h3 class="paid-title">Add User</h3>
               <h5 class="regen-body-title">
                 {{ `By clicking purchase you agree to be charged for an additional user.` }}
               </h5>
@@ -152,9 +152,66 @@
         </div>
       </div>
     </Modal>
+
+    <Modal v-if="plansModal" class="pricing-modal">
+      <div class="pricing-container">
+        <header @click="closePlansModal">
+          <p>X</p>
+        </header>
+        <main>
+          <h2 class="pricing-header">Upgrade to PRO</h2>
+          <p>This plan includes unlimited usage, email alerts, and premium support</p>
+          <div class="pricing-box">
+            <!-- <h2 class="pricing-box__header">PRO</h2> -->
+            <!-- <p>Self-serve plan with unlimited usage, automated email summaries, and the ability to learn your writing style.</p> -->
+            <!-- <p>Upgrade to unlimited usage and additional AI automations</p> -->
+            <h1 class="pricing-price">
+              $80 <span class="pricing-smaller-text">per user / month</span>
+            </h1>
+            <div>
+              <div class="pricing-list-container">
+                <h3 class="pricing-list-header">Everything in free, plus:</h3>
+                <ul class="pricing-list">
+                  <li>Unlimited usage</li>
+                  <li>Daily email alerts</li>
+                  <li>Personalized writing style</li>
+                  <li>Shareable digest</li>
+                  <li>AI call summaries</li>
+                  <li>Onboarding & Training</li>
+                  <li>Dedicated Customer Success Manager</li>
+                  <li>User data does not train comercial AI models</li>
+                </ul>
+              </div>
+              <div class="display-flex display-center pricing-width pricing-users relative">
+                <p class="users-position">Select number of users:</p>
+                <Multiselect
+                  style="width: 100%; height: 0.5rem; margin-left: 0rem"
+                  :options="amountList"
+                  :show-labels="false"
+                  v-model="numberOfUsers"
+                >
+                  <template slot="noResult">
+                    <p class="multi-slot">No results.</p>
+                  </template>
+                </Multiselect>
+              </div>
+              <button @click="purchasePro" class="primary-button pricing-button">
+                Upgrade to PRO
+                <img src="@/assets/images/arrow-small-right.svg" class="pricing-arrow-right" />
+              </button>
+              <!-- <p class="gray-text">This is a one-time fee. Training and premium support included.</p> -->
+            </div>
+          </div>
+          <p class="gray-text">
+            Questions about PRO plan or billing?
+            <a href="mailto:customers@managr.ai" style="font-size: 11px; margin: 0">Contact us.</a>
+          </p>
+        </main>
+      </div>
+    </Modal>
     <div>
       <!-- <h1>Settings</h1> -->
-      <h1>{{ user.organizationRef.name }} - Users</h1>
+      <h1 @click="test">{{ user.organizationRef.name }} - Users</h1>
 
       <div class="bar-header">
         <small
@@ -191,7 +248,13 @@
           <PulseLoadingSpinnerButton
             class="primary-button"
             v-if="!activationLink"
-            @click="aboveInviteLimit ? handleInviteNonSlack() : openPaidWarningModal()"
+            @click="
+              !isPaid && teamUsers >= 3
+                ? openPlansModal()
+                : teamUsers < allowedUsers
+                ? handleInviteNonSlack()
+                : openPaidWarningModal()
+            "
             text="Generate Link"
             :loading="loading"
             :disabled="!userInviteForm.field.email.value || loading"
@@ -387,11 +450,20 @@ export default {
       reactivatePaidUserModal: false,
       reactivateUserId: null,
       paidWarningModal: false,
+      plansModal: false,
+      numberOfUsers: 5,
+      amountList: [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+        26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
+        49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71,
+        72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94,
+        95, 96, 97, 98, 99, 100,
+      ],
     }
   },
   async created() {
     this.team = CollectionManager.create({ ModelClass: User })
-    this.teamUsers = this.listAllUsers()
+    this.listAllUsers()
     // if (this.user.isAdmin) {
     //   this.teamUsers = await this.getAllOrgUsers(this.user.organization)
     // } else {
@@ -423,10 +495,38 @@ export default {
     }
     this.userInviteForm.field.userLevel.value = User.types.REP
     this.team.refresh()
+
+    this.amountList = this.amountList.filter((item) => item >= this.activeUsers.length)
+    this.numberOfUsers = this.activeUsers.length
   },
   methods: {
-    test(log) {
-      console.log('log', log)
+    async purchasePro() {
+      try {
+        const response = await User.api.upgrade({ quantity: this.numberOfUsers })
+        const sessionId = response.session_id
+
+        const stripe = await this.$stripe()
+
+        const result = await stripe.redirectToCheckout({
+          sessionId: sessionId,
+        })
+
+        if (result.error) {
+          console.log('error', result.error)
+        }
+        this.numberOfUsers = 5
+      } catch (e) {
+        console.log('Error in purchasePro: ', e)
+      }
+    },
+    openPlansModal() {
+      this.plansModal = true
+    },
+    closePlansModal() {
+      this.plansModal = false
+    },
+    test() {
+      console.log('log', this.teamUsers)
     },
     openPaidWarningModal() {
       this.paidWarningModal = true
@@ -488,6 +588,7 @@ export default {
     },
     async listAllUsers() {
       const res = await User.api.list({ pagination: null })
+      this.teamUsers = res.count
       return res
     },
     async refresh() {
@@ -670,6 +771,7 @@ export default {
         return
       }
       // check form data for this request
+      //  if (teamUsers < allowedUsers) {}
       try {
         this.userInviteForm.field.team.value = this.user.team
         const res = await User.api.invite(this.userInviteForm.value)
@@ -731,6 +833,10 @@ export default {
     },
   },
   computed: {
+    isPaid() {
+      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
+      return !!this.$store.state.user.organizationRef.isPaid
+    },
     hasSlack() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.slackRef
@@ -752,13 +858,15 @@ export default {
     aboveInviteLimit() {
       return this.activeUsers >= this.user.organizationRef.numberOfAllowedUsers
     },
+    allowedUsers() {
+      return this.user.organizationRef.numberOfAllowedUsers
+    },
     orderedActive() {
       const active = []
       const noName = []
       const inactive = []
       for (let i = 0; i < this.team.list.length; i++) {
         const el = this.team.list[i]
-        console.log('el', el)
         if (el.isActive) {
           active.push(el)
         } else if (!el.isActive && el.fullName.trim()) {
@@ -1187,5 +1295,156 @@ h3 {
     box-shadow: none;
   }
   margin-left: 0.5rem;
+}
+
+.pricing-modal {
+  margin-top: 70px;
+  width: 100%;
+  height: 100%;
+}
+.pricing-container {
+  width: 45vw;
+  height: 80vh;
+  // color: $base-gray;
+  color: $dark-black-blue;
+  font-family: $thin-font-family;
+  font-size: 14px;
+  line-height: 24px;
+  font-weight: 400;
+
+  header {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+
+    p {
+      cursor: pointer;
+      margin-top: -4px;
+    }
+  }
+
+  main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    // h2 {
+    //   margin-bottom: 0px;
+    // }
+  }
+}
+.pricing-width {
+  width: 100%;
+}
+.pricing-box {
+  border: 1px solid $soft-gray;
+  border-radius: 0.5rem;
+  width: 65%;
+  // padding: 0.5rem 0.75rem;
+  padding: 1rem 1.5rem;
+  margin: 1rem 0;
+  &__header {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 24px;
+  }
+}
+.pricing-price {
+  // margin-top: 0.5rem;
+  // margin-bottom: 0.5rem;
+}
+.pricing-smaller-text {
+  font-size: 13px;
+}
+.pricing-header {
+  margin-top: 0;
+}
+.pricing-list-header {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+.pricing-list {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-left: 1rem;
+  // padding-bottom: 1rem;
+  // border-bottom: 1px solid $soft-gray;
+}
+.pricing-users {
+  border-top: 1px solid $soft-gray;
+  margin-top: 0rem;
+  // padding-top: 1rem;
+  padding: 0.85rem 0 0.5rem 0;
+}
+.pricing-button {
+  width: 100%;
+  padding: 0.75rem;
+  margin: 0.5rem 0 !important;
+}
+.pricing-list-container {
+  height: 26vh;
+  overflow: auto;
+}
+.pricing-arrow-right {
+  height: 14px;
+  margin-left: 0.25rem;
+  filter: invert(99%) !important;
+}
+.relative {
+  position: relative;
+}
+.users-position {
+  position: absolute;
+  z-index: 9999;
+  // margin-bottom: 0;
+}
+.display-flex {
+  display: flex;
+}
+.display-center {
+  align-items: center;
+}
+::v-deep .multiselect * {
+  font-size: 14px;
+  font-family: $thin-font-family;
+  // border-radius: 5px !important;
+}
+::v-deep .multiselect__option--highlight {
+  background-color: $off-white;
+  color: $base-gray;
+}
+::v-deep .multiselect__option--selected {
+  background-color: $soft-gray;
+}
+
+::v-deep .multiselect__content-wrapper {
+  // border-radius: 5px;
+  margin: 0.5rem 0rem;
+  border-top: 1px solid $soft-gray;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  position: absolute !important;
+}
+
+::v-deep .multiselect__tags {
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 0;
+  padding-left: 8.8rem;
+  padding-top: 0.65rem;
+  padding-bottom: 0rem;
+  min-height: 25px;
+}
+
+::v-deep .multiselect__select {
+  height: 32px;
+}
+
+::v-deep .multiselect__single {
+  margin-bottom: 0;
+}
+
+::v-deep .multiselect__placeholder {
+  color: $base-gray;
 }
 </style>
