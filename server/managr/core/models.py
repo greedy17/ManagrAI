@@ -937,9 +937,11 @@ class StripeAdapter:
         )
         with Variable_Client() as client:
             res = client.get(url, headers=core_consts.STRIPE_HEADERS)
+            print('IT"S RIGHT HERE --- > ',vars(res))
         return self._handle_response(res)
 
     def update_subscription(self, sub_id, quantity):
+        print(sub_id, quantity)
         url = core_consts.STRIPE_API_BASE_URL + core_consts.STRIPE_SUBSCIPTIONS
         with Variable_Client() as client:
             data = {

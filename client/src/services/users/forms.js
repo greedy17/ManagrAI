@@ -89,6 +89,7 @@ export class UserInviteForm extends Form {
   static email = new FormField()
   static team = new FormField()
   static teamLead = new FormField()
+  static quantity = new FormField()
 }
 
 export class UserLoginForm extends Form {

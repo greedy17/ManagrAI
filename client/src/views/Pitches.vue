@@ -643,7 +643,7 @@ export default {
         `Create a media pitch for XXX about ...`,
         `Issue a press release on behalf of XXX about ...`,
         `Use the text below to generate XXX for XXX ...`,
-        `List 10 journalists from Tier 1 publications that will write about XXX, along with creative pitching tips & a short bio`,
+        `Re-write this using my writing style:`,
       ],
       instructions: '',
       copyTip: 'Copy',
