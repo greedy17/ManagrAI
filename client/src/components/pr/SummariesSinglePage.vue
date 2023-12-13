@@ -835,7 +835,8 @@
                     </div>
                   </div>
 
-                  <div v-if="!summaryLoading">
+                  <div style="width: 100%" class="row-container" v-if="!summaryLoading">
+                    <!-- <img class="chat-img" src="@/assets/images/comment.svg" height="32px" alt="" /> -->
                     <div
                       style="
                         margin: 1rem 0 0 0;
@@ -850,33 +851,22 @@
                       v-if="showSummaryInstructions"
                     >
                       <div style="padding-top: 0" class="input-row">
-                        <!-- @click="toggleGenerateDropdown" -->
                         <div class="main-text-img">
-                          <img src="@/assets/images/comment.svg" height="16px" alt="" />
-                          <!-- <p>Chat</p> -->
-                          <!-- <img
-                            v-if="!showGenerateDropdown"
-                            src="@/assets/images/downArrow.svg"
-                            class="inverted"
-                            height="14px"
+                          <img
+                            style="margin-top: 4px"
+                            src="@/assets/images/comment.svg"
+                            height="18px"
                             alt=""
                           />
-                          <img
-                            class="rotate-img inverted"
-                            v-else
-                            src="@/assets/images/downArrow.svg"
-                            height="14px"
-                            alt=""
-                          /> -->
                         </div>
-                        <!-- v-if="showSummaryInput" -->
-                        <!-- @focus="showPromptDropdown" -->
+
                         <textarea
-                          style="margin: 0"
+                          style="margin: 0; padding-top: 1px"
                           class="area-input text-area-input"
                           id="instructions-text-area"
                           placeholder="Ask me anything about this coverage..."
                           v-model="newTemplate"
+                          :rows="1"
                           v-autoresize
                         />
 
@@ -890,14 +880,18 @@
                           v-autoresize
                         /> -->
 
-                        <button
+                        <!-- <button
                           @click="summarizing = true"
                           v-if="summary"
                           class="secondary-button"
                           style="margin-right: 0"
                         >
                           Cancel
-                        </button>
+                        </button> -->
+
+                        <div @click="summarizing = true" v-if="summary" class="cancel-container">
+                          <img src="@/assets/images/add.svg" class="lip-img invert-dark-blue" />
+                        </div>
 
                         <button
                           @click="getSummary(filteredArticles, newTemplate)"
@@ -914,7 +908,7 @@
                             v-if="!newTemplate"
                             style="margin: 0"
                             src="@/assets/images/paper-plane-top.svg"
-                            height="14px"
+                            height="16px"
                             alt=""
                             class="faded"
                           />
@@ -923,7 +917,7 @@
                             v-else
                             style="margin: 0"
                             src="@/assets/images/paper-plane-full.svg"
-                            height="13px"
+                            height="16px"
                             alt=""
                             class="grow filtered-blue"
                           />
@@ -3929,6 +3923,12 @@ button:disabled {
   flex-direction: row;
 }
 
+.chat-img {
+  margin: 12px 0 0 0;
+  padding: 0;
+  filter: invert(40%);
+}
+
 .row-container {
   display: flex;
   align-items: center;
@@ -5636,6 +5636,24 @@ header {
 
   img {
     transform: rotate(180deg);
+  }
+  transition: all 0.2s;
+}
+
+.cancel-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $offer-white;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 6px;
+  cursor: pointer;
+  // box-shadow: 1px 1px 3px 1px rgba(0, 0, 0, 0.1);
+  margin: 12px 0;
+
+  img {
+    transform: rotate(45deg);
   }
   transition: all 0.2s;
 }
