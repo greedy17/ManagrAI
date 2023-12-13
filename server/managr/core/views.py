@@ -1661,11 +1661,16 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
     def create(self, request, *args, **kwargs):
         u = request.user
+        quantity = request.data.get("quantity", False)
         if not u.is_superuser:
             if str(u.organization.id) != str(request.data["organization"]):
                 # allow custom organization in request only for SuperUsers
                 return Response(status=status.HTTP_403_FORBIDDEN)
         if len(u.organization.users.all()) >= u.organization.number_of_allowed_users:
+            # stripe_account = StripeAdapter(**{"user": u})
+            # sub_id = stripe_account.get_sub_id()
+            # res = stripe_account.update_subscription(sub_id, quantity)
+            # print('response is here', res)
             return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         slack_id = request.data.get("slack_id", False)
         make_team_lead = request.data.pop("team_lead")

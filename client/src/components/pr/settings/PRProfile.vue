@@ -771,7 +771,9 @@ export default {
         return
       }
       // check form data for this request
-      //  if (teamUsers < allowedUsers) {}
+      if (this.teamUsers >= this.allowedUsers) {
+        this.userInviteForm.field.quantity.value = this.allowedUsers + 1
+      }
       try {
         this.userInviteForm.field.team.value = this.user.team
         const res = await User.api.invite(this.userInviteForm.value)
@@ -787,26 +789,15 @@ export default {
         this.resetData()
         this.disableInput = true
       } catch (e) {
-        if (e.response.status === 426) {
-          // Upgrade modal here
-          this.$toast('Max users reached, upgrade to add more', {
-            timeout: 2500,
-            position: 'top-left',
-            type: 'error',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-        } else {
-          console.log('FULL ERROR :', e.response)
-          console.log(e.response.message)
-          this.$toast('Error creating link, try again', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'error',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-        }
+        console.log('FULL ERROR :', e.response)
+
+        this.$toast(`${e.response.request.responseText}`, {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         setTimeout(() => {
           this.loading = false
