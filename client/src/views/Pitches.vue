@@ -18,7 +18,7 @@
                 You have reached your usage limit for the month. Please upgrade your plan.
               </h5>
             </div>
-            <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
+            <!-- <textarea v-autoresize v-model="instructions" class="regen-body-text" /> -->
           </div>
         </div>
         <div class="paid-footer">
@@ -46,7 +46,7 @@
               <h3 class="paid-title">Are you sure?</h3>
               <h5 class="regen-body-title">This writing style will be permanently removed.</h5>
             </div>
-            <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
+            <!-- <textarea v-autoresize v-model="instructions" class="regen-body-text" /> -->
           </div>
         </div>
         <div class="paid-footer">
@@ -151,7 +151,7 @@
 
               <div @click="toggleStyleDropdown" class="drop-text pointer">
                 <p class="ellipsis-text" style="margin: 0">
-                  {{ writingStyleTitle ? writingStyleTitle : 'Style' }}
+                  {{ writingStyleTitle ? writingStyleTitle : 'Select Style' }}
                 </p>
                 <img
                   v-if="!showStyleDropdown"
@@ -415,8 +415,27 @@
       </footer> -->
     </div>
 
-    <div style="padding-top: 0" class="center gray-bg">
-      <div style="width: 50%; padding: 0 16px 0 32px">
+    <div style="padding-top: 0;" class="center gray-bg">
+      <div v-if="loading" style="width: 50%; margin-left: 4rem; margin-top: 1rem;">
+        <div style="width: 100%" class="row">
+          <!-- <p class="summary-load-text">Generating {{ type }}...</p> -->
+          <p class="summary-load-text">Generating content...</p>
+        </div>
+
+        <div class="summary-preview-skeleton shimmer">
+          <!-- <div class="content">
+            <div class="meta-wide"></div>
+            <div class="meta-shorter"></div>
+            <div class="meta-shortest"></div>
+          </div> -->
+          <div class="loading">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+      </div>
+      <div v-else style="width: 50%; padding: 0 16px 0 32px">
         <div class="pitch-container">
           <Transition name="slide-fade">
             <div v-if="showUpdateBanner" class="templates">
@@ -428,14 +447,16 @@
             <img src="@/assets/images/back.svg" height="18px" width="18px" alt="" />
           </div> -->
 
-            <p class="sub-text">
-              {{ !pitch ? 'Generated content will appear below.' : 'Content generated.' }}
+            <p class="sub-text text-truncation">
+              {{ !pitch ? 'Your content will appear below.' : `${savedOutput}` }}
             </p>
+            <p v-if="pitch" class="sub-text">{{ pitch.split(' ').length }} words</p>
           </div>
 
           <div class="title-bar">
             <div v-if="!showSaveName" class="row">
-              <button
+              <div v-if="pitch" class="gray-text">AI-generated content</div>
+              <!-- <button
                 :disabled="loading || !pitch"
                 @click="toggleRegenerate"
                 v-if="!regenerating"
@@ -449,8 +470,8 @@
                   alt=""
                 />
                 {{ contentLoading ? 'Regenerating' : 'Regenerate' }}
-              </button>
-              <div style="width: 600px" class="row" v-else>
+              </button> -->
+              <!-- <div style="width: 600px" class="row" v-else>
                 <input
                   :disabled="loading"
                   placeholder="provide additional instructions..."
@@ -470,8 +491,8 @@
                 >
                   Submit
                 </button>
-              </div>
-              <div class="save-wrapper" v-if="!loading && !savingPitch && !pitchSaved">
+              </div> -->
+              <!-- <div class="save-wrapper" v-if="!loading && !savingPitch && !pitchSaved">
                 <button
                   @click="toggleSaveName"
                   v-if="!regenerating"
@@ -490,8 +511,8 @@
                 <div style="margin-left: -50px" class="save-tooltip">
                   {{ pitch ? 'Save this version' : 'Create content first' }}
                 </div>
-              </div>
-              <div v-else>
+              </div> -->
+              <!-- <div v-else>
                 <button
                   @click="toggleSaveName"
                   v-if="!regenerating"
@@ -507,7 +528,7 @@
                   />
                   {{ savingPitch ? 'Saving' : 'Save' }}
                 </button>
-              </div>
+              </div> -->
             </div>
 
             <div v-else class="row">
@@ -522,20 +543,22 @@
                 @click="showSaveName = false"
                 :disabled="loading || savingPitch || pitchSaved"
                 class="secondary-button"
+                style="margin-right: 0;"
               >
-                cancel
+                Cancel
               </button>
 
               <button
                 @click="createSavedPitch"
                 :disabled="loading || savingPitch || pitchSaved"
                 class="primary-button"
+                style="margin-left: 1rem;"
               >
                 Save
               </button>
             </div>
 
-            <div
+            <!-- <div
               @click="copyText"
               v-if="pitch && true /*!regenerating*/"
               class="wrapper circle-border"
@@ -548,45 +571,162 @@
                 alt=""
               />
               <div style="margin-left: -14px" class="tooltip">{{ copyTip }}</div>
+            </div> -->
+            <div style="display: flex;">
+              <div style="margin-right: 0.5rem;">
+                <div
+                  @click="toggleSaveName"
+                  class="wrapper circle-border white-bg"
+                  v-if="pitch && !savingPitch && !pitchSaved"
+                >
+                  <img
+                    height="14px"
+                    src="@/assets/images/disk.svg"
+                    alt=""
+                    class="filter-green img-highlight"
+                  />
+                  <div
+                    class="tooltip"
+                    style="margin-left: -14px"
+                  >
+                  {{ 'Save' }}
+                  </div>
+                </div>
+                <div v-else-if="!pitch" class="wrapper circle-border white-bg" style="opacity: 0.7">
+                  <img
+                    style="cursor: not-allowed"
+                    class="right-mar img-highlight"
+                    src="@/assets/images/disk.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  <div style="margin-left: -14px" class="tooltip">Create content first</div>
+                </div>
+              </div>
+              
+              <div>
+                <div
+                  @click="copyText"
+                  class="wrapper circle-border white-bg"
+                  v-if="pitch"
+                >
+                  <img
+                    style="cursor: pointer"
+                    class="right-mar img-highlight"
+                    src="@/assets/images/clipboard.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  <div style="margin-left: -22px" class="tooltip">{{ copyTip }}</div>
+                </div>
+                <div v-else class="wrapper circle-border white-bg" style="opacity: 0.7">
+                  <img
+                    style="cursor: not-allowed"
+                    class="right-mar img-highlight"
+                    src="@/assets/images/clipboard.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  <div style="margin-left: -14px" class="tooltip">Create content first</div>
+                </div>
+              </div>
             </div>
-
-            <div v-else class="wrapper circle-border" style="opacity: 0.7">
+          </div>
+        </div>
+      </div>
+      <div v-if="pitch" class="centered" style="width: 100%; padding: 0px 32px 16px 56px">
+        <div v-if="pitch && !loading" style="width: 50%">
+          <pre 
+            style="                      
+              margin-top: -4px;
+              padding-top: 16px;
+              border-top: 1px solid rgba(0, 0, 0, 0.1);
+            "
+            v-html="pitch" 
+            class="pre-text"
+          ></pre>
+        </div>
+        <div
+          style="
+            margin: 1rem 0 0 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            border-radius: 28px;
+          "
+          id="instructions"
+          class="input-container-chat"
+          v-if="pitch && !loading"
+        >
+          <div style="padding-top: 0" class="input-row">
+            <div class="main-text-img">
               <img
-                style="cursor: not-allowed"
-                class="right-mar img-highlight"
-                src="@/assets/images/clipboard.svg"
-                height="12px"
+                style="margin-top: 4px"
+                src="@/assets/images/comment.svg"
+                height="18px"
                 alt=""
               />
-              <div style="margin-left: -14px" class="tooltip">Create content first</div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="centered" style="width: 100%; padding: 16px 32px 16px 56px">
-      <div v-if="loading" style="width: 50%">
-        <div style="width: 100%" class="row">
-          <!-- <p class="summary-load-text">Generating {{ type }}...</p> -->
-          <p class="summary-load-text">Generating content...</p>
-        </div>
 
-        <div class="summary-preview-skeleton shimmer">
-          <!-- <div class="content">
-            <div class="meta-wide"></div>
-            <div class="meta-shorter"></div>
-            <div class="meta-shortest"></div>
+            <textarea
+              style="margin: 0; padding-top: 1px"
+              class="area-input text-area-input"
+              id="instructions-text-area"
+              placeholder="What would you like to edit?"
+              v-model="instructions"
+              :rows="1"
+              v-autoresize
+            />
+
+            <div @click="instructions = ''" class="cancel-container">
+              <img src="@/assets/images/add.svg" class="lip-img invert-dark-blue" />
+            </div>
+            <button
+              @click="regeneratePitch"
+              :disabled="!instructions"
+              style="
+                margin: 0;
+                margin-left: 8px;
+                border: none !important;
+                background-color: transparent;
+              "
+            >
+              <img
+                v-if="!instructions"
+                style="margin: 0"
+                src="@/assets/images/paper-plane-top.svg"
+                height="17px"
+                alt=""
+                class="faded"
+              />
+
+              <img
+                v-else
+                style="margin: 0"
+                src="@/assets/images/paper-plane-full.svg"
+                height="13px"
+                alt=""
+                class="grow filtered-blue"
+              />
+            </button>
+          </div>
+
+          <!-- <div v-if="showingPromptDropdown" class="dropdown">
+            <div style="padding-top: 4px; padding-bottom: 4px">
+              <small class="gray-text">Popular Prompts</small>
+            </div>
+
+            <div
+              class="dropdown-item"
+              v-for="(suggestion, i) in filteredPromptSuggestions"
+              :key="i"
+              @click="addPromptSuggestion(suggestion)"
+            >
+              <p>
+                {{ suggestion }}
+              </p>
+            </div>
           </div> -->
-          <div class="loading">
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-          </div>
         </div>
-      </div>
-
-      <div v-if="pitch && !loading" style="width: 50%">
-        <pre v-html="pitch" class="pre-text"></pre>
       </div>
     </div>
   </div>
@@ -613,6 +753,7 @@ export default {
       writingStyleTitle: null,
       type: '',
       output: '',
+      savedOutput: '',
       persona: '',
       briefing: '',
       characters: null,
@@ -912,10 +1053,14 @@ export default {
     async regeneratePitch() {
       this.regenerating = false
       this.contentLoading = true
+      this.loading = true
+      const tempPitch = this.pitch
+      this.pitch = ''
+      this.savedOutput = this.instructions
       try {
         await Comms.api
           .regeneratePitch({
-            pitch: this.pitch,
+            pitch: tempPitch,
             instructions: this.instructions,
           })
           .then((response) => {
@@ -927,6 +1072,7 @@ export default {
         // this.clearData()
         this.instructions = ''
         this.contentLoading = false
+        this.loading = false
         this.scrollToTop()
       }
     },
@@ -947,6 +1093,7 @@ export default {
             chars: this.characters,
           })
           .then((response) => {
+            this.savedOutput = this.output
             this.pitch = response.pitch
             this.scrollToTop()
             this.$store.commit('setGeneratedContent', null)
@@ -1198,6 +1345,8 @@ export default {
 
 .title-container {
   position: relative;
+  display: flex;
+  justify-content: space-between;
   width: 100%;
   @media only screen and (max-width: 600px) {
     margin-top: 1rem;
@@ -1232,15 +1381,30 @@ export default {
   width: 100%;
 }
 
-.sub-text {
-  color: $light-gray-blue;
-  margin: 8px 0 16px 0;
-  font-size: 14px;
+// .sub-text {
+//   color: $light-gray-blue;
+//   margin: 8px 0 16px 0;
+//   font-size: 14px;
 
+//   font-family: $thin-font-family;
+//   span {
+//     font-weight: normal;
+//     word-wrap: break-word;
+//   }
+// }
+
+.sub-text {
+  // color: $light-gray-blue;
+  margin: 8px 0;
+  font-size: 14px;
   font-family: $thin-font-family;
+
   span {
-    font-weight: normal;
+    font-weight: 200;
     word-wrap: break-word;
+  }
+  @media only screen and (max-width: 600px) {
+    text-align: center;
   }
 }
 
@@ -1249,6 +1413,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  margin-top: 1.75rem;
 }
 
 .row {
@@ -1263,7 +1428,7 @@ export default {
 }
 
 .pitch-container {
-  padding: 16px 0;
+  padding: 16px 0 2px;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -1282,9 +1447,9 @@ export default {
 }
 
 .pre-text {
-  background-color: $white-blue;
+  // background-color: $white-blue;
   border-radius: 4px;
-  padding: 16px;
+  // padding: 16px;
   margin: 0;
   color: $base-gray;
   font-family: $thin-font-family;
@@ -1296,7 +1461,7 @@ export default {
 
 .dark-blue-bg {
   background-color: $dark-black-blue;
-  padding: 32px 0;
+  padding: 23px 0 30px;
 }
 
 .pitches {
@@ -1335,10 +1500,26 @@ export default {
   flex-wrap: nowrap;
   border: 1px solid rgba(0, 0, 0, 0.1);
   padding: 0 1rem;
+  margin-top: 0.95rem;
   border-radius: 6px;
-  width: 675px;
+  // width: 675px;
+  width: 100%;
+  min-height: 4.9rem;
   background-color: $offer-white;
   color: $base-gray;
+  @media only screen and (max-width: 600px) {
+    width: 100%;
+  }
+}
+.input-container-chat {
+  flex-wrap: nowrap;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.75rem 1.2rem;
+  border-radius: 6px;
+  width: 50%;
+  background-color: $offer-white;
+  color: $base-gray;
+  position: relative;
   @media only screen and (max-width: 600px) {
     width: 100%;
   }
@@ -2029,6 +2210,12 @@ footer {
 .primary-button:disabled {
   background-color: $soft-gray;
 }
+button:disabled {
+  background-color: $off-white !important;
+  border: 1px solid rgba(0, 0, 0, 0.2) !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}
 .circle-border {
   display: flex;
   align-items: center;
@@ -2201,5 +2388,57 @@ footer {
     transform: scale(1);
     opacity: 1;
   }
+}
+.white-bg {
+  background: white;
+}
+.absolute-right {
+  position: absolute;
+  right: 8px;
+  top: -48px;
+}
+.text-truncation {
+  width: 60%;
+  white-space: nowrap;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+}
+.main-text-img {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  filter: invert(40%);
+  margin: 0;
+  padding-right: 1rem;
+}
+.cancel-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $offer-white;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 6px;
+  cursor: pointer;
+  // box-shadow: 1px 1px 3px 1px rgba(0, 0, 0, 0.1);
+  margin: 12px 0;
+
+  img {
+    transform: rotate(45deg);
+  }
+  transition: all 0.2s;
+}
+.lip-img {
+  height: 14px;
+  padding: 0;
+  margin: 0;
+  z-index: 5500;
+}
+.invert-dark-blue {
+  filter: invert(22%) sepia(51%) saturate(390%) hue-rotate(161deg) brightness(92%) contrast(87%);
+}
+.filtered-blue {
+  filter: invert(20%) sepia(28%) saturate(811%) hue-rotate(162deg) brightness(94%) contrast(81%);
 }
 </style>
