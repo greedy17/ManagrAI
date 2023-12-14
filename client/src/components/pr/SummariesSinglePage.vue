@@ -1110,7 +1110,6 @@
                       src="@/assets/images/disk.svg"
                       alt=""
                       class="filter-green img-highlight"
-                      :class="{ dim: !(searchSaved || savedSearch) }"
                     />
                     <div
                       class="tooltip"
@@ -1252,25 +1251,6 @@
                         :rows="1"
                         v-autoresize
                       />
-
-                      <!-- <textarea
-                        v-else
-                        style="margin: 0"
-                        class="area-input text-area-input"
-                        id="instructions-text-area"
-                        :placeholder="`Provide instructions for ${contentType}...`"
-                        v-model="contentInstructions"
-                        v-autoresize
-                      /> -->
-
-                      <!-- <button
-                        @click="summarizing = true"
-                        v-if="summary"
-                        class="secondary-button"
-                        style="margin-right: 0"
-                      >
-                        Cancel
-                      </button> -->
 
                       <div @click="newTemplate = ''" v-if="summary" class="cancel-container">
                         <img src="@/assets/images/add.svg" class="lip-img invert-dark-blue" />
