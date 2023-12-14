@@ -151,7 +151,7 @@
 
               <div @click="toggleStyleDropdown" class="drop-text pointer">
                 <p class="ellipsis-text" style="margin: 0">
-                  {{ writingStyleTitle ? writingStyleTitle : 'Style' }}
+                  {{ writingStyleTitle ? writingStyleTitle : 'Select Style' }}
                 </p>
                 <img
                   v-if="!showStyleDropdown"
@@ -1296,7 +1296,7 @@ export default {
 
 .dark-blue-bg {
   background-color: $dark-black-blue;
-  padding: 32px 0;
+  padding: 23px 0 30px;
 }
 
 .pitches {
@@ -1335,8 +1335,11 @@ export default {
   flex-wrap: nowrap;
   border: 1px solid rgba(0, 0, 0, 0.1);
   padding: 0 1rem;
+  margin-top: 0.95rem;
   border-radius: 6px;
-  width: 675px;
+  // width: 675px;
+  width: 100%;
+  min-height: 4.9rem;
   background-color: $offer-white;
   color: $base-gray;
   @media only screen and (max-width: 600px) {
