@@ -789,8 +789,9 @@ export default {
       instructionsSuggestions: [
         `Create a media pitch for XXX about ...`,
         `Issue a press release on behalf of XXX about ...`,
-        `Use the text below to generate XXX for XXX ...`,
-        `Re-write this using my writing style:`,
+        // `Use the text below to generate XXX for XXX ...`,
+        `Re-write the content below using my writing style:`,
+        `List 10 journalists along with pitching tips, that would be interested in writing about the content below:`,
       ],
       instructions: '',
       copyTip: 'Copy',
