@@ -144,7 +144,7 @@
           <label for="pub">Publication Type</label>
           <input
             class="input-text"
-            placeholder="(e.g, teir 1, teir 2, industry specific, niche, etc.)"
+            placeholder="(e.g, tier 1, tier 2, industry specific, niche, etc.)"
             type="text"
             v-model="pubType"
             :disabled="loadingJournalists"
@@ -668,6 +668,7 @@
                 <div
                   @click="toggleJournalistModal"
                   class="wrapper circle-border white-bg"
+                  :class="{ 'bluee-bg': journalists }"
                   v-if="pitch"
                 >
                   <img
@@ -677,7 +678,9 @@
                     height="14px"
                     alt=""
                   />
-                  <div style="margin-left: -22px" class="tooltip">Find Journalists</div>
+                  <div style="margin-left: -22px" class="tooltip">
+                    {{ !journalists ? 'Find Journalists' : 'View Journalists' }}
+                  </div>
                 </div>
                 <div v-else class="wrapper circle-border white-bg" style="opacity: 0.7">
                   <img
@@ -1238,6 +1241,7 @@ export default {
         this.openPaidModal()
         return
       }
+      this.journalists - null
       this.loading = true
       this.showStyleDropdown = false
       try {
@@ -2585,6 +2589,9 @@ button:disabled {
 }
 .white-bg {
   background: white;
+}
+.bluee-bg {
+  background: $white-blue !important;
 }
 .absolute-right {
   position: absolute;
