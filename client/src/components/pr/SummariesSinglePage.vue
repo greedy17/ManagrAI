@@ -624,13 +624,30 @@
                   style="position: relative"
                 >
                   <div class="wrapper">
-                    <button disabled style="margin-left: 0" class="primary-button">Save</button>
+                    <!-- <button disabled style="margin-left: 0" class="primary-button">Save</button>
                     <div style="margin-left: -8px" class="tooltip tooltip-wide full">
                       Generate report first
-                    </div>
+                    </div> -->
+                    <p></p>
                   </div>
 
                   <div v-if="mainView !== 'website'">
+                    <div
+                      style="margin-right: 0; right: 120px"
+                      class="wrapper absolute-right-bottom circle-border white-bg dim"
+                    >
+                      <img
+                        style="cursor: not-allowed"
+                        class="right-mar img-highlight"
+                        src="@/assets/images/disk.svg"
+                        height="14px"
+                        alt=""
+                      />
+                      <div style="margin-left: -22px" class="tooltip tooltip-wide full">
+                        Generate report first
+                      </div>
+                    </div>
+
                     <div
                       style="margin-right: 0; right: 80px"
                       class="wrapper absolute-right-bottom circle-border white-bg dim"
@@ -1045,7 +1062,9 @@
                   </div>
 
                   <div style="margin: 1.5rem 0 0 0" class="loader-bg" v-else>
-                    <div class="gray-text" style="width: 100%; font-size: 13px;">Generating report...</div>
+                    <div class="gray-text" style="width: 100%; font-size: 13px">
+                      Generating report...
+                    </div>
                     <div class="summary-preview-skeleton shimmer">
                       <!-- <div class="content">
                         <div class="meta-wide"></div>
@@ -1061,7 +1080,7 @@
                   </div>
                 </div>
 
-                <div v-if="summary" style="width: 100%; margin-top: 2rem;" class="relative">
+                <div v-if="summary" style="width: 100%; margin-top: 2rem" class="relative">
                   <!-- <button
                     @click="toggleSaveName"
                     v-if="
@@ -1088,7 +1107,9 @@
                     />
                     {{ savingSearch ? 'Saving' : 'Save' }}
                   </button> -->
-                  <div class="gray-text absolute-right" style="left: 0; font-size: 14px;">AI-generated report</div>
+                  <div class="gray-text absolute-right" style="left: 0; font-size: 14px">
+                    AI-generated report
+                  </div>
                   <div
                     @mouseenter="changeEmailText"
                     @mouseleave="defaultEmailText"
@@ -1103,7 +1124,10 @@
                       savedSearch ||
                       mainView === 'website'
                     "
-                    v-if="!savedSearch && ((filteredArticles && filteredArticles.length) || tweets.length)"
+                    v-if="
+                      !savedSearch &&
+                      ((filteredArticles && filteredArticles.length) || tweets.length)
+                    "
                   >
                     <img
                       height="14px"
@@ -1116,7 +1140,7 @@
                       style="margin-left: -22px"
                       :class="{ 'tooltip-wide': !(searchSaved || savedSearch) }"
                     >
-                    {{ savingSearch ? 'Saving' : 'Save' }}
+                      {{ savingSearch ? 'Saving' : 'Save' }}
                     </div>
                   </div>
                   <div
@@ -1219,7 +1243,7 @@
                     class="pre-text"
                     v-html="summary"
                   ></pre>
-                  
+
                   <div
                     style="
                       margin: 1rem 0 0 0;
@@ -1333,10 +1357,11 @@
                       </div>
                     </div>
                   </div>
-
                 </div>
                 <div style="margin: 1.5rem 0 0 0" class="loader-bg" v-else-if="chatSummaryLoading">
-                  <div class="gray-text" style="width: 100%; font-size: 13px;">Generating report...</div>
+                  <div class="gray-text" style="width: 100%; font-size: 13px">
+                    Generating report...
+                  </div>
                   <div class="summary-preview-skeleton shimmer">
                     <!-- <div class="content">
                       <div class="meta-wide"></div>
@@ -3202,7 +3227,7 @@ export default {
         } else {
           await this.getSourceSummary()
         }
-      } catch(e) {
+      } catch (e) {
         console.log('error in getChatSummary', e)
       }
       this.chatSummaryLoading = false

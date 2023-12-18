@@ -154,6 +154,15 @@ OPEN_AI_REGENERATE_ARTICLE = (
     """
 )
 
+OPEN_AI_FIND_JOURNALISTS = (
+    lambda type, beat, location, content : f"""List up to 10 real journalists from relevant publications, along with pitching tips, who would be interested in writing about the content provided. Follow these instructions carefully:
+    - Publication Type: The journalists must be from news outlets of this type: {type}.
+    - Journalistic Beat: The journalist must cover this specific beat: {beat}.
+    - Location: The journalists must be based in or primarily cover {location}.
+    - Real Journalists Requirement: It is essential that the journalists listed are actual, currently active professionals in the field.
+    Content for the Pitch: {content} """
+)
+
 DO_NOT_TRACK_LIST = [
     "https://www.wsj.com",
     "https://www.nytimes.com",

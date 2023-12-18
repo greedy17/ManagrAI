@@ -120,6 +120,97 @@
       </div>
     </Modal>
 
+    <Modal v-if="journalistModalOpen" class="paid-modal" style="z-index: 1000000s">
+      <div style="width: 500px; min-height: 275px" class="regen-container">
+        <div class="paid-header">
+          <div>
+            <h3 class="regen-header-title">
+              {{ !journalists ? 'Find Journalists' : 'Journalists' }}
+            </h3>
+            <p class="regen-header-subtitle">
+              {{ !journalists ? 'Provide additional details below' : 'Journalist details' }}
+            </p>
+          </div>
+          <div v-if="!loadingJournalists" class="pointer" @click="toggleJournalistModal">
+            <small>X</small>
+          </div>
+          <div v-else><small>X</small></div>
+        </div>
+        <div
+          :class="loadingJournalists ? 'opaque' : ''"
+          v-if="!journalists"
+          class="paid-body input-width"
+        >
+          <label for="pub">Publication Type</label>
+          <input
+            class="input-text"
+            placeholder="(e.g, teir 1, teir 2, industry specific, niche, etc.)"
+            type="text"
+            v-model="pubType"
+            :disabled="loadingJournalists"
+            id="pub"
+          />
+
+          <label for="beat">Beat</label>
+          <input
+            class="input-text"
+            placeholder="(e.g, technology, health, lifestyle, etc.)"
+            type="text"
+            v-model="beat"
+            :disabled="loadingJournalists"
+            id="beat"
+          />
+
+          <label for="loc">Location</label>
+          <input
+            class="input-text"
+            placeholder="(e.g, National, Atlanta, D.C, etc.)"
+            type="text"
+            v-model="location"
+            :disabled="loadingJournalists"
+            id="loc"
+          />
+        </div>
+
+        <div v-else class="paid-body">
+          <pre v-html="journalists" class="pre-text" style="font-size: 14px"></pre>
+        </div>
+
+        <div class="paid-footer align-right">
+          <div class="input-row">
+            <button
+              :disabled="loadingJournalists"
+              @click="toggleJournalistModal"
+              class="secondary-button"
+            >
+              {{ !journalists ? 'Cancel' : 'Close' }}
+            </button>
+            <button
+              v-if="!journalists"
+              @mouseenter="changeJournalText"
+              @mouseleave="defaultJournalText"
+              :disabled="loadingJournalists || !isPaid"
+              @click="getJournalists"
+              class="primary-button no-transitions"
+            >
+              <img
+                v-if="loadingJournalists"
+                class="rotate"
+                height="12px"
+                src="@/assets/images/loading.svg"
+                alt=""
+              />
+              {{ journalText }}
+            </button>
+
+            <button v-else @click="copyJournalText" class="primary-button no-transitions">
+              {{ copyTip }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+
     <div :class="loading ? 'opaque' : ''" class="center">
       <div class="relative">
         <Transition name="slide-fade">
@@ -415,8 +506,8 @@
       </footer> -->
     </div>
 
-    <div style="padding-top: 0;" class="center gray-bg">
-      <div v-if="loading" style="width: 50%; margin-left: 4rem; margin-top: 1rem;">
+    <div style="padding-top: 0" class="center gray-bg">
+      <div v-if="loading" style="width: 50%; margin-left: 4rem; margin-top: 1rem">
         <div style="width: 100%" class="row">
           <!-- <p class="summary-load-text">Generating {{ type }}...</p> -->
           <p class="summary-load-text">Generating content...</p>
@@ -543,7 +634,7 @@
                 @click="showSaveName = false"
                 :disabled="loading || savingPitch || pitchSaved"
                 class="secondary-button"
-                style="margin-right: 0;"
+                style="margin-right: 0"
               >
                 Cancel
               </button>
@@ -552,7 +643,7 @@
                 @click="createSavedPitch"
                 :disabled="loading || savingPitch || pitchSaved"
                 class="primary-button"
-                style="margin-left: 1rem;"
+                style="margin-left: 1rem"
               >
                 Save
               </button>
@@ -572,8 +663,35 @@
               />
               <div style="margin-left: -14px" class="tooltip">{{ copyTip }}</div>
             </div> -->
-            <div style="display: flex;">
-              <div style="margin-right: 0.5rem;">
+            <div style="display: flex">
+              <div style="margin-right: 0.5rem">
+                <div
+                  @click="toggleJournalistModal"
+                  class="wrapper circle-border white-bg"
+                  v-if="pitch"
+                >
+                  <img
+                    style="cursor: pointer"
+                    class="right-mar img-highlight"
+                    src="@/assets/images/profile.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  <div style="margin-left: -22px" class="tooltip">Find Journalists</div>
+                </div>
+                <div v-else class="wrapper circle-border white-bg" style="opacity: 0.7">
+                  <img
+                    style="cursor: not-allowed"
+                    class="right-mar img-highlight"
+                    src="@/assets/images/profile.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  <div style="margin-left: -14px" class="tooltip">Create content first</div>
+                </div>
+              </div>
+
+              <div style="margin-right: 0.5rem">
                 <div
                   @click="toggleSaveName"
                   class="wrapper circle-border white-bg"
@@ -585,11 +703,8 @@
                     alt=""
                     class="filter-green img-highlight"
                   />
-                  <div
-                    class="tooltip"
-                    style="margin-left: -14px"
-                  >
-                  {{ 'Save' }}
+                  <div class="tooltip" style="margin-left: -14px">
+                    {{ 'Save' }}
                   </div>
                 </div>
                 <div v-else-if="!pitch" class="wrapper circle-border white-bg" style="opacity: 0.7">
@@ -603,13 +718,9 @@
                   <div style="margin-left: -14px" class="tooltip">Create content first</div>
                 </div>
               </div>
-              
+
               <div>
-                <div
-                  @click="copyText"
-                  class="wrapper circle-border white-bg"
-                  v-if="pitch"
-                >
+                <div @click="copyText" class="wrapper circle-border white-bg" v-if="pitch">
                   <img
                     style="cursor: pointer"
                     class="right-mar img-highlight"
@@ -636,35 +747,21 @@
       </div>
       <div v-if="pitch" class="centered" style="width: 100%; padding: 0px 32px 16px 56px">
         <div v-if="pitch && !loading" style="width: 50%">
-          <pre 
-            style="                      
-              margin-top: -4px;
-              padding-top: 16px;
-              border-top: 1px solid rgba(0, 0, 0, 0.1);
-            "
-            v-html="pitch" 
+          <pre
+            style="margin-top: -4px; padding-top: 16px; border-top: 1px solid rgba(0, 0, 0, 0.1)"
+            v-html="pitch"
             class="pre-text"
           ></pre>
         </div>
         <div
-          style="
-            margin: 1rem 0 0 0;
-            padding-top: 0;
-            padding-bottom: 0;
-            border-radius: 28px;
-          "
+          style="margin: 1rem 0 0 0; padding-top: 0; padding-bottom: 0; border-radius: 28px"
           id="instructions"
           class="input-container-chat"
           v-if="pitch && !loading"
         >
           <div style="padding-top: 0" class="input-row">
             <div class="main-text-img">
-              <img
-                style="margin-top: 4px"
-                src="@/assets/images/comment.svg"
-                height="18px"
-                alt=""
-              />
+              <img style="margin-top: 4px" src="@/assets/images/comment.svg" height="18px" alt="" />
             </div>
 
             <textarea
@@ -742,6 +839,13 @@ export default {
   },
   data() {
     return {
+      loadingJournalists: false,
+      journalists: null,
+      location: null,
+      beat: null,
+      pubType: null,
+      journalText: 'Search',
+      journalistModalOpen: false,
       contentLoading: false,
       showStyleDropdown: false,
       styleName: null,
@@ -819,6 +923,29 @@ export default {
     this.$store.commit('setGeneratedContent', null)
   },
   methods: {
+    async getJournalists() {
+      this.loadingJournalists = true
+      try {
+        await Comms.api
+          .getJournalists({
+            type: this.pubType,
+            beat: this.beat,
+            location: this.location,
+            content: this.pitch,
+          })
+          .then((response) => {
+            console.log(response)
+            this.journalists = response.journalists
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.loadingJournalists = false
+      }
+    },
+    toggleJournalistModal() {
+      this.journalistModalOpen = !this.journalistModalOpen
+    },
     enforceMax() {
       if (this.characters > 1500) {
         this.characters = 1500
@@ -879,6 +1006,22 @@ export default {
         this.refreshUser()
       }
     },
+
+    changeJournalText() {
+      if (!this.isPaid) {
+        this.journalText = 'Upgrade to Pro!'
+      } else {
+        return
+      }
+    },
+    defaultJournalText() {
+      if (!this.isPaid) {
+        this.journalText = 'Search'
+      } else {
+        return
+      }
+    },
+
     changeStyleText() {
       if (!this.isPaid) {
         this.styleText = 'Upgrade to Pro!'
@@ -930,6 +1073,19 @@ export default {
         console.error('Failed to copy text: ', err)
       }
     },
+    async copyJournalText() {
+      try {
+        await navigator.clipboard.writeText(this.journalists)
+        this.copyTip = 'Copied!'
+
+        setTimeout(() => {
+          this.copyTip = 'Copy'
+        }, 2000)
+      } catch (err) {
+        console.error('Failed to copy text: ', err)
+      }
+    },
+
     toggleSaveName() {
       this.showSaveName = !this.showSaveName
     },
@@ -1688,6 +1844,12 @@ footer {
   color: red !important;
 }
 
+.input-width {
+  input {
+    width: 500px !important;
+  }
+}
+
 .reset-button {
   @include white-button-danger();
   padding: 8px 12px;
@@ -1976,11 +2138,18 @@ footer {
   overflow-y: scroll;
   color: $base-gray;
   font-family: $thin-font-family;
+
+  label {
+    font-size: 14px;
+  }
 }
 .paid-header {
   display: flex;
   justify-content: space-between;
   margin-bottom: 1rem;
+  position: sticky;
+  top: 0;
+  background-color: white;
 }
 .paid-center {
   display: flex;
@@ -2000,6 +2169,8 @@ footer {
 }
 .paid-body {
   margin: 0.5rem 0;
+  scroll-behavior: smooth;
+  overflow-y: scroll;
 }
 .regen-body-title {
   margin: 0 0 0 0;
@@ -2007,6 +2178,9 @@ footer {
 .paid-title {
   margin-top: 0;
   margin-bottom: 2rem;
+}
+.align-right {
+  justify-content: flex-end !important;
 }
 .paid-footer {
   position: sticky;
@@ -2065,6 +2239,20 @@ footer {
 }
 
 .dropdown:hover::-webkit-scrollbar {
+  display: block;
+}
+
+.paid-body::-webkit-scrollbar {
+  width: 6px;
+  height: 0px;
+}
+.paid-body::-webkit-scrollbar-thumb {
+  background-color: $soft-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px;
+}
+
+.paid-body:hover::-webkit-scrollbar {
   display: block;
 }
 
@@ -2211,6 +2399,11 @@ footer {
 .primary-button:disabled {
   background-color: $soft-gray;
 }
+
+.no-transitions:hover {
+  scale: 1 !important;
+}
+
 button:disabled {
   background-color: $off-white !important;
   border: 1px solid rgba(0, 0, 0, 0.2) !important;
