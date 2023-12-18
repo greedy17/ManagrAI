@@ -37,7 +37,7 @@
                   <li>Daily email alerts</li>
                   <li>Personalized writing style</li>
                   <li>Shareable digest</li>
-                  <li>AI call summaries</li>
+                  <!-- <li>AI call summaries</li> -->
                   <li>Onboarding & Training</li>
                   <li>Dedicated Customer Success Manager</li>
                   <li>User data does not train comercial AI models</li>

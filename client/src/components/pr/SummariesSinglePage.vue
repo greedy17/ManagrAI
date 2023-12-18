@@ -590,7 +590,7 @@
                     class="sub-text ellipsis-text"
                     style="margin: 16px 0"
                   >
-                    AI-generated boolean: <span :title="booleanString">{{ booleanString }}</span>
+                    <span :title="booleanString">{{ booleanString }}</span>
                   </p>
                   <p v-else style="margin: 16px 0" class="sub-text">Article Report</p>
 
@@ -683,26 +683,17 @@
                 <div v-if="summary && summarizing" class="title-bar">
                   <div v-if="!showSaveName" class="row-container">
                     <div class="row">
-                      <!-- @click="openRegenModal" -->
-                      <button
+                      <!-- <button
                         :disabled="
                           articleSummaryLoading || loading || summaryLoading || savingSearch
                         "
                         @click="summarizing = false"
                         class="secondary-button"
                       >
-                        <!-- {{
-                          (filteredArticles && filteredArticles.length) || mainView === 'website'
-                            ? 'New'
-                            : tweets.length
-                            ? 'New'
-                            : 'New Search'
-                        }} -->
-
                         Chat
-                      </button>
+                      </button> -->
 
-                      <button
+                      <!-- <button
                         @click="toggleSaveName"
                         v-if="
                           !savedSearch &&
@@ -727,7 +718,7 @@
                           alt=""
                         />
                         {{ savingSearch ? 'Saving' : 'Save' }}
-                      </button>
+                      </button> -->
                     </div>
                   </div>
 
@@ -802,6 +793,16 @@
                     </div>
                   </div> -->
                 </div>
+                <!-- <div style="margin: 1.5rem 0 0 0" class="loader-bg" v-else-if="chatSummaryLoading">
+                  <div class="gray-text" style="width: 100%; margin-left: 2rem; font-size: 13px;">Generating report...</div>
+                  <div class="summary-preview-skeleton shimmer">
+                    <div class="loading">
+                      <div class="dot"></div>
+                      <div class="dot"></div>
+                      <div class="dot"></div>
+                    </div>
+                  </div>
+                </div> -->
 
                 <div
                   :class="{ bottommargin: summary && !summaryLoading }"
@@ -835,7 +836,8 @@
                     </div>
                   </div>
 
-                  <div v-if="!summaryLoading">
+                  <div style="width: 100%" class="row-container" v-if="!summaryLoading">
+                    <!-- <img class="chat-img" src="@/assets/images/comment.svg" height="32px" alt="" /> -->
                     <div
                       style="
                         margin: 1rem 0 0 0;
@@ -850,33 +852,22 @@
                       v-if="showSummaryInstructions"
                     >
                       <div style="padding-top: 0" class="input-row">
-                        <!-- @click="toggleGenerateDropdown" -->
                         <div class="main-text-img">
-                          <img src="@/assets/images/comment.svg" height="16px" alt="" />
-                          <!-- <p>Chat</p> -->
-                          <!-- <img
-                            v-if="!showGenerateDropdown"
-                            src="@/assets/images/downArrow.svg"
-                            class="inverted"
-                            height="14px"
+                          <img
+                            style="margin-top: 4px"
+                            src="@/assets/images/comment.svg"
+                            height="18px"
                             alt=""
                           />
-                          <img
-                            class="rotate-img inverted"
-                            v-else
-                            src="@/assets/images/downArrow.svg"
-                            height="14px"
-                            alt=""
-                          /> -->
                         </div>
-                        <!-- v-if="showSummaryInput" -->
-                        <!-- @focus="showPromptDropdown" -->
+
                         <textarea
-                          style="margin: 0"
+                          style="margin: 0; padding-top: 1px"
                           class="area-input text-area-input"
                           id="instructions-text-area"
                           placeholder="Ask me anything about this coverage..."
                           v-model="newTemplate"
+                          :rows="1"
                           v-autoresize
                         />
 
@@ -890,14 +881,18 @@
                           v-autoresize
                         /> -->
 
-                        <button
+                        <!-- <button
                           @click="summarizing = true"
                           v-if="summary"
                           class="secondary-button"
                           style="margin-right: 0"
                         >
                           Cancel
-                        </button>
+                        </button> -->
+
+                        <div @click="summarizing = true" v-if="summary" class="cancel-container">
+                          <img src="@/assets/images/add.svg" class="lip-img invert-dark-blue" />
+                        </div>
 
                         <button
                           @click="getSummary(filteredArticles, newTemplate)"
@@ -914,7 +909,7 @@
                             v-if="!newTemplate"
                             style="margin: 0"
                             src="@/assets/images/paper-plane-top.svg"
-                            height="14px"
+                            height="17px"
                             alt=""
                             class="faded"
                           />
@@ -923,7 +918,7 @@
                             v-else
                             style="margin: 0"
                             src="@/assets/images/paper-plane-full.svg"
-                            height="13px"
+                            height="16px"
                             alt=""
                             class="grow filtered-blue"
                           />
@@ -1050,17 +1045,80 @@
                   </div>
 
                   <div style="margin: 1.5rem 0 0 0" class="loader-bg" v-else>
+                    <div class="gray-text" style="width: 100%; font-size: 13px;">Generating report...</div>
                     <div class="summary-preview-skeleton shimmer">
-                      <div class="content">
+                      <!-- <div class="content">
                         <div class="meta-wide"></div>
                         <div class="meta-shorter"></div>
                         <div class="meta-shortest"></div>
+                      </div> -->
+                      <div class="loading">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div v-if="summary" style="width: 100%" class="relative">
+                <div v-if="summary" style="width: 100%; margin-top: 2rem;" class="relative">
+                  <!-- <button
+                    @click="toggleSaveName"
+                    v-if="
+                      !savedSearch &&
+                      ((filteredArticles && filteredArticles.length) || tweets.length)
+                    "
+                    :disabled="
+                      articleSummaryLoading ||
+                      loading ||
+                      summaryLoading ||
+                      savingSearch ||
+                      savedSearch ||
+                      mainView === 'website'
+                    "
+                    style="margin-left: -2px"
+                    class="primary-button"
+                  >
+                    <img
+                      v-if="savingSearch"
+                      class="rotate"
+                      height="12px"
+                      src="@/assets/images/loading.svg"
+                      alt=""
+                    />
+                    {{ savingSearch ? 'Saving' : 'Save' }}
+                  </button> -->
+                  <div class="gray-text absolute-right" style="left: 0; font-size: 14px;">AI-generated report</div>
+                  <div
+                    @mouseenter="changeEmailText"
+                    @mouseleave="defaultEmailText"
+                    @click="toggleSaveName"
+                    class="wrapper absolute-right circle-border white-bg"
+                    style="margin-right: 0; right: 128px"
+                    :disabled="
+                      articleSummaryLoading ||
+                      loading ||
+                      summaryLoading ||
+                      savingSearch ||
+                      savedSearch ||
+                      mainView === 'website'
+                    "
+                    v-if="!savedSearch && ((filteredArticles && filteredArticles.length) || tweets.length)"
+                  >
+                    <img
+                      height="14px"
+                      src="@/assets/images/disk.svg"
+                      alt=""
+                      class="filter-green img-highlight"
+                    />
+                    <div
+                      class="tooltip"
+                      style="margin-left: -22px"
+                      :class="{ 'tooltip-wide': !(searchSaved || savedSearch) }"
+                    >
+                    {{ savingSearch ? 'Saving' : 'Save' }}
+                    </div>
+                  </div>
                   <div
                     @mouseenter="changeEmailText"
                     @mouseleave="defaultEmailText"
@@ -1161,6 +1219,136 @@
                     class="pre-text"
                     v-html="summary"
                   ></pre>
+                  
+                  <div
+                    style="
+                      margin: 1rem 0 0 0;
+                      width: 100%;
+                      padding-top: 0;
+                      padding-bottom: 0;
+                      border-radius: 28px;
+                    "
+                    id="instructions"
+                    class="input-container"
+                    v-clickOutsidePromptMenu
+                  >
+                    <div style="padding-top: 0" class="input-row">
+                      <div class="main-text-img">
+                        <img
+                          style="margin-top: 4px"
+                          src="@/assets/images/comment.svg"
+                          height="18px"
+                          alt=""
+                        />
+                      </div>
+
+                      <textarea
+                        style="margin: 0; padding-top: 1px"
+                        class="area-input text-area-input"
+                        id="instructions-text-area"
+                        placeholder="Ask me anything about this coverage..."
+                        v-model="newTemplate"
+                        :rows="1"
+                        v-autoresize
+                      />
+
+                      <div @click="newTemplate = ''" v-if="summary" class="cancel-container">
+                        <img src="@/assets/images/add.svg" class="lip-img invert-dark-blue" />
+                      </div>
+
+                      <button
+                        @click="getChatSummary(filteredArticles, newTemplate)"
+                        v-if="mainView === 'news'"
+                        :disabled="!newTemplate"
+                        style="
+                          margin: 0;
+                          margin-left: 8px;
+                          border: none !important;
+                          background-color: transparent;
+                        "
+                      >
+                        <img
+                          v-if="!newTemplate"
+                          style="margin: 0"
+                          src="@/assets/images/paper-plane-top.svg"
+                          height="17px"
+                          alt=""
+                          class="faded"
+                        />
+
+                        <img
+                          v-else
+                          style="margin: 0"
+                          src="@/assets/images/paper-plane-full.svg"
+                          height="16px"
+                          alt=""
+                          class="grow filtered-blue"
+                        />
+                      </button>
+                      <button
+                        @click="getChatSummary"
+                        :disabled="!newTemplate"
+                        v-else
+                        style="
+                          margin: 0;
+                          margin-left: 8px;
+                          border: none !important;
+                          background-color: transparent;
+                        "
+                      >
+                        <img
+                          v-if="!newTemplate"
+                          style="margin: 0"
+                          src="@/assets/images/paper-plane-top.svg"
+                          height="17px"
+                          alt=""
+                          class="faded"
+                        />
+
+                        <img
+                          v-else
+                          style="margin: 0"
+                          src="@/assets/images/paper-plane-full.svg"
+                          height="13px"
+                          alt=""
+                          class="grow filtered-blue"
+                        />
+                      </button>
+                    </div>
+
+                    <div v-if="showingPromptDropdown" class="dropdown">
+                      <div style="padding-top: 4px; padding-bottom: 4px">
+                        <small class="gray-text">Popular Prompts</small>
+                      </div>
+
+                      <div
+                        class="dropdown-item"
+                        v-for="(suggestion, i) in filteredPromptSuggestions"
+                        :key="i"
+                        @click="addPromptSuggestion(suggestion)"
+                      >
+                        <p>
+                          {{ suggestion }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+                <div style="margin: 1.5rem 0 0 0" class="loader-bg" v-else-if="chatSummaryLoading">
+                  <div class="gray-text" style="width: 100%; font-size: 13px;">Generating report...</div>
+                  <div class="summary-preview-skeleton shimmer">
+                    <!-- <div class="content">
+                      <div class="meta-wide"></div>
+                      <div class="meta-shorter"></div>
+                      <div class="meta-shortest"></div>
+                    </div> -->
+                    <div class="loading">
+                      <div class="dot"></div>
+                      <div class="dot"></div>
+                      <div class="dot"></div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1855,6 +2043,7 @@ export default {
       addingSources: false,
       loadingUrl: null,
       articleSummaryLoading: false,
+      chatSummaryLoading: false,
       paidModal: false,
       showingDropdown: false,
       showGenerateDropdown: false,
@@ -2697,6 +2886,7 @@ export default {
           return this.stopLoading()
         }
         let response
+        this.summary = ''
         if (this.addedArticles.length === 1) {
           response = await this.getArticleSummary(this.addedArticles[0].link, this.newTemplate)
           this.summary = response
@@ -3004,12 +3194,26 @@ export default {
         this.scrollToTop()
       }
     },
+    async getChatSummary(clips, instructions = '') {
+      this.chatSummaryLoading = true
+      try {
+        if (this.mainView === 'news') {
+          await this.getSummary(clips, instructions)
+        } else {
+          await this.getSourceSummary()
+        }
+      } catch(e) {
+        console.log('error in getChatSummary', e)
+      }
+      this.chatSummaryLoading = false
+    },
     async getSummary(clips, instructions = '') {
       console.log(instructions)
       const allClips = this.getArticleDescriptions(clips)
       this.summaryLoading = true
       let openAiDown = false
       this.summary = ''
+      console.log('chatSummaryLoading stuff', this.chatSummaryLoading, this.summary)
       try {
         if (this.shouldCancel) {
           return this.stopLoading()
@@ -3796,10 +4000,11 @@ export default {
 
 .loading {
   display: flex;
-  justify-content: center;
+  // justify-content: center;
   align-items: center;
   border-radius: 6px;
-  padding: 1.5rem 0.75rem;
+  // padding: 1.5rem 0.75rem;
+  padding: 1.5rem 0;
 }
 .mar-top {
   margin-top: 24px;
@@ -3927,6 +4132,12 @@ button:disabled {
   display: flex;
   align-items: center;
   flex-direction: row;
+}
+
+.chat-img {
+  margin: 12px 0 0 0;
+  padding: 0;
+  filter: invert(40%);
 }
 
 .row-container {
@@ -4351,11 +4562,11 @@ button:disabled {
 }
 
 .loader-bg {
-  width: 100%;
+  // width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  // justify-content: center;
   // background-color: $white-blue;
   @media only screen and (max-width: 600px) {
     width: 70%;
@@ -4625,7 +4836,7 @@ header {
 }
 
 .sub-text {
-  color: $light-gray-blue;
+  // color: $light-gray-blue;
   margin: 8px 0;
   font-size: 14px;
   font-family: $thin-font-family;
@@ -5638,6 +5849,29 @@ header {
     transform: rotate(180deg);
   }
   transition: all 0.2s;
+}
+
+.cancel-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $offer-white;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 6px;
+  cursor: pointer;
+  // box-shadow: 1px 1px 3px 1px rgba(0, 0, 0, 0.1);
+  margin: 12px 0;
+
+  img {
+    transform: rotate(45deg);
+  }
+  transition: all 0.2s;
+}
+
+.cancel-container-none {
+  height: 50px;
+  width: 2px;
 }
 
 .added-clip {
