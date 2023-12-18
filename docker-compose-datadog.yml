@@ -78,6 +78,10 @@ services:
       - DD_PROCESS_AGENT_ENABLED=true
       - DD_SYSTEM_PROBE_ENABLED=true
       - POSTGRES_PASSWORD=managr
+      - DD_LOGS_CONFIG_LOGS_COLLECT_ALL=false  
+      - DD_LOGS_CONFIG_LOGS_PROCESSING_ENABLED=true  
+      - DD_LOGS_CONFIG_LOGS_PROCESSING_RULES='[{"type":"exclude_at_match","name":"exclude-trace","pattern":"TRACE"}]'
+      
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /proc/:/host/proc/:ro

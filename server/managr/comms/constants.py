@@ -185,4 +185,5 @@ EXCLUDE_DOMAINS = [
     "doctorofcredit.com",
     "ozbargain.com.au",
     "politicalwire.com",
+    "freerepublic.com",
 ]
