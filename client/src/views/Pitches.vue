@@ -211,6 +211,54 @@
       </div>
     </Modal>
 
+    <Modal v-if="saveModalOpen" class="paid-modal" style="z-index: 1000000s">
+      <div style="width: 500px; min-height: 275px" class="regen-container">
+        <div class="paid-header">
+          <div>
+            <h3 class="regen-header-title">Save</h3>
+            <p class="regen-header-subtitle">Save your pitch</p>
+          </div>
+          <div v-if="!savingPitch" class="pointer" @click="toggleSaveModal">
+            <small>X</small>
+          </div>
+          <div v-else><small>X</small></div>
+        </div>
+        <div :class="savingPitch ? 'opaque' : ''" class="paid-body input-width">
+          <label for="pub">Pitch Name:</label>
+          <input
+            class="input-text"
+            placeholder="Name your pitch"
+            type="text"
+            v-model="pitchName"
+            :disabled="savingPitch"
+            id="pub"
+          />
+        </div>
+
+        <div class="paid-footer align-right">
+          <div class="input-row">
+            <button :disabled="savingPitch" @click="toggleSaveModal" class="secondary-button">
+              Cancel
+            </button>
+            <button
+              :disabled="savingPitch"
+              @click="createSavedPitch"
+              class="primary-button no-transitions"
+            >
+              <img
+                v-if="savingPitch"
+                class="rotate"
+                height="12px"
+                src="@/assets/images/loading.svg"
+                alt=""
+              />
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+
     <div :class="loading ? 'opaque' : ''" class="center">
       <div class="relative">
         <Transition name="slide-fade">
@@ -527,7 +575,7 @@
         </div>
       </div>
       <div v-else style="width: 50%; padding: 0 16px 0 32px">
-        <div class="pitch-container">
+        <div style="padding-right: 16px" class="pitch-container">
           <Transition name="slide-fade">
             <div v-if="showUpdateBanner" class="templates">
               <p>Pitch saved successfully!</p>
@@ -622,7 +670,7 @@
               </div> -->
             </div>
 
-            <div v-else class="row">
+            <!-- <div v-else class="row">
               <input
                 autofocus
                 class="area-input-outline"
@@ -647,7 +695,7 @@
               >
                 Save
               </button>
-            </div>
+            </div> -->
 
             <!-- <div
               @click="copyText"
@@ -663,7 +711,7 @@
               />
               <div style="margin-left: -14px" class="tooltip">{{ copyTip }}</div>
             </div> -->
-            <div style="display: flex">
+            <div style="display: flex; padding: 0 0 16px 0">
               <div style="margin-right: 0.5rem">
                 <div
                   @click="toggleJournalistModal"
@@ -696,7 +744,7 @@
 
               <div style="margin-right: 0.5rem">
                 <div
-                  @click="toggleSaveName"
+                  @click="toggleSaveModal"
                   class="wrapper circle-border white-bg"
                   v-if="pitch && !savingPitch && !pitchSaved"
                 >
@@ -748,7 +796,7 @@
           </div>
         </div>
       </div>
-      <div v-if="pitch" class="centered" style="width: 100%; padding: 0px 32px 16px 56px">
+      <div v-if="pitch" class="centered" style="width: 100%; padding: 0px 48px 16px 56px">
         <div v-if="pitch && !loading" style="width: 50%">
           <pre
             style="margin-top: -4px; padding-top: 16px; border-top: 1px solid rgba(0, 0, 0, 0.1)"
@@ -842,6 +890,7 @@ export default {
   },
   data() {
     return {
+      saveModalOpen: false,
       loadingJournalists: false,
       journalists: null,
       location: null,
@@ -926,6 +975,9 @@ export default {
     this.$store.commit('setGeneratedContent', null)
   },
   methods: {
+    toggleSaveModal() {
+      this.saveModalOpen = !this.saveModalOpen
+    },
     async getJournalists() {
       this.loadingJournalists = true
       try {
@@ -1188,7 +1240,7 @@ export default {
         })
         if (response.id) {
           // this.searchId = response.id
-          this.showUpdateBanner = true
+
           this.savedPitch = {
             name: response.name,
             user: this.user.id,
@@ -1204,11 +1256,19 @@ export default {
         console.log(e)
       } finally {
         // this.showUpdateBanner = true
-        this.savingPitch = false
+
         setTimeout(() => {
-          this.showUpdateBanner = false
+          this.saveModalOpen = false
+          this.savingPitch = false
+          this.successToggle()
         }, 2000)
       }
+    },
+    successToggle() {
+      this.showUpdateBanner = true
+      setTimeout(() => {
+        this.showUpdateBanner = false
+      }, 2000)
     },
     async regeneratePitch() {
       this.regenerating = false
@@ -1574,7 +1634,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  margin-top: 1.75rem;
+  margin-top: 1rem;
 }
 
 .row {
