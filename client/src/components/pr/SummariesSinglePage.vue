@@ -217,53 +217,43 @@
       </div>
     </Modal>
 
-    <Modal v-if="detailModalOpen" class="regen-modal">
-      <div :class="{ dim: contentLoading }" class="regen-container">
-        <div class="regen-header">
+    <Modal v-if="saveModalOpen" class="regen-modal">
+      <div :class="{ dim: savingSearch }" class="regen-container">
+        <div class="paid-header">
           <div>
-            <h4 class="regen-header-title">Details</h4>
-            <p class="regen-header-subtitle">Details lorem ipsum</p>
+            <h3 class="regen-header-title">Save</h3>
+            <p class="regen-header-subtitle">Save your current search</p>
           </div>
-          <div @click="toggleDetailModaldetails" class="pointer"><small>X</small></div>
+          <div @click="toggleSaveModal" class="pointer"><small>X</small></div>
         </div>
 
-        <div class="regen-body padding">
-          <label style="font-size: 13px" for="detail-title">Title:</label>
+        <div class="paid-body">
+          <label style="font-size: 13px" for="detail-title">Name:</label>
           <input
             id="detail-title"
             style="width: 100%; margin-bottom: 1rem"
             class="area-input-outline"
             type="text"
-            v-model="detailTitle"
-          />
-
-          <label style="font-size: 13px" for="detail-text">Text:</label>
-          <textarea
-            id="detail-text"
-            class="area-input-outline wider"
-            v-model="detialText"
-            type="text"
-            v-autoresize
-            :disabled="contentLoading"
+            placeholder="Name your search"
+            v-model="searchName"
           />
         </div>
 
-        <div class="regen-footer">
-          <div></div>
+        <div style="margin: 0; padding-bottom: 0" class="paid-footer aligned-right">
           <div class="row">
-            <button :disabled="contentLoading" @click="toggleDetailModal" class="cancel-button">
+            <button :disabled="savingSearch" @click="toggleSaveModal" class="cancel-button">
               Cancel
             </button>
-            <button :disabled="contentLoading" class="save-button">
+            <button @click="createSearch" :disabled="savingSearch" class="save-button">
               <img
-                v-if="contentLoading"
+                v-if="savingSearch"
                 style="margin-right: 8px"
                 src="@/assets/images/loading.svg"
                 class="rotate"
                 height="12px"
                 alt=""
               />
-              {{ contentLoading ? 'saving' : 'save' }}
+              {{ savingSearch ? 'Saving' : 'Save' }}
             </button>
           </div>
         </div>
@@ -582,7 +572,7 @@
                     </div>
                   </div>
 
-                  <p style="margin: 16px 0" v-else-if="!selectedSearch" class="sub-text">
+                  <p style="margin: 16px 0 32px 0" v-else-if="!selectedSearch" class="sub-text">
                     Your report will appear below.
                   </p>
                   <p
@@ -594,7 +584,7 @@
                   </p>
                   <p v-else style="margin: 16px 0" class="sub-text">Article Report</p>
 
-                  <p v-if="selectedSearch" style="margin-right: 4px; font-size: 14px">
+                  <p v-if="selectedSearch" style="margin: 16px 0 32px 0; font-size: 14px">
                     {{
                       mainView === 'news'
                         ? `${filteredArticles.length} News Clips`
@@ -739,7 +729,7 @@
                     </div>
                   </div>
 
-                  <div v-else class="row">
+                  <!-- <div v-else class="row">
                     <input
                       autofocus
                       class="area-input-outline"
@@ -763,7 +753,7 @@
                     >
                       Save
                     </button>
-                  </div>
+                  </div> -->
 
                   <!-- <div v-if="mainView === 'website' && addedArticles.length === 1" class="relative">
                     <div
@@ -1113,7 +1103,7 @@
                   <div
                     @mouseenter="changeEmailText"
                     @mouseleave="defaultEmailText"
-                    @click="toggleSaveName"
+                    @click="toggleSaveModal"
                     class="wrapper absolute-right circle-border white-bg"
                     style="margin-right: 0; right: 128px"
                     :disabled="
@@ -1135,11 +1125,7 @@
                       alt=""
                       class="filter-green img-highlight"
                     />
-                    <div
-                      class="tooltip"
-                      style="margin-left: -22px"
-                      :class="{ 'tooltip-wide': !(searchSaved || savedSearch) }"
-                    >
+                    <div class="tooltip" style="margin-left: -22px">
                       {{ savingSearch ? 'Saving' : 'Save' }}
                     </div>
                   </div>
@@ -1994,12 +1980,12 @@ export default {
       showSummaryInstructions: true,
       showingViews: false,
       summarizing: false,
-      detailModalOpen: false,
+      saveModalOpen: false,
       detialText: null,
       detailTitle: null,
       currentAlertId: null,
       alertSet: false,
-      emailText: 'Enable',
+      emailText: 'Activate Alerts',
       showNotifyBanner: false,
       currentAlert: null,
       emailAlerts: [],
@@ -2209,8 +2195,8 @@ export default {
     this.abortFunctions()
   },
   methods: {
-    toggleDetailModal() {
-      this.detailModalOpen = !this.detailModalOpen
+    toggleSaveModal() {
+      this.saveModalOpen = !this.saveModalOpen
     },
     changeEmailText() {
       if (!this.isPaid) {
@@ -2221,7 +2207,7 @@ export default {
     },
     defaultEmailText() {
       if (!this.isPaid) {
-        this.emailText = 'Enable'
+        this.emailText = 'Activate Alerts'
       } else {
         return
       }
@@ -3013,7 +2999,6 @@ export default {
           .then((response) => {
             if (response.id) {
               this.searchId = response.id
-              this.showUpdateBanner = true
               this.savedSearch = {
                 name: response.name,
                 input_text: this.newSearch,
@@ -3026,12 +3011,20 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
-        this.savingSearch = false
         this.$store.dispatch('getSearches')
+
         setTimeout(() => {
-          this.showUpdateBanner = false
+          this.saveModalOpen = false
+          this.savingSearch = false
+          this.successToggle()
         }, 2000)
       }
+    },
+    successToggle() {
+      this.showUpdateBanner = true
+      setTimeout(() => {
+        this.showUpdateBanner = false
+      }, 2000)
     },
     async sendSummaryEmail() {
       this.sendingSummaryEmail = true
@@ -5219,6 +5212,10 @@ header {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.aligned-right {
+  justify-content: flex-end;
 }
 
 .blue-border-button {
