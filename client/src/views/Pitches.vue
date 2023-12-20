@@ -216,9 +216,23 @@
       <div style="width: 510px; min-height: 275px" class="regen-container">
         <div class="paid-header">
           <div>
-            <h3 class="regen-header-title">Optimize Content</h3>
+            <h3 class="regen-header-title">
+              {{
+                !feedback
+                  ? 'Optimize Content'
+                  : regeneratedFeedback && feedback
+                  ? 'Optimized Content'
+                  : 'Optimize Content'
+              }}
+            </h3>
             <p class="regen-header-subtitle">
-              Get content feedback by providing additional details
+              {{
+                !feedback
+                  ? 'Get content feedback by providing additional details'
+                  : regeneratedFeedback && feedback
+                  ? 'Below is the revised version'
+                  : 'Get content feedback by providing additional detail'
+              }}
             </p>
           </div>
           <div v-if="!loadingFeedback" class="pointer" @click="toggleFeedbackModal">
@@ -273,6 +287,23 @@
         </div>
 
         <div v-else class="paid-body">
+          <!-- <div style="display: flex; justify-content: flex-end">
+            <div
+              style="width: fit-content"
+              @click="copyFeedbackText"
+              class="wrapper circle-border white-bg"
+            >
+              <img
+                style="cursor: pointer"
+                class="img-highlight"
+                src="@/assets/images/clipboard.svg"
+                height="14px"
+                alt=""
+              />
+              <div style="margin-left: -22px" class="tooltip">{{ copyTip }}</div>
+            </div>
+          </div> -->
+
           <pre v-html="feedback" class="pre-text" style="font-size: 14px"></pre>
         </div>
 
@@ -305,7 +336,7 @@
 
             <button
               :disabled="loadingFeedback || !isPaid"
-              v-else
+              v-else-if="feedback && !regeneratedFeedback"
               @click="handleRegenerateFeedback"
               class="primary-button no-transitions"
             >
@@ -317,6 +348,10 @@
                 alt=""
               />
               Apply Feedback
+            </button>
+
+            <button v-else @click="copyFeedbackText" class="primary-button no-transitions">
+              {{ copyTip }}
             </button>
           </div>
         </div>
@@ -909,6 +944,7 @@ export default {
   },
   data() {
     return {
+      regeneratedFeedback: false,
       feedbackModalOpen: false,
       saveModalOpen: false,
       loadingJournalists: false,
@@ -971,10 +1007,11 @@ export default {
       characterSuggestions: [`250`, `500`, `750`, `1000`, `1500`],
       instructionsSuggestions: [
         `Create a media pitch for XXX about ...`,
+        `Write a LinkedIn Post about XXX`,
         `Issue a press release on behalf of XXX about ...`,
         // `Use the text below to generate XXX for XXX ...`,
         `Re-write the content below using my writing style:`,
-        `List 10 journalists along with pitching tips, that would be interested in writing about the content below:`,
+        `Tweak this content slightly, enhance readability:`,
       ],
       instructions: '',
       copyTip: 'Copy',
@@ -1055,6 +1092,7 @@ export default {
           })
           .then((response) => {
             console.log(response)
+            this.regeneratedFeedback = true
             this.feedback = response.feedback
           })
       } catch (e) {
@@ -1223,7 +1261,17 @@ export default {
         console.error('Failed to copy text: ', err)
       }
     },
-
+    async copyFeedbackText() {
+      try {
+        await navigator.clipboard.writeText(this.feedback)
+        this.copyTip = 'Copied!'
+        setTimeout(() => {
+          this.copyTip = 'Copy'
+        }, 2000)
+      } catch (err) {
+        console.error('Failed to copy text: ', err)
+      }
+    },
     toggleSaveName() {
       this.showSaveName = !this.showSaveName
     },
@@ -1384,6 +1432,12 @@ export default {
         this.openPaidModal()
         return
       }
+      this.feedback = null
+      this.specificFeedback = null
+      this.feedbackType = null
+      this.audience = null
+      this.objective = null
+      this.regeneratedFeedback = false
       this.journalists - null
       this.loading = true
       this.showStyleDropdown = false
