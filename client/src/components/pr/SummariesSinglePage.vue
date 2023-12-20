@@ -340,7 +340,7 @@
 
       <div class="no-content">
         <div :class="{ 'neg-mar-btm': mainView === 'website' }" class="title-row main-header">
-          <div style="width: 50%; padding: 0 32px">
+          <div class="create-report-container">
             <h2 style="margin-bottom: 0">Create report</h2>
 
             <!-- <div class="row">
@@ -373,6 +373,32 @@
           </div>
 
           <div class="news-column">
+            <div v-if="isMobile" class="switcher" style="border-bottom-right-radius: 0; border-bottom-left-radius: 0; ">
+              <div
+                @click="switchMainView('news')"
+                :class="{ activeswitch: mainView === 'news' }"
+                class="switch-item"
+                id="news-tab"
+              >
+                News
+              </div>
+              <!-- <div
+                @click="switchMainView('social')"
+                :class="{ activeswitch: mainView === 'social' }"
+                class="switch-item"
+                id="social-tab"
+              >
+                Social
+              </div> -->
+              <div
+                @click="switchMainView('website')"
+                :class="{ activeswitch: mainView === 'website' }"
+                class="switch-item"
+                id="articles-tab"
+              >
+                Article
+              </div>
+            </div>
             <div
               v-if="mainView !== 'website'"
               style="margin-bottom: 30px; padding: 0 16px"
@@ -381,7 +407,7 @@
               v-clickOutsideMenu
             >
               <div style="margin-right: -8px" class="input-row">
-                <div class="main-text">Instructions</div>
+                <div v-if="!isMobile" class="main-text">Instructions</div>
                 <textarea
                   @keyup.enter="generateNewSearch(false)"
                   id="search-input"
@@ -394,7 +420,7 @@
                   :disabled="loading || summaryLoading"
                 />
 
-                <div class="switcher">
+                <div class="switcher" v-if="!isMobile">
                   <div
                     @click="switchMainView('news')"
                     :class="{ activeswitch: mainView === 'news' }"
@@ -472,21 +498,20 @@
                 </div>
               </div>
             </div>
-
             <div
               v-else-if="mainView === 'website'"
               style="margin-bottom: 30px"
               class="input-container"
             >
-              <div style="margin-right: -8px" class="input-row">
-                <div class="main-text">Article</div>
+            <div style="margin-right: -8px" class="input-row">
+                <div v-if="!isMobile" class="main-text">Article</div>
                 <input
                   @keyup.enter="uploadArticle"
                   class="area-input-small"
                   placeholder="Paste article url..."
                   v-model="uploadLink"
                 />
-                <div class="switcher">
+                <div v-if="!isMobile" class="switcher">
                   <div
                     @click="switchMainView('news')"
                     :class="{ activeswitch: mainView === 'news' }"
@@ -572,7 +597,7 @@
                     </div>
                   </div>
 
-                  <p style="margin: 16px 0 32px 0" v-else-if="!selectedSearch" class="sub-text">
+                  <p style="margin: 16px 0;" v-else-if="!selectedSearch" class="sub-text">
                     Your report will appear below.
                   </p>
                   <p
@@ -3499,6 +3524,9 @@ export default {
           : []
       }
     },
+    isMobile() {
+      return window.innerWidth <= 600
+    },
     controllers() {
       return this.$store.state.abortControllers
     },
@@ -4791,7 +4819,7 @@ header {
   justify-content: center;
   @media only screen and (max-width: 600px) {
     width: 90%;
-    padding-top: 48px;
+    padding: 48px 0px 0px 0px;
   }
 }
 
@@ -6040,5 +6068,12 @@ input[type='date']::-webkit-input-placeholder {
 
 .filtered-blue {
   filter: invert(20%) sepia(28%) saturate(811%) hue-rotate(162deg) brightness(94%) contrast(81%);
+}
+.create-report-container {
+  width: 50%;
+  padding: 0 32px;
+  @media only screen and (max-width: 600px) {
+    width: 95%;
+  }
 }
 </style>
