@@ -162,6 +162,33 @@ OPEN_AI_FIND_JOURNALISTS = (
     - Real Journalists Requirement: It is essential that the journalists listed are actual, currently active professionals in the field.
     Content for the Pitch: {content} """
 )
+OPEN_AI_FIND_JOURNALISTS = (
+    lambda type, beat, location, content : f"""List up to 10 real journalists from relevant publications, along with pitching tips, who would be interested in writing about the content provided. Follow these instructions carefully:
+    - Publication Type: The journalists must be from news outlets of this type: {type}.
+    - Journalistic Beat: The journalist must cover this specific beat: {beat}.
+    - Location: The journalists must be based in or primarily cover {location}.
+    - Real Journalists Requirement: It is essential that the journalists listed are actual, currently active professionals in the field.
+    Content for the Pitch: {content} """
+)
+
+OPEN_AI_GENERATE_FEEDBACK = (
+    lambda type, audience, objective, feedback, content : f"""
+    Analyze the content along with the post details below from the perspective of a Social Media Manager and provide short, blunt, direct feedback in order to help optimize the content. Output must be as follows: Score: 1-10 (10 being best), Score details: 3-4 bullet points outlining score reasoning, Feedback: 1-2 sentences providing additional feedback.
+    Post Type: {type}
+    Target Audience: {audience}
+    Post Objective: {objective}
+    Specific Feedback: {feedback}
+    Content: {content}
+    """
+)
+
+REGENERATE_CONTENT_WITH_FEEDBACK = (
+    lambda content,feedback : f"""
+    Rewrite the content below based on this feedback
+    Content: {content}
+    Feedback: {feedback}
+    """
+)
 
 DO_NOT_TRACK_LIST = [
     "https://www.wsj.com",
