@@ -174,12 +174,11 @@
                 <ul class="pricing-list">
                   <li>Unlimited usage</li>
                   <li>Daily email alerts</li>
-                  <li>Personalized writing style</li>
+                  <li>Learn writing style</li>
+                  <li>Find Journalists</li>
+                  <li>Post Optimizer</li>
                   <li>Shareable digest</li>
-                  <li>AI call summaries</li>
                   <li>Onboarding & Training</li>
-                  <li>Dedicated Customer Success Manager</li>
-                  <li>User data does not train comercial AI models</li>
                 </ul>
               </div>
               <div class="display-flex display-center pricing-width pricing-users relative">

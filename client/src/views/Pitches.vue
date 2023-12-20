@@ -59,7 +59,7 @@
       </div>
     </Modal>
     <Modal v-if="inputModalOpen" class="paid-modal">
-      <div style="width: 600px; min-height: 275px" class="regen-container">
+      <div style="width: 610px; min-height: 275px" class="regen-container">
         <div class="paid-header">
           <div>
             <h4 class="regen-header-title">Learn Writing Style</h4>
@@ -74,6 +74,7 @@
         </div>
         <div class="paid-body">
           <input
+            style="width: 600px"
             class="input-text"
             placeholder="Name your writing style..."
             type="text"
@@ -81,7 +82,7 @@
             :disabled="savingStyle"
           />
           <div class="sample-row">
-            <div style="width: 600px" class="input-container">
+            <div style="width: 604px" class="input-container">
               <div class="input-row relative">
                 <textarea
                   :disabled="savingStyle"
@@ -121,7 +122,7 @@
     </Modal>
 
     <Modal v-if="journalistModalOpen" class="paid-modal" style="z-index: 1000000s">
-      <div style="width: 500px; min-height: 275px" class="regen-container">
+      <div style="width: 510px; min-height: 275px" class="regen-container">
         <div class="paid-header">
           <div>
             <h3 class="regen-header-title">
@@ -205,6 +206,117 @@
 
             <button v-else @click="copyJournalText" class="primary-button no-transitions">
               {{ copyTip }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+
+    <Modal v-if="feedbackModalOpen" class="paid-modal" style="z-index: 1000000s">
+      <div style="width: 510px; min-height: 275px" class="regen-container">
+        <div class="paid-header">
+          <div>
+            <h3 class="regen-header-title">Optimize Content</h3>
+            <p class="regen-header-subtitle">
+              Get content feedback by providing additional details
+            </p>
+          </div>
+          <div v-if="!loadingFeedback" class="pointer" @click="toggleFeedbackModal">
+            <small>X</small>
+          </div>
+          <div v-else><small>X</small></div>
+        </div>
+        <div
+          :class="loadingFeedback ? 'opaque' : ''"
+          v-if="!feedback"
+          class="paid-body input-width"
+        >
+          <label for="pt">Post Type</label>
+          <input
+            class="input-text"
+            placeholder="(e.g., blog post, LinkedIn post, Tweet, Instagram, email, etc.)"
+            type="text"
+            v-model="feedbackType"
+            :disabled="loadingFeedback"
+            id="pt"
+          />
+
+          <label for="aud">Audience</label>
+          <input
+            class="input-text"
+            placeholder="(e.g., age range, profession, interests, etc.)"
+            type="text"
+            v-model="audience"
+            :disabled="loadingFeedback"
+            id="aud"
+          />
+
+          <label for="po">Post Objective</label>
+          <input
+            class="input-text"
+            placeholder="(e.g., to inform, to persuade, to entertain, etc.)"
+            type="text"
+            v-model="objective"
+            :disabled="loadingFeedback"
+            id="po"
+          />
+
+          <label for="sf">Specific feedback</label>
+          <input
+            class="input-text"
+            placeholder="(e.g., headline effectiveness, clarity, engagement tactics, etc.)"
+            type="text"
+            v-model="specificFeedback"
+            :disabled="loadingFeedback"
+            id="sf"
+          />
+        </div>
+
+        <div v-else class="paid-body">
+          <pre v-html="feedback" class="pre-text" style="font-size: 14px"></pre>
+        </div>
+
+        <div class="paid-footer align-right">
+          <div class="input-row">
+            <button
+              :disabled="loadingFeedback"
+              @click="toggleFeedbackModal"
+              class="secondary-button"
+            >
+              {{ !feedback ? 'Cancel' : 'Close' }}
+            </button>
+            <button
+              v-if="!feedback"
+              @mouseenter="changeFeedbackText"
+              @mouseleave="defaultFeedbackText"
+              :disabled="loadingFeedback || !isPaid"
+              @click="getFeedback"
+              class="primary-button no-transitions"
+            >
+              <img
+                v-if="loadingFeedback"
+                class="rotate"
+                height="12px"
+                src="@/assets/images/loading.svg"
+                alt=""
+              />
+              {{ feedbackText }}
+            </button>
+
+            <button
+              :disabled="loadingFeedback || !isPaid"
+              v-else
+              @click="handleRegenerateFeedback"
+              class="primary-button no-transitions"
+            >
+              <img
+                v-if="loadingFeedback"
+                class="rotate"
+                height="12px"
+                src="@/assets/images/loading.svg"
+                alt=""
+              />
+              Apply Feedback
             </button>
           </div>
         </div>
@@ -435,138 +547,15 @@
           </div>
         </div>
       </div>
-
-      <!-- <div class="input-container" v-clickOutsideCharacterMenu>
-        <div class="input-row">
-          <div class="main-text">
-            <img src="@/assets/images/a.svg" height="12px" alt="" />
-            Words
-          </div>
-
-          <input
-            :disabled="loading"
-            class="area-input"
-            placeholder="Provide word count..."
-            v-model="characters"
-            type="number"
-            max="1500"
-            @focus="showCharacterDropdown($event)"
-          />
-        </div>
-        <div v-if="showingCharacterDropdown" class="dropdown">
-          <small style="padding-top: 8px" class="gray-text">Character Suggestions</small>
-          <div
-            @click="addCharacterSuggestion(suggestion)"
-            class="dropdown-item"
-            v-for="(suggestion, i) in filteredCharacterSuggestions"
-            :key="i"
-          >
-            <p>
-              {{ suggestion }}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div class="input-container" v-clickOutsideTypeMenu>
-        <div class="input-row">
-          <div class="main-text">
-            <img src="@/assets/images/blog-text.svg" height="14px" alt="" />
-            Style
-          </div>
-
-          <input
-            :disabled="loading"
-            style="overflow-x: hidden"
-            class="area-input"
-            placeholder="Select a writing style..."
-            v-model="writingStyleTitle"
-            @focus="showTypeDropdown"
-          />
-        </div>
-        <div v-if="showingTypeDropdown" class="dropdown">
-          <small style="padding-top: 8px" class="gray-text"
-            >{{
-              userWritingStyles.length
-                ? `Saved writing styles: ${userWritingStyles.length}`
-                : 'Saved writing styles will appear here:'
-            }}
-          </small>
-          <section v-if="userWritingStyles.length">
-            <div
-              @mouseenter="setIndex(i)"
-              @mouseLeave="removeIndex"
-              @click="addWritingStyle(style.style, style.title)"
-              class="dropdown-item"
-              v-for="(style, i) in userWritingStyles"
-              :key="i"
-            >
-              <p>
-                {{ style.title }}
-              </p>
-
-              <div @click="openResetModal(style.id)" class="absolute-icon">
-                <img v-if="hoverIndex === i" src="@/assets/images/trash.svg" height="12px" alt="" />
-              </div>
-            </div>
-            <div style="padding: 16px 0" class="centered">
-              <button
-                @mouseenter="changeStyleText"
-                @mouseleave="defaultStyleText"
-                style="margin-bottom: 8px; width: 160px"
-                @click="toggleLearnInputModal"
-                class="primary-button extra-padding"
-              >
-                <img class="invert" src="@/assets/images/sparkle.svg" height="12px" alt="" />
-                {{ styleText }}
-              </button>
-            </div>
-          </section>
-          <section v-else>
-            <div class="dropdown-footer">
-              <button
-                @mouseenter="changeStyleText"
-                @mouseleave="defaultStyleText"
-                style="margin-bottom: 8px; width: 160px"
-                @click="toggleLearnInputModal"
-                class="primary-button extra-padding"
-              >
-                <img class="invert" src="@/assets/images/sparkle.svg" height="12px" alt="" />
-                {{ styleText }}
-              </button>
-            </div>
-          </section>
-        </div>
-      </div>
-
-      <footer>
-        <button :disabled="loading" @click="clearData" class="secondary-button">Clear</button>
-        <button :disabled="loading || !this.output" @click="generatePitch" class="primary-button">
-          <img
-            v-if="loading"
-            class="rotate"
-            height="14px"
-            src="@/assets/images/loading.svg"
-            alt=""
-          />
-          {{ loading ? 'Submitting' : 'Submit' }}
-        </button>
-      </footer> -->
     </div>
 
     <div style="padding-top: 0" class="center gray-bg">
       <div v-if="loading" style="width: 50%; margin-left: 4rem; margin-top: 1rem">
         <div style="width: 100%" class="row">
-          <!-- <p class="summary-load-text">Generating {{ type }}...</p> -->
           <p class="summary-load-text">Generating content...</p>
         </div>
 
         <div class="summary-preview-skeleton shimmer">
-          <!-- <div class="content">
-            <div class="meta-wide"></div>
-            <div class="meta-shorter"></div>
-            <div class="meta-shortest"></div>
-          </div> -->
           <div class="loading">
             <div class="dot"></div>
             <div class="dot"></div>
@@ -712,6 +701,36 @@
               <div style="margin-left: -14px" class="tooltip">{{ copyTip }}</div>
             </div> -->
             <div style="display: flex; padding: 0 0 16px 0">
+              <div style="margin-right: 0.5rem">
+                <div
+                  @click="toggleFeedbackModal"
+                  class="wrapper circle-border white-bg"
+                  :class="{ 'bluee-bg': feedback }"
+                  v-if="pitch"
+                >
+                  <img
+                    style="cursor: pointer"
+                    class="right-mar img-highlight"
+                    src="@/assets/images/thumb.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  <div style="margin-left: -22px" class="tooltip">
+                    {{ !feedback ? 'Optimize Content' : 'View Feedback' }}
+                  </div>
+                </div>
+                <div v-else class="wrapper circle-border white-bg" style="opacity: 0.7">
+                  <img
+                    style="cursor: not-allowed"
+                    class="right-mar img-highlight"
+                    src="@/assets/images/thumb.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  <div style="margin-left: -14px" class="tooltip">Create content first</div>
+                </div>
+              </div>
+
               <div style="margin-right: 0.5rem">
                 <div
                   @click="toggleJournalistModal"
@@ -890,12 +909,20 @@ export default {
   },
   data() {
     return {
+      feedbackModalOpen: false,
       saveModalOpen: false,
       loadingJournalists: false,
+      loadingFeedback: false,
       journalists: null,
       location: null,
       beat: null,
       pubType: null,
+      feedbackType: null,
+      audience: null,
+      objective: null,
+      specificFeedback: null,
+      feedback: null,
+      feedbackText: 'Submit',
       journalText: 'Search',
       journalistModalOpen: false,
       contentLoading: false,
@@ -989,7 +1016,6 @@ export default {
             content: this.pitch,
           })
           .then((response) => {
-            console.log(response)
             this.journalists = response.journalists
           })
       } catch (e) {
@@ -998,8 +1024,50 @@ export default {
         this.loadingJournalists = false
       }
     },
+    async getFeedback() {
+      this.loadingFeedback = true
+      try {
+        await Comms.api
+          .getFeedback({
+            type: this.feedbackType,
+            audience: this.audience,
+            objective: this.objective,
+            feedback: this.specificFeedback,
+            content: this.pitch,
+          })
+          .then((response) => {
+            console.log(response)
+            this.feedback = response.feedback
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.loadingFeedback = false
+      }
+    },
+    async handleRegenerateFeedback() {
+      this.loadingFeedback = true
+      try {
+        await Comms.api
+          .regenerateWithFeedback({
+            content: this.pitch,
+            feedback: this.feedback,
+          })
+          .then((response) => {
+            console.log(response)
+            this.feedback = response.feedback
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.loadingFeedback = false
+      }
+    },
     toggleJournalistModal() {
       this.journalistModalOpen = !this.journalistModalOpen
+    },
+    toggleFeedbackModal() {
+      this.feedbackModalOpen = !this.feedbackModalOpen
     },
     enforceMax() {
       if (this.characters > 1500) {
@@ -1059,6 +1127,21 @@ export default {
         this.deleteId = null
         this.writingStyle = null
         this.refreshUser()
+      }
+    },
+
+    changeFeedbackText() {
+      if (!this.isPaid) {
+        this.feedbackText = 'Upgrade to Pro!'
+      } else {
+        return
+      }
+    },
+    defaultFeedbackText() {
+      if (!this.isPaid) {
+        this.feedbackText = 'Submit'
+      } else {
+        return
       }
     },
 

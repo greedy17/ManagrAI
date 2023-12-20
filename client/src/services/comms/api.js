@@ -101,6 +101,24 @@ class CommsApi extends ModelAPI {
         }
     }
 
+    async getFeedback(data) {
+        try {
+            const res = await this.client.post('pitches/feedback/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
+    async regenerateWithFeedback(data) {
+        try {
+            const res = await this.client.post('pitches/regenerate-feedback/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
     async regenerateTranscript(data) {
         try {
             const res = await this.client.post(CommsApi.ENDPOINT + 'regenerate-pitch/', data)
