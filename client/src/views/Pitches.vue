@@ -59,7 +59,7 @@
       </div>
     </Modal>
     <Modal v-if="inputModalOpen" class="paid-modal">
-      <div style="width: 610px; min-height: 275px" class="regen-container">
+      <div :style="isMobile ? 'width: 95%; min-height: 275px' : 'width: 610px; min-height: 275px'" class="regen-container">
         <div class="paid-header">
           <div>
             <h4 class="regen-header-title">Learn Writing Style</h4>
@@ -122,7 +122,7 @@
     </Modal>
 
     <Modal v-if="journalistModalOpen" class="paid-modal" style="z-index: 1000000s">
-      <div style="width: 510px; min-height: 275px" class="regen-container">
+      <div style="min-height: 275px" class="regen-container">
         <div class="paid-header">
           <div>
             <h3 class="regen-header-title">
@@ -213,7 +213,7 @@
     </Modal>
 
     <Modal v-if="feedbackModalOpen" class="paid-modal" style="z-index: 1000000s">
-      <div style="width: 510px; min-height: 275px" class="regen-container">
+      <div style="min-height: 275px" class="regen-container">
         <div class="paid-header">
           <div>
             <h3 class="regen-header-title">
@@ -359,7 +359,7 @@
     </Modal>
 
     <Modal v-if="saveModalOpen" class="paid-modal" style="z-index: 1000000s">
-      <div style="width: 500px; min-height: 275px" class="regen-container">
+      <div :style="isMobile ? 'width: 95%; min-height: 275px' : 'width: 500px; min-height: 275px'" class="regen-container">
         <div class="paid-header">
           <div>
             <h3 class="regen-header-title">Save</h3>
@@ -416,13 +416,33 @@
       </div>
 
       <div class="centered dark-blue-bg" style="width: 100%; color: white">
-        <div style="width: 50%; padding: 0 32px">
+        <div class="create-report-container">
           <h2 style="margin: 0">Create content</h2>
           <p>Generate content that mirrors your writing style.</p>
+          
+          <div v-if="isMobile" @click="toggleStyleDropdown" class="drop-text pointer">
+            <p class="ellipsis-text" style="margin: 0">
+              {{ writingStyleTitle ? writingStyleTitle : 'Select Style' }}
+            </p>
+            <img
+              v-if="!showStyleDropdown"
+              src="@/assets/images/downArrow.svg"
+              class="inverted"
+              height="14px"
+              alt=""
+            />
+            <img
+              class="rotate-img inverted"
+              v-else
+              src="@/assets/images/downArrow.svg"
+              height="14px"
+              alt=""
+            />
+          </div>
 
           <div class="input-container" v-clickOutsideInstructionsMenu>
             <div class="input-row relative">
-              <div class="main-text">Instructions</div>
+              <div v-if="!isMobile" class="main-text">Instructions</div>
 
               <textarea
                 :disabled="loading"
@@ -435,7 +455,7 @@
                 @focus="showInstructionsDropdown($event)"
               />
 
-              <div @click="toggleStyleDropdown" class="drop-text pointer">
+              <div v-if="!isMobile" @click="toggleStyleDropdown" class="drop-text pointer">
                 <p class="ellipsis-text" style="margin: 0">
                   {{ writingStyleTitle ? writingStyleTitle : 'Select Style' }}
                 </p>
@@ -585,7 +605,7 @@
     </div>
 
     <div style="padding-top: 0" class="center gray-bg">
-      <div v-if="loading" style="width: 50%; margin-left: 4rem; margin-top: 1rem">
+      <div v-if="loading" class="width-dynamic" style="margin-left: 4rem; margin-top: 1rem">
         <div style="width: 100%" class="row">
           <p class="summary-load-text">Generating content...</p>
         </div>
@@ -598,7 +618,7 @@
           </div>
         </div>
       </div>
-      <div v-else style="width: 50%; padding: 0 16px 0 32px">
+      <div v-else class="width-dynamic" style="padding: 0 16px 0 32px">
         <div style="padding-right: 16px" class="pitch-container">
           <Transition name="slide-fade">
             <div v-if="showUpdateBanner" class="templates">
@@ -610,7 +630,7 @@
             <img src="@/assets/images/back.svg" height="18px" width="18px" alt="" />
           </div> -->
 
-            <p class="sub-text text-truncation">
+            <p :class="isMobile ? 'sub-text' : 'sub-text text-truncation'">
               {{ !pitch ? 'Your content will appear below.' : `${savedOutput}` }}
             </p>
             <p v-if="pitch" class="sub-text">{{ pitch.split(' ').length }} words</p>
@@ -850,8 +870,8 @@
           </div>
         </div>
       </div>
-      <div v-if="pitch" class="centered" style="width: 100%; padding: 0px 48px 16px 56px">
-        <div v-if="pitch && !loading" style="width: 50%">
+      <div v-if="pitch" class="centered pitch-padding" style="width: 100%;">
+        <div v-if="pitch && !loading" class="width-dynamic">
           <pre
             style="margin-top: -4px; padding-top: 16px; border-top: 1px solid rgba(0, 0, 0, 0.1)"
             v-html="pitch"
@@ -1512,6 +1532,9 @@ export default {
     remainingCharsSample() {
       return 8000 - this.sample.length
     },
+    isMobile() {
+      return window.innerWidth <= 600
+    },
     user() {
       return this.$store.state.user
     },
@@ -1793,7 +1816,7 @@ export default {
   align-items: flex-start;
   justify-content: center;
   @media only screen and (max-width: 600px) {
-    width: 80%;
+    // width: 80%;
   }
 }
 
@@ -1834,7 +1857,8 @@ export default {
   color: $chat-font-color;
   @media only screen and (max-width: 600px) {
     height: 91vh;
-    padding: 12px 36px 0 36px;
+    // padding: 12px 36px 0 36px;
+    padding: 12px 0px 0 0px;
   }
 }
 
@@ -2048,6 +2072,9 @@ footer {
 .input-width {
   input {
     width: 500px !important;
+    @media only screen and (max-width: 600px) {
+      width: 95% !important;
+    }
   }
 }
 
@@ -2331,6 +2358,9 @@ footer {
 }
 .paid-modal {
   margin-top: 132px;
+  @media only screen and (max-width: 600px) {
+    margin-top: 62px;
+  }
 }
 .regen-container {
   width: 500px;
@@ -2342,6 +2372,9 @@ footer {
 
   label {
     font-size: 14px;
+  }
+  @media only screen and (max-width: 600px) {
+    width: 95%;
   }
 }
 .paid-header {
@@ -2838,5 +2871,24 @@ button:disabled {
 }
 .filtered-blue {
   filter: invert(20%) sepia(28%) saturate(811%) hue-rotate(162deg) brightness(94%) contrast(81%);
+}
+.create-report-container {
+  width: 50%;
+  padding: 0 32px;
+  @media only screen and (max-width: 600px) {
+    width: 95%;
+  }
+}
+.width-dynamic {
+  width: 50%;
+  @media only screen and (max-width: 600px) {
+    width: 95%;
+  }
+}
+.pitch-padding {
+  padding: 0px 48px 16px 56px;
+  @media only screen and (max-width: 600px) {
+    padding: 0px 32px 16px 32px;
+  }
 }
 </style>
