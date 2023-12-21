@@ -2002,6 +2002,7 @@ export default {
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: center;
   max-width: 100px;
   margin: 0;
   font-size: 12px;

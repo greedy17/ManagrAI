@@ -373,7 +373,7 @@
           </div>
 
           <div class="news-column">
-            <div v-if="isMobile" class="switcher" style="border-bottom-right-radius: 0; border-bottom-left-radius: 0; ">
+            <div v-if="isMobile" class="switcher" style="margin-bottom: 1rem;">
               <div
                 @click="switchMainView('news')"
                 :class="{ activeswitch: mainView === 'news' }"
@@ -609,7 +609,7 @@
                   </p>
                   <p v-else style="margin: 16px 0" class="sub-text">Article Report</p>
 
-                  <p v-if="selectedSearch" style="margin: 16px 0 32px 0; font-size: 14px">
+                  <p v-if="selectedSearch" :style="isMobile ? 'margin: 16px 0 16px 0; font-size: 14px' : 'margin: 16px 0 32px 0; font-size: 14px'">
                     {{
                       mainView === 'news'
                         ? `${filteredArticles.length} News Clips`
@@ -635,8 +635,8 @@
                       addedArticles.length
                     )
                   "
-                  class="space-between"
-                  style="position: relative"
+                  class="space-between mobile-margin-top"
+                  style="position: relative;"
                 >
                   <div class="wrapper">
                     <!-- <button disabled style="margin-left: 0" class="primary-button">Save</button>
@@ -4204,6 +4204,10 @@ button:disabled {
   align-items: center;
   width: 100%;
   padding: 0 64px;
+  @media only screen and (max-width: 600px) {
+    align-items: flex-start;
+    padding: 0 44px;
+  }
 }
 
 .fullHeight {
@@ -4818,7 +4822,7 @@ header {
   align-items: flex-start;
   justify-content: center;
   @media only screen and (max-width: 600px) {
-    width: 90%;
+    width: 100%;
     padding: 48px 0px 0px 0px;
   }
 }
@@ -6074,6 +6078,11 @@ input[type='date']::-webkit-input-placeholder {
   padding: 0 32px;
   @media only screen and (max-width: 600px) {
     width: 95%;
+  }
+}
+.mobile-margin-top {
+  @media only screen and (max-width: 600px) {
+    margin-top: 1.5rem;
   }
 }
 </style>
