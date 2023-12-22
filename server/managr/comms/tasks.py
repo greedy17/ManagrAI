@@ -405,6 +405,11 @@ def _send_news_summary(news_alert_id):
             [alert.user.email],
             context=content,
         )
+        if "sent_count" in alert.meta_data.keys():
+            alert.meta_data["sent_count"] += 1
+        else:
+            alert.meta_data["sent_count"] = 1
+        alert.save()
     return
 
 

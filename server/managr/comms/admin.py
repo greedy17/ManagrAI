@@ -29,6 +29,7 @@ class CustomNewsSource(admin.ModelAdmin):
     ordering = ("-last_scraped", "is_active")
     readonly_fields = ("access_count",)
     search_fields = ("domain", "site_name")
+    list_filter = ("is_active",)
 
     def crawling_display(self, obj):
         return obj.crawling

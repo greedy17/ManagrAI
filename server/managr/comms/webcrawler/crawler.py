@@ -48,6 +48,8 @@ def data_cleaner(data):
         content = content.replace("\n", " ").replace("\t", " ").replace("  ", "")
         data["content"] = content
         data["publish_date"] = parsed_date
+        if len(data["title"]) > 150:
+            data["title"] = data["title"][:145] + "..."
     except KeyError:
         return False
     return data
