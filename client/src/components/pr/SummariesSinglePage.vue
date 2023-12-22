@@ -217,53 +217,43 @@
       </div>
     </Modal>
 
-    <Modal v-if="detailModalOpen" class="regen-modal">
-      <div :class="{ dim: contentLoading }" class="regen-container">
-        <div class="regen-header">
+    <Modal v-if="saveModalOpen" class="regen-modal">
+      <div :class="{ dim: savingSearch }" class="regen-container">
+        <div class="paid-header">
           <div>
-            <h4 class="regen-header-title">Details</h4>
-            <p class="regen-header-subtitle">Details lorem ipsum</p>
+            <h3 class="regen-header-title">Save</h3>
+            <p class="regen-header-subtitle">Save your current search</p>
           </div>
-          <div @click="toggleDetailModaldetails" class="pointer"><small>X</small></div>
+          <div @click="toggleSaveModal" class="pointer"><small>X</small></div>
         </div>
 
-        <div class="regen-body padding">
-          <label style="font-size: 13px" for="detail-title">Title:</label>
+        <div class="paid-body">
+          <label style="font-size: 13px" for="detail-title">Name:</label>
           <input
             id="detail-title"
             style="width: 100%; margin-bottom: 1rem"
             class="area-input-outline"
             type="text"
-            v-model="detailTitle"
-          />
-
-          <label style="font-size: 13px" for="detail-text">Text:</label>
-          <textarea
-            id="detail-text"
-            class="area-input-outline wider"
-            v-model="detialText"
-            type="text"
-            v-autoresize
-            :disabled="contentLoading"
+            placeholder="Name your search"
+            v-model="searchName"
           />
         </div>
 
-        <div class="regen-footer">
-          <div></div>
+        <div style="margin: 0; padding-bottom: 0" class="paid-footer aligned-right">
           <div class="row">
-            <button :disabled="contentLoading" @click="toggleDetailModal" class="cancel-button">
+            <button :disabled="savingSearch" @click="toggleSaveModal" class="cancel-button">
               Cancel
             </button>
-            <button :disabled="contentLoading" class="save-button">
+            <button @click="createSearch" :disabled="savingSearch" class="save-button">
               <img
-                v-if="contentLoading"
+                v-if="savingSearch"
                 style="margin-right: 8px"
                 src="@/assets/images/loading.svg"
                 class="rotate"
                 height="12px"
                 alt=""
               />
-              {{ contentLoading ? 'saving' : 'save' }}
+              {{ savingSearch ? 'Saving' : 'Save' }}
             </button>
           </div>
         </div>
@@ -350,7 +340,7 @@
 
       <div class="no-content">
         <div :class="{ 'neg-mar-btm': mainView === 'website' }" class="title-row main-header">
-          <div style="width: 50%; padding: 0 32px">
+          <div class="create-report-container">
             <h2 style="margin-bottom: 0">Create report</h2>
 
             <!-- <div class="row">
@@ -383,6 +373,32 @@
           </div>
 
           <div class="news-column">
+            <div v-if="isMobile" class="switcher" style="margin-bottom: 1rem;">
+              <div
+                @click="switchMainView('news')"
+                :class="{ activeswitch: mainView === 'news' }"
+                class="switch-item"
+                id="news-tab"
+              >
+                News
+              </div>
+              <!-- <div
+                @click="switchMainView('social')"
+                :class="{ activeswitch: mainView === 'social' }"
+                class="switch-item"
+                id="social-tab"
+              >
+                Social
+              </div> -->
+              <div
+                @click="switchMainView('website')"
+                :class="{ activeswitch: mainView === 'website' }"
+                class="switch-item"
+                id="articles-tab"
+              >
+                Article
+              </div>
+            </div>
             <div
               v-if="mainView !== 'website'"
               style="margin-bottom: 30px; padding: 0 16px"
@@ -391,7 +407,7 @@
               v-clickOutsideMenu
             >
               <div style="margin-right: -8px" class="input-row">
-                <div class="main-text">Instructions</div>
+                <div v-if="!isMobile" class="main-text">Instructions</div>
                 <textarea
                   @keyup.enter="generateNewSearch(false)"
                   id="search-input"
@@ -404,7 +420,7 @@
                   :disabled="loading || summaryLoading"
                 />
 
-                <div class="switcher">
+                <div class="switcher" v-if="!isMobile">
                   <div
                     @click="switchMainView('news')"
                     :class="{ activeswitch: mainView === 'news' }"
@@ -482,21 +498,20 @@
                 </div>
               </div>
             </div>
-
             <div
               v-else-if="mainView === 'website'"
               style="margin-bottom: 30px"
               class="input-container"
             >
-              <div style="margin-right: -8px" class="input-row">
-                <div class="main-text">Article</div>
+            <div style="margin-right: -8px" class="input-row">
+                <div v-if="!isMobile" class="main-text">Article</div>
                 <input
                   @keyup.enter="uploadArticle"
                   class="area-input-small"
                   placeholder="Paste article url..."
                   v-model="uploadLink"
                 />
-                <div class="switcher">
+                <div v-if="!isMobile" class="switcher">
                   <div
                     @click="switchMainView('news')"
                     :class="{ activeswitch: mainView === 'news' }"
@@ -582,7 +597,7 @@
                     </div>
                   </div>
 
-                  <p style="margin: 16px 0" v-else-if="!selectedSearch" class="sub-text">
+                  <p style="margin: 16px 0;" v-else-if="!selectedSearch" class="sub-text">
                     Your report will appear below.
                   </p>
                   <p
@@ -594,7 +609,7 @@
                   </p>
                   <p v-else style="margin: 16px 0" class="sub-text">Article Report</p>
 
-                  <p v-if="selectedSearch" style="margin-right: 4px; font-size: 14px">
+                  <p v-if="selectedSearch" :style="isMobile ? 'margin: 16px 0 16px 0; font-size: 14px' : 'margin: 16px 0 32px 0; font-size: 14px'">
                     {{
                       mainView === 'news'
                         ? `${filteredArticles.length} News Clips`
@@ -620,17 +635,34 @@
                       addedArticles.length
                     )
                   "
-                  class="space-between"
-                  style="position: relative"
+                  class="space-between mobile-margin-top"
+                  style="position: relative;"
                 >
                   <div class="wrapper">
-                    <button disabled style="margin-left: 0" class="primary-button">Save</button>
+                    <!-- <button disabled style="margin-left: 0" class="primary-button">Save</button>
                     <div style="margin-left: -8px" class="tooltip tooltip-wide full">
                       Generate report first
-                    </div>
+                    </div> -->
+                    <p></p>
                   </div>
 
                   <div v-if="mainView !== 'website'">
+                    <div
+                      style="margin-right: 0; right: 120px"
+                      class="wrapper absolute-right-bottom circle-border white-bg dim"
+                    >
+                      <img
+                        style="cursor: not-allowed"
+                        class="right-mar img-highlight"
+                        src="@/assets/images/disk.svg"
+                        height="14px"
+                        alt=""
+                      />
+                      <div style="margin-left: -22px" class="tooltip tooltip-wide full">
+                        Generate report first
+                      </div>
+                    </div>
+
                     <div
                       style="margin-right: 0; right: 80px"
                       class="wrapper absolute-right-bottom circle-border white-bg dim"
@@ -722,7 +754,7 @@
                     </div>
                   </div>
 
-                  <div v-else class="row">
+                  <!-- <div v-else class="row">
                     <input
                       autofocus
                       class="area-input-outline"
@@ -746,7 +778,7 @@
                     >
                       Save
                     </button>
-                  </div>
+                  </div> -->
 
                   <!-- <div v-if="mainView === 'website' && addedArticles.length === 1" class="relative">
                     <div
@@ -1045,7 +1077,9 @@
                   </div>
 
                   <div style="margin: 1.5rem 0 0 0" class="loader-bg" v-else>
-                    <div class="gray-text" style="width: 100%; font-size: 13px;">Generating report...</div>
+                    <div class="gray-text" style="width: 100%; font-size: 13px">
+                      Generating report...
+                    </div>
                     <div class="summary-preview-skeleton shimmer">
                       <!-- <div class="content">
                         <div class="meta-wide"></div>
@@ -1061,7 +1095,7 @@
                   </div>
                 </div>
 
-                <div v-if="summary" style="width: 100%; margin-top: 2rem;" class="relative">
+                <div v-if="summary" style="width: 100%; margin-top: 2rem" class="relative">
                   <!-- <button
                     @click="toggleSaveName"
                     v-if="
@@ -1088,11 +1122,13 @@
                     />
                     {{ savingSearch ? 'Saving' : 'Save' }}
                   </button> -->
-                  <div class="gray-text absolute-right" style="left: 0; font-size: 14px;">AI-generated report</div>
+                  <div class="gray-text absolute-right" style="left: 0; font-size: 14px">
+                    AI-generated report
+                  </div>
                   <div
                     @mouseenter="changeEmailText"
                     @mouseleave="defaultEmailText"
-                    @click="toggleSaveName"
+                    @click="toggleSaveModal"
                     class="wrapper absolute-right circle-border white-bg"
                     style="margin-right: 0; right: 128px"
                     :disabled="
@@ -1103,7 +1139,10 @@
                       savedSearch ||
                       mainView === 'website'
                     "
-                    v-if="!savedSearch && ((filteredArticles && filteredArticles.length) || tweets.length)"
+                    v-if="
+                      !savedSearch &&
+                      ((filteredArticles && filteredArticles.length) || tweets.length)
+                    "
                   >
                     <img
                       height="14px"
@@ -1111,12 +1150,8 @@
                       alt=""
                       class="filter-green img-highlight"
                     />
-                    <div
-                      class="tooltip"
-                      style="margin-left: -22px"
-                      :class="{ 'tooltip-wide': !(searchSaved || savedSearch) }"
-                    >
-                    {{ savingSearch ? 'Saving' : 'Save' }}
+                    <div class="tooltip" style="margin-left: -22px">
+                      {{ savingSearch ? 'Saving' : 'Save' }}
                     </div>
                   </div>
                   <div
@@ -1219,7 +1254,7 @@
                     class="pre-text"
                     v-html="summary"
                   ></pre>
-                  
+
                   <div
                     style="
                       margin: 1rem 0 0 0;
@@ -1333,10 +1368,11 @@
                       </div>
                     </div>
                   </div>
-
                 </div>
                 <div style="margin: 1.5rem 0 0 0" class="loader-bg" v-else-if="chatSummaryLoading">
-                  <div class="gray-text" style="width: 100%; font-size: 13px;">Generating report...</div>
+                  <div class="gray-text" style="width: 100%; font-size: 13px">
+                    Generating report...
+                  </div>
                   <div class="summary-preview-skeleton shimmer">
                     <!-- <div class="content">
                       <div class="meta-wide"></div>
@@ -1969,12 +2005,12 @@ export default {
       showSummaryInstructions: true,
       showingViews: false,
       summarizing: false,
-      detailModalOpen: false,
+      saveModalOpen: false,
       detialText: null,
       detailTitle: null,
       currentAlertId: null,
       alertSet: false,
-      emailText: 'Enable',
+      emailText: 'Activate Alerts',
       showNotifyBanner: false,
       currentAlert: null,
       emailAlerts: [],
@@ -2184,8 +2220,8 @@ export default {
     this.abortFunctions()
   },
   methods: {
-    toggleDetailModal() {
-      this.detailModalOpen = !this.detailModalOpen
+    toggleSaveModal() {
+      this.saveModalOpen = !this.saveModalOpen
     },
     changeEmailText() {
       if (!this.isPaid) {
@@ -2196,7 +2232,7 @@ export default {
     },
     defaultEmailText() {
       if (!this.isPaid) {
-        this.emailText = 'Enable'
+        this.emailText = 'Activate Alerts'
       } else {
         return
       }
@@ -2988,7 +3024,6 @@ export default {
           .then((response) => {
             if (response.id) {
               this.searchId = response.id
-              this.showUpdateBanner = true
               this.savedSearch = {
                 name: response.name,
                 input_text: this.newSearch,
@@ -3001,12 +3036,20 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
-        this.savingSearch = false
         this.$store.dispatch('getSearches')
+
         setTimeout(() => {
-          this.showUpdateBanner = false
+          this.saveModalOpen = false
+          this.savingSearch = false
+          this.successToggle()
         }, 2000)
       }
+    },
+    successToggle() {
+      this.showUpdateBanner = true
+      setTimeout(() => {
+        this.showUpdateBanner = false
+      }, 2000)
     },
     async sendSummaryEmail() {
       this.sendingSummaryEmail = true
@@ -3202,7 +3245,7 @@ export default {
         } else {
           await this.getSourceSummary()
         }
-      } catch(e) {
+      } catch (e) {
         console.log('error in getChatSummary', e)
       }
       this.chatSummaryLoading = false
@@ -3480,6 +3523,9 @@ export default {
           ? this.addedClips.map((clip) => (clip.title ? clip.title : clip.id))
           : []
       }
+    },
+    isMobile() {
+      return window.innerWidth <= 600
     },
     controllers() {
       return this.$store.state.abortControllers
@@ -4158,6 +4204,10 @@ button:disabled {
   align-items: center;
   width: 100%;
   padding: 0 64px;
+  @media only screen and (max-width: 600px) {
+    align-items: flex-start;
+    padding: 0 44px;
+  }
 }
 
 .fullHeight {
@@ -4772,8 +4822,8 @@ header {
   align-items: flex-start;
   justify-content: center;
   @media only screen and (max-width: 600px) {
-    width: 90%;
-    padding-top: 48px;
+    width: 100%;
+    padding: 48px 0px 0px 0px;
   }
 }
 
@@ -5194,6 +5244,10 @@ header {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.aligned-right {
+  justify-content: flex-end;
 }
 
 .blue-border-button {
@@ -6018,5 +6072,17 @@ input[type='date']::-webkit-input-placeholder {
 
 .filtered-blue {
   filter: invert(20%) sepia(28%) saturate(811%) hue-rotate(162deg) brightness(94%) contrast(81%);
+}
+.create-report-container {
+  width: 50%;
+  padding: 0 32px;
+  @media only screen and (max-width: 600px) {
+    width: 95%;
+  }
+}
+.mobile-margin-top {
+  @media only screen and (max-width: 600px) {
+    margin-top: 1.5rem;
+  }
 }
 </style>
