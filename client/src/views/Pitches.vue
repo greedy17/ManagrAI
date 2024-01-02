@@ -129,7 +129,7 @@
         <div class="paid-header">
           <div>
             <h3 class="regen-header-title">
-              {{ !journalists ? 'Find Journalists or Influencers' : 'Journalists/Influencers' }}
+              {{ !journalists ? 'Find Journalists/Influencers' : 'Journalists/Influencers' }}
             </h3>
             <p class="regen-header-subtitle">
               {{ !journalists ? 'Provide additional details below' : 'Journalist details' }}
@@ -148,7 +148,7 @@
           <label for="pub">Publication Type</label>
           <input
             class="input-text"
-            placeholder="(e.g., tier 1, industry-specific, niche, TikTok influencers, etc.)"
+            placeholder="(e.g., Tier 1, industry-specific, niche, TikTok influencers, etc.)"
             type="text"
             v-model="pubType"
             :disabled="loadingJournalists"
@@ -158,7 +158,7 @@
           <label for="beat">Beat</label>
           <input
             class="input-text"
-            placeholder="(e.g., technology, health, lifestyle, etc.)"
+            placeholder="(e.g., Technology, health, lifestyle, etc.)"
             type="text"
             v-model="beat"
             :disabled="loadingJournalists"
