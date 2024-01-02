@@ -899,7 +899,7 @@
               style="margin: 0; padding-top: 1px"
               class="area-input text-area-input"
               id="instructions-text-area"
-              placeholder="What would you like to edit?"
+              placeholder="Make edits..."
               v-model="instructions"
               :rows="1"
               v-autoresize

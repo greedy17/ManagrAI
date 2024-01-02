@@ -1014,7 +1014,7 @@
 
                         <div
                           class="dropdown-item"
-                          v-for="(suggestion, i) in searchSuggestions"
+                          v-for="(suggestion, i) in filteredSuggestions"
                           :key="i"
                           @click="addPromptSuggestion(suggestion)"
                         >
@@ -1366,7 +1366,7 @@
 
                       <div
                         class="dropdown-item"
-                        v-for="(suggestion, i) in searchSuggestions"
+                        v-for="(suggestion, i) in filteredSuggestions"
                         :key="i"
                         @click="addPromptSuggestion(suggestion)"
                       >
@@ -2929,6 +2929,7 @@ export default {
     async getSourceSummary() {
       // this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       this.summaryLoading = true
+      this.showingPromptDropdown = false
       try {
         if (this.shouldCancel) {
           return this.stopLoading()
@@ -3251,6 +3252,7 @@ export default {
     },
     async getChatSummary(clips, instructions = '') {
       this.chatSummaryLoading = true
+      this.showingPromptDropdown = false
       try {
         if (this.mainView === 'news') {
           await this.getSummary(clips, instructions)
@@ -3565,9 +3567,9 @@ export default {
       return this.$store.state.currentSearch
     },
     filteredSuggestions() {
-      if (!this.newSearch) return this.searchSuggestions
+      if (!this.newTemplate) return this.searchSuggestions
       return this.searchSuggestions.filter((suggestions) =>
-        suggestions.toLowerCase().includes(this.newSearch.toLowerCase()),
+        suggestions.toLowerCase().includes(this.newTemplate.toLowerCase()),
       )
     },
     filteredPromptSuggestions() {
