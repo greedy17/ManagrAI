@@ -407,7 +407,7 @@
               v-clickOutsideMenu
             >
               <div style="margin-right: -8px" class="input-row">
-                <div v-if="!isMobile" class="main-text">Search</div>
+                <div v-if="!isMobile" class="main-text-small">Search</div>
                 <textarea
                   @keyup.enter="generateNewSearch(false)"
                   id="search-input"
@@ -4467,6 +4467,23 @@ button:disabled {
 
 .main-text {
   min-width: 80px !important;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  margin: 0;
+  font-size: 13px;
+  color: $dark-black-blue;
+  svg,
+  img {
+    filter: invert(40%);
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.main-text-small {
+  min-width: 60px !important;
   display: flex;
   flex-direction: row;
   align-items: center;

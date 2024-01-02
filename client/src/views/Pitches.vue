@@ -129,7 +129,7 @@
         <div class="paid-header">
           <div>
             <h3 class="regen-header-title">
-              {{ !journalists ? 'Find Journalists' : 'Journalists' }}
+              {{ !journalists ? 'Find Journalists or Influencers' : 'Journalists/Influencers' }}
             </h3>
             <p class="regen-header-subtitle">
               {{ !journalists ? 'Provide additional details below' : 'Journalist details' }}
