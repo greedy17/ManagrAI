@@ -373,7 +373,7 @@
           </div>
 
           <div class="news-column">
-            <div v-if="isMobile" class="switcher" style="margin-bottom: 1rem;">
+            <div v-if="isMobile" class="switcher" style="margin-bottom: 1rem">
               <div
                 @click="switchMainView('news')"
                 :class="{ activeswitch: mainView === 'news' }"
@@ -407,12 +407,12 @@
               v-clickOutsideMenu
             >
               <div style="margin-right: -8px" class="input-row">
-                <div v-if="!isMobile" class="main-text">Instructions</div>
+                <div v-if="!isMobile" class="main-text-small">Search</div>
                 <textarea
                   @keyup.enter="generateNewSearch(false)"
                   id="search-input"
                   class="area-input text-area-input"
-                  placeholder="Type instructions..."
+                  placeholder="Enter search term..."
                   @focus="showDropdown"
                   autocomplete="off"
                   v-model="newSearch"
@@ -485,7 +485,7 @@
                   -
                   <input class="area-input-smallest" type="date" v-model="dateEnd" />
                 </div>
-                <small style="padding-top: 8px" class="gray-text">Popular Searches</small>
+                <small style="padding-top: 8px" class="gray-text">Search Examples</small>
                 <div
                   @click="addSuggestion(suggestion)"
                   class="dropdown-item"
@@ -503,7 +503,7 @@
               style="margin-bottom: 30px"
               class="input-container"
             >
-            <div style="margin-right: -8px" class="input-row">
+              <div style="margin-right: -8px" class="input-row">
                 <div v-if="!isMobile" class="main-text">Article</div>
                 <input
                   @keyup.enter="uploadArticle"
@@ -597,7 +597,7 @@
                     </div>
                   </div>
 
-                  <p style="margin: 16px 0;" v-else-if="!selectedSearch" class="sub-text">
+                  <p style="margin: 16px 0" v-else-if="!selectedSearch" class="sub-text">
                     Your report will appear below.
                   </p>
                   <p
@@ -609,7 +609,14 @@
                   </p>
                   <p v-else style="margin: 16px 0" class="sub-text">Article Report</p>
 
-                  <p v-if="selectedSearch" :style="isMobile ? 'margin: 16px 0 16px 0; font-size: 14px' : 'margin: 16px 0 32px 0; font-size: 14px'">
+                  <p
+                    v-if="selectedSearch"
+                    :style="
+                      isMobile
+                        ? 'margin: 16px 0 16px 0; font-size: 14px'
+                        : 'margin: 16px 0 32px 0; font-size: 14px'
+                    "
+                  >
                     {{
                       mainView === 'news'
                         ? `${filteredArticles.length} News Clips`
@@ -636,7 +643,7 @@
                     )
                   "
                   class="space-between mobile-margin-top"
-                  style="position: relative;"
+                  style="position: relative"
                 >
                   <div class="wrapper">
                     <!-- <button disabled style="margin-left: 0" class="primary-button">Save</button>
@@ -894,10 +901,11 @@
                         </div>
 
                         <textarea
+                          @focus="showPromptDropdown"
                           style="margin: 0; padding-top: 1px"
                           class="area-input text-area-input"
                           id="instructions-text-area"
-                          placeholder="Ask me anything about this coverage..."
+                          placeholder="Ask Managr..."
                           v-model="newTemplate"
                           :rows="1"
                           v-autoresize
@@ -1001,12 +1009,12 @@
 
                       <div v-if="showingPromptDropdown" class="dropdown">
                         <div style="padding-top: 4px; padding-bottom: 4px">
-                          <small class="gray-text">Popular Prompts</small>
+                          <small class="gray-text">Popular Requests</small>
                         </div>
 
                         <div
                           class="dropdown-item"
-                          v-for="(suggestion, i) in filteredPromptSuggestions"
+                          v-for="(suggestion, i) in searchSuggestions"
                           :key="i"
                           @click="addPromptSuggestion(suggestion)"
                         >
@@ -1278,10 +1286,11 @@
                       </div>
 
                       <textarea
+                        @focus="showPromptDropdown"
                         style="margin: 0; padding-top: 1px"
                         class="area-input text-area-input"
                         id="instructions-text-area"
-                        placeholder="Ask me anything about this coverage..."
+                        placeholder="Ask Managr..."
                         v-model="newTemplate"
                         :rows="1"
                         v-autoresize
@@ -1350,15 +1359,14 @@
                         />
                       </button>
                     </div>
-
                     <div v-if="showingPromptDropdown" class="dropdown">
                       <div style="padding-top: 4px; padding-bottom: 4px">
-                        <small class="gray-text">Popular Prompts</small>
+                        <small class="gray-text">Popular Requests</small>
                       </div>
 
                       <div
                         class="dropdown-item"
-                        v-for="(suggestion, i) in filteredPromptSuggestions"
+                        v-for="(suggestion, i) in searchSuggestions"
                         :key="i"
                         @click="addPromptSuggestion(suggestion)"
                       >
@@ -2145,26 +2153,30 @@ export default {
       copyTip: 'Copy',
       searchSuggestions: [
         // 'XXX',
-        `XXX competitors (list them out) not XXX`,
-        `XXX and viral and TikTok`,
-        `List out topics XXX would care about`,
-        'XXX no stock related news',
-        'XXX no exclusions',
-        'University of XXX no sports related news',
-        'XXX Hospital no ER related stories',
+        ` What is the PR impact of this coverage`,
+        `Find me the most positive / negative article`,
+        `Provide creative newsjacking ideas for XXX based on this coverage`,
+        `List 5 of the most important headlines (include source name + journalist)`,
+        `List 5 journalists (from top pubs, include pitching tips) I can pitch on behalf of XXX`,
+        `List 5 questions & answers journalists would ask about XXX`,
+        `Issue a statement on behalf of XXX`,
+        `Write a blog post based on this coverage`,
       ],
       promptSuggestions: [
-        `Summarize the news for XXX`,
-        `Summarize the news for XXX, provide sentiment analysis, and the PR impact of this coverage`,
-        `Trends about XXX`,
-        `List 5 of the most important headlines ( include source name + journalist) about XXX`,
-        `Find up to 10 journalists (from top pubs, include pitching tips) writing about XXX`,
-        `Create a media monitoring report for XXX. List top sources and journalist (based on popularity and size of publication), sentiment analysis, and any other important metrics`,
-        // `Respond to all the negative coverage about XXX on behalf of XXX`,
-        `Generate 5 questions & answers journalists would ask about XXX`,
-        `Write an informative media pitch on behalf of XXX about XXX`,
-        `Write an engaging blog post on behalf of XXX about XXX`,
-        `Issue a blunt statement on behalf of XXX about XXX`,
+        `"Coca-Cola"`,
+        `"Commercial real estate" AND "Technology"`,
+        `"OpenAI" OR "Google Bard"`,
+        `"Apple no stock related news"`,
+        // `Summarize the news for XXX, provide sentiment analysis, and the PR impact of this coverage`,
+        // `Trends about XXX`,
+        // `List 5 of the most important headlines ( include source name + journalist) about XXX`,
+        // `Find up to 10 journalists (from top pubs, include pitching tips) writing about XXX`,
+        // `Create a media monitoring report for XXX. List top sources and journalist (based on popularity and size of publication), sentiment analysis, and any other important metrics`,
+
+        // `Generate 5 questions & answers journalists would ask about XXX`,
+        // `Write an informative media pitch on behalf of XXX about XXX`,
+        // `Write an engaging blog post on behalf of XXX about XXX`,
+        // `Issue a blunt statement on behalf of XXX about XXX`,
       ],
     }
   },
@@ -3715,7 +3727,7 @@ export default {
 .dropdown {
   padding: 8px 0 8px 0;
   position: relative;
-  height: fit-content;
+  // height: fit-content;
   max-height: 200px;
   width: 100%;
   top: 8px;
@@ -4455,6 +4467,23 @@ button:disabled {
 
 .main-text {
   min-width: 80px !important;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  margin: 0;
+  font-size: 13px;
+  color: $dark-black-blue;
+  svg,
+  img {
+    filter: invert(40%);
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.main-text-small {
+  min-width: 60px !important;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -5992,7 +6021,7 @@ header {
   background-color: $offer-white;
   border-left: 1px solid rgba(0, 0, 0, 0.1);
   position: fixed;
-  z-index: 3000;
+  z-index: 300000;
   right: 0;
   top: 0;
   box-shadow: 30px 30px 40px;
