@@ -59,7 +59,10 @@
       </div>
     </Modal>
     <Modal v-if="inputModalOpen" class="paid-modal">
-      <div :style="isMobile ? 'width: 95%; min-height: 275px' : 'width: 610px; min-height: 275px'" class="regen-container">
+      <div
+        :style="isMobile ? 'width: 95%; min-height: 275px' : 'width: 610px; min-height: 275px'"
+        class="regen-container"
+      >
         <div class="paid-header">
           <div>
             <h4 class="regen-header-title">Learn Writing Style</h4>
@@ -122,7 +125,7 @@
     </Modal>
 
     <Modal v-if="journalistModalOpen" class="paid-modal" style="z-index: 1000000s">
-      <div style="min-height: 275px" class="regen-container">
+      <div style="min-height: 275px; width: 510px" class="regen-container">
         <div class="paid-header">
           <div>
             <h3 class="regen-header-title">
@@ -145,7 +148,7 @@
           <label for="pub">Publication Type</label>
           <input
             class="input-text"
-            placeholder="(e.g, tier 1, tier 2, industry specific, niche, etc.)"
+            placeholder="(e.g., tier 1, industry-specific, niche, TikTok influencers, etc.)"
             type="text"
             v-model="pubType"
             :disabled="loadingJournalists"
@@ -155,7 +158,7 @@
           <label for="beat">Beat</label>
           <input
             class="input-text"
-            placeholder="(e.g, technology, health, lifestyle, etc.)"
+            placeholder="(e.g., technology, health, lifestyle, etc.)"
             type="text"
             v-model="beat"
             :disabled="loadingJournalists"
@@ -165,7 +168,7 @@
           <label for="loc">Location</label>
           <input
             class="input-text"
-            placeholder="(e.g, National, Atlanta, D.C, etc.)"
+            placeholder="(e.g., National, Atlanta, D.C, etc.)"
             type="text"
             v-model="location"
             :disabled="loadingJournalists"
@@ -359,7 +362,10 @@
     </Modal>
 
     <Modal v-if="saveModalOpen" class="paid-modal" style="z-index: 1000000s">
-      <div :style="isMobile ? 'width: 95%; min-height: 275px' : 'width: 500px; min-height: 275px'" class="regen-container">
+      <div
+        :style="isMobile ? 'width: 95%; min-height: 275px' : 'width: 500px; min-height: 275px'"
+        class="regen-container"
+      >
         <div class="paid-header">
           <div>
             <h3 class="regen-header-title">Save</h3>
@@ -419,7 +425,7 @@
         <div class="create-report-container">
           <h2 style="margin: 0">Create content</h2>
           <p>Generate content that mirrors your writing style.</p>
-          
+
           <div v-if="isMobile" @click="toggleStyleDropdown" class="drop-text pointer">
             <p class="ellipsis-text" style="margin: 0">
               {{ writingStyleTitle ? writingStyleTitle : 'Select Style' }}
@@ -870,7 +876,7 @@
           </div>
         </div>
       </div>
-      <div v-if="pitch" class="centered pitch-padding" style="width: 100%;">
+      <div v-if="pitch" class="centered pitch-padding" style="width: 100%">
         <div v-if="pitch && !loading" class="width-dynamic">
           <pre
             style="margin-top: -4px; padding-top: 16px; border-top: 1px solid rgba(0, 0, 0, 0.1)"
