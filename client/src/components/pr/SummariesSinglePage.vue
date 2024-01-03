@@ -341,7 +341,7 @@
       <div class="no-content">
         <div :class="{ 'neg-mar-btm': mainView === 'website' }" class="title-row main-header">
           <div class="create-report-container">
-            <h2 style="margin-bottom: 0">Create report</h2>
+            <h2 style="margin-bottom: 0">Summarize</h2>
 
             <!-- <div class="row">
               
@@ -367,7 +367,7 @@
                   ? 'Instantly search through X (formally Twitter).'
                   : mainView === 'website'
                   ? 'Instantly summarize a news article.'
-                  : 'Generate an AI report based on news coverage.'
+                  : 'Generate an AI summary based on news coverage.'
               }}
             </p>
           </div>
@@ -598,7 +598,7 @@
                   </div>
 
                   <p style="margin: 16px 0" v-else-if="!selectedSearch" class="sub-text">
-                    Your report will appear below.
+                    Your summary will appear below.
                   </p>
                   <p
                     v-else-if="selectedSearch && mainView !== 'website'"

@@ -423,7 +423,7 @@
 
       <div class="centered dark-blue-bg" style="width: 100%; color: white">
         <div class="create-report-container">
-          <h2 style="margin: 0">Create content</h2>
+          <h2 style="margin: 0">Write</h2>
           <p>Generate content that mirrors your writing style.</p>
 
           <div v-if="isMobile" @click="toggleStyleDropdown" class="drop-text pointer">
