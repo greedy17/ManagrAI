@@ -341,7 +341,7 @@
       <div class="no-content">
         <div :class="{ 'neg-mar-btm': mainView === 'website' }" class="title-row main-header">
           <div class="create-report-container">
-            <h2 style="margin-bottom: 0">Create Summary</h2>
+            <h2 style="margin-bottom: 0">Summarize</h2>
 
             <!-- <div class="row">
               
