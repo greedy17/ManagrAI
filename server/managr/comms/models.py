@@ -47,7 +47,7 @@ class Search(TimeStampModel):
         ordering = ["name"]
 
     def __str__(self):
-        return f"{self.user.email} - {self.name}"
+        return f"{self.name} - {self.user.email}"
 
     def update_boolean(self):
         try:
