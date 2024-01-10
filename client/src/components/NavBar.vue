@@ -142,6 +142,15 @@
           <p>Pitch</p>
         </router-link>
 
+        <router-link active-class="active" :to="{ name: 'Assist' }" id="router-assist">
+          <div style="margin-top: 2px" class="row">
+            <p>Assist</p>
+            <div class="beta-tag-small">
+              <p>Beta</p>
+            </div>
+          </div>
+        </router-link>
+
         <!-- <router-link
           v-if="!hasZoomIntegration"
           :to="{ name: 'PRIntegrations' }"
@@ -886,7 +895,6 @@ export default {
       return this.$store.state.user.role === 'PR'
     },
     isPaid() {
-      // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
       return !!this.$store.state.user.organizationRef.isPaid
     },
     searchesUsed() {
@@ -1055,6 +1063,24 @@ export default {
 
 .mobile-search-icon {
   filter: invert(65%) sepia(13%) saturate(505%) hue-rotate(200deg) brightness(90%) contrast(88%);
+}
+
+.beta-tag-small {
+  letter-spacing: 1px;
+  margin-left: 8px;
+
+  p {
+    background-color: $white-blue;
+    color: $dark-black-blue;
+    border-radius: 6px;
+    padding: 2px 6px 2px 6px;
+    font-size: 11px;
+    cursor: text;
+
+    &:hover {
+      color: white;
+    }
+  }
 }
 
 .beta-tag {

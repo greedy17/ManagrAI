@@ -1085,9 +1085,7 @@
                   </div>
 
                   <div style="margin: 1.5rem 0 0 0" class="loader-bg" v-else>
-                    <div class="gray-text" style="width: 100%; font-size: 13px">
-                      Generating report...
-                    </div>
+                    <div class="gray-text" style="width: 100%; font-size: 13px">Generating...</div>
                     <div class="summary-preview-skeleton shimmer">
                       <!-- <div class="content">
                         <div class="meta-wide"></div>
@@ -1378,9 +1376,7 @@
                   </div>
                 </div>
                 <div style="margin: 1.5rem 0 0 0" class="loader-bg" v-else-if="chatSummaryLoading">
-                  <div class="gray-text" style="width: 100%; font-size: 13px">
-                    Generating report...
-                  </div>
+                  <div class="gray-text" style="width: 100%; font-size: 13px">Generating...</div>
                   <div class="summary-preview-skeleton shimmer">
                     <!-- <div class="content">
                       <div class="meta-wide"></div>

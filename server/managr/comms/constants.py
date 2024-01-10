@@ -190,6 +190,17 @@ REGENERATE_CONTENT_WITH_FEEDBACK = (
     """
 )
 
+
+RUN_PROCESS = (
+    lambda date, type, summary, details, style : f""""
+    Today is {date}. You are tasked with creating content based on the latest news which is provided below. You must adhere to the writing style provided. For context, user may have also provided additional details about themselves or their company.
+    1. Content Instructions: {type}
+    2. News Summary: {summary}
+    3. Additional Details: {details}
+    4. Writing Style: {style}
+    """
+)
+
 DO_NOT_TRACK_LIST = [
     "https://www.wsj.com",
     "https://www.nytimes.com",

@@ -22,13 +22,13 @@ from urllib.parse import urlencode
 from django.shortcuts import redirect
 from rest_framework.decorators import action
 from . import constants as comms_consts
-from .models import Search, TwitterAuthAccount, Pitch
+from .models import Search, TwitterAuthAccount, Pitch, Process
 from .models import Article as InternalArticle
 from .models import WritingStyle, EmailAlert
 from managr.core.models import User
 from managr.comms import exceptions as comms_exceptions
 from .tasks import emit_process_website_domain, emit_send_news_summary, emit_share_client_summary
-from .serializers import SearchSerializer, PitchSerializer, EmailAlertSerializer
+from .serializers import SearchSerializer, PitchSerializer, EmailAlertSerializer, ProcessSerializer
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
 from managr.utils.misc import decrypt_dict
@@ -106,7 +106,7 @@ class PRSearchViewSet(
     def get_clips(self, request, *args, **kwargs):
         user = User.objects.get(id=request.GET.get("user_id"))
         has_error = False
-        search = request.GET.get("search")
+        search = request.GET.get("search", False)
         boolean = request.GET.get("boolean", False)
         date_to = request.GET.get("date_to", False)
         date_from = request.GET.get("date_from", False)
@@ -1306,41 +1306,131 @@ class EmailAlertViewSet(
         return Response(status=status.HTTP_200_OK)
 
 
-# class DetailViewSet(
-#     viewsets.GenericViewSet,
-#     mixins.CreateModelMixin,
-#     mixins.RetrieveModelMixin,
-#     mixins.UpdateModelMixin,
-#     mixins.ListModelMixin,
-# ):
-#     serializer_class = DetailSerializer
+class ProcessViewSet(
+    viewsets.GenericViewSet,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.ListModelMixin,
+):
+    serializer_class = ProcessSerializer
 
-#     def get_queryset(self):
-#         return Detail.objects.filter(user=self.request.user)
+    def get_queryset(self):
+        return Process.objects.filter(user=self.request.user)
 
-#     def create(self, request, *args, **kwargs):
-#         try:
-#             serializer = self.serializer_class(data=request.data)
-#             serializer.is_valid(raise_exception=True)
-#             serializer.save()
-#             readSerializer = self.serializer_class(instance=serializer.instance)
-#         except Exception as e:
-#             logger.exception(f"Error validating data for detials <{e}>")
-#             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
-#         return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
+    def create(self, request, *args, **kwargs):
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            readSerializer = self.serializer_class(instance=serializer.instance)
+        except Exception as e:
+            logger.exception(f"Error validating data for detials <{e}>")
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
 
-#     def partial_update(self, request, *args, **kwargs):
-#         instance = self.get_object()
-#         data = self.request.data
-#         serializer = self.serializer_class(instance=instance, data=data, partial=True)
-#         serializer.is_valid(raise_exception=True)
-#         serializer.save()
-#         return Response(status=status.HTTP_200_OK, data=serializer.data)
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = self.request.data
+        serializer = self.serializer_class(instance=instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
 
-#     def destroy(self, request, *args, **kwargs):
-#         instance = self.get_object()
-#         try:
-#             instance.delete()
-#         except Exception as e:
-#             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
-#         return Response(status=status.HTTP_200_OK)
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            instance.delete()
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="run",
+    )
+    def run_process(self, request, *args, **kwargs):
+        user = request.user
+        type = request.data.get("type")
+        summary = request.data.get("summary")
+        details = request.data.get("details")
+        process_id = request.data.get("process_id")
+        style = request.data.get("style")
+
+#         style = """
+#         The author's style is formal yet personal, employing a tone of gratitude and excitement. They use first-person narrative, making the text relatable and engaging. The structure is chronological, starting with the present and moving to past achievements, ending with a hopeful look to the future. The author uses sophisticated vocabulary and complex sentence structures, demonstrating a high level of education and professionalism.
+# The author establishes credibility by mentioning specific names, roles, and institutions, and by expressing gratitude towards mentors and colleagues. They avoid promotional language, focusing instead on personal growth and learning opportunities.
+# Guidelines for replicating this style:
+# 1. Use a formal yet personal tone, employing first-person narrative.
+# 2. Structure the text chronologically, linking past, present, and future.
+# 3. Use sophisticated vocabulary and complex sentence structures.
+# 4. Establish credibility by mentioning specific names, roles, and institutions.
+# 5. Express gratitude and excitement about learning and growth opportunities.
+# 6. Avoid promotional language, focusing on informative and trustworthy discourse.
+#         """
+
+        has_error = False
+        attempts = 1
+        token_amount = 1000
+        timeout = 60.0
+
+        while True:
+            try:
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.RUN_PROCESS(
+                   datetime.now(), type, summary, details, style
+                )
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    token_amount=token_amount,
+                    top_p=0.1,
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                res = open_ai_exceptions._handle_response(r)
+
+                content = res.get("choices")[0].get("message").get("content")
+
+                if process_id:
+                    process = Process.objects.get(id=process_id)
+                    process.generated_content = content
+                    process.save()
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount <= 2000:
+                    has_error = True
+
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 500
+                    continue
+            except httpx.ReadTimeout as e:
+                print(e)
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+        if has_error:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
+        return Response({"content": content})

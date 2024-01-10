@@ -124,7 +124,7 @@
       </div>
     </Modal>
 
-    <Modal v-if="journalistModalOpen" class="paid-modal" style="z-index: 1000000s">
+    <Modal v-if="journalistModalOpen" class="paid-modal" style="z-index: 1000000">
       <div style="min-height: 275px; width: 510px" class="regen-container">
         <div class="paid-header">
           <div>
@@ -613,7 +613,7 @@
     <div style="padding-top: 0" class="center gray-bg">
       <div v-if="loading" class="width-dynamic" style="margin-left: 4rem; margin-top: 1rem">
         <div style="width: 100%" class="row">
-          <p class="summary-load-text">Generating content...</p>
+          <p class="summary-load-text">Generating...</p>
         </div>
 
         <div class="summary-preview-skeleton shimmer">
@@ -2070,10 +2070,6 @@ footer {
   font-size: 13px;
   padding: 10px 20px 10px 18px;
   outline: none;
-}
-
-.input-text ::placeholder {
-  color: red !important;
 }
 
 .input-width {

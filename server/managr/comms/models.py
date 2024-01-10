@@ -509,3 +509,22 @@ class EmailAlert(TimeStampModel):
         null=True,
         blank=True,
     )
+
+
+class Process(TimeStampModel):
+    user = models.ForeignKey(
+        "core.User",
+        related_name="process",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
+    )
+    name = models.CharField(max_length=255)
+    search_id = models.CharField(max_length=255)
+    type = models.TextField(null=True, blank=True)
+    details = models.TextField()
+    style = models.TextField(null=True, blank=True)
+    generated_content = models.TextField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["name"]
