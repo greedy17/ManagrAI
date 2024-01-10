@@ -46,8 +46,14 @@ class CustomArticle(admin.ModelAdmin):
 
 
 class CustomEmailAlertAdmin(admin.ModelAdmin):
-    list_display = ("user", "search", "run_at")
+    list_display = ("user", "search", "run_at", "times_sent")
     ordering = ("run_at",)
+
+    def times_sent(self, obj):
+        ts = obj.meta_data["sent_count"] if "sent_count" in obj.meta_data.keys() else 0
+        return ts
+
+    times_sent.short_description = "Times Sent"
 
 
 admin.site.register(Search, CustomSearch)
