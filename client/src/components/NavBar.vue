@@ -143,7 +143,7 @@
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'Assist' }" id="router-assist">
-          <div style="margin-top: 2px" class="row">
+          <div class="row">
             <p>Assist</p>
             <div class="beta-tag-small">
               <p>Beta</p>

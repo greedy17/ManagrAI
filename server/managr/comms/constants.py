@@ -163,11 +163,11 @@ OPEN_AI_FIND_JOURNALISTS = (
     Content for the Pitch: {content} """
 )
 OPEN_AI_FIND_JOURNALISTS = (
-    lambda type, beat, location, content : f"""List up to 10 real journalists from relevant publications, along with pitching tips, who would be interested in writing about the content provided. Follow these instructions carefully:
-    - Publication Type: The journalists must be from news outlets of this type: {type}.
-    - Journalistic Beat: The journalist must cover this specific beat: {beat}.
-    - Location: The journalists must be based in or primarily cover {location}.
-    - Real Journalists Requirement: It is essential that the journalists listed are actual, currently active professionals in the field.
+    lambda type, beat, location, content : f"""List up to 10 real journalists (or social media influencers) from relevant publications, along with pitching tips, who would be interested in writing about the content provided. User will specify whether they want journalist or influencers. Follow these instructions carefully:
+    - Publication Type: The journalists or influencers must be from news outlets (or social platform) of this type: {type}.
+    - Journalistic Beat: The journalist or influencers must cover this specific beat: {beat}.
+    - Location: The journalists or influencers must be based in or primarily cover {location}.
+    - Real Journalists Requirement: It is essential that the journalists or influencers listed are real, currently active professionals in the field.
     Content for the Pitch: {content} """
 )
 
@@ -193,11 +193,12 @@ REGENERATE_CONTENT_WITH_FEEDBACK = (
 
 RUN_PROCESS = (
     lambda date, type, summary, details, style : f""""
-    Today is {date}. You are tasked with creating content based on the latest news which is provided below. You must adhere to the writing style provided. For context, user may have also provided additional details about themselves or their company.
-    1. Content Instructions: {type}
-    2. News Summary: {summary}
-    3. Additional Details: {details}
-    4. Writing Style: {style}
+    Today is {date}. You are tasked with creating content based on the latest news which is provided below, along with other important details. You must adhere to the writing style provided. For context, user may have also provided additional details about themselves, their company, or their intent for the content being written.
+    a. Content Instructions: {type}
+    b. Content cannot exceed 2,000 characters
+    c. News Summary: {summary}
+    d. Additional Details: {details}
+    e. Writing Style: {style}
     """
 )
 

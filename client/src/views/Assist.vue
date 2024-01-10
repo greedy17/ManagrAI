@@ -70,7 +70,7 @@
             </Multiselect>
           </div>
 
-          <label for="loc">Company details</label>
+          <label for="loc">Additional details</label>
           <input
             class="input-text"
             placeholder="(e.g., company name & description, personal preferences, etc.)"
@@ -118,7 +118,11 @@
               {{ !journalists ? 'Find Journalists/Influencers' : 'Journalists/Influencers' }}
             </h3>
             <p class="regen-header-subtitle">
-              {{ !journalists ? 'Provide additional details below' : 'Journalist details' }}
+              {{
+                !journalists
+                  ? 'Provide additional details below'
+                  : 'Journalist/Influencer details and pitching tips'
+              }}
             </p>
           </div>
           <div v-if="!loading" class="pointer" @click="toggleJournalistModal">
@@ -126,11 +130,7 @@
           </div>
           <div v-else><small>X</small></div>
         </div>
-        <div
-          :class="loading ? 'opaque' : ''"
-          v-if="!journalists"
-          class="paid-body input-width"
-        >
+        <div :class="loading ? 'opaque' : ''" v-if="!journalists" class="paid-body input-width">
           <label for="pub">Publication Type</label>
           <input
             class="input-text"
@@ -167,12 +167,8 @@
         </div>
 
         <div class="paid-footer">
-          <div class="row">
-            <button
-              :disabled="loading"
-              @click="toggleJournalistModal"
-              class="secondary-button"
-            >
+          <div style="margin-right: 0.5rem" class="row">
+            <button :disabled="loading" @click="toggleJournalistModal" class="secondary-button">
               {{ !journalists ? 'Cancel' : 'Close' }}
             </button>
             <button
@@ -183,19 +179,189 @@
               @click="getJournalists"
               class="primary-button no-transitions"
             >
-              <img
+              <!-- <img
                 v-if="loading"
                 class="rotate"
                 height="12px"
                 src="@/assets/images/loading.svg"
                 alt=""
-              />
+              /> -->
               {{ journalText }}
+              <div style="margin-left: 4px" v-if="loading" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
             </button>
 
             <button v-else @click="copyJournalText" class="primary-button no-transitions">
               {{ copyTip }}
             </button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+
+    <Modal v-if="feedbackModalOpen" class="process-modal">
+      <div style="min-height: 275px" class="modal-container">
+        <div class="paid-header">
+          <div>
+            <h3 class="regen-header-title">
+              {{
+                !feedback
+                  ? 'Optimize Content'
+                  : regeneratedFeedback && feedback
+                  ? 'Optimized Content'
+                  : 'Optimize Content'
+              }}
+            </h3>
+            <p class="regen-header-subtitle">
+              {{
+                !feedback
+                  ? 'Get content feedback by providing additional details'
+                  : regeneratedFeedback && feedback
+                  ? 'Below is the revised version'
+                  : 'Get content feedback by providing additional detail'
+              }}
+            </p>
+          </div>
+          <div v-if="!loadingFeedback" class="pointer" @click="toggleFeedbackModal">
+            <small>X</small>
+          </div>
+          <div v-else><small>X</small></div>
+        </div>
+        <div
+          :class="loadingFeedback ? 'opaque' : ''"
+          v-if="!feedback"
+          class="paid-body input-width"
+        >
+          <label for="pt">Post Type</label>
+          <input
+            class="input-text"
+            placeholder="(e.g., blog post, LinkedIn post, Tweet, Instagram, email, etc.)"
+            type="text"
+            v-model="feedbackType"
+            :disabled="loadingFeedback"
+            id="pt"
+          />
+
+          <label for="aud">Audience</label>
+          <input
+            class="input-text"
+            placeholder="(e.g., age range, profession, interests, etc.)"
+            type="text"
+            v-model="audience"
+            :disabled="loadingFeedback"
+            id="aud"
+          />
+
+          <label for="po">Post Objective</label>
+          <input
+            class="input-text"
+            placeholder="(e.g., to inform, to persuade, to entertain, etc.)"
+            type="text"
+            v-model="objective"
+            :disabled="loadingFeedback"
+            id="po"
+          />
+
+          <label for="sf">Specific feedback</label>
+          <input
+            class="input-text"
+            placeholder="(e.g., headline effectiveness, clarity, engagement tactics, etc.)"
+            type="text"
+            v-model="specificFeedback"
+            :disabled="loadingFeedback"
+            id="sf"
+          />
+        </div>
+
+        <div v-else class="paid-body">
+          <pre v-html="feedback" class="pre-text" style="font-size: 14px"></pre>
+        </div>
+
+        <div class="paid-footer">
+          <div class="row">
+            <button
+              :disabled="loadingFeedback"
+              @click="toggleFeedbackModal"
+              class="secondary-button"
+            >
+              {{ !feedback ? 'Cancel' : 'Close' }}
+            </button>
+            <button
+              v-if="!feedback"
+              @mouseenter="changeFeedbackText"
+              @mouseleave="defaultFeedbackText"
+              :disabled="loadingFeedback || !isPaid"
+              @click="getFeedback"
+              class="primary-button no-transitions"
+            >
+              <!-- <img
+                v-if="loadingFeedback"
+                class="rotate"
+                height="12px"
+                src="@/assets/images/loading.svg"
+                alt=""
+              /> -->
+              {{ feedbackText }}
+              <div style="margin-left: 4px" v-if="loadingFeedback" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
+            </button>
+
+            <button
+              :disabled="loadingFeedback || !isPaid"
+              v-else-if="feedback && !regeneratedFeedback"
+              @click="handleRegenerateFeedback"
+              class="primary-button no-transitions"
+            >
+              <!-- <img
+                v-if="loadingFeedback"
+                class="rotate"
+                height="12px"
+                src="@/assets/images/loading.svg"
+                alt=""
+              /> -->
+              Apply Feedback
+              <div style="margin-left: 4px" v-if="loadingFeedback" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
+            </button>
+
+            <button v-else @click="copyFeedbackText" class="primary-button no-transitions">
+              {{ copyTip }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+
+    <Modal v-if="deleteModalOpen" class="process-modal">
+      <div style="width: 450px" class="regen-container">
+        <div class="paid-header">
+          <div>
+            <h4 class="regen-header-title"></h4>
+            <p class="regen-header-subtitle"></p>
+          </div>
+          <div class="pointer" @click="toggleDeleteModal"><small>X</small></div>
+        </div>
+        <div class="paid-body">
+          <div>
+            <div class="paid-center">
+              <h3 class="paid-title">Are you sure?</h3>
+              <h5 class="regen-body-title">This process will be permanently removed.</h5>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top: 32px" class="paid-footer">
+          <div class="row">
+            <div class="secondary-button" @click="toggleDeleteModal">Cancel</div>
+            <div class="reset-button" @click="deleteProcess">Delete</div>
           </div>
         </div>
       </div>
@@ -227,9 +393,9 @@
             </div>
 
             <div v-if="showingDropdown" class="dropdown">
-                <div class="bottom-margin-small">
-                     <small class="gray-text">Select Process</small>
-                </div>
+              <div class="bottom-margin-small">
+                <small class="gray-text">Select Process</small>
+              </div>
 
               <div
                 @click="startProcess(process)"
@@ -241,10 +407,13 @@
                   {{ process.name }}
                 </p>
               </div>
+
               <p v-if="!processes.length" class="dropdown-item">Saved processes will appear here</p>
 
               <div class="dropdown-footer">
-                <button @click="toggleModal" class="primary-button">Create new process</button>
+                <button :disabled="!isPaid" @click="toggleModal" class="primary-button">
+                  Create new process
+                </button>
               </div>
             </div>
           </div>
@@ -255,29 +424,107 @@
     <div class="center-left-gray">
       <div class="full-width center">
         <div class="header">
-          <p class="med-text top-margin">
-            {{ currentProcess ? currentProcess.name : 'AI generated content will appear below' }}
-          </p>
+          <div class="space-between bottom-margin">
+            <p class="med-text top-margin">
+              {{ currentProcess ? currentProcess.name : 'AI generated content will appear below' }}
+            </p>
+
+            <p v-if="generatedContent" class="med-text top-margin">
+              {{ generatedContent.split(' ').length }} words
+            </p>
+          </div>
 
           <div class="space-between bottom-margin">
-            <div >
-                <div v-if="processLoading">
-                  <div class="med-text gray-span row">
-                    {{`Step ${currentStep}/3:`}}
-                    <span>{{stepName}}</span>
-                    <div class="loading">
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                    </div>
+            <div>
+              <div v-if="processLoading">
+                <div class="med-text gray-span row">
+                  {{ `Step ${currentStep}/3:` }}
+                  <span>{{ stepName }}</span>
+                  <div class="loading">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
                   </div>
                 </div>
+              </div>
+
+              <div v-else-if="contentLoading">
+                <div class="med-text row">
+                  <p style="margin-right: 0.5rem">Regenerating</p>
+                  <div class="loading">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                style="margin-top: -8px"
+                v-else-if="!contentLoading && !processLoading && generatedContent"
+              >
+                <p class="med-text gray-text">AI-generated content</p>
+              </div>
             </div>
 
-          
-
             <div style="display: flex; padding: 0 0 16px 0">
- 
+              <div style="margin-right: 0.5rem">
+                <div
+                  @click="toggleDeleteModal"
+                  class="wrapper circle-border white-bg"
+                  v-if="generatedContent"
+                >
+                  <img
+                    style="cursor: pointer"
+                    class="img-highlight"
+                    src="@/assets/images/trash.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  <div style="margin-left: -14px" class="tooltip">Delete</div>
+                </div>
+                <div v-else class="wrapper circle-border white-bg" style="opacity: 0.7">
+                  <img
+                    style="cursor: not-allowed"
+                    class="img-highlight"
+                    src="@/assets/images/trash.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  <div style="margin-left: -14px" class="tooltip">Run process first</div>
+                </div>
+              </div>
+
+              <div style="margin-right: 0.5rem">
+                <div
+                  @click="toggleFeedbackModal"
+                  class="wrapper circle-border white-bg"
+                  :class="{ 'bluee-bg': feedback }"
+                  v-if="generatedContent"
+                >
+                  <img
+                    style="cursor: pointer"
+                    class="right-mar img-highlight"
+                    src="@/assets/images/thumb.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  <div style="margin-left: -14px" class="tooltip">
+                    {{ !feedback ? 'Optimize Content' : 'View Feedback' }}
+                  </div>
+                </div>
+                <div v-else class="wrapper circle-border white-bg" style="opacity: 0.7">
+                  <img
+                    style="cursor: not-allowed"
+                    class="right-mar img-highlight"
+                    src="@/assets/images/thumb.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  <div style="margin-left: -14px" class="tooltip">Run process first</div>
+                </div>
+              </div>
+
               <div style="margin-right: 0.5rem">
                 <div
                   @click="toggleJournalistModal"
@@ -308,9 +555,12 @@
                 </div>
               </div>
 
-
               <div>
-                <div @click="copyText" class="wrapper circle-border white-bg" v-if="generatedContent">
+                <div
+                  @click="copyText"
+                  class="wrapper circle-border white-bg"
+                  v-if="generatedContent"
+                >
                   <img
                     style="cursor: pointer"
                     class="img-highlight"
@@ -332,23 +582,78 @@
                 </div>
               </div>
             </div>
-
-            </div>
           </div>
-        </div>
-      </div>
- 
-    <div class="center-left white-bg">
-      <div class="full-width center">
-        <div class="header">
-          <p class="med-text">
-              <pre class="pre-text" v-html="generatedContent">
-              </pre>
-          </p>
         </div>
       </div>
     </div>
 
+    <div class="center-left white-bg">
+      <div class="full-width center">
+        <div class="header">
+          <pre class="pre-text top-margin" v-html="generatedContent"></pre>
+
+          <div
+            style="margin: 1rem 0; padding-top: 0; padding-bottom: 0; border-radius: 28px"
+            id="instructions"
+            class="input-container-chat"
+            v-if="generatedContent"
+          >
+            <div class="row">
+              <div class="main-text-img">
+                <img
+                  style="margin-top: 4px"
+                  src="@/assets/images/comment.svg"
+                  height="18px"
+                  alt=""
+                />
+              </div>
+
+              <textarea
+                style="margin: 0; padding: 16px 24px 12px 24px"
+                class="area-input text-area-input"
+                id="instructions-text-area"
+                placeholder="Make edits..."
+                v-model="instructions"
+                :rows="1"
+                v-autoresize
+              />
+
+              <div @click="instructions = ''" class="cancel-container">
+                <img src="@/assets/images/add.svg" class="lip-img filtered-blue" />
+              </div>
+              <button
+                @click="regenerateContent"
+                :disabled="!instructions"
+                style="
+                  margin: 0;
+                  margin-left: 8px;
+                  border: none !important;
+                  background-color: transparent;
+                "
+              >
+                <img
+                  v-if="!instructions"
+                  style="margin: 0"
+                  src="@/assets/images/paper-plane-top.svg"
+                  height="17px"
+                  alt=""
+                  class="faded"
+                />
+
+                <img
+                  v-else
+                  style="margin: 0"
+                  src="@/assets/images/paper-plane-full.svg"
+                  height="13px"
+                  alt=""
+                  class="grow filtered-blue"
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 <script>
@@ -363,9 +668,11 @@ export default {
   },
   data() {
     return {
+      instructions: '',
       showingDropdown: false,
       modalOpen: false,
       journalistModalOpen: false,
+      feedbackModalOpen: false,
       loading: false,
       processLoading: false,
       processes: null,
@@ -378,15 +685,24 @@ export default {
       currentProcess: null,
       dateStart: null,
       dateEnd: null,
-      copyTip: 'copy',
+      copyTip: 'Copy',
       generatedContent: '',
       currentStep: 0,
-      stepName: 'Scanning the news',
+      stepName: 'Scanning news',
       journalists: null,
       location: null,
       beat: null,
       pubType: null,
       journalText: 'Search',
+      feedback: null,
+      regeneratedFeedback: false,
+      loadingFeedback: false,
+      feedbackType: null,
+      specificFeedback: null,
+      feedback: null,
+      feedbackText: 'Submit',
+      deleteModalOpen: false,
+      contentLoading: false,
     }
   },
   async created() {
@@ -412,6 +728,15 @@ export default {
     toggleJournalistModal() {
       this.journalistModalOpen = !this.journalistModalOpen
     },
+    toggleFeedbackModal() {
+      this.feedbackModalOpen = !this.feedbackModalOpen
+    },
+    toggleDeleteModal() {
+      this.deleteModalOpen = !this.deleteModalOpen
+    },
+    getSearches() {
+      this.$store.dispatch('getSearches')
+    },
     async getProcesses() {
       try {
         Comms.api.getProcesses().then((response) => {
@@ -419,6 +744,38 @@ export default {
         })
       } catch (e) {
         console.log(e)
+      }
+    },
+    async deleteProcess() {
+      try {
+        Comms.api
+          .deleteProcess({
+            id: this.currentProcess.id,
+          })
+          .then(() => {
+            this.$toast('Process removed', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+          })
+      } catch (e) {
+        console.log(e)
+
+        this.$toast(`${e}`, {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.generatedContent = ''
+        this.currentProcess = null
+        this.deleteModalOpen = false
+        this.getProcesses()
       }
     },
     async createProcess() {
@@ -456,6 +813,7 @@ export default {
       } finally {
         this.loading = false
         this.clearForm()
+        this.getSearches()
         this.getProcesses()
       }
     },
@@ -496,17 +854,32 @@ export default {
       }
     },
     async startProcess(process) {
-      this.generatedContent = ''
-      this.currentProcess = process
-      this.processLoading = true
-      this.hideDropdown()
-      this.currentStep = 1
-      let boolean = this.searches.filter((search) => search.id === this.currentProcess.search_id)[0]
-        .search_boolean
+      if (this.isPaid) {
+        this.generatedContent = ''
+        this.currentProcess = process
+        this.processLoading = true
+        this.hideDropdown()
+        this.currentStep = 1
+        let boolean = this.searches.filter(
+          (search) => search.id === this.currentProcess.search_id,
+        )[0].search_boolean
 
-      setTimeout(() => {
-        this.getClips(boolean)
-      }, 1000)
+        console.log('BOOLEAN : --- >', boolean)
+        console.log('SEARCHES : --- >', this.searches)
+        console.log('CP : --- >', this.currentProcess)
+
+        setTimeout(() => {
+          this.getClips(boolean)
+        }, 1000)
+      } else {
+        this.$toast('Upgrade to pro!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      }
     },
     async getClips(boolean) {
       try {
@@ -527,7 +900,7 @@ export default {
     },
     async getSummary(clips) {
       this.currentStep = 2
-      this.stepName = 'Summarizing'
+      this.stepName = 'Summarizing coverage'
       const allClips = this.getArticleDescriptions(clips)
       const search = this.searches.filter(
         (search) => search.id === this.currentProcess.search_id,
@@ -581,7 +954,19 @@ export default {
         console.error('Failed to copy text: ', err)
       }
     },
+    async copyFeedbackText() {
+      try {
+        await navigator.clipboard.writeText(this.feedback)
+        this.copyTip = 'Copied!'
+        setTimeout(() => {
+          this.copyTip = 'Copy'
+        }, 2000)
+      } catch (err) {
+        console.error('Failed to copy text: ', err)
+      }
+    },
     async getJournalists() {
+      this.journalText = 'Searching'
       this.loading = true
       try {
         await Comms.api
@@ -598,6 +983,7 @@ export default {
         console.log(e)
       } finally {
         this.loading = false
+        this.journalText = 'Search'
       }
     },
     changeJournalText() {
@@ -612,6 +998,80 @@ export default {
         this.journalText = 'Search'
       } else {
         return
+      }
+    },
+    changeFeedbackText() {
+      if (!this.isPaid) {
+        this.feedbackText = 'Upgrade to Pro!'
+      } else {
+        return
+      }
+    },
+    defaultFeedbackText() {
+      if (!this.isPaid) {
+        this.feedbackText = 'Submit'
+      } else {
+        return
+      }
+    },
+    async handleRegenerateFeedback() {
+      this.loadingFeedback = true
+      try {
+        await Comms.api
+          .regenerateWithFeedback({
+            content: this.generatedContent,
+            feedback: this.feedback,
+          })
+          .then((response) => {
+            this.regeneratedFeedback = true
+            this.feedback = response.feedback
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.loadingFeedback = false
+      }
+    },
+    async getFeedback() {
+      this.loadingFeedback = true
+      try {
+        await Comms.api
+          .getFeedback({
+            type: this.feedbackType,
+            audience: this.audience,
+            objective: this.objective,
+            feedback: this.specificFeedback,
+            content: this.generatedContent,
+          })
+          .then((response) => {
+            this.feedback = response.feedback
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.loadingFeedback = false
+      }
+    },
+    async regenerateContent() {
+      this.contentLoading = true
+      const tempContent = this.generatedContent
+      this.generatedContent = ''
+
+      try {
+        await Comms.api
+          .regeneratePitch({
+            pitch: tempContent,
+            instructions: this.instructions,
+          })
+          .then((response) => {
+            this.generatedContent = response.pitch
+          })
+      } catch (e) {
+        console.log('ERROR CREATING content::', e)
+      } finally {
+        this.instructions = ''
+        this.contentLoading = false
+        // this.scrollToTop()
       }
     },
     clearForm() {
@@ -693,6 +1153,91 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+button:disabled {
+  background-color: $off-white !important;
+}
+
+.grow:hover {
+  transform: scale(1.2);
+  box-shadow: 2px 4px 32px rgba($color: $black, $alpha: 0.3);
+  opacity: 0.7;
+}
+.grow {
+  transition: all 0.2s;
+}
+
+.faded {
+  filter: invert(55%);
+}
+
+.cancel-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $offer-white;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 6px;
+  cursor: pointer;
+  // box-shadow: 1px 1px 3px 1px rgba(0, 0, 0, 0.1);
+  margin: 12px 0;
+
+  img {
+    transform: rotate(45deg);
+  }
+  transition: all 0.2s;
+}
+
+.lip-img {
+  height: 14px;
+  padding: 0;
+  margin: 0;
+  z-index: 5500;
+}
+
+.filtered-blue {
+  filter: invert(20%) sepia(28%) saturate(811%) hue-rotate(162deg) brightness(94%) contrast(81%);
+}
+
+.main-text-img {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  filter: invert(40%);
+  margin: 0;
+  padding-right: 1rem;
+}
+
+.input-container-chat {
+  flex-wrap: nowrap;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  width: 100%;
+  background-color: $offer-white;
+  color: $base-gray;
+  position: relative;
+  @media only screen and (max-width: 600px) {
+    width: 100%;
+  }
+}
+.reset-button {
+  @include white-button-danger();
+  padding: 8px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  margin-left: 1rem;
+}
+
+.cancel-button {
+  @include gray-text-button();
+  &:hover {
+    scale: 1;
+    opacity: 0.7;
+    box-shadow: none;
+  }
+}
+
 .pre-text {
   color: $base-gray;
   font-family: $thin-font-family;
@@ -746,20 +1291,20 @@ export default {
   }
 }
 
-.modal-container::-webkit-scrollbar {
-  width: 6px;
-  height: 0px;
-  display: none;
-}
-.modal-container::-webkit-scrollbar-thumb {
-  background-color: $soft-gray;
-  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
-  border-radius: 6px;
-}
+// .modal-container::-webkit-scrollbar {
+//   width: 6px;
+//   height: 0px;
+//   display: none;
+// }
+// .modal-container::-webkit-scrollbar-thumb {
+//   background-color: $soft-gray;
+//   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+//   border-radius: 6px;
+// }
 
-.modal-container:hover::-webkit-scrollbar {
-  display: block;
-}
+// .modal-container:hover::-webkit-scrollbar {
+//   display: block;
+// }
 
 .paid-header {
   display: flex;
@@ -1217,6 +1762,13 @@ export default {
   align-items: center;
   border-radius: 6px;
   padding: 0.75rem 0.5rem 0.5rem 0rem;
+}
+
+.loading-small {
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  padding: 0;
 }
 
 .dot {
