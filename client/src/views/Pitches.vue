@@ -290,23 +290,6 @@
         </div>
 
         <div v-else class="paid-body">
-          <!-- <div style="display: flex; justify-content: flex-end">
-            <div
-              style="width: fit-content"
-              @click="copyFeedbackText"
-              class="wrapper circle-border white-bg"
-            >
-              <img
-                style="cursor: pointer"
-                class="img-highlight"
-                src="@/assets/images/clipboard.svg"
-                height="14px"
-                alt=""
-              />
-              <div style="margin-left: -22px" class="tooltip">{{ copyTip }}</div>
-            </div>
-          </div> -->
-
           <pre v-html="feedback" class="pre-text" style="font-size: 14px"></pre>
         </div>
 
