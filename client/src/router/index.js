@@ -31,6 +31,12 @@ export default new Router({
       component: () => import('@/views/Pitches'),
     },
     {
+      path: '/assist',
+      name: 'Assist',
+      beforeEnter: Auth.requireAuth,
+      component: () => import('@/views/Assist'),
+    },
+    {
       path: '/transcribe',
       name: 'PRTranscripts',
       beforeEnter: Auth.requireAuth,

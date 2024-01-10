@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Search, Pitch, NewsSource, Article, WritingStyle, EmailAlert
+from .models import Search, Pitch, NewsSource, Article, WritingStyle, EmailAlert, Process
 from django.contrib.postgres.search import SearchVector
 
 
@@ -74,7 +74,7 @@ class EmailAlertSerializer(serializers.ModelSerializer):
         fields = ("id", "user", "title", "search", "run_at", "meta_data")
 
 
-# class DetailSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = EmailAlert
-#         fields = ("title", "text", "user")
+class ProcessSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Process
+        fields = ("id", "user", "name", "search_id", "type", "details", "style", "generated_content")
