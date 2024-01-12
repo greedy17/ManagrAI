@@ -411,8 +411,14 @@
               <p v-if="!processes.length" class="dropdown-item">Saved processes will appear here</p>
 
               <div class="dropdown-footer">
-                <button :disabled="!isPaid" @click="toggleModal" class="primary-button">
-                  Create new process
+                <button
+                  @mouseenter="changeProcessText"
+                  @mouseleave="defaultProcessText"
+                  :disabled="!isPaid"
+                  @click="toggleModal"
+                  class="primary-button"
+                >
+                  {{ processButtonText }}
                 </button>
               </div>
             </div>
@@ -703,6 +709,7 @@ export default {
       feedbackText: 'Submit',
       deleteModalOpen: false,
       contentLoading: false,
+      processButtonText: 'Create new process',
     }
   },
   async created() {
@@ -1010,6 +1017,20 @@ export default {
     defaultFeedbackText() {
       if (!this.isPaid) {
         this.feedbackText = 'Submit'
+      } else {
+        return
+      }
+    },
+    changeProcessText() {
+      if (!this.isPaid) {
+        this.processButtonText = 'Upgrade to Pro!'
+      } else {
+        return
+      }
+    },
+    defaultProcessText() {
+      if (!this.isPaid) {
+        this.processButtonText = 'Create new process'
       } else {
         return
       }

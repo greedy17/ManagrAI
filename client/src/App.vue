@@ -28,6 +28,17 @@
     <div :class="{ 'page-content': !hideNavBar }">
       <router-view :key="$route.fullPath"></router-view>
     </div>
+
+    <div v-if="showingHelp" class="tooltip-bottom-left">
+      <div class="column">
+        <p>Need help ?</p>
+        <small>Email us at support@mymanagr.com</small>
+      </div>
+    </div>
+
+    <div @mouseenter="showHelp" @mouseleave="hideHelp" class="icon-bottom-left">
+      <img src="@/assets/images/help.png" height="16px" alt="" />
+    </div>
   </div>
 </template>
 
@@ -51,6 +62,7 @@ export default {
       menuOpen: false,
       showExpireModal: false,
       checkInterval: null,
+      showingHelp: false,
     }
   },
   watch: {
@@ -110,6 +122,12 @@ export default {
   },
 
   methods: {
+    showHelp() {
+      this.showingHelp = true
+    },
+    hideHelp() {
+      this.showingHelp = false
+    },
     ...mapActions(['refreshCurrentUser']),
     openModal() {
       this.modalOpen = true
@@ -124,14 +142,17 @@ export default {
       this.menuOpen = false
     },
     checkEnvironment() {
-      const host = window.location.host;
+      const host = window.location.host
       let key
       if (host.includes('localhost') || host.includes('127.0.0.1')) {
-        key = "pk_test_51OKmfeK7HCniMBUgPlsZADW5oDgfeqmrfxGPyMi8PMST4Vwtpx9UBArus6sL4wHXAYz2nohTtz1xg0LfOsRLDjZT00TyZn8QQe"
+        key =
+          'pk_test_51OKmfeK7HCniMBUgPlsZADW5oDgfeqmrfxGPyMi8PMST4Vwtpx9UBArus6sL4wHXAYz2nohTtz1xg0LfOsRLDjZT00TyZn8QQe'
       } else if (host.includes('staging')) {
-        key = "pk_test_51OKmcnJHm94PSCW8ruuXHTjqGMAOWitNe2IbTaddNXnrutuc8qtszxyuTjcaDNw2niLCDo8AiU1ErgzEKAlOd0ep00X9rd6FNW"
+        key =
+          'pk_test_51OKmcnJHm94PSCW8ruuXHTjqGMAOWitNe2IbTaddNXnrutuc8qtszxyuTjcaDNw2niLCDo8AiU1ErgzEKAlOd0ep00X9rd6FNW'
       } else {
-        key = "pk_live_51OF1jYHvb6ZAgKwka9s7I7e3dBWwE6ettoQvdUsqLOyFKCeJARsy9J06bLSWfOkEikTihykhUNNTJ4wvGGUetH4z00TlvK5vKy"
+        key =
+          'pk_live_51OF1jYHvb6ZAgKwka9s7I7e3dBWwE6ettoQvdUsqLOyFKCeJARsy9J06bLSWfOkEikTihykhUNNTJ4wvGGUetH4z00TlvK5vKy'
       }
       this.$store.dispatch('updateStripeKey', key)
     },
@@ -211,6 +232,96 @@ export default {
 @import '@/styles/cards';
 @import '@/styles/mixins/utils';
 @import '@/styles/mixins/inputs';
+
+.column {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.tooltip-bottom-left {
+  position: absolute;
+  right: 80px;
+  bottom: 40px;
+  padding: 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-family: $thin-font-family;
+  font-size: 14px;
+  border-radius: 4px;
+
+  -webkit-transform: translateY(10px);
+  -moz-transform: translateY(10px);
+  -ms-transform: translateY(10px);
+  -o-transform: translateY(10px);
+  transform: translateY(10px);
+  -webkit-transition: all 0.25s ease-out;
+  -moz-transition: all 0.25s ease-out;
+  -ms-transition: all 0.25s ease-out;
+  -o-transition: all 0.25s ease-out;
+  transition: all 0.25s ease-out;
+  -webkit-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -moz-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -ms-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -o-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+
+  p {
+    margin-top: 0;
+    font-weight: bold;
+  }
+
+  small {
+    font-size: 13px;
+  }
+}
+
+// .tooltip-bottom-left:before {
+//   bottom: -20px;
+//   content: ' ';
+//   display: block;
+//   height: 20px;
+//   left: 0;
+//   position: absolute;
+//   width: 100%;
+// }
+
+// .tooltip-bottom-left:after {
+//   border-left: solid transparent 10px;
+//   border-right: solid transparent 10px;
+//   border-top: solid red 10px;
+
+//   content: ' ';
+//   height: 0;
+//   top: 60%;
+//   left: 100%;
+//   position: absolute;
+//   width: 0;
+// }
+
+.icon-bottom-left {
+  position: absolute;
+  right: 36px;
+  bottom: 32px;
+  padding: 6px 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 100%;
+  transition: all 0.25s;
+  cursor: pointer;
+
+  img {
+    filter: invert(40%);
+  }
+
+  &:hover {
+    // box-shadow: 1px 3px 5px rgb(136, 134, 134);
+    // transform: scale(1.05);
+    background-color: $dark-black-blue;
+    img {
+      filter: invert(100%);
+    }
+  }
+}
+
 .Vue-Toastification__toast--success.custom {
   background-color: $dark-green;
 }
