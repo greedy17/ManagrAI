@@ -112,7 +112,7 @@ class PRSearchViewSet(
         date_from = request.GET.get("date_from", False)
         while True:
             try:
-                if not boolean:        
+                if not boolean:
                     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                     prompt = comms_consts.OPEN_AI_QUERY_STRING(search)
                     body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
@@ -700,6 +700,9 @@ class PRSearchViewSet(
     def share_email_summary(self, request, *args, **kwargs):
         summary = request.data.get("summary", "N/A")
         clips = request.data.get("clips", [])
+        logger.info(request.user.email)
+        logger.info(summary)
+        logger.info(clips)
         emit_share_client_summary(summary, clips, request.user.email)
         return Response(status=status.HTTP_200_OK)
 
@@ -1054,9 +1057,7 @@ class PitchViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_FIND_JOURNALISTS(
-                    type, beat, location, content
-                )
+                prompt = comms_consts.OPEN_AI_FIND_JOURNALISTS(type, beat, location, content)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
@@ -1071,9 +1072,8 @@ class PitchViewSet(
                     )
                 res = open_ai_exceptions._handle_response(r)
 
-
                 journalists = res.get("choices")[0].get("message").get("content")
-                
+
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -1146,7 +1146,7 @@ class PitchViewSet(
                 res = open_ai_exceptions._handle_response(r)
 
                 feedback = res.get("choices")[0].get("message").get("content")
-                
+
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -1180,7 +1180,6 @@ class PitchViewSet(
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
         return Response({"feedback": feedback})
 
-
     @action(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
@@ -1199,9 +1198,7 @@ class PitchViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.REGENERATE_CONTENT_WITH_FEEDBACK(
-                    content, feedback
-                )
+                prompt = comms_consts.REGENERATE_CONTENT_WITH_FEEDBACK(content, feedback)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
@@ -1217,7 +1214,7 @@ class PitchViewSet(
                 res = open_ai_exceptions._handle_response(r)
 
                 feedback = res.get("choices")[0].get("message").get("content")
-                
+
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -1249,8 +1246,8 @@ class PitchViewSet(
                 break
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
-        return Response({"feedback": feedback})        
-   
+        return Response({"feedback": feedback})
+
 
 class EmailAlertViewSet(
     viewsets.GenericViewSet,
@@ -1359,17 +1356,17 @@ class ProcessViewSet(
         process_id = request.data.get("process_id")
         style = request.data.get("style")
 
-#         style = """
-#         The author's style is formal yet personal, employing a tone of gratitude and excitement. They use first-person narrative, making the text relatable and engaging. The structure is chronological, starting with the present and moving to past achievements, ending with a hopeful look to the future. The author uses sophisticated vocabulary and complex sentence structures, demonstrating a high level of education and professionalism.
-# The author establishes credibility by mentioning specific names, roles, and institutions, and by expressing gratitude towards mentors and colleagues. They avoid promotional language, focusing instead on personal growth and learning opportunities.
-# Guidelines for replicating this style:
-# 1. Use a formal yet personal tone, employing first-person narrative.
-# 2. Structure the text chronologically, linking past, present, and future.
-# 3. Use sophisticated vocabulary and complex sentence structures.
-# 4. Establish credibility by mentioning specific names, roles, and institutions.
-# 5. Express gratitude and excitement about learning and growth opportunities.
-# 6. Avoid promotional language, focusing on informative and trustworthy discourse.
-#         """
+        #         style = """
+        #         The author's style is formal yet personal, employing a tone of gratitude and excitement. They use first-person narrative, making the text relatable and engaging. The structure is chronological, starting with the present and moving to past achievements, ending with a hopeful look to the future. The author uses sophisticated vocabulary and complex sentence structures, demonstrating a high level of education and professionalism.
+        # The author establishes credibility by mentioning specific names, roles, and institutions, and by expressing gratitude towards mentors and colleagues. They avoid promotional language, focusing instead on personal growth and learning opportunities.
+        # Guidelines for replicating this style:
+        # 1. Use a formal yet personal tone, employing first-person narrative.
+        # 2. Structure the text chronologically, linking past, present, and future.
+        # 3. Use sophisticated vocabulary and complex sentence structures.
+        # 4. Establish credibility by mentioning specific names, roles, and institutions.
+        # 5. Express gratitude and excitement about learning and growth opportunities.
+        # 6. Avoid promotional language, focusing on informative and trustworthy discourse.
+        #         """
 
         has_error = False
         attempts = 1
@@ -1379,9 +1376,7 @@ class ProcessViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.RUN_PROCESS(
-                   datetime.now(), type, summary, details, style
-                )
+                prompt = comms_consts.RUN_PROCESS(datetime.now(), type, summary, details, style)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,

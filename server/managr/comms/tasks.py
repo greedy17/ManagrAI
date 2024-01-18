@@ -48,6 +48,7 @@ def emit_send_news_summary(news_alert_id, schedule):
 
 
 def emit_share_client_summary(summary, clips, user_email):
+    logger.info("emit function")
     return _share_client_summary(summary, clips, user_email)
 
 
@@ -415,6 +416,7 @@ def _send_news_summary(news_alert_id):
 
 @background()
 def _share_client_summary(summary, clips, user_email):
+    print("here")
     for clip in clips:
         if clip["author"] is None:
             clip["author"] = "N/A"
@@ -424,7 +426,7 @@ def _share_client_summary(summary, clips, user_email):
         "clips": clips,
         "website_url": f"{settings.MANAGR_URL}/login",
     }
-    print(content)
+    logger.info(content)
     try:
         send_html_email(
             f"Managr Digest",
@@ -434,5 +436,5 @@ def _share_client_summary(summary, clips, user_email):
             context=content,
         )
     except Exception as e:
-        print(e)
+        logger.exception(e)
     return
