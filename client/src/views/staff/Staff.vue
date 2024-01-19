@@ -12,20 +12,25 @@
     >
       <form v-if="true /*hasSlack*/" class="invite-form confirm-modal form-margin-small">
         <div class="header">
-          <div class="flex-row" style="justify-content: space-between;">
-            <div class="flex-row" style="margin-top: -0rem;">
-              <img src="@/assets/images/logo.png" class="logo" alt="" style="margin-right: 0.5rem;" />
+          <div class="flex-row" style="justify-content: space-between">
+            <div class="flex-row" style="margin-top: -0rem">
+              <img
+                src="@/assets/images/logo.png"
+                class="logo"
+                alt=""
+                style="margin-right: 0.5rem"
+              />
               <h3 class="invite-form__title">Are you sure?</h3>
             </div>
             <img
               src="@/assets/images/close.svg"
-              style="height: 1.25rem; margin-top: -0rem; cursor: pointer; margin-right: 1rem;"
+              style="height: 1.25rem; margin-top: -0rem; cursor: pointer; margin-right: 1rem"
               @click="handleConfirmCancel"
               alt=""
             />
           </div>
           <div class="flex-row">
-            <div class="invite-form__subtitle" style="margin-top: 1.5rem;">
+            <div class="invite-form__subtitle" style="margin-top: 1.5rem">
               By clicking Confirm, you will be transferring the Admin role to
               {{ this.newAdmin ? this.newAdmin.email : 'the selected user' }}.
             </div>
@@ -38,7 +43,7 @@
               <PulseLoadingSpinnerButton
                 @click="changeAdminSubmit"
                 class="invite-button modal-button"
-                style="width: 5rem; margin-right: 5%; height: 2rem;"
+                style="width: 5rem; margin-right: 5%; height: 2rem"
                 text="Confirm"
                 :loading="pulseLoading"
                 >Confirm</PulseLoadingSpinnerButton
@@ -48,12 +53,12 @@
         </div>
       </form>
     </Modal>
-    <Modal v-if="deleteOpen" style="margin-top: 10rem;">
+    <Modal v-if="deleteOpen" style="margin-top: 10rem">
       <div class="delete_modal">
         <div class="delete_modal__header">
           <img style="height: 28px" src="@/assets/images/logo.png" />
           <h4>Deactivate Org</h4>
-          <div style="width: 28px;"></div>
+          <div style="width: 28px"></div>
           <!-- <img
             @click="deleteOpen = !deleteOpen"
             src="@/assets/images/close.svg"
@@ -192,7 +197,7 @@
         <div v-if="modalName === 'slackFormInstance'">
           <div class="modal-container__body">
             <div class="flex-row-spread sticky border-bottom">
-              <div class="flex-row" style="justify-content: space-between; width: 100%;">
+              <div class="flex-row" style="justify-content: space-between; width: 100%">
                 <div class="flex-row">
                   <img src="@/assets/images/logo.png" class="logo" alt="" />
                   <h4>
@@ -203,7 +208,7 @@
                 </div>
                 <img
                   src="@/assets/images/close.svg"
-                  style="height: 1.25rem; margin-top: 0rem; cursor: pointer; margin-right: 1rem;"
+                  style="height: 1.25rem; margin-top: 0rem; cursor: pointer; margin-right: 1rem"
                   @click="resetEdit"
                   alt=""
                 />
@@ -238,14 +243,27 @@
                 <div style="margin-bottom: 0.5rem">
                   <span class="">Saved Data:</span>
                   <!-- {{ modalInfo.saved_data ? modalInfo.saved_data : 'None' }} -->
-                  <div v-for="(value,propertyName) in modalInfo.saved_data" :key="value" style="margin-left: 1rem;">
-                    {{propertyName}}: <span 
-                    :class="
-                    modalInfo.previous_data[propertyName] === undefined
-                    ||
-                    (modalInfo.previous_data[propertyName] !== value && (Number(modalInfo.previous_data[propertyName]) && (modalInfo.previous_data[propertyName].toString().split('.')[1] === undefined || !checkDecimals(modalInfo.previous_data[propertyName])) ? checkDecimals(value): true))
-                    ? 'yellow-background' : ''"
-                    >{{ `${value}` }}</span>
+                  <div
+                    v-for="(value, propertyName) in modalInfo.saved_data"
+                    :key="value"
+                    style="margin-left: 1rem"
+                  >
+                    {{ propertyName }}:
+                    <span
+                      :class="
+                        modalInfo.previous_data[propertyName] === undefined ||
+                        (modalInfo.previous_data[propertyName] !== value &&
+                          (Number(modalInfo.previous_data[propertyName]) &&
+                          (modalInfo.previous_data[propertyName].toString().split('.')[1] ===
+                            undefined ||
+                            !checkDecimals(modalInfo.previous_data[propertyName]))
+                            ? checkDecimals(value)
+                            : true))
+                          ? 'yellow-background'
+                          : ''
+                      "
+                      >{{ `${value}` }}</span
+                    >
                   </div>
                 </div>
                 <div>
@@ -256,9 +274,7 @@
                     style="margin-left: 1rem"
                   >
                     {{ propertyName }}:
-                    <span>{{
-                      `${value}`
-                    }}</span>
+                    <span>{{ `${value}` }}</span>
                     <!-- (
                       modalInfo.saved_data[propertyName] && 
                       modalInfo.saved_data[propertyName] !== value
@@ -417,7 +433,7 @@
         <div v-else-if="modalName === 'alert'">
           <div class="modal-container__body">
             <div class="flex-row-spread sticky border-bottom">
-              <div class="flex-row" style="justify-content: space-between; width: 100%;">
+              <div class="flex-row" style="justify-content: space-between; width: 100%">
                 <div class="flex-row">
                   <img src="@/assets/images/logo.png" class="logo" alt="" />
                   <h4>
@@ -426,7 +442,7 @@
                 </div>
                 <img
                   src="@/assets/images/close.svg"
-                  style="height: 1.25rem; margin-top: 0rem; cursor: pointer; margin-right: 1rem;"
+                  style="height: 1.25rem; margin-top: 0rem; cursor: pointer; margin-right: 1rem"
                   @click="resetEdit"
                   alt=""
                 />
@@ -465,7 +481,9 @@
                     <div style="margin-left: 1rem">
                       <div>ID: {{ config.id }}</div>
                       <div>Recurrence Frequency: {{ config.recurrence_frequency }}</div>
-                      <div v-if="!config.recurrence_days.length">Recurrence Day: {{ weekdays[config.recurrence_day] }}</div>
+                      <div v-if="!config.recurrence_days.length">
+                        Recurrence Day: {{ weekdays[config.recurrence_day] }}
+                      </div>
                       <div v-else>Recurrence Days: {{ getWeekdays(config.recurrence_days) }}</div>
                       <div>Recipients: {{ config.recipients }}</div>
                       <div>Recipient Type: {{ config.recipient_type }}</div>
@@ -512,7 +530,7 @@
                 </div>
                 <img
                   src="@/assets/images/close.svg"
-                  style="height: 1.25rem; margin-top: 0rem; cursor: pointer; margin-right: 1rem;"
+                  style="height: 1.25rem; margin-top: 0rem; cursor: pointer; margin-right: 1rem"
                   @click="resetEdit"
                   alt=""
                 />
@@ -771,7 +789,7 @@
                 </div>
                 <img
                   src="@/assets/images/close.svg"
-                  style="height: 1.25rem; margin-top: 0rem; cursor: pointer; margin-right: 1rem;"
+                  style="height: 1.25rem; margin-top: 0rem; cursor: pointer; margin-right: 1rem"
                   @click="resetEdit"
                   alt=""
                 />
@@ -871,7 +889,12 @@
                     <img src="@/assets/images/hubspot-single-logo.svg" height="18px" alt="" />
                   </span>
                   <span v-else :class="'grayscale'">
-                    <img src="@/assets/images/revoke.svg" style="margin-right: 20px; margin-left: 2px" height="18px" alt="" />
+                    <img
+                      src="@/assets/images/revoke.svg"
+                      style="margin-right: 20px; margin-left: 2px"
+                      height="18px"
+                      alt=""
+                    />
                   </span>
                   <!-- <span :class="member.has_zoom_integration ? '' : 'grayscale'">
                     <img src="@/assets/images/zoom.png" alt="" height="18px" />
@@ -1056,7 +1079,7 @@
             </div>
             <img
               src="@/assets/images/close.svg"
-              style="height: 1.25rem; margin-top: 0rem; cursor: pointer; margin-right: 1rem;"
+              style="height: 1.25rem; margin-top: 0rem; cursor: pointer; margin-right: 1rem"
               @click="handleCancel"
               alt=""
             />
@@ -1103,9 +1126,7 @@
                 <Multiselect
                   placeholder="Team Lead"
                   v-model="teamLead"
-                  :options="
-                    team.filter((u) => u.id !== user.id)
-                  "
+                  :options="team.filter((u) => u.id !== user.id)"
                   openDirection="below"
                   style="width: 33vw"
                   selectLabel="Enter"
@@ -1154,14 +1175,14 @@
     >
       <form v-if="true /*hasSlack*/" class="invite-form" style="margin-top: 7.5rem">
         <div class="header">
-          <div class="flex-row" style="justify-content: space-between; width: 100%;">
+          <div class="flex-row" style="justify-content: space-between; width: 100%">
             <div class="flex-row">
               <img src="@/assets/images/logo.png" class="logo" alt="" />
               <h3 class="invite-form__title">Add Members to Team</h3>
             </div>
             <img
               src="@/assets/images/close.svg"
-              style="height: 1.25rem; margin-top: 0rem; cursor: pointer; margin-right: 1rem;"
+              style="height: 1.25rem; margin-top: 0rem; cursor: pointer; margin-right: 1rem"
               @click="handleCancel"
               alt=""
             />
@@ -1270,7 +1291,7 @@
                   v-model="selectedTeamLead"
                   :options="selectedTeamUsers"
                   openDirection="below"
-                  style="width: 33vw; margin-bottom: 1rem;"
+                  style="width: 33vw; margin-bottom: 1rem"
                   selectLabel="Enter"
                   label="email"
                   :multiple="false"
@@ -1307,40 +1328,11 @@
       </form>
     </Modal>
     <div v-if="orgLoading">
-      <Loader
-        :loaderText="`Pulling in your latest data`"
-      />
+      <Loader :loaderText="`Pulling in your latest data`" />
     </div>
     <div v-else>
-      <div class="flex-row" style="justify-content: space-between; width: 82vw; margin-left: 2rem;">
+      <div class="flex-row" style="justify-content: space-between">
         <div class="flex-row">
-          <small class="pipeline-header">Quick Commands:</small>
-          <button
-            @click.stop="
-              showCommandList = !showCommandList
-              showOrgList = false
-            "
-            class="text-button"
-            style="cursor: pointer"
-          >
-            Commands
-            <img height="12px" src="@/assets/images/downArrow.svg" alt="" />
-          </button>
-          <div v-outside-click="closeListSelect" v-show="showCommandList" class="list-section">
-            <div class="list-section__title flex-row-spread">
-              <p>Commands</p>
-            </div>
-            <button
-              @click="selectCommand(command)"
-              :v-model="selectedCommand"
-              class="list-button"
-              v-for="command in commandOptions"
-              :key="command.id"
-            >
-              {{ command.label }}
-            </button>
-          </div>
-          <small class="pipeline-header">Organization:</small>
           <button
             @click.stop="
               showOrgList = !showOrgList
@@ -1349,28 +1341,23 @@
             class="text-button"
             style="cursor: pointer"
           >
-            Organization
+            Organizations
             <img height="12px" src="@/assets/images/downArrow.svg" alt="" />
           </button>
-          <small class="pipeline-header">Search Orgs: </small>
-          <div class="search-bar">
-            <img src="@/assets/images/search.svg" style="height: 18px" alt="" />
-            <input
-              type="search"
-              placeholder="search"
-              v-model="filterText"
-              @input="showOrgList = true"
-            />
-          </div>
-          <div
-            v-outside-click="closeListSelect"
-            v-show="showOrgList"
-            class="list-section"
-            style="left: 310px"
-          >
-            <div class="list-section__title flex-row-spread">
-              <p>Organizations</p>
+
+          <div v-outside-click="closeListSelect" v-show="showOrgList" class="list-section">
+            <div class="list-section__body">
+              <div class="search-bar">
+                <img src="@/assets/images/search.svg" style="height: 18px" alt="" />
+                <input
+                  type="search"
+                  placeholder="Search"
+                  v-model="filterText"
+                  @input="showOrgList = true"
+                />
+              </div>
             </div>
+
             <button
               @click="selectOrg(org)"
               :v-model="selected_org"
@@ -1386,7 +1373,7 @@
             <small style="font-weight: 400px; margin-left: 0.2rem">{{ setFilters[i][0] }}</small>
             <small style="margin-left: 0.2rem">{{ setFilters[i][1] }}</small>
           </div>
-    
+
           <section style="position: relative">
             <div style="display: flex">
               <button
@@ -1400,7 +1387,7 @@
                   height="12px"
                   style="margin-right: 0.25rem"
                   alt=""
-                />Filter
+                />
               </button>
               <button
                 v-if="activeFilters.length"
@@ -1417,7 +1404,7 @@
               </button>
             </div>
             <div v-outside-click="closeFilters" v-if="filtering">
-              <div v-if="filtering && selected_org" class="filter-selection" style="z-index: 5;">
+              <div v-if="filtering && selected_org" class="filter-selection" style="z-index: 5">
                 <div class="filter-selection__body">
                   <Multiselect
                     placeholder="Team/User"
@@ -1453,7 +1440,11 @@
                     track-by="name"
                     :customLabel="filtersLabel"
                     :label="
-                      selectedTeamOrUser ? (selectedTeamOrUser.name === 'team' ? 'name' : 'email') : ''
+                      selectedTeamOrUser
+                        ? selectedTeamOrUser.name === 'team'
+                          ? 'name'
+                          : 'email'
+                        : ''
                     "
                   >
                     <template slot="placeholder">
@@ -1464,24 +1455,7 @@
                   </Multiselect>
                 </div>
               </div>
-              <div v-else class="filter-selection" style="z-index: 5;">
-                <!-- <div class="filter-selection__body">
-                  <Multiselect
-                    placeholder="Team/User"
-                    @select="resetFilters"
-                    style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 4"
-                    v-model="selectedTeamOrUser"
-                    :options="teamOrUser"
-                    openDirection="below"
-                    selectLabel="Enter"
-                    track-by="name"
-                    label="name"
-                  >
-                    <template slot="noResult">
-                      <p class="multi-slot">No results.</p>
-                    </template>
-                  </Multiselect>
-                </div> -->
+              <div v-else class="filter-selection" style="z-index: 5">
                 <div class="filter-selection__body">
                   <Multiselect
                     placeholder="Filter"
@@ -1506,9 +1480,19 @@
           </section>
         </div>
         <div>
-          <h4 v-if="selected_org" @click="selected_org = null" style="cursor: pointer; padding-top: 0.25rem; margin: 0; font-size: 14px; justify-self: flex-end;">
+          <h4
+            v-if="selected_org"
+            @click="selected_org = null"
+            style="
+              cursor: pointer;
+              padding-top: 0.25rem;
+              margin: 0;
+              font-size: 14px;
+              justify-self: flex-end;
+            "
+          >
             <img
-              style="margin-right: 0px; filter: invert(40%); height: 0.6rem;"
+              style="margin-right: 0px; filter: invert(40%); height: 0.6rem"
               src="@/assets/images/left.svg"
               height="13px"
             />
@@ -1520,25 +1504,20 @@
         <template v-if="selected_org && selected_org.id && page !== 'TeamManager'">
           <div v-if="loading">Loading</div>
           <template v-else>
-            <!-- <div style="border-bottom: 1px solid black; margin-left: 1rem"> -->
-            <!-- Top Section -->
-            <div class="invite-list__container" style="margin-top: 1rem;">
-              <!-- <img class="back-logo" style="right: 18%; bottom: 57%" src="@/assets/images/logo.png" /> -->
-              <!-- <h4 @click="selected_org = null" style="cursor: pointer; padding-top: 0.25rem; margin: 0;">
-                <img
-                  style="margin-right: 4px; filter: invert(40%);"
-                  src="@/assets/images/left.svg"
-                  height="13px"
-                />
-                Back
-              </h4> -->
-              <div style="display: flex; flex-direction: column; margin-left: 1.2rem;">
+            <div class="invite-list__container" style="margin-top: 1rem">
+              <div style="display: flex; flex-direction: column; margin-left: 1.2rem">
                 <h2 class="org-title">{{ selected_org.name }}</h2>
-                <h4 class="org-subtitle">
-                  {{ selected_org.days_since_created_ref }} days active
-                </h4>
+                <h4 class="org-subtitle">{{ selected_org.days_since_created_ref }} days active</h4>
               </div>
-              <div style="display: flex; margin-left: 1.2rem; width: 75vw; justify-content: space-between; height: 28vh;">
+              <div
+                style="
+                  display: flex;
+                  margin-left: 1.2rem;
+                  width: 75vw;
+                  justify-content: space-between;
+                  height: 28vh;
+                "
+              >
                 <div class="left-actions">
                   <div class="invite-list__section__container">
                     <div class="line-up">
@@ -1566,7 +1545,7 @@
                     <div class="" style="width: 48%">
                       <input
                         class="wide gray-border"
-                        style="border: 1px solid #e8e8e8; padding: 0.5rem;"
+                        style="border: 1px solid #e8e8e8; padding: 0.5rem"
                         type="search"
                         v-model="ignoreEmails"
                         placeholder="None"
@@ -1580,9 +1559,12 @@
                     <div>
                       <Multiselect
                         v-model="hasProducts"
-                        :options="[{label: 'Yes', value: true}, {label: 'No', value: false}]"
+                        :options="[
+                          { label: 'Yes', value: true },
+                          { label: 'No', value: false },
+                        ]"
                         openDirection="below"
-                        style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem;"
+                        style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
                         selectLabel="Enter"
                         label="label"
                       >
@@ -1592,7 +1574,7 @@
                         <template slot="placeholder">
                           <p class="slot-icon">
                             <!-- <img src="@/assets/images/search.svg" alt="" /> -->
-                            {{`${hasProducts.label}`}}
+                            {{ `${hasProducts.label}` }}
                           </p>
                         </template>
                       </Multiselect>
@@ -1609,93 +1591,67 @@
                     </button>
                   </div>
                 </div>
-                <div class="right-actions" style="margin-left: 1rem;">
+                <div class="right-actions" style="margin-left: 1rem">
                   <div class="invite-list__section__container">
-                      <div class="line-up">
-                        <div class="invite-list__section__item">Admin:</div>
-                      </div>
-                      <Multiselect
-                        v-model="newAdmin"
-                        @select="handleConfirm"
-                        :options="orgUsers.filter(user => !user.is_admin) /* do not show the current admin */"
-                        openDirection="below"
-                        style="max-width: 20vw; margin-bottom: 1rem; margin-top: 0.5rem;"
-                        selectLabel="Enter"
-                        label="email"
-                      >
-                        <template slot="noResult">
-                          <p class="multi-slot">No results.</p>
-                        </template>
-                        <template slot="placeholder">
-                          <p class="slot-icon">
-                            <!-- <img src="@/assets/images/search.svg" alt="" /> -->
-                            {{`${admin ? admin.email : ''}`}}
-                          </p>
-                        </template>
-                      </Multiselect>
-                  </div>
-                  <!-- <div class="invite-list__section__container">
-                    <div style="display: flex; flex-direction: column; margin-left: 1rem;">
-                      <p style="margin: 0">
-                        Users:
-                        <span v-if="filteredOrgUsers" class="green">{{ filteredOrgUsers.length }}</span>
-                      </p>
-                      <Multiselect
-                        placeholder="Select User"
-                        @select="openModal('user', $event)"
-                        style="max-width: 20vw; margin-bottom: 1rem; margin-top: 0.5rem;"
-                        v-model="selectedUser"
-                        :options="filteredOrgUsers"
-                        openDirection="below"
-                        selectLabel="Enter"
-                        track-by="id"
-                        :custom-label="customUserLabel"
-                        :multiple="false"
-                      >
-                        <template slot="noResult">
-                          <p class="multi-slot">No results.</p>
-                        </template>
-                      </Multiselect>
+                    <div class="line-up">
+                      <div class="invite-list__section__item">Admin:</div>
                     </div>
-                  </div> -->
+                    <Multiselect
+                      v-model="newAdmin"
+                      @select="handleConfirm"
+                      :options="
+                        orgUsers.filter(
+                          (user) => !user.is_admin,
+                        ) /* do not show the current admin */
+                      "
+                      openDirection="below"
+                      style="max-width: 20vw; margin-bottom: 1rem; margin-top: 0.5rem"
+                      selectLabel="Enter"
+                      label="email"
+                    >
+                      <template slot="noResult">
+                        <p class="multi-slot">No results.</p>
+                      </template>
+                      <template slot="placeholder">
+                        <p class="slot-icon">
+                          <!-- <img src="@/assets/images/search.svg" alt="" /> -->
+                          {{ `${admin ? admin.email : ''}` }}
+                        </p>
+                      </template>
+                    </Multiselect>
+                  </div>
+
                   <div class="invite-list__section__container">
-                      <div class="line-up">
-                        <div class="invite-list__section__item">Select Action:</div>
-                      </div>
-                      <Multiselect
-                        placeholder="Select Action"
-                        @select="selectAction($event)"
-                        style="max-width: 20vw; margin-bottom: 1rem; margin-top: 0.5rem;"
-                        v-model="selectedAction"
-                        :options="actionOptions"
-                        openDirection="below"
-                        selectLabel="Enter"
-                        track-by="label"
-                        label="label"
-                        :multiple="false"
-                      >
-                        <template slot="noResult">
-                          <p class="multi-slot">No results.</p>
-                        </template>
-                      </Multiselect>
+                    <div class="line-up">
+                      <div class="invite-list__section__item">Select Action:</div>
+                    </div>
+                    <Multiselect
+                      placeholder="Select Action"
+                      @select="selectAction($event)"
+                      style="max-width: 20vw; margin-bottom: 1rem; margin-top: 0.5rem"
+                      v-model="selectedAction"
+                      :options="actionOptions"
+                      openDirection="below"
+                      selectLabel="Enter"
+                      track-by="label"
+                      label="label"
+                      :multiple="false"
+                    >
+                      <template slot="noResult">
+                        <p class="multi-slot">No results.</p>
+                      </template>
+                    </Multiselect>
                   </div>
                 </div>
               </div>
             </div>
             <!-- Team Section -->
-            <div class="invite-list__container" style="margin-top: 1rem;">
-              <!-- <img class="back-logo" style="right: 18%; bottom: 57%" src="@/assets/images/logo.png" /> -->
-              <!-- <h4 @click="selected_org = null" style="cursor: pointer; padding-top: 0.25rem; margin: 0;">
-                <img
-                  style="margin-right: 4px; filter: invert(40%);"
-                  src="@/assets/images/left.svg"
-                  height="13px"
-                />
-                Back
-              </h4> -->
+            <div class="invite-list__container" style="margin-top: 1rem">
               <div class="team-top-container">
                 <div>
-                  <div style="margin-bottom: 1rem; margin-left: 0.5rem">Teams: <span class="green">{{ teamList.length }}</span></div>
+                  <div style="margin-bottom: 1rem; margin-left: 0.5rem">
+                    Teams: <span class="green">{{ teamList.length }}</span>
+                  </div>
                   <div>
                     <Multiselect
                       placeholder="Select Team"
@@ -1710,12 +1666,7 @@
                       <template slot="noResult">
                         <p class="multi-slot">No results. Try loading more</p>
                       </template>
-                      <template slot="afterList">
-                        <!-- <p class="multi-slot__more" @click="listUsers(slackMembers.nextCursor)">
-                          Load More
-                          <img src="@/assets/images/plusOne.svg" class="invert" alt="" />
-                        </p> -->
-                      </template>
+                      <template slot="afterList"> </template>
                       <template slot="placeholder">
                         <p class="slot-icon">
                           <img src="@/assets/images/search.svg" alt="" />
@@ -1740,251 +1691,11 @@
                     :selectedTeamUsers="selectedTeamUsers"
                     :inviteActions="inviteActions"
                     @cancel="handleCancel"
-                    @handleRefresh="() => inviteOpen = false"
+                    @handleRefresh="() => (inviteOpen = false)"
                   />
                 </section>
               </div>
-              <!-- <div style="display: flex; margin-left: 1.2rem; width: 75vw; justify-content: space-between;">
-                <div class="left-actions">
-                  <div class="invite-list__section__container">
-                    <div class="line-up">
-                      <div class="invite-list__section__item">State:</div>
-                    </div>
-                    <div>
-                      <Multiselect
-                        placeholder="State"
-                        style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 3"
-                        v-model="stateActive"
-                        :options="states"
-                        openDirection="below"
-                        selectLabel="Enter"
-                        track-by="id"
-                      >
-                        <template slot="noResult">
-                          <p class="multi-slot">No results.</p>
-                        </template>
-                      </Multiselect>
-                    </div>
-                  </div>
-                  <div class="invite-list__section__container">
-                    <div class="line-up">
-                      <div class="invite-list__section__item">Admin:</div>
-                    </div>
-                    <Multiselect
-                      v-model="newAdmin"
-                      @select="handleConfirm"
-                      :options="orgUsers.filter(user => !user.is_admin) /* do not show the current admin */"
-                      openDirection="below"
-                      style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 5;"
-                      selectLabel="Enter"
-                      label="email"
-                    >
-                      <template slot="noResult">
-                        <p class="multi-slot">No results.</p>
-                      </template>
-                      <template slot="placeholder">
-                        <p class="slot-icon">
-                          {{`${admin ? admin.email : ''}`}}
-                        </p>
-                      </template>
-                    </Multiselect>
-                  </div>
-                  <div class="invite-list__section__container">
-                    <div class="line-up">
-                      <div class="invite-list__section__item">Ignore Emails:</div>
-                    </div>
-                    <div class="z-more" style="width: 48%">
-                      <input
-                        class="wide gray-border z-more"
-                        style="border: 1px solid #e8e8e8; padding: 0.5rem;"
-                        type="search"
-                        v-model="ignoreEmails"
-                        placeholder="None"
-                      />
-                    </div>
-                  </div>
-                  <div class="invite-list__section__container">
-                    <div class="line-up">
-                      <div class="invite-list__section__item">Has Products:</div>
-                    </div>
-                    <div>
-                      <Multiselect
-                        v-model="hasProducts"
-                        :options="[{label: 'Yes', value: true}, {label: 'No', value: false}]"
-                        openDirection="below"
-                        style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem; z-index: 5;"
-                        selectLabel="Enter"
-                        label="label"
-                      >
-                        <template slot="noResult">
-                          <p class="multi-slot">No results.</p>
-                        </template>
-                        <template slot="placeholder">
-                          <p class="slot-icon">
-                            {{`${hasProducts.label}`}}
-                          </p>
-                        </template>
-                      </Multiselect>
-                    </div>
-                  </div>
-                  <div class="invite-list__section__container">
-                    <button
-                      style="margin: 1rem 0 0 0; align-self: center"
-                      class="green_button"
-                      @click="postOrgUpdates()"
-                    >
-                      Save Changes
-                    </button>
-                  </div>
-                </div>
-                <div class="right-actions">
-                  <div class="invite-list__section__container">
-                    <div style="display: flex; flex-direction: column; margin-left: 1rem;">
-                      <p style="margin: 0">
-                        Users:
-                        <span v-if="filteredOrgUsers" class="green">{{ filteredOrgUsers.length }}</span>
-                      </p>
-                      <Multiselect
-                        placeholder="Select User"
-                        @select="openModal('user', $event)"
-                        style="max-width: 20vw; margin-bottom: 1rem; margin-top: 0.5rem;"
-                        v-model="selectedUser"
-                        :options="filteredOrgUsers"
-                        openDirection="below"
-                        selectLabel="Enter"
-                        track-by="id"
-                        :custom-label="customUserLabel"
-                        :multiple="false"
-                      >
-                        <template slot="noResult">
-                          <p class="multi-slot">No results.</p>
-                        </template>
-                      </Multiselect>
-                    </div>
-                  </div>
-                  <div class="invite-list__section__container">
-                    <div style="display: flex; flex-direction: column; margin-left: 1rem; margin-top: 3rem;">
-                      <p style="margin: 0;">
-                        Select Action:
-                      </p>
-                      <Multiselect
-                        placeholder="Select Action"
-                        @select="selectAction($event)"
-                        style="max-width: 20vw; margin-bottom: 1rem; margin-top: 0.5rem;"
-                        v-model="selectedAction"
-                        :options="actionOptions"
-                        openDirection="below"
-                        selectLabel="Enter"
-                        track-by="label"
-                        label="label"
-                        :multiple="false"
-                      >
-                        <template slot="noResult">
-                          <p class="multi-slot">No results.</p>
-                        </template>
-                      </Multiselect>
-                    </div>
-                  </div>
-                </div>
-              </div> -->
             </div>
-  
-            <!-- <div class="form__list">
-              <div class="added-collection">
-                <p class="added-collection__header">
-                  Users
-                  <span v-if="filteredOrgUsers" class="green">{{ filteredOrgUsers.length }}</span>
-                </p>
-                <div class="added-collection__body">
-                  <Multiselect
-                    placeholder="Select User"
-                    style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
-                    v-model="selectedUser"
-                    :options="filteredOrgUsers"
-                    openDirection="below"
-                    selectLabel="Enter"
-                    track-by="id"
-                    :custom-label="customUserLabel"
-                    :multiple="false"
-                  >
-                    <template slot="noResult">
-                      <p class="multi-slot">No results.</p>
-                    </template>
-                  </Multiselect>
-                </div>
-                <div class="added-collection__body">
-                  <button class="green_button" @click="openModal('user', selectedUser)">Go</button>
-                  <button
-                    class="green_button"
-                    @click="openModal('usersOverview', filteredOrgUsers)"
-                    style="margin-left: 1rem"
-                  >
-                    Overview
-                  </button>
-                </div>
-              </div>
-              <div class="added-collection">
-                <p class="added-collection__header">
-                  Slack Form
-                  <span v-if="filteredOrgSlackForms" class="green">{{
-                    filteredOrgSlackForms.length
-                  }}</span>
-                </p>
-                <div class="added-collection__body">
-                  <Multiselect
-                    placeholder="Select Slack Form"
-                    style="max-width: 20vw; margin-bottom: 1rem; margin-top: 1rem"
-                    v-model="selectedSlackForms"
-                    :options="filteredOrgSlackForms"
-                    openDirection="below"
-                    selectLabel="Enter"
-                    track-by="id"
-                    :custom-label="slackFormLabel"
-                    :multiple="false"
-                  >
-                    <template slot="noResult">
-                      <p class="multi-slot">No results.</p>
-                    </template>
-                  </Multiselect>
-                </div>
-                <div class="added-collection__body">
-                  <button class="green_button" @click="openModal('slackForm', selectedSlackForms)">
-                    Go
-                  </button>
-                </div>
-              </div>
-              <div class="added-collection">
-                <p class="added-collection__header">
-                  Slack Form Instances
-                  <span v-if="filteredOrgSlackFormInstances" class="green">{{
-                    filteredOrgSlackFormInstances.length
-                  }}</span>
-                </p>
-                <div class="added-collection__body">
-                  <button class="green_button" @click="goToSlackFormInstace()">Go</button>
-                </div>
-              </div>
-              <div class="added-collection">
-                <p class="added-collection__header">
-                  Meeting Workflows
-                  <span v-if="filteredOrgMeetingWorkflows" class="green">{{
-                    filteredOrgMeetingWorkflows.length
-                  }}</span>
-                </p>
-                <div class="added-collection__body">
-                  <button class="green_button" @click="goToMeetingWorkflow()">Go</button>
-                </div>
-              </div>
-              <div class="added-collection">
-                <p class="added-collection__header">
-                  Alerts
-                  <span v-if="filteredOrgAlerts" class="green">{{ filteredOrgAlerts.length }}</span>
-                </p>
-                <div class="added-collection__body">
-                  <button class="green_button" @click="goToAlerts()">Go</button>
-                </div>
-              </div>
-            </div> -->
           </template>
         </template>
         <template v-else-if="page === 'SlackForm'">
@@ -2019,13 +1730,17 @@
           <button class="green_button back" @click="goBack">Back</button>
           <div
             :class="i % 2 === 0 ? 'light-back padding' : 'pure-white padding'"
-            style="display: flex; justify-content: space-between;"
+            style="display: flex; justify-content: space-between"
             v-for="(slackFormInstance, i) in filteredOrgSlackFormInstances"
             :key="slackFormInstance.id"
           >
-            <h5 class="click click_width" @click="openModal('slackFormInstance', slackFormInstance)">
+            <h5
+              class="click click_width"
+              @click="openModal('slackFormInstance', slackFormInstance)"
+            >
               {{ slackFormInstance.template_ref ? slackFormInstance.template_ref.resource : '-' }}
-              {{ slackFormInstance.template_ref ? slackFormInstance.template_ref.form_type : '-' }} by
+              {{ slackFormInstance.template_ref ? slackFormInstance.template_ref.form_type : '-' }}
+              by
               {{ getUserName(slackFormInstance.user) }}
               {{
                 slackFormInstance.submission_date
@@ -2046,7 +1761,15 @@
             <section class="header">
               <div class="profile-info">
                 <div class="profile-info__body">
-                  <h3 style="color: #41b883; background-color: #dcf8e9; padding: 4px; border-radius: 6px; cursor: default;">
+                  <h3
+                    style="
+                      color: #41b883;
+                      background-color: #dcf8e9;
+                      padding: 4px;
+                      border-radius: 6px;
+                      cursor: default;
+                    "
+                  >
                     {{ selected_org.name }}'s Teams
                   </h3>
                   <div class="options__section">
@@ -2056,7 +1779,7 @@
                         v-model="selectedViewedTeam"
                         :options="teamList"
                         openDirection="below"
-                        style="width: 33vw; z-index: 3;"
+                        style="width: 33vw; z-index: 3"
                         selectLabel="Enter"
                         track-by="id"
                         label="name"
@@ -2091,7 +1814,7 @@
                 </div>
               </div>
             </section>
-  
+
             <div class="main-content">
               <section v-if="manageTeamSelected">
                 <Invite
@@ -2100,7 +1823,7 @@
                   :inviteOpen="inviteOpen"
                   :selectedTeamUsers="selectedTeamUsers"
                   @cancel="handleCancel"
-                  @handleRefresh="() => inviteOpen = false"
+                  @handleRefresh="() => (inviteOpen = false)"
                 />
               </section>
             </div>
@@ -2131,53 +1854,42 @@
           >
             <h5 class="click click_width" @click="openModal('alert', alert)">
               {{ alert.title ? alert.title : 'N/A' }} ({{ getUserName(alert.user) }})
-              <!-- ({{ alert.alert_level ? alert.alert_level : 'N/A' }}) by
-              {{ getUserName(alert.user) }} -->
             </h5>
           </div>
         </template>
         <template v-else-if="page === 'StaffInvite'">
-          <h4 @click="page = null" style="cursor: pointer; padding-top: 0.25rem; margin: 0; font-size: 14px; justify-self: flex-end;">
+          <h4
+            @click="page = null"
+            style="
+              cursor: pointer;
+              padding-top: 0.25rem;
+              margin: 0;
+              font-size: 14px;
+              justify-self: flex-end;
+            "
+          >
             <img
-              style="margin-right: 0px; filter: invert(40%); height: 0.6rem;"
+              style="margin-right: 0px; filter: invert(40%); height: 0.6rem"
               src="@/assets/images/left.svg"
               height="13px"
             />
           </h4>
-          <div style="margin-top: 1rem;">
+          <div style="margin-top: 1rem">
             <span>Full Name: </span> <input v-model="inviteFullName" />
           </div>
-          <div style="margin-top: 1rem;">
-            <span>Email: </span> <input v-model="inviteEmail" />
-          </div>
-          <div style="margin-top: 1rem;">
+          <div style="margin-top: 1rem"><span>Email: </span> <input v-model="inviteEmail" /></div>
+          <div style="margin-top: 1rem">
             <span>Company Name: </span> <input v-model="inviteOrgName" />
           </div>
-          <div style="margin-top: 1rem;">
+          <div style="margin-top: 1rem">
             <span>Is Paid?: </span> <input type="checkbox" v-model="inviteIsPaid" />
           </div>
-          <!-- <div style="margin-top: 1rem;">
-            <span>Product: </span> 
-            <Multiselect
-              placeholder="Select Product"
-              style="max-width: 18vw; margin-bottom: 1rem; margin-top: 1rem"
-              v-model="inviteRole"
-              :options="[{name: 'PR'}, {name: 'Sales'}]"
-              openDirection="below"
-              selectLabel="Enter"
-              track-by="name"
-              label="name"
-            >
-              <template slot="noResult">
-                <p class="multi-slot">No results.</p>
-              </template>
-            </Multiselect>
-          </div> -->
+
           <div>
             <button @click="generateInvite" class="green_button">Generate Link</button>
           </div>
-          <div v-if="invitedAdminLink" style="margin-top: 1rem; display: flex;">
-            <div style="max-width: 80%; overflow-x: auto; word-break: keep-all;">
+          <div v-if="invitedAdminLink" style="margin-top: 1rem; display: flex">
+            <div style="max-width: 80%; overflow-x: auto; word-break: keep-all">
               {{ invitedAdminLink }}
             </div>
             <div>
@@ -2195,13 +1907,30 @@
           </div>
         </template>
         <template v-else>
-          <div class="" style="margin-top: 1rem;">
-            <div style="display: flex; flex-direction: row; justify-content: flex-start; height: 41vh; width: 100%;">
-              <div class="added-collection padding" style="width: 25vw; height: 39vh; display: flex; justify-content: flex-start; flex-direction: column; align-items: flex-start; margin-right: 1rem;;">
-                <h4 style="margin-top: 1rem; margin-bottom: 1rem;">Total Users: {{trialUsers.length}}</h4>
-                <h4 style="margin-top: 1rem; margin-bottom: 1rem;">Active Users: {{/*activeTrialUsers.length*/ prActiveUsers}}</h4>
-                <h4 style="margin-bottom: 0rem; margin-top: 0.75rem;">Deactivate:</h4>
-                <div style="display: flex; align-items: center;">
+          <div class="">
+            <div
+              style="display: flex; flex-direction: row; justify-content: flex-start; width: 100%"
+            >
+              <div
+                class="added-collection"
+                style="
+                  width: 13.5%;
+                  display: flex;
+                  justify-content: flex-start;
+                  flex-direction: column;
+                  align-items: flex-start;
+                "
+              >
+                <h4 style="margin-top: 1rem">Total Users: {{ trialUsers.length }}</h4>
+                <h4 style="margin-top: 0.5rem">
+                  Active Users: {{ /*activeTrialUsers.length*/ prActiveUsers }}
+                </h4>
+                <h4 style="margin-top: 0.5rem">Power Users: {{ powerUsers }}</h4>
+                <h4 class="red-text" style="margin-top: 0.5rem">
+                  Inactive Users: {{ inactiveUsers }}
+                </h4>
+                <!-- <h4 style="margin-bottom: 0rem; margin-top: 0.75rem">Deactivate:</h4>
+                <div style="display: flex; align-items: center">
                   <Multiselect
                     placeholder="Select Org to Deactivate"
                     style="max-width: 18vw; margin-bottom: 1rem; margin-top: 1rem"
@@ -2217,147 +1946,176 @@
                       <p class="multi-slot">No results.</p>
                     </template>
                   </Multiselect>
-                  <button @click="deactivateOrg" class="green_button red" style="height: 2rem; margin-left: 1rem;">Deactivate</button>
-                </div>
-                <button @click="goToStaffInvite" class="green_button">Invite Admin</button>
-              </div>
-              <div class="added-collection padding" style="display: flex; flex-direction: row; width: 55vw; height: 39vh; align-items: center;">
-                <apexchart ref="chartRef" :type="chartOptions.chart.type" :series="series" :options="chartOptions" style="width: 32vw;" />
-                <!-- <div>
-                  <Multiselect
-                    placeholder="Select Chart to View"
-                    style="max-width: 18vw; margin-bottom: 1rem; margin-top: 1rem"
-                    v-model="selectedChart"
-                    :options="selectedChartOptions"
-                    openDirection="below"
-                    selectLabel="Enter"
-                    track-by="id"
-                    label="name"
-                    :multiple="false"
+                  <button
+                    @click="deactivateOrg"
+                    class="green_button red"
+                    style="height: 2rem; margin-left: 1rem"
                   >
-                    <template slot="noResult">
-                      <p class="multi-slot">No results.</p>
-                    </template>
-                  </Multiselect>
+                    Deactivate
+                  </button>
                 </div> -->
+
+                <!-- <button @click="goToStaffInvite" class="green_button">Invite Admin</button> -->
+              </div>
+              <div
+                class="added-collection"
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  align-items: center;
+                  justify-content: flex-start;
+                  width: 86.5%;
+                  padding-top: 32px;
+                  padding-left: 4rem;
+                  margin-right: 0;
+                "
+              >
+                <apexchart
+                  ref="chartRef"
+                  :type="chartOptions.chart.type"
+                  :series="series"
+                  :options="chartOptions"
+                />
               </div>
             </div>
-            <div class="added-collection padding" style="width: 100%; justify-content: center;">
-              <div class="flex-row-spread" style="width: 10rem;">
-                <h4>Filter by day:</h4>
-                <input type="number" min="0" v-model="filterByDay" style="width: 3.5rem; padding: 4px;" class="search-bar" />
+
+            <div
+              class="added-collection no-top-margin padding"
+              style="width: 100%; height: 42vh; overflow: auto, justify-content: center;padding-top:32px;position:relative;padding-left:0"
+            >
+              <div class="sticky-left" style="width: 24%; margin-left: -4px">
+                <div style="margin-bottom: 1.5rem" class="search-bar">
+                  <img src="@/assets/images/search.svg" style="height: 18px" alt="" />
+                  <input type="search" placeholder="Search" v-model="userText" />
+                </div>
               </div>
-              <div style="height: 45vh; width: 75vw; overflow: auto;">
-                <div class="user-view-header-container" style="margin-bottom: 0.5rem;">
-                  <div style="width: 25%">User</div>
-                  <div style="width: 15%">Integrations</div>
+
+              <!-- <div class="flex-row-spread" style="width: 10rem">
+                <h4>Filter by day:</h4>
+                <input
+                  type="number"
+                  min="0"
+                  v-model="filterByDay"
+                  style="width: 3.5rem; padding: 4px"
+                  class="search-bar"
+                />
+              </div> -->
+              <div>
+                <div class="user-view-header-container" style="margin-bottom: 0.5rem">
+                  <div class="sticky-left" style="width: 25.5%">User</div>
+                  <!-- <div style="width: 15%">Integrations</div> -->
                   <div style="width: 10%">Days Actv</div>
                   <div style="width: 10%">Total Usage</div>
                   <div style="width: 10%">Usage / Day</div>
-                  <div style="width: 10%">N. Summs</div>
-                  <div style="width: 10%">A. Summs</div>
-                  <div style="width: 10%">S. Summs</div>
-                  <div style="width: 10%">N. Srchs</div>
-                  <div style="width: 10%">S. Srchs</div>
+                  <div style="width: 12%">News Summaries</div>
+                  <div style="width: 12%">Article Summaries</div>
+                  <div style="width: 10%">News Alerts</div>
                   <div style="width: 10%">Pitches</div>
-                  <div style="width: 10%">TScripts</div>
-                  <div style="width: 10%">T. Summs</div>
+                  <div style="width: 10%">Assists</div>
+                  <div style="width: 10%">Saved News</div>
+                  <div style="width: 10%">Saved Social</div>
+
+                  <!-- <div style="width: 10%">TScripts</div>
+                  <div style="width: 10%">T. Summs</div> -->
                   <!-- <div style="width: 25%">Total Updates</div> -->
                 </div>
-                <div style="height: 95%;">
-                  <div v-for="user in sortedDayTrialUsers" :key="user.id" class="user-view-header-container" style="margin-bottom: 0.25rem;">
-                    <div style="width: 25%">{{ user.email }}</div>
-                    <div class="flex-row-spread" style="width: 15%">
-                      <div
-                        style="display: flex; flex-direction: column;"
-                        class="invite-list-users__section__item invite-list-users__status"
-                      >
-                        <div style="display: flex; align-items: flex-start;">
-                          <!-- <span :class="user.crm ? '' : 'grayscale'">
-                            <img src="@/assets/images/twitter-x.svg" alt="" height="18px" />
-                          </span> -->
-                          <!-- <span
-                            v-if="user.crm === 'SALESFORCE'"
-                            :class="user.salesforce_account ? '' : 'grayscale'"
-                            >
-                            <img src="@/assets/images/salesforce.png" height="18px" alt="" />
-                          </span> -->
-                          <!-- <span
-                            v-else-if="user.crm === 'HUBSPOT'"
-                            :class="user.hubspot_account ? '' : 'grayscale'"
-                          >
-                            <img src="@/assets/images/hubspot-single-logo.svg" height="18px" alt="" />
-                          </span> -->
-                          <!-- <span v-else :class="'grayscale'">
-                            <img src="@/assets/images/revoke.svg" style="margin-right: 20px; margin-left: 2px" height="18px" alt="" />
-                          </span> -->
-                          <span :class="user.slack_integration ? '' : 'grayscale'">
-                            <img src="@/assets/images/slackLogo.png" height="18px" alt="" />
-                          </span>
-                          <!-- <span :class="user.nylas ? '' : 'grayscale'">
-                            <img src="@/assets/images/gmailCal.png" alt="" height="18px" />
-                          </span> -->
-                          <span :class="user.zoom_account ? '' : 'grayscale'">
-                            <img src="@/assets/images/zoom.png" alt="" height="18px" />
-                          </span>
-                          <!-- <span v-if="user.outreach_account">
-                            <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
-                          </span> -->
-                          <!-- <span v-else-if="user.salesloft_account">
-                            <img src="@/assets/images/salesloft-logo.png" alt="" height="18px" />
-                          </span> -->
-                          <!-- <span v-else class="grayscale">
-                            <img src="@/assets/images/outreach_logo.png" alt="" height="18px" />
-                          </span> -->
-                          <!-- <span :class="user.gong_account ? '' : 'grayscale'">
-                            <img src="@/assets/images/gong-logo.webp" alt="" height="18px" />
-                          </span> -->
-                        </div>
-                      </div>
+                <div style="height: 95%">
+                  <div
+                    v-for="user in sortedDayTrialUsers"
+                    :key="user.id"
+                    class="user-view-header-container"
+                    style="margin-bottom: 0.25rem"
+                  >
+                    <div class="sticky-left" style="width: 25.5%">{{ user.email }}</div>
+                    <div style="width: 10%">{{ user.days_active }}</div>
+                    <div style="width: 10%">{{ getTotalUsage(user) }}</div>
+                    <div style="width: 10%">{{ getUsageDay(user) }}</div>
+                    <div style="width: 12%">
+                      {{ user.meta_data.news_summaries ? user.meta_data.news_summaries.total : 0 }}
                     </div>
-                    <div style="width: 10%">{{user.days_active}}</div>
-                    <div style="width: 10%">{{getTotalUsage(user)}}</div>
-                    <div style="width: 10%">{{getUsageDay(user)}}</div>
-                    <div style="width: 10%">{{user.meta_data.news_summaries ? user.meta_data.news_summaries.total : 0}}</div>
-                    <div style="width: 10%">{{user.meta_data.article_summaries ? user.meta_data.article_summaries.total : 0}}</div>
-                    <div style="width: 10%">{{user.meta_data.tweet_summaries ? user.meta_data.tweet_summaries.total : 0}}</div>
-                    <div style="width: 10%">{{user.searches_ref.filter(search => search.type === 'NEWS').length}}</div>
-                    <div style="width: 10%">{{user.searches_ref.filter(search => search.type === 'SOCIAL_MEDIA').length}}</div>
-                    <div style="width: 10%">{{user.meta_data.pitches ? user.meta_data.pitches.total : 0}}</div>
-                    <div style="width: 10%">{{user.meta_data.transcript ? user.meta_data.transcript.total : 0}}</div>
-                    <div style="width: 10%">{{user.meta_data.transcript_summaries ? user.meta_data.transcript_summaries.total : 0}}</div>
+                    <div style="width: 12%">
+                      {{
+                        user.meta_data.article_summaries
+                          ? user.meta_data.article_summaries.total
+                          : 0
+                      }}
+                    </div>
+                    <div style="width: 10%">
+                      {{ user.meta_data.emails ? user.meta_data.emails.total : 0 }}
+                    </div>
+                    <div style="width: 10%">
+                      {{ user.meta_data.pitches ? user.meta_data.pitches.total : 0 }}
+                    </div>
+                    <div style="width: 10%">
+                      {{ user.meta_data.assist ? user.meta_data.assist.total : 0 }}
+                    </div>
+                    <div style="width: 10%">
+                      {{ user.searches_ref.filter((search) => search.type === 'NEWS').length }}
+                    </div>
+                    <div style="width: 10%">
+                      {{
+                        user.searches_ref.filter((search) => search.type === 'SOCIAL_MEDIA').length
+                      }}
+                    </div>
+
+                    <!-- <div style="width: 10%">
+                      {{ user.meta_data.transcript ? user.meta_data.transcript.total : 0 }}
+                    </div>
+                    <div style="width: 10%">
+                      {{
+                        user.meta_data.transcript_summaries
+                          ? user.meta_data.transcript_summaries.total
+                          : 0
+                      }}
+                    </div> -->
                     <!-- <div style="width: 25%">{{user.total_updates}}</div> -->
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-          <h2>PR Usage Data <span v-if="!showInstances" @click="showInstances = !showInstances" style="cursor: pointer;">></span><span v-else @click="showInstances = !showInstances" style="cursor: pointer;">v</span></h2>
-          <div v-if="showInstances">
-            <div v-if="allOrgsLoading">
-              Loading...
-            </div>
-            <div v-else>
-              <div class="pure-white padding" style="display: flex; justify-content: space-between;">
-                <h4 style="left: 0; width: 10rem; overflow-x: auto;">USER</h4>
-                <h4 style="left: 40%; width: 10rem; overflow-x: auto;">DATE</h4>
-                <h4 style="left: 80%; width: 10rem; overflow-x: auto;">UPDATE SOURCE</h4>
-              </div>
-              <div v-for="(instance, i) in prUsageData" :key="instance.pk">
-                <div
-                  :class="i % 2 === 0 ? 'light-back padding' : 'pure-white padding'"
-                  class=""
-                  @click="() => null"
-                  style="display: flex; justify-content: space-between;"
-                >
-                  <h4 style="left: 0; width: 10rem; overflow-x: auto;">{{ instance.user }}</h4>
-                  <h4 style="left: 34.75%; width: 10rem; overflow-x: auto;">{{ instance.date ? instance.date : '--' }}</h4>
-                  <h4 style="left: 63.5%; width: 10rem; overflow-x: auto;">{{ instance.updateSource ? instance.updateSource : '--' }}</h4>
+
+            <div>
+              <div style="width: 100%; margin-right: 0; padding-top: 0" class="added-collection">
+                <div v-if="allOrgsLoading">Loading...</div>
+                <div v-else>
+                  <div
+                    class="pure-white sticky"
+                    style="display: flex; justify-content: space-between; padding-top: 8px"
+                  >
+                    <h4 style="width: 33.3%; padding-left: 4px">User</h4>
+                    <h4 style="width: 33.3%; padding-left: 4px">Date</h4>
+                    <h4 style="width: 33.3%; padding-left: 4px">Usage Type</h4>
+                  </div>
+                  <div v-for="(instance, i) in prUsageData" :key="instance.pk">
+                    <div
+                      :class="i % 2 === 0 ? 'light-back ' : 'pure-white '"
+                      class=""
+                      @click="() => null"
+                      style="display: flex; justify-content: space-between; width: 100%"
+                    >
+                      <h4 style="width: 33.3%; padding-left: 4px">{{ instance.user }}</h4>
+                      <h4 style="width: 33.3%; padding-left: 4px">
+                        {{ instance.date ? instance.date : '--' }}
+                      </h4>
+                      <h4 style="width: 33.3%; padding-left: 4px">
+                        {{ instance.updateSource ? instance.updateSource : '--' }}
+                      </h4>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          <h2>Completed Tasks <span v-if="!showAdminTasks" @click="showAdminTasks = !showAdminTasks" style="cursor: pointer;">></span><span v-else @click="showAdminTasks = !showAdminTasks" style="cursor: pointer;">v</span></h2>
+
+          <!-- <h2>
+            Completed Tasks
+            <span
+              v-if="!showAdminTasks"
+              @click="showAdminTasks = !showAdminTasks"
+              style="cursor: pointer"
+              >></span
+            ><span v-else @click="showAdminTasks = !showAdminTasks" style="cursor: pointer">v</span>
+          </h2>
           <div v-if="showAdminTasks">
             <div v-for="(task, i) in adminTasks" :key="task.pk">
               <div
@@ -2373,7 +2131,7 @@
                 </h4>
               </div>
             </div>
-          </div>
+          </div> -->
         </template>
       </div>
     </div>
@@ -2391,7 +2149,6 @@ import FormField from '@/components/forms/FormField'
 import Loader from '@/components/Loader'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
 import Invite from '../settings/_pages/_Invite'
-import { decryptData } from '../../encryption'
 
 export default {
   name: 'Staff',
@@ -2455,12 +2212,15 @@ export default {
       selectedViewedTeam: null,
       selectedTeam: null,
       selectedFilter: null,
-      selectedOrgFilter: {name: 'Active Orgs'},
+      selectedOrgFilter: { name: 'Active Orgs' },
       selectedOrgFilterOptions: [
-        {name: 'Active Orgs'}, {name: 'Inactive Orgs'}, {name: 'All'},
+        { name: 'Active Orgs' },
+        { name: 'Inactive Orgs' },
+        { name: 'All' },
       ],
       selectedDeactivateOrg: null,
       filterByDay: 30,
+      userText: '',
       usersFilteredByDays: [],
       deleteOpen: false,
       allSubmissions: [],
@@ -2518,72 +2278,76 @@ export default {
       everyUser: [],
       actionOptions: [
         // {label: 'Users Overview', action: () => this.openModal('usersOverview', this.filteredOrgUsers)},
-        {label: 'Submissions', action: () => this.goToSlackFormInstace()},
-        {label: 'Forms', action: () => this.goToSlackForms() /*this.openModal('slackForm', this.selectedSlackForms)*/},
-        {label: 'Alerts', action: () => this.goToAlerts()},
+        { label: 'Submissions', action: () => this.goToSlackFormInstace() },
+        {
+          label: 'Forms',
+          action: () =>
+            this.goToSlackForms() /*this.openModal('slackForm', this.selectedSlackForms)*/,
+        },
+        { label: 'Alerts', action: () => this.goToAlerts() },
       ],
       inviteActions: [
-          {
-            label: 'Uninvite', 
-            action: (thisPassed, member) => {
-              if ((member.isAdmin || member.is_admin)) {
-                thisPassed.$toast('Cannot uninvite the current admin.', {
-                  timeout: 2000,
-                  position: 'top-left',
-                  type: 'error',
-                  toastClassName: 'custom',
-                  bodyClassName: ['custom'],
-                })
-                return
-              }
-              if (!member.isActive && !member.is_active) {
-                thisPassed.$toast('User already deactivated.', {
-                  timeout: 2000,
-                  position: 'top-left',
-                  type: 'error',
-                  toastClassName: 'custom',
-                  bodyClassName: ['custom'],
-                })
-                return
-              }
-              thisPassed.openUninviteModal(member.id)
-            },
+        {
+          label: 'Uninvite',
+          action: (thisPassed, member) => {
+            if (member.isAdmin || member.is_admin) {
+              thisPassed.$toast('Cannot uninvite the current admin.', {
+                timeout: 2000,
+                position: 'top-left',
+                type: 'error',
+                toastClassName: 'custom',
+                bodyClassName: ['custom'],
+              })
+              return
+            }
+            if (!member.isActive && !member.is_active) {
+              thisPassed.$toast('User already deactivated.', {
+                timeout: 2000,
+                position: 'top-left',
+                type: 'error',
+                toastClassName: 'custom',
+                bodyClassName: ['custom'],
+              })
+              return
+            }
+            thisPassed.openUninviteModal(member.id)
           },
-          {
-            label: 'Change Team',
-            action: (thisPassed, member) => {
-              if ((member.isAdmin || member.is_admin)) {
-                thisPassed.$toast('Cannot change the team of the current admin.', {
-                  timeout: 2000,
-                  position: 'top-left',
-                  type: 'error',
-                  toastClassName: 'custom',
-                  bodyClassName: ['custom'],
-                })
-                return
-              }
-              this.selectedUsers = [member]
-              this.selectedTeam = this.teamList.filter(team => team.id === member.team)[0]
-              this.handleEdit()
-            },
+        },
+        {
+          label: 'Change Team',
+          action: (thisPassed, member) => {
+            if (member.isAdmin || member.is_admin) {
+              thisPassed.$toast('Cannot change the team of the current admin.', {
+                timeout: 2000,
+                position: 'top-left',
+                type: 'error',
+                toastClassName: 'custom',
+                bodyClassName: ['custom'],
+              })
+              return
+            }
+            this.selectedUsers = [member]
+            this.selectedTeam = this.teamList.filter((team) => team.id === member.team)[0]
+            this.handleEdit()
           },
-          {
-            label: 'Make Team Lead',
-            action: (thisPassed, member) => {
-              if (member.team === this.admin.team) {
-                thisPassed.$toast('Cannot change the team lead of admin\'s team.', {
-                  timeout: 2000,
-                  position: 'top-left',
-                  type: 'error',
-                  toastClassName: 'custom',
-                  bodyClassName: ['custom'],
-                })
-                return
-              }
-              this.selectedTeamLead = member
-              this.changeTeamLeader()
-            },
+        },
+        {
+          label: 'Make Team Lead',
+          action: (thisPassed, member) => {
+            if (member.team === this.admin.team) {
+              thisPassed.$toast("Cannot change the team lead of admin's team.", {
+                timeout: 2000,
+                position: 'top-left',
+                type: 'error',
+                toastClassName: 'custom',
+                bodyClassName: ['custom'],
+              })
+              return
+            }
+            this.selectedTeamLead = member
+            this.changeTeamLeader()
           },
+        },
       ],
       pulseLoading: false,
       changeAdminConfirmModal: false,
@@ -2602,19 +2366,28 @@ export default {
       usageData: null,
       allOrgsLoading: false,
       prActiveUsers: 0,
+      powerUsers: 0,
+      inactiveUsers: 0,
       chartOptions: {
-        series: [{
-          name: 'Users',
-          data: []
-        }, {
-          name: 'Active Users',
-          data: []
-        }],
+        series: [
+          {
+            name: 'Users',
+            data: [],
+          },
+          {
+            name: 'Active User',
+            data: [],
+          },
+          {
+            name: 'Power User',
+            data: [],
+          },
+        ],
         // colors: ['#41b883', '#008FFB'], // original colors
-        colors: ['#c7c7cc', '#41b883'],
+        colors: ['#eeeeee', '#e9f3fa', '#183153'],
         dataLabels: {
           enabled: true,
-          formatter: function(val, opt) {
+          formatter: function (val, opt) {
             // uncomment if we want numbers in the bars
             if (opt.seriesIndex === 1) {
               // return opt.globals.series[0][opt.dataPointIndex] + val
@@ -2622,11 +2395,15 @@ export default {
               // return val
             }
           },
+
+          style: {
+            colors: ['#183153'],
+          },
         },
         tooltip: {
-          custom: function({series, seriesIndex, dataPointIndex, w}) {
+          custom: function ({ series, seriesIndex, dataPointIndex, w }) {
             // if (seriesIndex === 1) {
-            //   return '<div class="arrow_box">' + 
+            //   return '<div class="arrow_box">' +
             //       '<div>' +
             //         `<div class="apexcharts-tooltip-title">${w.config.xaxis.categories[dataPointIndex]}</div>` +
             //         '<div class="apexcharts-tooltip-y-group">' + '<span class="apexcharts-tooltip-text-y-label" style="margin-left: 0.5rem">Active Users: </span>' + '<span class="apexcharts-tooltip-text-y-value" style="margin-right: 0.5rem">' + series[seriesIndex][dataPointIndex] + '</span>' + '</div>' +
@@ -2634,55 +2411,105 @@ export default {
             //       '</div>' +
             //     '</div>'
             // } else {
-              const divided = (series[1][dataPointIndex] / (series[1][dataPointIndex] + series[0][dataPointIndex]) * 100)
-              const percentage = Number.parseFloat(divided).toFixed(0)
-              return '<div class="arrow_box">' + 
-                  '<div>' +
-                    `<div class="apexcharts-tooltip-title">${w.config.xaxis.categories[dataPointIndex]}</div>` +
-                    '<div class="apexcharts-tooltip-y-group">' + '<span class="apexcharts-tooltip-text-y-label" style="margin-left: 0.5rem">Active Users: </span>' + '<span class="apexcharts-tooltip-text-y-value" style="margin-right: 0.5rem">' + series[1][dataPointIndex] + '</span>' + '</div>' +
-                    '<div class="apexcharts-tooltip-y-group">' + '<span class="apexcharts-tooltip-text-y-label" style="margin-left: 0.5rem">Total Users: </span>' + '<span class="apexcharts-tooltip-text-y-value" style="margin-right: 0.5rem">' + (series[1][dataPointIndex] + series[0][dataPointIndex]) + '</span>' + '</div>' +
-                    '<div class="apexcharts-tooltip-y-group">' + '<span class="apexcharts-tooltip-text-y-label" style="margin-left: 0.5rem">Percent Active: </span>' + '<span class="apexcharts-tooltip-text-y-value" style="margin-right: 0.5rem">' + percentage + '%' + '</span>' + '</div>' +
-                  '</div>' +
-                '</div>'
+            const divided =
+              (series[1][dataPointIndex] +
+                series[2][dataPointIndex] /
+                  (series[1][dataPointIndex] +
+                    series[2][dataPointIndex] +
+                    series[0][dataPointIndex])) *
+              100
+            const percentage = Number.parseFloat(divided).toFixed(0)
+            return (
+              '<div class="arrow_box">' +
+              '<div>' +
+              `<div style="padding-left: 1rem" class="apexcharts-tooltip-title">${w.config.xaxis.categories[dataPointIndex]}</div>` +
+              '<div class="apexcharts-tooltip-y-group">' +
+              '<span class="apexcharts-tooltip-text-y-label" style="margin-left: 1rem">Total Users: </span>' +
+              '<span class="apexcharts-tooltip-text-y-value" style="margin-right: 1rem">' +
+              (series[1][dataPointIndex] + series[2][dataPointIndex] + series[0][dataPointIndex]) +
+              '</span>' +
+              '</div>' +
+              '<div class="apexcharts-tooltip-y-group">' +
+              '<span class="apexcharts-tooltip-text-y-label" style="margin-left: 1rem">Active Users: </span>' +
+              '<span class="apexcharts-tooltip-text-y-value" style="margin-right: 1rem">' +
+              series[1][dataPointIndex] +
+              '</span>' +
+              '</div>' +
+              '<div class="apexcharts-tooltip-y-group">' +
+              '<span class="apexcharts-tooltip-text-y-label" style="margin-left: 1rem">Power Users: </span>' +
+              '<span class="apexcharts-tooltip-text-y-value" style="margin-right: 1rem">' +
+              series[2][dataPointIndex] +
+              '</span>' +
+              '</div>' +
+              '<div class="apexcharts-tooltip-y-group">' +
+              '<span class="apexcharts-tooltip-text-y-label" style="margin-left: 1rem">Percent Active: </span>' +
+              '<span class="apexcharts-tooltip-text-y-value" style="margin-right:1rem">' +
+              percentage +
+              '%' +
+              '</span>' +
+              '</div>' +
+              '</div>' +
+              '</div>'
+            )
             // }
-          }
+          },
         },
         // <div class="apexcharts-tooltip apexcharts-theme-light" style="left: 51.6074px; top: 25.535px;"><div class="apexcharts-tooltip-title" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px;">Jan</div><div class="apexcharts-tooltip-series-group apexcharts-active" style="order: 1; display: flex;"><span class="apexcharts-tooltip-marker" style="background-color: rgb(0, 143, 251);"></span><div class="apexcharts-tooltip-text" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px;"><div class="apexcharts-tooltip-y-group"><span class="apexcharts-tooltip-text-y-label">Active Users: </span><span class="apexcharts-tooltip-text-y-value">44</span></div><div class="apexcharts-tooltip-goals-group"><span class="apexcharts-tooltip-text-goals-label"></span><span class="apexcharts-tooltip-text-goals-value"></span></div><div class="apexcharts-tooltip-z-group"><span class="apexcharts-tooltip-text-z-label"></span><span class="apexcharts-tooltip-text-z-value"></span></div></div></div><div class="apexcharts-tooltip-series-group" style="order: 2; display: none;"><span class="apexcharts-tooltip-marker" style="background-color: rgb(0, 143, 251);"></span><div class="apexcharts-tooltip-text" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px;"><div class="apexcharts-tooltip-y-group"><span class="apexcharts-tooltip-text-y-label">Active Users: </span><span class="apexcharts-tooltip-text-y-value">44</span></div><div class="apexcharts-tooltip-goals-group"><span class="apexcharts-tooltip-text-goals-label"></span><span class="apexcharts-tooltip-text-goals-value"></span></div><div class="apexcharts-tooltip-z-group"><span class="apexcharts-tooltip-text-z-label"></span><span class="apexcharts-tooltip-text-z-value"></span></div></div></div></div>
         chart: {
           type: 'bar',
-          height: 350,
+          height: '100%',
+
           stacked: true,
           // stackType: '100%',
           stackType: 'normal',
+
+          toolbar: {
+            show: false,
+          },
         },
+
         states: {
           hover: {
             filter: {
-              type: 'none'
-            }
-          }
+              type: 'none',
+            },
+          },
         },
-        responsive: [{
-          breakpoint: 480,
-          options: {
-            legend: {
-              position: 'bottom',
-              offsetX: -10,
-              offsetY: 0
-            }
-          }
-        }],
+        responsive: [
+          {
+            breakpoint: 480,
+            options: {
+              legend: {
+                position: 'bottom',
+                offsetX: 0,
+                offsetY: 0,
+              },
+            },
+          },
+        ],
         xaxis: {
-          categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+          categories: [
+            'Jan',
+            'Feb',
+            'Mar',
+            'Apr',
+            'May',
+            'Jun',
+            'Jul',
+            'Aug',
+            'Sep',
+            'Oct',
+            'Nov',
+            'Dec',
+          ],
         },
         fill: {
-          opacity: 1
+          opacity: 1,
         },
         legend: {
           position: 'right',
-          offsetX: 0,
-          offsetY: 50
+          offsetX: -20,
+          offsetY: 70,
         },
       },
       selectedChart: null,
@@ -2706,8 +2533,7 @@ export default {
         return this.filteredActiveOrganizations.filter((org) =>
           org.name.toLowerCase().includes(this.filterText.toLowerCase()),
         )
-      }
-      else if (!this.selectedOrgFilter || this.selectedOrgFilter.name === 'Active Orgs') {
+      } else if (!this.selectedOrgFilter || this.selectedOrgFilter.name === 'Active Orgs') {
         return this.filteredActiveOrganizations
       } else if (this.selectedOrgFilter.name === 'Inactive Orgs') {
         return this.filteredInactiveOrganizations
@@ -2718,28 +2544,31 @@ export default {
     selectedTeamUsers() {
       if (this.selectedViewedTeam && this.selectedViewedTeam.id === 'all') {
         return this.orgUsers
-      }
-      else if (this.selectedViewedTeam) {
-        return this.orgUsers.filter(user => user.team === this.selectedViewedTeam.id)
+      } else if (this.selectedViewedTeam) {
+        return this.orgUsers.filter((user) => user.team === this.selectedViewedTeam.id)
       } else return []
     },
     filteredActiveOrganizations() {
-      return this.organizations.filter(org => org.state === 'ACTIVE')
+      return this.organizations.filter((org) => org.state === 'ACTIVE')
     },
     filteredInactiveOrganizations() {
-      return this.organizations.filter(org => org.state !== 'ACTIVE')
+      return this.organizations.filter((org) => org.state !== 'ACTIVE')
     },
     activeTrialUsers() {
-      return this.trialUsers.filter(user => user.updates_this_month >= 10)
+      return this.trialUsers.filter((user) => user.updates_this_month >= 10)
     },
     dayTrialUsers() {
-      const trialUsers = this.trialUsers.filter(user => user.days_active <= this.filterByDay)
+      const trialUsers = this.trialUsers.filter((user) =>
+        user.email.toLowerCase().includes(this.userText.toLowerCase()),
+      )
       return trialUsers.sort((a, b) => a.days_active - b.days_active)
-    }
+    },
   },
   mounted() {
     this.stateActive = this.user.organizationRef.state
-    this.hasProducts = this.user.organizationRef.hasProducts ? {label: 'Yes', value: true} : {label: 'No', value: false}
+    this.hasProducts = this.user.organizationRef.hasProducts
+      ? { label: 'Yes', value: true }
+      : { label: 'No', value: false }
     this.ignoreEmails = this.user.organizationRef.ignoreEmailRef
   },
   methods: {
@@ -2763,6 +2592,7 @@ export default {
       return count
     },
     getUsageDay(user) {
+      console.log(user.meta_data)
       const metaData = user.meta_data
       let count = 0
       for (let key in metaData) {
@@ -2770,6 +2600,7 @@ export default {
       }
       count += user.searches_ref.length
       if (user.days_active) {
+        console.log('count is here', count)
         return Math.round((count / user.days_active) * 10) / 10
       } else {
         return count
@@ -2794,7 +2625,12 @@ export default {
     },
     async generateInvite() {
       try {
-        if (!this.inviteFullName || !this.inviteRole.name || !this.inviteEmail || !this.inviteOrgName) {
+        if (
+          !this.inviteFullName ||
+          !this.inviteRole.name ||
+          !this.inviteEmail ||
+          !this.inviteOrgName
+        ) {
           this.$toast('Come on Mike... submit all info.', {
             timeout: 2000,
             position: 'top-left',
@@ -2805,10 +2641,7 @@ export default {
           return
         }
         const firstName = this.inviteFullName.split(' ')[0]
-        const lastName = this.inviteFullName
-          .split(' ')
-          .slice(1)
-          .join(' ')
+        const lastName = this.inviteFullName.split(' ').slice(1).join(' ')
         const data = {
           role: this.inviteRole.name,
           first_name: firstName,
@@ -2973,7 +2806,6 @@ export default {
         }, 200)
       } else {
         try {
-
           const addTeamData = {
             team_lead: this.selectedTeamLead.id,
             id: this.selectedViewedTeam.id,
@@ -3043,10 +2875,9 @@ export default {
     },
     applyOrgFilter(value) {
       if (!value) {
-        this.selectedOrgFilter = {name: 'Active Orgs'}
+        this.selectedOrgFilter = { name: 'Active Orgs' }
         this.filtering = false
-      }
-      else {
+      } else {
         this.selectedOrgFilter = null
       }
       this.filtering = false
@@ -3091,9 +2922,8 @@ export default {
     async getEveryOrgUser() {
       let allUsers = []
       for (let i = 0; i < this.organizations.length; i++) {
-        let res = await this.getAllOrgUsers(
-          this.organizations[i].id,
-        )
+        let res = await this.getAllOrgUsers(this.organizations[i].id)
+
         allUsers = [...allUsers, ...res]
       }
       this.everyUser = allUsers
@@ -3125,13 +2955,16 @@ export default {
         let res = await Organization.api.getStaffOrganizations()
         this.organizations = res
         if (this.selected_org) {
-          const orgForTeam = this.organizations.filter(org => org.id === this.selected_org.id)[0]
-          this.teamList = [{
-            id: 'all',
-            name: 'All Users', 
-            organization: this.selected_org,
-            team_lead: null,
-          }, ...orgForTeam.teams_ref]
+          const orgForTeam = this.organizations.filter((org) => org.id === this.selected_org.id)[0]
+          this.teamList = [
+            {
+              id: 'all',
+              name: 'All Users',
+              organization: this.selected_org,
+              team_lead: null,
+            },
+            ...orgForTeam.teams_ref,
+          ]
         } else {
           this.allOrgsLoading = true
           this.getAllCustomSlackForms()
@@ -3394,9 +3227,7 @@ export default {
     async getAllCustomSlackForms() {
       let allSlackForms = []
       for (let i = 0; i < this.organizations.length; i++) {
-        let res = await SlackOAuth.api.getStaffFormInstances(
-          this.organizations[i].id,
-        )
+        let res = await SlackOAuth.api.getStaffFormInstances(this.organizations[i].id)
         allSlackForms = [...allSlackForms, ...res]
       }
       this.allSlackFormInstances = allSlackForms
@@ -3555,64 +3386,83 @@ export default {
       try {
         const res = await User.api.getTrialUsers()
         this.trialUsers = res
+        console.log('trial users', res)
         // this.adminSearches = await User.api.getAdminSearches()
         await this.getUsageData()
         this.setChartOptions()
         this.organizePRUsageData()
-      } catch(e) {
+      } catch (e) {
         console.log('Error in getTrialUsers', e)
       }
     },
     async getUsageData() {
       const res = await User.api.callCommand('PULL_USAGE_DATA')
       this.usageData = res.data
+      console.log('usage data is here --- >', this.usageData)
     },
     setChartOptions() {
       const today = new Date(Date.now())
       const currentMonth = today.getMonth()
-      let newCategories = this.chartOptions.xaxis.categories.slice(0, currentMonth+1)
-      this.$refs.chartRef.updateOptions({xaxis: { categories: [...newCategories] }})
+      let newCategories = this.chartOptions.xaxis.categories.slice(0, currentMonth + 1)
+      this.$refs.chartRef.updateOptions({ xaxis: { categories: [...newCategories] } })
       const currentYear = today.getFullYear()
       const totalsArr = []
       const activeArr = []
+      const powerArr = []
       for (let key in this.usageData.totals) {
         activeArr.push(this.usageData.totals[key]['total active users'])
       }
       for (let i = 0; i <= currentMonth; i++) {
-        let totalsCount = 0;
+        let totalsCount = 0
         for (let j = 0; j < this.trialUsers.length; j++) {
           const yearMonthDay = this.trialUsers[j].datetime_created.split('T')[0].split('-')
           if (Number(yearMonthDay[0]) !== currentYear) {
             totalsCount++
-          }
-          else if (Number(yearMonthDay[1]) <= i+1) {
+          } else if (Number(yearMonthDay[1]) <= i + 1) {
             totalsCount++
           }
         }
         totalsCount = totalsCount - activeArr[i]
+
         totalsArr.push(totalsCount)
       }
-      this.chartOptions.series = [{name: 'Users', data: []}, {name: 'Active Users', data: []}]
+      this.chartOptions.series = [
+        { name: 'Users', data: [] },
+        { name: 'Active User', data: [] },
+        { name: 'Power User', data: [] },
+      ]
       // remove last active and totals and replace with usage / day info
       const usageActiveTotals = this.getUsageActiveTotals()
       totalsArr.pop()
       activeArr.pop()
       totalsArr.push(usageActiveTotals[0])
       activeArr.push(usageActiveTotals[1])
+      powerArr.push(usageActiveTotals[2])
       this.prActiveUsers = usageActiveTotals[1]
+      this.powerUsers = usageActiveTotals[2]
+      this.inactiveUsers = usageActiveTotals[3]
+
       this.chartOptions.series[0].data = [...totalsArr]
       this.chartOptions.series[1].data = [...activeArr]
+      this.chartOptions.series[2].data = [...powerArr]
     },
     getUsageActiveTotals() {
-      let active = 0;
+      let active = 0
+      let power = 0
+      let inactive = 0
       for (let i = 0; i < this.trialUsers.length; i++) {
         const data = this.getUsageDay(this.trialUsers[i])
+
         if (data >= 1) {
+          power += 1
+        } else if (data * 7 > 1) {
           active += 1
+        } else if (data * 30 < 1) {
+          inactive += 1
         }
       }
-      // [total, active]
-      return [this.trialUsers.length-active, active]
+      // [total, active,]
+      return [this.trialUsers.length - active - power, active, power, inactive]
     },
     organizePRUsageData() {
       const data = []
@@ -3629,7 +3479,7 @@ export default {
           }
         }
       }
-      this.prUsageData = data.sort((a, b) => new Date(b.date) - new Date(a.date));
+      this.prUsageData = data.sort((a, b) => new Date(b.date) - new Date(a.date))
     },
     formatCopyObject(obj) {
       let string = '{'
@@ -3657,7 +3507,6 @@ export default {
     this.getTasks()
     this.getStaffOrgs()
     this.getTrialUsers()
-    
   },
   watch: {
     async selected_org() {
@@ -3666,7 +3515,9 @@ export default {
         this.loading = false
         this.filterText = ''
         this.ignoreEmails = this.selected_org.ignore_email_ref
-        this.hasProducts = this.selected_org.has_products ? {label: 'Yes', value: true} : {label: 'No', value: false}
+        this.hasProducts = this.selected_org.has_products
+          ? { label: 'Yes', value: true }
+          : { label: 'No', value: false }
         this.stateActive = this.selected_org.state
         this.orgUsers = await this.getAllOrgUsers(this.selected_org.id)
         this.orgSlackForms = await SlackOAuth.api.getStaffForms(this.selected_org.id)
@@ -3675,15 +3526,18 @@ export default {
           this.selected_org.id,
         )
         this.orgAlerts = await AlertTemplate.api.getAdminAlerts(this.selected_org.id)
-        this.teamList = [{
-          id: 'all',
-          name: 'All Users', 
-          organization: this.selected_org,
-          team_lead: null,
-        }, ...this.selected_org.teams_ref]
-        this.admin = this.orgUsers.filter(user => user.is_admin)[0]
+        this.teamList = [
+          {
+            id: 'all',
+            name: 'All Users',
+            organization: this.selected_org,
+            team_lead: null,
+          },
+          ...this.selected_org.teams_ref,
+        ]
+        this.admin = this.orgUsers.filter((user) => user.is_admin)[0]
         this.newAdmin = this.admin
-        this.selectedViewedTeam = this.teamList.filter(team => team.id === 'all')[0]
+        this.selectedViewedTeam = this.teamList.filter((team) => team.id === 'all')[0]
         this.filteredOrgUsers = this.orgUsers
         this.team = this.orgUsers
         this.filteredOrgSlackForms = this.orgSlackForms
@@ -3694,7 +3548,7 @@ export default {
         this.orgLoading = false
       }
     },
-    dayTrialUsers: ['sortDayTrialUsers']
+    dayTrialUsers: ['sortDayTrialUsers'],
   },
 }
 </script>
@@ -3704,16 +3558,31 @@ export default {
 @import '@/styles/buttons';
 @import '@/styles/modals';
 
+::v-deep .apexcharts-text tspan {
+  font-family: $thin-font-family;
+}
+
+::v-deep .apexcharts-legend-text {
+  font-family: $thin-font-family !important;
+  font-size: 14px;
+}
+
+button {
+  font-family: $thin-font-family;
+  color: $dark-black-blue;
+}
 .staff {
-  margin-top: 6rem;
+  padding-top: 6rem;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
   height: 100vh;
-  padding-left: 60px;
+  font-family: $thin-font-family;
+  color: $dark-black-blue;
 }
 .staff__main_page {
-  width: 80vw;
-  margin-left: 1rem;
+  width: 94vw;
 }
 p {
   font-size: 14px;
@@ -3805,7 +3674,7 @@ input[type='search']:focus {
   // }
 }
 .light-back {
-  background-color: $white-green;
+  background-color: $off-white;
 }
 .pure-white {
   background-color: #ffffff;
@@ -3840,6 +3709,14 @@ input[type='search']:focus {
   left: 0;
   top: 0;
   padding: 0px 6px 8px -2px;
+}
+
+.sticky-left {
+  position: sticky;
+  width: 100%;
+  left: 0;
+  background: white;
+  padding-left: 16px;
 }
 .border-bottom {
   border-bottom: 1.25px solid $soft-gray;
@@ -3961,9 +3838,14 @@ input[type='search']:focus {
   background-color: white;
   border-radius: 0.3rem;
   border: 1px solid #e8e8e8;
-  width: 45%;
-  margin-bottom: 1rem;
+  padding: 16px;
+  // width: 45%;
+  margin: 1.5rem 1.5rem 1.5rem 0;
   transition: all 0.25s;
+  height: 30vh;
+  overflow: scroll;
+  scroll-behavior: smooth;
+  font-size: 14px;
   &__header {
     max-height: 3rem;
     margin: 0;
@@ -3990,9 +3872,15 @@ input[type='search']:focus {
     justify-content: space-evenly;
   }
 }
-.added-collection:hover {
-  box-shadow: 1px 2px 2px $very-light-gray;
-  transform: scale(1.015);
+// .added-collection:hover {
+//   box-shadow: 1px 2px 2px $very-light-gray;
+//   transform: scale(1.015);
+// }
+.red-text {
+  color: $coral;
+}
+.no-top-margin {
+  margin-top: 0;
 }
 .separator {
   margin-top: 1rem;
@@ -4053,9 +3941,11 @@ input[type='search']:focus {
   margin-left: 4px;
 }
 .text-button {
-  border: none;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  padding: 8px 16px;
   font-size: 13px;
-  background-color: transparent;
+  background-color: white;
   margin-right: 8px;
   color: $base-gray;
   letter-spacing: 0.75px;
@@ -4063,19 +3953,24 @@ input[type='search']:focus {
 .list-section {
   z-index: 4;
   position: absolute;
-  top: 10vh;
-  left: 88px;
+  top: 8.5rem;
+  left: 3vw;
   border-radius: 6px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  background-color: $white;
+  background-color: white;
   min-width: 20vw;
   max-height: 70vh;
   overflow: scroll;
   margin-right: 0.5rem;
-  box-shadow: 1px 1px 2px 1px $very-light-gray;
+  box-shadow: 1px 1px 8px $very-light-gray;
   letter-spacing: 0.75px;
+
+  &__body {
+    padding: 16px 8px;
+    width: 100%;
+  }
   &__title {
     position: sticky;
     top: 0;
@@ -4125,7 +4020,7 @@ input[type='search']:focus {
   letter-spacing: 0.75px;
 }
 .list-button:hover {
-  color: $dark-green;
+  color: $dark-black-blue;
   background-color: $off-white;
 }
 .main {
@@ -4158,13 +4053,12 @@ main:hover > span {
 .add-filter-button {
   display: flex;
   align-items: center;
-  border: none;
-  padding: 0.25rem 0.6rem;
-  border-radius: 6px;
-  background-color: transparent;
+  justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  border-radius: 4px;
+  background-color: white;
   cursor: pointer;
-  color: $base-gray;
-  letter-spacing: 0.75px !important;
 
   img {
     filter: invert(70%);
@@ -4210,7 +4104,7 @@ main:hover > span {
   margin-bottom: 0.2rem;
 }
 .org-subtitle {
-  margin-top: 0; 
+  margin-top: 0;
   margin-left: 0.2rem;
   color: $dark-green;
   font-size: 0.9rem;
@@ -4220,25 +4114,31 @@ main:hover > span {
 }
 .search-bar {
   background-color: white;
-  border: 1px solid $soft-gray;
+  border: 1px solid rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2px;
-  border-radius: 8px;
+  padding: 8px;
+  border-radius: 16px;
   // margin-top: 16px;
-  margin-left: 4px;
+  width: 100%;
+
+  img {
+    filter: invert(40%);
+    margin-right: 8px;
+  }
 }
 [type='search']::-webkit-search-cancel-button {
   -webkit-appearance: none;
   appearance: none;
 }
 input[type='search'] {
-  width: 15vw;
+  width: 100%;
   // letter-spacing: 0.75px;
   border: none;
   padding: 2px;
   margin: 0;
+  font-family: $thin-font-family;
 }
 input[type='search']:focus {
   outline: none;
@@ -4441,7 +4341,7 @@ input[type='search']:focus {
     justify-content: center;
     position: relative;
     background-color: $off-white;
-    border: 1px solid $soft-gray;
+    border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 100%;
     height: 19vh;
     width: 19vh;
@@ -4473,7 +4373,7 @@ input[type='search']:focus {
   }
 }
 .options {
-  // border: 1px solid $soft-gray;
+  // border: 1px solid rgba(0, 0, 0, 0.1);
   top: 10vh;
   left: 20vw;
   padding: 16px 8px 8px 8px;
@@ -4517,17 +4417,17 @@ input[type='search']:focus {
   margin-top: 15vh;
 }
 .team-top-container {
-  display: flex; 
-  flex-direction: row; 
+  display: flex;
+  flex-direction: row;
   justify-content: space-between;
   align-items: center;
   margin-left: 1.2rem;
   border-bottom: 1px solid $very-light-gray;
   padding-bottom: 1rem;
-  width: 75vw
+  width: 75vw;
 }
 .apexcharts-legend {
-  flex-direction: row-reverse
+  flex-direction: row-reverse;
 }
 .delete_modal {
   @include popup-modal();
@@ -4581,6 +4481,7 @@ input[type='search']:focus {
   display: -webkit-box;
   -webkit-box-align: center;
   -webkit-box-pack: justify;
+  margin: 16px 0;
 }
 .red {
   background-color: $coral !important;
