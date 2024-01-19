@@ -1347,7 +1347,7 @@
 
           <div v-outside-click="closeListSelect" v-show="showOrgList" class="list-section">
             <div class="list-section__body">
-              <div class="search-bar">
+              <div @click="test" class="search-bar">
                 <img src="@/assets/images/search.svg" style="height: 18px" alt="" />
                 <input
                   type="search"
@@ -2009,7 +2009,8 @@
                   <div style="width: 10%">Usage / Day</div>
                   <div style="width: 12%">News Summaries</div>
                   <div style="width: 12%">Article Summaries</div>
-                  <div style="width: 10%">News Alerts</div>
+                  <div style="width: 10%">Saved Alerts</div>
+                  <div style="width: 10%">Sent Alerts</div>
                   <div style="width: 10%">Pitches</div>
                   <div style="width: 10%">Assists</div>
                   <div style="width: 10%">Saved News</div>
@@ -2039,6 +2040,9 @@
                           ? user.meta_data.article_summaries.total
                           : 0
                       }}
+                    </div>
+                    <div style="width: 10%">
+                      {{ user.meta_data.emails ? user.meta_data.emails.total : 0 }}
                     </div>
                     <div style="width: 10%">
                       {{ user.meta_data.emails ? user.meta_data.emails.total : 0 }}
@@ -2572,8 +2576,8 @@ export default {
     this.ignoreEmails = this.user.organizationRef.ignoreEmailRef
   },
   methods: {
-    test(log) {
-      console.log('log', log)
+    test() {
+      console.log(this.dayTrialUsers)
     },
     sortDayTrialUsers() {
       this.sortedDayTrialUsers = this.dayTrialUsers
