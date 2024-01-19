@@ -68,7 +68,7 @@ class NewsSpider(scrapy.Spider):
         "USER_AGENT": "Mozilla/5.0 (compatible; managr-webcrawler/1.0; +https://managr.ai/documentation)",
         "HTTPCACHE_ENABLED": True,
         "HTTPCACHE_DIR": settings.HTTPCACHE_DIR,
-        "HTTPCACHE_EXPIRATION_SECS": 604800,
+        "HTTPCACHE_EXPIRATION_SECS": 86400,
     }
 
     def __init__(self, *args, **kwargs):
