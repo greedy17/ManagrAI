@@ -104,17 +104,17 @@ class NewsSpider(scrapy.Spider):
                         article_domain
                     ):
                         article_url = complete_url(article_url, source.domain)
-                        current_datetime = datetime.datetime.now()
-                        source.last_scraped = timezone.make_aware(
-                            current_datetime, timezone.get_current_timezone()
-                        )
-                        source.save()
                         yield scrapy.Request(
                             article_url,
                             callback=self.parse_article,
                             headers={"Referer": "https://www.google.com"},
                             cb_kwargs={"source": source},
                         )
+                current_datetime = datetime.datetime.now()
+                source.last_scraped = timezone.make_aware(
+                    current_datetime, timezone.get_current_timezone()
+                )
+                source.save()
         else:
             self.process_new_url(source, response)
         self.urls_processed += 1
