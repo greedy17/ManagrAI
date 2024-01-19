@@ -799,7 +799,7 @@ export default {
           })
           .then((response) => {
             console.log('created process', response)
-            this.$toast('Sucess!', {
+            this.$toast('Success!', {
               timeout: 2000,
               position: 'top-left',
               type: 'success',
@@ -838,7 +838,7 @@ export default {
           })
           .then((response) => {
             this.generatedContent = response.content
-            this.$toast('Sucess!', {
+            this.$toast('Success!', {
               timeout: 2000,
               position: 'top-left',
               type: 'success',

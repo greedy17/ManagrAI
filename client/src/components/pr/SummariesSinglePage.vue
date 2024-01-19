@@ -2152,6 +2152,7 @@ export default {
         ` What is the PR impact of this coverage`,
         `Find me the most positive / negative article`,
         `Provide creative newsjacking ideas for XXX based on this coverage`,
+        `Provide new pitching angles for XXX based on this news`,
         `List 5 of the most important headlines (include source name + journalist)`,
         `List 5 journalists (from top pubs, include pitching tips) I can pitch on behalf of XXX`,
         `List 5 questions & answers journalists would ask about XXX`,
