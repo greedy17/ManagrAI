@@ -36,7 +36,12 @@
       </div>
     </div>
 
-    <div @mouseenter="showHelp" @mouseleave="hideHelp" class="icon-bottom-left">
+    <div
+      v-if="this.$route.name !== 'Staff'"
+      @mouseenter="showHelp"
+      @mouseleave="hideHelp"
+      class="icon-bottom-left"
+    >
       <img src="@/assets/images/help.png" height="16px" alt="" />
     </div>
   </div>

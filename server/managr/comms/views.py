@@ -1393,6 +1393,8 @@ class ProcessViewSet(
 
                 content = res.get("choices")[0].get("message").get("content")
 
+                user.add_meta_data("assist")
+
                 if process_id:
                     process = Process.objects.get(id=process_id)
                     process.generated_content = content
