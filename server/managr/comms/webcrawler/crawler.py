@@ -80,6 +80,7 @@ class NewsSpider(scrapy.Spider):
 
     def parse(self, response):
         url = response.request.url
+        print("----------------------------------------------------")
         print(url)
         if url[len(url) - 1] == "/":
             url = url[: len(url) - 1]
@@ -232,7 +233,8 @@ class NewsSpider(scrapy.Spider):
                 }
         source.scrape_data = scrape_dict
         source.site_name = site_name
-        source.last_scraped = datetime.datetime.now()
+        current_datetime = datetime.datetime.now()
+        source.last_scraped = timezone.make_aware(current_datetime, timezone.get_current_timezone())
         source.save()
         return
 
