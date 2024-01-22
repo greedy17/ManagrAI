@@ -2003,7 +2003,6 @@
               <div>
                 <div class="user-view-header-container" style="margin-bottom: 0.5rem">
                   <div class="sticky-left" style="width: 25.5%">User</div>
-                  <!-- <div style="width: 15%">Integrations</div> -->
                   <div style="width: 10%">Days Actv</div>
                   <div style="width: 10%">Total Usage</div>
                   <div style="width: 10%">Usage / Day</div>
@@ -2042,10 +2041,12 @@
                       }}
                     </div>
                     <div style="width: 10%">
-                      {{ user.meta_data.emails ? user.meta_data.emails.total : 0 }}
+                      {{ allEmailAlerts[user.id] ? allEmailAlerts[user.id].length : 0 }}
                     </div>
                     <div style="width: 10%">
-                      {{ user.meta_data.emails ? user.meta_data.emails.total : 0 }}
+                      {{
+                        allEmailAlerts[user.id] ? calculateSentCountSum(allEmailAlerts[user.id]) : 0
+                      }}
                     </div>
                     <div style="width: 10%">
                       {{ user.meta_data.pitches ? user.meta_data.pitches.total : 0 }}
@@ -2079,7 +2080,10 @@
             </div>
 
             <div>
-              <div style="width: 100%; margin-right: 0; padding-top: 0" class="added-collection">
+              <div
+                style="width: 100%; margin-right: 0; padding-top: 0; height: 40vh"
+                class="added-collection"
+              >
                 <div v-if="allOrgsLoading">Loading...</div>
                 <div v-else>
                   <div
@@ -2148,6 +2152,7 @@ import AlertTemplate from '@/services/alerts'
 import { MeetingWorkflows } from '@/services/salesforce'
 import Organization from '@/services/organizations'
 import User from '@/services/users'
+import { Comms } from '@/services/comms'
 import CollectionManager from '@/services/collectionManager'
 import FormField from '@/components/forms/FormField'
 import Loader from '@/components/Loader'
@@ -2167,6 +2172,7 @@ export default {
   },
   data() {
     return {
+      allEmailAlerts: {},
       commandOptions: [
         { label: 'Salesforce Resources', value: 'SALESFORCE_RESOURCES' },
         { label: 'Salesforce Fields', value: 'SALESFORCE_FIELDS' },
@@ -2416,11 +2422,10 @@ export default {
             //     '</div>'
             // } else {
             const divided =
-              (series[1][dataPointIndex] +
-                series[2][dataPointIndex] /
-                  (series[1][dataPointIndex] +
-                    series[2][dataPointIndex] +
-                    series[0][dataPointIndex])) *
+              ((series[1][dataPointIndex] + series[2][dataPointIndex]) /
+                (series[1][dataPointIndex] +
+                  series[2][dataPointIndex] +
+                  series[0][dataPointIndex])) *
               100
             const percentage = Number.parseFloat(divided).toFixed(0)
             return (
@@ -2576,6 +2581,11 @@ export default {
     this.ignoreEmails = this.user.organizationRef.ignoreEmailRef
   },
   methods: {
+    calculateSentCountSum(userData) {
+      return userData.reduce((sum, item) => {
+        return sum + (item.meta_data.sent_count || 0)
+      }, 0)
+    },
     test() {
       console.log(this.dayTrialUsers)
     },
@@ -3390,11 +3400,25 @@ export default {
       try {
         const res = await User.api.getTrialUsers()
         this.trialUsers = res
-        console.log('trial users', res)
         // this.adminSearches = await User.api.getAdminSearches()
         await this.getUsageData()
         this.setChartOptions()
         this.organizePRUsageData()
+      } catch (e) {
+        console.log('Error in getTrialUsers', e)
+      }
+    },
+    async getAllAlerts() {
+      let allAlerts = {}
+
+      try {
+        const res = await Comms.api.getAllEmailAlerts()
+
+        for (let i = 0; i < res.length; i++) {
+          allAlerts[res[i].user] = res.filter((a) => a.user === res[i].user)
+        }
+        console.log('ALL ALERTS IS HERE --- > ', allAlerts)
+        this.allEmailAlerts = allAlerts
       } catch (e) {
         console.log('Error in getTrialUsers', e)
       }
@@ -3511,6 +3535,7 @@ export default {
     this.getTasks()
     this.getStaffOrgs()
     this.getTrialUsers()
+    this.getAllAlerts()
   },
   watch: {
     async selected_org() {
