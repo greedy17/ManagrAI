@@ -1302,6 +1302,18 @@ class EmailAlertViewSet(
         emit_send_news_summary(alert_id, str(datetime.now()))
         return Response(status=status.HTTP_200_OK)
 
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="get-email-alerts",
+    )
+    def get_email_alerts(self, request, *args, **kwargs):
+
+        alerts = EmailAlert.objects
+        serialized = EmailAlertSerializer(alerts, many=True)
+        return Response(data=serialized.data, status=status.HTTP_200_OK)    
+
 
 class ProcessViewSet(
     viewsets.GenericViewSet,

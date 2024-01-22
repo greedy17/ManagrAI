@@ -251,6 +251,14 @@ class CommsApi extends ModelAPI {
         }
     }
 
+    async getAllEmailAlerts() {
+        try {
+            const res = await this.client.get('email-alerts/get-email-alerts/')
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
     async getEmailAlerts() {
         try {
             const res = await this.client.get('email-alerts/')
