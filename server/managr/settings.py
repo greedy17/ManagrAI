@@ -519,10 +519,11 @@ STRIPE_PRICE_ID = os.environ.get("STRIPE_PRICE_ID")
 MAX_ATTEMPTS = 5
 
 # Scrapy settings
-HTTPCACHE_ENABLED = True
-HTTPCACHE_DIR = os.path.join(os.getcwd(), "server", "scrapy_cache")
-HTTPCACHE_IGNORE_HTTP_CODES = [404, 500]
-HTTPCACHE_IGNORE_MISSING = True
+HTTPCACHE_ENABLED = False
+if HTTPCACHE_ENABLED:
+    HTTPCACHE_DIR = os.path.join(os.getcwd(), "server", "scrapy_cache")
+    HTTPCACHE_IGNORE_HTTP_CODES = [404, 500]
+    HTTPCACHE_IGNORE_MISSING = True
 ROBOTSTXT_OBEY = True
 USE_ELASTICACHE = False
 if USE_ELASTICACHE:
