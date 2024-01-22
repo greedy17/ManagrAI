@@ -68,7 +68,7 @@ class NewsSpider(scrapy.Spider):
         "USER_AGENT": "Mozilla/5.0 (compatible; managr-webcrawler/1.0; +https://managr.ai/documentation)",
         "HTTPCACHE_ENABLED": True,
         "HTTPCACHE_DIR": settings.HTTPCACHE_DIR,
-        "HTTPCACHE_EXPIRATION_SECS": 86400,
+        "HTTPCACHE_EXPIRATION_SECS": 43200,
     }
 
     def __init__(self, *args, **kwargs):
@@ -80,6 +80,7 @@ class NewsSpider(scrapy.Spider):
 
     def parse(self, response):
         url = response.request.url
+        print(url)
         if url[len(url) - 1] == "/":
             url = url[: len(url) - 1]
         try:
@@ -92,6 +93,7 @@ class NewsSpider(scrapy.Spider):
             article_links = response.xpath(regex)
             do_not_track_str = ",".join(comms_consts.DO_NOT_TRACK_LIST)
             if source.last_scraped and source.article_link_attribute:
+                print(1)
                 if len(article_links) and (self.first_only or self.test):
                     article_links = [article_links[0]]
                 for anchor in article_links:
@@ -104,16 +106,19 @@ class NewsSpider(scrapy.Spider):
                         article_domain
                     ):
                         article_url = complete_url(article_url, source.domain)
+
                         yield scrapy.Request(
                             article_url,
                             callback=self.parse_article,
                             headers={"Referer": "https://www.google.com"},
                             cb_kwargs={"source": source},
                         )
+                print(source.last_scraped)
                 current_datetime = datetime.datetime.now()
                 source.last_scraped = timezone.make_aware(
                     current_datetime, timezone.get_current_timezone()
                 )
+                print(source.last_scraped)
                 source.save()
         else:
             self.process_new_url(source, response)
@@ -232,6 +237,7 @@ class NewsSpider(scrapy.Spider):
         return
 
     def start_requests(self):
+        print(len(self.start_urls))
         for url in self.start_urls:
             yield scrapy.Request(
                 url, headers={"Referer": "https://www.google.com"}, callback=self.parse
