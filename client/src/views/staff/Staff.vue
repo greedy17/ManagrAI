@@ -1983,10 +1983,22 @@
               class="added-collection no-top-margin padding"
               style="width: 100%; height: 42vh; overflow: auto, justify-content: center;padding-top:32px;position:relative;padding-left:0"
             >
-              <div class="sticky-left" style="width: 24%; margin-left: -4px">
-                <div style="margin-bottom: 1.5rem" class="search-bar">
-                  <img src="@/assets/images/search.svg" style="height: 18px" alt="" />
-                  <input type="search" placeholder="Search" v-model="userText" />
+              <div class="sticky-left space-between" style="width: 100%; margin-left: -4px">
+                <div style="width: 24%; margin-left: -4px">
+                  <div style="margin-bottom: 1.5rem" class="search-bar">
+                    <img src="@/assets/images/search.svg" style="height: 18px" alt="" />
+                    <input type="search" placeholder="Search" v-model="userText" />
+                  </div>
+                </div>
+
+                <div style="cursor: pointer" @click="convertData">
+                  <img
+                    style="margin-top: 0.5rem; padding: 0"
+                    class="invert"
+                    src="@/assets/images/export.svg"
+                    height="16px"
+                    alt=""
+                  />
                 </div>
               </div>
 
@@ -2014,10 +2026,6 @@
                   <div style="width: 10%">Assists</div>
                   <div style="width: 10%">Saved News</div>
                   <div style="width: 10%">Saved Social</div>
-
-                  <!-- <div style="width: 10%">TScripts</div>
-                  <div style="width: 10%">T. Summs</div> -->
-                  <!-- <div style="width: 25%">Total Updates</div> -->
                 </div>
                 <div style="height: 95%">
                   <div
@@ -2062,18 +2070,6 @@
                         user.searches_ref.filter((search) => search.type === 'SOCIAL_MEDIA').length
                       }}
                     </div>
-
-                    <!-- <div style="width: 10%">
-                      {{ user.meta_data.transcript ? user.meta_data.transcript.total : 0 }}
-                    </div>
-                    <div style="width: 10%">
-                      {{
-                        user.meta_data.transcript_summaries
-                          ? user.meta_data.transcript_summaries.total
-                          : 0
-                      }}
-                    </div> -->
-                    <!-- <div style="width: 25%">{{user.total_updates}}</div> -->
                   </div>
                 </div>
               </div>
@@ -2081,7 +2077,7 @@
 
             <div>
               <div
-                style="width: 100%; margin-right: 0; padding-top: 0; height: 40vh"
+                style="width: 100%; margin-right: 0; padding-top: 0; height: 42vh"
                 class="added-collection"
               >
                 <div v-if="allOrgsLoading">Loading...</div>
@@ -2378,6 +2374,7 @@ export default {
       prActiveUsers: 0,
       powerUsers: 0,
       inactiveUsers: 0,
+      csvData: null,
       chartOptions: {
         series: [
           {
@@ -2581,6 +2578,60 @@ export default {
     this.ignoreEmails = this.user.organizationRef.ignoreEmailRef
   },
   methods: {
+    convertData() {
+      let csvData = this.sortedDayTrialUsers.map((user) => ({
+        email: user.email,
+        daysActive: user.days_active,
+        totalUsage: this.getTotalUsage(user),
+        usagePerDay: this.getUsageDay(user),
+        newsSummaries: user.meta_data.news_summaries ? user.meta_data.news_summaries.total : 0,
+        articleSummaries: user.meta_data.article_summaries
+          ? user.meta_data.article_summaries.total
+          : 0,
+        savedAlerts: this.allEmailAlerts[user.id] ? this.allEmailAlerts[user.id].length : 0,
+        sentAlerts: this.allEmailAlerts[user.id]
+          ? this.calculateSentCountSum(this.allEmailAlerts[user.id])
+          : 0,
+        pitches: user.meta_data.pitches ? user.meta_data.pitches.total : 0,
+        assists: user.meta_data.assist ? user.meta_data.assist.total : 0,
+        savedNews: user.searches_ref.filter((search) => search.type === 'NEWS').length,
+        savedSocial: user.searches_ref.filter((search) => search.type === 'SOCIAL_MEDIA').length,
+      }))
+
+      this.arrayToCSV(csvData)
+    },
+
+    arrayToCSV(data) {
+      const csvRows = []
+
+      const headers = Object.keys(data[0])
+      csvRows.push(headers.join(','))
+
+      // Loop over the rows
+      for (const row of data) {
+        const values = headers.map((header) => {
+          const escaped = ('' + row[header]).replace(/"/g, '\\"')
+          return `"${escaped}"`
+        })
+        csvRows.push(values.join(','))
+      }
+
+      const csvString = csvRows.join('\n')
+
+      this.downloadCSV(csvString)
+    },
+
+    downloadCSV(csvString, filename = 'export.csv') {
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = filename
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    },
+
     calculateSentCountSum(userData) {
       return userData.reduce((sum, item) => {
         return sum + (item.meta_data.sent_count || 0)
@@ -3747,6 +3798,13 @@ input[type='search']:focus {
   background: white;
   padding-left: 16px;
 }
+.sticky-top {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+  // padding-top: 16px;
+}
 .border-bottom {
   border-bottom: 1.25px solid $soft-gray;
 }
@@ -4457,6 +4515,12 @@ input[type='search']:focus {
 }
 .apexcharts-legend {
   flex-direction: row-reverse;
+}
+
+.space-between {
+  display: flex;
+  align-items: row;
+  justify-content: space-between;
 }
 .delete_modal {
   @include popup-modal();
