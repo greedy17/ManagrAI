@@ -2616,9 +2616,9 @@ export default {
         csvRows.push(values.join(','))
       }
 
-      csvRows.join('\n')
+      const csvString = csvRows.join('\n')
 
-      this.downloadCSV(csvRows)
+      this.downloadCSV(csvString)
     },
 
     downloadCSV(csvString, filename = 'export.csv') {
