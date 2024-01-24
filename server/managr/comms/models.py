@@ -583,8 +583,8 @@ class TwitterAccount(TimeStampModel):
         client = OAuth1Session(comms_consts.TWITTER_API_KEY, comms_consts.TWITTER_API_SECRET)
         request_token = client.fetch_request_token(comms_consts.TWITTER_REQUEST_TOKEN_URI)
         authorization = client.authorization_url(comms_consts.TWITTER_AUTHORIZATION_URI)
-        print(authorization)
-        return authorization
+        request_token["link"] = authorization
+        return request_token
 
     @staticmethod
     def authenticate(code, identifier):
