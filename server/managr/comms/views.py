@@ -1426,7 +1426,7 @@ class ProcessViewSet(
 @permission_classes([permissions.IsAuthenticated])
 def get_twitter_request_token(request):
     authorization_url = TwitterAccount.get_token(request)
-    return redirect(authorization_url)
+    return Response({"link": authorization_url})
 
 
 @api_view(["GET"])
