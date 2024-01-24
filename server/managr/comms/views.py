@@ -750,16 +750,6 @@ def get_shared_summary(request, encrypted_param):
     return Response(data={"summary": search.summary})
 
 
-def redirect_from_twitter(request):
-    code = request.GET.get("code", None)
-    q = urlencode({"code": code, "state": "TWITTER"})
-    if not code:
-        err = {"error": "there was an error"}
-        err = urlencode(err)
-        return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{err}")
-    return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{q}")
-
-
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def upload_link(request):
@@ -1479,3 +1469,17 @@ def get_twitter_authentication(request):
         logger.exception(f"HUBSPOT ACCOUNT CREATION ERROR: {e}\n RES: {res}")
         return Response(data={"success": False})
     return Response(data={"success": True})
+
+
+def redirect_from_twitter(request):
+    oauth_token = request.GET.get("oauth_token", None)
+    oauth_callback_confirmed = request.GET.get("oauth_callback_confirmed", None)
+    oauth_token_secret = request.GET.get("code", None)
+    q = urlencode(
+        {"oauth_token": oauth_token, "state": "TWITTER", "oauth_token_secret": oauth_token_secret}
+    )
+    if not oauth_callback_confirmed:
+        err = {"error": "there was an error"}
+        err = urlencode(err)
+        return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{err}")
+    return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{q}")
