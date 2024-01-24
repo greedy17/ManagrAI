@@ -261,7 +261,7 @@
       </div>
       <div class="integrations__cards">
         <!-- Slack -->
-        <div class="card">
+        <!-- <div class="card">
           <div class="card__header" style="">
             <img style="height: 40px" src="@/assets/images/slackLogo.png" />
           </div>
@@ -282,7 +282,7 @@
             >
               Slack Connected
             </p>
-            <!-- <p v-else class="card-text">Generate summaries via Slack</p> -->
+     
             <p v-else class="card-text">Connect to generate summaries via Slack</p>
             <div></div>
             <div class="sep-button-container">
@@ -316,9 +316,9 @@
               </button>
             </div>
           </div>
-        </div>
+        </div> -->
         <!-- Zoom -->
-        <div class="card">
+        <!-- <div class="card">
           <div class="card__header" style="justify-content: space-between">
             <img style="height: 40px" src="@/assets/images/zoom.png" />
           </div>
@@ -327,22 +327,11 @@
             <div style="display: flex">
               <h3 class="card__title">Zoom</h3>
             </div>
-            <!-- <p class="card-text">Use AI to summarize calls</p> -->
+ 
             <p class="card-text">Connect to enable AI call summaries</p>
             <div class="sep-button-container">
               <div class="separator"></div>
-              <!-- <button
-                class="long-button gray"
-                style="
-                  margin-right: 0;
-                  margin-top: 1rem;
-                  margin-bottom: 0.5rem;
-                  padding-top: 0.4rem;
-                  padding-bottom: 0.4rem;
-                "
-              >
-                Coming Soon...
-              </button> -->
+       
               <button
                 v-if="hasZoomIntegration"
                 class="long-button coral"
@@ -368,10 +357,10 @@
                     padding-bottom: 0.4rem;
                   "
                 >
-                  <img 
+                  <img
                     src="@/assets/images/chat-lock.svg"
                     class="filtered-gray"
-                    style="height: 12px; margin-right: 0.5rem;"
+                    style="height: 12px; margin-right: 0.5rem"
                   />
                   Connect
                 </button>
@@ -392,11 +381,11 @@
               </button>
             </div>
           </div>
-        </div>
+        </div> -->
         <!-- Twitter -->
-        <!-- <div class="card">
+        <div class="card">
           <div class="card__header" style="">
-            <img style="height: 40px" src="@/assets/images/twitter-x.svg" />
+            <img style="height: 40px; margin-left: -12px" src="@/assets/images/twitter-x.svg" />
           </div>
           <div class="card__body">
             <div style="display: flex">
@@ -429,14 +418,13 @@
                 Connect
                 <img
                   src="@/assets/images/angle-small-right.svg"
-                  class="green-filter"
-                  style="margin-top: 1px; margin-left: 0.5rem; height: 16px; font-weight: bold"
+                  style="margin-top: 1px; margin-left: 0.5rem; height: 16px; filter: opacity(40%)"
                 />
               </button>
             </div>
           </div>
-        </div> -->
-        <!-- Instagram -->
+        </div>
+        <!-- instagram -->
         <div class="card">
           <div class="card__header" style="">
             <img style="height: 40px" src="@/assets/images/instagram-11.svg" />
@@ -451,13 +439,7 @@
               <div class="separator"></div>
               <button
                 class="long-button gray"
-                style="
-                  margin-right: 0;
-                  margin-top: 1rem;
-                  margin-bottom: 0.5rem;
-                  padding-top: 0.4rem;
-                  padding-bottom: 0.4rem;
-                "
+                style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem"
               >
                 Coming Soon...
               </button>
@@ -1187,10 +1169,16 @@ export default {
       }
     },
     async twitterAuthorization() {
-      const authoRes = await User.api.getTwitterAuthorization()
-      if (authoRes.link) {
-        localStorage.twitterVerification = authoRes.verifier
-        window.location.href = authoRes.link
+      try {
+        await User.api.getTwitterAuthorization().then((res) => {
+          console.log('res here', res)
+          if (res.link) {
+            // localStorage.twitterVerification = res.verifier
+            window.location.href = res.link
+          }
+        })
+      } catch (e) {
+        console.log(e)
       }
     },
   },
@@ -1491,7 +1479,7 @@ a {
 .card {
   background-color: $white;
   // padding: 16px 24px;
-  padding: 0.5rem 0.75rem;
+  padding: 16px;
   border: 1px solid $soft-gray;
   border-radius: 8px;
   display: flex;
@@ -1528,11 +1516,10 @@ a {
     justify-content: center;
     margin-left: 12px;
     h3 {
-      margin-top: 0.2rem;
+      margin-top: 0.5rem;
       margin-bottom: 0;
-      // margin: 0;
       padding: 0;
-      font-size: 16px;
+      font-size: 18px;
     }
     p {
       font-size: 12px;
@@ -1602,7 +1589,7 @@ a {
   margin-left: 4px;
 }
 .card-text {
-  font-size: 14px;
+  font-size: 14px !important;
   color: $light-gray-blue;
   margin-top: 0.5rem;
   // text-align: center;
@@ -1919,15 +1906,14 @@ a {
 }
 .long-button {
   @include white-button();
-  // color: $black;
-  // color: $dark-green;
   border: 1px solid $soft-gray;
   cursor: pointer;
   width: 15vw;
-  // border-radius: 0.75rem;
   display: flex;
   align-items: center;
-  padding: 0.25rem 0.5rem;
+  padding: 10px 8px;
+  font-family: $thin-font-family;
+  color: $dark-black-blue;
   @media only screen and (max-width: 600px) {
     width: 60vw;
   }
@@ -2016,7 +2002,9 @@ a {
   }
 }
 .pr-integrations-container {
-  min-width: 82vw;
+  width: 100vw;
+  padding-left: 32px;
+  font-family: $thin-font-family;
 }
 .wrapper {
   display: flex;

@@ -575,7 +575,7 @@ class TwitterAccount(TimeStampModel):
     @staticmethod
     def get_authorization():
         query = urlencode(comms_consts.TWITTER_AUTHORIZATION_QUERY_PARAMS)
-        return f"{comms_consts.AUTHORIZATION_URI}?{query}"
+        return f"{comms_consts.TWITTER_AUTHORIZATION_URI}?{query}"
 
     @staticmethod
     def authenticate(code, identifier):

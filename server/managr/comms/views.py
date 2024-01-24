@@ -714,25 +714,6 @@ class PRSearchViewSet(
         return Response(status=status.HTTP_200_OK)
 
 
-@api_view(["get"])
-@permission_classes([permissions.IsAuthenticated])
-def get_twitter_auth_link(request):
-    link, verifier = TwitterAuthAccount.get_authorization_link()
-    return Response(data={"link": link, "verifier": verifier})
-
-
-@api_view(["POST"])
-@permission_classes([permissions.IsAuthenticated])
-def get_twitter_authentication(request):
-    code = request.data.get("code", None)
-    verifier = request.data.get("verifier", None)
-    try:
-        res = TwitterAuthAccount.get_access_token(code, verifier)
-    except Exception as e:
-        logger.exception(e)
-    return Response(data={"success": True})
-
-
 @api_view(["GET"])
 @permission_classes(
     [
