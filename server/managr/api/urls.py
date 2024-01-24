@@ -382,6 +382,11 @@ urlpatterns = [
         comms_views.get_twitter_authentication,
         name="twitter-authentication",
     ),
+    path(
+        "users/twitter/re-direct",
+        comms_views.redirect_from_twitter,
+        name="redirect-twitter",
+    ),
 ]
 
 router.register("users/reports", core_views.ReportViewSet, "reports"),
