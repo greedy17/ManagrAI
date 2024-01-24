@@ -372,6 +372,16 @@ urlpatterns = [
         name="trigger-alerts",
     ),
     path("shared/<str:encrypted_param>", comms_views.get_shared_summary, "shared"),
+    path(
+        "users/twitter/authorization",
+        comms_views.get_twitter_auth_link,
+        name="twitter-authorization",
+    ),
+    path(
+        "users/twitter/authenticate",
+        comms_views.get_twitter_authentication,
+        name="twitter-authentication",
+    ),
 ]
 
 router.register("users/reports", core_views.ReportViewSet, "reports"),
