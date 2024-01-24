@@ -1,4 +1,5 @@
 from django.conf import settings
+from urllib.parse import urlencode
 
 USE_NEWS_API = settings.USE_NEWS_API
 NEWS_API_KEY = settings.NEWS_API_KEY if USE_NEWS_API else None
@@ -10,8 +11,8 @@ TWITTER_ACCESS_TOKEN = settings.TWITTER_ACCESS_TOKEN if USE_TWITTER_API else Non
 TWITTER_BASE_URI = "https://api.twitter.com/"
 TWITTER_REQUEST_TOKEN_URI = "oauth/request_token"
 TWITTER_RECENT_TWEETS_URI = "2/tweets/search/recent"
-TWITTER_AUTHORIZATION_URI = "https://twitter.com/i/oauth2/authorize"
-TWITTER_ACCESS_TOKEN_URI = TWITTER_BASE_URI + "2/oauth2/token"
+TWITTER_AUTHORIZATION_URI = TWITTER_BASE_URI + "oauth/authorize"
+TWITTER_ACCESS_TOKEN_URI = TWITTER_BASE_URI + "oauth/access_token"
 TWITTER_SCOPES = ["tweet.read", "offline.access", "users.read"]
 if settings.IN_DEV:
     TWITTER_FRONTEND_REDIRECT = "http://localhost:8080/settings/integrations"
@@ -20,6 +21,22 @@ elif settings.IN_STAGING:
 else:
     TWITTER_FRONTEND_REDIRECT = "https://app.managr.ai/settings/integrations"
 TWITTER_API_HEADERS = {"Authorization": f"Bearer {TWITTER_ACCESS_TOKEN}"}
+
+
+TWITTER_AUTHORIZATION_QUERY_PARAMS = {
+    "oauth_callback": TWITTER_REDIRECT_URI,
+    "oauth_consumer_key": TWITTER_CLIENT_ID,
+}
+
+
+def TWITTER_AUTHENTICATION_PARAMS(token, verifier):
+    params = {
+        "oauth_consumer_key": TWITTER_CLIENT_ID,
+        "oauth_token": token,
+        "oauth_verifier": verifier,
+    }
+    return params
+
 
 NEWS_API_HEADERS = {
     "Authorization": f"Bearer {NEWS_API_KEY}",
@@ -155,7 +172,7 @@ OPEN_AI_REGENERATE_ARTICLE = (
 )
 
 OPEN_AI_FIND_JOURNALISTS = (
-    lambda type, beat, location, content : f"""List up to 10 real journalists from relevant publications, along with pitching tips, who would be interested in writing about the content provided. Follow these instructions carefully:
+    lambda type, beat, location, content: f"""List up to 10 real journalists from relevant publications, along with pitching tips, who would be interested in writing about the content provided. Follow these instructions carefully:
     - Publication Type: The journalists must be from news outlets of this type: {type}.
     - Journalistic Beat: The journalist must cover this specific beat: {beat}.
     - Location: The journalists must be based in or primarily cover {location}.
@@ -163,7 +180,7 @@ OPEN_AI_FIND_JOURNALISTS = (
     Content for the Pitch: {content} """
 )
 OPEN_AI_FIND_JOURNALISTS = (
-    lambda type, beat, location, content : f"""List up to 10 real journalists (or social media influencers) from relevant publications, along with pitching tips, who would be interested in writing about the content provided. User will specify whether they want journalist or influencers. Follow these instructions carefully:
+    lambda type, beat, location, content: f"""List up to 10 real journalists (or social media influencers) from relevant publications, along with pitching tips, who would be interested in writing about the content provided. User will specify whether they want journalist or influencers. Follow these instructions carefully:
     - Publication Type: The journalists or influencers must be from news outlets (or social platform) of this type: {type}.
     - Journalistic Beat: The journalist or influencers must cover this specific beat: {beat}.
     - Location: The journalists or influencers must be based in or primarily cover {location}.
@@ -172,7 +189,7 @@ OPEN_AI_FIND_JOURNALISTS = (
 )
 
 OPEN_AI_GENERATE_FEEDBACK = (
-    lambda type, audience, objective, feedback, content : f"""
+    lambda type, audience, objective, feedback, content: f"""
     Analyze the content along with the post details below from the perspective of a Social Media Manager and provide short, blunt, direct feedback in order to help optimize the content. Output must be as follows: Score: 1-10 (10 being best), Score details: 3-4 bullet points outlining score reasoning, Feedback: 1-2 sentences providing additional feedback.
     Post Type: {type}
     Target Audience: {audience}
@@ -183,7 +200,7 @@ OPEN_AI_GENERATE_FEEDBACK = (
 )
 
 REGENERATE_CONTENT_WITH_FEEDBACK = (
-    lambda content,feedback : f"""
+    lambda content, feedback: f"""
     Rewrite the content below based on this feedback
     Content: {content}
     Feedback: {feedback}
@@ -192,7 +209,7 @@ REGENERATE_CONTENT_WITH_FEEDBACK = (
 
 
 RUN_PROCESS = (
-    lambda date, type, summary, details, style : f""""
+    lambda date, type, summary, details, style: f""""
     Today is {date}. You are tasked with creating content based on the latest news which is provided below, along with other important details. You must adhere to the writing style provided. For context, user may have also provided additional details about themselves, their company, or their intent for the content being written.
     a. Content Instructions: {type}
     b. Content cannot exceed 2,000 characters

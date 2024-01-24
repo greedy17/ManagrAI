@@ -18,17 +18,24 @@ from rest_framework import (
     status,
     viewsets,
 )
+from rest_framework.exceptions import ValidationError
 from urllib.parse import urlencode
 from django.shortcuts import redirect
 from rest_framework.decorators import action
 from . import constants as comms_consts
-from .models import Search, TwitterAuthAccount, Pitch, Process
+from .models import Search, TwitterAccount, Pitch, Process
 from .models import Article as InternalArticle
 from .models import WritingStyle, EmailAlert
 from managr.core.models import User
 from managr.comms import exceptions as comms_exceptions
 from .tasks import emit_process_website_domain, emit_send_news_summary, emit_share_client_summary
-from .serializers import SearchSerializer, PitchSerializer, EmailAlertSerializer, ProcessSerializer
+from .serializers import (
+    SearchSerializer,
+    PitchSerializer,
+    EmailAlertSerializer,
+    ProcessSerializer,
+    TwitterAccountSerializer,
+)
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
 from managr.utils.misc import decrypt_dict
@@ -1309,10 +1316,9 @@ class EmailAlertViewSet(
         url_path="get-email-alerts",
     )
     def get_email_alerts(self, request, *args, **kwargs):
-
         alerts = EmailAlert.objects
         serialized = EmailAlertSerializer(alerts, many=True)
-        return Response(data=serialized.data, status=status.HTTP_200_OK)    
+        return Response(data=serialized.data, status=status.HTTP_200_OK)
 
 
 class ProcessViewSet(
@@ -1443,3 +1449,33 @@ class ProcessViewSet(
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
         return Response({"content": content})
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def get_twitter_auth_link(request):
+    link = TwitterAccount.get_authorization()
+    return Response({"link": link})
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def get_twitter_authentication(request):
+    code = request.data.get("code", None)
+    user = request.user
+    if not code:
+        raise ValidationError()
+    res = TwitterAccount.create_account(code, request.user.id)
+    existing = TwitterAccount.objects.filter(user=request.user).first()
+    if existing:
+        serializer = TwitterAccountSerializer(data=res.as_dict, instance=existing)
+    else:
+        serializer = TwitterAccountSerializer(data=res.as_dict)
+    try:
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+    except Exception as e:
+        logger.exception(f"HUBSPOT ACCOUNT CREATION ERROR: {e}\n RES: {res}")
+        return Response(data={"success": False})
+    return Response(data={"success": True})

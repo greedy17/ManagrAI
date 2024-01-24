@@ -530,3 +530,60 @@ class Process(TimeStampModel):
 
     class Meta:
         ordering = ["name"]
+
+
+class TwitterAccount(TimeStampModel):
+    user = models.ForeignKey(
+        "core.User",
+        related_name="twitter_account",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
+    )
+    access_token = models.CharField(max_length=255, null=True)
+    access_token_secret = models.CharField(max_length=255, null=True)
+    display_name = models.CharField(max_length=255, null=True)
+
+    @staticmethod
+    def _handle_response(response, fn_name=None):
+        if not hasattr(response, "status_code"):
+            raise ValueError
+
+        elif response.status_code == 200 or response.status_code == 201:
+            try:
+                data = response.json()
+            except json.decoder.JSONDecodeError as e:
+                return logger.error(f"An error occured with a nylas integration, {e}")
+            except Exception as e:
+                TwitterApiException(e)
+
+        else:
+            status_code = response.status_code
+            error_data = response.json()
+            error_param = error_data.get("errors", None)
+            error_message = error_data.get("message", None)
+            error_code = error_data.get("code", None)
+            kwargs = {
+                "status_code": status_code,
+                "error_code": error_code,
+                "error_param": error_param,
+                "error_message": error_message,
+            }
+            return TwitterApiException(kwargs)
+        return data
+
+    @staticmethod
+    def get_authorization():
+        query = urlencode(comms_consts.TWITTER_AUTHORIZATION_QUERY_PARAMS)
+        return f"{comms_consts.AUTHORIZATION_URI}?{query}"
+
+    @staticmethod
+    def authenticate(code, identifier):
+        data = comms_consts.TWITTER_AUTHENTICATION_PARAMS(code, identifier)
+        with Variable_Client() as client:
+            res = client.post(
+                f"{comms_consts.AUTHENTICATION_URI}",
+                data=data,
+                headers=comms_consts.AUTHENTICATION_HEADERS,
+            )
+            return TwitterAccount._handle_response(res)
