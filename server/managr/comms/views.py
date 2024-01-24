@@ -1461,15 +1461,14 @@ def get_twitter_authentication(request):
 
 def redirect_from_twitter(request):
     print("I AM HERE !!!!!!")
-    verifier = request.GET.get("oauth_verifier")
-    oauth_callback_confirmed = request.GET.get("oauth_callback_confirmed", None)
+    verifier = request.GET.get("oauth_verifier", False)
     q = urlencode(
         {
             "state": "TWITTER",
             "oauth_verifier": verifier,
         }
     )
-    if not oauth_callback_confirmed:
+    if not verifier:
         err = {"error": "there was an error"}
         err = urlencode(err)
         return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{err}")
