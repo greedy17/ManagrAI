@@ -587,6 +587,7 @@ class TwitterAccount(TimeStampModel):
                 data=data,
                 headers=comms_consts.TWITTER_API_HEADERS
             )
+            print('RESPONSE IS HERE --- >',res)
             return TwitterAccount._handle_response(res)
 
     @staticmethod

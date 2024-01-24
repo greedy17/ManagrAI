@@ -1460,7 +1460,6 @@ def get_twitter_authentication(request):
 
 
 def redirect_from_twitter(request):
-    print('I AM HERE !!!!!!')
     oauth_token = request.GET.get("oauth_token", None)
     oauth_callback_confirmed = request.GET.get("oauth_callback_confirmed", None)
     oauth_token_secret = request.GET.get("code", None)
