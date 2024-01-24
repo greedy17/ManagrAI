@@ -573,9 +573,21 @@ class TwitterAccount(TimeStampModel):
         return data
 
     @staticmethod
-    def get_authorization():
-        query = urlencode(comms_consts.TWITTER_AUTHORIZATION_QUERY_PARAMS)
+    def get_authorization(token):
+        query = urlencode(comms_consts.TWITTER_TOKEN_PARAMS(token))
         return f"{comms_consts.TWITTER_AUTHORIZATION_URI}?{query}"
+
+    @staticmethod
+    def get_token():
+        data = comms_consts.TWITTER_AUTHORIZATION_QUERY_PARAMS
+        print('data is here', data)
+        with Variable_Client() as client:
+            res = client.post(
+                f"{comms_consts.TWITTER_REQUEST_TOKEN_URI}",
+                data=data,
+                headers=comms_consts.TWITTER_API_HEADERS
+            )
+            return TwitterAccount._handle_response(res)
 
     @staticmethod
     def authenticate(code, identifier):

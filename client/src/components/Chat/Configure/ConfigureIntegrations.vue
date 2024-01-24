@@ -1168,14 +1168,20 @@ export default {
         // }
       }
     },
+
     async twitterAuthorization() {
       try {
-        await User.api.getTwitterAuthorization().then((res) => {
-          console.log('res here', res)
-          if (res.link) {
-            // localStorage.twitterVerification = res.verifier
-            window.location.href = res.link
-          }
+        await User.api.getTwitterToken().then((res) => {
+          console.log(res)
+          // if (res.token) {
+          //   User.api.getTwitterAuthorization({ token: res.token }).then((res) => {
+          //     console.log('res here', res)
+
+          //     if (res.link) {
+          //       window.location.href = res.link
+          //     }
+          //   })
+          // }
         })
       } catch (e) {
         console.log(e)

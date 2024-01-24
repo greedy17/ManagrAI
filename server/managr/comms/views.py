@@ -1422,10 +1422,17 @@ class ProcessViewSet(
         return Response({"content": content})
 
 
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def get_twitter_request_token(request):
+    token = TwitterAccount.get_token()
+    return Response({"token": token})
+
+
 @api_view(["GET"])
 @permission_classes([permissions.IsAuthenticated])
 def get_twitter_auth_link(request):
-    link = TwitterAccount.get_authorization()
+    link = TwitterAccount.get_authorization(request.token)
     return Response({"link": link})
 
 

@@ -5,11 +5,12 @@ USE_NEWS_API = settings.USE_NEWS_API
 NEWS_API_KEY = settings.NEWS_API_KEY if USE_NEWS_API else None
 
 USE_TWITTER_API = settings.USE_TWITTER_API
+TWITTER_API_KEY = settings.TWITTER_API_KEY
 TWITTER_CLIENT_ID = settings.TWITTER_CLIENT_ID if USE_TWITTER_API else None
 TWITTER_REDIRECT_URI = settings.TWITTER_REDIRECT_URI if USE_TWITTER_API else None
 TWITTER_ACCESS_TOKEN = settings.TWITTER_ACCESS_TOKEN if USE_TWITTER_API else None
 TWITTER_BASE_URI = "https://api.twitter.com/"
-TWITTER_REQUEST_TOKEN_URI = "oauth/request_token"
+TWITTER_REQUEST_TOKEN_URI = TWITTER_BASE_URI + "oauth/request_token/"
 TWITTER_RECENT_TWEETS_URI = "2/tweets/search/recent"
 TWITTER_AUTHORIZATION_URI = TWITTER_BASE_URI + "oauth/authorize"
 TWITTER_ACCESS_TOKEN_URI = TWITTER_BASE_URI + "oauth/access_token"
@@ -25,18 +26,26 @@ TWITTER_API_HEADERS = {"Authorization": f"Bearer {TWITTER_ACCESS_TOKEN}"}
 
 TWITTER_AUTHORIZATION_QUERY_PARAMS = {
     "oauth_callback": TWITTER_REDIRECT_URI,
-    "oauth_consumer_key": TWITTER_CLIENT_ID,
+    "oauth_consumer_key": TWITTER_API_KEY,
 }
 
 
 def TWITTER_AUTHENTICATION_PARAMS(token, verifier):
     params = {
-        "oauth_consumer_key": TWITTER_CLIENT_ID,
+        "oauth_consumer_key": TWITTER_API_KEY,
         "oauth_token": token,
         "oauth_verifier": verifier,
     }
     return params
 
+
+def TWITTER_TOKEN_PARAMS(token):
+    params = {
+        "oauth_token": token,
+        "oauth_callback": TWITTER_REDIRECT_URI,
+    }
+    return params
+  
 
 NEWS_API_HEADERS = {
     "Authorization": f"Bearer {NEWS_API_KEY}",
