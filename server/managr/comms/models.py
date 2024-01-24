@@ -19,6 +19,7 @@ from urllib.parse import urlencode
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.indexes import GinIndex
+from requests_oauthlib import OAuth1Session
 
 logger = logging.getLogger("managr")
 
@@ -578,16 +579,12 @@ class TwitterAccount(TimeStampModel):
         return f"{comms_consts.TWITTER_AUTHORIZATION_URI}?{query}"
 
     @staticmethod
-    def get_token():
-        data = comms_consts.TWITTER_AUTHORIZATION_QUERY_PARAMS
-        print('data is here', data)
-        with Variable_Client() as client:
-            res = client.post(
-                f"{comms_consts.TWITTER_REQUEST_TOKEN_URI}",
-                data=data,
-                headers=comms_consts.TWITTER_API_HEADERS
-            )
-            return TwitterAccount._handle_response(res)
+    def get_token(request):
+        client = OAuth1Session(comms_consts.TWITTER_API_KEY, comms_consts.TWITTER_API_SECRET)
+        request_token = client.fetch_request_token(comms_consts.TWITTER_REQUEST_TOKEN_URI)
+        authorization = client.authorization_url(comms_consts.TWITTER_AUTHORIZATION_URI)
+        print(authorization)
+        return authorization
 
     @staticmethod
     def authenticate(code, identifier):

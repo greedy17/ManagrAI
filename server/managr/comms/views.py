@@ -1425,8 +1425,8 @@ class ProcessViewSet(
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def get_twitter_request_token(request):
-    token = TwitterAccount.get_token()
-    return Response({"token": token})
+    authorization_url = TwitterAccount.get_token(request)
+    return redirect(authorization_url)
 
 
 @api_view(["GET"])
@@ -1460,7 +1460,7 @@ def get_twitter_authentication(request):
 
 
 def redirect_from_twitter(request):
-    print('I AM HERE !!!!!!')
+    print("I AM HERE !!!!!!")
     oauth_token = request.GET.get("oauth_token", None)
     oauth_callback_confirmed = request.GET.get("oauth_callback_confirmed", None)
     oauth_token_secret = request.GET.get("code", None)
