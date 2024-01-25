@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Search, Pitch, NewsSource, Article, EmailAlert, WritingStyle
+from .models import Search, Pitch, NewsSource, Article, EmailAlert, WritingStyle, TwitterAccount
 
 # Register your models here.
 
@@ -62,3 +62,4 @@ admin.site.register(NewsSource, CustomNewsSource)
 admin.site.register(Article, CustomArticle)
 admin.site.register(EmailAlert, CustomEmailAlertAdmin)
 admin.site.register(WritingStyle)
+admin.site.register(TwitterAccount)
