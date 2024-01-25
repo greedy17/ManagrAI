@@ -549,6 +549,7 @@ class PRSearchViewSet(
     )
     def get_tweets(self, request, *args, **kwargs):
         user = User.objects.get(id=request.GET.get("user_id"))
+        twitter_account = user.twitter_account
         has_error = False
         search = request.GET.get("search")
         query_input = None
@@ -578,7 +579,7 @@ class PRSearchViewSet(
                     query_input = r.get("choices")[0].get("message").get("content")
                     query_input = query_input.replace("AND", " ")
                     query_input = query_input + " lang:en"
-                tweet_res = TwitterAuthAccount.get_tweets(query_input, next_token)
+                tweet_res = twitter_account.adapter.get_tweets(query_input, next_token)
                 tweets = tweet_res.get("data", None)
                 includes = tweet_res.get("includes", None)
                 if tweets:
@@ -644,13 +645,14 @@ class PRSearchViewSet(
         tweets = request.data.get("tweets")
         search = request.data.get("search")
         instructions = request.data.get("instructions", False)
+        twitter_account = user.twitter_account
         has_error = False
         attempts = 1
         token_amount = 1000
         timeout = 60.0
         while True:
             try:
-                res = TwitterAuthAccount.get_summary(
+                res = twitter_account.adapter.get_summary(
                     request.user, token_amount, timeout, tweets, search, instructions, True
                 )
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
@@ -1439,28 +1441,26 @@ def get_twitter_auth_link(request):
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def get_twitter_authentication(request):
-    code = request.data.get("code", None)
     user = request.user
-    if not code:
-        raise ValidationError()
-    res = TwitterAccount.create_account(code, request.user.id)
+    data = request.data
+    access_token = TwitterAccount.authenticate(data.get("oauth_token"), data.get("oauth_verifier"))
+    data = {"user": user, "access_token": access_token}
     existing = TwitterAccount.objects.filter(user=request.user).first()
     if existing:
-        serializer = TwitterAccountSerializer(data=res.as_dict, instance=existing)
+        serializer = TwitterAccountSerializer(data=data, instance=existing)
     else:
-        serializer = TwitterAccountSerializer(data=res.as_dict)
+        serializer = TwitterAccountSerializer(data=data)
     try:
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
     except Exception as e:
-        logger.exception(f"HUBSPOT ACCOUNT CREATION ERROR: {e}\n RES: {res}")
+        logger.exception(str(e))
         return Response(data={"success": False})
     return Response(data={"success": True})
 
 
 def redirect_from_twitter(request):
-    print("I AM HERE !!!!!!")
     verifier = request.GET.get("oauth_verifier", False)
     q = urlencode(
         {

@@ -20,6 +20,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.indexes import GinIndex
 from requests_oauthlib import OAuth1Session
+from oauthlib.oauth2 import OAuth2Error
 
 logger = logging.getLogger("managr")
 
@@ -118,7 +119,9 @@ class Search(TimeStampModel):
 
 class TwitterAuthAccountAdapter:
     def __init__(self, **kwargs):
+        self.user = kwargs.get("user", None)
         self.access_token = kwargs.get("access_token", None)
+        self.display_name = kwargs.get("display_name", None)
 
     @staticmethod
     def _handle_response(response, fn_name=None):
@@ -225,13 +228,6 @@ class TwitterAuthAccountAdapter:
         with Variable_Client() as client:
             res = client.post(url, headers={"Content-Type": "application/x-www-form-urlencoded"})
         return cls._handle_response(res)
-
-
-TwitterAuthAccount = TwitterAuthAccountAdapter(
-    **{
-        "access_token": comms_consts.TWITTER_ACCESS_TOKEN,
-    }
-)
 
 
 class Pitch(TimeStampModel):
@@ -573,6 +569,15 @@ class TwitterAccount(TimeStampModel):
             return TwitterApiException(kwargs)
         return data
 
+    def adapter(self):
+        return TwitterAuthAccountAdapter(
+            **{
+                "user": self.user,
+                "access_token": self.access_token,
+                "display_name": self.display_name,
+            }
+        )
+
     @staticmethod
     def get_authorization(token):
         query = urlencode(comms_consts.TWITTER_TOKEN_PARAMS(token))
@@ -580,19 +585,25 @@ class TwitterAccount(TimeStampModel):
 
     @staticmethod
     def get_token(request):
-        client = OAuth1Session(comms_consts.TWITTER_API_KEY, comms_consts.TWITTER_API_SECRET)
+        client = OAuth1Session(
+            comms_consts.TWITTER_API_KEY,
+            comms_consts.TWITTER_API_SECRET,
+            callback_uri=comms_consts.TWITTER_REDIRECT_URI,
+        )
         request_token = client.fetch_request_token(comms_consts.TWITTER_REQUEST_TOKEN_URI)
         authorization = client.authorization_url(comms_consts.TWITTER_AUTHORIZATION_URI)
         request_token["link"] = authorization
         return request_token
 
     @staticmethod
-    def authenticate(code, identifier):
-        data = comms_consts.TWITTER_AUTHENTICATION_PARAMS(code, identifier)
-        with Variable_Client() as client:
-            res = client.post(
-                f"{comms_consts.AUTHENTICATION_URI}",
-                data=data,
-                headers=comms_consts.AUTHENTICATION_HEADERS,
+    def authenticate(request_token, verifier):
+        client = OAuth1Session(
+            comms_consts.TWITTER_API_KEY, comms_consts.TWITTER_API_SECRET, request_token
+        )
+        try:
+            access_token = client.fetch_access_token(
+                comms_consts.TWITTER_ACCESS_TOKEN_URI, verifier
             )
-            return TwitterAccount._handle_response(res)
+            return access_token
+        except OAuth2Error:
+            return "Invalid authorization code"

@@ -476,6 +476,10 @@ class User(AbstractUser, TimeStampModel):
         return hasattr(self, "team_lead_of")
 
     @property
+    def has_twitter_integration(self):
+        return hasattr(self, "twitter_account")
+
+    @property
     def as_slack_option(self):
         return block_builders.option(self.full_name, str(self.id))
 
