@@ -71,13 +71,21 @@
           </div>
 
           <label for="loc">Additional details</label>
-          <input
-            class="input-text"
-            placeholder="(e.g., company name & description, personal preferences, etc.)"
+          <textarea
+            class="area-input text-area-input bordered"
+            style="
+              width: 500px;
+              border: 1px solid rgba(0, 0, 0, 0.1) !important;
+              border-radius: 4px;
+              margin-top: 1rem;
+              background-color: white;
+            "
+            placeholder="(e.g., content objective, company details, target audience, etc.)"
             type="text"
-            id="loc"
+            id="details"
             v-model="processDetails"
             :disabled="loading"
+            v-autoresize
           />
         </div>
 
@@ -1289,6 +1297,7 @@ button:disabled {
 }
 
 .process-modal {
+  height: 800px;
   margin-top: 132px;
   @media only screen and (max-width: 600px) {
     margin-top: 62px;
@@ -1310,6 +1319,11 @@ button:disabled {
   @media only screen and (max-width: 600px) {
     width: 95%;
   }
+}
+
+.bordered {
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  border-radius: 4px;
 }
 
 // .modal-container::-webkit-scrollbar {
