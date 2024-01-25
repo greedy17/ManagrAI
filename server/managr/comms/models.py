@@ -607,7 +607,7 @@ class TwitterAccount(TimeStampModel):
                 data=json.dumps(body),
                 headers=core_consts.OPEN_AI_HEADERS,
             )
-        return open_ai_exceptions._handle_response(r)    
+        return open_ai_exceptions._handle_response(r)
 
     def adapter(self):
         return TwitterAuthAccountAdapter(
@@ -626,8 +626,8 @@ class TwitterAccount(TimeStampModel):
     @staticmethod
     def get_token(request):
         client = OAuth1Session(
-            comms_consts.TWITTER_API_KEY,
-            comms_consts.TWITTER_API_SECRET,
+            # comms_consts.TWITTER_API_KEY,
+            # comms_consts.TWITTER_API_SECRET,
             callback_uri=comms_consts.TWITTER_REDIRECT_URI,
         )
         request_token = client.fetch_request_token(comms_consts.TWITTER_REQUEST_TOKEN_URI)
@@ -637,9 +637,9 @@ class TwitterAccount(TimeStampModel):
 
     @staticmethod
     def authenticate(request_token, verifier):
-        client = OAuth1Session(
-            comms_consts.TWITTER_API_KEY, comms_consts.TWITTER_API_SECRET, request_token
-        )
+        # client = OAuth1Session(
+        #     comms_consts.TWITTER_API_KEY, comms_consts.TWITTER_API_SECRET, request_token
+        # )
         try:
             access_token = client.fetch_access_token(
                 comms_consts.TWITTER_ACCESS_TOKEN_URI, verifier
