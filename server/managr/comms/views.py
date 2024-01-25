@@ -549,7 +549,7 @@ class PRSearchViewSet(
     )
     def get_tweets(self, request, *args, **kwargs):
         user = User.objects.get(id=request.GET.get("user_id"))
-        twitter_account = user.twitter_account.all().first()
+        twitter_account = user.twitter_account
         has_error = False
         search = request.GET.get("search")
         query_input = None
@@ -645,7 +645,7 @@ class PRSearchViewSet(
         tweets = request.data.get("tweets")
         search = request.data.get("search")
         instructions = request.data.get("instructions", False)
-        twitter_account = user.twitter_account.all().first()
+        twitter_account = user.twitter_account
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -1444,7 +1444,11 @@ def get_twitter_authentication(request):
     user = request.user
     data = request.data
     access_token = TwitterAccount.authenticate(data.get("oauth_token"), data.get("oauth_verifier"))
-    data = {"user": user.id, "access_token": access_token.get("oauth_token"), "access_token_secret": access_token.get("oauth_token_secret")}
+    data = {
+        "user": user.id,
+        "access_token": access_token.get("oauth_token"),
+        "access_token_secret": access_token.get("oauth_token_secret"),
+    }
     existing = TwitterAccount.objects.filter(user=request.user).first()
     if existing:
         serializer = TwitterAccountSerializer(data=data, instance=existing)
@@ -1463,14 +1467,7 @@ def get_twitter_authentication(request):
 def redirect_from_twitter(request):
     verifier = request.GET.get("oauth_verifier", False)
     token = request.GET.get("oauth_token", False)
-    q = urlencode(
-        {
-            "state": "TWITTER",
-            "oauth_verifier": verifier,
-            "code": 'code',
-            "token": token
-        }
-    )
+    q = urlencode({"state": "TWITTER", "oauth_verifier": verifier, "code": "code", "token": token})
     if not verifier:
         err = {"error": "there was an error"}
         err = urlencode(err)
