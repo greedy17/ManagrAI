@@ -549,7 +549,7 @@ class PRSearchViewSet(
     )
     def get_tweets(self, request, *args, **kwargs):
         user = User.objects.get(id=request.GET.get("user_id"))
-        twitter_account = user.twitter_account
+        twitter_account = user.twitter_account.all().first()
         has_error = False
         search = request.GET.get("search")
         query_input = None
@@ -579,7 +579,7 @@ class PRSearchViewSet(
                     query_input = r.get("choices")[0].get("message").get("content")
                     query_input = query_input.replace("AND", " ")
                     query_input = query_input + " lang:en"
-                tweet_res = twitter_account.adapter.get_tweets(query_input, next_token)
+                tweet_res = twitter_account.get_tweets(query_input, next_token)
                 tweets = tweet_res.get("data", None)
                 includes = tweet_res.get("includes", None)
                 if tweets:
@@ -645,14 +645,14 @@ class PRSearchViewSet(
         tweets = request.data.get("tweets")
         search = request.data.get("search")
         instructions = request.data.get("instructions", False)
-        twitter_account = user.twitter_account
+        twitter_account = user.twitter_account.all().first()
         has_error = False
         attempts = 1
         token_amount = 1000
         timeout = 60.0
         while True:
             try:
-                res = twitter_account.adapter.get_summary(
+                res = twitter_account.get_summary(
                     request.user, token_amount, timeout, tweets, search, instructions, True
                 )
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
