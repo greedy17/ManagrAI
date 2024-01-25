@@ -382,21 +382,21 @@
               >
                 News
               </div>
-              <!-- <div
+              <div
                 @click="switchMainView('social')"
                 :class="{ activeswitch: mainView === 'social' }"
                 class="switch-item"
                 id="social-tab"
               >
-                Social
-              </div> -->
+                X
+              </div>
               <div
                 @click="switchMainView('website')"
                 :class="{ activeswitch: mainView === 'website' }"
                 class="switch-item"
                 id="articles-tab"
               >
-                Article
+                Url
               </div>
             </div>
             <div
@@ -429,21 +429,21 @@
                   >
                     News
                   </div>
-                  <!-- <div
+                  <div
                     @click="switchMainView('social')"
                     :class="{ activeswitch: mainView === 'social' }"
                     class="switch-item"
                     id="social-tab"
                   >
-                    Social
-                  </div> -->
+                    X
+                  </div>
                   <div
                     @click="switchMainView('website')"
                     :class="{ activeswitch: mainView === 'website' }"
                     class="switch-item"
                     id="articles-tab"
                   >
-                    Article
+                    URL
                   </div>
                 </div>
 
@@ -1136,6 +1136,7 @@
                     @mouseleave="defaultEmailText"
                     @click="toggleSaveModal"
                     class="wrapper absolute-right circle-border white-bg"
+                    :class="mainView === 'social' ? 'rightalign' : ''"
                     style="margin-right: 0; right: 128px"
                     :disabled="
                       articleSummaryLoading ||
@@ -1257,7 +1258,7 @@
                       padding-top: 16px;
                       border-top: 1px solid rgba(0, 0, 0, 0.1);
                     "
-                    class="pre-text"
+                    class="pre-text bottom-border"
                     v-html="summary"
                   ></pre>
 
@@ -2874,6 +2875,7 @@ export default {
       this.changeSearch({ search: null, template: null })
       this.savedSearch = null
       this.showGenerateDropdown = false
+      this.showingDropdown = false
       if (!this.isPaid && this.searchesUsed >= 10) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
@@ -2890,7 +2892,7 @@ export default {
         return
       } else if (this.mainView === 'social') {
         this.closeRegenModal()
-        this.getTweets()
+        this.getTweets(saved)
       } else if (this.mainView === 'website') {
         this.closeRegenModal()
         this.getSourceSummary()
@@ -3152,7 +3154,7 @@ export default {
         this.loading = false
       }
     },
-    async getTweets(boolean = null) {
+    async getTweets(saved = false) {
       this.summary = null
       this.loading = true
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
@@ -3173,7 +3175,7 @@ export default {
               this.tweets = response.tweets
               this.tweetMedia = response.includes.media
               this.booleanString = response.string
-              // this.getTweetSummary()
+              this.getTweetSummary()
             }
             this.clearNewSearch()
             this.showingDropdown = false
@@ -3230,6 +3232,9 @@ export default {
               return this.stopLoading()
             }
             this.summary = response.summary
+            if (this.searchSaved) {
+              this.updateSearch()
+            }
             this.refreshUser()
           })
       } catch (e) {
@@ -3262,7 +3267,6 @@ export default {
       this.chatSummaryLoading = false
     },
     async getSummary(clips, instructions = '') {
-      console.log(instructions)
       const allClips = this.getArticleDescriptions(clips)
       this.summaryLoading = true
       let openAiDown = false
@@ -3810,9 +3814,12 @@ export default {
   font-weight: 400;
   font-size: 12px;
   img {
-    filter: invert(63%) sepia(10%) saturate(617%) hue-rotate(200deg) brightness(93%) contrast(94%);
-    margin-right: 8px;
+    margin: 0 !important;
   }
+  // img {
+  //   filter: invert(63%) sepia(10%) saturate(617%) hue-rotate(200deg) brightness(93%) contrast(94%);
+  //   margin-right: 8px;
+  // }
 }
 
 .activeswitch {
@@ -4202,6 +4209,12 @@ button:disabled {
   align-items: center;
   justify-content: space-between;
   width: 100%;
+}
+
+.bottom-border {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  margin-bottom: 32px;
+  padding-bottom: 16px;
 }
 
 .column {
@@ -5842,6 +5855,10 @@ header {
 
 .white-bg {
   background: white;
+}
+
+.rightalign {
+  right: 48px !important;
 }
 
 .modal {
