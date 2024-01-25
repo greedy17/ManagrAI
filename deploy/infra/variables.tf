@@ -164,6 +164,8 @@ variable "environments" {
     news_api_key           = string
 
     use_twitter_api        = bool
+    twitter_api_key        = string
+    twitter_api_secret     = string
     twitter_client_id      = string
     twitter_redirect_uri   = string
     twitter_access_token   = string

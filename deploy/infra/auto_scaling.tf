@@ -116,6 +116,8 @@ resource "aws_cloudwatch_metric_alarm" "service_memory_high" {
     ServiceName = aws_ecs_service.main[each.key].name
   }
 
+  alarm_actions = [aws_appautoscaling_policy.up[each.key].arn]
+
   tags = {
     "app" = "managr"
   }
@@ -137,6 +139,8 @@ resource "aws_cloudwatch_metric_alarm" "service_memory_low" {
     ClusterName = aws_ecs_cluster.main.name
     ServiceName = aws_ecs_service.main[each.key].name
   }
+
+  alarm_actions = [aws_appautoscaling_policy.down[each.key].arn]
 
   tags = {
     "app" = "managr"

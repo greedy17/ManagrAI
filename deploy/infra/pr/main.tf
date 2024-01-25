@@ -322,6 +322,8 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
 
     newApiKey            = var.app_config.news_api_key
 
+    twitterApiKey        = each.app_config.twitter_api_key
+    twitterApiSecret     = each.app_config.twitter_api_secret
     twitterClientId      = each.app_config.twitter_client_id
     twitterRedirectUri   = each.app_config.twitter_redirect_uri
     twitterAccessToken   = each.app_config.twitter_access_token

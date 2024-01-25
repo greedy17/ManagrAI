@@ -275,6 +275,14 @@
         "valueFrom": "${config_secret_arn}:newsApiKey::"
       },
       {
+        "name": "TWITTER_API_KEY",
+        "valueFrom": "${config_secret_arn}:twitterApiKey::"
+      },
+      {
+        "name": "TWITTER_API_SECRET",
+        "valueFrom": "${config_secret_arn}:twitterApiSecret::"
+      },
+      {
         "name": "TWITTER_CLIENT_ID",
         "valueFrom": "${config_secret_arn}:twitterClientId::"
       },
