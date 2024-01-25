@@ -530,7 +530,7 @@ class Process(TimeStampModel):
 
 
 class TwitterAccount(TimeStampModel):
-    user = models.ForeignKey(
+    user = models.OneToOneField(
         "core.User",
         related_name="twitter_account",
         blank=False,
