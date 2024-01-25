@@ -17,11 +17,11 @@ TWITTER_AUTHORIZATION_URI = TWITTER_BASE_URI + "oauth/authorize"
 TWITTER_ACCESS_TOKEN_URI = TWITTER_BASE_URI + "oauth/access_token"
 TWITTER_SCOPES = ["tweet.read", "offline.access", "users.read"]
 if settings.IN_DEV:
-    TWITTER_FRONTEND_REDIRECT = "http://localhost:8080/settings/integrations"
+    TWITTER_FRONTEND_REDIRECT = "http://localhost:8080/pr-integrations"
 elif settings.IN_STAGING:
-    TWITTER_FRONTEND_REDIRECT = "https://staging.managr.ai/settings/integrations"
+    TWITTER_FRONTEND_REDIRECT = "https://staging.managr.ai/pr-integrations"
 else:
-    TWITTER_FRONTEND_REDIRECT = "https://app.managr.ai/settings/integrations"
+    TWITTER_FRONTEND_REDIRECT = "https://app.managr.ai/pr-integrations"
 TWITTER_API_HEADERS = {"Authorization": f"Bearer {TWITTER_ACCESS_TOKEN}"}
 
 
