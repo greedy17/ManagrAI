@@ -18,17 +18,24 @@ from rest_framework import (
     status,
     viewsets,
 )
+from rest_framework.exceptions import ValidationError
 from urllib.parse import urlencode
 from django.shortcuts import redirect
 from rest_framework.decorators import action
 from . import constants as comms_consts
-from .models import Search, TwitterAuthAccount, Pitch, Process
+from .models import Search, TwitterAccount, Pitch, Process
 from .models import Article as InternalArticle
 from .models import WritingStyle, EmailAlert
 from managr.core.models import User
 from managr.comms import exceptions as comms_exceptions
 from .tasks import emit_process_website_domain, emit_send_news_summary, emit_share_client_summary
-from .serializers import SearchSerializer, PitchSerializer, EmailAlertSerializer, ProcessSerializer
+from .serializers import (
+    SearchSerializer,
+    PitchSerializer,
+    EmailAlertSerializer,
+    ProcessSerializer,
+    TwitterAccountSerializer,
+)
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
 from managr.utils.misc import decrypt_dict
@@ -542,6 +549,7 @@ class PRSearchViewSet(
     )
     def get_tweets(self, request, *args, **kwargs):
         user = User.objects.get(id=request.GET.get("user_id"))
+        twitter_account = user.twitter_account
         has_error = False
         search = request.GET.get("search")
         query_input = None
@@ -571,7 +579,7 @@ class PRSearchViewSet(
                     query_input = r.get("choices")[0].get("message").get("content")
                     query_input = query_input.replace("AND", " ")
                     query_input = query_input + " lang:en"
-                tweet_res = TwitterAuthAccount.get_tweets(query_input, next_token)
+                tweet_res = twitter_account.get_tweets(query_input, next_token)
                 tweets = tweet_res.get("data", None)
                 includes = tweet_res.get("includes", None)
                 if tweets:
@@ -637,13 +645,14 @@ class PRSearchViewSet(
         tweets = request.data.get("tweets")
         search = request.data.get("search")
         instructions = request.data.get("instructions", False)
+        twitter_account = user.twitter_account
         has_error = False
         attempts = 1
         token_amount = 1000
         timeout = 60.0
         while True:
             try:
-                res = TwitterAuthAccount.get_summary(
+                res = twitter_account.get_summary(
                     request.user, token_amount, timeout, tweets, search, instructions, True
                 )
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
@@ -707,25 +716,6 @@ class PRSearchViewSet(
         return Response(status=status.HTTP_200_OK)
 
 
-@api_view(["get"])
-@permission_classes([permissions.IsAuthenticated])
-def get_twitter_auth_link(request):
-    link, verifier = TwitterAuthAccount.get_authorization_link()
-    return Response(data={"link": link, "verifier": verifier})
-
-
-@api_view(["POST"])
-@permission_classes([permissions.IsAuthenticated])
-def get_twitter_authentication(request):
-    code = request.data.get("code", None)
-    verifier = request.data.get("verifier", None)
-    try:
-        res = TwitterAuthAccount.get_access_token(code, verifier)
-    except Exception as e:
-        logger.exception(e)
-    return Response(data={"success": True})
-
-
 @api_view(["GET"])
 @permission_classes(
     [
@@ -741,16 +731,6 @@ def get_shared_summary(request, encrypted_param):
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     search = Search.objects.get(id=decrypt_dict["id"])
     return Response(data={"summary": search.summary})
-
-
-def redirect_from_twitter(request):
-    code = request.GET.get("code", None)
-    q = urlencode({"code": code, "state": "TWITTER"})
-    if not code:
-        err = {"error": "there was an error"}
-        err = urlencode(err)
-        return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{err}")
-    return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{q}")
 
 
 @api_view(["POST"])
@@ -1309,10 +1289,9 @@ class EmailAlertViewSet(
         url_path="get-email-alerts",
     )
     def get_email_alerts(self, request, *args, **kwargs):
-
         alerts = EmailAlert.objects
         serialized = EmailAlertSerializer(alerts, many=True)
-        return Response(data=serialized.data, status=status.HTTP_200_OK)    
+        return Response(data=serialized.data, status=status.HTTP_200_OK)
 
 
 class ProcessViewSet(
@@ -1443,3 +1422,54 @@ class ProcessViewSet(
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
         return Response({"content": content})
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def get_twitter_request_token(request):
+    res = TwitterAccount.get_token(request)
+    return Response(res)
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def get_twitter_auth_link(request):
+    link = TwitterAccount.get_authorization(request.token)
+    return Response({"link": link})
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def get_twitter_authentication(request):
+    user = request.user
+    data = request.data
+    access_token = TwitterAccount.authenticate(data.get("oauth_token"), data.get("oauth_verifier"))
+    data = {
+        "user": user.id,
+        "access_token": access_token.get("oauth_token"),
+        "access_token_secret": access_token.get("oauth_token_secret"),
+    }
+    existing = TwitterAccount.objects.filter(user=request.user).first()
+    if existing:
+        serializer = TwitterAccountSerializer(data=data, instance=existing)
+    else:
+        serializer = TwitterAccountSerializer(data=data)
+    try:
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+    except Exception as e:
+        logger.exception(str(e))
+        return Response(data={"success": False})
+    return Response(data={"success": True})
+
+
+def redirect_from_twitter(request):
+    verifier = request.GET.get("oauth_verifier", False)
+    token = request.GET.get("oauth_token", False)
+    q = urlencode({"state": "TWITTER", "oauth_verifier": verifier, "code": "code", "token": token})
+    if not verifier:
+        err = {"error": "there was an error"}
+        err = urlencode(err)
+        return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{err}")
+    return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{q}")

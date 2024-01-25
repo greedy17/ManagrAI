@@ -39,6 +39,7 @@ scrapy = "*"
 typing-extensions = "==4.7.1"
 cryptography = "*"
 protobuf = "==3.20"
+requests-oauthlib = "*"
 
 [requires]
 python_version = "3.9"

@@ -7,6 +7,7 @@ from django.db import IntegrityError
 from ..models import NewsSource
 from ..serializers import ArticleSerializer
 from dateutil import parser
+
 from ..utils import (
     get_domain,
     extract_date_from_text,
@@ -27,10 +28,10 @@ XPATH_STRING_OBJ = {
     ],
     "description": ["//meta[contains(@property, 'description')]/@content"],
     "publish_date": [
+        "//body//time/@datetime | //body//time/@dateTime | //body//time/text()",
         "//meta[contains(@itemprop,'date')]/@content",
         "//meta[contains(translate(@property, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'modified') or contains(translate(@property, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'published')]/@content",
-        "//meta[contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'modified') or contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'published')]/@content",
-        "//body//time/@datetime | //body//time/@dateTime | //body//time/text()",
+        "//meta[contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'mod ified') or contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'published')]/@content",
         "//meta[contains(@name, 'date')]/@content",
         "(//*[contains(translate(@class, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'date')])[last()]//text()",
         f"//body//*[not(self::script) and not(self::p) and (contains(text(),', {datetime.datetime.now().year}') or contains(text(),'{datetime.datetime.now().year},'))]",
@@ -51,6 +52,8 @@ def data_cleaner(data):
         if len(data["title"]) > 150:
             data["title"] = data["title"][:145] + "..."
     except KeyError:
+        return False
+    except parser.ParserError:
         return False
     return data
 
@@ -177,14 +180,14 @@ class NewsSpider(scrapy.Spider):
                     serializer.is_valid(raise_exception=True)
                     serializer.save()
                 else:
-                    raise Exception()
+                    raise Exception("Failed to clean data")
             else:
                 logger.info(f"No content for article: {response.url}")
                 return
         except IntegrityError:
             return
         except Exception as e:
-            source.error_log.append(f"{str(e)} - data: {meta_tag_data}")
+            source.error_log.append(f"{str(e)}, {meta_tag_data}")
             source.save()
         return
 

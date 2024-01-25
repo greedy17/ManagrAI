@@ -19,6 +19,8 @@ from urllib.parse import urlencode
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.indexes import GinIndex
+from requests_oauthlib import OAuth1Session
+from oauthlib.oauth2 import OAuth2Error
 
 logger = logging.getLogger("managr")
 
@@ -117,7 +119,9 @@ class Search(TimeStampModel):
 
 class TwitterAuthAccountAdapter:
     def __init__(self, **kwargs):
+        self.user = kwargs.get("user", None)
         self.access_token = kwargs.get("access_token", None)
+        self.display_name = kwargs.get("display_name", None)
 
     @staticmethod
     def _handle_response(response, fn_name=None):
@@ -224,13 +228,6 @@ class TwitterAuthAccountAdapter:
         with Variable_Client() as client:
             res = client.post(url, headers={"Content-Type": "application/x-www-form-urlencoded"})
         return cls._handle_response(res)
-
-
-TwitterAuthAccount = TwitterAuthAccountAdapter(
-    **{
-        "access_token": comms_consts.TWITTER_ACCESS_TOKEN,
-    }
-)
 
 
 class Pitch(TimeStampModel):
@@ -530,3 +527,123 @@ class Process(TimeStampModel):
 
     class Meta:
         ordering = ["name"]
+
+
+class TwitterAccount(TimeStampModel):
+    user = models.OneToOneField(
+        "core.User",
+        related_name="twitter_account",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
+    )
+    access_token = models.CharField(max_length=255, null=True)
+    access_token_secret = models.CharField(max_length=255, null=True)
+    display_name = models.CharField(max_length=255, null=True)
+
+    @staticmethod
+    def _handle_response(response, fn_name=None):
+        if not hasattr(response, "status_code"):
+            raise ValueError
+
+        elif response.status_code == 200 or response.status_code == 201:
+            try:
+                data = response.json()
+            except json.decoder.JSONDecodeError as e:
+                return logger.error(f"An error occured with a nylas integration, {e}")
+            except Exception as e:
+                TwitterApiException(e)
+
+        else:
+            status_code = response.status_code
+            error_data = response.json()
+            error_param = error_data.get("errors", None)
+            error_message = error_data.get("message", None)
+            error_code = error_data.get("code", None)
+            kwargs = {
+                "status_code": status_code,
+                "error_code": error_code,
+                "error_param": error_param,
+                "error_message": error_message,
+            }
+            return TwitterApiException(kwargs)
+        return data
+
+    def get_tweets(self, query, next_token=False):
+        url = comms_consts.TWITTER_BASE_URI + comms_consts.TWITTER_RECENT_TWEETS_URI
+        params = {
+            "query": query,
+            "max_results": 50,
+            "expansions": "author_id,attachments.media_keys",
+            "user.fields": "username,name,profile_image_url,public_metrics,verified,location,url",
+            "tweet.fields": "created_at",
+            "media.fields": "url,variants",
+            "sort_order": "relevancy",
+        }
+        if next_token:
+            params["next_token"] = next_token
+        headers = comms_consts.TWITTER_API_HEADERS
+        with Variable_Client() as client:
+            response = client.get(url, headers=headers, params=params)
+            return self._handle_response(response)
+
+    def get_summary(
+        self, user, tokens, timeout, tweets, input_text, instructions=False, for_client=False
+    ):
+        url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+        prompt = comms_consts.OPEN_AI_TWITTER_SUMMARY(
+            datetime.now().date(), tweets, input_text, instructions, for_client
+        )
+        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+            user.email,
+            prompt,
+            "You are a VP of Communications",
+            token_amount=tokens,
+            top_p=0.1,
+        )
+        with Variable_Client(timeout) as client:
+            r = client.post(
+                url,
+                data=json.dumps(body),
+                headers=core_consts.OPEN_AI_HEADERS,
+            )
+        return open_ai_exceptions._handle_response(r)    
+
+    def adapter(self):
+        return TwitterAuthAccountAdapter(
+            **{
+                "user": self.user,
+                "access_token": self.access_token,
+                "display_name": self.display_name,
+            }
+        )
+
+    @staticmethod
+    def get_authorization(token):
+        query = urlencode(comms_consts.TWITTER_TOKEN_PARAMS(token))
+        return f"{comms_consts.TWITTER_AUTHORIZATION_URI}?{query}"
+
+    @staticmethod
+    def get_token(request):
+        client = OAuth1Session(
+            comms_consts.TWITTER_API_KEY,
+            comms_consts.TWITTER_API_SECRET,
+            callback_uri=comms_consts.TWITTER_REDIRECT_URI,
+        )
+        request_token = client.fetch_request_token(comms_consts.TWITTER_REQUEST_TOKEN_URI)
+        authorization = client.authorization_url(comms_consts.TWITTER_AUTHORIZATION_URI)
+        request_token["link"] = authorization
+        return request_token
+
+    @staticmethod
+    def authenticate(request_token, verifier):
+        client = OAuth1Session(
+            comms_consts.TWITTER_API_KEY, comms_consts.TWITTER_API_SECRET, request_token
+        )
+        try:
+            access_token = client.fetch_access_token(
+                comms_consts.TWITTER_ACCESS_TOKEN_URI, verifier
+            )
+            return access_token
+        except OAuth2Error:
+            return "Invalid authorization code"

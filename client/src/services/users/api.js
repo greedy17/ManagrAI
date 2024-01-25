@@ -27,6 +27,7 @@ const GENERATE_ACTIVATE_ENDPOINT = uid => `/users/${uid}/activate/`
 const CHECK_STATUS_ENDPOINT = '/account-status/'
 const CHECK_TASKS_ENDPOINT = '/task-status/'
 const SSO_DATA_ENDPOINT = '/sso-data/'
+const TWITTER_REQUEST_TOKEN = '/users/twitter/request-token/'
 const TWITTER_AUTHORIZATION = '/users/twitter/authorization'
 const TWITTER_AUTHENTICATION = '/users/twitter/authenticate'
 const UPGRADE = '/users/upgrade-user/'
@@ -729,6 +730,14 @@ export default class UserAPI {
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'User.getAdminSearches' })
+    }
+  }
+  async getTwitterToken() {
+    try {
+      const res = await this.client.post(TWITTER_REQUEST_TOKEN)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'User.getTwitterToken' })
     }
   }
   async getTwitterAuthorization() {

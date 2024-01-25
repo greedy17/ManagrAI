@@ -476,6 +476,10 @@ class User(AbstractUser, TimeStampModel):
         return hasattr(self, "team_lead_of")
 
     @property
+    def has_twitter_integration(self):
+        return hasattr(self, "twitter_account")
+
+    @property
     def as_slack_option(self):
         return block_builders.option(self.full_name, str(self.id))
 
@@ -937,7 +941,7 @@ class StripeAdapter:
         )
         with Variable_Client() as client:
             res = client.get(url, headers=core_consts.STRIPE_HEADERS)
-            print('IT"S RIGHT HERE --- > ',vars(res))
+            print('IT"S RIGHT HERE --- > ', vars(res))
         return self._handle_response(res)
 
     def update_subscription(self, sub_id, quantity):
@@ -949,3 +953,7 @@ class StripeAdapter:
             }
             res = client.post(url, data=data)
         return self._handle_response(res)
+
+    @classmethod
+    def create_account():
+        return
