@@ -1048,6 +1048,8 @@ export default {
       selectedCRM: null,
       // selectedMessenger: null,
       selectedIntegration: null,
+      twitterToken: null,
+      twitterSecret: null,
     }
   },
   methods: {
@@ -1173,6 +1175,13 @@ export default {
       try {
         await User.api.getTwitterToken().then((res) => {
           console.log(res)
+
+          this.twitterToken = res.oauth_token
+          this.twitterSecret = res.oauth_token_secret
+
+          if (res.link) {
+            window.location.href = res.link
+          }
           // if (res.token) {
           //   User.api.getTwitterAuthorization({ token: res.token }).then((res) => {
           //     console.log('res here', res)

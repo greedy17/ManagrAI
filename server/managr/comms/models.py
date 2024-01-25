@@ -580,29 +580,11 @@ class TwitterAccount(TimeStampModel):
 
     @staticmethod
     def get_token(request):
-
-        client_key = comms_consts.TWITTER_API_KEY
-        client_secret = comms_consts.TWITTER_API_SECRET
-        request_url = 'https://api.twitter.com/oauth/request_token'
-        oauth = OAuth1Session(client_key, client_secret=client_secret)
-
-        try:
-            fetch_response = oauth.fetch_request_token(request_url)
-
-            request.session['oauth_token'] = fetch_response.get('oauth_token')
-            request.session['oauth_token_secret'] = fetch_response.get('oauth_token_secret')
-
-            authorization_url = oauth.authorization_url(comms_consts.TWITTER_AUTHORIZATION_URI)
-            return ({'authorization_url': authorization_url})
-
-        except Exception as e:
-            print(e)
-            return ({'error': 'An error occurred'})
-            
-            # client = OAuth1Session(comms_consts.TWITTER_API_KEY, comms_consts.TWITTER_API_SECRET)
-            # request_token = client.fetch_request_token(comms_consts.TWITTER_REQUEST_TOKEN_URI)
-            # authorization = client.authorization_url(comms_consts.TWITTER_AUTHORIZATION_URI)
-            # return authorization
+        client = OAuth1Session(comms_consts.TWITTER_API_KEY, comms_consts.TWITTER_API_SECRET, callback_uri=comms_consts.TWITTER_REDIRECT_URI)
+        request_token = client.fetch_request_token(comms_consts.TWITTER_REQUEST_TOKEN_URI)
+        authorization = client.authorization_url(comms_consts.TWITTER_AUTHORIZATION_URI)
+        request_token["link"] = authorization
+        return request_token
 
     @staticmethod
     def authenticate(code, identifier):
