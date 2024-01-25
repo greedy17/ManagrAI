@@ -509,9 +509,9 @@ if USE_NEWS_API:
     NEWS_API_KEY = _env_get_required("NEWS_API_KEY")
 
 USE_TWITTER_API = os.environ.get("USE_TWITTER_API") == "True"
+TWITTER_API_KEY = _env_get_required("TWITTER_API_KEY")
+TWITTER_API_SECRET = _env_get_required("TWITTER_API_SECRET")
 if USE_TWITTER_API:
-    TWITTER_API_KEY = _env_get_required("TWITTER_API_KEY")
-    TWITTER_API_SECRET = _env_get_required("TWITTER_API_SECRET")
     TWITTER_ACCESS_TOKEN = _env_get_required("TWITTER_ACCESS_TOKEN")
     TWITTER_CLIENT_ID = _env_get_required("TWITTER_CLIENT_ID")
     TWITTER_REDIRECT_URI = _env_get_required("TWITTER_REDIRECT_URI")
