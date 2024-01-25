@@ -549,7 +549,7 @@ class PRSearchViewSet(
     )
     def get_tweets(self, request, *args, **kwargs):
         user = User.objects.get(id=request.GET.get("user_id"))
-        twitter_account = user.twitter_account.all().first()
+        twitter_account = user.twitter_account
         has_error = False
         search = request.GET.get("search")
         query_input = None
@@ -645,7 +645,7 @@ class PRSearchViewSet(
         tweets = request.data.get("tweets")
         search = request.data.get("search")
         instructions = request.data.get("instructions", False)
-        twitter_account = user.twitter_account.all().first()
+        twitter_account = user.twitter_account
         has_error = False
         attempts = 1
         token_amount = 1000

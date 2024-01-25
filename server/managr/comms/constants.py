@@ -75,8 +75,8 @@ DEFAULT_TWITTER_INSTRUCTIONS = """*Executive summary:*\n Highlighting 5 key poin
 DEFAULT_CLIENT_INSTRUCTIONS = "Summary: Summarize the news in paragraph format, in less than 600 characters. \n Top Sources: List top 10 sources (based on popularity and size, no newswire sources)"
 
 
-DEFAULT_TWITTER_CLIENT_INSTRUCTIONS = """<strong>Summary of the Tweets:</strong>\n
-<strong>Sentiment:</strong>\n
+DEFAULT_TWITTER_CLIENT_INSTRUCTIONS = """<strong>Summary of the Tweets (no more than 400 characters long): </strong>\n
+<strong>Sentiment (no more than 200 characters long):</strong>\n
 <strong>Top Influencers:</strong>\n Identify key influencers based on follower count"""
 
 DEFAULT_WRITING_STYLE = "Aim for a professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Get right to the point"
