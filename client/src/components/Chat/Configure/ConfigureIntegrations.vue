@@ -266,24 +266,18 @@
             <img style="height: 40px; margin-left: -12px" src="@/assets/images/twitter-x.svg" />
           </div>
           <div class="card__body">
-            <div style="display: flex">
+            <div class="row-center" style="display: flex">
               <h3 class="card__title">X/Twitter</h3>
+              <div v-if="hasTwitterIntegration" class="green-dot"></div>
             </div>
             <p class="card-text">Connect to search Twitter</p>
             <div></div>
             <div class="sep-button-container">
               <div class="separator"></div>
               <button
-                v-if="false"
-                class="long-button coral"
-                style="
-                  margin-right: 0;
-                  margin-top: 1rem;
-                  margin-bottom: 0.5rem;
-                  padding-top: 0.4rem;
-                  padding-bottom: 0.4rem;
-                "
-                @click="setRemoveApp('SLACK')"
+                v-if="hasTwitterIntegration"
+                class="long-button connected"
+                style="margin-top: 1rem; margin-bottom: 0.5rem"
               >
                 Disconnect
               </button>
@@ -327,7 +321,7 @@
             <div class="sep-button-container">
               <div class="separator"></div>
               <button
-                class="long-button gray"
+                class="long-button"
                 style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem"
               >
                 Coming Soon...
@@ -424,7 +418,7 @@ export default {
   },
   methods: {
     test(log) {
-      console.log('log', log)
+      console.log(this.user)
     },
     async onGetAuthLink(integration) {
       if (!integration) {
@@ -556,6 +550,9 @@ export default {
       }
     },
   },
+  mounted() {
+    this.test()
+  },
   async created() {
     // if there is a code assume an integration has begun
     if (this.$route.query.code) {
@@ -620,6 +617,9 @@ export default {
     },
     hasZoomIntegration() {
       return !!this.$store.state.user.hasZoomIntegration
+    },
+    hasTwitterIntegration() {
+      return !!this.$store.state.user.hasTwitterIntegration
     },
     hasEmailIntegration() {
       return false
@@ -1270,6 +1270,12 @@ a {
   border: 1px solid $soft-gray;
   cursor: pointer;
 }
+
+.connected {
+  background-color: white !important;
+  color: $coral !important;
+}
+
 .long-button {
   @include white-button();
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -1279,7 +1285,8 @@ a {
   align-items: center;
   padding: 10px 8px;
   font-family: $thin-font-family;
-  color: $dark-black-blue;
+  color: white;
+  background-color: $dark-black-blue;
   @media only screen and (max-width: 600px) {
     width: 60vw;
   }
@@ -1468,6 +1475,19 @@ a {
   align-items: center;
   border-radius: 6px;
   padding: 0;
+}
+
+.green-dot {
+  width: 4px;
+  height: 4px;
+  background: $dark-green;
+  border-radius: 50%;
+  margin-left: 8px;
+}
+
+.row-center {
+  flex-direction: row;
+  align-items: center;
 }
 
 .dot {
