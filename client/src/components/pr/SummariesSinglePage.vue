@@ -388,7 +388,7 @@
                 class="switch-item"
                 id="social-tab"
               >
-                X
+                Social
               </div>
               <div
                 @click="switchMainView('website')"
@@ -417,7 +417,9 @@
                   autocomplete="off"
                   v-model="newSearch"
                   v-autoresize
-                  :disabled="loading || summaryLoading"
+                  :disabled="
+                    loading || summaryLoading || (mainView === 'social' && !hasTwitterIntegration)
+                  "
                 />
 
                 <div class="switcher" v-if="!isMobile">
@@ -435,7 +437,7 @@
                     class="switch-item"
                     id="social-tab"
                   >
-                    X
+                    Social
                   </div>
                   <div
                     @click="switchMainView('website')"
@@ -504,7 +506,7 @@
               class="input-container"
             >
               <div style="margin-right: -8px" class="input-row">
-                <div v-if="!isMobile" class="main-text">Article</div>
+                <div v-if="!isMobile" class="main-text">URL</div>
                 <input
                   @keyup.enter="uploadArticle"
                   class="area-input-small"
@@ -520,21 +522,21 @@
                   >
                     News
                   </div>
-                  <!-- <div
+                  <div
                     @click="switchMainView('social')"
                     :class="{ activeswitch: mainView === 'social' }"
                     class="switch-item"
                     id="social-tab"
                   >
                     Social
-                  </div> -->
+                  </div>
                   <div
                     @click="switchMainView('website')"
                     :class="{ activeswitch: mainView === 'website' }"
                     class="switch-item"
                     id="articles-tab"
                   >
-                    Article
+                    URL
                   </div>
                 </div>
 
@@ -597,6 +599,12 @@
                     </div>
                   </div>
 
+                  <p class="sub-text" v-else-if="mainView === 'social' && !hasTwitterIntegration">
+                    Connect your
+                    <span @click="goToIntegrations" class="link">twitter account</span> to use this
+                    feature
+                  </p>
+
                   <p style="margin: 16px 0" v-else-if="!selectedSearch" class="sub-text">
                     Your summary will appear below.
                   </p>
@@ -605,7 +613,9 @@
                     class="sub-text ellipsis-text"
                     style="margin: 16px 0"
                   >
-                    <span :title="booleanString">{{ booleanString }}</span>
+                    <span :title="booleanString">{{
+                      booleanString ? booleanString.replace('lang:en', '') : ''
+                    }}</span>
                   </p>
                   <p v-else style="margin: 16px 0" class="sub-text">Article Report</p>
 
@@ -905,7 +915,7 @@
                           style="margin: 0; padding-top: 1px"
                           class="area-input text-area-input"
                           id="instructions-text-area"
-                          placeholder="Ask Managr..."
+                          placeholder="New summary instructions..."
                           v-model="newTemplate"
                           :rows="1"
                           v-autoresize
@@ -1129,7 +1139,7 @@
                     {{ savingSearch ? 'Saving' : 'Save' }}
                   </button> -->
                   <div class="gray-text absolute-right" style="left: 0; font-size: 14px">
-                    AI-generated report
+                    AI-generated summary
                   </div>
                   <div
                     @mouseenter="changeEmailText"
@@ -1289,7 +1299,7 @@
                         style="margin: 0; padding-top: 1px"
                         class="area-input text-area-input"
                         id="instructions-text-area"
-                        placeholder="Ask Managr..."
+                        placeholder="New summary instructions..."
                         v-model="newTemplate"
                         :rows="1"
                         v-autoresize
@@ -1329,7 +1339,7 @@
                         />
                       </button>
                       <button
-                        @click="getChatSummary"
+                        @click="getChatSummary(preparedTweets, newTemplate)"
                         :disabled="!newTemplate"
                         v-else
                         style="
@@ -2004,6 +2014,7 @@ export default {
   },
   data() {
     return {
+      preparedTweets: null,
       addedClip: false,
       showSummaryInput: true,
       contentType: 'Instructions',
@@ -2230,6 +2241,9 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    goToIntegrations() {
+      this.$router.push({ name: 'PRIntegrations' })
+    },
     toggleSaveModal() {
       this.saveModalOpen = !this.saveModalOpen
     },
@@ -2977,7 +2991,6 @@ export default {
       }
     },
     async updateSearch() {
-      console.log('I AM MAKING IT HERE', this.newTemplate)
       try {
         await Comms.api
           .upateSearch({
@@ -3177,7 +3190,7 @@ export default {
               this.booleanString = response.string
               this.getTweetSummary()
             }
-            this.clearNewSearch()
+
             this.showingDropdown = false
           })
       } catch (e) {
@@ -3215,6 +3228,7 @@ export default {
     },
     async getTweetSummary(instructions = '') {
       let tweets = this.prepareTweetSummary(this.tweets)
+      this.preparedTweets = tweets
       this.summaryLoading = true
       this.summary = ''
       try {
@@ -3258,6 +3272,9 @@ export default {
       try {
         if (this.mainView === 'news') {
           await this.getSummary(clips, instructions)
+        } else if (this.mainView === 'social') {
+          await this.getSummary(clips, instructions, true)
+        } else if (this.mainView === 'social') {
         } else {
           await this.getSourceSummary()
         }
@@ -3266,12 +3283,18 @@ export default {
       }
       this.chatSummaryLoading = false
     },
-    async getSummary(clips, instructions = '') {
-      const allClips = this.getArticleDescriptions(clips)
+    async getSummary(clips, instructions = '', twitter = false) {
+      let allClips
+      if (!twitter) {
+        allClips = this.getArticleDescriptions(clips)
+      } else {
+        allClips = clips
+      }
+
       this.summaryLoading = true
       let openAiDown = false
       this.summary = ''
-      console.log('chatSummaryLoading stuff', this.chatSummaryLoading, this.summary)
+
       try {
         if (this.shouldCancel) {
           return this.stopLoading()
@@ -3528,6 +3551,9 @@ export default {
     },
   },
   computed: {
+    hasTwitterIntegration() {
+      return !!this.$store.state.user.hasTwitterIntegration
+    },
     clipTitles() {
       if (Object.keys(this.$store.state.categories).length) {
         return this.allCategoryClips
@@ -3683,6 +3709,12 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.link {
+  border-bottom: 1px solid $dark-black-blue;
+  padding-bottom: 2px;
+  cursor: pointer;
+}
 
 @keyframes typing {
   from {
