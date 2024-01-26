@@ -364,7 +364,7 @@
             <p style="margin-top: 8px" class="typed">
               {{
                 mainView === 'social'
-                  ? 'Instantly search through X (formally Twitter).'
+                  ? 'Generate an AI summary based on X/Twitter coverage.'
                   : mainView === 'website'
                   ? 'Instantly summarize a news article.'
                   : 'Generate an AI summary based on news coverage.'
@@ -601,8 +601,8 @@
 
                   <p class="sub-text" v-else-if="mainView === 'social' && !hasTwitterIntegration">
                     Connect your
-                    <span @click="goToIntegrations" class="link">twitter account</span> to use this
-                    feature
+                    <span @click="goToIntegrations" class="link">X/Twitter account</span> to use
+                    this feature
                   </p>
 
                   <p style="margin: 16px 0" v-else-if="!selectedSearch" class="sub-text">
@@ -2703,10 +2703,12 @@ export default {
       this.newSearch = ''
       this.addedClips = []
       this.filteredArticles = []
+      this.tweets = []
       this.metaData = { clips: [] }
       this.$emit('change-search', null)
       this.$store.dispatch('setSearch', null)
       this.summary = ''
+      this.tweetError = ''
     },
     resetSearch() {
       this.clearNewSearch()
