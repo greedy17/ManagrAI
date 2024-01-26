@@ -1464,6 +1464,18 @@ def get_twitter_authentication(request):
     return Response(data={"success": True})
 
 
+@api_view(["DELETE"])
+@permission_classes([permissions.IsAuthenticated])
+def revoke_twitter_auth(request):
+    user = request.user
+    twitter_account = TwitterAccount.objects.filter(user=user)
+    try:
+        twitter_account.delete()
+    except Exception as e:
+        return Response({"error": str(e)})
+    return Response(data={"success": True})
+
+
 def redirect_from_twitter(request):
     verifier = request.GET.get("oauth_verifier", False)
     token = request.GET.get("oauth_token", False)
