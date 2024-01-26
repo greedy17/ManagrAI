@@ -1563,7 +1563,7 @@
           <div class="content-width" v-else-if="mainView === 'social' && tweetError">
             <div class="news-container">
               <div class="no-results">
-                <p>{{ tweetError }}</p>
+                <p>{{ tweetError ? tweetError.replace('lang:en', '') : '' }}</p>
               </div>
             </div>
           </div>
