@@ -278,8 +278,15 @@
                 v-if="hasTwitterIntegration"
                 class="long-button connected"
                 style="margin-top: 1rem; margin-bottom: 0.5rem"
+                @click="revokeTwitter"
               >
-                Disconnect
+                <div style="margin-left: 4px" v-if="revoking" class="loading-small">
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                </div>
+
+                <div v-else>Disconnect</div>
               </button>
               <button
                 v-else
@@ -320,12 +327,18 @@
             <div></div>
             <div class="sep-button-container">
               <div class="separator"></div>
-              <button
-                class="long-button"
-                style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem"
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  width: 100%;
+                  margin-top: 1.5rem;
+                  font-size: 13px;
+                "
               >
                 Coming Soon...
-              </button>
+              </div>
               <!-- <button
                 v-if="hasSlackIntegration || (orgHasSlackIntegration && userCanIntegrateSlack)"
                 class="long-button coral"
@@ -414,11 +427,26 @@ export default {
       // selectedMessenger: null,
       selectedIntegration: null,
       connecting: false,
+      revoking: false,
     }
   },
   methods: {
     test(log) {
       console.log(this.user)
+    },
+    async revokeTwitter() {
+      this.revoking = true
+      try {
+        await User.api.revokeTwitter().then((res) => {
+          console.log(res)
+        })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.$store.dispatch('refreshCurrentUser')
+
+        this.revoking = false
+      }
     },
     async onGetAuthLink(integration) {
       if (!integration) {

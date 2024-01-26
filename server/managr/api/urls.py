@@ -392,6 +392,11 @@ urlpatterns = [
         comms_views.get_twitter_request_token,
         name="twitter-request-token",
     ),
+    path(
+        "users/twitter/revoke-token/",
+        comms_views.revoke_twitter_auth,
+        name="twitter-revoke-token",
+    ),
 ]
 
 router.register("users/reports", core_views.ReportViewSet, "reports"),

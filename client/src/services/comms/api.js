@@ -387,7 +387,6 @@ class TwitterAccountAPI extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data from Code' })(e)
         }
     }
-
     async revoke() {
         try {
             await this.client.delete(TwitterAccountAPI.ENDPOINT + 'revoke')
