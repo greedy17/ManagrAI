@@ -30,6 +30,7 @@ const SSO_DATA_ENDPOINT = '/sso-data/'
 const TWITTER_REQUEST_TOKEN = '/users/twitter/request-token/'
 const TWITTER_AUTHORIZATION = '/users/twitter/authorization'
 const TWITTER_AUTHENTICATION = '/users/twitter/authenticate'
+const TWITTER_REVOKE = '/users/twitter/revoke-token/'
 const UPGRADE = '/users/upgrade-user/'
 const NYLAS_AUTH_EMAIL_LINK = '/users/email-auth-link/'
 const NYLAS_SEND_EMAIL = '/users/nylas/send-new-email/'
@@ -756,7 +757,15 @@ export default class UserAPI {
       apiErrorHandler({ apiName: 'User.getTwiiterAuthentication' })
     }
   }
-
+  async revokeTwitter() {
+    try {
+      const res = await this.client.delete(TWITTER_REVOKE)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'User.getTwiiterAuthentication' })
+    }
+  }
+  TWITTER_REVOKE
   async upgrade(data) {
     try {
       const res = await this.client.post(UPGRADE, data)
