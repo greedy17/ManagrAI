@@ -358,7 +358,7 @@ class NewsSource(TimeStampModel):
         attribute_list = self.article_link_attribute.split(",")
         regex = "//body//" + attribute_list[0]
         if self.article_link_selector:
-            regex += "]"
+            regex += "["
         # check for data attribute
         if self.data_attribute_key:
             if self.data_attribute_value is not None:

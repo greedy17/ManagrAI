@@ -172,6 +172,7 @@ class NewsSpider(scrapy.Spider):
             for article in article_tags:
                 full_article += article
             meta_tag_data["content"] = full_article
+        print(meta_tag_data)
         try:
             if "content" in meta_tag_data.keys():
                 cleaned_data = data_cleaner(meta_tag_data)
