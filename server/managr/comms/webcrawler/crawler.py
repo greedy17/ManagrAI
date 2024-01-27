@@ -129,6 +129,7 @@ class NewsSpider(scrapy.Spider):
         for key in XPATH_STRING_OBJ.keys():
             if key in article_selectors.keys() and article_selectors[key]:
                 selector = response.xpath(article_selectors[key]).getall()
+                print(selector)
                 if len(selector):
                     selector = ",".join(selector)
                 if key == "publish_date":

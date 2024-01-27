@@ -45,7 +45,14 @@ def extract_date_from_text(text):
         r"([A-Za-z]+(?: \d{1,2},)? \d{4})",
         r"([A-Za-z]{3}\. \d{1,2}, \d{4} \d{1,2}:\d{2} [apAP]\.m\.)",
     ]
-    strptime_formats = ["%d %B %Y", "%B %d, %Y", "%b %d, %Y", "%b. %d, %Y %I:%M %p"]
+    date_str = text
+    strptime_formats = [
+        "%d %B %Y",
+        "%B %d, %Y",
+        "%b %d, %Y",
+        "%b. %d, %Y %I:%M %p",
+        "%Y-%m-%dT%H:%M:%S%z",
+    ]
     for pattern in patterns:
         match = re.search(pattern, text)
         if match:
@@ -60,14 +67,14 @@ def extract_date_from_text(text):
                 date_str = date_str.replace("a.m.", "AM")
             if "p.m." in date_str:
                 date_str = date_str.replace("p.m.", "PM")
-            for format in strptime_formats:
-                try:
-                    date_obj = datetime.strptime(date_str, format)
-                except ValueError:
-                    continue
-                except Exception:
-                    continue
-                return str(date_obj)
+    for format in strptime_formats:
+        try:
+            date_obj = datetime.strptime(date_str, format)
+        except ValueError:
+            continue
+        except Exception:
+            continue
+        return str(date_obj)
     return None
 
 
