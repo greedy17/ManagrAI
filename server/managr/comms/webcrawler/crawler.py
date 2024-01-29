@@ -215,7 +215,9 @@ class NewsSpider(scrapy.Spider):
             + f" and not({exclude_words})"
             + "]"
         )
-        site_name = response.xpath("//meta[contains(@property, 'site_name')]/@content").get()
+        site_name = response.xpath(
+            "//meta[contains(@property, 'site_name') or contains(@property,'og:title')]/@content"
+        ).get()
         scrape_dict = {}
         for idx, link in enumerate(anchor_tags):
             href = link.css("::attr(href)").get()
