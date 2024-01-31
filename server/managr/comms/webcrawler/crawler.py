@@ -81,6 +81,14 @@ class NewsSpider(scrapy.Spider):
         self.test = kwargs.get("test")
         self.urls_processed = 0
 
+    def get_site_name(self, response):
+        site_name = response.xpath(
+            "//meta[contains(@property,'og:url') or contains(@property, 'og:site_name')]/@content"
+        ).getall()
+        if len(site_name) > 1:
+            return site_name[1]
+        return site_name
+
     def parse(self, response):
         url = response.request.url
         if url[len(url) - 1] == "/":
@@ -114,6 +122,9 @@ class NewsSpider(scrapy.Spider):
                             headers={"Referer": "https://www.google.com"},
                             cb_kwargs={"source": source},
                         )
+                if source.site_name is None:
+                    site_name = self.get_site_name(response)
+                    source.site_name = site_name
                 current_datetime = datetime.datetime.now()
                 source.last_scraped = timezone.make_aware(
                     current_datetime, timezone.get_current_timezone()
@@ -129,7 +140,6 @@ class NewsSpider(scrapy.Spider):
         for key in XPATH_STRING_OBJ.keys():
             if key in article_selectors.keys() and article_selectors[key]:
                 selector = response.xpath(article_selectors[key]).getall()
-                print(selector)
                 if len(selector):
                     selector = ",".join(selector)
                 if key == "publish_date":
@@ -215,9 +225,6 @@ class NewsSpider(scrapy.Spider):
             + f" and not({exclude_words})"
             + "]"
         )
-        site_name = response.xpath(
-            "//meta[contains(@property, 'site_name') or contains(@property,'og:title')]/@content"
-        ).get()
         scrape_dict = {}
         for idx, link in enumerate(anchor_tags):
             href = link.css("::attr(href)").get()
@@ -234,7 +241,7 @@ class NewsSpider(scrapy.Spider):
                     "classes": classes,
                 }
         source.scrape_data = scrape_dict
-        source.site_name = site_name
+        source.site_name = self.get_site_name(response)
         current_datetime = datetime.datetime.now()
         source.last_scraped = timezone.make_aware(current_datetime, timezone.get_current_timezone())
         source.save()

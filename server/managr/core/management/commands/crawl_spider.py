@@ -30,7 +30,7 @@ class Command(BaseCommand):
         url = options.get("url", False)
         new = options["new"]
         if url:
-            urls = [url]
+            urls = url.split(",")
         else:
             remove_api_sources()
             scrape_ready = True if options["active"] else False
