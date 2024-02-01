@@ -1616,19 +1616,22 @@
                           articleSummaryLoading || loading || summaryLoading || savingSearch
                         "
                       >
-                        <img
-                          v-if="articleSummaryLoading && loadingUrl === article.link"
-                          class="rotate"
-                          height="14px"
-                          src="@/assets/images/loading.svg"
-                          alt=""
-                        />
-                        <img v-else src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
+                        <img src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
                         {{
                           articleSummaryLoading && loadingUrl === article.link
                             ? 'Summarizing'
                             : 'Summarize'
                         }}
+
+                        <div
+                          style="margin-left: 4px"
+                          v-if="articleSummaryLoading && loadingUrl === article.link"
+                          class="loading-small"
+                        >
+                          <div class="dot"></div>
+                          <div class="dot"></div>
+                          <div class="dot"></div>
+                        </div>
                       </button>
                       <img
                         v-else
@@ -1746,18 +1749,20 @@
                           "
                           class="primary-button"
                         >
-                          <img
-                            v-if="articleSummaryLoading && loadingUrl === article.link"
-                            class="rotate"
-                            height="14px"
-                            src="@/assets/images/loading.svg"
-                            alt=""
-                          />
                           {{
                             articleSummaryLoading && loadingUrl === article.link
                               ? 'Submitting'
                               : 'Submit'
                           }}
+                          <div
+                            style="margin-left: 4px"
+                            v-if="articleSummaryLoading && loadingUrl === article.link"
+                            class="loading-small"
+                          >
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                          </div>
                         </button>
                       </div>
                     </div>
@@ -1827,19 +1832,22 @@
                           articleSummaryLoading || loading || summaryLoading || savingSearch
                         "
                       >
-                        <img
-                          v-if="articleSummaryLoading && loadingUrl === article.link"
-                          class="rotate"
-                          height="14px"
-                          src="@/assets/images/loading.svg"
-                          alt=""
-                        />
-                        <img v-else src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
+                        <img src="@/assets/images/sparkles-thin.svg" height="14px" alt="" />
                         {{
                           articleSummaryLoading && loadingUrl === article.link
                             ? 'Summarizing'
                             : 'Summarize'
                         }}
+
+                        <div
+                          style="margin-left: 4px"
+                          v-if="articleSummaryLoading && loadingUrl === article.link"
+                          class="loading-small"
+                        >
+                          <div class="dot"></div>
+                          <div class="dot"></div>
+                          <div class="dot"></div>
+                        </div>
                       </button>
                       <img
                         v-else
@@ -1957,18 +1965,21 @@
                           "
                           class="primary-button"
                         >
-                          <img
-                            v-if="articleSummaryLoading && loadingUrl === article.link"
-                            class="rotate"
-                            height="14px"
-                            src="@/assets/images/loading.svg"
-                            alt=""
-                          />
                           {{
                             articleSummaryLoading && loadingUrl === article.link
                               ? 'Submitting'
                               : 'Submit'
                           }}
+
+                          <div
+                            style="margin-left: 4px"
+                            v-if="articleSummaryLoading && loadingUrl === article.link"
+                            class="loading-small"
+                          >
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                          </div>
                         </button>
                       </div>
                     </div>
