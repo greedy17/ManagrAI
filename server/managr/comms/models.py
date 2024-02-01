@@ -350,10 +350,11 @@ class NewsSource(TimeStampModel):
 
     def create_search_regex(self):
         current_year = str(datetime.now().year)
-        if self.article_link_regex:
+        if self.article_link_regex is not None:
             if self.article_link_selector == "year" and current_year in self.article_link_regex:
                 return self.article_link_regex
-            return self.article_link_regex
+            elif self.article_link_selector != "year":
+                return self.article_link_regex
         # add the link selector
         attribute_list = self.article_link_attribute.split(",")
         regex = "//body//" + attribute_list[0]
@@ -406,7 +407,6 @@ class NewsSource(TimeStampModel):
     @classmethod
     def domain_list(cls, scrape_ready=False, new=False):
         active_sources = cls.objects.filter(is_active=True).order_by("last_scraped")
-        print(len(active_sources))
         # filters sources that have been filled out but haven't been run yet to create the regex and scrape for the first time
         if scrape_ready and new:
             active_sources = active_sources.filter(
@@ -418,7 +418,6 @@ class NewsSource(TimeStampModel):
         # filters sources that were just added and don't have scrape data yet
         elif not scrape_ready and new:
             active_sources = active_sources.filter(article_link_attribute__isnull=True)
-        print(len(active_sources))
         source_list = [source.domain for source in active_sources]
         return source_list
 
