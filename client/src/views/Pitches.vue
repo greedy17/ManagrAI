@@ -110,14 +110,12 @@
               Cancel
             </button>
             <button :disabled="savingStyle" @click="saveWritingStyle" class="primary-button">
-              <img
-                v-if="savingStyle"
-                class="rotate"
-                height="12px"
-                src="@/assets/images/loading.svg"
-                alt=""
-              />
               {{ savingStyle ? 'Learning' : 'Learn' }}
+              <div style="margin-left: 4px" v-if="savingStyle" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
             </button>
           </div>
         </div>
@@ -197,14 +195,12 @@
               @click="getJournalists"
               class="primary-button no-transitions"
             >
-              <img
-                v-if="loadingJournalists"
-                class="rotate"
-                height="12px"
-                src="@/assets/images/loading.svg"
-                alt=""
-              />
               {{ journalText }}
+              <div style="margin-left: 4px" v-if="loadingJournalists" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
             </button>
 
             <button v-else @click="copyJournalText" class="primary-button no-transitions">
@@ -310,14 +306,12 @@
               @click="getFeedback"
               class="primary-button no-transitions"
             >
-              <img
-                v-if="loadingFeedback"
-                class="rotate"
-                height="12px"
-                src="@/assets/images/loading.svg"
-                alt=""
-              />
               {{ feedbackText }}
+              <div style="margin-left: 4px" v-if="loadingFeedback" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
             </button>
 
             <button
@@ -326,14 +320,12 @@
               @click="handleRegenerateFeedback"
               class="primary-button no-transitions"
             >
-              <img
-                v-if="loadingFeedback"
-                class="rotate"
-                height="12px"
-                src="@/assets/images/loading.svg"
-                alt=""
-              />
               Apply Feedback
+              <div style="margin-left: 4px" v-if="loadingFeedback" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
             </button>
 
             <button v-else @click="copyFeedbackText" class="primary-button no-transitions">
@@ -381,14 +373,12 @@
               @click="createSavedPitch"
               class="primary-button no-transitions"
             >
-              <img
-                v-if="savingPitch"
-                class="rotate"
-                height="12px"
-                src="@/assets/images/loading.svg"
-                alt=""
-              />
               Save
+              <div style="margin-left: 4px" v-if="savingPitch" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
             </button>
           </div>
         </div>
@@ -2857,6 +2847,12 @@ button:disabled {
 }
 .filtered-blue {
   filter: invert(20%) sepia(28%) saturate(811%) hue-rotate(162deg) brightness(94%) contrast(81%);
+}
+.loading-small {
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  padding: 0;
 }
 .create-report-container {
   width: 50%;

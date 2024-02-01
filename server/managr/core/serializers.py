@@ -382,6 +382,7 @@ class UserTrialSerializer(serializers.ModelSerializer):
     updates_this_month = serializers.SerializerMethodField("get_updates_made_this_month")
     total_updates = serializers.SerializerMethodField("get_total_updates_made")
     searches_ref = serializers.SerializerMethodField("get_searches")
+    organization_ref = OrganizationSerializer(many=False, source="organization", read_only=True)
 
     class Meta:
         model = User
@@ -403,6 +404,7 @@ class UserTrialSerializer(serializers.ModelSerializer):
             "zoom_account",
             "meta_data",
             "searches_ref",
+            "organization_ref",
         )
 
     def get_days_active(self, instance):
