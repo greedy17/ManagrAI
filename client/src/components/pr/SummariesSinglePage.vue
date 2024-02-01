@@ -30,15 +30,12 @@
               Cancel
             </button>
             <button :disabled="contentLoading" @click="generateContent" class="save-button">
-              <img
-                v-if="contentLoading"
-                style="margin-right: 8px"
-                src="@/assets/images/loading.svg"
-                class="rotate"
-                height="12px"
-                alt=""
-              />
               {{ contentLoading ? 'submitting' : 'submit' }}
+              <div style="margin-left: 4px" v-if="contentLoading" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
             </button>
           </div>
         </div>
@@ -203,14 +200,12 @@
               :disabled="savingAlert || !alertTIme"
               class="save-button"
             >
-              <img
-                v-if="savingAlert"
-                class="rotate"
-                height="12px"
-                src="@/assets/images/loading.svg"
-                alt=""
-                style="margin-right: 8px"
-              />Submit
+              {{ savingAlert ? 'Submitting' : 'Submit' }}
+              <div style="margin-left: 4px" v-if="savingAlert" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
             </button>
           </div>
         </div>
@@ -245,15 +240,12 @@
               Cancel
             </button>
             <button @click="createSearch" :disabled="savingSearch" class="save-button">
-              <img
-                v-if="savingSearch"
-                style="margin-right: 8px"
-                src="@/assets/images/loading.svg"
-                class="rotate"
-                height="12px"
-                alt=""
-              />
               {{ savingSearch ? 'Saving' : 'Save' }}
+              <div style="margin-left: 4px" v-if="savingSearch" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
             </button>
           </div>
         </div>
@@ -2165,7 +2157,7 @@ export default {
         `Find me the most positive / negative article`,
         `Provide creative newsjacking ideas for XXX based on this coverage`,
         `Provide new pitching angles for XXX based on this news`,
-        `Provide a comprehensive overview of XXX's media coverage`,
+        `Provide a comprehensive media monitoring insight dashboard (list top sources, estimate the potential reach, sentiment analysis, competitor highlights, etc.)`,
         `List 5 of the most important headlines (include source name + journalist)`,
         `List 5 journalists (from top pubs, include pitching tips) I can pitch on behalf of XXX`,
         `List 5 questions & answers journalists would ask about XXX`,
@@ -5879,7 +5871,7 @@ header {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 100%;
   padding: 5px 6px;
-  background-color: $white-blue;
+  background-color: white;
   img {
     margin: 0 !important;
   }
@@ -6165,5 +6157,11 @@ input[type='date']::-webkit-input-placeholder {
   @media only screen and (max-width: 600px) {
     margin-top: 1.5rem;
   }
+}
+.loading-small {
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  padding: 0;
 }
 </style>

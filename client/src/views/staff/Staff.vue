@@ -1479,9 +1479,13 @@
             </div>
           </section>
         </div>
-        <div>
+        <div class="toggle" v-if="!selected_org">
+          <div :class="{ dull: !showingAll }" @click="showAllUsers">All Users</div>
+          |
+          <div :class="{ dull: !showingPaid }" @click="showPaidUsers">Paid Users</div>
+        </div>
+        <div v-if="selected_org">
           <h4
-            v-if="selected_org"
             @click="selected_org = null"
             style="
               cursor: pointer;
@@ -2168,6 +2172,9 @@ export default {
   },
   data() {
     return {
+      allUsersStored: null,
+      showingAll: true,
+      showingPaid: false,
       allEmailAlerts: {},
       commandOptions: [
         { label: 'Salesforce Resources', value: 'SALESFORCE_RESOURCES' },
@@ -2578,6 +2585,17 @@ export default {
     this.ignoreEmails = this.user.organizationRef.ignoreEmailRef
   },
   methods: {
+    showAllUsers() {
+      this.trialUsers = this.allUsersStored
+      this.showingPaid = false
+      this.showingAll = true
+    },
+    showPaidUsers() {
+      let orgUsers = this.trialUsers.filter((user) => user.organization_ref)
+      this.trialUsers = orgUsers.filter((user) => user.organization_ref.is_paid)
+      this.showingAll = false
+      this.showingPaid = true
+    },
     convertData() {
       let csvData = this.sortedDayTrialUsers.map((user) => ({
         email: user.email,
@@ -2657,7 +2675,6 @@ export default {
       return count
     },
     getUsageDay(user) {
-      console.log(user.meta_data)
       const metaData = user.meta_data
       let count = 0
       for (let key in metaData) {
@@ -2665,7 +2682,6 @@ export default {
       }
       count += user.searches_ref.length
       if (user.days_active) {
-        console.log('count is here', count)
         return Math.round((count / user.days_active) * 10) / 10
       } else {
         return count
@@ -3450,7 +3466,9 @@ export default {
     async getTrialUsers() {
       try {
         const res = await User.api.getTrialUsers()
+        console.log('users', res)
         this.trialUsers = res
+        this.allUsersStored = res
         // this.adminSearches = await User.api.getAdminSearches()
         await this.getUsageData()
         this.setChartOptions()
@@ -3638,6 +3656,21 @@ export default {
 @import '@/styles/buttons';
 @import '@/styles/modals';
 
+.dull {
+  opacity: 0.4;
+}
+
+.toggle {
+  width: 150px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-size: 12px;
+  padding: 8px;
+  cursor: pointer;
+}
 ::v-deep .apexcharts-text tspan {
   font-family: $thin-font-family;
 }

@@ -104,14 +104,13 @@
               @click="createProcess"
               class="primary-button no-transitions"
             >
-              <img
-                v-if="loading"
-                class="rotate"
-                height="12px"
-                src="@/assets/images/loading.svg"
-                alt=""
-              />
-              Save
+              <div v-if="!loading">Save</div>
+              <div v-else>Saving</div>
+              <div style="margin-left: 4px" v-if="loading" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
             </button>
           </div>
         </div>
@@ -187,13 +186,6 @@
               @click="getJournalists"
               class="primary-button no-transitions"
             >
-              <!-- <img
-                v-if="loading"
-                class="rotate"
-                height="12px"
-                src="@/assets/images/loading.svg"
-                alt=""
-              /> -->
               {{ journalText }}
               <div style="margin-left: 4px" v-if="loading" class="loading-small">
                 <div class="dot"></div>
@@ -305,13 +297,6 @@
               @click="getFeedback"
               class="primary-button no-transitions"
             >
-              <!-- <img
-                v-if="loadingFeedback"
-                class="rotate"
-                height="12px"
-                src="@/assets/images/loading.svg"
-                alt=""
-              /> -->
               {{ feedbackText }}
               <div style="margin-left: 4px" v-if="loadingFeedback" class="loading-small">
                 <div class="dot"></div>
@@ -326,13 +311,6 @@
               @click="handleRegenerateFeedback"
               class="primary-button no-transitions"
             >
-              <!-- <img
-                v-if="loadingFeedback"
-                class="rotate"
-                height="12px"
-                src="@/assets/images/loading.svg"
-                alt=""
-              /> -->
               Apply Feedback
               <div style="margin-left: 4px" v-if="loadingFeedback" class="loading-small">
                 <div class="dot"></div>
