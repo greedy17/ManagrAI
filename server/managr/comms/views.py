@@ -627,7 +627,7 @@ class PRSearchViewSet(
                 logger.exception(e)
                 tweet_res = e
                 break
-
+        print(tweet_list)
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": tweet_res})
         return Response({"tweets": tweet_list, "string": query_input, "includes": includes})
