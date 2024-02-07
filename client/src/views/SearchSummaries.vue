@@ -1051,7 +1051,7 @@
           <div
             v-if="mainView !== 'website'"
             @click="generateNewSearch(false)"
-            class="image-container left-margin right-margin-m"
+            class="image-container left-margin right-margin-m wrapper"
           >
             <img
               v-if="!newSearch || loading || summaryLoading"
@@ -1069,9 +1069,15 @@
               alt=""
               class="filtered-blue"
             />
+
+            <div class="tooltip">Submit</div>
           </div>
 
-          <div v-else @click="uploadArticle" class="image-container left-margin right-margin-m">
+          <div
+            v-else
+            @click="uploadArticle"
+            class="image-container left-margin right-margin-m wrapper"
+          >
             <img
               v-if="!newSearch || loading || summaryLoading"
               style="margin: 0; cursor: text"
@@ -1088,6 +1094,8 @@
               alt=""
               class="filtered-blue"
             />
+
+            <div class="tooltip">Submit</div>
           </div>
         </div>
       </div>
@@ -1244,8 +1252,12 @@
             <div class="tooltip-wide">Popular prompts</div>
           </div>
 
-          <div v-if="!newTemplate" class="image-container left-margin right-margin-m white-bg">
+          <div
+            v-if="!newTemplate"
+            class="image-container left-margin right-margin-m white-bg wrapper"
+          >
             <img src="@/assets/images/paper-plane-top.svg" height="14px" alt="" />
+            <div class="tooltip">Submit</div>
           </div>
 
           <div
