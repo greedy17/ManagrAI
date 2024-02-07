@@ -145,9 +145,6 @@
         <router-link active-class="active" :to="{ name: 'Assist' }" id="router-assist">
           <div class="row">
             <p>Assist</p>
-            <div class="beta-tag-small">
-              <p>Beta</p>
-            </div>
           </div>
         </router-link>
 
@@ -1085,7 +1082,7 @@ export default {
 
 .beta-tag {
   letter-spacing: 1px;
-  margin-left: 32px;
+  margin-left: 8px;
 
   p {
     background-color: $dark-black-blue;
@@ -1462,7 +1459,7 @@ a:hover {
 .active {
   color: $dark-black-blue;
   position: relative;
-  border-bottom: 2px solid $dark-black-blue;
+  border-bottom: 1px solid $dark-black-blue;
   // background-color: $white-blue;
 }
 

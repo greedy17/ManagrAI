@@ -29,7 +29,7 @@
       <router-view :key="$route.fullPath"></router-view>
     </div>
 
-    <div v-if="showingHelp" class="tooltip-bottom-left">
+    <!-- <div v-if="showingHelp" class="tooltip-bottom-left">
       <div class="column">
         <p>Need help ?</p>
         <small>Email us at support@mymanagr.com</small>
@@ -43,7 +43,7 @@
       class="icon-bottom-left"
     >
       <img src="@/assets/images/help.png" height="16px" alt="" />
-    </div>
+    </div> -->
   </div>
 </template>
 
