@@ -4,14 +4,14 @@
       <div class="regen-container">
         <div style="background-color: white" class="paid-header sticky-header">
           <div>
-            <h4 class="regen-header-title">Popular Prompts</h4>
+            <h3 class="regen-header-title">Popular Prompts</h3>
             <p class="regen-header-subtitle"></p>
           </div>
           <div class="pointer" @click="togglePromptModal"><small>X</small></div>
         </div>
         <div class="paid-body">
           <div>
-            <div class="paid-center">
+            <div class="paid-center aligned-left">
               <p
                 class="paid-item"
                 @click="selectPrompt(prompt)"
@@ -338,7 +338,7 @@
         <div v-if="mainView === 'news'">
           <div style="padding-top: 2rem" v-if="!(filteredArticles && filteredArticles.length)">
             <div class="row">
-              <div class="image-container right-margin-m">
+              <div style="cursor: text" class="image-container-blue right-margin-m">
                 <img
                   class="blue-filter"
                   style="margin-left: -1px"
@@ -361,7 +361,7 @@
               </div>
             </div>
 
-            <div v-else class="small-container">
+            <div v-else class="small-container letter-spacing">
               <p class="bottom-margin-xl">
                 <span class="bold">Get started by creating a new search.</span> Managr will find
                 relevant news clips from thousands of top media outlets and provide a summary.
@@ -613,7 +613,7 @@
 
           <div style="padding-top: 2rem" v-else-if="!(tweets && tweets.length)">
             <div class="row">
-              <div class="image-container right-margin-m">
+              <div style="cursor: text" class="image-container-blue right-margin-m">
                 <img
                   class="blue-filter"
                   style="margin-left: -1px"
@@ -625,7 +625,7 @@
               <h3>Managr</h3>
             </div>
 
-            <div class="small-container">
+            <div class="small-container letter-spacing">
               <p class="bottom-margin-xl">
                 <span class="bold">Get started by creating a new search.</span> Managr will find
                 relevant social clips from X/Twitter and provide a summary.
@@ -752,7 +752,7 @@
           </div>
         </div>
         <div v-else-if="mainView === 'website'">
-          <div v-if="clipLoading">
+          <div style="margin-top: 2rem" v-if="clipLoading">
             <div class="small-container">
               <div class="loading">
                 <p>Generating clips</p>
@@ -763,9 +763,9 @@
             </div>
           </div>
 
-          <div style="margin-top: 2rem" v-else-if="!addedArticles.length">
+          <div style="margin-top: 2rem" v-else-if="!addedArticles.length && !clipLoading">
             <div class="row">
-              <div class="image-container right-margin-m">
+              <div style="cursor: text" class="image-container-blue right-margin-m">
                 <img
                   class="blue-filter"
                   style="margin-left: -1px"
@@ -777,7 +777,7 @@
               <h3>Managr</h3>
             </div>
 
-            <div class="small-container">
+            <div class="small-container letter-spacing">
               <p class="bottom-margin-xl">
                 <span class="bold">Get started by pasting a article URL.</span> Managr will read it
                 and provide a summary.
@@ -1023,9 +1023,14 @@
           <div
             v-if="mainView === 'news'"
             @click="toggleDateDropdown"
-            class="image-container left-margin wrapper"
+            class="image-container-blue left-margin wrapper"
           >
-            <img src="@/assets/images/calendar.svg" height="14px" alt="" />
+            <img
+              style="filter: invert(100%)"
+              src="@/assets/images/calendar.svg"
+              height="14px"
+              alt=""
+            />
             <div class="tooltip">Date Range</div>
           </div>
           <div class="right-margin" v-else></div>
@@ -1047,11 +1052,11 @@
           <div
             v-if="mainView !== 'website'"
             @click="generateNewSearch(false)"
-            class="image-container left-margin right-margin-m"
+            class="image-container-blue left-margin right-margin-m"
           >
             <img
               v-if="!newSearch || loading || summaryLoading"
-              style="margin: 0; cursor: text"
+              style="margin: 0; cursor: text; filter: invert(100%)"
               src="@/assets/images/paper-plane-top.svg"
               height="14px"
               alt=""
@@ -1059,7 +1064,7 @@
 
             <img
               v-else
-              style="margin: 0"
+              style="margin: 0; filter: invert(100%)"
               src="@/assets/images/paper-plane-full.svg"
               height="14px"
               alt=""
@@ -1067,10 +1072,14 @@
             />
           </div>
 
-          <div v-else @click="uploadArticle" class="image-container left-margin right-margin-m">
+          <div
+            v-else
+            @click="uploadArticle"
+            class="image-container-blue left-margin right-margin-m"
+          >
             <img
               v-if="!newSearch || loading || summaryLoading"
-              style="margin: 0; cursor: text"
+              style="margin: 0; cursor: text; filter: invert(100%)"
               src="@/assets/images/paper-plane-top.svg"
               height="14px"
               alt=""
@@ -1078,7 +1087,7 @@
 
             <img
               v-else
-              style="margin: 0"
+              style="margin: 0; filter: invert(100%)"
               src="@/assets/images/paper-plane-full.svg"
               height="14px"
               alt=""
@@ -1230,22 +1239,46 @@
             v-autoresize
           />
 
-          <div @click="togglePromptModal" class="image-container left-margin wrapper white-bg">
-            <img src="@/assets/images/comment.svg" height="14px" alt="" />
+          <div @click="togglePromptModal" class="image-container-blue left-margin wrapper white-bg">
+            <img
+              style="filter: invert(100%)"
+              src="@/assets/images/comment.svg"
+              height="14px"
+              alt=""
+            />
             <div class="tooltip-wide">Popular prompts</div>
           </div>
 
-          <div v-if="!newTemplate" class="image-container left-margin right-margin-m white-bg">
-            <img src="@/assets/images/paper-plane-top.svg" height="14px" alt="" />
+          <div v-if="!newTemplate" class="image-container-blue left-margin right-margin-m white-bg">
+            <img
+              style="filter: invert(100%)"
+              src="@/assets/images/paper-plane-top.svg"
+              height="14px"
+              alt=""
+            />
           </div>
 
           <div
-            @click="getSummary(filteredArticles, newTemplate)"
-            class="image-container left-margin right-margin-m white-bg"
-            v-else
+            @click="getChatSummary(filteredArticles, newTemplate)"
+            class="image-container-blue left-margin right-margin-m white-bg"
+            v-else-if="mainView === 'news' && newTemplate"
           >
             <img
-              style="margin: 0"
+              style="margin: 0; filter: invert(100%)"
+              src="@/assets/images/paper-plane-full.svg"
+              height="14px"
+              alt=""
+              class="filtered-blue"
+            />
+          </div>
+
+          <div
+            @click="getChatSummary(preparedTweets, newTemplate)"
+            class="image-container-blue left-margin right-margin-m white-bg"
+            v-else-if="newTemplate"
+          >
+            <img
+              style="margin: 0; filter: invert(100%)"
               src="@/assets/images/paper-plane-full.svg"
               height="14px"
               alt=""
@@ -1760,10 +1793,8 @@ export default {
     },
     async uploadArticle() {
       this.resetAll()
-      // this.summary = null
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       this.clipLoading = true
-      // this.showSummaryInstructions = false
       try {
         await Comms.api
           .uploadLink({
@@ -1953,6 +1984,7 @@ export default {
       this.newSearch = ''
       this.addedClips = []
       this.filteredArticles = []
+      this.addedArticles = []
       this.tweets = []
       this.metaData = { clips: [] }
       this.changeSearch(null)
@@ -2143,6 +2175,8 @@ export default {
       }
     },
     async generateNewSearch(saved = false, boolean = '') {
+      this.filteredArticles = []
+      this.tweets = []
       this.changeSearch(null)
       this.savedSearch = null
       this.showGenerateDropdown = false
@@ -3314,6 +3348,10 @@ button:disabled {
   }
 }
 
+.letter-spacing {
+  //   letter-spacing: 0.25px;
+}
+
 .summary-button {
   @include gray-text-button();
   margin: 0 0.5rem;
@@ -3608,7 +3646,7 @@ button:disabled {
 }
 
 h3 {
-  font-size: 18px;
+  font-size: 20px;
   margin: 0;
 }
 
@@ -3624,7 +3662,7 @@ li {
   padding-left: 42px;
   padding-right: 32px;
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.75;
 }
 
 .blue-filter {
@@ -3700,7 +3738,7 @@ li {
 }
 
 .footer {
-  padding: 16px 32px;
+  padding: 16px 32px 32px 32px;
   width: 100%;
   background-color: white;
   z-index: 2;
@@ -3835,10 +3873,27 @@ li {
   }
 }
 
+.image-container-blue {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: $dark-black-blue;
+
+  img {
+    filter: brightness(0) invert(100%);
+  }
+}
+
 .input-container {
   border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Horizontal offset, vertical offset, blur radius, color */
+  transition: box-shadow 0.3s ease;
   padding: 0;
-  border-radius: 8px;
+  border-radius: 24px;
   width: 100%;
   color: $base-gray;
   position: relative;
@@ -3998,6 +4053,9 @@ p {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+.aligned-left {
+  align-items: flex-start;
 }
 .regen-header-title {
   margin: 0.25rem 0;

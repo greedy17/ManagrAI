@@ -59,11 +59,9 @@
                 {{ upgradeMessage }}
               </h5>
             </div>
-            <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
           </div>
         </div>
         <div class="paid-footer">
-          <!-- <div></div> -->
           <div class="row">
             <div
               style="padding-top: 9px; padding-bottom: 9px"
@@ -95,11 +93,9 @@
                 If you have any questions, email us at support@mymanagr.com
               </h5>
             </div>
-            <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
           </div>
         </div>
         <div class="paid-footer">
-          <!-- <div></div> -->
           <div class="row">
             <div
               style="padding-top: 9px; padding-bottom: 9px"
@@ -129,11 +125,9 @@
               <h3 class="paid-title">Something went wrong</h3>
               <h5 class="regen-body-title">Please try again later.</h5>
             </div>
-            <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
           </div>
         </div>
         <div class="paid-footer">
-          <!-- <div></div> -->
           <div class="row">
             <div
               style="padding-top: 9px; padding-bottom: 9px"
