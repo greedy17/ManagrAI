@@ -381,13 +381,13 @@
 
           <div ref="topDivider" v-else>
             <div
-              style="margin-top: 2rem"
+              style="margin: 5rem 0"
               v-for="article in filteredArticles"
               :key="article.id"
               class="news-container"
             >
               <div class="news-card" @click="selectArticle(article)">
-                <header class="row">
+                <header class="row-between">
                   <div class="card-col">
                     <div class="card-top-left">
                       <span>{{ article.source.name }}</span>
@@ -625,7 +625,7 @@
               <h3>Managr</h3>
             </div>
 
-            <div class="small-container letter-spacing">
+            <div v-if="hasTwitterIntegration" class="small-container letter-spacing">
               <p class="bottom-margin-xl">
                 <span class="bold">Get started by creating a new search.</span> Managr will find
                 relevant social clips from X/Twitter and provide a summary.
@@ -639,6 +639,14 @@
                 <p>For specific topics use OR & AND, “Camping AND Football”</p>
                 <p>Date range is set to last 7 days</p>
               </div>
+            </div>
+
+            <div v-else class="small-container letter-spacing">
+              <p class="bottom-margin-xl">
+                <span class="bold">Get started by creating a new search.</span> Managr will find
+                relevant social clips from X/Twitter and provide a summary. Make sure to connect
+                your X account <span class="link" @click="goToIntegrations">here</span>.
+              </p>
             </div>
           </div>
 
@@ -736,15 +744,6 @@
                         getTimeDifferenceInMinutes(tweet.created_at)
                       }}</span>
                     </div>
-                    <!-- <button
-                      :disabled="clipTitles.includes(tweet.id)"
-                      class="tertiary-button"
-                      @click="addClip(tweet)"
-                    >
-                      <img height="10px" src="@/assets/images/share.svg" alt="" />
-
-                      {{ clipTitles.includes(tweet.id) ? 'Shared' : 'Share' }}
-                    </button> -->
                   </div>
                 </div>
               </div>
@@ -1052,11 +1051,11 @@
           <div
             v-if="mainView !== 'website'"
             @click="generateNewSearch(false)"
-            class="image-container-blue left-margin right-margin-m"
+            class="image-container left-margin right-margin-m wrapper"
           >
             <img
               v-if="!newSearch || loading || summaryLoading"
-              style="margin: 0; cursor: text; filter: invert(100%)"
+              style="margin: 0; cursor: text"
               src="@/assets/images/paper-plane-top.svg"
               height="14px"
               alt=""
@@ -1064,22 +1063,24 @@
 
             <img
               v-else
-              style="margin: 0; filter: invert(100%)"
+              style="margin: 0"
               src="@/assets/images/paper-plane-full.svg"
               height="14px"
               alt=""
               class="filtered-blue"
             />
+
+            <div class="tooltip">Submit</div>
           </div>
 
           <div
             v-else
             @click="uploadArticle"
-            class="image-container-blue left-margin right-margin-m"
+            class="image-container left-margin right-margin-m wrapper"
           >
             <img
               v-if="!newSearch || loading || summaryLoading"
-              style="margin: 0; cursor: text; filter: invert(100%)"
+              style="margin: 0; cursor: text"
               src="@/assets/images/paper-plane-top.svg"
               height="14px"
               alt=""
@@ -1087,12 +1088,14 @@
 
             <img
               v-else
-              style="margin: 0; filter: invert(100%)"
+              style="margin: 0"
               src="@/assets/images/paper-plane-full.svg"
               height="14px"
               alt=""
               class="filtered-blue"
             />
+
+            <div class="tooltip">Submit</div>
           </div>
         </div>
       </div>
@@ -1249,22 +1252,21 @@
             <div class="tooltip-wide">Popular prompts</div>
           </div>
 
-          <div v-if="!newTemplate" class="image-container-blue left-margin right-margin-m white-bg">
-            <img
-              style="filter: invert(100%)"
-              src="@/assets/images/paper-plane-top.svg"
-              height="14px"
-              alt=""
-            />
+          <div
+            v-if="!newTemplate"
+            class="image-container left-margin right-margin-m white-bg wrapper"
+          >
+            <img src="@/assets/images/paper-plane-top.svg" height="14px" alt="" />
+            <div class="tooltip">Submit</div>
           </div>
 
           <div
             @click="getChatSummary(filteredArticles, newTemplate)"
-            class="image-container-blue left-margin right-margin-m white-bg"
+            class="image-container left-margin right-margin-m white-bg"
             v-else-if="mainView === 'news' && newTemplate"
           >
             <img
-              style="margin: 0; filter: invert(100%)"
+              style="margin: 0"
               src="@/assets/images/paper-plane-full.svg"
               height="14px"
               alt=""
@@ -1274,11 +1276,11 @@
 
           <div
             @click="getChatSummary(preparedTweets, newTemplate)"
-            class="image-container-blue left-margin right-margin-m white-bg"
+            class="image-container left-margin right-margin-m white-bg"
             v-else-if="newTemplate"
           >
             <img
-              style="margin: 0; filter: invert(100%)"
+              style="margin: 0"
               src="@/assets/images/paper-plane-full.svg"
               height="14px"
               alt=""
@@ -2982,6 +2984,12 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+.link {
+  border-bottom: 1px solid $dark-black-blue;
+  padding-bottom: 2px;
+  cursor: pointer;
+}
+
 .dropdownBorder {
   color: white !important;
   border-radius: 4px;
@@ -3675,6 +3683,12 @@ li {
   flex-direction: row;
   align-items: center;
 }
+.row-between {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
 .content-body {
   display: flex;
   align-items: flex-start;
@@ -4023,9 +4037,9 @@ p {
 
 .blue-text-bg {
   background: $white-blue;
-  padding: 32px 8px 8px 8px;
+  padding: 32px 12px 12px 12px;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .regen-header {
