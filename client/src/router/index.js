@@ -22,8 +22,14 @@ export default new Router({
       path: '/summaries',
       name: 'PRSummaries',
       beforeEnter: Auth.requireAuth,
-      component: () => import('@/views/PRSummaries')
+      component: () => import('@/views/SearchSummaries')
     },
+    // {
+    //   path: '/search',
+    //   name: 'SearchSummaries',
+    //   beforeEnter: Auth.requireAuth,
+    //   component: () => import('@/views/SearchSummaries')
+    // },
     {
       path: '/pitches',
       name: 'Pitches',

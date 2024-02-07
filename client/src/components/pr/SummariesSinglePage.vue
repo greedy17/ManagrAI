@@ -42,7 +42,6 @@
       </div>
     </Modal>
 
-    <!-- paidModal -->
     <Modal v-if="paidModal" class="paid-modal">
       <div class="regen-container">
         <div class="paid-header">
@@ -1229,7 +1228,7 @@
                       alt=""
                       class="filter-green img-highlight"
                     />
-                    <!-- <span class="summary-email-span">{{ sendSummaryEmailText }}</span> -->
+
                     <div
                       v-if="sendSummaryEmailText !== 'Sent!'"
                       style="margin-left: -22px"
@@ -1529,12 +1528,12 @@
                 <div class="card-footer">
                   <div class="author-time">
                     <span class="author">{{ '@' + tweet.user.username }}</span>
-                    <span class="divier-dot">.</span>
+                    <span class="divider-dot">.</span>
                     <small class="bold-text"
                       >{{ formatNumber(tweet.user.public_metrics.followers_count) }}
                       <span>Followers</span>
                     </small>
-                    <span class="divier-dot">.</span>
+                    <span class="divider-dot">.</span>
                     <span class="off-gray time">{{
                       getTimeDifferenceInMinutes(tweet.created_at)
                     }}</span>
@@ -1588,11 +1587,11 @@
                 <div class="card-footer">
                   <div class="author-time">
                     <span class="author">{{ article.author }}</span>
-                    <span class="divier-dot">.</span>
+                    <span class="divider-dot">.</span>
                     <span class="off-gray time">{{
                       getTimeDifferenceInMinutes(article.publish_date)
                     }}</span>
-                    <span class="divier-dot">.</span>
+                    <span class="divider-dot">.</span>
                   </div>
                   <div class="footer-icon-container">
                     <button
@@ -1777,7 +1776,6 @@
                 <header>
                   <div class="card-col">
                     <div class="card-top-left">
-                      <!-- <img :src="article.icon" /> -->
                       <span>{{ article.source }}</span>
                     </div>
                     <h1 class="article-title" @click="goToArticle(article.link)">
@@ -1804,23 +1802,13 @@
                 <div class="card-footer">
                   <div class="author-time">
                     <span class="author">{{ article.author }}</span>
-                    <span class="divier-dot">.</span>
+                    <span class="divider-dot">.</span>
                     <span class="off-gray time">{{
                       getTimeDifferenceInMinutes(article.publish_date)
                     }}</span>
-                    <span class="divier-dot">.</span>
+                    <span class="divider-dot">.</span>
                   </div>
                   <div class="footer-icon-container">
-                    <!-- <button
-                      :disabled="clipTitles.includes(article.title)"
-                      class="tertiary-button"
-                      @click="addClip(article)"
-                    >
-                      <img height="10px" src="@/assets/images/share.svg" alt="" />
-
-                      {{ clipTitles.includes(article.title) ? 'Shared' : 'Share' }}
-                    </button> -->
-
                     <div v-if="mainView === 'website' && addedArticles.length === 1"></div>
                     <div v-else>
                       <button
@@ -3839,48 +3827,8 @@ export default {
     margin-top: 0;
   }
 }
-.switch-item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
-  border-radius: 6px;
-  width: 100%;
-  margin: 0 2px;
-  cursor: pointer;
-  color: $mid-gray;
-  white-space: nowrap;
-  font-weight: 400;
-  font-size: 12px;
-  img {
-    margin: 0 !important;
-  }
-  // img {
-  //   filter: invert(63%) sepia(10%) saturate(617%) hue-rotate(200deg) brightness(93%) contrast(94%);
-  //   margin-right: 8px;
-  // }
-}
 
-.activeswitch {
-  background-color: white;
-  padding: 4px 6px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  color: $dark-black-blue;
-  img {
-    filter: none;
-  }
-}
-
-.relative {
-  position: relative;
-}
-.absolute {
-  position: absolute;
-}
 .regenerate-article {
-  // background-color: red;
-  // bottom: 0;
-  // right: 16px;
   margin-top: 1rem;
 }
 
@@ -4063,26 +4011,6 @@ export default {
 .inverted {
   filter: invert(100%);
 }
-
-// .img-border {
-//   border: 1px solid #416177;
-//   border-radius: 100%;
-//   padding: 0px 4px;
-//   margin-left: 8px;
-//   cursor: pointer;
-//   img {
-//     margin: 0 !important;
-//     filter: invert(33%) sepia(27%) saturate(676%) hue-rotate(161deg) brightness(95%) contrast(84%);
-//   }
-// }
-
-// .img-border:hover {
-//   background: #416177;
-
-//   img {
-//     filter: invert(100%);
-//   }
-// }
 
 .loader-container {
   display: flex;
@@ -5237,7 +5165,7 @@ header {
     font-size: 10px !important;
   }
 }
-.divier-dot {
+.divider-dot {
   position: relative;
   bottom: 0.2rem;
 }
@@ -5567,7 +5495,6 @@ header {
 .wrapper {
   display: flex;
   align-items: center;
-  // background-color: ;
   font-family: $thin-font-family;
   font-size: 14px;
   position: relative;
@@ -5611,7 +5538,6 @@ header {
   left: -62px !important;
 }
 
-/* This bridges the gap so you can mouse into the tooltip without it disappearing */
 .wrapper .tooltip:before {
   bottom: -20px;
   content: ' ';
@@ -5844,9 +5770,6 @@ header {
   background-color: $dark-black-blue;
   font-size: 12px;
   padding: 8px;
-  // @media only screen and (max-width: 600px) {
-  //   padding: 16px 8px 48px 8px;
-  // }
 }
 
 .rotate-img {
