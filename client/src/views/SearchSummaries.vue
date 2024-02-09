@@ -3663,13 +3663,13 @@ li {
 }
 
 .bold {
-  font-weight: bold;
+  font-family: $base-font-family;
 }
 
 .small-container {
   padding-left: 42px;
   padding-right: 32px;
-  font-size: 14px;
+  font-size: 15px !important;
   line-height: 1.75;
 }
 
@@ -3978,9 +3978,9 @@ textarea::placeholder {
   align-items: center;
 }
 
-p {
-  font-size: 14px;
-}
+// p {
+//   font-size: 14px;
+// }
 
 .horizontal-padding {
   padding: 0 34px 0 36px;
