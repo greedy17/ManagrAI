@@ -239,7 +239,7 @@ class Pitch(TimeStampModel):
         on_delete=models.CASCADE,
     )
     name = models.CharField(max_length=255)
-    instructions = models.TextField()
+    instructions = models.TextField( null=True, blank=True)
     type = models.CharField(max_length=255, null=True, blank=True)
     audience = models.CharField(max_length=255, null=True, blank=True)
     content = models.TextField(null=True, blank=True)

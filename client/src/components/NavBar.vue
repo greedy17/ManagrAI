@@ -762,7 +762,13 @@ export default {
           .then(() => {
             this.$store.dispatch('getPitches')
             this.deletePitchModelOpen = false
-            this.showUpdateBanner = true
+            this.$toast('Content deleted', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
           })
       } catch (e) {
         console.log('ERROR DELETING PITCH', e)

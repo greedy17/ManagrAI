@@ -492,6 +492,13 @@
                       Styles
                     </p>
                     <div
+                      @click="addWritingStyle(defaultStyle.style, defaultStyle.title)"
+                      class="dropdown-item"
+                      style="padding: 4px 0"
+                    >
+                      <p style="padding: 0 16px; margin: 0">Default</p>
+                    </div>
+                    <div
                       @mouseenter="setIndex(i)"
                       @mouseLeave="removeIndex"
                       @click="addWritingStyle(style.style, style.title)"
@@ -725,6 +732,10 @@ export default {
   },
   data() {
     return {
+      defaultStyle: {
+        title: 'Default',
+        style: `Begin with a precise introduction, without informal salutations. Be clear, concise, and informative, avoiding metaphors. Offer coherent data without persuasion. Aim for depth, not sensationalism and avoid commercial bias.`,
+      },
       regeneratedFeedback: false,
       feedbackModalOpen: false,
       saveModalOpen: false,
@@ -825,11 +836,11 @@ export default {
   },
   methods: {
     clearForm() {
-      this.storeContent()
-      this.output = null
+      // this.storeContent()
+      this.output = ''
       this.writingStyle = null
       this.writingStyleTitle = null
-      this.type = null
+      this.type = ''
     },
     storeContent() {
       this.storedOutput = this.output
@@ -1192,9 +1203,17 @@ export default {
             type: this.type,
             audience: this.persona,
             generated_pitch: this.pitch,
-
             instructions: this.output,
           }
+
+          this.$toast('Content saved', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+
           await this.$store.dispatch('getPitches')
         }
       } catch (e) {
