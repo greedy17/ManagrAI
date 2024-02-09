@@ -761,6 +761,7 @@ def upload_link(request):
         emit_process_website_domain(url, request.user.organization.name)
     except Exception as e:
         logger.exception(e)
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     return Response(data=article)
 
 
@@ -824,9 +825,7 @@ class PitchViewSet(
 
         while True:
             try:
-                res = Pitch.generate_pitch(
-                    user, type, instructions, style, token_amount, timeout
-                )
+                res = Pitch.generate_pitch(user, type, instructions, style, token_amount, timeout)
                 pitch = res.get("choices")[0].get("message").get("content")
                 if pitch_id:
                     saved_pitch = Pitch.objects.get(id=pitch_id)
