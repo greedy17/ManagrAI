@@ -259,7 +259,7 @@
           <label style="font-size: 13px" for="detail-title">Name:</label>
           <input
             id="detail-title"
-            style="width: 100%; margin-bottom: 1rem"
+            style="width: 100%; margin: 0.5rem 0 1rem 0"
             class="area-input-outline"
             type="text"
             placeholder="Name your search"
@@ -653,7 +653,7 @@
           <div v-else>
             <div>
               <div
-                style="margin-top: 1rem"
+                style="margin: 5rem 0"
                 class="news-container"
                 v-for="(tweet, i) in tweets"
                 :key="i"
@@ -778,7 +778,7 @@
 
             <div class="small-container letter-spacing">
               <p class="bottom-margin-xl">
-                <span class="bold">Get started by pasting a article URL.</span> Managr will read it
+                <span class="bold">Get started by pasting an article URL.</span> Managr will read it
                 and provide a summary.
               </p>
             </div>
@@ -1213,7 +1213,9 @@
 
       <div v-else class="content-body">
         <div style="margin-top: 66px" class="news-container" v-if="summary">
-          <pre v-html="summary" class="pre-text"></pre>
+          <div>
+            <pre v-html="summary" class="pre-text"></pre>
+          </div>
         </div>
 
         <div class="centered-col" v-else>
