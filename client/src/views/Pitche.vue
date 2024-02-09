@@ -1,5 +1,5 @@
 <template>
-  <div ref="pitchTop" class="pitch-view">
+  <div ref="pitchTop" class="pitches">
     <!-- paidModal -->
     <Modal v-if="paidModal" class="paid-modal">
       <div class="regen-container">
@@ -212,7 +212,7 @@
     </Modal>
 
     <Modal v-if="feedbackModalOpen" class="paid-modal" style="z-index: 1000000s">
-      <div style="min-height: 275px; width: 510px" class="regen-container">
+      <div style="min-height: 275px" class="regen-container">
         <div class="paid-header">
           <div>
             <h3 class="regen-header-title">
@@ -336,9 +336,9 @@
       </div>
     </Modal>
 
-    <Modal v-if="saveModalOpen" class="paid-modal" style="z-index: 1000000">
+    <Modal v-if="saveModalOpen" class="paid-modal" style="z-index: 1000000s">
       <div
-        :style="isMobile ? 'width: 95%; min-height: 275px' : 'width: 510px; min-height: 275px'"
+        :style="isMobile ? 'width: 95%; min-height: 275px' : 'width: 500px; min-height: 275px'"
         class="regen-container"
       >
         <div class="paid-header">
@@ -385,75 +385,56 @@
       </div>
     </Modal>
 
-    <section class="container">
-      <div class="content-body">
-        <div>
-          <div class="row-start">
-            <div style="cursor: text" class="image-container-blue right-margin-m">
-              <img
-                class="blue-filter"
-                style="margin-left: -1px"
-                src="@/assets/images/logo.png"
-                height="16px"
-                alt=""
-              />
-            </div>
-            <h3>Managr</h3>
+    <div :class="loading ? 'opaque' : ''" class="center">
+      <!-- <div class="relative">
+        <Transition name="slide-fade">
+          <div v-if="showBanner" style="left: -64px; top: 0; width: 120px" class="templates">
+            <p>Saved Successfully!</p>
           </div>
+        </Transition>
+      </div> -->
 
-          <div style="margin-top: -4px" class="small-container">
-            <p>
-              <span class="bold">Create content that sounds like you.</span> Choose content type,
-              provide key data, and select a writng style.
+      <div class="centered dark-blue-bg" style="width: 100%; color: white">
+        <div class="create-report-container">
+          <h2 style="margin: 0">Write</h2>
+          <p>Generate content that mirrors your writing style.</p>
+
+          <div v-if="isMobile" @click="toggleStyleDropdown" class="drop-text pointer">
+            <p class="ellipsis-text" style="margin: 0">
+              {{ writingStyleTitle ? writingStyleTitle : 'Select Style' }}
             </p>
+            <img
+              v-if="!showStyleDropdown"
+              src="@/assets/images/downArrow.svg"
+              class="inverted"
+              height="14px"
+              alt=""
+            />
+            <img
+              class="rotate-img inverted"
+              v-else
+              src="@/assets/images/downArrow.svg"
+              height="14px"
+              alt=""
+            />
           </div>
-        </div>
 
-        <div class="small-container" style="width: 100%; margin-top: 1rem">
-          <div style="padding-bottom: 128px; overflow-y: scroll; height: 100%">
-            <div style="position: relative">
-              <label for="content-type">Content Type</label>
-              <input
-                class="primary-input"
-                type="text"
-                name="content-type"
-                v-model="type"
-                :disabled="loading"
-                maxlength="300"
-                placeholder="(e.g., create a 200 word media pitch, draft a blog post, etc.)"
-                id=""
-              />
-              <div class="absolute-count">
-                <small>{{ remainingCharsSample }}</small>
-              </div>
-            </div>
+          <div class="input-container" v-clickOutsideInstructionsMenu>
+            <div class="input-row relative">
+              <div v-if="!isMobile" class="main-text">Instructions</div>
 
-            <div style="position: relative">
-              <label for="key-data">Key Data</label>
               <textarea
-                style="margin-top: 1rem"
-                class="area-input-bordered"
-                id="key-data"
-                placeholder="Paste relevant data, notes, or other important details."
-                v-model="output"
-                :rows="3"
-                v-autoresize
                 :disabled="loading"
-                maxlength="3000"
+                maxlength="2000"
+                style="margin: 0"
+                class="area-input text-area-input"
+                :placeholder="instructionsPlaceholder"
+                v-model="output"
+                v-autoresize
+                @focus="showInstructionsDropdown($event)"
               />
 
-              <div style="bottom: -2px" class="absolute-count">
-                <small>{{ remainingChars }}</small>
-              </div>
-            </div>
-
-            <label style="margin-top: 1rem" for="writing-style">Writing Style</label>
-            <div style="margin-top: 1rem; width: 100%; position: relative" id="writing-style">
-              <div
-                @click="toggleStyleDropdown"
-                class="drop-text pointer"
-                :class="loading ? 'textcursor' : ''"
-              >
+              <div v-if="!isMobile" @click="toggleStyleDropdown" class="drop-text pointer">
                 <p class="ellipsis-text" style="margin: 0">
                   {{ writingStyleTitle ? writingStyleTitle : 'Select Style' }}
                 </p>
@@ -483,13 +464,9 @@
                         cursor: text;
                         color: #2f4656;
                         font-size: 15px;
-                        position: sticky;
-                        top: 0;
-                        background-color: white;
-                        z-index: 15;
                       "
                     >
-                      Styles
+                      Select writing style
                     </p>
                     <div
                       @mouseenter="setIndex(i)"
@@ -514,7 +491,7 @@
                       </div>
                     </div>
 
-                    <div style="padding: 8px 0; position: sticky; bottom: 0">
+                    <div style="padding: 8px 0">
                       <button
                         @mouseenter="changeStyleText"
                         @mouseleave="defaultStyleText"
@@ -540,178 +517,290 @@
                   </section>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <div class="footer sticky-bottom">
-        <div style="padding-bottom: 8px" class="flex-end small-container">
-          <!-- <div
-            :class="{ fadedimg: !storedType && !storedOutput && !storedWritingStyle }"
-            @click="refillContent"
-            class="wrapper image-container"
-          >
-            <img
-              style="margin-bottom: 2px"
-              src="@/assets/images/refresh-pr.svg"
-              height="14px"
-              alt=""
-            />
-            <div class="tooltip">Refill form</div>
-          </div> -->
-
-          <div class="rows">
-            <button @click="clearForm" :disabled="loading" class="secondary-button">Clear</button>
-            <button
-              @click="generatePitch"
-              :disabled="!type || !writingStyle || loading"
-              class="primary-button"
-            >
-              Generate
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="container gray-bg">
-      <div class="header sticky-top gray-bg" v-if="pitch">
-        <div class="space-between margin-top-s horizontal-padding">
-          <p class="sub-text">{{ pitch.split(' ').length }} words</p>
-
-          <div class="rows">
-            <div
-              @click="toggleFeedbackModal"
-              class="wrapper icon-button white-bg"
-              :class="{ 'bluee-bg': feedback }"
-              style="margin-right: 0.5rem"
-            >
-              <img
-                style="cursor: pointer"
-                class="right-mar img-highlight"
-                src="@/assets/images/thumb.svg"
-                height="14px"
-                alt=""
-              />
-              <div class="tooltip-below">
-                {{ !feedback ? 'Optimize Content' : 'View Feedback' }}
+              <div class="absolute-count">
+                <small>{{ remainingChars }}</small>
               </div>
-            </div>
 
-            <div
-              @click="toggleJournalistModal"
-              class="wrapper icon-button white-bg"
-              :class="{ 'bluee-bg': journalists }"
-              style="margin-right: 0.5rem"
-            >
-              <img
-                style="cursor: pointer"
-                class="right-mar img-highlight"
-                src="@/assets/images/profile.svg"
-                height="14px"
-                alt=""
-              />
-              <div class="tooltip-below">
-                {{ !journalists ? 'Find Journalists' : 'View Journalists' }}
-              </div>
-            </div>
-
-            <div
-              style="margin-right: 0.5rem"
-              @click="copyText"
-              class="wrapper icon-button white-bg"
-            >
-              <img
-                style="cursor: pointer"
-                class="right-mar img-highlight"
-                src="@/assets/images/clipboard.svg"
-                height="14px"
-                alt=""
-              />
-              <div class="tooltip-below">{{ copyTip }}</div>
-            </div>
-
-            <div>
               <button
-                @click="toggleSaveModal"
-                class="green-button"
-                :disabled="savingPitch || pitchSaved"
+                :disabled="loading || !this.output"
+                @click="generatePitch"
+                style="
+                  margin: 0;
+                  margin-left: 8px;
+                  margin-top: 2px;
+                  border: none !important;
+                  background-color: transparent;
+                  cursor: pointer;
+                "
               >
-                Save
+                <img
+                  v-if="loading || !this.output"
+                  style="margin: 0"
+                  src="@/assets/images/paper-plane-top.svg"
+                  height="14px"
+                  alt=""
+                  class="grow faded"
+                />
+
+                <img
+                  v-else
+                  style="margin: 0"
+                  src="@/assets/images/paper-plane-full.svg"
+                  height="14px"
+                  alt=""
+                  class="grow"
+                />
               </button>
             </div>
+            <div v-if="showingInstructionsDropdown" class="dropdown">
+              <small style="padding: 8px 0" class="gray-text">Word count:</small>
+              <div style="padding: 0 0 4px 0; margin-bottom: 8px">
+                <input
+                  :disabled="loading"
+                  class="number-input"
+                  placeholder="Optional..."
+                  v-model="characters"
+                  type="number"
+                  max="1500"
+                  @input="enforceMax"
+                />
+              </div>
+              <small style="padding-top: 8px" class="gray-text">Example Instructions</small>
+              <div
+                @click="addInstructionsSuggestion(suggestion)"
+                class="dropdown-item"
+                v-for="(suggestion, i) in filteredInstructionsSuggestions"
+                :key="i"
+              >
+                <p>
+                  {{ suggestion }}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <div
-        style="margin-top: -2rem"
-        v-if="!pitch && !loading"
-        class="content-body centered-content"
-      >
-        <div class="centered-col">
-          <div style="cursor: text" class="image-container white-bg extra-padding">
-            <img src="@/assets/images/comment.svg" height="32px" alt="" />
+    <div style="padding-top: 0" class="center gray-bg">
+      <div v-if="loading" class="width-dynamic" style="margin-left: 4rem; margin-top: 1rem">
+        <div style="width: 100%" class="row">
+          <p class="summary-load-text">Generating...</p>
+        </div>
+
+        <div class="summary-preview-skeleton shimmer">
+          <div class="loading">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
           </div>
-          <p>Your content will appear here.</p>
         </div>
       </div>
-
-      <div v-else-if="loading" class="content-body centered-content">
-        <div class="loading">
-          <p>Generating content</p>
-          <div class="dot"></div>
-          <div class="dot"></div>
-          <div class="dot"></div>
-        </div>
-      </div>
-
-      <div v-else-if="pitch" class="content-body">
-        <div class="small-container">
-          <pre class="pre-text" v-html="pitch"></pre>
-        </div>
-      </div>
-
-      <div class="footer sticky-bottom gray-bg">
-        <div class="input-container-alt">
-          <img class="left-margin-l" src="@/assets/images/pencil.svg" height="14px" alt="" />
-
-          <textarea
-            class="area-input-alt text-area-input"
-            :placeholder="!pitch ? 'Start by generating content...' : 'Make edits...'"
-            autocomplete="off"
-            :disabled="!pitch"
-            @keyup.enter="regeneratePitch"
-            v-autoresize
-            v-model="instructions"
-          />
-          <div
-            style="cursor: text"
-            v-if="!pitch"
-            class="image-container left-margin-m white-bg wrapper"
-          >
-            <img src="@/assets/images/paper-plane-top.svg" height="14px" alt="" />
-            <div class="tooltip">Submit</div>
+      <div v-else class="width-dynamic" style="padding: 0 16px 0 32px">
+        <div style="padding-right: 16px" class="pitch-container">
+          <Transition name="slide-fade">
+            <div v-if="showUpdateBanner" class="templates">
+              <p>Pitch saved successfully!</p>
+            </div>
+          </Transition>
+          <div class="title-container">
+            <p :class="isMobile ? 'sub-text' : 'sub-text text-truncation'">
+              {{ !pitch ? 'Your content will appear below.' : `${savedOutput}` }}
+            </p>
+            <p v-if="pitch" class="sub-text">{{ pitch.split(' ').length }} words</p>
           </div>
 
-          <div
-            @click="regeneratePitch"
-            class="image-container left-margin-m white-bg wrapper"
-            v-else
-          >
-            <img
-              style="margin: 0"
-              src="@/assets/images/paper-plane-full.svg"
-              height="14px"
-              alt=""
-              class="filtered-blue"
+          <div class="title-bar">
+            <div v-if="!showSaveName" class="row">
+              <div v-if="pitch" class="gray-text">AI-generated content</div>
+            </div>
+            <div style="display: flex; padding: 0 0 16px 0">
+              <div style="margin-right: 0.5rem">
+                <div
+                  @click="toggleFeedbackModal"
+                  class="wrapper circle-border white-bg"
+                  :class="{ 'bluee-bg': feedback }"
+                  v-if="pitch"
+                >
+                  <img
+                    style="cursor: pointer"
+                    class="right-mar img-highlight"
+                    src="@/assets/images/thumb.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  <div style="margin-left: -22px" class="tooltip">
+                    {{ !feedback ? 'Optimize Content' : 'View Feedback' }}
+                  </div>
+                </div>
+                <div v-else class="wrapper circle-border white-bg" style="opacity: 0.7">
+                  <img
+                    style="cursor: not-allowed"
+                    class="right-mar img-highlight"
+                    src="@/assets/images/thumb.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  <div style="margin-left: -14px" class="tooltip">Create content first</div>
+                </div>
+              </div>
+
+              <div style="margin-right: 0.5rem">
+                <div
+                  @click="toggleJournalistModal"
+                  class="wrapper circle-border white-bg"
+                  :class="{ 'bluee-bg': journalists }"
+                  v-if="pitch"
+                >
+                  <img
+                    style="cursor: pointer"
+                    class="right-mar img-highlight"
+                    src="@/assets/images/profile.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  <div style="margin-left: -22px" class="tooltip">
+                    {{ !journalists ? 'Find Journalists' : 'View Journalists' }}
+                  </div>
+                </div>
+                <div v-else class="wrapper circle-border white-bg" style="opacity: 0.7">
+                  <img
+                    style="cursor: not-allowed"
+                    class="right-mar img-highlight"
+                    src="@/assets/images/profile.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  <div style="margin-left: -14px" class="tooltip">Create content first</div>
+                </div>
+              </div>
+
+              <div style="margin-right: 0.5rem">
+                <div
+                  @click="toggleSaveModal"
+                  class="wrapper circle-border white-bg"
+                  v-if="pitch && !savingPitch && !pitchSaved"
+                >
+                  <img
+                    height="14px"
+                    src="@/assets/images/disk.svg"
+                    alt=""
+                    class="filter-green img-highlight"
+                  />
+                  <div class="tooltip" style="margin-left: -14px">
+                    {{ 'Save' }}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div @click="copyText" class="wrapper circle-border white-bg" v-if="pitch">
+                  <img
+                    style="cursor: pointer"
+                    class="right-mar img-highlight"
+                    src="@/assets/images/clipboard.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  <div style="margin-left: -22px" class="tooltip">{{ copyTip }}</div>
+                </div>
+                <div v-else class="wrapper circle-border white-bg" style="opacity: 0.7">
+                  <img
+                    style="cursor: not-allowed"
+                    class="right-mar img-highlight"
+                    src="@/assets/images/clipboard.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  <div style="margin-left: -14px" class="tooltip">Create content first</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-if="pitch" class="centered pitch-padding" style="width: 100%">
+        <div v-if="pitch && !loading" class="width-dynamic">
+          <pre
+            style="margin-top: -4px; padding-top: 16px; border-top: 1px solid rgba(0, 0, 0, 0.1)"
+            v-html="pitch"
+            class="pre-text"
+          ></pre>
+        </div>
+        <div
+          style="margin: 1rem 0 0 0; padding-top: 0; padding-bottom: 0; border-radius: 28px"
+          id="instructions"
+          class="input-container-chat"
+          v-if="pitch && !loading"
+        >
+          <div style="padding-top: 0" class="input-row">
+            <div class="main-text-img">
+              <img style="margin-top: 4px" src="@/assets/images/comment.svg" height="18px" alt="" />
+            </div>
+
+            <textarea
+              style="margin: 0; padding-top: 1px"
+              class="area-input text-area-input"
+              id="instructions-text-area"
+              placeholder="Make edits..."
+              v-model="instructions"
+              :rows="1"
+              v-autoresize
             />
-            <div class="tooltip">Submit</div>
+
+            <div @click="instructions = ''" class="cancel-container">
+              <img src="@/assets/images/add.svg" class="lip-img invert-dark-blue" />
+            </div>
+            <button
+              @click="regeneratePitch"
+              :disabled="!instructions"
+              style="
+                margin: 0;
+                margin-left: 8px;
+                border: none !important;
+                background-color: transparent;
+              "
+            >
+              <img
+                v-if="!instructions"
+                style="margin: 0"
+                src="@/assets/images/paper-plane-top.svg"
+                height="17px"
+                alt=""
+                class="faded"
+              />
+
+              <img
+                v-else
+                style="margin: 0"
+                src="@/assets/images/paper-plane-full.svg"
+                height="13px"
+                alt=""
+                class="grow filtered-blue"
+              />
+            </button>
           </div>
+
+          <!-- <div v-if="showingPromptDropdown" class="dropdown">
+            <div style="padding-top: 4px; padding-bottom: 4px">
+              <small class="gray-text">Popular Prompts</small>
+            </div>
+
+            <div
+              class="dropdown-item"
+              v-for="(suggestion, i) in filteredPromptSuggestions"
+              :key="i"
+              @click="addPromptSuggestion(suggestion)"
+            >
+              <p>
+                {{ suggestion }}
+              </p>
+            </div>
+          </div> -->
         </div>
       </div>
-    </section>
+    </div>
   </div>
 </template>
 <script>
@@ -719,7 +808,7 @@ import { Comms } from '@/services/comms'
 import User from '@/services/users/'
 
 export default {
-  name: 'Pitches',
+  name: 'Pitche',
   components: {
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
   },
@@ -807,10 +896,6 @@ export default {
       savingStyle: false,
       writingStyle: null,
       resetModal: false,
-      storedOutput: null,
-      storedWritingStyle: null,
-      storedType: null,
-      storedWritingStyleTitle: null,
     }
   },
   watch: {
@@ -824,29 +909,6 @@ export default {
     this.$store.commit('setGeneratedContent', null)
   },
   methods: {
-    clearForm() {
-      this.storeContent()
-      this.output = null
-      this.writingStyle = null
-      this.writingStyleTitle = null
-      this.type = null
-    },
-    storeContent() {
-      this.storedOutput = this.output
-      this.storedWritingStyle = this.writingStyle
-      this.storedType = this.type
-      this.storedWritingStyleTitle = this.writingStyleTitle
-    },
-    refillContent() {
-      if (!this.storedOutput && !this.storedWritingStyle && !this.storedType) {
-        return
-      } else {
-        this.output = this.storedOutput
-        this.writingStyle = this.storedWritingStyle
-        this.type = this.storedType
-        this.writingStyleTitle = this.storedWritingStyleTitle
-      }
-    },
     toggleSaveModal() {
       this.saveModalOpen = !this.saveModalOpen
     },
@@ -921,11 +983,7 @@ export default {
       }
     },
     toggleStyleDropdown() {
-      if (!this.loading) {
-        this.showStyleDropdown = !this.showStyleDropdown
-      } else {
-        return
-      }
+      this.showStyleDropdown = !this.showStyleDropdown
     },
     test() {
       console.log(this.userWritingStyles)
@@ -945,13 +1003,11 @@ export default {
             title: this.styleName,
           })
           .then((response) => {
-            this.$toast('Writing style saved', {
-              timeout: 2000,
-              position: 'top-left',
-              type: 'success',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            })
+            console.log('response.style', response.style)
+            this.showBanner = true
+            setTimeout(() => {
+              this.showBanner = false
+            }, 2000)
           })
       } catch (e) {
         console.log(e)
@@ -1220,7 +1276,7 @@ export default {
       this.contentLoading = true
       this.loading = true
       const tempPitch = this.pitch
-      this.pitch = null
+      this.pitch = ''
       this.savedOutput = this.instructions
       try {
         await Comms.api
@@ -1246,31 +1302,25 @@ export default {
         this.openPaidModal()
         return
       }
-      this.storeContent()
-      this.pitch = null
       this.feedback = null
       this.specificFeedback = null
       this.feedbackType = null
       this.audience = null
       this.objective = null
       this.regeneratedFeedback = false
-      this.journalists = null
+      this.journalists - null
       this.loading = true
       this.showStyleDropdown = false
-      console.log(
-        this.type + ' --- ENDS HERE ---',
-        this.output + '--- ENDS HERE ---',
-        this.writingStyle + '--- ENDS HERE---',
-      )
       try {
         await Comms.api
           .generatePitch({
             type: this.type,
             instructions: this.output,
+            audience: this.persona,
             style: this.writingStyle,
+            chars: this.characters,
           })
           .then((response) => {
-            // this.clearForm()
             this.savedOutput = this.output
             this.pitch = response.pitch
             this.scrollToTop()
@@ -1324,13 +1374,13 @@ export default {
       return this.$store.state.user.writingStylesRef
     },
     remainingChars() {
-      return 3000 - this.output.length
+      return 2000 - this.output.length
     },
     remainingCharsBrief() {
       return 2000 - this.briefing.length
     },
     remainingCharsSample() {
-      return 300 - this.type.length
+      return 8000 - this.sample.length
     },
     isMobile() {
       return window.innerWidth <= 600
@@ -1511,226 +1561,8 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
-.green-button {
-  @include dark-blue-button();
-  background-color: $dark-green;
-  padding: 8px 16px;
-  border: none;
-  margin-right: 0;
-}
-
-.icon-button {
-  @include dark-blue-button();
-  padding: 7px 12px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  img {
-    filter: invert(40%);
-  }
-}
-
-.flex-end {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-.margin-top-s {
-  margin-top: 1.5rem;
-}
-
-.padding-top-l {
-  padding-top: 88px;
-}
-
-.header {
-  padding: 60px 16px 8px 16px;
-  width: 100%;
-  background-color: white;
-  z-index: 2;
-}
-
-.extra-padding {
-  padding: 12px !important;
-}
-
-.sticky-top {
-  position: absolute;
-  top: 0;
-}
-
-.centered-col {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  font-size: 14px;
-  width: 100%;
-  height: 80%;
-}
-
-.area-input-alt {
-  width: 85%;
-  margin-bottom: 0.25rem;
-  max-height: 250px;
-  padding: 0 1.25rem;
-  line-height: 1.25;
-  outline: none;
-  border: none;
-  letter-spacing: 0.5px;
-  font-size: 14px;
-  font-family: $thin-font-family !important;
-  font-weight: 400;
-  border: none !important;
-  resize: none;
-  text-align: left;
-  overflow: auto;
-  scroll-behavior: smooth;
-  color: $dark-black-blue;
-  background-color: transparent;
-}
-
-label {
-  font-size: 14px;
-  font-weight: bold;
-}
-
-.sticky-bottom {
-  position: absolute;
-  bottom: 0;
-}
-
-.footer {
-  padding: 16px 40px 32px 40px;
-  width: 100%;
-  background-color: white;
-  z-index: 10;
-}
-
-.content-body {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  overflow-y: scroll;
-  scroll-behavior: smooth;
-  z-index: 0;
-  padding: 88px 40px 32px 40px;
-  font-size: 16px;
-  width: 100%;
-  height: 100%;
-}
-
-.content-body::-webkit-scrollbar {
-  width: 6px;
-  height: 0px;
-}
-.content-body::-webkit-scrollbar-thumb {
-  background-color: $soft-gray;
-  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
-  border-radius: 6px;
-}
-
-.horizonal-padding {
-  padding-left: 32px;
-  padding-right: 32px;
-}
-
-.bold {
-  font-family: $base-font-family;
-  font-weight: 200 !important;
-}
-
-h3 {
-  font-size: 20px;
-  margin: 0;
-}
-
-.small-container {
-  padding-left: 32px;
-  padding-right: 32px;
-  font-size: 15px;
-  line-height: 1.75;
-}
-
-.horizontal-padding {
-  padding-left: 56px;
-  padding-right: 64px;
-}
-
-.spacer {
-  padding-top: 68px;
-}
-.space-between {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.container {
-  width: 50vw;
-  height: 100vh;
-  position: relative;
-}
-
-.container:first-of-type {
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.image-container {
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 50%;
-  padding: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-
-  img {
-    filter: invert(40%);
-  }
-}
-
-.image-container-blue {
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 50%;
-  padding: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  background-color: $dark-black-blue;
-
-  img {
-    filter: brightness(0) invert(100%);
-  }
-}
-
-.sticky-bottom {
-  position: absolute;
-  bottom: 0;
-}
-
-.left-margin {
-  margin-left: 8px;
-}
-.left-margin-m {
-  margin-left: 12px;
-}
-
-.left-margin-l {
-  margin-left: 16px;
-}
-
-.right-margin {
-  margin-right: 8px;
-}
-.right-margin-m {
-  margin-right: 12px;
-}
-
-.bottom-margin-xl {
-  margin-bottom: 32px;
+::placeholder {
+  color: $mid-gray;
 }
 
 @keyframes rotation {
@@ -1758,7 +1590,7 @@ h3 {
 
 .absolute-count {
   position: absolute;
-  bottom: 0;
+  bottom: 4px;
   right: 3px;
   font-size: 10px;
   color: $light-gray-blue;
@@ -1770,13 +1602,6 @@ h3 {
 
 .no-text-margin {
   margin: 0;
-}
-
-.centered-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
 }
 
 .centered {
@@ -1800,7 +1625,7 @@ h3 {
 // }
 
 .sub-text {
-  color: $light-gray-blue;
+  // color: $light-gray-blue;
   margin: 8px 0;
   font-size: 14px;
   font-family: $thin-font-family;
@@ -1822,17 +1647,6 @@ h3 {
   margin-top: 1rem;
 }
 
-.row-start {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  margin-left: -10px;
-}
-.rows {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
 .row {
   display: flex;
   align-items: center;
@@ -1865,7 +1679,6 @@ h3 {
 
 .pre-text {
   // background-color: $white-blue;
-  padding: 40px 0 88px 0;
   border-radius: 4px;
   // padding: 16px;
   margin: 0;
@@ -1882,15 +1695,21 @@ h3 {
   padding: 23px 0 30px;
 }
 
-.pitch-view {
-  font-family: $thin-font-family;
-  font-size: 14px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
+.pitches {
   background-color: white;
-  color: $dark-black-blue;
+  width: 100vw;
+  height: 100vh;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: scroll;
+  font-family: $thin-font-family;
+  color: $chat-font-color;
+  @media only screen and (max-width: 600px) {
+    height: 91vh;
+    // padding: 12px 36px 0 36px;
+    padding: 12px 0px 0 0px;
+  }
 }
 
 .center {
@@ -1906,24 +1725,6 @@ h3 {
   gap: 24px;
   @media only screen and (max-width: 600px) {
     padding-top: 4px;
-  }
-}
-
-.input-container-alt {
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Horizontal offset, vertical offset, blur radius, color */
-  transition: box-shadow 0.3s ease;
-  padding: 0;
-  border-radius: 24px;
-  width: 100%;
-  color: $base-gray;
-  position: relative;
-  display: flex;
-  align-items: center;
-  flex-direction: row;
-
-  img {
-    filter: invert(40%);
   }
 }
 
@@ -1973,49 +1774,6 @@ h3 {
 .number-input::placeholder {
   font-size: 11px;
 }
-
-.area-input-bordered {
-  border-radius: 6px;
-  width: 100%;
-  background-color: white;
-  margin-bottom: 0.25rem;
-  max-height: 200px;
-  padding: 1rem 1.25rem;
-  line-height: 1.75;
-  outline: none;
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;
-  letter-spacing: 0.5px;
-  font-size: 13px;
-  font-family: $thin-font-family;
-  font-weight: 400;
-  resize: none;
-  text-align: left;
-  overflow: auto;
-  scroll-behavior: smooth;
-  color: $dark-black-blue;
-}
-
-.area-input {
-  width: 85%;
-  margin-bottom: 0.25rem;
-  max-height: 250px;
-  padding: 0 1.25rem;
-  line-height: 1.25;
-  outline: none;
-  border: none;
-  letter-spacing: 0.5px;
-  font-size: 14px;
-  font-family: $thin-font-family !important;
-  font-weight: 400;
-  border: none !important;
-  resize: none;
-  text-align: left;
-  overflow: auto;
-  scroll-behavior: smooth;
-  color: $dark-black-blue;
-  background-color: transparent;
-}
-
 .area-input {
   width: 100%;
   background-color: $offer-white;
@@ -2037,18 +1795,15 @@ h3 {
   color: $dark-black-blue;
 }
 
-.area-input:disabled,
-.area-input-bordered:disabled {
+.area-input:disabled {
   cursor: not-allowed;
 }
 
-.area-input::-webkit-scrollbar,
-.area-input-bordered::-webkit-scrollbar {
+.area-input::-webkit-scrollbar {
   width: 4px;
   height: 0px;
 }
-.area-input::-webkit-scrollbar-thumb,
-.area-input-bordered::-webkit-scrollbar-thumb {
+.area-input::-webkit-scrollbar-thumb {
   background-color: $soft-gray;
   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
   border-radius: 6px;
@@ -2097,15 +1852,15 @@ h3 {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
+  justify-content: center;
+  max-width: 100px;
   margin: 0;
-  font-size: 14px;
+  font-size: 12px;
   color: $dark-black-blue;
-  background-color: white;
+  background-color: $off-white;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 4px;
-  padding: 12px 16px;
+  padding: 4px;
   svg,
   img {
     margin-left: 4px;
@@ -2147,18 +1902,6 @@ footer {
   color: $dark-black-blue;
   background-color: white;
   margin-right: -2px;
-}
-
-.primary-input {
-  width: 100%;
-  margin: 1rem 0;
-  border-radius: 6px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  font-family: $thin-font-family !important;
-  background-color: white;
-  font-size: 13px;
-  padding: 16px 20px 16px 18px;
-  outline: none;
 }
 
 .input-text {
@@ -2213,6 +1956,7 @@ footer {
 .wrapper {
   display: flex;
   align-items: center;
+  // background-color: red;
   font-family: $thin-font-family;
   font-size: 14px;
   position: relative;
@@ -2221,15 +1965,13 @@ footer {
   -webkit-font-smoothing: antialiased; /* webkit text rendering fix */
 }
 
-.wrapper .tooltip,
-.wrapper .tooltip-wide {
-  z-index: 10000;
+.wrapper .tooltip {
   background: $dark-black-blue;
   border-radius: 4px;
   bottom: 100%;
   color: #fff;
   display: block;
-  left: -34px;
+  left: -20px;
   margin-bottom: 15px;
   opacity: 0;
   padding: 8px;
@@ -2253,44 +1995,8 @@ footer {
   box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
 }
 
-.wrapper .tooltip-below {
-  z-index: 10000;
-  background: $dark-black-blue;
-  border-radius: 4px;
-  top: 150%;
-  color: #fff;
-  display: block;
-  left: -30px;
-  margin-bottom: 15px;
-  opacity: 0;
-  padding: 8px;
-  pointer-events: none;
-  position: absolute;
-  width: 100px;
-  -webkit-transform: translateY(10px);
-  -moz-transform: translateY(10px);
-  -ms-transform: translateY(10px);
-  -o-transform: translateY(10px);
-  transform: translateY(10px);
-  -webkit-transition: all 0.25s ease-out;
-  -moz-transition: all 0.25s ease-out;
-  -ms-transition: all 0.25s ease-out;
-  -o-transition: all 0.25s ease-out;
-  transition: all 0.25s ease-out;
-  -webkit-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
-  -moz-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
-  -ms-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
-  -o-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
-  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
-}
-
-.tooltip-wide {
-  width: 150px !important;
-  left: -60px !important;
-}
-
-.wrapper .tooltip:before,
-.wrapper .tooltip-wide:before {
+/* This bridges the gap so you can mouse into the tooltip without it disappearing */
+.wrapper .tooltip:before {
   bottom: -20px;
   content: ' ';
   display: block;
@@ -2300,18 +2006,7 @@ footer {
   width: 100%;
 }
 
-.wrapper .tooltip-below:before {
-  top: -20px;
-  content: ' ';
-  display: block;
-  height: 20px;
-  left: 0;
-  position: absolute;
-  width: 100%;
-}
-
-.wrapper .tooltip:after,
-.wrapper .tooltip-wide:after {
+.wrapper .tooltip:after {
   border-left: solid transparent 10px;
   border-right: solid transparent 10px;
   border-top: solid $dark-black-blue 10px;
@@ -2324,22 +2019,7 @@ footer {
   width: 0;
 }
 
-.wrapper .tooltip-below:after {
-  border-left: solid transparent 10px;
-  border-right: solid transparent 10px;
-  border-bottom: solid $dark-black-blue 10px;
-  top: -10px;
-  content: ' ';
-  height: 0;
-  left: 50%;
-  margin-left: -13px;
-  position: absolute;
-  width: 0;
-}
-
-.wrapper:hover .tooltip,
-.wrapper:hover .tooltip-wide,
-.wrapper:hover .tooltip-below {
+.wrapper:hover .tooltip {
   opacity: 1;
   pointer-events: auto;
   -webkit-transform: translateY(0px);
@@ -2349,17 +2029,14 @@ footer {
   transform: translateY(0px);
 }
 
-.lte8 .wrapper .tooltip,
-.lte8 .wrapper .tooltip-wide,
-.lt38 .wrapper .tooltip-below {
+.lte8 .wrapper .tooltip {
   display: none;
 }
 
-.lte8 .wrapper:hover .tooltip,
-.lte8 .wrapper:hover .tooltip-wide,
-.lte8 .wrapper:hover .tooltip-below {
+.lte8 .wrapper:hover .tooltip {
   display: block;
 }
+
 .save-wrapper {
   display: flex;
   align-items: center;
@@ -2571,9 +2248,6 @@ footer {
 .pointer {
   cursor: pointer;
 }
-.textcursor {
-  cursor: text !important;
-}
 .paid-body {
   margin: 0.5rem 0;
   scroll-behavior: smooth;
@@ -2645,18 +2319,15 @@ footer {
   border-radius: 6px;
 }
 
-.dropdown:hover::-webkit-scrollbar,
-.content-dropdown:hover::-webkit-scrollbar {
+.dropdown:hover::-webkit-scrollbar {
   display: block;
 }
 
-.paid-body::-webkit-scrollbar,
-.content-dropdown::-webkit-scrollbar {
+.paid-body::-webkit-scrollbar {
   width: 6px;
   height: 0px;
 }
-.paid-body::-webkit-scrollbar-thumb,
-.content-dropdown::-webkit-scrollbar-thumb {
+.paid-body::-webkit-scrollbar-thumb {
   background-color: $soft-gray;
   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
   border-radius: 6px;
@@ -2689,7 +2360,7 @@ footer {
 }
 
 .ellipsis-text {
-  max-width: 400px;
+  max-width: 100px;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
@@ -2783,13 +2454,6 @@ footer {
 .content {
   // width: 80%;
 }
-
-input::placeholder,
-textarea::placeholder {
-  font-family: $thin-font-family !important;
-  color: $light-gray-blue;
-}
-
 .area-input-outline {
   width: 300px;
   background-color: $offer-white;
@@ -2915,13 +2579,10 @@ button:disabled {
   filter: invert(55%);
 }
 
-.fadedimg {
-  filter: opacity(40%);
-  cursor: text;
-}
-
 .gray-bg {
+  padding: 16px 0;
   background-color: $off-white;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .rotate-img {
@@ -2929,12 +2590,10 @@ button:disabled {
 }
 
 .content-dropdown {
-  width: 50%;
-  overflow-y: scroll;
-  max-height: 200px;
+  width: 260px;
   position: absolute;
-  bottom: 60px;
-  left: 0;
+  top: 48px;
+  right: 32px;
   font-size: 13px;
   font-weight: 400;
   background: white;
@@ -2942,7 +2601,7 @@ button:disabled {
   border-radius: 5px;
   box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
   line-height: 1.5;
-  z-index: 3;
+  z-index: 1000;
   border: 1px solid rgba(0, 0, 0, 0.1);
 
   p {
@@ -3010,9 +2669,6 @@ button:disabled {
 }
 .bluee-bg {
   background: $white-blue !important;
-  img {
-    filter: invert(50%);
-  }
 }
 .absolute-right {
   position: absolute;
