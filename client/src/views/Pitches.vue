@@ -521,7 +521,7 @@
                       </div>
                     </div>
 
-                    <div style="padding: 8px 0; position: sticky; bottom: 0">
+                    <div style="padding: 8px 0; position: sticky; bottom: 0; background: white">
                       <button
                         @mouseenter="changeStyleText"
                         @mouseleave="defaultStyleText"
@@ -534,7 +534,30 @@
                     </div>
                   </section>
                   <section style="padding: 8px 0" v-else>
-                    <p class="dropdown-item">Saved writing styles will appear here</p>
+                    <p
+                      style="
+                        margin-bottom: 0;
+                        padding-bottom: 8px;
+                        cursor: text;
+                        color: #2f4656;
+                        font-size: 15px;
+                        position: sticky;
+                        top: 0;
+                        background-color: white;
+                        z-index: 15;
+                      "
+                    >
+                      Styles
+                    </p>
+
+                    <div
+                      @click="addWritingStyle(defaultStyle.style, defaultStyle.title)"
+                      class="dropdown-item"
+                      style="padding: 8px 0 16px 0"
+                    >
+                      <p style="padding: 0 16px; margin: 0">Default</p>
+                    </div>
+
                     <button
                       @mouseenter="changeStyleText"
                       @mouseleave="defaultStyleText"
