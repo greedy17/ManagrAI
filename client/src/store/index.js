@@ -30,13 +30,6 @@ const state = {
   templates: null,
   pollingItems: [],
   pricebooks: null,
-  allOpps: [],
-  chatOpps: [],
-  allContacts: [],
-  allAccounts: [],
-  allLeads: [],
-  messages: [],
-  crmForms: [],
   currentView: 'home',
   currentMeeting: null,
   currentOpp: null,
@@ -57,8 +50,10 @@ const state = {
   meetingBeingProcessed: '',
   allSearches: [],
   allPitches: [],
+  allAssist: [],
   currentSearch: null,
   currentPitch: null,
+  currentAssist: null,
   currentReportClips: [],
   categories: {},
   reportTitle: null,
@@ -164,6 +159,9 @@ const mutations = {
   SAVE_PITCHES(state, pitches) {
     state.allPitches = pitches
   },
+  SAVE_ASSIST(state, assist) {
+    state.allAssist = assist
+  },
   SAVE_TEMPLATES(state, templates) {
     state.templates = templates
   },
@@ -190,6 +188,9 @@ const mutations = {
   },
   SET_PITCH: (state, payload) => {
     state.currentPitch = payload
+  },
+  SET_ASSIST: (state, payload) => {
+    state.currentAssist = payload
   },
   SET_MEETING: (state, payload) => {
     state.currentMeeting = payload
@@ -324,11 +325,24 @@ const actions = {
       console.log(e)
     }
   },
+  async getAssist({ commit }) {
+    try {
+      await Comms.api.getProcesses().then(response => {
+        commit('SAVE_ASSIST', response.results)
+      })
+
+    } catch (e) {
+      console.log(e)
+    }
+  },
   setSearch({ commit }, search) {
     commit('SET_SEARCH', search)
   },
   setPitch({ commit }, pitch) {
     commit('SET_PITCH', pitch)
+  },
+  setAssist({ commit }, assist) {
+    commit('SET_ASSIST', assist)
   },
   setCurrentView({ commit }, view) {
     commit('SET_VIEW', view)
@@ -601,30 +615,30 @@ const actions = {
       // const encrypted = encryptData(user, process.env.VUE_APP_SECRET_KEY)
       // commit('UPDATE_USER', encrypted)
       commit('UPDATE_USER', user)
-    } catch(e) {
+    } catch (e) {
       console.log('e refreshUser', e.response)
       // if (e.response.status === 401 && e.response.data.detail === 'Token expired') {
-        // Handle the 401 Unauthorized error here
-        // For example, you can log the user out or show an error message
-        // You can also redirect the user to the login page
-        // let tempUser
-        // if (state.user && state.user.id) {
-        //   store.dispatch('updateTempRefreshUser', state.user)
-        //   tempUser = state.user
-        // } else {
-        //   tempUser = state.tempRefreshUser
-        // }
-        // const user = state.user
-        // const token = state.token
-        // // call refresh token endpoint
-        // User.api.refreshToken(token, user && user.id ? user.id : tempUser.id).then((res) => {
-        //   // with token, insert into store
-        //   dispatch('updateUserToken', res.token).then(() => {
-        //     // refresh user
-        //     dispatch('updateTempRefreshUser', null)
-        //     dispatch('refreshCurrentUser')
-        //   })
-        // })
+      // Handle the 401 Unauthorized error here
+      // For example, you can log the user out or show an error message
+      // You can also redirect the user to the login page
+      // let tempUser
+      // if (state.user && state.user.id) {
+      //   store.dispatch('updateTempRefreshUser', state.user)
+      //   tempUser = state.user
+      // } else {
+      //   tempUser = state.tempRefreshUser
+      // }
+      // const user = state.user
+      // const token = state.token
+      // // call refresh token endpoint
+      // User.api.refreshToken(token, user && user.id ? user.id : tempUser.id).then((res) => {
+      //   // with token, insert into store
+      //   dispatch('updateUserToken', res.token).then(() => {
+      //     // refresh user
+      //     dispatch('updateTempRefreshUser', null)
+      //     dispatch('refreshCurrentUser')
+      //   })
+      // })
       // }
       // do nothing for now
       return null
