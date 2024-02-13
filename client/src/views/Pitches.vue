@@ -717,17 +717,18 @@
             v-model="instructions"
           />
           <div
-            style="cursor: text"
+            style="cursor: text; margin-left: 1.5rem"
             v-if="!pitch"
-            class="image-container left-margin-m white-bg wrapper"
+            class="image-container white-bg wrapper"
           >
             <img src="@/assets/images/paper-plane-top.svg" height="14px" alt="" />
             <div class="tooltip">Submit</div>
           </div>
 
           <div
+            style="margin-left: 1.5rem"
             @click="regeneratePitch"
-            class="image-container left-margin-m white-bg wrapper"
+            class="image-container white-bg wrapper"
             v-else
           >
             <img
@@ -1851,9 +1852,9 @@ h3 {
     font-weight: 200;
     word-wrap: break-word;
   }
-  @media only screen and (max-width: 600px) {
-    text-align: center;
-  }
+  // @media only screen and (max-width: 600px) {
+  //   text-align: center;
+  // }
 }
 
 .title-bar {

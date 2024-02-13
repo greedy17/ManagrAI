@@ -11,12 +11,7 @@ export default new Router({
     {
       path: '/',
       beforeEnter: Auth.homepageRedirect,
-      component: () => import('@/views/ChatHome')
-    },
-    {
-      path: '/chat',
-      name: 'Home',
-      component: () => import('@/views/ChatHome')
+      component: () => import('@/views/SearchSummaries')
     },
     {
       path: '/summaries',

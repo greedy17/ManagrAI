@@ -353,14 +353,295 @@
       </div>
     </Modal>
 
+    <section class="container">
+      <div class="content-body">
+        <div>
+          <div class="row-start">
+            <div style="cursor: text" class="image-container-blue right-margin-m">
+              <img
+                class="blue-filter"
+                style="margin-left: -1px"
+                src="@/assets/images/logo.png"
+                height="16px"
+                alt=""
+              />
+            </div>
+            <h3>Managr</h3>
+          </div>
+
+          <div style="margin-top: -4px" class="small-container">
+            <p>
+              <span class="bold">Create content based on the latest news.</span>
+              Managr will read the news, distill key insights, and create personalized content using
+              a saved writing style.
+            </p>
+          </div>
+        </div>
+
+        <div class="small-container" style="width: 100%; margin-top: 0.5rem; padding-bottom: 60px">
+          <label for="name">Name</label>
+          <input
+            v-model="processName"
+            placeholder="Name your process..."
+            type="text"
+            id="name"
+            :disabled="loading"
+          />
+
+          <label for="">Saved search</label>
+          <div>
+            <Multiselect
+              style="margin: 0.5rem 0"
+              :options="searches"
+              :show-labels="false"
+              placeholder="Choose one"
+              label="name"
+              track-by="id"
+              v-model="processSearchId"
+              :disabled="loading"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+            </Multiselect>
+          </div>
+
+          <label for="loc">Content type</label>
+          <input
+            placeholder="(e.g., media pitch, press release, blog post, issue statement, etc.)"
+            type="text"
+            id="loc"
+            v-model="processType"
+            :disabled="loading"
+          />
+
+          <label for="">Writing style</label>
+
+          <div>
+            <Multiselect
+              style="margin: 0.5rem 0"
+              :options="writingStyles"
+              :show-labels="false"
+              placeholder="Choose one"
+              label="title"
+              track-by="style"
+              v-model="processStyle"
+              :disabled="loading"
+            >
+              <template slot="noResult">
+                <p class="multi-slot">No results.</p>
+              </template>
+            </Multiselect>
+          </div>
+
+          <label for="loc">Additional details</label>
+          <textarea
+            style="
+              border: 1px solid rgba(0, 0, 0, 0.1) !important;
+              background-color: white;
+              margin: 0.5rem 0;
+            "
+            class="area-input text-area-input bordered"
+            placeholder="(e.g., content objective, company details, target audience, etc.)"
+            type="text"
+            id="details"
+            v-model="processDetails"
+            :disabled="loading"
+            v-autoresize
+          />
+          <!-- <div>
+            <small></small>
+            1000 char limit
+          </div> -->
+        </div>
+      </div>
+
+      <div class="footer sticky-bottom">
+        <div style="padding-bottom: 8px" class="flex-end small-container">
+          <div class="row">
+            <button
+              @click="clearForm"
+              style="margin-right: 12px"
+              :disabled="loading"
+              class="secondary-button"
+            >
+              Clear
+            </button>
+
+            <button
+              :disabled="
+                loading ||
+                !processDetails ||
+                !processName ||
+                !processStyle ||
+                !processType ||
+                !processSearchId
+              "
+              @click="createProcess"
+              class="green-button"
+            >
+              <div v-if="!loading">Save</div>
+              <div v-else>Saving</div>
+              <div style="margin-left: 4px" v-if="loading" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="container gray-bg">
+      <div v-if="generatedContent" class="header sticky-top gray-bg">
+        <div
+          style="padding-top: 1.5rem; margin-bottom: 0.75rem"
+          class="flex-end row horizontal-padding"
+        >
+          <div
+            @click="toggleFeedbackModal"
+            class="wrapper icon-button white-bg right-margin-m"
+            :class="{ 'bluee-bg': feedback }"
+          >
+            <img
+              style="cursor: pointer"
+              class="right-mar img-highlight"
+              src="@/assets/images/thumb.svg"
+              height="14px"
+              alt=""
+            />
+            <div class="tooltip-below">
+              {{ !feedback ? 'Optimize Content' : 'View Feedback' }}
+            </div>
+          </div>
+
+          <div
+            @click="toggleJournalistModal"
+            class="wrapper icon-button white-bg right-margin-m"
+            :class="{ 'bluee-bg': journalists }"
+          >
+            <img
+              style="cursor: pointer"
+              class="img-highlight"
+              src="@/assets/images/profile.svg"
+              height="14px"
+              alt=""
+            />
+            <div class="tooltip-below">
+              {{ !journalists ? 'Find Journalists' : 'View Journalists' }}
+            </div>
+          </div>
+
+          <div @click="copyText" class="wrapper icon-button white-bg">
+            <img
+              style="cursor: pointer"
+              class="img-highlight"
+              src="@/assets/images/clipboard.svg"
+              height="14px"
+              alt=""
+            />
+            <div class="tooltip-below">{{ copyTip }}</div>
+          </div>
+        </div>
+
+        <div class="space-between horizontal-padding">
+          <p class="sub-text">
+            {{ currentAssist ? currentAssist.name : 'AI generated content' }}
+          </p>
+
+          <p v-if="generatedContent" class="med-text">
+            {{ generatedContent.split(' ').length }} words
+          </p>
+        </div>
+      </div>
+
+      <div
+        style="margin-top: 2rem"
+        v-if="!generatedContent && !processLoading && !contentLoading"
+        class="content-body centered-content"
+      >
+        <div class="centered-col">
+          <div style="cursor: text" class="image-container white-bg extra-padding">
+            <img src="@/assets/images/comment.svg" height="32px" alt="" />
+          </div>
+          <p>Your content will appear here.</p>
+        </div>
+      </div>
+
+      <div class="content-body centered-content" v-else-if="processLoading">
+        <div class="med-text gray-span row">
+          {{ `Step ${currentStep}/3:` }}
+          <span>{{ stepName }}</span>
+          <div class="loading">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-body centered-content" v-else-if="contentLoading">
+        <div class="med-text row">
+          <p style="margin-right: 0.5rem">Regenerating</p>
+          <div class="loading">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else-if="generatedContent" class="content-body">
+        <div style="margin: 96px 0" class="small-container">
+          <pre class="pre-text" v-html="generatedContent"></pre>
+        </div>
+      </div>
+
+      <div class="footer sticky-bottom gray-bg">
+        <div class="input-container-alt">
+          <img class="left-margin-l" src="@/assets/images/pencil.svg" height="14px" alt="" />
+
+          <textarea
+            class="area-input-alt text-area-input"
+            :placeholder="!generatedContent ? 'Select a saved assist...' : 'Make edits...'"
+            autocomplete="off"
+            :disabled="!generatedContent"
+            v-autoresize
+            v-model="instructions"
+          />
+          <div
+            style="cursor: text; margin-left: 1.5rem"
+            v-if="!generatedContent"
+            class="image-container white-bg wrapper"
+          >
+            <img src="@/assets/images/paper-plane-top.svg" height="14px" alt="" />
+            <div class="tooltip">Submit</div>
+          </div>
+
+          <div
+            style="margin-left: 1.5rem"
+            @click="regenerateContent"
+            class="image-container white-bg wrapper"
+            v-else
+          >
+            <img
+              style="margin: 0"
+              src="@/assets/images/paper-plane-full.svg"
+              height="14px"
+              alt=""
+              class="filtered-blue"
+            />
+            <div class="tooltip">Submit</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 
     <div class="center-left">
       <div class="full-width center">
         <div class="header">
-          <div>
-            <h2 class="large-text">Automate</h2>
-            <p class="med-text">Streamline the entire content creation process with AI</p>
-          </div>
-
           <div
             style="margin-bottom: 30px; padding: 0 16px"
             class="input-container"
@@ -459,121 +740,7 @@
               </div>
             </div>
 
-            <div style="display: flex; padding: 0 0 16px 0">
-              <div style="margin-right: 0.5rem">
-                <div
-                  @click="toggleDeleteModal"
-                  class="wrapper circle-border white-bg"
-                  v-if="generatedContent"
-                >
-                  <img
-                    style="cursor: pointer"
-                    class="img-highlight"
-                    src="@/assets/images/trash.svg"
-                    height="14px"
-                    alt=""
-                  />
-                  <div style="margin-left: -14px" class="tooltip">Delete</div>
-                </div>
-                <div v-else class="wrapper circle-border white-bg" style="opacity: 0.7">
-                  <img
-                    style="cursor: not-allowed"
-                    class="img-highlight"
-                    src="@/assets/images/trash.svg"
-                    height="14px"
-                    alt=""
-                  />
-                  <div style="margin-left: -14px" class="tooltip">Run process first</div>
-                </div>
-              </div>
-
-              <div style="margin-right: 0.5rem">
-                <div
-                  @click="toggleFeedbackModal"
-                  class="wrapper circle-border white-bg"
-                  :class="{ 'bluee-bg': feedback }"
-                  v-if="generatedContent"
-                >
-                  <img
-                    style="cursor: pointer"
-                    class="right-mar img-highlight"
-                    src="@/assets/images/thumb.svg"
-                    height="14px"
-                    alt=""
-                  />
-                  <div style="margin-left: -14px" class="tooltip">
-                    {{ !feedback ? 'Optimize Content' : 'View Feedback' }}
-                  </div>
-                </div>
-                <div v-else class="wrapper circle-border white-bg" style="opacity: 0.7">
-                  <img
-                    style="cursor: not-allowed"
-                    class="right-mar img-highlight"
-                    src="@/assets/images/thumb.svg"
-                    height="14px"
-                    alt=""
-                  />
-                  <div style="margin-left: -14px" class="tooltip">Run process first</div>
-                </div>
-              </div>
-
-              <div style="margin-right: 0.5rem">
-                <div
-                  @click="toggleJournalistModal"
-                  class="wrapper circle-border white-bg"
-                  :class="{ 'bluee-bg': journalists }"
-                  v-if="generatedContent"
-                >
-                  <img
-                    style="cursor: pointer"
-                    class="img-highlight"
-                    src="@/assets/images/profile.svg"
-                    height="14px"
-                    alt=""
-                  />
-                  <div style="margin-left: -14px" class="tooltip">
-                    {{ !journalists ? 'Find Journalists' : 'View Journalists' }}
-                  </div>
-                </div>
-                <div v-else class="wrapper circle-border white-bg" style="opacity: 0.7">
-                  <img
-                    style="cursor: not-allowed"
-                    class="img-highlight"
-                    src="@/assets/images/profile.svg"
-                    height="14px"
-                    alt=""
-                  />
-                  <div style="margin-left: -14px" class="tooltip">Run process first</div>
-                </div>
-              </div>
-
-              <div>
-                <div
-                  @click="copyText"
-                  class="wrapper circle-border white-bg"
-                  v-if="generatedContent"
-                >
-                  <img
-                    style="cursor: pointer"
-                    class="img-highlight"
-                    src="@/assets/images/clipboard.svg"
-                    height="14px"
-                    alt=""
-                  />
-                  <div style="margin-left: -14px" class="tooltip">{{ copyTip }}</div>
-                </div>
-                <div v-else class="wrapper circle-border white-bg" style="opacity: 0.7">
-                  <img
-                    style="cursor: not-allowed"
-                    class="img-highlight"
-                    src="@/assets/images/clipboard.svg"
-                    height="14px"
-                    alt=""
-                  />
-                  <div style="margin-left: -14px" class="tooltip">Run process first</div>
-                </div>
-              </div>
-            </div>
+            
           </div>
         </div>
       </div>
@@ -645,7 +812,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 <script>
@@ -698,8 +865,14 @@ export default {
       processButtonText: 'Create new process',
     }
   },
+  watch: {
+    currentAssist(newVal, oldVal) {
+      if (newVal.id !== (oldVal ? oldVal.id : null)) {
+        this.startProcess(newVal)
+      }
+    },
+  },
   async created() {
-    this.getProcesses()
     const today = new Date()
     const sevenDaysAgo = new Date(today)
     sevenDaysAgo.setDate(today.getDate() - 7)
@@ -731,46 +904,40 @@ export default {
       this.$store.dispatch('getSearches')
     },
     async getProcesses() {
-      try {
-        Comms.api.getProcesses().then((response) => {
-          this.processes = response.results
-        })
-      } catch (e) {
-        console.log(e)
-      }
+      this.$store.dispatch('getAssist')
     },
-    async deleteProcess() {
-      try {
-        Comms.api
-          .deleteProcess({
-            id: this.currentProcess.id,
-          })
-          .then(() => {
-            this.$toast('Process removed', {
-              timeout: 2000,
-              position: 'top-left',
-              type: 'success',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            })
-          })
-      } catch (e) {
-        console.log(e)
+    // async deleteProcess() {
+    //   try {
+    //     Comms.api
+    //       .deleteProcess({
+    //         id: this.currentAssist.id,
+    //       })
+    //       .then(() => {
+    //         this.$toast('Process removed', {
+    //           timeout: 2000,
+    //           position: 'top-left',
+    //           type: 'success',
+    //           toastClassName: 'custom',
+    //           bodyClassName: ['custom'],
+    //         })
+    //       })
+    //   } catch (e) {
+    //     console.log(e)
 
-        this.$toast(`${e}`, {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.generatedContent = ''
-        this.currentProcess = null
-        this.deleteModalOpen = false
-        this.getProcesses()
-      }
-    },
+    //     this.$toast(`${e}`, {
+    //       timeout: 2000,
+    //       position: 'top-left',
+    //       type: 'error',
+    //       toastClassName: 'custom',
+    //       bodyClassName: ['custom'],
+    //     })
+    //   } finally {
+    //     this.generatedContent = ''
+    //     this.currentProcess = null
+    //     this.deleteModalOpen = false
+    //     this.getProcesses()
+    //   }
+    // },
     async createProcess() {
       this.loading = true
       try {
@@ -784,8 +951,8 @@ export default {
             style: this.processStyle.style,
           })
           .then((response) => {
-            console.log('created process', response)
-            this.$toast('Success!', {
+            console.log('process created', response)
+            this.$toast('Process saved', {
               timeout: 2000,
               position: 'top-left',
               type: 'success',
@@ -816,10 +983,10 @@ export default {
       try {
         await Comms.api
           .runProcess({
-            type: this.currentProcess.type,
-            details: this.currentProcess.details,
-            style: this.currentProcess.style,
-            process_id: this.currentProcess.id,
+            type: this.currentAssist.type,
+            details: this.currentAssist.details,
+            style: this.currentAssist.style,
+            process_id: this.currentAssist.id,
             summary: summary,
           })
           .then((response) => {
@@ -849,17 +1016,12 @@ export default {
     async startProcess(process) {
       if (this.isPaid) {
         this.generatedContent = ''
-        this.currentProcess = process
+        let currentProcess = process
         this.processLoading = true
-        this.hideDropdown()
+        // this.hideDropdown()
         this.currentStep = 1
-        let boolean = this.searches.filter(
-          (search) => search.id === this.currentProcess.search_id,
-        )[0].search_boolean
-
-        console.log('BOOLEAN : --- >', boolean)
-        console.log('SEARCHES : --- >', this.searches)
-        console.log('CP : --- >', this.currentProcess)
+        let boolean = this.searches.filter((search) => search.id === currentProcess.search_id)[0]
+          .search_boolean
 
         setTimeout(() => {
           this.getClips(boolean)
@@ -895,12 +1057,11 @@ export default {
       this.currentStep = 2
       this.stepName = 'Summarizing coverage'
       const allClips = this.getArticleDescriptions(clips)
-      const search = this.searches.filter(
-        (search) => search.id === this.currentProcess.search_id,
-      )[0].input_text
+      const search = this.searches.filter((search) => search.id === this.currentAssist.search_id)[0]
+        .input_text
 
       const instructions = this.searches.filter(
-        (search) => search.id === this.currentProcess.search_id,
+        (search) => search.id === this.currentAssist.search_id,
       )[0].instructions
 
       try {
@@ -1083,11 +1244,10 @@ export default {
     },
     clearForm() {
       this.processName = null
-      this.processSearchId.id = null
+      this.processSearchId = null
       this.processType = null
       this.processDetails = null
-      this.processStyle.style = null
-      this.toggleModal()
+      this.processStyle = null
     },
     testValues() {
       console.log(
@@ -1119,6 +1279,9 @@ export default {
       return this.processes.filter((process) =>
         process.name.toLowerCase().includes(this.processText.toLowerCase()),
       )
+    },
+    currentAssist() {
+      return this.$store.state.currentAssist
     },
   },
   directives: {
@@ -1159,6 +1322,261 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.icon-button {
+  @include dark-blue-button();
+  padding: 7px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  img {
+    filter: invert(40%);
+  }
+}
+
+.sub-text {
+  color: $light-gray-blue;
+  margin: 8px 0;
+  font-size: 14px;
+  font-family: $thin-font-family;
+
+  span {
+    font-weight: 200;
+    word-wrap: break-word;
+  }
+  // @media only screen and (max-width: 600px) {
+  //   text-align: center;
+  // }
+}
+
+.margin-top-s {
+  margin-top: 1.5rem;
+}
+
+.area-input-alt {
+  width: 85%;
+  margin-bottom: 0.25rem;
+  max-height: 250px;
+  padding: 0 1.25rem;
+  line-height: 1.25;
+  outline: none;
+  border: none;
+  letter-spacing: 0.5px;
+  font-size: 14px;
+  font-family: $thin-font-family !important;
+  font-weight: 400;
+  border: none !important;
+  resize: none;
+  text-align: left;
+  overflow: auto;
+  scroll-behavior: smooth;
+  color: $dark-black-blue;
+  background-color: transparent;
+}
+
+label {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.input-container-alt {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Horizontal offset, vertical offset, blur radius, color */
+  transition: box-shadow 0.3s ease;
+  padding: 0;
+  border-radius: 24px;
+  width: 100%;
+  color: $base-gray;
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+
+  img {
+    filter: invert(40%);
+  }
+}
+
+.extra-padding {
+  padding: 12px 8px;
+}
+
+.centered-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.centered-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  font-size: 14px;
+  width: 100%;
+  height: 80%;
+}
+
+button:disabled {
+  background-color: $off-white !important;
+  border: 1px solid rgba(0, 0, 0, 0.2) !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}
+
+.footer {
+  padding: 16px 40px 32px 40px;
+  width: 100%;
+  background-color: white;
+  z-index: 10;
+}
+
+.green-button {
+  @include dark-blue-button();
+  background-color: $dark-green;
+  padding: 8px 16px;
+  border: none;
+  margin-right: 0;
+}
+
+h3 {
+  font-size: 20px;
+  margin: 0;
+}
+
+.bold {
+  font-family: $base-font-family;
+  font-weight: 200 !important;
+}
+
+.small-container {
+  padding-left: 32px;
+  padding-right: 32px;
+  font-size: 15px;
+  line-height: 1.75;
+
+  input {
+    width: 100%;
+    margin: 0.5rem 0;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    font-family: $thin-font-family !important;
+    font-size: 13px;
+    padding: 10px 20px 10px 18px;
+    outline: none;
+  }
+}
+
+.horizontal-padding {
+  padding-left: 56px;
+  padding-right: 64px;
+}
+
+.space-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.left-margin {
+  margin-left: 8px;
+}
+.left-margin-m {
+  margin-left: 12px;
+}
+
+.left-margin-l {
+  margin-left: 16px;
+}
+
+.right-margin {
+  margin-right: 8px;
+}
+.right-margin-m {
+  margin-right: 12px;
+}
+
+.bottom-margin-xl {
+  margin-bottom: 32px;
+}
+
+.image-container {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  img {
+    filter: invert(40%);
+  }
+}
+
+.image-container-blue {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: $dark-black-blue;
+
+  img {
+    filter: brightness(0) invert(100%);
+  }
+}
+
+.sticky-bottom {
+  position: absolute;
+  bottom: 0;
+}
+
+.row-start {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  margin-left: -10px;
+}
+
+.content-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  overflow-y: scroll;
+  scroll-behavior: smooth;
+  z-index: 0;
+  padding: 88px 40px 32px 40px;
+  font-size: 16px;
+  width: 100%;
+  height: 100%;
+}
+
+.content-body::-webkit-scrollbar {
+  width: 6px;
+  height: 0px;
+}
+.content-body::-webkit-scrollbar-thumb {
+  background-color: $soft-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px;
+}
+
+.sticky-top {
+  position: absolute;
+  top: 0;
+}
+.container {
+  width: 50vw;
+  height: 100vh;
+  position: relative;
+}
+
+.container:first-of-type {
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
 
 button:disabled {
   background-color: $off-white !important;
@@ -1383,27 +1801,21 @@ button:disabled {
 }
 
 .main {
+  font-family: $thin-font-family;
+  font-size: 14px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: flex-start;
-  position: relative;
-  border-radius: 8px;
-  padding: 58px 36px 0 36px;
-  height: 100vh;
-  width: 100vw;
-  color: $dark-blue;
   background-color: white;
-  overflow-y: scroll;
-  font-family: $thin-font-family;
-  @media only screen and (max-width: 600px) {
-    padding: 12px 12px 0 12px;
-  }
+  color: $dark-black-blue;
 }
 
 .header {
-  width: 700px;
-  padding: 0 1rem;
+  padding: 60px 16px 8px 16px;
+  width: 100%;
+  background-color: white;
+  z-index: 2;
 }
 
 .center-left {
@@ -1599,6 +2011,13 @@ button:disabled {
   }
 }
 
+.flex-end {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+}
+
 .paid-footer {
   position: sticky;
   background: white;
@@ -1614,6 +2033,10 @@ button:disabled {
 
 .gray-text {
   color: $mid-gray;
+}
+
+.gray-bg {
+  background-color: $off-white;
 }
 
 .med-text {
@@ -1699,13 +2122,15 @@ button:disabled {
   -webkit-font-smoothing: antialiased; /* webkit text rendering fix */
 }
 
-.wrapper .tooltip {
+.wrapper .tooltip,
+.wrapper .tooltip-wide {
+  z-index: 10000;
   background: $dark-black-blue;
   border-radius: 4px;
   bottom: 100%;
   color: #fff;
   display: block;
-  left: -20px;
+  left: -34px;
   margin-bottom: 15px;
   opacity: 0;
   padding: 8px;
@@ -1729,7 +2154,44 @@ button:disabled {
   box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
 }
 
-.wrapper .tooltip:before {
+.wrapper .tooltip-below {
+  z-index: 10000;
+  background: $dark-black-blue;
+  border-radius: 4px;
+  top: 150%;
+  color: #fff;
+  display: block;
+  left: -30px;
+  margin-bottom: 15px;
+  opacity: 0;
+  padding: 8px;
+  pointer-events: none;
+  position: absolute;
+  width: 100px;
+  -webkit-transform: translateY(10px);
+  -moz-transform: translateY(10px);
+  -ms-transform: translateY(10px);
+  -o-transform: translateY(10px);
+  transform: translateY(10px);
+  -webkit-transition: all 0.25s ease-out;
+  -moz-transition: all 0.25s ease-out;
+  -ms-transition: all 0.25s ease-out;
+  -o-transition: all 0.25s ease-out;
+  transition: all 0.25s ease-out;
+  -webkit-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -moz-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -ms-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -o-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+}
+
+.tooltip-wide {
+  width: 150px !important;
+  left: -60px !important;
+}
+
+.wrapper .tooltip:before,
+.wrapper .tooltip-wide:before {
   bottom: -20px;
   content: ' ';
   display: block;
@@ -1739,7 +2201,18 @@ button:disabled {
   width: 100%;
 }
 
-.wrapper .tooltip:after {
+.wrapper .tooltip-below:before {
+  top: -20px;
+  content: ' ';
+  display: block;
+  height: 20px;
+  left: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.wrapper .tooltip:after,
+.wrapper .tooltip-wide:after {
   border-left: solid transparent 10px;
   border-right: solid transparent 10px;
   border-top: solid $dark-black-blue 10px;
@@ -1752,7 +2225,22 @@ button:disabled {
   width: 0;
 }
 
-.wrapper:hover .tooltip {
+.wrapper .tooltip-below:after {
+  border-left: solid transparent 10px;
+  border-right: solid transparent 10px;
+  border-bottom: solid $dark-black-blue 10px;
+  top: -10px;
+  content: ' ';
+  height: 0;
+  left: 50%;
+  margin-left: -13px;
+  position: absolute;
+  width: 0;
+}
+
+.wrapper:hover .tooltip,
+.wrapper:hover .tooltip-wide,
+.wrapper:hover .tooltip-below {
   opacity: 1;
   pointer-events: auto;
   -webkit-transform: translateY(0px);
@@ -1762,14 +2250,17 @@ button:disabled {
   transform: translateY(0px);
 }
 
-.lte8 .wrapper .tooltip {
+.lte8 .wrapper .tooltip,
+.lte8 .wrapper .tooltip-wide,
+.lt38 .wrapper .tooltip-below {
   display: none;
 }
 
-.lte8 .wrapper:hover .tooltip {
+.lte8 .wrapper:hover .tooltip,
+.lte8 .wrapper:hover .tooltip-wide,
+.lte8 .wrapper:hover .tooltip-below {
   display: block;
 }
-
 .loading {
   display: flex;
   align-items: center;
