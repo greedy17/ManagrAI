@@ -83,6 +83,6 @@ class CustomHObjectField(admin.ModelAdmin):
     list_filter = ("hubspot_object",)
 
 
-admin.site.register(HubspotAuthAccount, CustomHubspotAuthAccountAdmin)
-admin.site.register(HSObjectFieldsOperation, CustomSyncFieldOperationAdmin)
-admin.site.register(HSSyncOperation, CustomSyncOperationAdmin)
+# admin.site.register(HubspotAuthAccount, CustomHubspotAuthAccountAdmin)
+# admin.site.register(HSObjectFieldsOperation, CustomSyncFieldOperationAdmin)
+# admin.site.register(HSSyncOperation, CustomSyncOperationAdmin)

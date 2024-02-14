@@ -219,6 +219,6 @@ class CustomReportAdmin(admin.ModelAdmin):
 
 
 admin.site.register(User, CustomUserAdmin)
-admin.site.register(NylasAuthAccount, CustomNylasAuthAccount)
+# admin.site.register(NylasAuthAccount, CustomNylasAuthAccount)
 admin.site.register(NoteTemplate, CustomNoteTemplate)
 admin.site.register(Report, CustomReportAdmin)
