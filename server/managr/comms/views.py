@@ -11,6 +11,7 @@ from pytz import timezone
 from datetime import datetime, timedelta
 from newspaper import Article, ArticleException
 from managr.api.models import ExpiringTokenAuthentication
+from channels.db import database_sync_to_async
 from rest_framework.response import Response
 from rest_framework import (
     permissions,
@@ -110,8 +111,8 @@ class PRSearchViewSet(
         detail=False,
         url_path="clips",
     )
-    def get_clips(self, request, *args, **kwargs):
-        user = User.objects.get(id=request.GET.get("user_id"))
+    async def get_clips(self, request, *args, **kwargs):
+        user = await User.objects.get(id=request.GET.get("user_id"))
         has_error = False
         search = request.GET.get("search", False)
         boolean = request.GET.get("boolean", False)
@@ -128,22 +129,24 @@ class PRSearchViewSet(
                         token_amount=500,
                         top_p=0.1,
                     )
-                    with Variable_Client() as client:
-                        r = client.post(
+                    async with Variable_Client() as client:
+                        r = await client.post(
                             url,
                             data=json.dumps(body),
                             headers=core_consts.OPEN_AI_HEADERS,
                         )
                     r = open_ai_exceptions._handle_response(r)
                     query_input = r.get("choices")[0].get("message").get("content")
-                    news_res = Search.get_clips(query_input, date_to, date_from)
+                    news_res = await Search.get_clips(query_input, date_to, date_from)
                     articles = news_res["articles"]
                 else:
-                    news_res = Search.get_clips(boolean, date_to, date_from)
+                    news_res = await Search.get_clips(boolean, date_to, date_from)
                     articles = news_res["articles"]
                     query_input = boolean
                 articles = [article for article in articles if article["title"] != "[Removed]"]
-                internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
+                internal_articles = await InternalArticle.search_by_query(
+                    query_input, date_to, date_from
+                )
                 articles = normalize_article_data(articles, internal_articles)
                 break
             except Exception as e:
@@ -151,6 +154,8 @@ class PRSearchViewSet(
                 logger.exception(e)
                 articles = str(e)
                 break
+        print(articles)
+        print(query_input)
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": articles})
         return Response({"articles": articles, "string": query_input})

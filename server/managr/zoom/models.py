@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 from django.db import models
 from django.utils import timezone
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.fields import ArrayField
 from background_task.models import Task
 from managr.core import constants as core_consts
 from managr.core.models import TimeStampModel
@@ -163,7 +163,9 @@ class ZoomMeetingQuerySet(models.QuerySet):
 
 class ZoomMeeting(TimeStampModel):
     zoom_account = models.ForeignKey(
-        "ZoomAuthAccount", related_name="meetings", on_delete=models.CASCADE,
+        "ZoomAuthAccount",
+        related_name="meetings",
+        on_delete=models.CASCADE,
     )
     account_id = models.CharField(max_length=255, blank=True, null=True)
     operator = models.EmailField(null=True, blank=True)
@@ -176,11 +178,14 @@ class ZoomMeeting(TimeStampModel):
     end_time = models.DateTimeField(null=True, blank=True)
     duration = models.PositiveSmallIntegerField(null=True, blank=True)
     operation = models.CharField(
-        max_length=255, blank=True, null=True, help_text="Operation on all or single occurences",
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Operation on all or single occurences",
     )
     timezone = models.CharField(max_length=255, null=True, blank=True)
     occurences = ArrayField(
-        JSONField(max_length=128, default=dict),
+        models.JSONField(max_length=128, default=dict),
         default=list,
         blank=True,
         null=True,
@@ -199,14 +204,14 @@ class ZoomMeeting(TimeStampModel):
     join_url = models.CharField(max_length=255, blank=True, null=True)
 
     recurrence = ArrayField(
-        JSONField(max_length=128, default=dict),
+        models.JSONField(max_length=128, default=dict),
         default=list,
         blank=True,
         null=True,
         help_text="if recurring meeting",
     )
     participants = ArrayField(
-        JSONField(max_length=128, default=dict),
+        models.JSONField(max_length=128, default=dict),
         default=list,
         blank=True,
         null=True,
@@ -220,7 +225,11 @@ class ZoomMeeting(TimeStampModel):
 
     # Meeting scores
     meeting_score = models.SmallIntegerField(null=True, blank=True)
-    meeting_score_components = JSONField(default=dict, blank=True, null=True,)
+    meeting_score_components = models.JSONField(
+        default=dict,
+        blank=True,
+        null=True,
+    )
     original_duration = models.SmallIntegerField(
         null=True,
         blank=True,

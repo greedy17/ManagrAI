@@ -8,7 +8,7 @@ from datetime import datetime
 from django.db import models
 from django.utils import timezone
 
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.fields import ArrayField
 from django.db.models import Q
 from django.db.models.constraints import UniqueConstraint
 from background_task.models import CompletedTask
@@ -212,8 +212,10 @@ class HubspotAuthAccount(TimeStampModel):
     access_token = models.CharField(max_length=255, blank=True)
     refresh_token = models.CharField(max_length=255, blank=True)
     hubspot_id = models.CharField(max_length=255, blank=True)
-    hobjects = JSONField(
-        default=getHobjectDefaults, help_text="All resources we are retrieving", max_length=500,
+    hobjects = models.JSONField(
+        default=getHobjectDefaults,
+        help_text="All resources we are retrieving",
+        max_length=500,
     )
     extra_pipeline_fields = ArrayField(models.CharField(max_length=1000), default=list, blank=True)
     hubspot_app_id = models.CharField(max_length=255, blank=True)
@@ -240,9 +242,11 @@ class HubspotAuthAccount(TimeStampModel):
     def resource_sync_opts(self):
         return list(
             filter(
-                lambda resource: f"{resource}"
-                if self.hobjects.get(resource, None) not in ["", None, False]
-                else False,
+                lambda resource: (
+                    f"{resource}"
+                    if self.hobjects.get(resource, None) not in ["", None, False]
+                    else False
+                ),
                 self.hobjects,
             )
         )
@@ -253,7 +257,13 @@ class HubspotAuthAccount(TimeStampModel):
 
     @property
     def custom_objects(self):
-        object_list = set(["Deal", "Company", "Contact",])
+        object_list = set(
+            [
+                "Deal",
+                "Company",
+                "Contact",
+            ]
+        )
         custom = set(self.hobjects.keys())
         return list(custom - object_list)
 
@@ -267,9 +277,11 @@ class HubspotAuthAccount(TimeStampModel):
             map(
                 lambda resource: f"{hs_consts.HUBSPOT_OBJECT_FIELDS}.{resource}",
                 filter(
-                    lambda resource: resource
-                    if self.hobjects.get(resource, None) not in ["", None, False]
-                    else False,
+                    lambda resource: (
+                        resource
+                        if self.hobjects.get(resource, None) not in ["", None, False]
+                        else False
+                    ),
                     self.hobjects,
                 ),
             )
@@ -281,9 +293,11 @@ class HubspotAuthAccount(TimeStampModel):
             map(
                 lambda resource: f"{hs_consts.hubspot_PICKLIST_VALUES}.{resource}",
                 filter(
-                    lambda resource: resource
-                    if self.hobjects.get(resource, None) not in ["", None, False]
-                    else False,
+                    lambda resource: (
+                        resource
+                        if self.hobjects.get(resource, None) not in ["", None, False]
+                        else False
+                    ),
                     self.hobjects,
                 ),
             )
@@ -296,9 +310,11 @@ class HubspotAuthAccount(TimeStampModel):
                 map(
                     lambda resource: f"{hs_consts.hubspot_VALIDATIONS}.{resource}",
                     filter(
-                        lambda resource: resource
-                        if self.hobjects.get(resource, None) not in ["", None, False]
-                        else False,
+                        lambda resource: (
+                            resource
+                            if self.hobjects.get(resource, None) not in ["", None, False]
+                            else False
+                        ),
                         self.hobjects,
                     ),
                 )
@@ -478,13 +494,15 @@ class Company(TimeStampModel, IntegrationModel):
 
     name = models.CharField(max_length=255)
     organization = models.ForeignKey(
-        "organization.Organization", related_name="companies", on_delete=models.CASCADE,
+        "organization.Organization",
+        related_name="companies",
+        on_delete=models.CASCADE,
     )
     owner = models.ForeignKey(
         "core.User", on_delete=models.CASCADE, related_name="companies", blank=True, null=True
     )
     external_owner = models.CharField(max_length=255, blank=True)
-    secondary_data = JSONField(
+    secondary_data = models.JSONField(
         default=dict,
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",
@@ -512,7 +530,12 @@ class DealQuerySet(models.QuerySet):
 
 class Deal(TimeStampModel, IntegrationModel):
     name = models.CharField(max_length=255, blank=True, null=False)
-    amount = models.DecimalField(max_digits=30, decimal_places=15, default=0.00, null=True,)
+    amount = models.DecimalField(
+        max_digits=30,
+        decimal_places=15,
+        default=0.00,
+        null=True,
+    )
     forecast_category = models.CharField(max_length=255, null=True)
 
     close_date = models.DateField(null=True)
@@ -528,21 +551,29 @@ class Deal(TimeStampModel, IntegrationModel):
     )
 
     owner = models.ForeignKey(
-        "core.User", related_name="owned_deals", on_delete=models.SET_NULL, blank=True, null=True,
+        "core.User",
+        related_name="owned_deals",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
     )
     stage = models.CharField(max_length=255, null=True)
     company = models.ForeignKey(
-        "Company", related_name="companies", on_delete=models.SET_NULL, blank=True, null=True,
+        "Company",
+        related_name="companies",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
     )
     is_stale = models.BooleanField(default=False)
-    secondary_data = JSONField(
+    secondary_data = models.JSONField(
         default=dict,
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",
         max_length=500,
     )
     reference_data = ArrayField(
-        JSONField(max_length=128, default=dict),
+        models.JSONField(max_length=128, default=dict),
         default=list,
         blank=True,
         help_text="An array of objects containing the API Name references and values for displaying",
@@ -593,11 +624,15 @@ class HubspotContact(TimeStampModel, IntegrationModel):
         null=True,
     )
     company = models.ForeignKey(
-        "Company", on_delete=models.SET_NULL, related_name="contacts", null=True, blank=True,
+        "Company",
+        on_delete=models.SET_NULL,
+        related_name="contacts",
+        null=True,
+        blank=True,
     )
     external_owner = models.CharField(max_length=255, blank=True)
     external_company = models.CharField(max_length=255, blank=True)
-    secondary_data = JSONField(
+    secondary_data = models.JSONField(
         default=dict,
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",
@@ -627,7 +662,10 @@ class HObjectFieldQuerySet(models.QuerySet):
 
 class HObjectField(TimeStampModel, IntegrationModel):
     hubspot_account = models.ForeignKey(
-        "HubspotAuthAccount", on_delete=models.CASCADE, related_name="hubspot_fields", null=True,
+        "HubspotAuthAccount",
+        on_delete=models.CASCADE,
+        related_name="hubspot_fields",
+        null=True,
     )
     hubspot_object = models.CharField(max_length=255, null=True)
     name = models.CharField(max_length=255)
@@ -642,11 +680,13 @@ class HObjectField(TimeStampModel, IntegrationModel):
     display_value = models.TextField(blank=True, null=True)
     group_name = models.CharField(max_length=255, null=True, blank=True)
     options = ArrayField(
-        JSONField(max_length=255, blank=True, null=True, default=dict), default=list, blank=True,
+        models.JSONField(max_length=255, blank=True, null=True, default=dict),
+        default=list,
+        blank=True,
     )
     display_order = models.IntegerField(default=0)
     hubspot_defined = models.BooleanField(default=False, null=True)
-    modification_metadata = JSONField(blank=True, null=True, default=dict)
+    modification_metadata = models.JSONField(blank=True, null=True, default=dict)
     form_field = models.BooleanField(default=False)
     is_public = models.BooleanField(
         default=False,
@@ -691,7 +731,8 @@ class HObjectField(TimeStampModel, IntegrationModel):
                                 value["text"]["text"], value["value"]
                             ),
                             filter(
-                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                                lambda opt: opt.get("value", None) == value,
+                                self.get_slack_options,
                             ),
                         )
                     )
@@ -713,7 +754,8 @@ class HObjectField(TimeStampModel, IntegrationModel):
                                 value["text"]["text"], value["value"]
                             ),
                             filter(
-                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                                lambda opt: opt.get("value", None) == value,
+                                self.get_slack_options,
                             ),
                         ),
                     ),
@@ -729,7 +771,8 @@ class HObjectField(TimeStampModel, IntegrationModel):
                                 value["text"]["text"], value["value"]
                             ),
                             filter(
-                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                                lambda opt: opt.get("value", None) == value,
+                                self.get_slack_options,
                             ),
                         )
                     )
@@ -761,7 +804,10 @@ class HObjectField(TimeStampModel, IntegrationModel):
                 resource = self.relationship_name
                 action_query = f"{slack_consts.GET_LOCAL_RESOURCE_OPTIONS}?u={user_id}&resource={resource}&field_id={self.id}"
                 return block_builders.multi_external_select(
-                    f"_{self.label}_", action_query, block_id=self.name, initial_options=None,
+                    f"_{self.label}_",
+                    action_query,
+                    block_id=self.name,
+                    initial_options=None,
                 )
             else:
                 user_id = str(self.salesforce_account.user.id)
@@ -775,7 +821,9 @@ class HObjectField(TimeStampModel, IntegrationModel):
 
         elif self.field_type == "date":
             return block_builders.datepicker(
-                label=f"*{self.label}*", initial_date=value, block_id=self.name,
+                label=f"*{self.label}*",
+                initial_date=value,
+                block_id=self.name,
             )
 
         elif self.field_type == "select":
@@ -846,6 +894,8 @@ class HObjectField(TimeStampModel, IntegrationModel):
                 )
 
             return block_builders.input_block(
-                self.label, optional=True, initial_value=value, block_id=self.name,
+                self.label,
+                optional=True,
+                initial_value=value,
+                block_id=self.name,
             )
-

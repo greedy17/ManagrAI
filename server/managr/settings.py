@@ -532,3 +532,4 @@ if USE_ELASTICACHE:
 
 
 BACKGROUND_TASK_RUN_ASYNC = True
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"

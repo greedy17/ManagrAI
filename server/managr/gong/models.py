@@ -11,8 +11,6 @@ from django.db import models
 from django.utils import timezone
 from urllib.parse import urlencode
 from requests.exceptions import HTTPError
-
-from django.contrib.postgres.fields import JSONField, ArrayField
 from django.core.exceptions import ObjectDoesNotExist
 
 from managr.core.models import TimeStampModel, User
@@ -279,10 +277,18 @@ class GongAccountAdapter:
 
 class GongAccount(TimeStampModel):
     auth_account = models.ForeignKey(
-        "GongAuthAccount", related_name="users", on_delete=models.CASCADE, blank=True, null=True,
+        "GongAuthAccount",
+        related_name="users",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
     )
     user = models.OneToOneField(
-        "core.User", on_delete=models.CASCADE, related_name="gong_account", blank=True, null=True,
+        "core.User",
+        on_delete=models.CASCADE,
+        related_name="gong_account",
+        blank=True,
+        null=True,
     )
     gong_id = models.CharField(max_length=50)
     is_active = models.BooleanField(default=True)
@@ -389,7 +395,9 @@ class GongCallAdapter:
             "Content-Type": "application/json",
         }
         body = {
-            "filter": {"callIds": [self.gong_id],},
+            "filter": {
+                "callIds": [self.gong_id],
+            },
             "contentSelector": {
                 "context": "Extended",
                 "contextTiming": ["Now"],
@@ -422,7 +430,11 @@ class GongCallAdapter:
 
 class GongCall(TimeStampModel):
     auth_account = models.ForeignKey(
-        "GongAuthAccount", related_name="calls", on_delete=models.CASCADE, blank=True, null=True,
+        "GongAuthAccount",
+        related_name="calls",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
     )
     crm_id = models.CharField(max_length=100, null=True)
     acc_crm_id = models.CharField(max_length=100, null=True)
