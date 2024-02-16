@@ -367,14 +367,30 @@
                 relevant news clips from thousands of top media outlets and provide a summary.
               </p>
 
-              <p class="bold">Helpful search tips:</p>
+              <!-- <p class="bold">Helpful tips:</p> -->
 
-              <div>
-                <p>Simply type a brand or phrase like, “Lululemon"</p>
-                <p>You can ask questions like, “who is writing about commercial real estate”</p>
-                <p>For specific topics use OR & AND, “commercial real estate AND AI”</p>
-                <p>Click the calendar icon to adjust date range</p>
-                <p>Toggle to “Social” to look through X/Twitter, or “URL” for a specific site</p>
+              <div class="no-margins">
+                <p class="bold gray-title">Simple search</p>
+                <p style="margin-bottom: 16px; margin-left: 4px">
+                  <img src="@/assets/images/return.svg" height="11px" alt="" /> Lululemon,
+                  "commercial real estate" AND proptech, Apple no stock related news
+                </p>
+                <p class="bold gray-title">Question-based search</p>
+                <p style="margin-bottom: 16px; margin-left: 4px">
+                  <img src="@/assets/images/return.svg" height="11px" alt="" />
+                  What is the sentiment around apple vision pro? List top journalist writing about
+                  sustainability and fashion along with creative pitching angles.
+                </p>
+                <p class="bold gray-title">Date Range</p>
+                <p style="margin-bottom: 16px; margin-left: 4px">
+                  <img src="@/assets/images/return.svg" height="11px" alt="" />
+                  The default is 7 days. Click calendar icon to adjust.
+                </p>
+                <p class="bold gray-title">New summary</p>
+                <p style="margin-bottom: 16px; margin-left: 4px">
+                  <img src="@/assets/images/return.svg" height="11px" alt="" />
+                  Click the speech bubble in the right chatbar to see popular prompts.
+                </p>
               </div>
             </div>
           </div>
@@ -631,14 +647,14 @@
                 relevant social clips from X/Twitter and provide a summary.
               </p>
 
-              <p class="bold">Helpful search tips:</p>
+              <!-- <p class="bold">Helpful search tips:</p>
 
               <div>
                 <p>Simply type a brand or phrase like, “Lululemon"</p>
                 <p>You can ask questions like, “why is Travis Kelce trending”</p>
                 <p>For specific topics use OR & AND, “Camping AND Football”</p>
                 <p>Date range is set to last 7 days</p>
-              </div>
+              </div> -->
             </div>
 
             <div v-else class="small-container letter-spacing">
@@ -3668,6 +3684,25 @@ li {
   font-family: $base-font-family;
 }
 
+.gray-title {
+  width: fit-content;
+  border-radius: 4px;
+  padding: 2px 6px;
+  background-color: $off-white;
+}
+
+.no-margins {
+  padding-left: 16px;
+  p {
+    margin: 0;
+
+    img {
+      transform: rotate(180deg);
+      transform: scaleX(-1);
+      margin-right: 2px;
+    }
+  }
+}
 .small-container {
   padding-left: 42px;
   padding-right: 32px;
