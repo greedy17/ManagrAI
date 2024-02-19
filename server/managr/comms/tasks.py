@@ -399,11 +399,12 @@ def _send_news_summary(news_alert_id):
             "clips": clip_short_list,
             "website_url": f"{settings.MANAGR_URL}/login",
         }
+        email_list = [alert.user.email].extend(alert.search.recipients)
         send_html_email(
             f"Managr Digest: {alert.search.name}",
             "core/email-templates/news-email.html",
             settings.DEFAULT_FROM_EMAIL,
-            [alert.user.email],
+            email_list,
             context=content,
         )
         if "sent_count" in alert.meta_data.keys():
@@ -430,9 +431,9 @@ def _send_social_summary(news_alert_id):
             for user in user_data:
                 if user["id"] == tweet["author_id"]:
                     if user["public_metrics"]["followers_count"] > 1000:
-                        tweet[
-                            "tweet_link"
-                        ] = f"https://twitter.com/{user['username']}/status/{tweet['id']}"
+                        tweet["tweet_link"] = (
+                            f"https://twitter.com/{user['username']}/status/{tweet['id']}"
+                        )
                         tweet["user"] = user
                         tweet_list.append(tweet)
                     break
