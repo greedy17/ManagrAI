@@ -715,6 +715,23 @@ class PRSearchViewSet(
         emit_share_client_summary(summary, clips, request.user.email)
         return Response(status=status.HTTP_200_OK)
 
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="summary",
+    )
+    def edit_recipients(self, request, *args, **kwargs):
+        recipient = request.data.get("recipient")
+        search_id = request.data.get("search_id")
+        action = request.data.get("action")
+        search = Search.objects.get(id=search_id)
+        if action == "ADD":
+            search.add_recipient(recipient)
+        else:
+            search.remove_recipient(recipient)
+        return Response(status=status.HTTP_200_OK)
+
 
 @api_view(["GET"])
 @permission_classes(
