@@ -1,12 +1,14 @@
 from channels.routing import ProtocolTypeRouter, URLRouter
-
-# Example of token auth middleware
-# from managr.chat.token_auth import TokenAuthMiddleware
-
+from managr.consumers import ManagrConsumer
+from django.urls import path
 
 application = ProtocolTypeRouter(
     {
         # (http->django views is added by default)
-        # "websocket": TokenAuthMiddleware(URLRouter(chat_routing.websocket_urlpatterns)),
+        # "websocket": URLRouter(
+        #     [
+        #         path("ws/", ManagrConsumer.as_asgi()),
+        #     ]
+        # ),
     }
 )

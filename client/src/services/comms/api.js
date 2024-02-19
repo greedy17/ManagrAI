@@ -164,7 +164,8 @@ class CommsApi extends ModelAPI {
     }
     async getClips(data, signal) {
         try {
-            const res = await this.client.get(CommsApi.ENDPOINT + 'clips/', { signal, params: data })
+            const res = await this.client.get('pr/clips/', { signal, params: data })
+            console.log(res)
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)

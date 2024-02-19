@@ -397,6 +397,11 @@ urlpatterns = [
         comms_views.revoke_twitter_auth,
         name="twitter-revoke-token",
     ),
+    path(
+        "pr/clips/",
+        comms_views.get_clips,
+        name="get-clips",
+    ),
 ]
 
 router.register("users/reports", core_views.ReportViewSet, "reports"),

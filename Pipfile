@@ -42,6 +42,7 @@ requests-oauthlib = "*"
 asyncio = "*"
 django = "==3.2"
 daphne = "*"
+asyncpg = "*"
 
 [requires]
 python_version = "3.9"
