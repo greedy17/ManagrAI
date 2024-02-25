@@ -1710,10 +1710,25 @@ h3 {
   justify-content: space-between;
 }
 
+p,
+label {
+  @media only screen and (max-width: 600px) {
+    font-size: 14px !important;
+  }
+}
+
 .container {
   width: 50vw;
   height: 100vh;
   position: relative;
+
+  @media only screen and (max-width: 600px) {
+    width: 100vw;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    width: 100vw;
+  }
 }
 
 .container:first-of-type {
@@ -1934,6 +1949,19 @@ h3 {
   justify-content: flex-start;
   background-color: white;
   color: $dark-black-blue;
+
+  @media only screen and (max-width: 600px) {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    /* Styles for tablets */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 .center {
