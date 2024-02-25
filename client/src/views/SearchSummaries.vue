@@ -199,7 +199,7 @@
               <label for="time-select">Delivery time:</label>
               <input
                 id="time-select"
-                style="width: 100%"
+                style="width: 100%; margin-top: 0.5rem"
                 class="area-input-outline"
                 required
                 @input="calculateDate(alertTIme)"
@@ -338,7 +338,10 @@
         <div v-if="mainView === 'news'">
           <div style="padding-top: 2rem" v-if="!(filteredArticles && filteredArticles.length)">
             <div class="row">
-              <div style="cursor: text" class="image-container-blue right-margin-m">
+              <div
+                style="cursor: text; transform: none"
+                class="image-container-blue right-margin-m"
+              >
                 <img
                   class="blue-filter"
                   style="margin-left: -1px"
@@ -373,7 +376,7 @@
                 <p class="bold gray-title">Simple search</p>
                 <p style="margin-bottom: 16px; margin-left: 4px">
                   <img src="@/assets/images/return.svg" height="11px" alt="" /> Lululemon,
-                  "commercial real estate" AND proptech, Apple no stock related news
+                  "commercial real estate" AND technology, Apple no stock related news
                 </p>
                 <p class="bold gray-title">Question-based search</p>
                 <p style="margin-bottom: 16px; margin-left: 4px">
@@ -397,7 +400,7 @@
 
           <div ref="topDivider" v-else>
             <div
-              style="margin: 5rem 0"
+              style="margin: 2rem 0"
               v-for="article in filteredArticles"
               :key="article.id"
               class="news-container"
@@ -669,7 +672,7 @@
           <div v-else>
             <div>
               <div
-                style="margin: 5rem 0"
+                style="margin: 2rem 0"
                 class="news-container"
                 v-for="(tweet, i) in tweets"
                 :key="i"
@@ -1210,7 +1213,7 @@
           </button>
         </div>
 
-        <div style="width: 88%" class="space-between vertical-padding">
+        <div style="width: 100%" class="space-between vertical-padding">
           <p class="sub-text">AI-generated summary</p>
           <p>{{ summary.split(' ').length }} words</p>
         </div>
@@ -1471,10 +1474,12 @@ export default {
       upgradeMessage: 'You have reached your usage limit for the month. Please upgrade your plan.',
       copyTip: 'Copy',
       searchSuggestions: [
-        ` What is the PR impact of this coverage`,
+        `What is the PR impact of this coverage`,
         `Find me the most positive / negative article`,
+        'Analyze the media to identify what aspects of the topic are most intriguing or concerning to the public.',
         `Provide creative newsjacking ideas for XXX based on this coverage`,
         `Provide new pitching angles for XXX based on this news`,
+        `Generate a list of 5 questions that the public might have about XXX and how an expert in the field would respond to them.`,
         `Provide a comprehensive media monitoring insight dashboard (list top sources, estimate the potential reach, sentiment analysis, competitor highlights, etc.)`,
         `List 5 of the most important headlines (include source name + journalist)`,
         `List 5 journalists (from top pubs, include pitching tips) I can pitch on behalf of XXX`,
@@ -1715,7 +1720,10 @@ export default {
         this.optionIndex = index
         this.contentUrl = url
         this.contentType = val
-        this.contentInstructions = `Create a ${val} for XXX, newsjacking this article`
+        if (val) {
+          this.contentInstructions = `Create a ${val} for XXX, newsjacking this article`
+        }
+
         // this.setArticlePitchContent(url,sum)
       }
     },
@@ -3037,11 +3045,6 @@ export default {
   color: #6b6b6b;
   font-size: 13px;
   padding: 6px 0;
-  @media only screen and (max-width: 600px) {
-    padding: 14px 0;
-    color: $dark-black-blue;
-    // font-size: 18px;
-  }
   img {
     margin-left: 8px;
   }
@@ -3302,9 +3305,6 @@ export default {
     font-weight: 200;
     word-wrap: break-word;
   }
-  @media only screen and (max-width: 600px) {
-    text-align: center;
-  }
 }
 
 .article-copy-container {
@@ -3323,10 +3323,6 @@ export default {
   padding: 4px 12px;
   color: $base-gray;
   border-radius: 12px;
-  @media only screen and (max-width: 600px) {
-    max-width: 65px;
-    font-size: 10px !important;
-  }
 }
 
 .author-time {
@@ -3368,9 +3364,6 @@ button:disabled {
   img {
     // filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
     margin-right: 8px;
-  }
-  @media only screen and (max-width: 600px) {
-    font-size: 10px;
   }
 }
 
@@ -3426,6 +3419,9 @@ button:disabled {
   transition: all 0.3s;
   padding: 1rem 0;
   margin-bottom: 1rem;
+
+  @media only screen and (min-width: 1025px) and (max-width: 1300px) {
+  }
 }
 
 .news-card-medium {
@@ -3446,10 +3442,6 @@ button:disabled {
     overflow: none;
     text-overflow: ellipsis;
     margin-bottom: 8px;
-    @media only screen and (max-width: 600px) {
-      align-items: flex-start;
-      margin-left: 0.25rem;
-    }
   }
 }
 
@@ -3457,9 +3449,6 @@ button:disabled {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  @media only screen and (max-width: 600px) {
-    padding-top: 1rem;
-  }
 }
 
 .card-row-med {
@@ -3494,13 +3483,10 @@ button:disabled {
   &:hover {
     opacity: 0.7;
   }
+
   @media only screen and (max-width: 600px) {
-    margin-left: 0.25rem;
-    // height: 96px;
-    // width: 224px;
-    width: 100%;
-    object-fit: cover;
-    // height: 50%;
+    margin-left: 0;
+    margin-bottom: 4px;
   }
 }
 
@@ -3530,9 +3516,14 @@ button:disabled {
   &:hover {
     color: #6b6b6b;
   }
+
   @media only screen and (max-width: 600px) {
-    font-size: 12px;
-    max-width: 270px;
+    font-size: 14px;
+    max-width: 320px;
+  }
+
+  @media only screen and (min-width: 1025px) and (max-width: 1300px) {
+    max-width: 360px;
   }
 }
 
@@ -3547,6 +3538,15 @@ button:disabled {
   overflow: hidden;
   font-weight: 400;
   margin: 0;
+
+  @media only screen and (max-width: 600px) {
+    font-size: 13px;
+    max-width: 320px;
+  }
+
+  @media only screen and (min-width: 1025px) and (max-width: 1300px) {
+    max-width: 360px;
+  }
 }
 
 .article-preview-medium {
@@ -3566,15 +3566,25 @@ button:disabled {
   align-items: center;
   padding: 16px 0;
   margin-top: 1rem;
-  @media only screen and (max-width: 600px) {
-    margin-top: 0rem;
-  }
+
   span {
     font-size: 12px;
     margin-right: 0.5rem;
-    @media only screen and (max-width: 600px) {
-      margin-right: 0.25rem;
+  }
+
+  @media only screen and (max-width: 510px) {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+
+    button {
+      margin-top: 1.5rem;
+      margin-left: 0 !important;
+      width: 40vw;
     }
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
   }
 }
 
@@ -3597,6 +3607,13 @@ button:disabled {
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
+
+  @media only screen and (max-width: 600px) {
+    max-width: 320px;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 
 .pre-text {
@@ -3725,6 +3742,16 @@ li {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
+
+  @media only screen and (max-width: 510px) {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 .content-body {
   display: flex;
@@ -3737,6 +3764,10 @@ li {
   font-size: 16px;
   width: 100%;
   height: 100%;
+
+  @media only screen and (max-width: 600px) {
+    padding: 120px 32px 0 16px;
+  }
 }
 
 .content-body::-webkit-scrollbar {
@@ -3757,16 +3788,51 @@ li {
   align-items: center;
   justify-content: flex-start;
   background-color: white;
+
+  @media only screen and (max-width: 600px) {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    /* Styles for tablets */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  @media only screen and (min-width: 1025px) {
+    /* Styles for desktops */
+  }
 }
 
 .container {
   width: 50vw;
   height: 100vh;
   position: relative;
+
+  @media only screen and (max-width: 600px) {
+    width: 100vw;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    width: 100vw;
+  }
+}
+
+p {
+  @media only screen and (max-width: 600px) {
+    font-size: 14px !important;
+  }
 }
 
 .container:first-of-type {
   border-right: 1px solid rgba(0, 0, 0, 0.1);
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    border: none;
+  }
 }
 
 .header {
@@ -3781,7 +3847,7 @@ li {
 }
 
 .vertical-padding {
-  padding: 1rem 0;
+  padding: 1rem 40px;
 }
 
 .top-border {
@@ -3918,10 +3984,17 @@ li {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: all 0.2s;
 
   img {
     filter: invert(40%);
   }
+}
+
+.image-container:hover,
+.image-container-blue:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .image-container-blue {
@@ -3933,6 +4006,7 @@ li {
   justify-content: center;
   cursor: pointer;
   background-color: $dark-black-blue;
+  transition: all 0.2s;
 
   img {
     filter: brightness(0) invert(100%);
@@ -4021,6 +4095,13 @@ textarea::placeholder {
 
 .horizontal-padding {
   padding: 0 34px 0 36px;
+
+  @media only screen and (max-width: 600px) {
+    padding: 0 16px;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 
 .cancel-button {
@@ -4057,9 +4138,6 @@ textarea::placeholder {
   position: relative;
   overflow-y: scroll;
   font-family: $thin-font-family;
-  @media only screen and (max-width: 600px) {
-    width: 100%;
-  }
 }
 ::v-deep .modal {
   @media only screen and (max-width: 600px) {
@@ -4140,9 +4218,6 @@ textarea::placeholder {
   margin: 1rem 0;
   padding: 1rem;
   font-family: $thin-font-family !important;
-  @media only screen and (max-width: 600px) {
-    width: 100%;
-  }
 }
 .regen-footer {
   position: sticky;
