@@ -175,7 +175,7 @@
         <router-link style="cursor: text" :to="{ name: '' }" id="router-assist-free" v-else>
           <div class="row">
             <p>Assist</p>
-            <p style="margin-left: 8px" class="searches-used-text">PRO</p>
+            <p style="margin-left: 8px" class="searches-used-text">Upgrade to PRO</p>
           </div>
         </router-link>
       </div>
@@ -443,9 +443,9 @@
         </router-link>
 
         <router-link style="cursor: text" :to="{ name: '' }" id="router-assist-free" v-else>
-          <div class="row">
+          <div class="row wrapper">
             <p>Assist</p>
-            <p style="margin-left: 8px" class="searches-used-text">PRO</p>
+            <p style="left: -40px" class="tooltip">Upgrade to PRO</p>
           </div>
         </router-link>
 

@@ -388,7 +388,7 @@
     <section class="container">
       <div class="content-body">
         <div>
-          <div class="row-start">
+          <!-- <div class="row-start">
             <div style="cursor: text" class="image-container-blue right-margin-m">
               <img
                 class="blue-filter"
@@ -399,18 +399,27 @@
               />
             </div>
             <h3>Managr</h3>
-          </div>
+          </div> -->
 
           <div style="margin-top: -4px" class="small-container">
-            <p>
-              <span class="bold">Create content that sounds like you.</span> Choose content type,
-              provide key data, and select a writng style.
+            <p style="margin: 0; font-size: 16px" class="bold">Create content</p>
+            <p style="margin: 0">
+              Choose type (media pitch, blog post, etc.), provide key data, and select a writing
+              style.
             </p>
           </div>
         </div>
 
         <div class="small-container" style="width: 100%; margin-top: 1rem">
-          <div style="padding-bottom: 128px; overflow-y: scroll; height: 100%">
+          <div
+            style="
+              padding-top: 1rem;
+              padding-bottom: 128px;
+              overflow-y: scroll;
+              height: 100%;
+              border-top: 1px solid rgba(0, 0, 0, 0.1);
+            "
+          >
             <div style="position: relative">
               <label for="content-type">Content Type</label>
               <input
@@ -697,7 +706,7 @@
         </div>
       </div>
 
-      <div v-else-if="pitch" class="content-body">
+      <div style="margin-top: 0.5rem" v-else-if="pitch" class="content-body">
         <div class="small-container">
           <pre class="pre-text" v-html="pitch"></pre>
         </div>
@@ -1635,7 +1644,7 @@ export default {
 
 label {
   font-size: 14px;
-  font-weight: bold;
+  font-weight: bold !important;
 }
 
 .sticky-bottom {
