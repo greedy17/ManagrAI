@@ -311,7 +311,7 @@
         </div>
 
         <div
-          style="width: 100%; margin-top: 1rem"
+          style="width: 100%; margin-top: 0.5rem"
           v-if="selectedSearch && !loading"
           class="space-between horizontal-padding"
         >
@@ -337,7 +337,7 @@
       <div class="content-body">
         <div v-if="mainView === 'news'">
           <div style="padding-top: 2rem" v-if="!(filteredArticles && filteredArticles.length)">
-            <div class="row">
+            <!-- <div class="row">
               <div
                 style="cursor: text; transform: none"
                 class="image-container-blue right-margin-m"
@@ -351,9 +351,9 @@
                 />
               </div>
               <h3>Managr</h3>
-            </div>
+            </div> -->
 
-            <div v-if="loading">
+            <div style="margin-top: -0.5rem" v-if="loading">
               <div class="small-container">
                 <div class="loading">
                   <p>Generating clips</p>
@@ -365,10 +365,13 @@
             </div>
 
             <div v-else class="small-container letter-spacing">
-              <p class="bottom-margin-xl">
-                <span class="bold">Get started by creating a new search.</span> Managr will find
-                relevant news clips from thousands of top media outlets and provide a summary.
-              </p>
+              <div class="bottom-margin-xl bottom-border-light">
+                <p style="margin: 0" class="bold">Summarize the news.</p>
+                <p style="margin: 0">
+                  Type in a keyword, topic or question to get started. Interact with the summary on
+                  the right.
+                </p>
+              </div>
 
               <!-- <p class="bold">Helpful tips:</p> -->
 
@@ -400,7 +403,7 @@
 
           <div ref="topDivider" v-else>
             <div
-              style="margin: 2rem 0"
+              style="margin: 2.75rem 0"
               v-for="article in filteredArticles"
               :key="article.id"
               class="news-container"
@@ -631,7 +634,7 @@
           </div>
 
           <div style="padding-top: 2rem" v-else-if="!(tweets && tweets.length)">
-            <div class="row">
+            <!-- <div class="row">
               <div style="cursor: text" class="image-container-blue right-margin-m">
                 <img
                   class="blue-filter"
@@ -642,13 +645,16 @@
                 />
               </div>
               <h3>Managr</h3>
-            </div>
+            </div> -->
 
             <div v-if="hasTwitterIntegration" class="small-container letter-spacing">
-              <p class="bottom-margin-xl">
-                <span class="bold">Get started by creating a new search.</span> Managr will find
-                relevant social clips from X/Twitter and provide a summary.
-              </p>
+              <div class="bottom-margin-xl">
+                <p style="margin: 0" class="bold">Summarize social.</p>
+                <p style="margin: 0">
+                  Type in a keyword, topic or question to get started. Interact with the summary on
+                  the right.
+                </p>
+              </div>
 
               <!-- <p class="bold">Helpful search tips:</p>
 
@@ -782,7 +788,7 @@
           </div>
 
           <div style="margin-top: 2rem" v-else-if="!addedArticles.length && !clipLoading">
-            <div class="row">
+            <!-- <div class="row">
               <div style="cursor: text" class="image-container-blue right-margin-m">
                 <img
                   class="blue-filter"
@@ -793,13 +799,13 @@
                 />
               </div>
               <h3>Managr</h3>
-            </div>
+            </div> -->
 
             <div class="small-container letter-spacing">
-              <p class="bottom-margin-xl">
-                <span class="bold">Get started by pasting an article URL.</span> Managr will read it
-                and provide a summary.
-              </p>
+              <div class="bottom-margin-xl">
+                <p style="margin: 0" class="bold">Summarize an article.</p>
+                <p style="margin: 0">Paste article URL. Interact with the summary on the right.</p>
+              </div>
             </div>
           </div>
 
@@ -1477,9 +1483,10 @@ export default {
         `What is the PR impact of this coverage`,
         `Find me the most positive / negative article`,
         'Analyze the media to identify what aspects of the topic are most intriguing or concerning to the public.',
+        `Generate a list of 5 questions that the public might have about this topic and how an expert in the field would respond to them.`,
+        `Provide top 10 SEO phrases relating to this topic`,
         `Provide creative newsjacking ideas for XXX based on this coverage`,
         `Provide new pitching angles for XXX based on this news`,
-        `Generate a list of 5 questions that the public might have about XXX and how an expert in the field would respond to them.`,
         `Provide a comprehensive media monitoring insight dashboard (list top sources, estimate the potential reach, sentiment analysis, competitor highlights, etc.)`,
         `List 5 of the most important headlines (include source name + journalist)`,
         `List 5 journalists (from top pubs, include pitching tips) I can pitch on behalf of XXX`,
@@ -3709,7 +3716,7 @@ li {
 }
 
 .no-margins {
-  padding-left: 16px;
+  // padding-left: 16px;
   p {
     margin: 0;
 
@@ -3874,7 +3881,7 @@ p {
 }
 
 .padding-top {
-  padding-top: 72px;
+  padding-top: 80px;
 }
 
 .padding-top-s {
@@ -3902,6 +3909,11 @@ p {
 
 .bottom-margin-xl {
   margin-bottom: 32px;
+}
+
+.bottom-border-light {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding-bottom: 1rem;
 }
 
 .extra-padding {
