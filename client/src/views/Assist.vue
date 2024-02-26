@@ -372,8 +372,7 @@
           <div style="margin-top: -4px" class="small-container">
             <p style="margin: 0" class="bold">Create content based on the latest news</p>
             <p style="margin-top: 0">
-              Managr will read the news, distill key insights, and create personalized content using
-              a saved writing style.
+              Turn the latest media coverage into personalized content for your brand.
             </p>
           </div>
         </div>

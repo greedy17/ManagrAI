@@ -1944,11 +1944,6 @@ label {
   white-space: pre-wrap;
 }
 
-.bottom-border-light {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  padding-bottom: 1rem;
-}
-
 .dark-blue-bg {
   background-color: $dark-black-blue;
   padding: 23px 0 30px;
