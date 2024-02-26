@@ -13,9 +13,9 @@ class CustomAlertInstance(admin.ModelAdmin):
     ordering = ("-datetime_created",)
 
 
-admin.site.register(models.AlertConfig)
-admin.site.register(models.AlertGroup)
-admin.site.register(models.AlertMessageTemplate)
-admin.site.register(models.AlertInstance, CustomAlertInstance)
-admin.site.register(models.AlertOperand)
-admin.site.register(models.AlertTemplate)
+# admin.site.register(models.AlertConfig)
+# admin.site.register(models.AlertGroup)
+# admin.site.register(models.AlertMessageTemplate)
+# admin.site.register(models.AlertInstance, CustomAlertInstance)
+# admin.site.register(models.AlertOperand)
+# admin.site.register(models.AlertTemplate)

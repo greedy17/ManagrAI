@@ -38,8 +38,8 @@ class CustomPeople(admin.ModelAdmin):
     ordering = ("-datetime_created",)
 
 
-admin.site.register(models.SalesloftAuthAccount, CustomSalesloftAuthAccount)
-admin.site.register(models.SalesloftAccount, CustomSalesloftAccount)
-admin.site.register(models.Cadence, CustomCadence)
-admin.site.register(models.SLAccount, CustomSLAccount)
-admin.site.register(models.People, CustomPeople)
+# admin.site.register(models.SalesloftAuthAccount, CustomSalesloftAuthAccount)
+# admin.site.register(models.SalesloftAccount, CustomSalesloftAccount)
+# admin.site.register(models.Cadence, CustomCadence)
+# admin.site.register(models.SLAccount, CustomSLAccount)
+# admin.site.register(models.People, CustomPeople)

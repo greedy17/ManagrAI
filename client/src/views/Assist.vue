@@ -356,7 +356,7 @@
     <section class="container">
       <div class="content-body">
         <div>
-          <div class="row-start">
+          <!-- <div class="row-start">
             <div style="cursor: text" class="image-container-blue right-margin-m">
               <img
                 class="blue-filter"
@@ -367,19 +367,27 @@
               />
             </div>
             <h3>Managr</h3>
-          </div>
+          </div> -->
 
           <div style="margin-top: -4px" class="small-container">
-            <p>
-              <span class="bold">Create content based on the latest news.</span>
-              Managr will read the news, distill key insights, and create personalized content using
-              a saved writing style.
+            <p style="margin: 0" class="bold">Create content based on the latest news</p>
+            <p style="margin-top: 0">
+              Turn the latest media coverage into personalized content for your brand.
             </p>
           </div>
         </div>
 
-        <div class="small-container" style="width: 100%; margin-top: 0.5rem; padding-bottom: 60px">
-          <label for="name">Name</label>
+        <div class="small-container" style="width: 100%; padding-bottom: 60px">
+          <label
+            style="
+              border-top: 1px solid rgba(0, 0, 0, 0.1);
+              width: 100%;
+              display: block;
+              padding-top: 1rem;
+            "
+            for="name"
+            >Name</label
+          >
           <input
             v-model="processName"
             placeholder="Name your process..."
@@ -1533,6 +1541,11 @@ h3 {
   bottom: 0;
 }
 
+.bottom-border-light {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding-bottom: 1rem;
+}
+
 .row-start {
   display: flex;
   flex-direction: row;
@@ -1572,6 +1585,20 @@ h3 {
   width: 50vw;
   height: 100vh;
   position: relative;
+
+  @media only screen and (max-width: 600px) {
+    width: 100vw;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    width: 100vw;
+  }
+}
+
+p {
+  @media only screen and (max-width: 600px) {
+    font-size: 14px !important;
+  }
 }
 
 .container:first-of-type {
@@ -1809,6 +1836,23 @@ button:disabled {
   justify-content: flex-start;
   background-color: white;
   color: $dark-black-blue;
+
+  @media only screen and (max-width: 600px) {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    /* Styles for tablets */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  @media only screen and (min-width: 1025px) {
+    /* Styles for desktops */
+  }
 }
 
 .header {

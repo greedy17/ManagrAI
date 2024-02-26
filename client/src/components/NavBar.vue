@@ -138,7 +138,280 @@
       </div>
     </Transition>
     <div v-if="userIsLoggedIn">
-      <nav id="nav" v-if="this.$store.state.user.role === 'PR' && !isMobile">
+      <div id="hamburger">
+        <img
+          v-if="!mobileMenuOpen"
+          src="@/assets/images/menu-burger.svg"
+          height="24px"
+          @click="toggleMobileMenu"
+        />
+        <div class="close-menu" @click="toggleMobileMenu" v-else>X</div>
+      </div>
+
+      <div class="mobile-nav" v-if="mobileMenuOpen">
+        <router-link
+          active-class="active-mobile"
+          :to="{ name: 'PRSummaries' }"
+          id="router-summarize"
+        >
+          <p>Search</p>
+        </router-link>
+
+        <router-link active-class="active-mobile" :to="{ name: 'Pitches' }" id="router-pitch">
+          <p>Pitch</p>
+        </router-link>
+
+        <router-link
+          active-class="active-mobile"
+          :to="{ name: 'Assist' }"
+          id="router-assist"
+          v-if="isPaid"
+        >
+          <div class="row">
+            <p>Assist</p>
+          </div>
+        </router-link>
+
+        <router-link style="cursor: text" :to="{ name: '' }" id="router-assist-free" v-else>
+          <div class="row">
+            <p>Assist</p>
+            <p style="margin-left: 8px" class="searches-used-text">Upgrade to PRO</p>
+          </div>
+        </router-link>
+      </div>
+
+      <div id="relative-mobile">
+        <div class="aligned-right">
+          <div
+            v-if="$route.name === 'PRSummaries'"
+            @click="toggleShowSearches"
+            class="row pointer nav-text"
+          >
+            Saved Searches
+            <img
+              v-if="!showSavedSearches"
+              src="@/assets/images/downArrow.svg"
+              height="14px"
+              alt=""
+            />
+            <img
+              class="rotate-img"
+              v-else
+              src="@/assets/images/downArrow.svg"
+              height="14px"
+              alt=""
+            />
+          </div>
+
+          <div
+            v-else-if="$route.name === 'Pitches'"
+            @click="toggleShowPitches"
+            class="row pointer nav-text"
+          >
+            Saved Pitches
+            <img
+              v-if="!showSavedPitches"
+              src="@/assets/images/downArrow.svg"
+              height="14px"
+              alt=""
+            />
+            <img
+              class="rotate-img"
+              v-else
+              src="@/assets/images/downArrow.svg"
+              height="14px"
+              alt=""
+            />
+          </div>
+
+          <div
+            v-else-if="$route.name === 'Assist'"
+            @click="toggleShowAssist"
+            class="row pointer nav-text"
+          >
+            Saved Assists
+            <img v-if="!showSavedAssist" src="@/assets/images/downArrow.svg" height="14px" alt="" />
+            <img
+              class="rotate-img"
+              v-else
+              src="@/assets/images/downArrow.svg"
+              height="14px"
+              alt=""
+            />
+          </div>
+
+          <div v-if="showSavedSearches" class="search-dropdown">
+            <div class="input">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
+                  fill="currentColor"
+                ></path>
+              </svg>
+              <input class="search-input" v-model="searchText" :placeholder="`Search...`" />
+              <img
+                v-show="searchText"
+                @click="clearText"
+                src="@/assets/images/close.svg"
+                class="invert pointer"
+                height="12px"
+                alt=""
+              />
+            </div>
+            <p class="v-margin" v-if="!searches.length">Nothing here...</p>
+
+            <div class="searches-container">
+              <div
+                @mouseenter="setIndex(i)"
+                @mouseLeave="removeIndex"
+                class="row relative"
+                v-for="(search, i) in searches"
+                :key="search.id"
+              >
+                <img
+                  class="search-icon invert"
+                  v-if="search.type === 'NEWS'"
+                  src="@/assets/images/memo.svg"
+                  height="12px"
+                  alt=""
+                  @click="selectSearch(search)"
+                />
+                <img
+                  class="search-icon"
+                  v-else-if="search.type === 'SOCIAL_MEDIA'"
+                  src="@/assets/images/comment.svg"
+                  height="12px"
+                  alt=""
+                  @click="selectSearch(search)"
+                />
+                <p @click="selectSearch(search)">
+                  {{ search.name }}
+                </p>
+
+                <img
+                  @click="toggleDeleteModal(search)"
+                  v-if="hoverIndex === i"
+                  class="absolute-icon"
+                  src="@/assets/images/trash.svg"
+                  height="12px"
+                  alt=""
+                />
+              </div>
+            </div>
+          </div>
+          <div v-else-if="showSavedPitches" class="search-dropdown">
+            <div class="input">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
+                  fill="currentColor"
+                ></path>
+              </svg>
+              <input class="search-input" v-model="pitchText" :placeholder="`Search...`" />
+              <img
+                v-show="pitchText"
+                @click="clearText"
+                src="@/assets/images/close.svg"
+                class="invert pointer"
+                height="12px"
+                alt=""
+              />
+            </div>
+            <p class="v-margin" v-if="!pitches.length">Nothing here...</p>
+
+            <div class="searches-container">
+              <div
+                @mouseenter="setIndex(i)"
+                @mouseLeave="removeIndex"
+                class="row relative"
+                v-for="(pitch, i) in pitches"
+                :key="pitch.id"
+              >
+                <img
+                  class="search-icon invert"
+                  v-if="pitch.type === 'NEWS'"
+                  src="@/assets/images/memo.svg"
+                  height="12px"
+                  alt=""
+                  @click="selectPitch(pitch)"
+                />
+                <img
+                  class="search-icon"
+                  v-else-if="pitch.type === 'SOCIAL_MEDIA'"
+                  src="@/assets/images/comment.svg"
+                  height="12px"
+                  alt=""
+                  @click="selectPitch(pitch)"
+                />
+                <p @click="selectPitch(pitch)">
+                  {{ pitch.name }}
+                </p>
+
+                <img
+                  @click="togglePitchDeleteModal(pitch)"
+                  v-if="hoverIndex === i"
+                  class="absolute-icon"
+                  src="@/assets/images/trash.svg"
+                  height="12px"
+                  alt=""
+                />
+              </div>
+            </div>
+          </div>
+
+          <div v-else-if="showSavedAssist" class="search-dropdown">
+            <div class="input">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
+                  fill="currentColor"
+                ></path>
+              </svg>
+              <input class="search-input" v-model="AssistText" :placeholder="`Search...`" />
+              <img
+                v-show="AssistText"
+                @click="clearText"
+                src="@/assets/images/close.svg"
+                class="invert pointer"
+                height="12px"
+                alt=""
+              />
+            </div>
+            <p class="v-margin" v-if="!assists.length">Nothing here...</p>
+
+            <div class="searches-container">
+              <div
+                @mouseenter="setIndex(i)"
+                @mouseLeave="removeIndex"
+                class="row relative"
+                v-for="(assist, i) in assists"
+                :key="assist.id"
+              >
+                <p @click="selectAssist(assist)">
+                  {{ assist.name }}
+                </p>
+
+                <img
+                  @click="toggleAssistDeleteModal(assist)"
+                  v-if="hoverIndex === i"
+                  class="absolute-icon"
+                  src="@/assets/images/trash.svg"
+                  height="12px"
+                  alt=""
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <nav id="nav">
         <router-link :to="{ name: 'PRSummaries' }">
           <div class="logo">
             <img @click="goHome" style="height: 28px" src="@/assets/images/logo.png" />
@@ -158,47 +431,25 @@
           <p>Pitch</p>
         </router-link>
 
-        <router-link active-class="active" :to="{ name: 'Assist' }" id="router-assist">
+        <router-link
+          active-class="active"
+          :to="{ name: 'Assist' }"
+          id="router-assist"
+          v-if="isPaid"
+        >
           <div class="row">
             <p>Assist</p>
           </div>
         </router-link>
 
-        <!-- <router-link
-          v-if="!hasZoomIntegration"
-          :to="{ name: 'PRIntegrations' }"
-          id="router-transcribe1"
-        >
-          <div class="wrapper">
-            <p>Transcribe</p>
-            <div style="margin-left: -20px" class="tooltip">Connect Zoom</div>
+        <router-link style="cursor: text" :to="{ name: '' }" id="router-assist-free" v-else>
+          <div class="row wrapper">
+            <p>Assist</p>
+            <p style="left: -40px" class="tooltip">Upgrade to PRO</p>
           </div>
         </router-link>
 
-        <router-link
-          v-else
-          active-class="active"
-          :to="{ name: 'PRTranscripts' }"
-          id="router-transcribe2"
-        >
-          <p>Transcribe</p>
-        </router-link> -->
-
-        <!-- <a @mouseenter="textSoonOn" @mouseleave="textSoonOff">{{ soonText }}</a> -->
-
         <div class="auto-left">
-          <!-- <div v-if="$route.name === 'PRSummaries' || $route.name === 'Pitches'" class="nav-text">
-            <button @click="goHome" class="tertiary-button">
-              {{
-                $route.name === 'PRSummaries'
-                  ? 'New Search'
-                  : $route.name === 'Pitches'
-                  ? 'New Pitch'
-                  : ''
-              }}
-            </button>
-          </div> -->
-
           <div
             v-if="
               ($route.name === 'PRSummaries' ||
@@ -208,7 +459,7 @@
             "
             class="row wrapper-count"
           >
-            <p class="searches-used-text">{{ searchesUsed }} / 10</p>
+            <p class="searches-used-text">{{ 10 - searchesUsed }} / 10</p>
             <div style="margin-left: -40px" class="tooltip-count">Remaining monthly credits</div>
           </div>
           <div class="relative">
@@ -499,10 +750,10 @@
           </div>
         </div>
       </nav>
-      <div v-else-if="this.$store.state.user.role === 'PR' && isMobile" class="hamburger-container">
+      <!-- <div v-else-if="this.$store.state.user.role === 'PR' && isMobile" class="hamburger-container">
         <img src="@/assets/images/menu-burger.svg" class="hamburger" @click="showMobileMenu" />
-      </div>
-      <nav v-if="mobileMenuOpen" class="mobile-nav-container" v-clickOutsideMobileNav>
+      </div> -->
+      <!-- <nav v-if="mobileMenuOpen" class="mobile-nav-container" v-clickOutsideMobileNav>
         <div @click="goHome" class="mobile-nav-top mar-left extra-padding-vert">
           <p class="small-margin">Home</p>
         </div>
@@ -514,17 +765,6 @@
         <router-link active-class="active" :to="{ name: 'Pitches' }">
           <p class="small-margin">Pitch</p>
         </router-link>
-
-        <!-- <div v-if="!hasZoomIntegration" :to="{ name: 'PRIntegrations' }">
-          <div class="wrapper-mobile">
-            <p class="small-margin light-gray-blue">Transcribe</p>
-            <div style="margin-left: -20px" class="tooltip-mobile">Connect Zoom</div>
-          </div>
-        </div>
-
-        <router-link v-else active-class="active" :to="{ name: 'PRTranscripts' }">
-          <p class="small-margin">Transcribe</p>
-        </router-link> -->
 
         <div class="relative mar-left">
           <div
@@ -583,28 +823,9 @@
             />
           </div>
 
-          <!-- search-dropdown -->
+
           <div v-if="showSavedSearches" class="">
-            <!-- <div class="input">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
-                  fill="currentColor"
-                ></path>
-              </svg>
-              <input class="search-input" v-model="searchText" :placeholder="`Search...`" />
-              <img
-                v-show="searchText"
-                @click="clearText"
-                src="@/assets/images/close.svg"
-                class="invert pointer"
-                height="12px"
-                alt=""
-              />
-            </div>
-            <p class="v-margin" v-if="!searches.length">Nothing here...</p> -->
+      
 
             <div class="searches-container">
               <div
@@ -686,23 +907,21 @@
         </div>
 
         <router-link active-class="active" :to="{ name: 'PRSettings' }">
-          <!-- <img class="mar-right" src="@/assets/images/settings.svg" height="14px" alt="" /> -->
-          <!-- <img class="mar-right" src="@/assets/images/profile.svg" height="14px" alt="" /> -->
+        
           Users
         </router-link>
         <router-link active-class="active" :to="{ name: 'PRIntegrations' }">
-          <!-- <img class="mar-right" src="@/assets/images/apps.svg" height="14px" alt="" /> -->
+       
           Integrations
         </router-link>
         <router-link active-class="active" :to="{ name: 'PRReports' }">
-          <!-- <img class="mar-right" src="@/assets/images/report.svg" height="14px" alt="" /> -->
-          Reports
+       
         </router-link>
         <div active-class="active" @click="logOut" class="bottom">
           <img class="minor-mar-right" src="@/assets/images/logout.svg" height="12px" alt="" /> Sign
           out
         </div>
-      </nav>
+      </nav> -->
     </div>
   </div>
 </template>
@@ -805,9 +1024,8 @@ export default {
     removeIndex() {
       this.hoverIndex = null
     },
-    showMobileMenu() {
-      this.hamburgerClicked = true
-      this.mobileMenuOpen = true
+    toggleMobileMenu() {
+      this.mobileMenuOpen = !this.mobileMenuOpen
     },
     hideMobileMenu() {
       this.mobileMenuOpen = false
@@ -1117,6 +1335,17 @@ export default {
 @import '@/styles/buttons';
 
 @media only screen and (max-width: 600px) {
+  #hamburger {
+    display: block !important;
+  }
+
+  #relative-mobile {
+    display: block !important;
+  }
+
+  #nav {
+    display: none;
+  }
 }
 /* Small devices (portrait tablets and large phones, 600px and up) */
 @media only screen and (min-width: 600px) {
@@ -1136,6 +1365,39 @@ export default {
     opacity: 0.9;
     transform: translate(10%, 0%);
   }
+}
+
+#hamburger {
+  display: none;
+  cursor: pointer;
+  position: fixed;
+  top: 24px;
+  left: 32px;
+  z-index: 20100;
+  background-color: white;
+  width: 100%;
+  padding: 0 4px;
+
+  img {
+    filter: invert(40%);
+  }
+}
+
+.close-menu {
+  font-family: $thin-font-family;
+  font-size: 18px;
+}
+
+#relative-mobile {
+  display: none;
+}
+
+.aligned-right {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  z-index: 200000;
+  background-color: white;
 }
 
 .rotate-img {
@@ -1360,12 +1622,6 @@ export default {
   scroll-behavior: smooth;
   margin-bottom: 1rem;
   padding: 0.5rem 0;
-  @media only screen and (max-width: 600px) {
-    font-size: 13px;
-    p {
-      margin-left: 0.5rem;
-    }
-  }
 }
 
 .relative {
@@ -1527,27 +1783,39 @@ nav {
   padding: 0px 4px;
   border-bottom: 1px solid $soft-gray;
   @media only screen and (max-width: 600px) {
-    align-items: flex-start;
   }
 }
-.hamburger-container {
-  z-index: 2000;
-  height: 58px;
-  width: 100vw;
-  background-color: white;
-}
-.hamburger {
-  height: 20px;
-  margin: 1.5rem 2rem;
-}
-.mobile-nav-container {
-  z-index: 2000;
-  height: 100vh;
-  width: 80vw;
-  border-right: 1px solid $soft-gray;
+
+.mobile-nav {
+  z-index: 200000;
+  height: 25vh;
+  width: 60vw;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
   background-color: white;
   display: flex;
   flex-direction: column;
+  position: absolute;
+  top: 56px;
+  left: 30px;
+
+  a {
+    text-decoration: none;
+    font-weight: 400;
+    font-family: $thin-font-family;
+    color: $light-gray-blue;
+    font-size: 13px;
+    padding: 4px 16px;
+    margin: 0;
+
+    img {
+      transition: all 0.2s;
+    }
+  }
+
+  a:hover {
+    opacity: 0.6;
+  }
 }
 .logo {
   cursor: pointer;
@@ -1578,7 +1846,6 @@ nav {
   font-family: $thin-font-family;
   font-size: 14px;
   @media only screen and (max-width: 600px) {
-    gap: 4px;
   }
 }
 
@@ -1592,11 +1859,7 @@ nav {
   color: #6b6b6b;
   font-size: 13px;
   padding: 6px 0;
-  @media only screen and (max-width: 600px) {
-    padding: 14px 0;
-    color: $dark-black-blue;
-    // font-size: 18px;
-  }
+
   img {
     margin-left: 8px;
   }
@@ -1604,13 +1867,8 @@ nav {
 .light-gray-blue {
   color: $light-gray-blue;
 }
-.saved-searches-mobile {
-  @media only screen and (max-width: 600px) {
-    font-size: 14px;
-    color: $dark-black-blue;
-  }
-}
-a {
+
+#nav a {
   text-decoration: none;
   font-weight: 400;
   font-family: $thin-font-family;
@@ -1619,12 +1877,7 @@ a {
   font-size: 14px;
   padding: 6px 4px;
   margin: 0 12px;
-  @media only screen and (max-width: 600px) {
-    margin: 0px 16px;
-    padding: 14px 0;
-    color: $dark-black-blue;
-    // font-size: 18px;
-  }
+
   img {
     transition: all 0.2s;
   }
@@ -1636,6 +1889,13 @@ a:hover {
   color: $dark-black-blue;
   position: relative;
   border-bottom: 1px solid $dark-black-blue;
+  // background-color: $white-blue;
+}
+
+.active-mobile {
+  color: $dark-black-blue;
+  position: relative;
+  background-color: $off-white;
   // background-color: $white-blue;
 }
 
@@ -1975,9 +2235,7 @@ a:hover {
   padding: 14px 0;
   font-size: 14px;
 }
-.mobile-nav-top {
-  margin-top: 2rem;
-}
+
 .mar-left {
   margin-left: 1rem;
 }

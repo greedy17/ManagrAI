@@ -28,7 +28,7 @@ class CustomProspect(admin.ModelAdmin):
     ordering = ("-datetime_created",)
 
 
-admin.site.register(models.OutreachAccount, CustomOutreachAccount)
-admin.site.register(models.Sequence, CustomSequence)
-admin.site.register(models.Account, CustomAccount)
-admin.site.register(models.Prospect, CustomProspect)
+# admin.site.register(models.OutreachAccount, CustomOutreachAccount)
+# admin.site.register(models.Sequence, CustomSequence)
+# admin.site.register(models.Account, CustomAccount)
+# admin.site.register(models.Prospect, CustomProspect)

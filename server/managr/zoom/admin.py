@@ -1,6 +1,7 @@
 from django.contrib import admin
 from . import models
 
+
 # Register your models here.
 class CustomZoomAuthAccount(admin.ModelAdmin):
     model = models.ZoomAuthAccount
@@ -11,4 +12,4 @@ class CustomZoomAuthAccount(admin.ModelAdmin):
     )
 
 
-admin.site.register(models.ZoomAuthAccount, CustomZoomAuthAccount)
+# admin.site.register(models.ZoomAuthAccount, CustomZoomAuthAccount)

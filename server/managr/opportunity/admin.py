@@ -51,4 +51,4 @@ class CustomLeadAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(Lead, CustomLeadAdmin)
+# admin.site.register(Lead, CustomLeadAdmin)

@@ -36,7 +36,7 @@ class CustomBaseContact(admin.ModelAdmin):
 
 
 # Register your models here.
-admin.site.register(crm_models.BaseAccount, CustomBaseAccount)
-admin.site.register(crm_models.BaseOpportunity, CustomBaseOpportunity)
-admin.site.register(crm_models.BaseContact, CustomBaseContact)
-admin.site.register(crm_models.ObjectField, CustomObjectField)
+# admin.site.register(crm_models.BaseAccount, CustomBaseAccount)
+# admin.site.register(crm_models.BaseOpportunity, CustomBaseOpportunity)
+# admin.site.register(crm_models.BaseContact, CustomBaseContact)
+# admin.site.register(crm_models.ObjectField, CustomObjectField)
