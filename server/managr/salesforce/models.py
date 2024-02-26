@@ -7,7 +7,7 @@ from datetime import datetime
 from django.db import models
 from django.utils import timezone
 from managr.utils.client import Variable_Client
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.fields import ArrayField
 from django.db.models import Q
 from django.db.models.constraints import UniqueConstraint
 from background_task.models import CompletedTask
@@ -116,16 +116,18 @@ class SObjectField(TimeStampModel, IntegrationModel):
     relationship_name = models.CharField(max_length=255, null=True)
     allow_multiple = models.BooleanField(default=False)
     default_filters = ArrayField(
-        JSONField(max_length=255, blank=True, null=True, default=dict), default=list, blank=True
+        models.JSONField(max_length=255, blank=True, null=True, default=dict),
+        default=list,
+        blank=True,
     )
     reference_to_infos = ArrayField(
-        JSONField(max_length=128, default=dict),
+        models.JSONField(max_length=128, default=dict),
         default=list,
         blank=True,
         help_text="An of objects containing the API Name references",
     )
     options = ArrayField(
-        JSONField(max_length=255, blank=True, null=True, default=dict),
+        models.JSONField(max_length=255, blank=True, null=True, default=dict),
         default=list,
         blank=True,
         help_text="if this is a custom managr field pass a dict of label, value, if this is not a custom managr field then construct the values dynamically",
@@ -166,7 +168,8 @@ class SObjectField(TimeStampModel, IntegrationModel):
                     *map(
                         lambda value: block_builders.option(value["text"]["text"], value["value"]),
                         filter(
-                            lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                            lambda opt: opt.get("value", None) == value,
+                            self.get_slack_options,
                         ),
                     ),
                 )
@@ -188,7 +191,8 @@ class SObjectField(TimeStampModel, IntegrationModel):
                                 value["text"]["text"], value["value"]
                             ),
                             filter(
-                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                                lambda opt: opt.get("value", None) == value,
+                                self.get_slack_options,
                             ),
                         ),
                     ),
@@ -204,7 +208,8 @@ class SObjectField(TimeStampModel, IntegrationModel):
                                 value["text"]["text"], value["value"]
                             ),
                             filter(
-                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                                lambda opt: opt.get("value", None) == value,
+                                self.get_slack_options,
                             ),
                         )
                     )
@@ -411,7 +416,7 @@ class SObjectPicklist(TimeStampModel, IntegrationModel):
     )
 
     values = ArrayField(
-        JSONField(max_length=128, default=dict),
+        models.JSONField(max_length=128, default=dict),
         default=list,
         blank=True,
         help_text="An array of objects containing the values",
@@ -807,7 +812,10 @@ class MeetingWorkflow(SFSyncOperation):
         template = (
             OrgCustomSlackForm.objects.for_user(self.user)
             .filter(
-                Q(resource=resource, form_type=form_type,)
+                Q(
+                    resource=resource,
+                    form_type=form_type,
+                )
                 & Q(Q(stage=kwargs.get("stage", None)) | Q(stage=kwargs.get("stage", "")))
             )
             .first()
@@ -866,21 +874,23 @@ class SalesforceAuthAccount(TimeStampModel):
         help_text="Automatically Send a Refresh task to be executed 15 mins before expiry to reduce errors",
     )
     # default for json field must be a callable
-    sobjects = JSONField(
-        default=getSobjectDefaults, help_text="All resources we are retrieving", max_length=500,
+    sobjects = models.JSONField(
+        default=getSobjectDefaults,
+        help_text="All resources we are retrieving",
+        max_length=500,
     )
     default_record_id = models.CharField(
         max_length=255,
         blank=True,
         help_text="The default record id should be the same for all objects and is used for picklist values",
     )
-    default_record_ids = JSONField(
+    default_record_ids = models.JSONField(
         default=dict,
         null=True,
         help_text="Default Record Id's are obtained when initially getting fields we need this default record it to gather picklist values",
         max_length=500,
     )
-    exclude_fields = JSONField(
+    exclude_fields = models.JSONField(
         default=dict,
         null=True,
         help_text="Certain Fields are not available for query are retreived as part of the user's fields, these are tracked here and excluded on resyncs",
@@ -935,9 +945,11 @@ class SalesforceAuthAccount(TimeStampModel):
         operations_order = sf_consts.RESOURCE_SYNC_ORDER
         operations = list(
             filter(
-                lambda resource: f"{resource}"
-                if self.sobjects.get(resource, None) not in ["", None, False]
-                else False,
+                lambda resource: (
+                    f"{resource}"
+                    if self.sobjects.get(resource, None) not in ["", None, False]
+                    else False
+                ),
                 self.sobjects,
             )
         )
@@ -951,9 +963,9 @@ class SalesforceAuthAccount(TimeStampModel):
             map(
                 lambda resource: f"{sf_consts.SALESFORCE_OBJECT_FIELDS}.{resource}",
                 filter(
-                    lambda resource: resource
-                    if self.sobjects.get(resource, None) not in ["", None]
-                    else False,
+                    lambda resource: (
+                        resource if self.sobjects.get(resource, None) not in ["", None] else False
+                    ),
                     self.sobjects,
                 ),
             )
@@ -965,9 +977,11 @@ class SalesforceAuthAccount(TimeStampModel):
             map(
                 lambda resource: f"{sf_consts.SALESFORCE_PICKLIST_VALUES}.{resource}",
                 filter(
-                    lambda resource: resource
-                    if self.sobjects.get(resource, None) not in ["", None, False]
-                    else False,
+                    lambda resource: (
+                        resource
+                        if self.sobjects.get(resource, None) not in ["", None, False]
+                        else False
+                    ),
                     self.sobjects,
                 ),
             )
@@ -980,9 +994,11 @@ class SalesforceAuthAccount(TimeStampModel):
                 map(
                     lambda resource: f"{sf_consts.SALESFORCE_VALIDATIONS}.{resource}",
                     filter(
-                        lambda resource: resource
-                        if self.sobjects.get(resource, None) not in ["", None, False]
-                        else False,
+                        lambda resource: (
+                            resource
+                            if self.sobjects.get(resource, None) not in ["", None, False]
+                            else False
+                        ),
                         self.sobjects,
                     ),
                 )
@@ -1135,7 +1151,9 @@ class SalesforceAuthAccount(TimeStampModel):
         token_header = sf_consts.SALESFORCE_BEARER_AUTH_HEADER(access_token)
         with Variable_Client() as client:
             r = client.post(
-                url, data=json_data, headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
+                url,
+                data=json_data,
+                headers={**sf_consts.SALESFORCE_JSON_HEADER, **token_header},
             )
             return SalesforceAuthAccountAdapter._handle_response(r)
 
@@ -1172,4 +1190,3 @@ class SalesforceAuthAccount(TimeStampModel):
         if self.user.is_team_lead:
             self.user.team.team_forms.all().delete()
         return super().delete(*args, **kwargs)
-

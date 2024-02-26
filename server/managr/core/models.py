@@ -14,7 +14,7 @@ from django.db import models, IntegrityError
 from django.contrib.auth.models import AbstractUser, BaseUserManager, AnonymousUser
 from django.db.models import Q
 from django.contrib.auth import login
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.fields import ArrayField
 from managr.utils.misc import (
     datetime_appended_filepath,
     phrase_to_snake_case,
@@ -232,7 +232,7 @@ class User(AbstractUser, TimeStampModel):
         upload_to=datetime_appended_filepath, max_length=255, null=True, blank=True
     )
     timezone = models.CharField(default="UTC", max_length=255)
-    reminders = JSONField(
+    reminders = models.JSONField(
         default=core_consts.REMINDERS,
         null=True,
         blank=True,
@@ -248,12 +248,12 @@ class User(AbstractUser, TimeStampModel):
         "organization.Team", related_name="users", on_delete=models.SET_NULL, null=True
     )
     make_team_lead = models.BooleanField(default=False)
-    meta_data = JSONField(
+    meta_data = models.JSONField(
         default=dict,
         null=True,
         blank=True,
     )
-    private_meta_data = JSONField(
+    private_meta_data = models.JSONField(
         default=dict,
         null=True,
         blank=True,
@@ -669,7 +669,7 @@ class Notification(TimeStampModel):
         choices=core_consts.NOTIFICATION_CLASS_CHOICES,
     )
     viewed = models.BooleanField(blank=False, null=False, default=False)
-    meta = JSONField(help_text="Details about the notification", default=dict)
+    meta = models.JSONField(help_text="Details about the notification", default=dict)
     user = models.ForeignKey(
         "core.User", on_delete=models.SET_NULL, related_name="notifications", null=True
     )
@@ -693,13 +693,13 @@ class MeetingPrepInstance(TimeStampModel):
         "core.User", on_delete=models.CASCADE, related_name="meeting_preps", null=True
     )
     participants = ArrayField(
-        JSONField(max_length=128, default=dict),
+        models.JSONField(max_length=128, default=dict),
         default=list,
         blank=True,
         null=True,
         help_text="Json object of participants",
     )
-    event_data = JSONField(max_length=128, default=dict)
+    event_data = models.JSONField(max_length=128, default=dict)
     resource_id = models.CharField(
         max_length=255,
         null=True,
@@ -734,7 +734,7 @@ class UserActivity(models.Model):
     user = models.OneToOneField(
         "core.User", on_delete=models.SET_NULL, related_name="activity", null=True
     )
-    clicks = JSONField(default=defaultClickActivity)
+    clicks = models.JSONField(default=defaultClickActivity)
 
     def __str__(self):
         return f"Activity for {self.user.email}"
@@ -868,7 +868,7 @@ class Report(TimeStampModel):
     main_image = models.ImageField(
         upload_to=bucket_upload_filepath, max_length=255, null=True, blank=True
     )
-    meta_data = JSONField()
+    meta_data = models.JSONField()
 
     objects = ReportQuerySet.as_manager()
 

@@ -2,7 +2,7 @@ from django.apps import AppConfig
 
 
 class HubspotConfig(AppConfig):
-    name = "hubspot"
+    name = "managr.hubspot"
 
     def ready(self):
         import managr.hubspot.signals

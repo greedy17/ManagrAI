@@ -5,7 +5,7 @@ import logging
 from datetime import datetime
 from django.db import models
 from managr.core.models import TimeStampModel
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.fields import ArrayField
 from managr.zoom.models import ZoomAuthAccount, ZoomMeeting
 from managr.salesforce.models import MeetingWorkflow
 from managr.zoom.zoom_helper.models import ZoomMtg
@@ -22,13 +22,13 @@ class Meeting(TimeStampModel):
     provider = models.CharField(max_length=255, null=True, blank=True)
     is_owner = models.BooleanField(default=True)
     participants = ArrayField(
-        JSONField(max_length=128, default=dict),
+        models.JSONField(max_length=128, default=dict),
         default=list,
         blank=True,
         null=True,
         help_text="Json object of participants",
     )
-    meta_data = JSONField(
+    meta_data = models.JSONField(
         default=dict, blank=True, null=True, help_text="Json object of extra meeting data"
     )
 

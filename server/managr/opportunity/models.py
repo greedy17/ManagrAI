@@ -2,7 +2,7 @@ import uuid
 import json
 
 from django.db import models
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.fields import ArrayField
 from django.db.models import Q
 from managr.salesforce.exceptions import ResourceAlreadyImported
 from managr.core.models import TimeStampModel, IntegrationModel
@@ -34,14 +34,18 @@ class Lead(TimeStampModel, IntegrationModel):
         max_length=255, blank=True, help_text="value from the integration"
     )
     name = models.CharField(max_length=255, blank=True)
-    secondary_data = JSONField(
+    secondary_data = models.JSONField(
         default=dict,
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",
         max_length=500,
     )
     owner = models.ForeignKey(
-        "core.User", related_name="owned_leads", on_delete=models.SET_NULL, blank=True, null=True,
+        "core.User",
+        related_name="owned_leads",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
     )
     objects = LeadQuerySet.as_manager()
 
@@ -94,7 +98,7 @@ class Lead(TimeStampModel, IntegrationModel):
             object_fields = user.object_fields.filter(crm_object="Lead").values_list(
                 "api_name", flat=True
             )
-            res = LeadAdapter.create(data, token,object_fields, user_id,base_url)
+            res = LeadAdapter.create(data, token, object_fields, user_id, base_url)
             from managr.salesforce.routes import routes
 
             serializer = routes["Lead"]["serializer"](data=res.as_dict)
@@ -141,7 +145,12 @@ class Opportunity(TimeStampModel, IntegrationModel):
     """
 
     name = models.CharField(max_length=255, blank=True, null=False)
-    amount = models.DecimalField(max_digits=30, decimal_places=15, default=0.00, null=True,)
+    amount = models.DecimalField(
+        max_digits=30,
+        decimal_places=15,
+        default=0.00,
+        null=True,
+    )
     forecast_category = models.CharField(max_length=255, null=True)
 
     close_date = models.DateField(null=True)
@@ -179,14 +188,14 @@ class Opportunity(TimeStampModel, IntegrationModel):
     )  # sf has this as a datetime field but returns a date field only
     last_stage_update = models.DateTimeField(null=True)
     is_stale = models.BooleanField(default=False)
-    secondary_data = JSONField(
+    secondary_data = models.JSONField(
         default=dict,
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",
         max_length=500,
     )
     reference_data = ArrayField(
-        JSONField(max_length=128, default=dict),
+        models.JSONField(max_length=128, default=dict),
         default=list,
         blank=True,
         help_text="An array of objects containing the API Name references and values for displaying",

@@ -7,7 +7,7 @@ from calendar import monthrange
 
 from django.db import models
 from django.db.models import Q
-from django.contrib.postgres.fields import ArrayField, JSONField
+from django.contrib.postgres.fields import ArrayField
 from django.utils import timezone
 
 from managr.alerts.utils.utils import convertToSlackFormat
@@ -90,7 +90,10 @@ class AlertTemplate(TimeStampModel):
                 user_crm.salesforce_id,
                 self.resource_type,
                 ["Id"],
-                additional_filters=[*self.adapter_class.additional_filters(), operand_groups,],
+                additional_filters=[
+                    *self.adapter_class.additional_filters(),
+                    operand_groups,
+                ],
             )
             return f"{user_crm.instance_url}{q[0]}"
         else:
@@ -116,7 +119,10 @@ class AlertTemplate(TimeStampModel):
                 self.user.crm_account.salesforce_id,
                 self.resource_type,
                 ["Id"],
-                additional_filters=[*self.adapter_class.additional_filters(), operand_groups,],
+                additional_filters=[
+                    *self.adapter_class.additional_filters(),
+                    operand_groups,
+                ],
                 user_list=user_list,
             )
             return f"{self.user.crm_account.instance_url}{q[0]}"
@@ -185,7 +191,10 @@ class AlertGroupQuerySet(models.QuerySet):
 
 class AlertGroup(TimeStampModel):
     group_condition = models.CharField(
-        choices=(("AND", "AND"), ("OR", "OR"),),
+        choices=(
+            ("AND", "AND"),
+            ("OR", "OR"),
+        ),
         max_length=255,
         help_text="Applied to itself for multiple groups AND/OR group1 AND/OR group 2",
     )
@@ -250,7 +259,10 @@ class AlertOperand(TimeStampModel):
         "alerts.AlertGroup", on_delete=models.CASCADE, related_name="operands"
     )
     operand_condition = models.CharField(
-        choices=(("AND", "AND"), ("OR", "OR"),),
+        choices=(
+            ("AND", "AND"),
+            ("OR", "OR"),
+        ),
         max_length=255,
         help_text="Applied to itself for multiple groups AND/OR group1 AND/OR group 2",
     )
@@ -594,17 +606,26 @@ class AlertConfig(TimeStampModel):
                 user_ids_to_include.append(self.template.user.id)
             elif target == "MANAGERS":
                 query |= Q(
-                    user_level=core_consts.USER_LEVEL_MANAGER, is_active=True, crm__isnull=False,
+                    user_level=core_consts.USER_LEVEL_MANAGER,
+                    is_active=True,
+                    crm__isnull=False,
                 )
             elif target == "REPS":
                 query |= Q(
-                    user_level=core_consts.USER_LEVEL_REP, is_active=True, crm__isnull=False,
+                    user_level=core_consts.USER_LEVEL_REP,
+                    is_active=True,
+                    crm__isnull=False,
                 )
             elif target == "ALL":
-                query |= Q(is_active=True, crm__isnull=False,)
+                query |= Q(
+                    is_active=True,
+                    crm__isnull=False,
+                )
             elif target == "SDR":
                 query |= Q(
-                    user_level=core_consts.USER_LEVEL_SDR, is_active=True, crm__isnull=False,
+                    user_level=core_consts.USER_LEVEL_SDR,
+                    is_active=True,
+                    crm__isnull=False,
                 )
             elif target == "TEAM":
                 query |= Q(team=self.template.user.team, is_active=True)
@@ -636,7 +657,9 @@ class AlertInstanceQuerySet(models.QuerySet):
 
 class AlertInstance(TimeStampModel):
     template = models.ForeignKey(
-        "alerts.AlertTemplate", on_delete=models.CASCADE, related_name="instances",
+        "alerts.AlertTemplate",
+        on_delete=models.CASCADE,
+        related_name="instances",
     )
     user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="alerts")
     rendered_text = models.TextField(
@@ -648,7 +671,7 @@ class AlertInstance(TimeStampModel):
     )
     sent_at = models.DateTimeField(null=True)
     resource_id = models.CharField(max_length=255)
-    instance_meta = JSONField(
+    instance_meta = models.JSONField(
         default=dict,
         null=True,
         blank=True,
@@ -778,9 +801,9 @@ class AlertInstance(TimeStampModel):
                                         pass
                                     if user.crm == "SALESFORCE":
                                         url = self.user.crm_account.instance_url.split(".")[0]
-                                        binding_map[
-                                            binding
-                                        ] = f"<{url}.lightning.force.com/lightning/r/{relationship}/{binding_map[binding]}/view|{reference_record}>"
+                                        binding_map[binding] = (
+                                            f"<{url}.lightning.force.com/lightning/r/{relationship}/{binding_map[binding]}/view|{reference_record}>"
+                                        )
                         elif k == "__Recipient":
                             binding_map[binding] = getattr(self.user, v)
                             if binding_map[binding] in ["", None]:
