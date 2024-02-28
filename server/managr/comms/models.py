@@ -16,7 +16,7 @@ from managr.core import exceptions as open_ai_exceptions
 from dateutil import parser
 from managr.utils.misc import encrypt_dict
 from urllib.parse import urlencode
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.indexes import GinIndex
 from requests_oauthlib import OAuth1Session
@@ -39,7 +39,7 @@ class Search(TimeStampModel):
     instructions = models.TextField(null=True, blank=True)
     summary = models.TextField(null=True, blank=True)
     type = models.CharField(choices=comms_consts.SEARCH_TYPE_CHOICES, max_length=50, default="NEWS")
-    meta_data = JSONField(
+    meta_data = models.JSONField(
         default=dict,
         null=True,
         blank=True,
@@ -239,7 +239,7 @@ class Pitch(TimeStampModel):
         on_delete=models.CASCADE,
     )
     name = models.CharField(max_length=255)
-    instructions = models.TextField( null=True, blank=True)
+    instructions = models.TextField(null=True, blank=True)
     type = models.CharField(max_length=255, null=True, blank=True)
     audience = models.CharField(max_length=255, null=True, blank=True)
     content = models.TextField(null=True, blank=True)
@@ -255,9 +255,7 @@ class Pitch(TimeStampModel):
     def generate_pitch(cls, user, type, instructions, style, tokens, timeout):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
         # style = user.writing_style if user.writing_style else False
-        prompt = comms_consts.OPEN_AI_PITCH(
-            datetime.now().date(), type, instructions, style
-        )
+        prompt = comms_consts.OPEN_AI_PITCH(datetime.now().date(), type, instructions, style)
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
             user.email,
             prompt,
@@ -279,11 +277,11 @@ class NewsSource(TimeStampModel):
     rss_feed_url = models.URLField(blank=True, null=True)
     last_scraped = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
-    access_count = JSONField(default=dict, null=True, blank=True)
+    access_count = models.JSONField(default=dict, null=True, blank=True)
     # Web Scraping Fields
     category_link_selector = models.CharField(max_length=255, blank=True, null=True)
     category_name_attribute = models.CharField(max_length=50, blank=True, null=True)
-    category_mapping = JSONField(
+    category_mapping = models.JSONField(
         blank=True,
         null=True,
         help_text="JSON mapping of website categories to application categories",
@@ -299,7 +297,7 @@ class NewsSource(TimeStampModel):
     article_title_selector = models.CharField(max_length=255, blank=True, null=True)
     article_content_selector = models.CharField(max_length=255, blank=True, null=True)
     author_selector = models.CharField(max_length=255, blank=True, null=True)
-    scrape_data = JSONField(default=dict, null=True, blank=True)
+    scrape_data = models.JSONField(default=dict, null=True, blank=True)
     error_log = ArrayField(models.CharField(max_length=255), default=list, blank=True)
 
     def __str__(self):
@@ -504,7 +502,7 @@ class EmailAlert(TimeStampModel):
         null=False,
         on_delete=models.CASCADE,
     )
-    meta_data = JSONField(
+    meta_data = models.JSONField(
         default=dict,
         null=True,
         blank=True,

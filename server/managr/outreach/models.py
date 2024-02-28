@@ -11,8 +11,6 @@ from django.db import models
 from django.utils import timezone
 from urllib.parse import urlencode
 from requests.exceptions import HTTPError
-
-from django.contrib.postgres.fields import JSONField, ArrayField
 from django.core.exceptions import ObjectDoesNotExist
 
 from managr.core.models import TimeStampModel, User
@@ -83,7 +81,9 @@ class OutreachAccountAdapter:
     def get_auth_token(code: str):
         query = outreach_consts.AUTHENTICATION_QUERY_PARAMS(code)
         query = urlencode(query)
-        r = client.post(f"{outreach_consts.AUTHENTICATION_URI}?{query}",)
+        r = client.post(
+            f"{outreach_consts.AUTHENTICATION_URI}?{query}",
+        )
         return OutreachAccountAdapter._handle_response(r)
 
     def refresh(self):
@@ -111,7 +111,10 @@ class OutreachAccountAdapter:
     def get_mailbox(cls, access_token, user_id):
         headers = outreach_consts.OUTREACH_REQUEST_HEADERS(access_token)
         query = urlencode({"filter[user][id]": user_id})
-        res = client.get(f"{outreach_consts.OUTREACH_BASE_URI}/mailboxes?{query}", headers=headers,)
+        res = client.get(
+            f"{outreach_consts.OUTREACH_BASE_URI}/mailboxes?{query}",
+            headers=headers,
+        )
         return OutreachAccountAdapter._handle_response(res)
 
     @classmethod
@@ -144,7 +147,10 @@ class OutreachAccountAdapter:
             "Content-Type": "application/json",
         }
         query = urlencode({"filter[owner][id]": self.outreach_id})
-        res = client.get(f"{outreach_consts.OUTREACH_BASE_URI}/sequences?{query}", headers=headers,)
+        res = client.get(
+            f"{outreach_consts.OUTREACH_BASE_URI}/sequences?{query}",
+            headers=headers,
+        )
         return OutreachAccountAdapter._handle_response(res)
 
     def get_accounts(self):
@@ -155,7 +161,10 @@ class OutreachAccountAdapter:
         query = urlencode(
             {"filter[owner][id]": self.outreach_id, "page[limit]": 250, "sort": "-updatedAt"}
         )
-        res = client.get(f"{outreach_consts.OUTREACH_BASE_URI}/accounts?{query}", headers=headers,)
+        res = client.get(
+            f"{outreach_consts.OUTREACH_BASE_URI}/accounts?{query}",
+            headers=headers,
+        )
         return OutreachAccountAdapter._handle_response(res)
 
     def get_prospects(self):
@@ -166,7 +175,10 @@ class OutreachAccountAdapter:
         query = urlencode(
             {"filter[owner][id]": self.outreach_id, "page[limit]": 1000, "sort": "-updatedAt"}
         )
-        res = client.get(f"{outreach_consts.OUTREACH_BASE_URI}/prospects?{query}", headers=headers,)
+        res = client.get(
+            f"{outreach_consts.OUTREACH_BASE_URI}/prospects?{query}",
+            headers=headers,
+        )
         return OutreachAccountAdapter._handle_response(res)
 
     def get_contacts_for_account(self, account_name):
@@ -177,7 +189,10 @@ class OutreachAccountAdapter:
         query = urlencode(
             {"filter[account][name]": account_name, "page[limit]": 1000, "sort": "-updatedAt"}
         )
-        res = client.get(f"{outreach_consts.OUTREACH_BASE_URI}/prospects?{query}", headers=headers,)
+        res = client.get(
+            f"{outreach_consts.OUTREACH_BASE_URI}/prospects?{query}",
+            headers=headers,
+        )
         return OutreachAccountAdapter._handle_response(res)
 
     def get_contacts_by_email(self, email):
@@ -186,7 +201,10 @@ class OutreachAccountAdapter:
             "Content-Type": "application/json",
         }
         query = urlencode({"filter[emails]": email, "page[limit]": 1000, "sort": "-updatedAt"})
-        res = client.get(f"{outreach_consts.OUTREACH_BASE_URI}/prospects?{query}", headers=headers,)
+        res = client.get(
+            f"{outreach_consts.OUTREACH_BASE_URI}/prospects?{query}",
+            headers=headers,
+        )
         return OutreachAccountAdapter._handle_response(res)
 
 
@@ -481,7 +499,11 @@ class Prospect(TimeStampModel):
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
     account = models.ForeignKey(
-        "Account", related_name="prospects", on_delete=models.CASCADE, blank=True, null=True,
+        "Account",
+        related_name="prospects",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
     )
     owner = models.ForeignKey(
         "OutreachAccount",

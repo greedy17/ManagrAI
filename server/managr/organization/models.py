@@ -2,7 +2,7 @@ from datetime import datetime
 import pytz
 from django.db import models
 from django.db.models import Q
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.fields import ArrayField
 from django.forms import CharField
 
 from managr.salesforce.adapter.models import (
@@ -183,7 +183,7 @@ class Account(TimeStampModel, IntegrationModel):
         "core.User", on_delete=models.CASCADE, related_name="accounts", blank=True, null=True
     )
     external_owner = models.CharField(max_length=255, blank=True)
-    secondary_data = JSONField(
+    secondary_data = models.JSONField(
         default=dict,
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",
@@ -291,7 +291,7 @@ class Contact(TimeStampModel, IntegrationModel):
     )
     external_owner = models.CharField(max_length=255, blank=True)
     external_account = models.CharField(max_length=255, blank=True)
-    secondary_data = JSONField(
+    secondary_data = models.JSONField(
         default=dict,
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",
@@ -497,7 +497,7 @@ class Pricebook2(TimeStampModel, IntegrationModel):
     organization = models.ForeignKey(
         "organization.Organization", on_delete=models.CASCADE, related_name="pricebooks", null=True
     )
-    secondary_data = JSONField(
+    secondary_data = models.JSONField(
         default=dict,
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",
@@ -564,7 +564,7 @@ class Product2QuerySet(models.QuerySet):
 class Product2(TimeStampModel, IntegrationModel):
     name = models.CharField(max_length=150)
     description = models.TextField(null=True, blank=True)
-    secondary_data = JSONField(
+    secondary_data = models.JSONField(
         default=dict,
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",
@@ -651,7 +651,7 @@ class PricebookEntry(TimeStampModel, IntegrationModel):
         related_name="pricebook_entry",
         on_delete=models.CASCADE,
     )
-    secondary_data = JSONField(
+    secondary_data = models.JSONField(
         default=dict,
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",
@@ -743,7 +743,7 @@ class OpportunityLineItem(TimeStampModel, IntegrationModel):
         default=0.00,
         null=True,
     )
-    secondary_data = JSONField(
+    secondary_data = models.JSONField(
         default=dict,
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",

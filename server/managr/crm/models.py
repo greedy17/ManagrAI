@@ -2,7 +2,7 @@ from copy import copy
 from datetime import datetime
 from django.db import models
 from managr.core.models import TimeStampModel, IntegrationModel
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.fields import ArrayField
 from managr.slack.helpers import block_builders
 from managr.core.models import User
 from managr.crm.routes import adapter_routes as adapters
@@ -10,6 +10,7 @@ from managr.crm.routes import model_routes
 from managr.crm import constants as crm_consts
 from managr.slack import constants as slack_consts
 from managr.salesforce.adapter.models import OpportunityAdapter
+
 
 # Create your models here.
 class BaseAccountQuerySet(models.QuerySet):
@@ -28,13 +29,15 @@ class BaseAccountQuerySet(models.QuerySet):
 class BaseAccount(TimeStampModel, IntegrationModel):
     name = models.CharField(max_length=255)
     organization = models.ForeignKey(
-        "organization.Organization", related_name="base_accounts", on_delete=models.CASCADE,
+        "organization.Organization",
+        related_name="base_accounts",
+        on_delete=models.CASCADE,
     )
     owner = models.ForeignKey(
         "core.User", on_delete=models.CASCADE, related_name="base_accounts", blank=True, null=True
     )
     external_owner = models.CharField(max_length=255, blank=True)
-    secondary_data = JSONField(
+    secondary_data = models.JSONField(
         default=dict,
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",
@@ -137,7 +140,12 @@ class BaseOpportunityQuerySet(models.QuerySet):
 
 class BaseOpportunity(TimeStampModel, IntegrationModel):
     name = models.CharField(max_length=255, blank=True, null=False)
-    amount = models.DecimalField(max_digits=30, decimal_places=15, default=0.00, null=True,)
+    amount = models.DecimalField(
+        max_digits=30,
+        decimal_places=15,
+        default=0.00,
+        null=True,
+    )
     forecast_category = models.CharField(max_length=255, null=True)
     close_date = models.DateField(null=True)
     account = models.ForeignKey(
@@ -164,7 +172,7 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
     )
     stage = models.CharField(max_length=255, null=True)
     is_stale = models.BooleanField(default=False)
-    secondary_data = JSONField(
+    secondary_data = models.JSONField(
         default=dict,
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",
@@ -283,11 +291,15 @@ class BaseContact(TimeStampModel, IntegrationModel):
         "core.User", on_delete=models.CASCADE, related_name="base_contacts", blank=True, null=True
     )
     account = models.ForeignKey(
-        "BaseAccount", on_delete=models.SET_NULL, related_name="contacts", null=True, blank=True,
+        "BaseAccount",
+        on_delete=models.SET_NULL,
+        related_name="contacts",
+        null=True,
+        blank=True,
     )
     external_owner = models.CharField(max_length=255, blank=True)
     external_account = models.CharField(max_length=255, blank=True)
-    secondary_data = JSONField(
+    secondary_data = models.JSONField(
         default=dict,
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",
@@ -400,13 +412,13 @@ class ObjectField(TimeStampModel, IntegrationModel):
     relationship_name = models.CharField(max_length=255, null=True)
     length = models.PositiveIntegerField(default=0)
     reference_to_infos = ArrayField(
-        JSONField(max_length=128, default=dict),
+        models.JSONField(max_length=128, default=dict),
         default=list,
         blank=True,
         help_text="An of objects containing the API Name references",
     )
     options = ArrayField(
-        JSONField(max_length=255, blank=True, null=True, default=dict),
+        models.JSONField(max_length=255, blank=True, null=True, default=dict),
         default=list,
         blank=True,
         help_text="if this is a custom managr field pass a dict of label, value, if this is not a custom managr field then construct the values dynamically",
@@ -431,7 +443,8 @@ class ObjectField(TimeStampModel, IntegrationModel):
             if self.relationship_name == "Owner" and len(self.reference_to_infos) > 1:
                 items = dict(
                     *filter(
-                        lambda details: details["api_name"] == "User", self.reference_to_infos,
+                        lambda details: details["api_name"] == "User",
+                        self.reference_to_infos,
                     ),
                 )
             else:
@@ -510,7 +523,10 @@ class ObjectField(TimeStampModel, IntegrationModel):
                 initial_option = dict(
                     *map(
                         lambda value: block_builders.option(value["text"]["text"], value["value"]),
-                        filter(lambda opt: opt.get("value", None) == value, options,),
+                        filter(
+                            lambda opt: opt.get("value", None) == value,
+                            options,
+                        ),
                     ),
                 )
 
@@ -531,7 +547,8 @@ class ObjectField(TimeStampModel, IntegrationModel):
                                 value["text"]["text"], value["value"]
                             ),
                             filter(
-                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                                lambda opt: opt.get("value", None) == value,
+                                self.get_slack_options,
                             ),
                         ),
                     ),
@@ -547,7 +564,8 @@ class ObjectField(TimeStampModel, IntegrationModel):
                                 value["text"]["text"], value["value"]
                             ),
                             filter(
-                                lambda opt: opt.get("value", None) == value, self.get_slack_options,
+                                lambda opt: opt.get("value", None) == value,
+                                self.get_slack_options,
                             ),
                         )
                     )
@@ -724,4 +742,3 @@ class ObjectField(TimeStampModel, IntegrationModel):
             )
         else:
             return [block_builders.option("No Options", "None")]
-

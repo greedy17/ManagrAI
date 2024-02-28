@@ -7,10 +7,14 @@ from rest_framework import (
     mixins,
     viewsets,
 )
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
+from django.http import JsonResponse
+from asgiref.sync import async_to_sync, sync_to_async
 from pytz import timezone
 from datetime import datetime, timedelta
 from newspaper import Article, ArticleException
 from managr.api.models import ExpiringTokenAuthentication
+from channels.db import database_sync_to_async
 from rest_framework.response import Response
 from rest_framework import (
     permissions,
@@ -49,9 +53,63 @@ from managr.comms.utils import (
     normalize_article_data,
     get_domain,
 )
-
+from django.views.decorators.http import require_http_methods
+from django.http import JsonResponse
 
 logger = logging.getLogger("managr")
+
+
+def getclips(request):
+    try:
+        user = User.objects.get(id=request.GET.get("user_id"))
+        has_error = False
+        search = request.GET.get("search", False)
+        boolean = request.GET.get("boolean", False)
+        date_to = request.GET.get("date_to", False)
+        date_from = request.GET.get("date_from", False)
+
+        if not boolean:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_QUERY_STRING(search)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email,
+                prompt,
+                token_amount=500,
+                top_p=0.1,
+            )
+            with Variable_Client() as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            r = open_ai_exceptions._handle_response(r)
+            query_input = r.get("choices")[0].get("message").get("content")
+            news_res = Search.get_clips(query_input, date_to, date_from)
+            articles = news_res["articles"]
+        else:
+            news_res = Search.get_clips(boolean, date_to, date_from)
+            articles = news_res["articles"]
+            query_input = boolean
+
+        articles = [article for article in articles if article["title"] != "[Removed]"]
+        internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
+        articles = normalize_article_data(articles, internal_articles)
+
+        return {"articles": articles, "string": query_input}
+
+    except Exception as e:
+        has_error = True
+        logger.exception(e)
+        return {"error": str(e)}
+
+
+@require_http_methods(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+@async_to_sync
+async def get_clips(request, *args, **kwargs):
+    response = await sync_to_async(getclips)(request)
+    return JsonResponse(data=response)
 
 
 def add_timezone_and_convert_to_utc(datetime_str, user_timezone):
@@ -104,56 +162,14 @@ class PRSearchViewSet(
         search.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(
-        methods=["get"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="clips",
-    )
-    def get_clips(self, request, *args, **kwargs):
-        user = User.objects.get(id=request.GET.get("user_id"))
-        has_error = False
-        search = request.GET.get("search", False)
-        boolean = request.GET.get("boolean", False)
-        date_to = request.GET.get("date_to", False)
-        date_from = request.GET.get("date_from", False)
-        while True:
-            try:
-                if not boolean:
-                    url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                    prompt = comms_consts.OPEN_AI_QUERY_STRING(search)
-                    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                        user.email,
-                        prompt,
-                        token_amount=500,
-                        top_p=0.1,
-                    )
-                    with Variable_Client() as client:
-                        r = client.post(
-                            url,
-                            data=json.dumps(body),
-                            headers=core_consts.OPEN_AI_HEADERS,
-                        )
-                    r = open_ai_exceptions._handle_response(r)
-                    query_input = r.get("choices")[0].get("message").get("content")
-                    news_res = Search.get_clips(query_input, date_to, date_from)
-                    articles = news_res["articles"]
-                else:
-                    news_res = Search.get_clips(boolean, date_to, date_from)
-                    articles = news_res["articles"]
-                    query_input = boolean
-                articles = [article for article in articles if article["title"] != "[Removed]"]
-                internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
-                articles = normalize_article_data(articles, internal_articles)
-                break
-            except Exception as e:
-                has_error = True
-                logger.exception(e)
-                articles = str(e)
-                break
-        if has_error:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": articles})
-        return Response({"articles": articles, "string": query_input})
+    # @action(
+    #     methods=["get"],
+    #     permission_classes=[permissions.IsAuthenticated],
+    #     detail=False,
+    #     url_path="clips",
+    # )
+    # async def get_clips(self, request, *args, **kwargs):
+    #     return await getclips(request)
 
     @action(
         methods=["post"],

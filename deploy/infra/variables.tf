@@ -18,7 +18,7 @@ variable "az_count" {
 
 variable "app_count" {
   type    = number
-  default = 1
+  default = 2
 }
 
 variable "health_check_path" {
