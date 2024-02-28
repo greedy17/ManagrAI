@@ -282,7 +282,6 @@ class User(AbstractUser, TimeStampModel):
         This property sets the user specific url for authorizing
         the users email to give Nylas access.
         """
-
         return gen_auth_url(email=self.email)
 
     @property
