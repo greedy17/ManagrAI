@@ -2,7 +2,7 @@ import logging
 import time
 from django.db import models
 from django.db.models.constraints import UniqueConstraint
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField, JSONField
 from django.db.models import Q
 from managr.slack.helpers import block_builders
 from managr.crm.exceptions import TokenExpired, InvalidRefreshToken, ApiRateLimitExceeded
@@ -50,13 +50,13 @@ class OrganizationSlackIntegration(TimeStampModel):
     access_token = models.CharField(
         max_length=255, null=True, blank=True, help_text="Slack API access token"
     )
-    incoming_webhook = models.JSONField(
+    incoming_webhook = JSONField(
         default=dict,
         null=True,
         blank=True,
         help_text="data leveraged to post messages from external sources into Slack",
     )
-    enterprise = models.JSONField(
+    enterprise = JSONField(
         default=dict,
         null=True,
         blank=True,
@@ -133,7 +133,7 @@ class UserSlackIntegration(TimeStampModel):
         blank=True,
         help_text="Manager's slack id's who want a recap from this user",
     )
-    realtime_alert_configs = models.JSONField(
+    realtime_alert_configs = JSONField(
         default=dict,
         help_text="Object for all real time alert settings",
         blank=True,
@@ -193,7 +193,7 @@ class OrgCustomSlackForm(TimeStampModel):
         choices=slack_consts.FORM_RESOURCES,
         help_text="Resources we currently support custom forms for",
     )
-    config = models.JSONField(
+    config = JSONField(
         default=dict,
         help_text="The configuration object for this organization's custom Slack form.",
         blank=True,
@@ -299,12 +299,12 @@ class OrgCustomSlackFormInstance(TimeStampModel):
     template = models.ForeignKey(
         "slack.OrgCustomSlackForm", on_delete=models.SET_NULL, related_name="instances", null=True
     )
-    saved_data = models.JSONField(
+    saved_data = JSONField(
         default=dict,
         help_text="The data submitted on the form",
         blank=True,
     )
-    previous_data = models.JSONField(
+    previous_data = JSONField(
         default=dict,
         help_text="This will hold previous data for updated forms",
         blank=True,
@@ -327,7 +327,7 @@ class OrgCustomSlackFormInstance(TimeStampModel):
     alert_instance_id = models.ForeignKey(
         "alerts.AlertInstance", models.SET_NULL, related_name="form_instance", null=True, blank=True
     )
-    recap_data = models.JSONField(
+    recap_data = JSONField(
         default=DEFAULT_RECAP_DICT,
         null=True,
         blank=True,

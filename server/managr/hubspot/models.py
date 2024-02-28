@@ -8,7 +8,7 @@ from datetime import datetime
 from django.db import models
 from django.utils import timezone
 
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField, JSONField
 from django.db.models import Q
 from django.db.models.constraints import UniqueConstraint
 from background_task.models import CompletedTask
@@ -212,7 +212,7 @@ class HubspotAuthAccount(TimeStampModel):
     access_token = models.CharField(max_length=255, blank=True)
     refresh_token = models.CharField(max_length=255, blank=True)
     hubspot_id = models.CharField(max_length=255, blank=True)
-    hobjects = models.JSONField(
+    hobjects = JSONField(
         default=getHobjectDefaults,
         help_text="All resources we are retrieving",
         max_length=500,
@@ -502,7 +502,7 @@ class Company(TimeStampModel, IntegrationModel):
         "core.User", on_delete=models.CASCADE, related_name="companies", blank=True, null=True
     )
     external_owner = models.CharField(max_length=255, blank=True)
-    secondary_data = models.JSONField(
+    secondary_data = JSONField(
         default=dict,
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",
@@ -566,14 +566,14 @@ class Deal(TimeStampModel, IntegrationModel):
         null=True,
     )
     is_stale = models.BooleanField(default=False)
-    secondary_data = models.JSONField(
+    secondary_data = JSONField(
         default=dict,
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",
         max_length=500,
     )
     reference_data = ArrayField(
-        models.JSONField(max_length=128, default=dict),
+        JSONField(max_length=128, default=dict),
         default=list,
         blank=True,
         help_text="An array of objects containing the API Name references and values for displaying",
@@ -632,7 +632,7 @@ class HubspotContact(TimeStampModel, IntegrationModel):
     )
     external_owner = models.CharField(max_length=255, blank=True)
     external_company = models.CharField(max_length=255, blank=True)
-    secondary_data = models.JSONField(
+    secondary_data = JSONField(
         default=dict,
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",
@@ -680,13 +680,13 @@ class HObjectField(TimeStampModel, IntegrationModel):
     display_value = models.TextField(blank=True, null=True)
     group_name = models.CharField(max_length=255, null=True, blank=True)
     options = ArrayField(
-        models.JSONField(max_length=255, blank=True, null=True, default=dict),
+        JSONField(max_length=255, blank=True, null=True, default=dict),
         default=list,
         blank=True,
     )
     display_order = models.IntegerField(default=0)
     hubspot_defined = models.BooleanField(default=False, null=True)
-    modification_metadata = models.JSONField(blank=True, null=True, default=dict)
+    modification_metadata = JSONField(blank=True, null=True, default=dict)
     form_field = models.BooleanField(default=False)
     is_public = models.BooleanField(
         default=False,

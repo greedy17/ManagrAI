@@ -2,7 +2,7 @@ import uuid
 import json
 
 from django.db import models
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField, JSONField
 from django.db.models import Q
 from managr.salesforce.exceptions import ResourceAlreadyImported
 from managr.core.models import TimeStampModel, IntegrationModel
@@ -34,7 +34,7 @@ class Lead(TimeStampModel, IntegrationModel):
         max_length=255, blank=True, help_text="value from the integration"
     )
     name = models.CharField(max_length=255, blank=True)
-    secondary_data = models.JSONField(
+    secondary_data = JSONField(
         default=dict,
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",
@@ -188,14 +188,14 @@ class Opportunity(TimeStampModel, IntegrationModel):
     )  # sf has this as a datetime field but returns a date field only
     last_stage_update = models.DateTimeField(null=True)
     is_stale = models.BooleanField(default=False)
-    secondary_data = models.JSONField(
+    secondary_data = JSONField(
         default=dict,
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",
         max_length=500,
     )
     reference_data = ArrayField(
-        models.JSONField(max_length=128, default=dict),
+        JSONField(max_length=128, default=dict),
         default=list,
         blank=True,
         help_text="An array of objects containing the API Name references and values for displaying",

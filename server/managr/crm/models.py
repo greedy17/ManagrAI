@@ -2,7 +2,7 @@ from copy import copy
 from datetime import datetime
 from django.db import models
 from managr.core.models import TimeStampModel, IntegrationModel
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField, JSONField
 from managr.slack.helpers import block_builders
 from managr.core.models import User
 from managr.crm.routes import adapter_routes as adapters
@@ -37,7 +37,7 @@ class BaseAccount(TimeStampModel, IntegrationModel):
         "core.User", on_delete=models.CASCADE, related_name="base_accounts", blank=True, null=True
     )
     external_owner = models.CharField(max_length=255, blank=True)
-    secondary_data = models.JSONField(
+    secondary_data = JSONField(
         default=dict,
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",
@@ -172,7 +172,7 @@ class BaseOpportunity(TimeStampModel, IntegrationModel):
     )
     stage = models.CharField(max_length=255, null=True)
     is_stale = models.BooleanField(default=False)
-    secondary_data = models.JSONField(
+    secondary_data = JSONField(
         default=dict,
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",
@@ -299,7 +299,7 @@ class BaseContact(TimeStampModel, IntegrationModel):
     )
     external_owner = models.CharField(max_length=255, blank=True)
     external_account = models.CharField(max_length=255, blank=True)
-    secondary_data = models.JSONField(
+    secondary_data = JSONField(
         default=dict,
         null=True,
         help_text="All non primary fields that are on the model each org may have its own",
@@ -412,13 +412,13 @@ class ObjectField(TimeStampModel, IntegrationModel):
     relationship_name = models.CharField(max_length=255, null=True)
     length = models.PositiveIntegerField(default=0)
     reference_to_infos = ArrayField(
-        models.JSONField(max_length=128, default=dict),
+        JSONField(max_length=128, default=dict),
         default=list,
         blank=True,
         help_text="An of objects containing the API Name references",
     )
     options = ArrayField(
-        models.JSONField(max_length=255, blank=True, null=True, default=dict),
+        JSONField(max_length=255, blank=True, null=True, default=dict),
         default=list,
         blank=True,
         help_text="if this is a custom managr field pass a dict of label, value, if this is not a custom managr field then construct the values dynamically",

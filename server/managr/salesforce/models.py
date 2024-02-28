@@ -7,7 +7,7 @@ from datetime import datetime
 from django.db import models
 from django.utils import timezone
 from managr.utils.client import Variable_Client
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField, JSONField
 from django.db.models import Q
 from django.db.models.constraints import UniqueConstraint
 from background_task.models import CompletedTask
@@ -116,18 +116,18 @@ class SObjectField(TimeStampModel, IntegrationModel):
     relationship_name = models.CharField(max_length=255, null=True)
     allow_multiple = models.BooleanField(default=False)
     default_filters = ArrayField(
-        models.JSONField(max_length=255, blank=True, null=True, default=dict),
+        JSONField(max_length=255, blank=True, null=True, default=dict),
         default=list,
         blank=True,
     )
     reference_to_infos = ArrayField(
-        models.JSONField(max_length=128, default=dict),
+        JSONField(max_length=128, default=dict),
         default=list,
         blank=True,
         help_text="An of objects containing the API Name references",
     )
     options = ArrayField(
-        models.JSONField(max_length=255, blank=True, null=True, default=dict),
+        JSONField(max_length=255, blank=True, null=True, default=dict),
         default=list,
         blank=True,
         help_text="if this is a custom managr field pass a dict of label, value, if this is not a custom managr field then construct the values dynamically",
@@ -416,7 +416,7 @@ class SObjectPicklist(TimeStampModel, IntegrationModel):
     )
 
     values = ArrayField(
-        models.JSONField(max_length=128, default=dict),
+        JSONField(max_length=128, default=dict),
         default=list,
         blank=True,
         help_text="An array of objects containing the values",
@@ -874,7 +874,7 @@ class SalesforceAuthAccount(TimeStampModel):
         help_text="Automatically Send a Refresh task to be executed 15 mins before expiry to reduce errors",
     )
     # default for json field must be a callable
-    sobjects = models.JSONField(
+    sobjects = JSONField(
         default=getSobjectDefaults,
         help_text="All resources we are retrieving",
         max_length=500,
@@ -884,13 +884,13 @@ class SalesforceAuthAccount(TimeStampModel):
         blank=True,
         help_text="The default record id should be the same for all objects and is used for picklist values",
     )
-    default_record_ids = models.JSONField(
+    default_record_ids = JSONField(
         default=dict,
         null=True,
         help_text="Default Record Id's are obtained when initially getting fields we need this default record it to gather picklist values",
         max_length=500,
     )
-    exclude_fields = models.JSONField(
+    exclude_fields = JSONField(
         default=dict,
         null=True,
         help_text="Certain Fields are not available for query are retreived as part of the user's fields, these are tracked here and excluded on resyncs",

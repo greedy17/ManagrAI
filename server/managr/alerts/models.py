@@ -7,7 +7,7 @@ from calendar import monthrange
 
 from django.db import models
 from django.db.models import Q
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField, JSONField
 from django.utils import timezone
 
 from managr.alerts.utils.utils import convertToSlackFormat
@@ -671,7 +671,7 @@ class AlertInstance(TimeStampModel):
     )
     sent_at = models.DateTimeField(null=True)
     resource_id = models.CharField(max_length=255)
-    instance_meta = models.JSONField(
+    instance_meta = JSONField(
         default=dict,
         null=True,
         blank=True,
