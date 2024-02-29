@@ -298,7 +298,7 @@ class NewsSource(TimeStampModel):
     article_content_selector = models.CharField(max_length=255, blank=True, null=True)
     author_selector = models.CharField(max_length=255, blank=True, null=True)
     scrape_data = JSONField(default=dict, null=True, blank=True)
-    error_log = ArrayField(models.CharField(max_length=255), default=list, blank=True)
+    error_log = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return self.domain
@@ -418,6 +418,13 @@ class NewsSource(TimeStampModel):
             active_sources = active_sources.filter(article_link_attribute__isnull=True)
         source_list = [source.domain for source in active_sources]
         return source_list
+
+    def add_error(self, error):
+        if self.error_log:
+            self.error_log += error
+        else:
+            self.error_log = error
+        return self.save()
 
 
 class Article(TimeStampModel):

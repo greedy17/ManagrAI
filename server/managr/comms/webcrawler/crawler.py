@@ -183,7 +183,6 @@ class NewsSpider(scrapy.Spider):
             for article in article_tags:
                 full_article += article
             meta_tag_data["content"] = full_article
-        # print(meta_tag_data)
         try:
             if "content" in meta_tag_data.keys():
                 cleaned_data = data_cleaner(meta_tag_data)
@@ -199,8 +198,7 @@ class NewsSpider(scrapy.Spider):
         except IntegrityError:
             return
         except Exception as e:
-            source.error_log.append(f"{str(e)}, {meta_tag_data}")
-            source.save()
+            source.add_error(f"{str(e)} {meta_tag_data}\n")
         return
 
     def process_new_url(self, source, response):
