@@ -469,7 +469,9 @@ class Article(TimeStampModel):
         from managr.comms.utils import boolean_search_to_query
 
         converted_boolean = boolean_search_to_query(boolean_string)
-        articles = Article.objects.filter(converted_boolean)
+        article_ids = Article.objects.filter(converted_boolean).values_list("id", flat=True)
+        print(len(article_ids))
+        articles = Article.objects.filter(id__in=article_ids)
         if date_to:
             date_to_date_obj = parser.parse(date_to)
             day_incremented = date_to_date_obj + timedelta(days=1)
