@@ -443,6 +443,7 @@ class Article(TimeStampModel):
     class Meta:
         indexes = [
             GinIndex(fields=["content_search_vector"]),
+            models.Index(fields=["-publish_date"]),
         ]
         constraints = [UniqueConstraint(fields=["source", "title"], name="unique_article")]
 
