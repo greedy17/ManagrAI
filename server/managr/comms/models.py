@@ -4,6 +4,7 @@ import logging
 import base64
 import hashlib
 from datetime import datetime, timedelta
+from dateutil import parser
 from django.db import models
 from managr.core.models import TimeStampModel
 from django.db.models.constraints import UniqueConstraint
@@ -13,7 +14,6 @@ from .exceptions import _handle_response as _handle_news_response, TwitterApiExc
 from managr.utils.client import Variable_Client
 from managr.utils.sites import get_site_url
 from managr.core import exceptions as open_ai_exceptions
-from dateutil import parser
 from managr.utils.misc import encrypt_dict
 from urllib.parse import urlencode
 from django.contrib.postgres.fields import ArrayField, JSONField
@@ -468,15 +468,14 @@ class Article(TimeStampModel):
     def search_by_query(cls, boolean_string, date_to=False, date_from=False):
         from managr.comms.utils import boolean_search_to_query
 
+        date_to_date_obj = parser.parse(date_to)
+        day_incremented = date_to_date_obj + timedelta(days=1)
+        day_incremented_str = str(day_incremented)
+        date_range_articles = Article.objects.filter(
+            publish_date__range=(date_from, day_incremented_str)
+        )
         converted_boolean = boolean_search_to_query(boolean_string)
-        article_ids = Article.objects.filter(converted_boolean).values_list("id", flat=True)
-        print(len(article_ids))
-        articles = Article.objects.filter(id__in=article_ids)
-        if date_to:
-            date_to_date_obj = parser.parse(date_to)
-            day_incremented = date_to_date_obj + timedelta(days=1)
-            day_incremented_str = str(day_incremented)
-            articles = articles.filter(publish_date__range=(date_from, day_incremented_str))
+        articles = date_range_articles.filter(converted_boolean)
         if len(articles):
             articles = articles[:20]
         return list(articles)
