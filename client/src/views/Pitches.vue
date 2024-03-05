@@ -98,7 +98,7 @@
                 />
 
                 <div class="absolute-count">
-                  <small>{{ remainingCharsSample }}</small>
+                  <small>{{ remainingStyleChars }}</small>
                 </div>
               </div>
             </div>
@@ -448,7 +448,7 @@
                 :rows="3"
                 v-autoresize
                 :disabled="loading"
-                maxlength="3000"
+                maxlength="5000"
               />
 
               <div style="bottom: -2px" class="absolute-count">
@@ -501,11 +501,13 @@
                       Styles
                     </p>
                     <div
-                      @click="addWritingStyle(defaultStyle.style, defaultStyle.title)"
+                      @click="addWritingStyle(style.style, style.title)"
                       class="dropdown-item"
                       style="padding: 4px 0"
+                      v-for="(style, i) in defaultWritingStyles"
+                      :key="i"
                     >
-                      <p style="padding: 0 16px; margin: 0">Default</p>
+                      <p style="padding: 0 16px; margin: 0">{{ style.title }}</p>
                     </div>
                     <div
                       @mouseenter="setIndex(i)"
@@ -765,10 +767,44 @@ export default {
   },
   data() {
     return {
-      defaultStyle: {
-        title: 'Default',
-        style: `Begin with a precise introduction, without informal salutations. Be clear, concise, and informative, avoiding metaphors. Offer coherent data without persuasion. Aim for depth, not sensationalism and avoid commercial bias.`,
-      },
+      defaultWritingStyles: [
+        {
+          title: 'Default',
+          style: `Begin with a precise introduction, without informal salutations. Be clear, concise, and informative, avoiding metaphors. Offer coherent data without persuasion. Aim for depth, not sensationalism and avoid commercial bias.`,
+        },
+        {
+          title: 'Media Pitch',
+          style: `Author's Style Guidelines:
+0. Start email with "Hi {Journalist first name}", end with "Thanks,". Get right to it, no opening fluff like "I hope this message finds you well"
+1. Tone: Maintain a professional, respectful tone. Show appreciation for the journalist's work and express interest in collaboration.
+2. Formality: Use formal language, but avoid jargon. Keep sentences clear and concise.
+3. Structure: Start with a personalized greeting. Follow with a brief appreciation of the journalist's work, then introduce your topic. Provide key insights, then propose collaboration. End with a forward-looking statement and a thank you.
+4. Linguistic Idiosyncrasies: Use active voice and precise, impactful words. Include statistics and expert opinions for credibility.
+5. Credibility: Establish credibility by referencing recent research, expert opinions, and relevant industry trends.
+6. Engagement: Engage the reader by offering exclusive insights and proposing collaboration.
+7. Non-Promotional: Avoid promotional language. Focus on providing valuable, informative content.
+8. Stylistic Techniques: Use a mix of short and long sentences for rhythm. Use rhetorical questions to engage the reader and provoke thought.`,
+        },
+        {
+          title: 'Blog Post',
+          style: `The author's style is formal and informative, using a journalistic tone to convey complex scientific concepts in a digestible manner. The structure is linear, starting with historical context and leading to the current developments. The author uses technical jargon, but also provides explanations to ensure understanding. Credibility is established through the mention of renowned scientists, historical achievements, and the university's long-standing involvement in the field. The author avoids persuasive language, focusing on facts and achievements.
+Guidelines: Maintain a formal, journalistic tone. Use technical terms but provide explanations. Structure content linearly, starting with historical context. Establish credibility through mention of renowned figures and achievements. Avoid persuasive language, focusing on facts.`,
+        },
+        {
+          title: 'Email',
+          style: `1. Start with a friendly greeting: Use 'Hey' or 'Hi' to initiate a warm, approachable tone.
+2. Be direct and concise: Avoid fluff and unnecessary details. Get straight to the point.
+3. Maintain a neutral tone: Avoid persuasive or sales-oriented language. The tone should be informative, not promotional.
+4. Use simple, clear language: Avoid jargon or complex terms. The goal is to be understood by all readers.
+5. Structure: Use short sentences and paragraphs. Break up information into digestible chunks.
+6. Credibility: Use facts and data to support points. Avoid personal opinions or assumptions.
+7. Action point: End with a clear, actionable step for the reader. This should be direct and easy to understand.
+8. Informality: Maintain a casual, friendly tone throughout. This helps to engage the reader and make the content more relatable.
+9. Linguistic idiosyncrasies: Use common, everyday language. Avoid overly formal or academic language.
+10. Objectivity: Maintain an unbiased stance. Avoid taking sides or expressing personal views.`,
+        },
+      ],
+      defaultStyle: {},
       regeneratedFeedback: false,
       feedbackModalOpen: false,
       saveModalOpen: false,
@@ -1376,13 +1412,16 @@ export default {
       return this.$store.state.user.writingStylesRef
     },
     remainingChars() {
-      return 3000 - this.output.length
+      return 5000 - this.output.length
     },
     remainingCharsBrief() {
       return 2000 - this.briefing.length
     },
     remainingCharsSample() {
       return 300 - this.type.length
+    },
+    remainingStyleChars() {
+      return 8000 - this.sample.length
     },
     isMobile() {
       return window.innerWidth <= 600

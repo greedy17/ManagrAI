@@ -240,7 +240,7 @@ class Pitch(TimeStampModel):
     )
     name = models.CharField(max_length=255)
     instructions = models.TextField(null=True, blank=True)
-    type = models.CharField(max_length=255, null=True, blank=True)
+    type = models.CharField(max_length=300, null=True, blank=True)
     audience = models.CharField(max_length=255, null=True, blank=True)
     content = models.TextField(null=True, blank=True)
     generated_pitch = models.TextField(null=True, blank=True)
