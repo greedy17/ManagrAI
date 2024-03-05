@@ -367,7 +367,7 @@
               v-else
               class="small-container letter-spacing"
             >
-              <div class="text-width">
+              <div v-if="!selectedSearch" class="text-width">
                 <h3 style="margin: 0; font-size: 24px" class="">Summarize the News</h3>
                 <p style="margin: 0">
                   Start by typing in keywords or a topic. Then provide summary instructions
@@ -816,7 +816,7 @@
               style="width: 100%; padding: 0 32px; padding-top: 16px"
               class="small-container letter-spacing"
             >
-              <div class="text-width">
+              <div v-if="!selectedSearch" class="text-width">
                 <h3 style="margin: 0; font-size: 24px" class="">Summarize Social</h3>
                 <p v-if="hasTwitterIntegration" style="margin: 0">
                   Start by typing in keywords or a topic. Then provide summary instructions
@@ -1097,7 +1097,7 @@
             style="width: 100%; padding: 0 32px; padding-top: 16px"
             v-else-if="!addedArticles.length && !clipLoading"
           >
-            <div class="text-width">
+            <div v-if="!selectedSearch" class="text-width">
               <h3 style="margin: 0; font-size: 24px" class="">Summarize Article</h3>
               <p style="margin: 0">Paste an article url to generate a summary</p>
             </div>
@@ -1393,7 +1393,7 @@
       <div class="footer sticky-bottom">
         <div class="centered">
           <button
-            class="img-button"
+            class="img-button-blue"
             @click="resetAll"
             v-if="
               (filteredArticles && filteredArticles.length) ||
@@ -1519,18 +1519,21 @@
       </div>
 
       <div v-else class="content-body">
-        <div style="margin-top: 80px" class="news-container" v-if="summary">
+        <div style="padding-top: 80px" class="news-container" v-if="summary">
           <!-- <div style="width: 100%; padding: 16px 0 0 0" class="space-between">
             <p class="sub-text">AI-generated summary</p>
             <p>{{ summary.split(' ').length }} words</p>
           </div> -->
 
           <div class="relative">
-            <pre v-html="summary" class="pre-text"></pre>
+            <pre style="overflow-y: scroll" v-html="summary" class="pre-text"></pre>
 
             <div v-if="showSummaryMenu" class="summary-section">
               <div style="width: 100%" class="large-input-container">
-                <div style="border: none; box-shadow: none" class="input-container">
+                <div
+                  style="border: none; box-shadow: none; padding-bottom: 0.5rem"
+                  class="input-container"
+                >
                   <img
                     v-if="
                       (filteredArticles && filteredArticles.length) ||
@@ -1538,6 +1541,7 @@
                       addedArticles.length
                     "
                     class="left-margin-m"
+                    style="margin-top: 0"
                     src="@/assets/images/sparkle.svg"
                     height="18px"
                     alt=""
@@ -1552,6 +1556,7 @@
                   />
 
                   <textarea
+                    style=""
                     class="area-input text-area-input"
                     placeholder="Summary instructions..."
                     autofocus
@@ -1618,7 +1623,7 @@
                   <div style="width: 100%; margin-top: 16px" class="flex-end small-buttons">
                     <button @click="toggleSummaryMenu">Close</button>
 
-                    <button v-if="!newTemplate">Submit</button>
+                    <!-- <button v-if="!newTemplate">Submit</button>
 
                     <button
                       class="blue-button"
@@ -1634,7 +1639,7 @@
                       v-else-if="newTemplate"
                     >
                       Submit
-                    </button>
+                    </button> -->
                   </div>
                 </div>
               </div>
@@ -1643,7 +1648,7 @@
         </div>
 
         <div class="centered-col" v-else>
-          <div class="image-container lightblue-bg extra-padding">
+          <div class="image-container white-bg extra-padding">
             <img src="@/assets/images/comment.svg" height="32px" alt="" />
           </div>
           <p>Your summary will appear here.</p>
@@ -1767,7 +1772,13 @@ export default {
       errorModal: false,
       selectedSearch: null,
       selectedDateTime: '',
-      searchExamples: [`Lululemon`, `Apple Vision PRO`, `OpenAI`, `Supreme Court AND Social Media`],
+      searchExamples: [
+        `Lululemon`,
+        `Apple Vision PRO`,
+        `OpenAI`,
+        `Supreme Court AND Social Media`,
+        `“Embedded Finance”`,
+      ],
       summaryExamples: [
         {
           name: `Brand Analysis`,
@@ -1780,6 +1791,10 @@ export default {
         {
           name: `Topic Summary`,
           value: `Bring me up to speed on what’s happening. Provide sentiment analysis. Analyze the media to identify what aspects of the topic are most intriguing or concerning to the public`,
+        },
+        {
+          name: `Media Pitching`,
+          value: `Summarize the news for {BrandX}. Provide creative pitching angles. List 5 journalists (from top pubs, include pitching tips) I can pitch`,
         },
         {
           name: `Find Journalists`,
@@ -1802,8 +1817,12 @@ export default {
           value: `Provide creative newsjacking ideas for {BrandX} based on this coverage`,
         },
         {
-          name: `Issue a statement`,
+          name: `Issue Statement`,
           value: `Issue a statement on behalf of {BrandX}`,
+        },
+        {
+          name: `Draft Blog Post`,
+          value: `Draft an informative blog post based on this coverage`,
         },
         {
           name: `SEO`,
@@ -3564,6 +3583,19 @@ export default {
   }
 }
 
+.img-button-blue {
+  @include dark-blue-button();
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 12px 32px;
+  border-radius: 12px;
+  font-size: 16px;
+  img {
+    filter: invert(100%);
+    margin-right: 8px;
+  }
+}
+
 .icon-button {
   @include dark-blue-button();
   padding: 7px 12px;
@@ -4541,6 +4573,7 @@ textarea {
   position: relative;
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   flex-direction: row;
 
   img {

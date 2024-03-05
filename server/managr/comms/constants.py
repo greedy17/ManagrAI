@@ -83,10 +83,11 @@ DEFAULT_WRITING_STYLE = "Aim for a professional, informative, yet concise style,
 
 OPEN_AI_QUERY_STRING = (
     lambda search: f"""From the search query '{search}', extract only the main subject or specific topic, ignoring any contextual details about professions, actions, or additional requests. The output must be a concise key subject that can be used for a boolean query in NewsAPI. Avoid including terms that describe professions (like 'journalists') or actions (like 'providing pitching tips'), focusing only on the core subject matter (like 'CPR'). The output must be a valid boolean query that can be used by NewsAPI following the steps below:
-    1. Do not include AND or OR within quotes, unless it's part of an entity name. Example: 'AI and farming' should return as 'AI' AND 'farming'.
-    2. If the query includes negative qualifiers like 'not', transform them into appropriate boolean operators like 'NOT'. Replace general concepts with specific key terms relevant for NewsAPI boolean queries. For instance, 'not stock related' should be translated into 'NOT stocks', 'NOT shares', 'NOT Nasdaq'
-    3. When asked to write content on behalf of an organization or entity, omit the organization or entity name. Example: "Write a media pitch for Mayo Clinic about AI and Cancer" should return "AI and Cancer"
-    4. Disregard any reference to a date, like 'last night', 'yesterday', etc.
+    1. If quotes are being used around the query then always search the exact phrase. Example: "optimized supply chain management" should return as "optimized supply chain management".
+    2. Do not include AND or OR within quotes, unless it's part of an entity name. Example: 'AI and farming' should return as 'AI' AND 'farming'.
+    3. If the query includes negative qualifiers like 'not', transform them into appropriate boolean operators like 'NOT'. Replace general concepts with specific key terms relevant for NewsAPI boolean queries. For instance, 'not stock related' should be translated into 'NOT stocks', 'NOT shares', 'NOT Nasdaq'
+    4. When asked to write content on behalf of an organization or entity, omit the organization or entity name. Example: "Write a media pitch for Mayo Clinic about AI and Cancer" should return "AI and Cancer"
+    5. Disregard any reference to a date, like 'last night', 'yesterday', etc.
     """
 )
 
