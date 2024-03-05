@@ -286,7 +286,7 @@
     </Modal>
     <section id="clips" class="container">
       <div class="header centered sticky-top padding-top col">
-        <div class="switcher">
+        <!-- <div class="switcher">
           <div
             @click="switchMainView('news')"
             :class="{ activeswitch: mainView === 'news' }"
@@ -308,7 +308,7 @@
           >
             URL
           </div>
-        </div>
+        </div> -->
 
         <div
           style="width: 100%; margin-top: 0.5rem"
@@ -334,27 +334,25 @@
         </div>
       </div>
 
-      <div class="content-body">
+      <div
+        :class="
+          selectedSearch &&
+          !loading &&
+          !(
+            (filteredArticles && filteredArticles.length) ||
+            (tweets && tweets.length) ||
+            addedArticles.length
+          )
+            ? 'extra-padding-top'
+            : ''
+        "
+        class="content-body"
+        style="width: 100%"
+      >
         <div v-if="mainView === 'news'">
           <div style="padding-top: 2rem" v-if="!(filteredArticles && filteredArticles.length)">
-            <!-- <div class="row">
-              <div
-                style="cursor: text; transform: none"
-                class="image-container-blue right-margin-m"
-              >
-                <img
-                  class="blue-filter"
-                  style="margin-left: -1px"
-                  src="@/assets/images/logo.png"
-                  height="16px"
-                  alt=""
-                />
-              </div>
-              <h3>Managr</h3>
-            </div> -->
-
             <div style="margin-top: -0.5rem" v-if="loading">
-              <div class="small-container">
+              <div class="small-container centered">
                 <div class="loading">
                   <p>Generating clips</p>
                   <div class="dot"></div>
@@ -364,18 +362,198 @@
               </div>
             </div>
 
-            <div v-else class="small-container letter-spacing">
-              <div class="bottom-margin-xl bottom-border-light">
-                <p style="margin: 0" class="bold">Summarize the news.</p>
+            <div
+              style="width: 100%; padding: 0 32px; padding-top: 16px"
+              v-else
+              class="small-container letter-spacing"
+            >
+              <div class="text-width">
+                <h3 style="margin: 0; font-size: 24px" class="">Summarize the News</h3>
                 <p style="margin: 0">
-                  Type in a keyword, topic or question to get started. Interact with the summary on
-                  the right.
+                  Start by typing in keywords or a topic. Then provide summary instructions
                 </p>
               </div>
 
-              <!-- <p class="bold">Helpful tips:</p> -->
+              <div style="width: 100%; margin-top: 32px">
+                <div style="width: 100%" class="large-input-container">
+                  <div style="border: none; box-shadow: none" class="input-container">
+                    <img
+                      class="left-margin-m"
+                      src="@/assets/images/search.svg"
+                      height="20px"
+                      alt=""
+                    />
+                    <textarea
+                      v-if="mainView !== 'website'"
+                      id="search-input"
+                      @keyup.enter="generateNewSearch(false)"
+                      class="area-input text-area-input"
+                      placeholder="Enter keywords..."
+                      autocomplete="off"
+                      v-model="newSearch"
+                      v-autoresize
+                      :disabled="
+                        loading ||
+                        summaryLoading ||
+                        (mainView === 'social' && !hasTwitterIntegration)
+                      "
+                    />
 
-              <div class="no-margins">
+                    <textarea
+                      v-else
+                      @keyup.enter="uploadArticle"
+                      class="area-input text-area-input"
+                      placeholder="Paste article url..."
+                      v-model="uploadLink"
+                      :disabled="contentLoading"
+                    />
+                    <!-- <div
+                    v-if="mainView === 'news'"
+                    @click="toggleDateDropdown"
+                    class="image-container-blue left-margin wrapper"
+                  >
+                    <img
+                      style="filter: invert(100%)"
+                      src="@/assets/images/calendar.svg"
+                      height="14px"
+                      alt=""
+                    />
+                    <div class="tooltip">Date Range</div>
+                  </div>
+                  <div class="right-margin" v-else></div> -->
+
+                    <!-- <div v-if="dateOpen" class="date-dropdown">
+                    <div class="space-between">
+                      <small style="padding-top: 8px" class="gray-text">Date Range</small>
+
+                      <small @click="toggleDateDropdown" class="close-x">X</small>
+                    </div>
+
+                    <div style="width: 100%; margin-top: 8px">
+                      <input class="area-input-smallest" type="date" v-model="dateStart" />
+                      -
+                      <input class="area-input-smallest" type="date" v-model="dateEnd" />
+                    </div>
+                  </div> -->
+
+                    <div
+                      v-if="mainView !== 'website'"
+                      @click="generateNewSearch(false)"
+                      class="image-container left-margin right-margin-m wrapper"
+                    >
+                      <img
+                        v-if="!newSearch || loading || summaryLoading"
+                        style="margin: 0; cursor: text"
+                        src="@/assets/images/paper-plane-top.svg"
+                        height="14px"
+                        alt=""
+                      />
+
+                      <img
+                        v-else
+                        style="margin: 0"
+                        src="@/assets/images/paper-plane-full.svg"
+                        height="14px"
+                        alt=""
+                        class="filtered-blue"
+                      />
+
+                      <div class="tooltip">Submit</div>
+                    </div>
+
+                    <div
+                      v-else
+                      @click="uploadArticle"
+                      class="image-container left-margin right-margin-m wrapper"
+                    >
+                      <img
+                        v-if="!newSearch || loading || summaryLoading"
+                        style="margin: 0; cursor: text"
+                        src="@/assets/images/paper-plane-top.svg"
+                        height="14px"
+                        alt=""
+                      />
+
+                      <img
+                        v-else
+                        style="margin: 0"
+                        src="@/assets/images/paper-plane-full.svg"
+                        height="14px"
+                        alt=""
+                        class="filtered-blue"
+                      />
+
+                      <div class="tooltip">Submit</div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="expanded-item">
+                      <div class="row horizontal-padding-s img-text">
+                        <img src="@/assets/images/newspaper.svg" height="20px" alt="" />
+                        <p>Source</p>
+                      </div>
+
+                      <div class="switcher">
+                        <div
+                          @click="switchMainView('news')"
+                          :class="{ activeswitch: mainView === 'news' }"
+                          class="switch-item"
+                        >
+                          News
+                        </div>
+                        <div
+                          @click="switchMainView('social')"
+                          :class="{ activeswitch: mainView === 'social' }"
+                          class="switch-item"
+                        >
+                          Social
+                        </div>
+                        <div
+                          @click="switchMainView('website')"
+                          :class="{ activeswitch: mainView === 'website' }"
+                          class="switch-item"
+                        >
+                          URL
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="expanded-item">
+                      <div class="row horizontal-padding-s img-text">
+                        <img src="@/assets/images/calendar.svg" height="18px" alt="" />
+                        <p>Date Range</p>
+                      </div>
+
+                      <div>
+                        <input class="area-input-smallest" type="date" v-model="dateStart" />
+                        -
+                        <input class="area-input-smallest" type="date" v-model="dateEnd" />
+                      </div>
+                    </div>
+
+                    <div class="expanded-item-column">
+                      <div class="row horizontal-padding-s img-text">
+                        <img src="@/assets/images/arrow-trend-up.svg" height="18px" alt="" />
+                        <p>Search Examples:</p>
+                      </div>
+
+                      <div class="horizontal-padding rows">
+                        <p
+                          v-for="(example, i) in searchExamples"
+                          :key="i"
+                          @click="setNewSearch(example)"
+                          class="bold gray-title"
+                        >
+                          {{ example }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- <div class="no-margins">
                 <p class="bold gray-title">Simple search</p>
                 <p style="margin-bottom: 16px; margin-left: 4px">
                   <img src="@/assets/images/return.svg" height="11px" alt="" /> Lululemon,
@@ -397,11 +575,11 @@
                   <img src="@/assets/images/return.svg" height="11px" alt="" />
                   Click the speech bubble in the right chatbar to see popular prompts.
                 </p>
-              </div>
+              </div> -->
             </div>
           </div>
 
-          <div ref="topDivider" v-else>
+          <div style="padding: 40px 0" ref="topDivider" v-else>
             <div
               style="margin: 2.75rem 0"
               v-for="article in filteredArticles"
@@ -634,48 +812,175 @@
           </div>
 
           <div style="padding-top: 2rem" v-else-if="!(tweets && tweets.length)">
-            <!-- <div class="row">
-              <div style="cursor: text" class="image-container-blue right-margin-m">
-                <img
-                  class="blue-filter"
-                  style="margin-left: -1px"
-                  src="@/assets/images/logo.png"
-                  height="16px"
-                  alt=""
-                />
-              </div>
-              <h3>Managr</h3>
-            </div> -->
+            <div
+              style="width: 100%; padding: 0 32px; padding-top: 16px"
+              class="small-container letter-spacing"
+            >
+              <div class="text-width">
+                <h3 style="margin: 0; font-size: 24px" class="">Summarize Social</h3>
+                <p v-if="hasTwitterIntegration" style="margin: 0">
+                  Start by typing in keywords or a topic. Then provide summary instructions
+                </p>
 
-            <div v-if="hasTwitterIntegration" class="small-container letter-spacing">
-              <div class="bottom-margin-xl">
-                <p style="margin: 0" class="bold">Summarize social.</p>
-                <p style="margin: 0">
-                  Type in a keyword, topic or question to get started. Interact with the summary on
-                  the right.
+                <p style="margin: 0" v-else>
+                  Start by connecting your X account
+                  <span class="link" @click="goToIntegrations">here</span>.
                 </p>
               </div>
 
-              <!-- <p class="bold">Helpful search tips:</p>
+              <div style="width: 100%; margin-top: 32px">
+                <div style="width: 100%" class="large-input-container">
+                  <div style="border: none; box-shadow: none" class="input-container">
+                    <img
+                      class="left-margin-m"
+                      src="@/assets/images/search.svg"
+                      height="20px"
+                      alt=""
+                    />
+                    <textarea
+                      v-if="mainView !== 'website'"
+                      id="search-input"
+                      @keyup.enter="generateNewSearch(false)"
+                      class="area-input text-area-input"
+                      placeholder="Enter keywords..."
+                      autocomplete="off"
+                      v-model="newSearch"
+                      v-autoresize
+                      :disabled="
+                        loading ||
+                        summaryLoading ||
+                        (mainView === 'social' && !hasTwitterIntegration)
+                      "
+                    />
 
-              <div>
-                <p>Simply type a brand or phrase like, “Lululemon"</p>
-                <p>You can ask questions like, “why is Travis Kelce trending”</p>
-                <p>For specific topics use OR & AND, “Camping AND Football”</p>
-                <p>Date range is set to last 7 days</p>
-              </div> -->
-            </div>
+                    <textarea
+                      v-else
+                      @keyup.enter="uploadArticle"
+                      class="area-input text-area-input"
+                      placeholder="Paste article url..."
+                      v-model="uploadLink"
+                      :disabled="contentLoading"
+                    />
+                    <div
+                      v-if="mainView !== 'website'"
+                      @click="generateNewSearch(false)"
+                      class="image-container left-margin right-margin-m wrapper"
+                    >
+                      <img
+                        v-if="!newSearch || loading || summaryLoading"
+                        style="margin: 0; cursor: text"
+                        src="@/assets/images/paper-plane-top.svg"
+                        height="14px"
+                        alt=""
+                      />
 
-            <div v-else class="small-container letter-spacing">
-              <p class="bottom-margin-xl">
-                <span class="bold">Get started by creating a new search.</span> Managr will find
-                relevant social clips from X/Twitter and provide a summary. Make sure to connect
-                your X account <span class="link" @click="goToIntegrations">here</span>.
-              </p>
+                      <img
+                        v-else
+                        style="margin: 0"
+                        src="@/assets/images/paper-plane-full.svg"
+                        height="14px"
+                        alt=""
+                        class="filtered-blue"
+                      />
+
+                      <div class="tooltip">Submit</div>
+                    </div>
+
+                    <div
+                      v-else
+                      @click="uploadArticle"
+                      class="image-container left-margin right-margin-m wrapper"
+                    >
+                      <img
+                        v-if="!newSearch || loading || summaryLoading"
+                        style="margin: 0; cursor: text"
+                        src="@/assets/images/paper-plane-top.svg"
+                        height="14px"
+                        alt=""
+                      />
+
+                      <img
+                        v-else
+                        style="margin: 0"
+                        src="@/assets/images/paper-plane-full.svg"
+                        height="14px"
+                        alt=""
+                        class="filtered-blue"
+                      />
+
+                      <div class="tooltip">Submit</div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="expanded-item">
+                      <div class="row horizontal-padding-s img-text">
+                        <img src="@/assets/images/newspaper.svg" height="20px" alt="" />
+                        <p>Source</p>
+                      </div>
+
+                      <div class="switcher">
+                        <div
+                          @click="switchMainView('news')"
+                          :class="{ activeswitch: mainView === 'news' }"
+                          class="switch-item"
+                        >
+                          News
+                        </div>
+                        <div
+                          @click="switchMainView('social')"
+                          :class="{ activeswitch: mainView === 'social' }"
+                          class="switch-item"
+                        >
+                          Social
+                        </div>
+                        <div
+                          @click="switchMainView('website')"
+                          :class="{ activeswitch: mainView === 'website' }"
+                          class="switch-item"
+                        >
+                          URL
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="expanded-item">
+                      <div class="row horizontal-padding-s img-text">
+                        <img src="@/assets/images/calendar.svg" height="18px" alt="" />
+                        <p>Date Range</p>
+                      </div>
+
+                      <div style="gap: 8px; opacity: 0.6" class="row">
+                        <p>{{ dateStart }}</p>
+                        <p>-</p>
+                        <p>{{ dateEnd }}</p>
+                      </div>
+                    </div>
+
+                    <div class="expanded-item-column">
+                      <div class="row horizontal-padding-s img-text">
+                        <img src="@/assets/images/arrow-trend-up.svg" height="18px" alt="" />
+                        <p>Search Examples:</p>
+                      </div>
+
+                      <div class="horizontal-padding rows">
+                        <p
+                          v-for="(example, i) in searchExamples"
+                          :key="i"
+                          @click="setNewSearch(example)"
+                          class="bold gray-title"
+                        >
+                          {{ example }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div v-else>
+          <div style="padding: 48px 0" v-else>
             <div>
               <div
                 style="margin: 2rem 0"
@@ -775,8 +1080,8 @@
             </div>
           </div>
         </div>
-        <div v-else-if="mainView === 'website'">
-          <div style="margin-top: 2rem" v-if="clipLoading">
+        <div style="width: 100%; padding: 32px 0" v-else-if="mainView === 'website'">
+          <div v-if="clipLoading">
             <div class="small-container">
               <div class="loading">
                 <p>Generating clips</p>
@@ -787,24 +1092,91 @@
             </div>
           </div>
 
-          <div style="margin-top: 2rem" v-else-if="!addedArticles.length && !clipLoading">
-            <!-- <div class="row">
-              <div style="cursor: text" class="image-container-blue right-margin-m">
-                <img
-                  class="blue-filter"
-                  style="margin-left: -1px"
-                  src="@/assets/images/logo.png"
-                  height="16px"
-                  alt=""
-                />
-              </div>
-              <h3>Managr</h3>
-            </div> -->
+          <div
+            class="small-container letter-spacing"
+            style="width: 100%; padding: 0 32px; padding-top: 16px"
+            v-else-if="!addedArticles.length && !clipLoading"
+          >
+            <div class="text-width">
+              <h3 style="margin: 0; font-size: 24px" class="">Summarize Article</h3>
+              <p style="margin: 0">Paste an article url to generate a summary</p>
+            </div>
 
-            <div class="small-container letter-spacing">
-              <div class="bottom-margin-xl">
-                <p style="margin: 0" class="bold">Summarize an article.</p>
-                <p style="margin: 0">Paste article URL. Interact with the summary on the right.</p>
+            <div style="width: 100%; margin-top: 32px">
+              <div style="width: 100%" class="large-input-container">
+                <div style="border: none; box-shadow: none" class="input-container">
+                  <img
+                    class="left-margin-m"
+                    src="@/assets/images/search.svg"
+                    height="20px"
+                    alt=""
+                  />
+
+                  <textarea
+                    @keyup.enter="uploadArticle"
+                    class="area-input text-area-input"
+                    placeholder="Paste article url..."
+                    v-model="uploadLink"
+                    :disabled="contentLoading"
+                  />
+
+                  <div
+                    @click="uploadArticle"
+                    class="image-container left-margin right-margin-m wrapper"
+                  >
+                    <img
+                      v-if="!newSearch || loading || summaryLoading"
+                      style="margin: 0; cursor: text"
+                      src="@/assets/images/paper-plane-top.svg"
+                      height="14px"
+                      alt=""
+                    />
+
+                    <img
+                      v-else
+                      style="margin: 0"
+                      src="@/assets/images/paper-plane-full.svg"
+                      height="14px"
+                      alt=""
+                      class="filtered-blue"
+                    />
+
+                    <div class="tooltip">Submit</div>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="expanded-item">
+                    <div class="row horizontal-padding-s img-text">
+                      <img src="@/assets/images/newspaper.svg" height="20px" alt="" />
+                      <p>Source</p>
+                    </div>
+
+                    <div class="switcher">
+                      <div
+                        @click="switchMainView('news')"
+                        :class="{ activeswitch: mainView === 'news' }"
+                        class="switch-item"
+                      >
+                        News
+                      </div>
+                      <div
+                        @click="switchMainView('social')"
+                        :class="{ activeswitch: mainView === 'social' }"
+                        class="switch-item"
+                      >
+                        Social
+                      </div>
+                      <div
+                        @click="switchMainView('website')"
+                        :class="{ activeswitch: mainView === 'website' }"
+                        class="switch-item"
+                      >
+                        URL
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1019,116 +1391,26 @@
       </div>
 
       <div class="footer sticky-bottom">
-        <div class="input-container relative">
-          <img class="left-margin-m" src="@/assets/images/search.svg" height="20px" alt="" />
-          <textarea
-            v-if="mainView !== 'website'"
-            id="search-input"
-            @keyup.enter="generateNewSearch(false)"
-            class="area-input text-area-input"
-            placeholder="Enter search term..."
-            autocomplete="off"
-            v-model="newSearch"
-            @focus="closeDropDowns"
-            v-autoresize
-            :disabled="
-              loading || summaryLoading || (mainView === 'social' && !hasTwitterIntegration)
+        <div class="centered">
+          <button
+            class="img-button"
+            @click="resetAll"
+            v-if="
+              (filteredArticles && filteredArticles.length) ||
+              (tweets && tweets.length) ||
+              addedArticles.length
             "
-          />
-
-          <textarea
-            v-else
-            @keyup.enter="uploadArticle"
-            class="area-input text-area-input"
-            placeholder="Paste article url..."
-            v-model="uploadLink"
-            :disabled="contentLoading"
-          />
-          <div
-            v-if="mainView === 'news'"
-            @click="toggleDateDropdown"
-            class="image-container-blue left-margin wrapper"
           >
-            <img
-              style="filter: invert(100%)"
-              src="@/assets/images/calendar.svg"
-              height="14px"
-              alt=""
-            />
-            <div class="tooltip">Date Range</div>
-          </div>
-          <div class="right-margin" v-else></div>
-
-          <div v-if="dateOpen" class="date-dropdown">
-            <div class="space-between">
-              <small style="padding-top: 8px" class="gray-text">Date Range</small>
-
-              <small @click="toggleDateDropdown" class="close-x">X</small>
-            </div>
-
-            <div style="width: 100%; margin-top: 8px">
-              <input class="area-input-smallest" type="date" v-model="dateStart" />
-              -
-              <input class="area-input-smallest" type="date" v-model="dateEnd" />
-            </div>
-          </div>
-
-          <div
-            v-if="mainView !== 'website'"
-            @click="generateNewSearch(false)"
-            class="image-container left-margin right-margin-m wrapper"
-          >
-            <img
-              v-if="!newSearch || loading || summaryLoading"
-              style="margin: 0; cursor: text"
-              src="@/assets/images/paper-plane-top.svg"
-              height="14px"
-              alt=""
-            />
-
-            <img
-              v-else
-              style="margin: 0"
-              src="@/assets/images/paper-plane-full.svg"
-              height="14px"
-              alt=""
-              class="filtered-blue"
-            />
-
-            <div class="tooltip">Submit</div>
-          </div>
-
-          <div
-            v-else
-            @click="uploadArticle"
-            class="image-container left-margin right-margin-m wrapper"
-          >
-            <img
-              v-if="!newSearch || loading || summaryLoading"
-              style="margin: 0; cursor: text"
-              src="@/assets/images/paper-plane-top.svg"
-              height="14px"
-              alt=""
-            />
-
-            <img
-              v-else
-              style="margin: 0"
-              src="@/assets/images/paper-plane-full.svg"
-              height="14px"
-              alt=""
-              class="filtered-blue"
-            />
-
-            <div class="tooltip">Submit</div>
-          </div>
+            <img src="@/assets/images/search.svg" height="18px" alt="" />
+            New Search
+          </button>
         </div>
       </div>
     </section>
 
     <section id="summaries" class="container gray-bg">
       <div v-if="summary" class="header sticky-top padding-top-s gray-bg centered-column">
-        <div style="margin-top: 1.5rem; width: 88%" class="flex-end">
+        <div style="margin-top: 2rem; width: 88%" class="flex-end">
           <div @click="copyText" class="wrapper icon-button white-bg right-margin">
             <img
               style="cursor: pointer"
@@ -1219,10 +1501,10 @@
           </button>
         </div>
 
-        <div style="width: 100%" class="space-between vertical-padding">
+        <!-- <div style="width: 100%" class="space-between vertical-padding">
           <p class="sub-text">AI-generated summary</p>
           <p>{{ summary.split(' ').length }} words</p>
-        </div>
+        </div> -->
       </div>
 
       <div class="content-body" v-if="summaryLoading">
@@ -1237,14 +1519,131 @@
       </div>
 
       <div v-else class="content-body">
-        <div style="margin-top: 66px" class="news-container" v-if="summary">
-          <div>
+        <div style="margin-top: 80px" class="news-container" v-if="summary">
+          <!-- <div style="width: 100%; padding: 16px 0 0 0" class="space-between">
+            <p class="sub-text">AI-generated summary</p>
+            <p>{{ summary.split(' ').length }} words</p>
+          </div> -->
+
+          <div class="relative">
             <pre v-html="summary" class="pre-text"></pre>
+
+            <div v-if="showSummaryMenu" class="summary-section">
+              <div style="width: 100%" class="large-input-container">
+                <div style="border: none; box-shadow: none" class="input-container">
+                  <img
+                    v-if="
+                      (filteredArticles && filteredArticles.length) ||
+                      (tweets && tweets.length) ||
+                      addedArticles.length
+                    "
+                    class="left-margin-m"
+                    src="@/assets/images/sparkle.svg"
+                    height="18px"
+                    alt=""
+                  />
+
+                  <img
+                    v-else
+                    class="left-margin-m"
+                    src="@/assets/images/sparkles-nofill-round.svg"
+                    height="18px"
+                    alt=""
+                  />
+
+                  <textarea
+                    class="area-input text-area-input"
+                    placeholder="Summary instructions..."
+                    autofocus
+                    autocomplete="off"
+                    v-model="newTemplate"
+                    :disabled="!summary || loading || summaryLoading"
+                    v-autoresize
+                  />
+
+                  <div
+                    v-if="!newTemplate"
+                    class="image-container left-margin right-margin-m white-bg wrapper"
+                  >
+                    <img src="@/assets/images/paper-plane-top.svg" height="14px" alt="" />
+                    <div class="tooltip">Submit</div>
+                  </div>
+
+                  <div
+                    @click="getChatSummary(filteredArticles, newTemplate)"
+                    class="image-container left-margin right-margin-m white-bg"
+                    v-else-if="mainView === 'news' && newTemplate"
+                  >
+                    <img
+                      style="margin: 0"
+                      src="@/assets/images/paper-plane-full.svg"
+                      height="14px"
+                      alt=""
+                      class="filtered-blue"
+                    />
+                  </div>
+
+                  <div
+                    @click="getChatSummary(preparedTweets, newTemplate)"
+                    class="image-container left-margin right-margin-m white-bg"
+                    v-else-if="newTemplate"
+                  >
+                    <img
+                      style="margin: 0"
+                      src="@/assets/images/paper-plane-full.svg"
+                      height="14px"
+                      alt=""
+                      class="filtered-blue"
+                    />
+                  </div>
+                </div>
+
+                <div class="expanded-item-column">
+                  <div class="row horizontal-padding-s img-text">
+                    <img src="@/assets/images/arrow-trend-up.svg" height="18px" alt="" />
+                    <p>Popular summaries:</p>
+                  </div>
+
+                  <div class="horizontal-padding rows">
+                    <p
+                      v-for="(example, i) in summaryExamples"
+                      :key="i"
+                      @click="setNewSummary(example.value)"
+                      class="bold gray-title"
+                    >
+                      {{ example.name }}
+                    </p>
+                  </div>
+
+                  <div style="width: 100%; margin-top: 16px" class="flex-end small-buttons">
+                    <button @click="toggleSummaryMenu">Close</button>
+
+                    <button v-if="!newTemplate">Submit</button>
+
+                    <button
+                      class="blue-button"
+                      @click="getChatSummary(filteredArticles, newTemplate)"
+                      v-else-if="mainView === 'news' && newTemplate"
+                    >
+                      Submit
+                    </button>
+
+                    <button
+                      class="blue-button"
+                      @click="getChatSummary(preparedTweets, newTemplate)"
+                      v-else-if="newTemplate"
+                    >
+                      Submit
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         <div class="centered-col" v-else>
-          <div class="image-container white-bg extra-padding">
+          <div class="image-container lightblue-bg extra-padding">
             <img src="@/assets/images/comment.svg" height="32px" alt="" />
           </div>
           <p>Your summary will appear here.</p>
@@ -1252,68 +1651,11 @@
       </div>
 
       <div class="footer sticky-bottom gray-bg">
-        <div class="input-container">
-          <img class="left-margin-m" src="@/assets/images/sparkle.svg" height="18px" alt="" />
-          <textarea
-            class="area-input text-area-input"
-            :placeholder="
-              (filteredArticles && filteredArticles.length) ||
-              (tweets && tweets.length) ||
-              addedArticles.length
-                ? 'New summary instructions...'
-                : 'Start by generating a search'
-            "
-            autocomplete="off"
-            v-model="newTemplate"
-            :disabled="!summary || loading || summaryLoading"
-            v-autoresize
-          />
-
-          <div @click="togglePromptModal" class="image-container-blue left-margin wrapper white-bg">
-            <img
-              style="filter: invert(100%)"
-              src="@/assets/images/comment.svg"
-              height="14px"
-              alt=""
-            />
-            <div class="tooltip-wide">Popular prompts</div>
-          </div>
-
-          <div
-            v-if="!newTemplate"
-            class="image-container left-margin right-margin-m white-bg wrapper"
-          >
-            <img src="@/assets/images/paper-plane-top.svg" height="14px" alt="" />
-            <div class="tooltip">Submit</div>
-          </div>
-
-          <div
-            @click="getChatSummary(filteredArticles, newTemplate)"
-            class="image-container left-margin right-margin-m white-bg"
-            v-else-if="mainView === 'news' && newTemplate"
-          >
-            <img
-              style="margin: 0"
-              src="@/assets/images/paper-plane-full.svg"
-              height="14px"
-              alt=""
-              class="filtered-blue"
-            />
-          </div>
-
-          <div
-            @click="getChatSummary(preparedTweets, newTemplate)"
-            class="image-container left-margin right-margin-m white-bg"
-            v-else-if="newTemplate"
-          >
-            <img
-              style="margin: 0"
-              src="@/assets/images/paper-plane-full.svg"
-              height="14px"
-              alt=""
-              class="filtered-blue"
-            />
-          </div>
+        <div class="centered">
+          <button @click="toggleSummaryMenu" v-if="summary" class="img-button">
+            <img src="@/assets/images/sparkle.svg" height="18px" alt="" />
+            New Summary
+          </button>
         </div>
       </div>
     </section>
@@ -1331,6 +1673,8 @@ export default {
   },
   data() {
     return {
+      showSummaryMenu: false,
+      expandedView: false,
       promptModalOpen: false,
       dateOpen: false,
       preparedTweets: null,
@@ -1423,6 +1767,53 @@ export default {
       errorModal: false,
       selectedSearch: null,
       selectedDateTime: '',
+      searchExamples: [`Lululemon`, `Apple Vision PRO`, `OpenAI`, `Supreme Court AND Social Media`],
+      summaryExamples: [
+        {
+          name: `Brand Analysis`,
+          value: `Summarize the news for {BrandX} leadership team in paragraph form. Provide sentiment analysis. List the top 3 most impactful stories, site source and author`,
+        },
+        {
+          name: `University Roundup`,
+          value: `Highlight any key research or faculty news for {UniversityX} leadership team. Highlight any sports related news. Provide overall sentiment analysis`,
+        },
+        {
+          name: `Topic Summary`,
+          value: `Bring me up to speed on what’s happening. Provide sentiment analysis. Analyze the media to identify what aspects of the topic are most intriguing or concerning to the public`,
+        },
+        {
+          name: `Find Journalists`,
+          value: `List 5 journalists (from top pubs, include pitching tips) I can pitch on behalf of {BrandX}`,
+        },
+        {
+          name: `Expert Q&A`,
+          value: `Generate a list of 5 questions that the public might have about this topic and how an expert {ExpertX} would respond to them.`,
+        },
+        {
+          name: `Media Q&A`,
+          value: `List 5 questions & answers journalists would ask {BrandX} leadership team`,
+        },
+        {
+          name: `Competitor Update`,
+          value: `Highlight any important competitor news for {BrandX}. How does this impact {BrandX}. As {BrandX} PR agency provide feedback based on this news`,
+        },
+        {
+          name: `Newsjacking`,
+          value: `Provide creative newsjacking ideas for {BrandX} based on this coverage`,
+        },
+        {
+          name: `Issue a statement`,
+          value: `Issue a statement on behalf of {BrandX}`,
+        },
+        {
+          name: `SEO`,
+          value: `Provide top 10 SEO phrases relating to this topic`,
+        },
+        {
+          name: `Social Media Overview`,
+          value: `Summarize the social media coverage, Provide sentiment analysis, Identify top Influencers `,
+        },
+      ],
       articleGenerateOptions: [
         { name: 'Press Release', value: `Press Release` },
         { name: 'Statement', value: 'Statement' },
@@ -1545,6 +1936,15 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    toggleSummaryMenu() {
+      this.showSummaryMenu = !this.showSummaryMenu
+    },
+    setNewSearch(txt) {
+      this.newSearch = txt
+    },
+    setNewSummary(txt) {
+      this.newTemplate = txt
+    },
     togglePromptModal() {
       this.promptModalOpen = !this.promptModalOpen
     },
@@ -2026,6 +2426,7 @@ export default {
       this.$store.dispatch('setSearch', null)
       this.summary = ''
       this.tweetError = ''
+      this.showSummaryMenu = false
     },
     resetSearch() {
       this.clearNewSearch()
@@ -2209,6 +2610,9 @@ export default {
         this.toggleDateDropdown()
       }
     },
+    toggleDropdowns() {
+      this.expandedView = !this.expandedView
+    },
     async generateNewSearch(saved = false, boolean = '') {
       this.filteredArticles = []
       this.tweets = []
@@ -2216,6 +2620,7 @@ export default {
       this.savedSearch = null
       this.showGenerateDropdown = false
       this.showingDropdown = false
+      this.showSummaryMenu = false
       if (!this.isPaid && this.searchesUsed >= 10) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
@@ -2269,6 +2674,7 @@ export default {
       // this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       this.summaryLoading = true
       this.showingPromptDropdown = false
+      this.showSummaryMenu = false
       try {
         if (this.shouldCancel) {
           return this.stopLoading()
@@ -2603,6 +3009,7 @@ export default {
     async getChatSummary(clips, instructions = '') {
       this.chatSummaryLoading = true
       this.showingPromptDropdown = false
+      this.showSummaryMenu = false
       try {
         if (this.mainView === 'news') {
           await this.getSummary(clips, instructions)
@@ -3124,12 +3531,37 @@ export default {
   flex-direction: column;
 }
 
+.blue-button {
+  @include dark-blue-button();
+  background-color: $dark-black-blue !important;
+  color: white !important;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: none;
+  margin-left: 0;
+}
+
 .primary-button {
   @include dark-blue-button();
   padding: 8px 12px;
   border: none;
   img {
     filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
+    margin-right: 8px;
+  }
+}
+
+.img-button {
+  @include dark-blue-button();
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 12px 32px;
+  border-radius: 12px;
+  color: $dark-black-blue;
+  font-size: 16px;
+  img {
+    filter: invert(40%);
     margin-right: 8px;
   }
 }
@@ -3404,6 +3836,13 @@ button:disabled {
   padding: 0 40px;
 }
 
+.summary-section {
+  position: absolute;
+  top: 0;
+  z-index: 1000;
+  background-color: white;
+}
+
 .scroll-container {
   overflow-y: scroll;
 }
@@ -3473,7 +3912,7 @@ button:disabled {
 }
 .card-top-left {
   display: flex;
-  font-size: 12px;
+  font-size: 14px;
   img {
     height: 12px;
     margin-right: 0.5rem;
@@ -3507,7 +3946,7 @@ button:disabled {
 }
 
 .article-title {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 900;
   line-height: 24px;
   letter-spacing: 0;
@@ -3610,7 +4049,7 @@ button:disabled {
 }
 
 .ellipsis-text {
-  max-width: 520px;
+  max-width: 400px;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
@@ -3713,6 +4152,9 @@ li {
   border-radius: 4px;
   padding: 2px 6px;
   background-color: $off-white;
+  margin-top: 0;
+  margin-left: 8px;
+  cursor: pointer;
 }
 
 .no-margins {
@@ -3730,7 +4172,7 @@ li {
 .small-container {
   padding-left: 42px;
   padding-right: 32px;
-  font-size: 15px !important;
+  font-size: 16px !important;
   line-height: 1.75;
 }
 
@@ -3744,6 +4186,15 @@ li {
   flex-direction: row;
   align-items: center;
 }
+
+.rows {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+}
+
 .row-between {
   display: flex;
   flex-direction: row;
@@ -3767,7 +4218,7 @@ li {
   overflow-y: scroll;
   scroll-behavior: smooth;
   z-index: 0;
-  padding: 120px 32px 0 32px;
+  padding: 56px 32px 0 32px;
   font-size: 16px;
   width: 100%;
   height: 100%;
@@ -3785,6 +4236,10 @@ li {
   background-color: $soft-gray;
   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
   border-radius: 6px;
+}
+
+.extra-padding-top {
+  padding-top: 104px;
 }
 
 .search {
@@ -3829,6 +4284,7 @@ li {
 }
 
 p {
+  font-size: 16px !important;
   @media only screen and (max-width: 600px) {
     font-size: 14px !important;
   }
@@ -3857,6 +4313,10 @@ p {
   padding: 1rem 40px;
 }
 
+.horiz-padding {
+  padding: 0 40px;
+}
+
 .top-border {
   border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
@@ -3878,6 +4338,18 @@ p {
   flex-direction: row;
   align-items: center;
   justify-content: flex-end;
+}
+
+.small-buttons {
+  button {
+    @include dark-blue-button();
+    background-color: white;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 4px 6px;
+    color: $dark-black-blue;
+    font-size: 14px;
+    margin-right: 8px;
+  }
 }
 
 .padding-top {
@@ -3911,6 +4383,18 @@ p {
   margin-bottom: 32px;
 }
 
+.text-width {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+
+  p {
+    font-size: 17px;
+  }
+}
+
 .bottom-border-light {
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   padding-bottom: 1rem;
@@ -3938,7 +4422,7 @@ p {
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  font-size: 14px;
+  font-size: 16px;
   width: 100%;
   height: 80%;
 }
@@ -3951,24 +4435,35 @@ p {
   background-color: white;
 }
 
+.lightblue-bg {
+  background-color: $white-blue;
+}
+
+.img-text {
+  img {
+    margin-right: 16px;
+    filter: invert(40%);
+  }
+}
+
 .switcher {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-evenly;
   background-color: $off-white;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 6px;
-  padding: 4px 0;
-  width: 88%;
+  // border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 32px;
+  padding: 6px 2px;
+  width: 60%;
 }
 
 .switch-item {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 4px;
-  border-radius: 6px;
+  padding: 6px 4px;
+  border-radius: 32px;
   width: 100%;
   margin: 0 2px;
   cursor: pointer;
@@ -3980,8 +4475,8 @@ p {
 
 .activeswitch {
   background-color: white;
-  padding: 8px 4px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 6px 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   color: $dark-black-blue;
   img {
     filter: none;
@@ -4025,9 +4520,21 @@ p {
   }
 }
 
+input,
+textarea {
+  font-size: 16px !important;
+}
+
+.large-input-container {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 9px;
+  padding: 16px;
+}
+
 .input-container {
   border: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Horizontal offset, vertical offset, blur radius, color */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.3s ease;
   padding: 0;
   border-radius: 24px;
@@ -4101,6 +4608,23 @@ textarea::placeholder {
   align-items: center;
 }
 
+.expanded-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 4px 0;
+}
+
+.expanded-item-column {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  flex-direction: column;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 4px 0;
+}
+
 // p {
 //   font-size: 14px;
 // }
@@ -4114,6 +4638,10 @@ textarea::placeholder {
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
   }
+}
+
+.horizontal-padding-s {
+  padding: 0 16px;
 }
 
 .cancel-button {
@@ -4166,7 +4694,7 @@ textarea::placeholder {
   background: $white-blue;
   padding: 32px 12px 12px 12px;
   border-radius: 4px;
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .regen-header {
