@@ -3003,7 +3003,6 @@ export default {
       } finally {
         this.summarizing = true
         this.summaryLoading = false
-        this.scrollToTop()
       }
     },
     async getChatSummary(clips, instructions = '') {
@@ -3097,7 +3096,6 @@ export default {
         this.$store.dispatch('updateAbortController', newAbortControllers)
         this.summarizing = true
         this.summaryLoading = false
-        this.scrollToTop()
       }
     },
     async regenerateArticleSummary(url, summary, instructions) {

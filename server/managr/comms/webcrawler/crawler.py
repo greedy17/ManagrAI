@@ -87,6 +87,8 @@ class NewsSpider(scrapy.Spider):
         ).getall()
         if len(site_name) > 1:
             return site_name[1]
+        elif not len(site_name):
+            return self.domain
         return site_name
 
     def parse(self, response):
