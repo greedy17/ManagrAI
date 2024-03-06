@@ -439,23 +439,14 @@
                     <div
                       v-if="mainView !== 'website'"
                       @click="generateNewSearch(false)"
-                      class="image-container left-margin right-margin-m wrapper"
+                      class="image-container left-margin wrapper"
+                      :class="newSearch ? 'dark-blue-bg' : ''"
                     >
                       <img
-                        v-if="!newSearch || loading || summaryLoading"
                         style="margin: 0; cursor: text"
                         src="@/assets/images/paper-plane-top.svg"
                         height="14px"
                         alt=""
-                      />
-
-                      <img
-                        v-else
-                        style="margin: 0"
-                        src="@/assets/images/paper-plane-full.svg"
-                        height="14px"
-                        alt=""
-                        class="filtered-blue"
                       />
 
                       <div class="tooltip">Submit</div>
@@ -464,23 +455,14 @@
                     <div
                       v-else
                       @click="uploadArticle"
-                      class="image-container left-margin right-margin-m wrapper"
+                      class="image-container left-margin wrapper"
+                      :class="newSearch ? 'dark-blue-bg' : ''"
                     >
                       <img
-                        v-if="!newSearch || loading || summaryLoading"
                         style="margin: 0; cursor: text"
                         src="@/assets/images/paper-plane-top.svg"
                         height="14px"
                         alt=""
-                      />
-
-                      <img
-                        v-else
-                        style="margin: 0"
-                        src="@/assets/images/paper-plane-full.svg"
-                        height="14px"
-                        alt=""
-                        class="filtered-blue"
                       />
 
                       <div class="tooltip">Submit</div>
@@ -865,22 +847,13 @@
                       v-if="mainView !== 'website'"
                       @click="generateNewSearch(false)"
                       class="image-container left-margin right-margin-m wrapper"
+                      :class="newSearch ? 'dark-blue-bg' : ''"
                     >
                       <img
-                        v-if="!newSearch || loading || summaryLoading"
                         style="margin: 0; cursor: text"
                         src="@/assets/images/paper-plane-top.svg"
                         height="14px"
                         alt=""
-                      />
-
-                      <img
-                        v-else
-                        style="margin: 0"
-                        src="@/assets/images/paper-plane-full.svg"
-                        height="14px"
-                        alt=""
-                        class="filtered-blue"
                       />
 
                       <div class="tooltip">Submit</div>
@@ -890,22 +863,13 @@
                       v-else
                       @click="uploadArticle"
                       class="image-container left-margin right-margin-m wrapper"
+                      :class="newSearch ? 'dark-blue-bg' : ''"
                     >
                       <img
-                        v-if="!newSearch || loading || summaryLoading"
                         style="margin: 0; cursor: text"
                         src="@/assets/images/paper-plane-top.svg"
                         height="14px"
                         alt=""
-                      />
-
-                      <img
-                        v-else
-                        style="margin: 0"
-                        src="@/assets/images/paper-plane-full.svg"
-                        height="14px"
-                        alt=""
-                        class="filtered-blue"
                       />
 
                       <div class="tooltip">Submit</div>
@@ -1123,22 +1087,13 @@
                   <div
                     @click="uploadArticle"
                     class="image-container left-margin right-margin-m wrapper"
+                    :class="newSearch ? 'dark-blue-bg' : ''"
                   >
                     <img
-                      v-if="!newSearch || loading || summaryLoading"
                       style="margin: 0; cursor: text"
                       src="@/assets/images/paper-plane-top.svg"
                       height="14px"
                       alt=""
-                    />
-
-                    <img
-                      v-else
-                      style="margin: 0"
-                      src="@/assets/images/paper-plane-full.svg"
-                      height="14px"
-                      alt=""
-                      class="filtered-blue"
                     />
 
                     <div class="tooltip">Submit</div>
@@ -1578,19 +1533,20 @@
                     @click="getChatSummary(filteredArticles, newTemplate)"
                     class="image-container left-margin right-margin-m white-bg"
                     v-else-if="mainView === 'news' && newTemplate"
+                    :class="newTemplate ? 'dark-blue-bg' : ''"
                   >
                     <img
                       style="margin: 0"
                       src="@/assets/images/paper-plane-full.svg"
                       height="14px"
                       alt=""
-                      class="filtered-blue"
                     />
                   </div>
 
                   <div
                     @click="getChatSummary(preparedTweets, newTemplate)"
                     class="image-container left-margin right-margin-m white-bg"
+                    :class="newTemplate ? 'dark-blue-bg' : ''"
                     v-else-if="newTemplate"
                   >
                     <img
@@ -1598,7 +1554,6 @@
                       src="@/assets/images/paper-plane-full.svg"
                       height="14px"
                       alt=""
-                      class="filtered-blue"
                     />
                   </div>
                 </div>
@@ -4469,6 +4424,13 @@ p {
   background-color: $white-blue;
 }
 
+.dark-blue-bg {
+  background-color: $dark-black-blue !important;
+  img {
+    filter: invert(100%) !important;
+  }
+}
+
 .img-text {
   img {
     margin-right: 16px;
@@ -4516,7 +4478,7 @@ p {
 .image-container {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 50%;
-  padding: 6px;
+  padding: 7px;
   display: flex;
   align-items: center;
   justify-content: center;

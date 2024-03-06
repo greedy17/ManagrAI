@@ -562,17 +562,19 @@
                     </p>
 
                     <div
-                      @click="addWritingStyle(defaultStyle.style, defaultStyle.title)"
+                      @click="addWritingStyle(style.style, style.title)"
                       class="dropdown-item"
-                      style="padding: 8px 0 16px 0"
+                      style="padding: 4px 0"
+                      v-for="(style, i) in defaultWritingStyles"
+                      :key="i"
                     >
-                      <p style="padding: 0 16px; margin: 0">Default</p>
+                      <p style="padding: 0 16px; margin: 0">{{ style.title }}</p>
                     </div>
 
                     <button
                       @mouseenter="changeStyleText"
                       @mouseleave="defaultStyleText"
-                      style="margin-bottom: 8px"
+                      style="margin-top: 8px"
                       @click="toggleLearnInputModal"
                       class="primary-button"
                     >
