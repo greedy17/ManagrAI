@@ -484,7 +484,7 @@
 
               <div v-if="showStyleDropdown" class="content-dropdown">
                 <div class="drop-container">
-                  <section v-if="!userWritingStyles.length">
+                  <section v-if="userWritingStyles.length">
                     <p
                       style="
                         margin-bottom: 0;
