@@ -78,6 +78,9 @@ class PRSearchViewSet(
     def get_queryset(self):
         return Search.objects.filter(user=self.request.user)
 
+    def get_all_searches(self):
+        return Search.objects.filter(organization=self.request.user.organization)
+
     def create(self, request, *args, **kwargs):
         user = request.user
         data = request.data
