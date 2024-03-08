@@ -370,8 +370,10 @@
           </div> -->
 
           <div style="margin-top: -4px" class="small-container">
-            <p style="margin: 0" class="bold">Create content based on the latest news</p>
-            <p style="margin-top: 0">
+            <h4 style="margin: 0; font-size: 16px" class="bold">
+              Create content based on the latest news
+            </h4>
+            <p style="margin-top: 0; font-size: 16px">
               Turn the latest media coverage into personalized content for your brand.
             </p>
           </div>
@@ -379,6 +381,7 @@
 
         <div class="small-container" style="width: 100%; padding-bottom: 60px">
           <label
+            class="bold"
             style="
               border-top: 1px solid rgba(0, 0, 0, 0.1);
               width: 100%;
@@ -396,7 +399,7 @@
             :disabled="loading"
           />
 
-          <label for="">Saved search</label>
+          <label class="bold" for="">Saved search</label>
           <div>
             <Multiselect
               style="margin: 0.5rem 0"
@@ -414,7 +417,7 @@
             </Multiselect>
           </div>
 
-          <label for="loc">Content type</label>
+          <label class="bold" for="loc">Content type</label>
           <input
             placeholder="(e.g., media pitch, press release, blog post, issue statement, etc.)"
             type="text"
@@ -423,12 +426,12 @@
             :disabled="loading"
           />
 
-          <label for="">Writing style</label>
+          <label class="bold" for="">Writing style</label>
 
           <div>
             <Multiselect
               style="margin: 0.5rem 0"
-              :options="writingStyles"
+              :options="[...defaultWritingStyles, ...writingStyles]"
               :show-labels="false"
               placeholder="Choose one"
               label="title"
@@ -442,25 +445,27 @@
             </Multiselect>
           </div>
 
-          <label for="loc">Additional details</label>
-          <textarea
-            style="
-              border: 1px solid rgba(0, 0, 0, 0.1) !important;
-              background-color: white;
-              margin: 0.5rem 0;
-            "
-            class="area-input text-area-input bordered"
-            placeholder="(e.g., content objective, company details, target audience, etc.)"
-            type="text"
-            id="details"
-            v-model="processDetails"
-            :disabled="loading"
-            v-autoresize
-          />
-          <!-- <div>
-            <small></small>
-            1000 char limit
-          </div> -->
+          <div style="position: relative">
+            <label class="bold" for="loc">Additional details</label>
+            <textarea
+              style="
+                border: 1px solid rgba(0, 0, 0, 0.1) !important;
+                background-color: white;
+                margin: 0.5rem 0;
+              "
+              class="area-input text-area-input bordered"
+              placeholder="(e.g., content objective, company details, target audience, etc.)"
+              type="text"
+              id="details"
+              v-model="processDetails"
+              :disabled="loading"
+              axlength="5000"
+              v-autoresize
+            />
+            <div class="absolute-count">
+              <small>{{ remainingChars }}</small>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -847,7 +852,7 @@ export default {
       processName: null,
       processSearchId: null,
       processType: null,
-      processDetails: null,
+      processDetails: '',
       processStyle: null,
       currentProcess: null,
       dateStart: null,
@@ -871,6 +876,43 @@ export default {
       deleteModalOpen: false,
       contentLoading: false,
       processButtonText: 'Create new process',
+      defaultWritingStyles: [
+        {
+          title: 'Default',
+          style: `Begin with a precise introduction, without informal salutations. Be clear, concise, and informative, avoiding metaphors. Offer coherent data without persuasion. Aim for depth, not sensationalism and avoid commercial bias.`,
+        },
+        {
+          title: 'Media Pitch',
+          style: `Author's Style Guidelines:
+0. Start email with "Hi {Journalist first name}", end with "Thanks,". Get right to it, no opening fluff like "I hope this message finds you well"
+1. Tone: Maintain a professional, respectful tone. Show appreciation for the journalist's work and express interest in collaboration.
+2. Formality: Use formal language, but avoid jargon. Keep sentences clear and concise.
+3. Structure: Start with a personalized greeting. Follow with a brief appreciation of the journalist's work, then introduce your topic. Provide key insights, then propose collaboration. End with a forward-looking statement and a thank you.
+4. Linguistic Idiosyncrasies: Use active voice and precise, impactful words. Include statistics and expert opinions for credibility.
+5. Credibility: Establish credibility by referencing recent research, expert opinions, and relevant industry trends.
+6. Engagement: Engage the reader by offering exclusive insights and proposing collaboration.
+7. Non-Promotional: Avoid promotional language. Focus on providing valuable, informative content.
+8. Stylistic Techniques: Use a mix of short and long sentences for rhythm. Use rhetorical questions to engage the reader and provoke thought.`,
+        },
+        {
+          title: 'Blog Post',
+          style: `The author's style is formal and informative, using a journalistic tone to convey complex scientific concepts in a digestible manner. The structure is linear, starting with historical context and leading to the current developments. The author uses technical jargon, but also provides explanations to ensure understanding. Credibility is established through the mention of renowned scientists, historical achievements, and the university's long-standing involvement in the field. The author avoids persuasive language, focusing on facts and achievements.
+Guidelines: Maintain a formal, journalistic tone. Use technical terms but provide explanations. Structure content linearly, starting with historical context. Establish credibility through mention of renowned figures and achievements. Avoid persuasive language, focusing on facts.`,
+        },
+        {
+          title: 'Email',
+          style: `1. Start with a friendly greeting: Use 'Hey' or 'Hi' to initiate a warm, approachable tone.
+2. Be direct and concise: Avoid fluff and unnecessary details. Get straight to the point.
+3. Maintain a neutral tone: Avoid persuasive or sales-oriented language. The tone should be informative, not promotional.
+4. Use simple, clear language: Avoid jargon or complex terms. The goal is to be understood by all readers.
+5. Structure: Use short sentences and paragraphs. Break up information into digestible chunks.
+6. Credibility: Use facts and data to support points. Avoid personal opinions or assumptions.
+7. Action point: End with a clear, actionable step for the reader. This should be direct and easy to understand.
+8. Informality: Maintain a casual, friendly tone throughout. This helps to engage the reader and make the content more relatable.
+9. Linguistic idiosyncrasies: Use common, everyday language. Avoid overly formal or academic language.
+10. Objectivity: Maintain an unbiased stance. Avoid taking sides or expressing personal views.`,
+        },
+      ],
     }
   },
   watch: {
@@ -1254,7 +1296,7 @@ export default {
       this.processName = null
       this.processSearchId = null
       this.processType = null
-      this.processDetails = null
+      this.processDetails = ''
       this.processStyle = null
     },
     testValues() {
@@ -1290,6 +1332,9 @@ export default {
     },
     currentAssist() {
       return this.$store.state.currentAssist
+    },
+    remainingChars() {
+      return 5000 - this.processDetails.length
     },
   },
   directives: {
@@ -1638,6 +1683,14 @@ button:disabled {
     transform: rotate(45deg);
   }
   transition: all 0.2s;
+}
+
+.absolute-count {
+  position: absolute;
+  bottom: 0;
+  right: 3px;
+  font-size: 10px;
+  color: $light-gray-blue;
 }
 
 .lip-img {
