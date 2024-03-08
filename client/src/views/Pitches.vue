@@ -519,7 +519,7 @@
                       :key="i"
                       style="padding: 4px 0"
                     >
-                      <p style="padding: 0 16px; margin: 0">
+                      <p style="padding: 0 16px; margin: 0; color: black !important">
                         {{ style.title }}
                       </p>
 
@@ -533,11 +533,21 @@
                       </div>
                     </div>
 
-                    <div style="padding: 8px 0; position: sticky; bottom: 0; background: white">
+                    <div
+                      style="
+                        padding: 8px 0;
+                        position: sticky;
+                        bottom: 0;
+                        background: white;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                      "
+                    >
                       <button
                         @mouseenter="changeStyleText"
                         @mouseleave="defaultStyleText"
-                        style="margin-bottom: 8px; width: 86%"
+                        style="margin-bottom: 8px; width: 45%"
                         @click="toggleLearnInputModal"
                         class="primary-button"
                       >
@@ -2832,7 +2842,7 @@ footer {
   overflow: hidden;
   text-overflow: ellipsis;
   font-weight: 400;
-  font-size: 14px;
+  font-size: 15px;
   // z-index: 2300;
 
   p {
@@ -3048,10 +3058,14 @@ button:disabled {
   transform: rotate(180deg);
 }
 
+.dark-blue-color {
+  color: red !important;
+}
+
 .content-dropdown {
   width: 60%;
   overflow-y: scroll;
-  max-height: 400px;
+  max-height: 300px;
   position: absolute;
   bottom: 60px;
   left: 0;
