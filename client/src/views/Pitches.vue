@@ -484,7 +484,7 @@
 
               <div v-if="showStyleDropdown" class="content-dropdown">
                 <div class="drop-container">
-                  <section v-if="userWritingStyles.length">
+                  <section v-if="!userWritingStyles.length">
                     <p
                       style="
                         margin-bottom: 0;
@@ -582,15 +582,17 @@
                       <p style="padding: 0 16px; margin: 0">{{ style.title }}</p>
                     </div>
 
-                    <button
-                      @mouseenter="changeStyleText"
-                      @mouseleave="defaultStyleText"
-                      style="margin-top: 8px"
-                      @click="toggleLearnInputModal"
-                      class="primary-button"
-                    >
-                      {{ styleText }}
-                    </button>
+                    <div style="display: flex; align-items: center; justify-content: center">
+                      <button
+                        @mouseenter="changeStyleText"
+                        @mouseleave="defaultStyleText"
+                        style="margin-top: 8px"
+                        @click="toggleLearnInputModal"
+                        class="primary-button"
+                      >
+                        {{ styleText }}
+                      </button>
+                    </div>
                   </section>
                 </div>
               </div>
