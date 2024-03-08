@@ -421,7 +421,7 @@
             "
           >
             <div style="position: relative">
-              <label for="content-type">Content Type</label>
+              <label class="bold" for="content-type">Content Type</label>
               <input
                 class="primary-input"
                 type="text"
@@ -438,7 +438,7 @@
             </div>
 
             <div style="position: relative">
-              <label for="key-data">Key Data</label>
+              <label class="bold" for="key-data">Key Data</label>
               <textarea
                 style="margin-top: 1rem"
                 class="area-input-bordered"
@@ -456,7 +456,7 @@
               </div>
             </div>
 
-            <label style="margin-top: 1rem" for="writing-style">Writing Style</label>
+            <label class="bold" style="margin-top: 1rem" for="writing-style">Writing Style</label>
             <div style="margin-top: 1rem; width: 100%; position: relative" id="writing-style">
               <div
                 @click="toggleStyleDropdown"

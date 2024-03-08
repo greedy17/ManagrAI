@@ -370,8 +370,10 @@
           </div> -->
 
           <div style="margin-top: -4px" class="small-container">
-            <p style="margin: 0" class="bold">Create content based on the latest news</p>
-            <p style="margin-top: 0">
+            <h4 style="margin: 0; font-size: 16px" class="bold">
+              Create content based on the latest news
+            </h4>
+            <p style="margin-top: 0; font-size: 16px">
               Turn the latest media coverage into personalized content for your brand.
             </p>
           </div>
@@ -379,6 +381,7 @@
 
         <div class="small-container" style="width: 100%; padding-bottom: 60px">
           <label
+            class="bold"
             style="
               border-top: 1px solid rgba(0, 0, 0, 0.1);
               width: 100%;
@@ -396,7 +399,7 @@
             :disabled="loading"
           />
 
-          <label for="">Saved search</label>
+          <label class="bold" for="">Saved search</label>
           <div>
             <Multiselect
               style="margin: 0.5rem 0"
@@ -414,7 +417,7 @@
             </Multiselect>
           </div>
 
-          <label for="loc">Content type</label>
+          <label class="bold" for="loc">Content type</label>
           <input
             placeholder="(e.g., media pitch, press release, blog post, issue statement, etc.)"
             type="text"
@@ -423,7 +426,7 @@
             :disabled="loading"
           />
 
-          <label for="">Writing style</label>
+          <label class="bold" for="">Writing style</label>
 
           <div>
             <Multiselect
@@ -443,7 +446,7 @@
           </div>
 
           <div style="position: relative">
-            <label for="loc">Additional details</label>
+            <label class="bold" for="loc">Additional details</label>
             <textarea
               style="
                 border: 1px solid rgba(0, 0, 0, 0.1) !important;
