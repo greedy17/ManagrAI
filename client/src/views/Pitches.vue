@@ -443,7 +443,7 @@
                 style="margin-top: 1rem"
                 class="area-input-bordered"
                 id="key-data"
-                placeholder="Paste relevant data, notes, or other important details."
+                placeholder="Paste relevant data, a news summary, or notes."
                 v-model="output"
                 :rows="3"
                 v-autoresize
@@ -491,7 +491,7 @@
                         padding-bottom: 8px;
                         cursor: text;
                         color: #2f4656;
-                        font-size: 15px;
+                        font-size: 16px;
                         position: sticky;
                         top: 0;
                         background-color: white;
@@ -509,6 +509,7 @@
                     >
                       <p style="padding: 0 16px; margin: 0">{{ style.title }}</p>
                     </div>
+                    <div class="divider"></div>
                     <div
                       @mouseenter="setIndex(i)"
                       @mouseLeave="removeIndex"
@@ -551,7 +552,7 @@
                         padding-bottom: 8px;
                         cursor: text;
                         color: #2f4656;
-                        font-size: 15px;
+                        font-size: 16px;
                         position: sticky;
                         top: 0;
                         background-color: white;
@@ -2831,7 +2832,7 @@ footer {
   overflow: hidden;
   text-overflow: ellipsis;
   font-weight: 400;
-  font-size: 13px;
+  font-size: 14px;
   // z-index: 2300;
 
   p {
@@ -2879,13 +2880,11 @@ footer {
   padding-top: 1.25rem;
 }
 .divider {
-  position: relative;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  width: 675px;
-  margin-top: 1rem;
-  @media only screen and (max-width: 600px) {
-    width: 100vw;
-  }
+  width: 100%;
+  margin-left: 8px !important;
+  margin-top: 4px;
+  margin-bottom: 4px;
 }
 
 .divider-text {
@@ -3050,9 +3049,9 @@ button:disabled {
 }
 
 .content-dropdown {
-  width: 50%;
+  width: 60%;
   overflow-y: scroll;
-  max-height: 200px;
+  max-height: 400px;
   position: absolute;
   bottom: 60px;
   left: 0;

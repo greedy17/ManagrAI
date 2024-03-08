@@ -1787,6 +1787,10 @@ export default {
           name: `Social Media Overview`,
           value: `Summarize the social media coverage, Provide sentiment analysis, Identify top Influencers `,
         },
+        {
+          name: `Sales Meeting`,
+          value: `I am a sales rep, you are the VP of Sales, bring me up to speed on whats happening in the industry and how I can leverage it to sell my product: {ProductX} -- provide super specific, tangible, and creative advice.`,
+        },
       ],
       articleGenerateOptions: [
         { name: 'Press Release', value: `Press Release` },

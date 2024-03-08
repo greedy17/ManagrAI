@@ -158,7 +158,7 @@
         </router-link>
 
         <router-link active-class="active-mobile" :to="{ name: 'Pitches' }" id="router-pitch">
-          <p>Pitch</p>
+          <p>Write</p>
         </router-link>
 
         <router-link
@@ -428,7 +428,7 @@
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'Pitches' }" id="router-pitch">
-          <p>Pitch</p>
+          <p>Write</p>
         </router-link>
 
         <router-link
