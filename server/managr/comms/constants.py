@@ -224,9 +224,9 @@ REGENERATE_CONTENT_WITH_FEEDBACK = (
 )
 
 OPEN_AI_GENERATE_PDF_SUMMARY = (
-    lambda: date, instructions,text: f"""
+    lambda date, instructions, text: f"""
     Today's date is {date}. Read the content below and carefully follow the instructions, output has to be less than 1500 characters: 
-    \n Here are the instructions:{Instructions}. \n Here is the content: {text}.
+    \n Here are the instructions:{instructions}. \n Here is the content: {text}.
 """
 )
 
