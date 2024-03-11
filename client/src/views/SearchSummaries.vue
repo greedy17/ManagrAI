@@ -498,6 +498,13 @@
                         >
                           URL
                         </div>
+                        <div
+                          @click="switchMainView('pdf')"
+                          :class="{ activeswitch: mainView === 'pdf' }"
+                          class="switch-item"
+                        >
+                          PDF
+                        </div>
                       </div>
                     </div>
 
@@ -905,6 +912,13 @@
                         >
                           URL
                         </div>
+                        <div
+                          @click="switchMainView('pdf')"
+                          :class="{ activeswitch: mainView === 'pdf' }"
+                          class="switch-item"
+                        >
+                          PDF
+                        </div>
                       </div>
                     </div>
 
@@ -1129,6 +1143,13 @@
                       >
                         URL
                       </div>
+                      <div
+                        @click="switchMainView('pdf')"
+                        :class="{ activeswitch: mainView === 'pdf' }"
+                        class="switch-item"
+                      >
+                        PDF
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1336,6 +1357,119 @@
                           </div>
                         </button>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="width: 100%; padding: 32px 0" v-else-if="mainView === 'pdf'">
+          <div v-if="loading">
+            <div class="small-container">
+              <div class="loading">
+                <p>Generating clips</p>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="small-container letter-spacing"
+            style="width: 100%; padding: 0 32px; padding-top: 16px"
+            v-else-if="!pdfLoaded"
+          >
+            <div v-if="!pdfLoaded" class="text-width">
+              <h3 style="margin: 0; font-size: 24px" class="">Summarize PDF</h3>
+              <p style="margin: 0">Upload a PDF or paste a link to it</p>
+            </div>
+
+            <div style="width: 100%; margin-top: 32px">
+              <div style="width: 100%" class="large-input-container">
+                <div style="border: none; box-shadow: none" class="input-container">
+                  <img
+                    class="left-margin-m"
+                    src="@/assets/images/search.svg"
+                    height="20px"
+                    alt=""
+                  />
+
+                  <textarea
+                    class="area-input text-area-input"
+                    placeholder="Paste PDF url..."
+                    v-model="pdfLink"
+                    :disabled="loading"
+                  />
+
+                  <div
+                    class="image-container left-margin right-margin-m wrapper"
+                    :class="newSearch ? 'dark-blue-bg' : ''"
+                  >
+                    <img
+                      style="margin: 0; cursor: text"
+                      src="@/assets/images/paper-plane-top.svg"
+                      height="14px"
+                      alt=""
+                    />
+
+                    <div class="tooltip">Submit</div>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="expanded-item">
+                    <div class="row horizontal-padding-s img-text">
+                      <img src="@/assets/images/newspaper.svg" height="20px" alt="" />
+                      <p>Source</p>
+                    </div>
+
+                    <div class="switcher">
+                      <div
+                        @click="switchMainView('news')"
+                        :class="{ activeswitch: mainView === 'news' }"
+                        class="switch-item"
+                      >
+                        News
+                      </div>
+                      <div
+                        @click="switchMainView('social')"
+                        :class="{ activeswitch: mainView === 'social' }"
+                        class="switch-item"
+                      >
+                        Social
+                      </div>
+                      <div
+                        @click="switchMainView('website')"
+                        :class="{ activeswitch: mainView === 'website' }"
+                        class="switch-item"
+                      >
+                        URL
+                      </div>
+                      <div
+                        @click="switchMainView('pdf')"
+                        :class="{ activeswitch: mainView === 'pdf' }"
+                        class="switch-item"
+                      >
+                        PDF
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="expanded-item">
+                    <div class="row horizontal-padding-s img-text">
+                      <img src="@/assets/images/pdf.svg" height="18px" alt="" />
+
+                      <div class="file-input-wrapper">
+                        <input type="file" accept="application/pdf" id="pdfile" />
+                        <label for="pdfile">Choose File</label>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p>10 page max.</p>
                     </div>
                   </div>
                 </div>
@@ -1633,6 +1767,8 @@ export default {
   },
   data() {
     return {
+      pdfLoaded: false,
+      pdfLink: null,
       showSummaryMenu: false,
       expandedView: false,
       promptModalOpen: false,
@@ -4622,6 +4758,28 @@ textarea::placeholder {
   padding: 4px 0;
 }
 
+.file-input-wrapper {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+  border: 1px solid #ccc;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  cursor: pointer;
+}
+
+.file-input-wrapper input[type='file'] {
+  position: absolute;
+  font-size: 100px;
+  opacity: 0;
+  right: 0;
+  top: 0;
+}
+
+.file-input-wrapper label {
+  cursor: pointer;
+}
 // p {
 //   font-size: 14px;
 // }
