@@ -402,6 +402,12 @@ urlpatterns = [
         comms_views.get_clips,
         name="get-clips",
     ),
+    path(
+        "summarize-pdf/",
+        comms_views.upload_pdf,
+        name="upload_pdf",
+    ),
+    
 ]
 
 router.register("users/reports", core_views.ReportViewSet, "reports"),
