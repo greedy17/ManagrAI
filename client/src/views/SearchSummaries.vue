@@ -1444,8 +1444,8 @@
                       </div>
                     </div>
 
-                    <div @click="summarizePdf">
-                      <p>10 page max.</p>
+                    <div style="background: red" @click="summarizePdf">
+                      <p style="color: white">TEST</p>
                     </div>
                   </div>
                 </div>
@@ -2029,14 +2029,24 @@ export default {
   methods: {
     async summarizePdf() {
       try {
-        const formData = new FormData()
-        formData.append('pdf_file', this.selectedFile)
+        let formData = new FormData()
         formData.append('instructions', 'Summarize the data')
+        if (this.selectedFile && this.selectedFile instanceof File) {
+          formData.append('pdf_file', this.selectedFile)
+        } else {
+          console.error('This is not a File object')
+        }
         await Comms.api.summarizePDF(formData).then((res) => {
           console.log(res)
         })
       } catch (e) {
-        console.log(e)
+        this.$toast(`Try Again: ${e.data.error}`, {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     handleFileUpload(event) {

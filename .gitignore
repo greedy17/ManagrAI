@@ -19,6 +19,7 @@ package-lock.json
 server/static-files/
 server/media-files/
 server/scrapy_cache/
+server/dev-files/
 node_modules/
 logs/
 
