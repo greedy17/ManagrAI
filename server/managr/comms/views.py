@@ -1510,7 +1510,14 @@ def upload_pdf(request):
     text = ""
     with pdfplumber.open(pdf_file) as pdf:
         for page in pdf.pages:
-            text += page.extract_text()
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text.extract_text()
+    if not len(text):
+        return Response(
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            data={"error": "No text could be extract from the uploaded PDF"},
+        )
     has_error = False
     attempts = 1
     token_amount = 4000
