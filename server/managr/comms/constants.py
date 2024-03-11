@@ -223,6 +223,12 @@ REGENERATE_CONTENT_WITH_FEEDBACK = (
     """
 )
 
+OPEN_AI_GENERATE_PDF_SUMMARY = (
+    lambda: text: f"""
+    {text}
+"""
+)
+
 
 RUN_PROCESS = (
     lambda date, type, summary, details, style: f""""
