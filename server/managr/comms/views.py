@@ -1507,6 +1507,7 @@ def upload_pdf(request):
     user = request.user
     pdf_file = request.FILES.get("pdf_file")
     reader = PyPDF2.PdfReader(pdf_file)
+    instructions = request.data.get("instructions")
     text = ""
     for page in reader.pages:
         text += page.extract_text() + "\n"
@@ -1518,7 +1519,9 @@ def upload_pdf(request):
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_GENERATE_PDF_SUMMARY(text)
+                prompt = comms_consts.OPEN_AI_GENERATE_PDF_SUMMARY(
+                    datetime.now().date(), instructions, text
+                )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
