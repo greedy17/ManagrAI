@@ -3,6 +3,7 @@ import httpx
 import time
 import logging
 import pytz
+import PyPDF2
 from rest_framework import (
     mixins,
     viewsets,
@@ -1498,3 +1499,76 @@ def redirect_from_twitter(request):
         err = urlencode(err)
         return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{err}")
     return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{q}")
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def upload_pdf(request):
+    print('DATA IS HERE : ',request.data)
+    user = request.user
+    pdf_file = request.FILES.get("pdf_file")
+    print(pdf_file)
+    reader = PyPDF2.PdfReader(pdf_file)
+    instructions = request.data.get("instructions")
+    print(instructions)
+    text = ""
+    for page in reader.pages:
+        text += page.extract_text() + "\n"
+        has_error = False
+        attempts = 1
+        token_amount = 4000
+        timeout = 60.0
+
+        while True:
+            try:
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.OPEN_AI_GENERATE_PDF_SUMMARY(
+                    datetime.now().date(), instructions, text
+                )
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    token_amount=token_amount,
+                    top_p=0.1,
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                res = open_ai_exceptions._handle_response(r)
+
+                content = res.get("choices")[0].get("message").get("content")
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount <= 2000:
+                    has_error = True
+
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 500
+                    continue
+            except httpx.ReadTimeout as e:
+                print(e)
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+        if has_error:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
+        return Response({"content": content})
+    return Response()

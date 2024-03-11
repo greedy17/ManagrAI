@@ -286,30 +286,6 @@
     </Modal>
     <section id="clips" class="container">
       <div class="header centered sticky-top padding-top col">
-        <!-- <div class="switcher">
-          <div
-            @click="switchMainView('news')"
-            :class="{ activeswitch: mainView === 'news' }"
-            class="switch-item"
-          >
-            News
-          </div>
-          <div
-            @click="switchMainView('social')"
-            :class="{ activeswitch: mainView === 'social' }"
-            class="switch-item"
-          >
-            Social
-          </div>
-          <div
-            @click="switchMainView('website')"
-            :class="{ activeswitch: mainView === 'website' }"
-            class="switch-item"
-          >
-            URL
-          </div>
-        </div> -->
-
         <div
           style="width: 100%; margin-top: 0.5rem"
           v-if="selectedSearch && !loading"
@@ -1463,12 +1439,12 @@
                       <img src="@/assets/images/pdf.svg" height="18px" alt="" />
 
                       <div class="file-input-wrapper">
-                        <input type="file" accept="application/pdf" id="pdfile" />
+                        <input @change="handleFileUpload" type="file" accept=".pdf" id="pdfile" />
                         <label for="pdfile">Choose File</label>
                       </div>
                     </div>
 
-                    <div>
+                    <div @click="summarizePdf">
                       <p>10 page max.</p>
                     </div>
                   </div>
@@ -1767,6 +1743,7 @@ export default {
   },
   data() {
     return {
+      selectedFile: null,
       pdfLoaded: false,
       pdfLink: null,
       showSummaryMenu: false,
@@ -2050,6 +2027,43 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    async summarizePdf() {
+      try {
+        const formData = new FormData()
+        formData.append('pdf_file', this.selectedFile)
+        formData.append('instructions', 'Summarize the data')
+        await Comms.api.summarizePDF(formData).then((res) => {
+          console.log(res)
+        })
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    handleFileUpload(event) {
+      this.selectedFile = event.target.files[0]
+    },
+    // in case we need file type verification on the server
+    uploadPDF() {
+      if (!this.selectedFile) {
+        console.log('No file selected')
+        return
+      }
+      const formData = new FormData()
+      formData.append('pdfFile', this.selectedFile)
+
+      axios
+        .post('uploadEndpoint', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+        .then((response) => {
+          console.log('File uploaded successfully', response.data)
+        })
+        .catch((error) => {
+          console.error('Error uploading file', error)
+        })
+    },
     toggleSummaryMenu() {
       this.showSummaryMenu = !this.showSummaryMenu
     },
