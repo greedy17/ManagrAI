@@ -1571,5 +1571,4 @@ def upload_pdf(request):
             break
     if has_error:
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
-    print(content)
     return Response({"content": content})

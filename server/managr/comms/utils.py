@@ -406,6 +406,9 @@ def convert_pdf_from_url(url):
                     page_text = page.extract_text()
                     if page_text:
                         text += page_text
+        import os
+
+        os.remove(temp_filename)
         return text
     except Exception as e:
         print(str(e))
