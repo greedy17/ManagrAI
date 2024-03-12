@@ -2092,7 +2092,7 @@ export default {
       } catch (e) {
         // `${e.data.error}`
 
-        this.$toast(`Unable to process PDF. It may be too long or doesn't contain readable text`, {
+        this.$toast(`Unable to process. PDF too long or text not readable.`, {
           timeout: 3500,
           position: 'top-left',
           type: 'error',
