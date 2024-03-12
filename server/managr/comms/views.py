@@ -3,19 +3,16 @@ import httpx
 import time
 import logging
 import pytz
-import pdfplumber
 from rest_framework import (
     mixins,
     viewsets,
 )
-from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from django.http import JsonResponse
 from asgiref.sync import async_to_sync, sync_to_async
 from pytz import timezone
 from datetime import datetime, timedelta
 from newspaper import Article, ArticleException
 from managr.api.models import ExpiringTokenAuthentication
-from channels.db import database_sync_to_async
 from rest_framework.response import Response
 from rest_framework import (
     permissions,
@@ -23,7 +20,6 @@ from rest_framework import (
     status,
     viewsets,
 )
-from rest_framework.exceptions import ValidationError
 from urllib.parse import urlencode
 from django.shortcuts import redirect
 from rest_framework.decorators import action
@@ -53,6 +49,8 @@ from managr.comms.utils import (
     generate_config,
     normalize_article_data,
     get_domain,
+    extract_pdf_text,
+    convert_pdf_from_url,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
@@ -1506,19 +1504,18 @@ def redirect_from_twitter(request):
 @permission_classes([permissions.IsAuthenticated])
 def upload_pdf(request):
     user = request.user
-    pdf_file = request.FILES.get("pdf_file")
-    instructions = request.data.get("instructions")
-    text = ""
-    with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-        for chunk in pdf_file.chunks():
-            tmp_file.write(chunk)
-        tmp_file_path = tmp_file.name
-    
-    with pdfplumber.open(tmp_file_path) as pdf:
-        for page in pdf.pages:
-            page_text = page.extract_text()
-            if page_text:
-                text += page_text
+    url = request.data.get("url", None)
+    pdf_file = request.FILES.get("pdf_file", None)
+    instructions = request.data.get("instructions", "Create a summary")
+    if pdf_file:
+        text = extract_pdf_text(pdf_file)
+    else:
+        text = convert_pdf_from_url(url)
+    if not len(text):
+        return Response(
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            data={"error": "No text could be extract from the uploaded PDF"},
+        )
     has_error = False
     attempts = 1
     token_amount = 4000
