@@ -7,14 +7,12 @@ from rest_framework import (
     mixins,
     viewsets,
 )
-from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from django.http import JsonResponse
 from asgiref.sync import async_to_sync, sync_to_async
 from pytz import timezone
 from datetime import datetime, timedelta
 from newspaper import Article, ArticleException
 from managr.api.models import ExpiringTokenAuthentication
-from channels.db import database_sync_to_async
 from rest_framework.response import Response
 from rest_framework import (
     permissions,
@@ -22,7 +20,6 @@ from rest_framework import (
     status,
     viewsets,
 )
-from rest_framework.exceptions import ValidationError
 from urllib.parse import urlencode
 from django.shortcuts import redirect
 from rest_framework.decorators import action
@@ -52,9 +49,12 @@ from managr.comms.utils import (
     generate_config,
     normalize_article_data,
     get_domain,
+    extract_pdf_text,
+    convert_pdf_from_url,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
+import tempfile
 
 logger = logging.getLogger("managr")
 
@@ -1498,3 +1498,78 @@ def redirect_from_twitter(request):
         err = urlencode(err)
         return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{err}")
     return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{q}")
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def upload_pdf(request):
+    user = request.user
+    url = request.data.get("url", None)
+    pdf_file = request.FILES.get("pdf_file", None)
+    instructions = request.data.get("instructions", "Create a summary")
+    if pdf_file:
+        text = extract_pdf_text(pdf_file)
+    else:
+        text = convert_pdf_from_url(url)
+    if not len(text):
+        return Response(
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            data={"error": "No text could be extract from the uploaded PDF"},
+        )
+    has_error = False
+    attempts = 1
+    token_amount = 4000
+    timeout = 60.0
+    while True:
+        try:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_GENERATE_PDF_SUMMARY(
+                datetime.now().date(), instructions, text
+            )
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email,
+                prompt,
+                token_amount=token_amount,
+                top_p=0.1,
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            res = open_ai_exceptions._handle_response(r)
+
+            content = res.get("choices")[0].get("message").get("content")
+            break
+        except open_ai_exceptions.StopReasonLength:
+            logger.exception(
+                f"Retrying again due to token amount, amount currently at: {token_amount}"
+            )
+            if token_amount <= 8000:
+                has_error = True
+
+                message = "Token amount error"
+                break
+            else:
+                token_amount += 1000
+                continue
+        except httpx.ReadTimeout as e:
+            print(e)
+            timeout += 30.0
+            if timeout >= 120.0:
+                has_error = True
+                message = "Read timeout issue"
+                logger.exception(f"Read timeout from Open AI {e}")
+                break
+            else:
+                attempts += 1
+                continue
+        except Exception as e:
+            has_error = True
+            message = f"Unknown exception: {e}"
+            logger.exception(e)
+            break
+    if has_error:
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
+    return Response({"content": content})

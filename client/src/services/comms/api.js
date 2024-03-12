@@ -357,6 +357,14 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    async summarizePDF(data) {
+        try {
+            const res = await this.client.post('summarize-pdf/', data, { headers: { "Content-Type": "multipart/form-data" } })
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
 }
 
 class TwitterAccountAPI extends ModelAPI {

@@ -2,6 +2,9 @@ import re
 import json
 import boto3
 import csv
+import pdfplumber
+import tempfile
+import requests
 from datetime import datetime
 from functools import reduce
 from managr.core.utils import Variable_Client
@@ -375,3 +378,63 @@ def complete_url(url, default_domain, default_scheme="https"):
         )
     )
     return complete_url
+
+
+def save_and_extract_text(file):
+    text = ""
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
+            temp_file.write(file.read())
+            temp_filename = temp_file.name
+            with pdfplumber.open(temp_filename) as pdf:
+                for page in pdf.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        text += page_text
+        import os
+
+        os.remove(temp_filename)
+        return text
+    except Exception as e:
+        print(str(e))
+        return ""
+
+
+def extract_pdf_text(pdf_file):
+    from django.core.files.uploadedfile import InMemoryUploadedFile
+
+    text = ""
+    try:
+        if isinstance(pdf_file, InMemoryUploadedFile):
+            text = save_and_extract_text(pdf_file)
+        else:
+            with pdfplumber.open(pdf_file.temporary_file_path()) as pdf:
+                for page in pdf.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        text += page_text
+        return text
+    except Exception as e:
+        print(str(e))
+        return ""
+
+
+def convert_pdf_from_url(url):
+    text = ""
+    try:
+        r = requests.get(url)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
+            temp_file.write(r.content)
+            temp_filename = temp_file.name
+            with pdfplumber.open(temp_filename) as pdf:
+                for page in pdf.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        text += page_text
+        import os
+
+        os.remove(temp_filename)
+        return text
+    except Exception as e:
+        print(str(e))
+        return ""
