@@ -1409,8 +1409,12 @@
                         ref="fileInput"
                       />
                       <label class="ellipsis-text-s" style="cursor: pointer" for="fileInput">
-                        {{ selectedFile ? selectedFile.name : 'Upload PDF' }}</label
-                      >
+                        {{ selectedFile ? selectedFile.name : 'Upload PDF' }}
+                      </label>
+
+                      <div v-if="selectedFile" class="file-img">
+                        <img src="@/assets/images/upload2.svg" height="12px" alt="" />
+                      </div>
                     </div>
                   </div>
 
@@ -4868,13 +4872,26 @@ textarea::placeholder {
 }
 
 .custom-file-upload {
-  display: inline-block;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  padding: 5px 8px 0 8px;
+  padding: 4px 12px;
   border: 1px solid #ccc;
   border-radius: 4px;
   background-color: white;
   color: black;
+}
+
+.file-img {
+  margin-left: 12px;
+  background-color: white;
+  img {
+    top: 12px;
+    z-index: 5;
+    margin-right: 8px;
+  }
 }
 
 /* Hide the original file input */
