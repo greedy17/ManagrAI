@@ -56,6 +56,7 @@ from managr.comms.utils import (
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
+import tempfile
 
 logger = logging.getLogger("managr")
 
@@ -1505,20 +1506,19 @@ def redirect_from_twitter(request):
 @permission_classes([permissions.IsAuthenticated])
 def upload_pdf(request):
     user = request.user
-
     pdf_file = request.FILES.get("pdf_file")
     instructions = request.data.get("instructions")
     text = ""
-    with pdfplumber.open(pdf_file.temporary_file_path()) as pdf:
+    with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+        for chunk in pdf_file.chunks():
+            tmp_file.write(chunk)
+        tmp_file_path = tmp_file.name
+    
+    with pdfplumber.open(tmp_file_path) as pdf:
         for page in pdf.pages:
             page_text = page.extract_text()
             if page_text:
                 text += page_text
-    if not len(text):
-        return Response(
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            data={"error": "No text could be extract from the uploaded PDF"},
-        )
     has_error = False
     attempts = 1
     token_amount = 4000
@@ -1544,6 +1544,7 @@ def upload_pdf(request):
             res = open_ai_exceptions._handle_response(r)
 
             content = res.get("choices")[0].get("message").get("content")
+            break
         except open_ai_exceptions.StopReasonLength:
             logger.exception(
                 f"Retrying again due to token amount, amount currently at: {token_amount}"

@@ -1342,30 +1342,31 @@
         </div>
 
         <div style="width: 100%; padding: 32px 0" v-else-if="mainView === 'pdf'">
-          <div v-if="loading">
+          <!-- <div v-if="loading">
             <div class="small-container">
               <div class="loading">
-                <p>Generating clips</p>
+                <p>Summarizing PDF</p>
                 <div class="dot"></div>
                 <div class="dot"></div>
                 <div class="dot"></div>
               </div>
             </div>
-          </div>
+          </div> -->
 
           <div
             class="small-container letter-spacing"
             style="width: 100%; padding: 0 32px; padding-top: 16px"
-            v-else-if="!pdfLoaded"
           >
-            <div v-if="!pdfLoaded" class="text-width">
-              <h3 style="margin: 0; font-size: 24px" class="">Summarize PDF</h3>
-              <p style="margin: 0">Upload a PDF or paste a link to it</p>
+            <div class="text-width">
+              <h3 style="margin: 0; font-size: 24px" class="beta-span">
+                Summarize PDF <span>Beta</span>
+              </h3>
+              <p style="margin: 0">Upload a PDF that has 10 pages or less</p>
             </div>
 
-            <div style="width: 100%; margin-top: 32px">
+            <div :class="{ opaque: summaryLoading }" style="width: 100%; margin-top: 32px">
               <div style="width: 100%" class="large-input-container">
-                <div style="border: none; box-shadow: none" class="input-container">
+                <!-- <div style="border: none; box-shadow: none" class="input-container">
                   <img
                     class="left-margin-m"
                     src="@/assets/images/search.svg"
@@ -1393,12 +1394,45 @@
 
                     <div class="tooltip">Submit</div>
                   </div>
-                </div>
+                </div> -->
+                <div style="border-top: none; padding-bottom: 16px" class="expanded-item">
+                  <div class="row horizontal-padding-s img-text">
+                    <img src="@/assets/images/upload.svg" height="18px" alt="" />
 
+                    <div @click="openFilePicker" class="custom-file-upload">
+                      <input
+                        :disabled="summaryLoading"
+                        @change="handleFileUpload"
+                        type="file"
+                        accept=".pdf"
+                        id="pdfile"
+                        ref="fileInput"
+                      />
+                      <label class="ellipsis-text-s" style="cursor: pointer" for="fileInput">
+                        {{ selectedFile ? selectedFile.name : 'Upload PDF' }}</label
+                      >
+                    </div>
+                  </div>
+
+                  <div
+                    @click="summarizePdf"
+                    class="image-container left-margin right-margin-m wrapper"
+                    :class="{ 'dark-blue-bg': selectedFile, void: summaryLoading }"
+                  >
+                    <img
+                      style="margin: 0"
+                      src="@/assets/images/paper-plane-top.svg"
+                      height="14px"
+                      alt=""
+                    />
+
+                    <div class="tooltip">Summarize</div>
+                  </div>
+                </div>
                 <div>
                   <div class="expanded-item">
                     <div class="row horizontal-padding-s img-text">
-                      <img src="@/assets/images/newspaper.svg" height="20px" alt="" />
+                      <img src="@/assets/images/pdf.svg" height="20px" alt="" />
                       <p>Source</p>
                     </div>
 
@@ -1431,21 +1465,6 @@
                       >
                         PDF
                       </div>
-                    </div>
-                  </div>
-
-                  <div class="expanded-item">
-                    <div class="row horizontal-padding-s img-text">
-                      <img src="@/assets/images/pdf.svg" height="18px" alt="" />
-
-                      <div class="file-input-wrapper">
-                        <input @change="handleFileUpload" type="file" accept=".pdf" id="pdfile" />
-                        <label for="pdfile">Choose File</label>
-                      </div>
-                    </div>
-
-                    <div style="background: red" @click="summarizePdf">
-                      <p style="color: white">TEST</p>
                     </div>
                   </div>
                 </div>
@@ -1491,7 +1510,7 @@
             @click="sendSummaryEmail"
             class="wrapper icon-button white-bg right-margin"
             :disabled="sentSummaryEmail"
-            v-if="mainView !== 'social' && mainView !== 'website'"
+            v-if="mainView !== 'social' && mainView !== 'website' && mainView !== 'pdf'"
           >
             <img
               v-if="sendingSummaryEmail"
@@ -1643,6 +1662,20 @@
                     @click="getChatSummary(filteredArticles, newTemplate)"
                     class="image-container left-margin right-margin-m white-bg"
                     v-else-if="mainView === 'news' && newTemplate"
+                    :class="newTemplate ? 'dark-blue-bg' : ''"
+                  >
+                    <img
+                      style="margin: 0"
+                      src="@/assets/images/paper-plane-full.svg"
+                      height="14px"
+                      alt=""
+                    />
+                  </div>
+
+                  <div
+                    @click="summarizePdf(newTemplate)"
+                    class="image-container left-margin right-margin-m white-bg"
+                    v-else-if="mainView === 'pdf' && newTemplate"
                     :class="newTemplate ? 'dark-blue-bg' : ''"
                   >
                     <img
@@ -2027,29 +2060,48 @@ export default {
     this.abortFunctions()
   },
   methods: {
-    async summarizePdf() {
+    openFilePicker() {
+      if (!this.summaryLoading) {
+        this.$refs.fileInput.click()
+      }
+    },
+
+    async summarizePdf(instructions) {
+      if (!this.selectedFile) {
+        console.log('select file first')
+        return
+      }
+      this.summaryLoading = true
+      this.showingPromptDropdown = false
+      this.showSummaryMenu = false
       try {
         let formData = new FormData()
-        formData.append('instructions', 'Summarize the data')
+        formData.append('instructions', instructions ? instructions : 'Summarize the data')
         if (this.selectedFile && this.selectedFile instanceof File) {
           formData.append('pdf_file', this.selectedFile)
         } else {
           console.error('This is not a File object')
         }
         await Comms.api.summarizePDF(formData).then((res) => {
-          console.log(res)
+          this.summary = res.content
         })
       } catch (e) {
-        this.$toast(`Try Again: ${e.data.error}`, {
-          timeout: 2000,
+        // `${e.data.error}`
+
+        this.$toast(`Unable to process PDF. It may be too long or doesn't contain readable text`, {
+          timeout: 3500,
           position: 'top-left',
           type: 'error',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+      } finally {
+        // this.selectedFile = null
+        this.summaryLoading = false
       }
     },
     handleFileUpload(event) {
+      this.summary = ''
       this.selectedFile = event.target.files[0]
     },
     // in case we need file type verification on the server
@@ -3687,6 +3739,10 @@ export default {
   }
 }
 
+.opaque {
+  opacity: 0.75;
+}
+
 .img-button {
   @include dark-blue-button();
   background-color: white;
@@ -4197,6 +4253,21 @@ button:disabled {
   border-radius: 100%;
 }
 
+.ellipsis-text-s {
+  display: inline-block;
+  max-width: 200px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+
+  // @media only screen and (max-width: 600px) {
+  //   max-width: 320px;
+  // }
+
+  // @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  // }
+}
+
 .ellipsis-text {
   max-width: 400px;
   white-space: nowrap;
@@ -4323,6 +4394,16 @@ li {
   padding-right: 32px;
   font-size: 16px !important;
   line-height: 1.75;
+}
+
+.beta-span {
+  span {
+    background-color: $white-blue;
+    color: black;
+    font-size: 14px;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
 }
 
 .blue-filter {
@@ -4595,6 +4676,10 @@ p {
   }
 }
 
+.void {
+  cursor: not-allowed !important;
+}
+
 .img-text {
   img {
     margin-right: 16px;
@@ -4782,27 +4867,21 @@ textarea::placeholder {
   padding: 4px 0;
 }
 
-.file-input-wrapper {
-  position: relative;
-  overflow: hidden;
+.custom-file-upload {
   display: inline-block;
+  cursor: pointer;
+  padding: 5px 8px 0 8px;
   border: 1px solid #ccc;
-  padding: 2px 6px;
-  border-radius: 5px;
-  background-color: #f9f9f9;
-  cursor: pointer;
+  border-radius: 4px;
+  background-color: white;
+  color: black;
 }
 
-.file-input-wrapper input[type='file'] {
-  position: absolute;
-  font-size: 100px;
-  opacity: 0;
-  right: 0;
-  top: 0;
-}
-
-.file-input-wrapper label {
-  cursor: pointer;
+/* Hide the original file input */
+.custom-file-upload input[type='file'] {
+  padding: 0;
+  margin: 0;
+  display: none;
 }
 // p {
 //   font-size: 14px;
