@@ -208,7 +208,7 @@
             @click="toggleShowPitches"
             class="row pointer nav-text"
           >
-            Saved Pitches
+            Saved Content
             <img
               v-if="!showSavedPitches"
               src="@/assets/images/downArrow.svg"
@@ -489,7 +489,7 @@
               @click="toggleShowPitches"
               class="row pointer nav-text"
             >
-              Saved Pitches
+              Saved Content
               <img
                 v-if="!showSavedPitches"
                 src="@/assets/images/downArrow.svg"
@@ -804,7 +804,7 @@
             @click="toggleShowPitches"
             class="row pointer nav-text saved-searches-mobile"
           >
-            Saved Pitches
+            Saved Content
             <img
               v-if="!showSavedPitches"
               src="@/assets/images/downArrow.svg"
