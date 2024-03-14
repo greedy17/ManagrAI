@@ -586,6 +586,18 @@
                   />
                 </div>
               </div>
+
+              <div class="h-padding">
+                <div @click="togglePersonal" class="toggle">
+                  <div :class="{ 'active-toggle': personalSearches }" class="toggle-side">
+                    <small>Personal</small>
+                  </div>
+
+                  <div :class="{ 'active-toggle': !personalSearches }" class="toggle-side">
+                    <small>Group</small>
+                  </div>
+                </div>
+              </div>
             </div>
             <div v-else-if="showSavedPitches" class="search-dropdown">
               <div class="input">
@@ -944,6 +956,7 @@ export default {
   },
   data() {
     return {
+      personalSearches: true,
       items: [],
       searchText: '',
       pitchText: '',
@@ -1018,6 +1031,9 @@ export default {
     },
   },
   methods: {
+    togglePersonal() {
+      this.personalSearches = !this.personalSearches
+    },
     setIndex(i) {
       this.hoverIndex = i
     },
@@ -1241,7 +1257,11 @@ export default {
   },
   computed: {
     unfilteredSearches() {
-      return this.$store.state.allSearches
+      if (this.personalSearches) {
+        return this.$store.state.allSearches.filter((search) => search.user === this.user.id)
+      } else {
+        return this.$store.state.allSearches
+      }
     },
     activeUsers() {
       return this.team.list.filter((user) => user.isActive)
@@ -1313,6 +1333,9 @@ export default {
     userCRM() {
       return this.$store.state.user.crm
     },
+    user() {
+      return this.$store.state.user
+    },
     routeName() {
       return this.$route.name
     },
@@ -1365,6 +1388,47 @@ export default {
     opacity: 0.9;
     transform: translate(10%, 0%);
   }
+}
+
+.active-toggle {
+  background-color: white;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 3px 11px rgba(0, 0, 0, 0.1);
+  padding: 6px 12px;
+}
+
+.toggle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: $off-white;
+  cursor: pointer;
+  width: fit-content;
+  padding: 2px 1px;
+  border-radius: 16px;
+
+  small {
+    font-size: 13px;
+    margin: 0 4px;
+  }
+}
+
+.toggle-side {
+  width: 80px;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.h-padding {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #hamburger {
@@ -1620,7 +1684,7 @@ export default {
   max-height: 250px;
   overflow-y: scroll;
   scroll-behavior: smooth;
-  margin-bottom: 1rem;
+  margin-bottom: 0.25rem;
   padding: 0.5rem 0;
 }
 

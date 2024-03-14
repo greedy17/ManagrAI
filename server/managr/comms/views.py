@@ -134,7 +134,7 @@ class PRSearchViewSet(
     serializer_class = SearchSerializer
 
     def get_queryset(self):
-        return Search.objects.filter(user=self.request.user)
+        return Search.objects.filter(user__organization=self.request.user.organization)
 
     def create(self, request, *args, **kwargs):
         user = request.user
