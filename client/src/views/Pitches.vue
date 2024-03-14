@@ -483,7 +483,14 @@
               </div>
 
               <div v-if="showStyleDropdown" class="content-dropdown">
-                <div class="drop-container">
+                <div
+                  @click="showStyleDropdown = !showStyleDropdown"
+                  style="margin: 0"
+                  class="close-modal"
+                >
+                  <p style="margin: 0">X</p>
+                </div>
+                <div style="margin-top: -16px" class="drop-container">
                   <section v-if="userWritingStyles.length">
                     <p
                       style="
@@ -547,7 +554,7 @@
                       <button
                         @mouseenter="changeStyleText"
                         @mouseleave="defaultStyleText"
-                        style="margin-bottom: 8px; width: 45%"
+                        style="margin-bottom: 16px; width: 45%"
                         @click="toggleLearnInputModal"
                         class="primary-button"
                       >
@@ -582,7 +589,14 @@
                       <p style="padding: 0 16px; margin: 0">{{ style.title }}</p>
                     </div>
 
-                    <div style="display: flex; align-items: center; justify-content: center">
+                    <div
+                      style="
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin-bottom: 16px;
+                      "
+                    >
                       <button
                         @mouseenter="changeStyleText"
                         @mouseleave="defaultStyleText"
@@ -3062,6 +3076,20 @@ button:disabled {
 
 .dark-blue-color {
   color: red !important;
+}
+
+.close-modal {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: flex-end;
+
+  p {
+    width: fit-content !important;
+    padding: 0;
+    margin: 0;
+  }
 }
 
 .content-dropdown {
