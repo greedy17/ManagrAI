@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crawler Report</title>
+</head>
+
+<body
+    style="margin: 0; padding: 0; background-color: #FAFAFA; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; font-weight:200;">
+    <center>
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"
+            style="margin: auto; max-width: 600px; background-color: #FFFFFF; color:#27292c;">
+            <tr>
+                <td style="padding: 30px; text-align: start;border-bottom: 1px solid #DDDDDD;">
+                    <p style="font-size:40px;font-weight:200;margin:8px 0;color: #2f4656;"> Managr Crawler Report</p>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 30px;">
+                    <div style="border-bottom: 1px solid #DDDDDD;margin-bottom:16px;padding-bottom:16px;">
+                        <pre
+                            style="color: #2f4656;font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size: 16px;line-height: 24px;word-wrap: break-word;white-space: pre-wrap; padding: 16px;background-color:#e9f3fa;">
+                        Total urls processed: {{urls_processed}}</pre>
+                    </div>
+                    <div style="border-bottom: 1px solid #DDDDDD;margin-bottom:16px;padding-bottom:16px;">
+                        <pre
+                            style="color: #2f4656;font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size: 16px;line-height: 24px;word-wrap: break-word;white-space: pre-wrap; padding: 16px;background-color:#e9f3fa;">
+                        Number of sources scraped: {{start_urls}}</pre>
+                    </div>
+                    <div>Errors:</div>
+                    {% for value in errors %}
+                    <div>
+                        <!-- <img src="{{value.image_url}}" style="height: 12px;width:12px; margin-right: 8px;"> -->
+                        <div style="border-bottom: 1px solid #DDDDDD; padding-bottom: 15px; margin-bottom: 15px; font-size: 800;">
+                            {{value}}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </td>
+            </tr>
+        </table>
+    </center>
+</body>
+
+</html>

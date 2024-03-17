@@ -1508,9 +1508,9 @@ def upload_pdf(request):
     pdf_file = request.FILES.get("pdf_file", None)
     instructions = request.data.get("instructions", "Create a summary")
     if pdf_file:
-        text = extract_pdf_text(pdf_file)
+        text, images = extract_pdf_text(pdf_file)
     else:
-        text = convert_pdf_from_url(url)
+        text, images = convert_pdf_from_url(url)
     if not len(text):
         return Response(
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1541,6 +1541,18 @@ def upload_pdf(request):
             res = open_ai_exceptions._handle_response(r)
 
             content = res.get("choices")[0].get("message").get("content")
+            # if len(images):
+            #     prompt = comms_consts.OPEN_AI_IMAGE_CONTENT(
+            #         images, "Generate a summary of the images", token_amount
+            #     )
+            #     with Variable_Client(timeout) as client:
+            #         r = client.post(
+            #             url,
+            #             data=json.dumps(prompt),
+            #             headers=core_consts.OPEN_AI_HEADERS,
+            #         )
+            #     res = open_ai_exceptions._handle_response(r)
+            #     print(res)
             break
         except open_ai_exceptions.StopReasonLength:
             logger.exception(

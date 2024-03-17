@@ -2,7 +2,7 @@ import re
 import json
 import boto3
 import csv
-import pdfplumber
+import fitz
 import tempfile
 import requests
 from datetime import datetime
@@ -380,61 +380,100 @@ def complete_url(url, default_domain, default_scheme="https"):
     return complete_url
 
 
+def images_extractor(pdf, page):
+    import base64
+
+    image_list = []
+    images = page.get_images()
+    if len(images):
+        image = pdf.extract_image(images[0][0])
+        image_base64 = base64.b64encode(image["image"]).decode("utf-8")
+        image_list.append(image_base64)
+    return image_list
+
+
 def save_and_extract_text(file):
     text = ""
+    image_list = []
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
             temp_file.write(file.read())
             temp_filename = temp_file.name
-            with pdfplumber.open(temp_filename) as pdf:
-                for page in pdf.pages:
-                    page_text = page.extract_text()
-                    if page_text:
-                        text += page_text
+
+        # Open the PDF file with PyMuPDF
+        doc = fitz.open(temp_filename)
+        for page_number in range(doc.page_count):
+            page = doc.load_page(page_number)
+            text += page.get_text()
+            images = images_extractor(doc, page)
+            image_list.extend(images)
         import os
 
+        # Remove the temporary file
         os.remove(temp_filename)
-        return text
+
+        return text, image_list
     except Exception as e:
         print(str(e))
-        return ""
+        return "", image_list
 
 
 def extract_pdf_text(pdf_file):
     from django.core.files.uploadedfile import InMemoryUploadedFile
 
     text = ""
+    image_list = []
     try:
         if isinstance(pdf_file, InMemoryUploadedFile):
-            text = save_and_extract_text(pdf_file)
+            text, images = save_and_extract_text(pdf_file)
+            image_list.extend(images)
         else:
-            with pdfplumber.open(pdf_file.temporary_file_path()) as pdf:
-                for page in pdf.pages:
-                    page_text = page.extract_text()
-                    if page_text:
-                        text += page_text
-        return text
+            # Open the PDF file with PyMuPDF
+            doc = fitz.open(pdf_file.temporary_file_path())
+            for page_number in range(doc.page_count):
+                page = doc.load_page(page_number)
+                text += page.get_text()
+                images = images_extractor(doc, page)
+                image_list.extend(images)
+        return text, image_list
     except Exception as e:
         print(str(e))
-        return ""
+        return "", image_list
 
 
 def convert_pdf_from_url(url):
+    import os
+
     text = ""
+    image_list = []
     try:
         r = requests.get(url)
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
             temp_file.write(r.content)
             temp_filename = temp_file.name
-            with pdfplumber.open(temp_filename) as pdf:
-                for page in pdf.pages:
-                    page_text = page.extract_text()
-                    if page_text:
-                        text += page_text
-        import os
 
+        # Open the PDF file with PyMuPDF
+        doc = fitz.open(temp_filename)
+        for page_number in range(doc.page_count):
+            page = doc.load_page(page_number)
+            text += page.get_text()
+            images = images_extractor(doc, page)
+            image_list.extend(images)
+        # Remove the temporary file
         os.remove(temp_filename)
-        return text
+
+        return text, image_list
     except Exception as e:
         print(str(e))
-        return ""
+        return "", image_list
+
+
+def apr(account, apr, months):
+    interest_count = 0
+    for month in range(months):
+        account += 500
+        interest = account * (apr / 100)
+        print(interest)
+        interest_count += interest
+        account += interest
+    return f"Total {account} / Interest Earned: {interest_count}"
