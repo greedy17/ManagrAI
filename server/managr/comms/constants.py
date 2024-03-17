@@ -170,6 +170,17 @@ def OPEN_AI_GENERATE_CONTENT(date, article, style, instructions):
     return body
 
 
+def OPEN_AI_IMAGE_CONTENT(images, instructions, tokens):
+    messages = {"role": "user"}
+    content = [{"type": "text", "text": instructions}]
+    for image in images:
+        image_dict = {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image}"}}
+        content.append(image_dict)
+    messages["content"] = content
+    body = {"model": "gpt-4-vision-preview", "messages": [messages], "max_tokens": tokens}
+    return body
+
+
 OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS = (
     lambda pitch, instructions: f"""
 Adjust and rewrite the content per the instructions, while maintaining the existing writing style.\n

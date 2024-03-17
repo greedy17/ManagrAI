@@ -1,12 +1,14 @@
 import scrapy
 import logging
 import datetime
+from scrapy import signals
 from django.utils import timezone
 from django.conf import settings
 from django.db import IntegrityError
 from ..models import NewsSource
 from ..serializers import ArticleSerializer
 from dateutil import parser
+from managr.api.emails import send_html_email
 
 from ..utils import (
     get_domain,
@@ -80,6 +82,34 @@ class NewsSpider(scrapy.Spider):
         self.first_only = kwargs.get("first_only")
         self.test = kwargs.get("test")
         self.urls_processed = 0
+        self.error_log = []
+
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = super(NewsSpider, cls).from_crawler(crawler, *args, **kwargs)
+        crawler.signals.connect(spider.spider_closed_handler, signal=signals.spider_closed)
+        return spider
+
+    def spider_closed_handler(self, spider):
+        report_data = {
+            "start_urls": len(self.start_urls),
+            "urls_processed": self.urls_processed,
+            "errors": self.error_log,
+        }
+        self.generate_report(report_data)
+
+    def generate_report(self, data):
+        try:
+            send_html_email(
+                f"Managr Crawler Report",
+                "core/email-templates/crawler-email.html",
+                settings.DEFAULT_FROM_EMAIL,
+                ["zach@mymanagr.com", "mike@managr.ai"],
+                context=data,
+            )
+        except Exception as e:
+            logger.exception(e)
+        return
 
     def get_site_name(self, response):
         site_name = response.xpath(
@@ -200,7 +230,9 @@ class NewsSpider(scrapy.Spider):
         except IntegrityError:
             return
         except Exception as e:
+            self.error_log.append(f"URL: {source.domain} | Error: {str(e)}")
             source.add_error(f"{str(e)} {meta_tag_data}\n")
+        self.urls_processed += 1
         return
 
     def process_new_url(self, source, response):
@@ -248,10 +280,11 @@ class NewsSpider(scrapy.Spider):
         return
 
     def start_requests(self):
+        self.total_urls = len(self.start_urls)
         for url in self.start_urls:
             try:
                 yield scrapy.Request(
                     url, headers={"Referer": "https://www.google.com"}, callback=self.parse
                 )
             except Exception as e:
-                logger.exception(e)
+                self.error_log.append(str(e))
