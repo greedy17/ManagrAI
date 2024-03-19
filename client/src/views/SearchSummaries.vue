@@ -1882,6 +1882,7 @@ export default {
         `Exercise AND TikTok`,
         `Supreme Court AND Social Media`,
         `“Embedded Finance”`,
+        `Fashion AND Sustainability`,
       ],
       summaryExamples: [
         {

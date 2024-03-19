@@ -127,11 +127,7 @@
         <div class="paid-header">
           <div>
             <h3 class="regen-header-title">
-              {{
-                !journalists
-                  ? 'Discover relevant journalists or influencers'
-                  : 'Journalists/Influencers'
-              }}
+              {{ !journalists ? 'Discover Journalists or Influencers' : 'Journalists/Influencers' }}
             </h3>
             <p class="regen-header-subtitle">
               {{ !journalists ? 'Provide additional details below' : 'Journalist details' }}
@@ -391,20 +387,17 @@
 
     <Modal v-if="outputModalOpen" class="paid-modal">
       <div
-        :style="isMobile ? 'width: 95%; min-height: 100px' : 'width: 610px; min-height: 100px'"
+        :style="isMobile ? 'width: 95%; min-height: 100px' : 'width: 610px; min-height: 100px;'"
         class="regen-container"
       >
-        <div class="space-between">
-          <p style="font-size: 17px">Key Data</p>
-          <img
-            style="margin-right: 10px; cursor: pointer"
-            @click="expandOutput"
-            src="@/assets/images/expand-arrows.svg"
-            height="14px"
-            alt=""
-          />
+        <div style="background-color: white; z-index: 1000" class="paid-header">
+          <div class="space-between">
+            <p style="font-size: 17px">Key Data</p>
+            <p style="margin-right: 12px; cursor: pointer" @click="expandOutput">X</p>
+          </div>
         </div>
-        <div class="paid-body">
+
+        <div style="margin-bottom: 32px" class="paid-body">
           <div class="sample-row">
             <div style="width: 604px" class="input-container">
               <div class="input-row relative">
@@ -412,10 +405,10 @@
                   :disabled="savingStyle"
                   maxlength="8000"
                   class="area-input text-area-input"
-                  style="padding: 16px 0 0 0"
+                  style="padding: 16px 0 0 0; max-height: 350px; width: 650px"
                   placeholder="Paste relevant data, a news summary, or notes..."
                   v-model="output"
-                  rows="7"
+                  rows="20"
                   v-autoresize
                 />
 
@@ -517,7 +510,8 @@
                     v-autoresize
                     :disabled="loading"
                     maxlength="5000"
-                    style="max-height: 100px"
+                    rows="4"
+                    style="max-height: 100px; padding-top: 2.5rem !important"
                   />
 
                   <img
@@ -1034,9 +1028,10 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
           value: `Craft a professional, insightful LinkedIn Post about {TopicX}`,
         },
         {
-          name: `Twitter Thread`,
-          value: `Create a series of {NumberX} connected tweets about {TopicX}`,
+          name: `LinkedIn Hook`,
+          value: `10-20 word, cheeky, witty LinkedIn post hook`,
         },
+
         {
           name: `Instagram Story`,
           value: `Create an engaging Instagram story post about {TopicX}`,
@@ -1054,8 +1049,8 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
           value: `Write a concise, direct, professional email regarding {TopicX}`,
         },
         {
-          name: `LinkedIn Hook`,
-          value: `10-20 word, cheeky, witty LinkedIn post hook`,
+          name: `Twitter Thread`,
+          value: `Create a series of {NumberX} connected tweets about {TopicX}`,
         },
         {
           name: `SEO Optimization`,
@@ -1953,6 +1948,7 @@ h3 {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
 }
 
 p,
@@ -2916,7 +2912,7 @@ footer {
   margin: 0.25rem 0;
 }
 .regen-header-subtitle {
-  font-size: 12px;
+  font-size: 14px;
   color: $light-gray-blue;
   margin: 0.5rem 0;
 }
