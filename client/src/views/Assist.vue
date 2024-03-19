@@ -370,25 +370,15 @@
           </div> -->
 
           <div style="margin-top: -4px" class="small-container">
-            <h4 style="margin: 0; font-size: 16px" class="bold">
-              Create content based on the latest news
-            </h4>
-            <p style="margin-top: 0; font-size: 16px">
-              Turn the latest media coverage into personalized content for your brand.
-            </p>
+            <div class="text-width">
+              <h3 style="margin: 0; font-size: 24px" class="">Content Autopilot</h3>
+              <p style="margin: 0">Get auto-generated content based on the latest news</p>
+            </div>
           </div>
         </div>
 
         <div class="small-container" style="width: 100%; padding-bottom: 60px">
-          <label
-            class="bold"
-            style="
-              border-top: 1px solid rgba(0, 0, 0, 0.1);
-              width: 100%;
-              display: block;
-              padding-top: 1rem;
-            "
-            for="name"
+          <label class="bold" style="width: 100%; display: block; padding-top: 1rem" for="name"
             >Name</label
           >
           <input

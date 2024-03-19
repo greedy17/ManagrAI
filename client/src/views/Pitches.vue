@@ -127,7 +127,11 @@
         <div class="paid-header">
           <div>
             <h3 class="regen-header-title">
-              {{ !journalists ? 'Find Journalists/Influencers' : 'Journalists/Influencers' }}
+              {{
+                !journalists
+                  ? 'Discover relevant journalists or influencers'
+                  : 'Journalists/Influencers'
+              }}
             </h3>
             <p class="regen-header-subtitle">
               {{ !journalists ? 'Provide additional details below' : 'Journalist details' }}
@@ -143,7 +147,7 @@
           v-if="!journalists"
           class="paid-body input-width"
         >
-          <label for="pub">Publication Type</label>
+          <label for="pub">Type</label>
           <input
             class="input-text"
             placeholder="(e.g., Tier 1, industry-specific, niche, TikTok influencers, etc.)"
@@ -153,7 +157,7 @@
             id="pub"
           />
 
-          <label for="beat">Beat</label>
+          <label for="beat">Topic</label>
           <input
             class="input-text"
             placeholder="(e.g., Technology, health, lifestyle, etc.)"
@@ -175,7 +179,7 @@
         </div>
 
         <div v-else class="paid-body">
-          <pre v-html="journalists" class="pre-text" style="font-size: 14px"></pre>
+          <pre v-html="journalists" class="pre-text" style="font-size: 16px"></pre>
         </div>
 
         <div class="paid-footer align-right">
@@ -286,7 +290,7 @@
         </div>
 
         <div v-else class="paid-body">
-          <pre v-html="feedback" class="pre-text" style="font-size: 14px"></pre>
+          <pre v-html="feedback" class="pre-text" style="font-size: 16px"></pre>
         </div>
 
         <div class="paid-footer align-right">
@@ -385,229 +389,316 @@
       </div>
     </Modal>
 
-    <section class="container">
-      <div class="content-body">
-        <div>
-          <!-- <div class="row-start">
-            <div style="cursor: text" class="image-container-blue right-margin-m">
-              <img
-                class="blue-filter"
-                style="margin-left: -1px"
-                src="@/assets/images/logo.png"
-                height="16px"
-                alt=""
-              />
-            </div>
-            <h3>Managr</h3>
-          </div> -->
+    <Modal v-if="outputModalOpen" class="paid-modal">
+      <div
+        :style="isMobile ? 'width: 95%; min-height: 100px' : 'width: 610px; min-height: 100px'"
+        class="regen-container"
+      >
+        <div class="space-between">
+          <p style="font-size: 17px">Key Data</p>
+          <img
+            style="margin-right: 10px; cursor: pointer"
+            @click="expandOutput"
+            src="@/assets/images/expand-arrows.svg"
+            height="14px"
+            alt=""
+          />
+        </div>
+        <div class="paid-body">
+          <div class="sample-row">
+            <div style="width: 604px" class="input-container">
+              <div class="input-row relative">
+                <textarea
+                  :disabled="savingStyle"
+                  maxlength="8000"
+                  class="area-input text-area-input"
+                  style="padding: 16px 0 0 0"
+                  placeholder="Paste relevant data, a news summary, or notes..."
+                  v-model="output"
+                  rows="7"
+                  v-autoresize
+                />
 
-          <div style="margin-top: -4px" class="small-container">
-            <p style="margin: 0; font-size: 16px" class="bold">Create content</p>
-            <p style="margin: 0">
-              Choose type (media pitch, blog post, etc.), provide key data, and select a writing
-              style.
-            </p>
+                <div style="margin-bottom: 8px" class="absolute-count">
+                  <small>{{ remainingStyleChars }}</small>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
+    </Modal>
 
-        <div class="small-container" style="width: 100%; margin-top: 1rem">
-          <div
-            style="
-              padding-top: 1rem;
-              padding-bottom: 128px;
-              overflow-y: scroll;
-              height: 100%;
-              border-top: 1px solid rgba(0, 0, 0, 0.1);
-            "
-          >
-            <div style="position: relative">
-              <label class="bold" for="content-type">Content Type</label>
-              <input
-                class="primary-input"
-                type="text"
-                name="content-type"
-                v-model="type"
-                :disabled="loading"
-                maxlength="300"
-                placeholder="(e.g., create a 200 word media pitch, draft a blog post, etc.)"
-                id=""
-              />
-              <div class="absolute-count">
-                <small>{{ remainingCharsSample }}</small>
-              </div>
-            </div>
+    <section class="container">
+      <div style="padding-top: 88px" class="content-body">
+        <div style="width: 100%; padding: 0 32px; padding-top: 16px" class="small-container">
+          <div class="text-width">
+            <h3 style="margin: 0; font-size: 24px" class="">Writing Assistant</h3>
+            <p style="margin: 0">Create content that sounds like you</p>
+          </div>
 
-            <div style="position: relative">
-              <label class="bold" for="key-data">Key Data</label>
-              <textarea
-                style="margin-top: 1rem"
-                class="area-input-bordered"
-                id="key-data"
-                placeholder="Paste relevant data, a news summary, or notes."
-                v-model="output"
-                :rows="3"
-                v-autoresize
-                :disabled="loading"
-                maxlength="5000"
-              />
-
-              <div style="bottom: -2px" class="absolute-count">
-                <small>{{ remainingChars }}</small>
-              </div>
-            </div>
-
-            <label class="bold" style="margin-top: 1rem" for="writing-style">Writing Style</label>
-            <div style="margin-top: 1rem; width: 100%; position: relative" id="writing-style">
+          <div style="margin-top: 32px" class="large-input-container">
+            <div>
               <div
-                @click="toggleStyleDropdown"
-                class="drop-text pointer"
-                :class="loading ? 'textcursor' : ''"
+                style="border: none; box-shadow: none; position: relative"
+                class="input-containered"
               >
-                <p class="ellipsis-text" style="margin: 0">
-                  {{ writingStyleTitle ? writingStyleTitle : 'Select Style' }}
-                </p>
-                <img
-                  v-if="!showStyleDropdown"
-                  src="@/assets/images/downArrow.svg"
-                  class="inverted"
-                  height="14px"
-                  alt=""
+                <img class="left-margin-m" src="@/assets/images/wand.svg" height="20px" alt="" />
+                <textarea
+                  class="area-input text-area-input"
+                  name="content-type"
+                  v-model="type"
+                  :disabled="loading"
+                  maxlength="300"
+                  placeholder="Content Instructions..."
+                  v-autoresize
+                  autocomplete="off"
                 />
-                <img
-                  class="rotate-img inverted"
-                  v-else
-                  src="@/assets/images/downArrow.svg"
-                  height="14px"
-                  alt=""
-                />
+
+                <div
+                  @click="generatePitch"
+                  class="image-container left-margin-l wrapper"
+                  :class="type && writingStyle && !loading ? 'dark-blue-bg' : ''"
+                >
+                  <img
+                    style="margin: 0; cursor: text"
+                    src="@/assets/images/paper-plane-top.svg"
+                    height="14px"
+                    alt=""
+                  />
+
+                  <div class="tooltip">Submit</div>
+                </div>
+                <!-- <div class="absolute-count">
+                  <small>{{ remainingCharsSample }}</small>
+                </div> -->
               </div>
 
-              <div v-if="showStyleDropdown" class="content-dropdown">
-                <div
-                  @click="showStyleDropdown = !showStyleDropdown"
-                  style="margin: 0"
-                  class="close-modal"
-                >
-                  <p style="margin: 0">X</p>
+              <div>
+                <div class="expanded-item-column">
+                  <div class="row horizontal-padding-s img-text">
+                    <img src="@/assets/images/arrow-trend-up.svg" height="18px" alt="" />
+                    <p style="margin-left: 6px">Popular Content</p>
+                  </div>
+
+                  <div class="horizontal-padding-m rowss">
+                    <p
+                      v-for="(example, i) in contentExamples"
+                      :key="i"
+                      @click="setNewContent(example.value)"
+                      class="bold gray-title"
+                    >
+                      {{ example.name }}
+                    </p>
+                  </div>
                 </div>
-                <div style="margin-top: -16px" class="drop-container">
-                  <section v-if="userWritingStyles.length">
-                    <p
+
+                <div
+                  class="input-containered"
+                  style="
+                    border: none;
+                    box-shadow: none;
+                    position: relative;
+                    border-radius: 0;
+                    border-top: 1px solid rgba(0, 0, 0, 0.1);
+                  "
+                >
+                  <img
+                    class="left-margin-m"
+                    src="@/assets/images/document.svg"
+                    height="20px"
+                    alt=""
+                  />
+                  <textarea
+                    class="area-input text-area-input"
+                    id="key-data"
+                    placeholder="Paste relevant data, a news summary, or notes..."
+                    v-model="output"
+                    v-autoresize
+                    :disabled="loading"
+                    maxlength="5000"
+                    style="max-height: 100px"
+                  />
+
+                  <img
+                    @click="expandOutput"
+                    class="left-margin-xl"
+                    src="@/assets/images/expand-arrows.svg"
+                    height="14px"
+                    alt=""
+                    style="cursor: pointer"
+                  />
+                  <!-- <div style="bottom: -2px" class="absolute-count">
+                    <small>{{ remainingChars }}</small>
+                  </div> -->
+                </div>
+
+                <div class="expanded-item" style="position: relative" id="writing-style">
+                  <img
+                    class="left-margin-m"
+                    src="@/assets/images/edit-note.svg"
+                    height="19px"
+                    alt=""
+                  />
+
+                  <div
+                    @click="toggleStyleDropdown"
+                    class="drop-text pointer"
+                    :class="loading ? 'textcursor' : ''"
+                  >
+                    <p class="ellipsis-text" style="margin: 0">
+                      {{ writingStyleTitle ? writingStyleTitle : 'Select writing style' }}
+                    </p>
+                    <img
+                      v-if="!showStyleDropdown"
+                      src="@/assets/images/downArrow.svg"
+                      class="inverted"
+                      height="14px"
+                      alt=""
+                    />
+                    <img
+                      class="rotate-img inverted"
+                      v-else
+                      src="@/assets/images/downArrow.svg"
+                      height="14px"
+                      alt=""
+                    />
+                  </div>
+
+                  <div v-if="showStyleDropdown" class="content-dropdown">
+                    <div
+                      @click="showStyleDropdown = !showStyleDropdown"
                       style="
-                        margin-bottom: 0;
-                        padding-bottom: 8px;
-                        cursor: text;
-                        color: #2f4656;
-                        font-size: 16px;
+                        margin: 0;
                         position: sticky;
                         top: 0;
+                        width: 100%;
                         background-color: white;
-                        z-index: 15;
                       "
+                      class="close-modal"
                     >
-                      Styles
-                    </p>
-                    <div
-                      @click="addWritingStyle(style.style, style.title)"
-                      class="dropdown-item"
-                      style="padding: 4px 0"
-                      v-for="(style, i) in defaultWritingStyles"
-                      :key="i"
-                    >
-                      <p style="padding: 0 16px; margin: 0">{{ style.title }}</p>
+                      <p style="margin-right: -8px; font-size: 17px">X</p>
                     </div>
-                    <div class="divider"></div>
-                    <div
-                      @mouseenter="setIndex(i)"
-                      @mouseLeave="removeIndex"
-                      @click="addWritingStyle(style.style, style.title)"
-                      class="dropdown-item"
-                      v-for="(style, i) in userWritingStyles"
-                      :key="i"
-                      style="padding: 4px 0"
-                    >
-                      <p style="padding: 0 16px; margin: 0; color: black !important">
-                        {{ style.title }}
-                      </p>
+                    <div style="margin-top: -16px" class="drop-container">
+                      <section v-if="userWritingStyles.length">
+                        <p
+                          style="
+                            margin-bottom: 0;
+                            padding-bottom: 8px;
+                            cursor: text;
+                            color: #2f4656;
+                            font-size: 16px;
+                            position: sticky;
+                            top: 0;
+                            background-color: white;
+                            z-index: 15;
+                          "
+                        >
+                          Styles
+                        </p>
+                        <div
+                          @click="addWritingStyle(style.style, style.title)"
+                          class="dropdown-item"
+                          style="padding: 4px 0"
+                          v-for="(style, i) in defaultWritingStyles"
+                          :key="i"
+                        >
+                          <p style="padding: 0 16px; margin: 0">{{ style.title }}</p>
+                        </div>
+                        <div class="divider"></div>
+                        <div
+                          @mouseenter="setIndex(i)"
+                          @mouseLeave="removeIndex"
+                          @click="addWritingStyle(style.style, style.title)"
+                          class="dropdown-item"
+                          v-for="(style, i) in userWritingStyles"
+                          :key="i"
+                          style="padding: 4px 0"
+                        >
+                          <p style="padding: 0 16px; margin: 0; color: black !important">
+                            {{ style.title }}
+                          </p>
 
-                      <div @click="openResetModal(style.id)" class="absolute-icon">
-                        <img
-                          v-if="hoverIndex === i"
-                          src="@/assets/images/trash.svg"
-                          height="12px"
-                          alt=""
-                        />
-                      </div>
-                    </div>
+                          <div @click="openResetModal(style.id)" class="absolute-icon">
+                            <img
+                              v-if="hoverIndex === i"
+                              src="@/assets/images/trash.svg"
+                              height="12px"
+                              alt=""
+                            />
+                          </div>
+                        </div>
 
-                    <div
-                      style="
-                        padding: 8px 0;
-                        position: sticky;
-                        bottom: 0;
-                        background: white;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                      "
-                    >
-                      <button
-                        @mouseenter="changeStyleText"
-                        @mouseleave="defaultStyleText"
-                        style="margin-bottom: 16px; width: 45%"
-                        @click="toggleLearnInputModal"
-                        class="primary-button"
-                      >
-                        {{ styleText }}
-                      </button>
-                    </div>
-                  </section>
-                  <section style="padding: 8px 0" v-else>
-                    <p
-                      style="
-                        margin-bottom: 0;
-                        padding-bottom: 8px;
-                        cursor: text;
-                        color: #2f4656;
-                        font-size: 16px;
-                        position: sticky;
-                        top: 0;
-                        background-color: white;
-                        z-index: 15;
-                      "
-                    >
-                      Styles
-                    </p>
+                        <div
+                          style="
+                            padding: 8px 0;
+                            position: sticky;
+                            bottom: 0;
+                            background: white;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                          "
+                        >
+                          <button
+                            @mouseenter="changeStyleText"
+                            @mouseleave="defaultStyleText"
+                            style="margin-bottom: 16px; width: 45%"
+                            @click="toggleLearnInputModal"
+                            class="primary-button"
+                          >
+                            {{ styleText }}
+                          </button>
+                        </div>
+                      </section>
+                      <section style="padding: 8px 0" v-else>
+                        <p
+                          style="
+                            margin-bottom: 0;
+                            padding-bottom: 8px;
+                            cursor: text;
+                            color: #2f4656;
+                            font-size: 16px;
+                            position: sticky;
+                            top: 0;
+                            background-color: white;
+                            z-index: 15;
+                          "
+                        >
+                          Styles
+                        </p>
 
-                    <div
-                      @click="addWritingStyle(style.style, style.title)"
-                      class="dropdown-item"
-                      style="padding: 4px 0"
-                      v-for="(style, i) in defaultWritingStyles"
-                      :key="i"
-                    >
-                      <p style="padding: 0 16px; margin: 0">{{ style.title }}</p>
-                    </div>
+                        <div
+                          @click="addWritingStyle(style.style, style.title)"
+                          class="dropdown-item"
+                          style="padding: 4px 0"
+                          v-for="(style, i) in defaultWritingStyles"
+                          :key="i"
+                        >
+                          <p style="padding: 0 16px; margin: 0">{{ style.title }}</p>
+                        </div>
 
-                    <div
-                      style="
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        margin-bottom: 16px;
-                      "
-                    >
-                      <button
-                        @mouseenter="changeStyleText"
-                        @mouseleave="defaultStyleText"
-                        style="margin-top: 8px"
-                        @click="toggleLearnInputModal"
-                        class="primary-button"
-                      >
-                        {{ styleText }}
-                      </button>
+                        <div
+                          style="
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            margin-bottom: 16px;
+                          "
+                        >
+                          <button
+                            @mouseenter="changeStyleText"
+                            @mouseleave="defaultStyleText"
+                            style="margin-top: 8px"
+                            @click="toggleLearnInputModal"
+                            class="primary-button"
+                          >
+                            {{ styleText }}
+                          </button>
+                        </div>
+                      </section>
                     </div>
-                  </section>
+                  </div>
                 </div>
               </div>
             </div>
@@ -615,9 +706,9 @@
         </div>
       </div>
 
-      <div class="footer sticky-bottom">
+      <!-- <div class="footer sticky-bottom">
         <div style="padding-bottom: 8px" class="flex-end small-container">
-          <!-- <div
+          <div
             :class="{ fadedimg: !storedType && !storedOutput && !storedWritingStyle }"
             @click="refillContent"
             class="wrapper image-container"
@@ -629,7 +720,7 @@
               alt=""
             />
             <div class="tooltip">Refill form</div>
-          </div> -->
+          </div>
 
           <div class="rows">
             <button @click="clearForm" :disabled="loading" class="secondary-button">Clear</button>
@@ -642,7 +733,7 @@
             </button>
           </div>
         </div>
-      </div>
+      </div> -->
     </section>
 
     <section class="container gray-bg">
@@ -683,7 +774,7 @@
                 alt=""
               />
               <div class="tooltip-below">
-                {{ !journalists ? 'Find Journalists' : 'View Journalists' }}
+                {{ !journalists ? 'Discover Voices' : 'View Journalists' }}
               </div>
             </div>
 
@@ -738,7 +829,7 @@
       </div>
 
       <div style="margin-top: 0.5rem" v-else-if="pitch" class="content-body">
-        <div class="small-container">
+        <div style="padding-top: 32px" class="small-container">
           <pre class="pre-text" v-html="pitch"></pre>
         </div>
       </div>
@@ -875,6 +966,7 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
       showingCharacterDropdown: false,
       showingInstructionsDropdown: false,
       storedEvent: null,
+      outputModalOpen: false,
       storedPlaceholder: '',
       optionalPlaceholder: 'Optional',
       instructionsPlaceholder: 'What would you like written?',
@@ -920,6 +1012,60 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
       storedWritingStyle: null,
       storedType: null,
       storedWritingStyleTitle: null,
+      contentExamples: [
+        {
+          name: `Media Pitch`,
+          value: `Create a 200 word media pitch on behalf of {BrandX}`,
+        },
+        {
+          name: `Blog Post`,
+          value: `Create an informative blog post for {BrandX}`,
+        },
+        {
+          name: `Re-write`,
+          value: `Re-write this based on my writing style`,
+        },
+        {
+          name: `Optimize`,
+          value: `Optimize this content for {AudienceType}`,
+        },
+        {
+          name: `Linkedin Post`,
+          value: `Craft a professional, insightful LinkedIn Post about {TopicX}`,
+        },
+        {
+          name: `Twitter Thread`,
+          value: `Create a series of {NumberX} connected tweets about {TopicX}`,
+        },
+        {
+          name: `Instagram Story`,
+          value: `Create an engaging Instagram story post about {TopicX}`,
+        },
+        {
+          name: `TikTok Caption`,
+          value: `Create a catchy, engaging, concise TikTok caption for a video about {TopicX}`,
+        },
+        {
+          name: `Mastering TopicX`,
+          value: `Create a Social Post that has a "how to" element to it, about {TopicX},`,
+        },
+        {
+          name: `Email`,
+          value: `Write a concise, direct, professional email regarding {TopicX}`,
+        },
+        {
+          name: `LinkedIn Hook`,
+          value: `10-20 word, cheeky, witty LinkedIn post hook`,
+        },
+        {
+          name: `SEO Optimization`,
+          value: `Craft SEO-enhanced blog titles and meta descriptions for optimal impact`,
+        },
+        {
+          name: `Product Launch`,
+          value: `Create an exciting, persuasive announcement for the launch of {ProductX} by {BrandX}`,
+        },
+      ],
     }
   },
   watch: {
@@ -933,6 +1079,12 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
     this.$store.commit('setGeneratedContent', null)
   },
   methods: {
+    expandOutput() {
+      this.outputModalOpen = !this.outputModalOpen
+    },
+    setNewContent(val) {
+      this.type = val
+    },
     clearForm() {
       // this.storeContent()
       this.output = ''
@@ -1363,6 +1515,9 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
         this.openPaidModal()
         return
       }
+      if (!this.type || !this.writingStyle || this.loading) {
+        return
+      }
       this.storeContent()
       this.pitch = null
       this.feedback = null
@@ -1374,11 +1529,7 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
       this.journalists = null
       this.loading = true
       this.showStyleDropdown = false
-      console.log(
-        this.type + ' --- ENDS HERE ---',
-        this.output + '--- ENDS HERE ---',
-        this.writingStyle + '--- ENDS HERE---',
-      )
+
       try {
         await Comms.api
           .generatePitch({
@@ -1684,7 +1835,7 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  font-size: 14px;
+  font-size: 16px;
   width: 100%;
   height: 80%;
 }
@@ -1735,7 +1886,7 @@ label {
   overflow-y: scroll;
   scroll-behavior: smooth;
   z-index: 0;
-  padding: 88px 40px 32px 40px;
+  padding: 56px 32px 0 32px;
   font-size: 16px;
   width: 100%;
   height: 100%;
@@ -1758,7 +1909,6 @@ label {
 
 .bold {
   font-family: $base-font-family;
-  font-weight: 200 !important;
 }
 
 h3 {
@@ -1773,9 +1923,27 @@ h3 {
   line-height: 1.75;
 }
 
+.large-input-container {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 9px;
+  padding: 16px;
+}
+
 .horizontal-padding {
   padding-left: 56px;
   padding-right: 64px;
+}
+
+.horizontal-padding-m {
+  padding: 0 34px 0 36px;
+
+  @media only screen and (max-width: 600px) {
+    padding: 0 16px;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 
 .spacer {
@@ -1815,11 +1983,12 @@ label {
 .image-container {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 50%;
-  padding: 6px;
+  padding: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: all 0.2s;
 
   img {
     filter: invert(40%);
@@ -1855,6 +2024,10 @@ label {
 
 .left-margin-l {
   margin-left: 16px;
+}
+
+.left-margin-xl {
+  margin-left: 20px;
 }
 
 .right-margin {
@@ -1963,6 +2136,15 @@ label {
   align-items: flex-start;
   margin-left: -10px;
 }
+
+.rowss {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+}
+
 .rows {
   display: flex;
   flex-direction: row;
@@ -2014,7 +2196,10 @@ label {
 
 .dark-blue-bg {
   background-color: $dark-black-blue;
-  padding: 23px 0 30px;
+
+  img {
+    filter: invert(100%) !important;
+  }
 }
 
 .pitch-view {
@@ -2068,6 +2253,25 @@ label {
   position: relative;
   display: flex;
   align-items: center;
+  flex-direction: row;
+
+  img {
+    filter: invert(40%);
+  }
+}
+
+.input-containered {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+  padding: 0;
+  border-radius: 24px;
+  width: 100%;
+  color: $base-gray;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   flex-direction: row;
 
   img {
@@ -2164,26 +2368,26 @@ label {
   background-color: transparent;
 }
 
-.area-input {
-  width: 100%;
-  background-color: $offer-white;
-  margin-bottom: 0.25rem;
-  max-height: 250px;
-  padding: 0 1.25rem;
-  line-height: 1.75;
-  outline: none;
-  border: none;
-  letter-spacing: 0.5px;
-  font-size: 13px;
-  font-family: $thin-font-family;
-  font-weight: 400;
-  border: none !important;
-  resize: none;
-  text-align: left;
-  overflow: auto;
-  scroll-behavior: smooth;
-  color: $dark-black-blue;
-}
+// .area-input {
+//   width: 100%;
+//   background-color: $offer-white;
+//   margin-bottom: 0.25rem;
+//   max-height: 250px;
+//   padding: 0 1.25rem;
+//   line-height: 1.75;
+//   outline: none;
+//   border: none;
+//   letter-spacing: 0.5px;
+//   font-size: 13px;
+//   font-family: $thin-font-family;
+//   font-weight: 400;
+//   border: none !important;
+//   resize: none;
+//   text-align: left;
+//   overflow: auto;
+//   scroll-behavior: smooth;
+//   color: $dark-black-blue;
+// }
 
 .area-input:disabled,
 .area-input-bordered:disabled {
@@ -2248,12 +2452,12 @@ label {
   justify-content: space-between;
   width: 100%;
   margin: 0;
-  font-size: 14px;
+  font-size: 16px;
   color: $dark-black-blue;
   background-color: white;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  // border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 4px;
-  padding: 12px 16px;
+  padding: 12px 16px 12px 20px;
   svg,
   img {
     margin-left: 4px;
@@ -2903,7 +3107,7 @@ footer {
   // padding-top: 1rem;
 }
 .text-area-input {
-  padding-top: 1.25rem;
+  padding-top: 1rem;
 }
 .divider {
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
@@ -3093,9 +3297,9 @@ button:disabled {
 }
 
 .content-dropdown {
-  width: 60%;
+  width: 65%;
   overflow-y: scroll;
-  max-height: 300px;
+  max-height: 400px;
   position: absolute;
   bottom: 60px;
   left: 0;
@@ -3251,5 +3455,85 @@ button:disabled {
   @media only screen and (max-width: 600px) {
     padding: 0px 32px 16px 32px;
   }
+}
+
+.text-width {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+
+  p {
+    font-size: 17px;
+  }
+}
+
+input,
+textarea {
+  font-family: $thin-font-family;
+  font-size: 16px;
+}
+
+input::placeholder {
+  font-family: $thin-font-family;
+  font-size: 16px;
+}
+input:disabled {
+  cursor: not-allowed;
+}
+textarea:disabled {
+  cursor: not-allowed;
+}
+textarea::placeholder {
+  font-family: $thin-font-family;
+  font-size: 16px;
+}
+
+.expanded-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 4px 0;
+
+  img {
+    filter: invert(40%);
+  }
+}
+
+.expanded-item-column {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  flex-direction: column;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 4px 0;
+
+  img {
+    filter: invert(40%);
+  }
+}
+
+.horizontal-padding-s {
+  padding: 0 12px;
+}
+
+.img-text {
+  font-size: 16px;
+  img {
+    margin-right: 16px;
+    filter: invert(40%);
+  }
+}
+
+.gray-title {
+  width: fit-content;
+  border-radius: 4px;
+  padding: 2px 6px;
+  background-color: $off-white;
+  margin-top: 0;
+  margin-left: 8px;
+  cursor: pointer;
 }
 </style>
