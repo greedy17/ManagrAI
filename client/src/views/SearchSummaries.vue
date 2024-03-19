@@ -344,10 +344,8 @@
               class="small-container letter-spacing"
             >
               <div v-if="!selectedSearch" class="text-width">
-                <h3 style="margin: 0; font-size: 24px" class="">Summarize the News</h3>
-                <p style="margin: 0">
-                  Start by typing in keywords or a topic. Then provide summary instructions
-                </p>
+                <h3 style="margin: 0; font-size: 24px" class="">Research Assistant</h3>
+                <p style="margin: 0">Get content ideas based on real-time news</p>
               </div>
 
               <div style="width: 100%; margin-top: 32px">
@@ -364,7 +362,7 @@
                       id="search-input"
                       @keyup.enter="generateNewSearch(false)"
                       class="area-input text-area-input"
-                      placeholder="Enter keywords..."
+                      placeholder="Search..."
                       autocomplete="off"
                       v-model="newSearch"
                       v-autoresize
@@ -782,9 +780,10 @@
               class="small-container letter-spacing"
             >
               <div v-if="!selectedSearch" class="text-width">
-                <h3 style="margin: 0; font-size: 24px" class="">Summarize Social</h3>
+                <h3 style="margin: 0; font-size: 24px" class="">Research Assistant</h3>
+
                 <p v-if="hasTwitterIntegration" style="margin: 0">
-                  Start by typing in keywords or a topic. Then provide summary instructions
+                  Get content ideas based on social media
                 </p>
 
                 <p style="margin: 0" v-else>
@@ -1052,8 +1051,8 @@
             v-else-if="!addedArticles.length && !clipLoading"
           >
             <div v-if="!selectedSearch" class="text-width">
-              <h3 style="margin: 0; font-size: 24px" class="">Summarize Article</h3>
-              <p style="margin: 0">Paste an article url to generate a summary</p>
+              <h3 style="margin: 0; font-size: 24px" class="">Research Assistant</h3>
+              <p style="margin: 0">Get content ideas based on a website</p>
             </div>
 
             <div style="width: 100%; margin-top: 32px">
@@ -1359,9 +1358,9 @@
           >
             <div class="text-width">
               <h3 style="margin: 0; font-size: 24px" class="beta-span">
-                Summarize PDF <span>Beta</span>
+                Research Assistant <span>Beta</span>
               </h3>
-              <p style="margin: 0">Upload a PDF that has 10 pages or less</p>
+              <p style="margin: 0">Get content ideas based on a PDF</p>
             </div>
 
             <div :class="{ opaque: summaryLoading }" style="width: 100%; margin-top: 32px">
@@ -1878,11 +1877,12 @@ export default {
       selectedSearch: null,
       selectedDateTime: '',
       searchExamples: [
-        `Lululemon`,
+        `"Cancer Research"`,
         `Apple Vision PRO`,
-        `OpenAI`,
+        `Exercise AND TikTok`,
         `Supreme Court AND Social Media`,
         `“Embedded Finance”`,
+        `Fashion AND Sustainability`,
       ],
       summaryExamples: [
         {

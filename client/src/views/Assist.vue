@@ -370,100 +370,93 @@
           </div> -->
 
           <div style="margin-top: -4px" class="small-container">
-            <h4 style="margin: 0; font-size: 16px" class="bold">
-              Create content based on the latest news
-            </h4>
-            <p style="margin-top: 0; font-size: 16px">
-              Turn the latest media coverage into personalized content for your brand.
-            </p>
+            <div class="text-width">
+              <h3 style="margin: 0; font-size: 24px" class="">Content Autopilot</h3>
+              <p style="margin: 0">Get auto-generated content based on the latest news</p>
+            </div>
           </div>
         </div>
 
-        <div class="small-container" style="width: 100%; padding-bottom: 60px">
-          <label
-            class="bold"
-            style="
-              border-top: 1px solid rgba(0, 0, 0, 0.1);
-              width: 100%;
-              display: block;
-              padding-top: 1rem;
-            "
-            for="name"
-            >Name</label
-          >
-          <input
-            v-model="processName"
-            placeholder="Name your process..."
-            type="text"
-            id="name"
-            :disabled="loading"
-          />
-
-          <label class="bold" for="">Saved search</label>
+        <div class="small-container" style="width: 100%; padding-bottom: 60px; margin-top: 16px">
+          <!-- style="border: 1px solid rgba(0, 0, 0, 0.1); padding: 16px; border-radius: 5px" -->
           <div>
-            <Multiselect
-              style="margin: 0.5rem 0"
-              :options="searches"
-              :show-labels="false"
-              placeholder="Choose one"
-              label="name"
-              track-by="id"
-              v-model="processSearchId"
-              :disabled="loading"
+            <label class="bold" style="width: 100%; display: block; padding-top: 1rem" for="name"
+              >Name</label
             >
-              <template slot="noResult">
-                <p class="multi-slot">No results.</p>
-              </template>
-            </Multiselect>
-          </div>
-
-          <label class="bold" for="loc">Content type</label>
-          <input
-            placeholder="(e.g., media pitch, press release, blog post, issue statement, etc.)"
-            type="text"
-            id="loc"
-            v-model="processType"
-            :disabled="loading"
-          />
-
-          <label class="bold" for="">Writing style</label>
-
-          <div>
-            <Multiselect
-              style="margin: 0.5rem 0"
-              :options="[...defaultWritingStyles, ...writingStyles]"
-              :show-labels="false"
-              placeholder="Choose one"
-              label="title"
-              track-by="style"
-              v-model="processStyle"
-              :disabled="loading"
-            >
-              <template slot="noResult">
-                <p class="multi-slot">No results.</p>
-              </template>
-            </Multiselect>
-          </div>
-
-          <div style="position: relative">
-            <label class="bold" for="loc">Additional details</label>
-            <textarea
-              style="
-                border: 1px solid rgba(0, 0, 0, 0.1) !important;
-                background-color: white;
-                margin: 0.5rem 0;
-              "
-              class="area-input text-area-input bordered"
-              placeholder="(e.g., content objective, company details, target audience, etc.)"
+            <input
+              v-model="processName"
+              placeholder="Name your process..."
               type="text"
-              id="details"
-              v-model="processDetails"
+              id="name"
               :disabled="loading"
-              axlength="5000"
-              v-autoresize
             />
-            <div class="absolute-count">
-              <small>{{ remainingChars }}</small>
+
+            <label class="bold" for="">Saved search</label>
+            <div>
+              <Multiselect
+                style="margin: 0.5rem 0"
+                :options="searches"
+                :show-labels="false"
+                placeholder="Choose one"
+                label="name"
+                track-by="id"
+                v-model="processSearchId"
+                :disabled="loading"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+              </Multiselect>
+            </div>
+
+            <label class="bold" for="loc">Content type</label>
+            <input
+              placeholder="(e.g., media pitch, press release, blog post, issue statement, etc.)"
+              type="text"
+              id="loc"
+              v-model="processType"
+              :disabled="loading"
+            />
+
+            <label class="bold" for="">Writing style</label>
+
+            <div>
+              <Multiselect
+                style="margin: 0.5rem 0"
+                :options="[...defaultWritingStyles, ...writingStyles]"
+                :show-labels="false"
+                placeholder="Choose one"
+                label="title"
+                track-by="style"
+                v-model="processStyle"
+                :disabled="loading"
+              >
+                <template slot="noResult">
+                  <p class="multi-slot">No results.</p>
+                </template>
+              </Multiselect>
+            </div>
+
+            <div style="position: relative">
+              <label class="bold" for="loc">Additional details</label>
+              <textarea
+                style="
+                  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+                  background-color: white;
+                  margin: 0.5rem 0;
+                "
+                class="area-input text-area-input bordered"
+                placeholder="(e.g., content objective, company details, target audience, etc.)"
+                type="text"
+                id="details"
+                v-model="processDetails"
+                :disabled="loading"
+                axlength="5000"
+                v-autoresize
+              />
+              <div class="absolute-count">
+                <small>{{ remainingChars }}</small>
+              </div>
             </div>
           </div>
         </div>
