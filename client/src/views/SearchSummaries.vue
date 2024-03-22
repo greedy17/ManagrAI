@@ -1627,7 +1627,7 @@
                       (tweets && tweets.length) ||
                       addedArticles.length
                     "
-                    class="left-margin-m"
+                    class="left-margin-m blue-icon"
                     style="margin-top: 0"
                     src="@/assets/images/sparkle.svg"
                     height="18px"
@@ -1926,8 +1926,8 @@ export default {
           value: `Issue a statement on behalf of {BrandX}`,
         },
         {
-          name: `Draft Blog Post`,
-          value: `Draft an informative blog post based on this coverage`,
+          name: `Blog Post`,
+          value: `Draft an informative blog post based on this coverage for {BrandX}`,
         },
         {
           name: `SEO Suggestions`,
@@ -3775,6 +3775,10 @@ export default {
     filter: invert(22%) sepia(32%) saturate(554%) hue-rotate(161deg) brightness(99%) contrast(90%);
     margin-right: 8px;
   }
+}
+
+.blue-icon {
+  filter: invert(22%) sepia(32%) saturate(554%) hue-rotate(161deg) brightness(99%) contrast(90%) !important;
 }
 
 .img-button-blue {
