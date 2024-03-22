@@ -91,7 +91,7 @@
                   :disabled="savingStyle"
                   maxlength="8000"
                   class="area-input text-area-input"
-                  style="padding: 16px 0 0 0"
+                  style="padding: 16px 0 0 0; width: 600px"
                   placeholder="Paste sample here..."
                   v-model="sample"
                   v-autoresize
@@ -403,7 +403,7 @@
               <div class="input-row relative">
                 <textarea
                   :disabled="savingStyle"
-                  maxlength="8000"
+                  maxlength="5000"
                   class="area-input text-area-input"
                   style="padding: 16px 0 0 0; max-height: 350px; width: 650px"
                   placeholder="Paste relevant data, a news summary, or notes..."
@@ -413,7 +413,7 @@
                 />
 
                 <div style="margin-bottom: 8px" class="absolute-count">
-                  <small>{{ remainingStyleChars }}</small>
+                  <small>{{ remainingChars }}</small>
                 </div>
               </div>
             </div>
@@ -462,9 +462,9 @@
 
                   <div class="tooltip">Submit</div>
                 </div>
-                <!-- <div class="absolute-count">
+                <div class="absolute-count-small">
                   <small>{{ remainingCharsSample }}</small>
-                </div> -->
+                </div>
               </div>
 
               <div>
@@ -2064,6 +2064,18 @@ label {
   position: absolute;
   bottom: 0;
   right: 3px;
+  font-size: 10px;
+  color: $light-gray-blue;
+  // background-color: $white-blue;
+  // border: 1px solid rgba(0, 0, 0, 0.1);
+  // border-radius: 4px;
+  // padding: 2px 4px;
+}
+
+.absolute-count-small {
+  position: absolute;
+  bottom: 20px;
+  right: 44px;
   font-size: 10px;
   color: $light-gray-blue;
   // background-color: $white-blue;

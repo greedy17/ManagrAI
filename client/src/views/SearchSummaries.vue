@@ -1627,7 +1627,7 @@
                       (tweets && tweets.length) ||
                       addedArticles.length
                     "
-                    class="left-margin-m"
+                    class="left-margin-m blue-icon"
                     style="margin-top: 0"
                     src="@/assets/images/sparkle.svg"
                     height="18px"
@@ -1758,9 +1758,9 @@
 
       <div class="footer sticky-bottom gray-bg">
         <div class="centered">
-          <button @click="toggleSummaryMenu" v-if="summary" class="img-button">
+          <button @click="toggleSummaryMenu" v-if="summary" class="img-button-blueicon">
             <img src="@/assets/images/sparkle.svg" height="18px" alt="" />
-            New Summary
+            Provide Summary Instructions
           </button>
         </div>
       </div>
@@ -1886,16 +1886,16 @@ export default {
       ],
       summaryExamples: [
         {
-          name: `Brand Analysis`,
-          value: `Summarize the news for {BrandX} leadership team in paragraph form. Provide sentiment analysis. List the top 3 most impactful stories, site source and author`,
-        },
-        {
-          name: `University Roundup`,
-          value: `Highlight any key research or faculty news for {UniversityX} leadership team. Highlight any sports related news. Provide overall sentiment analysis`,
-        },
-        {
           name: `Topic Summary`,
-          value: `Bring me up to speed on what’s happening. Provide sentiment analysis. Analyze the media to identify what aspects of the topic are most intriguing or concerning to the public`,
+          value: `Bring {BrandX} up to speed on what’s happening. How this news may impact them. Identify what aspects of the topic are most intriguing or concerning to the public. No salutations.`,
+        },
+        {
+          name: `PR Advice`,
+          value: `As {BrandX}'s PR agency, provide creative suggestions on how they should respond to or leverage this news`,
+        },
+        {
+          name: `Newsjacking Ideas`,
+          value: `Provide creative newsjacking ideas for {BrandX} based on this coverage`,
         },
         {
           name: `Media Pitching`,
@@ -1906,40 +1906,40 @@ export default {
           value: `List 5 journalists (from top pubs, include pitching tips) I can pitch on behalf of {BrandX}`,
         },
         {
+          name: `Media Q&A`,
+          value: `List 5 questions & answers journalists would ask {BrandX} leadership team`,
+        },
+        {
           name: `Expert Q&A`,
           value: `Generate a list of 5 questions that the public might have about this topic and how an expert {ExpertX} would respond to them.`,
         },
         {
-          name: `Media Q&A`,
-          value: `List 5 questions & answers journalists would ask {BrandX} leadership team`,
+          name: `Brand Analysis`,
+          value: `Summarize the news for {BrandX} leadership team in paragraph form. Provide sentiment analysis. List the top 3 most impactful stories, site source and author`,
         },
         {
           name: `Competitor Update`,
           value: `Highlight any important competitor news for {BrandX}. How does this impact {BrandX}. As {BrandX} PR agency provide feedback based on this news`,
         },
         {
-          name: `Newsjacking`,
-          value: `Provide creative newsjacking ideas for {BrandX} based on this coverage`,
-        },
-        {
           name: `Issue Statement`,
           value: `Issue a statement on behalf of {BrandX}`,
         },
         {
-          name: `Draft Blog Post`,
-          value: `Draft an informative blog post based on this coverage`,
+          name: `Blog Post`,
+          value: `Draft an informative blog post based on this coverage for {BrandX}`,
         },
         {
-          name: `SEO`,
-          value: `Provide top 10 SEO phrases relating to this topic`,
-        },
-        {
-          name: `Social Media Overview`,
-          value: `Summarize the social media coverage, Provide sentiment analysis, Identify top Influencers `,
+          name: `SEO Suggestions`,
+          value: `Provide top 10 SEO suggestions relating to this topic for {BrandX}`,
         },
         {
           name: `Sales Meeting`,
           value: `I am a sales rep, you are the VP of Sales, bring me up to speed on whats happening in the industry and how I can leverage it to sell my product: {ProductX} -- provide super specific, tangible, and creative advice.`,
+        },
+        {
+          name: `Email Roundup`,
+          value: `Craft an email roundup for {BrandX} leadership team bringing them up to speed on the most important, relevant, impactful news. Offer advice at the end. Be short, direct, to the point. No fluff.`,
         },
       ],
       articleGenerateOptions: [
@@ -3760,6 +3760,25 @@ export default {
     filter: invert(40%);
     margin-right: 8px;
   }
+}
+
+.img-button-blueicon {
+  @include dark-blue-button();
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 12px 32px;
+  border-radius: 12px;
+  color: $dark-black-blue;
+  font-size: 16px;
+  img {
+    filter: invert(22%) sepia(32%) saturate(554%) hue-rotate(161deg) brightness(99%) contrast(90%);
+    margin-right: 8px;
+  }
+}
+
+.blue-icon {
+  filter: invert(22%) sepia(32%) saturate(554%) hue-rotate(161deg) brightness(99%) contrast(90%) !important;
 }
 
 .img-button-blue {
