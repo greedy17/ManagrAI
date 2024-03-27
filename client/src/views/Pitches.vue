@@ -462,9 +462,9 @@
 
                   <div class="tooltip">Submit</div>
                 </div>
-                <div class="absolute-count-small">
+                <!-- <div class="absolute-count-small">
                   <small>{{ remainingCharsSample }}</small>
-                </div>
+                </div> -->
               </div>
 
               <div>

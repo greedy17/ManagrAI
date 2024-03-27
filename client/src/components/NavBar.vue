@@ -750,10 +750,10 @@
                 <img class="mar-right" src="@/assets/images/apps.svg" height="13px" alt="" />
                 Integrations
               </p>
-              <p class="dropdown-item" @click="goToReports">
+              <!-- <p class="dropdown-item" @click="goToReports">
                 <img class="mar-right" src="@/assets/images/report.svg" height="13px" alt="" />
                 Digest
-              </p>
+              </p> -->
               <p @click="logOut" class="dropdown-item dropdown-border">
                 <img class="mar-right" src="@/assets/images/logout.svg" height="13px" alt="" /> Sign
                 out
