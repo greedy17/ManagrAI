@@ -417,7 +417,7 @@
                       :class="newSearch ? 'dark-blue-bg' : ''"
                     >
                       <img
-                        style="margin: 0; cursor: text"
+                        style="margin: 0"
                         src="@/assets/images/paper-plane-top.svg"
                         height="14px"
                         alt=""
@@ -1613,7 +1613,11 @@
           </div> -->
 
           <div class="relative">
-            <pre style="overflow-y: scroll" v-html="summary" class="pre-text"></pre>
+            <pre
+              style="overflow-y: scroll; padding-bottom: 120px"
+              v-html="summary"
+              class="pre-text"
+            ></pre>
 
             <div v-if="showSummaryMenu" class="summary-section">
               <div style="width: 100%" class="large-input-container">
@@ -1919,7 +1923,7 @@ export default {
         },
         {
           name: `Competitor Update`,
-          value: `Highlight any important competitor news for {BrandX}. How does this impact {BrandX}. As {BrandX} PR agency provide feedback based on this news`,
+          value: `Bring {BrandX} up to speed on what {CompetitorsX} are up to. How this news may impact them. As {BrandX} PR agency provide feedback based on this news. No salutations`,
         },
         {
           name: `Issue Statement`,
