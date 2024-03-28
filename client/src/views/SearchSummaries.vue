@@ -1710,8 +1710,8 @@
 
                 <div class="expanded-item-column">
                   <div class="row horizontal-padding-s img-text">
-                    <img src="@/assets/images/arrow-trend-up.svg" height="18px" alt="" />
-                    <p>Popular summaries:</p>
+                    <img src="@/assets/images/file-ai.svg" height="18px" alt="" />
+                    <p>Templates:</p>
                   </div>
 
                   <div class="horizontal-padding rows">
@@ -2896,6 +2896,7 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
+        this.refreshUser()
         this.summarizing = true
       }
     },
@@ -3139,6 +3140,7 @@ export default {
         this.tweetMedia = null
         this.clearNewSearch()
       } finally {
+        this.refreshUser()
         this.loading = false
       }
     },
@@ -3294,6 +3296,7 @@ export default {
         this.$store.dispatch('updateAbortController', newAbortControllers)
         this.summarizing = true
         this.summaryLoading = false
+        this.refreshUser()
       }
     },
     async regenerateArticleSummary(url, summary, instructions) {
