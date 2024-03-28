@@ -455,7 +455,7 @@
               ($route.name === 'PRSummaries' ||
                 $route.name === 'Pitches' ||
                 $route.name === 'Assist') &&
-              !isPaid
+              isPaid
             "
             class="row wrapper-count"
           >

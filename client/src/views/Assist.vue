@@ -1043,6 +1043,18 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
         this.getProcesses()
       }
     },
+    // refreshUser() {
+    //   User.api
+    //     .getUser(this.user.id)
+    //     .then((user) => {
+    //       this.$store.dispatch('updateUser', user)
+    //       return user
+    //     })
+    //     .catch(() => {
+    //       // do nothing for now
+    //       return null
+    //     })
+    // },
     async runProcess(summary) {
       this.currentStep = 3
       this.stepName = 'Generating content'

@@ -470,8 +470,8 @@
               <div>
                 <div class="expanded-item-column">
                   <div class="row horizontal-padding-s img-text">
-                    <img src="@/assets/images/arrow-trend-up.svg" height="18px" alt="" />
-                    <p style="margin-left: 6px">Popular Content</p>
+                    <img src="@/assets/images/file-ai.svg" height="18px" alt="" />
+                    <p style="margin-left: 6px">Templates:</p>
                   </div>
 
                   <div class="horizontal-padding-m rowss">
@@ -1548,6 +1548,7 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
       } catch (e) {
         console.log('ERROR CREATING PITCH', e)
       } finally {
+        this.refreshUser()
         // this.clearData()
         this.loading = false
         this.scrollToTop()
