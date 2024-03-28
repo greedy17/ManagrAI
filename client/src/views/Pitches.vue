@@ -454,7 +454,7 @@
                   :class="type && writingStyle && !loading ? 'dark-blue-bg' : ''"
                 >
                   <img
-                    style="margin: 0; cursor: text"
+                    style="margin: 0"
                     src="@/assets/images/paper-plane-top.svg"
                     height="14px"
                     alt=""
