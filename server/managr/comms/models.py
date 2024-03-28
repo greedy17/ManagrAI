@@ -25,6 +25,7 @@ from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.indexes import GinIndex
 from requests_oauthlib import OAuth1Session, OAuth2Session
 from oauthlib.oauth2 import OAuth2Error
+from requests_oauthlib.compliance_fixes import facebook_compliance_fix
 
 logger = logging.getLogger("managr")
 
