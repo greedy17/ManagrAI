@@ -91,3 +91,29 @@ class TwitterApiException:
             raise ServerError()
         else:
             raise Exception(f"Twitter api error: {self.param}")
+
+
+class InstagramApiException:
+    def __init__(self, e, fn_name=None, retries=0):
+        self.error = e
+        self.error_class_name = e.__class__.__name__
+        self.status_code = e["status_code"]
+        self.param = e["error_param"]
+        self.fn_name = fn_name
+        self.retry_attempts = 0
+        self.raise_error()
+
+    def raise_error(self):
+        if self.error_class_name == "JSONDecodeError":
+            logger.error(f"An error occured decoding the json, {self.fn_name}")
+            return
+        elif self.status_code == 401:
+            return
+        elif self.status_code == 404 and self.param == "EXPIRED_AUTHENTICATION":
+            return
+        elif self.status_code == 429:
+            raise TooManyRequestsError()
+        elif self.status_code == 500:
+            raise ServerError()
+        else:
+            raise Exception(f"Twitter api error: {self.param}")

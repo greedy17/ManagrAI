@@ -1477,6 +1477,32 @@ def get_twitter_authentication(request):
     return Response(data={"success": True})
 
 
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def get_instagram_authentication(request):
+    user = request.user
+    data = request.data
+    access_token = TwitterAccount.authenticate(data.get("oauth_token"), data.get("oauth_verifier"))
+    data = {
+        "user": user.id,
+        "access_token": access_token.get("oauth_token"),
+        "access_token_secret": access_token.get("oauth_token_secret"),
+    }
+    existing = TwitterAccount.objects.filter(user=request.user).first()
+    if existing:
+        serializer = TwitterAccountSerializer(data=data, instance=existing)
+    else:
+        serializer = TwitterAccountSerializer(data=data)
+    try:
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+    except Exception as e:
+        logger.exception(str(e))
+        return Response(data={"success": False})
+    return Response(data={"success": True})
+
+
 @api_view(["DELETE"])
 @permission_classes([permissions.IsAuthenticated])
 def revoke_twitter_auth(request):

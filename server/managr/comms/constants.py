@@ -1,5 +1,4 @@
 from django.conf import settings
-from urllib.parse import urlencode
 
 USE_NEWS_API = settings.USE_NEWS_API
 NEWS_API_KEY = settings.NEWS_API_KEY if USE_NEWS_API else None
@@ -24,6 +23,19 @@ else:
     TWITTER_FRONTEND_REDIRECT = "https://app.managr.ai/pr-integrations"
 TWITTER_API_HEADERS = {"Authorization": f"Bearer {TWITTER_ACCESS_TOKEN}"}
 
+USE_INSTAGRAM_API = settings.USE_INSTAGRAM_API
+INSTAGRAM_APP_KEY = settings.INSTAGRAM_APP_KEY
+INSTAGRAM_APP_SECRET = settings.INSTAGRAM_APP_SECRET
+INSTAGRAM_REDIRECT_URI = settings.INSTAGRAM_REDIRECT_URI
+INSTAGRAM_BASE_URI = "https://api.instagram.com/"
+INSTAGRAM_AUTHORIZATION_URI = INSTAGRAM_BASE_URI + "oauth/authorize"
+INSTAGRAM_ACCESS_TOKEN_URI = INSTAGRAM_BASE_URI + "oauth/access_token"
+if settings.IN_DEV:
+    INSTAGRAM_FRONTEND_REDIRECT = "http://localhost:8080/pr-integrations"
+elif settings.IN_STAGING:
+    INSTAGRAM_FRONTEND_REDIRECT = "https://staging.managr.ai/pr-integrations"
+else:
+    INSTAGRAM_FRONTEND_REDIRECT = "https://app.managr.ai/pr-integrations"
 
 TWITTER_AUTHORIZATION_QUERY_PARAMS = {
     "oauth_callback": TWITTER_REDIRECT_URI,
