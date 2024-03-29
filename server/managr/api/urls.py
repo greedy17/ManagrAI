@@ -407,6 +407,11 @@ urlpatterns = [
         comms_views.upload_pdf,
         name="upload_pdf",
     ),
+     path(
+        "users/instagram/request-token/",
+        comms_views.get_instagram_request_token,
+        name="twitter-request-token",
+    ),
     
 ]
 

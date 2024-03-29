@@ -24,7 +24,7 @@ from urllib.parse import urlencode
 from django.shortcuts import redirect
 from rest_framework.decorators import action
 from . import constants as comms_consts
-from .models import Search, TwitterAccount, Pitch, Process
+from .models import Search, TwitterAccount, Pitch, Process, InstagramAccount
 from .models import Article as InternalArticle
 from .models import WritingStyle, EmailAlert
 from managr.core.models import User
@@ -1476,6 +1476,11 @@ def get_twitter_authentication(request):
         return Response(data={"success": False})
     return Response(data={"success": True})
 
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def get_instagram_request_token(request):
+    res = InstagramAccount.get_token(request)
+    return Response(res)
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])

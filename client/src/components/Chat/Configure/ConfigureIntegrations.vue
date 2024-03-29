@@ -306,10 +306,6 @@
                 </div>
 
                 <div v-else>Connect</div>
-                <!-- <img
-                  src="@/assets/images/angle-small-right.svg"
-                  style="margin-top: 1px; margin-left: 0.5rem; height: 16px; filter: opacity(40%)"
-                /> -->
               </button>
             </div>
           </div>
@@ -327,45 +323,40 @@
             <div></div>
             <div class="sep-button-container">
               <div class="separator"></div>
-              <div
-                style="
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  width: 100%;
-                  margin-top: 1.5rem;
-                  font-size: 13px;
-                "
+
+              <button
+                v-if="hasIgIntegration"
+                class="long-button connected"
+                style="margin-top: 1rem; margin-bottom: 0.5rem"
+                @click="revokeIg"
               >
-                Coming Soon...
-              </div>
-              <!-- <button
-                v-if="hasSlackIntegration || (orgHasSlackIntegration && userCanIntegrateSlack)"
-                class="long-button coral"
-                style="
-                  margin-right: 0;
-                  margin-top: 1rem;
-                  margin-bottom: 0.5rem;
-                  padding-top: 0.4rem;
-                  padding-bottom: 0.4rem;
-                "
-                @click="setRemoveApp('SLACK')"
-              >
-                Disconnect
-              </button> -->
-              <!-- <button
+                <div style="margin-left: 4px" v-if="revoking" class="loading-small">
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                </div>
+
+                <div v-else>Disconnect</div>
+              </button>
+              <button
                 v-else
                 class="long-button"
                 style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem"
-                @click="connectApp('SLACK')"
+                @click="instagramAuthorization"
+                :disabled="(generatingToken && selectedIntegration == 'INSTAGRAM') || connecting"
               >
-                Connect
-                <img
-                  src="@/assets/images/angle-small-right.svg"
-                  class="green-filter"
-                  style="margin-top: 1px; margin-left: 0.5rem; height: 16px; font-weight: bold"
-                />
-              </button> -->
+                <div
+                  style="margin-left: 4px"
+                  v-if="generatingToken && selectedIntegration == 'INSTAGRAM'"
+                  class="loading-small"
+                >
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                </div>
+
+                <div v-else>Connect</div>
+              </button>
             </div>
           </div>
         </div>
@@ -438,6 +429,20 @@ export default {
       this.revoking = true
       try {
         await User.api.revokeTwitter().then((res) => {
+          console.log(res)
+        })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.$store.dispatch('refreshCurrentUser')
+
+        this.revoking = false
+      }
+    },
+    async revokeIg() {
+      this.revoking = true
+      try {
+        await User.api.revokeInstagram().then((res) => {
           console.log(res)
         })
       } catch (e) {
@@ -577,6 +582,20 @@ export default {
         this.connecting = false
       }
     },
+    async instagramAuthorization() {
+      this.connecting = true
+      try {
+        await User.api.getIgToken().then((res) => {
+          if (res.link) {
+            window.location.href = res.link
+          }
+        })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.connecting = false
+      }
+    },
   },
   mounted() {
     this.test()
@@ -673,6 +692,10 @@ export default {
     },
     hasSlackIntegration() {
       return !!this.$store.state.user.slackRef
+    },
+    hasIgIntegration() {
+      return false
+      // return !!this.$store.state.user.slackRef
     },
     hasNylasIntegration() {
       return !!this.$store.state.user.nylas
