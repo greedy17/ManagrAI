@@ -426,7 +426,6 @@
       <div style="padding-top: 88px" class="content-body">
         <div style="width: 100%; padding: 0 32px; padding-top: 16px" class="small-container">
           <div class="text-width">
-            <h3 style="margin: 0; font-size: 24px" class="">Writing Assistant</h3>
             <p style="margin: 0">Create content that sounds like you</p>
           </div>
 
@@ -560,20 +559,21 @@
                   </div>
 
                   <div v-if="showStyleDropdown" class="content-dropdown">
-                    <div
-                      @click="showStyleDropdown = !showStyleDropdown"
-                      style="
-                        margin: 0;
-                        position: sticky;
-                        top: 0;
-                        width: 100%;
-                        background-color: white;
-                      "
-                      class="close-modal"
-                    >
-                      <p style="margin-right: -8px; font-size: 17px">X</p>
+                    <div class="close-modal">
+                      <div class="h-padding">
+                        <div @click="toggleStyles" class="toggle">
+                          <div :class="{ 'active-toggle': personalStyles }" class="toggle-side">
+                            <small>Personal</small>
+                          </div>
+
+                          <div :class="{ 'active-toggle': !personalStyles }" class="toggle-side">
+                            <small>Group</small>
+                          </div>
+                        </div>
+                      </div>
+                      <p @click="showStyleDropdown = !showStyleDropdown">X</p>
                     </div>
-                    <div style="margin-top: -16px" class="drop-container">
+                    <div class="drop-container">
                       <section v-if="userWritingStyles.length">
                         <p
                           style="
@@ -595,7 +595,7 @@
                           class="dropdown-item"
                           style="padding: 4px 0"
                           v-for="(style, i) in defaultWritingStyles"
-                          :key="i"
+                          :key="style.title"
                         >
                           <p style="padding: 0 16px; margin: 0">{{ style.title }}</p>
                         </div>
@@ -694,6 +694,27 @@
                     </div>
                   </div>
                 </div>
+
+                <!-- <div class="expanded-item-u">
+                  <img
+                    class="left-margin-m hide-img"
+                    src="@/assets/images/edit-note.svg"
+                    height="19px"
+                    alt=""
+                  />
+
+                  <div class="h-padding">
+                    <div class="toggle">
+                      <div :class="{ 'active-toggle': personalStyles }" class="toggle-side">
+                        <small>Personal</small>
+                      </div>
+
+                      <div :class="{ 'active-toggle': !personalStyles }" class="toggle-side">
+                        <small>Group</small>
+                      </div>
+                    </div>
+                  </div>
+                </div> -->
               </div>
             </div>
           </div>
@@ -1006,6 +1027,8 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
       storedWritingStyle: null,
       storedType: null,
       storedWritingStyleTitle: null,
+      personalStyles: true,
+      allWritingStyles: [],
       contentExamples: [
         {
           name: `Media Pitch`,
@@ -1073,7 +1096,24 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
   beforeDestroy() {
     this.$store.commit('setGeneratedContent', null)
   },
+  created() {
+    this.getWritingStyles()
+  },
   methods: {
+    toggleStyles() {
+      this.personalStyles = !this.personalStyles
+    },
+    async getWritingStyles() {
+      try {
+        await Comms.api
+          .getWritingStyles({
+            all_styles: false,
+          })
+          .then((response) => {
+            this.allWritingStyles = response
+          })
+      } catch (e) {}
+    },
     expandOutput() {
       this.outputModalOpen = !this.outputModalOpen
     },
@@ -1585,7 +1625,11 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
   },
   computed: {
     userWritingStyles() {
-      return this.$store.state.user.writingStylesRef
+      if (this.personalStyles) {
+        return this.allWritingStyles.filter((style) => style.user === this.user.id)
+      } else {
+        return this.allWritingStyles
+      }
     },
     remainingChars() {
       return 5000 - this.output.length
@@ -3295,13 +3339,19 @@ button:disabled {
   width: 100%;
   display: flex;
   flex-direction: row;
-  justify-content: flex-end;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 1000;
 
   p {
+    padding: 0 !important;
+    margin-right: 8px !important;
+    font-size: 17px;
     width: fit-content !important;
-    padding: 0;
-    margin: 0;
   }
 }
 
@@ -3511,6 +3561,25 @@ textarea::placeholder {
   }
 }
 
+.expanded-item-u {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 4px 0;
+
+  img {
+    filter: invert(40%);
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+.hide-img {
+  visibility: hidden;
+}
+
 .expanded-item-column {
   display: flex;
   justify-content: flex-start;
@@ -3544,5 +3613,46 @@ textarea::placeholder {
   margin-top: 0;
   margin-left: 8px;
   cursor: pointer;
+}
+
+.active-toggle {
+  background-color: white;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 3px 11px rgba(0, 0, 0, 0.1);
+  padding: 6px 12px;
+}
+
+.toggle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: $off-white;
+  cursor: pointer;
+  width: fit-content;
+  padding: 2px 1px;
+  border-radius: 16px;
+
+  small {
+    font-size: 13px;
+    margin: 0 4px;
+  }
+}
+
+.toggle-side {
+  width: 80px;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.h-padding {
+  padding: 8px 12px 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

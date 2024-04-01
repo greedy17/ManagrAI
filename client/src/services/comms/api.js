@@ -234,7 +234,14 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
-
+    async getWritingStyles(data) {
+        try {
+            const res = await this.client.get('writing-styles/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
     async saveWritingStyle(data) {
         try {
             const res = await this.client.post('pitches/learn/', { params: data })
@@ -251,7 +258,6 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
-
     async getAllEmailAlerts() {
         try {
             const res = await this.client.get('email-alerts/get-email-alerts/')

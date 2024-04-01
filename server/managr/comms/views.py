@@ -36,6 +36,7 @@ from .serializers import (
     EmailAlertSerializer,
     ProcessSerializer,
     TwitterAccountSerializer,
+    WritingStyleSerializer,
 )
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
@@ -1585,3 +1586,22 @@ def upload_pdf(request):
     if has_error:
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
     return Response({"content": content})
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def get_writing_styles(request):
+    # if request.data.get("all_styles", False):
+    #     writing_styles = WritingStyle.objects.filter(
+    #         user__organization=request.user.organization
+    #     )
+    # else:
+    #     writing_styles = WritingStyle.objects.filter(
+    #         user=request.user
+    #     )
+    #     print('why...')
+    writing_styles = WritingStyle.objects.filter(
+            user__organization=request.user.organization
+        )
+    serializer = WritingStyleSerializer(writing_styles, many=True)  # Serialize the queryset
+
+    return Response(serializer.data)
