@@ -407,7 +407,11 @@ urlpatterns = [
         comms_views.upload_pdf,
         name="upload_pdf",
     ),
-    
+    path(
+        "writing-styles/",
+        comms_views.get_writing_styles,
+        name="writing_styles",
+    ),
 ]
 
 router.register("users/reports", core_views.ReportViewSet, "reports"),

@@ -891,6 +891,7 @@ export default {
       deleteModalOpen: false,
       contentLoading: false,
       processButtonText: 'Create new process',
+      writingStyles: [],
       defaultWritingStyles: [
         {
           title: 'Default',
@@ -943,9 +944,21 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
     sevenDaysAgo.setDate(today.getDate() - 7)
     this.dateStart = sevenDaysAgo.toISOString().split('T')[0]
     this.dateEnd = today.toISOString().split('T')[0]
+    this.getWritingStyles()
   },
 
   methods: {
+    async getWritingStyles() {
+      try {
+        await Comms.api
+          .getWritingStyles({
+            all_styles: false,
+          })
+          .then((response) => {
+            this.writingStyles = response
+          })
+      } catch (e) {}
+    },
     showDropdown() {
       this.showingDropdown = true
     },
@@ -1346,9 +1359,9 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
     searches() {
       return this.$store.state.allSearches
     },
-    writingStyles() {
-      return this.$store.state.user.writingStylesRef
-    },
+    // writingStyles() {
+    //   return this.$store.state.user.writingStylesRef
+    // },
     isPaid() {
       return !!this.$store.state.user.organizationRef.isPaid
     },
