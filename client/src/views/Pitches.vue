@@ -426,7 +426,6 @@
       <div style="padding-top: 88px" class="content-body">
         <div style="width: 100%; padding: 0 32px; padding-top: 16px" class="small-container">
           <div class="text-width">
-            <h3 style="margin: 0; font-size: 24px" class="">Writing Assistant</h3>
             <p style="margin: 0">Create content that sounds like you</p>
           </div>
 

@@ -344,8 +344,7 @@
               class="small-container letter-spacing"
             >
               <div v-if="!selectedSearch" class="text-width">
-                <h3 style="margin: 0; font-size: 24px" class="">Research Assistant</h3>
-                <p style="margin: 0">Get content ideas based on real-time news</p>
+                <p style="margin: 0">Get a pulse on whats happening in the news</p>
               </div>
 
               <div style="width: 100%; margin-top: 32px">
@@ -780,10 +779,8 @@
               class="small-container letter-spacing"
             >
               <div v-if="!selectedSearch" class="text-width">
-                <h3 style="margin: 0; font-size: 24px" class="">Research Assistant</h3>
-
                 <p v-if="hasTwitterIntegration" style="margin: 0">
-                  Get content ideas based on social media
+                  Get a pulse on whats happening in social media
                 </p>
 
                 <p style="margin: 0" v-else>
@@ -806,7 +803,11 @@
                       id="search-input"
                       @keyup.enter="generateNewSearch(false)"
                       class="area-input text-area-input"
-                      placeholder="Enter keywords..."
+                      :placeholder="
+                        hasTwitterIntegration
+                          ? 'Enter keywords...'
+                          : 'Connect your X account to search...'
+                      "
                       autocomplete="off"
                       v-model="newSearch"
                       v-autoresize
@@ -1051,8 +1052,7 @@
             v-else-if="!addedArticles.length && !clipLoading"
           >
             <div v-if="!selectedSearch" class="text-width">
-              <h3 style="margin: 0; font-size: 24px" class="">Research Assistant</h3>
-              <p style="margin: 0">Get content ideas based on a website</p>
+              <p style="margin: 0">Summarize an article</p>
             </div>
 
             <div style="width: 100%; margin-top: 32px">
@@ -1357,10 +1357,10 @@
             style="width: 100%; padding: 0 32px; padding-top: 16px"
           >
             <div class="text-width">
-              <h3 style="margin: 0; font-size: 24px" class="beta-span">
+              <!-- <h3 style="margin: 0; font-size: 24px" class="beta-span">
                 Research Assistant <span>Beta</span>
-              </h3>
-              <p style="margin: 0">Get content ideas based on a PDF</p>
+              </h3> -->
+              <p style="margin: 0" class="beta-span">Summarize a short PDF <span>Beta</span></p>
             </div>
 
             <div :class="{ opaque: summaryLoading }" style="width: 100%; margin-top: 32px">
@@ -4651,7 +4651,7 @@ p {
   flex-direction: column;
 
   p {
-    font-size: 17px;
+    font-size: 18px;
   }
 }
 

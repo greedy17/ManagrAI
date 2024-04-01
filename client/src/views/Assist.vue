@@ -357,7 +357,6 @@
       <div style="padding-top: 80px">
         <div style="width: 100%; padding: 0 32px; padding-top: 16px" class="small-container">
           <div class="text-width">
-            <h3 style="margin: 0; font-size: 24px" class="">Content Autopilot</h3>
             <p style="margin: 0">Get auto-generated content based on the latest news</p>
           </div>
         </div>
