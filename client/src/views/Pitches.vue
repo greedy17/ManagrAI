@@ -1539,6 +1539,7 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
         console.log('ERROR CREATING PITCH::', e)
       } finally {
         // this.clearData()
+        this.refreshUser()
         this.instructions = ''
         this.contentLoading = false
         this.loading = false
