@@ -759,15 +759,12 @@ class InstagramAccount(TimeStampModel):
 
     @staticmethod
     def get_token(request):
-        client = OAuth1Session(
-            comms_consts.TWITTER_API_KEY,
-            comms_consts.TWITTER_API_SECRET,
-            callback_uri=comms_consts.TWITTER_REDIRECT_URI,
+        client = OAuth2Session(
+            comms_consts.INSTAGRAM_APP_KEY, redirect_uri=comms_consts.INSTAGRAM_REDIRECT_URI
         )
-        request_token = client.fetch_request_token(comms_consts.TWITTER_REQUEST_TOKEN_URI)
-        authorization = client.authorization_url(comms_consts.TWITTER_AUTHORIZATION_URI)
-        request_token["link"] = authorization
-        return request_token
+        client = facebook_compliance_fix(client)
+        authorization_url, _ = client.authorization_url("https://api.instagram.com/oauth/authorize")
+        return {"linke": authorization_url}
 
     @staticmethod
     def authenticate(request_token, verifier):
