@@ -102,3 +102,12 @@ class TwitterAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = TwitterAccount
         fields = ("id", "user", "access_token", "access_token_secret")
+
+# class DiscoverSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Discover
+#         fields = (
+#             "id",
+#             "name",
+#             "",
+#         )        
