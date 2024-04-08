@@ -596,35 +596,6 @@ export default {
       showingInstructionsDropdown: false,
       storedEvent: null,
       outputModalOpen: false,
-      storedPlaceholder: '',
-      optionalPlaceholder: 'Optional',
-      instructionsPlaceholder: 'What would you like written?',
-      typeSuggestions: [
-        `Press Release`,
-        `Media Pitch`,
-        `Blog Post`,
-        `LinkedIn Post`,
-        `Twitter Post`,
-        `Email`,
-      ],
-      audienceSuggestions: [
-        `Millenial moms`,
-        `Vegans`,
-        `College students`,
-        `Local writers in Georgia`,
-        `Gen Z`,
-        `Health and wellness enthusiast`,
-      ],
-      characterSuggestions: [`250`, `500`, `750`, `1000`, `1500`],
-      instructionsSuggestions: [
-        `Create a media pitch for XXX about ...`,
-        `Write a LinkedIn Post about XXX`,
-        `Issue a press release on behalf of XXX about ...`,
-        // `Use the text below to generate XXX for XXX ...`,
-        `Re-write the content below using my writing style:`,
-        `Tweak this content slightly, enhance readability:`,
-      ],
-      instructions: '',
       copyTip: 'Copy',
       textToCopy: '',
       showSaveName: false,
@@ -644,10 +615,12 @@ export default {
       personalStyles: true,
       allWritingStyles: [],
       popularExamples: [
-        `Tier 1 Journalist`,
-        `Local Journalist`,
-        `XXX Journalist`,
-        `Local Influencer`,
+        `Tier 1 Journalists`,
+        `Local Journalists`,
+        `XXX Journalists`,
+        `Instagram Influencers`,
+        `TikTok Influencers`,
+        `XXX Influencers`,
       ],
     }
   },
@@ -666,6 +639,10 @@ export default {
   },
   methods: {
     async discoverJournalists() {
+      if (!this.isPaid && this.searchesUsed >= 10) {
+        this.openPaidModal()
+        return
+      }
       this.loading = true
       try {
         await Comms.api
@@ -682,6 +659,7 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
+        this.refreshUser()
         this.loading = false
       }
     },
@@ -822,51 +800,6 @@ export default {
     },
     removeIndex() {
       this.hoverIndex = null
-    },
-    async saveWritingStyle() {
-      this.savingStyle = true
-      try {
-        await Comms.api
-          .saveWritingStyle({
-            example: this.sample,
-            title: this.styleName,
-          })
-          .then((response) => {
-            this.$toast('Writing style saved', {
-              timeout: 2000,
-              position: 'top-left',
-              type: 'success',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            })
-          })
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.sample = ''
-        this.styleName = ''
-        this.toggleLearnInput()
-        this.savingStyle = false
-        this.refreshUser()
-        this.toggleLearnInputModal()
-      }
-    },
-    async resetWritingStyle() {
-      this.savingStyle = true
-      this.sample = ''
-      this.writingStyleTitle = ''
-      this.closeResetModal()
-      try {
-        await Comms.api.deleteWritingStyle({ style_id: this.deleteId })
-        this.toggleLearnInput()
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.savingStyle = false
-        this.deleteId = null
-        this.writingStyle = null
-        this.refreshUser()
-      }
     },
 
     changeFeedbackText() {
@@ -1137,55 +1070,7 @@ export default {
         this.scrollToTop()
       }
     },
-    async generatePitch() {
-      if (!this.isPaid && this.searchesUsed >= 10) {
-        this.openPaidModal()
-        return
-      }
-      if (!this.type || !this.writingStyle || this.loading) {
-        return
-      }
-      this.storeContent()
-      this.pitch = null
-      this.feedback = null
-      this.specificFeedback = null
-      this.feedbackType = null
-      this.audience = null
-      this.objective = null
-      this.regeneratedFeedback = false
-      this.journalists = null
-      this.loading = true
-      this.showStyleDropdown = false
 
-      try {
-        await Comms.api
-          .generatePitch({
-            type: this.type,
-            instructions: this.output,
-            style: this.writingStyle,
-          })
-          .then((response) => {
-            // this.clearForm()
-            this.savedOutput = this.output
-            this.pitch = response.pitch
-            this.scrollToTop()
-            this.$store.commit('setGeneratedContent', null)
-          })
-          .then((response) => {
-            this.refreshUser()
-          })
-          .then((response) => {
-            this.$store.dispatch('getPitches')
-          })
-      } catch (e) {
-        console.log('ERROR CREATING PITCH', e)
-      } finally {
-        this.refreshUser()
-        // this.clearData()
-        this.loading = false
-        this.scrollToTop()
-      }
-    },
     setPitch(pitch) {
       this.pitch = pitch.generated_pitch
       this.type = pitch.type

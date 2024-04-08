@@ -109,5 +109,8 @@ class TwitterAccountSerializer(serializers.ModelSerializer):
 #         fields = (
 #             "id",
 #             "name",
-#             "",
+#             "content",
+#             "type",
+#             "beat",
+#             "location",
 #         )        

@@ -462,7 +462,8 @@
             v-if="
               ($route.name === 'PRSummaries' ||
                 $route.name === 'Pitches' ||
-                $route.name === 'Assist') &&
+                $route.name === 'Assist' ||
+                $route.name === 'Discover') &&
               !isPaid
             "
             class="row wrapper-count"

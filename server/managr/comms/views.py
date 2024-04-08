@@ -1643,6 +1643,7 @@ def discover_journalist(request):
             res = open_ai_exceptions._handle_response(r)
           
             message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+            user.add_meta_data("discovery")
             break
         except open_ai_exceptions.StopReasonLength:
             logger.exception(
