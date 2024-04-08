@@ -161,6 +161,10 @@
           <p>Write</p>
         </router-link>
 
+        <router-link active-class="active-mobile" :to="{ name: 'Discover' }" id="router-pitch">
+          <p>Discover</p>
+        </router-link>
+
         <router-link
           active-class="active-mobile"
           :to="{ name: 'Assist' }"
@@ -429,6 +433,10 @@
 
         <router-link active-class="active" :to="{ name: 'Pitches' }" id="router-pitch">
           <p>Write</p>
+        </router-link>
+
+        <router-link active-class="active" :to="{ name: 'Discover' }" id="router-pitch">
+          <p>Discover</p>
         </router-link>
 
         <router-link

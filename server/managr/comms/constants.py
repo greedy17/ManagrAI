@@ -253,6 +253,18 @@ RUN_PROCESS = (
     """
 )
 
+DISCOVER_JOURNALIST = (
+    lambda type, beat, location, content: f""""
+    List up to 10 real journalists (or social media influencers) and their respective publications, that would be interested in writing about the content provided below. Provide pitching tips that are relevant to the user's content. User will specify whether they want journalist or influencers. Follow these instructions carefully:
+  - Publication Type: The journalists or influencers must be from news outlets (or social platform) of this type: {type}.
+  - Journalistic Beat: The journalist or influencers must cover this specific beat or topic: {beat}.
+  - Location: The journalists or influencers must be based in or primarily cover {location}.
+  - Real Journalists Requirement: It is essential that the journalists or influencers listed are real, currently active professionals in the field.
+  - Guess their email: do your best to guess their email address
+  - Here is the user’s content: {content}
+    """
+)
+
 DO_NOT_TRACK_LIST = [
     "https://www.wsj.com",
     "https://www.nytimes.com",

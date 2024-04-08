@@ -32,6 +32,12 @@ export default new Router({
       component: () => import('@/views/Pitches'),
     },
     {
+      path: '/discover',
+      name: 'Discover',
+      beforeEnter: Auth.requireAuth,
+      component: () => import('@/views/Discover'),
+    },
+    {
       path: '/assist',
       name: 'Assist',
       beforeEnter: Auth.requireAuth,

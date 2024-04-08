@@ -412,6 +412,11 @@ urlpatterns = [
         comms_views.get_writing_styles,
         name="writing_styles",
     ),
+     path(
+        "discover/",
+        comms_views.discover_journalist,
+        name="discover_journalist",
+    ),
 ]
 
 router.register("users/reports", core_views.ReportViewSet, "reports"),
