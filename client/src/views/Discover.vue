@@ -53,7 +53,7 @@
             placeholder="Name your list"
             type="text"
             v-model="listName"
-            :disabled="savinglist"
+            :disabled="savingList"
             id="pub"
           />
         </div>
@@ -64,8 +64,8 @@
               Cancel
             </button>
             <button
-              :disabled="savingList"
-              @click="createSavedPitch"
+              :disabled="savingList || !listName"
+              @click="saveDiscovery"
               class="primary-button no-transitions"
             >
               Save
@@ -501,15 +501,15 @@
               <div class="tooltip-below">{{ copyTip }}</div>
             </div>
 
-            <!-- <div>
+            <div>
               <button
                 @click="toggleSaveModal"
                 class="green-button"
-                :disabled="savingList || pitchSaved"
+                :disabled="savingList || discoverySaved"
               >
                 Save
               </button>
-            </div> -->
+            </div>
           </div>
         </div>
       </div>
@@ -529,7 +529,7 @@
 
       <div v-else-if="loading" class="content-body centered-content">
         <div class="loading">
-          <p>Generating content</p>
+          <p>Generating list</p>
           <div class="dot"></div>
           <div class="dot"></div>
           <div class="dot"></div>
@@ -559,6 +559,7 @@ export default {
     return {
       saveModalOpen: false,
       contentModalOpen: false,
+      savingList: false,
       location: null,
       beat: null,
       type: null,
@@ -601,7 +602,7 @@ export default {
       showSaveName: false,
       savingList: false,
       listName: '',
-      savedPitch: null,
+      savedDiscovery: null,
       showUpdateBanner: false,
       showInput: false,
       sample: '',
@@ -625,9 +626,9 @@ export default {
     }
   },
   watch: {
-    currentPitch(newVal, oldVal) {
+    currentDiscovery(newVal, oldVal) {
       if (newVal.id !== (oldVal ? oldVal.id : null)) {
-        this.setPitch(newVal)
+        this.setDiscovery(newVal)
       }
     },
   },
@@ -654,7 +655,6 @@ export default {
           })
           .then((response) => {
             this.summary = response
-            console.log(response)
           })
       } catch (e) {
         console.log(e)
@@ -662,6 +662,62 @@ export default {
         this.refreshUser()
         this.loading = false
       }
+    },
+    async saveDiscovery() {
+      this.savingList = true
+      try {
+        await Comms.api
+          .saveDiscovery({
+            user: this.user.id,
+            name: this.listName,
+            content: this.content,
+            type: this.type,
+            beat: this.beat,
+            location: this.location,
+            list: this.summary,
+          })
+          .then((response) => {
+            console.log(response)
+            if (response.id) {
+              this.savedDiscovery = {
+                name: response.name,
+                user: this.user.id,
+                content: response.content,
+                beat: response.beat,
+                type: response.type,
+                location: response.location,
+                list: response.list,
+              }
+
+              this.$toast('List saved', {
+                timeout: 2000,
+                position: 'top-left',
+                type: 'success',
+                toastClassName: 'custom',
+                bodyClassName: ['custom'],
+              })
+
+              this.getDiscoveries()
+            }
+          })
+      } catch (e) {
+        console.log(e)
+        this.$toast(`${e}`, {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        setTimeout(() => {
+          this.saveModalOpen = false
+          this.savingList = false
+        }, 2000)
+      }
+    },
+    async getDiscoveries() {
+      this.$store.dispatch('getDiscoveries')
     },
     clearData() {
       this.content = ''
@@ -1071,11 +1127,13 @@ export default {
       }
     },
 
-    setPitch(pitch) {
-      this.pitch = pitch.generated_pitch
-      this.type = pitch.type
-      this.output = pitch.instructions
-      this.persona = pitch.audience
+    setDiscovery(discovery) {
+      console.log(discovery)
+      this.summary = discovery.list
+      this.type = discovery.type
+      this.content = discovery.content
+      this.beat = discovery.beat
+      this.location = discovery.location
 
       // this.generatePitch()
     },
@@ -1164,16 +1222,16 @@ export default {
       }
       return arr.length
     },
-    currentPitch() {
-      return this.$store.state.currentPitch
+    currentDiscovery() {
+      return this.$store.state.currentDiscovery
     },
-    pitchSaved() {
-      if (this.savedPitch && this.pitch && this.savedPitch.generated_pitch === this.pitch) {
+    discoverySaved() {
+      if (this.savedDiscovery && this.summary && this.savedDiscovery.list === this.summary) {
         return true
       } else if (
-        this.pitch &&
-        this.currentPitch &&
-        this.currentPitch.generated_pitch === this.pitch
+        this.summary &&
+        this.currentDiscovery &&
+        this.currentDiscovery.list === this.summary
       ) {
         return true
       } else {

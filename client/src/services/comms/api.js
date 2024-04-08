@@ -371,9 +371,33 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    async getDiscoveries(data) {
+        try {
+            const res = await this.client.get('discovery', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async saveDiscovery(data) {
+        try {
+            const res = await this.client.post('discovery/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async deleteDiscovery(data) {
+        try {
+            const res = await this.client.delete(`discovery/${data.id}/`)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
     async discoverJournalists(data) {
         try {
-            const res = await this.client.post('discover/', data)
+            const res = await this.client.post('discovery/run/', data)
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)

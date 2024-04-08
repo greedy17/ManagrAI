@@ -635,13 +635,11 @@
                           "
                         >
                           <button
-                            @mouseenter="changeStyleText"
-                            @mouseleave="defaultStyleText"
                             style="margin-bottom: 16px; width: 45%"
                             @click="toggleLearnInputModal"
                             class="primary-button"
                           >
-                            {{ styleText }}
+                            Learn writing style
                           </button>
                         </div>
                       </section>
