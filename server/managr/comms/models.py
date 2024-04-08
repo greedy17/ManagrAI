@@ -656,42 +656,24 @@ class TwitterAccount(TimeStampModel):
         except OAuth2Error:
             return "Invalid authorization code"
 
-# class Discover(TimeStampModel):
-#     user = models.ForeignKey(
-#         "core.User",
-#         related_name="pitches",
-#         blank=False,
-#         null=False,
-#         on_delete=models.CASCADE,
-#     )
-#     name = models.CharField(max_length=255)
-#     instructions = models.TextField(null=True, blank=True)
-#     type = models.CharField(max_length=300, null=True, blank=True)
-#     audience = models.CharField(max_length=255, null=True, blank=True)
-#     content = models.TextField(null=True, blank=True)
-#     generated_pitch = models.TextField(null=True, blank=True)
 
-#     class Meta:
-#         ordering = ["name"]
+class Discovery(TimeStampModel):
+    user = models.ForeignKey(
+        "core.User",
+        related_name="discoveries",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
+    )
+    name = models.CharField(max_length=255)
+    content = models.TextField(null=True, blank=True)
+    type = models.CharField(max_length=255, null=True, blank=True)
+    beat = models.CharField(max_length=255, null=True, blank=True)
+    location = models.CharField(max_length=255, null=True, blank=True)
+    list = models.TextField(null=True, blank=True)
 
-#     def __str__(self):
-#         return f"{self.user.email} - {self.name}"
+    class Meta:
+        ordering = ["name"]
 
-#     @classmethod
-#     def generate_pitch(cls, user, type, instructions, style, tokens, timeout):
-#         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-#         # style = user.writing_style if user.writing_style else False
-#         prompt = comms_consts.OPEN_AI_PITCH(datetime.now().date(), type, instructions, style)
-#         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-#             user.email,
-#             prompt,
-#             token_amount=tokens,
-#             top_p=0.1,
-#         )
-#         with Variable_Client(timeout) as client:
-#             r = client.post(
-#                 url,
-#                 data=json.dumps(body),
-#                 headers=core_consts.OPEN_AI_HEADERS,
-#             )
-#         return open_ai_exceptions._handle_response(r)            
+    def __str__(self):
+        return f"{self.user.email} - {self.name}"

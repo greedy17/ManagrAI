@@ -412,11 +412,6 @@ urlpatterns = [
         comms_views.get_writing_styles,
         name="writing_styles",
     ),
-     path(
-        "discover/",
-        comms_views.discover_journalist,
-        name="discover_journalist",
-    ),
 ]
 
 router.register("users/reports", core_views.ReportViewSet, "reports"),
@@ -461,4 +456,5 @@ router.register("prsearch", comms_views.PRSearchViewSet, "prsearch")
 router.register("pitches", comms_views.PitchViewSet, "pitches")
 router.register("email-alerts", comms_views.EmailAlertViewSet, "email-alerts")
 router.register("process", comms_views.ProcessViewSet, "process")
+router.register("discovery", comms_views.DiscoveryViewSet, "discovery")
 urlpatterns += router.urls

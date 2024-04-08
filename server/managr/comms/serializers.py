@@ -8,6 +8,7 @@ from .models import (
     EmailAlert,
     Process,
     TwitterAccount,
+    Discovery,
 )
 from django.contrib.postgres.search import SearchVector
 
@@ -103,14 +104,17 @@ class TwitterAccountSerializer(serializers.ModelSerializer):
         model = TwitterAccount
         fields = ("id", "user", "access_token", "access_token_secret")
 
-# class DiscoverSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Discover
-#         fields = (
-#             "id",
-#             "name",
-#             "content",
-#             "type",
-#             "beat",
-#             "location",
-#         )        
+
+class DiscoverySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Discovery
+        fields = (
+            "id",
+            "user",
+            "name",
+            "content",
+            "type",
+            "beat",
+            "location",
+            "list",
+        )        
