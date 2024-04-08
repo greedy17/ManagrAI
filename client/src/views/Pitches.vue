@@ -681,6 +681,23 @@
                           "
                         >
                           <button
+                            style="margin-top: 8px"
+                            @click="toggleLearnInputModal"
+                            class="primary-button"
+                          >
+                            Learn writing style
+                          </button>
+                        </div>
+
+                        <!-- <div
+                          style="
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            margin-bottom: 16px;
+                          "
+                        >
+                          <button
                             @mouseenter="changeStyleText"
                             @mouseleave="defaultStyleText"
                             style="margin-top: 8px"
@@ -689,7 +706,7 @@
                           >
                             {{ styleText }}
                           </button>
-                        </div>
+                        </div> -->
                       </section>
                     </div>
                   </div>
@@ -1339,12 +1356,17 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
       }
     },
     toggleLearnInputModal() {
-      if (this.isPaid) {
-        this.inputModalOpen = !this.inputModalOpen
+      // if (this.isPaid) {
+      //   this.inputModalOpen = !this.inputModalOpen
 
-        if (this.showStyleDropdown === true) {
-          this.showStyleDropdown = false
-        }
+      //   if (this.showStyleDropdown === true) {
+      //     this.showStyleDropdown = false
+      //   }
+      // }
+      this.inputModalOpen = !this.inputModalOpen
+
+      if (this.showStyleDropdown === true) {
+        this.showStyleDropdown = false
       }
     },
     async copyText() {
