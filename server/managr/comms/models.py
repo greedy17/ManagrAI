@@ -672,7 +672,6 @@ class InstagramAccount(TimeStampModel):
     )
     instagram_id = models.CharField(max_length=255, null=True)
     access_token = models.CharField(max_length=255, null=True)
-    access_token_secret = models.CharField(max_length=255, null=True)
     display_name = models.CharField(max_length=255, null=True)
 
     @staticmethod
@@ -760,21 +759,28 @@ class InstagramAccount(TimeStampModel):
     @staticmethod
     def get_token(request):
         client = OAuth2Session(
-            comms_consts.INSTAGRAM_APP_KEY, redirect_uri=comms_consts.INSTAGRAM_REDIRECT_URI
+            comms_consts.INSTAGRAM_APP_KEY,
+            redirect_uri=comms_consts.INSTAGRAM_REDIRECT_URI,
+            scope=comms_consts.INSTAGRAM_SCOPES,
         )
-        client = facebook_compliance_fix(client)
-        authorization_url, _ = client.authorization_url("https://api.instagram.com/oauth/authorize")
-        return {"linke": authorization_url}
+        # client = facebook_compliance_fix(client)
+        authorization_url, _ = client.authorization_url(
+            "https://api.instagram.com/oauth/authorize",
+            state="INSTAGRAM",
+        )
+        return {"link": authorization_url}
 
     @staticmethod
-    def authenticate(request_token, verifier):
-        client = OAuth1Session(
-            comms_consts.TWITTER_API_KEY, comms_consts.TWITTER_API_SECRET, request_token
+    def authenticate(code):
+        client = OAuth2Session(
+            comms_consts.INSTAGRAM_APP_KEY,
         )
         try:
-            access_token = client.fetch_access_token(
-                comms_consts.TWITTER_ACCESS_TOKEN_URI, verifier
+            token = client.fetch_token(
+                "https://api.instagram.com/oauth/access_token",
+                code=code,
+                client_secret=comms_consts.INSTAGRAM_APP_SECRET,
             )
-            return access_token
+            return token
         except OAuth2Error:
             return "Invalid authorization code"

@@ -388,6 +388,11 @@ urlpatterns = [
         name="redirect-twitter",
     ),
     path(
+        "users/instagram/re-direct/",
+        comms_views.redirect_from_instagram,
+        name="redirect-instagram",
+    ),
+    path(
         "users/twitter/request-token/",
         comms_views.get_twitter_request_token,
         name="twitter-request-token",
@@ -407,12 +412,11 @@ urlpatterns = [
         comms_views.upload_pdf,
         name="upload_pdf",
     ),
-     path(
+    path(
         "users/instagram/request-token/",
         comms_views.get_instagram_request_token,
         name="twitter-request-token",
     ),
-    
 ]
 
 router.register("users/reports", core_views.ReportViewSet, "reports"),

@@ -8,6 +8,7 @@ from .models import (
     EmailAlert,
     Process,
     TwitterAccount,
+    InstagramAccount,
 )
 from django.contrib.postgres.search import SearchVector
 
@@ -102,3 +103,9 @@ class TwitterAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = TwitterAccount
         fields = ("id", "user", "access_token", "access_token_secret")
+
+
+class InstagramAccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InstagramAccount
+        fields = ("id", "user", "access_token")

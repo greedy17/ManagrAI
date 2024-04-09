@@ -30,6 +30,7 @@ INSTAGRAM_REDIRECT_URI = settings.INSTAGRAM_REDIRECT_URI
 INSTAGRAM_BASE_URI = "https://api.instagram.com/"
 INSTAGRAM_AUTHORIZATION_URI = INSTAGRAM_BASE_URI + "oauth/authorize"
 INSTAGRAM_ACCESS_TOKEN_URI = INSTAGRAM_BASE_URI + "oauth/access_token"
+INSTAGRAM_SCOPES = "user_profile,user_media"
 if settings.IN_DEV:
     INSTAGRAM_FRONTEND_REDIRECT = "http://localhost:8080/pr-integrations"
 elif settings.IN_STAGING:

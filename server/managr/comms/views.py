@@ -36,6 +36,7 @@ from .serializers import (
     EmailAlertSerializer,
     ProcessSerializer,
     TwitterAccountSerializer,
+    InstagramAccountSerializer,
 )
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
@@ -1476,28 +1477,29 @@ def get_twitter_authentication(request):
         return Response(data={"success": False})
     return Response(data={"success": True})
 
+
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def get_instagram_request_token(request):
     res = InstagramAccount.get_token(request)
     return Response(res)
 
+
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def get_instagram_authentication(request):
     user = request.user
     data = request.data
-    access_token = TwitterAccount.authenticate(data.get("oauth_token"), data.get("oauth_verifier"))
+    access_token = InstagramAccount.authenticate(data.get("code"))
     data = {
         "user": user.id,
         "access_token": access_token.get("oauth_token"),
-        "access_token_secret": access_token.get("oauth_token_secret"),
     }
-    existing = TwitterAccount.objects.filter(user=request.user).first()
+    existing = InstagramAccount.objects.filter(user=request.user).first()
     if existing:
-        serializer = TwitterAccountSerializer(data=data, instance=existing)
+        serializer = InstagramAccountSerializer(data=data, instance=existing)
     else:
-        serializer = TwitterAccountSerializer(data=data)
+        serializer = InstagramAccountSerializer(data=data)
     try:
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -1525,6 +1527,16 @@ def redirect_from_twitter(request):
     token = request.GET.get("oauth_token", False)
     q = urlencode({"state": "TWITTER", "oauth_verifier": verifier, "code": "code", "token": token})
     if not verifier:
+        err = {"error": "there was an error"}
+        err = urlencode(err)
+        return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{err}")
+    return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{q}")
+
+
+def redirect_from_instagram(request):
+    code = request.GET.get("code", False)
+    q = urlencode({"state": "INSTAGRAM", "code": code})
+    if not code:
         err = {"error": "there was an error"}
         err = urlencode(err)
         return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{err}")
