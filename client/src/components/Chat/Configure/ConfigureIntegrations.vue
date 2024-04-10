@@ -703,7 +703,7 @@ export default {
     },
     hasIgIntegration() {
       return false
-      // return !!this.$store.state.user.slackRef
+      // return !!this.$store.state.has_instagram_integration
     },
     hasNylasIntegration() {
       return !!this.$store.state.user.nylas
