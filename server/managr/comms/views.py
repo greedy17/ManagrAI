@@ -1493,7 +1493,7 @@ def get_instagram_authentication(request):
     access_token = InstagramAccount.authenticate(data.get("code"))
     data = {
         "user": user.id,
-        "access_token": access_token.get("oauth_token"),
+        "access_token": access_token,
     }
     existing = InstagramAccount.objects.filter(user=request.user).first()
     if existing:

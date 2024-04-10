@@ -417,6 +417,11 @@ urlpatterns = [
         comms_views.get_instagram_request_token,
         name="twitter-request-token",
     ),
+    path(
+        "users/instagram/authenticate/",
+        comms_views.get_instagram_authentication,
+        name="twitter-authenticate",
+    ),
 ]
 
 router.register("users/reports", core_views.ReportViewSet, "reports"),

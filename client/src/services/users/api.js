@@ -28,6 +28,7 @@ const CHECK_STATUS_ENDPOINT = '/account-status/'
 const CHECK_TASKS_ENDPOINT = '/task-status/'
 const SSO_DATA_ENDPOINT = '/sso-data/'
 const IG_REQUEST_TOKEN = '/users/instagram/request-token/'
+const IG_AUTHENTICATION = '/users/instagram/authenticate/'
 const TWITTER_REQUEST_TOKEN = '/users/twitter/request-token/'
 const TWITTER_AUTHORIZATION = '/users/twitter/authorization'
 const TWITTER_AUTHENTICATION = '/users/twitter/authenticate'
@@ -737,6 +738,14 @@ export default class UserAPI {
   async getIgToken() {
     try {
       const res = await this.client.post(IG_REQUEST_TOKEN)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'User.getTwitterToken' })
+    }
+  }
+  async getIgAuthorization(data) {
+    try {
+      const res = await this.client.post(IG_AUTHENTICATION, data)
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'User.getTwitterToken' })

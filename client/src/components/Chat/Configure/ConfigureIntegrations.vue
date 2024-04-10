@@ -621,6 +621,14 @@ export default {
             this.$route.query.context,
             this.$route.query.scope,
           )
+        } else if (this.selectedIntegration === 'INSTAGRAM') {
+          console.log('making it here')
+          const data = {
+            code: this.$route.query.code,
+          }
+          await modelClass.api.getIgAuthorization(data).then((response) => {
+            console.log('IG RESPONSE', response)
+          })
         }
       } catch (e) {
         let { response } = e
@@ -725,6 +733,8 @@ export default {
         case 'OUTREACH':
           return OutreachAccount
         case 'TWITTER':
+          return User
+        case 'INSTAGRAM':
           return User
         default:
           return null
