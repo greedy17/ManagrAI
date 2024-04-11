@@ -806,7 +806,7 @@ class InstagramAccount(TimeStampModel):
             r = client.get(url, headers=headers)
             r = InstagramAccount._handle_response(r)
         data = r["data"]
-        id = data["id"]
+        id = data[0]["id"]
         return id
 
     def get_instagram_account_id(self, account_id):
@@ -835,6 +835,6 @@ class InstagramAccount(TimeStampModel):
             with Variable_Client() as client:
                 r = client.get(url, headers=headers)
                 r = InstagramAccount._handle_response(r)
-            id = r["data"]["id"]
+            id = r["data"][0]["id"]
             self.add_hashtag(hashtag, id)
             return id

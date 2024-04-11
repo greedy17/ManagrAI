@@ -34,7 +34,7 @@ INSTAGRAM_GRAPH_BASE_URL = "https://graph.facebook.com/v19.0/"
 INSTAGRAM_AUTHORIZATION_URI = INSTAGRAM_BASE_URI + "dialog/oauth"
 INSTAGRAM_ACCESS_TOKEN_URI = INSTAGRAM_GRAPH_BASE_URL + "oauth/access_token"
 INSTAGRAM_ACCOUNTS_URI = INSTAGRAM_GRAPH_BASE_URL + "me/accounts"
-INSTAGRAM_HASHTAG_SEARCH_URI = INSTAGRAM_BASE_URI + "ig_hashtag_search"
+INSTAGRAM_HASHTAG_SEARCH_URI = INSTAGRAM_GRAPH_BASE_URL + "ig_hashtag_search"
 INSTAGRAM_SCOPES = (
     "public_profile,email,instagram_basic,business_management,pages_show_list,pages_read_engagement"
 )
