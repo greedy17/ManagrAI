@@ -726,12 +726,10 @@ class InstagramAccount(TimeStampModel):
             r = InstagramAccount._handle_response(r)
             return r
 
-    def get_summary(
-        self, user, tokens, timeout, tweets, input_text, instructions=False, for_client=False
-    ):
+    def get_summary(self, user, tokens, timeout, posts, instructions=False, for_client=False):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-        prompt = comms_consts.OPEN_AI_TWITTER_SUMMARY(
-            datetime.now().date(), tweets, input_text, instructions, for_client
+        prompt = comms_consts.OPEN_AI_INSTAGRAM_SUMMARY(
+            datetime.now().date(), posts, instructions, for_client
         )
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
             user.email,

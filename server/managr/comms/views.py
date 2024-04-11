@@ -767,6 +767,62 @@ class PRSearchViewSet(
             }
         )
 
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="ig-summary",
+    )
+    def get_instagram_summary(self, request, *args, **kwargs):
+        user = request.user
+        if user.has_hit_summary_limit:
+            return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
+        posts = request.data.get("posts")
+        instructions = request.data.get("instructions", False)
+        ig_account = user.instagram_account
+        has_error = False
+        attempts = 1
+        token_amount = 1000
+        timeout = 60.0
+        while True:
+            try:
+                res = ig_account.get_summary(
+                    request.user, token_amount, timeout, posts, instructions, True
+                )
+                message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+                user.add_meta_data("ig_summaries")
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount <= 2000:
+                    has_error = True
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 500
+                    continue
+            except httpx.ReadTimeout as e:
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+        if has_error:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
+
+        return Response(data={"summary": message})
+
 
 @api_view(["GET"])
 @permission_classes(

@@ -114,6 +114,11 @@ DEFAULT_TWITTER_CLIENT_INSTRUCTIONS = """<strong>Summary of the Tweets (no more 
 <strong>Sentiment (no more than 200 characters long):</strong>\n
 <strong>Top Influencers:</strong>\n Identify key influencers based on follower count"""
 
+
+DEFAULT_INSTAGRAM_CLIENT_INSTRUCTIONS = """<strong>Summary of the Posts (no more than 400 characters long): </strong>\n
+<strong>Sentiment (no more than 200 characters long):</strong>\n
+"""
+
 DEFAULT_WRITING_STYLE = "Aim for a professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Get right to the point"
 
 OPEN_AI_QUERY_STRING = (
@@ -143,7 +148,16 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_clie
 def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, instructions, for_client=False):
     if not instructions:
         instructions = DEFAULT_TWITTER_CLIENT_INSTRUCTIONS
-    body = f"""Today's date is {date}.Summarize the twitter coverage based on these tweets.\n Tweets: {tweets}\n
+    body = f"""Today's date is {date}.Summarize the instagram coverage based on these posts.\n Posts: {tweets}\n
+    You must follow these instructions: {instructions}. Summary cannot be longer than 1,000 characters.
+    """
+    return body
+
+
+def OPEN_AI_INSTAGRAM_SUMMARY(date, posts, instructions, for_client=False):
+    if not instructions:
+        instructions = DEFAULT_INSTAGRAM_CLIENT_INSTRUCTIONS
+    body = f"""Today's date is {date}.Summarize the instagram coverage based on these posts.\n Posts: {posts}\n
     You must follow these instructions: {instructions}. Summary cannot be longer than 1,000 characters.
     """
     return body
