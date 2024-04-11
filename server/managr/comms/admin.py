@@ -1,5 +1,14 @@
 from django.contrib import admin
-from .models import Search, Pitch, NewsSource, Article, EmailAlert, WritingStyle, TwitterAccount
+from .models import (
+    Search,
+    Pitch,
+    NewsSource,
+    Article,
+    EmailAlert,
+    WritingStyle,
+    TwitterAccount,
+    InstagramAccount,
+)
 
 # Register your models here.
 
@@ -63,3 +72,4 @@ admin.site.register(Article, CustomArticle)
 admin.site.register(EmailAlert, CustomEmailAlertAdmin)
 admin.site.register(WritingStyle)
 admin.site.register(TwitterAccount)
+admin.site.register(InstagramAccount)

@@ -1,4 +1,6 @@
 from django.conf import settings
+from datetime import datetime
+import time
 
 USE_NEWS_API = settings.USE_NEWS_API
 NEWS_API_KEY = settings.NEWS_API_KEY if USE_NEWS_API else None
@@ -27,10 +29,15 @@ USE_INSTAGRAM_API = settings.USE_INSTAGRAM_API
 INSTAGRAM_APP_KEY = settings.INSTAGRAM_APP_KEY
 INSTAGRAM_APP_SECRET = settings.INSTAGRAM_APP_SECRET
 INSTAGRAM_REDIRECT_URI = settings.INSTAGRAM_REDIRECT_URI
-INSTAGRAM_BASE_URI = "https://api.instagram.com/"
-INSTAGRAM_AUTHORIZATION_URI = INSTAGRAM_BASE_URI + "oauth/authorize"
-INSTAGRAM_ACCESS_TOKEN_URI = INSTAGRAM_BASE_URI + "oauth/access_token"
-INSTAGRAM_SCOPES = "user_profile,user_media"
+INSTAGRAM_BASE_URI = "https://www.facebook.com/v19.0/"
+INSTAGRAM_GRAPH_BASE_URL = "https://graph.facebook.com/v19.0/"
+INSTAGRAM_AUTHORIZATION_URI = INSTAGRAM_BASE_URI + "dialog/oauth"
+INSTAGRAM_ACCESS_TOKEN_URI = INSTAGRAM_GRAPH_BASE_URL + "oauth/access_token"
+INSTAGRAM_ACCOUNTS_URI = INSTAGRAM_GRAPH_BASE_URL + "me/accounts"
+INSTAGRAM_HASHTAG_SEARCH_URI = INSTAGRAM_BASE_URI + "ig_hashtag_search"
+INSTAGRAM_SCOPES = (
+    "public_profile,email,instagram_basic,business_management,pages_show_list,pages_read_engagement"
+)
 if settings.IN_DEV:
     INSTAGRAM_FRONTEND_REDIRECT = "http://localhost:8080/pr-integrations"
 elif settings.IN_STAGING:
@@ -59,6 +66,21 @@ def TWITTER_TOKEN_PARAMS(token):
         "oauth_callback": TWITTER_REDIRECT_URI,
     }
     return params
+
+
+def INSTAGRAM_MEDIA_PARAMS(instagram_id):
+    params = {
+        "fields": "id,caption,permalink,children,comments_count,media_type,media_url,timestamp,like_count",
+        "user_id": instagram_id,
+        "limit": "100",
+        "locale": "en_US",
+    }
+    return params
+
+
+def INSTAGRAM_TOP_MEDIA_URI(hashtag_id):
+    url = INSTAGRAM_GRAPH_BASE_URL + hashtag_id + "/recent_media"
+    return url
 
 
 NEWS_API_HEADERS = {

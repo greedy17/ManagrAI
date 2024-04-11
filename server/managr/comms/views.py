@@ -55,7 +55,7 @@ from managr.comms.utils import (
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
-import tempfile
+from managr.comms.tasks import emit_get_meta_account_info
 
 logger = logging.getLogger("managr")
 
@@ -731,6 +731,41 @@ class PRSearchViewSet(
         logger.info(clips)
         emit_share_client_summary(summary, clips, request.user.email)
         return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="posts",
+    )
+    def get_instagram_posts(self, request, *args, **kwargs):
+        user = User.objects.get(id=request.GET.get("user_id"))
+        ig_account = user.instagram_account
+        has_error = False
+        hashtag = request.GET.get("hashtag")
+        next_token = False
+        post_list = []
+        attempts = 1
+        while True:
+            try:
+                id = ig_account.get_hashtag_id(hashtag)
+                posts_res = ig_account.get_posts(id)
+                posts = posts_res["data"]
+                post_list = posts
+                break
+            except Exception as e:
+                has_error = True
+                logger.exception(e)
+                ig_res = e
+                break
+
+        if has_error:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": ig_res})
+        return Response(
+            {
+                "tweets": post_list,
+            }
+        )
 
 
 @api_view(["GET"])
@@ -1490,20 +1525,17 @@ def get_instagram_request_token(request):
 def get_instagram_authentication(request):
     user = request.user
     data = request.data
-    access_token = InstagramAccount.authenticate(data.get("code"))
-    data = {
-        "user": user.id,
-        "access_token": access_token,
-    }
+    access_token_response = InstagramAccount.authenticate(data.get("code"))
+    access_token_response["user"] = user.id
     existing = InstagramAccount.objects.filter(user=request.user).first()
     if existing:
-        serializer = InstagramAccountSerializer(data=data, instance=existing)
+        serializer = InstagramAccountSerializer(data=access_token_response, instance=existing)
     else:
-        serializer = InstagramAccountSerializer(data=data)
+        serializer = InstagramAccountSerializer(data=access_token_response)
     try:
         serializer.is_valid(raise_exception=True)
         serializer.save()
-
+        emit_get_meta_account_info(str(user.id))
     except Exception as e:
         logger.exception(str(e))
         return Response(data={"success": False})

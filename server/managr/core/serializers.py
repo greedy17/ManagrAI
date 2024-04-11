@@ -78,6 +78,7 @@ class UserClientSerializer(serializers.ModelSerializer):
             "has_zoom_integration",
             "has_salesforce_integration",
             "has_twitter_integration",
+            "has_instagram_integration",
             "salesforce_account_ref",
             "slack_ref",
             "slack_account",

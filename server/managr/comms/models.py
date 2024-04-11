@@ -670,9 +670,11 @@ class InstagramAccount(TimeStampModel):
         null=False,
         on_delete=models.CASCADE,
     )
+    facebook_id = models.CharField(max_length=255, null=True)
     instagram_id = models.CharField(max_length=255, null=True)
-    access_token = models.CharField(max_length=255, null=True)
+    access_token = models.TextField(null=True)
     display_name = models.CharField(max_length=255, null=True)
+    hashtag_list = ArrayField(models.CharField(max_length=255), default=list)
 
     @staticmethod
     def _handle_response(response, fn_name=None):
@@ -702,23 +704,27 @@ class InstagramAccount(TimeStampModel):
             return InstagramApiException(kwargs)
         return data
 
-    def get_tweets(self, query, next_token=False):
-        url = comms_consts.TWITTER_BASE_URI + comms_consts.TWITTER_RECENT_TWEETS_URI
-        params = {
-            "query": query,
-            "max_results": 50,
-            "expansions": "author_id,attachments.media_keys",
-            "user.fields": "username,name,profile_image_url,public_metrics,verified,location,url",
-            "tweet.fields": "created_at",
-            "media.fields": "url,variants",
-            "sort_order": "relevancy",
-        }
-        if next_token:
-            params["next_token"] = next_token
-        headers = comms_consts.TWITTER_API_HEADERS
+    def check_for_hashtag(self, ht):
+        for hashtag_str in self.hashtag_list:
+            if ht in hashtag_str:
+                hashtag, date, id = ht.split(".")
+                return id
+        return False
+
+    def add_hashtag(self, hashtag, hashtag_id):
+        date = str(datetime.now().date())
+        hashtag_str = f"{hashtag}.{date}.{hashtag_id}"
+        self.hashtag_list.append(hashtag_str)
+        return self.save()
+
+    def get_posts(self, hashtag_id, next_token=False):
+        url = comms_consts.INSTAGRAM_TOP_MEDIA_URI(hashtag_id)
+        params = comms_consts.INSTAGRAM_MEDIA_PARAMS(self.instagram_id)
+        headers = {"Authorization": f"Bearer {self.access_token}"}
         with Variable_Client() as client:
-            response = client.get(url, headers=headers, params=params)
-            return self._handle_response(response)
+            r = client.get(url, headers=headers, params=params)
+            r = InstagramAccount._handle_response(r)
+            return r
 
     def get_summary(
         self, user, tokens, timeout, tweets, input_text, instructions=False, for_client=False
@@ -742,19 +748,21 @@ class InstagramAccount(TimeStampModel):
             )
         return open_ai_exceptions._handle_response(r)
 
-    def adapter(self):
-        return TwitterAuthAccountAdapter(
-            **{
-                "user": self.user,
-                "access_token": self.access_token,
-                "display_name": self.display_name,
-            }
-        )
-
     @staticmethod
-    def get_authorization(token):
-        query = urlencode(comms_consts.TWITTER_TOKEN_PARAMS(token))
-        return f"{comms_consts.TWITTER_AUTHORIZATION_URI}?{query}"
+    def get_long_lived_token(access_token):
+        url = "https://graph.facebook.com/oauth/access_token"
+        params = {
+            "grant_type": "fb_exchange_token",
+            "fb_exchange_token": access_token,
+            "client_secret": comms_consts.INSTAGRAM_APP_SECRET,
+            "client_id": comms_consts.INSTAGRAM_APP_KEY,
+        }
+        encoded_url = url + "?" + urlencode(params)
+        with Variable_Client() as client:
+            r = client.get(encoded_url)
+            r = InstagramAccount._handle_response(r)
+        token = r["access_token"]
+        return token
 
     @staticmethod
     def get_token(request):
@@ -763,9 +771,8 @@ class InstagramAccount(TimeStampModel):
             redirect_uri=comms_consts.INSTAGRAM_REDIRECT_URI,
             scope=comms_consts.INSTAGRAM_SCOPES,
         )
-        # client = facebook_compliance_fix(client)
         authorization_url, _ = client.authorization_url(
-            "https://api.instagram.com/oauth/authorize",
+            comms_consts.INSTAGRAM_AUTHORIZATION_URI,
             state="INSTAGRAM",
         )
         return {"link": authorization_url}
@@ -773,14 +780,61 @@ class InstagramAccount(TimeStampModel):
     @staticmethod
     def authenticate(code):
         client = OAuth2Session(
-            comms_consts.INSTAGRAM_APP_KEY,
+            comms_consts.INSTAGRAM_APP_KEY, redirect_uri=comms_consts.INSTAGRAM_REDIRECT_URI
         )
         try:
             token = client.fetch_token(
-                "https://api.instagram.com/oauth/access_token",
+                comms_consts.INSTAGRAM_ACCESS_TOKEN_URI,
                 code=code,
                 client_secret=comms_consts.INSTAGRAM_APP_SECRET,
+                include_client_id=comms_consts.INSTAGRAM_APP_KEY,
             )
-            return token
-        except OAuth2Error:
-            return "Invalid authorization code"
+            # response = {"access_token": token["access_token"]}
+            access_token = token["access_token"]
+            long_lived_token = InstagramAccount.get_long_lived_token(access_token)
+            response = {"access_token": long_lived_token}
+            return response
+
+        except OAuth2Error as e:
+            print(e)
+            return str(e)
+
+    def get_account_id(self):
+        url = comms_consts.INSTAGRAM_ACCOUNTS_URI
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+        with Variable_Client() as client:
+            r = client.get(url, headers=headers)
+            r = InstagramAccount._handle_response(r)
+        data = r["data"]
+        id = data["id"]
+        return id
+
+    def get_instagram_account_id(self, account_id):
+        url = (
+            comms_consts.INSTAGRAM_GRAPH_BASE_URL
+            + account_id
+            + "?fields=instagram_business_account"
+        )
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+        with Variable_Client() as client:
+            r = client.get(url, headers=headers)
+            r = InstagramAccount._handle_response(r)
+        account = r["instagram_business_account"]
+        id = account["id"]
+        return id
+
+    def get_hashtag_id(self, hashtag):
+        hashtag_check = self.check_for_hashtag(hashtag)
+        if hashtag_check:
+            return hashtag_check
+        else:
+            url = comms_consts.INSTAGRAM_HASHTAG_SEARCH_URI
+            params = urlencode({"user_id": self.instagram_id, "q": hashtag})
+            headers = {"Authorization": f"Bearer {self.access_token}"}
+            url = url + "?" + params
+            with Variable_Client() as client:
+                r = client.get(url, headers=headers)
+                r = InstagramAccount._handle_response(r)
+            id = r["data"]["id"]
+            self.add_hashtag(hashtag, id)
+            return id

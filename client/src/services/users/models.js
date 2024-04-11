@@ -60,6 +60,7 @@ export default class User extends Model {
   static writingStyles = new fields.Field()
   static writingStylesRef = new fields.Field()
   static hasTwitterIntegration = new fields.Field({ readOnly: true })
+  static hasInstagramIntegration = new fields.Field({ readOnly: true })
 
 
   static fromAPI(json = {}) {

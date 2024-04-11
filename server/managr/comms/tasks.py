@@ -52,6 +52,10 @@ def emit_share_client_summary(summary, clips, user_email):
     return _share_client_summary(summary, clips, user_email)
 
 
+def emit_get_meta_account_info(user_id):
+    return _get_meta_account_info(user_id)
+
+
 def create_new_search(payload, user_id):
     state = payload["view"]["state"]["values"]
     input_text = state["SEARCH"]["plain_input"]["value"]
@@ -437,4 +441,15 @@ def _share_client_summary(summary, clips, user_email):
         )
     except Exception as e:
         logger.exception(e)
+    return
+
+
+@background
+def _get_meta_account_info(user_id):
+    user = User.objects.get(id=user_id)
+    ig_account = user.instgram_account
+    account_id = ig_account.get_account_id()
+    instagram_id = ig_account.get_instagram_account_id(account_id)
+    ig_account.instagram_id = instagram_id
+    ig_account.save()
     return
