@@ -422,8 +422,12 @@ urlpatterns = [
         comms_views.get_instagram_authentication,
         name="twitter-authenticate",
     ),
+    path(
+        "users/instagram/revoke-token/",
+        comms_views.revoke_instagram_auth,
+        name="instagram-revoke-token",
+    ),
 ]
-
 router.register("users/reports", core_views.ReportViewSet, "reports"),
 router.register("users/conversations", core_views.ConversationViewSet, "conversations"),
 router.register("users/invite", core_views.UserInvitationView, "invite-user")

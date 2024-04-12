@@ -162,6 +162,14 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    async getPosts(data) {
+        try {
+            const res = await this.client.get(CommsApi.ENDPOINT + 'posts/', { params: data })
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
     async getClips(data, signal) {
         try {
             const res = await this.client.get('pr/clips/', { signal, params: data })
@@ -188,7 +196,14 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
-
+    async getPostsSummary(data) {
+        try {
+            const res = await this.client.post(CommsApi.ENDPOINT + 'ig-summary/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
     async getArticleSummary(url, search, instructions) {
         try {
             const res = await this.client.post(CommsApi.ENDPOINT + 'article-summary/', { params: url, search, instructions })

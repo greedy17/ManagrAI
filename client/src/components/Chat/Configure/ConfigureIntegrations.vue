@@ -316,8 +316,9 @@
             <img style="height: 40px" src="@/assets/images/instagram-11.svg" />
           </div>
           <div class="card__body">
-            <div style="display: flex">
+            <div class="row-center" style="display: flex">
               <h3 class="card__title">Instagram</h3>
+              <div v-if="hasIgIntegration" class="green-dot"></div>
             </div>
             <p class="card-text">Connect to search Instagram</p>
             <div></div>

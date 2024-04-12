@@ -763,7 +763,7 @@ class PRSearchViewSet(
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": ig_res})
         return Response(
             {
-                "tweets": post_list,
+                "posts": post_list,
             }
         )
 
@@ -1595,6 +1595,18 @@ def get_instagram_authentication(request):
     except Exception as e:
         logger.exception(str(e))
         return Response(data={"success": False})
+    return Response(data={"success": True})
+
+
+@api_view(["DELETE"])
+@permission_classes([permissions.IsAuthenticated])
+def revoke_instagram_auth(request):
+    user = request.user
+    ig_account = InstagramAccount.objects.filter(user=user)
+    try:
+        ig_account.delete()
+    except Exception as e:
+        return Response({"error": str(e)})
     return Response(data={"success": True})
 
 

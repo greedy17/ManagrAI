@@ -29,6 +29,7 @@ const CHECK_TASKS_ENDPOINT = '/task-status/'
 const SSO_DATA_ENDPOINT = '/sso-data/'
 const IG_REQUEST_TOKEN = '/users/instagram/request-token/'
 const IG_AUTHENTICATION = '/users/instagram/authenticate/'
+const IG_REVOKE = '/users/instagram/revoke-token/'
 const TWITTER_REQUEST_TOKEN = '/users/twitter/request-token/'
 const TWITTER_AUTHORIZATION = '/users/twitter/authorization'
 const TWITTER_AUTHENTICATION = '/users/twitter/authenticate'
@@ -749,6 +750,14 @@ export default class UserAPI {
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'User.getTwitterToken' })
+    }
+  }
+  async revokeInstagram() {
+    try {
+      const res = await this.client.delete(IG_REVOKE)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'User.getInstagramAuthentication' })
     }
   }
   async getTwitterToken() {

@@ -1837,6 +1837,7 @@ export default {
       mainView: 'news',
       savedSearch: null,
       tweets: [],
+      posts: [],
       tweetMedia: null,
       tweetUsers: null,
       articleInstructions: null,
@@ -1886,8 +1887,12 @@ export default {
       ],
       summaryExamples: [
         {
-          name: `Brand Analysis`,
-          value: `Summarize the news for {BrandX} leadership team in paragraph form. Provide sentiment analysis. List the top 3 most impactful stories, site source and author`,
+          name: `Media Analysis`,
+          value: `{Brand X} was mentioned in all of these news articles. As the VP of PR, please provide a media dashboard analyzing all the media coverage. Include the following Metrics: Overall Sentiment, Total Potential Reach (estimate a number), Top Stories, Top 10 Outlets (based on assumed circulation, include circulation number and author).`,
+        },
+        {
+          name: `Crisis Comms`,
+          value: `IF there is a negative story about {Lululemon} or a potential crisis is brewing, then flag the story (headline, source, author, date using mm/dd format) and draft a short crisis communication statement, and suggest 2-3 key messages for damage control. If there is crisis, simply reply with {All good, no crisis :)}`,
         },
         {
           name: `University Roundup`,
@@ -1915,7 +1920,7 @@ export default {
         },
         {
           name: `Competitor Update`,
-          value: `Highlight any important competitor news for {BrandX}. How does this impact {BrandX}. As {BrandX} PR agency provide feedback based on this news`,
+          value: `Bring {BrandX} up to speed on what {CompetitorX} is up to and why it matters, in paragraph form. Only flag the most impactful stories.  One short paragraph for positive and another for negative stories (headline, source, author, date in mm/dd format). Lastly offer 2-3 super creative newsjacking ideas.`,
         },
         {
           name: `Newsjacking`,
@@ -2831,7 +2836,8 @@ export default {
         return
       } else if (this.mainView === 'social') {
         this.closeRegenModal()
-        this.getTweets(saved)
+        // this.getTweets(saved)
+        this.getPosts(saved)
       } else if (this.mainView === 'website') {
         this.closeRegenModal()
         this.getSourceSummary()
@@ -3138,6 +3144,43 @@ export default {
         this.loading = false
       }
     },
+    async getPosts(saved = false) {
+      this.summary = null
+      this.loading = true
+      this.changeSearch({ search: this.newSearch, template: this.newTemplate })
+      try {
+        if (this.shouldCancel) {
+          return this.stopLoading()
+        }
+        await Comms.api
+          .getPosts({
+            hashtag: this.newSearch,
+            user_id: this.user.id,
+          })
+          .then((response) => {
+            if (this.shouldCancel) {
+              return this.stopLoading()
+            }
+            console.log('POST ARE HERE', response)
+            // if (response.posts) {
+            //   this.posts = response.posts
+            //   this.getPostsSummary()
+            // }
+
+            this.showingDropdown = false
+          })
+      } catch (e) {
+        console.log(e)
+        // this.tweetError = e.data.error
+        // this.booleanString = e.data.string
+        // this.summaryLoading = false
+        // this.tweets = []
+        // this.tweetMedia = null
+        this.clearNewSearch()
+      } finally {
+        this.loading = false
+      }
+    },
     prepareTweetSummary(tweets) {
       let tweetList = []
       for (let i = 0; i < tweets.length; i++) {
@@ -3173,6 +3216,43 @@ export default {
           .getTweetSummary({
             tweets: tweets,
             search: this.newSearch,
+            instructions: this.newTemplate,
+          })
+          .then((response) => {
+            if (this.shouldCancel) {
+              return this.stopLoading()
+            }
+            this.summary = response.summary
+            if (this.searchSaved) {
+              this.updateSearch()
+            }
+            this.refreshUser()
+          })
+      } catch (e) {
+        console.log('Error in getTweetSummary', e)
+        this.$toast('Something went wrong, please try again.', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.summarizing = true
+        this.summaryLoading = false
+      }
+    },
+    async getPostsSummary(instructions = '') {
+      let posts = []
+      this.summaryLoading = true
+      this.summary = ''
+      try {
+        if (this.shouldCancel) {
+          return this.stopLoading()
+        }
+        await Comms.api
+          .getPostsSummary({
+            posts: posts,
             instructions: this.newTemplate,
           })
           .then((response) => {
