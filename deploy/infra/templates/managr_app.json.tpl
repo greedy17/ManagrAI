@@ -306,6 +306,18 @@
       {
         "name": "STRIPE_PRICE_ID",
         "valueFrom": "${config_secret_arn}:stripePriceId::"
+      },
+      {
+        "name": "INSTAGRAM_APP_SECRET",
+        "valueFrom": "${config_secret_arn}:instagramAppSecret::"
+      },
+      {
+        "name": "INSTAGRAM_APP_KEY",
+        "valueFrom": "${config_secret_arn}:instagramAppKey::"
+      },
+      {
+        "name": "INSTAGRAM_REDIRECT_URI",
+        "valueFrom": "${config_secret_arn}:instagramRedirectUri::"
       }
     ],
     "logConfiguration": {

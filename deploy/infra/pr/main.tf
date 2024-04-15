@@ -136,6 +136,7 @@ data "template_file" "managr_app" {
     use_sso        = title(var.app_config.use_sso)
     use_news_api   = title(var.app_config.use_news_api)
     use_twitter_api= title(var.app_config.use_twitter_api)
+    use_instagram_api= title(var.app_config.use_instagram_api)
   }
 }
 
@@ -330,6 +331,10 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
 
     stripeApiKey         = each.app_config.stripe_api_key
     stripePriceId        = each.app_config.stripe_price_id
+
+    instagramAppKey      = each.app_config.instagram_app_key
+    instagramAppSecret   = each.app_config.instagram_app_secret
+    instagramRedirectUri = each.app_config.instagram_redirect_uri
   })
 }
 
