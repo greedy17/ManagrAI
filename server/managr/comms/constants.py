@@ -79,7 +79,7 @@ def INSTAGRAM_MEDIA_PARAMS(instagram_id):
 
 
 def INSTAGRAM_TOP_MEDIA_URI(hashtag_id):
-    url = INSTAGRAM_GRAPH_BASE_URL + hashtag_id + "/recent_media"
+    url = INSTAGRAM_GRAPH_BASE_URL + hashtag_id + "/top_media"
     return url
 
 
