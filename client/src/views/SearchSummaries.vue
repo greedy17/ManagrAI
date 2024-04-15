@@ -1729,7 +1729,8 @@
             v-if="
               (filteredArticles && filteredArticles.length) ||
               (tweets && tweets.length) ||
-              addedArticles.length
+              addedArticles.length ||
+              (posts && posts.length)
             "
           >
             <img src="@/assets/images/search.svg" height="18px" alt="" />
@@ -1924,6 +1925,20 @@
                     class="image-container left-margin right-margin-m white-bg"
                     v-else-if="mainView === 'pdf' && newTemplate"
                     :class="newTemplate ? 'dark-blue-bg' : ''"
+                  >
+                    <img
+                      style="margin: 0"
+                      src="@/assets/images/paper-plane-full.svg"
+                      height="14px"
+                      alt=""
+                    />
+                  </div>
+
+                  <div
+                    @click="getPostsSummary"
+                    class="image-container left-margin right-margin-m white-bg"
+                    :class="newTemplate ? 'dark-blue-bg' : ''"
+                    v-else-if="mainView === 'instagram'"
                   >
                     <img
                       style="margin: 0"
@@ -2868,6 +2883,7 @@ export default {
       this.filteredArticles = []
       this.addedArticles = []
       this.tweets = []
+      this.posts = []
       this.metaData = { clips: [] }
       this.changeSearch(null)
       this.$store.dispatch('setSearch', null)
@@ -3412,7 +3428,7 @@ export default {
               return this.stopLoading()
             }
             console.log(response)
-            if (response.posts) {
+            if (response.posts.length) {
               this.posts = response.posts
               this.getPostsSummary()
             }
@@ -3540,6 +3556,7 @@ export default {
       } finally {
         this.summarizing = true
         this.summaryLoading = false
+        this.showSummaryMenu = false
       }
     },
     async getChatSummary(clips, instructions = '') {
