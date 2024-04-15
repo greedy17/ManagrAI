@@ -8,6 +8,7 @@ from .models import (
     WritingStyle,
     TwitterAccount,
     InstagramAccount,
+    Discovery,
 )
 
 # Register your models here.
@@ -73,3 +74,4 @@ admin.site.register(EmailAlert, CustomEmailAlertAdmin)
 admin.site.register(WritingStyle)
 admin.site.register(TwitterAccount)
 admin.site.register(InstagramAccount)
+admin.site.register(Discovery)
