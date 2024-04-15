@@ -52,6 +52,7 @@ from managr.comms.utils import (
     get_domain,
     extract_pdf_text,
     convert_pdf_from_url,
+    merge_sort_dates,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
@@ -752,6 +753,7 @@ class PRSearchViewSet(
                 posts_res = ig_account.get_posts(id)
                 posts = posts_res["data"]
                 post_list = posts
+                # post_list = merge_sort_dates(post_list, "timestamp")
                 break
             except Exception as e:
                 has_error = True
@@ -778,6 +780,10 @@ class PRSearchViewSet(
         if user.has_hit_summary_limit:
             return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         posts = request.data.get("posts")
+        for idx, post in enumerate(posts):
+            hashtag_idx = post.find("#")
+            if hashtag_idx > 0:
+                posts[idx] = post[:hashtag_idx]
         instructions = request.data.get("instructions", False)
         ig_account = user.instagram_account
         has_error = False
