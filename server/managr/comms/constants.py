@@ -72,8 +72,8 @@ def INSTAGRAM_MEDIA_PARAMS(instagram_id):
     params = {
         "fields": "id,caption,permalink,children{media_url},comments_count,media_type,media_url,timestamp,like_count",
         "user_id": instagram_id,
-        "limit": "100",
-        "locale": "en_US",
+        "limit": "30",
+        "language": "en",
     }
     return params
 

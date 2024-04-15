@@ -298,7 +298,7 @@
           </p>
           <p v-else style="margin: 16px 0" class="sub-text">Article Report</p>
 
-          <p style="margin-right: 6px">
+          <p style="margin-right: 6px; padding-bottom: 0">
             {{
               mainView === 'news'
                 ? `${filteredArticles.length} News Clips`
@@ -309,6 +309,12 @@
                 : `${tweets.length} Tweets`
             }}
           </p>
+          <!-- v-if="
+              (filteredArticles && filteredArticles.length) ||
+              (tweets && tweets.length) ||
+              addedArticles.length ||
+              posts.length
+            " -->
         </div>
       </div>
 
@@ -1093,7 +1099,7 @@
                       id="search-input"
                       @keyup.enter="generateNewSearch(false)"
                       class="area-input text-area-input"
-                      placeholder="Search hashtags..."
+                      placeholder="Enter hashtag..."
                       autocomplete="off"
                       v-model="newSearch"
                       v-autoresize
@@ -1177,7 +1183,7 @@
 
                     <div class="expanded-item-column">
                       <div class="row horizontal-padding-s img-text">
-                        <img src="@/assets/images/arrow-trend-up.svg" height="18px" alt="" />
+                        <img src="@/assets/images/hastag.svg" height="18px" alt="" />
                         <p>Used Hashtags:</p>
                       </div>
 
@@ -1210,8 +1216,10 @@
                 v-for="(post, i) in posts"
                 :key="i"
               >
-                <div>
-                  <small class="bold-text">{{ formattedPostDate(post.timestamp) }}</small>
+                <div @click="goToIg(post.permalink)" class="row">
+                  <small class="gray-title-no-margin">{{
+                    formattedPostDate(post.timestamp)
+                  }}</small>
                 </div>
                 <div class="news-card-medium">
                   <div v-if="post.media_type" class="tweet-attachement">
@@ -1731,7 +1739,7 @@
               (filteredArticles && filteredArticles.length) ||
               (tweets && tweets.length) ||
               addedArticles.length ||
-              (posts && posts.length)
+              posts.length
             "
           >
             <img src="@/assets/images/search.svg" height="18px" alt="" />
@@ -2188,7 +2196,7 @@ export default {
         },
         {
           name: `Crisis Comms`,
-          value: `IF there is a negative story about {Lululemon} or a potential crisis is brewing, then flag the story (headline, source, author, date using mm/dd format) and draft a short crisis communication statement, and suggest 2-3 key messages for damage control. If there is crisis, simply reply with {All good, no crisis :)}`,
+          value: `IF there is a negative story about {BrandX} or a potential crisis is brewing, then flag the story (headline, source, author, date using mm/dd format) and draft a short crisis communication statement, and suggest 2-3 key messages for damage control. If there is crisis, simply reply with {All good, no crisis :)}`,
         },
         {
           name: `Competitor Update`,
@@ -2338,6 +2346,12 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    goToIg(link) {
+      window.open(link, '_blank')
+    },
+    removeHashtags() {
+      this.newSearch = this.newSearch.replace(/#/g, '')
+    },
     formattedPostDate(timestamp) {
       const dateObj = new Date(timestamp)
 
@@ -3135,6 +3149,7 @@ export default {
         this.getTweets(saved)
       } else if (this.mainView === 'instagram') {
         this.closeRegenModal()
+        this.removeHashtags()
         this.getPosts(saved)
       } else if (this.mainView === 'website') {
         this.closeRegenModal()
@@ -4813,6 +4828,15 @@ li {
   background-color: $off-white;
   margin-top: 0;
   margin-left: 8px;
+  cursor: pointer;
+}
+
+.gray-title-no-margin {
+  width: fit-content;
+  border-radius: 4px;
+  padding: 3px 8px;
+  background-color: $off-white;
+  margin-top: 0;
   cursor: pointer;
 }
 

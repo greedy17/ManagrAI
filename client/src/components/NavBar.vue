@@ -65,10 +65,7 @@
               <!-- <p class="gray-text">This is a one-time fee. Training and premium support included.</p> -->
             </div>
           </div>
-          <p class="gray-text">
-            Questions about PRO plan or billing?
-            <a href="mailto:customers@managr.ai" style="font-size: 11px; margin: 0">Contact us.</a>
-          </p>
+          <p class="gray-text">Have questions ? Email us at mike@mymanagr.com</p>
 
           <!-- <div class="display-flex display-center pricing-width pricing-users">
             <p>Number of Users: </p>
@@ -2544,7 +2541,7 @@ a:hover {
 }
 .gray-text {
   color: $mid-gray;
-  font-size: 11px;
+  font-size: 14px;
 }
 .pricing-width {
   width: 100%;
