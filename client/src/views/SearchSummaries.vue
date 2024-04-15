@@ -927,10 +927,15 @@
                         <p>Date Range</p>
                       </div>
 
-                      <div style="gap: 8px; opacity: 0.6" class="row">
-                        <p>{{ dateStart }}</p>
-                        <p>-</p>
-                        <p>{{ dateEnd }}</p>
+                      <div>
+                        <input
+                          disabled
+                          class="area-input-smallest"
+                          type="date"
+                          v-model="dateStart"
+                        />
+                        -
+                        <input disabled class="area-input-smallest" type="date" v-model="dateEnd" />
                       </div>
                     </div>
 
@@ -1174,10 +1179,10 @@
                         <p>Date Range</p>
                       </div>
 
-                      <div style="gap: 8px; opacity: 0.6" class="row">
-                        <p>{{ dateStart }}</p>
-                        <p>-</p>
-                        <p>{{ dateEnd }}</p>
+                      <div>
+                        <input class="area-input-smallest" type="date" v-model="dateStart" />
+                        -
+                        <input class="area-input-smallest" type="date" v-model="dateEnd" />
                       </div>
                     </div>
 
