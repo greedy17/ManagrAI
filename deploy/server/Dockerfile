@@ -127,7 +127,11 @@ ENV SECRET_KEY='secret123' \
   TWITTER_REDIRECT_URI='' \
   TWITTER_ACCESS_TOKEN='' \
   STRIPE_API_KEY='' \
-  STRIPE_PRICE_ID='' 
+  STRIPE_PRICE_ID='' \
+  USE_INSTAGRAM_API='' \
+  INSTAGRAM_APP_KEY='' \
+  INSTAGRAM_APP_SECRET='' \
+  INSTAGRAM_REDIRECT_URI='' 
 
 
 # Set the name of the working directory inside the docker container

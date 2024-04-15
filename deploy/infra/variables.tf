@@ -172,6 +172,11 @@ variable "environments" {
 
     stripe_api_key         = string
     stripe_price_id        = string
+
+    use_instagram_api      = bool
+    instagram_app_key      = string
+    instagram_app_secret   = string
+    instagram_redirect_uri = string
   }))
 }
 

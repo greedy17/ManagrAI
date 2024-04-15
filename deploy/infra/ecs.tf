@@ -129,6 +129,7 @@ data "template_file" "managr_app" {
     use_sso        = title(each.value.use_sso)
     use_news_api   = title(each.value.use_news_api)
     use_twitter_api= title(each.value.use_twitter_api)
+    use_instagram_api= title(each.value.use_instagram_api)
   }
 }
 
@@ -180,7 +181,8 @@ data "template_file" "managr_app_scheduled_tasks" {
     use_open_ai    = title(each.value.env.use_open_ai)
     use_sso        = title(each.value.env.use_sso)
     use_news_api   = title(each.value.env.use_news_api)
-    use_twitter_api= title(each.value.env.use_twitter_api)
+    use_twitter_api = title(each.value.env.use_twitter_api)
+    use_instagram_api = title(each.value.use_instagram_api)
   }
 }
 
@@ -383,5 +385,9 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
 
     stripeApiKey         = each.value.stripe_api_key
     stripePriceId        = each.value.stripe_price_id
+
+    instagramAppKey      = each.value.instagram_app_key
+    instagramAppSecret   = each.value.instagram_app_secret
+    instagramRedirectUri = each.value.instagram_redirect_uri
   })
 }
