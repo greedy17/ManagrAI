@@ -790,7 +790,7 @@
             >
               <div v-if="!selectedSearch" class="text-width">
                 <p v-if="hasTwitterIntegration" style="margin: 0">
-                  Get a pulse on whats happening on X(Twitter)
+                  Get a pulse on whats happening on X (Twitter)
                 </p>
 
                 <p style="margin: 0" v-else>
@@ -2151,14 +2151,6 @@ export default {
       ],
       summaryExamples: [
         {
-          name: `Media Analysis`,
-          value: `{Brand X} was mentioned in all of these news articles. As the VP of PR, please provide a media dashboard analyzing all the media coverage. Include the following Metrics: Overall Sentiment, Total Potential Reach (estimate a number), Top Stories, Top 10 Outlets (based on assumed circulation, include circulation number and author).`,
-        },
-        {
-          name: `Crisis Comms`,
-          value: `IF there is a negative story about {Lululemon} or a potential crisis is brewing, then flag the story (headline, source, author, date using mm/dd format) and draft a short crisis communication statement, and suggest 2-3 key messages for damage control. If there is crisis, simply reply with {All good, no crisis :)}`,
-        },
-        {
           name: `Topic Summary`,
           value: `Bring {BrandX} up to speed on what’s happening. Identify what aspects of the topic are most intriguing or concerning to the public. No salutations.`,
         },
@@ -2189,6 +2181,14 @@ export default {
         {
           name: `Pitch Expert`,
           value: `Bring {BrandX} up to speed on what’s happening in terms of {TopicX}. Identify what aspects of the topic are most intriguing or concerning to the public. Identify which of their industry expects could be pitched to the media. No salutations.`,
+        },
+        {
+          name: `Media Analysis`,
+          value: `{Brand X} was mentioned in all of these news articles. As the VP of PR, please provide a media dashboard analyzing all the media coverage. Include the following Metrics: Overall Sentiment, Total Potential Reach (estimate a number), Top Stories, Top 10 Outlets (based on assumed circulation, include circulation number and author).`,
+        },
+        {
+          name: `Crisis Comms`,
+          value: `IF there is a negative story about {Lululemon} or a potential crisis is brewing, then flag the story (headline, source, author, date using mm/dd format) and draft a short crisis communication statement, and suggest 2-3 key messages for damage control. If there is crisis, simply reply with {All good, no crisis :)}`,
         },
         {
           name: `Competitor Update`,
