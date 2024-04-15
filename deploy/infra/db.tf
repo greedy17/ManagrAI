@@ -10,7 +10,7 @@ resource "aws_db_subnet_group" "managrdb" {
 resource "aws_db_instance" "managrdb" {
   for_each                   = { for e in var.environments : e.name => e }
   identifier                 = "${replace(each.value.rds_instance_name, "_", "-")}-${each.value.name}"
-  allocated_storage          = 20
+  allocated_storage          = 100
   engine                     = "postgres"
   engine_version             = "12.11"
   instance_class             = "db.t2.medium"
