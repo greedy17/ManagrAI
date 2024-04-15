@@ -6,7 +6,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import login
 from rest_framework import serializers
 import managr.core.constants as core_consts
-from managr.comms.serializers import SearchSerializer
+from managr.comms.serializers import SearchSerializer, InstagramAccountSerializer
 from managr.organization.serializers import OrganizationSerializer
 from managr.salesforce.serializers import SalesforceAuthSerializer
 from managr.organization.models import Organization
@@ -48,6 +48,7 @@ class UserClientSerializer(serializers.ModelSerializer):
     organization_ref = OrganizationSerializer(many=False, source="organization", read_only=True)
     salesforce_account_ref = SalesforceAuthSerializer(source="salesforce_account", read_only=True)
     hubspot_account_ref = HubspotAuthAccountSerializer(source="hubspot_account", read_only=True)
+    instagram_account_ref = InstagramAccountSerializer(source="instagram_account", read_only=True)
     slack_ref = UserSlackIntegrationSerializer(source="slack_integration", read_only=True)
     slack_account = UserFrontEndSlackIntegrationSerializer(
         source="slack_integration", read_only=True
@@ -65,6 +66,7 @@ class UserClientSerializer(serializers.ModelSerializer):
             "last_name",
             "organization",
             "organization_ref",
+            "instagram_account_ref",
             "is_active",
             "is_admin",
             "is_superuser",
