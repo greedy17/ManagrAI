@@ -304,6 +304,8 @@
                 ? `${filteredArticles.length} News Clips`
                 : mainView === 'website'
                 ? '1 Article'
+                : mainView === 'instagram'
+                ? `${posts.length} Posts`
                 : `${tweets.length} Tweets`
             }}
           </p>
@@ -371,7 +373,8 @@
                       :disabled="
                         loading ||
                         summaryLoading ||
-                        (mainView === 'social' && !hasTwitterIntegration)
+                        (mainView === 'social' && !hasTwitterIntegration) ||
+                        (mainView === 'instagra,' && !hasIgIntegration)
                       "
                     />
 
@@ -466,6 +469,13 @@
                           class="switch-item"
                         >
                           Social
+                        </div>
+                        <div
+                          @click="switchMainView('instagram')"
+                          :class="{ activeswitch: mainView === 'instagram' }"
+                          class="switch-item"
+                        >
+                          IG
                         </div>
                         <div
                           @click="switchMainView('website')"
@@ -882,6 +892,13 @@
                           Social
                         </div>
                         <div
+                          @click="switchMainView('instagram')"
+                          :class="{ activeswitch: mainView === 'instagram' }"
+                          class="switch-item"
+                        >
+                          IG
+                        </div>
+                        <div
                           @click="switchMainView('website')"
                           :class="{ activeswitch: mainView === 'website' }"
                           class="switch-item"
@@ -1034,6 +1051,218 @@
             </div>
           </div>
         </div>
+
+        <div style="width: 100%" v-else-if="mainView === 'instagram'">
+          <div v-if="loading">
+            <div class="small-container">
+              <div class="loading">
+                <p>Gathering posts</p>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding-top: 2rem" v-else-if="!(posts && posts.length)">
+            <div
+              style="width: 100%; padding: 0 32px; padding-top: 16px"
+              class="small-container letter-spacing"
+            >
+              <div v-if="!selectedSearch" class="text-width">
+                <h3 style="margin: 0; font-size: 24px" class="">Summarize Social</h3>
+                <p v-if="hasIgIntegration" style="margin: 0">
+                  Start by typing in keywords or a topic. Then provide summary instructions
+                </p>
+
+                <p style="margin: 0" v-else>
+                  Start by connecting your Instagram account
+                  <span class="link" @click="goToIntegrations">here</span>.
+                </p>
+              </div>
+
+              <div style="width: 100%; margin-top: 32px">
+                <div style="width: 100%" class="large-input-container">
+                  <div style="border: none; box-shadow: none" class="input-container">
+                    <img
+                      class="left-margin-m"
+                      src="@/assets/images/search.svg"
+                      height="20px"
+                      alt=""
+                    />
+                    <textarea
+                      id="search-input"
+                      @keyup.enter="generateNewSearch(false)"
+                      class="area-input text-area-input"
+                      placeholder="Search hashtags..."
+                      autocomplete="off"
+                      v-model="newSearch"
+                      v-autoresize
+                      :disabled="loading || summaryLoading || !hasIgIntegration"
+                    />
+
+                    <div
+                      @click="generateNewSearch(false)"
+                      class="image-container left-margin right-margin-m wrapper"
+                      :class="newSearch ? 'dark-blue-bg' : ''"
+                    >
+                      <img
+                        style="margin: 0; cursor: text"
+                        src="@/assets/images/paper-plane-top.svg"
+                        height="14px"
+                        alt=""
+                      />
+
+                      <div class="tooltip">Submit</div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="expanded-item">
+                      <div class="row horizontal-padding-s img-text">
+                        <img src="@/assets/images/newspaper.svg" height="20px" alt="" />
+                        <p>Source</p>
+                      </div>
+
+                      <div class="switcher">
+                        <div
+                          @click="switchMainView('news')"
+                          :class="{ activeswitch: mainView === 'news' }"
+                          class="switch-item"
+                        >
+                          News
+                        </div>
+                        <div
+                          @click="switchMainView('social')"
+                          :class="{ activeswitch: mainView === 'social' }"
+                          class="switch-item"
+                        >
+                          Social
+                        </div>
+                        <div
+                          @click="switchMainView('instagram')"
+                          :class="{ activeswitch: mainView === 'instagram' }"
+                          class="switch-item"
+                        >
+                          IG
+                        </div>
+                        <div
+                          @click="switchMainView('website')"
+                          :class="{ activeswitch: mainView === 'website' }"
+                          class="switch-item"
+                        >
+                          URL
+                        </div>
+                        <div
+                          @click="switchMainView('pdf')"
+                          :class="{ activeswitch: mainView === 'pdf' }"
+                          class="switch-item"
+                        >
+                          PDF
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="expanded-item">
+                      <div class="row horizontal-padding-s img-text">
+                        <img src="@/assets/images/calendar.svg" height="18px" alt="" />
+                        <p>Date Range</p>
+                      </div>
+
+                      <div style="gap: 8px; opacity: 0.6" class="row">
+                        <p>{{ dateStart }}</p>
+                        <p>-</p>
+                        <p>{{ dateEnd }}</p>
+                      </div>
+                    </div>
+
+                    <div class="expanded-item-column">
+                      <div class="row horizontal-padding-s img-text">
+                        <img src="@/assets/images/arrow-trend-up.svg" height="18px" alt="" />
+                        <p>Used Hashtags:</p>
+                      </div>
+
+                      <div class="horizontal-padding rows">
+                        <p
+                          @click="setNewSearch(extractHashtag(hashtag))"
+                          v-for="(hashtag, i) in usedHashtags"
+                          :key="i"
+                          class="bold gray-title"
+                        >
+                          {{ extractHashtag(hashtag) }}
+                        </p>
+                      </div>
+
+                      <!-- <div style="width: 100%" lass="horizontal-padding rows" v-else>
+                        <p class="">hello world</p>
+                      </div> -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding: 48px 0" v-else>
+            <div>
+              <div
+                style="margin: 2rem 0"
+                class="news-container"
+                v-for="(post, i) in posts"
+                :key="i"
+              >
+                <div class="news-card-medium">
+                  <div v-if="post.media_type" class="tweet-attachement">
+                    <img
+                      v-if="post.media_type === 'IMAGE'"
+                      :src="post.media_url"
+                      class="cover-photo-ig"
+                      alt=""
+                    />
+
+                    <video
+                      style="margin-top: 1rem"
+                      v-else-if="post.media_type === 'VIDEO'"
+                      width="400"
+                      height="200"
+                      controls
+                    >
+                      <source :src="post.media_url" type="video/mp4" />
+                    </video>
+                  </div>
+
+                  <div class="attachment-header-container">
+                    <div>
+                      <header>
+                        <div class="card-row-med">
+                          <!-- <a :href="post.permalink">View post</a> -->
+                        </div>
+                      </header>
+
+                      <p class="article-preview">{{ post.caption }}</p>
+                    </div>
+                  </div>
+
+                  <div class="card-footer">
+                    <div class="author-time">
+                      <!-- <span class="author">{{ '@' + tweet.user.username }}</span> -->
+
+                      <small class="bold-text"
+                        >{{ post.like_count }}
+                        <span>Likes</span>
+                      </small>
+                      <span class="divider-dot">.</span>
+                      <small class="bold-text"
+                        >{{ post.comments_count }}
+                        <span>Comments</span>
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div style="width: 100%; padding: 32px 0" v-else-if="mainView === 'website'">
           <div v-if="clipLoading">
             <div class="small-container">
@@ -1111,6 +1340,13 @@
                         class="switch-item"
                       >
                         Social
+                      </div>
+                      <div
+                        @click="switchMainView('instagram')"
+                        :class="{ activeswitch: mainView === 'instagram' }"
+                        class="switch-item"
+                      >
+                        IG
                       </div>
                       <div
                         @click="switchMainView('website')"
@@ -1454,6 +1690,13 @@
                         class="switch-item"
                       >
                         Social
+                      </div>
+                      <div
+                        @click="switchMainView('instagram')"
+                        :class="{ activeswitch: mainView === 'instagram' }"
+                        class="switch-item"
+                      >
+                        IG
                       </div>
                       <div
                         @click="switchMainView('website')"
@@ -2051,6 +2294,7 @@ export default {
     const defaultTime = new Date()
     defaultTime.setHours(8, 0)
     this.selectedTime = defaultTime.toISOString().slice(0, 16)
+    console.log(this.user)
   },
   watch: {
     typedMessage: 'changeIndex',
@@ -2069,6 +2313,10 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    extractHashtag(hashtag) {
+      const parts = hashtag.split(/[.\n]/)
+      return parts[0]
+    },
     openFilePicker() {
       if (!this.summaryLoading) {
         this.$refs.fileInput.click()
@@ -2836,7 +3084,9 @@ export default {
         return
       } else if (this.mainView === 'social') {
         this.closeRegenModal()
-        // this.getTweets(saved)
+        this.getTweets(saved)
+      } else if (this.mainView === 'instagram') {
+        this.closeRegenModal()
         this.getPosts(saved)
       } else if (this.mainView === 'website') {
         this.closeRegenModal()
@@ -3161,12 +3411,11 @@ export default {
             if (this.shouldCancel) {
               return this.stopLoading()
             }
-            console.log('POST ARE HERE', response)
-            // if (response.posts) {
-            //   this.posts = response.posts
-            //   this.getPostsSummary()
-            // }
-
+            console.log(response)
+            if (response.posts) {
+              this.posts = response.posts
+              this.getPostsSummary()
+            }
             this.showingDropdown = false
           })
       } catch (e) {
@@ -3196,6 +3445,20 @@ export default {
         )
       }
       return tweetList
+    },
+    prepareIgSummary(posts) {
+      let postList = []
+      for (let i = 0; i < posts.length; i++) {
+        postList.push(
+          'Caption:' +
+            posts[i].caption +
+            // 'likes: ' +
+            // posts[i].likes_count +
+            ' Date: ' +
+            posts[i].timestamp,
+        )
+      }
+      return postList
     },
     getArticleDescriptions(articles) {
       return articles.map(
@@ -3243,7 +3506,7 @@ export default {
       }
     },
     async getPostsSummary(instructions = '') {
-      let posts = []
+      let posts = this.prepareIgSummary(this.posts)
       this.summaryLoading = true
       this.summary = ''
       try {
@@ -3536,8 +3799,18 @@ export default {
     },
   },
   computed: {
+    usedHashtags() {
+      if (this.user.instagramAccountRef && this.user.instagramAccountRef.hashtagList) {
+        return this.user.instagramAccountRef.hashtagList
+      } else {
+        return []
+      }
+    },
     hasTwitterIntegration() {
       return !!this.$store.state.user.hasTwitterIntegration
+    },
+    hasIgIntegration() {
+      return !!this.$store.state.user.hasInstagramIntegration
     },
     clipTitles() {
       if (Object.keys(this.$store.state.categories).length) {
@@ -4223,6 +4496,15 @@ button:disabled {
     margin-left: 0;
     margin-bottom: 4px;
   }
+}
+
+.cover-photo-ig {
+  height: 200px;
+  width: 300px;
+  margin-top: 1.25rem;
+  object-fit: cover;
+  cursor: text;
+  border-radius: 4px;
 }
 
 .cover-photo-no-l-margin {

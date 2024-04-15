@@ -704,12 +704,22 @@ class InstagramAccount(TimeStampModel):
             return InstagramApiException(kwargs)
         return data
 
+    # def check_for_hashtag(self, ht):
+    #     for hashtag_str in self.hashtag_list:
+    #         if ht in hashtag_str:
+    #             hashtag, date, id = ht.split(".")
+    #             return id
+    #     return False
+
     def check_for_hashtag(self, ht):
         for hashtag_str in self.hashtag_list:
             if ht in hashtag_str:
-                hashtag, date, id = ht.split(".")
-                return id
-        return False
+                parts = hashtag_str.split(".")
+                if len(parts) == 3:
+                    hashtag, date, _id = parts
+                    return _id
+        return None
+
 
     def add_hashtag(self, hashtag, hashtag_id):
         date = str(datetime.now().date())

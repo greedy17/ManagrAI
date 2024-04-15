@@ -108,4 +108,4 @@ class TwitterAccountSerializer(serializers.ModelSerializer):
 class InstagramAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = InstagramAccount
-        fields = ("id", "user", "access_token")
+        fields = ("id", "user", "access_token", "hashtag_list")
