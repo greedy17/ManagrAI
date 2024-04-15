@@ -1255,7 +1255,22 @@
                           :key="index"
                           class="carousel-item"
                         >
-                          <img :src="img.media_url" class="cover-photo-ig" alt="" />
+                          <img
+                            v-if="img.media_type === 'IMAGE'"
+                            :src="img.media_url"
+                            class="cover-photo-ig"
+                            alt=""
+                          />
+
+                          <video
+                            style="margin-top: 1rem"
+                            v-else-if="img.media_type === 'VIDEO'"
+                            width="400"
+                            height="200"
+                            controls
+                          >
+                            <source :src="img.media_url" type="video/mp4" />
+                          </video>
                         </div>
                       </div>
                       <div class="car-dots">

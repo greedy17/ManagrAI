@@ -70,7 +70,7 @@ def TWITTER_TOKEN_PARAMS(token):
 
 def INSTAGRAM_MEDIA_PARAMS(instagram_id):
     params = {
-        "fields": "id,caption,permalink,children{media_url},comments_count,media_type,media_url,timestamp,like_count",
+        "fields": "id,caption,permalink,children{media_url, media_type},comments_count,media_type,media_url,timestamp,like_count",
         "user_id": instagram_id,
         "limit": "30",
         "language": "en",
