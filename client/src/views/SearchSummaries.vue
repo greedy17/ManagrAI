@@ -1244,6 +1244,30 @@
                     >
                       <source :src="post.media_url" type="video/mp4" />
                     </video>
+
+                    <div v-else-if="post.media_type === 'CAROUSEL_ALBUM'" class="carousel">
+                      <div
+                        class="carousel-slide"
+                        :style="{ transform: `translateX(-${currentIndex * 100}%)` }"
+                      >
+                        <div
+                          v-for="(img, index) in post.children.data"
+                          :key="index"
+                          class="carousel-item"
+                        >
+                          <img :src="img.media_url" class="cover-photo-ig" alt="" />
+                        </div>
+                      </div>
+                      <div class="car-dots">
+                        <span
+                          v-for="(img, index) in post.children.data"
+                          :key="index"
+                          class="car-dot"
+                          :class="{ active: index === currentIndex }"
+                          @click="goTo(index)"
+                        ></span>
+                      </div>
+                    </div>
                   </div>
 
                   <div class="attachment-header-container">
@@ -2056,6 +2080,7 @@ export default {
   },
   data() {
     return {
+      currentIndex: 0,
       selectedFile: null,
       pdfLoaded: false,
       pdfLink: null,
@@ -2351,6 +2376,9 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    goTo(index) {
+      this.currentIndex = index
+    },
     goToIg(link) {
       window.open(link, '_blank')
     },
@@ -4842,7 +4870,7 @@ li {
   width: fit-content;
   border-radius: 4px;
   padding: 3px 8px;
-  background-color: $off-white;
+  background-color: $soft-gray;
   margin-top: 0;
   cursor: pointer;
 }
@@ -5624,5 +5652,48 @@ textarea::placeholder {
   position: absolute;
   top: 8px;
   right: 8px;
+}
+
+.carousel {
+  position: relative;
+  overflow: hidden;
+  width: 300px;
+  margin-top: 8px;
+}
+
+.carousel-slide {
+  display: flex;
+  transition: transform 0.5s ease;
+}
+
+.carousel-item {
+  flex: 0 0 auto;
+  width: 100%;
+  text-align: center;
+}
+
+.car-dots {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  background-color: rgba(247, 245, 245, 0.996);
+  padding: 3px 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.car-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #ccc;
+  margin: 0 5px;
+  cursor: pointer;
+}
+
+.car-dot.active {
+  background-color: #333;
 }
 </style>
