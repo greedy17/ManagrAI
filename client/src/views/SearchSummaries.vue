@@ -3471,6 +3471,8 @@ export default {
           .getPosts({
             hashtag: this.newSearch,
             user_id: this.user.id,
+            date_from: this.dateStart,
+            date_to: this.dateEnd,
           })
           .then((response) => {
             if (this.shouldCancel) {
