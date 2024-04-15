@@ -132,6 +132,22 @@
         </main>
       </div>
     </Modal>
+    <Modal v-if="deleteDiscoveryModelOpen" class="delete-modal">
+      <div class="delete-container">
+        <header @click="toggleDiscoveryDeleteModal">
+          <p>X</p>
+        </header>
+        <main>
+          <h2>Delete List</h2>
+          <p>Are you sure you want to delete this List ?</p>
+
+          <div style="margin-top: 20px" class="row">
+            <button @click="toggleDiscoveryDeleteModal" class="tertiary-button">Cancel</button>
+            <button @click="deleteDiscovery" class="red-button">Delete</button>
+          </div>
+        </main>
+      </div>
+    </Modal>
     <Transition name="slide-fade">
       <div v-if="showUpdateBanner" class="templates">
         <p>Search successfully deleted!</p>
@@ -154,11 +170,15 @@
           :to="{ name: 'PRSummaries' }"
           id="router-summarize"
         >
-          <p>Search</p>
+          <p>Summarize</p>
         </router-link>
 
         <router-link active-class="active-mobile" :to="{ name: 'Pitches' }" id="router-pitch">
           <p>Write</p>
+        </router-link>
+
+        <router-link active-class="active-mobile" :to="{ name: 'Discover' }" id="router-pitch">
+          <p>Discover</p>
         </router-link>
 
         <router-link
@@ -208,7 +228,7 @@
             @click="toggleShowPitches"
             class="row pointer nav-text"
           >
-            Saved Pitches
+            Saved Content
             <img
               v-if="!showSavedPitches"
               src="@/assets/images/downArrow.svg"
@@ -231,6 +251,27 @@
           >
             Saved Assists
             <img v-if="!showSavedAssist" src="@/assets/images/downArrow.svg" height="14px" alt="" />
+            <img
+              class="rotate-img"
+              v-else
+              src="@/assets/images/downArrow.svg"
+              height="14px"
+              alt=""
+            />
+          </div>
+
+          <div
+            v-else-if="$route.name === 'Discover'"
+            @click="toggleShowDiscoveries"
+            class="row pointer nav-text"
+          >
+            Saved Lists
+            <img
+              v-if="!showSavedDiscoveries"
+              src="@/assets/images/downArrow.svg"
+              height="14px"
+              alt=""
+            />
             <img
               class="rotate-img"
               v-else
@@ -373,9 +414,9 @@
                   fill="currentColor"
                 ></path>
               </svg>
-              <input class="search-input" v-model="AssistText" :placeholder="`Search...`" />
+              <input class="search-input" v-model="assistText" :placeholder="`Search...`" />
               <img
-                v-show="AssistText"
+                v-show="assistText"
                 @click="clearText"
                 src="@/assets/images/close.svg"
                 class="invert pointer"
@@ -408,6 +449,52 @@
               </div>
             </div>
           </div>
+
+          <div v-else-if="showSavedDiscoveries" class="search-dropdown">
+            <div class="input">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
+                  fill="currentColor"
+                ></path>
+              </svg>
+              <input class="search-input" v-model="discoveryText" :placeholder="`Search...`" />
+              <img
+                v-show="discoveryText"
+                @click="clearText"
+                src="@/assets/images/close.svg"
+                class="invert pointer"
+                height="12px"
+                alt=""
+              />
+            </div>
+            <p class="v-margin" v-if="!discoveries.length">Nothing here...</p>
+
+            <div class="searches-container">
+              <div
+                @mouseenter="setIndex(i)"
+                @mouseLeave="removeIndex"
+                class="row relative"
+                v-for="(discovery, i) in discoveries"
+                :key="discovery.id"
+              >
+                <p @click="selectDiscovery(discovery)">
+                  {{ discovery.name }}
+                </p>
+
+                <img
+                  @click="toggleDiscoveryDeleteModal(discovery)"
+                  v-if="hoverIndex === i"
+                  class="absolute-icon"
+                  src="@/assets/images/trash.svg"
+                  height="12px"
+                  alt=""
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -424,11 +511,15 @@
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'PRSummaries' }" id="router-summarize">
-          <p>Search</p>
+          <p>Summarize</p>
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'Pitches' }" id="router-pitch">
           <p>Write</p>
+        </router-link>
+
+        <router-link active-class="active" :to="{ name: 'Discover' }" id="router-pitch">
+          <p>Discover</p>
         </router-link>
 
         <router-link
@@ -454,7 +545,8 @@
             v-if="
               ($route.name === 'PRSummaries' ||
                 $route.name === 'Pitches' ||
-                $route.name === 'Assist') &&
+                $route.name === 'Assist' ||
+                $route.name === 'Discover') &&
               !isPaid
             "
             class="row wrapper-count"
@@ -489,7 +581,7 @@
               @click="toggleShowPitches"
               class="row pointer nav-text"
             >
-              Saved Pitches
+              Saved Content
               <img
                 v-if="!showSavedPitches"
                 src="@/assets/images/downArrow.svg"
@@ -513,6 +605,27 @@
               Saved Assists
               <img
                 v-if="!showSavedAssist"
+                src="@/assets/images/downArrow.svg"
+                height="14px"
+                alt=""
+              />
+              <img
+                class="rotate-img"
+                v-else
+                src="@/assets/images/downArrow.svg"
+                height="14px"
+                alt=""
+              />
+            </div>
+
+            <div
+              v-else-if="$route.name === 'Discover'"
+              @click="toggleShowDiscoveries"
+              class="row pointer nav-text"
+            >
+              Saved Lists
+              <img
+                v-if="!showSavedDiscoveries"
                 src="@/assets/images/downArrow.svg"
                 height="14px"
                 alt=""
@@ -584,6 +697,18 @@
                     height="12px"
                     alt=""
                   />
+                </div>
+              </div>
+
+              <div class="h-padding">
+                <div @click="togglePersonal" class="toggle">
+                  <div :class="{ 'active-toggle': personalSearches }" class="toggle-side">
+                    <small>Personal</small>
+                  </div>
+
+                  <div :class="{ 'active-toggle': !personalSearches }" class="toggle-side">
+                    <small>Group</small>
+                  </div>
                 </div>
               </div>
             </div>
@@ -659,9 +784,9 @@
                     fill="currentColor"
                   ></path>
                 </svg>
-                <input class="search-input" v-model="AssistText" :placeholder="`Search...`" />
+                <input class="search-input" v-model="assistText" :placeholder="`Search...`" />
                 <img
-                  v-show="AssistText"
+                  v-show="assistText"
                   @click="clearText"
                   src="@/assets/images/close.svg"
                   class="invert pointer"
@@ -685,6 +810,52 @@
 
                   <img
                     @click="toggleAssistDeleteModal(assist)"
+                    v-if="hoverIndex === i"
+                    class="absolute-icon"
+                    src="@/assets/images/trash.svg"
+                    height="12px"
+                    alt=""
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div v-else-if="showSavedDiscoveries" class="search-dropdown">
+              <div class="input">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
+                    fill="currentColor"
+                  ></path>
+                </svg>
+                <input class="search-input" v-model="discoveryText" :placeholder="`Search...`" />
+                <img
+                  v-show="discoveryText"
+                  @click="clearText"
+                  src="@/assets/images/close.svg"
+                  class="invert pointer"
+                  height="12px"
+                  alt=""
+                />
+              </div>
+              <p class="v-margin" v-if="!discoveries.length">Nothing here...</p>
+
+              <div class="searches-container">
+                <div
+                  @mouseenter="setIndex(i)"
+                  @mouseLeave="removeIndex"
+                  class="row relative"
+                  v-for="(discovery, i) in discoveries"
+                  :key="discovery.id"
+                >
+                  <p @click="selectDiscovery(discovery)">
+                    {{ discovery.name }}
+                  </p>
+
+                  <img
+                    @click="toggleDiscoveryDeleteModal(discovery)"
                     v-if="hoverIndex === i"
                     class="absolute-icon"
                     src="@/assets/images/trash.svg"
@@ -738,10 +909,10 @@
                 <img class="mar-right" src="@/assets/images/apps.svg" height="13px" alt="" />
                 Integrations
               </p>
-              <p class="dropdown-item" @click="goToReports">
+              <!-- <p class="dropdown-item" @click="goToReports">
                 <img class="mar-right" src="@/assets/images/report.svg" height="13px" alt="" />
                 Digest
-              </p>
+              </p> -->
               <p @click="logOut" class="dropdown-item dropdown-border">
                 <img class="mar-right" src="@/assets/images/logout.svg" height="13px" alt="" /> Sign
                 out
@@ -792,7 +963,7 @@
             @click="toggleShowPitches"
             class="row pointer nav-text saved-searches-mobile"
           >
-            Saved Pitches
+            Saved Content
             <img
               v-if="!showSavedPitches"
               src="@/assets/images/downArrow.svg"
@@ -944,16 +1115,20 @@ export default {
   },
   data() {
     return {
+      personalSearches: true,
       items: [],
       searchText: '',
       pitchText: '',
-      AssistText: '',
+      assistText: '',
+      discoveryText: '',
       showSavedSearches: false,
       showSavedPitches: false,
       showSavedAssist: false,
+      showSavedDiscoveries: false,
       deleteModelOpen: false,
       deletePitchModelOpen: false,
       deleteAssistModelOpen: false,
+      deleteDiscoveryModelOpen: false,
       selectedSearch: null,
       selectedPich: null,
       soonText: 'Transcribe',
@@ -977,6 +1152,7 @@ export default {
     this.getSearches()
     this.getPitches()
     this.getAssist()
+    this.getDiscoveries()
     await this.team.refresh()
     this.amountList = this.amountList.filter((item) => item >= this.activeUsers.length)
     this.numberOfUsers = this.activeUsers.length
@@ -1014,10 +1190,14 @@ export default {
       this.showSavedPitches = false
       this.showSavedAssist = false
       this.showSavedSearches = false
+      this.showSavedDiscoveries = false
       this.$emit('close-menu')
     },
   },
   methods: {
+    togglePersonal() {
+      this.personalSearches = !this.personalSearches
+    },
     setIndex(i) {
       this.hoverIndex = i
     },
@@ -1052,6 +1232,7 @@ export default {
       this.showSavedSearches = false
       this.showSavedPitches = false
       this.showSavedAssist = false
+      this.showSavedDiscoveries = false
     },
     togglePitchDeleteModal(pitch = null) {
       if (pitch) {
@@ -1061,6 +1242,7 @@ export default {
       this.showSavedSearches = false
       this.showSavedPitches = false
       this.showSavedAssist = false
+      this.showSavedDiscoveries = false
     },
     toggleAssistDeleteModal(assist = null) {
       if (assist) {
@@ -1070,6 +1252,17 @@ export default {
       this.showSavedSearches = false
       this.showSavedPitches = false
       this.showSavedAssist = false
+      this.showSavedDiscoveries = false
+    },
+    toggleDiscoveryDeleteModal(discovery = null) {
+      if (discovery) {
+        this.currentDiscovery = discovery
+      }
+      this.deleteDiscoveryModelOpen = !this.deleteDiscoveryModelOpen
+      this.showSavedSearches = false
+      this.showSavedPitches = false
+      this.showSavedAssist = false
+      this.showSavedDiscoveries = false
     },
     async deleteSearch() {
       try {
@@ -1143,6 +1336,34 @@ export default {
         })
       }
     },
+    async deleteDiscovery() {
+      try {
+        Comms.api
+          .deleteDiscovery({
+            id: this.currentDiscovery.id,
+          })
+          .then(() => {
+            this.$toast('Discovery removed', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+            this.getDiscoveries()
+            this.toggleDiscoveryDeleteModal()
+          })
+      } catch (e) {
+        console.log(e)
+        this.$toast(`${e}`, {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      }
+    },
     getInitials() {
       const fullSplit = this.fullName.split(' ')
       let initials = ''
@@ -1184,6 +1405,10 @@ export default {
       this.toggleShowAssist()
       this.$store.dispatch('setAssist', assist)
     },
+    selectDiscovery(discovery) {
+      this.toggleShowDiscoveries()
+      this.$store.dispatch('setDiscovery', discovery)
+    },
     toggleShowSearches() {
       this.$emit('close-menu')
       this.showSavedSearches = !this.showSavedSearches
@@ -1196,6 +1421,10 @@ export default {
       this.$emit('close-menu')
       this.showSavedAssist = !this.showSavedAssist
     },
+    toggleShowDiscoveries() {
+      this.$emit('close-menu')
+      this.showSavedDiscoveries = !this.showSavedDiscoveries
+    },
     getSearches() {
       this.$store.dispatch('getSearches')
     },
@@ -1204,6 +1433,9 @@ export default {
     },
     getAssist() {
       this.$store.dispatch('getAssist')
+    },
+    getDiscoveries() {
+      this.$store.dispatch('getDiscoveries')
     },
     goHome() {
       this.$router.go()
@@ -1219,12 +1451,14 @@ export default {
       this.showSavedPitches = false
       this.showSavedSearches = false
       this.showSavedAssist = false
+      this.showSavedDiscoveries = false
       this.$emit('toggle-menu')
     },
     clearText() {
       this.searchText = ''
       this.pitchText = ''
-      this.AssistText = ''
+      this.assistText = ''
+      this.discoveryText = ''
     },
     goToIntegrations() {
       this.$router.push({ name: 'PRIntegrations' })
@@ -1241,7 +1475,11 @@ export default {
   },
   computed: {
     unfilteredSearches() {
-      return this.$store.state.allSearches
+      if (this.personalSearches) {
+        return this.$store.state.allSearches.filter((search) => search.user === this.user.id)
+      } else {
+        return this.$store.state.allSearches
+      }
     },
     activeUsers() {
       return this.team.list.filter((user) => user.isActive)
@@ -1251,6 +1489,9 @@ export default {
     },
     unfilteredAssist() {
       return this.$store.state.allAssist
+    },
+    unfilteredDiscoveries() {
+      return this.$store.state.allDiscoveries
     },
     searches() {
       if (this.unfilteredSearches.length) {
@@ -1269,7 +1510,14 @@ export default {
     assists() {
       if (this.unfilteredAssist.length) {
         return this.unfilteredAssist.filter((assist) =>
-          assist.name.toLowerCase().includes(this.AssistText.toLowerCase()),
+          assist.name.toLowerCase().includes(this.assistText.toLowerCase()),
+        )
+      } else return []
+    },
+    discoveries() {
+      if (this.unfilteredDiscoveries.length) {
+        return this.unfilteredDiscoveries.filter((discovery) =>
+          discovery.name.toLowerCase().includes(this.discoveryText.toLowerCase()),
         )
       } else return []
     },
@@ -1312,6 +1560,9 @@ export default {
     },
     userCRM() {
       return this.$store.state.user.crm
+    },
+    user() {
+      return this.$store.state.user
     },
     routeName() {
       return this.$route.name
@@ -1365,6 +1616,47 @@ export default {
     opacity: 0.9;
     transform: translate(10%, 0%);
   }
+}
+
+.active-toggle {
+  background-color: white;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 3px 11px rgba(0, 0, 0, 0.1);
+  padding: 6px 12px;
+}
+
+.toggle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: $off-white;
+  cursor: pointer;
+  width: fit-content;
+  padding: 2px 1px;
+  border-radius: 16px;
+
+  small {
+    font-size: 13px;
+    margin: 0 4px;
+  }
+}
+
+.toggle-side {
+  width: 80px;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.h-padding {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #hamburger {
@@ -1620,7 +1912,7 @@ export default {
   max-height: 250px;
   overflow-y: scroll;
   scroll-behavior: smooth;
-  margin-bottom: 1rem;
+  margin-bottom: 0.25rem;
   padding: 0.5rem 0;
 }
 

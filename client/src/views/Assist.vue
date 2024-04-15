@@ -353,157 +353,172 @@
       </div>
     </Modal>
 
-    <section class="container">
-      <div class="content-body">
-        <div>
-          <!-- <div class="row-start">
-            <div style="cursor: text" class="image-container-blue right-margin-m">
-              <img
-                class="blue-filter"
-                style="margin-left: -1px"
-                src="@/assets/images/logo.png"
-                height="16px"
-                alt=""
-              />
-            </div>
-            <h3>Managr</h3>
-          </div> -->
-
-          <div style="margin-top: -4px" class="small-container">
-            <h4 style="margin: 0; font-size: 16px" class="bold">
-              Create content based on the latest news
-            </h4>
-            <p style="margin-top: 0; font-size: 16px">
-              Turn the latest media coverage into personalized content for your brand.
-            </p>
-          </div>
-        </div>
-
-        <div class="small-container" style="width: 100%; padding-bottom: 60px">
-          <label
-            class="bold"
-            style="
-              border-top: 1px solid rgba(0, 0, 0, 0.1);
-              width: 100%;
-              display: block;
-              padding-top: 1rem;
-            "
-            for="name"
-            >Name</label
-          >
-          <input
-            v-model="processName"
-            placeholder="Name your process..."
-            type="text"
-            id="name"
-            :disabled="loading"
-          />
-
-          <label class="bold" for="">Saved search</label>
-          <div>
-            <Multiselect
-              style="margin: 0.5rem 0"
-              :options="searches"
-              :show-labels="false"
-              placeholder="Choose one"
-              label="name"
-              track-by="id"
-              v-model="processSearchId"
-              :disabled="loading"
-            >
-              <template slot="noResult">
-                <p class="multi-slot">No results.</p>
-              </template>
-            </Multiselect>
-          </div>
-
-          <label class="bold" for="loc">Content type</label>
-          <input
-            placeholder="(e.g., media pitch, press release, blog post, issue statement, etc.)"
-            type="text"
-            id="loc"
-            v-model="processType"
-            :disabled="loading"
-          />
-
-          <label class="bold" for="">Writing style</label>
-
-          <div>
-            <Multiselect
-              style="margin: 0.5rem 0"
-              :options="[...defaultWritingStyles, ...writingStyles]"
-              :show-labels="false"
-              placeholder="Choose one"
-              label="title"
-              track-by="style"
-              v-model="processStyle"
-              :disabled="loading"
-            >
-              <template slot="noResult">
-                <p class="multi-slot">No results.</p>
-              </template>
-            </Multiselect>
-          </div>
-
-          <div style="position: relative">
-            <label class="bold" for="loc">Additional details</label>
-            <textarea
-              style="
-                border: 1px solid rgba(0, 0, 0, 0.1) !important;
-                background-color: white;
-                margin: 0.5rem 0;
-              "
-              class="area-input text-area-input bordered"
-              placeholder="(e.g., content objective, company details, target audience, etc.)"
-              type="text"
-              id="details"
-              v-model="processDetails"
-              :disabled="loading"
-              axlength="5000"
-              v-autoresize
-            />
-            <div class="absolute-count">
-              <small>{{ remainingChars }}</small>
-            </div>
+    <section style="overflow-y: scroll" class="container">
+      <div style="padding-top: 80px">
+        <div style="width: 100%; padding: 0 32px; padding-top: 16px" class="small-container">
+          <div class="text-width">
+            <p style="margin: 0">Get auto-generated content based on the latest news</p>
           </div>
         </div>
       </div>
+      <div style="padding-top: 16px" class="content-body-s">
+        <div class="small-container" style="width: 100%">
+          <!-- style="border: 1px solid rgba(0, 0, 0, 0.1); padding: 16px; border-radius: 5px" -->
+          <div class="large-input-container">
+            <div>
+              <div class="expanded-item-column">
+                <div class="row horizontal-padding-s img-text">
+                  <!-- <img src="@/assets/images/arrow-trend-up.svg" height="18px" alt="" /> -->
+                  <p>Name</p>
+                </div>
 
-      <div class="footer sticky-bottom">
-        <div style="padding-bottom: 8px" class="flex-end small-container">
-          <div class="row">
-            <button
-              @click="clearForm"
-              style="margin-right: 12px"
-              :disabled="loading"
-              class="secondary-button"
-            >
-              Clear
-            </button>
-
-            <button
-              :disabled="
-                loading ||
-                !processDetails ||
-                !processName ||
-                !processStyle ||
-                !processType ||
-                !processSearchId
-              "
-              @click="createProcess"
-              class="green-button"
-            >
-              <div v-if="!loading">Save</div>
-              <div v-else>Saving</div>
-              <div style="margin-left: 4px" v-if="loading" class="loading-small">
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
+                <div class="horizontal-padding-s">
+                  <input
+                    v-model="processName"
+                    placeholder="Name your process..."
+                    type="text"
+                    id="name"
+                    :disabled="loading"
+                  />
+                </div>
               </div>
-            </button>
+
+              <div class="expanded-item-column">
+                <div class="row horizontal-padding-s img-text">
+                  <!-- <img src="@/assets/images/arrow-trend-up.svg" height="18px" alt="" /> -->
+                  <p>Saved search</p>
+                </div>
+
+                <div class="horizontal-padding-s">
+                  <Multiselect
+                    style="margin: 0.5rem 0"
+                    :options="searches"
+                    :show-labels="false"
+                    placeholder="Choose one"
+                    label="name"
+                    track-by="id"
+                    v-model="processSearchId"
+                    :disabled="loading"
+                  >
+                    <template slot="noResult">
+                      <p class="multi-slot">No results.</p>
+                    </template>
+                  </Multiselect>
+                </div>
+              </div>
+
+              <div class="expanded-item-column">
+                <div class="row horizontal-padding-s img-text">
+                  <!-- <img src="@/assets/images/arrow-trend-up.svg" height="18px" alt="" /> -->
+                  <p>Content type</p>
+                </div>
+
+                <div class="horizontal-padding-s">
+                  <input
+                    placeholder="(e.g., media pitch, press release, blog post, issue statement, etc.)"
+                    type="text"
+                    id="loc"
+                    v-model="processType"
+                    :disabled="loading"
+                  />
+                </div>
+              </div>
+
+              <div class="expanded-item-column">
+                <div class="row horizontal-padding-s img-text">
+                  <!-- <img src="@/assets/images/arrow-trend-up.svg" height="18px" alt="" /> -->
+                  <p>Writing style</p>
+                </div>
+
+                <div class="horizontal-padding-s">
+                  <div>
+                    <Multiselect
+                      style="margin: 0.5rem 0"
+                      :options="[...defaultWritingStyles, ...writingStyles]"
+                      :show-labels="false"
+                      placeholder="Choose one"
+                      label="title"
+                      track-by="style"
+                      v-model="processStyle"
+                      :disabled="loading"
+                    >
+                      <template slot="noResult">
+                        <p class="multi-slot">No results.</p>
+                      </template>
+                    </Multiselect>
+                  </div>
+                </div>
+              </div>
+
+              <div class="expanded-item-column">
+                <div class="row horizontal-padding-s img-text">
+                  <!-- <img src="@/assets/images/arrow-trend-up.svg" height="18px" alt="" /> -->
+                  <p>Additional details</p>
+                </div>
+
+                <div style="position: relative" class="horizontal-padding-s">
+                  <textarea
+                    style="
+                      border: 1px solid rgba(0, 0, 0, 0.1) !important;
+                      background-color: white;
+                      margin: 0.5rem 0;
+                      max-height: 175px;
+                    "
+                    class="area-input text-area-input bordered"
+                    placeholder="(e.g., content objective, company details, target audience, etc.)"
+                    type="text"
+                    id="details"
+                    v-model="processDetails"
+                    :disabled="loading"
+                    maxlength="5000"
+                    v-autoresize
+                  />
+                  <div class="absolute-count">
+                    <small>{{ remainingChars }}</small>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top: 16px" class="flex-end horizontal-padding-s">
+                <div class="row">
+                  <button
+                    @click="clearForm"
+                    style="margin-right: 12px"
+                    :disabled="loading"
+                    class="secondary-button"
+                  >
+                    Clear
+                  </button>
+
+                  <button
+                    :disabled="
+                      loading ||
+                      !processDetails ||
+                      !processName ||
+                      !processStyle ||
+                      !processType ||
+                      !processSearchId
+                    "
+                    @click="createProcess"
+                    class="green-button"
+                  >
+                    <div v-if="!loading">Save</div>
+                    <div v-else>Saving</div>
+                    <div style="margin-left: 4px" v-if="loading" class="loading-small">
+                      <div class="dot"></div>
+                      <div class="dot"></div>
+                      <div class="dot"></div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+      <!-- 
+      <div class="footer sticky-bottom">     
+      </div> -->
     </section>
 
     <section class="container gray-bg">
@@ -876,6 +891,7 @@ export default {
       deleteModalOpen: false,
       contentLoading: false,
       processButtonText: 'Create new process',
+      writingStyles: [],
       defaultWritingStyles: [
         {
           title: 'Default',
@@ -928,9 +944,21 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
     sevenDaysAgo.setDate(today.getDate() - 7)
     this.dateStart = sevenDaysAgo.toISOString().split('T')[0]
     this.dateEnd = today.toISOString().split('T')[0]
+    this.getWritingStyles()
   },
 
   methods: {
+    async getWritingStyles() {
+      try {
+        await Comms.api
+          .getWritingStyles({
+            all_styles: false,
+          })
+          .then((response) => {
+            this.writingStyles = response
+          })
+      } catch (e) {}
+    },
     showDropdown() {
       this.showingDropdown = true
     },
@@ -1027,6 +1055,18 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
         this.getProcesses()
       }
     },
+    // refreshUser() {
+    //   User.api
+    //     .getUser(this.user.id)
+    //     .then((user) => {
+    //       this.$store.dispatch('updateUser', user)
+    //       return user
+    //     })
+    //     .catch(() => {
+    //       // do nothing for now
+    //       return null
+    //     })
+    // },
     async runProcess(summary) {
       this.currentStep = 3
       this.stepName = 'Generating content'
@@ -1319,9 +1359,9 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
     searches() {
       return this.$store.state.allSearches
     },
-    writingStyles() {
-      return this.$store.state.user.writingStylesRef
-    },
+    // writingStyles() {
+    //   return this.$store.state.user.writingStylesRef
+    // },
     isPaid() {
       return !!this.$store.state.user.organizationRef.isPaid
     },
@@ -1622,6 +1662,30 @@ h3 {
   border-radius: 6px;
 }
 
+.content-body-s {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  overflow-y: scroll;
+  scroll-behavior: smooth;
+  z-index: 0;
+  padding: 0 40px 16px 40px;
+  font-size: 16px;
+  width: 100%;
+  // height: 100%;
+}
+
+.content-body-s::-webkit-scrollbar {
+  width: 6px;
+  height: 0px;
+}
+.content-body-s::-webkit-scrollbar-thumb {
+  background-color: $soft-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px;
+}
+
 .sticky-top {
   position: absolute;
   top: 0;
@@ -1688,7 +1752,7 @@ button:disabled {
 .absolute-count {
   position: absolute;
   bottom: 0;
-  right: 3px;
+  right: 15px;
   font-size: 10px;
   color: $light-gray-blue;
 }
@@ -1889,6 +1953,7 @@ button:disabled {
   justify-content: flex-start;
   background-color: white;
   color: $dark-black-blue;
+  overflow: hidden;
 
   @media only screen and (max-width: 600px) {
     flex-direction: column;
@@ -1897,14 +1962,12 @@ button:disabled {
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
-    /* Styles for tablets */
     flex-direction: column;
     align-items: center;
     justify-content: center;
   }
 
   @media only screen and (min-width: 1025px) {
-    /* Styles for desktops */
   }
 }
 
@@ -2398,6 +2461,33 @@ button:disabled {
   40% {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+.large-input-container {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 9px;
+  padding: 16px;
+
+  p {
+    margin: 0;
+  }
+}
+
+.horizontal-padding-s {
+  padding: 0 12px;
+}
+
+.text-width {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+
+  p {
+    font-size: 17px;
   }
 }
 </style>

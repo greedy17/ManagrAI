@@ -249,7 +249,14 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
-
+    async getWritingStyles(data) {
+        try {
+            const res = await this.client.get('writing-styles/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
     async saveWritingStyle(data) {
         try {
             const res = await this.client.post('pitches/learn/', { params: data })
@@ -266,7 +273,6 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
-
     async getAllEmailAlerts() {
         try {
             const res = await this.client.get('email-alerts/get-email-alerts/')
@@ -375,6 +381,38 @@ class CommsApi extends ModelAPI {
     async summarizePDF(data) {
         try {
             const res = await this.client.post('summarize-pdf/', data, { headers: { "Content-Type": "multipart/form-data" } })
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async getDiscoveries(data) {
+        try {
+            const res = await this.client.get('discovery', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async saveDiscovery(data) {
+        try {
+            const res = await this.client.post('discovery/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async deleteDiscovery(data) {
+        try {
+            const res = await this.client.delete(`discovery/${data.id}/`)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async discoverJournalists(data) {
+        try {
+            const res = await this.client.post('discovery/run/', data)
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)

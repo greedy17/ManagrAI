@@ -427,6 +427,11 @@ urlpatterns = [
         comms_views.revoke_instagram_auth,
         name="instagram-revoke-token",
     ),
+    path(
+        "writing-styles/",
+        comms_views.get_writing_styles,
+        name="writing_styles",
+    ),
 ]
 router.register("users/reports", core_views.ReportViewSet, "reports"),
 router.register("users/conversations", core_views.ConversationViewSet, "conversations"),
@@ -470,4 +475,5 @@ router.register("prsearch", comms_views.PRSearchViewSet, "prsearch")
 router.register("pitches", comms_views.PitchViewSet, "pitches")
 router.register("email-alerts", comms_views.EmailAlertViewSet, "email-alerts")
 router.register("process", comms_views.ProcessViewSet, "process")
+router.register("discovery", comms_views.DiscoveryViewSet, "discovery")
 urlpatterns += router.urls

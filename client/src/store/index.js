@@ -51,8 +51,10 @@ const state = {
   allSearches: [],
   allPitches: [],
   allAssist: [],
+  allDiscoveries: [],
   currentSearch: null,
   currentPitch: null,
+  currentDiscovery: null,
   currentAssist: null,
   currentReportClips: [],
   categories: {},
@@ -162,6 +164,9 @@ const mutations = {
   SAVE_ASSIST(state, assist) {
     state.allAssist = assist
   },
+  SAVE_DISCOVERY(state, discoveries) {
+    state.allDiscoveries = discoveries
+  },
   SAVE_TEMPLATES(state, templates) {
     state.templates = templates
   },
@@ -191,6 +196,9 @@ const mutations = {
   },
   SET_ASSIST: (state, payload) => {
     state.currentAssist = payload
+  },
+  SET_DISCOVERY: (state, payload) => {
+    state.currentDiscovery = payload
   },
   SET_MEETING: (state, payload) => {
     state.currentMeeting = payload
@@ -335,6 +343,16 @@ const actions = {
       console.log(e)
     }
   },
+  async getDiscoveries({ commit }) {
+    try {
+      await Comms.api.getDiscoveries().then(response => {
+        commit('SAVE_DISCOVERY', response.results)
+      })
+
+    } catch (e) {
+      console.log(e)
+    }
+  },
   setSearch({ commit }, search) {
     commit('SET_SEARCH', search)
   },
@@ -343,6 +361,9 @@ const actions = {
   },
   setAssist({ commit }, assist) {
     commit('SET_ASSIST', assist)
+  },
+  setDiscovery({ commit }, discovery) {
+    commit('SET_DISCOVERY', discovery)
   },
   setCurrentView({ commit }, view) {
     commit('SET_VIEW', view)
