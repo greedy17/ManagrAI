@@ -298,7 +298,7 @@
           </p>
           <p v-else style="margin: 16px 0" class="sub-text">Article Report</p>
 
-          <p style="margin-right: 6px">
+          <p style="margin-right: 6px; padding-bottom: 0">
             {{
               mainView === 'news'
                 ? `${filteredArticles.length} News Clips`
@@ -309,6 +309,12 @@
                 : `${tweets.length} Tweets`
             }}
           </p>
+          <!-- v-if="
+              (filteredArticles && filteredArticles.length) ||
+              (tweets && tweets.length) ||
+              addedArticles.length ||
+              posts.length
+            " -->
         </div>
       </div>
 
@@ -346,10 +352,7 @@
               class="small-container letter-spacing"
             >
               <div v-if="!selectedSearch" class="text-width">
-                <h3 style="margin: 0; font-size: 24px" class="">Summarize the News</h3>
-                <p style="margin: 0">
-                  Start by typing in keywords or a topic. Then provide summary instructions
-                </p>
+                <p style="margin: 0">Get a pulse on whats happening in the news</p>
               </div>
 
               <div style="width: 100%; margin-top: 32px">
@@ -366,7 +369,7 @@
                       id="search-input"
                       @keyup.enter="generateNewSearch(false)"
                       class="area-input text-area-input"
-                      placeholder="Enter keywords..."
+                      placeholder="Search..."
                       autocomplete="off"
                       v-model="newSearch"
                       v-autoresize
@@ -422,7 +425,7 @@
                       :class="newSearch ? 'dark-blue-bg' : ''"
                     >
                       <img
-                        style="margin: 0; cursor: text"
+                        style="margin: 0"
                         src="@/assets/images/paper-plane-top.svg"
                         height="14px"
                         alt=""
@@ -468,7 +471,7 @@
                           :class="{ activeswitch: mainView === 'social' }"
                           class="switch-item"
                         >
-                          Social
+                          X
                         </div>
                         <div
                           @click="switchMainView('instagram')"
@@ -792,9 +795,8 @@
               class="small-container letter-spacing"
             >
               <div v-if="!selectedSearch" class="text-width">
-                <h3 style="margin: 0; font-size: 24px" class="">Summarize Social</h3>
                 <p v-if="hasTwitterIntegration" style="margin: 0">
-                  Start by typing in keywords or a topic. Then provide summary instructions
+                  Get a pulse on whats happening on X (Twitter)
                 </p>
 
                 <p style="margin: 0" v-else>
@@ -817,7 +819,11 @@
                       id="search-input"
                       @keyup.enter="generateNewSearch(false)"
                       class="area-input text-area-input"
-                      placeholder="Enter keywords..."
+                      :placeholder="
+                        hasTwitterIntegration
+                          ? 'Enter keywords...'
+                          : 'Connect your X account to search...'
+                      "
                       autocomplete="off"
                       v-model="newSearch"
                       v-autoresize
@@ -889,7 +895,7 @@
                           :class="{ activeswitch: mainView === 'social' }"
                           class="switch-item"
                         >
-                          Social
+                          X
                         </div>
                         <div
                           @click="switchMainView('instagram')"
@@ -921,10 +927,15 @@
                         <p>Date Range</p>
                       </div>
 
-                      <div style="gap: 8px; opacity: 0.6" class="row">
-                        <p>{{ dateStart }}</p>
-                        <p>-</p>
-                        <p>{{ dateEnd }}</p>
+                      <div>
+                        <input
+                          disabled
+                          class="area-input-smallest"
+                          type="date"
+                          v-model="dateStart"
+                        />
+                        -
+                        <input disabled class="area-input-smallest" type="date" v-model="dateEnd" />
                       </div>
                     </div>
 
@@ -1070,13 +1081,12 @@
               class="small-container letter-spacing"
             >
               <div v-if="!selectedSearch" class="text-width">
-                <h3 style="margin: 0; font-size: 24px" class="">Summarize Social</h3>
                 <p v-if="hasIgIntegration" style="margin: 0">
-                  Start by typing in keywords or a topic. Then provide summary instructions
+                  Get a pulse on whats happening on Instagram
                 </p>
 
                 <p style="margin: 0" v-else>
-                  Start by connecting your Instagram account
+                  Start by connecting your IG account
                   <span class="link" @click="goToIntegrations">here</span>.
                 </p>
               </div>
@@ -1094,7 +1104,7 @@
                       id="search-input"
                       @keyup.enter="generateNewSearch(false)"
                       class="area-input text-area-input"
-                      placeholder="Search hashtags..."
+                      placeholder="Enter hashtag..."
                       autocomplete="off"
                       v-model="newSearch"
                       v-autoresize
@@ -1137,7 +1147,7 @@
                           :class="{ activeswitch: mainView === 'social' }"
                           class="switch-item"
                         >
-                          Social
+                          X
                         </div>
                         <div
                           @click="switchMainView('instagram')"
@@ -1169,16 +1179,16 @@
                         <p>Date Range</p>
                       </div>
 
-                      <div style="gap: 8px; opacity: 0.6" class="row">
-                        <p>{{ dateStart }}</p>
-                        <p>-</p>
-                        <p>{{ dateEnd }}</p>
+                      <div>
+                        <input class="area-input-smallest" type="date" v-model="dateStart" />
+                        -
+                        <input class="area-input-smallest" type="date" v-model="dateEnd" />
                       </div>
                     </div>
 
                     <div class="expanded-item-column">
                       <div class="row horizontal-padding-s img-text">
-                        <img src="@/assets/images/arrow-trend-up.svg" height="18px" alt="" />
+                        <img src="@/assets/images/hastag.svg" height="18px" alt="" />
                         <p>Used Hashtags:</p>
                       </div>
 
@@ -1211,6 +1221,11 @@
                 v-for="(post, i) in posts"
                 :key="i"
               >
+                <div @click="goToIg(post.permalink)" class="row">
+                  <small class="gray-title-no-margin">{{
+                    formattedPostDate(post.timestamp)
+                  }}</small>
+                </div>
                 <div class="news-card-medium">
                   <div v-if="post.media_type" class="tweet-attachement">
                     <img
@@ -1248,12 +1263,12 @@
                       <!-- <span class="author">{{ '@' + tweet.user.username }}</span> -->
 
                       <small class="bold-text"
-                        >{{ post.like_count }}
+                        >{{ formattedNumber(post.like_count) }}
                         <span>Likes</span>
                       </small>
                       <span class="divider-dot">.</span>
                       <small class="bold-text"
-                        >{{ post.comments_count }}
+                        >{{ formattedNumber(post.comments_count) }}
                         <span>Comments</span>
                       </small>
                     </div>
@@ -1281,8 +1296,7 @@
             v-else-if="!addedArticles.length && !clipLoading"
           >
             <div v-if="!selectedSearch" class="text-width">
-              <h3 style="margin: 0; font-size: 24px" class="">Summarize Article</h3>
-              <p style="margin: 0">Paste an article url to generate a summary</p>
+              <p style="margin: 0">Summarize an article</p>
             </div>
 
             <div style="width: 100%; margin-top: 32px">
@@ -1339,7 +1353,7 @@
                         :class="{ activeswitch: mainView === 'social' }"
                         class="switch-item"
                       >
-                        Social
+                        X
                       </div>
                       <div
                         @click="switchMainView('instagram')"
@@ -1594,10 +1608,10 @@
             style="width: 100%; padding: 0 32px; padding-top: 16px"
           >
             <div class="text-width">
-              <h3 style="margin: 0; font-size: 24px" class="beta-span">
-                Summarize PDF <span>Beta</span>
-              </h3>
-              <p style="margin: 0">Upload a PDF that has 10 pages or less</p>
+              <!-- <h3 style="margin: 0; font-size: 24px" class="beta-span">
+                Research Assistant <span>Beta</span>
+              </h3> -->
+              <p style="margin: 0" class="beta-span">Summarize a short PDF <span>Beta</span></p>
             </div>
 
             <div :class="{ opaque: summaryLoading }" style="width: 100%; margin-top: 32px">
@@ -1689,7 +1703,7 @@
                         :class="{ activeswitch: mainView === 'social' }"
                         class="switch-item"
                       >
-                        Social
+                        X
                       </div>
                       <div
                         @click="switchMainView('instagram')"
@@ -1730,7 +1744,7 @@
               (filteredArticles && filteredArticles.length) ||
               (tweets && tweets.length) ||
               addedArticles.length ||
-              (posts && posts.length)
+              posts.length
             "
           >
             <img src="@/assets/images/search.svg" height="18px" alt="" />
@@ -1858,7 +1872,11 @@
           </div> -->
 
           <div class="relative">
-            <pre style="overflow-y: scroll" v-html="summary" class="pre-text"></pre>
+            <pre
+              style="overflow-y: scroll; padding-bottom: 120px"
+              v-html="summary"
+              class="pre-text"
+            ></pre>
 
             <div v-if="showSummaryMenu" class="summary-section">
               <div style="width: 100%" class="large-input-container">
@@ -1872,7 +1890,7 @@
                       (tweets && tweets.length) ||
                       addedArticles.length
                     "
-                    class="left-margin-m"
+                    class="left-margin-m blue-icon"
                     style="margin-top: 0"
                     src="@/assets/images/sparkle.svg"
                     height="18px"
@@ -1965,8 +1983,8 @@
 
                 <div class="expanded-item-column">
                   <div class="row horizontal-padding-s img-text">
-                    <img src="@/assets/images/arrow-trend-up.svg" height="18px" alt="" />
-                    <p>Popular summaries:</p>
+                    <img src="@/assets/images/file-ai.svg" height="18px" alt="" />
+                    <p>Templates:</p>
                   </div>
 
                   <div class="horizontal-padding rows">
@@ -2017,9 +2035,9 @@
 
       <div class="footer sticky-bottom gray-bg">
         <div class="centered">
-          <button @click="toggleSummaryMenu" v-if="summary" class="img-button">
+          <button @click="toggleSummaryMenu" v-if="summary" class="img-button-blueicon">
             <img src="@/assets/images/sparkle.svg" height="18px" alt="" />
-            New Summary
+            Provide Summary Instructions
           </button>
         </div>
       </div>
@@ -2137,28 +2155,25 @@ export default {
       selectedSearch: null,
       selectedDateTime: '',
       searchExamples: [
-        `Lululemon`,
+        `"Cancer Research"`,
         `Apple Vision PRO`,
-        `OpenAI`,
+        `Exercise AND TikTok`,
         `Supreme Court AND Social Media`,
         `“Embedded Finance”`,
+        `Fashion AND Sustainability`,
       ],
       summaryExamples: [
         {
-          name: `Media Analysis`,
-          value: `{Brand X} was mentioned in all of these news articles. As the VP of PR, please provide a media dashboard analyzing all the media coverage. Include the following Metrics: Overall Sentiment, Total Potential Reach (estimate a number), Top Stories, Top 10 Outlets (based on assumed circulation, include circulation number and author).`,
-        },
-        {
-          name: `Crisis Comms`,
-          value: `IF there is a negative story about {Lululemon} or a potential crisis is brewing, then flag the story (headline, source, author, date using mm/dd format) and draft a short crisis communication statement, and suggest 2-3 key messages for damage control. If there is crisis, simply reply with {All good, no crisis :)}`,
-        },
-        {
-          name: `University Roundup`,
-          value: `Highlight any key research or faculty news for {UniversityX} leadership team. Highlight any sports related news. Provide overall sentiment analysis`,
-        },
-        {
           name: `Topic Summary`,
-          value: `Bring me up to speed on what’s happening. Provide sentiment analysis. Analyze the media to identify what aspects of the topic are most intriguing or concerning to the public`,
+          value: `Bring {BrandX} up to speed on what’s happening. Identify what aspects of the topic are most intriguing or concerning to the public. No salutations.`,
+        },
+        {
+          name: `PR Advice`,
+          value: `As {BrandX}'s PR agency, provide creative suggestions on how they should respond to or leverage this news`,
+        },
+        {
+          name: `Newsjacking Ideas`,
+          value: `Provide creative newsjacking ideas for {BrandX} based on this coverage`,
         },
         {
           name: `Media Pitching`,
@@ -2169,40 +2184,48 @@ export default {
           value: `List 5 journalists (from top pubs, include pitching tips) I can pitch on behalf of {BrandX}`,
         },
         {
+          name: `Media Q&A`,
+          value: `List 5 questions & answers journalists would ask {BrandX} leadership team`,
+        },
+        {
           name: `Expert Q&A`,
           value: `Generate a list of 5 questions that the public might have about this topic and how an expert {ExpertX} would respond to them.`,
         },
         {
-          name: `Media Q&A`,
-          value: `List 5 questions & answers journalists would ask {BrandX} leadership team`,
+          name: `Pitch Expert`,
+          value: `Bring {BrandX} up to speed on what’s happening in terms of {TopicX}. Identify what aspects of the topic are most intriguing or concerning to the public. Identify which of their industry expects could be pitched to the media. No salutations.`,
+        },
+        {
+          name: `Media Analysis`,
+          value: `{Brand X} was mentioned in all of these news articles. As the VP of PR, please provide a media dashboard analyzing all the media coverage. Include the following Metrics: Overall Sentiment, Total Potential Reach (estimate a number), Top Stories, Top 10 Outlets (based on assumed circulation, include circulation number and author).`,
+        },
+        {
+          name: `Crisis Comms`,
+          value: `IF there is a negative story about {BrandX} or a potential crisis is brewing, then flag the story (headline, source, author, date using mm/dd format) and draft a short crisis communication statement, and suggest 2-3 key messages for damage control. If there is crisis, simply reply with {All good, no crisis :)}`,
         },
         {
           name: `Competitor Update`,
           value: `Bring {BrandX} up to speed on what {CompetitorX} is up to and why it matters, in paragraph form. Only flag the most impactful stories.  One short paragraph for positive and another for negative stories (headline, source, author, date in mm/dd format). Lastly offer 2-3 super creative newsjacking ideas.`,
         },
         {
-          name: `Newsjacking`,
-          value: `Provide creative newsjacking ideas for {BrandX} based on this coverage`,
-        },
-        {
           name: `Issue Statement`,
           value: `Issue a statement on behalf of {BrandX}`,
         },
         {
-          name: `Draft Blog Post`,
-          value: `Draft an informative blog post based on this coverage`,
+          name: `Blog Post`,
+          value: `Draft an informative blog post based on this coverage for {BrandX}`,
         },
         {
-          name: `SEO`,
-          value: `Provide top 10 SEO phrases relating to this topic`,
-        },
-        {
-          name: `Social Media Overview`,
-          value: `Summarize the social media coverage, Provide sentiment analysis, Identify top Influencers `,
+          name: `SEO Suggestions`,
+          value: `Provide top 10 SEO suggestions relating to this topic for {BrandX}`,
         },
         {
           name: `Sales Meeting`,
           value: `I am a sales rep, you are the VP of Sales, bring me up to speed on whats happening in the industry and how I can leverage it to sell my product: {ProductX} -- provide super specific, tangible, and creative advice.`,
+        },
+        {
+          name: `Email Roundup`,
+          value: `Craft an email roundup for {BrandX} leadership team bringing them up to speed on the most important, relevant, impactful news. Offer advice at the end. Be short, direct, to the point. No fluff.`,
         },
       ],
       articleGenerateOptions: [
@@ -2328,6 +2351,34 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    goToIg(link) {
+      window.open(link, '_blank')
+    },
+    removeHashtags() {
+      this.newSearch = this.newSearch.replace(/#/g, '')
+    },
+    formattedPostDate(timestamp) {
+      const dateObj = new Date(timestamp)
+
+      const month = dateObj.getMonth() + 1
+      const day = dateObj.getDate()
+      const year = dateObj.getFullYear()
+
+      const formattedMonth = month < 10 ? '0' + month : month
+      const formattedDay = day < 10 ? '0' + day : day
+
+      const formattedDate = `${formattedMonth}-${formattedDay}-${year}`
+
+      return formattedDate
+    },
+    formattedNumber(number) {
+      if (number) {
+        let numStr = number.toString()
+        return numStr.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+      } else {
+        return 0
+      }
+    },
     extractHashtag(hashtag) {
       const parts = hashtag.split(/[.\n]/)
       return parts[0]
@@ -3103,6 +3154,7 @@ export default {
         this.getTweets(saved)
       } else if (this.mainView === 'instagram') {
         this.closeRegenModal()
+        this.removeHashtags()
         this.getPosts(saved)
       } else if (this.mainView === 'website') {
         this.closeRegenModal()
@@ -3164,6 +3216,7 @@ export default {
       } catch (e) {
         console.log(e)
       } finally {
+        this.refreshUser()
         this.summarizing = true
       }
     },
@@ -3407,6 +3460,7 @@ export default {
         this.tweetMedia = null
         this.clearNewSearch()
       } finally {
+        this.refreshUser()
         this.loading = false
       }
     },
@@ -3422,6 +3476,8 @@ export default {
           .getPosts({
             hashtag: this.newSearch,
             user_id: this.user.id,
+            date_from: this.dateStart,
+            date_to: this.dateEnd,
           })
           .then((response) => {
             if (this.shouldCancel) {
@@ -3430,6 +3486,8 @@ export default {
             console.log(response)
             if (response.posts.length) {
               this.posts = response.posts
+                .slice()
+                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
               this.getPostsSummary()
             }
             this.showingDropdown = false
@@ -3650,6 +3708,7 @@ export default {
         this.$store.dispatch('updateAbortController', newAbortControllers)
         this.summarizing = true
         this.summaryLoading = false
+        this.refreshUser()
       }
     },
     async regenerateArticleSummary(url, summary, instructions) {
@@ -4130,6 +4189,25 @@ export default {
     filter: invert(40%);
     margin-right: 8px;
   }
+}
+
+.img-button-blueicon {
+  @include dark-blue-button();
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 12px 32px;
+  border-radius: 12px;
+  color: $dark-black-blue;
+  font-size: 16px;
+  img {
+    filter: invert(22%) sepia(32%) saturate(554%) hue-rotate(161deg) brightness(99%) contrast(90%);
+    margin-right: 8px;
+  }
+}
+
+.blue-icon {
+  filter: invert(22%) sepia(32%) saturate(554%) hue-rotate(161deg) brightness(99%) contrast(90%) !important;
 }
 
 .img-button-blue {
@@ -4760,6 +4838,15 @@ li {
   cursor: pointer;
 }
 
+.gray-title-no-margin {
+  width: fit-content;
+  border-radius: 4px;
+  padding: 3px 8px;
+  background-color: $off-white;
+  margin-top: 0;
+  cursor: pointer;
+}
+
 .no-margins {
   // padding-left: 16px;
   p {
@@ -5004,7 +5091,7 @@ p {
   flex-direction: column;
 
   p {
-    font-size: 17px;
+    font-size: 18px;
   }
 }
 

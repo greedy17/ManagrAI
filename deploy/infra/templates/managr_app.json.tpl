@@ -38,7 +38,8 @@
       { "name": "USE_OPEN_AI", "value": "${use_open_ai}" },
       { "name": "USE_SSO", "value": "${use_sso}" },
       { "name": "USE_NEWS_API", "value": "${use_news_api}" },
-      { "name": "USE_TWITTER_API", "value": "${use_twitter_api}" }
+      { "name": "USE_TWITTER_API", "value": "${use_twitter_api}" },
+      { "name": "USE_INSTAGRAM_API", "value": "${use_instagram_api}" }
     ],
     "secrets": [
       {
@@ -306,6 +307,18 @@
       {
         "name": "STRIPE_PRICE_ID",
         "valueFrom": "${config_secret_arn}:stripePriceId::"
+      },
+      {
+        "name": "INSTAGRAM_APP_SECRET",
+        "valueFrom": "${config_secret_arn}:instagramAppSecret::"
+      },
+      {
+        "name": "INSTAGRAM_APP_KEY",
+        "valueFrom": "${config_secret_arn}:instagramAppKey::"
+      },
+      {
+        "name": "INSTAGRAM_REDIRECT_URI",
+        "valueFrom": "${config_secret_arn}:instagramRedirectUri::"
       }
     ],
     "logConfiguration": {

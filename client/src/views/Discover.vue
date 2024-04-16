@@ -30,311 +30,6 @@
         </div>
       </div>
     </Modal>
-    <!-- resetModal -->
-    <Modal v-if="resetModal" class="paid-modal">
-      <div class="regen-container">
-        <div class="paid-header">
-          <div>
-            <h4 class="regen-header-title"></h4>
-            <p class="regen-header-subtitle"></p>
-          </div>
-          <div class="pointer" @click="closeResetModal"><small>X</small></div>
-        </div>
-        <div class="paid-body">
-          <div>
-            <div class="paid-center">
-              <h3 class="paid-title">Are you sure?</h3>
-              <h5 class="regen-body-title">This writing style will be permanently removed.</h5>
-            </div>
-            <!-- <textarea v-autoresize v-model="instructions" class="regen-body-text" /> -->
-          </div>
-        </div>
-        <div class="paid-footer">
-          <!-- <div></div> -->
-          <div class="row">
-            <div class="cancel-button" @click="closeResetModal">Cancel</div>
-            <div class="reset-button mar-left gray-border" @click="resetWritingStyle">Delete</div>
-          </div>
-        </div>
-      </div>
-    </Modal>
-    <Modal v-if="inputModalOpen" class="paid-modal">
-      <div
-        :style="isMobile ? 'width: 95%; min-height: 275px' : 'width: 610px; min-height: 275px'"
-        class="regen-container"
-      >
-        <div class="paid-header">
-          <div>
-            <h4 class="regen-header-title">Learn Writing Style</h4>
-            <p class="regen-header-subtitle">
-              Provide a sample of the writing style you want to emulate
-            </p>
-          </div>
-          <div v-if="!savingStyle" class="pointer" @click="toggleLearnInputModal">
-            <small>X</small>
-          </div>
-          <div v-else><small>X</small></div>
-        </div>
-        <div class="paid-body">
-          <input
-            style="width: 600px"
-            class="input-text"
-            placeholder="Name your writing style..."
-            type="text"
-            v-model="styleName"
-            :disabled="savingStyle"
-          />
-          <div class="sample-row">
-            <div style="width: 604px" class="input-container">
-              <div class="input-row relative">
-                <textarea
-                  :disabled="savingStyle"
-                  maxlength="8000"
-                  class="area-input text-area-input"
-                  style="padding: 16px 0 0 0; width: 600px"
-                  placeholder="Paste sample here..."
-                  v-model="sample"
-                  v-autoresize
-                />
-
-                <div class="absolute-count">
-                  <small>{{ remainingStyleChars }}</small>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="paid-footer">
-          <div class="input-row">
-            <button :disabled="savingStyle" @click="toggleLearnInputModal" class="secondary-button">
-              Cancel
-            </button>
-            <button :disabled="savingStyle" @click="saveWritingStyle" class="primary-button">
-              {{ savingStyle ? 'Learning' : 'Learn' }}
-              <div style="margin-left: 4px" v-if="savingStyle" class="loading-small">
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-              </div>
-            </button>
-          </div>
-        </div>
-      </div>
-    </Modal>
-
-    <Modal v-if="journalistModalOpen" class="paid-modal" style="z-index: 1000000">
-      <div style="min-height: 275px; width: 510px" class="regen-container">
-        <div class="paid-header">
-          <div>
-            <h3 class="regen-header-title">
-              {{ !journalists ? 'Discover Journalists or Influencers' : 'Journalists/Influencers' }}
-            </h3>
-            <p class="regen-header-subtitle">
-              {{ !journalists ? 'Provide additional details below' : 'Journalist details' }}
-            </p>
-          </div>
-          <div v-if="!loadingJournalists" class="pointer" @click="toggleJournalistModal">
-            <small>X</small>
-          </div>
-          <div v-else><small>X</small></div>
-        </div>
-        <div
-          :class="loadingJournalists ? 'opaque' : ''"
-          v-if="!journalists"
-          class="paid-body input-width"
-        >
-          <label for="pub">Type</label>
-          <input
-            class="input-text"
-            placeholder="(e.g., Tier 1, industry-specific, niche, TikTok influencers, etc.)"
-            type="text"
-            v-model="pubType"
-            :disabled="loadingJournalists"
-            id="pub"
-          />
-
-          <label for="beat">Topic</label>
-          <input
-            class="input-text"
-            placeholder="(e.g., Technology, health, lifestyle, etc.)"
-            type="text"
-            v-model="beat"
-            :disabled="loadingJournalists"
-            id="beat"
-          />
-
-          <label for="loc">Location</label>
-          <input
-            class="input-text"
-            placeholder="(e.g., National, Atlanta, D.C, etc.)"
-            type="text"
-            v-model="location"
-            :disabled="loadingJournalists"
-            id="loc"
-          />
-        </div>
-
-        <div v-else class="paid-body">
-          <pre v-html="journalists" class="pre-text" style="font-size: 16px"></pre>
-        </div>
-
-        <div class="paid-footer align-right">
-          <div class="input-row">
-            <button
-              :disabled="loadingJournalists"
-              @click="toggleJournalistModal"
-              class="secondary-button"
-            >
-              {{ !journalists ? 'Cancel' : 'Close' }}
-            </button>
-            <button
-              v-if="!journalists"
-              @mouseenter="changeJournalText"
-              @mouseleave="defaultJournalText"
-              :disabled="loadingJournalists || !isPaid"
-              @click="getJournalists"
-              class="primary-button no-transitions"
-            >
-              {{ journalText }}
-              <div style="margin-left: 4px" v-if="loadingJournalists" class="loading-small">
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-              </div>
-            </button>
-
-            <button v-else @click="copyJournalText" class="primary-button no-transitions">
-              {{ copyTip }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Modal>
-
-    <Modal v-if="feedbackModalOpen" class="paid-modal" style="z-index: 1000000s">
-      <div style="min-height: 275px; width: 510px" class="regen-container">
-        <div class="paid-header">
-          <div>
-            <h3 class="regen-header-title">
-              {{
-                !feedback
-                  ? 'Optimize Content'
-                  : regeneratedFeedback && feedback
-                  ? 'Optimized Content'
-                  : 'Optimize Content'
-              }}
-            </h3>
-            <p class="regen-header-subtitle">
-              {{
-                !feedback
-                  ? 'Get content feedback by providing additional details'
-                  : regeneratedFeedback && feedback
-                  ? 'Below is the revised version'
-                  : 'Get content feedback by providing additional detail'
-              }}
-            </p>
-          </div>
-          <div v-if="!loadingFeedback" class="pointer" @click="toggleFeedbackModal">
-            <small>X</small>
-          </div>
-          <div v-else><small>X</small></div>
-        </div>
-        <div
-          :class="loadingFeedback ? 'opaque' : ''"
-          v-if="!feedback"
-          class="paid-body input-width"
-        >
-          <label for="pt">Post Type</label>
-          <input
-            class="input-text"
-            placeholder="(e.g., blog post, LinkedIn post, Tweet, Instagram, email, etc.)"
-            type="text"
-            v-model="feedbackType"
-            :disabled="loadingFeedback"
-            id="pt"
-          />
-
-          <label for="aud">Audience</label>
-          <input
-            class="input-text"
-            placeholder="(e.g., age range, profession, interests, etc.)"
-            type="text"
-            v-model="audience"
-            :disabled="loadingFeedback"
-            id="aud"
-          />
-
-          <label for="po">Post Objective</label>
-          <input
-            class="input-text"
-            placeholder="(e.g., to inform, to persuade, to entertain, etc.)"
-            type="text"
-            v-model="objective"
-            :disabled="loadingFeedback"
-            id="po"
-          />
-
-          <label for="sf">Specific feedback</label>
-          <input
-            class="input-text"
-            placeholder="(e.g., headline effectiveness, clarity, engagement tactics, etc.)"
-            type="text"
-            v-model="specificFeedback"
-            :disabled="loadingFeedback"
-            id="sf"
-          />
-        </div>
-
-        <div v-else class="paid-body">
-          <pre v-html="feedback" class="pre-text" style="font-size: 16px"></pre>
-        </div>
-
-        <div class="paid-footer align-right">
-          <div class="input-row">
-            <button
-              :disabled="loadingFeedback"
-              @click="toggleFeedbackModal"
-              class="secondary-button"
-            >
-              {{ !feedback ? 'Cancel' : 'Close' }}
-            </button>
-            <button
-              v-if="!feedback"
-              @mouseenter="changeFeedbackText"
-              @mouseleave="defaultFeedbackText"
-              :disabled="loadingFeedback || !isPaid"
-              @click="getFeedback"
-              class="primary-button no-transitions"
-            >
-              {{ feedbackText }}
-              <div style="margin-left: 4px" v-if="loadingFeedback" class="loading-small">
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-              </div>
-            </button>
-
-            <button
-              :disabled="loadingFeedback || !isPaid"
-              v-else-if="feedback && !regeneratedFeedback"
-              @click="handleRegenerateFeedback"
-              class="primary-button no-transitions"
-            >
-              Apply Feedback
-              <div style="margin-left: 4px" v-if="loadingFeedback" class="loading-small">
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-              </div>
-            </button>
-
-            <button v-else @click="copyFeedbackText" class="primary-button no-transitions">
-              {{ copyTip }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Modal>
 
     <Modal v-if="saveModalOpen" class="paid-modal" style="z-index: 1000000">
       <div
@@ -344,37 +39,37 @@
         <div class="paid-header">
           <div>
             <h3 class="regen-header-title">Save</h3>
-            <p class="regen-header-subtitle">Save your pitch</p>
+            <p class="regen-header-subtitle">Save your List</p>
           </div>
-          <div v-if="!savingPitch" class="pointer" @click="toggleSaveModal">
+          <div v-if="!savingList" class="pointer" @click="toggleSaveModal">
             <small>X</small>
           </div>
           <div v-else><small>X</small></div>
         </div>
-        <div :class="savingPitch ? 'opaque' : ''" class="paid-body input-width">
-          <label for="pub">Pitch Name:</label>
+        <div :class="savingList ? 'opaque' : ''" class="paid-body input-width">
+          <label for="pub">List Name:</label>
           <input
             class="input-text"
-            placeholder="Name your pitch"
+            placeholder="Name your list"
             type="text"
-            v-model="pitchName"
-            :disabled="savingPitch"
+            v-model="listName"
+            :disabled="savingList"
             id="pub"
           />
         </div>
 
         <div class="paid-footer align-right">
           <div class="input-row">
-            <button :disabled="savingPitch" @click="toggleSaveModal" class="secondary-button">
+            <button :disabled="savingList" @click="toggleSaveModal" class="secondary-button">
               Cancel
             </button>
             <button
-              :disabled="savingPitch"
-              @click="createSavedPitch"
+              :disabled="savingList || !listName"
+              @click="saveDiscovery"
               class="primary-button no-transitions"
             >
               Save
-              <div style="margin-left: 4px" v-if="savingPitch" class="loading-small">
+              <div style="margin-left: 4px" v-if="savingList" class="loading-small">
                 <div class="dot"></div>
                 <div class="dot"></div>
                 <div class="dot"></div>
@@ -385,14 +80,14 @@
       </div>
     </Modal>
 
-    <Modal v-if="outputModalOpen" class="paid-modal">
+    <Modal v-if="contentModalOpen" class="paid-modal">
       <div
         :style="isMobile ? 'width: 95%; min-height: 100px' : 'width: 610px; min-height: 100px;'"
         class="regen-container"
       >
         <div style="background-color: white; z-index: 1000" class="paid-header">
           <div class="space-between">
-            <p style="font-size: 17px">Key Data</p>
+            <p style="font-size: 17px">Content</p>
             <p style="margin-right: 12px; cursor: pointer" @click="expandOutput">X</p>
           </div>
         </div>
@@ -402,18 +97,18 @@
             <div style="width: 604px" class="input-container">
               <div class="input-row relative">
                 <textarea
-                  :disabled="savingStyle"
-                  maxlength="5000"
+                  :disabled="loading"
+                  maxlength="8000"
                   class="area-input text-area-input"
                   style="padding: 16px 0 0 0; max-height: 350px; width: 650px"
-                  placeholder="Paste relevant data, a news summary, or notes..."
-                  v-model="output"
+                  placeholder="Paste your content here..."
+                  v-model="content"
                   rows="20"
                   v-autoresize
                 />
 
                 <div style="margin-bottom: 8px" class="absolute-count">
-                  <small>{{ remainingChars }}</small>
+                  <small>{{ remainingCharsSample }}</small>
                 </div>
               </div>
             </div>
@@ -426,7 +121,7 @@
       <div style="padding-top: 88px" class="content-body">
         <div style="width: 100%; padding: 0 32px; padding-top: 16px" class="small-container">
           <div class="text-width">
-            <p style="margin: 0">Create content that sounds like you</p>
+            <p style="margin: 0">Discover relevant journalists or influencers</p>
           </div>
 
           <div style="margin-top: 32px" class="large-input-container">
@@ -435,52 +130,82 @@
                 style="border: none; box-shadow: none; position: relative"
                 class="input-containered"
               >
-                <img class="left-margin-m" src="@/assets/images/wand.svg" height="20px" alt="" />
+                <img
+                  class="left-margin-m"
+                  src="@/assets/images/edit-note.svg"
+                  height="20px"
+                  alt=""
+                />
                 <textarea
                   class="area-input text-area-input"
                   name="content-type"
-                  v-model="type"
+                  v-model="content"
                   :disabled="loading"
-                  maxlength="300"
-                  placeholder="Content Instructions..."
+                  placeholder="Paste your content here"
                   v-autoresize
                   autocomplete="off"
+                  maxlength="8000"
+                  rows="4"
+                  style="max-height: 100px; padding-top: 2.5rem !important"
                 />
 
-                <div
-                  @click="generatePitch"
-                  class="image-container left-margin-l wrapper"
-                  :class="type && writingStyle && !loading ? 'dark-blue-bg' : ''"
-                >
-                  <img
-                    style="margin: 0"
-                    src="@/assets/images/paper-plane-top.svg"
-                    height="14px"
-                    alt=""
-                  />
-
-                  <div class="tooltip">Submit</div>
-                </div>
-                <!-- <div class="absolute-count-small">
+                <img
+                  @click="expandOutput"
+                  class="left-margin-xl"
+                  src="@/assets/images/expand-arrows.svg"
+                  height="14px"
+                  alt=""
+                  style="cursor: pointer"
+                />
+                <div class="absolute-count-small">
                   <small>{{ remainingCharsSample }}</small>
-                </div> -->
+                </div>
               </div>
 
               <div>
+                <div
+                  style="
+                    border: none;
+                    box-shadow: none;
+                    position: relative;
+                    border-radius: 0;
+                    border-top: 1px solid rgba(0, 0, 0, 0.1);
+                    padding: 8px 0;
+                  "
+                  class="input-containered"
+                >
+                  <img
+                    class="left-margin-m"
+                    src="@/assets/images/profile.svg"
+                    height="19px"
+                    alt=""
+                  />
+
+                  <input
+                    class="area-input"
+                    v-model="type"
+                    :disabled="loading"
+                    maxlength="300"
+                    style="padding-top: 8px; padding-bottom: 8px"
+                    placeholder="Journalist or Influencer type"
+                    autocomplete="off"
+                  />
+                </div>
+
                 <div class="expanded-item-column">
                   <div class="row horizontal-padding-s img-text">
-                    <img src="@/assets/images/file-ai.svg" height="18px" alt="" />
-                    <p style="margin-left: 6px">Templates:</p>
+                    <img src="@/assets/images/arrow-trend-up.svg" height="18px" alt="" />
+                    <p style="margin-left: 6px">Popular Examples:</p>
                   </div>
 
                   <div class="horizontal-padding-m rowss">
                     <p
-                      v-for="(example, i) in contentExamples"
+                      v-for="(example, i) in popularExamples"
                       :key="i"
-                      @click="setNewContent(example.value)"
+                      @click="setNewContent(example)"
                       class="bold gray-title"
                     >
-                      {{ example.name }}
+                      {{ example }}
                     </p>
                   </div>
                 </div>
@@ -493,40 +218,55 @@
                     position: relative;
                     border-radius: 0;
                     border-top: 1px solid rgba(0, 0, 0, 0.1);
+                    padding: 8px 0;
                   "
                 >
                   <img
                     class="left-margin-m"
-                    src="@/assets/images/document.svg"
+                    src="@/assets/images/comment.svg"
                     height="20px"
                     alt=""
                   />
-                  <textarea
-                    class="area-input text-area-input"
-                    id="key-data"
-                    placeholder="Paste relevant data, a news summary, or notes..."
-                    v-model="output"
-                    v-autoresize
+                  <input
+                    class="area-input"
+                    placeholder="Topic or beat"
+                    v-model="beat"
                     :disabled="loading"
-                    maxlength="5000"
-                    rows="4"
-                    style="max-height: 100px; padding-top: 2.5rem !important"
+                    style="padding-top: 12px; padding-bottom: 8px"
                   />
-
-                  <img
-                    @click="expandOutput"
-                    class="left-margin-xl"
-                    src="@/assets/images/expand-arrows.svg"
-                    height="14px"
-                    alt=""
-                    style="cursor: pointer"
-                  />
-                  <!-- <div style="bottom: -2px" class="absolute-count">
-                    <small>{{ remainingChars }}</small>
-                  </div> -->
+                  <!-- style="max-height: 100px; padding-top: 2.5rem !important" -->
                 </div>
 
-                <div class="expanded-item" style="position: relative" id="writing-style">
+                <div
+                  class="input-containered"
+                  style="
+                    border: none;
+                    box-shadow: none;
+                    position: relative;
+                    border-radius: 0;
+                    border-top: 1px solid rgba(0, 0, 0, 0.1);
+                    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+                    padding: 8px 0;
+                    margin-bottom: 1rem;
+                  "
+                >
+                  <img
+                    class="left-margin-m"
+                    src="@/assets/images/marker.svg"
+                    height="20px"
+                    alt=""
+                  />
+                  <input
+                    class="area-input"
+                    placeholder="Location"
+                    v-model="location"
+                    :disabled="loading"
+                    style="padding-top: 12px; padding-bottom: 8px"
+                  />
+                  <!-- style="max-height: 100px; padding-top: 2.5rem !important" -->
+                </div>
+
+                <!-- <div class="expanded-item" style="position: relative" id="writing-style">
                   <img
                     class="left-margin-m"
                     src="@/assets/images/edit-note.svg"
@@ -635,11 +375,13 @@
                           "
                         >
                           <button
+                            @mouseenter="changeStyleText"
+                            @mouseleave="defaultStyleText"
                             style="margin-bottom: 16px; width: 45%"
                             @click="toggleLearnInputModal"
                             class="primary-button"
                           >
-                            Learn writing style
+                            {{ styleText }}
                           </button>
                         </div>
                       </section>
@@ -679,23 +421,6 @@
                           "
                         >
                           <button
-                            style="margin-top: 8px"
-                            @click="toggleLearnInputModal"
-                            class="primary-button"
-                          >
-                            Learn writing style
-                          </button>
-                        </div>
-
-                        <!-- <div
-                          style="
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            margin-bottom: 16px;
-                          "
-                        >
-                          <button
                             @mouseenter="changeStyleText"
                             @mouseleave="defaultStyleText"
                             style="margin-top: 8px"
@@ -704,33 +429,23 @@
                           >
                             {{ styleText }}
                           </button>
-                        </div> -->
+                        </div>
                       </section>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- <div class="expanded-item-u">
-                  <img
-                    class="left-margin-m hide-img"
-                    src="@/assets/images/edit-note.svg"
-                    height="19px"
-                    alt=""
-                  />
-
-                  <div class="h-padding">
-                    <div class="toggle">
-                      <div :class="{ 'active-toggle': personalStyles }" class="toggle-side">
-                        <small>Personal</small>
-                      </div>
-
-                      <div :class="{ 'active-toggle': !personalStyles }" class="toggle-side">
-                        <small>Group</small>
-                      </div>
                     </div>
                   </div>
                 </div> -->
               </div>
+            </div>
+
+            <div style="padding: 16px 0" class="flex-end">
+              <button @click="clearData" class="secondary-button">Clear</button>
+              <button
+                @click="discoverJournalists"
+                :disabled="!content || !type || !beat || !location || loading"
+                class="primary-button"
+              >
+                Discover
+              </button>
             </div>
           </div>
         </div>
@@ -767,47 +482,10 @@
     </section>
 
     <section class="container gray-bg">
-      <div class="header sticky-top gray-bg" v-if="pitch">
+      <div class="header sticky-top gray-bg" v-if="summary">
         <div class="space-between margin-top-s horizontal-padding">
-          <p class="sub-text">{{ pitch.split(' ').length }} words</p>
-
+          <div></div>
           <div class="rows">
-            <div
-              @click="toggleFeedbackModal"
-              class="wrapper icon-button white-bg"
-              :class="{ 'bluee-bg': feedback }"
-              style="margin-right: 0.5rem"
-            >
-              <img
-                style="cursor: pointer"
-                class="right-mar img-highlight"
-                src="@/assets/images/thumb.svg"
-                height="14px"
-                alt=""
-              />
-              <div class="tooltip-below">
-                {{ !feedback ? 'Optimize Content' : 'View Feedback' }}
-              </div>
-            </div>
-
-            <div
-              @click="toggleJournalistModal"
-              class="wrapper icon-button white-bg"
-              :class="{ 'bluee-bg': journalists }"
-              style="margin-right: 0.5rem"
-            >
-              <img
-                style="cursor: pointer"
-                class="right-mar img-highlight"
-                src="@/assets/images/profile.svg"
-                height="14px"
-                alt=""
-              />
-              <div class="tooltip-below">
-                {{ !journalists ? 'Discover Voices' : 'View Journalists' }}
-              </div>
-            </div>
-
             <div
               style="margin-right: 0.5rem"
               @click="copyText"
@@ -827,7 +505,7 @@
               <button
                 @click="toggleSaveModal"
                 class="green-button"
-                :disabled="savingPitch || pitchSaved"
+                :disabled="savingList || discoverySaved"
               >
                 Save
               </button>
@@ -838,71 +516,33 @@
 
       <div
         style="margin-top: -2rem"
-        v-if="!pitch && !loading"
+        v-if="!summary && !loading"
         class="content-body centered-content"
       >
         <div class="centered-col">
-          <div style="cursor: text" class="image-container white-bg extra-padding">
+          <!-- <div style="cursor: text" class="image-container white-bg extra-padding">
             <img src="@/assets/images/comment.svg" height="32px" alt="" />
-          </div>
-          <p>Your content will appear here.</p>
+          </div> -->
+          <p>List of journalists + details</p>
         </div>
       </div>
 
       <div v-else-if="loading" class="content-body centered-content">
         <div class="loading">
-          <p>Generating content</p>
+          <p>Generating list</p>
           <div class="dot"></div>
           <div class="dot"></div>
           <div class="dot"></div>
         </div>
       </div>
 
-      <div style="margin-top: 0.5rem" v-else-if="pitch" class="content-body">
+      <div style="margin-top: 0.5rem" v-else-if="summary" class="content-body">
         <div style="padding-top: 32px" class="small-container">
-          <pre class="pre-text" v-html="pitch"></pre>
+          <pre class="pre-text" v-html="summary"></pre>
         </div>
       </div>
 
-      <div class="footer sticky-bottom gray-bg">
-        <div class="input-container-alt">
-          <img class="left-margin-l" src="@/assets/images/pencil.svg" height="14px" alt="" />
-
-          <textarea
-            class="area-input-alt text-area-input"
-            :placeholder="!pitch ? 'Start by generating content...' : 'Make edits...'"
-            autocomplete="off"
-            :disabled="!pitch"
-            @keyup.enter="regeneratePitch"
-            v-autoresize
-            v-model="instructions"
-          />
-          <div
-            style="cursor: text; margin-left: 1.5rem"
-            v-if="!pitch"
-            class="image-container white-bg wrapper"
-          >
-            <img src="@/assets/images/paper-plane-top.svg" height="14px" alt="" />
-            <div class="tooltip">Submit</div>
-          </div>
-
-          <div
-            style="margin-left: 1.5rem"
-            @click="regeneratePitch"
-            class="image-container white-bg wrapper"
-            v-else
-          >
-            <img
-              style="margin: 0"
-              src="@/assets/images/paper-plane-full.svg"
-              height="14px"
-              alt=""
-              class="filtered-blue"
-            />
-            <div class="tooltip">Submit</div>
-          </div>
-        </div>
-      </div>
+      <div class="footer sticky-bottom gray-bg"></div>
     </section>
   </div>
 </template>
@@ -911,60 +551,19 @@ import { Comms } from '@/services/comms'
 import User from '@/services/users/'
 
 export default {
-  name: 'Pitches',
+  name: 'Discover',
   components: {
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
   },
   data() {
     return {
-      defaultWritingStyles: [
-        {
-          title: 'Default',
-          style: `Begin with a precise introduction, without informal salutations. Be clear, concise, and informative, avoiding metaphors. Offer coherent data without persuasion. Aim for depth, not sensationalism and avoid commercial bias.`,
-        },
-        {
-          title: 'Media Pitch',
-          style: `Author's Style Guidelines:
-0. Start email with "Hi {Journalist first name}", end with "Thanks,". Get right to it, no opening fluff like "I hope this message finds you well"
-1. Tone: Maintain a professional, respectful tone. Show appreciation for the journalist's work and express interest in collaboration.
-2. Formality: Use formal language, but avoid jargon. Keep sentences clear and concise.
-3. Structure: Start with a personalized greeting. Follow with a brief appreciation of the journalist's work, then introduce your topic. Provide key insights, then propose collaboration. End with a forward-looking statement and a thank you.
-4. Linguistic Idiosyncrasies: Use active voice and precise, impactful words. Include statistics and expert opinions for credibility.
-5. Credibility: Establish credibility by referencing recent research, expert opinions, and relevant industry trends.
-6. Engagement: Engage the reader by offering exclusive insights and proposing collaboration.
-7. Non-Promotional: Avoid promotional language. Focus on providing valuable, informative content.
-8. Stylistic Techniques: Use a mix of short and long sentences for rhythm. Use rhetorical questions to engage the reader and provoke thought.`,
-        },
-        {
-          title: 'Blog Post',
-          style: `The author's style is formal and informative, using a journalistic tone to convey complex scientific concepts in a digestible manner. The structure is linear, starting with historical context and leading to the current developments. The author uses technical jargon, but also provides explanations to ensure understanding. Credibility is established through the mention of renowned scientists, historical achievements, and the university's long-standing involvement in the field. The author avoids persuasive language, focusing on facts and achievements.
-Guidelines: Maintain a formal, journalistic tone. Use technical terms but provide explanations. Structure content linearly, starting with historical context. Establish credibility through mention of renowned figures and achievements. Avoid persuasive language, focusing on facts.`,
-        },
-        {
-          title: 'Email',
-          style: `1. Start with a friendly greeting: Use 'Hey' or 'Hi' to initiate a warm, approachable tone.
-2. Be direct and concise: Avoid fluff and unnecessary details. Get straight to the point.
-3. Maintain a neutral tone: Avoid persuasive or sales-oriented language. The tone should be informative, not promotional.
-4. Use simple, clear language: Avoid jargon or complex terms. The goal is to be understood by all readers.
-5. Structure: Use short sentences and paragraphs. Break up information into digestible chunks.
-6. Credibility: Use facts and data to support points. Avoid personal opinions or assumptions.
-7. Action point: End with a clear, actionable step for the reader. This should be direct and easy to understand.
-8. Informality: Maintain a casual, friendly tone throughout. This helps to engage the reader and make the content more relatable.
-9. Linguistic idiosyncrasies: Use common, everyday language. Avoid overly formal or academic language.
-10. Objectivity: Maintain an unbiased stance. Avoid taking sides or expressing personal views.`,
-        },
-      ],
-      defaultStyle: {},
-      regeneratedFeedback: false,
-      feedbackModalOpen: false,
       saveModalOpen: false,
-      loadingJournalists: false,
-      loadingFeedback: false,
-      journalists: null,
+      contentModalOpen: false,
+      savingList: false,
       location: null,
       beat: null,
-      pubType: null,
-      feedbackType: null,
+      type: null,
+      content: '',
       audience: null,
       objective: null,
       specificFeedback: null,
@@ -986,6 +585,7 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
       savedOutput: '',
       persona: '',
       briefing: '',
+      summary: '',
       characters: null,
       pitch: null,
       loading: false,
@@ -997,41 +597,12 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
       showingInstructionsDropdown: false,
       storedEvent: null,
       outputModalOpen: false,
-      storedPlaceholder: '',
-      optionalPlaceholder: 'Optional',
-      instructionsPlaceholder: 'What would you like written?',
-      typeSuggestions: [
-        `Press Release`,
-        `Media Pitch`,
-        `Blog Post`,
-        `LinkedIn Post`,
-        `Twitter Post`,
-        `Email`,
-      ],
-      audienceSuggestions: [
-        `Millenial moms`,
-        `Vegans`,
-        `College students`,
-        `Local writers in Georgia`,
-        `Gen Z`,
-        `Health and wellness enthusiast`,
-      ],
-      characterSuggestions: [`250`, `500`, `750`, `1000`, `1500`],
-      instructionsSuggestions: [
-        `Create a media pitch for XXX about ...`,
-        `Write a LinkedIn Post about XXX`,
-        `Issue a press release on behalf of XXX about ...`,
-        // `Use the text below to generate XXX for XXX ...`,
-        `Re-write the content below using my writing style:`,
-        `Tweak this content slightly, enhance readability:`,
-      ],
-      instructions: '',
       copyTip: 'Copy',
       textToCopy: '',
       showSaveName: false,
-      savingPitch: false,
-      pitchName: '',
-      savedPitch: null,
+      savingList: false,
+      listName: '',
+      savedDiscovery: null,
       showUpdateBanner: false,
       showInput: false,
       sample: '',
@@ -1044,67 +615,20 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
       storedWritingStyleTitle: null,
       personalStyles: true,
       allWritingStyles: [],
-      contentExamples: [
-        {
-          name: `Media Pitch`,
-          value: `Create a 200 word media pitch on behalf of {BrandX}`,
-        },
-        {
-          name: `Blog Post`,
-          value: `Create an informative blog post for {BrandX}`,
-        },
-        {
-          name: `Re-write`,
-          value: `Re-write this based on my writing style`,
-        },
-        {
-          name: `Optimize`,
-          value: `Optimize this content for {AudienceType}`,
-        },
-        {
-          name: `Linkedin Post`,
-          value: `Craft a professional, insightful LinkedIn Post about {TopicX}`,
-        },
-        {
-          name: `LinkedIn Hook`,
-          value: `10-20 word, cheeky, witty LinkedIn post hook`,
-        },
-
-        {
-          name: `Instagram Story`,
-          value: `Create an engaging Instagram story post about {TopicX}`,
-        },
-        {
-          name: `TikTok Caption`,
-          value: `Create a catchy, engaging, concise TikTok caption for a video about {TopicX}`,
-        },
-        {
-          name: `Mastering TopicX`,
-          value: `Create a Social Post that has a "how to" element to it, about {TopicX},`,
-        },
-        {
-          name: `Email`,
-          value: `Write a concise, direct, professional email regarding {TopicX}`,
-        },
-        {
-          name: `Twitter Thread`,
-          value: `Create a series of {NumberX} connected tweets about {TopicX}`,
-        },
-        {
-          name: `SEO Optimization`,
-          value: `Craft SEO-enhanced blog titles and meta descriptions for optimal impact`,
-        },
-        {
-          name: `Product Launch`,
-          value: `Create an exciting, persuasive announcement for the launch of {ProductX} by {BrandX}`,
-        },
+      popularExamples: [
+        `Tier 1 Journalists`,
+        `Local Journalists`,
+        `XXX Journalists`,
+        `Instagram Influencers`,
+        `TikTok Influencers`,
+        `XXX Influencers`,
       ],
     }
   },
   watch: {
-    currentPitch(newVal, oldVal) {
+    currentDiscovery(newVal, oldVal) {
       if (newVal.id !== (oldVal ? oldVal.id : null)) {
-        this.setPitch(newVal)
+        this.setDiscovery(newVal)
       }
     },
   },
@@ -1115,6 +639,92 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
     this.getWritingStyles()
   },
   methods: {
+    async discoverJournalists() {
+      if (!this.isPaid && this.searchesUsed >= 10) {
+        this.openPaidModal()
+        return
+      }
+      this.loading = true
+      try {
+        await Comms.api
+          .discoverJournalists({
+            type: this.type,
+            beat: this.beat,
+            location: this.location,
+            content: this.content,
+          })
+          .then((response) => {
+            this.summary = response
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.refreshUser()
+        this.loading = false
+      }
+    },
+    async saveDiscovery() {
+      this.savingList = true
+      try {
+        await Comms.api
+          .saveDiscovery({
+            user: this.user.id,
+            name: this.listName,
+            content: this.content,
+            type: this.type,
+            beat: this.beat,
+            location: this.location,
+            list: this.summary,
+          })
+          .then((response) => {
+            console.log(response)
+            if (response.id) {
+              this.savedDiscovery = {
+                name: response.name,
+                user: this.user.id,
+                content: response.content,
+                beat: response.beat,
+                type: response.type,
+                location: response.location,
+                list: response.list,
+              }
+
+              this.$toast('List saved', {
+                timeout: 2000,
+                position: 'top-left',
+                type: 'success',
+                toastClassName: 'custom',
+                bodyClassName: ['custom'],
+              })
+
+              this.getDiscoveries()
+            }
+          })
+      } catch (e) {
+        console.log(e)
+        this.$toast(`${e}`, {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        setTimeout(() => {
+          this.saveModalOpen = false
+          this.savingList = false
+        }, 2000)
+      }
+    },
+    async getDiscoveries() {
+      this.$store.dispatch('getDiscoveries')
+    },
+    clearData() {
+      this.content = ''
+      this.type = ''
+      this.beat = ''
+      this.location = ''
+    },
     toggleStyles() {
       this.personalStyles = !this.personalStyles
     },
@@ -1130,7 +740,7 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
       } catch (e) {}
     },
     expandOutput() {
-      this.outputModalOpen = !this.outputModalOpen
+      this.contentModalOpen = !this.contentModalOpen
     },
     setNewContent(val) {
       this.type = val
@@ -1247,51 +857,6 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
     removeIndex() {
       this.hoverIndex = null
     },
-    async saveWritingStyle() {
-      this.savingStyle = true
-      try {
-        await Comms.api
-          .saveWritingStyle({
-            example: this.sample,
-            title: this.styleName,
-          })
-          .then((response) => {
-            this.$toast('Writing style saved', {
-              timeout: 2000,
-              position: 'top-left',
-              type: 'success',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            })
-          })
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.sample = ''
-        this.styleName = ''
-        this.toggleLearnInput()
-        this.savingStyle = false
-        this.refreshUser()
-        this.toggleLearnInputModal()
-      }
-    },
-    async resetWritingStyle() {
-      this.savingStyle = true
-      this.sample = ''
-      this.writingStyleTitle = ''
-      this.closeResetModal()
-      try {
-        await Comms.api.deleteWritingStyle({ style_id: this.deleteId })
-        this.toggleLearnInput()
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.savingStyle = false
-        this.deleteId = null
-        this.writingStyle = null
-        this.refreshUser()
-      }
-    },
 
     changeFeedbackText() {
       if (!this.isPaid) {
@@ -1354,22 +919,17 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
       }
     },
     toggleLearnInputModal() {
-      // if (this.isPaid) {
-      //   this.inputModalOpen = !this.inputModalOpen
+      if (this.isPaid) {
+        this.inputModalOpen = !this.inputModalOpen
 
-      //   if (this.showStyleDropdown === true) {
-      //     this.showStyleDropdown = false
-      //   }
-      // }
-      this.inputModalOpen = !this.inputModalOpen
-
-      if (this.showStyleDropdown === true) {
-        this.showStyleDropdown = false
+        if (this.showStyleDropdown === true) {
+          this.showStyleDropdown = false
+        }
       }
     },
     async copyText() {
       try {
-        await navigator.clipboard.writeText(this.pitch)
+        await navigator.clipboard.writeText(this.summary)
         this.copyTip = 'Copied!'
 
         setTimeout(() => {
@@ -1489,7 +1049,7 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
     },
     async createSavedPitch() {
       this.showSaveName = false
-      this.savingPitch = true
+      this.savingList = true
       try {
         const response = await Comms.api.savePitch({
           name: this.pitchName || this.pitch.slice(0, 60),
@@ -1528,7 +1088,7 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
 
         setTimeout(() => {
           this.saveModalOpen = false
-          this.savingPitch = false
+          this.savingList = false
           this.successToggle()
         }, 2000)
       }
@@ -1566,60 +1126,14 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
         this.scrollToTop()
       }
     },
-    async generatePitch() {
-      if (!this.isPaid && this.searchesUsed >= 10) {
-        this.openPaidModal()
-        return
-      }
-      if (!this.type || !this.writingStyle || this.loading) {
-        return
-      }
-      this.storeContent()
-      this.pitch = null
-      this.feedback = null
-      this.specificFeedback = null
-      this.feedbackType = null
-      this.audience = null
-      this.objective = null
-      this.regeneratedFeedback = false
-      this.journalists = null
-      this.loading = true
-      this.showStyleDropdown = false
 
-      try {
-        await Comms.api
-          .generatePitch({
-            type: this.type,
-            instructions: this.output,
-            style: this.writingStyle,
-          })
-          .then((response) => {
-            // this.clearForm()
-            this.savedOutput = this.output
-            this.pitch = response.pitch
-            this.scrollToTop()
-            this.$store.commit('setGeneratedContent', null)
-          })
-          .then((response) => {
-            this.refreshUser()
-          })
-          .then((response) => {
-            this.$store.dispatch('getPitches')
-          })
-      } catch (e) {
-        console.log('ERROR CREATING PITCH', e)
-      } finally {
-        this.refreshUser()
-        // this.clearData()
-        this.loading = false
-        this.scrollToTop()
-      }
-    },
-    setPitch(pitch) {
-      this.pitch = pitch.generated_pitch
-      this.type = pitch.type
-      this.output = pitch.instructions
-      this.persona = pitch.audience
+    setDiscovery(discovery) {
+      console.log(discovery)
+      this.summary = discovery.list
+      this.type = discovery.type
+      this.content = discovery.content
+      this.beat = discovery.beat
+      this.location = discovery.location
 
       // this.generatePitch()
     },
@@ -1634,14 +1148,6 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
           // do nothing for now
           return null
         })
-    },
-    clearData() {
-      this.type = ''
-      this.output = ''
-      this.persona = ''
-      this.briefing = ''
-      this.sample = ''
-      this.writingStyle = ''
     },
   },
   computed: {
@@ -1659,7 +1165,7 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
       return 2000 - this.briefing.length
     },
     remainingCharsSample() {
-      return 300 - this.type.length
+      return 8000 - this.content.length
     },
     remainingStyleChars() {
       return 8000 - this.sample.length
@@ -1716,16 +1222,16 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
       }
       return arr.length
     },
-    currentPitch() {
-      return this.$store.state.currentPitch
+    currentDiscovery() {
+      return this.$store.state.currentDiscovery
     },
-    pitchSaved() {
-      if (this.savedPitch && this.pitch && this.savedPitch.generated_pitch === this.pitch) {
+    discoverySaved() {
+      if (this.savedDiscovery && this.summary && this.savedDiscovery.list === this.summary) {
         return true
       } else if (
-        this.pitch &&
-        this.currentPitch &&
-        this.currentPitch.generated_pitch === this.pitch
+        this.summary &&
+        this.currentDiscovery &&
+        this.currentDiscovery.list === this.summary
       ) {
         return true
       } else {
@@ -2140,8 +1646,8 @@ label {
 
 .absolute-count-small {
   position: absolute;
-  bottom: 20px;
-  right: 44px;
+  bottom: 12px;
+  right: 16px;
   font-size: 10px;
   color: $light-gray-blue;
   // background-color: $white-blue;

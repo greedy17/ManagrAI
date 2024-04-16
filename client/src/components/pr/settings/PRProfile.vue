@@ -160,7 +160,7 @@
         </header>
         <main>
           <h2 class="pricing-header">Upgrade to PRO</h2>
-          <p>This plan includes unlimited usage, email alerts, and premium support</p>
+          <!-- <p>This plan includes unlimited usage, email alerts, and premium support</p> -->
           <div class="pricing-box">
             <!-- <h2 class="pricing-box__header">PRO</h2> -->
             <!-- <p>Self-serve plan with unlimited usage, automated email summaries, and the ability to learn your writing style.</p> -->
@@ -173,12 +173,11 @@
                 <h3 class="pricing-list-header">Everything in free, plus:</h3>
                 <ul class="pricing-list">
                   <li>Unlimited usage</li>
+                  <li>Unlimited saved searches</li>
                   <li>Daily email alerts</li>
-                  <li>Learn writing style</li>
-                  <li>Find Journalists</li>
-                  <li>Post Optimizer</li>
-                  <li>Shareable digest</li>
-                  <li>Onboarding & Training</li>
+                  <li>Content autopilot</li>
+                  <li>Onboarding</li>
+                  <li>Premium support</li>
                 </ul>
               </div>
               <div class="display-flex display-center pricing-width pricing-users relative">
@@ -201,10 +200,8 @@
               <!-- <p class="gray-text">This is a one-time fee. Training and premium support included.</p> -->
             </div>
           </div>
-          <p class="gray-text">
-            Questions about PRO plan or billing?
-            <a href="mailto:customers@managr.ai" style="font-size: 11px; margin: 0">Contact us.</a>
-          </p>
+
+          <p class="gray-text">Have questions ? Email us at mike@mymanagr.com</p>
         </main>
       </div>
     </Modal>

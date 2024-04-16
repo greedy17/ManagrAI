@@ -846,3 +846,25 @@ class InstagramAccount(TimeStampModel):
             id = r["data"][0]["id"]
             self.add_hashtag(hashtag, id)
             return id
+
+
+class Discovery(TimeStampModel):
+    user = models.ForeignKey(
+        "core.User",
+        related_name="discoveries",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
+    )
+    name = models.CharField(max_length=255)
+    content = models.TextField(null=True, blank=True)
+    type = models.CharField(max_length=255, null=True, blank=True)
+    beat = models.CharField(max_length=255, null=True, blank=True)
+    location = models.CharField(max_length=255, null=True, blank=True)
+    list = models.TextField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.name}"

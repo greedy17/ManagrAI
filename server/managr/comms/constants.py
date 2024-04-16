@@ -23,12 +23,13 @@ elif settings.IN_STAGING:
     TWITTER_FRONTEND_REDIRECT = "https://staging.managr.ai/pr-integrations"
 else:
     TWITTER_FRONTEND_REDIRECT = "https://app.managr.ai/pr-integrations"
-TWITTER_API_HEADERS = {"Authorization": f"Bearer {TWITTER_ACCESS_TOKEN}"}
+# TWITTER_API_HEADERS = {"Authorization": f"Bearer {TWITTER_ACCESS_TOKEN}"}
+TWITTER_API_HEADERS = {}
 
-USE_INSTAGRAM_API = settings.USE_INSTAGRAM_API
-INSTAGRAM_APP_KEY = settings.INSTAGRAM_APP_KEY
-INSTAGRAM_APP_SECRET = settings.INSTAGRAM_APP_SECRET
-INSTAGRAM_REDIRECT_URI = settings.INSTAGRAM_REDIRECT_URI
+# USE_INSTAGRAM_API = settings.USE_INSTAGRAM_API
+# INSTAGRAM_APP_KEY = settings.INSTAGRAM_APP_KEY
+# INSTAGRAM_APP_SECRET = settings.INSTAGRAM_APP_SECRET
+# INSTAGRAM_REDIRECT_URI = settings.INSTAGRAM_REDIRECT_URI
 INSTAGRAM_BASE_URI = "https://www.facebook.com/v19.0/"
 INSTAGRAM_GRAPH_BASE_URL = "https://graph.facebook.com/v19.0/"
 INSTAGRAM_AUTHORIZATION_URI = INSTAGRAM_BASE_URI + "dialog/oauth"
@@ -46,14 +47,14 @@ else:
     INSTAGRAM_FRONTEND_REDIRECT = "https://app.managr.ai/pr-integrations"
 
 TWITTER_AUTHORIZATION_QUERY_PARAMS = {
-    "oauth_callback": TWITTER_REDIRECT_URI,
-    "oauth_consumer_key": TWITTER_API_KEY,
+    # "oauth_callback": TWITTER_REDIRECT_URI,
+    # "oauth_consumer_key": TWITTER_API_KEY,
 }
 
 
 def TWITTER_AUTHENTICATION_PARAMS(token, verifier):
     params = {
-        "oauth_consumer_key": TWITTER_API_KEY,
+        # "oauth_consumer_key": TWITTER_API_KEY,
         "oauth_token": token,
         "oauth_verifier": verifier,
     }
@@ -63,7 +64,7 @@ def TWITTER_AUTHENTICATION_PARAMS(token, verifier):
 def TWITTER_TOKEN_PARAMS(token):
     params = {
         "oauth_token": token,
-        "oauth_callback": TWITTER_REDIRECT_URI,
+        # "oauth_callback": TWITTER_REDIRECT_URI,
     }
     return params
 
@@ -72,8 +73,8 @@ def INSTAGRAM_MEDIA_PARAMS(instagram_id):
     params = {
         "fields": "id,caption,permalink,children{media_url},comments_count,media_type,media_url,timestamp,like_count",
         "user_id": instagram_id,
-        "limit": "100",
-        "locale": "en_US",
+        "limit": "30",
+        "language": "en",
     }
     return params
 
@@ -299,6 +300,18 @@ RUN_PROCESS = (
     c. News Summary: {summary}
     d. Additional Details: {details}
     e. Writing Style: {style}
+    """
+)
+
+DISCOVER_JOURNALIST = (
+    lambda type, beat, location, content: f""""
+    List up to 10 real journalists (or social media influencers) and their respective publications, that would be interested in writing about the content provided below. Provide pitching tips that are relevant to the user's content. User will specify whether they want journalist or influencers. Follow these instructions carefully:
+  - Publication Type: The journalists or influencers must be from news outlets (or social platform) of this type: {type}.
+  - Journalistic Beat: The journalist or influencers must cover this specific beat or topic: {beat}.
+  - Location: The journalists or influencers must be based in or primarily cover {location}.
+  - Real Journalists Requirement: It is essential that the journalists or influencers listed are real, currently active professionals in the field.
+  - Guess their email: do your best to guess their email address
+  - Here is the user’s content: {content}
     """
 )
 
