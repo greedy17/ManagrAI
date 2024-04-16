@@ -38,7 +38,8 @@
       { "name": "USE_OPEN_AI", "value": "${use_open_ai}" },
       { "name": "USE_SSO", "value": "${use_sso}" },
       { "name": "USE_NEWS_API", "value": "${use_news_api}" },
-      { "name": "USE_TWITTER_API", "value": "${use_twitter_api}" }
+      { "name": "USE_TWITTER_API", "value": "${use_twitter_api}" },
+      { "name": "USE_INSTAGRAM_API", "value": "${use_instagram_api}" }
     ],
     "secrets": [
       {
