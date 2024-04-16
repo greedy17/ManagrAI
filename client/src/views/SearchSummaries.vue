@@ -291,10 +291,21 @@
           v-if="selectedSearch && !loading"
           class="space-between horizontal-padding"
         >
-          <p v-if="mainView !== 'website'" class="sub-text ellipsis-text" style="margin: 16px 0">
+          <p
+            v-if="mainView !== 'website' && mainView !== 'instagram'"
+            class="sub-text ellipsis-text"
+            style="margin: 16px 0"
+          >
             <span :title="booleanString">{{
               booleanString ? booleanString.replace('lang:en', '') : ''
             }}</span>
+          </p>
+          <p
+            v-else-if="mainView === 'instagram'"
+            class="sub-text ellipsis-text"
+            style="margin: 16px 0"
+          >
+            <span :title="newSearch">{{ newSearch }}</span>
           </p>
           <p v-else style="margin: 16px 0" class="sub-text">Article Report</p>
 
@@ -1273,16 +1284,16 @@
                           </video>
                         </div>
                       </div>
-                      <div class="car-dots">
-                        <span
-                          v-for="(img, index) in post.children.data"
-                          :key="index"
-                          class="car-dot"
-                          :class="{ active: index === currentIndex }"
-                          @click="goTo(index)"
-                        ></span>
-                      </div>
                     </div>
+                  </div>
+                  <div class="car-dots">
+                    <span
+                      v-for="(img, index) in post.children.data"
+                      :key="index"
+                      class="car-dot"
+                      :class="{ active: index === currentIndex }"
+                      @click="goTo(index)"
+                    ></span>
                   </div>
 
                   <div class="attachment-header-container">
@@ -1880,7 +1891,7 @@
               savedSearch ||
               mainView === 'website'
             "
-            v-if="(filteredArticles && filteredArticles.length) || tweets.length"
+            v-if="(filteredArticles && filteredArticles.length) || tweets.length || posts.length"
           >
             Save
           </button>
@@ -3062,7 +3073,12 @@ export default {
       this.metaData = search.meta_data
       this.addedClips = this.$store.state.currentReportClips
       // this.addedClips = search.meta_data.clips ? search.meta_data.clips : []
-      this.mainView = search.type === 'SOCIAL_MEDIA' ? 'social' : 'news'
+      this.mainView =
+        search.search_boolean === 'Ig'
+          ? 'instagram'
+          : search.type === 'SOCIAL_MEDIA'
+          ? 'social'
+          : 'news'
       this.generateNewSearch(true, search.search_boolean)
       this.setCurrentAlert()
     },
@@ -3335,7 +3351,7 @@ export default {
           .createSearch({
             name: this.searchName,
             input_text: this.newSearch,
-            search_boolean: this.booleanString,
+            search_boolean: this.booleanString || 'Ig',
             instructions: this.newTemplate ? this.newTemplate : this.newSearch,
             meta_data: this.metaData,
             type: this.mainView === 'news' ? 'NEWS' : 'SOCIAL_MEDIA',
@@ -3647,7 +3663,7 @@ export default {
           })
       } catch (e) {
         console.log('Error in getTweetSummary', e)
-        this.$toast('Something went wrong, please try again.', {
+        this.$toast(`Error: ${e}`, {
           timeout: 2000,
           position: 'top-left',
           type: 'error',
@@ -5688,14 +5704,14 @@ textarea::placeholder {
 }
 
 .car-dots {
-  position: absolute;
-  bottom: 10px;
+  position: sticky;
+  bottom: -16px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  background-color: rgba(247, 245, 245, 0.996);
-  padding: 3px 6px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  // background-color: rgba(247, 245, 245, 0.644);
+  padding: 3px 0;
+  // border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 4px;
 }
 
@@ -5709,6 +5725,6 @@ textarea::placeholder {
 }
 
 .car-dot.active {
-  background-color: #333;
+  background-color: $dark-black-blue;
 }
 </style>
