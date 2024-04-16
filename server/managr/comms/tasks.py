@@ -3,6 +3,7 @@ import json
 import uuid
 import httpx
 import datetime
+from dateutil import parser
 from django.conf import settings
 from background_task import background
 from managr.utils.client import Variable_Client
@@ -54,6 +55,10 @@ def emit_share_client_summary(summary, clips, user_email):
 
 def emit_get_meta_account_info(user_id):
     return _get_meta_account_info(user_id)
+
+
+def emit_process_user_hashtag_list(user_id):
+    return _process_user_hashtag_list(user_id)
 
 
 def create_new_search(payload, user_id):
@@ -452,4 +457,31 @@ def _get_meta_account_info(user_id):
     instagram_id = ig_account.get_instagram_account_id(account_id)
     ig_account.instagram_id = instagram_id
     ig_account.save()
+    return
+
+
+@background
+def _process_user_hashtag_list(user_id):
+    user = User.objects.get(id=user_id)
+    ig = user.instagram_account
+    new_hashtag_list = []
+    today = datetime.datetime.now().date()
+    for tag in ig.hashtag_list:
+        hashtag, date, hashtag_id = tag.split(".")
+        date_obj = parser.parse(date).date()
+        if date_obj == today:
+            continue
+        else:
+            new_hashtag_list.append(tag)
+    logger.info(
+        f"""
+        HASHTAG PROCESSER REPORT:
+        USER: {user.email}
+        USER_HASHTAG_LIST ({len(ig.hashtag_list)}): {ig.hashtag_list}
+        -----------------------------------------
+        PROCESSED_LIST ({len(new_hashtag_list)}): {new_hashtag_list}
+    """
+    )
+    ig.hashtag_list = new_hashtag_list
+    ig.save()
     return

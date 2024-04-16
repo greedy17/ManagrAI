@@ -784,10 +784,12 @@ class PRSearchViewSet(
         if user.has_hit_summary_limit:
             return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         posts = request.data.get("posts")
-        # for idx, post in enumerate(posts):
-        #     hashtag_idx = post.find("#")
-        #     if hashtag_idx > 0:
-        #         posts[idx] = post[:hashtag_idx]
+        for idx, post in enumerate(posts):
+            hashtag_idx = post.find("#")
+            if hashtag_idx > 0:
+                if hashtag_idx == 8:
+                    del posts[idx]
+                posts[idx] = post[:hashtag_idx]
         instructions = request.data.get("instructions", False)
         ig_account = user.instagram_account
         has_error = False
