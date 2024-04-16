@@ -691,9 +691,11 @@ class InstagramAccount(TimeStampModel):
 
         else:
             status_code = response.status_code
-            error_data = response.json()
-            error_param = error_data.get("errors", None)
-            error_message = error_data.get("message", None)
+            error_json = response.json()
+            print('ERROR JSON IS HERE',error_json)
+            error_data = error_json.get("error", None)
+            error_message = error_data.get("error_user_title", None)
+            error_param = error_data.get("message", None)
             error_code = error_data.get("code", None)
             kwargs = {
                 "status_code": status_code,
@@ -720,16 +722,19 @@ class InstagramAccount(TimeStampModel):
                     return _id
         return None
 
-
     def add_hashtag(self, hashtag, hashtag_id):
         date = str(datetime.now().date())
         hashtag_str = f"{hashtag}.{date}.{hashtag_id}"
         self.hashtag_list.append(hashtag_str)
         return self.save()
 
-    def get_posts(self, hashtag_id, next_token=False):
+    def get_posts(self, hashtag_id, date_to, date_from, next_token=False):
+        date_to_obj = datetime.strptime(date_to, "%Y-%m-%d")
+        date_from_obj = datetime.strptime(date_from, "%Y-%m-%d")
+        to_unix = int(date_to_obj.timestamp())
+        from_unix = int(date_from_obj.timestamp()) + 86400
         url = comms_consts.INSTAGRAM_TOP_MEDIA_URI(hashtag_id)
-        params = comms_consts.INSTAGRAM_MEDIA_PARAMS(self.instagram_id)
+        params = comms_consts.INSTAGRAM_MEDIA_PARAMS(self.instagram_id, to_unix, from_unix)
         headers = {"Authorization": f"Bearer {self.access_token}"}
         with Variable_Client() as client:
             r = client.get(url, headers=headers, params=params)

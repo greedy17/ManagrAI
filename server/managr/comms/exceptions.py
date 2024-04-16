@@ -17,6 +17,12 @@ class TooManyRequestsError(Exception):
         super().__init__(self.message)
 
 
+class HashtagLimitReached(Exception):
+    def __init__(self, error="Looks like we've hit a rate limit!"):
+        self.message = error
+        super().__init__(self.message)
+
+
 class NewsApiException:
     def __init__(self, e, fn_name=None, retries=0):
         self.error = e
@@ -99,6 +105,8 @@ class InstagramApiException:
         self.error_class_name = e.__class__.__name__
         self.status_code = e["status_code"]
         self.param = e["error_param"]
+        self.code = e["error_code"]
+        self.error_message = e["error_message"]
         self.fn_name = fn_name
         self.retry_attempts = 0
         self.raise_error()
@@ -107,6 +115,8 @@ class InstagramApiException:
         if self.error_class_name == "JSONDecodeError":
             logger.error(f"An error occured decoding the json, {self.fn_name}")
             return
+        elif self.status_code == 400 and self.code == 18:
+            raise HashtagLimitReached(self.error_message)
         elif self.status_code == 401:
             return
         elif self.status_code == 404 and self.param == "EXPIRED_AUTHENTICATION":

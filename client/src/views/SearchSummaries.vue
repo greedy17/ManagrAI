@@ -1203,7 +1203,7 @@
                         <p>Used Hashtags:</p>
                       </div>
 
-                      <div class="horizontal-padding rows">
+                      <div class="horizontal-padding rows max-height">
                         <p
                           @click="setNewSearch(extractHashtag(hashtag))"
                           v-for="(hashtag, i) in usedHashtags"
@@ -1284,26 +1284,21 @@
                           </video>
                         </div>
                       </div>
+
+                      <div class="car-dots">
+                        <span
+                          v-for="(img, index) in post.children.data"
+                          :key="index"
+                          class="car-dot"
+                          :class="{ active: index === currentIndex }"
+                          @click="goTo(index)"
+                        ></span>
+                      </div>
                     </div>
-                  </div>
-                  <div class="car-dots">
-                    <span
-                      v-for="(img, index) in post.children.data"
-                      :key="index"
-                      class="car-dot"
-                      :class="{ active: index === currentIndex }"
-                      @click="goTo(index)"
-                    ></span>
                   </div>
 
                   <div class="attachment-header-container">
-                    <div>
-                      <header>
-                        <div class="card-row-med">
-                          <!-- <a :href="post.permalink">View post</a> -->
-                        </div>
-                      </header>
-
+                    <div style="margin-top: 16px">
                       <p class="article-preview">{{ post.caption }}</p>
                     </div>
                   </div>
@@ -3553,11 +3548,13 @@ export default {
           })
       } catch (e) {
         console.log(e)
-        // this.tweetError = e.data.error
-        // this.booleanString = e.data.string
-        // this.summaryLoading = false
-        // this.tweets = []
-        // this.tweetMedia = null
+        this.$toast(`${e.data.error}`, {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
         this.clearNewSearch()
       } finally {
         this.loading = false
@@ -3583,12 +3580,9 @@ export default {
       let postList = []
       for (let i = 0; i < posts.length; i++) {
         postList.push(
-          'Caption:' +
-            posts[i].caption +
-            // 'likes: ' +
-            // posts[i].likes_count +
-            ' Date: ' +
-            posts[i].timestamp,
+          'Date: ' + posts[i].timestamp + ' Caption:' + posts[i].caption,
+          // 'likes: ' +
+          // posts[i].likes_count +
         )
       }
       return postList
@@ -4653,8 +4647,8 @@ button:disabled {
 }
 
 .cover-photo-ig {
-  height: 200px;
-  width: 300px;
+  height: 250px;
+  width: auto;
   margin-top: 1.25rem;
   object-fit: cover;
   cursor: text;
@@ -5396,6 +5390,11 @@ textarea::placeholder {
   padding: 4px 0;
 }
 
+.max-height {
+  max-height: 30vh;
+  overflow-y: scroll;
+}
+
 .custom-file-upload {
   display: flex;
   flex-direction: row;
@@ -5700,10 +5699,11 @@ textarea::placeholder {
 .carousel-item {
   flex: 0 0 auto;
   width: 100%;
-  text-align: center;
+  text-align: start;
 }
 
 .car-dots {
+  margin-top: 8px;
   position: sticky;
   bottom: -16px;
   left: 50%;
