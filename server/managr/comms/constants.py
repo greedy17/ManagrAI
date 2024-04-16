@@ -23,7 +23,8 @@ elif settings.IN_STAGING:
     TWITTER_FRONTEND_REDIRECT = "https://staging.managr.ai/pr-integrations"
 else:
     TWITTER_FRONTEND_REDIRECT = "https://app.managr.ai/pr-integrations"
-TWITTER_API_HEADERS = {"Authorization": f"Bearer {TWITTER_ACCESS_TOKEN}"}
+# TWITTER_API_HEADERS = {"Authorization": f"Bearer {TWITTER_ACCESS_TOKEN}"}
+TWITTER_API_HEADERS = {}
 
 USE_INSTAGRAM_API = settings.USE_INSTAGRAM_API
 if USE_INSTAGRAM_API:
