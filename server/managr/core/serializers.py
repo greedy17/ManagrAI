@@ -72,6 +72,7 @@ class UserClientSerializer(serializers.ModelSerializer):
             "is_superuser",
             "user_level",
             "role",
+            "is_staff",
             "has_nylas_integration",
             "has_hubspot_integration",
             "has_salesloft_integration",
