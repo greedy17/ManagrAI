@@ -311,7 +311,7 @@
           </div>
         </div>
         <!-- instagram -->
-        <div class="card">
+        <div v-if="user.isStaff" class="card">
           <div class="card__header" style="">
             <img style="height: 40px" src="@/assets/images/instagram-11.svg" />
           </div>
