@@ -787,7 +787,7 @@ class PRSearchViewSet(
         for idx, post in enumerate(posts):
             hashtag_idx = post.find("#")
             if hashtag_idx > 0:
-                if hashtag_idx == 8:
+                if hashtag_idx == 39:
                     del posts[idx]
                 posts[idx] = post[:hashtag_idx]
         instructions = request.data.get("instructions", False)

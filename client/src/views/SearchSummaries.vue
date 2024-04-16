@@ -3567,12 +3567,9 @@ export default {
       let postList = []
       for (let i = 0; i < posts.length; i++) {
         postList.push(
-          'Caption:' +
-            posts[i].caption +
-            // 'likes: ' +
-            // posts[i].likes_count +
-            ' Date: ' +
-            posts[i].timestamp,
+          'Date: ' + posts[i].timestamp + ' Caption:' + posts[i].caption,
+          // 'likes: ' +
+          // posts[i].likes_count +
         )
       }
       return postList
