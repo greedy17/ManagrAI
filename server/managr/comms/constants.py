@@ -26,9 +26,11 @@ else:
 TWITTER_API_HEADERS = {"Authorization": f"Bearer {TWITTER_ACCESS_TOKEN}"}
 
 USE_INSTAGRAM_API = settings.USE_INSTAGRAM_API
-INSTAGRAM_APP_KEY = settings.INSTAGRAM_APP_KEY
-INSTAGRAM_APP_SECRET = settings.INSTAGRAM_APP_SECRET
-INSTAGRAM_REDIRECT_URI = settings.INSTAGRAM_REDIRECT_URI
+if USE_INSTAGRAM_API:
+    INSTAGRAM_APP_KEY = settings.INSTAGRAM_APP_KEY
+    INSTAGRAM_APP_SECRET = settings.INSTAGRAM_APP_SECRET
+    INSTAGRAM_REDIRECT_URI = settings.INSTAGRAM_REDIRECT_URI
+
 INSTAGRAM_BASE_URI = "https://www.facebook.com/v19.0/"
 INSTAGRAM_GRAPH_BASE_URL = "https://graph.facebook.com/v19.0/"
 INSTAGRAM_AUTHORIZATION_URI = INSTAGRAM_BASE_URI + "dialog/oauth"
@@ -46,14 +48,14 @@ else:
     INSTAGRAM_FRONTEND_REDIRECT = "https://app.managr.ai/pr-integrations"
 
 TWITTER_AUTHORIZATION_QUERY_PARAMS = {
-    "oauth_callback": TWITTER_REDIRECT_URI,
-    "oauth_consumer_key": TWITTER_API_KEY,
+    # "oauth_callback": TWITTER_REDIRECT_URI,
+    # "oauth_consumer_key": TWITTER_API_KEY,
 }
 
 
 def TWITTER_AUTHENTICATION_PARAMS(token, verifier):
     params = {
-        "oauth_consumer_key": TWITTER_API_KEY,
+        # "oauth_consumer_key": TWITTER_API_KEY,
         "oauth_token": token,
         "oauth_verifier": verifier,
     }
@@ -63,7 +65,7 @@ def TWITTER_AUTHENTICATION_PARAMS(token, verifier):
 def TWITTER_TOKEN_PARAMS(token):
     params = {
         "oauth_token": token,
-        "oauth_callback": TWITTER_REDIRECT_URI,
+        # "oauth_callback": TWITTER_REDIRECT_URI,
     }
     return params
 
