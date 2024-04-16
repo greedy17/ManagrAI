@@ -743,6 +743,8 @@ class PRSearchViewSet(
     )
     def get_instagram_posts(self, request, *args, **kwargs):
         user = User.objects.get(id=request.GET.get("user_id"))
+        date_to = request.GET.get("date_to")
+        date_from = request.GET.get("date_from")
         ig_account = user.instagram_account
         has_error = False
         hashtag = request.GET.get("hashtag")
@@ -752,7 +754,7 @@ class PRSearchViewSet(
         while True:
             try:
                 id = ig_account.get_hashtag_id(hashtag)
-                posts_res = ig_account.get_posts(id)
+                posts_res = ig_account.get_posts(id, date_to, date_from)
                 posts = posts_res["data"]
                 post_list = posts
                 # post_list = merge_sort_dates(post_list, "timestamp")
@@ -1737,6 +1739,7 @@ def upload_pdf(request):
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
     return Response({"content": content})
 
+
 @api_view(["GET"])
 @permission_classes([permissions.IsAuthenticated])
 def get_writing_styles(request):
@@ -1749,9 +1752,7 @@ def get_writing_styles(request):
     #         user=request.user
     #     )
     #     print('why...')
-    writing_styles = WritingStyle.objects.filter(
-            user__organization=request.user.organization
-        )
+    writing_styles = WritingStyle.objects.filter(user__organization=request.user.organization)
     serializer = WritingStyleSerializer(writing_styles, many=True)  # Serialize the queryset
 
     return Response(serializer.data)
@@ -1801,7 +1802,7 @@ class DiscoveryViewSet(
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
         url_path="run",
-    ) 
+    )
     def run_discovery(self, request, *args, **kwargs):
         user = request.user
         # if user.has_hit_summary_limit:
@@ -1817,9 +1818,7 @@ class DiscoveryViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.DISCOVER_JOURNALIST(
-                    type, beat, location, content
-                )
+                prompt = comms_consts.DISCOVER_JOURNALIST(type, beat, location, content)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
@@ -1834,7 +1833,7 @@ class DiscoveryViewSet(
                         headers=core_consts.OPEN_AI_HEADERS,
                     )
                 res = open_ai_exceptions._handle_response(r)
-            
+
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("discovery")
                 break
@@ -1867,4 +1866,4 @@ class DiscoveryViewSet(
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
 
-        return Response(data=message)    
+        return Response(data=message)

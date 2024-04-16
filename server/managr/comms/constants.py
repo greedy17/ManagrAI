@@ -71,12 +71,14 @@ def TWITTER_TOKEN_PARAMS(token):
     return params
 
 
-def INSTAGRAM_MEDIA_PARAMS(instagram_id):
+def INSTAGRAM_MEDIA_PARAMS(instagram_id, until, since):
     params = {
         "fields": "id,caption,permalink,children{media_url, media_type},comments_count,media_type,media_url,timestamp,like_count",
         "user_id": instagram_id,
         "limit": "30",
         "language": "en",
+        "until": until,
+        "since": since,
     }
     return params
 
