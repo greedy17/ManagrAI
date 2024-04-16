@@ -756,13 +756,16 @@ class PRSearchViewSet(
                 id = ig_account.get_hashtag_id(hashtag)
                 posts_res = ig_account.get_posts(id, date_to, date_from)
                 posts = posts_res["data"]
+                if len(posts) == 0:
+                    has_error = True
+                    ig_res = f"No posts with #{hashtag} found for that date range"
                 post_list = posts
                 # post_list = merge_sort_dates(post_list, "timestamp")
                 break
             except Exception as e:
                 has_error = True
                 logger.exception(e)
-                ig_res = e
+                ig_res = str(e)
                 break
 
         if has_error:
