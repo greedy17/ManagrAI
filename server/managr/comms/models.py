@@ -691,9 +691,10 @@ class InstagramAccount(TimeStampModel):
 
         else:
             status_code = response.status_code
-            error_data = response.json()
-            error_param = error_data.get("errors", None)
-            error_message = error_data.get("message", None)
+            error_json = response.json()
+            error_data = error_json.get("error", None)
+            error_message = error_data.get("error_user_title", None)
+            error_param = error_data.get("message", None)
             error_code = error_data.get("code", None)
             kwargs = {
                 "status_code": status_code,
