@@ -57,6 +57,7 @@ def extract_date_from_text(text):
         r"(\d{1,2} [A-Za-z]+ \d{4})",
         r"([A-Za-z]+(?: \d{1,2},)? \d{4})",
         r"([A-Za-z]{3}\. \d{1,2}, \d{4} \d{1,2}:\d{2} [apAP]\.m\.)",
+        r"(\w+\s\d+,\s\d{4})",
     ]
     date_str = text
     strptime_formats = [
