@@ -1,6 +1,7 @@
 import scrapy
 import logging
 import datetime
+import time
 from scrapy import signals
 from django.utils import timezone
 from django.conf import settings
@@ -9,6 +10,7 @@ from ..models import NewsSource
 from ..serializers import ArticleSerializer
 from dateutil import parser
 from managr.api.emails import send_html_email
+from copy import copy
 
 from ..utils import (
     get_domain,
@@ -42,6 +44,15 @@ XPATH_STRING_OBJ = {
     "image_url": ["//meta[@property='og:image']/@content"],
 }
 
+XPATH_TO_FIELD = {
+    "title": "article_title_selector",
+    "author": "author_selector",
+    "description": "description_selector",
+    "publish_date": "date_published_selector",
+    "image_url": "image_url_selector",
+    "content": "article_content_selector",
+}
+
 
 def data_cleaner(data):
     try:
@@ -70,6 +81,7 @@ class NewsSpider(scrapy.Spider):
             "scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware": 100,
         },
         "AUTOTHROTTLE_ENABLED": True,
+        "AUTOTHROTTLE_TARGET_CONCURRENCY": 2,
         "USER_AGENT": "Mozilla/5.0 (compatible; managr-webcrawler/1.0; +https://managr.ai/documentation)",
         "HTTPCACHE_ENABLED": True,
         "HTTPCACHE_DIR": settings.HTTPCACHE_DIR,
@@ -83,6 +95,7 @@ class NewsSpider(scrapy.Spider):
         self.test = kwargs.get("test")
         self.urls_processed = 0
         self.error_log = []
+        self.start_time = time.time()
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -91,9 +104,15 @@ class NewsSpider(scrapy.Spider):
         return spider
 
     def spider_closed_handler(self, spider):
+        seconds = int((time.time() - self.start_time))
+        minutes = 0
+        if seconds >= 60:
+            minutes = round((seconds / 60), 0)
+        completed_in = f"{seconds} seconds" if minutes == 0 else f"{minutes} minutes"
         report_data = {
             "start_urls": len(self.start_urls),
             "urls_processed": self.urls_processed,
+            "time": completed_in,
             "errors": self.error_log,
         }
         self.generate_report(report_data)
@@ -119,6 +138,8 @@ class NewsSpider(scrapy.Spider):
             return site_name[1]
         elif not len(site_name):
             return response.request.url
+        if isinstance(site_name, list):
+            site_name = site_name[0]
         return site_name
 
     def parse(self, response):
@@ -127,8 +148,8 @@ class NewsSpider(scrapy.Spider):
             url = url[: len(url) - 1]
         try:
             source = NewsSource.objects.get(domain=url)
-        except Exception:
-            logger.exception(url)
+        except NewsSource.DoesNotExist:
+            logger.info(f"URL does not exist: {url}")
             return
         if source.article_link_attribute is not None:
             regex = source.create_search_regex()
@@ -165,21 +186,33 @@ class NewsSpider(scrapy.Spider):
         else:
             self.process_new_url(source, response)
         self.urls_processed += 1
+        return
 
     def parse_article(self, response, source):
+        xpath_copy = copy(XPATH_STRING_OBJ)
         meta_tag_data = {"link": response.url, "source": source.id}
         article_selectors = source.article_selectors()
-        for key in XPATH_STRING_OBJ.keys():
-            if key in article_selectors.keys() and article_selectors[key]:
+        fields_dict = {}
+        article_tags = None
+        if source.selectors_defined:
+            for key in article_selectors.keys():
                 selector = response.xpath(article_selectors[key]).getall()
                 if len(selector):
                     selector = ",".join(selector)
                 if key == "publish_date":
                     selector = extract_date_from_text(selector)
+                if key == "content":
+                    article_tags = selector
+                    continue
                 if selector is not None:
                     meta_tag_data[key] = selector
-            else:
-                for path in XPATH_STRING_OBJ[key]:
+                else:
+                    meta_tag_data[key] = "N/A"
+        else:
+            for key in xpath_copy.keys():
+                if article_selectors[key] is not None:
+                    xpath_copy[key] = [article_selectors[key]]
+                for path in xpath_copy[key]:
                     selector = response.xpath(path).get()
                     if key == "publish_date":
                         if "text" in path and selector is not None:
@@ -190,25 +223,25 @@ class NewsSpider(scrapy.Spider):
                             except Exception:
                                 continue
                     if selector is not None:
+                        fields_dict[key] = path
                         meta_tag_data[key] = selector
                         break
-            if key not in meta_tag_data.keys() or not len(meta_tag_data[key]):
-                meta_tag_data[key] = "N/A"
-        if article_selectors["content"]:
-            article_xpaths = [article_selectors["content"]]
-        else:
+                if key not in meta_tag_data.keys() or not len(meta_tag_data[key]):
+                    meta_tag_data[key] = "N/A"
             article_tag_list = ["article", "story", "content"]
             article_xpaths = ["//article//p//text()"]
             for a in article_tag_list:
                 article_xpaths.append(
                     f"//*[contains(@class, '{a}') or contains(@id, '{a}') and .//p]//p//text()"
                 )
-        article_tags = None
-        for tag in article_xpaths:
-            tags = response.xpath(tag).getall()
-            if len(tags):
-                article_tags = tags
-                break
+            if article_selectors["content"] is not None:
+                article_xpaths = [article_selectors["content"]]
+            for tag in article_xpaths:
+                tags = response.xpath(tag).getall()
+                if len(tags):
+                    fields_dict["content"] = tag
+                    article_tags = tags
+                    break
         full_article = ""
         cleaned_data = None
         if article_tags is not None:
@@ -232,6 +265,12 @@ class NewsSpider(scrapy.Spider):
         except Exception as e:
             self.error_log.append(f"URL: {source.domain} | Error: {str(e)}")
             source.add_error(f"{str(e)} {meta_tag_data}\n")
+        if len(fields_dict):
+            for key in fields_dict.keys():
+                path = fields_dict[key]
+                field = XPATH_TO_FIELD[key]
+                setattr(source, field, path)
+            source.save()
         self.urls_processed += 1
         return
 

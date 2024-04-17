@@ -42,6 +42,8 @@ def get_domain(url):
 
 
 def extract_date_from_text(text):
+    if isinstance(text, list) and len(text) == 0:
+        return None
     text = text.replace("\n", "").strip()
     patterns = [
         r"(\d{1,2} [A-Za-z]+ \d{4})",

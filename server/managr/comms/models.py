@@ -25,7 +25,6 @@ from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.indexes import GinIndex
 from requests_oauthlib import OAuth1Session, OAuth2Session
 from oauthlib.oauth2 import OAuth2Error
-from requests_oauthlib.compliance_fixes import facebook_compliance_fix
 
 logger = logging.getLogger("managr")
 
@@ -302,6 +301,8 @@ class NewsSource(TimeStampModel):
     article_title_selector = models.CharField(max_length=255, blank=True, null=True)
     article_content_selector = models.CharField(max_length=255, blank=True, null=True)
     author_selector = models.CharField(max_length=255, blank=True, null=True)
+    description_selector = models.CharField(max_length=255, blank=True, null=True)
+    image_url_selector = models.CharField(max_length=255, blank=True, null=True)
     scrape_data = JSONField(default=dict, null=True, blank=True)
     error_log = models.TextField(null=True, blank=True)
 
@@ -314,7 +315,18 @@ class NewsSource(TimeStampModel):
             "publish_date": self.date_published_selector,
             "title": self.article_title_selector,
             "content": self.article_content_selector,
+            "image_url": self.image_url_selector,
+            "description": self.description_selector,
+            "content": self.article_content_selector,
         }
+
+    @property
+    def selectors_defined(self):
+        selector_obj = self.article_selectors()
+        for value in selector_obj.values():
+            if value is None:
+                return False
+        return True
 
     def selector_processor(self):
         selector_split = self.article_link_selector.split(",")
