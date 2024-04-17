@@ -2180,8 +2180,6 @@ export default {
     this.addedClips = this.$store.state.currentReportClips
     this.shouldCancel = false
 
-    console.log('this.$route', this.$route.query.success)
-
     if (this.$route.query && this.$route.query.success) {
       if (this.$route.query.success === 'true') {
         this.successModal = true
@@ -3069,7 +3067,7 @@ export default {
       this.sendingSummaryEmail = true
       try {
         this.sentSummaryEmail = true
-        console.log('this.filteredArticles', this.filteredArticles)
+
         let clips
         if (this.mainView === 'social') {
           clips = this.tweets.filter((clip, i) => {

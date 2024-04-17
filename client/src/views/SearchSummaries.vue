@@ -1259,7 +1259,7 @@
                     <div v-else-if="post.media_type === 'CAROUSEL_ALBUM'" class="carousel">
                       <div
                         class="carousel-slide"
-                        :style="{ transform: `translateX(-${currentIndex * 100}%)` }"
+                        :style="{ transform: `translateX(-${post.currentIndex * 100}%)` }"
                       >
                         <div
                           v-for="(img, index) in post.children.data"
@@ -1290,8 +1290,8 @@
                           v-for="(img, index) in post.children.data"
                           :key="index"
                           class="car-dot"
-                          :class="{ active: index === currentIndex }"
-                          @click="goTo(index)"
+                          :class="{ active: index === post.currentIndex }"
+                          @click="goTo(post, index)"
                         ></span>
                       </div>
                     </div>
@@ -2357,8 +2357,6 @@ export default {
     this.addedClips = this.$store.state.currentReportClips
     this.shouldCancel = false
 
-    console.log('this.$route', this.$route.query.success)
-
     if (this.$route.query && this.$route.query.success) {
       if (this.$route.query.success === 'true') {
         this.successModal = true
@@ -2378,7 +2376,6 @@ export default {
     const defaultTime = new Date()
     defaultTime.setHours(8, 0)
     this.selectedTime = defaultTime.toISOString().slice(0, 16)
-    console.log(this.user)
   },
   watch: {
     typedMessage: 'changeIndex',
@@ -2397,8 +2394,12 @@ export default {
     this.abortFunctions()
   },
   methods: {
-    goTo(index) {
-      this.currentIndex = index
+    goTo(post, index) {
+      const postIndex = this.posts.findIndex((p) => p === post)
+      if (postIndex !== -1) {
+        this.$set(this.posts[postIndex], 'currentIndex', index)
+        this.$forceUpdate()
+      }
     },
     goToIg(link) {
       window.open(link, '_blank')
@@ -3393,7 +3394,7 @@ export default {
       this.sendingSummaryEmail = true
       try {
         this.sentSummaryEmail = true
-        console.log('this.filteredArticles', this.filteredArticles)
+
         let clips
         if (this.mainView === 'social') {
           clips = this.tweets.filter((clip, i) => {
@@ -3542,6 +3543,11 @@ export default {
               this.posts = response.posts
                 .slice()
                 .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+
+              this.posts.forEach((post) => {
+                post.currentIndex = 0
+              })
+
               this.getPostsSummary()
             }
             this.showingDropdown = false
