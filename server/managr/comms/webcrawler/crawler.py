@@ -197,9 +197,10 @@ class NewsSpider(scrapy.Spider):
         if source.selectors_defined:
             for key in article_selectors.keys():
                 selector = response.xpath(article_selectors[key]).getall()
-                if len(selector):
+                if len(selector) and key != "content" and key != "publish_date":
                     selector = ",".join(selector)
                 if key == "publish_date":
+
                     selector = extract_date_from_text(selector)
                 if key == "content":
                     article_tags = selector
