@@ -1191,9 +1191,14 @@
                       </div>
 
                       <div>
-                        <input class="area-input-smallest" type="date" v-model="dateStart" />
+                        <input
+                          disabled
+                          class="area-input-smallest"
+                          type="date"
+                          v-model="dateStart"
+                        />
                         -
-                        <input class="area-input-smallest" type="date" v-model="dateEnd" />
+                        <input disabled class="area-input-smallest" type="date" v-model="dateEnd" />
                       </div>
                     </div>
 
@@ -3586,7 +3591,14 @@ export default {
       let postList = []
       for (let i = 0; i < posts.length; i++) {
         postList.push(
-          'Date: ' + posts[i].timestamp + ' Caption:' + posts[i].caption,
+          'Date: ' +
+            posts[i].timestamp +
+            'likes: ' +
+            posts[i].like_count +
+            'Comments: ' +
+            posts[i].comments_count +
+            ' Caption:' +
+            posts[i].caption,
           // 'likes: ' +
           // posts[i].likes_count +
         )
