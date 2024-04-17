@@ -743,7 +743,6 @@ class PRSearchViewSet(
         url_path="posts",
     )
     def get_instagram_posts(self, request, *args, **kwargs):
-        print(request.GET)
         user = User.objects.get(id=request.GET.get("user_id"))
         date_to = request.GET.get("date_to")
         date_from = request.GET.get("date_from")
@@ -796,8 +795,6 @@ class PRSearchViewSet(
         for idx, post in enumerate(posts):
             hashtag_idx = post.find("#")
             if hashtag_idx > 0:
-                if hashtag_idx == 39:
-                    del posts[idx]
                 posts[idx] = post[:hashtag_idx]
         instructions = request.data.get("instructions", False)
         ig_account = user.instagram_account
