@@ -47,6 +47,11 @@ def extract_date_from_text(text):
             text = text[0]
         else:
             return None
+    try:
+        parsed_date = parser.parse(text)
+        return str(parsed_date)
+    except parser.ParserError:
+        pass
     text = text.replace("\n", "").strip()
     patterns = [
         r"(\d{1,2} [A-Za-z]+ \d{4})",

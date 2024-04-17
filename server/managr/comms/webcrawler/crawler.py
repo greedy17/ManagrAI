@@ -60,14 +60,15 @@ def data_cleaner(data):
         date = data.pop("publish_date")
         parsed_date = parser.parse(date)
         content = content.replace("\n", " ").replace("\t", " ").replace("  ", "")
+        data["author"] = data["author"].replace("\n", "").strip()
         data["content"] = content
         data["publish_date"] = parsed_date
         if len(data["title"]) > 150:
             data["title"] = data["title"][:145] + "..."
-    except KeyError:
-        return False
-    except parser.ParserError:
-        return False
+    except KeyError as e:
+        return str(e)
+    except parser.ParserError as e:
+        return str(e)
     return data
 
 
@@ -81,7 +82,6 @@ class NewsSpider(scrapy.Spider):
             "scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware": 100,
         },
         "AUTOTHROTTLE_ENABLED": True,
-        "AUTOTHROTTLE_TARGET_CONCURRENCY": 2,
         "USER_AGENT": "Mozilla/5.0 (compatible; managr-webcrawler/1.0; +https://managr.ai/documentation)",
         "HTTPCACHE_ENABLED": True,
         "HTTPCACHE_DIR": settings.HTTPCACHE_DIR,
@@ -112,6 +112,7 @@ class NewsSpider(scrapy.Spider):
         report_data = {
             "start_urls": len(self.start_urls),
             "urls_processed": self.urls_processed,
+            "seconds": str(seconds),
             "time": completed_in,
             "errors": self.error_log,
         }
@@ -200,7 +201,6 @@ class NewsSpider(scrapy.Spider):
                 if len(selector) and key != "content" and key != "publish_date":
                     selector = ",".join(selector)
                 if key == "publish_date":
-
                     selector = extract_date_from_text(selector)
                 if key == "content":
                     article_tags = selector
@@ -245,19 +245,21 @@ class NewsSpider(scrapy.Spider):
                     break
         full_article = ""
         cleaned_data = None
+
         if article_tags is not None:
             for article in article_tags:
+                article = article.replace("\n", "").strip()
                 full_article += article
             meta_tag_data["content"] = full_article
         try:
             if "content" in meta_tag_data.keys():
                 cleaned_data = data_cleaner(meta_tag_data)
-                if cleaned_data:
+                if isinstance(cleaned_data, dict):
                     serializer = ArticleSerializer(data=cleaned_data)
                     serializer.is_valid(raise_exception=True)
                     serializer.save()
                 else:
-                    raise Exception("Failed to clean data")
+                    raise Exception(cleaned_data)
             else:
                 logger.info(f"No content for article: {response.url}")
                 return
