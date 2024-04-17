@@ -764,11 +764,7 @@ class PRSearchViewSet(
                 date = parser.parse(date_from).date()
                 for post in posts:
                     ts = parser.parse(post["timestamp"]).date()
-                    print(date, ts)
-                    if "DM for cheap paid promotio" in post["caption"]:
-                        print(post)
                     if ts >= date:
-                        print("here")
                         post_list.append(post)
                 # post_list = merge_sort_dates(post_list, "timestamp")
                 break
