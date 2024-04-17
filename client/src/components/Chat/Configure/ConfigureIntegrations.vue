@@ -311,7 +311,7 @@
           </div>
         </div>
         <!-- instagram -->
-        <div v-if="user.isStaff" class="card">
+        <div class="card">
           <div class="card__header" style="">
             <img style="height: 40px" src="@/assets/images/instagram-11.svg" />
           </div>
@@ -656,6 +656,9 @@ export default {
     }
   },
   computed: {
+    userIsStaff() {
+      return !!this.user.IsStaff
+    },
     isOnboarding() {
       return this.$store.state.user.onboarding
     },

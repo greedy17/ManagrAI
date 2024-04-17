@@ -25,7 +25,6 @@ from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.indexes import GinIndex
 from requests_oauthlib import OAuth1Session, OAuth2Session
 from oauthlib.oauth2 import OAuth2Error
-from requests_oauthlib.compliance_fixes import facebook_compliance_fix
 
 logger = logging.getLogger("managr")
 
@@ -302,6 +301,8 @@ class NewsSource(TimeStampModel):
     article_title_selector = models.CharField(max_length=255, blank=True, null=True)
     article_content_selector = models.CharField(max_length=255, blank=True, null=True)
     author_selector = models.CharField(max_length=255, blank=True, null=True)
+    description_selector = models.CharField(max_length=255, blank=True, null=True)
+    image_url_selector = models.CharField(max_length=255, blank=True, null=True)
     scrape_data = JSONField(default=dict, null=True, blank=True)
     error_log = models.TextField(null=True, blank=True)
 
@@ -314,7 +315,18 @@ class NewsSource(TimeStampModel):
             "publish_date": self.date_published_selector,
             "title": self.article_title_selector,
             "content": self.article_content_selector,
+            "image_url": self.image_url_selector,
+            "description": self.description_selector,
+            "content": self.article_content_selector,
         }
+
+    @property
+    def selectors_defined(self):
+        selector_obj = self.article_selectors()
+        for value in selector_obj.values():
+            if value is None:
+                return False
+        return True
 
     def selector_processor(self):
         selector_split = self.article_link_selector.split(",")
@@ -691,9 +703,10 @@ class InstagramAccount(TimeStampModel):
 
         else:
             status_code = response.status_code
-            error_data = response.json()
-            error_param = error_data.get("errors", None)
-            error_message = error_data.get("message", None)
+            error_json = response.json()
+            error_data = error_json.get("error", None)
+            error_message = error_data.get("error_user_title", None)
+            error_param = error_data.get("message", None)
             error_code = error_data.get("code", None)
             kwargs = {
                 "status_code": status_code,
@@ -720,16 +733,19 @@ class InstagramAccount(TimeStampModel):
                     return _id
         return None
 
-
     def add_hashtag(self, hashtag, hashtag_id):
         date = str(datetime.now().date())
         hashtag_str = f"{hashtag}.{date}.{hashtag_id}"
         self.hashtag_list.append(hashtag_str)
         return self.save()
 
-    def get_posts(self, hashtag_id, next_token=False):
+    def get_posts(self, hashtag_id, date_to, date_from, next_token=False):
+        date_to_obj = datetime.strptime(date_to, "%Y-%m-%d")
+        date_from_obj = datetime.strptime(date_from, "%Y-%m-%d")
+        to_unix = int(date_to_obj.timestamp())
+        from_unix = int(date_from_obj.timestamp()) + 86400
         url = comms_consts.INSTAGRAM_TOP_MEDIA_URI(hashtag_id)
-        params = comms_consts.INSTAGRAM_MEDIA_PARAMS(self.instagram_id)
+        params = comms_consts.INSTAGRAM_MEDIA_PARAMS(self.instagram_id, to_unix, from_unix)
         headers = {"Authorization": f"Bearer {self.access_token}"}
         with Variable_Client() as client:
             r = client.get(url, headers=headers, params=params)

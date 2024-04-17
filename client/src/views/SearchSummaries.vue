@@ -291,10 +291,21 @@
           v-if="selectedSearch && !loading"
           class="space-between horizontal-padding"
         >
-          <p v-if="mainView !== 'website'" class="sub-text ellipsis-text" style="margin: 16px 0">
+          <p
+            v-if="mainView !== 'website' && mainView !== 'instagram'"
+            class="sub-text ellipsis-text"
+            style="margin: 16px 0"
+          >
             <span :title="booleanString">{{
               booleanString ? booleanString.replace('lang:en', '') : ''
             }}</span>
+          </p>
+          <p
+            v-else-if="mainView === 'instagram'"
+            class="sub-text ellipsis-text"
+            style="margin: 16px 0"
+          >
+            <span :title="newSearch">{{ newSearch }}</span>
           </p>
           <p v-else style="margin: 16px 0" class="sub-text">Article Report</p>
 
@@ -1192,7 +1203,7 @@
                         <p>Used Hashtags:</p>
                       </div>
 
-                      <div class="horizontal-padding rows">
+                      <div class="horizontal-padding rows max-height">
                         <p
                           @click="setNewSearch(extractHashtag(hashtag))"
                           v-for="(hashtag, i) in usedHashtags"
@@ -1248,7 +1259,7 @@
                     <div v-else-if="post.media_type === 'CAROUSEL_ALBUM'" class="carousel">
                       <div
                         class="carousel-slide"
-                        :style="{ transform: `translateX(-${currentIndex * 100}%)` }"
+                        :style="{ transform: `translateX(-${post.currentIndex * 100}%)` }"
                       >
                         <div
                           v-for="(img, index) in post.children.data"
@@ -1273,26 +1284,21 @@
                           </video>
                         </div>
                       </div>
+
                       <div class="car-dots">
                         <span
                           v-for="(img, index) in post.children.data"
                           :key="index"
                           class="car-dot"
-                          :class="{ active: index === currentIndex }"
-                          @click="goTo(index)"
+                          :class="{ active: index === post.currentIndex }"
+                          @click="goTo(post, index)"
                         ></span>
                       </div>
                     </div>
                   </div>
 
                   <div class="attachment-header-container">
-                    <div>
-                      <header>
-                        <div class="card-row-med">
-                          <!-- <a :href="post.permalink">View post</a> -->
-                        </div>
-                      </header>
-
+                    <div style="margin-top: 16px">
                       <p class="article-preview">{{ post.caption }}</p>
                     </div>
                   </div>
@@ -1880,7 +1886,7 @@
               savedSearch ||
               mainView === 'website'
             "
-            v-if="(filteredArticles && filteredArticles.length) || tweets.length"
+            v-if="(filteredArticles && filteredArticles.length) || tweets.length || posts.length"
           >
             Save
           </button>
@@ -2351,8 +2357,6 @@ export default {
     this.addedClips = this.$store.state.currentReportClips
     this.shouldCancel = false
 
-    console.log('this.$route', this.$route.query.success)
-
     if (this.$route.query && this.$route.query.success) {
       if (this.$route.query.success === 'true') {
         this.successModal = true
@@ -2372,7 +2376,6 @@ export default {
     const defaultTime = new Date()
     defaultTime.setHours(8, 0)
     this.selectedTime = defaultTime.toISOString().slice(0, 16)
-    console.log(this.user)
   },
   watch: {
     typedMessage: 'changeIndex',
@@ -2391,8 +2394,12 @@ export default {
     this.abortFunctions()
   },
   methods: {
-    goTo(index) {
-      this.currentIndex = index
+    goTo(post, index) {
+      const postIndex = this.posts.findIndex((p) => p === post)
+      if (postIndex !== -1) {
+        this.$set(this.posts[postIndex], 'currentIndex', index)
+        this.$forceUpdate()
+      }
     },
     goToIg(link) {
       window.open(link, '_blank')
@@ -3062,7 +3069,12 @@ export default {
       this.metaData = search.meta_data
       this.addedClips = this.$store.state.currentReportClips
       // this.addedClips = search.meta_data.clips ? search.meta_data.clips : []
-      this.mainView = search.type === 'SOCIAL_MEDIA' ? 'social' : 'news'
+      this.mainView =
+        search.search_boolean === 'Ig'
+          ? 'instagram'
+          : search.type === 'SOCIAL_MEDIA'
+          ? 'social'
+          : 'news'
       this.generateNewSearch(true, search.search_boolean)
       this.setCurrentAlert()
     },
@@ -3335,7 +3347,7 @@ export default {
           .createSearch({
             name: this.searchName,
             input_text: this.newSearch,
-            search_boolean: this.booleanString,
+            search_boolean: this.booleanString || 'Ig',
             instructions: this.newTemplate ? this.newTemplate : this.newSearch,
             meta_data: this.metaData,
             type: this.mainView === 'news' ? 'NEWS' : 'SOCIAL_MEDIA',
@@ -3382,7 +3394,7 @@ export default {
       this.sendingSummaryEmail = true
       try {
         this.sentSummaryEmail = true
-        console.log('this.filteredArticles', this.filteredArticles)
+
         let clips
         if (this.mainView === 'social') {
           clips = this.tweets.filter((clip, i) => {
@@ -3531,17 +3543,24 @@ export default {
               this.posts = response.posts
                 .slice()
                 .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+
+              this.posts.forEach((post) => {
+                post.currentIndex = 0
+              })
+
               this.getPostsSummary()
             }
             this.showingDropdown = false
           })
       } catch (e) {
         console.log(e)
-        // this.tweetError = e.data.error
-        // this.booleanString = e.data.string
-        // this.summaryLoading = false
-        // this.tweets = []
-        // this.tweetMedia = null
+        this.$toast(`${e.data.error}`, {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
         this.clearNewSearch()
       } finally {
         this.loading = false
@@ -3567,12 +3586,9 @@ export default {
       let postList = []
       for (let i = 0; i < posts.length; i++) {
         postList.push(
-          'Caption:' +
-            posts[i].caption +
-            // 'likes: ' +
-            // posts[i].likes_count +
-            ' Date: ' +
-            posts[i].timestamp,
+          'Date: ' + posts[i].timestamp + ' Caption:' + posts[i].caption,
+          // 'likes: ' +
+          // posts[i].likes_count +
         )
       }
       return postList
@@ -3647,7 +3663,7 @@ export default {
           })
       } catch (e) {
         console.log('Error in getTweetSummary', e)
-        this.$toast('Something went wrong, please try again.', {
+        this.$toast(`Error: ${e}`, {
           timeout: 2000,
           position: 'top-left',
           type: 'error',
@@ -4637,8 +4653,8 @@ button:disabled {
 }
 
 .cover-photo-ig {
-  height: 200px;
-  width: 300px;
+  height: 250px;
+  width: auto;
   margin-top: 1.25rem;
   object-fit: cover;
   cursor: text;
@@ -5380,6 +5396,11 @@ textarea::placeholder {
   padding: 4px 0;
 }
 
+.max-height {
+  max-height: 30vh;
+  overflow-y: scroll;
+}
+
 .custom-file-upload {
   display: flex;
   flex-direction: row;
@@ -5684,18 +5705,19 @@ textarea::placeholder {
 .carousel-item {
   flex: 0 0 auto;
   width: 100%;
-  text-align: center;
+  text-align: start;
 }
 
 .car-dots {
-  position: absolute;
-  bottom: 10px;
+  margin-top: 8px;
+  position: sticky;
+  bottom: -16px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  background-color: rgba(247, 245, 245, 0.996);
-  padding: 3px 6px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  // background-color: rgba(247, 245, 245, 0.644);
+  padding: 3px 0;
+  // border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 4px;
 }
 
@@ -5709,6 +5731,6 @@ textarea::placeholder {
 }
 
 .car-dot.active {
-  background-color: #333;
+  background-color: $dark-black-blue;
 }
 </style>
