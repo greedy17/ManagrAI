@@ -329,7 +329,16 @@ DO_NOT_TRACK_LIST = [
 ]
 
 
-DO_NOT_INCLUDE_WORDS = ["photos", "sex", "review", "linkedin", ".pdf", "facebook", "instagram"]
+DO_NOT_INCLUDE_WORDS = [
+    "photos",
+    "sex",
+    "review",
+    "linkedin",
+    ".pdf",
+    "facebook",
+    "instagram",
+    ".jpg",
+]
 
 EXCLUDE_DOMAINS = [
     "globenewswire.com",
@@ -351,4 +360,5 @@ EXCLUDE_DOMAINS = [
     "ozbargain.com.au",
     "politicalwire.com",
     "freerepublic.com",
+    "blogger.com",
 ]

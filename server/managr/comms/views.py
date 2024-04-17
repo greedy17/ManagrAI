@@ -21,6 +21,7 @@ from rest_framework import (
     viewsets,
 )
 from urllib.parse import urlencode
+from dateutil import parser
 from django.shortcuts import redirect
 from rest_framework.decorators import action
 from . import constants as comms_consts
@@ -759,7 +760,11 @@ class PRSearchViewSet(
                 if len(posts) == 0:
                     has_error = True
                     ig_res = f"No posts with #{hashtag} found for that date range"
-                post_list = posts
+                date = parser.parse(date_from).date()
+                for post in posts:
+                    ts = parser.parse(post["timestamp"]).date()
+                    if ts >= date:
+                        post_list.append(post)
                 # post_list = merge_sort_dates(post_list, "timestamp")
                 break
             except Exception as e:
@@ -790,8 +795,6 @@ class PRSearchViewSet(
         for idx, post in enumerate(posts):
             hashtag_idx = post.find("#")
             if hashtag_idx > 0:
-                if hashtag_idx == 39:
-                    del posts[idx]
                 posts[idx] = post[:hashtag_idx]
         instructions = request.data.get("instructions", False)
         ig_account = user.instagram_account

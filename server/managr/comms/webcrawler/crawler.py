@@ -29,6 +29,7 @@ XPATH_STRING_OBJ = {
         "//meta[@name='author']/@content",
         "//meta[contains(@name,'author')]/@content",
         "//*[@rel='author']/text()",
+        "//*[contains(@class,'author-name') and string-length() > 2]//text()",
     ],
     "description": ["//meta[contains(@property, 'description')]/@content"],
     "publish_date": [
@@ -93,6 +94,7 @@ class NewsSpider(scrapy.Spider):
         self.start_urls = kwargs.get("start_urls")
         self.first_only = kwargs.get("first_only")
         self.test = kwargs.get("test")
+        self.no_report = kwargs.get("no_report")
         self.urls_processed = 0
         self.error_log = []
         self.start_time = time.time()
@@ -116,6 +118,8 @@ class NewsSpider(scrapy.Spider):
             "time": completed_in,
             "errors": self.error_log,
         }
+        if self.no_report:
+            return
         self.generate_report(report_data)
 
     def generate_report(self, data):
@@ -160,10 +164,14 @@ class NewsSpider(scrapy.Spider):
                 if len(article_links) and (self.first_only or self.test):
                     article_links = [article_links[0]]
                 for anchor in article_links:
+                    skip = False
                     article_url = anchor.xpath("@href").extract_first()
                     for word in comms_consts.DO_NOT_INCLUDE_WORDS:
                         if word in article_url:
-                            continue
+                            skip = True
+                            break
+                    if skip:
+                        continue
                     article_domain = get_domain(article_url)
                     if (len(article_domain) and article_domain not in do_not_track_str) or not len(
                         article_domain

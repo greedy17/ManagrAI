@@ -25,6 +25,11 @@ class Command(BaseCommand):
             action="store_true",
             help="Combine with active flag, this will only run the first anchor tag pulled to test all of the active sources quickly.",
         )
+        parser.add_argument(
+            "--noreport",
+            action="store_true",
+            help="Won't run the report after the crawler runs",
+        )
 
     def handle(self, *args, **options):
         url = options.get("url", False)
@@ -37,5 +42,11 @@ class Command(BaseCommand):
             urls = NewsSource.domain_list(scrape_ready, new)
         first_only = True if (options["active"] and options["new"]) else False
         process = CrawlerProcess()
-        process.crawl(NewsSpider, start_urls=urls, first_only=first_only, test=options["test"])
+        process.crawl(
+            NewsSpider,
+            start_urls=urls,
+            first_only=first_only,
+            test=options["test"],
+            no_report=options["noreport"],
+        )
         process.start()
