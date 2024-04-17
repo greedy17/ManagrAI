@@ -21,6 +21,7 @@ from rest_framework import (
     viewsets,
 )
 from urllib.parse import urlencode
+from dateutil import parser
 from django.shortcuts import redirect
 from rest_framework.decorators import action
 from . import constants as comms_consts
@@ -742,6 +743,7 @@ class PRSearchViewSet(
         url_path="posts",
     )
     def get_instagram_posts(self, request, *args, **kwargs):
+        print(request.GET)
         user = User.objects.get(id=request.GET.get("user_id"))
         date_to = request.GET.get("date_to")
         date_from = request.GET.get("date_from")
@@ -759,7 +761,15 @@ class PRSearchViewSet(
                 if len(posts) == 0:
                     has_error = True
                     ig_res = f"No posts with #{hashtag} found for that date range"
-                post_list = posts
+                date = parser.parse(date_from).date()
+                for post in posts:
+                    ts = parser.parse(post["timestamp"]).date()
+                    print(date, ts)
+                    if "DM for cheap paid promotio" in post["caption"]:
+                        print(post)
+                    if ts >= date:
+                        print("here")
+                        post_list.append(post)
                 # post_list = merge_sort_dates(post_list, "timestamp")
                 break
             except Exception as e:
