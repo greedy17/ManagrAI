@@ -704,7 +704,6 @@ class InstagramAccount(TimeStampModel):
         else:
             status_code = response.status_code
             error_json = response.json()
-            print('ERROR JSON IS HERE',error_json)
             error_data = error_json.get("error", None)
             error_message = error_data.get("error_user_title", None)
             error_param = error_data.get("message", None)
@@ -741,7 +740,6 @@ class InstagramAccount(TimeStampModel):
         return self.save()
 
     def get_posts(self, hashtag_id, date_to, date_from, next_token=False):
-        print('DATES ARE HERE',date_to, date_from)
         date_to_obj = datetime.strptime(date_to, "%Y-%m-%d")
         date_from_obj = datetime.strptime(date_from, "%Y-%m-%d")
         to_unix = int(date_to_obj.timestamp())
@@ -749,7 +747,6 @@ class InstagramAccount(TimeStampModel):
         url = comms_consts.INSTAGRAM_TOP_MEDIA_URI(hashtag_id)
         params = comms_consts.INSTAGRAM_MEDIA_PARAMS(self.instagram_id, to_unix, from_unix)
         headers = {"Authorization": f"Bearer {self.access_token}"}
-        print("PARAMS ARE HERE", params)
         with Variable_Client() as client:
             r = client.get(url, headers=headers, params=params)
             r = InstagramAccount._handle_response(r)
