@@ -485,3 +485,12 @@ def _process_user_hashtag_list(user_id):
     ig.hashtag_list = new_hashtag_list
     ig.save()
     return
+
+
+@background
+def _run_spider_batch(urls):
+    from subprocess import Popen
+
+    command = ["server/manage.py", "crawl_spider", urls]
+    Popen(command)
+    return
