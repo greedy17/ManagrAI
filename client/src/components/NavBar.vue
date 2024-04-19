@@ -323,7 +323,7 @@
                   alt=""
                   @click="selectSearch(search)"
                 />
-                <p @click="selectSearch(search)">
+                <p :title="search.name" @click="selectSearch(search)">
                   {{ search.name }}
                 </p>
 
@@ -681,7 +681,7 @@
                     alt=""
                     @click="selectSearch(search)"
                   />
-                  <p @click="selectSearch(search)">
+                  <p :title="search.name" @click="selectSearch(search)">
                     {{ search.name }}
                   </p>
 
@@ -754,7 +754,7 @@
                     alt=""
                     @click="selectPitch(pitch)"
                   />
-                  <p @click="selectPitch(pitch)">
+                  <p :title="pitch.name" @click="selectPitch(pitch)">
                     {{ pitch.name }}
                   </p>
 
@@ -800,7 +800,7 @@
                   v-for="(assist, i) in assists"
                   :key="assist.id"
                 >
-                  <p @click="selectAssist(assist)">
+                  <p :title="assist.name" @click="selectAssist(assist)">
                     {{ assist.name }}
                   </p>
 
@@ -846,7 +846,7 @@
                   v-for="(discovery, i) in discoveries"
                   :key="discovery.id"
                 >
-                  <p @click="selectDiscovery(discovery)">
+                  <p :title="discovery.name" @click="selectDiscovery(discovery)">
                     {{ discovery.name }}
                   </p>
 
