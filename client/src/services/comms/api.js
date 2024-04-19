@@ -418,6 +418,14 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    async getSuggestions() {
+        try {
+            const res = await this.client.post(CommsApi.ENDPOINT + 'suggestions/',)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
 }
 
 class TwitterAccountAPI extends ModelAPI {

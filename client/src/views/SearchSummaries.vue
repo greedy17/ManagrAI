@@ -284,6 +284,40 @@
         </div>
       </div>
     </Modal>
+
+    <Modal v-if="suggestionModalOpen" class="regen-modal">
+      <div :class="{ dim: suggestionsLoading }" class="regen-container">
+        <div class="paid-header">
+          <div>
+            <h3 class="regen-header-title">Search suggestions</h3>
+          </div>
+          <div @click="toggleSuggestionModal" class="pointer"><small>X</small></div>
+        </div>
+
+        <div class="paid-body">
+          <div class="row">
+            <pre v-if="suggestions" v-html="suggestions" class="pre-text"></pre>
+            <p v-else>Generating</p>
+
+            <div style="margin-left: 4px" v-if="suggestionsLoading" class="loading-small">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin: 0; padding-bottom: 0" class="paid-footer aligned-right">
+          <button
+            :disabled="suggestionsLoading"
+            @click="toggleSuggestionModal"
+            class="cancel-button"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </Modal>
     <section id="clips" class="container">
       <div class="header centered sticky-top padding-top col">
         <div
@@ -459,6 +493,22 @@
                       />
 
                       <div class="tooltip">Submit</div>
+                    </div>
+                  </div>
+
+                  <div class="expanded-item">
+                    <div class="row horizontal-padding-s img-text">
+                      <img
+                        style="margin-left: -1px"
+                        src="@/assets/images/lightbulb-on.svg"
+                        height="20px"
+                        alt=""
+                      />
+                      <p>Search Suggestions</p>
+                    </div>
+
+                    <div class="horizontal-padding-s">
+                      <button @click="getSuggestions" class="white-button-round">View</button>
                     </div>
                   </div>
 
@@ -2106,6 +2156,9 @@ export default {
   },
   data() {
     return {
+      suggestionsLoading: false,
+      suggestionModalOpen: false,
+      suggestions: '',
       currentIndex: 0,
       selectedFile: null,
       pdfLoaded: false,
@@ -2399,6 +2452,37 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    async getSuggestions() {
+      this.suggestionModalOpen = true
+      if (this.suggestions) {
+        return
+      }
+      this.suggestionsLoading = true
+      try {
+        await Comms.api.getSuggestions().then((response) => {
+          console.log(response)
+          this.suggestions = response.suggestions
+        })
+      } catch (e) {
+        this.$toast(`Unable to generate suggestions at this time. Try again later`, {
+          timeout: 2500,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.suggestionsLoading = false
+      }
+    },
+
+    toggleSuggestionModal() {
+      if (this.suggestionsLoading) {
+        return
+      } else {
+        this.suggestionModalOpen = !this.suggestionModalOpen
+      }
+    },
     goTo(post, index) {
       const postIndex = this.posts.findIndex((p) => p === post)
       if (postIndex !== -1) {
@@ -4241,6 +4325,14 @@ export default {
     filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
     margin-right: 8px;
   }
+}
+
+.white-button-round {
+  @include dark-blue-button();
+  background-color: white;
+  padding: 8px 12px;
+  color: $dark-black-blue;
+  border: 1px solid $dark-black-blue;
 }
 
 .opaque {
