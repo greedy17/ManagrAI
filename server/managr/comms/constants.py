@@ -136,6 +136,21 @@ OPEN_AI_QUERY_STRING = (
     """
 )
 
+OPEN_AI_SEARCH_SUGGESTIONS = (
+    lambda name, company: f"""Given the following user details:
+    - Company: {company}
+    - Name: {name}
+    Please generate three initial search suggestions to help the user get started with monitoring relevant news. First search should be the company name - ex: "Coca-Cola" -- IF its a PR agency make an educated guess on who their top 5 clients are, use those as the search suggestions (do not search for the PR firm). Second search should be industry topics that are hyper relevant to the brand - if its a university, provide a topics that the school has research expertise in (vs generic industry topics), be as specific as possible - ex:"CPR", "Climate Change", "Cancer Research", Fashion AND Tiktok . Third Search, provide top 2-3 competitors using a OR in between.
+    Output instructions for Non PR firms: Start with "Hi {name}, here are some search suggestions to get you started."
+    - "Brand" (just the brand name)
+    - "Industry Topic" (up to 5,  Must be 2-3 words max, use AND in between words to broaden search, if needed.) -- ex: "Climate Change", AI AND Research, DEI AND Campus
+    - Competitors: Competitor 1 OR Competitor 2 OR Competitor 3 (if its a brand) - just the brand name.
+    Output instructions for PR firms: Start with "Hi {name}, here are some search suggestions to get you started."
+    - "Brands" (guess which brands they may work with based on location of agency and their niche, list just the brand name)
+    - "Industry Topic" (relevent to the PR agency's niche, up to 5, Must be 2-3 words max, use AND in between words to broaden search, if needed.) -- ex: if the agency is focused on fashion clients: AI and Fashion, GenZ and Tiktok. If the agency is focused on B2b: Embedded Finance, Commercial real-estate 
+    """
+)
+
 
 def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_client=False):
     if not instructions:
