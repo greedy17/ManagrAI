@@ -477,14 +477,3 @@ def convert_pdf_from_url(url):
     except Exception as e:
         print(str(e))
         return "", image_list
-
-
-def apr(account, apr, months):
-    interest_count = 0
-    for month in range(months):
-        account += 500
-        interest = account * (apr / 100)
-        print(interest)
-        interest_count += interest
-        account += interest
-    return f"Total {account} / Interest Earned: {interest_count}"
