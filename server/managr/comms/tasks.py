@@ -488,9 +488,26 @@ def _process_user_hashtag_list(user_id):
 
 
 @background
+def _check_spider_status():
+    sources = NewsSource.domain_list(True)
+    schedule = datetime.datetime.now() + datetime.timedelta(hours=1)
+    if len(sources):
+        for i in range(0, len(sources), 50):
+            batch = sources[i : i + 50]
+            batch_url_list = ",".join(batch)
+            print(batch_url_list)
+            _run_spider_batch(batch_url_list)
+        _check_spider_status(schedule=schedule)
+
+
+@background
 def _run_spider_batch(urls):
     from subprocess import Popen
 
-    command = ["server/manage.py", "crawl_spider", urls]
-    Popen(command)
-    return
+    try:
+        # Run the spider
+        command = ["server/manage.py", "crawl_spider", urls]
+        process = Popen(command)
+        process.wait()
+    except Exception as e:
+        logger.exception(str(e))

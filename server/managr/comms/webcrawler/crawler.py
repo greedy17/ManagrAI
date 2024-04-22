@@ -167,6 +167,8 @@ class NewsSpider(scrapy.Spider):
                 for anchor in article_links:
                     skip = False
                     article_url = anchor.xpath("@href").extract_first()
+                    if article_url is None:
+                        continue
                     for word in comms_consts.DO_NOT_INCLUDE_WORDS:
                         if word in article_url:
                             skip = True
