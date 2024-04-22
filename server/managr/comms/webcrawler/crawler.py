@@ -87,6 +87,7 @@ class NewsSpider(scrapy.Spider):
         "HTTPCACHE_ENABLED": True,
         "HTTPCACHE_DIR": settings.HTTPCACHE_DIR,
         "HTTPCACHE_EXPIRATION_SECS": 43200,
+        "LOG_LEVEL": settings.SCRAPY_LOG_LEVEL,
     }
 
     def __init__(self, *args, **kwargs):
