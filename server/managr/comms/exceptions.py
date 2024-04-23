@@ -23,6 +23,12 @@ class HashtagLimitReached(Exception):
         super().__init__(self.message)
 
 
+class TwitterUnauthorized(Exception):
+    def __init__(self, error="You are not authorized for this action"):
+        self.message = error
+        super().__init__(self.message)
+
+
 class NewsApiException:
     def __init__(self, e, fn_name=None, retries=0):
         self.error = e
@@ -88,7 +94,7 @@ class TwitterApiException:
             logger.error(f"An error occured decoding the json, {self.fn_name}")
             return
         elif self.status_code == 401:
-            return
+            raise TwitterUnauthorized()
         elif self.status_code == 404 and self.param == "EXPIRED_AUTHENTICATION":
             return
         elif self.status_code == 429:

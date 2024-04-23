@@ -727,9 +727,7 @@ class PRSearchViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_SEARCH_SUGGESTIONS(
-                    name, company
-                )
+                prompt = comms_consts.OPEN_AI_SEARCH_SUGGESTIONS(name, company)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
@@ -774,9 +772,11 @@ class PRSearchViewSet(
                 logger.exception(e)
                 break
         if has_error:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"suggestions": message})
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"suggestions": message}
+            )
 
-        return Response(data={"suggestions": message})  
+        return Response(data={"suggestions": message})
 
     @action(
         methods=["get"],

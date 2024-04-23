@@ -138,6 +138,7 @@ class TwitterAuthAccountAdapter:
             except json.decoder.JSONDecodeError as e:
                 return logger.error(f"An error occured with a nylas integration, {e}")
             except Exception as e:
+                print(str(e))
                 TwitterApiException(e)
 
         else:
@@ -583,6 +584,7 @@ class TwitterAccount(TimeStampModel):
                 TwitterApiException(e)
 
         else:
+            print(vars(response))
             status_code = response.status_code
             error_data = response.json()
             error_param = error_data.get("errors", None)
@@ -672,6 +674,7 @@ class TwitterAccount(TimeStampModel):
             access_token = client.fetch_access_token(
                 comms_consts.TWITTER_ACCESS_TOKEN_URI, verifier
             )
+            print(access_token)
             return access_token
         except OAuth2Error:
             return "Invalid authorization code"

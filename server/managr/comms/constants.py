@@ -16,6 +16,7 @@ TWITTER_REQUEST_TOKEN_URI = TWITTER_BASE_URI + "oauth/request_token"
 TWITTER_RECENT_TWEETS_URI = "2/tweets/search/recent"
 TWITTER_AUTHORIZATION_URI = TWITTER_BASE_URI + "oauth/authorize"
 TWITTER_ACCESS_TOKEN_URI = TWITTER_BASE_URI + "oauth/access_token"
+TWITTER_REFRESH_TOKEN_URI = TWITTER_BASE_URI + "oauth/token"
 TWITTER_SCOPES = ["tweet.read", "offline.access", "users.read"]
 if settings.IN_DEV:
     TWITTER_FRONTEND_REDIRECT = "http://localhost:8080/pr-integrations"
@@ -24,7 +25,6 @@ elif settings.IN_STAGING:
 else:
     TWITTER_FRONTEND_REDIRECT = "https://app.managr.ai/pr-integrations"
 TWITTER_API_HEADERS = {"Authorization": f"Bearer {TWITTER_ACCESS_TOKEN}"}
-TWITTER_API_HEADERS = {}
 
 USE_INSTAGRAM_API = settings.USE_INSTAGRAM_API
 if USE_INSTAGRAM_API:
