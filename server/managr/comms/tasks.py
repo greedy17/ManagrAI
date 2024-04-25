@@ -496,7 +496,7 @@ def _check_spider_status(batch_size=10):
             batch = sources[i : i + int(batch_size)]
             batch_url_list = ",".join(batch)
             _run_spider_batch(batch_url_list)
-        _check_spider_status(schedule=schedule)
+        _check_spider_status(batch_size, schedule=schedule)
 
 
 @background
