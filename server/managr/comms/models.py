@@ -401,7 +401,6 @@ class NewsSource(TimeStampModel):
             domain=self.domain,
             site_name=self.site_name,
             last_scraped=str(self.last_scraped),
-            access_count=self.access_count,
             article_link_selector=self.article_link_selector,
             article_link_attribute=self.article_link_attribute,
             article_link_regex=self.article_link_regex,
@@ -411,6 +410,9 @@ class NewsSource(TimeStampModel):
             author_selector=self.author_selector,
             article_content_selector=self.article_content_selector,
             is_active=self.is_active,
+            article_title_selector=self.article_title_selector,
+            image_url_selector=self.image_url_selector,
+            description_selector=self.description_selector,
         )
 
     @property
