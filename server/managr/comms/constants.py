@@ -322,6 +322,17 @@ RUN_PROCESS = (
     """
 )
 
+
+OPEN_AI_CONTENT_ASSIST = (
+    lambda date, style, instructions, clips: f"""Today's date is {date}. Follow the instructions below carefully:
+    Read all the news clips provided below.
+    Based on the news coverage do this: {instructions}
+    The output must adhere to this writing style: {style}
+    Output must not exceed 2500 characters
+    Here are the news clips: {clips}"""
+)
+
+
 DISCOVER_JOURNALIST = (
     lambda type, beat, location, content: f""""
     List up to 10 real journalists (or social media influencers) and their respective publications, that would be interested in writing about the content provided below. Provide pitching tips that are relevant to the user's content. User will specify whether they want journalist or influencers. Follow these instructions carefully:
