@@ -29,7 +29,7 @@
             <!-- <p>Self-serve plan with unlimited usage, automated email summaries, and the ability to learn your writing style.</p> -->
             <!-- <p>Upgrade to unlimited usage and additional AI automations</p> -->
             <h1 class="pricing-price">
-              $80 <span class="pricing-smaller-text">per user / month</span>
+              $100 <span class="pricing-smaller-text">per user / month</span>
             </h1>
             <div>
               <div class="pricing-list-container">
@@ -38,7 +38,7 @@
                   <li>Unlimited usage</li>
                   <li>Unlimited saved searches</li>
                   <li>Daily email alerts</li>
-                  <li>Content autopilot</li>
+                  <li>Unlimited list building</li>
                   <li>Onboarding</li>
                   <li>Premium support</li>
                   <!-- <li>Dedicated Customer Success Manager</li>
@@ -177,7 +177,7 @@
           <p>Discover</p>
         </router-link>
 
-        <router-link
+        <!-- <router-link
           active-class="active-mobile"
           :to="{ name: 'Assist' }"
           id="router-assist"
@@ -193,7 +193,7 @@
             <p>Assist</p>
             <p style="margin-left: 8px" class="searches-used-text">Upgrade to PRO</p>
           </div>
-        </router-link>
+        </router-link> -->
       </div>
 
       <div id="relative-mobile">
@@ -518,7 +518,7 @@
           <p>Discover</p>
         </router-link>
 
-        <router-link
+        <!-- <router-link
           active-class="active"
           :to="{ name: 'Assist' }"
           id="router-assist"
@@ -534,7 +534,7 @@
             <p>Assist</p>
             <p style="left: -40px" class="tooltip">Upgrade to PRO</p>
           </div>
-        </router-link>
+        </router-link> -->
 
         <div class="auto-left">
           <div
@@ -1136,11 +1136,11 @@ export default {
       team: CollectionManager.create({ ModelClass: User }),
       numberOfUsers: 5,
       amountList: [
-        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
-        26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
-        49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71,
-        72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94,
-        95, 96, 97, 98, 99, 100,
+        5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+        29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51,
+        52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74,
+        75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97,
+        98, 99, 100,
       ],
     }
   },
@@ -1151,7 +1151,7 @@ export default {
     this.getDiscoveries()
     await this.team.refresh()
     this.amountList = this.amountList.filter((item) => item >= this.activeUsers.length)
-    this.numberOfUsers = this.activeUsers.length
+    // this.numberOfUsers = this.activeUsers.length
   },
   directives: {
     clickOutsideMobileNav: {
