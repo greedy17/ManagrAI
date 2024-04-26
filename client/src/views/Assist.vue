@@ -94,12 +94,7 @@
             <button @click="toggleModal" class="secondary-button">Cancel</button>
             <button
               :disabled="
-                loading ||
-                !processDetails ||
-                !processName ||
-                !processStyle ||
-                !processType ||
-                !processSearchId
+                loading || !processDetails || !processName || !processStyle || !processSearchId
               "
               @click="createProcess"
               class="primary-button no-transitions"
@@ -386,7 +381,7 @@
               <div class="expanded-item-column">
                 <div class="row horizontal-padding-s img-text">
                   <!-- <img src="@/assets/images/arrow-trend-up.svg" height="18px" alt="" /> -->
-                  <p>Saved search</p>
+                  <p>Saved searches</p>
                 </div>
 
                 <div class="horizontal-padding-s">
@@ -394,11 +389,12 @@
                     style="margin: 0.5rem 0"
                     :options="searches"
                     :show-labels="false"
-                    placeholder="Choose one"
+                    placeholder="Select up to 3..."
                     label="name"
                     track-by="id"
                     v-model="processSearchId"
                     :disabled="loading"
+                    :multiple="true"
                   >
                     <template slot="noResult">
                       <p class="multi-slot">No results.</p>
@@ -406,10 +402,10 @@
                   </Multiselect>
                 </div>
               </div>
-
+              <!-- 
               <div class="expanded-item-column">
                 <div class="row horizontal-padding-s img-text">
-                  <!-- <img src="@/assets/images/arrow-trend-up.svg" height="18px" alt="" /> -->
+                  
                   <p>Content type</p>
                 </div>
 
@@ -422,7 +418,7 @@
                     :disabled="loading"
                   />
                 </div>
-              </div>
+              </div> -->
 
               <div class="expanded-item-column">
                 <div class="row horizontal-padding-s img-text">
@@ -453,7 +449,7 @@
               <div class="expanded-item-column">
                 <div class="row horizontal-padding-s img-text">
                   <!-- <img src="@/assets/images/arrow-trend-up.svg" height="18px" alt="" /> -->
-                  <p>Additional details</p>
+                  <p>Instructions</p>
                 </div>
 
                 <div style="position: relative" class="horizontal-padding-s">
@@ -516,7 +512,7 @@
           </div>
         </div>
       </div>
-      <!-- 
+      <!--       
       <div class="footer sticky-bottom">     
       </div> -->
     </section>
@@ -1024,7 +1020,6 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
             user: this.user.id,
             name: this.processName,
             search_id: this.processSearchId.id,
-            type: this.processType,
             details: this.processDetails,
             style: this.processStyle.style,
           })
@@ -1343,7 +1338,7 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
       console.log(
         this.processName,
         this.processSearchId.id,
-        this.processType,
+
         this.processDetails,
         this.processStyle.style,
       )
@@ -1415,6 +1410,25 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+::v-deep .multiselect__tag {
+  background-color: $dark-black-blue;
+  padding: 6px 26px 6px 10px;
+}
+
+::v-deep .multiselect__tag-icon {
+  background-color: $dark-black-blue;
+}
+
+::v-deep .multiselect__tag-icon:hover {
+  opacity: 0.5;
+}
+
+::v-deep .multiselect__tag-icon:after {
+  // content: "\D7";
+  color: white;
+  // font-size: 14px;
+}
 
 .icon-button {
   @include dark-blue-button();
@@ -1670,10 +1684,9 @@ h3 {
   overflow-y: scroll;
   scroll-behavior: smooth;
   z-index: 0;
-  padding: 0 40px 16px 40px;
+  padding: 0 40px 96px 40px;
   font-size: 16px;
   width: 100%;
-  // height: 100%;
 }
 
 .content-body-s::-webkit-scrollbar {
