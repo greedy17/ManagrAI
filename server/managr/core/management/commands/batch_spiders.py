@@ -7,12 +7,15 @@ from managr.comms.tasks import _run_spider_batch, _check_spider_status
 class Command(BaseCommand):
     help = "Batch Spiders to run"
 
+    def add_arguments(self, parser):
+        parser.add_argument("batch_size", nargs="?", type=int, help="The URL to scrape (optional)")
+
     def handle(self, *args, **options):
+        batch_size = options["batch_size"] if options["batch_size"] is not None else 10
         schedule = datetime.datetime.now() + datetime.timedelta(hours=3)
-        batch_size = 50
         news = NewsSource.domain_list(True, False)
-        for i in range(0, len(news), batch_size):
+        for i in range(0, len(news), int(batch_size)):
             batch = news[i : i + batch_size]
             batch_url_list = ",".join(batch)
             _run_spider_batch(batch_url_list)
-        _check_spider_status(schedule=schedule)
+        _check_spider_status(batch_size, schedule=schedule)
