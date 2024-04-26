@@ -79,3 +79,12 @@ def send_html_email(subject, template, send_from, send_to, context={}, bcc_email
         email.attach(part)
 
     email.send(fail_silently=False)
+
+
+def send_test_email(email_from, email_to):
+    send_html_email(
+        "This is Test",
+        "core/email-templates/developer-test.html",
+        email_from,
+        [email_to],
+    )
