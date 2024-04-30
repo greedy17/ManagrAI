@@ -24,7 +24,6 @@ from newspaper import Article
 from managr.slack.helpers.utils import block_finder
 from managr.comms.utils import generate_config, extract_base_domain, normalize_newsapi_to_model
 from managr.api.emails import send_html_email
-from background_task.models import Task
 
 logger = logging.getLogger("managr")
 
@@ -486,27 +485,6 @@ def _process_user_hashtag_list(user_id):
     ig.hashtag_list = new_hashtag_list
     ig.save()
     return
-
-
-@background
-def _check_spider_status(batch_size=10):
-    tasks = Task.objects.filter(
-        task_name="managr.comms.tasks._run_spider_batch", locked_at__isnull=False
-    )
-    if len(tasks):
-        dt = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
-        for task in tasks:
-            seconds_since_locked = dt - task.locked_at
-            if seconds_since_locked.seconds >= 1800:
-                task.delete()
-    sources = NewsSource.domain_list(True)
-    schedule = datetime.datetime.now() + datetime.timedelta(hours=1)
-    if len(sources):
-        for i in range(0, len(sources), int(batch_size)):
-            batch = sources[i : i + int(batch_size)]
-            batch_url_list = ",".join(batch)
-            _run_spider_batch(batch_url_list)
-        _check_spider_status(batch_size, schedule=schedule)
 
 
 @background

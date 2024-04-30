@@ -220,15 +220,21 @@ variable "scheduled_tasks" {
       task_count = 1
     },
     {
-      name       = "crawlspider"
-      command    = "crawl_spider --active"
-      cron       = "cron(0 7 * * ? *)"
+      name       = "batchspiders"
+      command    = "batch_spiders"
+      cron       = "cron(0 2 * * ? *)"
       task_count = 1
     },
     {
       name       = "runalerts"
       command    = "triggeralerts"
       cron       = "cron(0 8 ? * MON-FRI *)"
+      task_count = 1
+    },
+    {
+      name       = "spiderstatus"
+      command    = "spider_status"
+      cron       = "cron(*/30 2-8 * * ? *)"
       task_count = 1
     },
   ]
