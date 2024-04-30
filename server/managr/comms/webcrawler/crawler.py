@@ -129,7 +129,7 @@ class NewsSpider(scrapy.Spider):
                 f"Managr Crawler Report",
                 "core/email-templates/crawler-email.html",
                 settings.DEFAULT_FROM_EMAIL,
-                ["zach@mymanagr.com", "mike@managr.ai"],
+                ["zach@mymanagr.com"],
                 context=data,
             )
         except Exception as e:
@@ -212,6 +212,8 @@ class NewsSpider(scrapy.Spider):
                 if len(selector) and key != "content" and key != "publish_date":
                     selector = ",".join(selector)
                 if key == "publish_date":
+                    if isinstance(selector, list):
+                        selector = selector[0]
                     selector = extract_date_from_text(selector)
                 if key == "content":
                     article_tags = selector
