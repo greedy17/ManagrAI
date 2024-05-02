@@ -146,9 +146,10 @@ def boolean_search_to_query(search_string):
     current_query = None
     is_negative = False
     for idx, term in enumerate(term_list):
-        escaped_term = re.escape(term)
+        # escaped_term = re.escape(term)
+        # print(escaped_term)
         if idx == len(term_list) - 1:
-            current_query = Q(content__iregex=r"\m{}\M".format(escaped_term))
+            current_query = Q(content__iregex=r"\b{}\b".format(term))
             if len(current_q_objects):
                 if current_query is not None:
                     current_q_objects.append(current_query)
