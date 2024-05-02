@@ -18,7 +18,7 @@ variable "az_count" {
 
 variable "app_count" {
   type    = number
-  default = 2
+  default = 1
 }
 
 variable "health_check_path" {
@@ -202,27 +202,9 @@ variable "scheduled_tasks" {
       task_count = 1
     },
     {
-      name       = "syncresourcedata"
-      command    = "initresourcesync"
-      cron       = "cron(0 */11 * * ? *)"
-      task_count = 1
-    },
-    {
-      name       = "syncresourcefields"
-      command    = "initobjectfieldsync"
-      cron       = "cron(0 */12 * * ? *)"
-      task_count = 1
-    },
-    {
-      name       = "clearsfstaledata"
-      command    = "clearsfstaledata 1440"
-      cron       = "cron(0 22 * * ? *)"
-      task_count = 1
-    },
-    {
-      name       = "batchspiders"
+      name       = "batchspider"
       command    = "batch_spiders"
-      cron       = "cron(0 2 * * ? *)"
+      cron       = "cron(0 3 * * ? *)"
       task_count = 1
     },
     {

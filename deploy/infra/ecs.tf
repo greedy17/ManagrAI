@@ -182,7 +182,7 @@ data "template_file" "managr_app_scheduled_tasks" {
     use_sso        = title(each.value.env.use_sso)
     use_news_api   = title(each.value.env.use_news_api)
     use_twitter_api = title(each.value.env.use_twitter_api)
-    use_instagram_api = title(each.value.use_instagram_api)
+    use_instagram_api = title(each.value.env.use_instagram_api)
   }
 }
 
