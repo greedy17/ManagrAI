@@ -184,7 +184,7 @@ def boolean_search_to_query(search_string):
             current_query = None
             is_negative = True
         else:
-            current_query = Q(content__iregex=r"\m{}\M".format(escaped_term))
+            current_query = Q(content__iregex=r"\m{}\M".format(term))
     return query
 
 
