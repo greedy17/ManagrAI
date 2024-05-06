@@ -134,7 +134,7 @@
         </div>
 
         <div style="margin-bottom: 8px" class="paid-body">
-          <div>
+          <div style="position: relative">
             <input
               style="margin-bottom: 0"
               class="primary-input"
@@ -145,12 +145,19 @@
             <input class="primary-input" v-model="subject" type="text" placeholder="Subject" />
             <textarea
               class="primary-input"
-              v-model="pitchingTip"
+              v-model="revisedPitch"
               name=""
               id=""
               cols="30"
               rows="10"
+              :disabled="loadingPitch"
             ></textarea>
+
+            <div style="margin-left: 8px" v-if="loadingPitch" class="loading-small-absolute">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
 
             <!-- <p>
               {{ pitchingTip }}
@@ -159,7 +166,12 @@
         </div>
 
         <div class="flex-end">
-          <button style="margin-right: 4px" class="primary-button">
+          <button
+            @click="sendEmail"
+            :disabled="loadingPitch"
+            style="margin-right: 4px"
+            class="primary-button"
+          >
             <img
               style="filter: invert(100%); margin-right: 8px"
               src="@/assets/images/paper-plane-full.svg"
@@ -612,6 +624,7 @@ export default {
   },
   data() {
     return {
+      loadingPitch: false,
       emailJournalistModalOpen: false,
       saveModalOpen: false,
       contentModalOpen: false,
@@ -701,10 +714,10 @@ export default {
   methods: {
     async sendEmail() {
       try {
-        Comms.api.sendPitch({
+        Comms.api.sendEmail({
           subject: this.subject,
           body: this.revisedPitch,
-          recipients: [],
+          recipients: this.recipients,
         })
       } catch (e) {
         console.log(e)
@@ -712,6 +725,7 @@ export default {
       }
     },
     async rewritePitch() {
+      this.loadingPitch = true
       try {
         Comms.api
           .rewritePitch({
@@ -719,11 +733,12 @@ export default {
             tip: this.pitchingTip,
           })
           .then((res) => {
-            console.log(res)
+            this.revisedPitch = res.pitch
           })
       } catch (e) {
         console.log(e)
       } finally {
+        this.loadingPitch = false
       }
     },
     selectJournalist(event) {
@@ -734,8 +749,9 @@ export default {
 
         this.targetEmail = email
         this.pitchingTip = name
-        // this.modalData = { name, email }
+        this.loadingPitch = true
         this.emailJournalistModalOpen = true
+        this.rewritePitch()
       }
     },
     extractNameAndEmail(text) {
@@ -3168,6 +3184,14 @@ button:disabled {
   filter: invert(20%) sepia(28%) saturate(811%) hue-rotate(162deg) brightness(94%) contrast(81%);
 }
 .loading-small {
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  padding: 0;
+}
+.loading-small-absolute {
+  position: absolute;
+  bottom: 32px;
   display: flex;
   align-items: center;
   border-radius: 6px;
