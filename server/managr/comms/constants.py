@@ -257,6 +257,13 @@ Content: {pitch}\n
 Instructions: {instructions}"""
 )
 
+OPEN_AI_REWRITE_PTICH = (
+    lambda original, tip: f"""
+Adjust and rewrite this pitch per the pitching tip, while maintaining the existing writing style.\n
+pitch: {original}\n
+tip: {tip}"""
+)
+
 OPEN_AI_LEARN_WRITING_STYLE_PROMPT = (
     lambda sample: f"""Perform a detailed analysis of {sample}, focusing on discerning the author's unique style apart from content. Evaluate tone, formality, structure, and linguistic idiosyncrasies, ensuring an objective stance. Investigate the mechanisms used for establishing credibility, engaging readers informatively, avoiding persuasive or sales-oriented language. Task: Formulate concise guidelines capturing the essence of the author's style, enabling its replication across various themes. Emphasize a clear, informative, non-promotional communication style, highlighting specific stylistic techniques contributing to effective and trustworthy discourse. Output cannot exceed 1,200 characters."""
 )
@@ -341,6 +348,7 @@ DISCOVER_JOURNALIST = (
   - Location: The journalists or influencers must be based in or primarily cover {location}.
   - Real Journalists Requirement: It is essential that the journalists or influencers listed are real, currently active professionals in the field.
   - Guess their email: do your best to guess their email address
+  - Wrap each journalist/tip in a SPAN tag
   - Here is the user’s content: {content}
     """
 )

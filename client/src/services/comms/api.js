@@ -83,6 +83,15 @@ class CommsApi extends ModelAPI {
         }
     }
 
+    async rewritePitch(data) {
+        try {
+            const res = await this.client.post('pitches/rewrite/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
     async savePitch(data) {
         try {
             const res = await this.client.post('pitches/', data)

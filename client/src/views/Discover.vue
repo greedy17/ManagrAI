@@ -116,6 +116,61 @@
         </div>
       </div>
     </Modal>
+    <Modal v-if="emailJournalistModalOpen" class="paid-modal">
+      <div
+        :style="isMobile ? 'width: 95%; min-height: 100px' : 'width: 610px; min-height: 100px;'"
+        class="regen-container"
+      >
+        <div style="background-color: white; z-index: 1000" class="paid-header">
+          <div class="space-between">
+            <h2>Send Pitch</h2>
+            <p
+              style="margin-right: 12px; cursor: pointer"
+              @click="emailJournalistModalOpen = false"
+            >
+              X
+            </p>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 8px" class="paid-body">
+          <div>
+            <input
+              style="margin-bottom: 0"
+              class="primary-input"
+              v-model="targetEmail"
+              type="email"
+              placeholder="To"
+            />
+            <input class="primary-input" v-model="subject" type="text" placeholder="Subject" />
+            <textarea
+              class="primary-input"
+              v-model="pitchingTip"
+              name=""
+              id=""
+              cols="30"
+              rows="10"
+            ></textarea>
+
+            <!-- <p>
+              {{ pitchingTip }}
+            </p> -->
+          </div>
+        </div>
+
+        <div class="flex-end">
+          <button style="margin-right: 4px" class="primary-button">
+            <img
+              style="filter: invert(100%); margin-right: 8px"
+              src="@/assets/images/paper-plane-full.svg"
+              height="12px"
+              alt=""
+            />
+            Send
+          </button>
+        </div>
+      </div>
+    </Modal>
 
     <section class="container">
       <div style="padding-top: 88px" class="content-body">
@@ -537,8 +592,8 @@
       </div>
 
       <div style="margin-top: 0.5rem" v-else-if="summary" class="content-body">
-        <div style="padding-top: 32px" class="small-container">
-          <pre class="pre-text" v-html="summary"></pre>
+        <div @click="selectJournalist($event)" style="padding-top: 32px" class="small-container">
+          <pre class="pre-text" v-html="formattedResponse"></pre>
         </div>
       </div>
 
@@ -557,6 +612,7 @@ export default {
   },
   data() {
     return {
+      emailJournalistModalOpen: false,
       saveModalOpen: false,
       contentModalOpen: false,
       savingList: false,
@@ -568,6 +624,10 @@ export default {
       objective: null,
       specificFeedback: null,
       feedback: null,
+      targetEmail: '',
+      pitchingTip: '',
+      revisedPitch: '',
+      subject: '',
       feedbackText: 'Submit',
       journalText: 'Search',
       journalistModalOpen: false,
@@ -639,6 +699,63 @@ export default {
     this.getWritingStyles()
   },
   methods: {
+    async sendEmail() {
+      try {
+        Comms.api.sendPitch({
+          subject: this.subject,
+          body: this.revisedPitch,
+          recipients: [],
+        })
+      } catch (e) {
+        console.log(e)
+      } finally {
+      }
+    },
+    async rewritePitch() {
+      try {
+        Comms.api
+          .rewritePitch({
+            original: this.content,
+            tip: this.pitchingTip,
+          })
+          .then((res) => {
+            console.log(res)
+          })
+      } catch (e) {
+        console.log(e)
+      } finally {
+      }
+    },
+    selectJournalist(event) {
+      console.log(event.target.tagName)
+      if (event.target.tagName === 'SPAN') {
+        const text = event.target.innerText
+        const { name, email } = this.extractNameAndEmail(text)
+
+        this.targetEmail = email
+        this.pitchingTip = name
+        // this.modalData = { name, email }
+        this.emailJournalistModalOpen = true
+      }
+    },
+    extractNameAndEmail(text) {
+      // Split text by whitespace to extract name and email
+      const parts = text.trim().split(/\s+/)
+      let name = ''
+      let email = ''
+
+      parts.forEach((part) => {
+        if (part.includes('@')) {
+          email = part.replace(/[()<>]/g, '')
+        } else {
+          name += part + ' '
+        }
+      })
+
+      name = name.trim()
+
+      return { name, email }
+    },
     async discoverJournalists() {
       if (!this.isPaid && this.searchesUsed >= 10) {
         this.openPaidModal()
@@ -1151,6 +1268,39 @@ export default {
     },
   },
   computed: {
+    formattedResponse() {
+      if (this.summary) {
+        const regex = /([1-9][0-9]*)\.\s+Journalist:\s+([^\n]+)\nEmail:\s+([^ \n]+)/g
+
+        let formattedHtml = this.summary.replace(regex, (match, index, name, email) => {
+          name = name.trim()
+          console.log('name here: ', name)
+          console.log('email here: ', email)
+          return `<span class="clickable" data-name="${name}" data-email="${email}">${index}. Journalist: ${name} - Email: ${email}</span><br>`
+        })
+
+        console.log(formattedHtml)
+        return formattedHtml
+      } else {
+        return ''
+      }
+    },
+    // formattedResponse() {
+    //   if (this.summary) {
+    //     // Regular expression to match names and emails
+    //     const regex = /([1-9][0-9]*)\.\s+([^(<]+)\s+\(([^)]+)\)/g
+
+    //     // Replace each match with clickable span
+    //     let formattedHtml = this.summary.replace(regex, (match, index, name, email) => {
+    //       // Wrap name/email in clickable span
+    //       return `<span class="clickable" data-name="${name}" data-email="${email}">${match}</span>`
+    //     })
+    //     console.log(formattedHtml)
+    //     return formattedHtml
+    //   } else {
+    //     return
+    //   }
+    // },
     userWritingStyles() {
       if (this.personalStyles) {
         return this.allWritingStyles.filter((style) => style.user === this.user.id)
@@ -2085,7 +2235,7 @@ footer {
   width: 100%;
   margin: 1rem 0;
   border-radius: 6px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.135);
   font-family: $thin-font-family !important;
   background-color: white;
   font-size: 13px;
