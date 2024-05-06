@@ -1484,7 +1484,7 @@ class PitchViewSet(
                 break
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
-        return Response({"pitch": pitch})    
+        return Response({"pitch": pitch})
 
 
 class EmailAlertViewSet(
@@ -2010,3 +2010,12 @@ class DiscoveryViewSet(
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
 
         return Response(data=message)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="email",
+    )
+    def send_email(self, request, *args, **kwargs):
+        return
