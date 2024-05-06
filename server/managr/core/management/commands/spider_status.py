@@ -17,10 +17,10 @@ class Command(BaseCommand):
             for task in locked_tasks:
                 seconds_since_locked = dt - task.locked_at
                 if seconds_since_locked.seconds >= 1500:
-                    params = task.params()[0]
+                    # params = task.params()[0]
                     task.delete()
-                    url_list = ",".join(params)
-                    _run_spider_batch(url_list)
+                    # url_list = ",".join(params)
+                    # _run_spider_batch(url_list)
 
         if not len(tasks):
             sources = NewsSource.domain_list(True)
