@@ -427,6 +427,14 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    async sendEmail(data) {
+        try {
+            const res = await this.client.post('discovery/email/', data)
+            return res
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
     async getSuggestions() {
         try {
             const res = await this.client.post(CommsApi.ENDPOINT + 'suggestions/',)

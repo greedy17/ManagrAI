@@ -116,35 +116,65 @@
         </div>
       </div>
     </Modal>
-    <Modal v-if="emailJournalistModalOpen" class="paid-modal">
+    <Modal v-if="!emailJournalistModalOpen" class="paid-modal">
       <div
         :style="isMobile ? 'width: 95%; min-height: 100px' : 'width: 610px; min-height: 100px;'"
         class="regen-container"
       >
         <div style="background-color: white; z-index: 1000" class="paid-header">
           <div class="space-between">
-            <h2>Send Pitch</h2>
-            <p
-              style="margin-right: 12px; cursor: pointer"
-              @click="emailJournalistModalOpen = false"
+            <h2>Email Pitch</h2>
+
+            <div
+              style="
+                background-color: #eeeeee;
+                border-radius: 6px;
+                padding: 4px 8px 8px 8px;
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+              "
             >
-              X
-            </p>
+              <p style="font-weight: 900; font-size: 20px" @click="toggleEmailJournalistModal">x</p>
+            </div>
           </div>
         </div>
 
         <div style="margin-bottom: 8px" class="paid-body">
           <div style="position: relative">
+            <div style="position: relative">
+              <p
+                style="
+                  margin: 0;
+                  padding: 0;
+                  font-size: 18px;
+                  position: absolute;
+                  left: 0;
+                  top: 20px;
+                "
+              >
+                To:
+              </p>
+              <input
+                style="margin-bottom: 0; padding-left: 24px"
+                class="primary-input-underline"
+                v-model="targetEmail"
+                type="email"
+              />
+            </div>
+
             <input
-              style="margin-bottom: 0"
-              class="primary-input"
-              v-model="targetEmail"
-              type="email"
-              placeholder="To"
+              class="primary-input-underline"
+              v-model="subject"
+              type="text"
+              placeholder="Subject"
+              style="margin-bottom: 8px; padding-left: 0"
             />
-            <input class="primary-input" v-model="subject" type="text" placeholder="Subject" />
             <textarea
-              class="primary-input"
+              class="primary-input-underline"
+              style="resize: none"
               v-model="revisedPitch"
               name=""
               id=""
@@ -171,6 +201,7 @@
             :disabled="loadingPitch"
             style="margin-right: 4px"
             class="primary-button"
+            :class="{ opaque: loadingPitch || !subject || !targetEmail }"
           >
             <img
               style="filter: invert(100%); margin-right: 8px"
@@ -704,6 +735,15 @@ export default {
         this.setDiscovery(newVal)
       }
     },
+    // emailJournalistModalOpen(newVal, oldVal) {
+    //   console.log(newVal, oldVal)
+    //   if (newVal === true) {
+
+    //     this.rewritePitch()
+    //   } else {
+
+    //   }
+    // },
   },
   beforeDestroy() {
     this.$store.commit('setGeneratedContent', null)
@@ -712,12 +752,17 @@ export default {
     this.getWritingStyles()
   },
   methods: {
+    toggleEmailJournalistModal() {
+      if (!this.loadingPitch) {
+        this.emailJournalistModalOpen = !this.emailJournalistModalOpen
+      }
+    },
     async sendEmail() {
       try {
         Comms.api.sendEmail({
           subject: this.subject,
           body: this.revisedPitch,
-          recipients: this.recipients,
+          recipient: this.targetEmail,
         })
       } catch (e) {
         console.log(e)
@@ -725,7 +770,6 @@ export default {
       }
     },
     async rewritePitch() {
-      this.loadingPitch = true
       try {
         Comms.api
           .rewritePitch({
@@ -733,7 +777,9 @@ export default {
             tip: this.pitchingTip,
           })
           .then((res) => {
-            this.revisedPitch = res.pitch
+            this.revisedPitch = res.pitch.replace(/^Subject(?: Line)?:[\s\S]*?\n/, '')
+            this.subject = res.pitch.match(/^Subject(?: Line)?:(.*)\n/)[1]
+            console.log(this.subject)
           })
       } catch (e) {
         console.log(e)
@@ -742,14 +788,12 @@ export default {
       }
     },
     selectJournalist(event) {
-      console.log(event.target.tagName)
+      this.loadingPitch = true
       if (event.target.tagName === 'SPAN') {
         const text = event.target.innerText
         const { name, email } = this.extractNameAndEmail(text)
-
         this.targetEmail = email
         this.pitchingTip = name
-        this.loadingPitch = true
         this.emailJournalistModalOpen = true
         this.rewritePitch()
       }
@@ -1290,33 +1334,13 @@ export default {
 
         let formattedHtml = this.summary.replace(regex, (match, index, name, email) => {
           name = name.trim()
-          console.log('name here: ', name)
-          console.log('email here: ', email)
           return `<span class="clickable" data-name="${name}" data-email="${email}">${index}. Journalist: ${name} - Email: ${email}</span><br>`
         })
-
-        console.log(formattedHtml)
         return formattedHtml
       } else {
         return ''
       }
     },
-    // formattedResponse() {
-    //   if (this.summary) {
-    //     // Regular expression to match names and emails
-    //     const regex = /([1-9][0-9]*)\.\s+([^(<]+)\s+\(([^)]+)\)/g
-
-    //     // Replace each match with clickable span
-    //     let formattedHtml = this.summary.replace(regex, (match, index, name, email) => {
-    //       // Wrap name/email in clickable span
-    //       return `<span class="clickable" data-name="${name}" data-email="${email}">${match}</span>`
-    //     })
-    //     console.log(formattedHtml)
-    //     return formattedHtml
-    //   } else {
-    //     return
-    //   }
-    // },
     userWritingStyles() {
       if (this.personalStyles) {
         return this.allWritingStyles.filter((style) => style.user === this.user.id)
@@ -2025,6 +2049,10 @@ label {
   }
 }
 
+.clickable {
+  color: red !important;
+}
+
 .input-container {
   flex-wrap: nowrap;
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -2256,6 +2284,18 @@ footer {
   background-color: white;
   font-size: 13px;
   padding: 16px 20px 16px 18px;
+  outline: none;
+}
+
+.primary-input-underline {
+  width: 100%;
+  margin: 1rem 0;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.135);
+  font-family: $thin-font-family !important;
+  background-color: white;
+  font-size: 13px;
+  padding: 8px 20px 16px 18px;
   outline: none;
 }
 
@@ -3196,6 +3236,7 @@ button:disabled {
   align-items: center;
   border-radius: 6px;
   padding: 0;
+  z-index: 1000;
 }
 .create-report-container {
   width: 50%;

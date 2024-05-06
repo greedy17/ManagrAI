@@ -259,7 +259,7 @@ Instructions: {instructions}"""
 
 OPEN_AI_REWRITE_PTICH = (
     lambda original, tip: f"""
-Adjust and rewrite this pitch per the pitching tip, while maintaining the existing writing style.\n
+Adjust and rewrite this pitch per the pitching tip, while maintaining the existing writing style. This pitch will be sent via email so you must include a subject line\n
 pitch: {original}\n
 tip: {tip}"""
 )
