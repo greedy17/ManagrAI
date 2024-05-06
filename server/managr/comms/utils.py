@@ -5,7 +5,7 @@ import csv
 import fitz
 import tempfile
 import requests
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import reduce
 from managr.core.utils import Variable_Client
 from newspaper import Config
@@ -149,7 +149,7 @@ def boolean_search_to_query(search_string):
         # escaped_term = re.escape(term)
         # print(escaped_term)
         if idx == len(term_list) - 1:
-            current_query = Q(content__iregex=r"\b{}\b".format(term))
+            current_query = Q(content__iregex=r"{}".format(term))
             if len(current_q_objects):
                 if current_query is not None:
                     current_q_objects.append(current_query)
@@ -185,6 +185,7 @@ def boolean_search_to_query(search_string):
             is_negative = True
         else:
             current_query = Q(content__iregex=r"\m{}\M".format(term))
+
     return query
 
 
@@ -236,8 +237,8 @@ def merge_sort_dates(arr, key="publish_date"):
         merge_sort_dates(sub_array2)
         i = j = k = 0
         while i < len(sub_array1) and j < len(sub_array2):
-            parsed_value1 = parser.parse(sub_array1[i][key])
-            parsed_value2 = parser.parse(sub_array2[j][key])
+            parsed_value1 = parser.parse(sub_array1[i][key]).replace(tzinfo=timezone.utc)
+            parsed_value2 = parser.parse(sub_array2[j][key]).replace(tzinfo=timezone.utc)
             if parsed_value1 < parsed_value2:
                 arr[k] = sub_array1[i]
                 i += 1

@@ -387,4 +387,5 @@ EXCLUDE_DOMAINS = [
     "politicalwire.com",
     "freerepublic.com",
     "blogger.com",
+    "slashdot.org",
 ]
