@@ -2019,16 +2019,16 @@ class DiscoveryViewSet(
         url_path="email",
     )
     def send_email(self, request, *args, **kwargs):
-        print(request.data)
+        user = request.user
         subject = request.data.get("subject")
-        body = request.data.get("body").split("\n\n")
+        body = request.data.get("body").replace("[Your Name]", f"\n\n{user.full_name}").split("\n\n")
         recipient = request.data.get("recipient")
         context = {"body": body}
         try:
             send_html_email(
                 subject,
                 "core/email-templates/user-email.html",
-                request.user.email,
+                user.email,
                 [recipient],
                 context=context,
             )
