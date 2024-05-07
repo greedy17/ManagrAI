@@ -116,7 +116,7 @@
         </div>
       </div>
     </Modal>
-    <Modal v-if="!emailJournalistModalOpen" class="paid-modal">
+    <Modal v-if="emailJournalistModalOpen" class="paid-modal">
       <div
         :style="isMobile ? 'width: 95%; min-height: 100px' : 'width: 610px; min-height: 100px;'"
         class="regen-container"
@@ -144,6 +144,13 @@
 
         <div style="margin-bottom: 8px" class="paid-body">
           <div style="position: relative">
+            <div
+              class="row"
+              style="padding-bottom: 12px; border-bottom: 1px solid rgba(0, 0, 0, 0.135)"
+            >
+              <p style="margin: 0; padding: 0; font-size: 18px; margin-right: 8px">From:</p>
+              <p class="e-container" style="margin: 0">{{ user.email }}</p>
+            </div>
             <div style="position: relative">
               <p
                 style="
@@ -174,7 +181,7 @@
             />
             <textarea
               class="primary-input-underline"
-              style="resize: none"
+              style="resize: none; padding-left: 4px"
               v-model="revisedPitch"
               name=""
               id=""
@@ -1718,6 +1725,12 @@ label {
   @media only screen and (max-width: 600px) {
     font-size: 14px !important;
   }
+}
+
+.e-container {
+  background-color: $soft-gray;
+  border-radius: 6px;
+  padding: 4px;
 }
 
 .container {
