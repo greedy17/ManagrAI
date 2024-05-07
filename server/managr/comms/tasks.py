@@ -386,6 +386,7 @@ def _send_news_summary(news_alert_id):
     start_time = end_time - datetime.timedelta(hours=24)
     clips = alert.search.get_clips(boolean, end_time, start_time)["articles"]
     if len(clips):
+        clips = [article for article in clips if article["title"] != "[Removed]"]
         normalized_clips = normalize_newsapi_to_model(clips)
         descriptions = [clip["description"] for clip in normalized_clips]
         res = Search.get_summary(

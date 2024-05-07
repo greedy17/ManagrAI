@@ -212,7 +212,7 @@ class NewsSpider(scrapy.Spider):
                 if len(selector) and key != "content" and key != "publish_date":
                     selector = ",".join(selector)
                 if key == "publish_date":
-                    if isinstance(selector, list):
+                    if isinstance(selector, list) and len(selector):
                         selector = selector[0]
                     selector = extract_date_from_text(selector)
                 if key == "content":
