@@ -60,6 +60,7 @@ from managr.comms.utils import (
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
 from managr.comms.tasks import emit_get_meta_account_info
+from managr.api.emails import send_html_email
 
 logger = logging.getLogger("managr")
 
@@ -2018,4 +2019,20 @@ class DiscoveryViewSet(
         url_path="email",
     )
     def send_email(self, request, *args, **kwargs):
-        return
+        print(request.data)
+        subject = request.data.get("subject")
+        body = request.data.get("body").split("\n\n")
+        recipient = request.data.get("recipient")
+        context = {"body": body}
+        try:
+            send_html_email(
+                subject,
+                "core/email-templates/user-email.html",
+                request.user.email,
+                [recipient],
+                context=context,
+            )
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            logger.exception(str(e))
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
