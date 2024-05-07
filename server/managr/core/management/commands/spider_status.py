@@ -15,7 +15,8 @@ class Command(BaseCommand):
         if len(locked_tasks):
             dt = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
             for task in locked_tasks:
-                seconds_since_locked = dt - task.locked_at
+                task_locked = task.locked_at.replace(tzinfo=datetime.timezone.utc)
+                seconds_since_locked = dt - task_locked
                 if seconds_since_locked.seconds >= 1500:
                     # params = task.params()[0]
                     task.delete()
