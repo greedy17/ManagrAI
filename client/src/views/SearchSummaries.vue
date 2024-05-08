@@ -2269,7 +2269,11 @@ export default {
       summaryExamples: [
         {
           name: `Topic Summary`,
-          value: `Bring {BrandX} up to speed on what’s happening. Identify what aspects of the topic are most intriguing or concerning to the public. No salutations.`,
+          value: `Summarize the news about {BrandX} (in paragraph form, multiple short paragraphs for optimal readability). Focus on key research, advancements, regulatory changes, industry trends, and professional development. Focus only on US stories and disregard stock related news. `,
+        },
+        {
+          name: 'Audience Analysis',
+          value: `Summarize the news about {TOPICX} (in paragraph form, multiple short paragraphs for optimal readability). Identify what aspects of the topic are most intriguing or concerning to the public. Focus only on US stories and disregard stock related news.`,
         },
         {
           name: `PR Advice`,
@@ -2300,8 +2304,8 @@ export default {
           value: `Bring {BrandX} up to speed on what’s happening in terms of {TopicX}. Identify what aspects of the topic are most intriguing or concerning to the public. Identify which of their industry expects could be pitched to the media. No salutations.`,
         },
         {
-          name: `Media Analysis`,
-          value: `{Brand X} was mentioned in all of these news articles. As the VP of PR, please provide a media dashboard analyzing all the media coverage. Include the following Metrics: Overall Sentiment, Total Potential Reach (estimate a number), Top Stories, Top 10 Outlets (based on assumed circulation, include circulation number and author).`,
+          name: `Brand Analysis`,
+          value: `Summarize the news about {BrandX} (in paragraph form) - keep in mind, all these clips mention them in the article. Identify what aspects of the topic are most intriguing or concerning to the public. Then (separate paragraph), flag the top 3 stories (headline, source, author, and date mm/dd). End with a short line on overall brand sentiment.`,
         },
         {
           name: `Crisis Comms`,

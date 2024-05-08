@@ -2021,8 +2021,9 @@ class DiscoveryViewSet(
     def send_email(self, request, *args, **kwargs):
         user = request.user
         subject = request.data.get("subject")
-        body = request.data.get("body").replace("[Your Name]", f"\n\n{user.full_name}").split("\n\n")
+        body = request.data.get("body").replace("[Your Name]", f"\n\n{user.full_name}")
         recipient = request.data.get("recipient")
+        bcc = request.data.get("bcc")
         context = {"body": body}
         try:
             send_html_email(
@@ -2031,6 +2032,7 @@ class DiscoveryViewSet(
                 user.email,
                 [recipient],
                 context=context,
+                bcc_emails=bcc
             )
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Exception as e:

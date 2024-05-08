@@ -118,7 +118,7 @@
     </Modal>
     <Modal v-if="emailJournalistModalOpen" class="paid-modal">
       <div
-        :style="isMobile ? 'width: 95%; min-height: 100px' : 'width: 610px; min-height: 100px;'"
+        :style="isMobile ? 'width: 95%; min-height: 100px' : 'width: 610px; min-height: 100px; '"
         class="regen-container"
       >
         <div style="background-color: white; z-index: 1000" class="paid-header">
@@ -142,15 +142,42 @@
           </div>
         </div>
 
-        <div style="margin-bottom: 8px" class="paid-body">
+        <div style="margin-bottom: 8px; overflow: hidden; height: 400px" class="paid-body">
           <div style="position: relative">
-            <div
-              class="row"
-              style="padding-bottom: 12px; border-bottom: 1px solid rgba(0, 0, 0, 0.135)"
-            >
-              <p style="margin: 0; padding: 0; font-size: 18px; margin-right: 8px">From:</p>
-              <p class="e-container" style="margin: 0">{{ user.email }}</p>
+            <div class="rows">
+              <div
+                class="row"
+                style="
+                  padding-bottom: 12px;
+                  border-bottom: 1px solid rgba(0, 0, 0, 0.135);
+                  width: 50%;
+                "
+              >
+                <p style="margin: 0; padding: 0; font-size: 18px; margin-right: 8px">From:</p>
+
+                <p class="e-container" style="margin: 0">{{ user.email + ' via managr.ai' }}</p>
+              </div>
+
+              <div
+                class="row"
+                style="
+                  padding-bottom: 12px;
+                  border-bottom: 1px solid rgba(0, 0, 0, 0.135);
+                  width: 50%;
+                "
+              >
+                <p style="margin: 0; padding: 0; font-size: 18px; margin-right: 8px">Bcc:</p>
+                <p class="b-container" style="margin: 0">{{ bccEmail }}</p>
+                <!-- <input
+                  style="margin-bottom: 0; padding-left: 34px"
+                  class="primary-input-underline"
+                  v-model="bccEmail"
+                  type="email"
+                  :disabled="loadingPitch || sendingEmail"
+                /> -->
+              </div>
             </div>
+
             <div style="position: relative">
               <p
                 style="
@@ -165,58 +192,83 @@
                 To:
               </p>
               <input
-                style="margin-bottom: 0; padding-left: 24px"
+                style="margin-bottom: 0; padding-left: 26px"
                 class="primary-input-underline"
                 v-model="targetEmail"
                 type="email"
+                :disabled="loadingPitch || sendingEmail"
               />
             </div>
 
-            <input
-              class="primary-input-underline"
-              v-model="subject"
-              type="text"
-              placeholder="Subject"
-              style="margin-bottom: 8px; padding-left: 0"
-            />
-            <textarea
-              class="primary-input-underline"
-              style="resize: none; padding-left: 4px"
-              v-model="revisedPitch"
-              name=""
-              id=""
-              cols="30"
-              rows="10"
-              :disabled="loadingPitch"
-            ></textarea>
+            <div style="position: relative; margin-bottom: 8px">
+              <p
+                style="
+                  margin: 0;
+                  padding: 0;
+                  font-size: 18px;
+                  position: absolute;
+                  left: 0;
+                  top: 20px;
+                "
+              >
+                Subject:
+              </p>
+              <input
+                class="primary-input-underline"
+                v-model="subject"
+                type="text"
+                placeholder=""
+                style="padding-left: 64px"
+                :disabled="loadingPitch || sendingEmail"
+              />
+            </div>
 
-            <div style="margin-left: 8px" v-if="loadingPitch" class="loading-small-absolute">
+            <quill-editor
+              :disabled="loadingPitch || sendingEmail"
+              ref="quillEditor"
+              :options="{
+                modules: {
+                  toolbar: toolbarOptions,
+                  clipboard: {
+                    matchVisual: false,
+                  },
+                },
+                theme: 'snow',
+                placeholder: '',
+              }"
+              v-model="revisedPitch"
+              class="text-editor"
+            />
+
+            <div v-if="loadingPitch" style="margin-left: 12px" class="loading-small-absolute">
               <div class="dot"></div>
               <div class="dot"></div>
               <div class="dot"></div>
             </div>
-
-            <!-- <p>
-              {{ pitchingTip }}
-            </p> -->
           </div>
         </div>
 
-        <div class="flex-end">
+        <div style="margin-top: -16px" class="flex-end">
           <button
             @click="sendEmail"
-            :disabled="loadingPitch"
+            :disabled="loadingPitch || !subject || !targetEmail || sendingEmail"
             style="margin-right: 4px"
             class="primary-button"
             :class="{ opaque: loadingPitch || !subject || !targetEmail }"
           >
             <img
+              v-if="!loadingPitch && subject && targetEmail"
               style="filter: invert(100%); margin-right: 8px"
               src="@/assets/images/paper-plane-full.svg"
               height="12px"
               alt=""
             />
-            Send
+            <div v-if="sendingEmail" style="margin: 0 4px" class="loading-small">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+            <span v-else> Send</span>
           </button>
         </div>
       </div>
@@ -625,9 +677,6 @@
         class="content-body centered-content"
       >
         <div class="centered-col">
-          <!-- <div style="cursor: text" class="image-container white-bg extra-padding">
-            <img src="@/assets/images/comment.svg" height="32px" alt="" />
-          </div> -->
           <p>List of journalists + details</p>
         </div>
       </div>
@@ -653,15 +702,33 @@
 </template>
 <script>
 import { Comms } from '@/services/comms'
+import { quillEditor } from 'vue-quill-editor'
 import User from '@/services/users/'
+import 'quill/dist/quill.core.css'
+import 'quill/dist/quill.snow.css'
+import 'quill/dist/quill.bubble.css'
 
 export default {
   name: 'Discover',
   components: {
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
+    quillEditor,
   },
   data() {
     return {
+      toolbarOptions: [
+        ['bold', 'italic', 'underline', 'strike'], // toggled buttons
+        ['link', 'image'],
+
+        [{ header: 1 }, { header: 2 }], // custom button values
+        [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
+
+        [{ size: ['small', false, 'large', 'huge'] }], // custom dropdown
+
+        ['clean'], // remove formatting button
+      ],
+      bccEmail: '',
+      sendingEmail: false,
       loadingPitch: false,
       emailJournalistModalOpen: false,
       saveModalOpen: false,
@@ -742,41 +809,57 @@ export default {
         this.setDiscovery(newVal)
       }
     },
-    // emailJournalistModalOpen(newVal, oldVal) {
-    //   console.log(newVal, oldVal)
-    //   if (newVal === true) {
-
-    //     this.rewritePitch()
-    //   } else {
-
-    //   }
-    // },
   },
   beforeDestroy() {
     this.$store.commit('setGeneratedContent', null)
   },
   created() {
     this.getWritingStyles()
+    this.bccEmail = this.user.email
   },
   methods: {
     toggleEmailJournalistModal() {
-      if (!this.loadingPitch) {
+      if (!this.loadingPitch && !this.sendingEmail) {
         this.emailJournalistModalOpen = !this.emailJournalistModalOpen
       }
     },
     async sendEmail() {
+      this.sendingEmail = true
+
       try {
-        Comms.api.sendEmail({
-          subject: this.subject,
-          body: this.revisedPitch,
-          recipient: this.targetEmail,
-        })
+        Comms.api
+          .sendEmail({
+            subject: this.subject,
+            body: this.revisedPitch,
+            recipient: this.targetEmail,
+            bcc: [this.bccEmail],
+          })
+          .then((response) => {
+            this.emailJournalistModalOpen = false
+            this.$toast('Email sent', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
+            this.sendingEmail = false
+          })
       } catch (e) {
         console.log(e)
+        this.$toast('Error sending email, try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.sendingEmail = false
       } finally {
       }
     },
     async rewritePitch() {
+      this.loadingPitch = true
       try {
         Comms.api
           .rewritePitch({
@@ -784,18 +867,18 @@ export default {
             tip: this.pitchingTip,
           })
           .then((res) => {
-            this.revisedPitch = res.pitch.replace(/^Subject(?: Line)?:[\s\S]*?\n/, '')
+            let html = res.pitch.replace(/^Subject(?: Line)?:[\s\S]*?\n/, '')
+            let cleanText = this.$sanitize(html)
+            this.revisedPitch = cleanText
             this.subject = res.pitch.match(/^Subject(?: Line)?:(.*)\n/)[1]
-            console.log(this.subject)
+            this.loadingPitch = false
           })
       } catch (e) {
-        console.log(e)
-      } finally {
-        this.loadingPitch = false
+        console.error(e)
       }
     },
+
     selectJournalist(event) {
-      this.loadingPitch = true
       if (event.target.tagName === 'SPAN') {
         const text = event.target.innerText
         const { name, email } = this.extractNameAndEmail(text)
@@ -1337,11 +1420,11 @@ export default {
   computed: {
     formattedResponse() {
       if (this.summary) {
-        const regex = /([1-9][0-9]*)\.\s+Journalist:\s+([^\n]+)\nEmail:\s+([^ \n]+)/g
+        const regex = /([1-9][0-9]*)\.\s+Journalist:\s+([^\n]+)\nEmail:\s+/g
 
         let formattedHtml = this.summary.replace(regex, (match, index, name, email) => {
           name = name.trim()
-          return `<span class="clickable" data-name="${name}" data-email="${email}">${index}. Journalist: ${name} - Email: ${email}</span><br>`
+          return `<span class="clickable">${index}. <strong> Journalist: ${name} - Email: ${email}</strong></span>`
         })
         return formattedHtml
       } else {
@@ -1546,6 +1629,23 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+::v-deep .pre-text span {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.128);
+  padding-bottom: 2px;
+  cursor: pointer;
+}
+
+::v-deep .ql-toolbar.ql-snow {
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+
+::v-deep .ql-container {
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  padding: 8px 2px;
+}
+
 .green-button {
   @include dark-blue-button();
   background-color: $dark-green;
@@ -1728,9 +1828,25 @@ label {
 }
 
 .e-container {
-  background-color: $soft-gray;
+  background-color: $dark-black-blue;
+  color: white;
   border-radius: 6px;
   padding: 4px;
+  margin: 0;
+  max-width: 240px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.b-container {
+  background-color: $white-blue;
+  border-radius: 6px;
+  padding: 4px 6px;
+  margin: 0;
+  max-width: 240px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .container {
@@ -1890,21 +2006,6 @@ label {
 //   }
 // }
 
-.sub-text {
-  color: $light-gray-blue;
-  margin: 8px 0;
-  font-size: 14px;
-  font-family: $thin-font-family;
-
-  span {
-    font-weight: 200;
-    word-wrap: break-word;
-  }
-  // @media only screen and (max-width: 600px) {
-  //   text-align: center;
-  // }
-}
-
 .title-bar {
   display: flex;
   align-items: center;
@@ -1964,15 +2065,13 @@ label {
 }
 
 .pre-text {
-  // background-color: $white-blue;
   padding: 40px 0 88px 0;
   border-radius: 4px;
-  // padding: 16px;
   margin: 0;
   color: $base-gray;
   font-family: $thin-font-family;
   font-size: 16px;
-  line-height: 32px;
+  // line-height: 32px;
   word-wrap: break-word;
   white-space: pre-wrap;
 }
@@ -2060,10 +2159,6 @@ label {
   img {
     filter: invert(40%);
   }
-}
-
-.clickable {
-  color: red !important;
 }
 
 .input-container {
@@ -3244,13 +3339,20 @@ button:disabled {
 }
 .loading-small-absolute {
   position: absolute;
-  bottom: 32px;
+  bottom: -32px;
   display: flex;
   align-items: center;
   border-radius: 6px;
   padding: 0;
   z-index: 1000;
 }
+
+.text-editor {
+  height: 160px;
+  width: 100%;
+  border-radius: 8px;
+}
+
 .create-report-container {
   width: 50%;
   padding: 0 32px;

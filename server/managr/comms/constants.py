@@ -223,7 +223,7 @@ def OPEN_AI_PITCH(date, type, instructions, style=False):
     if not style:
         style = "Begin with a precise introduction, without informal salutations. Be clear, concise, and informative, avoiding metaphors. Offer coherent data without persuasion. Aim for depth, not sensationalism and avoid commercial bias."
     body = f"""Today's date is {date}. You are tasked with generating content. You must follow the instructions below.
-    1. Here is what you are asked to generate: {type}.
+    1. Here is what you are asked to generate. Strictly adhere to any specified word count: {type}.
     2. If provided, generate content must be based on this information: {instructions}.
     3. You must Mirror this writing style {style}.
     4. Lastly, this content must not exceed 2000 characters.
@@ -259,7 +259,7 @@ Instructions: {instructions}"""
 
 OPEN_AI_REWRITE_PTICH = (
     lambda original, tip: f"""
-Adjust and rewrite this pitch per the pitching tip, while maintaining the existing writing style. This pitch will be sent via email so you must include a subject line\n
+Adjust and rewrite this pitch per the pitching tip, while maintaining the existing writing style. This pitch will be sent via email so you must include a short intriguing subject line; no more than 6 words.\n
 pitch: {original}\n
 tip: {tip}"""
 )
@@ -274,14 +274,6 @@ OPEN_AI_REGENERATE_ARTICLE = (
     """
 )
 
-OPEN_AI_FIND_JOURNALISTS = (
-    lambda type, beat, location, content: f"""List up to 10 real journalists from relevant publications, along with pitching tips, who would be interested in writing about the content provided. Follow these instructions carefully:
-    - Publication Type: The journalists must be from news outlets of this type: {type}.
-    - Journalistic Beat: The journalist must cover this specific beat: {beat}.
-    - Location: The journalists must be based in or primarily cover {location}.
-    - Real Journalists Requirement: It is essential that the journalists listed are actual, currently active professionals in the field.
-    Content for the Pitch: {content} """
-)
 OPEN_AI_FIND_JOURNALISTS = (
     lambda type, beat, location, content: f"""List up to 10 real journalists (or social media influencers) from relevant publications, along with pitching tips, who would be interested in writing about the content provided. User will specify whether they want journalist or influencers. Follow these instructions carefully:
     - Publication Type: The journalists or influencers must be from news outlets (or social platform) of this type: {type}.
