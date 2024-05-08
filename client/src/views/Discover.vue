@@ -836,7 +836,7 @@ export default {
           })
           .then((response) => {
             this.emailJournalistModalOpen = false
-            this.$toast('Email sent', {
+            this.$toast('Pitch sent', {
               timeout: 2000,
               position: 'top-left',
               type: 'success',
