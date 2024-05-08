@@ -426,7 +426,6 @@ def _send_news_summary(news_alert_id):
 
 @background()
 def _share_client_summary(summary, clips, user_email):
-    print("here")
     for clip in clips:
         if clip["author"] is None:
             clip["author"] = "N/A"

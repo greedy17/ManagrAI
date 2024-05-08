@@ -772,7 +772,7 @@
           <p class="sub-text">{{ pitch.split(' ').length }} words</p>
 
           <div class="rows">
-            <div
+            <!-- <div
               @click="toggleFeedbackModal"
               class="wrapper icon-button white-bg"
               :class="{ 'bluee-bg': feedback }"
@@ -788,9 +788,9 @@
               <div class="tooltip-below">
                 {{ !feedback ? 'Optimize Content' : 'View Feedback' }}
               </div>
-            </div>
+            </div> -->
 
-            <div
+            <!-- <div
               @click="toggleJournalistModal"
               class="wrapper icon-button white-bg"
               :class="{ 'bluee-bg': journalists }"
@@ -806,7 +806,7 @@
               <div class="tooltip-below">
                 {{ !journalists ? 'Discover Voices' : 'View Journalists' }}
               </div>
-            </div>
+            </div> -->
 
             <div
               style="margin-right: 0.5rem"
@@ -1047,7 +1047,7 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
       contentExamples: [
         {
           name: `Media Pitch`,
-          value: `Create a 200 word media pitch on behalf of {BrandX}`,
+          value: `Craft a short, 50 word media pitch for {BrandX}.`,
         },
         {
           name: `Blog Post`,

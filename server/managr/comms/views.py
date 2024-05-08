@@ -60,6 +60,7 @@ from managr.comms.utils import (
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
 from managr.comms.tasks import emit_get_meta_account_info
+from managr.api.emails import send_html_email
 
 logger = logging.getLogger("managr")
 
@@ -1419,6 +1420,73 @@ class PitchViewSet(
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
         return Response({"feedback": feedback})
 
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="rewrite",
+    )
+    def rewrite_pitch(self, request, *args, **kwargs):
+        user = request.user
+        original = request.data.get("original")
+        tip = request.data.get("tip")
+        has_error = False
+        attempts = 1
+        token_amount = 1000
+        timeout = 60.0
+
+        while True:
+            try:
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.OPEN_AI_REWRITE_PTICH(original, tip)
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    token_amount=token_amount,
+                    top_p=0.1,
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                r = open_ai_exceptions._handle_response(r)
+                pitch = r.get("choices")[0].get("message").get("content")
+                user.add_meta_data("pitches")
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount <= 2000:
+                    has_error = True
+
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 500
+                    continue
+            except httpx.ReadTimeout as e:
+                print(e)
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+        if has_error:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
+        return Response({"pitch": pitch})
+
 
 class EmailAlertViewSet(
     viewsets.GenericViewSet,
@@ -1943,3 +2011,30 @@ class DiscoveryViewSet(
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
 
         return Response(data=message)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="email",
+    )
+    def send_email(self, request, *args, **kwargs):
+        user = request.user
+        subject = request.data.get("subject")
+        body = request.data.get("body").replace("[Your Name]", f"\n\n{user.full_name}")
+        recipient = request.data.get("recipient")
+        bcc = request.data.get("bcc")
+        context = {"body": body}
+        try:
+            send_html_email(
+                subject,
+                "core/email-templates/user-email.html",
+                user.email,
+                [recipient],
+                context=context,
+                bcc_emails=bcc
+            )
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            logger.exception(str(e))
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})

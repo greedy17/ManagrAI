@@ -23,7 +23,7 @@
                 <td style="padding: 30px;">
                     <div style="border-bottom: 1px solid #DDDDDD; margin-bottom:16px; padding-bottom:16px;">
                         <pre
-                            style="color: #2f4656; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px; word-wrap: break-word; white-space: pre-wrap; padding: 16px; background-color:#e9f3fa;">{{summary}}</pre>
+                            style="color: #2f4656; font-family: Arial, sans-serif; font-size: 16px; line-height: 24px; word-wrap: break-word; white-space: pre-wrap; padding: 16px; background-color:#e9f3fa;">{{summary}}</pre>
                     </div>
                     {% for value in clips %}
                     <div style="border-bottom: 1px solid #DDDDDD; padding-bottom: 15px; margin-bottom: 15px;">
@@ -37,8 +37,8 @@
                                         {{value.description }}</p>
                                 </td>
                                 <td>
-                                    <img src={{value.image_url}}
-                                        style="height: 120px; width: 120px; margin-left: 16px; margin-top: 16px; object-fit: cover; cursor: pointer;">
+                                    <img src="{{value.image_url}}" alt="{{value.title}}" width="120" height="120"
+                                        style="display: block; border: none; height: 120px; width: 120px; margin-left: 16px; margin-top: 16px; object-fit: cover; cursor: pointer;">
                                 </td>
                             </tr>
                         </table>

@@ -83,6 +83,15 @@ class CommsApi extends ModelAPI {
         }
     }
 
+    async rewritePitch(data) {
+        try {
+            const res = await this.client.post('pitches/rewrite/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
     async savePitch(data) {
         try {
             const res = await this.client.post('pitches/', data)
@@ -414,6 +423,14 @@ class CommsApi extends ModelAPI {
         try {
             const res = await this.client.post('discovery/run/', data)
             return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async sendEmail(data) {
+        try {
+            const res = await this.client.post('discovery/email/', data)
+            return res
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
