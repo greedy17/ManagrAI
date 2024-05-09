@@ -2269,15 +2269,19 @@ export default {
       summaryExamples: [
         {
           name: `Topic Summary`,
-          value: `Summarize the news about {BrandX} (in paragraph form, multiple short paragraphs for optimal readability). Focus on key research, advancements, regulatory changes, industry trends, and professional development. Focus only on US stories and disregard stock related news. `,
+          value: `Summarize the news about {TopicX} (in paragraph form, multiple short paragraphs for optimal readability). Focus on key research, advancements, regulatory changes, industry trends, and professional development. Focus only on US stories and disregard stock related news. `,
         },
         {
           name: 'Audience Analysis',
-          value: `Summarize the news about {TOPICX} (in paragraph form, multiple short paragraphs for optimal readability). Identify what aspects of the topic are most intriguing or concerning to the public. Focus only on US stories and disregard stock related news.`,
+          value: `Summarize the news about {TopicX} (in paragraph form, multiple short paragraphs for optimal readability). Identify what aspects of the topic are most intriguing or concerning to the public. Focus only on US stories and disregard stock related news.`,
         },
         {
           name: `PR Advice`,
           value: `As {BrandX}'s PR agency, provide creative suggestions on how they should respond to or leverage this news`,
+        },
+        {
+          name: `Enhance Press Release`,
+          value: `Update the provided press release by integrating relevant, recent news to make it more timely and contextual. Focus on connecting the company's announcements with current industry trends, significant events, and the latest data and statistics. Ensure the updated release reflects the company's proactive role in the industry. Flag the new content. Here the release: {PressReleaseSnippet}`,
         },
         {
           name: `Newsjacking Ideas`,
@@ -2327,14 +2331,14 @@ export default {
           name: `SEO Suggestions`,
           value: `Provide top 10 SEO suggestions relating to this topic for {BrandX}`,
         },
-        {
-          name: `Sales Meeting`,
-          value: `I am a sales rep, you are the VP of Sales, bring me up to speed on whats happening in the industry and how I can leverage it to sell my product: {ProductX} -- provide super specific, tangible, and creative advice.`,
-        },
-        {
-          name: `Email Roundup`,
-          value: `Craft an email roundup for {BrandX} leadership team bringing them up to speed on the most important, relevant, impactful news. Offer advice at the end. Be short, direct, to the point. No fluff.`,
-        },
+        // {
+        //   name: `Sales Meeting`,
+        //   value: `I am a sales rep, you are the VP of Sales, bring me up to speed on whats happening in the industry and how I can leverage it to sell my product: {ProductX} -- provide super specific, tangible, and creative advice.`,
+        // },
+        // {
+        //   name: `Email Roundup`,
+        //   value: `Craft an email roundup for {BrandX} leadership team bringing them up to speed on the most important, relevant, impactful news. Offer advice at the end. Be short, direct, to the point. No fluff.`,
+        // },
       ],
       articleGenerateOptions: [
         { name: 'Press Release', value: `Press Release` },

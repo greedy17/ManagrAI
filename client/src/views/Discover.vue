@@ -229,9 +229,6 @@
               :options="{
                 modules: {
                   toolbar: toolbarOptions,
-                  clipboard: {
-                    matchVisual: false,
-                  },
                 },
                 theme: 'snow',
                 placeholder: '',
@@ -241,6 +238,7 @@
             />
 
             <div v-if="loadingPitch" style="margin-left: 12px" class="loading-small-absolute">
+              <p>Updating content</p>
               <div class="dot"></div>
               <div class="dot"></div>
               <div class="dot"></div>
@@ -249,6 +247,7 @@
         </div>
 
         <div style="margin-top: -16px" class="flex-end">
+          <!-- <button @click="test">test formatting</button> -->
           <button
             @click="sendEmail"
             :disabled="loadingPitch || !subject || !targetEmail || sendingEmail"
@@ -728,6 +727,15 @@ export default {
         ['clean'], // remove formatting button
       ],
       bccEmail: '',
+      formatTest: `hello world,
+      
+      this should enter the quill editor in the same format it was written
+      
+      this line is spaced
+      
+      and this one is as well
+      
+      `,
       sendingEmail: false,
       loadingPitch: false,
       emailJournalistModalOpen: false,
@@ -818,6 +826,10 @@ export default {
     this.bccEmail = this.user.email
   },
   methods: {
+    test() {
+      this.revisedPitch = this.formatTest
+      console.log(this.formatTest)
+    },
     toggleEmailJournalistModal() {
       if (!this.loadingPitch && !this.sendingEmail) {
         this.emailJournalistModalOpen = !this.emailJournalistModalOpen
@@ -825,7 +837,6 @@ export default {
     },
     async sendEmail() {
       this.sendingEmail = true
-
       try {
         Comms.api
           .sendEmail({
@@ -843,6 +854,7 @@ export default {
               toastClassName: 'custom',
               bodyClassName: ['custom'],
             })
+            this.revisedPitch = ''
             this.sendingEmail = false
           })
       } catch (e) {
@@ -1114,9 +1126,6 @@ export default {
       } else {
         return
       }
-    },
-    test() {
-      console.log(this.userWritingStyles)
     },
     setIndex(i) {
       this.hoverIndex = i
@@ -3339,12 +3348,19 @@ button:disabled {
 }
 .loading-small-absolute {
   position: absolute;
-  bottom: -32px;
+  top: 80%;
+  left: 30%;
   display: flex;
   align-items: center;
   border-radius: 6px;
   padding: 0;
   z-index: 1000;
+
+  p {
+    font-size: 16px;
+    margin: 0 8px 4px 0;
+    padding: 0;
+  }
 }
 
 .text-editor {
