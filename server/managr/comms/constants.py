@@ -222,11 +222,11 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
 def OPEN_AI_PITCH(date, type, instructions, style=False):
     if not style:
         style = "Begin with a precise introduction, without informal salutations. Be clear, concise, and informative, avoiding metaphors. Offer coherent data without persuasion. Aim for depth, not sensationalism and avoid commercial bias."
-    body = f"""Today's date is {date}. You are tasked with generating content. You must follow the instructions below.
-    1. Here is what you are asked to generate. Strictly adhere to any specified word count: {type}.
+    body = f"""Today's date is {date}. You are tasked with generating content. You must follow the instructions below. Strictly adhere to any specified word count in the instructions:
+    1. Here are the instructions: {type}.
     2. If provided, generate content must be based on this information: {instructions}.
-    3. You must Mirror this writing style {style}.
-    4. Lastly, this content must not exceed 2000 characters.
+    3. You must Mirror this writing style: {style}.
+    4. Again, please adhere to the specified word count.
     """
     return body
 

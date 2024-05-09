@@ -1050,6 +1050,10 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
           value: `Craft a short, 50 word media pitch for {BrandX}.`,
         },
         {
+          name: `Press Release`,
+          value: `Create a press release from the provided data. Emphasize key statistics and link them to industry trends. Use an attention-grabbing headline, crucial details early on, and compelling quotes. Aim for an engaging narrative that appeals to journalists.`,
+        },
+        {
           name: `Blog Post`,
           value: `Create an informative blog post for {BrandX}`,
         },
