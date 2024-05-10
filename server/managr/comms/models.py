@@ -918,7 +918,6 @@ class Journalist(TimeStampModel):
                 url,
             )
             r = r.json()
-            print(r)
             status = r["data"]["status"]
         is_valid = True if status == "valid" else False
         return is_valid
