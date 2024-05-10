@@ -25,7 +25,7 @@ from dateutil import parser
 from django.shortcuts import redirect
 from rest_framework.decorators import action
 from . import constants as comms_consts
-from .models import Search, TwitterAccount, Pitch, Process, InstagramAccount, Discovery
+from .models import Search, TwitterAccount, Pitch, Process, InstagramAccount, Discovery, Journalist
 from .models import Article as InternalArticle
 from .models import WritingStyle, EmailAlert
 from managr.core.models import User
@@ -2032,9 +2032,24 @@ class DiscoveryViewSet(
                 user.email,
                 [recipient],
                 context=context,
-                bcc_emails=bcc
+                bcc_emails=bcc,
             )
             return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            logger.exception(str(e))
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="verify",
+    )
+    def verify_email(self, request, *args, **kwargs):
+        email = request.data.get("email")
+        try:
+            is_valid = Journalist.verify_email(email)
+            return Response(status=status.HTTP_200_OK, data={"is_valid": is_valid})
         except Exception as e:
             logger.exception(str(e))
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
