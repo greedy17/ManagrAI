@@ -1660,6 +1660,23 @@ export default {
   padding: 8px 2px;
 }
 
+.abs-img {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+
+  p {
+    padding: 0;
+    margin: 0 4px 0 0;
+  }
+}
+
+.red-bg {
+  background-color: $coral;
+  padding: 4px;
+  border-radius: 4px;
+}
+
 .green-button {
   @include dark-blue-button();
   background-color: $dark-green;
