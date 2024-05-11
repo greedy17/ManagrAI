@@ -2276,8 +2276,8 @@ export default {
           value: `Summarize the news about {TopicX} (in paragraph form, multiple short paragraphs for optimal readability). Identify what aspects of the topic are most intriguing or concerning to the public. Focus only on US stories and disregard stock related news.`,
         },
         {
-          name: `PR Advice`,
-          value: `As {BrandX}'s PR agency, provide creative suggestions on how they should respond to or leverage this news`,
+          name: `Create Press Release`,
+          value: `Generate a press release for {BrandX} based on recent news on {TopicX}. Extract key trends and stats, link activities to the news, and include an expert quote. Ensure the content aligns with the mission for maximum engagement. `,
         },
         {
           name: `Enhance Press Release`,
@@ -2288,11 +2288,7 @@ export default {
           value: `Provide creative newsjacking ideas for {BrandX} based on this coverage`,
         },
         {
-          name: `Media Pitching`,
-          value: `Summarize the news for {BrandX}. Provide creative pitching angles. List 5 journalists (from top pubs, include pitching tips) I can pitch`,
-        },
-        {
-          name: `Find Journalists`,
+          name: `List Journalists`,
           value: `List 5 journalists (from top pubs, include pitching tips) I can pitch on behalf of {BrandX}`,
         },
         {

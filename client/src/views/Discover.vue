@@ -225,7 +225,7 @@
 
             <quill-editor
               :disabled="loadingPitch || sendingEmail"
-              ref="quillEditor"
+              ref="quill"
               :options="{
                 modules: {
                   toolbar: toolbarOptions,
@@ -233,7 +233,7 @@
                 theme: 'snow',
                 placeholder: '',
               }"
-              v-model="revisedPitch"
+              v-model:content="revisedPitch"
               class="text-editor"
             />
 
@@ -247,7 +247,6 @@
         </div>
 
         <div style="margin-top: -16px" class="flex-end">
-          <!-- <button @click="test">test formatting</button> -->
           <button
             @click="sendEmail"
             :disabled="loadingPitch || !subject || !targetEmail || sendingEmail"
@@ -827,8 +826,10 @@ export default {
   },
   methods: {
     test() {
-      this.revisedPitch = this.formatTest
-      console.log(this.formatTest)
+      const quill = this.$refs.quill.quill
+      quill.clipboard.dangerouslyPasteHTML()
+      // this.revisedPitch = this.formatTest
+      // console.log(this.formatTest)
     },
     toggleEmailJournalistModal() {
       if (!this.loadingPitch && !this.sendingEmail) {
@@ -873,23 +874,21 @@ export default {
     async rewritePitch() {
       this.loadingPitch = true
       try {
-        Comms.api
-          .rewritePitch({
-            original: this.content,
-            tip: this.pitchingTip,
-          })
-          .then((res) => {
-            let html = res.pitch.replace(/^Subject(?: Line)?:[\s\S]*?\n/, '')
-            let cleanText = this.$sanitize(html)
-            this.revisedPitch = cleanText
-            this.subject = res.pitch.match(/^Subject(?: Line)?:(.*)\n/)[1]
-            this.loadingPitch = false
-          })
+        const res = await Comms.api.rewritePitch({
+          original: this.content,
+          tip: this.pitchingTip,
+        })
+        const body = res.pitch.replace(/^Subject(?: Line)?:[\s\S]*?\n/, '')
+        const html = `<p>${body.replace(/\n/g, '</p><p>')}</p>`
+        const quill = this.$refs.quill.quill
+        quill.clipboard.dangerouslyPasteHTML(html)
+        this.subject = res.pitch.match(/^Subject(?: Line)?:(.*)\n/)[1].trim()
       } catch (e) {
         console.error(e)
+      } finally {
+        this.loadingPitch = false
       }
     },
-
     selectJournalist(event) {
       if (event.target.tagName === 'SPAN') {
         const text = event.target.innerText
@@ -1638,6 +1637,12 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+::v-deep .ql-snow.ql-toolbar button {
+  background: $soft-gray;
+  border-radius: 4px;
+  margin-right: 4px;
+}
+
 ::v-deep .pre-text span {
   border-bottom: 1px solid rgba(0, 0, 0, 0.128);
   padding-bottom: 2px;
@@ -1653,6 +1658,23 @@ export default {
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
   padding: 8px 2px;
+}
+
+.abs-img {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+
+  p {
+    padding: 0;
+    margin: 0 4px 0 0;
+  }
+}
+
+.red-bg {
+  background-color: $coral;
+  padding: 4px;
+  border-radius: 4px;
 }
 
 .green-button {
