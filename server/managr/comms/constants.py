@@ -261,7 +261,7 @@ Instructions: {instructions}"""
 
 OPEN_AI_REWRITE_PTICH = (
     lambda original, tip: f"""
-Adjust and rewrite this pitch per the pitching tip, while maintaining the existing writing style. This pitch will be sent via email so you must include a short intriguing subject line; no more than 6 words.\n
+Adjust and rewrite this pitch per the pitching tip, while maintaining the existing writing style. This pitch will be sent via email so you must include a short intriguing subject line; no more than 6 words. Do not bold any text.\n
 pitch: {original}\n
 tip: {tip}"""
 )
