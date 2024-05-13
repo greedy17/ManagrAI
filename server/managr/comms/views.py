@@ -2029,7 +2029,7 @@ class DiscoveryViewSet(
             send_html_email(
                 subject,
                 "core/email-templates/user-email.html",
-                user.email,
+                f"{user.full_name} <{user.email}>",
                 [recipient],
                 context=context,
                 bcc_emails=bcc,

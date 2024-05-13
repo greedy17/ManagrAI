@@ -23,7 +23,7 @@ class Command(BaseCommand):
                     # url_list = ",".join(params)
                     # _run_spider_batch(url_list)
 
-        if not len(tasks):
+        if len(tasks) == 0:
             sources = NewsSource.domain_list(True)
             if len(sources):
                 for i in range(0, len(sources), int(batch_size)):
