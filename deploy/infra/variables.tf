@@ -204,7 +204,7 @@ variable "scheduled_tasks" {
     {
       name       = "batchspider"
       command    = "batch_spiders"
-      cron       = "cron(0 3 * * ? *)"
+      cron       = "cron(0 1 * * ? *)"
       task_count = 1
     },
     {
@@ -216,7 +216,7 @@ variable "scheduled_tasks" {
     {
       name       = "spiderstatus"
       command    = "spider_status"
-      cron       = "cron(*/30 2-8 * * ? *)"
+      cron       = "cron(*/30 1-8 * * ? *)"
       task_count = 1
     },
   ]

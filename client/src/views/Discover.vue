@@ -126,6 +126,7 @@
             <h2>Email Pitch</h2>
 
             <div
+              @click="toggleEmailJournalistModal"
               style="
                 background-color: #eeeeee;
                 border-radius: 6px;
@@ -137,7 +138,7 @@
                 cursor: pointer;
               "
             >
-              <p style="font-weight: 900; font-size: 20px" @click="toggleEmailJournalistModal">x</p>
+              <p style="font-weight: 900; font-size: 20px">x</p>
             </div>
           </div>
         </div>
@@ -167,7 +168,7 @@
                 "
               >
                 <p style="margin: 0; padding: 0; font-size: 18px; margin-right: 8px">Bcc:</p>
-                <p class="b-container" style="margin: 0">{{ bccEmail }}</p>
+                <p :title="bccEmail" class="b-container" style="margin: 0">{{ bccEmail }}</p>
                 <!-- <input
                   style="margin-bottom: 0; padding-left: 34px"
                   class="primary-input-underline"
@@ -196,8 +197,36 @@
                 class="primary-input-underline"
                 v-model="targetEmail"
                 type="email"
-                :disabled="loadingPitch || sendingEmail"
+                :class="{ coraltext: emailError, greenText: emailVerified }"
+                :disabled="loadingPitch || sendingEmail || verifying"
               />
+
+              <button
+                v-if="targetEmail && !emailVerified && !verifying && !emailError"
+                :disabled="loadingPitch || sendingEmail"
+                @click="verifyEmail"
+                class="abs-placed secondary-button"
+              >
+                <div class="row base-img">
+                  <img src="@/assets/images/shield-x.svg" height="14px" alt="" />
+                  Verify
+                </div>
+              </button>
+
+              <div v-else-if="verifying" style="top: 50%" class="abs-placed loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
+
+              <div v-else-if="emailVerified" class="row green-img abs-placed" style="top: 35%">
+                <img src="@/assets/images/shield-check.svg" height="18px" alt="" />
+                <!-- Verified -->
+              </div>
+
+              <div v-else-if="emailError" class="abs-placed red-img" style="top: 35%">
+                <p>Unverified, try different email</p>
+              </div>
             </div>
 
             <div style="position: relative; margin-bottom: 8px">
@@ -249,7 +278,7 @@
         <div style="margin-top: -16px" class="flex-end">
           <button
             @click="sendEmail"
-            :disabled="loadingPitch || !subject || !targetEmail || sendingEmail"
+            :disabled="loadingPitch || !subject || !targetEmail || sendingEmail || verifying"
             style="margin-right: 4px"
             class="primary-button"
             :class="{ opaque: loadingPitch || !subject || !targetEmail }"
@@ -735,6 +764,10 @@ export default {
       and this one is as well
       
       `,
+      emailError: false,
+      emailVerified: false,
+      verifying: false,
+      verifiedEmails: [],
       sendingEmail: false,
       loadingPitch: false,
       emailJournalistModalOpen: false,
@@ -816,6 +849,24 @@ export default {
         this.setDiscovery(newVal)
       }
     },
+    emailJournalistModalOpen(newVal, oldVal) {
+      if (newVal === true) {
+        this.emailVerified = false
+        this.emailError = false
+      }
+    },
+    targetEmail(newVal, oldVal) {
+      if (newVal !== oldVal) {
+        this.emailVerified = false
+        this.emailError = false
+      }
+    },
+    emailJournalistModalOpen(newVal, oldVal) {
+      if (newVal === false) {
+        this.revisedPitch = ''
+        this.emailError = false
+      }
+    },
   },
   beforeDestroy() {
     this.$store.commit('setGeneratedContent', null)
@@ -825,14 +876,36 @@ export default {
     this.bccEmail = this.user.email
   },
   methods: {
-    test() {
-      const quill = this.$refs.quill.quill
-      quill.clipboard.dangerouslyPasteHTML()
-      // this.revisedPitch = this.formatTest
-      // console.log(this.formatTest)
+    async verifyEmail() {
+      this.verifying = true
+      try {
+        const res = await Comms.api.verifyEmail({
+          email: this.targetEmail,
+        })
+        console.log(res)
+        if (res.data.is_valid) {
+          this.emailVerified = true
+        } else {
+          this.emailError = true
+          console.log('im here, look elsewhere')
+        }
+      } catch (e) {
+        console.error(e)
+        this.$toast('Error verifying email, try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        setTimeout(() => {
+          this.verifying = false
+        }, 500)
+      }
     },
     toggleEmailJournalistModal() {
-      if (!this.loadingPitch && !this.sendingEmail) {
+      if (!this.loadingPitch && !this.sendingEmail && !this.verifying) {
         this.emailJournalistModalOpen = !this.emailJournalistModalOpen
       }
     },
@@ -1660,10 +1733,42 @@ export default {
   padding: 8px 2px;
 }
 
-.abs-img {
+.redbg {
+  background: $light-coral !important;
+  border: 1px solid $coral !important;
+}
+.greenbg {
+  background: $white-green !important;
+}
+
+.base-img {
+  img {
+    filter: invert(30%);
+    margin-right: 4px;
+  }
+  color: $dark-black-blue !important;
+}
+
+.red-img {
+  img {
+    filter: invert(46%) sepia(43%) saturate(800%) hue-rotate(308deg) brightness(104%) contrast(97%);
+    margin-right: 4px;
+  }
+  color: $coral !important;
+}
+
+.green-img {
+  img {
+    filter: invert(65%) sepia(5%) saturate(4090%) hue-rotate(101deg) brightness(95%) contrast(88%);
+    margin-right: 4px;
+  }
+  color: $dark-green !important;
+}
+
+.abs-placed {
   position: absolute;
-  right: 16px;
-  top: 50%;
+  right: 8px;
+  top: 12px;
 
   p {
     padding: 0;
@@ -1675,6 +1780,14 @@ export default {
   background-color: $coral;
   padding: 4px;
   border-radius: 4px;
+}
+
+.coraltext {
+  color: $coral !important;
+}
+
+.greenText {
+  color: $dark-green !important;
 }
 
 .green-button {
