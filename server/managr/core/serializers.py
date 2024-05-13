@@ -412,7 +412,7 @@ class UserTrialSerializer(serializers.ModelSerializer):
         )
 
     def get_days_active(self, instance):
-        today = datetime.today().astimezone(pytz.UTC)
+        today = datetime.today()
         return (today - instance.datetime_created).days
 
     def get_updates_made_this_month(self, instance):
