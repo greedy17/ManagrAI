@@ -175,7 +175,7 @@ def OPEN_AI_CHAT_COMPLETIONS_BODY(
     top_p=False,
 ):
     body = {
-        "model": "gpt-4",
+        "model": "gpt-4o",
         "messages": [
             {"role": "user", "content": prompt},
         ],
@@ -229,7 +229,6 @@ OPEN_AI_NEWS_BOOLEAN_CONVERSION = (
     # 4: If the search term is a broad category such as "sports", ensure you include or exclude relevant subtopics (e.g., "football", "baseball", "basketball", "coaches", etc.), based on the nature of the query.
     # 5: Use logical operators judiciously to balance specificity and breadth. Employ 'AND' to combine terms that are closely related or typically reported together, ensuring relevance. Opt for 'OR' when connecting terms that are less frequently associated or when one term has a low probability of appearing in news contexts. This approach broadens the search scope while maintaining focus on the primary subject.
     # Search Term: {search}"""
-
     lambda search: f"""Convert the term below into a boolean query to be used for News API.
     term: {search}
     output must only be the boolean string.
