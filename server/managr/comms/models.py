@@ -892,3 +892,33 @@ class Discovery(TimeStampModel):
 
     def __str__(self):
         return f"{self.user.email} - {self.name}"
+
+
+class Journalist(TimeStampModel):
+    email = models.EmailField(max_length=254)
+    first_name = models.CharField(max_length=254)
+    last_name = models.CharField(max_length=254)
+    outlet = models.CharField(max_length=255)
+    verified = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["last_name"]
+
+    def __str__(self):
+        return f"{self.email} - {self.outlet}"
+
+    @classmethod
+    def verify_email(cls, email):
+        url = comms_consts.HUNTER_VERIFY_URI
+        params = {"api_key": comms_consts.HUNTER_API_KEY, "email": email}
+        encoded_params = urlencode(params)
+        url = url + "?" + encoded_params
+        with Variable_Client() as client:
+            r = client.get(
+                url,
+            )
+            r = r.json()
+            print('RESPONSE HERE: ',r)
+            status = r["data"]["status"]
+        is_valid = True if status == "valid" else False
+        return is_valid

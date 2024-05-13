@@ -1267,6 +1267,7 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
               toastClassName: 'custom',
               bodyClassName: ['custom'],
             })
+            this.refreshUser()
           })
       } catch (e) {
         console.log(e)
@@ -1274,8 +1275,8 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
         this.sample = ''
         this.styleName = ''
         this.toggleLearnInput()
+        this.getWritingStyles()
         this.savingStyle = false
-        this.refreshUser()
         this.toggleLearnInputModal()
       }
     },
