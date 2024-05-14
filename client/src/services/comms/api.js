@@ -443,6 +443,14 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    async draftPitch(data) {
+        try {
+            const res = await this.client.post('discovery/draft/', data)
+            return res
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
     async getSuggestions() {
         try {
             const res = await this.client.post(CommsApi.ENDPOINT + 'suggestions/',)

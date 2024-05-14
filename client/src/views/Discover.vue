@@ -755,19 +755,9 @@ export default {
         ['clean'], // remove formatting button
       ],
       bccEmail: '',
-      formatTest: `hello world,
-      
-      this should enter the quill editor in the same format it was written
-      
-      this line is spaced
-      
-      and this one is as well
-      
-      `,
       emailError: false,
       emailVerified: false,
       verifying: false,
-      verifiedEmails: [],
       sendingEmail: false,
       loadingPitch: false,
       emailJournalistModalOpen: false,
@@ -851,6 +841,7 @@ export default {
     },
     emailJournalistModalOpen(newVal, oldVal) {
       if (newVal === true) {
+        this.revisedPitch = ''
         this.emailVerified = false
         this.emailError = false
       }
@@ -858,12 +849,6 @@ export default {
     targetEmail(newVal, oldVal) {
       if (newVal !== oldVal) {
         this.emailVerified = false
-        this.emailError = false
-      }
-    },
-    emailJournalistModalOpen(newVal, oldVal) {
-      if (newVal === false) {
-        this.revisedPitch = ''
         this.emailError = false
       }
     },
@@ -899,6 +884,7 @@ export default {
           bodyClassName: ['custom'],
         })
       } finally {
+        this.refreshUser()
         setTimeout(() => {
           this.verifying = false
         }, 500)
@@ -942,6 +928,7 @@ export default {
         })
         this.sendingEmail = false
       } finally {
+        this.refreshUser()
       }
     },
     async rewritePitch() {
@@ -959,6 +946,7 @@ export default {
       } catch (e) {
         console.error(e)
       } finally {
+        this.refreshUser()
         this.loadingPitch = false
       }
     },
