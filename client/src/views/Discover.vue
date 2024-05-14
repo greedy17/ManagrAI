@@ -116,7 +116,7 @@
         </div>
       </div>
     </Modal>
-    <Modal v-if="emailJournalistModalOpen" class="paid-modal">
+    <Modal v-if="!emailJournalistModalOpen" class="paid-modal">
       <div
         :style="isMobile ? 'width: 95%; min-height: 100px' : 'width: 610px; min-height: 100px; '"
         class="regen-container"

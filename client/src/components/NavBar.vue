@@ -29,7 +29,7 @@
             <!-- <p>Self-serve plan with unlimited usage, automated email summaries, and the ability to learn your writing style.</p> -->
             <!-- <p>Upgrade to unlimited usage and additional AI automations</p> -->
             <h1 class="pricing-price">
-              $100 <span class="pricing-smaller-text">per user / month</span>
+              $133.33 <span class="pricing-smaller-text">per user / month</span>
             </h1>
             <div>
               <div class="pricing-list-container">
