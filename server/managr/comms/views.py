@@ -2080,7 +2080,7 @@ class DiscoveryViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_EMAIL_JOURNALIST(username, 'Lululemon', style, author, outlet, headline, description, date)
+                prompt = comms_consts.OPEN_AI_EMAIL_JOURNALIST(username, org, style, author, outlet, headline, description, date)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
