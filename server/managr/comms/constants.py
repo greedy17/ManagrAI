@@ -215,9 +215,9 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
     if not instructions:
         instructions = DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS(search)
     if not search:
-        body = f"Today's date is {date}. Read the article below, then follow these instructions: {instructions}. Output cannot exceed 800 characters.\n Article: {article} \n"
+        body = f"Today's date is {date}. Read the article below, then follow these instructions: {instructions}. Do not bold any text in your response. Output cannot exceed 800 characters.\n Article: {article} \n"
     else:
-        body = f"Today's date is {date}. At least one of the terms in the boolean search were mentioned in the provided news article. Follow the instructions carefully.\nBoolean Search: {search} \n Instructions: {instructions} \n News Article: {article}"
+        body = f"Today's date is {date}. At least one of the terms in the boolean search were mentioned in the provided news article. Follow the instructions carefully. Do not bold any text in your response. \nBoolean Search: {search} \n Instructions: {instructions} \n News Article: {article}"
     return body
 
 
@@ -282,6 +282,7 @@ OPEN_AI_FIND_JOURNALISTS = (
     - Journalistic Beat: The journalist or influencers must cover this specific beat: {beat}.
     - Location: The journalists or influencers must be based in or primarily cover {location}.
     - Real Journalists Requirement: It is essential that the journalists or influencers listed are real, currently active professionals in the field.
+    - Do not bold any of the text in the response.
     Content for the Pitch: {content} """
 )
 
@@ -298,7 +299,7 @@ OPEN_AI_GENERATE_FEEDBACK = (
 
 REGENERATE_CONTENT_WITH_FEEDBACK = (
     lambda content, feedback: f"""
-    Rewrite the content below based on this feedback
+    Rewrite the content below based on this feedback.
     Content: {content}
     Feedback: {feedback}
     """
@@ -335,7 +336,7 @@ OPEN_AI_CONTENT_ASSIST = (
 
 
 DISCOVER_JOURNALIST = (
-    lambda type, beat, location, content: f""""
+    lambda type, beat, location, content: f"""
     List up to 10 real journalists (or social media influencers) and their respective publications, that would be interested in writing about the content provided below. Provide pitching tips that are relevant to the user's content. User will specify whether they want journalist or influencers. Follow these instructions carefully:
   - Publication Type: The journalists or influencers must be from news outlets (or social platform) of this type: {type}.
   - Journalistic Beat: The journalist or influencers must cover this specific beat or topic: {beat}.
@@ -344,7 +345,21 @@ DISCOVER_JOURNALIST = (
   - Guess their email: do your best to guess their email address
   - Wrap each journalist/tip in a SPAN tag
   - Here is the user’s content: {content}
+  - DO NOT bold any text in the response
     """
+)
+
+OPEN_AI_EMAIL_JOURNALIST = (
+     lambda user, org, style, author, outlet, headline, description, date, : f"""
+    {author} from {outlet} wrote this article, "{headline}", heres the article description: {description}. The date of the article is {date}. Now, here is what I need you to do:
+    1. Write a short, 100 word email to the journalist from: {user}
+    2. Make an observation about their article and use this opportunity to make a tailored pitch for {org}. Use any specific information or pitching tips you have about the journalist (e.g., how they like to be pitched, what they usually cover, their interests). If the company name seems to be a PR agency, assume it's on behalf of the agency's clients.
+    3. You must use this writing style: {style}
+    4. Open with "Hey {author}," . The name here is passed via parameter from a JS function and sometimes it includes an email, ONLY include the first name in the opening line.
+    5. Subject line: email subject line must be 2-3 words.
+    6. Guess their email. Do your best to guess their work email address. The email is sometimes attached to the name, if so you must use that. Always return the email like this - email: (guessed email)
+    7. Do not bold any of the text in the response.  
+     """
 )
 
 DO_NOT_TRACK_LIST = [

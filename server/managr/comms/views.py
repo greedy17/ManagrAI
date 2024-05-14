@@ -1453,7 +1453,7 @@ class PitchViewSet(
                     )
                 r = open_ai_exceptions._handle_response(r)
                 pitch = r.get("choices")[0].get("message").get("content")
-                user.add_meta_data("pitches")
+                user.add_meta_data("emailDraft")
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -2034,6 +2034,7 @@ class DiscoveryViewSet(
                 context=context,
                 bcc_emails=bcc,
             )
+            user.add_meta_data("emailSent")
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Exception as e:
             logger.exception(str(e))
@@ -2046,10 +2047,85 @@ class DiscoveryViewSet(
         url_path="verify",
     )
     def verify_email(self, request, *args, **kwargs):
+        user = request.user
         email = request.data.get("email")
         try:
             is_valid = Journalist.verify_email(email)
+            user.add_meta_data("verify")
             return Response(status=status.HTTP_200_OK, data={"is_valid": is_valid})
         except Exception as e:
             logger.exception(str(e))
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="draft",
+    )
+    def draft_pitch(self, request, *args, **kwargs):
+        user = request.user
+        username = request.data.get("user")
+        org = request.data.get("org")
+        style = request.data.get("style")
+        author = request.data.get("author")
+        outlet = request.data.get("outlet")
+        headline = request.data.get("headline")
+        description = request.data.get("description")
+        date = request.data.get("date") 
+        has_error = False
+        attempts = 1
+        token_amount = 1000
+        timeout = 60.0
+        while True:
+            try:
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.OPEN_AI_EMAIL_JOURNALIST(username, org, style, author, outlet, headline, description, date)
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    "You are a VP of Communications",
+                    token_amount=token_amount,
+                    top_p=0.1,
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                res = open_ai_exceptions._handle_response(r)
+
+                message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+                user.add_meta_data("emailDraft")
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount <= 2000:
+                    has_error = True
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 500
+                    continue
+            except httpx.ReadTimeout as e:
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+        if has_error:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
+
+        return Response(data=message)
