@@ -131,7 +131,8 @@ ENV SECRET_KEY='secret123' \
   USE_INSTAGRAM_API='' \
   INSTAGRAM_APP_KEY='' \
   INSTAGRAM_APP_SECRET='' \
-  INSTAGRAM_REDIRECT_URI='' 
+  INSTAGRAM_REDIRECT_URI='' \
+  HUNTER_API_KEY=''
 
 
 # Set the name of the working directory inside the docker container

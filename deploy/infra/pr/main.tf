@@ -335,6 +335,8 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     instagramAppKey      = each.app_config.instagram_app_key
     instagramAppSecret   = each.app_config.instagram_app_secret
     instagramRedirectUri = each.app_config.instagram_redirect_uri
+
+    hunterApiKey         = each.app_config.hunter_api_key
   })
 }
 

@@ -177,6 +177,8 @@ variable "environments" {
     instagram_app_key      = string
     instagram_app_secret   = string
     instagram_redirect_uri = string
+
+    hunter_api_key         = string
   }))
 }
 
@@ -216,7 +218,7 @@ variable "scheduled_tasks" {
     {
       name       = "spiderstatus"
       command    = "spider_status"
-      cron       = "cron(*/30 1-8 * * ? *)"
+      cron       = "cron(15/15 1-8 * * ? *)"
       task_count = 1
     },
   ]

@@ -168,6 +168,8 @@ variable "app_config" {
     instagram_app_key      = string
     instagram_app_secret   = string
     instagram_redirect_uri = string
+
+    hunter_api_key         = string
   })
 }
 

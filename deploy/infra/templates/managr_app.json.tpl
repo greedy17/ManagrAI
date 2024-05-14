@@ -319,6 +319,10 @@
       {
         "name": "INSTAGRAM_REDIRECT_URI",
         "valueFrom": "${config_secret_arn}:instagramRedirectUri::"
+      },
+      {
+        "name": "HUNTER_API_KEY",
+        "valueFrom": "${config_secret_arn}:hunterApiKey::"
       }
     ],
     "logConfiguration": {
