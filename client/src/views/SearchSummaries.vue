@@ -2344,6 +2344,8 @@ export default {
   },
   data() {
     return {
+      currentJournalist: '',
+      currentPublication: '',
       toolbarOptions: [
         ['bold', 'italic', 'underline', 'strike'], // toggled buttons
         ['link', 'image'],
@@ -2697,6 +2699,8 @@ export default {
       try {
         const res = await Comms.api.verifyEmail({
           email: this.targetEmail,
+          journalist: this.currentJournalist,
+          publication: this.currentPublication,
         })
         console.log(res)
         if (res.data.is_valid) {
@@ -2789,12 +2793,16 @@ export default {
     },
     selectJournalist(article) {
       // user, org, style, author, outlet, headline, description, date,
+
       const author = article.author
       const outlet = article.source.name
       const headline = article.title
       const description = article.description
       const date = this.getTimeDifferenceInMinutes(article.publish_date)
       this.emailJournalistModalOpen = true
+
+      this.currentJournalist = author
+      this.currentPublication = outlet
       this.draftPitch(author, outlet, headline, description, date)
     },
     extractNameAndEmail(text) {
