@@ -423,6 +423,17 @@ class NewsSource(TimeStampModel):
         return False
 
     @classmethod
+    def get_stopped_sources(cls):
+        today = datetime.today()
+        stopped_sources = []
+        news = NewsSource.objects.filter(article_link_regex__isnull=False, is_active=True)
+        for n in news:
+            article = n.newest_article_date()
+            if article and (today - article).days >= 7:
+                stopped_sources.append((n.domain, article))
+        return stopped_sources
+
+    @classmethod
     def domain_list(cls, scrape_ready=False, new=False):
         twelve_hours = datetime.now() - timedelta(hours=12)
         active_sources = cls.objects.filter(is_active=True).order_by("last_scraped")
@@ -441,6 +452,13 @@ class NewsSource(TimeStampModel):
             active_sources = active_sources.filter(article_link_attribute__isnull=True)
         source_list = [source.domain for source in active_sources]
         return source_list
+
+    def newest_article_date(self):
+        articles = self.articles.all().order_by("-publish_date")
+        if articles:
+            newest_article_date = articles.first().publish_date
+            return newest_article_date
+        return None
 
     def add_error(self, error):
         if self.error_log:
