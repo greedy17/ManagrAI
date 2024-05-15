@@ -960,3 +960,33 @@ class StripeAdapter:
     @classmethod
     def create_account():
         return
+
+
+class CrawlerReport(TimeStampModel):
+    task_times = ArrayField(models.IntegerField(), null=True, default=list)
+    error_log = ArrayField(models.TextField(), null=True, default=list)
+    start_url_counts = ArrayField(models.IntegerField(), null=True, default=list)
+    total_url_counts = ArrayField(models.IntegerField(), null=True, default=list)
+
+    def create_report_data(self):
+        all_errors = []
+        for error_str in self.error_log:
+            error_arr = error_str.split(",")
+            all_errors.extend(error_arr)
+        total_start_urls = 0
+        total_url_count = 0
+        total_spider_time = 0
+        for i in range(len(self.task_times)):
+            total_start_urls += self.start_url_counts[i]
+            total_url_count += self.total_url_counts[i]
+            total_spider_time += self.task_times[i]
+        minutes = int(round((total_spider_time / 60), 0))
+        completed_in = f"{minutes} minutes"
+        report_data = {
+            "start_urls": total_start_urls,
+            "urls_processed": total_start_urls,
+            "seconds": str(total_spider_time),
+            "time": completed_in,
+            "errors": all_errors,
+        }
+        return report_data

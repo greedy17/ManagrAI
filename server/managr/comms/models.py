@@ -453,6 +453,14 @@ class NewsSource(TimeStampModel):
         source_list = [source.domain for source in active_sources]
         return source_list
 
+    @classmethod
+    def problem_urls(cls):
+        d = datetime.now().date()
+        news = NewsSource.objects.filter(last_scraped__date=d, is_active=False).values_list(
+            "domain", flat=True
+        )
+        return list(news)
+
     def newest_article_date(self):
         articles = self.articles.all().order_by("-publish_date")
         if articles:

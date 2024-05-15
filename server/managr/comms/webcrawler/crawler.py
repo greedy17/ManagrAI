@@ -5,6 +5,7 @@ import time
 from scrapy import signals
 from django.utils import timezone
 from django.conf import settings
+from managr.core.models import CrawlerReport
 from django.db import IntegrityError
 from ..models import NewsSource
 from ..serializers import ArticleSerializer
@@ -107,21 +108,29 @@ class NewsSpider(scrapy.Spider):
         return spider
 
     def spider_closed_handler(self, spider):
-        seconds = int((time.time() - self.start_time))
-        minutes = 0
-        if seconds >= 60:
-            minutes = round((seconds / 60), 0)
-        completed_in = f"{seconds} seconds" if minutes == 0 else f"{minutes} minutes"
-        report_data = {
-            "start_urls": len(self.start_urls),
-            "urls_processed": self.urls_processed,
-            "seconds": str(seconds),
-            "time": completed_in,
-            "errors": self.error_log,
-        }
         if self.no_report:
             return
-        self.generate_report(report_data)
+        report = CrawlerReport.objects.all().order_by("-datetime_created").first()
+        seconds = int((time.time() - self.start_time))
+        # minutes = 0
+        # if seconds >= 60:
+        #     minutes = round((seconds / 60), 0)
+        # completed_in = f"{seconds} seconds" if minutes == 0 else f"{minutes} minutes"
+        # report_data = {
+        #     "start_urls": len(self.start_urls),
+        #     "urls_processed": self.urls_processed,
+        #     "seconds": str(seconds),
+        #     "time": completed_in,
+        #     "errors": self.error_log,
+        # }
+        report_str = ",".join(self.error_log)
+        report.task_times.append(seconds)
+        report.error_log.append(report_str)
+        report.start_url_counts.append(len(self.start_urls))
+        report.total_url_counts.append(self.urls_processed)
+        report.save()
+        return
+        # self.generate_report(report_data)
 
     def generate_report(self, data):
         try:
@@ -155,7 +164,18 @@ class NewsSpider(scrapy.Spider):
         try:
             source = NewsSource.objects.get(domain=url)
         except NewsSource.DoesNotExist:
-            logger.info(f"URL does not exist: {url}")
+            original_urls = response.meta.get("redirect_urls", [])
+            if len(original_urls):
+                original_url = original_urls[0]
+                sources = NewsSource.objects.filter(domain=original_url)
+                if len(sources):
+                    source = sources.first()
+                    source.is_active = False
+                    current_datetime = datetime.datetime.now()
+                    source.last_scraped = timezone.make_aware(
+                        current_datetime, timezone.get_current_timezone()
+                    )
+                    source.save()
             return
         if source.article_link_attribute is not None:
             regex = source.create_search_regex()
