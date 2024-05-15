@@ -10,8 +10,8 @@ from managr.utils.client import Variable_Client
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_clips_paginator_block
 from . import constants as comms_consts
-from .models import Search, NewsSource, EmailAlert
-from .serializers import SearchSerializer, NewsSourceSerializer
+from .models import Search, NewsSource, EmailAlert, Journalist
+from .serializers import SearchSerializer, NewsSourceSerializer, JournalistSerializer
 from managr.core import constants as core_consts
 from managr.core.models import User
 from managr.core import exceptions as open_ai_exceptions
@@ -498,3 +498,21 @@ def _run_spider_batch(urls):
         process.wait()
     except Exception as e:
         logger.exception(str(e))
+
+
+@background
+def _add_jounralist_to_db(data, verified):
+    data["verified"] = verified
+    publication = data.pop("publication")
+    full_name = data.pop("journalist")
+    first, last = full_name.split(" ")
+    data["first_name"] = first
+    data["last_name"] = last
+    data["outlet"] = publication
+    serializer = JournalistSerializer(data=data)
+    try:
+        serializer.is_valid()
+        serializer.save()
+    except Exception as e:
+        logger.exception(str(e))
+    return
