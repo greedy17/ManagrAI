@@ -743,6 +743,8 @@ export default {
   },
   data() {
     return {
+      currentJournalist: '',
+      currentPublication: '',
       toolbarOptions: [
         ['bold', 'italic', 'underline', 'strike'], // toggled buttons
         ['link', 'image'],
@@ -866,6 +868,8 @@ export default {
       try {
         const res = await Comms.api.verifyEmail({
           email: this.targetEmail,
+          journalist: this.currentJournalist,
+          publication: this.currentPublication,
         })
         console.log(res)
         if (res.data.is_valid) {
@@ -953,30 +957,36 @@ export default {
     selectJournalist(event) {
       if (event.target.tagName === 'SPAN') {
         const text = event.target.innerText
-        const { name, email } = this.extractNameAndEmail(text)
+        const { name, email, publication, tip } = this.extractNameAndEmail(text)
+        console.log('INFO IS HERE:', name, email, publication, tip)
         this.targetEmail = email
-        this.pitchingTip = name
+        this.pitchingTip = tip
+        this.currentJournalist = name
+        this.currentPublication = publication
         this.emailJournalistModalOpen = true
         this.rewritePitch()
       }
     },
     extractNameAndEmail(text) {
-      // Split text by whitespace to extract name and email
-      const parts = text.trim().split(/\s+/)
-      let name = ''
-      let email = ''
+      // const parts = text.trim().split(/\s+/)
+      // let name = ''
+      // let email = ''
 
-      parts.forEach((part) => {
-        if (part.includes('@')) {
-          email = part.replace(/[()<>]/g, '')
-        } else {
-          name += part + ' '
-        }
-      })
+      // parts.forEach((part) => {
+      //   if (part.includes('@')) {
+      //     email = part.replace(/[()<>]/g, '')
+      //   } else {
+      //     name += part + ' '
+      //   }
+      // })
 
-      name = name.trim()
+      // name = name.trim()
+      const name = text.match(/Journalist:\s*(.*)/)[1].trim()
+      const publication = text.match(/Publication:\s*(.*)/)[1].trim()
+      const email = text.match(/Email:\s*(.*)/)[1].trim()
+      const tip = text.match(/Pitching Tip:\s*(.*)/)[1].trim()
 
-      return { name, email }
+      return { name, email, publication, tip }
     },
     async discoverJournalists() {
       if (!this.isPaid && this.searchesUsed >= 10) {

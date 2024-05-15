@@ -30,7 +30,12 @@ from .models import Article as InternalArticle
 from .models import WritingStyle, EmailAlert
 from managr.core.models import User
 from managr.comms import exceptions as comms_exceptions
-from .tasks import emit_process_website_domain, emit_send_news_summary, emit_share_client_summary
+from .tasks import (
+    emit_process_website_domain,
+    emit_send_news_summary,
+    emit_share_client_summary,
+    _add_jounralist_to_db,
+)
 from .serializers import (
     SearchSerializer,
     PitchSerializer,
@@ -2052,6 +2057,7 @@ class DiscoveryViewSet(
         try:
             is_valid = Journalist.verify_email(email)
             user.add_meta_data("verify")
+            _add_jounralist_to_db(request.data, is_valid)
             return Response(status=status.HTTP_200_OK, data={"is_valid": is_valid})
         except Exception as e:
             logger.exception(str(e))
@@ -2072,7 +2078,7 @@ class DiscoveryViewSet(
         outlet = request.data.get("outlet")
         headline = request.data.get("headline")
         description = request.data.get("description")
-        date = request.data.get("date") 
+        date = request.data.get("date")
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -2080,7 +2086,9 @@ class DiscoveryViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_EMAIL_JOURNALIST(username, org, style, author, outlet, headline, description, date)
+                prompt = comms_consts.OPEN_AI_EMAIL_JOURNALIST(
+                    username, org, style, author, outlet, headline, description, date
+                )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,

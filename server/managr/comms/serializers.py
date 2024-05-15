@@ -10,6 +10,7 @@ from .models import (
     TwitterAccount,
     InstagramAccount,
     Discovery,
+    Journalist,
 )
 from django.contrib.postgres.search import SearchVector
 
@@ -111,6 +112,7 @@ class InstagramAccountSerializer(serializers.ModelSerializer):
         model = InstagramAccount
         fields = ("id", "user", "access_token", "hashtag_list")
 
+
 class DiscoverySerializer(serializers.ModelSerializer):
     class Meta:
         model = Discovery
@@ -123,4 +125,17 @@ class DiscoverySerializer(serializers.ModelSerializer):
             "beat",
             "location",
             "list",
-        )  
+        )
+
+
+class JournalistSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Journalist
+        fields = (
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "outlet",
+            "verified",
+        )
