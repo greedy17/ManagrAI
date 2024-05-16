@@ -278,7 +278,6 @@ class NewsSpider(scrapy.Spider):
                     break
         full_article = ""
         cleaned_data = None
-
         if article_tags is not None:
             for article in article_tags:
                 article = article.replace("\n", "").strip()

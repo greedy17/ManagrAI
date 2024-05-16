@@ -105,6 +105,7 @@ NEW_API_EVERYTHING_DATE_URI = (
 )
 
 SEARCH_TYPE_CHOICES = (("NEWS", "News"), ("SOCIAL_MEDIA", "Social Media"), ("MIXED", "Mixed"))
+COVERAGE_TYPE_CHOICES = (("NATIONAL", "National"), ("LOCAL", "Local"), ("BOTH", "Both"))
 
 DEFAULT_INSTRUCTIONS = """*Executive summary:*\n Highlighting 5 key points from today's clips.\n
 *Sentiment*\n Evaluate the overall tone or sentiment of the coverage. Is it primarily positive, neutral, or negative and why.\n
@@ -350,7 +351,7 @@ DISCOVER_JOURNALIST = (
 )
 
 OPEN_AI_EMAIL_JOURNALIST = (
-     lambda user, org, style, author, outlet, headline, description, date, : f"""
+    lambda user, org, style, author, outlet, headline, description, date,: f"""
     {author} from {outlet} wrote this article, "{headline}", heres the article description: {description}. The date of the article is {date}. Now, here is what I need you to do:
     1. Write a short, 100 word email to the journalist from: {user}
     2. Make an observation about their article and use this opportunity to make a tailored pitch for {org}. Use any specific information or pitching tips you have about the journalist (e.g., how they like to be pitched, what they usually cover, their interests). If the company name seems to be a PR agency, assume it's on behalf of the agency's clients.

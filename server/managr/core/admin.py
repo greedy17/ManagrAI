@@ -218,8 +218,14 @@ class CustomReportAdmin(admin.ModelAdmin):
     list_filter = ("user__organization",)
 
 
+class CustomCrawlerReportAdmin(admin.ModelAdmin):
+    model = CrawlerReport
+    list_display = ("datetime_created",)
+    ordering = ("-datetime_created",)
+
+
 admin.site.register(User, CustomUserAdmin)
 # admin.site.register(NylasAuthAccount, CustomNylasAuthAccount)
 admin.site.register(NoteTemplate, CustomNoteTemplate)
 admin.site.register(Report, CustomReportAdmin)
-admin.site.register(CrawlerReport)
+admin.site.register(CrawlerReport, CustomCrawlerReportAdmin)

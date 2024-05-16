@@ -67,6 +67,12 @@ class CustomEmailAlertAdmin(admin.ModelAdmin):
     times_sent.short_description = "Times Sent"
 
 
+class CustomJournalAdmin(admin.ModelAdmin):
+    list_display = ("datetime_created", "email", "outlet", "verified")
+    ordering = ("datetime_created",)
+    list_filter = ("outlet",)
+
+
 admin.site.register(Search, CustomSearch)
 admin.site.register(Pitch, CustomPitch)
 admin.site.register(NewsSource, CustomNewsSource)
@@ -76,4 +82,4 @@ admin.site.register(WritingStyle)
 admin.site.register(TwitterAccount)
 admin.site.register(InstagramAccount)
 admin.site.register(Discovery)
-admin.site.register(Journalist)
+admin.site.register(Journalist, CustomJournalAdmin)

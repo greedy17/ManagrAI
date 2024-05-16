@@ -926,6 +926,13 @@ class Journalist(TimeStampModel):
     last_name = models.CharField(max_length=254)
     outlet = models.CharField(max_length=255)
     verified = models.BooleanField(default=False)
+    beats = ArrayField(models.CharField(max_length=255), blank=True, null=True)
+    city = models.CharField(max_length=255, blank=True, null=True)
+    state = models.CharField(max_length=255, blank=True, null=True)
+    country = models.CharField(max_length=255, blank=True, null=True)
+    coverage_type = models.CharField(
+        choices=comms_consts.COVERAGE_TYPE_CHOICES, max_length=50, default="BOTH"
+    )
 
     class Meta:
         ordering = ["last_name"]
