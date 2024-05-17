@@ -2073,7 +2073,7 @@
                       {{ user.meta_data.verify ? user.meta_data.verify.total : 0 }}
                     </div>
                     <div style="width: 10%">
-                      {{ user.meta_data.emailsSent ? user.meta_data.emailsSent.total : 0 }}
+                      {{ user.meta_data.emailSent ? user.meta_data.emailSent.total : 0 }}
                     </div>
                     <div style="width: 10%">
                       {{ user.meta_data.emailDraft ? user.meta_data.emailDraft.total : 0 }}
