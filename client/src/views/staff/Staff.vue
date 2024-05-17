@@ -2030,6 +2030,7 @@
                   <div style="width: 10%">Discoveries</div>
                   <div style="width: 12%">Emails Verified</div>
                   <div style="width: 10%">Emails Sent</div>
+                  <div style="width: 10%">Emails Drafted</div>
                   <div style="width: 10%">Saved News</div>
                   <div style="width: 10%">Saved Social</div>
                 </div>
@@ -2073,6 +2074,9 @@
                     </div>
                     <div style="width: 10%">
                       {{ user.meta_data.emailsSent ? user.meta_data.emailsSent.total : 0 }}
+                    </div>
+                    <div style="width: 10%">
+                      {{ user.meta_data.emailDraft ? user.meta_data.emailDraft.total : 0 }}
                     </div>
                     <div style="width: 10%">
                       {{ user.searches_ref.filter((search) => search.type === 'NEWS').length }}
