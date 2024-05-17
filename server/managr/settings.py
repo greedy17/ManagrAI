@@ -397,6 +397,11 @@ if _env_get_required("USE_ROLLBAR") == "True":
     LOGGING["loggers"]["managr"]["handlers"].remove("mail_admins")
     LOGGING["loggers"]["managr"]["handlers"].append("rollbar")
 
+BACKGROUND_TASKS = {
+    "enabled": True,
+    "backend": "django_background_tasks.backend.DatabaseBackend",
+    "MAX_RUNNING": 4,
+}
 
 #
 # Nylas Integration Settings

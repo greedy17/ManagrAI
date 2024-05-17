@@ -25,6 +25,7 @@ from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.indexes import GinIndex
 from requests_oauthlib import OAuth1Session, OAuth2Session
 from oauthlib.oauth2 import OAuth2Error
+from django.conf import settings
 
 logger = logging.getLogger("managr")
 
@@ -444,9 +445,12 @@ class NewsSource(TimeStampModel):
             )
         # filters sources that are already scrapping
         elif scrape_ready and not new:
-            active_sources = active_sources.filter(
-                article_link_regex__isnull=False, last_scraped__lt=twelve_hours
-            )
+            if settings.IN_DEV:
+                active_sources = active_sources.filter(article_link_regex__isnull=False)
+            else:
+                active_sources = active_sources.filter(
+                    article_link_regex__isnull=False, last_scraped__lt=twelve_hours
+                )
         # filters sources that were just added and don't have scrape data yet
         elif not scrape_ready and new:
             active_sources = active_sources.filter(article_link_attribute__isnull=True)
