@@ -921,7 +921,7 @@ class Discovery(TimeStampModel):
 
 
 class Journalist(TimeStampModel):
-    email = models.EmailField(max_length=254)
+    email = models.EmailField(max_length=254, unique=True)
     first_name = models.CharField(max_length=254)
     last_name = models.CharField(max_length=254)
     outlet = models.CharField(max_length=255)

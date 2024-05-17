@@ -976,10 +976,15 @@ class CrawlerReport(TimeStampModel):
         total_start_urls = 0
         total_url_count = 0
         total_spider_time = 0
+        pair_time = 0
         for i in range(len(self.task_times)):
+            if i % 2 != 0:
+                total_pair_time = max(self.task_times[i], pair_time)
+                total_spider_time += total_pair_time
+            else:
+                pair_time = self.task_times[i]
             total_start_urls += self.start_url_counts[i]
             total_url_count += self.total_url_counts[i]
-            total_spider_time += self.task_times[i]
         minutes = int(round((total_spider_time / 60), 0))
         completed_in = f"{minutes} minutes"
         report_data = {
