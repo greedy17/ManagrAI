@@ -960,7 +960,7 @@ export default {
         const { name, email, publication, tip } = this.extractNameAndEmail(text)
         console.log('INFO IS HERE:', name, email, publication, tip)
         this.targetEmail = email
-        this.pitchingTip = tip
+        this.pitchingTip = 'The journalist is ' + name + '.' + tip
         this.currentJournalist = name
         this.currentPublication = publication
         this.emailJournalistModalOpen = true
