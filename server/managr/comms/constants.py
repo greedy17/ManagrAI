@@ -192,6 +192,7 @@ OPEN_AI_TWITTER_SEARCH_CONVERSION = (
     1: Concentrate on the primary keywords or key concepts of the search term. For example, from 'why is Michael Jordan trending', extract just 'Michael Jordan'.
     2:Only use hashtag terms when given
     3: Only do user search when instructed
+    4: only return the converted search term
     Search Term: {search}"""
 )
 
