@@ -5251,6 +5251,8 @@ button:disabled {
 .card-top-left {
   display: flex;
   font-size: 14px;
+  font-family: $base-font-family;
+
   img {
     height: 12px;
     margin-right: 0.5rem;
@@ -5294,7 +5296,8 @@ button:disabled {
 
 .article-title {
   font-size: 17px;
-  font-weight: 900;
+  font-family: $base-font-family;
+  font-weight: 200;
   line-height: 24px;
   letter-spacing: 0;
   color: $base-gray;
