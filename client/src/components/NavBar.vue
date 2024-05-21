@@ -166,7 +166,7 @@
           :to="{ name: 'PRSummaries' }"
           id="router-summarize"
         >
-          <p>Summarize</p>
+          <p>Search</p>
         </router-link>
 
         <router-link active-class="active-mobile" :to="{ name: 'Pitches' }" id="router-pitch">
@@ -507,7 +507,7 @@
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'PRSummaries' }" id="router-summarize">
-          <p>Summarize</p>
+          <p>Search</p>
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'Pitches' }" id="router-pitch">

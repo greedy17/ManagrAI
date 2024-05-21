@@ -2320,7 +2320,7 @@
         <div class="centered">
           <button @click="toggleSummaryMenu" v-if="summary" class="img-button-blueicon">
             <img src="@/assets/images/sparkle.svg" height="18px" alt="" />
-            Provide Summary Instructions
+            Generate New Summary
           </button>
         </div>
       </div>
@@ -2474,7 +2474,7 @@ export default {
         `Apple Vision PRO`,
         `Exercise AND TikTok`,
         `Supreme Court AND Social Media`,
-        `“Embedded Finance”`,
+        `Destination AND Travel`,
         `Fashion AND Sustainability`,
       ],
       summaryExamples: [
