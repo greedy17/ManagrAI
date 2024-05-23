@@ -339,7 +339,7 @@ DISCOVER_JOURNALIST = (
     2. Journalist Type: The journalists or influencers must be: {type}.
     3. Journalistic Beat: The journalists or influencers must cover this specific beat or topic: {beat}.
     4. Location: The journalists or influencers must be based in or primarily cover {location}.
-    5. Guess their email: Do your best to guess their email address. Make sure to base it on common email patterns associated with their respective publication.
+    5. Guess their email: You must guess their work email address. Make sure to base it on common email patterns associated with their respective publication.
     6. User’s Content: {content}.
     7. DO NOT bold any text in the response
     8. Wrap each journalist/tip in a SPAN tag
