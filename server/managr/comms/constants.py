@@ -334,15 +334,15 @@ OPEN_AI_CONTENT_ASSIST = (
 
 DISCOVER_JOURNALIST = (
     lambda type, beat, location, content: f"""
-    List up to 10 real journalists (or social media influencers) and their respective publications, that would be interested in writing about the content provided below. Provide pitching tips that are relevant to the user's content. User will specify whether they want journalist or influencers. Follow these instructions carefully:
-  - Publication Type: The journalists or influencers must be from news outlets (or social platform) of this type: {type}.
-  - Journalistic Beat: The journalist or influencers must cover this specific beat or topic: {beat}.
-  - Location: The journalists or influencers must be based in or primarily cover {location}.
-  - Real Journalists Requirement: It is essential that the journalists or influencers listed are real, currently active professionals in the field.
-  - Guess their email: do your best to guess their email address
-  - Wrap each journalist/tip in a SPAN tag
-  - Here is the user’s content: {content}
-  - DO NOT bold any text in the response
+    List up to 10 real, active journalists (or social media influencers) and their respective publications that would be interested in writing about the content provided below. Provide pitching tips based on what you know about the journalists, relevant to the user's content. User will specify whether they want journalists or influencers. Follow these instructions very carefully:
+    1. Very Important: Ensure that all journalists or influencers listed are real, currently active professionals. Do not include fake names such as Jane Doe or John Smith and avoid listing journalists that have retired
+    2. Journalist Type: The journalists or influencers must be: {type}.
+    3. Journalistic Beat: The journalists or influencers must cover this specific beat or topic: {beat}.
+    4. Location: The journalists or influencers must be based in or primarily cover {location}.
+    5. Guess their email: Do your best to guess their email address. Make sure to base it on common email patterns associated with their respective publication.
+    6. User’s Content: {content}.
+    7. DO NOT bold any text in the response
+    8. Wrap each journalist/tip in a SPAN tag
     """
 )
 
