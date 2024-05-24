@@ -257,10 +257,11 @@ Instructions: {instructions}"""
 )
 
 OPEN_AI_REWRITE_PTICH = (
-    lambda original, tip: f"""
+    lambda original, tip, name: f"""
 Adjust and rewrite this pitch per the pitching tip, while maintaining the existing writing style. This pitch will be sent via email so you must include a short intriguing subject line; no more than 3 words. Do not bold any text.\n
 pitch: {original}\n
-tip: {tip}"""
+tip: {tip}
+my name: {name}"""
 )
 
 OPEN_AI_LEARN_WRITING_STYLE_PROMPT = (
@@ -343,6 +344,10 @@ DISCOVER_JOURNALIST = (
     6. User’s Content: {content}.
     7. DO NOT bold any text in the response
     8. Wrap each journalist/tip in a SPAN tag
+    9. Always respond in this format: Journalist: [journalist]
+    Publication: [publication/podcast/etc.]
+    Email: [email]
+    Pitching Tip: [pitching tip]
     """
 )
 
@@ -354,7 +359,7 @@ OPEN_AI_EMAIL_JOURNALIST = (
     3. You must use this writing style: {style}
     4. Open with "Hey {author}," . The name here is passed via parameter from a JS function and sometimes it includes an email, ONLY include the first name in the opening line.
     5. Subject line: email subject line must be 2-3 words.
-    6. Guess their email. Do your best to guess their work email address. The email is sometimes attached to the name, if so you must use that. Always return the email like this - email: (guessed email)
+    6. Guess their email. You must guess their work email address. Make sure to base it on common email patterns associated with their respective publication. The email is sometimes attached to the name, if so you must use that. Always return the email like this - email: (guessed email)
     7. Do not bold any of the text in the response.  
      """
 )

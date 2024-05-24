@@ -958,7 +958,6 @@ export default {
       if (event.target.tagName === 'SPAN') {
         const text = event.target.innerText
         const { name, email, publication, tip } = this.extractNameAndEmail(text)
-        console.log('INFO IS HERE:', name, email, publication, tip)
         this.targetEmail = email
         this.pitchingTip = 'The journalist is ' + name + '.' + tip
         this.currentJournalist = name

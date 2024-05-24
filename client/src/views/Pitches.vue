@@ -122,7 +122,7 @@
       </div>
     </Modal>
 
-    <Modal v-if="journalistModalOpen" class="paid-modal" style="z-index: 1000000">
+    <Modal v-if="journalistModalOpen" class="paid-modal">
       <div style="min-height: 275px; width: 510px" class="regen-container">
         <div class="paid-header">
           <div>
@@ -211,7 +211,7 @@
       </div>
     </Modal>
 
-    <Modal v-if="feedbackModalOpen" class="paid-modal" style="z-index: 1000000s">
+    <Modal v-if="feedbackModalOpen" class="paid-modal">
       <div style="min-height: 275px; width: 510px" class="regen-container">
         <div class="paid-header">
           <div>
@@ -336,7 +336,7 @@
       </div>
     </Modal>
 
-    <Modal v-if="saveModalOpen" class="paid-modal" style="z-index: 1000000">
+    <Modal v-if="saveModalOpen" class="paid-modal">
       <div
         :style="isMobile ? 'width: 95%; min-height: 275px' : 'width: 510px; min-height: 275px'"
         class="regen-container"
