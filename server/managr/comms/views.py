@@ -1443,7 +1443,7 @@ class PitchViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_REWRITE_PTICH(original, tip)
+                prompt = comms_consts.OPEN_AI_REWRITE_PTICH(original, tip, user.first_name)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,

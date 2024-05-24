@@ -89,7 +89,8 @@ export default {
   width: 100vw;
   height: 100vh;
   min-height: 100vh !important; // in case of inheritance issues
-  z-index: 1000;
+  min-width: 100vw !important;
+  z-index: 1000000000000000;
   display: flex;
   flex-flow: column;
   align-items: center;
