@@ -283,6 +283,7 @@ class NewsSource(TimeStampModel):
     rss_feed_url = models.URLField(blank=True, null=True)
     last_scraped = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    is_crawling = models.BooleanField(default=False)
     access_count = JSONField(default=dict, null=True, blank=True)
     # Web Scraping Fields
     category_link_selector = models.CharField(max_length=255, blank=True, null=True)
@@ -420,7 +421,9 @@ class NewsSource(TimeStampModel):
     def crawling(self):
         article_check = Article.objects.filter(source=self)
         if len(article_check):
-            return True
+            self.is_crawling = True
+            self.save()
+            return self.is_crawling
         return False
 
     @classmethod

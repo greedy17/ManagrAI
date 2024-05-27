@@ -32,7 +32,7 @@ class CustomNewsSource(admin.ModelAdmin):
         "domain",
         "site_name",
         "is_active",
-        "crawling_display",
+        "is_crawling",
         "last_scraped",
         "article_link_attribute",
         "article_link_selector",
@@ -40,13 +40,7 @@ class CustomNewsSource(admin.ModelAdmin):
     ordering = ("-last_scraped", "is_active")
     readonly_fields = ("access_count",)
     search_fields = ("domain", "site_name")
-    list_filter = ("is_active",)
-
-    def crawling_display(self, obj):
-        return obj.crawling
-
-    crawling_display.boolean = True
-    crawling_display.short_description = "Crawling"
+    list_filter = ("is_active", "is_crawling")
 
 
 class CustomArticle(admin.ModelAdmin):
