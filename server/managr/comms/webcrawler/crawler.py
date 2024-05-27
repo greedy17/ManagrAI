@@ -28,7 +28,7 @@ XPATH_STRING_OBJ = {
     "title": ["//meta[contains(@property, 'title')]/@content"],
     "author": [
         "//*[contains(@class,'gnt_ar_by')]/a/text()",
-        "//meta[@name='author' | @name='authors']/@content",
+        "//meta[@name='author' or @name='authors']/@content",
         "//*[@class='article__author']/text()",
         "//meta[contains(@name,'author')]/@content",
         "//*[@rel='author']/text()",
@@ -302,13 +302,15 @@ class NewsSpider(scrapy.Spider):
             return
         except Exception as e:
             self.error_log.append(f"URL: {source.domain} | Error: {str(e)}")
-            source.add_error(f"{str(e)} {meta_tag_data}\n")
+            if len(source.error_log) <= 5:
+                source.add_error(f"{str(e)} {meta_tag_data}\n")
         if len(fields_dict):
             for key in fields_dict.keys():
                 path = fields_dict[key]
                 field = XPATH_TO_FIELD[key]
                 setattr(source, field, path)
             source.save()
+            source.crawling
         self.urls_processed += 1
         return
 

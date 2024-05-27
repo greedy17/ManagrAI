@@ -430,7 +430,7 @@ class NewsSource(TimeStampModel):
     def get_stopped_sources(cls):
         today = datetime.today()
         stopped_sources = []
-        news = NewsSource.objects.filter(article_link_regex__isnull=False, is_active=True)
+        news = NewsSource.objects.filter(is_crawling=True)
         for n in news:
             article = n.newest_article_date()
             if article and (today - article).days >= 7:
@@ -449,10 +449,10 @@ class NewsSource(TimeStampModel):
         # filters sources that are already scrapping
         elif scrape_ready and not new:
             if settings.IN_DEV:
-                active_sources = active_sources.filter(article_link_regex__isnull=False)
+                active_sources = active_sources.filter(is_crawling=True)
             else:
                 active_sources = active_sources.filter(
-                    article_link_regex__isnull=False, last_scraped__lt=twelve_hours
+                    is_crawling=True, last_scraped__lt=twelve_hours
                 )
         # filters sources that were just added and don't have scrape data yet
         elif not scrape_ready and new:
