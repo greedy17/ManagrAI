@@ -218,7 +218,7 @@ variable "scheduled_tasks" {
     {
       name       = "spiderstatus"
       command    = "spider_status"
-      cron       = "cron(15/15 1-8 * * ? *)"
+      cron       = "cron(15/15 1-12 * * ? *)"
       task_count = 1
     },
   ]

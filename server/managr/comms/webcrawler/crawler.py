@@ -27,13 +27,16 @@ logger = logging.getLogger("managr")
 XPATH_STRING_OBJ = {
     "title": ["//meta[contains(@property, 'title')]/@content"],
     "author": [
-        "//meta[@name='author']/@content",
+        "//*[contains(@class,'gnt_ar_by')]/a/text()",
+        "//meta[@name='author' | @name='authors']/@content",
+        "//*[@class='article__author']/text()",
         "//meta[contains(@name,'author')]/@content",
         "//*[@rel='author']/text()",
         "//*[contains(@class,'author-name') and string-length() > 2]//text()",
     ],
     "description": ["//meta[contains(@property, 'description')]/@content"],
     "publish_date": [
+        "//*[contains(@class,'gnt_ar_dt')]/@aria-label",
         "//body//time/@datetime | //body//time/@dateTime | //body//time/text()",
         "//meta[contains(@itemprop,'date')]/@content",
         "//meta[contains(translate(@property, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'modified') or contains(translate(@property, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'published')]/@content",
@@ -62,7 +65,7 @@ def data_cleaner(data):
         date = data.pop("publish_date")
         parsed_date = parser.parse(date)
         content = content.replace("\n", " ").replace("\t", " ").replace("  ", "")
-        data["author"] = data["author"].replace("\n", "").strip()
+        data["author"] = data["author"].replace("\n", "").replace(",", "").strip()
         data["content"] = content
         data["publish_date"] = parsed_date
         if len(data["title"]) > 150:

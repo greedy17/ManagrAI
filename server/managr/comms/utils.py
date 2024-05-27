@@ -58,6 +58,7 @@ def extract_date_from_text(text):
         r"([A-Za-z]+(?: \d{1,2},)? \d{4})",
         r"([A-Za-z]{3}\. \d{1,2}, \d{4} \d{1,2}:\d{2} [apAP]\.m\.)",
         r"(\w+\s\d+,\s\d{4})",
+        r"(?P<date>\w+ \d{1,2}, \d{4}) at (?P<time>\d{1,2}:\d{2} \w{2})",
     ]
     date_str = text
     strptime_formats = [
@@ -66,6 +67,7 @@ def extract_date_from_text(text):
         "%b %d, %Y",
         "%b. %d, %Y %I:%M %p",
         "%Y-%m-%dT%H:%M:%S%z",
+        "%B %d, %Y at %I:%M %p",
     ]
     for pattern in patterns:
         match = re.search(pattern, text)
