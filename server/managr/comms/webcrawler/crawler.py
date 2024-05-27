@@ -302,7 +302,7 @@ class NewsSpider(scrapy.Spider):
             return
         except Exception as e:
             self.error_log.append(f"URL: {source.domain} | Error: {str(e)}")
-            if len(source.error_log) <= 5:
+            if source.error_log is None or len(source.error_log) <= 5:
                 source.add_error(f"{str(e)} {meta_tag_data}\n")
         if len(fields_dict):
             for key in fields_dict.keys():
