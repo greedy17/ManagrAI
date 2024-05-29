@@ -432,6 +432,16 @@ urlpatterns = [
         comms_views.get_writing_styles,
         name="writing_styles",
     ),
+    path(
+        "mailgun-webhooks/",
+        comms_views.mailgun_webhooks,
+        name="mailgun-webhooks",
+    ),
+    path(
+        "email-received-webhook/",
+        comms_views.email_recieved_webhook,
+        name="email-received-webhook",
+    ),
 ]
 router.register("users/reports", core_views.ReportViewSet, "reports"),
 router.register("users/conversations", core_views.ConversationViewSet, "conversations"),
