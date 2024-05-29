@@ -629,6 +629,12 @@
                 class="primary-button"
               >
                 Discover
+
+                <div v-if="loading" class="loading" style="padding: 6px 0; margin-left: 4px">
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                </div>
               </button>
             </div>
           </div>
