@@ -2502,7 +2502,7 @@ export default {
         },
         {
           name: `List Journalists`,
-          value: `List 5 journalists (from top pubs, include pitching tips) I can pitch on behalf of {BrandX}`,
+          value: `List 5 journalists (from top pubs, what they wrote, and include pitching tips) I can pitch on behalf of {BrandX}`,
         },
         {
           name: `Media Q&A`,

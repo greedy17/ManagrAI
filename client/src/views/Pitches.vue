@@ -79,7 +79,7 @@
           <input
             style="width: 600px"
             class="input-text"
-            placeholder="Name your writing style..."
+            placeholder="Style Name..."
             type="text"
             v-model="styleName"
             :disabled="savingStyle"

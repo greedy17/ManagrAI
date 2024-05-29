@@ -98,7 +98,7 @@
                   maxlength="8000"
                   class="area-input text-area-input"
                   style="padding: 16px 0 0 0; max-height: 350px; width: 650px"
-                  placeholder="Paste or insert content..."
+                  placeholder="Paste content..."
                   v-model="content"
                   rows="20"
                   v-autoresize
@@ -322,7 +322,7 @@
                   name="content-type"
                   v-model="content"
                   :disabled="loading"
-                  placeholder="Paste or insert content..."
+                  placeholder="Paste content..."
                   v-autoresize
                   autocomplete="off"
                   maxlength="8000"
@@ -340,6 +340,95 @@
                 />
                 <div class="absolute-count-small">
                   <small>{{ remainingCharsSample }}</small>
+                </div>
+              </div>
+
+              <div
+                class="input-containered"
+                style="
+                  border: none;
+                  box-shadow: none;
+                  position: relative;
+                  border-radius: 0;
+                  border-top: 1px solid rgba(0, 0, 0, 0.1);
+                  padding: 12px 0;
+                "
+              >
+                <img class="left-margin-m" src="@/assets/images/disk.svg" height="19px" alt="" />
+                <div style="position: relative">
+                  <div
+                    @click="toggleShowPitches"
+                    style="margin-left: 16px; padding: 2px 6px; border-radius: 4px"
+                    class="row pointer nav-text"
+                  >
+                    Saved content
+                    <img
+                      v-if="!showPitches"
+                      src="@/assets/images/downArrow.svg"
+                      height="14px"
+                      alt=""
+                      style="margin-left: 4px"
+                    />
+                    <img
+                      class="rotate-img"
+                      v-else
+                      src="@/assets/images/downArrow.svg"
+                      height="14px"
+                      alt=""
+                      style="margin-left: 4px"
+                    />
+                  </div>
+                  <div v-if="showPitches" class="search-dropdown">
+                    <div class="input">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path
+                          fill-rule="evenodd"
+                          clip-rule="evenodd"
+                          d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
+                          fill="currentColor"
+                        ></path>
+                      </svg>
+                      <input class="search-input" v-model="pitchText" :placeholder="`Search...`" />
+                      <img
+                        v-show="pitchText"
+                        @click="clearText"
+                        src="@/assets/images/close.svg"
+                        class="invert pointer"
+                        height="12px"
+                        alt=""
+                      />
+                    </div>
+                    <p class="v-margin" v-if="!pitches.length">Nothing here...</p>
+
+                    <div class="searches-container">
+                      <div
+                        @mouseenter="setIndex(i)"
+                        @mouseLeave="removeIndex"
+                        @click="insertPitch(pitch)"
+                        class="row relative"
+                        v-for="(pitch, i) in pitches"
+                        :key="pitch.id"
+                      >
+                        <img
+                          class="search-icon invert"
+                          v-if="pitch.type === 'NEWS'"
+                          src="@/assets/images/memo.svg"
+                          height="12px"
+                          alt=""
+                        />
+                        <img
+                          class="search-icon"
+                          v-else-if="pitch.type === 'SOCIAL_MEDIA'"
+                          src="@/assets/images/comment.svg"
+                          height="12px"
+                          alt=""
+                        />
+                        <p>
+                          {{ pitch.name }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -618,104 +707,21 @@
               </div>
             </div>
 
-            <div style="padding: 16px 0" class="space-between">
-              <div style="position: relative">
-                <div
-                  @click="toggleShowPitches"
-                  style="
-                    margin-left: 16px;
-                    border: 1px solid black;
-                    padding: 2px 4px;
-                    border-radius: 4px;
-                  "
-                  class="row pointer nav-text"
-                >
-                  Insert saved content
-                  <img
-                    v-if="!showPitches"
-                    src="@/assets/images/downArrow.svg"
-                    height="14px"
-                    alt=""
-                    style="margin-left: 4px"
-                  />
-                  <img
-                    class="rotate-img"
-                    v-else
-                    src="@/assets/images/downArrow.svg"
-                    height="14px"
-                    alt=""
-                    style="margin-left: 4px"
-                  />
+            <div style="padding: 16px 0 0 0" class="flex-end">
+              <button @click="clearData" class="secondary-button">Clear</button>
+              <button
+                @click="discoverJournalists"
+                :disabled="!content || !type || !beat || !location || loading"
+                class="primary-button"
+              >
+                Discover
+
+                <div v-if="loading" class="loading" style="padding: 6px 0; margin-left: 4px">
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                  <div class="dot"></div>
                 </div>
-                <div v-if="showPitches" class="search-dropdown">
-                  <div class="input">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                      <path
-                        fill-rule="evenodd"
-                        clip-rule="evenodd"
-                        d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
-                        fill="currentColor"
-                      ></path>
-                    </svg>
-                    <input class="search-input" v-model="pitchText" :placeholder="`Search...`" />
-                    <img
-                      v-show="pitchText"
-                      @click="clearText"
-                      src="@/assets/images/close.svg"
-                      class="invert pointer"
-                      height="12px"
-                      alt=""
-                    />
-                  </div>
-                  <p class="v-margin" v-if="!pitches.length">Nothing here...</p>
-
-                  <div class="searches-container">
-                    <div
-                      @mouseenter="setIndex(i)"
-                      @mouseLeave="removeIndex"
-                      @click="insertPitch(pitch)"
-                      class="row relative"
-                      v-for="(pitch, i) in pitches"
-                      :key="pitch.id"
-                    >
-                      <img
-                        class="search-icon invert"
-                        v-if="pitch.type === 'NEWS'"
-                        src="@/assets/images/memo.svg"
-                        height="12px"
-                        alt=""
-                      />
-                      <img
-                        class="search-icon"
-                        v-else-if="pitch.type === 'SOCIAL_MEDIA'"
-                        src="@/assets/images/comment.svg"
-                        height="12px"
-                        alt=""
-                      />
-                      <p>
-                        {{ pitch.name }}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="rows">
-                <button @click="clearData" class="secondary-button">Clear</button>
-                <button
-                  @click="discoverJournalists"
-                  :disabled="!content || !type || !beat || !location || loading"
-                  class="primary-button"
-                >
-                  Discover
-
-                  <div v-if="loading" class="loading" style="padding: 6px 0; margin-left: 4px">
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                  </div>
-                </button>
-              </div>
+              </button>
             </div>
           </div>
         </div>
@@ -1818,8 +1824,8 @@ export default {
 .search-dropdown {
   width: 260px;
   position: absolute;
-  bottom: 40px;
-  left: 0;
+  top: 40px;
+  left: 16px;
   font-size: 12px;
   font-weight: 400;
   background: white;
