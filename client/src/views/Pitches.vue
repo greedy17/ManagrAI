@@ -1,5 +1,5 @@
 <template>
-  <div ref="pitchTop" class="pitch-view" :class="{ 'reverse-column': pitch }">
+  <div ref="pitchTop" class="pitch-view" :class="{ 'reverse-column': pitch && isMobile }">
     <!-- paidModal -->
     <Modal v-if="paidModal" class="paid-modal">
       <div class="regen-container">

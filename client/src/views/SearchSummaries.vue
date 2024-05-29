@@ -1,5 +1,5 @@
 <template>
-  <div class="search" :class="{ 'reverse-column': summary }">
+  <div class="search" :class="{ 'reverse-column': summary && isMobile }">
     <Modal v-if="promptModalOpen" class="paid-modal">
       <div class="regen-container">
         <div style="background-color: white" class="paid-header sticky-header">
@@ -1694,7 +1694,12 @@
 
                 <div class="card-footer">
                   <div class="author-time">
-                    <span class="author">{{ article.author }}</span>
+                    <span
+                      @click="selectJournalist(article)"
+                      class="author"
+                      style="text-decoration: underline; cursor: pointer"
+                      >{{ article.author }}</span
+                    >
                     <span class="divider-dot">.</span>
                     <span class="off-gray time">{{
                       getTimeDifferenceInMinutes(article.publish_date)

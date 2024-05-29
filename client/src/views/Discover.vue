@@ -1,5 +1,5 @@
 <template>
-  <div ref="pitchTop" class="pitch-view" :class="{ 'reverse-column': summary }">
+  <div ref="pitchTop" class="pitch-view" :class="{ 'reverse-column': summary && isMobile }">
     <!-- paidModal -->
     <Modal v-if="paidModal" class="paid-modal">
       <div class="regen-container">
@@ -98,7 +98,7 @@
                   maxlength="8000"
                   class="area-input text-area-input"
                   style="padding: 16px 0 0 0; max-height: 350px; width: 650px"
-                  placeholder="Paste your content here..."
+                  placeholder="Paste or insert content..."
                   v-model="content"
                   rows="20"
                   v-autoresize
@@ -322,7 +322,7 @@
                   name="content-type"
                   v-model="content"
                   :disabled="loading"
-                  placeholder="Paste your content here"
+                  placeholder="Paste or insert content..."
                   v-autoresize
                   autocomplete="off"
                   maxlength="8000"
@@ -618,21 +618,104 @@
               </div>
             </div>
 
-            <div style="padding: 16px 0" class="flex-end">
-              <button @click="clearData" class="secondary-button">Clear</button>
-              <button
-                @click="discoverJournalists"
-                :disabled="!content || !type || !beat || !location || loading"
-                class="primary-button"
-              >
-                Discover
-
-                <div v-if="loading" class="loading" style="padding: 6px 0; margin-left: 4px">
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                  <div class="dot"></div>
+            <div style="padding: 16px 0" class="space-between">
+              <div style="position: relative">
+                <div
+                  @click="toggleShowPitches"
+                  style="
+                    margin-left: 16px;
+                    border: 1px solid black;
+                    padding: 2px 4px;
+                    border-radius: 4px;
+                  "
+                  class="row pointer nav-text"
+                >
+                  Insert saved content
+                  <img
+                    v-if="!showPitches"
+                    src="@/assets/images/downArrow.svg"
+                    height="14px"
+                    alt=""
+                    style="margin-left: 4px"
+                  />
+                  <img
+                    class="rotate-img"
+                    v-else
+                    src="@/assets/images/downArrow.svg"
+                    height="14px"
+                    alt=""
+                    style="margin-left: 4px"
+                  />
                 </div>
-              </button>
+                <div v-if="showPitches" class="search-dropdown">
+                  <div class="input">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <path
+                        fill-rule="evenodd"
+                        clip-rule="evenodd"
+                        d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
+                        fill="currentColor"
+                      ></path>
+                    </svg>
+                    <input class="search-input" v-model="pitchText" :placeholder="`Search...`" />
+                    <img
+                      v-show="pitchText"
+                      @click="clearText"
+                      src="@/assets/images/close.svg"
+                      class="invert pointer"
+                      height="12px"
+                      alt=""
+                    />
+                  </div>
+                  <p class="v-margin" v-if="!pitches.length">Nothing here...</p>
+
+                  <div class="searches-container">
+                    <div
+                      @mouseenter="setIndex(i)"
+                      @mouseLeave="removeIndex"
+                      @click="insertPitch(pitch)"
+                      class="row relative"
+                      v-for="(pitch, i) in pitches"
+                      :key="pitch.id"
+                    >
+                      <img
+                        class="search-icon invert"
+                        v-if="pitch.type === 'NEWS'"
+                        src="@/assets/images/memo.svg"
+                        height="12px"
+                        alt=""
+                      />
+                      <img
+                        class="search-icon"
+                        v-else-if="pitch.type === 'SOCIAL_MEDIA'"
+                        src="@/assets/images/comment.svg"
+                        height="12px"
+                        alt=""
+                      />
+                      <p>
+                        {{ pitch.name }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rows">
+                <button @click="clearData" class="secondary-button">Clear</button>
+                <button
+                  @click="discoverJournalists"
+                  :disabled="!content || !type || !beat || !location || loading"
+                  class="primary-button"
+                >
+                  Discover
+
+                  <div v-if="loading" class="loading" style="padding: 6px 0; margin-left: 4px">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                  </div>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -746,6 +829,8 @@ export default {
   },
   data() {
     return {
+      showPitches: false,
+      pitchText: '',
       currentJournalist: '',
       currentPublication: '',
       toolbarOptions: [
@@ -866,6 +951,16 @@ export default {
     this.bccEmail = this.user.email
   },
   methods: {
+    insertPitch(pitch) {
+      this.toggleShowPitches()
+      this.content = pitch.generated_pitch
+    },
+    toggleShowPitches() {
+      this.showPitches = !this.showPitches
+    },
+    clearText() {
+      this.pitchText = ''
+    },
     async verifyEmail() {
       this.verifying = true
       try {
@@ -1599,6 +1694,16 @@ export default {
         return false
       }
     },
+    unfilteredPitches() {
+      return this.$store.state.allPitches
+    },
+    pitches() {
+      if (this.unfilteredPitches.length) {
+        return this.unfilteredPitches.filter((pitch) =>
+          pitch.name.toLowerCase().includes(this.pitchText.toLowerCase()),
+        )
+      } else return []
+    },
   },
   directives: {
     autoresize: {
@@ -1709,6 +1814,89 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.search-dropdown {
+  width: 260px;
+  position: absolute;
+  bottom: 40px;
+  left: 0;
+  font-size: 12px;
+  font-weight: 400;
+  background: white;
+  padding: 0;
+  border-radius: 5px;
+  box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+  line-height: 1.5;
+  z-index: 2001;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+
+  p {
+    padding: 8px 16px;
+    font-size: 14px;
+    color: #7c7b7b;
+    cursor: pointer;
+    width: 245px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin: 0;
+  }
+
+  p:hover {
+    color: $dark-black-blue;
+  }
+}
+
+.input {
+  position: sticky;
+  z-index: 2005;
+  top: 1.5rem;
+  width: 224px;
+  margin: 1.5rem 0 0.5rem 1rem;
+  border-radius: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-family: $thin-font-family;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 8px 20px 8px 10px;
+}
+
+.search-input {
+  border: none;
+  outline: none;
+  margin-left: 0.5rem;
+  width: 100%;
+}
+
+.searches-container::-webkit-scrollbar:hover {
+}
+
+.searches-container::-webkit-scrollbar {
+  width: 6px;
+  height: 0px;
+}
+
+.searches-container::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px;
+}
+
+.searches-container:hover::-webkit-scrollbar-thumb {
+  background-color: $soft-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px;
+}
+
+.searches-container {
+  max-height: 250px;
+  overflow-y: scroll;
+  scroll-behavior: smooth;
+  margin-bottom: 0.25rem;
+  padding: 0.5rem 0;
+}
 
 ::v-deep .ql-snow.ql-toolbar button {
   background: $soft-gray;
