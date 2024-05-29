@@ -81,10 +81,7 @@
     </Modal>
 
     <Modal v-if="contentModalOpen" class="paid-modal">
-      <div
-        :style="isMobile ? 'width: 95%; min-height: 100px' : 'width: 610px; min-height: 100px;'"
-        class="regen-container"
-      >
+      <div :style="isMobile ? '' : 'width: 610px; min-height: 100px;'" class="regen-container">
         <div style="background-color: white; z-index: 1000" class="paid-header">
           <div class="space-between">
             <p style="font-size: 17px">Content</p>
@@ -2327,7 +2324,7 @@ label {
   background-color: $offer-white;
   color: $base-gray;
   @media only screen and (max-width: 600px) {
-    width: 100%;
+    width: 100% !important;
   }
 }
 .input-container-chat {
@@ -2340,7 +2337,7 @@ label {
   color: $base-gray;
   position: relative;
   @media only screen and (max-width: 600px) {
-    width: 100%;
+    width: 100% !important;
   }
 }
 
