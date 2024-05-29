@@ -1,5 +1,5 @@
 <template>
-  <div ref="pitchTop" class="pitch-view">
+  <div ref="pitchTop" class="pitch-view" :class="{ 'reverse-column': pitch && isMobile }">
     <!-- paidModal -->
     <Modal v-if="paidModal" class="paid-modal">
       <div class="regen-container">
@@ -79,7 +79,7 @@
           <input
             style="width: 600px"
             class="input-text"
-            placeholder="Name your writing style..."
+            placeholder="Style Name..."
             type="text"
             v-model="styleName"
             :disabled="savingStyle"
@@ -1942,6 +1942,10 @@ label {
   width: 100%;
   background-color: white;
   z-index: 10;
+
+  @media only screen and (max-width: 600px) {
+    padding: 16px 64px 32px 64px;
+  }
 }
 
 .content-body {
@@ -2035,7 +2039,8 @@ label {
   position: relative;
 
   @media only screen and (max-width: 600px) {
-    width: 100vw;
+    width: 125vw;
+    margin-left: 4px;
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
@@ -2075,11 +2080,6 @@ label {
   img {
     filter: brightness(0) invert(100%);
   }
-}
-
-.sticky-bottom {
-  position: absolute;
-  bottom: 0;
 }
 
 .left-margin {
@@ -2281,6 +2281,16 @@ label {
   }
 }
 
+::v-deep .modal {
+  @media only screen and (max-width: 600px) {
+    margin-left: -8px !important;
+  }
+}
+
+.reverse-column {
+  flex-direction: column-reverse !important;
+}
+
 .pitch-view {
   font-family: $thin-font-family;
   font-size: 14px;
@@ -2337,6 +2347,13 @@ label {
   img {
     filter: invert(40%);
   }
+
+  @media only screen and (max-width: 600px) {
+    padding-right: 16px;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 
 .input-containered {
@@ -2370,7 +2387,7 @@ label {
   background-color: $offer-white;
   color: $base-gray;
   @media only screen and (max-width: 600px) {
-    width: 100%;
+    width: 100% !important;
   }
 }
 .input-container-chat {
@@ -2382,8 +2399,9 @@ label {
   background-color: $offer-white;
   color: $base-gray;
   position: relative;
+
   @media only screen and (max-width: 600px) {
-    width: 100%;
+    width: 100% !important;
   }
 }
 
@@ -2975,7 +2993,11 @@ footer {
     font-size: 14px;
   }
   @media only screen and (max-width: 600px) {
-    width: 95%;
+    font-size: 13px !important;
+    width: 100% !important;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
   }
 }
 .paid-header {
@@ -3550,7 +3572,7 @@ button:disabled {
   flex-direction: column;
 
   p {
-    font-size: 17px;
+    font-size: 18px !important;
   }
 }
 

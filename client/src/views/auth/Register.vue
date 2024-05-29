@@ -378,6 +378,11 @@ label {
   padding: 64px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   font-family: $thin-font-family;
+
+  @media only screen and (max-width: 600px) {
+    padding: 32px;
+    width: 100%;
+  }
 }
 .error {
   color: red;

@@ -9,7 +9,7 @@
     </header>
 
     <div :class="{ disable: generatingToken }" class="form-card">
-      <h2 style="margin-bottom: -0.5rem;">Account Registration</h2>
+      <h2 style="margin-bottom: -0.5rem">Account Registration</h2>
       <p class="small-text">Create a password to get started</p>
       <div class="col full-width">
         <label for="company">Company Name</label>
@@ -443,6 +443,18 @@ export default {
       width: 227px;
     }
   }
+
+  @media only screen and (max-width: 600px) {
+    align-items: flex-start;
+    flex-direction: column;
+    flex-wrap: nowrap;
+
+    div {
+      input {
+        width: 300px;
+      }
+    }
+  }
 }
 
 .col {
@@ -510,6 +522,11 @@ export default {
   padding: 64px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   font-family: $thin-font-family;
+
+  @media only screen and (max-width: 600px) {
+    padding: 32px;
+    width: 100%;
+  }
 }
 
 .error {

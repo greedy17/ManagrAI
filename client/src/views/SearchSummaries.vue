@@ -1,5 +1,5 @@
 <template>
-  <div class="search">
+  <div class="search" :class="{ 'reverse-column': summary && isMobile }">
     <Modal v-if="promptModalOpen" class="paid-modal">
       <div class="regen-container">
         <div style="background-color: white" class="paid-header sticky-header">
@@ -320,10 +320,7 @@
     </Modal>
 
     <Modal v-if="emailJournalistModalOpen" class="paid-modal">
-      <div
-        :style="isMobile ? 'width: 95%; min-height: 100px' : 'width: 610px; min-height: 100px; '"
-        class="regen-container"
-      >
+      <div :style="isMobile ? '' : 'width: 610px; min-height: 100px; '" class="regen-container">
         <div style="background-color: white; z-index: 1000" class="paid-header">
           <div class="space-between">
             <h2>Email Pitch</h2>
@@ -498,7 +495,7 @@
     </Modal>
 
     <section id="clips" class="container">
-      <div class="header centered sticky-top padding-top col">
+      <div class="header centered sticky-top padding-top col mobile-header">
         <div
           style="width: 100%; margin-top: 0.5rem"
           v-if="selectedSearch && !loading"
@@ -1697,7 +1694,12 @@
 
                 <div class="card-footer">
                   <div class="author-time">
-                    <span class="author">{{ article.author }}</span>
+                    <span
+                      @click="selectJournalist(article)"
+                      class="author"
+                      style="text-decoration: underline; cursor: pointer"
+                      >{{ article.author }}</span
+                    >
                     <span class="divider-dot">.</span>
                     <span class="off-gray time">{{
                       getTimeDifferenceInMinutes(article.publish_date)
@@ -2500,7 +2502,7 @@ export default {
         },
         {
           name: `List Journalists`,
-          value: `List 5 journalists (from top pubs, include pitching tips) I can pitch on behalf of {BrandX}`,
+          value: `List 5 journalists (from top pubs, what they wrote, and include pitching tips) I can pitch on behalf of {BrandX}`,
         },
         {
           name: `Media Q&A`,
@@ -4682,6 +4684,12 @@ export default {
   font-size: 13px;
   padding: 4px 20px 16px 18px;
   outline: none;
+
+  @media only screen and (max-width: 600px) {
+  }
+
+  @media only screen and (min-width: 1025px) and (max-width: 1300px) {
+  }
 }
 
 .e-container {
@@ -4710,6 +4718,9 @@ export default {
   height: 160px;
   width: 100%;
   border-radius: 8px;
+  @media only screen and (max-width: 600px) {
+    height: 140px;
+  }
 }
 
 .link {
@@ -5654,6 +5665,10 @@ li {
   padding-top: 104px;
 }
 
+.reverse-column {
+  flex-direction: column-reverse !important;
+}
+
 .search {
   font-family: $thin-font-family;
   font-size: 14px;
@@ -5687,7 +5702,8 @@ li {
   position: relative;
 
   @media only screen and (max-width: 600px) {
-    width: 100vw;
+    width: 120vw;
+    margin-left: 24px;
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
@@ -5743,6 +5759,15 @@ p {
 .sticky-top {
   position: absolute;
   top: 0;
+}
+
+.mobile-header {
+  @media only screen and (max-width: 600px) {
+    padding-right: 56px !important;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 
 .flex-end {
@@ -5803,7 +5828,7 @@ p {
   flex-direction: column;
 
   p {
-    font-size: 18px;
+    font-size: 18px !important;
   }
 }
 
@@ -5879,6 +5904,12 @@ p {
   border-radius: 32px;
   padding: 6px 2px;
   width: 60%;
+  @media only screen and (max-width: 600px) {
+    width: 70%;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 
 .switch-item {
@@ -5894,6 +5925,13 @@ p {
   white-space: nowrap;
   font-weight: 400;
   font-size: 14px;
+
+  @media only screen and (max-width: 600px) {
+    font-size: 13px;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 
 .activeswitch {
@@ -6137,10 +6175,19 @@ textarea::placeholder {
   position: relative;
   overflow-y: scroll;
   font-family: $thin-font-family;
+
+  @media only screen and (max-width: 600px) {
+    font-size: 13px !important;
+    width: 100% !important;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
+
 ::v-deep .modal {
   @media only screen and (max-width: 600px) {
-    width: 90%;
+    // width: 90%;
   }
 }
 .message-text {
@@ -6326,6 +6373,10 @@ textarea::placeholder {
 
 .area-input-smallest:last-of-type {
   padding-left: 0.5rem;
+
+  @media only screen and (max-width: 600px) {
+    padding: 0;
+  }
 }
 
 .close-x {
