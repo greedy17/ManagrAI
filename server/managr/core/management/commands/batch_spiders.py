@@ -1,4 +1,3 @@
-import datetime
 from django.core.management.base import BaseCommand
 from managr.core.models import CrawlerReport
 from managr.comms.models import NewsSource
@@ -18,4 +17,4 @@ class Command(BaseCommand):
         for i in range(0, len(news), int(batch_size)):
             batch = news[i : i + batch_size]
             batch_url_list = ",".join(batch)
-            _run_spider_batch(batch_url_list)
+            _run_spider_batch(batch_url_list, priority=-1)
