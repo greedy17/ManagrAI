@@ -1,7 +1,13 @@
 <template>
   <div class="leadership">
     <header>
-      <img @click="goToManagr" class="blue-filter pointer" src="@/assets/images/logo.png" height="36px" alt="" />
+      <img
+        @click="goToManagr"
+        class="blue-filter pointer"
+        src="@/assets/images/logo.png"
+        height="36px"
+        alt=""
+      />
       <div class="header">
         <small>Already a member ?</small>
         <router-link class="secondary-button" :to="{ name: 'Login' }">Log in</router-link>
@@ -11,10 +17,9 @@
       <!-- <header>
         <img class="blue-filter" src="@/assets/images/logo.png" height="36px" alt="" />
       </header> -->
-  
-  
+
       <div v-if="!sentEmail" class="leadership-card">
-        <h2 class="h2-text" style="margin-bottom: -0.5rem;">Sign up for a free account</h2>
+        <h2 class="h2-text" style="margin-bottom: -0.5rem">Sign up for a free account</h2>
         <p class="small-text">Fill in the information below to get started with Managr</p>
         <div class="input__container">
           <p class="input__container_label">Company Name:</p>
@@ -28,18 +33,26 @@
           <p class="input__container_label">Email (company email only):</p>
           <input id="access-code" v-model="email" type="text" />
         </div>
-        <button id="access-code-button" class="submit-button" :disabled="!email || !name || !orgName" type="submit" @click="handleSendEmail">Email Registration Link</button>
+        <button
+          id="access-code-button"
+          class="submit-button"
+          :disabled="!email || !name || !orgName"
+          type="submit"
+          @click="handleSendEmail"
+        >
+          Email Registration Link
+        </button>
       </div>
-  
+
       <div v-else class="leadership-card">
         <h2>Registeration link sent!</h2>
         <div class="input__container">
-          <p style="margin-top: 0;">Please check your email and spam folder</p>
+          <p style="margin-top: 0">Please check your email and spam folder</p>
         </div>
         <!-- <button @click="returnHome">Back</button> -->
         <button @click="resendEmail">Resend Email</button>
       </div>
-  
+
       <div></div>
     </div>
   </div>
@@ -81,7 +94,7 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-      } catch(e) {
+      } catch (e) {
         console.log('error in resend email', e)
       }
     },
@@ -91,7 +104,6 @@ export default {
       }
 
       if (!this.email.includes('@') || !this.email.includes('.')) {
-        
       }
       if (!this.name.split(' ')[1]) {
         this.$toast('Please enter your full name', {
@@ -134,7 +146,7 @@ export default {
         this.userID = invite.data.id
         await User.api.sendEmail({ user_id: invite.data.id })
         this.sentEmail = true
-      } catch(e) {
+      } catch (e) {
         console.log('error in handleSendEmail', e)
         if (e.response && e.response.data) {
           const data = e.response.data
@@ -171,6 +183,10 @@ export default {
 
 .leadership {
   padding: 0 32px 32px 32px;
+
+  @media only screen and (max-width: 600px) {
+    width: 100vw;
+  }
 }
 .leadership-card {
   display: flex;
@@ -184,6 +200,11 @@ export default {
   padding: 64px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   font-family: $thin-font-family;
+
+  @media only screen and (max-width: 600px) {
+    padding: 32px;
+    width: 100%;
+  }
 }
 
 .leadership-code {
@@ -196,6 +217,11 @@ export default {
   align-items: center;
   justify-content: center;
   flex-direction: column;
+
+  @media only screen and (max-width: 600px) {
+    width: 100%;
+    padding: 32px 0;
+  }
 }
 
 input:focus {
@@ -209,16 +235,16 @@ h2 {
   margin-bottom: 1rem;
 }
 
-form {
-  @include standard-border();
-  margin-top: 3.125rem;
-  width: 31.25rem;
-  height: 18.75rem;
-  background-color: $white;
-  display: flex;
-  flex-flow: column;
-  align-items: center;
-}
+// form {
+//   @include standard-border();
+//   margin-top: 3.125rem;
+//   width: 31.25rem;
+//   height: 18.75rem;
+//   background-color: $white;
+//   display: flex;
+//   flex-flow: column;
+//   align-items: center;
+// }
 
 input {
   width: 320px;
@@ -247,6 +273,10 @@ input {
   &::placeholder {
     color: $very-light-gray;
   }
+
+  @media only screen and (max-width: 600px) {
+    width: 100% !important;
+  }
 }
 
 button {
@@ -261,6 +291,10 @@ button {
     background-color: $off-white;
     border: 1px solid rgba(0, 0, 0, 0.1);
     opacity: 0.7;
+  }
+
+  @media only screen and (max-width: 600px) {
+    width: 100% !important;
   }
 }
 
@@ -320,6 +354,9 @@ header {
 .input__container {
   display: flex;
   flex-direction: column;
+  @media only screen and (max-width: 600px) {
+    width: 100%;
+  }
 }
 .input__container_label {
   margin-top: 0;

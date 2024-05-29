@@ -1,5 +1,5 @@
 <template>
-  <div ref="pitchTop" class="pitch-view">
+  <div ref="pitchTop" class="pitch-view" :class="{ 'reverse-column': summary }">
     <!-- paidModal -->
     <Modal v-if="paidModal" class="paid-modal">
       <div class="regen-container">
@@ -1835,6 +1835,12 @@ export default {
   top: 0;
 }
 
+::v-deep .modal {
+  @media only screen and (max-width: 600px) {
+    margin-left: -8px !important;
+  }
+}
+
 .centered-col {
   display: flex;
   align-items: center;
@@ -1996,7 +2002,8 @@ label {
   position: relative;
 
   @media only screen and (max-width: 600px) {
-    width: 100vw;
+    width: 125vw;
+    margin-left: 4px;
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
@@ -3499,6 +3506,14 @@ button:disabled {
   height: 160px;
   width: 100%;
   border-radius: 8px;
+
+  @media only screen and (max-width: 600px) {
+    height: 140px;
+  }
+}
+
+.reverse-column {
+  flex-direction: column-reverse !important;
 }
 
 .create-report-container {
@@ -3529,7 +3544,12 @@ button:disabled {
   flex-direction: column;
 
   p {
-    font-size: 17px;
+    font-size: 18px !important;
+  }
+
+  @media only screen and (max-width: 600px) {
+    width: 120%;
+    margin-left: -32px;
   }
 }
 

@@ -95,6 +95,12 @@ export default {
   flex-flow: column;
   align-items: center;
   // overflow-y: scroll;
+  // @media only screen and (max-width: 600px) {
+  //   width: 90vw;
+  // }
+
+  // @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  // }
 }
 
 .dimmed {
@@ -108,7 +114,13 @@ export default {
   flex-flow: column;
   box-sizing: border-box;
   border-radius: 8px;
+
+  @media only screen and (max-width: 600px) {
+    margin-left: -48px;
+    width: 94vw;
+  }
 }
+
 .white {
   background-color: white;
 }
