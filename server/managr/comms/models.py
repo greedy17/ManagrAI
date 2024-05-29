@@ -19,7 +19,7 @@ from managr.utils.client import Variable_Client
 from managr.utils.sites import get_site_url
 from managr.core import exceptions as open_ai_exceptions
 from managr.utils.misc import encrypt_dict
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.indexes import GinIndex
@@ -481,6 +481,46 @@ class NewsSource(TimeStampModel):
         else:
             self.error_log = error
         return self.save()
+
+    def sync_journalists(self):
+        from managr.comms.serializers import JournalistSerializer
+
+        parsed_domain = urlparse(self.domain)
+        domain = parsed_domain.netloc
+        articles = self.articles.all().values_list("author", flat=True)
+        author_set = set(list(articles))
+        for a in author_set:
+            try:
+                author_list = a.split(",")
+            except ValueError:
+                print(f"Failed to split: {a}")
+                continue
+            for author in author_list:
+                try:
+                    first, last = author.split(" ")
+                    response = Journalist.email_finder(domain, first, last)
+                    if response["score"] is not None:
+                        is_valid = (
+                            False
+                            if response["verification"]["status"] in ["invalid", "unknown"]
+                            else True
+                        )
+                        data = {
+                            "verified": is_valid,
+                            "first_name": response["first_name"],
+                            "last_name": response["last_name"],
+                            "email": response["email"],
+                            "outlet": response["company"],
+                        }
+                        serializer = JournalistSerializer(data=data)
+                        serializer.is_valid(raise_exception=True)
+                        serializer.save()
+                except ValueError:
+                    print(f"Failed to split author name: {author}")
+                except Exception as e:
+                    print(e)
+                    continue
+        return
 
 
 class Article(TimeStampModel):
@@ -961,3 +1001,39 @@ class Journalist(TimeStampModel):
             status = r["data"]["status"]
         is_valid = False if status in ["invalid", "unknown"] else True
         return is_valid
+
+    @classmethod
+    def email_finder(cls, domain, first_name, last_name):
+        url = comms_consts.HUNTER_FINDER_URI
+        params = {
+            "api_key": comms_consts.HUNTER_API_KEY,
+            "domain": domain,
+            "first_name": first_name,
+            "last_name": last_name,
+        }
+        encoded_params = urlencode(params)
+        url = url + "?" + encoded_params
+        with Variable_Client() as client:
+            r = client.get(
+                url,
+            )
+            r = r.json()
+            response = r["data"]
+        return response
+
+
+class EmailTracker(TimeStampModel):
+    user = models.ForeignKey(
+        "core.User",
+        related_name="emails",
+        on_delete=models.CASCADE,
+    )
+    recipient = models.CharField(max_length=255)
+    subject = models.CharField(max_length=255)
+    body = models.TextField()
+    message_id = models.CharField(max_length=255, blank=True, null=True)
+    opens = models.IntegerField(default=0)
+    replies = models.IntegerField(default=0)
+    recieved = models.BooleanField(default=False)
+    failed = models.BooleanField(default=False)
+    activity_log = ArrayField(models.CharField(max_length=255), default=list)
