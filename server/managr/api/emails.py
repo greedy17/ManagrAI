@@ -57,7 +57,6 @@ def send_html_email(
         send_to,
         bcc_emails,
     )
-
     email.attach_alternative(html_body, "text/html")
 
     # Handle file attachments
@@ -80,7 +79,7 @@ def send_html_email(
             continue
         email.attach(part)
     for header_name, header_value in headers.items():
-        email.headers[header_name] = header_value
+        email.extra_headers[header_name] = header_value
 
     email.send(fail_silently=False)
 
