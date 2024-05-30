@@ -116,7 +116,6 @@ export default {
   border-radius: 8px;
 
   @media only screen and (max-width: 600px) {
-    margin-left: -48px;
     width: 94vw;
   }
 }
