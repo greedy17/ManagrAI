@@ -2035,7 +2035,7 @@ class DiscoveryViewSet(
             send_html_email(
                 subject,
                 "core/email-templates/user-email.html",
-                f"{user.full_name} <{user.email}>",
+                f"{user.full_name} <app@mg.managr.ai>",
                 [recipient],
                 context=context,
                 bcc_emails=bcc,
