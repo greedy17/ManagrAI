@@ -65,7 +65,9 @@ def data_cleaner(data):
         date = data.pop("publish_date")
         parsed_date = parser.parse(date)
         content = content.replace("\n", " ").replace("\t", " ").replace("  ", "")
-        data["author"] = data["author"].replace("\n", "").replace(",", "").strip()
+        data["author"] = (
+            data["author"].replace("\n", "").replace(",", "").replace("By ,", "").strip()
+        )
         data["content"] = content
         data["publish_date"] = parsed_date
         if len(data["title"]) > 150:

@@ -8,7 +8,9 @@ from django.template.loader import render_to_string
 from email.mime.application import MIMEApplication
 
 
-def send_html_email(subject, template, send_from, send_to, context={}, bcc_emails=[], files=[]):
+def send_html_email(
+    subject, template, send_from, send_to, context={}, bcc_emails=[], files=[], headers={}
+):
     """Generic sender to build and send an HTML email with a plain-text fallback.
 
     Args:
@@ -77,6 +79,8 @@ def send_html_email(subject, template, send_from, send_to, context={}, bcc_email
             # Ignore list elements that are neither a tuple or string
             continue
         email.attach(part)
+    for header_name, header_value in headers.items():
+        email.headers[header_name] = header_value
 
     email.send(fail_silently=False)
 

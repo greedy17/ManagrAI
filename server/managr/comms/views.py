@@ -2038,6 +2038,7 @@ class DiscoveryViewSet(
                 [recipient],
                 context=context,
                 bcc_emails=bcc,
+                headers={"X-Webhook": "staging"},
             )
             user.add_meta_data("emailSent")
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -2137,3 +2138,22 @@ class DiscoveryViewSet(
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
 
         return Response(data=message)
+
+
+@api_view(["POST"])
+@permission_classes([])
+def mailgun_webhooks(request):
+    event_data = request.data["event-data"]
+    message_id = event_data["message"]["headers"]["message-id"]
+    event_type = event_data["event"]
+    print(event_type)
+    return Response(status=status.HTTP_202_ACCEPTED)
+
+
+@api_view(["POST"])
+@permission_classes([])
+def email_recieved_webhook(request):
+    message_id = request.POST.get("Message-Id")
+    timestamp = request.POST.get("Date")
+    print(message_id, timestamp)
+    return Response(status=status.HTTP_202_ACCEPTED)

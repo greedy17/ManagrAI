@@ -19,6 +19,7 @@ TWITTER_ACCESS_TOKEN_URI = TWITTER_BASE_URI + "oauth/access_token"
 TWITTER_REFRESH_TOKEN_URI = TWITTER_BASE_URI + "oauth/token"
 TWITTER_SCOPES = ["tweet.read", "offline.access", "users.read"]
 HUNTER_VERIFY_URI = "https://api.hunter.io/v2/email-verifier"
+HUNTER_FINDER_URI = "https://api.hunter.io/v2/email-finder"
 HUNTER_API_KEY = settings.HUNTER_API_KEY
 if settings.IN_DEV:
     TWITTER_FRONTEND_REDIRECT = "http://localhost:8080/pr-integrations"
