@@ -298,7 +298,7 @@
       </div>
     </Modal>
 
-    <section class="container">
+    <section class="container" :class="{ 'fit-content': summary && isMobile }">
       <div style="padding-top: 88px" class="content-body">
         <div style="width: 100%; padding: 0 32px; padding-top: 16px" class="small-container">
           <div class="text-width">
@@ -757,7 +757,7 @@
       </div> -->
     </section>
 
-    <section class="container gray-bg">
+    <section class="container gray-bg" :class="{ 'fit-content': summary && isMobile }">
       <div class="header sticky-top gray-bg" v-if="summary">
         <div class="space-between margin-top-s horizontal-padding">
           <div></div>
@@ -2086,6 +2086,10 @@ label {
   z-index: 10;
 }
 
+.fit-content {
+  height: fit-content !important;
+}
+
 .content-body {
   display: flex;
   flex-direction: column;
@@ -2098,6 +2102,10 @@ label {
   font-size: 16px;
   width: 100%;
   height: 100%;
+
+  @media only screen and (max-width: 600px) {
+    padding: 56px 0px 16px 0px;
+  }
 }
 
 .content-body::-webkit-scrollbar {
@@ -2129,6 +2137,11 @@ h3 {
   padding-right: 32px;
   font-size: 15px;
   line-height: 1.75;
+
+  // @media only screen and (max-width: 600px) {
+  //   padding-left: 16px;
+  //   padding-right: 16px;
+  // }
 }
 
 .large-input-container {
@@ -2141,6 +2154,10 @@ h3 {
 .horizontal-padding {
   padding-left: 56px;
   padding-right: 64px;
+
+  @media only screen and (max-width: 600px) {
+    padding: 12px 16px 4px 16px;
+  }
 }
 
 .horizontal-padding-m {
@@ -2199,8 +2216,7 @@ label {
   position: relative;
 
   @media only screen and (max-width: 600px) {
-    width: 125vw;
-    margin-left: 4px;
+    width: 100vw;
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {

@@ -494,7 +494,7 @@
       </div>
     </Modal>
 
-    <section id="clips" class="container">
+    <section id="clips" class="container" :class="{ 'fit-content': summary && isMobile }">
       <div class="header centered sticky-top padding-top col mobile-header">
         <div
           style="width: 100%; margin-top: 0.5rem"
@@ -1600,7 +1600,7 @@
                   <div
                     @click="uploadArticle"
                     class="image-container left-margin right-margin-m wrapper"
-                    :class="newSearch ? 'dark-blue-bg' : ''"
+                    :class="uploadLink ? 'dark-blue-bg' : ''"
                   >
                     <img
                       style="margin: 0; cursor: text"
@@ -1695,7 +1695,7 @@
                 <div class="card-footer">
                   <div class="author-time">
                     <span
-                      @click="selectJournalist(article)"
+                      @click="selectJournalist(article, true)"
                       class="author"
                       style="text-decoration: underline; cursor: pointer"
                       >{{ article.author }}</span
@@ -2039,7 +2039,11 @@
       </div>
     </section>
 
-    <section id="summaries" class="container gray-bg">
+    <section
+      id="summaries"
+      class="container gray-bg"
+      :class="{ 'fit-content': summary && isMobile }"
+    >
       <div v-if="summary" class="header sticky-top padding-top-s gray-bg centered-column">
         <div style="margin-top: 2rem; width: 88%" class="flex-end">
           <div @click="copyText" class="wrapper icon-button white-bg right-margin">
@@ -2793,19 +2797,33 @@ export default {
         this.loadingPitch = false
       }
     },
-    selectJournalist(article) {
+    selectJournalist(article, web = false) {
       // user, org, style, author, outlet, headline, description, date,
+      if (web) {
+        const author = article.author
+        const outlet = article.source
+        const headline = article.title
+        const description = article.summary ? article.summary : article.description
+        const date = this.getTimeDifferenceInMinutes(article.publish_date)
 
-      const author = article.author
-      const outlet = article.source.name
-      const headline = article.title
-      const description = article.description
-      const date = this.getTimeDifferenceInMinutes(article.publish_date)
-      this.emailJournalistModalOpen = true
+        this.emailJournalistModalOpen = true
 
-      this.currentJournalist = author
-      this.currentPublication = outlet
-      this.draftPitch(author, outlet, headline, description, date)
+        this.currentJournalist = author
+        this.currentPublication = outlet
+        this.draftPitch(author, outlet, headline, description, date)
+      } else {
+        const author = article.author
+        const outlet = article.source.name
+        const headline = article.title
+        const description = article.description
+        const date = this.getTimeDifferenceInMinutes(article.publish_date)
+
+        this.emailJournalistModalOpen = true
+
+        this.currentJournalist = author
+        this.currentPublication = outlet
+        this.draftPitch(author, outlet, headline, description, date)
+      }
     },
     extractNameAndEmail(text) {
       // Split text by whitespace to extract name and email
@@ -5647,7 +5665,7 @@ li {
   height: 100%;
 
   @media only screen and (max-width: 600px) {
-    padding: 120px 32px 0 16px;
+    padding: 120px 0 8px 0;
   }
 }
 
@@ -5696,14 +5714,17 @@ li {
   }
 }
 
+.fit-content {
+  height: fit-content !important;
+}
+
 .container {
   width: 50vw;
   height: 100vh;
   position: relative;
 
   @media only screen and (max-width: 600px) {
-    width: 120vw;
-    margin-left: 24px;
+    width: 100vw;
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {

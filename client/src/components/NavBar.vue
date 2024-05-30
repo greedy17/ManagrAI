@@ -176,28 +176,10 @@
         <router-link active-class="active-mobile" :to="{ name: 'Discover' }" id="router-pitch">
           <p>Discover</p>
         </router-link>
-
-        <!-- <router-link
-          active-class="active-mobile"
-          :to="{ name: 'Assist' }"
-          id="router-assist"
-          v-if="isPaid"
-        >
-          <div class="row">
-            <p>Assist</p>
-          </div>
-        </router-link>
-
-        <router-link style="cursor: text" :to="{ name: '' }" id="router-assist-free" v-else>
-          <div class="row">
-            <p>Assist</p>
-            <p style="margin-left: 8px" class="searches-used-text">Upgrade to PRO</p>
-          </div>
-        </router-link> -->
       </div>
 
       <div id="relative-mobile">
-        <div class="aligned-right">
+        <div>
           <div
             v-if="$route.name === 'PRSummaries'"
             @click="toggleShowSearches"
@@ -1588,6 +1570,14 @@ export default {
 
   #relative-mobile {
     display: block !important;
+    position: fixed;
+    // top: 24px;
+    // right: 80px;
+    top: 0;
+    right: 0;
+    padding: 24px 32px 24px 0;
+    z-index: 20100;
+    background: white;
   }
 
   #nav {
@@ -1659,12 +1649,14 @@ export default {
   display: none;
   cursor: pointer;
   position: fixed;
-  top: 24px;
-  left: 32px;
+  // top: 24px;
+  // left: 32px;
+  top: 0;
+  left: 0;
+  padding: 24px 0 24px 32px;
   z-index: 20100;
   background-color: white;
   width: 100%;
-  padding: 0 4px;
 
   img {
     filter: invert(40%);
@@ -1963,6 +1955,11 @@ export default {
 
   p:hover {
     color: $dark-black-blue;
+  }
+
+  @media only screen and (max-width: 600px) {
+    top: 56px;
+    right: 8px;
   }
 }
 
