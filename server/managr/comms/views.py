@@ -2035,11 +2035,11 @@ class DiscoveryViewSet(
             send_html_email(
                 subject,
                 "core/email-templates/user-email.html",
-                f"{user.full_name} <app@mg.managr.ai>",
+                f"{user.full_name} <{user.email}>",
                 [recipient],
                 context=context,
                 bcc_emails=bcc,
-                headers={"X-Forward-To": "postmaster@mg.managr.ai"},
+                headers={"Reply-To": "app@mg.managr.ai"},
             )
             user.add_meta_data("emailSent")
             return Response(status=status.HTTP_204_NO_CONTENT)
