@@ -2038,6 +2038,7 @@ class DiscoveryViewSet(
                 [recipient],
                 context=context,
                 bcc_emails=bcc,
+                headers={"X-Webhook": "staging"},
             )
             user.add_meta_data("emailSent")
             return Response(status=status.HTTP_204_NO_CONTENT)
