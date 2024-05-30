@@ -66,6 +66,7 @@ from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
 from managr.comms.tasks import emit_get_meta_account_info
 from managr.api.emails import send_html_email
+from django.conf import settings
 
 logger = logging.getLogger("managr")
 
@@ -2038,7 +2039,7 @@ class DiscoveryViewSet(
                 [recipient],
                 context=context,
                 bcc_emails=bcc,
-                headers={"X-Webhook": "staging"},
+                headers={"X-Forward-To": "postmaster@mg.managr.ai"},
             )
             user.add_meta_data("emailSent")
             return Response(status=status.HTTP_204_NO_CONTENT)
