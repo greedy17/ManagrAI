@@ -435,7 +435,6 @@ def _share_client_summary(summary, clips, user_email):
         "clips": clips,
         "website_url": f"{settings.MANAGR_URL}/login",
     }
-    logger.info(content)
     try:
         send_html_email(
             f"Managr Digest",
