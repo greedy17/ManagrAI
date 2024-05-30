@@ -51,11 +51,7 @@ def send_html_email(
     # END TODO
 
     email = EmailMultiAlternatives(
-        subject,
-        plaintext_body,
-        send_from,
-        send_to,
-        bcc_emails,
+        subject, plaintext_body, send_from, send_to, bcc_emails, headers=headers
     )
     email.attach_alternative(html_body, "text/html")
 
@@ -78,8 +74,6 @@ def send_html_email(
             # Ignore list elements that are neither a tuple or string
             continue
         email.attach(part)
-    for header_name, header_value in headers.items():
-        email.extra_headers[header_name] = header_value
 
     email.send(fail_silently=False)
 
