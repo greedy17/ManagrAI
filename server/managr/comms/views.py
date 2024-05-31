@@ -2054,7 +2054,7 @@ class DiscoveryViewSet(
                 headers={
                     "Reply-To": f"{user.full_name} <{user.first_name}.{user.last_name}@mg.managr.ai>",
                     "X-Managr-Id": message_id,
-                    "Message-Id": message_id,
+                    "Message-ID": message_id,
                 },
             )
             user.add_meta_data("emailSent")
