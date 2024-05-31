@@ -2157,6 +2157,8 @@ def mailgun_webhooks(request):
 @api_view(["POST"])
 @permission_classes([])
 def email_recieved_webhook(request):
+    print(request.headers)
+    print(request.POST)
     message_id = request.POST.get("Message-Id")
     timestamp = request.POST.get("Date")
     print(message_id, timestamp)
