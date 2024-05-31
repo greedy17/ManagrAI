@@ -2052,8 +2052,9 @@ class DiscoveryViewSet(
                 context=context,
                 bcc_emails=bcc,
                 headers={
-                    "Reply-To": f"{user.full_name} <app@mg.managr.ai>",
-                    "Managr-Id": message_id,
+                    "Reply-To": f"{user.full_name} <{user.first_name}.{user.last_name}@mg.managr.ai>",
+                    "X-Managr-Id": message_id,
+                    "Message-Id": message_id,
                 },
             )
             user.add_meta_data("emailSent")
