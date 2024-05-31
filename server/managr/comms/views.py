@@ -3,6 +3,7 @@ import httpx
 import time
 import logging
 import pytz
+import uuid
 from rest_framework import (
     mixins,
     viewsets,
@@ -2031,6 +2032,7 @@ class DiscoveryViewSet(
         recipient = request.data.get("recipient")
         bcc = request.data.get("bcc")
         context = {"body": body}
+        message_id = f"{uuid.uuid4}-{user.email}"
         try:
             send_html_email(
                 subject,
@@ -2039,7 +2041,7 @@ class DiscoveryViewSet(
                 [recipient],
                 context=context,
                 bcc_emails=bcc,
-                headers={"Reply-To": "app@mg.managr.ai"},
+                headers={"Reply-To": "app@mg.managr.ai", "Message-Id": message_id},
             )
             user.add_meta_data("emailSent")
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -2145,6 +2147,7 @@ class DiscoveryViewSet(
 @permission_classes([])
 def mailgun_webhooks(request):
     event_data = request.data["event-data"]
+    print(event_data)
     message_id = event_data["message"]["headers"]["message-id"]
     event_type = event_data["event"]
     print(event_type)
