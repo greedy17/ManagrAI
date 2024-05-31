@@ -11,7 +11,11 @@ from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_clips_paginator_block
 from . import constants as comms_consts
 from .models import Search, NewsSource, EmailAlert, Journalist
-from .serializers import SearchSerializer, NewsSourceSerializer, JournalistSerializer
+from .serializers import (
+    SearchSerializer,
+    NewsSourceSerializer,
+    JournalistSerializer,
+)
 from managr.core import constants as core_consts
 from managr.core.models import User
 from managr.core import exceptions as open_ai_exceptions

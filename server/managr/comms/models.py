@@ -1034,6 +1034,17 @@ class EmailTracker(TimeStampModel):
     message_id = models.CharField(max_length=255, blank=True, null=True)
     opens = models.IntegerField(default=0)
     replies = models.IntegerField(default=0)
+    clicks = models.IntegerField(default=0)
     recieved = models.BooleanField(default=False)
     failed = models.BooleanField(default=False)
     activity_log = ArrayField(models.CharField(max_length=255), default=list)
+
+    def __str__(self):
+        return f"{self.user.email} - {self.recipient}"
+
+    def add_activity(self, type):
+        date = datetime.now()
+        date_str = date.isoformat()
+        new_item = f"{type}|{date_str}"
+        self.activity_log.append(new_item)
+        return self.save()

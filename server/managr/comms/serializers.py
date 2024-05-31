@@ -11,6 +11,7 @@ from .models import (
     InstagramAccount,
     Discovery,
     Journalist,
+    EmailTracker,
 )
 from django.contrib.postgres.search import SearchVector
 
@@ -139,3 +140,9 @@ class JournalistSerializer(serializers.ModelSerializer):
             "outlet",
             "verified",
         )
+
+
+class EmailTrackerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmailTracker
+        fields = ("id", "user", "recipient", "subject", "body", "message_id")

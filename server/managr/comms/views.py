@@ -26,7 +26,16 @@ from dateutil import parser
 from django.shortcuts import redirect
 from rest_framework.decorators import action
 from . import constants as comms_consts
-from .models import Search, TwitterAccount, Pitch, Process, InstagramAccount, Discovery, Journalist
+from .models import (
+    Search,
+    TwitterAccount,
+    Pitch,
+    Process,
+    InstagramAccount,
+    Discovery,
+    Journalist,
+    EmailTracker,
+)
 from .models import Article as InternalArticle
 from .models import WritingStyle, EmailAlert
 from managr.core.models import User
@@ -46,6 +55,7 @@ from .serializers import (
     InstagramAccountSerializer,
     WritingStyleSerializer,
     DiscoverySerializer,
+    EmailTrackerSerializer,
 )
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
@@ -2041,9 +2051,24 @@ class DiscoveryViewSet(
                 [recipient],
                 context=context,
                 bcc_emails=bcc,
-                headers={"Reply-To": "app@mg.managr.ai", "Message-Id": message_id},
+                headers={
+                    "Reply-To": f"{user.full_name} <app@mg.managr.ai>",
+                    "Managr-Id": message_id,
+                },
             )
             user.add_meta_data("emailSent")
+            serializer = EmailTrackerSerializer(
+                data={
+                    "user": user.id,
+                    "recipient": recipient,
+                    "body": body,
+                    "subject": subject,
+                    "message_id": message_id,
+                }
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            serializer.instance.add_activity("sent")
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Exception as e:
             logger.exception(str(e))
@@ -2148,9 +2173,21 @@ class DiscoveryViewSet(
 def mailgun_webhooks(request):
     event_data = request.data["event-data"]
     print(event_data)
-    message_id = event_data["message"]["headers"]["message-id"]
-    event_type = event_data["event"]
-    print(event_type)
+    # message_id = event_data["message"]["headers"]["message-id"]
+    # event_type = event_data["event"]
+    # tracker = EmailTracker.objects.get(message_id=message_id)
+    # tracker.add_activity(event_type)
+    # if event_type == "opened":
+    #     tracker.opens += 1
+    # elif event_type == "delivered":
+    #     tracker.received = True
+    # elif event_type == "failed":
+    #     tracker.failed = True
+    # elif event_type == "clicked":
+    #     tracker.clicks += 1
+    # else:
+    #     tracker.add_activity(event_type)
+    # tracker.save()
     return Response(status=status.HTTP_202_ACCEPTED)
 
 
@@ -2159,7 +2196,7 @@ def mailgun_webhooks(request):
 def email_recieved_webhook(request):
     print(request.headers)
     print(request.POST)
-    message_id = request.POST.get("Message-Id")
+    message_id = request.POST.get("Messsage-Id")
     timestamp = request.POST.get("Date")
     print(message_id, timestamp)
     return Response(status=status.HTTP_202_ACCEPTED)
