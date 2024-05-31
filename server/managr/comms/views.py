@@ -2032,7 +2032,7 @@ class DiscoveryViewSet(
         recipient = request.data.get("recipient")
         bcc = request.data.get("bcc")
         context = {"body": body}
-        message_id = f"{uuid.uuid4}-{user.email}"
+        message_id = f"{uuid.uuid4()}-{user.email}"
         try:
             send_html_email(
                 subject,
