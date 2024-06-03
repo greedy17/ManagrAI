@@ -841,7 +841,7 @@ export default {
       currentPublication: '',
       toolbarOptions: [
         ['bold', 'italic', 'underline', 'strike'], // toggled buttons
-        ['link', 'image'],
+        // ['link', 'image'],
 
         [{ header: 1 }, { header: 2 }], // custom button values
         [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],

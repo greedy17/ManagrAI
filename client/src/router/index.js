@@ -38,6 +38,12 @@ export default new Router({
       component: () => import('@/views/Discover'),
     },
     {
+      path: '/email-tracking',
+      name: 'EmailTracking',
+      beforeEnter: Auth.requireAuth,
+      component: () => import('@/views/EmailTracking'),
+    },
+    {
       path: '/assist',
       name: 'Assist',
       beforeEnter: Auth.requireAuth,

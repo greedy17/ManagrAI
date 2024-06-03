@@ -176,6 +176,10 @@
         <router-link active-class="active-mobile" :to="{ name: 'Discover' }" id="router-pitch">
           <p>Discover</p>
         </router-link>
+
+        <router-link active-class="active-mobile" :to="{ name: 'EmailTracking' }" id="router-pitch">
+          <p>Track</p>
+        </router-link>
       </div>
 
       <div id="relative-mobile">
@@ -498,6 +502,10 @@
 
         <router-link active-class="active" :to="{ name: 'Discover' }" id="router-pitch">
           <p>Discover</p>
+        </router-link>
+
+        <router-link active-class="active" :to="{ name: 'EmailTracking' }" id="router-pitch">
+          <p>Track</p>
         </router-link>
 
         <!-- <router-link
