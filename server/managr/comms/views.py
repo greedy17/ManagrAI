@@ -2177,20 +2177,20 @@ def mailgun_webhooks(request):
     event_type = event_data["event"]
     try:
         tracker = EmailTracker.objects.get(message_id=message_id)
+        tracker.add_activity(event_type)
+        if event_type == "opened":
+            tracker.opens += 1
+        elif event_type == "delivered":
+            tracker.received = True
+        elif event_type == "failed":
+            tracker.failed = True
+        elif event_type == "clicked":
+            tracker.clicks += 1
+        else:
+            tracker.add_activity(event_type)
+        tracker.save()
     except Exception as e:
         logger.exception(f"{e}, {message_id}\n{event_data}")
-    tracker.add_activity(event_type)
-    if event_type == "opened":
-        tracker.opens += 1
-    elif event_type == "delivered":
-        tracker.received = True
-    elif event_type == "failed":
-        tracker.failed = True
-    elif event_type == "clicked":
-        tracker.clicks += 1
-    else:
-        tracker.add_activity(event_type)
-    tracker.save()
     return Response(status=status.HTTP_202_ACCEPTED)
 
 
@@ -2207,19 +2207,19 @@ def email_recieved_webhook(request):
     first, last = name.split(".")
     original_subject = subject.replace("Re: ", "")
     user = User.objects.get(first_name=first, last_name=last)
-    print(original_subject, from_email, user.email)
     try:
         tracker = EmailTracker.objects.get(
             subject=original_subject, recipient=from_email, user=user
         )
         tracker.replies += 1
+        tracker.recieved = True
         tracker.save()
         tracker.add_activity("reply")
         send_html_email(
             subject,
             "core/email-templates/reply-email.html",
-            [from_email],
-            f"{user.full_name} <{user.email}>",
+            from_email,
+            user.email,
             {"html": email_html},
         )
     except Exception as e:
