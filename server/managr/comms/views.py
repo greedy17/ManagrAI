@@ -2204,6 +2204,7 @@ def email_recieved_webhook(request):
     first, last = name.split(".")
     original_subject = subject.replace("Re: ", "")
     user = User.objects.get(first_name=first, last_name=last)
+    print(original_subject,from_email,user.email)
     tracker = EmailTracker.objects.filter(subject=original_subject, recipient=from_email, user=user)
     tracker.replies += 1
     tracker.save()

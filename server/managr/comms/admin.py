@@ -10,6 +10,7 @@ from .models import (
     InstagramAccount,
     Discovery,
     Journalist,
+    EmailTracker,
 )
 
 # Register your models here.
@@ -67,6 +68,11 @@ class CustomJournalAdmin(admin.ModelAdmin):
     list_filter = ("outlet",)
 
 
+class CustomEmailTrackerAdmin(admin.ModelAdmin):
+    list_display = ("datetime_created", "subject", "recipient", "user")
+    ordering = ("datetime_created",)
+
+
 admin.site.register(Search, CustomSearch)
 admin.site.register(Pitch, CustomPitch)
 admin.site.register(NewsSource, CustomNewsSource)
@@ -77,3 +83,4 @@ admin.site.register(TwitterAccount)
 admin.site.register(InstagramAccount)
 admin.site.register(Discovery)
 admin.site.register(Journalist, CustomJournalAdmin)
+admin.site.register(EmailTracker, CustomEmailTrackerAdmin)
