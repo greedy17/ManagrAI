@@ -442,6 +442,11 @@ urlpatterns = [
         comms_views.email_recieved_webhook,
         name="email-received-webhook",
     ),
+    path(
+        "email-tracking/",
+        comms_views.get_email_tracking,
+        name="email-tracking",
+    ),
 ]
 router.register("users/reports", core_views.ReportViewSet, "reports"),
 router.register("users/conversations", core_views.ConversationViewSet, "conversations"),

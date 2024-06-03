@@ -2225,3 +2225,12 @@ def email_recieved_webhook(request):
     except Exception as e:
         print(e)
     return Response(status=status.HTTP_202_ACCEPTED)
+
+
+@api_view(["GET"])
+@permission_classes([])
+def get_email_tracking(request):
+    user = request.user
+    trackers = EmailTracker.objects.filter(user=user)
+    serialized = EmailTrackerSerializer(trackers, many=True)
+    return Response(data=serialized.data)
