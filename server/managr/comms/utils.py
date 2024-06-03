@@ -32,6 +32,13 @@ user_agents = [
 ]
 
 
+def extract_email_address(text):
+    match = re.search(r"<([^<>]+)>", text)
+    if match:
+        return match.group(1)
+    return None
+
+
 def get_domain(url):
     parsed_url = urlparse(url)
     netloc = parsed_url.netloc

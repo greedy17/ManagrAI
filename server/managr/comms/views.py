@@ -71,7 +71,7 @@ from managr.comms.utils import (
     get_domain,
     extract_pdf_text,
     convert_pdf_from_url,
-    merge_sort_dates,
+    extract_email_address,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
@@ -2173,31 +2173,46 @@ class DiscoveryViewSet(
 @permission_classes([])
 def mailgun_webhooks(request):
     event_data = request.data["event-data"]
-    print(event_data)
-    # message_id = event_data["message"]["headers"]["message-id"]
-    # event_type = event_data["event"]
-    # tracker = EmailTracker.objects.get(message_id=message_id)
-    # tracker.add_activity(event_type)
-    # if event_type == "opened":
-    #     tracker.opens += 1
-    # elif event_type == "delivered":
-    #     tracker.received = True
-    # elif event_type == "failed":
-    #     tracker.failed = True
-    # elif event_type == "clicked":
-    #     tracker.clicks += 1
-    # else:
-    #     tracker.add_activity(event_type)
-    # tracker.save()
+    message_id = event_data["message"]["headers"]["message-id"]
+    event_type = event_data["event"]
+    tracker = EmailTracker.objects.get(message_id=message_id)
+    tracker.add_activity(event_type)
+    if event_type == "opened":
+        tracker.opens += 1
+    elif event_type == "delivered":
+        tracker.received = True
+    elif event_type == "failed":
+        tracker.failed = True
+    elif event_type == "clicked":
+        tracker.clicks += 1
+    else:
+        tracker.add_activity(event_type)
+    tracker.save()
     return Response(status=status.HTTP_202_ACCEPTED)
 
 
 @api_view(["POST"])
 @permission_classes([])
 def email_recieved_webhook(request):
-    print(request.headers)
-    print(request.POST)
-    message_id = request.POST.get("Messsage-Id")
-    timestamp = request.POST.get("Date")
-    print(message_id, timestamp)
+    subject = request.POST.get("Subject")
+    email_html = request.POST.get("stripped_html")
+    to_email = request.POST.get("To")
+    to_email = extract_email_address(to_email)
+    from_email = request.POST.get("From")
+    from_email = extract_email_address(from_email)
+    name, domain = to_email.split("@")
+    first, last = name.split(".")
+    original_subject = subject.replace("Re: ", "")
+    user = User.objects.get(first_name=first, last_name=last)
+    tracker = EmailTracker.objects.filter(subject=original_subject, recipient=from_email, user=user)
+    tracker.replies += 1
+    tracker.save()
+    tracker.add_activity("reply")
+    send_html_email(
+        subject,
+        "core/email-templates/reply-email.html",
+        [from_email],
+        f"{user.full_name} <{user.email}>",
+        {"html": email_html},
+    )
     return Response(status=status.HTTP_202_ACCEPTED)
