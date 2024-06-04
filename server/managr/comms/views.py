@@ -2177,18 +2177,27 @@ def mailgun_webhooks(request):
     event_type = event_data["event"]
     try:
         tracker = EmailTracker.objects.get(message_id=message_id)
-        tracker.add_activity(event_type)
         if event_type == "opened":
-            tracker.opens += 1
+            last_log = tracker.activity_log[len(tracker.activity_log) - 1]
+            event, time = last_log.split("|")
+            if event == "opened":
+                message_timestamp = event_data["timestamp"]
+                datetime_obj = datetime.datetime.strptime(time, "%Y-%m-%dT%H:%M:%S.%f")
+                unix_time = datetime_obj.timestamp()
+                if unix_time - message_timestamp < 60:
+                    Response(status=status.HTTP_202_ACCEPTED)
+                else:
+                    tracker.opens += 1
+            else:
+                tracker.opens += 1
         elif event_type == "delivered":
             tracker.received = True
         elif event_type == "failed":
             tracker.failed = True
         elif event_type == "clicked":
             tracker.clicks += 1
-        else:
-            tracker.add_activity(event_type)
         tracker.save()
+        tracker.add_activity(event_type)
     except Exception as e:
         logger.exception(f"{e}, {message_id}\n{event_data}")
     return Response(status=status.HTTP_202_ACCEPTED)
