@@ -143,6 +143,8 @@ class JournalistSerializer(serializers.ModelSerializer):
 
 
 class EmailTrackerSerializer(serializers.ModelSerializer):
+    tracker_rates = serializers.SerializerMethodField("get_tracker_rates")
+
     class Meta:
         model = EmailTracker
         fields = (
@@ -158,4 +160,9 @@ class EmailTrackerSerializer(serializers.ModelSerializer):
             "activity_log",
             "received",
             "failed",
+            "tracker_rates",
         )
+
+    def get_tracker_rates(self, instance):
+        data = self.model.get_user_rates(instance.user.id)
+        return data
