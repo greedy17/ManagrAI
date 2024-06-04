@@ -3,46 +3,117 @@
     <table>
       <thead>
         <tr style="position: relative">
-          <th v-resizableColumn @click="sortBy('subject')">
+          <th style="cursor: pointer; d" v-resizableColumn @click="sortBy('subject')">
             Email
+
+            <img
+              v-if="sortKey === 'subject' && sortOrder === -1"
+              src="@/assets/images/arrowDrop.svg"
+              height="14px"
+              alt=""
+            />
+
+            <img
+              v-else-if="sortKey === 'subject' && sortOrder !== -1"
+              src="@/assets/images/arrowDropUp.svg"
+              height="14px"
+              alt=""
+            />
+
             <div class="resizer"></div>
           </th>
-          <th v-resizableColumn v-for="(value, key) in statsKeys" :key="key">
+          <th
+            v-resizableColumn
+            v-for="(value, key) in statsKeys"
+            :key="key"
+            @click="sortBy(value.charAt(0).toLowerCase() + value.slice(1))"
+          >
             {{ value }}
+
+            <img
+              v-if="sortKey === value.charAt(0).toLowerCase() + value.slice(1) && sortOrder === -1"
+              src="@/assets/images/arrowDrop.svg"
+              height="14px"
+              alt=""
+            />
+
+            <img
+              v-else-if="
+                sortKey === value.charAt(0).toLowerCase() + value.slice(1) && sortOrder !== -1
+              "
+              src="@/assets/images/arrowDropUp.svg"
+              height="14px"
+              alt=""
+            />
+            <div class="resizer"></div>
+          </th>
+          <th style="cursor: pointer" v-resizableColumn @click="sortBy('lastActivity')">
+            Last Activity
+            <img
+              v-if="sortKey === 'lastActivity' && sortOrder === -1"
+              src="@/assets/images/arrowDrop.svg"
+              height="14px"
+              alt=""
+            />
+
+            <img
+              v-else-if="sortKey === 'lastActivity' && sortOrder !== -1"
+              src="@/assets/images/arrowDropUp.svg"
+              height="14px"
+              alt=""
+            />
             <div class="resizer"></div>
           </th>
         </tr>
       </thead>
-      <tbody>
+      <tbody v-if="sortedEmails">
         <tr v-for="email in sortedEmails" :key="email.body">
           <td>
             <div class="email-details">
-              <div :tool-tip="email.recipient" class="initials-bubble tooltip">
-                {{ getInitials(email.recipient) }}
-              </div>
+              <!-- <div style="width: 40px">
+                <div :tool-tip="email.recipient" class="initials-bubble tooltip">
+                  {{ email.recipient[0].toUpperCase() }}
+                </div>
+              </div> -->
+
               <div class="email-info">
                 <div class="subject">
                   {{ email.subject }}
                 </div>
-                <div class="email">
-                  {{ email.body }}
-                </div>
+                <div class="email">{{ email.body.replace(/<[^>]*>/g, '') }}</div>
               </div>
             </div>
             <div class="blur"></div>
           </td>
-          <td>{{ email.recieved ? 'Delivered' : 'Failed' }}</td>
+          <td>{{ email.recipient }}</td>
+          <td>{{ email.failed ? 'Failed' : 'Delivered' }}</td>
           <td>{{ email.opens }}</td>
           <td>{{ email.clicks }}</td>
           <td>{{ email.replies }}</td>
-          <td>{{ formatActivityLog(email.activityLog[0]) }}</td>
+          <td>
+            <div>
+              <div class="base-font" style="margin-bottom: 4px">
+                {{
+                  email.activity_log[0].split('|')[0].charAt(0).toUpperCase() +
+                  email.activity_log[0].split('|')[0].slice(1)
+                }}
+              </div>
+
+              <div style="color: gray; font-size: 15px">
+                {{ formatActivityLog(email.activity_log[0]) }}
+              </div>
+            </div>
+          </td>
         </tr>
       </tbody>
+      <tbody v-else></tbody>
     </table>
   </div>
 </template>
 
 <script>
+import { Comms } from '@/services/comms'
+
 export default {
   name: 'EmailTable',
   data() {
@@ -50,38 +121,83 @@ export default {
       emails: [],
       sortKey: '',
       sortOrder: 1,
-      statsKeys: ['Status', 'Opens', 'Clicks', 'Replies', 'Last Activity'],
+      statsKeys: ['To', 'Status', 'Opens', 'Clicks', 'Replies'],
     }
   },
   props: {
     searchText: {},
+    failedFilter: {
+      type: Boolean,
+      default: null,
+    },
+    activityFilter: {
+      default: null,
+    },
   },
   computed: {
     sortedEmails() {
-      // Filter emails based on the searchText
-      const filteredEmails = this.emails.filter((email) => {
+      let filteredEmails = this.emails.filter((email) => {
         const searchText = this.searchText.toLowerCase()
+        const failedFilter = this.failedFilter !== undefined ? this.failedFilter : null
+        const activityFilter = this.activityFilter !== undefined ? this.activityFilter : null
+
+        const searchConditions = [
+          email.recipient.toLowerCase().includes(searchText),
+          email.subject.toLowerCase().includes(searchText),
+          email.body.toLowerCase().includes(searchText),
+          email.opens.toString().includes(searchText),
+          email.replies.toString().includes(searchText),
+          email.clicks.toString().includes(searchText),
+          email.activity_log[0].includes(searchText),
+          searchText.includes('delivered') && !email.failed,
+          searchText.includes('failed') && email.failed,
+        ]
+
+        const filterConditions = []
+
+        if (failedFilter !== null) {
+          filterConditions.push(email.failed === failedFilter)
+        }
+
+        if (activityFilter !== null) {
+          const [start, end] = activityFilter.split(',')
+          const startDate = new Date(start)
+          const endDate = new Date(end)
+          const emailDate = new Date(email.activity_log[0].split('|')[1])
+          filterConditions.push(emailDate >= startDate && emailDate <= endDate)
+        }
+
         return (
-          email.recipient.toLowerCase().includes(searchText) ||
-          email.subject.toLowerCase().includes(searchText) ||
-          email.body.toLowerCase().includes(searchText) ||
-          email.opens.toString().includes(searchText) ||
-          email.replies.toString().includes(searchText) ||
-          email.clicks.toString().includes(searchText)
-          // ||  email.received.toString().toLowerCase().includes(searchText) ||
-          //   email.failed.toString().toLowerCase().includes(searchText)
+          searchConditions.some((condition) => condition) &&
+          filterConditions.every((condition) => condition)
         )
       })
 
-      // Sort the filtered emails
       if (!this.sortKey) return filteredEmails
 
       return filteredEmails.slice().sort((a, b) => {
-        const aValue = this.sortKey === 'subject' ? a.subject : new Date(a.replies)
-        const bValue = this.sortKey === 'subject' ? b.subject : new Date(b.replies)
-
+        const aValue =
+          this.sortKey === 'lastActivity'
+            ? new Date(a.activity_log[0].split('|')[1])
+            : this.sortKey === 'to'
+            ? a.recipient
+            : this.sortKey === 'status'
+            ? a.failed
+            : a[this.sortKey]
+        //   this.sortKey === 'subject' ? a.subject : new Date(a.activity_log[0].split('|')[1])
+        const bValue =
+          this.sortKey === 'lastActivity'
+            ? new Date(b.activity_log[0].split('|')[1])
+            : this.sortKey === 'to'
+            ? b.recipient
+            : this.sortKey === 'status'
+            ? b.failed
+            : b[this.sortKey]
+        //    b[this.sortKey]
+        //   this.sortKey === 'subject' ? b.subject : new Date(b.activity_log[0].split('|')[1])
         if (aValue < bValue) return -1 * this.sortOrder
         if (aValue > bValue) return 1 * this.sortOrder
+
         return 0
       })
     },
@@ -125,44 +241,9 @@ export default {
   methods: {
     async fetchEmails() {
       try {
-        // const response = await axios.get('API_ENDPOINT')
-        // this.emails = response.data
-        this.emails = [
-          {
-            recipient: 'Journalisticlylongname Guysnameislongashell',
-            subject: 'Hey journalist guy',
-            body: 'Hi journalist guy, im emailing you about nothing. Just testing out this table real quick.',
-            recieved: true,
-            opens: 3,
-            replies: 1,
-            clicks: 7,
-            failed: false,
-            recieved: true,
-            activityLog: [
-              'sent|2024-06-03T12:23:10.867366',
-              'opened|2024-06-03T13:13:08.360252',
-              'opened|2024-06-03T13:13:08.374611',
-              'opened|2024-06-03T13:13:51.934088',
-            ],
-          },
-          {
-            recipient: 'Adam Eve',
-            subject: 'Search filters',
-            body: 'Hi Adam, im testing the search filter',
-            recieved: true,
-            opens: 5,
-            replies: 2,
-            clicks: 9,
-            failed: false,
-            recieved: true,
-            activityLog: [
-              'sent|2024-06-03T12:23:10.867366',
-              'opened|2024-06-03T13:13:08.360252',
-              'opened|2024-06-03T13:13:08.374611',
-              'opened|2024-06-03T13:13:51.934088',
-            ],
-          },
-        ]
+        const response = await Comms.api.getTrackedEmails()
+        // console.log(response)
+        this.emails = response
       } catch (error) {
         console.error('Error fetching email data:', error)
       }
@@ -187,14 +268,15 @@ export default {
         formattedTime = `on ${formattedDate}`
       }
 
-      return `${action.charAt(0).toUpperCase() + action.slice(1)} - ${formattedTime}`
+      //   return `${action.charAt(0).toUpperCase() + action.slice(1)} - ${formattedTime}`
+      return formattedTime
     },
-    getInitials(name) {
-      return name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-    },
+    // getInitials(name) {
+    //   return name
+    //     .split(' ')
+    //     .map((n) => n[0])
+    //     .join('')
+    // },
     sortBy(key) {
       if (this.sortKey === key) {
         this.sortOrder *= -1
@@ -244,7 +326,7 @@ export default {
     td {
       z-index: 1;
       background-color: white;
-      cursor: pointer;
+      overflow: hidden;
     }
 
     .email-details {
@@ -261,9 +343,9 @@ export default {
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-right: 10px;
-        font-size: 14px;
-        padding: 10px;
+        margin-right: 12px;
+        font-size: 16px;
+        padding: 5px 9px;
       }
 
       .email-info {
@@ -273,10 +355,13 @@ export default {
 
         .subject {
           font-family: $base-font-family;
+          margin-bottom: 4px;
         }
 
         .email {
           color: gray;
+          font-family: $thin-font-family;
+          font-size: 15px;
         }
       }
     }
@@ -331,11 +416,48 @@ export default {
       bottom: 0;
     }
 
-    // .actions-header {
-    //   display: flex;
-    //   align-items: center;
-    //   justify-content: space-between;
-    // }
+    .relative {
+      position: relative;
+    }
+
+    .dropdown {
+      position: absolute;
+      top: 48px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      padding: 8px;
+      left: 4px;
+      z-index: 4;
+      width: 96%;
+      min-height: 100px;
+      background-color: white;
+      border-radius: 4px;
+      box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+
+      .dropdown-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        img {
+          margin-right: 8px;
+        }
+      }
+
+      .dropdown-body {
+        padding: 0 8px;
+      }
+
+      .dropdown-footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 8px;
+      }
+    }
+
+    .base-font {
+      font-family: $base-font-family;
+    }
   }
 }
 

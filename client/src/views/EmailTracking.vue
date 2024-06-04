@@ -25,15 +25,57 @@
             </div>
 
             <div class="dropdown-body">
-              <p>Status</p>
-              <p>Last Activity</p>
-              <p>Journalist</p>
+              <div class="col">
+                <p>Status</p>
+                <div class="radio-group">
+                  <label class="radio-label">
+                    <input type="radio" name="option" :value="false" v-model="selectedOption" />
+                    <span class="custom-radio"></span>
+                    Delivered
+                  </label>
+                  <label class="radio-label">
+                    <input type="radio" name="option" :value="true" v-model="selectedOption" />
+                    <span class="custom-radio"></span>
+                    Failed
+                  </label>
+                </div>
+              </div>
+              <div class="col">
+                <p>Last Activity</p>
+
+                <div>
+                  <input class="area-input-smallest" type="date" v-model="dateStart" />
+                  -
+                  <input class="area-input-smallest" type="date" v-model="dateEnd" />
+                </div>
+              </div>
+              <!-- <p>Journalist</p> -->
             </div>
 
             <div class="dropdown-footer">
-              <button class="primary-button">Apply</button>
+              <button @click="applyFilters" class="primary-button">Apply</button>
             </div>
           </div>
+        </div>
+
+        <div v-if="failedFilter !== null">
+          <button class="primary-button lb-bg">
+            <div @click="removeFailedFilter">
+              <img src="@/assets/images/close.svg" height="14px" alt="" />
+            </div>
+            Status -
+            {{ failedFilter === true ? 'failed' : 'delivered' }}
+          </button>
+        </div>
+
+        <div v-if="activityFilter">
+          <button class="primary-button lb-bg">
+            <div @click="removeActivityFilter">
+              <img src="@/assets/images/close.svg" height="14px" alt="" />
+            </div>
+
+            {{ convertDates(activityFilter) }}
+          </button>
         </div>
       </div>
 
@@ -61,7 +103,11 @@
     </section>
 
     <div class="table-container">
-      <EmailTable :searchText="searchEmailText" />
+      <EmailTable
+        :searchText="searchEmailText"
+        :failedFilter="failedFilter"
+        :activityFilter="activityFilter"
+      />
     </div>
   </div>
 </template>
@@ -79,17 +125,49 @@ export default {
     return {
       searchEmailText: '',
       showFilters: false,
+      selectedOption: null,
+      dateStart: '',
+      dateEnd: '',
+      failedFilter: null,
+      activityFilter: null,
     }
   },
   computed: {},
   mounted() {},
-
+  created() {
+    const today = new Date()
+  },
   methods: {
     clearSearchText() {
       this.searchEmailText = ''
     },
     toggleFilterDropdown() {
       this.showFilters = !this.showFilters
+    },
+    applyFilters() {
+      if (this.dateStart && this.dateEnd) {
+        this.activityFilter = `${this.dateStart},${this.dateEnd}`
+      }
+
+      if (this.selectedOption !== null) {
+        this.failedFilter = this.selectedOption
+      }
+      this.toggleFilterDropdown()
+    },
+    removeFailedFilter() {
+      this.failedFilter = null
+    },
+    removeActivityFilter() {
+      this.activityFilter = null
+    },
+    convertDates(dates) {
+      const [firstDate, secondDate] = dates.split(',')
+      const [year, month, day] = firstDate.split('-')
+      const newFirstDate = `${month}/${day}/${year.slice(-2)}`
+      const [yr, m, d] = secondDate.split('-')
+      const newSecondDate = `${m}/${d}/${yr.slice(-2)}`
+
+      return `${newFirstDate} - ${newSecondDate}`
     },
   },
 }
@@ -113,7 +191,6 @@ export default {
   margin-top: 24px;
   height: 100%;
   background-color: white;
-  //   padding-top: 2px;
   overflow: scroll;
 }
 
@@ -206,12 +283,150 @@ export default {
   }
 
   .dropdown-body {
+    padding: 0 8px;
   }
+
   .dropdown-footer {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    padding: 8px;
+    padding: 24px 8px 12px 8px;
   }
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  p {
+    font-family: $base-font-family;
+  }
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  padding-left: 24px;
+  font-size: 14px;
+  user-select: none;
+}
+
+.radio-label input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.custom-radio {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  height: 20px;
+  width: 20px;
+  background-color: #f0f0f0;
+  border-radius: 50%;
+  border: 2px solid #dcdcdc;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.radio-label input:checked ~ .custom-radio {
+  background-color: $dark-blue;
+  border-color: $dark-black-blue;
+}
+
+.custom-radio::after {
+  content: '';
+  position: absolute;
+  display: none;
+}
+
+.radio-label input:checked ~ .custom-radio::after {
+  display: block;
+}
+
+.radio-label .custom-radio::after {
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: white;
+  transform: translate(-50%, -50%);
+}
+
+.area-input-smallest {
+  background-color: $off-white;
+  margin-bottom: 0.25rem;
+  max-height: 250px;
+  padding: 2px 0.5rem 2px 2px;
+  line-height: 1.75;
+  outline: none;
+  border: none;
+  letter-spacing: 0.5px;
+  font-size: 13px;
+  font-family: $thin-font-family !important;
+  font-weight: 400;
+  border: none !important;
+  resize: none;
+  text-align: left;
+  overflow: auto;
+  scroll-behavior: smooth;
+  color: $dark-black-blue;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.area-input-smallest:last-of-type {
+  padding-left: 0.5rem;
+
+  @media only screen and (max-width: 600px) {
+  }
+}
+
+.lb-bg {
+  background-color: $white-blue;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: $dark-black-blue;
+  padding-left: 28px;
+  position: relative;
+
+  &:hover {
+    box-shadow: none;
+    scale: 1;
+  }
+
+  div {
+    position: absolute;
+    left: 4px;
+    padding: 4px;
+    background-color: $soft-gray;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+      filter: none;
+      margin: 0;
+    }
+  }
+
+  div:hover {
+    opacity: 0.4;
+  }
+}
+
+.lb-bg:hover {
+  box-shadow: none;
 }
 </style>

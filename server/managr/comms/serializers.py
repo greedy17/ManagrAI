@@ -145,4 +145,17 @@ class JournalistSerializer(serializers.ModelSerializer):
 class EmailTrackerSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmailTracker
-        fields = ("id", "user", "recipient", "subject", "body", "message_id")
+        fields = (
+            "id",
+            "user",
+            "recipient",
+            "subject",
+            "body",
+            "message_id",
+            "opens",
+            "replies",
+            "clicks",
+            "activity_log",
+            "recieved",
+            "failed",
+        )

@@ -2658,7 +2658,6 @@ export default {
     const sevenDaysAgo = new Date(today)
     sevenDaysAgo.setDate(today.getDate() - 7)
 
-    // Format the dates as YYYY-MM-DD strings (required for <input type="date">)
     this.dateStart = sevenDaysAgo.toISOString().split('T')[0]
     this.dateEnd = today.toISOString().split('T')[0]
 
