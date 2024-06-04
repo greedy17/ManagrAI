@@ -2233,4 +2233,5 @@ def get_email_tracking(request):
     user = request.user
     trackers = EmailTracker.objects.filter(user=user)
     serialized = EmailTrackerSerializer(trackers, many=True)
-    return Response(data=serialized.data)
+    rate_data = EmailTracker.get_user_rates(user.id)
+    return Response(data={"trackers": serialized.data, "rates": rate_data})
