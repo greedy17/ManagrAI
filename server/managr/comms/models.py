@@ -499,25 +499,27 @@ class NewsSource(TimeStampModel):
                 else:
                     author_list = a.split(",")
             except ValueError:
-                print(f"Failed to split: {a}")
                 continue
             for author in author_list:
                 try:
                     author_names = author.split(" ")
                     if len(author_names) == 2:
-                        first = author[0]
-                        last = author[1]
+                        first = author_names[0]
+                        last = author_names[1]
                     elif len(author_names) == 3:
-                        first = author[0]
-                        if "II" in author[3]:
-                            last = author[2]
+                        first = author_names[0]
+                        if "II" in author_names[3]:
+                            last = author_names[2]
                         else:
-                            last = author[3]
+                            last = author_names[3]
                     else:
-                        first = author[0]
-                        last = author[1:]
+                        first = author_names[0]
+                        last = author_names[1:]
+                    journalist_check = Journalist.objects.filter(first_name=first, last_name=last)
+                    if len(journalist_check):
+                        continue
                     response = Journalist.email_finder(domain, first, last)
-                    if response["score"] is not None:
+                    if "score" in response.keys() and response["score"] is not None:
                         is_valid = (
                             False
                             if response["verification"]["status"] in ["invalid", "unknown"]
@@ -533,6 +535,9 @@ class NewsSource(TimeStampModel):
                         serializer = JournalistSerializer(data=data)
                         serializer.is_valid(raise_exception=True)
                         serializer.save()
+                        print(f"Created journalist {serializer.instance.email}")
+                    else:
+                        print(f"Failed to find journalist: {response}")
                 except ValueError:
                     print(f"Failed to split author name: {author}")
                 except Exception as e:
@@ -1036,6 +1041,8 @@ class Journalist(TimeStampModel):
                 url,
             )
             r = r.json()
+            if "errors" in r.keys():
+                return r["errors"][0]["details"]
             response = r["data"]
         return response
 
