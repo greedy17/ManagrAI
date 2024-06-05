@@ -29,7 +29,7 @@
             @click="sortBy(value.charAt(0).toLowerCase() + value.slice(1))"
           >
             {{ value }}
-            <div class="stat" v-if="value === 'Opens'">
+            <div class="stat" v-if="value === 'Opens' && openRate && userId === user.id">
               <span
                 :class="{
                   red: openRate <= 30,
@@ -39,7 +39,7 @@
                 >{{ openRate }}%</span
               >
             </div>
-            <div class="stat" v-else-if="value === 'Replies'">
+            <div class="stat" v-else-if="value === 'Replies' && replyRate && userId === user.id">
               <span
                 :class="{
                   red: replyRate <= 30,
@@ -237,6 +237,9 @@ export default {
 
         return 0
       })
+    },
+    user() {
+      return this.$store.state.user
     },
   },
   created() {
@@ -543,13 +546,14 @@ export default {
     .stat {
       position: absolute;
       right: 4px;
-      top: 12px;
+      top: 16px;
       font-family: $base-font-family;
+      font-size: 11px;
+
       span {
-        background-color: red;
-        padding: 6px 3px;
-        border-radius: 50%;
         font-size: 11px;
+        padding: 4px 2px;
+        border-radius: 4px;
       }
 
       .red {
