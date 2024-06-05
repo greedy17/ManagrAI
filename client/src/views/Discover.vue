@@ -1046,8 +1046,8 @@ export default {
           original: this.content,
           tip: this.pitchingTip,
         })
-        const body = res.pitch.replace(/^Subject(?: Line)?:[\s\S]*?\n/, '')
-        const html = `<p>${body.replace(/\n/g, '</p><p>')}</p>`
+        const body = res.pitch.replace(/^Subject(?: Line)?:[\s\S]*?\n/i, '')
+        const html = `<p>${body.replace(/\n/g, '</p><p>')}</p>` + this.user.emailSignature
         const quill = this.$refs.quill.quill
         quill.clipboard.dangerouslyPasteHTML(html)
         this.subject = res.pitch.match(/^Subject(?: Line)?:(.*)\n/)[1].trim()

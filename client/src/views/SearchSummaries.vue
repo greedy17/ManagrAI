@@ -2818,10 +2818,10 @@ export default {
           date: date,
         })
         const body = res.data.replace(/^Subject(?: Line)?:[\s\S]*?\n|email:.*$/gm, '')
-        const html = `<p>${body.replace(/\n/g, '</p><p>')}</p>`
+        const html = `<p>${body.replace(/\n/g, '</p><p>')}</p>` + this.user.emailSignature
         const quill = this.$refs.quill.quill
         quill.clipboard.dangerouslyPasteHTML(html)
-        this.subject = res.data.match(/^Subject(?: Line)?:(.*)\n/)[1].trim()
+        this.subject = res.data.match(/^Subject(?: Line)?:(.*)\n/i)[1].trim()
         this.targetEmail = res.data.match(/email:\s*(.*)$/m)[1].trim()
       } catch (e) {
         console.error(e)
