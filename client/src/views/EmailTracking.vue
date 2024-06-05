@@ -290,7 +290,7 @@ export default {
 
 .input {
   position: sticky;
-  z-index: 2005;
+  z-index: 8;
   top: 1.5rem;
   width: 300px;
   border-radius: 20px;
