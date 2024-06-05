@@ -489,16 +489,33 @@ class NewsSource(TimeStampModel):
         parsed_domain = urlparse(self.domain)
         domain = parsed_domain.netloc
         articles = self.articles.all().values_list("author", flat=True)
-        author_set = set(list(articles))
+        author_set = list(set(articles))
         for a in author_set:
+            if "staff" in a.lower() or self.site_name in a:
+                continue
             try:
-                author_list = a.split(",")
+                if " and " in a:
+                    author_list = a.split(" and ")
+                else:
+                    author_list = a.split(",")
             except ValueError:
                 print(f"Failed to split: {a}")
                 continue
             for author in author_list:
                 try:
-                    first, last = author.split(" ")
+                    author_names = author.split(" ")
+                    if len(author_names) == 2:
+                        first = author[0]
+                        last = author[1]
+                    elif len(author_names) == 3:
+                        first = author[0]
+                        if "II" in author[3]:
+                            last = author[2]
+                        else:
+                            last = author[3]
+                    else:
+                        first = author[0]
+                        last = author[1:]
                     response = Journalist.email_finder(domain, first, last)
                     if response["score"] is not None:
                         is_valid = (
