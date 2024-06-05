@@ -119,13 +119,13 @@ DEFAULT_TWITTER_INSTRUCTIONS = """*Executive summary:*\n Highlighting 5 key poin
 DEFAULT_CLIENT_INSTRUCTIONS = "Summary: Summarize the news in paragraph format, in less than 600 characters. \n Top Sources: List top 10 sources (based on popularity and size, no newswire sources)"
 
 
-DEFAULT_TWITTER_CLIENT_INSTRUCTIONS = """<strong>Summary of the Tweets (no more than 400 characters long): </strong>\n
-<strong>Sentiment (no more than 200 characters long):</strong>\n
+DEFAULT_TWITTER_CLIENT_INSTRUCTIONS = """<strong>Summary of the Tweets: No more than 400 characters long </strong>\n
+<strong>Sentiment: No more than 200 characters long</strong>\n
 <strong>Top Influencers:</strong>\n Identify key influencers based on follower count"""
 
 
-DEFAULT_INSTAGRAM_CLIENT_INSTRUCTIONS = """<strong>Summary of the Posts (no more than 400 characters long): </strong>\n
-<strong>Sentiment (no more than 200 characters long):</strong>\n
+DEFAULT_INSTAGRAM_CLIENT_INSTRUCTIONS = """<strong>Summary of the Posts: No more than 400 characters long </strong>\n
+<strong>Sentiment: No more than 200 characters long</strong>\n
 """
 
 DEFAULT_WRITING_STYLE = "Aim for a professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Get right to the point"
@@ -167,8 +167,8 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_clie
 def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, instructions, for_client=False):
     if not instructions:
         instructions = DEFAULT_TWITTER_CLIENT_INSTRUCTIONS
-    body = f"""Today's date is {date}.Summarize the instagram coverage based on these posts.\n Posts: {tweets}\n
-    You must follow these instructions: {instructions}. Summary cannot be longer than 1,000 characters.
+    body = f"""Today's date is {date}.Summarize the twitter coverage based on these tweets.\n Tweets: {tweets}\n
+    You must follow these instructions: {instructions}. Summary cannot be longer than 1,000 characters. Do not bold any text in your response.
     """
     return body
 
@@ -177,7 +177,7 @@ def OPEN_AI_INSTAGRAM_SUMMARY(date, posts, instructions, for_client=False):
     if not instructions:
         instructions = DEFAULT_INSTAGRAM_CLIENT_INSTRUCTIONS
     body = f"""Today's date is {date}.Summarize the instagram coverage based on these posts.\n Posts: {posts}\n
-    You must follow these instructions: {instructions}. Summary cannot be longer than 1,000 characters.
+    You must follow these instructions: {instructions}. Summary cannot be longer than 1,000 characters. Do not bold any text in your response.
     """
     return body
 

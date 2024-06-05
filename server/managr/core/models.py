@@ -259,6 +259,7 @@ class User(AbstractUser, TimeStampModel):
         blank=True,
     )
     writing_style = models.TextField(null=True, blank=True)
+    email_signature = models.TextField(null=True, blank=True)
     objects = UserManager()
 
     @property

@@ -205,9 +205,43 @@
         </main>
       </div>
     </Modal>
+
+    <Modal v-if="sigModalOpen" class="paid-modal">
+      <div class="regen-container">
+        <div class="paid-header">
+          <div>
+            <h3 class="regen-header-title">Signature</h3>
+          </div>
+          <img @click="toggleSigModal" src="@/assets/images/close.svg" height="18px" alt="" />
+        </div>
+        <div class="paid-body">
+          <textarea
+            class="area-input textarea-input"
+            v-autoresize
+            v-model="user.emailSignature"
+            cols="30"
+            rows="10"
+          ></textarea>
+        </div>
+
+        <div class="sig-footer">
+          <button @click="toggleSigModal" class="tertiary-button">Close</button>
+          <button :disabled="loading" @click="updateUser" class="primary-button">
+            <div v-if="!loading">Save</div>
+            <div class="loading" v-else>
+              Saving
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </Modal>
+
     <div>
       <!-- <h1>Settings</h1> -->
-      <h1 @click="test">{{ user.organizationRef.name }} - Users</h1>
+      <h1>{{ user.organizationRef.name }} - Users</h1>
 
       <div class="bar-header">
         <small
@@ -222,7 +256,12 @@
           :class="{ active: page === 'invite' }"
           >Invite</small
         >
-        <!-- <small @click="changeActivePage('profile')" class="pointer" :class="{ active: page === 'profile' }">Profile</small> -->
+        <small
+          @click="changeActivePage('profile')"
+          class="pointer"
+          :class="{ active: page === 'profile' }"
+          >Email Signature</small
+        >
       </div>
 
       <div v-if="page === 'invite'">
@@ -357,42 +396,28 @@
           </div>
         </div>
       </div>
-      <div v-if="page === 'profile'">
-        <div>
-          <div class="profile-img">
-            <img
-              src="@/assets/images/profile.svg"
-              style="filter: invert(80%)"
-              height="40px"
-              alt=""
-            />
-            <h3 class="profile-name">{{ user.fullName }}</h3>
+      <div class="profile" v-if="page === 'profile'">
+        <!-- <div>
+         
+          <div class="row org-timezone-container">
+            <p>{{ user.fullName }}</p>
+            <p></p>
+          </div>
+
+          <div class="row org-timezone-container">
+            <p>{{ user.email }}</p>
+            <p></p>
           </div>
 
           <div class="row org-timezone-container">
             <p>{{ user.organizationRef.name }} -</p>
             <p>{{ user.timezone }}</p>
           </div>
-        </div>
+        </div> -->
 
-        <div>
-          <div class="row small-gap">
-            <!-- <font-awesome-icon icon="fa-solid fa-at" /> -->
-
-            Email:
-
-            <p>{{ user.email }}</p>
-          </div>
-
-          <!-- <div class="row">
-            <font-awesome-icon icon="fa-solid fa-user-group" />
-            <p>{{ user.organizationRef.teamsRef[0].name }}</p>
-          </div> -->
-
-          <!-- <div class="row">
-            <font-awesome-icon icon="fa-solid fa-layer-group" />
-            <p>{{ user.userLevel.toLowerCase() }}</p>
-          </div> -->
+        <div style="margin-top: 2rem" class="row">
+          <h3>{{ user.fullName }}</h3>
+          <button @click="toggleSigModal" class="tertiary-button">View/Edit</button>
         </div>
       </div>
     </div>
@@ -417,6 +442,7 @@ export default {
   },
   data() {
     return {
+      sigModalOpen: false,
       page: 'users',
       copyTip: 'Copy link',
       disableInput: false,
@@ -458,6 +484,7 @@ export default {
     }
   },
   async created() {
+    console.log(this.user)
     this.team = CollectionManager.create({ ModelClass: User })
     this.listAllUsers()
     // if (this.user.isAdmin) {
@@ -496,6 +523,30 @@ export default {
     // this.numberOfUsers = this.activeUsers.length
   },
   methods: {
+    toggleSigModal() {
+      this.sigModalOpen = !this.sigModalOpen
+    },
+    async updateUser() {
+      this.loading = true
+      console.log('USER ID', this.user.id)
+      try {
+        const res = await User.api.update(this.user.id, {
+          email_signature: this.user.emailSignature,
+        })
+        this.loading = false
+        this.toggleSigModal()
+        this.$toast('Signature saved', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch (e) {
+        console.error(e)
+      } finally {
+      }
+    },
     async purchasePro() {
       try {
         const response = await User.api.upgrade({ quantity: this.numberOfUsers })
@@ -520,9 +571,6 @@ export default {
     },
     closePlansModal() {
       this.plansModal = false
-    },
-    test() {
-      console.log('log', this.teamUsers)
     },
     openPaidWarningModal() {
       this.paidWarningModal = true
@@ -819,6 +867,21 @@ export default {
       }
     },
   },
+  directives: {
+    autoresize: {
+      inserted(el) {
+        function adjustTextareaHeight() {
+          el.style.height = 'auto'
+          el.style.height = el.scrollHeight + 'px'
+        }
+
+        el.addEventListener('input', adjustTextareaHeight)
+        el.addEventListener('focus', adjustTextareaHeight)
+        el.addEventListener('textarea-clear', adjustTextareaHeight)
+        adjustTextareaHeight()
+      },
+    },
+  },
   computed: {
     isPaid() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
@@ -871,6 +934,47 @@ export default {
 <style scoped lang="scss">
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  margin: 0 5px;
+  background: rgb(97, 96, 96);
+  border-radius: 50%;
+  animation: bounce 1.2s infinite ease-in-out;
+}
+
+.dot:nth-child(2) {
+  animation-delay: -0.4s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: -0.2s;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  padding: 0;
+
+  p {
+    margin-right: 8px;
+  }
+}
 
 .settings {
   padding: 96px 144px 32px 144px;
@@ -939,12 +1043,22 @@ export default {
 
 .primary-button {
   @include dark-blue-button();
-  padding: 11px 12px;
+  // padding: 11px 12px;
   font-size: 13px;
   border: none;
   img {
     filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
     margin-right: 8px;
+  }
+}
+
+.tertiary-button {
+  @include gray-text-button();
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  &:hover {
+    scale: 1;
+    opacity: 0.7;
+    box-shadow: none;
   }
 }
 
@@ -1001,6 +1115,9 @@ h3 {
 .border-right {
   border-right: 1px solid $soft-gray;
 }
+.profile {
+  font-display: $thin-font-family;
+}
 .profile-img {
   margin-top: 1rem;
   margin-bottom: 1rem;
@@ -1032,15 +1149,16 @@ h3 {
   align-items: center;
   gap: 4px;
   // justify-content: center;
-  font-size: 14px;
+  font-size: 16px;
   p:first-of-type {
     margin-right: 0rem;
     // color: $grape;
-    font-weight: bold;
+    font-family: $base-font-family;
   }
   p:last-of-type {
     margin-right: 0.5rem;
     color: $light-gray-blue;
+    font-family: $thin-font-family;
   }
 }
 .small-gap {
@@ -1257,6 +1375,53 @@ h3 {
   align-items: center;
   justify-content: center;
 }
+
+.sig-footer {
+  position: sticky;
+  background: white;
+  width: 100%;
+  bottom: 0;
+  padding: 16px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.area-input {
+  width: 100%;
+  margin-bottom: 0.25rem;
+  max-height: 250px;
+  padding: 1rem;
+  line-height: 1.25;
+  outline: none;
+  border: none;
+  letter-spacing: 0.5px;
+  font-size: 14px;
+  font-family: $thin-font-family !important;
+  font-weight: 400;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  resize: none;
+  text-align: left;
+  overflow: auto;
+  scroll-behavior: smooth;
+  color: $dark-black-blue;
+  background-color: transparent;
+}
+.area-input::-webkit-scrollbar {
+  width: 6px;
+  height: 0px;
+}
+.area-input::-webkit-scrollbar-thumb {
+  background-color: $soft-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px;
+}
+
+.text-area-input {
+  padding-top: 1rem;
+}
+
 .cancel-button {
   @include gray-text-button();
   &:hover {

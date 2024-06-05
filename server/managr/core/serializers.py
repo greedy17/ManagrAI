@@ -95,6 +95,7 @@ class UserClientSerializer(serializers.ModelSerializer):
             "activation_link_ref",
             "writing_styles",
             "writing_styles_ref",
+            "email_signature",
         )
 
     read_only_fields = (

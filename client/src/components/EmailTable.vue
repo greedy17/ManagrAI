@@ -7,7 +7,45 @@
             <h3 class="regen-header-title">{{ selectedEmail.subject }}</h3>
           </div>
 
-          <img @click="toggleEmailModal" src="@/assets/images/close.svg" height="18px" alt="" />
+          <img
+            style="cursor: pointer"
+            @click="toggleEmailModal"
+            src="@/assets/images/close.svg"
+            height="18px"
+            alt=""
+          />
+        </div>
+
+        <div class="paid-body">
+          <!-- <h4>Activities</h4> -->
+          <pre class="pre-text" v-html="selectedEmail.body"></pre>
+        </div>
+
+        <div style="padding-top: 1rem" class="flex-end sticky-bottom">
+          <div
+            style="padding-top: 9px; padding-bottom: 9px"
+            class="cancel-button"
+            @click="toggleEmailModal"
+          >
+            Close
+          </div>
+        </div>
+      </div>
+    </Modal>
+    <Modal v-if="activityModalOpen" class="paid-modal">
+      <div class="regen-container">
+        <div style="background-color: white" class="paid-header sticky-header">
+          <div>
+            <h3 class="regen-header-title">{{ selectedEmail.subject }}</h3>
+          </div>
+
+          <img
+            style="cursor: pointer"
+            @click="toggleActivityModal"
+            src="@/assets/images/close.svg"
+            height="18px"
+            alt=""
+          />
         </div>
 
         <div class="paid-body">
@@ -17,11 +55,11 @@
           </p>
         </div>
 
-        <div style="padding-top: 1rem" class="flex-end">
+        <div style="padding-top: 1rem" class="flex-end sticky-bottom">
           <div
             style="padding-top: 9px; padding-bottom: 9px"
             class="cancel-button"
-            @click="toggleEmailModal"
+            @click="toggleActivityModal"
           >
             Close
           </div>
@@ -116,7 +154,7 @@
       </thead>
       <tbody v-if="sortedEmails">
         <tr v-for="email in sortedEmails" :key="email.body">
-          <td>
+          <td style="cursor: zoom-in" @click="toggleEmailModal(email)">
             <div class="email-details">
               <!-- <div style="width: 40px">
                 <div :tool-tip="email.recipient" class="initials-bubble tooltip">
@@ -138,17 +176,17 @@
           <td>{{ email.opens }}</td>
           <td>{{ email.clicks }}</td>
           <td>{{ email.replies }}</td>
-          <td style="cursor: zoom-in" @click="toggleEmailModal(email)">
+          <td style="cursor: zoom-in" @click="toggleActivityModal(email)">
             <div>
               <div class="base-font" style="margin-bottom: 4px">
                 {{
-                  email.activity_log[0].split('|')[0].charAt(0).toUpperCase() +
-                  email.activity_log[0].split('|')[0].slice(1)
+                  email.activity_log.at(-1).split('|')[0].charAt(0).toUpperCase() +
+                  email.activity_log.at(-1).split('|')[0].slice(1)
                 }}
               </div>
 
               <div style="color: gray; font-size: 15px">
-                {{ formatActivityLog(email.activity_log[0]) }}
+                {{ formatActivityLog(email.activity_log.at(-1)) }}
               </div>
             </div>
           </td>
@@ -180,6 +218,7 @@ export default {
       openRate: 0,
       replyRate: 0,
       emailModalOpen: false,
+      activityModalOpen: false,
       selectedEmail: null,
     }
   },
@@ -214,7 +253,7 @@ export default {
           email.opens.toString().includes(searchText),
           email.replies.toString().includes(searchText),
           email.clicks.toString().includes(searchText),
-          email.activity_log[0].includes(searchText),
+          email.activity_log.at(-1).includes(searchText),
           searchText.includes('delivered') && !email.failed,
           searchText.includes('failed') && email.failed,
         ]
@@ -233,7 +272,7 @@ export default {
           const [start, end] = activityFilter.split(',')
           const startDate = new Date(start)
           const endDate = new Date(end)
-          const emailDate = new Date(email.activity_log[0].split('|')[1])
+          const emailDate = new Date(email.activity_log.at(-1).split('|')[1])
           filterConditions.push(emailDate >= startDate && emailDate <= endDate)
         }
 
@@ -248,23 +287,23 @@ export default {
       return filteredEmails.slice().sort((a, b) => {
         const aValue =
           this.sortKey === 'lastActivity'
-            ? new Date(a.activity_log[0].split('|')[1])
+            ? new Date(a.activity_log.at(-1).split('|')[1])
             : this.sortKey === 'to'
             ? a.recipient
             : this.sortKey === 'status'
             ? a.failed
             : a[this.sortKey]
-        //   this.sortKey === 'subject' ? a.subject : new Date(a.activity_log[0].split('|')[1])
+        //   this.sortKey === 'subject' ? a.subject : new Date(a.activity_log.at(-1).split('|')[1])
         const bValue =
           this.sortKey === 'lastActivity'
-            ? new Date(b.activity_log[0].split('|')[1])
+            ? new Date(b.activity_log.at(-1).split('|')[1])
             : this.sortKey === 'to'
             ? b.recipient
             : this.sortKey === 'status'
             ? b.failed
             : b[this.sortKey]
         //    b[this.sortKey]
-        //   this.sortKey === 'subject' ? b.subject : new Date(b.activity_log[0].split('|')[1])
+        //   this.sortKey === 'subject' ? b.subject : new Date(b.activity_log.at(-1).split('|')[1])
         if (aValue < bValue) return -1 * this.sortOrder
         if (aValue > bValue) return 1 * this.sortOrder
 
@@ -314,6 +353,10 @@ export default {
   methods: {
     toggleEmailModal(email = null) {
       this.emailModalOpen = !this.emailModalOpen
+      this.selectedEmail = email
+    },
+    toggleActivityModal(email = null) {
+      this.activityModalOpen = !this.activityModalOpen
       this.selectedEmail = email
     },
     async fetchEmails() {
@@ -688,6 +731,18 @@ export default {
 
 .paid-body {
   margin: 0.5rem 0;
+  max-height: 350px;
+  overflow: scroll;
+}
+
+.paid-body::-webkit-scrollbar {
+  width: 6px;
+  height: 0px;
+}
+.paid-body::-webkit-scrollbar-thumb {
+  background-color: $soft-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px;
 }
 
 .email-container {
@@ -700,6 +755,12 @@ export default {
   display: flex;
   flex-direction: row;
   justify-content: flex-end;
+}
+
+.sticky-bottom {
+  position: sticky;
+  bottom: 0;
+  background: white;
 }
 
 .cancel-button {

@@ -685,8 +685,16 @@
                         class="text-area-input"
                         type="text"
                         v-model="selectedOrg"
+                        placeholder="Company..."
                       />
                     </div>
+
+                    <img
+                      style="filter: invert(70%); margin-right: 20px"
+                      src="@/assets/images/pencil.svg"
+                      height="14px"
+                      alt=""
+                    />
                   </div>
 
                   <div class="expanded-item">
@@ -2519,6 +2527,10 @@ export default {
           value: `Update the provided press release by integrating relevant, recent news to make it more timely and contextual. Focus on connecting the company's announcements with current industry trends, significant events, and the latest data and statistics. Ensure the updated release reflects the company's proactive role in the industry. Flag the new content. Here the release: {PressReleaseSnippet}`,
         },
         {
+          name: `Enhance Media Pitch`,
+          value: `Update the provided media pitch by integrating relevant, recent news to make it more timely and contextual. Focus on connecting the company's announcements with current industry trends, significant events, and the latest data and statistics. Ensure the updated pitch reflects the company's proactive role in the industry. Flag the new content. Here the release: {MediaPitch}`,
+        },
+        {
           name: `Newsjacking Ideas`,
           value: `Provide creative newsjacking ideas for {BrandX} based on this coverage`,
         },
@@ -2806,10 +2818,10 @@ export default {
           date: date,
         })
         const body = res.data.replace(/^Subject(?: Line)?:[\s\S]*?\n|email:.*$/gm, '')
-        const html = `<p>${body.replace(/\n/g, '</p><p>')}</p>`
+        const html = `<p>${body.replace(/\n/g, '</p><p>')}</p>` + this.user.emailSignature
         const quill = this.$refs.quill.quill
         quill.clipboard.dangerouslyPasteHTML(html)
-        this.subject = res.data.match(/^Subject(?: Line)?:(.*)\n/)[1].trim()
+        this.subject = res.data.match(/^Subject(?: Line)?:(.*)\n/i)[1].trim()
         this.targetEmail = res.data.match(/email:\s*(.*)$/m)[1].trim()
       } catch (e) {
         console.error(e)
