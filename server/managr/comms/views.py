@@ -2091,7 +2091,7 @@ class DiscoveryViewSet(
         outlet = request.data.get("publication")
         email = request.data.get("email")
         try:
-            db_check = Journalist.object.filter(first_name=first, last_name=last, outlet=outlet)
+            db_check = Journalist.objects.filter(first_name=first, last_name=last, outlet=outlet)
             if len(db_check):
                 internal_journalist = db_check.first()
                 return Response(
