@@ -391,6 +391,7 @@ class UserTrialSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
+            "full_name",
             "id",
             "email",
             "datetime_created",

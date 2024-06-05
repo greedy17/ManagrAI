@@ -428,7 +428,7 @@
           :style="
             isMobile
               ? 'width:100%;padding: 40px 16px 16px 24px;'
-              : 'width: 100%; padding: 0 32px; padding-top: 16px'
+              : 'width: 100%; padding: 0 32px; padding-top: 0'
           "
           class="small-container"
         >

@@ -300,7 +300,7 @@
 
     <section class="container" :class="{ 'fit-content': summary && isMobile }">
       <div style="padding-top: 88px" class="content-body">
-        <div style="width: 100%; padding: 0 32px; padding-top: 16px" class="small-container">
+        <div style="width: 100%; padding: 0 32px; padding-top: 0" class="small-container">
           <div class="text-width">
             <p style="margin: 0">Discover relevant journalists or influencers</p>
           </div>
@@ -841,7 +841,7 @@ export default {
       currentPublication: '',
       toolbarOptions: [
         ['bold', 'italic', 'underline', 'strike'], // toggled buttons
-        ['link', 'image'],
+        // ['link', 'image'],
 
         [{ header: 1 }, { header: 2 }], // custom button values
         [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],

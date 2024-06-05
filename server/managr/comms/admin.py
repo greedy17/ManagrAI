@@ -69,7 +69,7 @@ class CustomJournalAdmin(admin.ModelAdmin):
 
 
 class CustomEmailTrackerAdmin(admin.ModelAdmin):
-    list_display = ("datetime_created", "subject", "recipient", "user")
+    list_display = ("datetime_created", "recipient", "user", "received")
     ordering = ("datetime_created",)
 
 

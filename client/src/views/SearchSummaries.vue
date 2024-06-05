@@ -568,7 +568,7 @@
             </div>
 
             <div
-              style="width: 100%; padding: 0 32px; padding-top: 16px"
+              style="width: 100%; padding: 0 32px; padding-top: 0"
               v-else
               class="small-container letter-spacing"
             >
@@ -669,6 +669,23 @@
                       />
 
                       <div class="tooltip">Submit</div>
+                    </div>
+                  </div>
+
+                  <div class="expanded-item">
+                    <div style="width: 100%" class="row horizontal-padding-s img-text">
+                      <img
+                        style="margin-left: -1px"
+                        src="@/assets/images/building.svg"
+                        height="20px"
+                        alt=""
+                      />
+                      <input
+                        style="border: none; outline: none; padding: 10px 8px 10px 0px; width: 100%"
+                        class="text-area-input"
+                        type="text"
+                        v-model="selectedOrg"
+                      />
                     </div>
                   </div>
 
@@ -2354,7 +2371,7 @@ export default {
       currentPublication: '',
       toolbarOptions: [
         ['bold', 'italic', 'underline', 'strike'], // toggled buttons
-        ['link', 'image'],
+        // ['link', 'image'],
 
         [{ header: 1 }, { header: 2 }], // custom button values
         [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
@@ -2363,6 +2380,7 @@ export default {
 
         ['clean'], // remove formatting button
       ],
+      selectedOrg: null,
       bccEmail: '',
       targetEmail: '',
       revisedPitch: '',
@@ -2658,7 +2676,6 @@ export default {
     const sevenDaysAgo = new Date(today)
     sevenDaysAgo.setDate(today.getDate() - 7)
 
-    // Format the dates as YYYY-MM-DD strings (required for <input type="date">)
     this.dateStart = sevenDaysAgo.toISOString().split('T')[0]
     this.dateEnd = today.toISOString().split('T')[0]
 
@@ -2667,6 +2684,10 @@ export default {
     this.selectedTime = defaultTime.toISOString().slice(0, 16)
 
     this.bccEmail = this.user.email
+
+    if (this.user) {
+      this.selectedOrg = this.user.organizationRef.name
+    }
   },
   watch: {
     typedMessage: 'changeIndex',
@@ -2776,7 +2797,7 @@ export default {
       try {
         const res = await Comms.api.draftPitch({
           user: this.user.fullName,
-          org: this.user.organizationRef.name,
+          org: this.selectedOrg,
           style: this.pitchStyle,
           author: author,
           outlet: outlet,

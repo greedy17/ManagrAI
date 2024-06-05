@@ -3,6 +3,7 @@ import os
 import logging
 import base64
 import hashlib
+import statistics
 from datetime import datetime, timedelta
 from dateutil import parser
 from django.db import models
@@ -1052,7 +1053,7 @@ class EmailTracker(TimeStampModel):
     opens = models.IntegerField(default=0)
     replies = models.IntegerField(default=0)
     clicks = models.IntegerField(default=0)
-    recieved = models.BooleanField(default=False)
+    received = models.BooleanField(default=False)
     failed = models.BooleanField(default=False)
     activity_log = ArrayField(models.CharField(max_length=255), default=list)
 
@@ -1065,3 +1066,67 @@ class EmailTracker(TimeStampModel):
         new_item = f"{type}|{date_str}"
         self.activity_log.append(new_item)
         return self.save()
+
+    @classmethod
+    def get_user_rates(cls, user_id):
+        data = {}
+        trackers = cls.objects.filter(user__id=user_id)
+        if len(trackers):
+            delivered = trackers.filter(received=True)
+            failed = trackers.filter(failed=True)
+            replies = trackers.filter(replies__gt=0)
+            opens = trackers.filter(opens__gt=0)
+            delivery_rate = round((len(delivered) / len(trackers)) * 100, 2)
+            fail_rate = round((len(failed) / len(trackers)) * 100, 2)
+            reply_rate = round((len(replies) / len(trackers)) * 100, 2)
+            open_rate = round((len(opens) / len(trackers)) * 100, 2)
+            data = {
+                "delivery_rate": delivery_rate,
+                "fail_rate": fail_rate,
+                "reply_rate": reply_rate,
+                "open_rate": open_rate,
+            }
+        return data
+
+    @classmethod
+    def _create_email_tracker_data(cls, email):
+        from managr.core.models import User
+        import random
+        import uuid
+
+        user = User.objects.get(email=email)
+        open_list = [1, 2, 3]
+        booleans = [True, False]
+        count = 0
+        body = "Test"
+        date = str(datetime.now())
+        emails = list(Article.objects.filter(author__contains="@").values_list("author", flat=True))
+        subject = "Test"
+        while count <= 10:
+            activity_log = [f"delivered|{date}"]
+            data = {}
+
+            received = random.choice(booleans)
+            failed = False if received else True
+            if received:
+                open = random.choice(open_list)
+                data["opens"] = open
+                data["received"] = received
+                data["failed"] = failed
+                replied = random.choice(booleans)
+                data["replies"] = replied
+                activity_log.append(f"open|{date}")
+                if replied:
+                    activity_log.append(f"replied|{date}")
+            else:
+                activity_log.append(f"failed|{date}")
+            author = random.choice(emails)
+            data["recipient"] = author
+            data["user"] = user
+            data["subject"] = subject
+            data["body"] = body
+            data["activity_log"] = activity_log
+            data["message_id"] = str(uuid.uuid4())
+            EmailTracker.objects.create(**data)
+            count += 1
+        return
