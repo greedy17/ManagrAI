@@ -42,9 +42,9 @@
             <div class="stat" v-else-if="value === 'Replies'">
               <span
                 :class="{
-                  red: openRate <= 30,
-                  yellow: openRate > 30 && openRate < 70,
-                  green: openRate >= 70,
+                  red: replyRate <= 30,
+                  yellow: replyRate > 30 && replyRate < 70,
+                  green: replyRate >= 70,
                 }"
                 >{{ replyRate }}%</span
               >
@@ -547,9 +547,9 @@ export default {
       font-family: $base-font-family;
       span {
         background-color: red;
-        padding: 4px;
+        padding: 6px 3px;
         border-radius: 50%;
-        font-size: 12px;
+        font-size: 11px;
       }
 
       .red {
