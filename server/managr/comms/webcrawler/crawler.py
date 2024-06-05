@@ -66,7 +66,7 @@ def data_cleaner(data):
         parsed_date = parser.parse(date)
         content = content.replace("\n", " ").replace("\t", " ").replace("  ", "")
         data["author"] = (
-            data["author"].replace("\n", "").replace(",", "").replace("By ,", "").strip()
+            data["author"].replace("\n", "").replace(" and ", ",").replace("By ,", "").strip()
         )
         data["content"] = content
         data["publish_date"] = parsed_date
