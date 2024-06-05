@@ -532,7 +532,7 @@ class NewsSource(TimeStampModel):
                             "last_name": response["last_name"],
                             "email": response["email"],
                             "outlet": response["company"],
-                            "score": response["score"],
+                            "accuracy_score": response["score"],
                             "number_of_sources": len(response["sources"]),
                         }
                         serializer = JournalistSerializer(data=data)
