@@ -685,8 +685,16 @@
                         class="text-area-input"
                         type="text"
                         v-model="selectedOrg"
+                        placeholder="Company..."
                       />
                     </div>
+
+                    <img
+                      style="filter: invert(70%); margin-right: 20px"
+                      src="@/assets/images/pencil.svg"
+                      height="14px"
+                      alt=""
+                    />
                   </div>
 
                   <div class="expanded-item">
@@ -2517,6 +2525,10 @@ export default {
         {
           name: `Enhance Press Release`,
           value: `Update the provided press release by integrating relevant, recent news to make it more timely and contextual. Focus on connecting the company's announcements with current industry trends, significant events, and the latest data and statistics. Ensure the updated release reflects the company's proactive role in the industry. Flag the new content. Here the release: {PressReleaseSnippet}`,
+        },
+        {
+          name: `Enhance Media Pitch`,
+          value: `Update the provided media pitch by integrating relevant, recent news to make it more timely and contextual. Focus on connecting the company's announcements with current industry trends, significant events, and the latest data and statistics. Ensure the updated pitch reflects the company's proactive role in the industry. Flag the new content. Here the release: {MediaPitch}`,
         },
         {
           name: `Newsjacking Ideas`,

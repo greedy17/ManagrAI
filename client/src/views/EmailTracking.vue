@@ -71,7 +71,7 @@
                   </label>
                 </div>
               </div>
-              <div class="col">
+              <div class="col top-border">
                 <p>Last Activity</p>
 
                 <div>
@@ -332,6 +332,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: 0 8px;
 
     img {
       margin-right: 8px;
@@ -345,9 +346,14 @@ export default {
   }
 
   .dropdown-item {
-    margin: 8px 0;
+    padding: 8px 0;
     cursor: pointer;
     width: 100%;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .dropdown-item:last-of-type {
+    border-bottom: none;
   }
 
   .dropdown-item:hover {
@@ -399,8 +405,8 @@ export default {
   top: 50%;
   left: 0;
   transform: translateY(-50%);
-  height: 20px;
-  width: 20px;
+  height: 16px;
+  width: 16px;
   background-color: #f0f0f0;
   border-radius: 50%;
   border: 2px solid #dcdcdc;
@@ -496,5 +502,10 @@ export default {
 
 .lb-bg:hover {
   box-shadow: none;
+}
+
+.top-border {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  margin-top: 1.2rem;
 }
 </style>
