@@ -2206,6 +2206,8 @@ def mailgun_webhooks(request):
 @api_view(["POST"])
 @permission_classes([])
 def email_recieved_webhook(request):
+    print(vars(request))
+    print(request.POST)
     subject = request.POST.get("Subject")
     email_html = request.POST.get("stripped_html")
     to_email = request.POST.get("To")
