@@ -2182,7 +2182,7 @@ def mailgun_webhooks(request):
             event, time = last_log.split("|")
             if event == "opened":
                 message_timestamp = event_data["timestamp"]
-                datetime_obj = datetime.datetime.strptime(time, "%Y-%m-%dT%H:%M:%S.%f")
+                datetime_obj = datetime.strptime(time, "%Y-%m-%dT%H:%M:%S.%f")
                 unix_time = datetime_obj.timestamp()
                 if unix_time - message_timestamp < 60:
                     Response(status=status.HTTP_202_ACCEPTED)
