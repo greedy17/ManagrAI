@@ -182,8 +182,7 @@ export default {
     async getUsers() {
       try {
         const res = await User.api.getAllUsers()
-        this.allUsers = res.results
-        console.log(res.results)
+        this.allUsers = res.results.filter((user) => user.organization == this.user.organization)
       } catch (e) {
         console.log('Error in getTrialUsers', e)
       }

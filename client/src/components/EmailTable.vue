@@ -3,7 +3,7 @@
     <table>
       <thead>
         <tr style="position: relative">
-          <th style="cursor: pointer; d" v-resizableColumn @click="sortBy('subject')">
+          <th v-resizableColumn @click="sortBy('subject')">
             Email
 
             <img
@@ -29,7 +29,26 @@
             @click="sortBy(value.charAt(0).toLowerCase() + value.slice(1))"
           >
             {{ value }}
-
+            <div class="stat" v-if="value === 'Opens'">
+              <span
+                :class="{
+                  red: openRate <= 30,
+                  yellow: openRate > 30 && openRate < 70,
+                  green: openRate >= 70,
+                }"
+                >{{ openRate }}%</span
+              >
+            </div>
+            <div class="stat" v-else-if="value === 'Replies'">
+              <span
+                :class="{
+                  red: openRate <= 30,
+                  yellow: openRate > 30 && openRate < 70,
+                  green: openRate >= 70,
+                }"
+                >{{ replyRate }}%</span
+              >
+            </div>
             <img
               v-if="sortKey === value.charAt(0).toLowerCase() + value.slice(1) && sortOrder === -1"
               src="@/assets/images/arrowDrop.svg"
@@ -45,9 +64,10 @@
               height="14px"
               alt=""
             />
+
             <div class="resizer"></div>
           </th>
-          <th style="cursor: pointer" v-resizableColumn @click="sortBy('lastActivity')">
+          <th v-resizableColumn @click="sortBy('lastActivity')">
             Last Activity
             <img
               v-if="sortKey === 'lastActivity' && sortOrder === -1"
@@ -129,6 +149,8 @@ export default {
       sortKey: '',
       sortOrder: 1,
       statsKeys: ['To', 'Status', 'Opens', 'Clicks', 'Replies'],
+      openRate: 0,
+      replyRate: 0,
     }
   },
   props: {
@@ -257,8 +279,9 @@ export default {
     async fetchEmails() {
       try {
         const response = await Comms.api.getTrackedEmails()
-        // console.log(response.trackers)
         this.emails = response.trackers
+        this.openRate = response.rates.open_rate
+        this.replyRate = response.rates.reply_rate
       } catch (error) {
         console.error('Error fetching email data:', error)
       }
@@ -349,6 +372,7 @@ export default {
       position: sticky;
       top: 0;
       z-index: 5;
+      cursor: pointer;
     }
 
     td {
@@ -513,6 +537,34 @@ export default {
 
       p {
         margin-right: 8px;
+      }
+    }
+
+    .stat {
+      position: absolute;
+      right: 4px;
+      top: 12px;
+      font-family: $base-font-family;
+      span {
+        background-color: red;
+        padding: 4px;
+        border-radius: 50%;
+        font-size: 12px;
+      }
+
+      .red {
+        background-color: $light-red;
+        color: $coral;
+      }
+
+      .yellow {
+        background-color: $light-yellow;
+        color: $yellow;
+      }
+
+      .green {
+        background-color: $light-green;
+        color: $dark-green;
       }
     }
   }
