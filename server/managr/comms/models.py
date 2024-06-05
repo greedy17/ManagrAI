@@ -491,7 +491,7 @@ class NewsSource(TimeStampModel):
         articles = self.articles.all().values_list("author", flat=True)
         author_set = list(set(articles))
         for a in author_set:
-            if "staff" in a.lower() or self.site_name in a:
+            if "staff" in a.lower() or self.site_name in a or "The " in a:
                 continue
             try:
                 if " and " in a:
