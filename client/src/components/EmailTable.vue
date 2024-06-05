@@ -106,7 +106,14 @@
           </td>
         </tr>
       </tbody>
-      <tbody v-else></tbody>
+      <tbody v-else>
+        <div class="loading">
+          Generating
+          <div style="margin-left: 12px" class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </tbody>
     </table>
   </div>
 </template>
@@ -133,6 +140,9 @@ export default {
     activityFilter: {
       default: null,
     },
+    userId: {
+      default: null,
+    },
   },
   computed: {
     sortedEmails() {
@@ -140,6 +150,7 @@ export default {
         const searchText = this.searchText.toLowerCase()
         const failedFilter = this.failedFilter !== undefined ? this.failedFilter : null
         const activityFilter = this.activityFilter !== undefined ? this.activityFilter : null
+        const userFilter = this.userId !== undefined ? this.userId : null
 
         const searchConditions = [
           email.recipient.toLowerCase().includes(searchText),
@@ -154,6 +165,10 @@ export default {
         ]
 
         const filterConditions = []
+
+        if (userFilter !== null) {
+          filterConditions.push(email.user === userFilter)
+        }
 
         if (failedFilter !== null) {
           filterConditions.push(email.failed === failedFilter)
@@ -202,7 +217,7 @@ export default {
       })
     },
   },
-  mounted() {
+  created() {
     this.fetchEmails()
   },
   directives: {
@@ -242,8 +257,8 @@ export default {
     async fetchEmails() {
       try {
         const response = await Comms.api.getTrackedEmails()
-        // console.log(response)
-        this.emails = response
+        // console.log(response.trackers)
+        this.emails = response.trackers
       } catch (error) {
         console.error('Error fetching email data:', error)
       }
@@ -295,6 +310,19 @@ export default {
 .email-tracking {
   width: 100%;
   font-family: $thin-font-family;
+
+  @keyframes bounce {
+    0%,
+    80%,
+    100% {
+      transform: scale(0);
+      opacity: 0;
+    }
+    40% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
 
   table {
     width: 100%;
@@ -457,6 +485,35 @@ export default {
 
     .base-font {
       font-family: $base-font-family;
+    }
+
+    .dot {
+      width: 4px;
+      height: 4px;
+      margin: 0 6px;
+      background: rgb(97, 96, 96);
+      border-radius: 50%;
+      animation: bounce 1.2s infinite ease-in-out;
+    }
+
+    .dot:nth-child(2) {
+      animation-delay: -0.4s;
+    }
+
+    .dot:nth-child(3) {
+      animation-delay: -0.2s;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      border-radius: 6px;
+      margin-left: 16px;
+      padding: 1.5rem 0;
+
+      p {
+        margin-right: 8px;
+      }
     }
   }
 }

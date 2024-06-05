@@ -373,6 +373,16 @@ export default class UserAPI {
     }
   }
 
+  async getAllUsers() {
+    try {
+      const response = await this.client.get(USERS_ENDPOINT)
+      return response.data
+    } catch (e) {
+      console.log('error in getAllOrgUsers', e.response)
+      apiErrorHandler({ apiName: 'UsersAPI.getAllOrgUsers' })
+    }
+  }
+
   async getTasks() {
     try {
       const response = await this.client.get(TASKS_ENDPOINT)

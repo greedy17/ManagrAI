@@ -156,6 +156,6 @@ class EmailTrackerSerializer(serializers.ModelSerializer):
             "replies",
             "clicks",
             "activity_log",
-            "recieved",
+            "received",
             "failed",
         )

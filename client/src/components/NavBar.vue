@@ -850,6 +850,18 @@
                   />
                 </div>
               </div>
+
+              <div class="h-padding">
+                <div @click="togglePersonalDiscoveries" class="toggle">
+                  <div :class="{ 'active-toggle': personalDiscoveries }" class="toggle-side">
+                    <small>Personal</small>
+                  </div>
+
+                  <div :class="{ 'active-toggle': !personalDiscoveries }" class="toggle-side">
+                    <small>Group</small>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1102,6 +1114,7 @@ export default {
   data() {
     return {
       personalSearches: true,
+      personalDiscoveries: true,
       items: [],
       searchText: '',
       pitchText: '',
@@ -1183,6 +1196,9 @@ export default {
   methods: {
     togglePersonal() {
       this.personalSearches = !this.personalSearches
+    },
+    togglePersonalDiscoveries() {
+      this.personalDiscoveries = !this.personalDiscoveries
     },
     setIndex(i) {
       this.hoverIndex = i
@@ -1477,7 +1493,13 @@ export default {
       return this.$store.state.allAssist
     },
     unfilteredDiscoveries() {
-      return this.$store.state.allDiscoveries
+      if (this.personalDiscoveries) {
+        return this.$store.state.allDiscoveries.filter(
+          (discovery) => discovery.user === this.user.id,
+        )
+      } else {
+        return this.$store.state.allDiscoveries
+      }
     },
     searches() {
       if (this.unfilteredSearches.length) {

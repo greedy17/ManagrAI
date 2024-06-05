@@ -4,8 +4,39 @@
 
     <section class="space-between">
       <div class="row">
-        <div>
-          <button class="secondary-button">Select User</button>
+        <div class="relative">
+          <button @click="toggleUserDropdown" class="secondary-button">
+            {{ selectedUser.fullName ? selectedUser.fullName : selectedUser.full_name }}
+            <img src="@/assets/images/dropdown.svg" height="14px" alt="" />
+          </button>
+
+          <div style="left: 0" v-if="showUsers" class="dropdown">
+            <div class="dropdown-header">
+              <h3>Select User</h3>
+              <img
+                @click="toggleUserDropdown"
+                src="@/assets/images/close.svg"
+                class="pointer"
+                height="18px"
+                alt=""
+              />
+            </div>
+
+            <div class="dropdown-body">
+              <div class="col">
+                <div
+                  @click="selectUser(user)"
+                  class="dropdown-item"
+                  v-for="(user, i) in allUsers"
+                  :key="i"
+                >
+                  {{ user.full_name }}
+                </div>
+              </div>
+            </div>
+
+            <div class="dropdown-footer"></div>
+          </div>
         </div>
 
         <div class="relative">
@@ -107,6 +138,7 @@
         :searchText="searchEmailText"
         :failedFilter="failedFilter"
         :activityFilter="activityFilter"
+        :userId="selectedUser.id"
       />
     </div>
   </div>
@@ -114,6 +146,7 @@
 
 <script>
 import EmailTable from '../components/EmailTable.vue'
+import User from '@/services/users'
 
 export default {
   name: 'EmailTracking',
@@ -125,24 +158,44 @@ export default {
     return {
       searchEmailText: '',
       showFilters: false,
+      showUsers: false,
       selectedOption: null,
       dateStart: '',
       dateEnd: '',
       failedFilter: null,
       activityFilter: null,
+      selectedUser: null,
+      allUSers: [],
     }
   },
-  computed: {},
+  computed: {
+    user() {
+      return this.$store.state.user
+    },
+  },
   mounted() {},
   created() {
-    const today = new Date()
+    this.selectedUser = this.user
+    this.getUsers()
   },
   methods: {
+    async getUsers() {
+      try {
+        const res = await User.api.getAllUsers()
+        this.allUsers = res.results
+        console.log(res.results)
+      } catch (e) {
+        console.log('Error in getTrialUsers', e)
+      }
+    },
     clearSearchText() {
       this.searchEmailText = ''
     },
     toggleFilterDropdown() {
       this.showFilters = !this.showFilters
+    },
+    toggleUserDropdown() {
+      this.showUsers = !this.showUsers
     },
     applyFilters() {
       if (this.dateStart && this.dateEnd) {
@@ -153,6 +206,10 @@ export default {
         this.failedFilter = this.selectedOption
       }
       this.toggleFilterDropdown()
+    },
+    selectUser(user) {
+      this.selectedUser = user
+      this.toggleUserDropdown()
     },
     removeFailedFilter() {
       this.failedFilter = null
@@ -284,6 +341,18 @@ export default {
 
   .dropdown-body {
     padding: 0 8px;
+    max-height: 250px;
+    overflow: scroll;
+  }
+
+  .dropdown-item {
+    margin: 8px 0;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  .dropdown-item:hover {
+    opacity: 0.7;
   }
 
   .dropdown-footer {

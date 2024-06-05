@@ -1929,7 +1929,7 @@ class DiscoveryViewSet(
     serializer_class = DiscoverySerializer
 
     def get_queryset(self):
-        return Discovery.objects.filter(user=self.request.user)
+        return Discovery.objects.filter(user__organization=self.request.user.organization)
 
     def create(self, request, *args, **kwargs):
         try:
@@ -2231,6 +2231,7 @@ def email_recieved_webhook(request):
 @permission_classes([])
 def get_email_tracking(request):
     user = request.user
-    trackers = EmailTracker.objects.filter(user=user)
+    trackers = EmailTracker.objects.filter(user__organization=user.organization)
     serialized = EmailTrackerSerializer(trackers, many=True)
-    return Response(data=serialized.data)
+    rate_data = EmailTracker.get_user_rates(user.id)
+    return Response(data={"trackers": serialized.data, "rates": rate_data})
