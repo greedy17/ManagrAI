@@ -2199,7 +2199,7 @@ def mailgun_webhooks(request):
             event, time = last_log.split("|")
             if event == "opened":
                 message_timestamp = event_data["timestamp"]
-                datetime_obj = datetime.datetime.strptime(time, "%Y-%m-%dT%H:%M:%S.%f")
+                datetime_obj = datetime.strptime(time, "%Y-%m-%dT%H:%M:%S.%f")
                 unix_time = datetime_obj.timestamp()
                 if unix_time - message_timestamp < 60:
                     Response(status=status.HTTP_202_ACCEPTED)
@@ -2224,7 +2224,7 @@ def mailgun_webhooks(request):
 @permission_classes([])
 def email_recieved_webhook(request):
     subject = request.POST.get("Subject")
-    email_html = request.POST.get("stripped_html")
+    email_html = request.POST.get("stripped-html")
     to_email = request.POST.get("To")
     to_email = extract_email_address(to_email)
     from_email = request.POST.get("From")
