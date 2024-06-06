@@ -509,10 +509,10 @@ class NewsSource(TimeStampModel):
                         last = author_names[1]
                     elif len(author_names) == 3:
                         first = author_names[0]
-                        if "II" in author_names[3]:
-                            last = author_names[2]
+                        if "II" in author_names[2]:
+                            last = author_names[1]
                         else:
-                            last = author_names[3]
+                            last = author_names[2]
                     else:
                         first = author_names[0]
                         last = author_names[1:]
