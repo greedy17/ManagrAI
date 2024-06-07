@@ -51,7 +51,7 @@
         <div class="paid-body">
           <h4>Activities</h4>
           <p class="paid-item" v-for="(activity, i) in selectedEmail.activity_log" :key="i">
-            {{ formatActivity(activity) }}
+            {{ formatActivityLog(activity, true) }}
           </p>
         </div>
 
@@ -369,16 +369,19 @@ export default {
         console.error('Error fetching email data:', error)
       }
     },
-    formatActivityLog(logEntry) {
+    formatActivityLog(logEntry, fullEntry = false) {
       const [action, dateTime] = logEntry.split('|')
       const date = new Date(dateTime)
       const now = new Date()
       const diffInMilliseconds = now - date
+      const diffInMinutes = Math.floor(diffInMilliseconds / (1000 * 60))
       const diffInHours = Math.floor(diffInMilliseconds / (1000 * 60 * 60))
       const diffInDays = Math.floor(diffInMilliseconds / (1000 * 60 * 60 * 24))
 
       let formattedTime
-      if (diffInHours < 24) {
+      if (diffInMinutes < 120) {
+        formattedTime = `${diffInMinutes - 60} minute${diffInMinutes - 60 !== 1 ? 's' : ''} ago`
+      } else if (diffInHours < 24) {
         formattedTime = `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`
       } else if (diffInDays < 30) {
         formattedTime = `${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`
@@ -389,30 +392,11 @@ export default {
         formattedTime = `on ${formattedDate}`
       }
 
-      //   return `${action.charAt(0).toUpperCase() + action.slice(1)} - ${formattedTime}`
-      return formattedTime
-    },
-    formatActivity(logEntry) {
-      const [action, dateTime] = logEntry.split('|')
-      const date = new Date(dateTime)
-      const now = new Date()
-      const diffInMilliseconds = now - date
-      const diffInHours = Math.floor(diffInMilliseconds / (1000 * 60 * 60))
-      const diffInDays = Math.floor(diffInMilliseconds / (1000 * 60 * 60 * 24))
-
-      let formattedTime
-      if (diffInHours < 24) {
-        formattedTime = `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`
-      } else if (diffInDays < 30) {
-        formattedTime = `${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`
+      if (fullEntry) {
+        return `${action.charAt(0).toUpperCase() + action.slice(1)} - ${formattedTime}`
       } else {
-        const formattedDate = `${date.getMonth() + 1}/${date.getDate()}/${String(
-          date.getFullYear(),
-        ).slice(-2)}`
-        formattedTime = `on ${formattedDate}`
+        return formattedTime
       }
-
-      return `${action.charAt(0).toUpperCase() + action.slice(1)} - ${formattedTime}`
     },
     // getInitials(name) {
     //   return name
@@ -485,6 +469,10 @@ export default {
       z-index: 1;
       background-color: white;
       overflow: hidden;
+    }
+
+    tr:nth-child(even) {
+      background-color: $offer-white;
     }
 
     .email-details {

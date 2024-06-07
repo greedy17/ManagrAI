@@ -2379,8 +2379,8 @@ export default {
       currentPublication: '',
       toolbarOptions: [
         ['bold', 'italic', 'underline', 'strike'], // toggled buttons
-        // ['link', 'image'],
-
+        ['link'],
+        // next to link - 'image'
         [{ header: 1 }, { header: 2 }], // custom button values
         [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
 
@@ -2818,7 +2818,12 @@ export default {
           date: date,
         })
         const body = res.data.replace(/^Subject(?: Line)?:[\s\S]*?\n|email:.*$/gm, '')
-        const html = `<p>${body.replace(/\n/g, '</p><p>')}</p>` + this.user.emailSignature
+        const signature = this.user.emailSignature
+        const html = `<p>${body.replace(/\n/g, '</p><p>')} \n ${signature.replace(
+          /\n/g,
+          '</p><p>',
+        )}  </p>`
+
         const quill = this.$refs.quill.quill
         quill.clipboard.dangerouslyPasteHTML(html)
         this.subject = res.data.match(/^Subject(?: Line)?:(.*)\n/i)[1].trim()
