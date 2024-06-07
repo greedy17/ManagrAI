@@ -2083,12 +2083,29 @@ class DiscoveryViewSet(
     )
     def verify_email(self, request, *args, **kwargs):
         user = request.user
+        journalist = request.data.get("journalist")
+        try:
+            first, last = journalist.split(" ")
+        except Exception:
+            pass
+        outlet = request.data.get("publication")
         email = request.data.get("email")
         try:
-            is_valid = Journalist.verify_email(email)
-            user.add_meta_data("verify")
-            _add_jounralist_to_db(request.data, is_valid)
-            return Response(status=status.HTTP_200_OK, data={"is_valid": is_valid})
+            db_check = Journalist.object.filter(first_name=first, last_name=last, outlet=outlet)
+            if len(db_check):
+                internal_journalist = db_check.first()
+                return Response(
+                    status=status.HTTP_200_OK,
+                    data={
+                        "is_valid": internal_journalist.verified,
+                        "email": internal_journalist.email,
+                    },
+                )
+            else:
+                is_valid = Journalist.verify_email(email)
+                user.add_meta_data("verify")
+                _add_jounralist_to_db(request.data, is_valid)
+                return Response(status=status.HTTP_200_OK, data={"is_valid": is_valid})
         except Exception as e:
             logger.exception(str(e))
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
@@ -2240,7 +2257,9 @@ def email_recieved_webhook(request):
 @permission_classes([])
 def get_email_tracking(request):
     user = request.user
-    trackers = EmailTracker.objects.filter(user__organization=user.organization)
+    trackers = EmailTracker.objects.filter(user__organization=user.organization).order_by(
+        "-datetime_created"
+    )
     serialized = EmailTrackerSerializer(trackers, many=True)
     rate_data = EmailTracker.get_user_rates(user.id)
     return Response(data={"trackers": serialized.data, "rates": rate_data})
