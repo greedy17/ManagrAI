@@ -139,6 +139,8 @@ class JournalistSerializer(serializers.ModelSerializer):
             "last_name",
             "outlet",
             "verified",
+            "accuracy_score",
+            "number_of_sources",
         )
 
 

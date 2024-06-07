@@ -498,7 +498,8 @@ class NewsSource(TimeStampModel):
                     author_list = a.split(" and ")
                 else:
                     author_list = a.split(",")
-            except ValueError:
+            except ValueError as e:
+                print(f"{a} - {e}")
                 continue
             for author in author_list:
                 try:
@@ -508,10 +509,10 @@ class NewsSource(TimeStampModel):
                         last = author_names[1]
                     elif len(author_names) == 3:
                         first = author_names[0]
-                        if "II" in author_names[3]:
-                            last = author_names[2]
+                        if "II" in author_names[2]:
+                            last = author_names[1]
                         else:
-                            last = author_names[3]
+                            last = author_names[2]
                     else:
                         first = author_names[0]
                         last = author_names[1:]
@@ -531,6 +532,8 @@ class NewsSource(TimeStampModel):
                             "last_name": response["last_name"],
                             "email": response["email"],
                             "outlet": response["company"],
+                            "accuracy_score": response["score"],
+                            "number_of_sources": len(response["sources"]),
                         }
                         serializer = JournalistSerializer(data=data)
                         serializer.is_valid(raise_exception=True)
@@ -538,10 +541,10 @@ class NewsSource(TimeStampModel):
                         print(f"Created journalist {serializer.instance.email}")
                     else:
                         print(f"Failed to find journalist: {response}")
-                except ValueError:
-                    print(f"Failed to split author name: {author}")
+                except ValueError as e:
+                    print(f"Failed to split author name: {author} - {e}")
                 except Exception as e:
-                    print(e)
+                    print(f"{author} - {e}")
                     continue
         return
 
@@ -1003,6 +1006,8 @@ class Journalist(TimeStampModel):
     coverage_type = models.CharField(
         choices=comms_consts.COVERAGE_TYPE_CHOICES, max_length=50, default="BOTH"
     )
+    accuracy_score = models.IntegerField(default=0)
+    number_of_sources = models.IntegerField(default=0)
 
     class Meta:
         ordering = ["last_name"]

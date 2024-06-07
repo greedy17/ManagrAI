@@ -70,7 +70,7 @@ class CustomJournalAdmin(admin.ModelAdmin):
 
 class CustomEmailTrackerAdmin(admin.ModelAdmin):
     list_display = ("datetime_created", "recipient", "user", "received")
-    ordering = ("datetime_created",)
+    ordering = ("-datetime_created",)
 
 
 admin.site.register(Search, CustomSearch)
