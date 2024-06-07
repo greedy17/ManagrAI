@@ -1407,6 +1407,7 @@ h3 {
   scroll-behavior: smooth;
   color: $dark-black-blue;
   background-color: transparent;
+  white-space: pre-wrap;
 }
 .area-input::-webkit-scrollbar {
   width: 6px;

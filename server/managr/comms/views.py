@@ -2257,7 +2257,9 @@ def email_recieved_webhook(request):
 @permission_classes([])
 def get_email_tracking(request):
     user = request.user
-    trackers = EmailTracker.objects.filter(user__organization=user.organization)
+    trackers = EmailTracker.objects.filter(user__organization=user.organization).order_by(
+        "-datetime_created"
+    )
     serialized = EmailTrackerSerializer(trackers, many=True)
     rate_data = EmailTracker.get_user_rates(user.id)
     return Response(data={"trackers": serialized.data, "rates": rate_data})

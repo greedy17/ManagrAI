@@ -276,13 +276,16 @@ OPEN_AI_REGENERATE_ARTICLE = (
 )
 
 OPEN_AI_FIND_JOURNALISTS = (
-    lambda type, beat, location, content: f"""List up to 10 real journalists (or social media influencers) from relevant publications, along with pitching tips, who would be interested in writing about the content provided. User will specify whether they want journalist or influencers. Follow these instructions carefully:
-    - Publication Type: The journalists or influencers must be from news outlets (or social platform) of this type: {type}.
-    - Journalistic Beat: The journalist or influencers must cover this specific beat: {beat}.
-    - Location: The journalists or influencers must be based in or primarily cover {location}.
-    - Real Journalists Requirement: It is essential that the journalists or influencers listed are real, currently active professionals in the field.
-    - Do not bold any of the text in the response.
-    Content for the Pitch: {content} """
+    lambda type, beat, location, content: f"""List up to 10 real, active journalists and their respective publications that would be interested in writing about the content provided below. Provide pitching tips based on what you know about the journalists, relevant to the user's content. User will specify whether they want journalists or influencers. Follow these instructions very carefully:
+    Rule #1: Ensure that all journalists listed are real, currently active professionals. Do not include fake names such as Jane Doe or John Smith.
+    Rule #2: Only list journalists that have written for the publication in the past 12 months.
+    Rule #3: Email addresses need to be accurate, guess the correct emails based on verified patterns.
+    Rule #4: Do NOT bold any of the text in the response.
+    Journalist Type: The journalists or influencers must be: {type}.
+    Journalistic Beat: The journalists or influencers must cover this specific beat or topic: {beat}.
+    Location: The journalists or influencers must be based in or primarily cover {location}.
+    User’s Content: {content}.
+    """
 )
 
 OPEN_AI_GENERATE_FEEDBACK = (

@@ -6,7 +6,13 @@
       <div class="row">
         <div class="relative">
           <button @click="toggleUserDropdown" class="secondary-button">
-            {{ selectedUser.fullName ? selectedUser.fullName : selectedUser.full_name }}
+            {{
+              !selectedUser
+                ? 'All'
+                : selectedUser.fullName
+                ? selectedUser.fullName
+                : selectedUser.full_name
+            }}
             <img src="@/assets/images/dropdown.svg" height="14px" alt="" />
           </button>
 
@@ -22,8 +28,31 @@
               />
             </div>
 
+            <div style="margin: 8px 0 16px 0; padding-right: 12px" class="search">
+              <div style="width: 100%" class="input">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
+                    fill="currentColor"
+                  ></path>
+                </svg>
+                <input v-model="searchUsersText" class="search-input" :placeholder="`Search...`" />
+                <img
+                  v-if="searchUsersText"
+                  @click="clearUsersText"
+                  src="@/assets/images/close.svg"
+                  class="pointer"
+                  height="12px"
+                  alt=""
+                />
+              </div>
+            </div>
+
             <div class="dropdown-body">
               <div class="col">
+                <div v-if="!searchUsersText" @click="selectAllUsers" class="dropdown-item">All</div>
                 <div
                   @click="selectUser(user)"
                   class="dropdown-item"
@@ -138,7 +167,7 @@
         :searchText="searchEmailText"
         :failedFilter="failedFilter"
         :activityFilter="activityFilter"
-        :userId="selectedUser.id"
+        :userId="selectedUser ? selectedUser.id : null"
       />
     </div>
   </div>
@@ -157,6 +186,7 @@ export default {
   data() {
     return {
       searchEmailText: '',
+      searchUsersText: '',
       showFilters: false,
       showUsers: false,
       selectedOption: null,
@@ -165,12 +195,17 @@ export default {
       failedFilter: null,
       activityFilter: null,
       selectedUser: null,
-      allUSers: [],
+      users: [],
     }
   },
   computed: {
     user() {
       return this.$store.state.user
+    },
+    allUsers() {
+      return this.users.filter((user) =>
+        user.full_name.toLowerCase().includes(this.searchUsersText),
+      )
     },
   },
   mounted() {},
@@ -182,13 +217,16 @@ export default {
     async getUsers() {
       try {
         const res = await User.api.getAllUsers()
-        this.allUsers = res.results.filter((user) => user.organization == this.user.organization)
+        this.users = res.results.filter((user) => user.organization == this.user.organization)
       } catch (e) {
         console.log('Error in getTrialUsers', e)
       }
     },
     clearSearchText() {
       this.searchEmailText = ''
+    },
+    clearUsersText() {
+      this.searchUsersText = ''
     },
     toggleFilterDropdown() {
       this.showFilters = !this.showFilters
@@ -208,6 +246,10 @@ export default {
     },
     selectUser(user) {
       this.selectedUser = user
+      this.toggleUserDropdown()
+    },
+    selectAllUsers() {
+      this.selectedUser = null
       this.toggleUserDropdown()
     },
     removeFailedFilter() {
@@ -349,7 +391,6 @@ export default {
     padding: 8px 0;
     cursor: pointer;
     width: 100%;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   }
 
   .dropdown-item:last-of-type {

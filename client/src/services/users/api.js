@@ -504,7 +504,7 @@ export default class UserAPI {
 
   update(id, data) {
     const promise = apiClient()
-      .patch(GET_USER_ENDPOINT(id), this.cls.toAPI(data))
+      .patch(GET_USER_ENDPOINT(id), this.cls.toAPI(data), { headers: { "Content-Type": "application/json" } })
       .catch(apiErrorHandler({ apiName: 'UserAPI.update' }))
     return promise
   }
