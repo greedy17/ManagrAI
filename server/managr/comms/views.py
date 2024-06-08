@@ -2193,6 +2193,8 @@ def mailgun_webhooks(request):
     message_id = event_data["message"]["headers"]["message-id"]
     event_type = event_data["event"]
     try:
+        trackers = EmailTracker.objects.all()
+        print(trackers)
         tracker = EmailTracker.objects.get(message_id=message_id)
         if event_type == "opened":
             last_log = tracker.activity_log[len(tracker.activity_log) - 1]
