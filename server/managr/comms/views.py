@@ -2192,6 +2192,7 @@ def mailgun_webhooks(request):
     event_data = request.data["event-data"]
     message_id = event_data["message"]["headers"]["message-id"]
     event_type = event_data["event"]
+    print(message_id)
     try:
         trackers = EmailTracker.objects.all()
         print(trackers)
