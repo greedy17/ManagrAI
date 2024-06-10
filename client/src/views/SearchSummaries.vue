@@ -2741,9 +2741,9 @@ export default {
           journalist: this.currentJournalist,
           publication: this.currentPublication,
         })
-        console.log(res)
         if (res.data.is_valid) {
           this.emailVerified = true
+          this.targetEmail = res.data.email
         } else {
           this.emailError = true
         }
