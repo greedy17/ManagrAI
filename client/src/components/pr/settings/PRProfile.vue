@@ -215,13 +215,25 @@
           <img @click="toggleSigModal" src="@/assets/images/close.svg" height="18px" alt="" />
         </div>
         <div class="paid-body">
-          <textarea
+          <!-- <textarea
             class="area-input textarea-input"
             v-autoresize
             v-model="user.emailSignature"
             cols="30"
             rows="10"
-          ></textarea>
+          ></textarea> -->
+          <quill-editor
+            ref="quill"
+            :options="{
+              modules: {
+                toolbar: toolbarOptions,
+              },
+              theme: 'snow',
+              placeholder: '',
+            }"
+            v-model="user.emailSignature"
+            class="text-editor"
+          />
         </div>
 
         <div class="sig-footer">
@@ -431,6 +443,10 @@ import { UserInviteForm } from '@/services/users/forms'
 import SlackOAuth, { SlackUserList } from '@/services/slack'
 import FormField from '@/components/forms/FormField'
 import PulseLoadingSpinnerButton from '@thinknimble/pulse-loading-spinner-button'
+import { quillEditor } from 'vue-quill-editor'
+import 'quill/dist/quill.core.css'
+import 'quill/dist/quill.snow.css'
+import 'quill/dist/quill.bubble.css'
 
 export default {
   name: 'PRProfile',
@@ -439,9 +455,18 @@ export default {
     PulseLoadingSpinnerButton,
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     Multiselect: () => import(/* webpackPrefetch: true */ 'vue-multiselect'),
+    quillEditor,
   },
   data() {
     return {
+      toolbarOptions: [
+        ['bold', 'italic', 'underline', 'strike'], // toggled buttons
+        ['link'],
+        // next to link - 'image'
+        [{ header: 1 }, { header: 2 }], // custom button values
+
+        [{ size: ['small', false, 'large', 'huge'] }], // custom dropdown
+      ],
       sigModalOpen: false,
       page: 'users',
       copyTip: 'Copy link',
@@ -1599,5 +1624,15 @@ h3 {
 
 ::v-deep .multiselect__placeholder {
   color: $base-gray;
+}
+
+.text-editor {
+  height: 160px;
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 48px;
+  @media only screen and (max-width: 600px) {
+    height: 140px;
+  }
 }
 </style>

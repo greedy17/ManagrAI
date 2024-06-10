@@ -850,7 +850,7 @@
                   <div class="author-time">
                     <span style="cursor: pointer" @click="selectJournalist(article)" class="author">
                       <p>
-                        {{ article.author }}
+                        {{ extractJournalist(article.author) }}
                       </p>
                     </span>
                     <span class="divider-dot">.</span>
@@ -2741,9 +2741,12 @@ export default {
           journalist: this.currentJournalist,
           publication: this.currentPublication,
         })
-        console.log(res)
+        console.log(res.data)
         if (res.data.is_valid) {
           this.emailVerified = true
+          if (res.data.email) {
+            this.targetEmail = res.data.email
+          }
         } else {
           this.emailError = true
         }
@@ -2808,7 +2811,7 @@ export default {
       this.loadingPitch = true
       try {
         const res = await Comms.api.draftPitch({
-          user: this.user.fullName,
+          user: this.user.firstName,
           org: this.selectedOrg,
           style: this.pitchStyle,
           author: author,
@@ -2818,8 +2821,8 @@ export default {
           date: date,
         })
         const body = res.data.replace(/^Subject(?: Line)?:[\s\S]*?\n|email:.*$/gm, '')
-        const signature = this.user.emailSignature
-        const html = `<p>${body.replace(/\n/g, '</p><p>')} \n ${signature.replace(
+        const signature = this.user.emailSignature ? this.user.emailSignature : ''
+        const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
           /\n/g,
           '</p><p>',
         )}  </p>`
@@ -2836,9 +2839,8 @@ export default {
       }
     },
     selectJournalist(article, web = false) {
-      // user, org, style, author, outlet, headline, description, date,
       if (web) {
-        const author = article.author
+        const author = this.extractJournalist(article.author)
         const outlet = article.source
         const headline = article.title
         const description = article.summary ? article.summary : article.description
@@ -2847,10 +2849,11 @@ export default {
         this.emailJournalistModalOpen = true
 
         this.currentJournalist = author
+
         this.currentPublication = outlet
         this.draftPitch(author, outlet, headline, description, date)
       } else {
-        const author = article.author
+        const author = this.extractJournalist(article.author)
         const outlet = article.source.name
         const headline = article.title
         const description = article.description
@@ -2859,9 +2862,28 @@ export default {
         this.emailJournalistModalOpen = true
 
         this.currentJournalist = author
+
         this.currentPublication = outlet
         this.draftPitch(author, outlet, headline, description, date)
       }
+    },
+    extractJournalist(author) {
+      if (!author || author.includes('.com')) {
+        author = 'Unknown Author'
+      } else {
+        if (author.includes(',')) {
+          author = author.split(',')[0]
+        }
+
+        const authorParts = author.trim().split(' ')
+        if (authorParts.length === 3) {
+          author = `${authorParts[0]} ${authorParts[2]}`
+        } else if (authorParts.length === 2) {
+          author = `${authorParts[0]} ${authorParts[1]}`
+        }
+      }
+
+      return author
     },
     extractNameAndEmail(text) {
       // Split text by whitespace to extract name and email

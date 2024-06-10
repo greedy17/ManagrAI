@@ -1031,14 +1031,17 @@ class Journalist(TimeStampModel):
         return is_valid
 
     @classmethod
-    def email_finder(cls, domain, first_name, last_name):
+    def email_finder(cls, first_name, last_name, domain=False, outlet=False):
         url = comms_consts.HUNTER_FINDER_URI
         params = {
             "api_key": comms_consts.HUNTER_API_KEY,
-            "domain": domain,
             "first_name": first_name,
             "last_name": last_name,
         }
+        if domain:
+            params["domain"] = domain
+        else:
+            params["company"] = outlet
         encoded_params = urlencode(params)
         url = url + "?" + encoded_params
         with Variable_Client() as client:

@@ -365,7 +365,7 @@ OPEN_AI_EMAIL_JOURNALIST = (
     3. You must use this writing style: {style}
     4. Open with "Hey {author}," . The name here is passed via parameter from a JS function and sometimes it includes an email, ONLY include the first name in the opening line.
     5. Subject line: email subject line must be 2-3 words.
-    6. Guess their email. You must guess their work email address. Make sure to base it on common email patterns associated with their respective publication. The email is sometimes attached to the name, if so you must use that. Always return the email like this - email: (guessed email)
+    6. Guess their email. You must guess their work email address. Make sure to base it on verified email patterns associated with their respective publication. The email is sometimes attached to the name, if so you must use that. Always return the email like this - email: (guessed email)
     7. Do not bold any of the text in the response.  
      """
 )

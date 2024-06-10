@@ -922,10 +922,10 @@ export default {
       popularExamples: [
         `Tier 1 Journalists`,
         `Local Journalists`,
-        `XXX Journalists`,
+        `Niche Journalists`,
         `Instagram Influencers`,
         `TikTok Influencers`,
-        `XXX Influencers`,
+        `Micro Influencers`,
       ],
     }
   },
@@ -975,12 +975,13 @@ export default {
           journalist: this.currentJournalist,
           publication: this.currentPublication,
         })
-        console.log(res)
         if (res.data.is_valid) {
           this.emailVerified = true
+          if (res.data.email) {
+            this.targetEmail = res.data.email
+          }
         } else {
           this.emailError = true
-          console.log('im here, look elsewhere')
         }
       } catch (e) {
         console.error(e)
@@ -1047,7 +1048,11 @@ export default {
           tip: this.pitchingTip,
         })
         const body = res.pitch.replace(/^Subject(?: Line)?:[\s\S]*?\n/i, '')
-        const html = `<p>${body.replace(/\n/g, '</p><p>')}</p>` + this.user.emailSignature
+        const signature = this.user.emailSignature ? this.user.emailSignature : ''
+        const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
+          /\n/g,
+          '</p><p>',
+        )}  </p>`
         const quill = this.$refs.quill.quill
         quill.clipboard.dangerouslyPasteHTML(html)
         this.subject = res.pitch.match(/^Subject(?: Line)?:(.*)\n/)[1].trim()

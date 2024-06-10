@@ -171,12 +171,15 @@
             </div>
             <div class="blur"></div>
           </td>
-          <td>{{ email.recipient }}</td>
+          <td class="set-width">
+            {{ email.recipient }}
+          </td>
           <td>{{ email.failed ? 'Failed' : 'Delivered' }}</td>
           <td>{{ email.opens }}</td>
           <td>{{ email.clicks }}</td>
           <td>{{ email.replies }}</td>
-          <td style="cursor: zoom-in" @click="toggleActivityModal(email)">
+          <!-- @click="toggleActivityModal(email)" style="cursor: zoom-in"-->
+          <td>
             <div>
               <div class="base-font" style="margin-bottom: 4px">
                 {{
@@ -475,24 +478,17 @@ export default {
       background-color: $offer-white;
     }
 
+    .set-width {
+      min-width: 10vw;
+      width: 12vw;
+    }
+
     .email-details {
       display: flex;
       align-items: center;
       z-index: 0;
       min-width: 10vw;
-      width: 20vw;
-
-      .initials-bubble {
-        border-radius: 50%;
-        background-color: $soft-gray;
-        color: $dark-black-blue;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 12px;
-        font-size: 16px;
-        padding: 5px 9px;
-      }
+      width: 12vw;
 
       .email-info {
         display: flex;
@@ -512,31 +508,31 @@ export default {
       }
     }
 
-    .tooltip {
-      position: relative;
-      cursor: pointer;
+    // .tooltip {
+    //   position: relative;
+    //   cursor: pointer;
 
-      &::before {
-        content: attr(tool-tip);
-        position: absolute;
-        top: 16px;
-        left: 40px;
-        transform: translateY(-50%);
-        background-color: $dark-black-blue;
-        color: white;
-        padding: 5px;
-        border-radius: 3px;
-        white-space: nowrap;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.4s;
-        z-index: 3;
-      }
+    //   &::before {
+    //     content: attr(tool-tip);
+    //     position: absolute;
+    //     top: 16px;
+    //     left: 40px;
+    //     transform: translateY(-50%);
+    //     background-color: $dark-black-blue;
+    //     color: white;
+    //     padding: 5px;
+    //     border-radius: 3px;
+    //     white-space: nowrap;
+    //     opacity: 0;
+    //     pointer-events: none;
+    //     transition: opacity 0.4s;
+    //     z-index: 3;
+    //   }
 
-      &:hover::before {
-        opacity: 1;
-      }
-    }
+    //   &:hover::before {
+    //     opacity: 1;
+    //   }
+    // }
 
     .resizer {
       width: 10px;
@@ -553,7 +549,7 @@ export default {
 
     .blur {
       width: 12px;
-      background: white; /* adjust the color and opacity to your liking */
+      background: white;
       filter: blur(5px);
       cursor: none;
       position: absolute;

@@ -2103,6 +2103,10 @@ class DiscoveryViewSet(
                 )
             else:
                 is_valid = Journalist.verify_email(email)
+                if is_valid is False:
+                    r = Journalist.email_finder(first, last, outlet=outlet)
+                    is_valid = r["verification"]["status"]
+                    is_valid = False if is_valid in ["invalid", "unknown"] else True
                 user.add_meta_data("verify")
                 _add_jounralist_to_db(request.data, is_valid)
                 return Response(status=status.HTTP_200_OK, data={"is_valid": is_valid})
@@ -2192,10 +2196,8 @@ def mailgun_webhooks(request):
     event_data = request.data["event-data"]
     message_id = event_data["message"]["headers"]["message-id"]
     event_type = event_data["event"]
-    print(message_id)
     try:
         trackers = EmailTracker.objects.all()
-        print(trackers)
         tracker = EmailTracker.objects.get(message_id=message_id)
         if event_type == "opened":
             last_log = tracker.activity_log[len(tracker.activity_log) - 1]
@@ -2240,7 +2242,7 @@ def email_recieved_webhook(request):
     try:
         print(subject, from_email, user)
         tracker = EmailTracker.objects.get(
-            subject=original_subject, recipient=from_email, user=user
+            subject=original_subject, recipient__icontains=from_email, user=user
         )
         tracker.replies += 1
         tracker.recieved = True
