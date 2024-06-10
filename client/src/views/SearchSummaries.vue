@@ -2808,7 +2808,7 @@ export default {
       this.loadingPitch = true
       try {
         const res = await Comms.api.draftPitch({
-          user: this.user.fullName,
+          user: this.user.firstName,
           org: this.selectedOrg,
           style: this.pitchStyle,
           author: author,
@@ -2818,8 +2818,8 @@ export default {
           date: date,
         })
         const body = res.data.replace(/^Subject(?: Line)?:[\s\S]*?\n|email:.*$/gm, '')
-        const signature = this.user.emailSignature
-        const html = `<p>${body.replace(/\n/g, '</p><p>')} \n ${signature.replace(
+        const signature = this.user.emailSignature ? this.user.emailSignature : ''
+        const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
           /\n/g,
           '</p><p>',
         )}  </p>`
