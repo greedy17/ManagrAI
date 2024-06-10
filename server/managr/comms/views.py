@@ -2107,9 +2107,14 @@ class DiscoveryViewSet(
                     r = Journalist.email_finder(first, last, outlet=outlet)
                     is_valid = r["verification"]["status"]
                     is_valid = False if is_valid in ["invalid", "unknown"] else True
+                    email = r["email"]
+                    request.data["email"] = email
+                    request.data["publication"] = r["company"]
                 user.add_meta_data("verify")
                 _add_jounralist_to_db(request.data, is_valid)
-                return Response(status=status.HTTP_200_OK, data={"is_valid": is_valid})
+                return Response(
+                    status=status.HTTP_200_OK, data={"is_valid": is_valid, "email": email}
+                )
         except Exception as e:
             logger.exception(str(e))
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})

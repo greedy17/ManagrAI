@@ -66,6 +66,8 @@ class CustomJournalAdmin(admin.ModelAdmin):
     list_display = ("datetime_created", "email", "outlet", "verified")
     ordering = ("datetime_created",)
     list_filter = ("outlet",)
+    ordering = ("-datetime_created",)
+    search_fields = ("email",)
 
 
 class CustomEmailTrackerAdmin(admin.ModelAdmin):
