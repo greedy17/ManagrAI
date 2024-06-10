@@ -850,7 +850,7 @@
                   <div class="author-time">
                     <span style="cursor: pointer" @click="selectJournalist(article)" class="author">
                       <p>
-                        {{ article.author }}
+                        {{ extractJournalist(article.author) }}
                       </p>
                     </span>
                     <span class="divider-dot">.</span>
@@ -2836,9 +2836,8 @@ export default {
       }
     },
     selectJournalist(article, web = false) {
-      // user, org, style, author, outlet, headline, description, date,
       if (web) {
-        const author = article.author
+        const author = this.extractJournalist(article.author)
         const outlet = article.source
         const headline = article.title
         const description = article.summary ? article.summary : article.description
@@ -2847,10 +2846,12 @@ export default {
         this.emailJournalistModalOpen = true
 
         this.currentJournalist = author
+
+        console.log(this.currentJournalist)
         this.currentPublication = outlet
         this.draftPitch(author, outlet, headline, description, date)
       } else {
-        const author = article.author
+        const author = this.extractJournalist(article.author)
         const outlet = article.source.name
         const headline = article.title
         const description = article.description
@@ -2859,9 +2860,29 @@ export default {
         this.emailJournalistModalOpen = true
 
         this.currentJournalist = author
+
+        console.log(this.currentJournalist)
         this.currentPublication = outlet
         this.draftPitch(author, outlet, headline, description, date)
       }
+    },
+    extractJournalist(author) {
+      if (!author || author.includes('.com')) {
+        author = 'Unknown Author'
+      } else {
+        if (author.includes(',')) {
+          author = author.split(',')[0]
+        }
+
+        const authorParts = author.trim().split(' ')
+        if (authorParts.length === 3) {
+          author = `${authorParts[0]} ${authorParts[2]}`
+        } else if (authorParts.length === 2) {
+          author = `${authorParts[0]} ${authorParts[1]}`
+        }
+      }
+
+      return author
     },
     extractNameAndEmail(text) {
       // Split text by whitespace to extract name and email
