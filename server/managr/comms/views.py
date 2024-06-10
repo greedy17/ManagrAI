@@ -2196,10 +2196,8 @@ def mailgun_webhooks(request):
     event_data = request.data["event-data"]
     message_id = event_data["message"]["headers"]["message-id"]
     event_type = event_data["event"]
-    print(message_id)
     try:
         trackers = EmailTracker.objects.all()
-        print(trackers)
         tracker = EmailTracker.objects.get(message_id=message_id)
         if event_type == "opened":
             last_log = tracker.activity_log[len(tracker.activity_log) - 1]
@@ -2242,7 +2240,7 @@ def email_recieved_webhook(request):
     user = User.objects.get(first_name=first, last_name=last)
     try:
         tracker = EmailTracker.objects.get(
-            subject=original_subject, recipient=from_email, user=user
+            subject=original_subject, recipient__icontains=from_email, user=user
         )
         tracker.replies += 1
         tracker.recieved = True
