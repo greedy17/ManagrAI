@@ -2226,6 +2226,7 @@ def mailgun_webhooks(request):
 @api_view(["POST"])
 @permission_classes([])
 def email_recieved_webhook(request):
+    print(vars(request.POST))
     subject = request.POST.get("Subject")
     email_html = request.POST.get("stripped-html")
     to_email = request.POST.get("To")
@@ -2237,6 +2238,7 @@ def email_recieved_webhook(request):
     original_subject = subject.replace("Re: ", "")
     user = User.objects.get(first_name=first, last_name=last)
     try:
+        print(subject, from_email, user)
         tracker = EmailTracker.objects.get(
             subject=original_subject, recipient=from_email, user=user
         )
@@ -2244,13 +2246,14 @@ def email_recieved_webhook(request):
         tracker.recieved = True
         tracker.save()
         tracker.add_activity("reply")
-        send_html_email(
+        email = send_html_email(
             subject,
             "core/email-templates/reply-email.html",
             from_email,
             user.email,
             {"html": email_html},
         )
+        print(email)
     except Exception as e:
         print(e)
     return Response(status=status.HTTP_202_ACCEPTED)
