@@ -2741,9 +2741,12 @@ export default {
           journalist: this.currentJournalist,
           publication: this.currentPublication,
         })
+        console.log(res.data)
         if (res.data.is_valid) {
           this.emailVerified = true
-          this.targetEmail = res.data.email
+          if (res.data.email) {
+            this.targetEmail = res.data.email
+          }
         } else {
           this.emailError = true
         }
@@ -2847,7 +2850,6 @@ export default {
 
         this.currentJournalist = author
 
-        console.log(this.currentJournalist)
         this.currentPublication = outlet
         this.draftPitch(author, outlet, headline, description, date)
       } else {
@@ -2861,7 +2863,6 @@ export default {
 
         this.currentJournalist = author
 
-        console.log(this.currentJournalist)
         this.currentPublication = outlet
         this.draftPitch(author, outlet, headline, description, date)
       }

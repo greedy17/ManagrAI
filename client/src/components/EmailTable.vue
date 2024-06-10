@@ -171,12 +171,15 @@
             </div>
             <div class="blur"></div>
           </td>
-          <td>{{ email.recipient }}</td>
+          <td class="set-width">
+            {{ email.recipient }}
+          </td>
           <td>{{ email.failed ? 'Failed' : 'Delivered' }}</td>
           <td>{{ email.opens }}</td>
           <td>{{ email.clicks }}</td>
           <td>{{ email.replies }}</td>
-          <td style="cursor: zoom-in" @click="toggleActivityModal(email)">
+          <!-- @click="toggleActivityModal(email)" style="cursor: zoom-in"-->
+          <td>
             <div>
               <div class="base-font" style="margin-bottom: 4px">
                 {{
@@ -475,12 +478,17 @@ export default {
       background-color: $offer-white;
     }
 
+    .set-width {
+      min-width: 10vw;
+      width: 12vw;
+    }
+
     .email-details {
       display: flex;
       align-items: center;
       z-index: 0;
       min-width: 10vw;
-      width: 20vw;
+      width: 12vw;
 
       .email-info {
         display: flex;

@@ -977,7 +977,9 @@ export default {
         })
         if (res.data.is_valid) {
           this.emailVerified = true
-          this.targetEmail = res.data.email
+          if (res.data.email) {
+            this.targetEmail = res.data.email
+          }
         } else {
           this.emailError = true
         }
