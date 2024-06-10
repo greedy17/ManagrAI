@@ -2103,6 +2103,10 @@ class DiscoveryViewSet(
                 )
             else:
                 is_valid = Journalist.verify_email(email)
+                if is_valid is False:
+                    r = Journalist.email_finder(first, last, outlet=outlet)
+                    is_valid = r["verification"]["status"]
+                    is_valid = False if is_valid in ["invalid", "unknown"] else True
                 user.add_meta_data("verify")
                 _add_jounralist_to_db(request.data, is_valid)
                 return Response(status=status.HTTP_200_OK, data={"is_valid": is_valid})
