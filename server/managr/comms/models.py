@@ -1070,7 +1070,7 @@ class EmailTracker(TimeStampModel):
     activity_log = ArrayField(models.CharField(max_length=255), default=list)
 
     def __str__(self):
-        return f"{self.user.email} - {self.recipient}"
+        return f"{self.user.email} - {self.recipient}: {self.subject}"
 
     def add_activity(self, type):
         date = datetime.now()
