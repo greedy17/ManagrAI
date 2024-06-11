@@ -2106,7 +2106,7 @@ class DiscoveryViewSet(
                 if is_valid is False:
                     r = Journalist.email_finder(first, last, outlet=outlet)
                     is_valid = r["verification"]["status"]
-                    is_valid = False if is_valid in ["invalid", "unknown"] else True
+                    is_valid = False if is_valid in ["invalid", "unknown", None] else True
                     email = r["email"]
                     request.data["email"] = email
                     request.data["publication"] = r["company"]
