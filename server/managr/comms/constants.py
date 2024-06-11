@@ -413,4 +413,8 @@ EXCLUDE_DOMAINS = [
     "freerepublic.com",
     "blogger.com",
     "slashdot.org",
+    "theflightdeal.com",
+    "fly4free.com",
+    "antaranews.com",
+    "investorsobserver.com",
 ]
