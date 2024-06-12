@@ -262,7 +262,6 @@ class PRSearchViewSet(
             return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         url = request.data["params"]["url"]
         search = request.data["params"]["search"]
-        # search = '("Under Armour" OR "Nike" OR "Adidas" OR "Puma" OR "Reebok" OR "Fabletics" OR "Athleta") NOT "Lululemon"'
         instructions = request.data["params"]["instructions"]
         length = request.data["params"]["length"]
         has_error = False
@@ -2102,14 +2101,19 @@ class DiscoveryViewSet(
                     },
                 )
             else:
-                is_valid = Journalist.verify_email(email)
+                score = Journalist.verify_email(email)
+                is_valid = True if score >= 85 else False
                 if is_valid is False:
                     r = Journalist.email_finder(first, last, outlet=outlet)
-                    is_valid = r["verification"]["status"]
-                    is_valid = False if is_valid in ["invalid", "unknown", None] else True
+                    score = r["score"]
+                    if score is None:
+                        score = 0
+                    is_valid = True if score >= 85 else False
                     email = r["email"]
-                    request.data["email"] = email
-                    request.data["publication"] = r["company"]
+                    if email is not None:
+                        request.data["email"] = email
+                        request.data["publication"] = r["company"]
+                        request.data["score"] = score
                 user.add_meta_data("verify")
                 _add_jounralist_to_db(request.data, is_valid)
                 return Response(

@@ -1026,9 +1026,10 @@ class Journalist(TimeStampModel):
                 url,
             )
             r = r.json()
-            status = r["data"]["status"]
-        is_valid = False if status in ["invalid", "unknown", None] else True
-        return is_valid
+            score = r["data"]["score"]
+            if score is None:
+                score = 0
+        return score
 
     @classmethod
     def email_finder(cls, first_name, last_name, domain=False, outlet=False):

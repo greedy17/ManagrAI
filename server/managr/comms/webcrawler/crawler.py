@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.conf import settings
 from managr.core.models import CrawlerReport
 from django.db import IntegrityError
-from ..models import NewsSource
+from ..models import NewsSource, Article
 from ..serializers import ArticleSerializer
 from dateutil import parser
 from managr.api.emails import send_html_email
@@ -28,7 +28,6 @@ XPATH_STRING_OBJ = {
     "title": ["//meta[contains(@property, 'title')]/@content"],
     "author": [
         "//*[contains(@class,'gnt_ar_by')]/a/text()",
-        "//meta[@name='author' or @name='authors']/@content",
         "//*[@class='article__author']/text()",
         "//meta[contains(@name,'author')]/@content",
         "//*[@rel='author']/text()",
@@ -40,7 +39,7 @@ XPATH_STRING_OBJ = {
         "//body//time/@datetime | //body//time/@dateTime | //body//time/text()",
         "//meta[contains(@itemprop,'date')]/@content",
         "//meta[contains(translate(@property, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'modified') or contains(translate(@property, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'published')]/@content",
-        "//meta[contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'mod ified') or contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'published')]/@content",
+        "//meta[contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'modified') or contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'published')]/@content",
         "//meta[contains(@name, 'date')]/@content",
         "(//*[contains(translate(@class, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'date')])[last()]//text()",
         f"//body//*[not(self::script) and not(self::p) and (contains(text(),', {datetime.datetime.now().year}') or contains(text(),'{datetime.datetime.now().year},'))]",
@@ -68,6 +67,11 @@ def data_cleaner(data):
         data["author"] = (
             data["author"].replace("\n", "").replace(" and ", ",").replace("By ,", "").strip()
         )
+        authors = data["author"].split(",")
+        author = authors[0]
+        print(authors)
+        print(author)
+        data["author"] = author
         data["content"] = content
         data["publish_date"] = parsed_date
         if len(data["title"]) > 150:
@@ -102,6 +106,7 @@ class NewsSpider(scrapy.Spider):
         self.first_only = kwargs.get("first_only")
         self.test = kwargs.get("test")
         self.no_report = kwargs.get("no_report")
+        self.article_only = kwargs.get("article_only")
         self.urls_processed = 0
         self.error_log = []
         self.start_time = time.time()
@@ -225,8 +230,11 @@ class NewsSpider(scrapy.Spider):
         self.urls_processed += 1
         return
 
-    def parse_article(self, response, source):
+    def parse_article(self, response, source=False):
         xpath_copy = copy(XPATH_STRING_OBJ)
+        if source is False:
+            instance = Article.objects.get(link=response.url)
+            source = instance.source
         meta_tag_data = {"link": response.url, "source": source.id}
         article_selectors = source.article_selectors()
         fields_dict = {}
@@ -292,7 +300,10 @@ class NewsSpider(scrapy.Spider):
             if "content" in meta_tag_data.keys():
                 cleaned_data = data_cleaner(meta_tag_data)
                 if isinstance(cleaned_data, dict):
-                    serializer = ArticleSerializer(data=cleaned_data)
+                    if self.article_only:
+                        serializer = ArticleSerializer(instance=instance, data=cleaned_data)
+                    else:
+                        serializer = ArticleSerializer(data=cleaned_data)
                     serializer.is_valid(raise_exception=True)
                     serializer.save()
                 else:
@@ -363,9 +374,10 @@ class NewsSpider(scrapy.Spider):
     def start_requests(self):
         self.total_urls = len(self.start_urls)
         for url in self.start_urls:
+            callback = self.parse_article if self.article_only else self.parse
             try:
                 yield scrapy.Request(
-                    url, headers={"Referer": "https://www.google.com"}, callback=self.parse
+                    url, headers={"Referer": "https://www.google.com"}, callback=callback
                 )
             except Exception as e:
                 self.error_log.append(str(e))

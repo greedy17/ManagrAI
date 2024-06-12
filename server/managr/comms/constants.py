@@ -389,6 +389,7 @@ DO_NOT_INCLUDE_WORDS = [
     "facebook",
     "instagram",
     ".jpg",
+    "/video",
 ]
 
 EXCLUDE_DOMAINS = [
