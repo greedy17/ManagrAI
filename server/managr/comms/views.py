@@ -2113,7 +2113,7 @@ class DiscoveryViewSet(
                     if email is not None:
                         request.data["email"] = email
                         request.data["publication"] = r["company"]
-                        request.data["score"] = score
+                request.data["accuracy_score"] = score
                 user.add_meta_data("verify")
                 _add_jounralist_to_db(request.data, is_valid)
                 return Response(
@@ -2237,7 +2237,6 @@ def mailgun_webhooks(request):
 @api_view(["POST"])
 @permission_classes([])
 def email_recieved_webhook(request):
-    print(vars(request.POST))
     subject = request.POST.get("Subject")
     email_html = request.POST.get("stripped-html")
     to_email = request.POST.get("To")
@@ -2250,23 +2249,23 @@ def email_recieved_webhook(request):
     user = User.objects.get(first_name=first, last_name=last)
     try:
         print(subject, from_email, user)
-        tracker = EmailTracker.objects.get(
-            subject=original_subject, recipient__icontains=from_email, user=user
-        )
-        tracker.replies += 1
-        tracker.recieved = True
-        tracker.save()
-        tracker.add_activity("reply")
-        email = send_html_email(
-            subject,
-            "core/email-templates/reply-email.html",
-            from_email,
-            user.email,
-            {"html": email_html},
-        )
-        print(email)
+        trackers = EmailTracker.objects.filter(recipient__icontains=from_email, user=user)
+        filtered_trackers = [email for email in trackers if email.subject in original_subject]
+        if len(filtered_trackers):
+            tracker = filtered_trackers[0]
+            tracker.replies += 1
+            tracker.recieved = True
+            tracker.save()
+            tracker.add_activity("reply")
     except Exception as e:
         print(e)
+    email = send_html_email(
+        subject,
+        "core/email-templates/reply-email.html",
+        from_email,
+        user.email,
+        {"html": email_html},
+    )
     return Response(status=status.HTTP_202_ACCEPTED)
 
 
