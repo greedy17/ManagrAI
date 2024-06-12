@@ -394,7 +394,7 @@
                 :disabled="loadingPitch || sendingEmail || verifying"
               />
 
-              <button
+              <!-- <button
                 v-if="targetEmail && !emailVerified && !verifying && !emailError"
                 :disabled="loadingPitch || sendingEmail"
                 @click="verifyEmail"
@@ -404,9 +404,9 @@
                   <img src="@/assets/images/shield-x.svg" height="14px" alt="" />
                   Verify
                 </div>
-              </button>
+              </button> -->
 
-              <div v-else-if="verifying" style="top: 50%" class="abs-placed loading-small">
+              <div v-if="verifying" style="top: 50%" class="abs-placed loading-small">
                 <div class="dot"></div>
                 <div class="dot"></div>
                 <div class="dot"></div>
@@ -414,11 +414,10 @@
 
               <div v-else-if="emailVerified" class="rowed green-img abs-placed" style="top: 35%">
                 <img src="@/assets/images/shield-check.svg" height="18px" alt="" />
-                <!-- Verified -->
               </div>
 
               <div v-else-if="emailError" class="abs-placed red-img" style="top: 35%">
-                <p>Unverified, try different email</p>
+                <img src="@/assets/images/shield-x.svg" height="14px" alt="" />
               </div>
             </div>
 
@@ -511,7 +510,7 @@
               posts.length
             "
           >
-            <img v-if="!ismobile" src="@/assets/images/search.svg" height="16px" alt="" />
+            <img src="@/assets/images/search.svg" height="16px" alt="" />
             New Search
           </button>
 
@@ -2067,7 +2066,7 @@
     >
       <div v-if="summary" class="header sticky-top padding-top-s gray-bg centered-column">
         <div
-          :style="!ismobile ? 'margin-top: 2rem; width: 89%' : 'margin-top: 2rem; width: 100%'"
+          :style="!isMobile ? 'margin-top: 2rem; width: 89%' : 'margin-top: 2rem; width: 100%'"
           class="space-between"
         >
           <button @click="toggleSummaryMenu" v-if="summary" class="img-button-white">
@@ -2747,7 +2746,6 @@ export default {
           journalist: this.currentJournalist,
           publication: this.currentPublication,
         })
-
         if (res.data.is_valid) {
           this.emailVerified = true
           if (res.data.email) {
@@ -2769,7 +2767,7 @@ export default {
         this.refreshUser()
         setTimeout(() => {
           this.verifying = false
-        }, 500)
+        }, 200)
       }
     },
     toggleEmailJournalistModal() {
@@ -2837,6 +2835,11 @@ export default {
         quill.clipboard.dangerouslyPasteHTML(html)
         this.subject = res.data.match(/^Subject(?: Line)?:(.*)\n/i)[1].trim()
         this.targetEmail = res.data.match(/email:\s*(.*)$/m)[1].trim()
+
+        setTimeout(() => {
+          this.verifyEmail()
+        }, 500)
+        // this.verifyEmail()
       } catch (e) {
         console.error(e)
       } finally {

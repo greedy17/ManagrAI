@@ -198,7 +198,7 @@
                 :disabled="loadingPitch || sendingEmail || verifying"
               />
 
-              <button
+              <!-- <button
                 v-if="targetEmail && !emailVerified && !verifying && !emailError"
                 :disabled="loadingPitch || sendingEmail"
                 @click="verifyEmail"
@@ -208,9 +208,9 @@
                   <img src="@/assets/images/shield-x.svg" height="14px" alt="" />
                   Verify
                 </div>
-              </button>
+              </button> -->
 
-              <div v-else-if="verifying" style="top: 50%" class="abs-placed loading-small">
+              <div v-if="verifying" style="top: 50%" class="abs-placed loading-small">
                 <div class="dot"></div>
                 <div class="dot"></div>
                 <div class="dot"></div>
@@ -218,11 +218,10 @@
 
               <div v-else-if="emailVerified" class="row green-img abs-placed" style="top: 35%">
                 <img src="@/assets/images/shield-check.svg" height="18px" alt="" />
-                <!-- Verified -->
               </div>
 
               <div v-else-if="emailError" class="abs-placed red-img" style="top: 35%">
-                <p>Unverified, try different email</p>
+                <img src="@/assets/images/shield-x.svg" height="14px" alt="" />
               </div>
             </div>
 
@@ -1056,6 +1055,9 @@ export default {
         const quill = this.$refs.quill.quill
         quill.clipboard.dangerouslyPasteHTML(html)
         this.subject = res.pitch.match(/^Subject(?: Line)?:(.*)\n/)[1].trim()
+        setTimeout(() => {
+          this.verifyEmail()
+        }, 500)
       } catch (e) {
         console.error(e)
       } finally {
