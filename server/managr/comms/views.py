@@ -2206,7 +2206,6 @@ def mailgun_webhooks(request):
     message_id = event_data["message"]["headers"]["message-id"]
     event_type = event_data["event"]
     try:
-        trackers = EmailTracker.objects.all()
         tracker = EmailTracker.objects.get(message_id=message_id)
         if event_type == "opened":
             last_log = tracker.activity_log[len(tracker.activity_log) - 1]
@@ -2229,6 +2228,8 @@ def mailgun_webhooks(request):
             tracker.clicks += 1
         tracker.save()
         tracker.add_activity(event_type)
+    except EmailTracker.DoesNotExist():
+        return Response(status=status.HTTP_202_ACCEPTED)
     except Exception as e:
         logger.exception(f"{e}, {message_id}\n{event_data}")
     return Response(status=status.HTTP_202_ACCEPTED)
