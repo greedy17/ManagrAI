@@ -190,6 +190,7 @@
                 To:
               </p>
               <input
+                v-if="!verifying && !loadingPitch"
                 style="margin-bottom: 0; padding-left: 26px"
                 class="primary-input-underline"
                 v-model="targetEmail"
@@ -198,7 +199,16 @@
                 :disabled="loadingPitch || sendingEmail || verifying"
               />
 
-              <button
+              <input
+                v-else
+                style="margin-bottom: 0; padding-left: 26px"
+                class="primary-input-underline"
+                type="email"
+                :class="{ coraltext: emailError, greenText: emailVerified }"
+                disabled
+              />
+
+              <!-- <button
                 v-if="targetEmail && !emailVerified && !verifying && !emailError"
                 :disabled="loadingPitch || sendingEmail"
                 @click="verifyEmail"
@@ -208,9 +218,10 @@
                   <img src="@/assets/images/shield-x.svg" height="14px" alt="" />
                   Verify
                 </div>
-              </button>
+              </button> -->
 
-              <div v-else-if="verifying" style="top: 50%" class="abs-placed loading-small">
+              <div v-if="verifying" style="top: 50%" class="abs-placed loading-small">
+                Finding email
                 <div class="dot"></div>
                 <div class="dot"></div>
                 <div class="dot"></div>
@@ -218,11 +229,10 @@
 
               <div v-else-if="emailVerified" class="row green-img abs-placed" style="top: 35%">
                 <img src="@/assets/images/shield-check.svg" height="18px" alt="" />
-                <!-- Verified -->
               </div>
 
               <div v-else-if="emailError" class="abs-placed red-img" style="top: 35%">
-                <p>Unverified, try different email</p>
+                <img src="@/assets/images/shield-x.svg" height="14px" alt="" />
               </div>
             </div>
 
@@ -976,7 +986,9 @@ export default {
           publication: this.currentPublication,
         })
         if (res.data.is_valid) {
-          this.emailVerified = true
+          setTimeout(() => {
+            this.emailVerified = true
+          }, 500)
           if (res.data.email) {
             this.targetEmail = res.data.email
           }
@@ -985,13 +997,8 @@ export default {
         }
       } catch (e) {
         console.error(e)
-        this.$toast('Error verifying email, try again', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+
+        this.emailError = true
       } finally {
         this.refreshUser()
         setTimeout(() => {
@@ -1056,6 +1063,8 @@ export default {
         const quill = this.$refs.quill.quill
         quill.clipboard.dangerouslyPasteHTML(html)
         this.subject = res.pitch.match(/^Subject(?: Line)?:(.*)\n/)[1].trim()
+
+        this.verifyEmail()
       } catch (e) {
         console.error(e)
       } finally {
@@ -2153,7 +2162,7 @@ h3 {
   border: 1px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-radius: 9px;
-  padding: 16px;
+  padding: 8px 8px 24px 8px;
 }
 
 .horizontal-padding {
