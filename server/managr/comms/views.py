@@ -2109,8 +2109,8 @@ class DiscoveryViewSet(
                     if score is None:
                         score = 0
                     is_valid = True if score >= 85 else False
-                    email = r["email"]
-                    if email is not None:
+                    if r["email"] is not None:
+                        email = r["email"]
                         request.data["email"] = email
                         request.data["publication"] = r["company"]
                 request.data["accuracy_score"] = score
