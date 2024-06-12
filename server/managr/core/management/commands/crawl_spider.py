@@ -30,6 +30,11 @@ class Command(BaseCommand):
             action="store_true",
             help="Won't run the report after the crawler runs",
         )
+        parser.add_argument(
+            "--article",
+            action="store_true",
+            help="Runs the spider with parse article instead of parse",
+        )
 
     def handle(self, *args, **options):
         url = options.get("url", False)
@@ -48,5 +53,6 @@ class Command(BaseCommand):
             first_only=first_only,
             test=options["test"],
             no_report=options["noreport"],
+            article_only=options["article"],
         )
         process.start()

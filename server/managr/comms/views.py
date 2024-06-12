@@ -262,7 +262,6 @@ class PRSearchViewSet(
             return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         url = request.data["params"]["url"]
         search = request.data["params"]["search"]
-        # search = '("Under Armour" OR "Nike" OR "Adidas" OR "Puma" OR "Reebok" OR "Fabletics" OR "Athleta") NOT "Lululemon"'
         instructions = request.data["params"]["instructions"]
         length = request.data["params"]["length"]
         has_error = False
@@ -2102,14 +2101,19 @@ class DiscoveryViewSet(
                     },
                 )
             else:
-                is_valid = Journalist.verify_email(email)
+                score = Journalist.verify_email(email)
+                is_valid = True if score >= 85 else False
                 if is_valid is False:
                     r = Journalist.email_finder(first, last, outlet=outlet)
-                    is_valid = r["verification"]["status"]
-                    is_valid = False if is_valid in ["invalid", "unknown", None] else True
-                    email = r["email"]
-                    request.data["email"] = email
-                    request.data["publication"] = r["company"]
+                    score = r["score"]
+                    if score is None:
+                        score = 0
+                    is_valid = True if score >= 85 else False
+                    if r["email"] is not None:
+                        email = r["email"]
+                        request.data["email"] = email
+                        request.data["publication"] = r["company"]
+                request.data["accuracy_score"] = score
                 user.add_meta_data("verify")
                 _add_jounralist_to_db(request.data, is_valid)
                 return Response(
@@ -2202,7 +2206,6 @@ def mailgun_webhooks(request):
     message_id = event_data["message"]["headers"]["message-id"]
     event_type = event_data["event"]
     try:
-        trackers = EmailTracker.objects.all()
         tracker = EmailTracker.objects.get(message_id=message_id)
         if event_type == "opened":
             last_log = tracker.activity_log[len(tracker.activity_log) - 1]
@@ -2225,6 +2228,8 @@ def mailgun_webhooks(request):
             tracker.clicks += 1
         tracker.save()
         tracker.add_activity(event_type)
+    except EmailTracker.DoesNotExist():
+        return Response(status=status.HTTP_202_ACCEPTED)
     except Exception as e:
         logger.exception(f"{e}, {message_id}\n{event_data}")
     return Response(status=status.HTTP_202_ACCEPTED)
@@ -2233,7 +2238,6 @@ def mailgun_webhooks(request):
 @api_view(["POST"])
 @permission_classes([])
 def email_recieved_webhook(request):
-    print(vars(request.POST))
     subject = request.POST.get("Subject")
     email_html = request.POST.get("stripped-html")
     to_email = request.POST.get("To")
@@ -2246,23 +2250,23 @@ def email_recieved_webhook(request):
     user = User.objects.get(first_name=first, last_name=last)
     try:
         print(subject, from_email, user)
-        tracker = EmailTracker.objects.get(
-            subject=original_subject, recipient__icontains=from_email, user=user
-        )
-        tracker.replies += 1
-        tracker.recieved = True
-        tracker.save()
-        tracker.add_activity("reply")
-        email = send_html_email(
-            subject,
-            "core/email-templates/reply-email.html",
-            from_email,
-            user.email,
-            {"html": email_html},
-        )
-        print(email)
+        trackers = EmailTracker.objects.filter(recipient__icontains=from_email, user=user)
+        filtered_trackers = [email for email in trackers if email.subject in original_subject]
+        if len(filtered_trackers):
+            tracker = filtered_trackers[0]
+            tracker.replies += 1
+            tracker.recieved = True
+            tracker.save()
+            tracker.add_activity("reply")
     except Exception as e:
         print(e)
+    email = send_html_email(
+        subject,
+        "core/email-templates/reply-email.html",
+        from_email,
+        user.email,
+        {"html": email_html},
+    )
     return Response(status=status.HTTP_202_ACCEPTED)
 
 

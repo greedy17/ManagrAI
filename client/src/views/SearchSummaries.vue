@@ -2508,7 +2508,7 @@ export default {
       selectedDateTime: '',
       searchExamples: [
         `"Cancer Research"`,
-        `Apple Vision PRO`,
+        `Apple AND OpenAI`,
         `Exercise AND TikTok`,
         `Supreme Court AND Social Media`,
         `Destination AND Travel`,
@@ -2747,7 +2747,9 @@ export default {
           publication: this.currentPublication,
         })
         if (res.data.is_valid) {
-          this.emailVerified = true
+          setTimeout(() => {
+            this.emailVerified = true
+          }, 500)
           if (res.data.email) {
             this.targetEmail = res.data.email
           }
@@ -2835,11 +2837,7 @@ export default {
         quill.clipboard.dangerouslyPasteHTML(html)
         this.subject = res.data.match(/^Subject(?: Line)?:(.*)\n/i)[1].trim()
         this.targetEmail = res.data.match(/email:\s*(.*)$/m)[1].trim()
-
-        setTimeout(() => {
-          this.verifyEmail()
-        }, 500)
-        // this.verifyEmail()
+        this.verifyEmail()
       } catch (e) {
         console.error(e)
       } finally {

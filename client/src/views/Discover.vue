@@ -975,7 +975,9 @@ export default {
           publication: this.currentPublication,
         })
         if (res.data.is_valid) {
-          this.emailVerified = true
+          setTimeout(() => {
+            this.emailVerified = true
+          }, 500)
           if (res.data.email) {
             this.targetEmail = res.data.email
           }
@@ -1055,9 +1057,8 @@ export default {
         const quill = this.$refs.quill.quill
         quill.clipboard.dangerouslyPasteHTML(html)
         this.subject = res.pitch.match(/^Subject(?: Line)?:(.*)\n/)[1].trim()
-        setTimeout(() => {
-          this.verifyEmail()
-        }, 500)
+
+        this.verifyEmail()
       } catch (e) {
         console.error(e)
       } finally {
@@ -2155,7 +2156,7 @@ h3 {
   border: 1px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-radius: 9px;
-  padding: 16px;
+  padding: 8px 8px 24px 8px;
 }
 
 .horizontal-padding {

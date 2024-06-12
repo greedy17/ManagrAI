@@ -514,7 +514,7 @@ def _add_jounralist_to_db(data, verified):
     data["outlet"] = publication
     serializer = JournalistSerializer(data=data)
     try:
-        serializer.is_valid()
+        serializer.is_valid(raise_exception=True)
         serializer.save()
     except Exception as e:
         logger.exception(str(e))
