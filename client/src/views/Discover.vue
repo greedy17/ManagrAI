@@ -190,12 +190,22 @@
                 To:
               </p>
               <input
+                v-if="!verifying && !loadingPitch"
                 style="margin-bottom: 0; padding-left: 26px"
                 class="primary-input-underline"
                 v-model="targetEmail"
                 type="email"
                 :class="{ coraltext: emailError, greenText: emailVerified }"
                 :disabled="loadingPitch || sendingEmail || verifying"
+              />
+
+              <input
+                v-else
+                style="margin-bottom: 0; padding-left: 26px"
+                class="primary-input-underline"
+                type="email"
+                :class="{ coraltext: emailError, greenText: emailVerified }"
+                disabled
               />
 
               <!-- <button
@@ -211,6 +221,7 @@
               </button> -->
 
               <div v-if="verifying" style="top: 50%" class="abs-placed loading-small">
+                Finding email
                 <div class="dot"></div>
                 <div class="dot"></div>
                 <div class="dot"></div>
