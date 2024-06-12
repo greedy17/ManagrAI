@@ -501,6 +501,20 @@
           v-if="selectedSearch && !loading"
           class="space-between horizontal-padding"
         >
+          <button
+            class="img-button-white"
+            @click="resetAll"
+            v-if="
+              (filteredArticles && filteredArticles.length) ||
+              (tweets && tweets.length) ||
+              addedArticles.length ||
+              posts.length
+            "
+          >
+            <img v-if="!ismobile" src="@/assets/images/search.svg" height="16px" alt="" />
+            New Search
+          </button>
+
           <p
             v-if="mainView !== 'website' && mainView !== 'instagram'"
             class="sub-text ellipsis-text"
@@ -2044,24 +2058,6 @@
           </div>
         </div>
       </div>
-
-      <div class="footer sticky-bottom">
-        <div class="centered">
-          <button
-            class="img-button-blue"
-            @click="resetAll"
-            v-if="
-              (filteredArticles && filteredArticles.length) ||
-              (tweets && tweets.length) ||
-              addedArticles.length ||
-              posts.length
-            "
-          >
-            <img src="@/assets/images/search.svg" height="18px" alt="" />
-            New Search
-          </button>
-        </div>
-      </div>
     </section>
 
     <section
@@ -2070,95 +2066,105 @@
       :class="{ 'fit-content': summary && isMobile }"
     >
       <div v-if="summary" class="header sticky-top padding-top-s gray-bg centered-column">
-        <div style="margin-top: 2rem; width: 88%" class="flex-end">
-          <div @click="copyText" class="wrapper icon-button white-bg right-margin">
-            <img
-              style="cursor: pointer"
-              class="img-highlight"
-              src="@/assets/images/clipboard.svg"
-              height="14px"
-              alt=""
-            />
-            <div class="tooltip-below">{{ copyTip }}</div>
-          </div>
+        <div
+          :style="!ismobile ? 'margin-top: 2rem; width: 89%' : 'margin-top: 2rem; width: 100%'"
+          class="space-between"
+        >
+          <button @click="toggleSummaryMenu" v-if="summary" class="img-button-white">
+            <img src="@/assets/images/sparkle.svg" height="16px" alt="" />
+            Generate New Summary
+          </button>
 
-          <div
-            @click="sendSummaryEmail"
-            class="wrapper icon-button white-bg right-margin"
-            :disabled="sentSummaryEmail"
-            v-if="mainView !== 'social' && mainView !== 'website' && mainView !== 'pdf'"
-          >
-            <img
-              v-if="sendingSummaryEmail"
-              class="rotate img-highlight"
-              height="14px"
-              src="@/assets/images/loading.svg"
-              alt=""
-            />
-            <img
-              v-else
-              height="14px"
-              src="@/assets/images/email-round.svg"
-              alt=""
-              class="filter-green img-highlight"
-            />
+          <div class="row">
+            <div @click="copyText" class="wrapper icon-button white-bg right-margin">
+              <img
+                style="cursor: pointer"
+                class="img-highlight"
+                src="@/assets/images/clipboard.svg"
+                height="14px"
+                alt=""
+              />
+              <div class="tooltip-below">{{ copyTip }}</div>
+            </div>
 
-            <div v-if="sendSummaryEmailText !== 'Sent!'" class="tooltip-below">Send Email</div>
-          </div>
-
-          <div>
             <div
-              @click="toggleNotifyModal"
+              @click="sendSummaryEmail"
               class="wrapper icon-button white-bg right-margin"
               :disabled="sentSummaryEmail"
-              v-if="mainView === 'news' && !notifiedList.includes(searchId)"
+              v-if="mainView !== 'social' && mainView !== 'website' && mainView !== 'pdf'"
             >
               <img
+                v-if="sendingSummaryEmail"
+                class="rotate img-highlight"
                 height="14px"
-                src="@/assets/images/bell.svg"
+                src="@/assets/images/loading.svg"
+                alt=""
+              />
+              <img
+                v-else
+                height="14px"
+                src="@/assets/images/email-round.svg"
                 alt=""
                 class="filter-green img-highlight"
-                :class="{ dim: !(searchSaved || savedSearch) }"
               />
-              <div class="tooltip-below">
-                {{ searchSaved || savedSearch ? emailText : 'Save search to enable alerts' }}
+
+              <div v-if="sendSummaryEmailText !== 'Sent!'" class="tooltip-below">Send Email</div>
+            </div>
+
+            <div>
+              <div
+                @click="toggleNotifyModal"
+                class="wrapper icon-button white-bg right-margin"
+                :disabled="sentSummaryEmail"
+                v-if="mainView === 'news' && !notifiedList.includes(searchId)"
+              >
+                <img
+                  height="14px"
+                  src="@/assets/images/bell.svg"
+                  alt=""
+                  class="filter-green img-highlight"
+                  :class="{ dim: !(searchSaved || savedSearch) }"
+                />
+                <div class="tooltip-below">
+                  {{ searchSaved || savedSearch ? emailText : 'Save search to enable alerts' }}
+                </div>
+              </div>
+
+              <div
+                @click="removeEmailAlert"
+                class="wrapper icon-button white-bg right-margin"
+                v-else-if="
+                  mainView === 'news' &&
+                  (searchSaved || savedSearch) &&
+                  notifiedList.includes(searchId)
+                "
+              >
+                <img
+                  height="14px"
+                  src="@/assets/images/bell-slash.svg"
+                  alt=""
+                  class="img-highlight"
+                />
+                <div class="tooltip-below">Disable</div>
               </div>
             </div>
 
-            <div
-              @click="removeEmailAlert"
-              class="wrapper icon-button white-bg right-margin"
-              v-else-if="
-                mainView === 'news' &&
-                (searchSaved || savedSearch) &&
-                notifiedList.includes(searchId)
+            <button
+              class="green-button"
+              @click="toggleSaveModal"
+              :disabled="
+                articleSummaryLoading ||
+                loading ||
+                summaryLoading ||
+                savingSearch ||
+                savedSearch ||
+                mainView === 'website'
               "
+              v-if="(filteredArticles && filteredArticles.length) || tweets.length || posts.length"
             >
-              <img
-                height="14px"
-                src="@/assets/images/bell-slash.svg"
-                alt=""
-                class="img-highlight"
-              />
-              <div class="tooltip-below">Disable</div>
-            </div>
+              Save
+            </button>
           </div>
-
-          <button
-            class="green-button"
-            @click="toggleSaveModal"
-            :disabled="
-              articleSummaryLoading ||
-              loading ||
-              summaryLoading ||
-              savingSearch ||
-              savedSearch ||
-              mainView === 'website'
-            "
-            v-if="(filteredArticles && filteredArticles.length) || tweets.length || posts.length"
-          >
-            Save
-          </button>
         </div>
 
         <!-- <div style="width: 100%" class="space-between vertical-padding">
@@ -2347,14 +2353,14 @@
         </div>
       </div>
 
-      <div class="footer sticky-bottom gray-bg">
+      <!-- <div class="footer sticky-bottom gray-bg">
         <div class="centered">
           <button @click="toggleSummaryMenu" v-if="summary" class="img-button-blueicon">
             <img src="@/assets/images/sparkle.svg" height="18px" alt="" />
             Generate New Summary
           </button>
         </div>
-      </div>
+      </div> -->
     </section>
   </div>
 </template>
@@ -2741,7 +2747,7 @@ export default {
           journalist: this.currentJournalist,
           publication: this.currentPublication,
         })
-        console.log(res.data)
+
         if (res.data.is_valid) {
           this.emailVerified = true
           if (res.data.email) {
@@ -4987,6 +4993,30 @@ export default {
   }
 }
 
+.img-button-white {
+  @include dark-blue-button();
+  background-color: white;
+  color: $dark-black-blue;
+  border: 1px solid $dark-black-blue;
+  padding: 8px 12px;
+  border-radius: 5px;
+  font-size: 14px;
+  img {
+    filter: invert(30%);
+    margin-right: 8px;
+  }
+
+  @media only screen and (max-width: 600px) {
+    width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    img {
+      display: none;
+    }
+  }
+}
+
 .icon-button {
   @include dark-blue-button();
   padding: 7px 12px;
@@ -5503,7 +5533,7 @@ button:disabled {
 }
 
 .ellipsis-text {
-  max-width: 400px;
+  max-width: 275px;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
@@ -5844,7 +5874,9 @@ p {
 
 .mobile-header {
   @media only screen and (max-width: 600px) {
-    padding-right: 56px !important;
+    // padding-right: 56px !important;
+    width: 100%;
+    padding: 0;
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
@@ -6148,6 +6180,13 @@ textarea::placeholder {
 .space-between {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.space-evenly {
+  display: flex;
+  justify-content: space-evenly;
   align-items: center;
   width: 100%;
 }
