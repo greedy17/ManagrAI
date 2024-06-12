@@ -511,7 +511,7 @@
               posts.length
             "
           >
-            <img src="@/assets/images/search.svg" height="16px" alt="" />
+            <img v-if="!ismobile" src="@/assets/images/search.svg" height="16px" alt="" />
             New Search
           </button>
 
@@ -2066,7 +2066,10 @@
       :class="{ 'fit-content': summary && isMobile }"
     >
       <div v-if="summary" class="header sticky-top padding-top-s gray-bg centered-column">
-        <div style="margin-top: 2rem; width: 89%" class="space-between">
+        <div
+          :style="!ismobile ? 'margin-top: 2rem; width: 89%' : 'margin-top: 2rem; width: 100%'"
+          class="space-between"
+        >
           <button @click="toggleSummaryMenu" v-if="summary" class="img-button-white">
             <img src="@/assets/images/sparkle.svg" height="16px" alt="" />
             Generate New Summary
@@ -5002,6 +5005,16 @@ export default {
     filter: invert(30%);
     margin-right: 8px;
   }
+
+  @media only screen and (max-width: 600px) {
+    width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    img {
+      display: none;
+    }
+  }
 }
 
 .icon-button {
@@ -5861,7 +5874,9 @@ p {
 
 .mobile-header {
   @media only screen and (max-width: 600px) {
-    padding-right: 56px !important;
+    // padding-right: 56px !important;
+    width: 100%;
+    padding: 0;
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
