@@ -2768,13 +2768,7 @@ export default {
         }
       } catch (e) {
         console.error(e)
-        this.$toast('Error verifying email, try again', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        this.emailError = true
       } finally {
         this.refreshUser()
         setTimeout(() => {
