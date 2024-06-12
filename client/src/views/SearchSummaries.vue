@@ -2874,7 +2874,7 @@ export default {
       }
     },
     extractJournalist(author) {
-      if (!author || author.includes('.com')) {
+      if (!author || (author.includes('.com') && !author.includes(',')) || author.includes('@')) {
         author = 'Unknown Author'
       } else {
         if (author.includes(',')) {
