@@ -406,7 +406,7 @@
                   maxlength="10000"
                   class="area-input text-area-input"
                   style="padding: 16px 0 0 0; max-height: 350px; width: 650px"
-                  placeholder="Paste up to 3 pages of relevant data or notes ..."
+                  placeholder="Paste up to 3 pages of relevant data or notes..."
                   v-model="output"
                   rows="20"
                   v-autoresize
@@ -511,7 +511,7 @@
                   <textarea
                     class="area-input text-area-input"
                     id="key-data"
-                    placeholder="Paste relevant data, a news summary, or notes..."
+                    placeholder="Paste up to 3 pages of relevant data or notes..."
                     v-model="output"
                     v-autoresize
                     :disabled="loading"
@@ -1054,23 +1054,31 @@ Guidelines: Maintain a formal, journalistic tone. Use technical terms but provid
       contentExamples: [
         {
           name: `Media Pitch`,
-          value: `Craft a short, 50 word media pitch for {BrandX}.`,
+          value: `Craft a short, 50 word media pitch for {BrandX}.
+          `,
         },
         {
           name: `Press Release`,
-          value: `Create a press release from the provided data. Emphasize key statistics and link them to industry trends. Use an attention-grabbing headline, crucial details early on, and compelling quotes. Aim for an engaging narrative that appeals to journalists.`,
+          value: `Create a press release from the provided data. Emphasize key statistics and link them to industry trends. Use an attention-grabbing headline, crucial details early on, and compelling quotes. Aim for an engaging narrative that appeals to journalists.
+          `,
         },
         {
           name: `Briefing Sheet`,
-          value: `Create a briefing sheet for {JournalistName} who writes for {OutletName}. Provide background on journalist, the outlet, and suggested concise, bulleted talking points for {CompanyX} based on journalist's interests`,
+          value: `Create a briefing sheet for {JournalistName} who writes for {OutletName}.
+
+Provide background on journalist, the outlet, and suggested concise, bulleted talking points for {CompanyX} based on journalist's interests
+`,
         },
         {
           name: `Blog Post`,
-          value: `Create an informative blog post for {BrandX}`,
+          value: `Create an informative blog post for {BrandX}
+          `,
         },
         {
           name: `Re-write`,
-          value: `Re-write this based on my writing style`,
+          value: `Re-write this based on my writing style
+          
+          `,
         },
         {
           name: `Optimize`,
