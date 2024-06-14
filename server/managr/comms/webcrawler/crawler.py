@@ -69,8 +69,6 @@ def data_cleaner(data):
         )
         authors = data["author"].split(",")
         author = authors[0]
-        print(authors)
-        print(author)
         data["author"] = author
         data["content"] = content
         data["publish_date"] = parsed_date

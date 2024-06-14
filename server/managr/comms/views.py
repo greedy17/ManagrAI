@@ -2083,14 +2083,26 @@ class DiscoveryViewSet(
     def verify_email(self, request, *args, **kwargs):
         user = request.user
         journalist = request.data.get("journalist")
-        try:
-            first, last = journalist.split(" ")
-        except Exception:
-            pass
         outlet = request.data.get("publication")
         email = request.data.get("email")
+        name_list = journalist.split(" ")
+        db_check = []
+        if len(journalist) > 2:
+            first = name_list[0]
+            last = name_list[len(name_list) - 1]
+        else:
+            first = name_list[0]
+            last = name_list[1]
         try:
-            db_check = Journalist.objects.filter(first_name=first, last_name=last, outlet=outlet)
+            email_check = Journalist.objects.filter(email=email)
+            if len(email_check):
+                db_check = email_check
+            else:
+                name_check = Journalist.objects.filter(
+                    first_name=first, last_name=last, outlet=outlet
+                )
+                if len(name_check):
+                    db_check = name_check
             if len(db_check):
                 internal_journalist = db_check.first()
                 return Response(
