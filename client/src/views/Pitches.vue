@@ -433,7 +433,7 @@
           class="small-container"
         >
           <div class="text-width">
-            <p style="margin: 0">Create content that sounds like you</p>
+            <p style="margin: 0">AI writing assistant</p>
           </div>
 
           <div style="margin-top: 32px" class="large-input-container">
