@@ -317,7 +317,7 @@
 
           <div style="margin-top: 32px" class="large-input-container">
             <div style="padding: 0 8px">
-              <div style="padding: 16px 0">
+              <div style="padding: 16px 0 8px 0">
                 <div style="box-shadow: none; position: relative" class="input-containered-gray">
                   <img
                     class="left-margin-m"
@@ -359,7 +359,7 @@
                 </div>
               </div>
 
-              <div class="expanded-item">
+              <div style="border: none" class="expanded-item">
                 <div class="row horizontal-padding-s img-text">
                   <img src="@/assets/images/disk.svg" height="18px" alt="" />
                   <p style="margin-left: 6px">Saved Content</p>
@@ -371,7 +371,7 @@
                     style="margin-left: 16px"
                     class="row pointer drop-text-small"
                   >
-                    Content
+                    {{ selectedContent }}
                     <img
                       v-if="!showPitches"
                       src="@/assets/images/downArrow.svg"
@@ -461,7 +461,7 @@
                         :disabled="loading"
                         maxlength="300"
                         style="padding-top: 8px; padding-bottom: 8px"
-                        placeholder="Journalist/Influencer type"
+                        placeholder="(e.g. T1 Journalists, Local Journalists)"
                         autocomplete="off"
                       />
 
@@ -495,7 +495,7 @@
                   <div class="display-end">
                     <input
                       class="area-input-end"
-                      placeholder="Topic or beat"
+                      placeholder="(e.g. Health, Travel, Local)"
                       v-model="beat"
                       :disabled="loading"
                       style="padding-top: 12px; padding-bottom: 8px"
@@ -519,7 +519,7 @@
                   <div class="display-end">
                     <input
                       class="area-input-end"
-                      placeholder="Location"
+                      placeholder="(e.g. US, East Coast, Atlanta)"
                       v-model="location"
                       :disabled="loading"
                       style="padding-top: 12px; padding-bottom: 8px"
@@ -954,6 +954,7 @@ export default {
         `Podcasters`,
         `Social Media Influencers`,
       ],
+      selectedContent: 'Select content',
     }
   },
   watch: {
@@ -987,6 +988,7 @@ export default {
     insertPitch(pitch) {
       this.toggleShowPitches()
       this.content = pitch.generated_pitch
+      this.selectedContent = pitch.name
     },
     toggleShowPitches() {
       this.showPitches = !this.showPitches
