@@ -497,7 +497,13 @@
 
     <div :class="mainView !== 'news' ? 'align-top' : ''" v-if="!selectedSearch">
       <div class="text-width text-margin">
-        <h1 style="font-size: 24px; font-weight: 200">Search the news with AI</h1>
+        <h2
+          v-if="mainView === 'social' && !hasTwitterIntegration"
+          style="font-size: 22px; font-weight: 200"
+        >
+          Connect <span class="link" @click="goToIntegrations">Twitter</span> to continue
+        </h2>
+        <h1 v-else style="font-size: 24px; font-weight: 200">Search the news with AI</h1>
       </div>
 
       <div class="small-container letter-spacing">
@@ -883,7 +889,7 @@
                   </header>
 
                   <div class="card-footer">
-                    <div style="border-bottom: none" class="author-time">
+                    <div style="border-bottom: none" class="author-time wrapper">
                       <span
                         style="cursor: pointer"
                         @click="selectJournalist(article)"
@@ -904,6 +910,7 @@
                         getTimeDifferenceInMinutes(article.publish_date)
                       }}</span>
                       <span class="divider-dot">.</span>
+                      <div style="width: fit-content" class="tooltip">Pitch Journalist</div>
                     </div>
                     <div class="footer-icon-container">
                       <!-- <button
@@ -5297,6 +5304,31 @@ button:disabled {
   }
 }
 
+.tooltipped {
+  position: relative;
+  cursor: pointer;
+
+  &::before {
+    content: attr(tool-tip);
+    position: absolute;
+    bottom: 32px;
+    left: 40px;
+    transform: translateY(-50%);
+    background-color: $dark-black-blue;
+    color: white;
+    padding: 5px;
+    border-radius: 3px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s;
+  }
+
+  &:hover::before {
+    opacity: 1;
+  }
+}
+
 .article-preview-medium {
   color: $base-gray;
   font-family: $thin-font-family;
@@ -5557,6 +5589,10 @@ li {
   align-items: center;
   flex-wrap: wrap;
   gap: 4px 24px;
+
+  @media only screen and (min-width: 1025px) {
+    justify-content: center;
+  }
 }
 
 .row-between {

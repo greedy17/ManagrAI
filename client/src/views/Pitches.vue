@@ -438,10 +438,7 @@
 
           <div style="margin-top: 32px" class="large-input-container">
             <div>
-              <div
-                style="border: none; box-shadow: none; position: relative"
-                class="input-containered"
-              >
+              <div style="box-shadow: none; position: relative" class="input-container-gray">
                 <img class="left-margin-m" src="@/assets/images/wand.svg" height="20px" alt="" />
                 <textarea
                   class="area-input text-area-input"
@@ -449,7 +446,7 @@
                   v-model="type"
                   :disabled="loading"
                   maxlength="300"
-                  placeholder="Content Instructions..."
+                  placeholder="Instructions..."
                   v-autoresize
                   autocomplete="off"
                 />
@@ -458,6 +455,7 @@
                   @click="generatePitch"
                   class="image-container left-margin-l wrapper"
                   :class="type && writingStyle && !loading ? 'dark-blue-bg' : ''"
+                  style="margin-right: 8px"
                 >
                   <img
                     style="margin: 0"
@@ -474,10 +472,10 @@
               </div>
 
               <div>
-                <div class="expanded-item-column">
+                <div style="border-top: none" class="expanded-item-column">
                   <div class="row horizontal-padding-s img-text">
                     <img src="@/assets/images/file-ai.svg" height="18px" alt="" />
-                    <p style="margin-left: 6px">Templates:</p>
+                    <p style="margin-left: 6px">Instruction Templates</p>
                   </div>
 
                   <div class="horizontal-padding-m rowss">
@@ -492,62 +490,68 @@
                   </div>
                 </div>
 
-                <div
-                  class="input-containered"
-                  style="
-                    border: none;
-                    box-shadow: none;
-                    position: relative;
-                    border-radius: 0;
-                    border-top: 1px solid rgba(0, 0, 0, 0.1);
-                  "
-                >
-                  <img
-                    class="left-margin-m"
-                    src="@/assets/images/document.svg"
-                    height="20px"
-                    alt=""
-                  />
-                  <textarea
-                    class="area-input text-area-input"
-                    id="key-data"
-                    placeholder="Paste up to 3 pages of relevant data or notes..."
-                    v-model="output"
-                    v-autoresize
-                    :disabled="loading"
-                    maxlength="5000"
-                    rows="4"
-                    style="max-height: 100px; padding-top: 2.5rem !important"
-                  />
+                <div style="border-top: 1px solid rgba(0, 0, 0, 0.1)">
+                  <div class="row horizontal-padding-s img-text">
+                    <img src="@/assets/images/document.svg" height="18px" alt="" />
+                    <p style="margin-left: 6px">Data Input</p>
+                  </div>
 
-                  <img
-                    @click="expandOutput"
-                    class="left-margin-xl"
-                    src="@/assets/images/expand-arrows.svg"
-                    height="14px"
-                    alt=""
-                    style="cursor: pointer"
-                  />
-                  <!-- <div style="bottom: -2px" class="absolute-count">
+                  <div style="padding: 0 0 0 48px">
+                    <div class="input-containered" style="box-shadow: none; position: relative">
+                      <textarea
+                        class="area-input text-area-input"
+                        id="key-data"
+                        placeholder="Paste up to 3 pages of relevant data or notes..."
+                        v-model="output"
+                        v-autoresize
+                        :disabled="loading"
+                        maxlength="5000"
+                        rows="4"
+                        style="
+                          max-height: 100px;
+                          padding-top: 2.5rem !important;
+                          padding-right: 36px;
+                        "
+                      />
+
+                      <div
+                        style="position: absolute; right: 8px"
+                        class="image-container"
+                        @click="expandOutput"
+                      >
+                        <img
+                          src="@/assets/images/expand-arrows.svg"
+                          height="14px"
+                          alt=""
+                          style="cursor: pointer; margin: 0"
+                        />
+                      </div>
+                    </div>
+
+                    <!-- <div style="bottom: -2px" class="absolute-count">
                     <small>{{ remainingChars }}</small>
                   </div> -->
+                  </div>
                 </div>
 
-                <div class="expanded-item" style="position: relative" id="writing-style">
-                  <img
-                    class="left-margin-m"
-                    src="@/assets/images/edit-note.svg"
-                    height="19px"
-                    alt=""
-                  />
+                <div
+                  class="expanded-item"
+                  style="position: relative; padding-top: 16px"
+                  id="writing-style"
+                >
+                  <div class="row horizontal-padding-s img-text">
+                    <img src="@/assets/images/edit-note.svg" height="18px" alt="" />
+                    <p style="margin-left: 6px">Writing Style</p>
+                  </div>
 
                   <div
                     @click="toggleStyleDropdown"
                     class="drop-text pointer"
                     :class="loading ? 'textcursor' : ''"
+                    s
                   >
                     <p class="ellipsis-text" style="margin: 0">
-                      {{ writingStyleTitle ? writingStyleTitle : 'Select writing style' }}
+                      {{ writingStyleTitle ? writingStyleTitle : 'Select style' }}
                     </p>
                     <img
                       v-if="!showStyleDropdown"
@@ -1085,13 +1089,17 @@ Provide background on journalist, the outlet, and suggested concise, bulleted ta
           value: `Optimize this content for {AudienceType}`,
         },
         {
+          name: `Product Launch`,
+          value: `Create an exciting, persuasive announcement for the launch of {ProductX} by {BrandX}`,
+        },
+        {
           name: `Linkedin Post`,
           value: `Craft a professional, insightful LinkedIn Post about {TopicX}`,
         },
-        {
-          name: `LinkedIn Hook`,
-          value: `10-20 word, cheeky, witty LinkedIn post hook`,
-        },
+        // {
+        //   name: `LinkedIn Hook`,
+        //   value: `10-20 word, cheeky, witty LinkedIn post hook`,
+        // },
 
         {
           name: `Instagram Story`,
@@ -1101,26 +1109,22 @@ Provide background on journalist, the outlet, and suggested concise, bulleted ta
           name: `TikTok Caption`,
           value: `Create a catchy, engaging, concise TikTok caption for a video about {TopicX}`,
         },
-        {
-          name: `Mastering TopicX`,
-          value: `Create a Social Post that has a "how to" element to it, about {TopicX},`,
-        },
-        {
-          name: `Email`,
-          value: `Write a concise, direct, professional email regarding {TopicX}`,
-        },
+        // {
+        //   name: `Mastering TopicX`,
+        //   value: `Create a Social Post that has a "how to" element to it, about {TopicX},`,
+        // },
+        // {
+        //   name: `Email`,
+        //   value: `Write a concise, direct, professional email regarding {TopicX}`,
+        // },
         {
           name: `Twitter Thread`,
           value: `Create a series of {NumberX} connected tweets about {TopicX}`,
         },
-        {
-          name: `SEO Optimization`,
-          value: `Craft SEO-enhanced blog titles and meta descriptions for optimal impact`,
-        },
-        {
-          name: `Product Launch`,
-          value: `Create an exciting, persuasive announcement for the launch of {ProductX} by {BrandX}`,
-        },
+        // {
+        //   name: `SEO Optimization`,
+        //   value: `Craft SEO-enhanced blog titles and meta descriptions for optimal impact`,
+        // },
       ],
     }
   },
@@ -2009,6 +2013,26 @@ h3 {
   margin: 0;
 }
 
+.input-container-gray {
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+  padding: 0;
+  border-radius: 16px;
+  width: 100%;
+  color: $base-gray;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: row;
+  background-color: #f8f7f7;
+
+  img {
+    filter: invert(40%);
+  }
+}
+
 .small-container {
   padding-left: 32px;
   padding-right: 32px;
@@ -2091,6 +2115,7 @@ label {
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
+  background-color: white;
 
   img {
     filter: invert(40%);
@@ -2125,6 +2150,11 @@ label {
 
 .left-margin-xl {
   margin-left: 20px;
+}
+
+.abs-img {
+  position: absolute;
+  right: 0;
 }
 
 .right-margin {
@@ -2251,7 +2281,7 @@ label {
   flex-direction: row;
   align-items: center;
   flex-wrap: wrap;
-  gap: 4px 24px;
+  gap: 4px 16px;
 }
 
 .rows {
@@ -2387,11 +2417,10 @@ label {
 }
 
 .input-containered {
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.3s ease;
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  background-color: $off-white;
   padding: 0;
-  border-radius: 24px;
   width: 100%;
   color: $base-gray;
   position: relative;
@@ -2399,6 +2428,7 @@ label {
   align-items: center;
   justify-content: flex-start;
   flex-direction: row;
+  margin-bottom: 24px;
 
   img {
     filter: invert(40%);
@@ -2475,7 +2505,7 @@ label {
 }
 
 .area-input {
-  width: 85%;
+  width: 100%;
   margin-bottom: 0.25rem;
   max-height: 250px;
   padding: 0 1.25rem;
@@ -2577,14 +2607,14 @@ label {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  margin: 0;
+  width: 60%;
+  margin-left: 8px;
   font-size: 16px;
   color: $dark-black-blue;
-  background-color: white;
-  // border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-  padding: 12px 16px 12px 20px;
+  background-color: $off-white;
+  // border: 0.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 8px 12px;
   svg,
   img {
     margin-left: 4px;
@@ -3438,8 +3468,8 @@ button:disabled {
   overflow-y: scroll;
   max-height: 400px;
   position: absolute;
-  bottom: 60px;
-  left: 0;
+  bottom: 68px;
+  right: 0;
   font-size: 13px;
   font-weight: 400;
   background: white;
@@ -3685,8 +3715,8 @@ textarea::placeholder {
 
 .gray-title {
   width: fit-content;
-  border-radius: 4px;
-  padding: 2px 6px;
+  border-radius: 8px;
+  padding: 3px 8px;
   background-color: $off-white;
   margin-top: 0;
   margin-left: 8px;
