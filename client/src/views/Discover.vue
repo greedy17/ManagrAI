@@ -454,7 +454,7 @@
                     <img src="@/assets/images/profile.svg" height="19px" alt="" />
                     <p style="white-space: nowrap">Journalist/Influencer Type</p>
 
-                    <div class="display-end">
+                    <div style="margin-left: auto" class="display-end">
                       <input
                         class="area-input-end"
                         v-model="type"
@@ -2696,7 +2696,7 @@ label {
   border: 0.5px solid rgba(0, 0, 0, 0.1);
   border-radius: 12px;
   padding: 4px 0;
-  width: 80%;
+  width: 50%;
   margin-left: 32px;
 }
 
