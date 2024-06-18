@@ -2339,13 +2339,14 @@ export default {
       selectedSearch: null,
       selectedDateTime: '',
       searchExamples: [
+        `List top journalist writing about Fashion`,
         `"Cancer Research"`,
         `Apple AND OpenAI`,
+
         `Destination AND Travel`,
-        `List top journalist writing about Fashion`,
+        `Top stories Climate Change`,
         `Provide sentiment around Nike`,
         `List newsjacking ideas around Sustainability`,
-        `Top stories Climate Change`,
       ],
       socialSearchExamples: [
         `"Cancer Research"`,
@@ -5596,10 +5597,6 @@ li {
   align-items: center;
   flex-wrap: wrap;
   gap: 4px 24px;
-
-  @media only screen and (min-width: 1025px) {
-    justify-content: center;
-  }
 }
 
 .row-between {
