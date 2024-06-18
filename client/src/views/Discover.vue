@@ -312,66 +312,66 @@
       <div style="padding-top: 88px" class="content-body">
         <div style="width: 100%; padding: 0 32px; padding-top: 0" class="small-container">
           <div class="text-width">
-            <p style="margin: 0">Discover relevant journalists or influencers</p>
+            <p style="margin: 0">Discover Journalists using AI</p>
           </div>
 
           <div style="margin-top: 32px" class="large-input-container">
-            <div>
-              <div
-                style="border: none; box-shadow: none; position: relative"
-                class="input-containered"
-              >
-                <img
-                  class="left-margin-m"
-                  src="@/assets/images/edit-note.svg"
-                  height="20px"
-                  alt=""
-                />
-                <textarea
-                  class="area-input text-area-input"
-                  name="content-type"
-                  v-model="content"
-                  :disabled="loading"
-                  placeholder="Paste content..."
-                  v-autoresize
-                  autocomplete="off"
-                  maxlength="8000"
-                  rows="4"
-                  style="max-height: 100px; padding-top: 2.5rem !important"
-                />
+            <div style="padding: 0 8px">
+              <div style="padding: 16px 0">
+                <div style="box-shadow: none; position: relative" class="input-containered-gray">
+                  <img
+                    class="left-margin-m"
+                    src="@/assets/images/edit-note.svg"
+                    height="18px"
+                    alt=""
+                  />
+                  <textarea
+                    class="area-input text-area-input"
+                    name="content-type"
+                    v-model="content"
+                    :disabled="loading"
+                    placeholder="Paste content..."
+                    v-autoresize
+                    autocomplete="off"
+                    maxlength="8000"
+                    rows="4"
+                    style="max-height: 100px; padding-top: 2.5rem !important; padding-right: 36px"
+                  />
 
-                <img
-                  @click="expandOutput"
-                  class="left-margin-xl"
-                  src="@/assets/images/expand-arrows.svg"
-                  height="14px"
-                  alt=""
-                  style="cursor: pointer"
-                />
-                <div class="absolute-count-small">
-                  <small>{{ remainingCharsSample }}</small>
+                  <button
+                    style="position: absolute; right: 8px"
+                    class="image-container"
+                    :class="content ? 'dark-blue-bg' : ''"
+                    @click="discoverJournalists"
+                    :disabled="!content || !type || !beat || !location || loading"
+                  >
+                    <img
+                      style="margin: 0"
+                      src="@/assets/images/paper-plane-top.svg"
+                      height="14px"
+                      alt=""
+                    />
+                  </button>
+
+                  <div class="absolute-count-small">
+                    <small>{{ remainingCharsSample }}</small>
+                  </div>
                 </div>
               </div>
 
-              <div
-                class="input-containered"
-                style="
-                  border: none;
-                  box-shadow: none;
-                  position: relative;
-                  border-radius: 0;
-                  border-top: 1px solid rgba(0, 0, 0, 0.1);
-                  padding: 12px 0;
-                "
-              >
-                <img class="left-margin-m" src="@/assets/images/disk.svg" height="19px" alt="" />
-                <div style="position: relative">
+              <div class="expanded-item">
+                <div class="row horizontal-padding-s img-text">
+                  <img src="@/assets/images/disk.svg" height="18px" alt="" />
+                  <p style="margin-left: 6px">Saved Content</p>
+                </div>
+
+                <div style="position: relative; margin-right: 16px">
                   <div
                     @click="toggleShowPitches"
-                    style="margin-left: 16px; padding: 2px 6px; border-radius: 4px"
-                    class="row pointer nav-text"
+                    style="margin-left: 16px"
+                    class="row pointer drop-text-small"
                   >
-                    Saved content
+                    Content
                     <img
                       v-if="!showPitches"
                       src="@/assets/images/downArrow.svg"
@@ -443,39 +443,35 @@
               </div>
 
               <div>
-                <div
-                  style="
-                    border: none;
-                    box-shadow: none;
-                    position: relative;
-                    border-radius: 0;
-                    border-top: 1px solid rgba(0, 0, 0, 0.1);
-                    padding: 8px 0;
-                  "
-                  class="input-containered"
-                >
-                  <img
-                    class="left-margin-m"
-                    src="@/assets/images/profile.svg"
-                    height="19px"
-                    alt=""
-                  />
+                <div style="padding-top: 12px" class="expanded-item-column">
+                  <div
+                    style="width: 100%; padding-right: 0; margin-bottom: 8px"
+                    class="row horizontal-padding-s img-text"
+                  >
+                    <!-- <img src="@/assets/images/arrow-trend-up.svg" height="18px" alt="" />
+                    <p style="margin-left: 6px">Popular Examples:</p> -->
 
-                  <input
-                    class="area-input"
-                    v-model="type"
-                    :disabled="loading"
-                    maxlength="300"
-                    style="padding-top: 8px; padding-bottom: 8px"
-                    placeholder="Journalist or Influencer type"
-                    autocomplete="off"
-                  />
-                </div>
+                    <img src="@/assets/images/profile.svg" height="19px" alt="" />
+                    <p style="white-space: nowrap">Journalist/Influencer Type</p>
 
-                <div class="expanded-item-column">
-                  <div class="row horizontal-padding-s img-text">
-                    <img src="@/assets/images/arrow-trend-up.svg" height="18px" alt="" />
-                    <p style="margin-left: 6px">Popular Examples:</p>
+                    <div style="margin-left: auto" class="display-end">
+                      <input
+                        class="area-input-end"
+                        v-model="type"
+                        :disabled="loading"
+                        maxlength="300"
+                        style="padding-top: 8px; padding-bottom: 8px"
+                        placeholder="Journalist/Influencer type"
+                        autocomplete="off"
+                      />
+
+                      <img
+                        style="filter: invert(40%)"
+                        src="@/assets/images/pencil.svg"
+                        height="16px"
+                        alt=""
+                      />
+                    </div>
                   </div>
 
                   <div class="horizontal-padding-m rowss">
@@ -490,34 +486,55 @@
                   </div>
                 </div>
 
-                <div
-                  class="input-containered"
-                  style="
-                    border: none;
-                    box-shadow: none;
-                    position: relative;
-                    border-radius: 0;
-                    border-top: 1px solid rgba(0, 0, 0, 0.1);
-                    padding: 8px 0;
-                  "
-                >
-                  <img
-                    class="left-margin-m"
-                    src="@/assets/images/comment.svg"
-                    height="20px"
-                    alt=""
-                  />
-                  <input
-                    class="area-input"
-                    placeholder="Topic or beat"
-                    v-model="beat"
-                    :disabled="loading"
-                    style="padding-top: 12px; padding-bottom: 8px"
-                  />
-                  <!-- style="max-height: 100px; padding-top: 2.5rem !important" -->
+                <div style="padding-top: 16px" class="expanded-item">
+                  <div class="row horizontal-padding-s img-text">
+                    <img src="@/assets/images/comment.svg" height="18px" alt="" />
+                    <p style="margin-left: 6px">Beat/Topic</p>
+                  </div>
+
+                  <div class="display-end">
+                    <input
+                      class="area-input-end"
+                      placeholder="Topic or beat"
+                      v-model="beat"
+                      :disabled="loading"
+                      style="padding-top: 12px; padding-bottom: 8px"
+                    />
+
+                    <img
+                      style="filter: invert(40%); margin-right: 16px"
+                      src="@/assets/images/pencil.svg"
+                      height="16px"
+                      alt=""
+                    />
+                  </div>
                 </div>
 
-                <div
+                <div style="border: none" class="expanded-item">
+                  <div class="row horizontal-padding-s img-text">
+                    <img src="@/assets/images/marker.svg" height="18px" alt="" />
+                    <p style="margin-left: 6px">location</p>
+                  </div>
+
+                  <div class="display-end">
+                    <input
+                      class="area-input-end"
+                      placeholder="Location"
+                      v-model="location"
+                      :disabled="loading"
+                      style="padding-top: 12px; padding-bottom: 8px"
+                    />
+
+                    <img
+                      style="filter: invert(40%); margin-right: 16px"
+                      src="@/assets/images/pencil.svg"
+                      height="16px"
+                      alt=""
+                    />
+                  </div>
+                </div>
+
+                <!-- <div
                   class="input-containered"
                   style="
                     border: none;
@@ -543,8 +560,8 @@
                     :disabled="loading"
                     style="padding-top: 12px; padding-bottom: 8px"
                   />
-                  <!-- style="max-height: 100px; padding-top: 2.5rem !important" -->
-                </div>
+              
+                </div> -->
 
                 <!-- <div class="expanded-item" style="position: relative" id="writing-style">
                   <img
@@ -717,7 +734,7 @@
               </div>
             </div>
 
-            <div style="padding: 16px 0 0 0" class="flex-end">
+            <!-- <div style="padding: 16px 0 0 0" class="flex-end">
               <button @click="clearData" class="secondary-button">Clear</button>
               <button
                 @click="discoverJournalists"
@@ -732,7 +749,7 @@
                   <div class="dot"></div>
                 </div>
               </button>
-            </div>
+            </div> -->
           </div>
         </div>
       </div>
@@ -933,9 +950,9 @@ export default {
         `Tier 1 Journalists`,
         `Local Journalists`,
         `Niche Journalists`,
-        `Instagram Influencers`,
-        `TikTok Influencers`,
-        `Micro Influencers`,
+        `Broadcast Journalist `,
+        `Podcasters`,
+        `Social Media Influencers`,
       ],
     }
   },
@@ -1839,7 +1856,7 @@ export default {
   width: 260px;
   position: absolute;
   top: 40px;
-  left: 16px;
+  right: 8px;
   font-size: 12px;
   font-weight: 400;
   background: white;
@@ -2251,9 +2268,16 @@ label {
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
+  background-color: white;
 
   img {
     filter: invert(40%);
+  }
+
+  &:disabled {
+    img {
+      filter: none !important;
+    }
   }
 }
 
@@ -2269,6 +2293,12 @@ label {
 
   img {
     filter: brightness(0) invert(100%);
+  }
+
+  &:disabled {
+    img {
+      filter: none !important;
+    }
   }
 }
 
@@ -2536,6 +2566,25 @@ label {
   }
 }
 
+.input-containered-gray {
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+  padding: 0;
+  border-radius: 16px;
+  width: 100%;
+  color: $base-gray;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: row;
+  background-color: $off-white;
+
+  img {
+    filter: invert(40%);
+  }
+}
+
 .input-container {
   flex-wrap: nowrap;
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -2605,7 +2654,7 @@ label {
 }
 
 .area-input {
-  width: 85%;
+  width: 100%;
   margin-bottom: 0.25rem;
   max-height: 250px;
   padding: 0 1.25rem;
@@ -2623,6 +2672,32 @@ label {
   scroll-behavior: smooth;
   color: $dark-black-blue;
   background-color: transparent;
+}
+
+.area-input-end {
+  width: 100%;
+  padding: 4px 8px;
+  outline: none;
+  letter-spacing: 0.5px;
+  font-size: 14px;
+  font-family: $thin-font-family !important;
+  font-weight: 400;
+  border: none !important;
+  resize: none;
+  color: $dark-black-blue;
+  background-color: transparent;
+}
+.display-end {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  position: relative;
+  background-color: $off-white;
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 4px 0;
+  width: 50%;
+  margin-left: 32px;
 }
 
 // .area-input {
@@ -3568,6 +3643,25 @@ button:disabled {
     margin-right: 8px !important;
     font-size: 17px;
     width: fit-content !important;
+  }
+}
+
+.drop-text-small {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 16px;
+  color: $dark-black-blue;
+  background: $off-white;
+  // border: 0.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 8px 12px;
+  svg,
+  img {
+    margin-left: 4px;
+    filter: invert(40%);
   }
 }
 
