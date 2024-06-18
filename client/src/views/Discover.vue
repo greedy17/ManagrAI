@@ -443,7 +443,7 @@
               </div>
 
               <div>
-                <div class="expanded-item-column">
+                <div style="padding-top: 12px" class="expanded-item-column">
                   <div
                     style="width: 100%; padding-right: 0; margin-bottom: 8px"
                     class="row horizontal-padding-s img-text"
@@ -486,7 +486,7 @@
                   </div>
                 </div>
 
-                <div class="expanded-item">
+                <div style="padding-top: 16px" class="expanded-item">
                   <div class="row horizontal-padding-s img-text">
                     <img src="@/assets/images/comment.svg" height="18px" alt="" />
                     <p style="margin-left: 6px">Beat/Topic</p>

@@ -511,13 +511,14 @@
           <div
             v-if="mainView === 'website'"
             style="border: none; box-shadow: none"
-            class="input-container"
+            class="input-container-gray"
           >
             <img class="left-margin-m" src="@/assets/images/search.svg" height="20px" alt="" />
 
             <textarea
               @keyup.enter="uploadArticle"
               class="area-input text-area-input"
+              style="padding-top: 1.5rem"
               placeholder="Paste article url..."
               v-model="uploadLink"
               :disabled="contentLoading"
@@ -590,7 +591,11 @@
               id="search-input"
               @keyup.enter="generateNewSearch(false)"
               class="area-input text-area-input"
-              placeholder="Enter keywords or phrases..."
+              :placeholder="
+                mainView === 'social' && !hasTwitterIntegration
+                  ? 'Connect Twitter...'
+                  : 'Enter keywords or phrases...'
+              "
               autocomplete="off"
               v-model="newSearch"
               v-autoresize
@@ -680,7 +685,7 @@
           </div>
 
           <div>
-            <div class="expanded-item">
+            <div :class="mainView === 'website' ? 'borderless' : ''" class="expanded-item">
               <div class="row horizontal-padding-s img-text">
                 <img src="@/assets/images/newspaper.svg" height="20px" alt="" />
                 <p>Source</p>
@@ -910,7 +915,9 @@
                         getTimeDifferenceInMinutes(article.publish_date)
                       }}</span>
                       <span class="divider-dot">.</span>
-                      <div style="width: fit-content" class="tooltip">Pitch Journalist</div>
+                      <div style="width: fit-content; left: 0" class="tooltip">
+                        Pitch Journalist
+                      </div>
                     </div>
                     <div class="footer-icon-container">
                       <!-- <button
@@ -6147,6 +6154,10 @@ textarea::placeholder {
   justify-content: space-evenly;
   align-items: center;
   width: 100%;
+}
+
+.borderless {
+  border: none !important;
 }
 
 .expanded-item {
