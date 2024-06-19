@@ -829,7 +829,7 @@ class PRSearchViewSet(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
-        url_path="summary",
+        url_path="recipients",
     )
     def edit_recipients(self, request, *args, **kwargs):
         recipient = request.data.get("recipient")

@@ -181,7 +181,11 @@
               {{ email.recipient }}
             </div>
           </td>
-          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.failed ? 'Failed' : 'Delivered' }}</td>
+          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
+            <div :class="{ redbox: email.failed, greenbox: !email.failed }">
+              {{ email.failed ? 'Failed' : 'Delivered' }}
+            </div>
+          </td>
           <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.opens }}</td>
           <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.clicks }}</td>
           <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.replies }}</td>
@@ -672,8 +676,8 @@ export default {
       }
 
       .red {
-        background-color: $light-red;
-        color: $coral;
+        background-color: $light-red !important;
+        color: $coral !important;
       }
 
       .yellow {
@@ -682,10 +686,30 @@ export default {
       }
 
       .green {
-        background-color: $light-green;
-        color: $dark-green;
+        background-color: $light-green !important;
+        color: $dark-green !important;
       }
     }
+  }
+
+  .redbox {
+    background-color: $light-red !important;
+    color: $coral !important;
+    font-family: $base-font-family;
+    font-size: 14px;
+    padding: 4px 3px;
+    border-radius: 4px;
+    width: fit-content;
+  }
+
+  .greenbox {
+    background-color: $light-green !important;
+    color: $dark-green !important;
+    font-family: $base-font-family;
+    font-size: 14px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    width: fit-content;
   }
 
   .pre-text {
