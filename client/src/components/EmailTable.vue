@@ -697,7 +697,7 @@ export default {
     color: $coral !important;
     font-family: $base-font-family;
     font-size: 14px;
-    padding: 4px 3px;
+    padding: 4px 8px;
     border-radius: 4px;
     width: fit-content;
   }
