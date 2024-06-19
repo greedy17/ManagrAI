@@ -65,6 +65,10 @@ def emit_process_user_hashtag_list(user_id):
     return _process_user_hashtag_list(user_id)
 
 
+def emit_send_social_summary(news_alert_id, schedule):
+    return _send_social_summary(news_alert_id, schedule={"run_at": schedule})  
+
+
 def create_new_search(payload, user_id):
     state = payload["view"]["state"]["values"]
     input_text = state["SEARCH"]["plain_input"]["value"]
@@ -413,9 +417,66 @@ def _send_news_summary(news_alert_id):
             "clips": clip_short_list,
             "website_url": f"{settings.MANAGR_URL}/login",
         }
+        email_list = [alert.user.email].extend(alert.search.recipients)
         send_html_email(
             f"Managr Digest: {alert.search.name}",
             "core/email-templates/news-email.html",
+            settings.DEFAULT_FROM_EMAIL,
+            email_list,
+            context=content,
+        )
+        if "sent_count" in alert.meta_data.keys():
+            alert.meta_data["sent_count"] += 1
+        else:
+            alert.meta_data["sent_count"] = 1
+        alert.save()
+    return
+
+
+@background()
+def _send_social_summary(news_alert_id):
+    alert = EmailAlert.objects.get(id=news_alert_id)
+    boolean = alert.search.search_boolean
+    tweet_res = alert.user.twitter_account.get_tweets(boolean)
+    if len(tweet_res):
+        tweet_list = []
+        tweets = tweet_res.get("data", None)
+        includes = tweet_res.get("includes", None)
+        user_data = includes.get("users")
+        for tweet in tweets:
+            if len(tweet_list) > 5:
+                break
+            for user in user_data:
+                if user["id"] == tweet["author_id"]:
+                    if user["public_metrics"]["followers_count"] > 1000:
+                        tweet["tweet_link"] = (
+                            f"https://twitter.com/{user['username']}/status/{tweet['id']}"
+                        )
+                        tweet["user"] = user
+                        tweet_list.append(tweet)
+                    break
+        search_tweets = [
+            f"Name:{tweet['user']['username']} Tweet: {tweet['text']} Follower count: {tweet['user']['public_metrics']['followers_count']} Date: {tweet['created_at']}"
+            for tweet in tweet_list
+        ]
+        res = alert.user.twitter_account.get_summary(
+            alert.user,
+            2000,
+            60.0,
+            search_tweets,
+            alert.search.search_boolean,
+            alert.search.instructions,
+            False,
+        )
+        message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+        content = {
+            "summary": message,
+            "tweets": tweet_list,
+            "website_url": f"{settings.MANAGR_URL}/login",
+        }
+        send_html_email(
+            f"Managr Digest: {alert.search.name}",
+            "core/email-templates/social-email.html",
             settings.DEFAULT_FROM_EMAIL,
             [alert.user.email],
             context=content,

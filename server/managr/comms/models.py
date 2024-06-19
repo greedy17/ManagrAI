@@ -633,11 +633,23 @@ class EmailAlert(TimeStampModel):
         null=False,
         on_delete=models.CASCADE,
     )
+    recipients = ArrayField(models.CharField(max_length=255), default=list, blank=True)
     meta_data = JSONField(
         default=dict,
         null=True,
         blank=True,
     )
+
+    def add_recipient(self, email):
+        new_recipients = self.recipients.append(email)
+        remove_duplicates = list(set(new_recipients))
+        self.recipients = remove_duplicates
+        return self.save()
+
+    def remove_recipient(self, email):
+        remove_index = self.recipients.index(email)
+        self.recipients.pop(remove_index)
+        return self.save()
 
 
 class Process(TimeStampModel):

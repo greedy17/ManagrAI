@@ -2933,12 +2933,20 @@ export default {
       }
       this.getEmailAlerts()
     },
+    test() {
+      console.log(this.emailAlerts)
+    },
     async testEmailAlert() {
       try {
-        Comms.api.testEmailAlert({ alert_id: this.currentAlertId }).then((response) => {
-          this.toggleShowNotifyBanner()
-          this.toggleNotifyModal()
-        })
+        Comms.api
+          .testEmailAlert({
+            alert_id: this.currentAlertId,
+            social: this.mainView === 'social' ? true : false,
+          })
+          .then((response) => {
+            this.toggleShowNotifyBanner()
+            this.toggleNotifyModal()
+          })
       } catch (e) {
         console.log(e)
       }
@@ -2975,12 +2983,10 @@ export default {
             title: this.searchName,
           })
           .then((response) => {
+            this.currentAlert = response
             this.currentAlertId = response.id
             this.getEmailAlerts()
             this.toggleShowNotifyBanner()
-            setTimeout(() => {
-              this.setCurrentAlert(response.id)
-            }, 1000)
           })
       } catch (e) {
         console.log(e)
