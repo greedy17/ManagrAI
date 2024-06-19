@@ -176,7 +176,10 @@
             <div class="blur"></div>
           </td>
           <td :class="i % 2 !== 0 ? 'gray-bg' : ''" class="set-width">
-            {{ email.recipient }}
+            <div class="base-font" style="margin-bottom: 4px">{{ email.name }}</div>
+            <div style="color: #808080; font-size: 15px">
+              {{ email.recipient }}
+            </div>
           </td>
           <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.failed ? 'Failed' : 'Delivered' }}</td>
           <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.opens }}</td>
@@ -197,7 +200,7 @@
                 }}
               </div>
 
-              <div>
+              <div style="color: #808080; font-size: 15px">
                 {{ formatActivityLog(email.activity_log.at(-1)) }}
               </div>
             </div>
@@ -469,8 +472,9 @@ export default {
     th,
     td {
       padding: 12px;
+      font-size: 15px;
       text-align: left;
-      border-bottom: 1px solid #ddd;
+      // border-bottom: 1px solid #ddd;
       position: relative;
 
       .subject,
@@ -482,7 +486,9 @@ export default {
     }
 
     th {
-      background-color: white;
+      background-color: $off-white;
+      border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+      color: $dark-blue;
       position: sticky;
       top: 0;
       z-index: 5;
@@ -493,10 +499,6 @@ export default {
       z-index: 1;
       background-color: white;
       overflow: hidden;
-    }
-
-    tr:nth-child(even) {
-      background-color: $offer-white;
     }
 
     .set-width {
@@ -575,8 +577,8 @@ export default {
 
     .blur {
       width: 12px;
-      background: white;
-      filter: blur(5px);
+      background: rgba(255, 255, 255, 0.569);
+      filter: blur(8px);
       cursor: none;
       position: absolute;
       right: 0;

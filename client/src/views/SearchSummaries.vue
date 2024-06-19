@@ -2626,6 +2626,7 @@ export default {
             body: this.revisedPitch,
             recipient: this.targetEmail,
             bcc: [this.bccEmail],
+            name: this.currentJournalist,
           })
           .then((response) => {
             this.emailJournalistModalOpen = false
