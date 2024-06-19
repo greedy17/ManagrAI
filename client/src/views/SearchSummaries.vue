@@ -1944,7 +1944,10 @@
                   @click="toggleNotifyModal"
                   class="wrapper icon-button white-bg right-margin"
                   :disabled="sentSummaryEmail"
-                  v-if="mainView === 'news' && !notifiedList.includes(searchId)"
+                  v-if="
+                    (mainView === 'news' || mainView === 'social') &&
+                    !notifiedList.includes(searchId)
+                  "
                 >
                   <img
                     height="14px"
@@ -1962,7 +1965,7 @@
                   @click="removeEmailAlert"
                   class="wrapper icon-button white-bg right-margin"
                   v-else-if="
-                    mainView === 'news' &&
+                    (mainView === 'news' || mainView === 'social') &&
                     (searchSaved || savedSearch) &&
                     notifiedList.includes(searchId)
                   "
@@ -2976,7 +2979,7 @@ export default {
             this.getEmailAlerts()
             this.toggleShowNotifyBanner()
             setTimeout(() => {
-              this.setCurrentAlert(id)
+              this.setCurrentAlert(response.id)
             }, 1000)
           })
       } catch (e) {

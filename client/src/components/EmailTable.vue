@@ -66,7 +66,7 @@
         </div>
       </div>
     </Modal>
-    <table>
+    <table @click="test">
       <thead>
         <tr style="position: relative">
           <th v-resizableColumn @click="sortBy('subject')">
@@ -153,8 +153,12 @@
         </tr>
       </thead>
       <tbody v-if="sortedEmails">
-        <tr v-for="email in sortedEmails" :key="email.body">
-          <td style="cursor: zoom-in" @click="toggleEmailModal(email)">
+        <tr v-for="(email, i) in sortedEmails" :key="i">
+          <td
+            :class="i % 2 !== 0 ? 'gray-bg' : ''"
+            style="cursor: zoom-in"
+            @click="toggleEmailModal(email)"
+          >
             <div class="email-details">
               <!-- <div style="width: 40px">
                 <div :tool-tip="email.recipient" class="initials-bubble tooltip">
@@ -171,16 +175,21 @@
             </div>
             <div class="blur"></div>
           </td>
-          <td class="set-width">
+          <td :class="i % 2 !== 0 ? 'gray-bg' : ''" class="set-width">
             {{ email.recipient }}
           </td>
-          <td>{{ email.failed ? 'Failed' : 'Delivered' }}</td>
-          <td>{{ email.opens }}</td>
-          <td>{{ email.clicks }}</td>
-          <td>{{ email.replies }}</td>
+          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.failed ? 'Failed' : 'Delivered' }}</td>
+          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.opens }}</td>
+          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.clicks }}</td>
+          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.replies }}</td>
           <!-- @click="toggleActivityModal(email)" style="cursor: zoom-in"-->
-          <td>
+          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
             <div>
+              <!-- background-color: #fafafa;
+                  padding: 2px 6px;
+                  border: 0.5px solid rgba(0, 0, 0, 0.1);
+                  width: fit-content;
+                  border-radius: 8px; -->
               <div class="base-font" style="margin-bottom: 4px">
                 {{
                   email.activity_log.at(-1).split('|')[0].charAt(0).toUpperCase() +
@@ -188,7 +197,7 @@
                 }}
               </div>
 
-              <div style="color: gray; font-size: 15px">
+              <div>
                 {{ formatActivityLog(email.activity_log.at(-1)) }}
               </div>
             </div>
@@ -320,6 +329,11 @@ export default {
   created() {
     this.fetchEmails()
   },
+  watch: {
+    sortedEmails(newValue) {
+      this.$emit('emails-updated', newValue)
+    },
+  },
   directives: {
     resizableColumn: {
       bind(el) {
@@ -354,6 +368,9 @@ export default {
   },
 
   methods: {
+    test() {
+      console.log(this.sortedEmails)
+    },
     toggleEmailModal(email = null) {
       this.emailModalOpen = !this.emailModalOpen
       this.selectedEmail = email
@@ -422,6 +439,10 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.gray-bg {
+  background-color: $off-white !important;
+}
 
 .email-tracking {
   width: 100%;
@@ -498,6 +519,11 @@ export default {
         .subject {
           font-family: $base-font-family;
           margin-bottom: 4px;
+          // background-color: $off-white;
+          // padding: 3px 6px;
+          // border-radius: 8px;
+          // border: 0.5px solid rgba(0, 0, 0, 0.1);
+          // width: fit-content;
         }
 
         .email {

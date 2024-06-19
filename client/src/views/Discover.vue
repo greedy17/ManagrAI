@@ -452,7 +452,7 @@
                     <p style="margin-left: 6px">Popular Examples:</p> -->
 
                     <img src="@/assets/images/profile.svg" height="19px" alt="" />
-                    <p style="white-space: nowrap">Journalist/Influencer Type</p>
+                    <p style="white-space: nowrap">Journalist Type</p>
 
                     <div style="margin-left: auto" class="display-end">
                       <input
