@@ -1020,6 +1020,9 @@ class Journalist(TimeStampModel):
     )
     accuracy_score = models.IntegerField(default=0)
     number_of_sources = models.IntegerField(default=0)
+    status = models.CharField(
+        choices=comms_consts.JOURNALIST_CHOICES, max_length=100, default="OTHER"
+    )
 
     class Meta:
         ordering = ["last_name"]
