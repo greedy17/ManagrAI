@@ -633,11 +633,23 @@ class EmailAlert(TimeStampModel):
         null=False,
         on_delete=models.CASCADE,
     )
+    recipients = ArrayField(models.CharField(max_length=255), default=list, blank=True)
     meta_data = JSONField(
         default=dict,
         null=True,
         blank=True,
     )
+
+    def add_recipient(self, email):
+        new_recipients = self.recipients.append(email)
+        remove_duplicates = list(set(new_recipients))
+        self.recipients = remove_duplicates
+        return self.save()
+
+    def remove_recipient(self, email):
+        remove_index = self.recipients.index(email)
+        self.recipients.pop(remove_index)
+        return self.save()
 
 
 class Process(TimeStampModel):
@@ -1008,6 +1020,9 @@ class Journalist(TimeStampModel):
     )
     accuracy_score = models.IntegerField(default=0)
     number_of_sources = models.IntegerField(default=0)
+    status = models.CharField(
+        choices=comms_consts.JOURNALIST_CHOICES, max_length=100, default="OTHER"
+    )
 
     class Meta:
         ordering = ["last_name"]
@@ -1063,6 +1078,7 @@ class EmailTracker(TimeStampModel):
         on_delete=models.CASCADE,
     )
     recipient = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, default="N/A")
     subject = models.CharField(max_length=255)
     body = models.TextField()
     message_id = models.CharField(max_length=255, blank=True, null=True)

@@ -419,3 +419,13 @@ EXCLUDE_DOMAINS = [
     "antaranews.com",
     "investorsobserver.com",
 ]
+
+JOURNALIST_CHOICES = [
+    ("ACTIVE", "Active"),
+    ("INACTIVE", "Inactive"),
+    ("NOT_WITH", "No longer with outlet"),
+    ("FREE", "Freelancer"),
+    ("CON", "Contributor"),
+    ("OPT", "Opt out"),
+    ("OTHER", "Other"),
+]

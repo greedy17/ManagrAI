@@ -66,7 +66,7 @@
         </div>
       </div>
     </Modal>
-    <table>
+    <table @click="test">
       <thead>
         <tr style="position: relative">
           <th v-resizableColumn @click="sortBy('subject')">
@@ -153,8 +153,12 @@
         </tr>
       </thead>
       <tbody v-if="sortedEmails">
-        <tr v-for="email in sortedEmails" :key="email.body">
-          <td style="cursor: zoom-in" @click="toggleEmailModal(email)">
+        <tr v-for="(email, i) in sortedEmails" :key="i">
+          <td
+            :class="i % 2 !== 0 ? 'gray-bg' : ''"
+            style="cursor: zoom-in"
+            @click="toggleEmailModal(email)"
+          >
             <div class="email-details">
               <!-- <div style="width: 40px">
                 <div :tool-tip="email.recipient" class="initials-bubble tooltip">
@@ -171,16 +175,28 @@
             </div>
             <div class="blur"></div>
           </td>
-          <td class="set-width">
-            {{ email.recipient }}
+          <td :class="i % 2 !== 0 ? 'gray-bg' : ''" class="set-width">
+            <div class="base-font" style="margin-bottom: 4px">{{ email.name }}</div>
+            <div style="color: #808080; font-size: 15px">
+              {{ email.recipient }}
+            </div>
           </td>
-          <td>{{ email.failed ? 'Failed' : 'Delivered' }}</td>
-          <td>{{ email.opens }}</td>
-          <td>{{ email.clicks }}</td>
-          <td>{{ email.replies }}</td>
+          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
+            <div :class="{ redbox: email.failed, greenbox: !email.failed }">
+              {{ email.failed ? 'Failed' : 'Delivered' }}
+            </div>
+          </td>
+          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.opens }}</td>
+          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.clicks }}</td>
+          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.replies }}</td>
           <!-- @click="toggleActivityModal(email)" style="cursor: zoom-in"-->
-          <td>
+          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
             <div>
+              <!-- background-color: #fafafa;
+                  padding: 2px 6px;
+                  border: 0.5px solid rgba(0, 0, 0, 0.1);
+                  width: fit-content;
+                  border-radius: 8px; -->
               <div class="base-font" style="margin-bottom: 4px">
                 {{
                   email.activity_log.at(-1).split('|')[0].charAt(0).toUpperCase() +
@@ -188,7 +204,7 @@
                 }}
               </div>
 
-              <div style="color: gray; font-size: 15px">
+              <div style="color: #808080; font-size: 15px">
                 {{ formatActivityLog(email.activity_log.at(-1)) }}
               </div>
             </div>
@@ -320,6 +336,11 @@ export default {
   created() {
     this.fetchEmails()
   },
+  watch: {
+    sortedEmails(newValue) {
+      this.$emit('emails-updated', newValue)
+    },
+  },
   directives: {
     resizableColumn: {
       bind(el) {
@@ -354,6 +375,9 @@ export default {
   },
 
   methods: {
+    test() {
+      console.log(this.sortedEmails)
+    },
     toggleEmailModal(email = null) {
       this.emailModalOpen = !this.emailModalOpen
       this.selectedEmail = email
@@ -423,6 +447,10 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+.gray-bg {
+  background-color: $off-white !important;
+}
+
 .email-tracking {
   width: 100%;
   font-family: $thin-font-family;
@@ -448,8 +476,9 @@ export default {
     th,
     td {
       padding: 12px;
+      font-size: 15px;
       text-align: left;
-      border-bottom: 1px solid #ddd;
+      // border-bottom: 1px solid #ddd;
       position: relative;
 
       .subject,
@@ -461,7 +490,9 @@ export default {
     }
 
     th {
-      background-color: white;
+      background-color: $off-white;
+      border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+      color: $dark-blue;
       position: sticky;
       top: 0;
       z-index: 5;
@@ -472,10 +503,6 @@ export default {
       z-index: 1;
       background-color: white;
       overflow: hidden;
-    }
-
-    tr:nth-child(even) {
-      background-color: $offer-white;
     }
 
     .set-width {
@@ -498,6 +525,11 @@ export default {
         .subject {
           font-family: $base-font-family;
           margin-bottom: 4px;
+          // background-color: $off-white;
+          // padding: 3px 6px;
+          // border-radius: 8px;
+          // border: 0.5px solid rgba(0, 0, 0, 0.1);
+          // width: fit-content;
         }
 
         .email {
@@ -549,8 +581,8 @@ export default {
 
     .blur {
       width: 12px;
-      background: white;
-      filter: blur(5px);
+      background: rgba(255, 255, 255, 0.569);
+      filter: blur(8px);
       cursor: none;
       position: absolute;
       right: 0;
@@ -644,8 +676,8 @@ export default {
       }
 
       .red {
-        background-color: $light-red;
-        color: $coral;
+        background-color: $light-red !important;
+        color: $coral !important;
       }
 
       .yellow {
@@ -654,10 +686,30 @@ export default {
       }
 
       .green {
-        background-color: $light-green;
-        color: $dark-green;
+        background-color: $light-green !important;
+        color: $dark-green !important;
       }
     }
+  }
+
+  .redbox {
+    background-color: $light-red !important;
+    color: $coral !important;
+    font-family: $base-font-family;
+    font-size: 14px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    width: fit-content;
+  }
+
+  .greenbox {
+    background-color: $light-green !important;
+    color: $dark-green !important;
+    font-family: $base-font-family;
+    font-size: 14px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    width: fit-content;
   }
 
   .pre-text {

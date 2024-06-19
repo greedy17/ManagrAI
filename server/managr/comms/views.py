@@ -43,6 +43,7 @@ from managr.comms import exceptions as comms_exceptions
 from .tasks import (
     emit_process_website_domain,
     emit_send_news_summary,
+    emit_send_social_summary,
     emit_share_client_summary,
     _add_jounralist_to_db,
 )
@@ -158,6 +159,9 @@ class PRSearchViewSet(
 
     def get_queryset(self):
         return Search.objects.filter(user__organization=self.request.user.organization)
+
+    def get_all_searches(self):
+        return Search.objects.filter(organization=self.request.user.organization)
 
     def create(self, request, *args, **kwargs):
         user = request.user
@@ -665,7 +669,7 @@ class PRSearchViewSet(
                 logger.exception(e)
                 tweet_res = e
                 break
-
+        print(tweet_list)
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": tweet_res})
         return Response({"tweets": tweet_list, "string": query_input, "includes": includes})
@@ -822,109 +826,21 @@ class PRSearchViewSet(
         return Response(status=status.HTTP_200_OK)
 
     @action(
-        methods=["get"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="posts",
-    )
-    def get_instagram_posts(self, request, *args, **kwargs):
-        user = User.objects.get(id=request.GET.get("user_id"))
-        date_to = request.GET.get("date_to")
-        date_from = request.GET.get("date_from")
-        ig_account = user.instagram_account
-        has_error = False
-        hashtag = request.GET.get("hashtag")
-        next_token = False
-        post_list = []
-        attempts = 1
-        while True:
-            try:
-                id = ig_account.get_hashtag_id(hashtag)
-                posts_res = ig_account.get_posts(id, date_to, date_from)
-                posts = posts_res["data"]
-                if len(posts) == 0:
-                    has_error = True
-                    ig_res = f"No posts with #{hashtag} found for that date range"
-                date = parser.parse(date_from).date()
-                for post in posts:
-                    ts = parser.parse(post["timestamp"]).date()
-                    if ts >= date:
-                        post_list.append(post)
-                # post_list = merge_sort_dates(post_list, "timestamp")
-                break
-            except Exception as e:
-                has_error = True
-                logger.exception(e)
-                ig_res = str(e)
-                break
-
-        if has_error:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": ig_res})
-        return Response(
-            {
-                "posts": post_list,
-            }
-        )
-
-    @action(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
-        url_path="ig-summary",
+        url_path="recipients",
     )
-    def get_instagram_summary(self, request, *args, **kwargs):
-        user = request.user
-        if user.has_hit_summary_limit:
-            return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
-        posts = request.data.get("posts")
-        for idx, post in enumerate(posts):
-            hashtag_idx = post.find("#")
-            if hashtag_idx > 0:
-                posts[idx] = post[:hashtag_idx]
-        instructions = request.data.get("instructions", False)
-        ig_account = user.instagram_account
-        has_error = False
-        attempts = 1
-        token_amount = 1000
-        timeout = 60.0
-        while True:
-            try:
-                res = ig_account.get_summary(
-                    request.user, token_amount, timeout, posts, instructions, True
-                )
-                message = res.get("choices")[0].get("message").get("content").replace("**", "*")
-                user.add_meta_data("ig_summaries")
-                break
-            except open_ai_exceptions.StopReasonLength:
-                logger.exception(
-                    f"Retrying again due to token amount, amount currently at: {token_amount}"
-                )
-                if token_amount <= 2000:
-                    has_error = True
-                    message = "Token amount error"
-                    break
-                else:
-                    token_amount += 500
-                    continue
-            except httpx.ReadTimeout as e:
-                timeout += 30.0
-                if timeout >= 120.0:
-                    has_error = True
-                    message = "Read timeout issue"
-                    logger.exception(f"Read timeout from Open AI {e}")
-                    break
-                else:
-                    attempts += 1
-                    continue
-            except Exception as e:
-                has_error = True
-                message = f"Unknown exception: {e}"
-                logger.exception(e)
-                break
-        if has_error:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
-
-        return Response(data={"summary": message})
+    def edit_recipients(self, request, *args, **kwargs):
+        recipient = request.data.get("recipient")
+        search_id = request.data.get("search_id")
+        action = request.data.get("action")
+        search = Search.objects.get(id=search_id)
+        if action == "ADD":
+            search.add_recipient(recipient)
+        else:
+            search.remove_recipient(recipient)
+        return Response(status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])
@@ -1554,7 +1470,12 @@ class EmailAlertViewSet(
     )
     def test_email_alert(self, request, *args, **kwargs):
         alert_id = request.data.get("alert_id")
-        emit_send_news_summary(alert_id, str(datetime.now()))
+        social = request.data.get("social")
+        if social:
+            print("In Social")
+            emit_send_social_summary(alert_id, str(datetime.now()))
+        else:
+            emit_send_news_summary(alert_id, str(datetime.now()))
         return Response(status=status.HTTP_200_OK)
 
     @action(
@@ -2039,6 +1960,7 @@ class DiscoveryViewSet(
         subject = request.data.get("subject")
         body = request.data.get("body").replace("[Your Name]", f"\n\n{user.full_name}")
         recipient = request.data.get("recipient")
+        name = request.data.get("name")
         bcc = request.data.get("bcc")
         context = {"body": body}
         message_id = f"{uuid.uuid4()}-{user.email}"
@@ -2064,6 +1986,7 @@ class DiscoveryViewSet(
                     "body": body,
                     "subject": subject,
                     "message_id": message_id,
+                    "name": name,
                 }
             )
             serializer.is_valid(raise_exception=True)

@@ -70,7 +70,7 @@
 
         <div class="relative">
           <button @click="toggleFilterDropdown" class="primary-button">
-            <img src="@/assets/images/add.svg" height="12px" alt="" /> Add Filter
+            <img src="@/assets/images/add.svg" height="12px" alt="" /> Filter
           </button>
           <div v-if="showFilters" class="dropdown">
             <div class="dropdown-header">
@@ -138,10 +138,10 @@
           </button>
         </div>
 
-        <!-- <div class="image-container wrapper">
+        <div @click="convertData" class="image-container wrapper">
           <img src="@/assets/images/download.svg" height="14px" alt="" />
-          <div class="tooltip">Export Table</div>
-        </div> -->
+          <div class="tooltip">Export</div>
+        </div>
       </div>
 
       <div class="search">
@@ -173,6 +173,7 @@
         :failedFilter="failedFilter"
         :activityFilter="activityFilter"
         :userId="selectedUser ? selectedUser.id : null"
+        @emails-updated="setEmailValues"
       />
     </div>
   </div>
@@ -201,6 +202,7 @@ export default {
       activityFilter: null,
       selectedUser: null,
       users: [],
+      emailValues: null,
     }
   },
   computed: {
@@ -219,6 +221,84 @@ export default {
     this.getUsers()
   },
   methods: {
+    setEmailValues(value) {
+      this.emailValues = value
+    },
+    formatActivityLog(logEntry, fullEntry = false) {
+      const [action, dateTime] = logEntry.split('|')
+      const date = new Date(dateTime)
+      const now = new Date()
+      const diffInMilliseconds = now - date
+      const diffInMinutes = Math.floor(diffInMilliseconds / (1000 * 60))
+      const diffInHours = Math.floor(diffInMilliseconds / (1000 * 60 * 60))
+      const diffInDays = Math.floor(diffInMilliseconds / (1000 * 60 * 60 * 24))
+
+      let formattedTime
+      if (diffInMinutes < 120) {
+        formattedTime = `${diffInMinutes - 60} minute${diffInMinutes - 60 !== 1 ? 's' : ''} ago`
+      } else if (diffInHours < 24) {
+        formattedTime = `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`
+      } else if (diffInDays < 30) {
+        formattedTime = `${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`
+      } else {
+        const formattedDate = `${date.getMonth() + 1}/${date.getDate()}/${String(
+          date.getFullYear(),
+        ).slice(-2)}`
+        formattedTime = `on ${formattedDate}`
+      }
+
+      if (fullEntry) {
+        return `${action.charAt(0).toUpperCase() + action.slice(1)} - ${formattedTime}`
+      } else {
+        return formattedTime
+      }
+    },
+
+    convertData() {
+      console.log(this.emailValues)
+      let csvData = this.emailValues.map((email) => ({
+        email: email.subject + ':' + email.body.replace(/<\/?[^>]+(>|$)/g, ''),
+        to: email.recipient,
+        status: email.failed ? 'failed' : 'Delivered',
+        opens: email.opens,
+        clicks: email.clicks,
+        replies: email.replies,
+        lastActivity: this.formatActivityLog(email.activity_log.at(-1)),
+      }))
+
+      this.arrayToCSV(csvData)
+    },
+
+    arrayToCSV(data) {
+      const csvRows = []
+
+      const headers = Object.keys(data[0])
+      csvRows.push(headers.join(','))
+
+      // Loop over the rows
+      for (const row of data) {
+        const values = headers.map((header) => {
+          const escaped = ('' + row[header]).replace(/"/g, '\\"')
+          return `"${escaped}"`
+        })
+        csvRows.push(values.join(','))
+      }
+
+      const csvString = csvRows.join('\n')
+
+      this.downloadCSV(csvString)
+    },
+
+    downloadCSV(csvString, filename = 'managr-tracker.csv') {
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = filename
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    },
     async getUsers() {
       try {
         const res = await User.api.getAllUsers()

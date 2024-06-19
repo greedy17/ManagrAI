@@ -1944,7 +1944,10 @@
                   @click="toggleNotifyModal"
                   class="wrapper icon-button white-bg right-margin"
                   :disabled="sentSummaryEmail"
-                  v-if="mainView === 'news' && !notifiedList.includes(searchId)"
+                  v-if="
+                    (mainView === 'news' || mainView === 'social') &&
+                    !notifiedList.includes(searchId)
+                  "
                 >
                   <img
                     height="14px"
@@ -1962,7 +1965,7 @@
                   @click="removeEmailAlert"
                   class="wrapper icon-button white-bg right-margin"
                   v-else-if="
-                    mainView === 'news' &&
+                    (mainView === 'news' || mainView === 'social') &&
                     (searchSaved || savedSearch) &&
                     notifiedList.includes(searchId)
                   "
@@ -2623,6 +2626,7 @@ export default {
             body: this.revisedPitch,
             recipient: this.targetEmail,
             bcc: [this.bccEmail],
+            name: this.currentJournalist,
           })
           .then((response) => {
             this.emailJournalistModalOpen = false
@@ -2930,12 +2934,20 @@ export default {
       }
       this.getEmailAlerts()
     },
+    test() {
+      console.log(this.emailAlerts)
+    },
     async testEmailAlert() {
       try {
-        Comms.api.testEmailAlert({ alert_id: this.currentAlertId }).then((response) => {
-          this.toggleShowNotifyBanner()
-          this.toggleNotifyModal()
-        })
+        Comms.api
+          .testEmailAlert({
+            alert_id: this.currentAlertId,
+            social: this.mainView === 'social' ? true : false,
+          })
+          .then((response) => {
+            this.toggleShowNotifyBanner()
+            this.toggleNotifyModal()
+          })
       } catch (e) {
         console.log(e)
       }
@@ -2972,12 +2984,10 @@ export default {
             title: this.searchName,
           })
           .then((response) => {
+            this.currentAlert = response
             this.currentAlertId = response.id
             this.getEmailAlerts()
             this.toggleShowNotifyBanner()
-            setTimeout(() => {
-              this.setCurrentAlert(id)
-            }, 1000)
           })
       } catch (e) {
         console.log(e)
