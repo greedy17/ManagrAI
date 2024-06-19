@@ -1075,6 +1075,7 @@ class EmailTracker(TimeStampModel):
         on_delete=models.CASCADE,
     )
     recipient = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, default="N/A")
     subject = models.CharField(max_length=255)
     body = models.TextField()
     message_id = models.CharField(max_length=255, blank=True, null=True)

@@ -151,6 +151,7 @@ class EmailTrackerSerializer(serializers.ModelSerializer):
             "id",
             "user",
             "recipient",
+            "name",
             "subject",
             "body",
             "message_id",

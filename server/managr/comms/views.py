@@ -1472,7 +1472,7 @@ class EmailAlertViewSet(
         alert_id = request.data.get("alert_id")
         social = request.data.get("social")
         if social:
-            print('In Social')
+            print("In Social")
             emit_send_social_summary(alert_id, str(datetime.now()))
         else:
             emit_send_news_summary(alert_id, str(datetime.now()))
@@ -1960,6 +1960,7 @@ class DiscoveryViewSet(
         subject = request.data.get("subject")
         body = request.data.get("body").replace("[Your Name]", f"\n\n{user.full_name}")
         recipient = request.data.get("recipient")
+        name = request.data.get("name")
         bcc = request.data.get("bcc")
         context = {"body": body}
         message_id = f"{uuid.uuid4()}-{user.email}"
@@ -1985,6 +1986,7 @@ class DiscoveryViewSet(
                     "body": body,
                     "subject": subject,
                     "message_id": message_id,
+                    "name": name,
                 }
             )
             serializer.is_valid(raise_exception=True)
