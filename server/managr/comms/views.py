@@ -108,6 +108,7 @@ def getclips(request):
                     headers=core_consts.OPEN_AI_HEADERS,
                 )
             r = open_ai_exceptions._handle_response(r)
+            print(1)
             query_input = r.get("choices")[0].get("message").get("content")
             news_res = Search.get_clips(query_input, date_to, date_from)
             articles = news_res["articles"]
@@ -115,11 +116,13 @@ def getclips(request):
             news_res = Search.get_clips(boolean, date_to, date_from)
             articles = news_res["articles"]
             query_input = boolean
-
+        print(2)
         articles = [article for article in articles if article["title"] != "[Removed]"]
+        print(3)
         internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
+        print(4)
         articles = normalize_article_data(articles, internal_articles)
-
+        print(5)
         return {"articles": articles, "string": query_input}
 
     except Exception as e:
@@ -128,57 +131,12 @@ def getclips(request):
         return {"error": str(e)}
 
 
-# @require_http_methods(["GET"])
-# @permission_classes([permissions.IsAuthenticated])
-# @async_to_sync
-# async def get_clips(request, *args, **kwargs):
-#     response = await sync_to_async(getclips)(request)
-#     return JsonResponse(data=response)
-
-
 @require_http_methods(["GET"])
 @permission_classes([permissions.IsAuthenticated])
-def get_clips(request, *args, **kwargs):
-    try:
-        user = User.objects.get(id=request.GET.get("user_id"))
-        has_error = False
-        search = request.GET.get("search", False)
-        boolean = request.GET.get("boolean", False)
-        date_to = request.GET.get("date_to", False)
-        date_from = request.GET.get("date_from", False)
-        print(date_to, date_from)
-        if not boolean:
-            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_QUERY_STRING(search)
-            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                user.email,
-                prompt,
-                token_amount=500,
-                top_p=0.1,
-            )
-            with Variable_Client() as client:
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=core_consts.OPEN_AI_HEADERS,
-                )
-            r = open_ai_exceptions._handle_response(r)
-            query_input = r.get("choices")[0].get("message").get("content")
-            news_res = Search.get_clips(query_input, date_to, date_from)
-            articles = news_res["articles"]
-        else:
-            news_res = Search.get_clips(boolean, date_to, date_from)
-            articles = news_res["articles"]
-            query_input = boolean
-
-        articles = [article for article in articles if article["title"] != "[Removed]"]
-        internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
-        articles = normalize_article_data(articles, internal_articles)
-        return Response(data={"articles": articles, "string": query_input})
-    except Exception as e:
-        has_error = True
-        logger.exception(e)
-        return {"error": str(e)}
+@async_to_sync
+async def get_clips(request, *args, **kwargs):
+    response = await sync_to_async(getclips)(request)
+    return JsonResponse(data=response)
 
 
 def add_timezone_and_convert_to_utc(datetime_str, user_timezone):
@@ -2207,7 +2165,7 @@ def mailgun_webhooks(request):
             tracker.clicks += 1
         tracker.save()
         tracker.add_activity(event_type)
-    except EmailTracker.DoesNotExist():
+    except EmailTracker.DoesNotExist:
         return Response(status=status.HTTP_202_ACCEPTED)
     except Exception as e:
         logger.exception(f"{e}, {message_id}\n{event_data}")
