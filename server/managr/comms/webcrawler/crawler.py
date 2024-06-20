@@ -379,3 +379,30 @@ class NewsSpider(scrapy.Spider):
                 )
             except Exception as e:
                 self.error_log.append(str(e))
+
+
+class SubstackSpider(scrapy.Spider):
+    name = "substack_spider"
+
+    custom_settings = {
+        "DOWNLOAD_DELAY_RANDOMIZE": True,
+        "DOWNLOAD_DELAY": 2,
+        "DOWNLOADER_MIDDLEWARES": {
+            "scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware": 100,
+        },
+        "AUTOTHROTTLE_ENABLED": True,
+        "USER_AGENT": "Mozilla/5.0 (compatible; managr-webcrawler/1.0; +https://managr.ai/documentation)",
+        "HTTPCACHE_ENABLED": True,
+        "HTTPCACHE_DIR": settings.HTTPCACHE_DIR,
+        "HTTPCACHE_EXPIRATION_SECS": 43200,
+        "LOG_LEVEL": settings.SCRAPY_LOG_LEVEL,
+    }
+
+    def __init__(self, *args, **kwargs):
+        super(SubstackSpider, self).__init__(*args, **kwargs)
+        self.start_url = kwargs.get("start_url")
+
+    def parse(self, response):
+        article_links = response.xpath("//div[@class='reader2-page-body']/div/div")
+        print(article_links)
+        return {"results": article_links}
