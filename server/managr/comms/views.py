@@ -91,7 +91,7 @@ def getclips(request):
         boolean = request.GET.get("boolean", False)
         date_to = request.GET.get("date_to", False)
         date_from = request.GET.get("date_from", False)
-
+        print(date_to, date_from)
         if not boolean:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
             prompt = comms_consts.OPEN_AI_QUERY_STRING(search)
@@ -128,12 +128,57 @@ def getclips(request):
         return {"error": str(e)}
 
 
+# @require_http_methods(["GET"])
+# @permission_classes([permissions.IsAuthenticated])
+# @async_to_sync
+# async def get_clips(request, *args, **kwargs):
+#     response = await sync_to_async(getclips)(request)
+#     return JsonResponse(data=response)
+
+
 @require_http_methods(["GET"])
 @permission_classes([permissions.IsAuthenticated])
-@async_to_sync
-async def get_clips(request, *args, **kwargs):
-    response = await sync_to_async(getclips)(request)
-    return JsonResponse(data=response)
+def get_clips(request, *args, **kwargs):
+    try:
+        user = User.objects.get(id=request.GET.get("user_id"))
+        has_error = False
+        search = request.GET.get("search", False)
+        boolean = request.GET.get("boolean", False)
+        date_to = request.GET.get("date_to", False)
+        date_from = request.GET.get("date_from", False)
+        print(date_to, date_from)
+        if not boolean:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_QUERY_STRING(search)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email,
+                prompt,
+                token_amount=500,
+                top_p=0.1,
+            )
+            with Variable_Client() as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            r = open_ai_exceptions._handle_response(r)
+            query_input = r.get("choices")[0].get("message").get("content")
+            news_res = Search.get_clips(query_input, date_to, date_from)
+            articles = news_res["articles"]
+        else:
+            news_res = Search.get_clips(boolean, date_to, date_from)
+            articles = news_res["articles"]
+            query_input = boolean
+
+        articles = [article for article in articles if article["title"] != "[Removed]"]
+        internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
+        articles = normalize_article_data(articles, internal_articles)
+        return Response(data={"articles": articles, "string": query_input})
+    except Exception as e:
+        has_error = True
+        logger.exception(e)
+        return {"error": str(e)}
 
 
 def add_timezone_and_convert_to_utc(datetime_str, user_timezone):
@@ -669,7 +714,6 @@ class PRSearchViewSet(
                 logger.exception(e)
                 tweet_res = e
                 break
-        print(tweet_list)
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": tweet_res})
         return Response({"tweets": tweet_list, "string": query_input, "includes": includes})
