@@ -379,9 +379,15 @@ export default {
   transition: all 0.2s;
   background-color: white;
   margin-left: 16px;
+  transition: all 0.25s;
 
   img {
     filter: invert(40%);
+  }
+
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: scale(1.1);
   }
 }
 

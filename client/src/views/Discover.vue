@@ -489,7 +489,7 @@
                 <div style="padding-top: 16px" class="expanded-item">
                   <div class="row horizontal-padding-s img-text">
                     <img src="@/assets/images/comment.svg" height="18px" alt="" />
-                    <p style="margin-left: 6px">Beat/Topic</p>
+                    <p style="margin-left: 6px">Beat</p>
                   </div>
 
                   <div class="display-end">
@@ -513,7 +513,7 @@
                 <div style="border: none" class="expanded-item">
                   <div class="row horizontal-padding-s img-text">
                     <img src="@/assets/images/marker.svg" height="18px" alt="" />
-                    <p style="margin-left: 6px">location</p>
+                    <p style="margin-left: 6px">Location</p>
                   </div>
 
                   <div class="display-end">

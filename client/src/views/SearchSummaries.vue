@@ -1900,7 +1900,7 @@
           >
             <button @click="toggleSummaryMenu" v-if="summary" class="img-button-white">
               <img src="@/assets/images/sparkle.svg" height="16px" alt="" />
-              Generate New Summary
+              New Summary
             </button>
 
             <div class="row">
