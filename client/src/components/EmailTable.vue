@@ -268,6 +268,7 @@ export default {
         const searchConditions = [
           email.recipient.toLowerCase().includes(searchText),
           email.subject.toLowerCase().includes(searchText),
+          email.name.toLowerCase().includes(searchText),
           email.body.toLowerCase().includes(searchText),
           email.opens.toString().includes(searchText),
           email.replies.toString().includes(searchText),
