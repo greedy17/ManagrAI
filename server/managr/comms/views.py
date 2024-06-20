@@ -2165,7 +2165,7 @@ def mailgun_webhooks(request):
             tracker.clicks += 1
         tracker.save()
         tracker.add_activity(event_type)
-    except EmailTracker.DoesNotExist():
+    except EmailTracker.DoesNotExist:
         return Response(status=status.HTTP_202_ACCEPTED)
     except Exception as e:
         logger.exception(f"{e}, {message_id}\n{event_data}")
