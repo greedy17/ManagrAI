@@ -2356,10 +2356,11 @@ export default {
         `Apple AND OpenAI`,
         `Destination AND Travel`,
         `Why is Taylor Swift Trending?`,
-        `#Lululemon`,
+        `from: nytimes`,
+        `from: elonmusk`,
         `Tom Brady`,
-        `from: Elon Musk`,
-        `place: New York City`,
+        `#Lululemon`,
+        `Latest TikTok Trends`,
       ],
 
       summaryExamples: [
