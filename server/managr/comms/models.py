@@ -588,7 +588,7 @@ class Article(TimeStampModel):
         )
 
     @classmethod
-    def search_by_query(cls, boolean_string, date_to=False, date_from=False):
+    def search_by_query(cls, boolean_string, date_to=False, date_from=False, author=False):
         from managr.comms.utils import boolean_search_to_query
 
         date_to_date_obj = parser.parse(date_to)
@@ -597,8 +597,11 @@ class Article(TimeStampModel):
         date_range_articles = Article.objects.filter(
             publish_date__range=(date_from, day_incremented_str)
         )
-        converted_boolean = boolean_search_to_query(boolean_string)
-        articles = date_range_articles.filter(converted_boolean)
+        if author:
+            articles = date_range_articles.filter(author__icontains=boolean_string)
+        else:
+            converted_boolean = boolean_search_to_query(boolean_string)
+            articles = date_range_articles.filter(converted_boolean)
         if len(articles):
             articles = articles[:20]
         return list(articles)
