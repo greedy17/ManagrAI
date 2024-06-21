@@ -737,6 +737,8 @@ class TwitterAccount(TimeStampModel):
         self, user, tokens, timeout, tweets, input_text, instructions=False, for_client=False
     ):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+        if "from:" in input_text:
+            instructions = comms_consts.TWITTER_USERNAME_INSTRUCTIONS(user.organization.name)
         prompt = comms_consts.OPEN_AI_TWITTER_SUMMARY(
             datetime.now().date(), tweets, input_text, instructions, for_client
         )
@@ -790,7 +792,6 @@ class TwitterAccount(TimeStampModel):
             access_token = client.fetch_access_token(
                 comms_consts.TWITTER_ACCESS_TOKEN_URI, verifier
             )
-            print(access_token)
             return access_token
         except OAuth2Error:
             return "Invalid authorization code"
