@@ -2345,19 +2345,22 @@ export default {
         `List top journalist writing about Fashion`,
         `"Cancer Research"`,
         `Apple AND OpenAI`,
-
+        `List newsjacking ideas around Sustainability`,
         `Destination AND Travel`,
         `Top stories Climate Change`,
         `Provide sentiment around Nike`,
-        `List newsjacking ideas around Sustainability`,
+        `journalist: Alexander Maxham`,
       ],
       socialSearchExamples: [
         `"Cancer Research"`,
         `Apple AND OpenAI`,
         `Destination AND Travel`,
         `Why is Taylor Swift Trending?`,
-        `#Lululemon`,
+        `from: nytimes`,
+        `from: elonmusk`,
         `Tom Brady`,
+        `#Lululemon`,
+        `Latest TikTok Trends`,
       ],
 
       summaryExamples: [
@@ -4121,6 +4124,7 @@ export default {
               clips: allClips,
               search: this.newSearch,
               instructions: instructions,
+              company: this.selectedOrg,
             },
             this.controllers.getSummary.controller.signal,
           )
@@ -5606,7 +5610,7 @@ li {
   flex-direction: row;
   align-items: center;
   flex-wrap: wrap;
-  gap: 4px 24px;
+  gap: 3px 12px;
 }
 
 .row-between {

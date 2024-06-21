@@ -588,7 +588,7 @@ class Article(TimeStampModel):
         )
 
     @classmethod
-    def search_by_query(cls, boolean_string, date_to=False, date_from=False):
+    def search_by_query(cls, boolean_string, date_to=False, date_from=False, author=False):
         from managr.comms.utils import boolean_search_to_query
 
         date_to_date_obj = parser.parse(date_to)
@@ -597,8 +597,11 @@ class Article(TimeStampModel):
         date_range_articles = Article.objects.filter(
             publish_date__range=(date_from, day_incremented_str)
         )
-        converted_boolean = boolean_search_to_query(boolean_string)
-        articles = date_range_articles.filter(converted_boolean)
+        if author:
+            articles = date_range_articles.filter(author__icontains=boolean_string)
+        else:
+            converted_boolean = boolean_search_to_query(boolean_string)
+            articles = date_range_articles.filter(converted_boolean)
         if len(articles):
             articles = articles[:20]
         return list(articles)
@@ -734,6 +737,8 @@ class TwitterAccount(TimeStampModel):
         self, user, tokens, timeout, tweets, input_text, instructions=False, for_client=False
     ):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+        if "from:" in input_text:
+            instructions = comms_consts.TWITTER_USERNAME_INSTRUCTIONS(user.organization.name)
         prompt = comms_consts.OPEN_AI_TWITTER_SUMMARY(
             datetime.now().date(), tweets, input_text, instructions, for_client
         )
@@ -787,7 +792,6 @@ class TwitterAccount(TimeStampModel):
             access_token = client.fetch_access_token(
                 comms_consts.TWITTER_ACCESS_TOKEN_URI, verifier
             )
-            print(access_token)
             return access_token
         except OAuth2Error:
             return "Invalid authorization code"

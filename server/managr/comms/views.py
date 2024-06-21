@@ -91,7 +91,12 @@ def getclips(request):
         boolean = request.GET.get("boolean", False)
         date_to = request.GET.get("date_to", False)
         date_from = request.GET.get("date_from", False)
-        print(date_to, date_from)
+        if "journalist:" in search:
+            search = search.replace("journalist:", "").strip()
+            print(search)
+            internal_articles = InternalArticle.search_by_query(search, date_to, date_from, True)
+            articles = normalize_article_data([], internal_articles)
+            return {"articles": articles, "string": search}
         if not boolean:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
             prompt = comms_consts.OPEN_AI_QUERY_STRING(search)
@@ -108,21 +113,22 @@ def getclips(request):
                     headers=core_consts.OPEN_AI_HEADERS,
                 )
             r = open_ai_exceptions._handle_response(r)
-            print(1)
+            logger.info(1)
             query_input = r.get("choices")[0].get("message").get("content")
             news_res = Search.get_clips(query_input, date_to, date_from)
             articles = news_res["articles"]
         else:
             news_res = Search.get_clips(boolean, date_to, date_from)
+            logger.info(1)
             articles = news_res["articles"]
             query_input = boolean
-        print(2)
+        logger.info(2)
         articles = [article for article in articles if article["title"] != "[Removed]"]
-        print(3)
+        logger.info(3)
         internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
-        print(4)
+        logger.info(4)
         articles = normalize_article_data(articles, internal_articles)
-        print(5)
+        logger.info(5)
         return {"articles": articles, "string": query_input}
 
     except Exception as e:
@@ -214,6 +220,9 @@ class PRSearchViewSet(
         clips = request.data.get("clips")
         search = request.data.get("search")
         instructions = request.data.get("instructions", False)
+        company = request.data.get("company")
+        if "journalist" in search:
+            instructions = comms_consts.JOURNALIST_INSTRUCTIONS(company)
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -623,7 +632,9 @@ class PRSearchViewSet(
                     r = open_ai_exceptions._handle_response(r)
                     query_input = r.get("choices")[0].get("message").get("content")
                     query_input = query_input.replace("AND", " ")
-                    query_input = query_input + " lang:en"
+                    query_input = query_input + " lang:en -is:retweet"
+                    if "from:" not in query_input:
+                        query_input = query_input + " is:verified"
                 tweet_res = twitter_account.get_tweets(query_input, next_token)
                 tweets = tweet_res.get("data", None)
                 includes = tweet_res.get("includes", None)
@@ -674,6 +685,7 @@ class PRSearchViewSet(
                 break
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": tweet_res})
+        query_input = query_input.replace("-is:retweet", "").replace("is:verified", "")
         return Response({"tweets": tweet_list, "string": query_input, "includes": includes})
 
     @action(
