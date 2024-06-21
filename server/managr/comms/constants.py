@@ -156,6 +156,10 @@ OPEN_AI_SEARCH_SUGGESTIONS = (
 )
 
 
+def JOURNALIST_INSTRUCTIONS(company):
+    return f"Summarize articles journalist wrote, then you must provide a factual background on the journalist (important: do not make it up). Lastly, provide pitching tips for user who works for {company}"
+
+
 def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_client=False):
     if not instructions:
         instructions = DEFAULT_CLIENT_INSTRUCTIONS

@@ -220,6 +220,9 @@ class PRSearchViewSet(
         clips = request.data.get("clips")
         search = request.data.get("search")
         instructions = request.data.get("instructions", False)
+        company = request.data.get("company")
+        if "journalist" in search:
+            instructions = comms_consts.JOURNALIST_INSTRUCTIONS(company)
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -629,7 +632,7 @@ class PRSearchViewSet(
                     r = open_ai_exceptions._handle_response(r)
                     query_input = r.get("choices")[0].get("message").get("content")
                     query_input = query_input.replace("AND", " ")
-                    query_input = query_input + " lang:en"
+                    query_input = query_input + " lang:en -is:retweet is:verified"
                 tweet_res = twitter_account.get_tweets(query_input, next_token)
                 tweets = tweet_res.get("data", None)
                 includes = tweet_res.get("includes", None)
@@ -680,6 +683,7 @@ class PRSearchViewSet(
                 break
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": tweet_res})
+        query_input = query_input.replace("-is:retweet is:verified", "")
         return Response({"tweets": tweet_list, "string": query_input, "includes": includes})
 
     @action(
