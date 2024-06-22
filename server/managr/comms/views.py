@@ -219,7 +219,7 @@ class PRSearchViewSet(
         search = request.data.get("search")
         instructions = request.data.get("instructions", False)
         company = request.data.get("company")
-        if "journalist" in search:
+        if "journalist:" in search:
             instructions = comms_consts.JOURNALIST_INSTRUCTIONS(company)
         has_error = False
         attempts = 1
