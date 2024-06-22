@@ -92,8 +92,6 @@ def getclips(request):
         date_to = request.GET.get("date_to", False)
         date_from = request.GET.get("date_from", False)
         if "journalist:" in search:
-            search = search.replace("journalist:", "").strip()
-            print(search)
             internal_articles = InternalArticle.search_by_query(search, date_to, date_from, True)
             articles = normalize_article_data([], internal_articles)
             return {"articles": articles, "string": search}
