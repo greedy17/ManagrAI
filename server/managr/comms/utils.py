@@ -488,3 +488,96 @@ def convert_pdf_from_url(url):
     except Exception as e:
         print(str(e))
         return "", image_list
+
+
+def google_search(query):
+    url = comms_consts.GOOGLE_SEARCH_URI
+    params = comms_consts.GOOGLE_SEARCH_PARAMS(query)
+    with Variable_Client() as client:
+        res = client.get(url, params=params)
+        if res.status_code == 200:
+            results_list = []
+            images = []
+            res = res.json()
+            results = res["items"]
+            for item in results:
+                result_data = {
+                    "title": item["title"],
+                    "snippet": item["snippet"],
+                    "link": item["link"],
+                }
+                images.append(item["pagemap"]["cse_image"][0]["src"])
+                results_list.append(result_data)
+            return {"images": images, "results": results_list}
+        else:
+            return {}
+
+
+def test_open(user, journalist, results):
+    from managr.core import constants as core_consts
+    from managr.core import exceptions as open_ai_exceptions
+    import httpx
+
+    has_error = False
+    attempts = 1
+    token_amount = 1000
+    timeout = 60.0
+    while True:
+        try:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(
+                journalist, results, user.organization.name
+            )
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email,
+                prompt,
+                "You are a VP of Communications",
+                token_amount=token_amount,
+                top_p=0.1,
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            res = open_ai_exceptions._handle_response(r)
+
+            message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+            print(message)
+            break
+        except open_ai_exceptions.StopReasonLength:
+            if token_amount <= 2000:
+                has_error = True
+                message = "Token amount error"
+                break
+            else:
+                token_amount += 500
+                continue
+        except httpx.ReadTimeout as e:
+            timeout += 30.0
+            if timeout >= 120.0:
+                has_error = True
+                message = "Read timeout issue"
+                break
+            else:
+                attempts += 1
+                continue
+        except Exception as e:
+            has_error = True
+            message = f"Unknown exception: {e}"
+            break
+    return message
+
+
+def test_flow():
+    from managr.core.models import User
+
+    user = User.objects.get(email="zach@mymanagr.com")
+    journalist = "Kristin Corpuz"
+    query = "Kristin Corpuz AND Allure"
+    google_res = google_search(query)
+    results = google_res["results"]
+    images = google_res["images"]
+    message = test_open(user, journalist, results)
+    return message

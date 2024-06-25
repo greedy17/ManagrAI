@@ -56,6 +56,20 @@ TWITTER_AUTHORIZATION_QUERY_PARAMS = {
     "oauth_consumer_key": TWITTER_API_KEY,
 }
 
+GOOGLE_SEARCH_URI = "https://www.googleapis.com/customsearch/v1"
+GOOGLE_SEARCH_KEY = settings.GOOGLE_SEARCH_API_KEY
+GOOGLE_SEARCH_ID = settings.GOOGLE_SEARCH_ID
+
+
+def GOOGLE_SEARCH_PARAMS(query):
+    params = {"q": query, "key": GOOGLE_SEARCH_KEY, "cx": GOOGLE_SEARCH_ID}
+    return params
+
+
+def OPEN_AI_RESULTS_PROMPT(journalist, results, company):
+    prompt = f"Craft a bio for {journalist} based on the info below. At the end provide short, relevant pitching tips for {company}. \n Here is the info: \nResults: {results}\n"
+    return prompt
+
 
 def TWITTER_AUTHENTICATION_PARAMS(token, verifier):
     params = {

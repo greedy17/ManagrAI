@@ -73,6 +73,7 @@ from managr.comms.utils import (
     extract_pdf_text,
     convert_pdf_from_url,
     extract_email_address,
+    google_search
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
@@ -2074,6 +2075,79 @@ class DiscoveryViewSet(
         except Exception as e:
             logger.exception(str(e))
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="web-context",
+    )
+    def journalist_web_context(self, request, *args, **kwargs):
+        user = request.user
+        journalist = request.data.get("journalist")
+        outlet = request.data.get("outlet")
+        query = f"{journalist} AND {outlet}"
+        google_results = google_search(query)
+        if len(google_results) == 0:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": "No results could be found."})
+        results = google_results["results"]
+        images = google_results["images"]
+        has_error = False
+        attempts = 1
+        token_amount = 1000
+        timeout = 60.0
+        while True:
+            try:
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(journalist,results,user.organization.name)
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    "You are a VP of Communications",
+                    token_amount=token_amount,
+                    top_p=0.1,
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                res = open_ai_exceptions._handle_response(r)
+
+                message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+                print(message)
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount <= 2000:
+                    has_error = True
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 500
+                    continue
+            except httpx.ReadTimeout as e:
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+        if has_error:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
+
+        return Response(data={"summary": message, "images": images})
 
     @action(
         methods=["post"],
