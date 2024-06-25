@@ -3,7 +3,7 @@ import os
 import logging
 import base64
 import hashlib
-import statistics
+import requests
 from datetime import datetime, timedelta
 from dateutil import parser
 from django.db import models

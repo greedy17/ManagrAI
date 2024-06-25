@@ -55,6 +55,8 @@ class Organization(TimeStampModel):
     is_paid = models.BooleanField(default=False)
     number_of_allowed_users = models.IntegerField(default=3)
     objects = OrganizationQuerySet.as_manager()
+    smtp_user = models.CharField(max_length=255, blank=True, null=True)
+    smtp_pass = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return f"{self.name}"
