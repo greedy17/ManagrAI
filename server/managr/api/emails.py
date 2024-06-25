@@ -9,7 +9,15 @@ from email.mime.application import MIMEApplication
 
 
 def send_html_email(
-    subject, template, send_from, send_to, context={}, bcc_emails=[], files=[], headers={}
+    subject,
+    template,
+    send_from,
+    send_to,
+    context={},
+    bcc_emails=[],
+    files=[],
+    headers={},
+    user=False,
 ):
     """Generic sender to build and send an HTML email with a plain-text fallback.
 
@@ -74,6 +82,11 @@ def send_html_email(
             # Ignore list elements that are neither a tuple or string
             continue
         email.attach(part)
+    if user:
+        organiation = user.organization
+        if organiation.smtp_user is not None:
+            email.extra_headers["SMTP-USERNAME"] = organiation.smtp_user
+            email.extra_headers["SMTP-PASSWORD"] = organiation.smtp_pass
 
     email.send(fail_silently=False)
 

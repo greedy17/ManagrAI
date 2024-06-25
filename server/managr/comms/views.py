@@ -92,8 +92,6 @@ def getclips(request):
         date_to = request.GET.get("date_to", False)
         date_from = request.GET.get("date_from", False)
         if "journalist:" in search:
-            search = search.replace("journalist:", "").strip()
-            print(search)
             internal_articles = InternalArticle.search_by_query(search, date_to, date_from, True)
             articles = normalize_article_data([], internal_articles)
             return {"articles": articles, "string": search}
@@ -221,7 +219,7 @@ class PRSearchViewSet(
         search = request.data.get("search")
         instructions = request.data.get("instructions", False)
         company = request.data.get("company")
-        if "journalist" in search:
+        if "journalist:" in search:
             instructions = comms_consts.JOURNALIST_INSTRUCTIONS(company)
         has_error = False
         attempts = 1
@@ -612,10 +610,11 @@ class PRSearchViewSet(
         attempts = 1
         while True:
             try:
+                if attempts >= 10:
+                    break
                 if query_input is None:
                     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                     prompt = comms_consts.OPEN_AI_TWITTER_SEARCH_CONVERSION(search)
-
                     body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                         user.email,
                         prompt,
@@ -638,6 +637,7 @@ class PRSearchViewSet(
                 tweet_res = twitter_account.get_tweets(query_input, next_token)
                 tweets = tweet_res.get("data", None)
                 includes = tweet_res.get("includes", None)
+                attempts += 1
                 if tweets:
                     if "next_token" in tweet_res["meta"].keys():
                         next_token = tweet_res["meta"]["next_token"]
@@ -651,7 +651,10 @@ class PRSearchViewSet(
                                     tweet["user"] = user
                                     tweet_list.append(tweet)
                                 break
+
                 else:
+                    if len(tweet_list):
+                        break
                     return Response(
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         data={"error": f"No results for {query_input}", "string": query_input},
@@ -666,7 +669,9 @@ class PRSearchViewSet(
                     data={"error": f"No results for {query_input}", "string": query_input},
                 )
             except comms_exceptions.TooManyRequestsError:
-                if attempts > 3:
+                if len(tweet_list):
+                    break
+                else:
                     return Response(
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         data={
@@ -674,11 +679,8 @@ class PRSearchViewSet(
                             "string": query_input,
                         },
                     )
-                attempts += 1
-                retry_after = int(tweet_res.headers.get("Retry-After", 5))
-                time.sleep(retry_after)
-                continue
             except Exception as e:
+                print(1)
                 has_error = True
                 logger.exception(e)
                 tweet_res = e
@@ -1991,6 +1993,7 @@ class DiscoveryViewSet(
                     "X-Managr-Id": message_id,
                     "Message-ID": message_id,
                 },
+                user=user,
             )
             user.add_meta_data("emailSent")
             serializer = EmailTrackerSerializer(
