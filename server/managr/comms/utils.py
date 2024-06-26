@@ -499,14 +499,17 @@ def google_search(query):
             results_list = []
             images = []
             res = res.json()
-            results = res["items"]
+            results = res["items"][:5]
             for item in results:
                 result_data = {
                     "title": item["title"],
                     "snippet": item["snippet"],
                     "link": item["link"],
                 }
-                images.append(item["pagemap"]["cse_image"][0]["src"])
+                try:
+                    images.append(item["pagemap"]["cse_image"][0]["src"])
+                except Exception:
+                    pass
                 results_list.append(result_data)
             return {"images": images, "results": results_list}
         else:
@@ -525,7 +528,10 @@ def test_open(user, journalist, results, text):
     while True:
         try:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(journalist, results, "Visit Orlando", text)
+            # prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(journalist, results, "Visit Orlando", text)
+            prompt = f"Create one summary based on the information from all the search results below. Ensure the summary encompasses a variety of topics mentioned in the results. You must include the source name and date to cite where you got the information from.\nHere are the top 5 search results:{results}\nAnd here is the top article: {text}"
+            print(prompt)
+            print("_______________________________")
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
                 prompt,
@@ -631,3 +637,18 @@ def test_flow():
     message = test_open(user, journalist, results, text)
     email = test_rewrite(message)
     return email
+
+
+def dumb(query):
+    from newspaper import Article
+    from managr.core.models import User
+
+    res = google_search(query)
+    results = res["results"][:6]
+    art = Article(results[0]["link"], config=generate_config())
+    art.download()
+    art.parse()
+    text = art.text
+    user = User.objects.get(email="zach@mymanagr.com")
+    summary = test_open(user, "text", results, text)
+    return summary
