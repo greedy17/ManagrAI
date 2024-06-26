@@ -79,7 +79,7 @@ from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
 from managr.comms.tasks import emit_get_meta_account_info
 from managr.api.emails import send_html_email
-from django.conf import settings
+from newspaper.article import ArticleException
 
 logger = logging.getLogger("managr")
 
@@ -2095,6 +2095,15 @@ class DiscoveryViewSet(
             )
         results = google_results["results"]
         images = google_results["images"]
+        art = Article(results[0]["link"], config=generate_config())
+        try:
+            art.download()
+            art.parse()
+            text = art.text
+        except ArticleException:
+            text = ""
+        except Exception:
+            text = ""
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -2315,8 +2324,6 @@ def get_email_tracking(request):
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def get_web_summary(request):
-    from newspaper.article import ArticleException
-
     user = request.user
     query = request.data.get("query")
     res = google_search(query)
