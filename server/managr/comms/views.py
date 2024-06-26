@@ -2310,3 +2310,72 @@ def get_email_tracking(request):
     serialized = EmailTrackerSerializer(trackers, many=True)
     rate_data = EmailTracker.get_user_rates(user.id)
     return Response(data={"trackers": serialized.data, "rates": rate_data})
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def get_web_summary(request):
+    from newspaper.article import ArticleException
+
+    user = request.user
+    query = request.data.get("query")
+    res = google_search(query)
+    results = res["results"]
+    art = Article(results[0]["link"], config=generate_config())
+    try:
+        art.download()
+        art.parse()
+        text = art.text
+    except ArticleException:
+        text = ""
+    except Exception:
+        text = ""
+    has_error = False
+    attempts = 1
+    token_amount = 1000
+    timeout = 60.0
+    while True:
+        try:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_WEB_SUMMARY(results, text)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email,
+                prompt,
+                "You are a VP of Communications",
+                token_amount=token_amount,
+                top_p=0.1,
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            res = open_ai_exceptions._handle_response(r)
+
+            message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+            break
+        except open_ai_exceptions.StopReasonLength:
+            if token_amount <= 2000:
+                has_error = True
+                message = "Token amount error"
+                break
+            else:
+                token_amount += 500
+                continue
+        except httpx.ReadTimeout as e:
+            timeout += 30.0
+            if timeout >= 120.0:
+                has_error = True
+                message = "Read timeout issue"
+                break
+            else:
+                attempts += 1
+                continue
+        except Exception as e:
+            has_error = True
+            message = f"Unknown exception: {e}"
+            break
+    if has_error:
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
+    return Response(data={"message": message})

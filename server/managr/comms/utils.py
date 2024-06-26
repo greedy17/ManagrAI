@@ -528,8 +528,8 @@ def test_open(user, journalist, results, text):
     while True:
         try:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            # prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(journalist, results, "Visit Orlando", text)
-            prompt = f"Create one summary based on the information from all the search results below. Ensure the summary encompasses a variety of topics mentioned in the results. You must include the source name and date to cite where you got the information from.\nHere are the top 5 search results:{results}\nAnd here is the top article: {text}"
+            prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(journalist, results, "Managr", text)
+            # prompt = f"Create one summary based on the information from all the search results below. Ensure the summary encompasses a variety of topics mentioned in the results. You must include the source name and date to cite where you got the information from.\nHere are the top 5 search results:{results}\nAnd here is the top article: {text}"
             print(prompt)
             print("_______________________________")
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
@@ -625,8 +625,8 @@ def test_flow():
     from newspaper import Article
 
     user = User.objects.get(email="zach@mymanagr.com")
-    journalist = "Kristin Corpuz"
-    query = "Kristin Corpuz AND Allure"
+    journalist = "Sapna Maheshwari"
+    query = "Sapna Maheshwari AND ny times"
     google_res = google_search(query)
     results = google_res["results"]
     images = google_res["images"]
