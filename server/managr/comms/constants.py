@@ -66,8 +66,8 @@ def GOOGLE_SEARCH_PARAMS(query):
     return params
 
 
-def OPEN_AI_RESULTS_PROMPT(journalist, results, company):
-    prompt = f"Craft a bio for {journalist} based on the info below. At the end provide short, relevant pitching tips for {company}. \n Here is the info: \nResults: {results}\n"
+def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
+    prompt = f"Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the journalist from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then include 3 short, relevant pitching tips for {company} based on what you learned about the journalist. Lastly, if available, list out social handles and email (if email not available, exclude email details from the output). Do not include styling."
     return prompt
 
 
@@ -280,11 +280,11 @@ Instructions: {instructions}"""
 )
 
 OPEN_AI_REWRITE_PTICH = (
-    lambda original, tip, name: f"""
-Adjust and rewrite this pitch per the pitching tip, while maintaining the existing writing style. This pitch will be sent via email so you must include a short intriguing subject line; no more than 3 words. Do not bold any text.\n
+    lambda original, details, name: f"""
+Adjust and rewrite this pitch based on what you know about the journalist (see below), while maintaining the existing writing style. This pitch will be sent via email so you must include a short intriguing subject line; no more than 3 words. Do not bold any text.\n
 pitch: {original}\n
-tip: {tip}
-my name: {name}"""
+Journalist details: {details}
+my name {name}"""
 )
 
 OPEN_AI_LEARN_WRITING_STYLE_PROMPT = (

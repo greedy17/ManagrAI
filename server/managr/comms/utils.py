@@ -513,7 +513,7 @@ def google_search(query):
             return {}
 
 
-def test_open(user, journalist, results):
+def test_open(user, journalist, results, text):
     from managr.core import constants as core_consts
     from managr.core import exceptions as open_ai_exceptions
     import httpx
@@ -525,9 +525,7 @@ def test_open(user, journalist, results):
     while True:
         try:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(
-                journalist, results, user.organization.name
-            )
+            prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(journalist, results, "Visit Orlando", text)
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
                 prompt,
@@ -570,8 +568,55 @@ def test_open(user, journalist, results):
     return message
 
 
+def test_rewrite(details):
+    from managr.core import constants as core_consts
+    from managr.core import exceptions as open_ai_exceptions
+
+    original = "Hi {Journalist first name},I admire your insightful coverage of cultural heritage. I'm reaching out to share a compelling story about the art of Gullah rag quilting. Sharon Cooper-Murray, 'The Gullah Lady,' can no longer teach this craft due to health reasons. However, Cookie Washington, an African American Quilter Artist, is dedicated to preserving this tradition. This technique, passed down through generations, combines feed and grain sacks with rag strips to create unique quilts. Would you be interested in exploring this rich cultural heritage and Cookie's efforts to honor Sharon's legacy?Thanks,[Your Name]"
+    has_error = False
+    attempts = 1
+    token_amount = 1000
+    timeout = 60.0
+
+    while True:
+        try:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_REWRITE_PTICH(original, details, "Zachary")
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                "zach@mymanagr.com",
+                prompt,
+                token_amount=token_amount,
+                top_p=0.1,
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            r = open_ai_exceptions._handle_response(r)
+            pitch = r.get("choices")[0].get("message").get("content")
+            print(pitch)
+            break
+        except open_ai_exceptions.StopReasonLength:
+            if token_amount <= 2000:
+                has_error = True
+
+                message = "Token amount error"
+                break
+            else:
+                token_amount += 500
+                continue
+        except Exception as e:
+            has_error = True
+            message = f"Unknown exception: {e}"
+            break
+    return
+
+
 def test_flow():
     from managr.core.models import User
+    from newspaper import Article
 
     user = User.objects.get(email="zach@mymanagr.com")
     journalist = "Kristin Corpuz"
@@ -579,5 +624,10 @@ def test_flow():
     google_res = google_search(query)
     results = google_res["results"]
     images = google_res["images"]
-    message = test_open(user, journalist, results)
-    return message
+    art = Article(results[0]["link"], config=generate_config())
+    art.download()
+    art.parse()
+    text = art.text
+    message = test_open(user, journalist, results, text)
+    email = test_rewrite(message)
+    return email

@@ -73,7 +73,7 @@ from managr.comms.utils import (
     extract_pdf_text,
     convert_pdf_from_url,
     extract_email_address,
-    google_search
+    google_search,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
@@ -1378,7 +1378,7 @@ class PitchViewSet(
     def rewrite_pitch(self, request, *args, **kwargs):
         user = request.user
         original = request.data.get("original")
-        tip = request.data.get("tip")
+        details = request.data.get("details")
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -1387,7 +1387,7 @@ class PitchViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_REWRITE_PTICH(original, tip, user.first_name)
+                prompt = comms_consts.OPEN_AI_REWRITE_PTICH(original, details, user.first_name)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
@@ -2075,7 +2075,7 @@ class DiscoveryViewSet(
         except Exception as e:
             logger.exception(str(e))
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
-        
+
     @action(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
@@ -2089,7 +2089,10 @@ class DiscoveryViewSet(
         query = f"{journalist} AND {outlet}"
         google_results = google_search(query)
         if len(google_results) == 0:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": "No results could be found."})
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={"error": "No results could be found."},
+            )
         results = google_results["results"]
         images = google_results["images"]
         has_error = False
@@ -2099,7 +2102,9 @@ class DiscoveryViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(journalist,results,user.organization.name)
+                prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(
+                    journalist, results, user.organization.name
+                )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
@@ -2116,7 +2121,6 @@ class DiscoveryViewSet(
                 res = open_ai_exceptions._handle_response(r)
 
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
-                print(message)
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
