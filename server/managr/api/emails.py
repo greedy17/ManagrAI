@@ -1,8 +1,9 @@
 import os
 from io import StringIO
-
+import smtplib
 from django.conf import settings
 from django.core.mail.message import EmailMultiAlternatives
+from django.core.mail import get_connection
 from django.template.loader import render_to_string
 
 from email.mime.application import MIMEApplication
@@ -85,8 +86,21 @@ def send_html_email(
     if user:
         organiation = user.organization
         if organiation.smtp_user is not None:
-            email.extra_headers["SMTP-USERNAME"] = organiation.smtp_user
-            email.extra_headers["SMTP-PASSWORD"] = organiation.smtp_pass
+            smtp_user = user.organization.smtp_user
+            smtp_pass = user.organization.smtp_pass
+            smtp_host = settings.EMAIL_HOST
+            smtp_port = settings.EMAIL_PORT
+
+            # Override the Django email backend settings
+            connection = get_connection(
+                backend="django.core.mail.backends.smtp.EmailBackend",
+                host=smtp_host,
+                port=smtp_port,
+                username=smtp_user,
+                password=smtp_pass,
+                use_tls=True,
+            )
+            email.connection = connection
 
     email.send(fail_silently=False)
 
