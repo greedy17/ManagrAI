@@ -361,22 +361,30 @@ OPEN_AI_CONTENT_ASSIST = (
 
 DISCOVER_JOURNALIST = (
     lambda type, beat, location, content: f"""
-    List up to 10 real, active journalists and their respective publications that would be interested in writing about the content provided below. Provide pitching tips based on what you know about the journalists, relevant to the user's content. User will specify whether they want journalists or influencers. Follow these instructions very carefully:
-    Rule #1: Ensure that all journalists listed are real, currently active professionals. Do not include fake names such as Jane Doe or John Smith.
-    Rule #2: Only list journalists that have written for the publication in the past 12 months.
-    Rule #3: Email addresses need to be accurate, guess the correct emails based on verified patterns.
-    Here is the Journalist Type: The journalists or influencers must be: {type}.
-    Here is the Journalistic Beat: The journalists or influencers must cover this specific beat or topic: {beat}.
-    Here is the Location: The journalists or influencers must be based in or primarily cover {location}.
-    Here is the User’s Content: {content}.
-    Important Output instructions:
-    1. DO NOT bold any text in the response
-    2. Wrap each journalist/tip in a SPAN tag
-    3. Always respond in this format: Journalist: [journalist]
-    Publication: [publication/podcast/etc.]
-    Email: [email]
-    Pitching Tip: [pitching tip]
-    """
+    List up to 10 real, active journalists (or social media influencers) and their respective publications that would be interested in writing about the content provided below. Follow these instructions very carefully:
+
+    * Rule #1: Ensure that all journalists or influencers listed are real, currently active professionals. Do not include fake names such as Jane Doe or John Smith.
+
+    * Rule #2: Prioritize journalists that you have the highest confidence in that they still work there and are still active journalists.
+
+    Additional journalist criteria:
+
+    * Journalist Type: The journalists or influencers must be: {type}.
+    * Journalistic Beat: The journalists or influencers must cover this specific beat or topic: {beat}.
+    * Location: The journalists or influencers must be based in or primarily cover {location}.
+    * User's Content: {content}.
+
+    Content output, 3 rows:
+    Name:
+    Outlet:
+    Reason for Selection:
+    View bio
+
+    "View bio" MUST be returned in a button tag!
+    "Name", "Outlet", and "Reason for Selection" MUST be returned in a strong tag!
+    You MUST wrap each individual journalists/influencer selection in a span tag!
+    Do not add any additional text to the response. ONLY return with what I asked for.
+"""
 )
 
 OPEN_AI_EMAIL_JOURNALIST = (

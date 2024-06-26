@@ -307,6 +307,63 @@
         </div>
       </div>
     </Modal>
+    <Modal v-if="googleModalOpen" class="bio-modal">
+      <div class="bio-container">
+        <header>
+          <p style="font-size: 17px">Journalist Bio</p>
+
+          <div class="row">
+            <div
+              style="margin-right: 0.5rem"
+              @click="copyBioText"
+              class="wrapper icon-button white-bg"
+            >
+              <img
+                style="cursor: pointer"
+                class="right-mar img-highlight"
+                src="@/assets/images/clipboard.svg"
+                height="14px"
+                alt=""
+              />
+              <div class="tooltip-below">{{ copyTip }}</div>
+            </div>
+
+            <div
+              style="margin-right: 0.5rem"
+              @click="copyBioText"
+              class="wrapper icon-button white-bg"
+            >
+              <img
+                style="cursor: pointer"
+                class="right-mar img-highlight"
+                src="@/assets/images/clipboard.svg"
+                height="14px"
+                alt=""
+              />
+              <div class="tooltip-below">{{ copyTip }}</div>
+            </div>
+          </div>
+        </header>
+
+        <section>
+          <div>
+            <pre class="pre-text" v-html="currentJournalistBio"></pre>
+          </div>
+          <aside>
+            <img src="" alt="" />
+            <img src="" alt="" />
+            <img src="" alt="" />
+          </aside>
+        </section>
+
+        <footer>
+          <div class="row">
+            <button @click="toggleGoogleModal">Close</button>
+            <button>Pitch Journalist</button>
+          </div>
+        </footer>
+      </div>
+    </Modal>
 
     <section class="container" :class="{ 'fit-content': summary && isMobile }">
       <div style="padding-top: 88px" class="content-body">
@@ -838,7 +895,7 @@
 
       <div style="margin-top: 0.5rem" v-else-if="summary" class="content-body">
         <div @click="selectJournalist($event)" style="padding-top: 32px" class="small-container">
-          <pre class="pre-text" v-html="formattedResponse"></pre>
+          <div class="pre-text" v-html="summary"></div>
         </div>
       </div>
 
@@ -862,6 +919,8 @@ export default {
   },
   data() {
     return {
+      googleModalOpen: false,
+      currentJournalistBio: '',
       showPitches: false,
       pitchText: '',
       currentJournalist: '',
@@ -958,6 +1017,11 @@ export default {
     }
   },
   watch: {
+    // summary(newVal, oldVal) {
+    //   if (newVal !== oldVal) {
+    //     this.formatSummary(newVal)
+    //   }
+    // },
     currentDiscovery(newVal, oldVal) {
       if (newVal.id !== (oldVal ? oldVal.id : null)) {
         this.setDiscovery(newVal)
@@ -985,6 +1049,24 @@ export default {
     this.bccEmail = this.user.email
   },
   methods: {
+    async getJournalistBio() {
+      try {
+        const res = await Comms.api.getJournalistBio({
+          journalist: this.currentJournalist,
+          outlet: this.currentPublication,
+        })
+        console.log(res)
+      } catch (e) {
+        console.error(e)
+      } finally {
+      }
+    },
+    formatSummary() {
+      this.summary = this.summary.replace(/\*/g, '<b>').replace(/\*/g, '</b>')
+    },
+    toggleGoogleModal() {
+      this.googleModalOpen = !this.googleModalOpen
+    },
     insertPitch(pitch) {
       this.toggleShowPitches()
       this.content = pitch.generated_pitch
@@ -1093,15 +1175,18 @@ export default {
       }
     },
     selectJournalist(event) {
-      if (event.target.tagName === 'SPAN') {
-        const text = event.target.innerText
-        const { name, email, publication, tip } = this.extractNameAndEmail(text)
-        this.targetEmail = email
-        this.pitchingTip = 'The journalist is ' + name + '.' + tip
+      if (event.target.tagName === 'BUTTON') {
+        const text = event.target.closest('span').outerHTML
+        const { name, publication } = this.extractNameAndEmail(text)
         this.currentJournalist = name
         this.currentPublication = publication
-        this.emailJournalistModalOpen = true
-        this.rewritePitch()
+        this.googleModalOpen = true
+        this.getJournalistBio()
+
+        // this.pitchingTip = 'The journalist is ' + name + '.' + tip
+        // this.targetEmail = email
+        // this.emailJournalistModalOpen = true
+        // this.rewritePitch()
       }
     },
     extractNameAndEmail(text) {
@@ -1118,12 +1203,17 @@ export default {
       // })
 
       // name = name.trim()
-      const name = text.match(/Journalist:\s*(.*)/)[1].trim()
-      const publication = text.match(/Publication:\s*(.*)/)[1].trim()
-      const email = text.match(/Email:\s*(.*)/)[1].trim()
-      const tip = text.match(/Pitching Tip:\s*(.*)/)[1].trim()
+      const name = text
+        .match(/Name:\s*(.*)/)[1]
+        .trim()
+        .replace(/<strong>|<\/strong>/g, '')
+      const publication = text
+        .match(/Outlet:\s*(.*)/)[1]
+        .trim()
+        .replace(/<strong>|<\/strong>/g, '')
+      // const tip = text.match(/Reason for Selection:\s*(.*)/)[1].trim()
 
-      return { name, email, publication, tip }
+      return { name, publication }
     },
     async discoverJournalists() {
       if (!this.isPaid && this.searchesUsed >= 10) {
@@ -1422,6 +1512,18 @@ export default {
         console.error('Failed to copy text: ', err)
       }
     },
+    async copyBioText() {
+      try {
+        await navigator.clipboard.writeText(this.currentJournalistBio)
+        this.copyTip = 'Copied!'
+
+        setTimeout(() => {
+          this.copyTip = 'Copy'
+        }, 2000)
+      } catch (err) {
+        console.error('Failed to copy text: ', err)
+      }
+    },
     async copyJournalText() {
       try {
         await navigator.clipboard.writeText(this.journalists)
@@ -1634,19 +1736,6 @@ export default {
     },
   },
   computed: {
-    formattedResponse() {
-      if (this.summary) {
-        const regex = /([1-9][0-9]*)\.\s+Journalist:\s+([^\n]+)\nEmail:\s+/g
-
-        let formattedHtml = this.summary.replace(regex, (match, index, name, email) => {
-          name = name.trim()
-          return `<span class="clickable">${index}. <strong> Journalist: ${name} - Email: ${email}</strong></span>`
-        })
-        return formattedHtml
-      } else {
-        return ''
-      }
-    },
     userWritingStyles() {
       if (this.personalStyles) {
         return this.allWritingStyles.filter((style) => style.user === this.user.id)
@@ -1944,10 +2033,24 @@ export default {
   margin-right: 4px;
 }
 
-::v-deep .pre-text span {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.128);
-  padding-bottom: 2px;
+::v-deep .pre-text button {
+  // border-bottom: 1px solid rgba(0, 0, 0, 0.128);
+  background-color: white;
+  padding: 4px 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: $dark-black-blue;
   cursor: pointer;
+  transition: all 0.5s;
+  border-radius: 5px;
+
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: scale(1.02);
+  }
+}
+
+::v-deep .pre-text strong {
+  font-family: $base-font-family;
 }
 
 ::v-deep .ql-toolbar.ql-snow {
@@ -3231,6 +3334,60 @@ footer {
     margin-top: 62px;
   }
 }
+
+.bio-modal {
+  margin-top: 132px;
+  @media only screen and (max-width: 600px) {
+    margin-top: 62px;
+  }
+
+  width: 70vw;
+}
+
+.bio-container {
+  width: 60vw;
+  // max-height: 500px;
+  position: relative;
+  overflow-y: scroll;
+  color: $base-gray;
+  font-family: $thin-font-family;
+
+  label {
+    font-size: 14px;
+  }
+  @media only screen and (max-width: 600px) {
+    width: 95%;
+  }
+
+  header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  footer {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  section {
+    padding: 32px;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+
+    aside {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+}
+
 .regen-container {
   width: 500px;
   max-height: 500px;
