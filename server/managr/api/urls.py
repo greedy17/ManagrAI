@@ -496,4 +496,5 @@ router.register("pitches", comms_views.PitchViewSet, "pitches")
 router.register("email-alerts", comms_views.EmailAlertViewSet, "email-alerts")
 router.register("process", comms_views.ProcessViewSet, "process")
 router.register("discovery", comms_views.DiscoveryViewSet, "discovery")
+router.register("jcontact", comms_views.JournalistContactViewSet, "jcontact")
 urlpatterns += router.urls

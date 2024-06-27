@@ -11,6 +11,7 @@ from .models import (
     Discovery,
     Journalist,
     EmailTracker,
+    JournalistContact,
 )
 
 # Register your models here.
@@ -86,3 +87,4 @@ admin.site.register(InstagramAccount)
 admin.site.register(Discovery)
 admin.site.register(Journalist, CustomJournalAdmin)
 admin.site.register(EmailTracker, CustomEmailTrackerAdmin)
+admin.site.register(JournalistContact)

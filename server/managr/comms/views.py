@@ -37,7 +37,7 @@ from .models import (
     EmailTracker,
 )
 from .models import Article as InternalArticle
-from .models import WritingStyle, EmailAlert
+from .models import WritingStyle, EmailAlert, JournalistContact
 from managr.core.models import User
 from managr.comms import exceptions as comms_exceptions
 from .tasks import (
@@ -57,6 +57,7 @@ from .serializers import (
     WritingStyleSerializer,
     DiscoverySerializer,
     EmailTrackerSerializer,
+    JournalistContactSerializer,
 )
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
@@ -2386,3 +2387,23 @@ def get_web_summary(request):
     if has_error:
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
     return Response(data={"message": message})
+
+
+class JournalistContactViewSet(
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+):
+    authentication_classes = [ExpiringTokenAuthentication]
+    serializer_class = JournalistContactSerializer
+
+    def get_queryset(self):
+        contacts = JournalistContact.objects.for_user(user=self.request.user)
+        if self.request.data.get("tag", False):
+            tag = self.request.get("tag")
+            return contacts.filter(tags__contains=[tag])
+        else:
+            return contacts
