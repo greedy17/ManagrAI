@@ -1,8 +1,9 @@
 import os
 from io import StringIO
-
+import smtplib
 from django.conf import settings
 from django.core.mail.message import EmailMultiAlternatives
+from django.core.mail import get_connection
 from django.template.loader import render_to_string
 from django.core.mail import get_connection
 from email.mime.application import MIMEApplication

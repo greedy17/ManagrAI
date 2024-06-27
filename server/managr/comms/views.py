@@ -37,7 +37,7 @@ from .models import (
     EmailTracker,
 )
 from .models import Article as InternalArticle
-from .models import WritingStyle, EmailAlert
+from .models import WritingStyle, EmailAlert, JournalistContact
 from managr.core.models import User
 from managr.comms import exceptions as comms_exceptions
 from .tasks import (
@@ -57,6 +57,7 @@ from .serializers import (
     WritingStyleSerializer,
     DiscoverySerializer,
     EmailTrackerSerializer,
+    JournalistContactSerializer,
 )
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
@@ -73,12 +74,13 @@ from managr.comms.utils import (
     extract_pdf_text,
     convert_pdf_from_url,
     extract_email_address,
+    google_search,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
 from managr.comms.tasks import emit_get_meta_account_info
 from managr.api.emails import send_html_email
-from django.conf import settings
+from newspaper.article import ArticleException
 
 logger = logging.getLogger("managr")
 
@@ -1377,7 +1379,9 @@ class PitchViewSet(
     def rewrite_pitch(self, request, *args, **kwargs):
         user = request.user
         original = request.data.get("original")
-        tip = request.data.get("tip")
+        bio = request.data.get("bio")
+
+        print("BIO IS HERE:  ",bio)
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -1386,7 +1390,7 @@ class PitchViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_REWRITE_PTICH(original, tip, user.first_name)
+                prompt = comms_consts.OPEN_AI_REWRITE_PTICH(original, bio, user.first_name)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
@@ -2079,12 +2083,107 @@ class DiscoveryViewSet(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
+        url_path="web-context",
+    )
+    def journalist_web_context(self, request, *args, **kwargs):
+        user = request.user
+        journalist = request.data.get("journalist")
+        outlet = request.data.get("outlet")
+        content = request.data.get("content")
+        company = request.data.get("company")
+        search = request.data.get("search")
+        query = f"{journalist} AND {outlet}"
+        google_results = google_search(query)
+        if len(google_results) == 0:
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={"error": "No results could be found."},
+            )
+        results = google_results["results"]
+        images = google_results["images"]
+        art = Article(results[0]["link"], config=generate_config())
+        try:
+            art.download()
+            art.parse()
+            text = art.text
+        except ArticleException:
+            text = ""
+        except Exception:
+            text = ""
+        has_error = False
+        attempts = 1
+        token_amount = 1000
+        timeout = 60.0
+        while True:
+            try:
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                if search:                   
+                    prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(
+                        journalist, results, company, text
+                    )
+                else:
+                    prompt = comms_consts.OPEN_AI_DISCOVERY_RESULTS_PROMPT(
+                        journalist, results, content, text
+                    )  
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    "You are a VP of Communications",
+                    token_amount=token_amount,
+                    top_p=0.1,
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                res = open_ai_exceptions._handle_response(r)
+
+                message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount <= 2000:
+                    has_error = True
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 500
+                    continue
+            except httpx.ReadTimeout as e:
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+        if has_error:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
+
+        return Response(data={"summary": message, "images": images})
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
         url_path="draft",
     )
     def draft_pitch(self, request, *args, **kwargs):
         user = request.user
         username = request.data.get("user")
         org = request.data.get("org")
+        bio = request.data.get("bio")
         style = request.data.get("style")
         author = request.data.get("author")
         outlet = request.data.get("outlet")
@@ -2099,7 +2198,7 @@ class DiscoveryViewSet(
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_EMAIL_JOURNALIST(
-                    username, org, style, author, outlet, headline, description, date
+                    username, org, style, bio, author, outlet, headline, description, date
                 )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
@@ -2232,3 +2331,114 @@ def get_email_tracking(request):
     serialized = EmailTrackerSerializer(trackers, many=True)
     rate_data = EmailTracker.get_user_rates(user.id)
     return Response(data={"trackers": serialized.data, "rates": rate_data})
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def get_web_summary(request):
+    user = request.user
+    query = request.data.get("query")
+    res = google_search(query)
+    results = res["results"]
+    art = Article(results[0]["link"], config=generate_config())
+    try:
+        art.download()
+        art.parse()
+        text = art.text
+    except ArticleException:
+        text = ""
+    except Exception:
+        text = ""
+    has_error = False
+    attempts = 1
+    token_amount = 1000
+    timeout = 60.0
+    while True:
+        try:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_WEB_SUMMARY(results, text)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email,
+                prompt,
+                "You are a VP of Communications",
+                token_amount=token_amount,
+                top_p=0.1,
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            res = open_ai_exceptions._handle_response(r)
+
+            message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+            break
+        except open_ai_exceptions.StopReasonLength:
+            if token_amount <= 2000:
+                has_error = True
+                message = "Token amount error"
+                break
+            else:
+                token_amount += 500
+                continue
+        except httpx.ReadTimeout as e:
+            timeout += 30.0
+            if timeout >= 120.0:
+                has_error = True
+                message = "Read timeout issue"
+                break
+            else:
+                attempts += 1
+                continue
+        except Exception as e:
+            has_error = True
+            message = f"Unknown exception: {e}"
+            break
+    if has_error:
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
+    return Response(data={"message": message})
+
+
+class JournalistContactViewSet(
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+):
+    authentication_classes = [ExpiringTokenAuthentication]
+    serializer_class = JournalistContactSerializer
+
+    def get_queryset(self):
+        contacts = JournalistContact.objects.for_user(user=self.request.user)
+        if self.request.data.get("tag", False):
+            tag = self.request.get("tag")
+            return contacts.filter(tags__contains=[tag])
+        else:
+            return contacts
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="modify_tags",
+    )
+    def modify_tags(self, request, *args, **kwargs):
+        id = request.data.get("id")
+        tag = request.data.get("tag")
+        modifier = request.data.get("modifier")
+        JournalistContact.modify_tags(id, tag, modifier)
+        Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="tag_list",
+    )
+    def get_tag_list(self, request, *args, **kwargs):
+        user = request.user
+        tags = JournalistContact.get_tags_by_user(user)
+        return Response(status=status.HTTP_200_OK, data={"tags": tags})

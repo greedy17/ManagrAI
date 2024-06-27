@@ -413,6 +413,11 @@ urlpatterns = [
         name="upload_pdf",
     ),
     path(
+        "web-summary/",
+        comms_views.get_web_summary,
+        name="web-summary",
+    ),
+    path(
         "users/instagram/request-token/",
         comms_views.get_instagram_request_token,
         name="twitter-request-token",
@@ -491,4 +496,5 @@ router.register("pitches", comms_views.PitchViewSet, "pitches")
 router.register("email-alerts", comms_views.EmailAlertViewSet, "email-alerts")
 router.register("process", comms_views.ProcessViewSet, "process")
 router.register("discovery", comms_views.DiscoveryViewSet, "discovery")
+router.register("jcontact", comms_views.JournalistContactViewSet, "jcontact")
 urlpatterns += router.urls

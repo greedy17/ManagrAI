@@ -1167,3 +1167,45 @@ class EmailTracker(TimeStampModel):
             EmailTracker.objects.create(**data)
             count += 1
         return
+
+
+class JournalistContactQuerySet(models.QuerySet):
+    def for_user(self, user):
+        return self.filter(user=user.id)
+
+
+class JournalistContact(TimeStampModel):
+    user = models.ForeignKey(
+        "core.User",
+        related_name="j_contacts",
+        on_delete=models.CASCADE,
+    )
+    journalist = models.ForeignKey(
+        "comms.Journalist",
+        on_delete=models.CASCADE,
+    )
+    tags = ArrayField(models.CharField(max_length=255), default=list)
+
+    class Meta:
+        unique_together = ("user", "journalist")
+
+    objects = JournalistContactQuerySet.as_manager()
+
+    @classmethod
+    def get_tags_by_user(cls, user):
+        tags_query = cls.objects.filter(user=user)
+        tag_list = []
+        for contact in tags_query:
+            tag_list.extend(contact.tags)
+        return list(set(tag_list))
+
+    @classmethod
+    def modify_tags(cls, id, tag, modifier):
+        contact = cls.objects.get(id=id)
+        if modifier == "add":
+            tags = contact.tags
+            tags.append(tag)
+            contact.tags = list(set(tags))
+        else:
+            contact.tags.remove(tag)
+        return contact.save()

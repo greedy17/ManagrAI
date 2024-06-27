@@ -1141,6 +1141,11 @@ Provide background on journalist, the outlet, and suggested concise, bulleted ta
   created() {
     this.getWritingStyles()
   },
+  mounted() {
+    const style = `Begin with a precise introduction, without informal salutations. Be clear, concise, and informative, avoiding metaphors. Offer coherent data without persuasion. Aim for depth, not sensationalism and avoid commercial bias.`
+    this.writingStyle = style
+    this.writingStyleTitle = 'Default'
+  },
   methods: {
     toggleStyles() {
       this.personalStyles = !this.personalStyles
