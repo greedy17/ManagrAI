@@ -2420,3 +2420,14 @@ class JournalistContactViewSet(
         modifier = request.data.get("modifier")
         JournalistContact.modify_tags(id, tag, modifier)
         Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="tag_list",
+    )
+    def get_tag_list(self, request, *args, **kwargs):
+        user = request.user
+        tags = JournalistContact.get_tags_by_user(user)
+        return Response(status=status.HTTP_200_OK, data={"tags": tags})
