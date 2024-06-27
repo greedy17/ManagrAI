@@ -168,4 +168,4 @@ class EmailTrackerSerializer(serializers.ModelSerializer):
 class JournalistContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = JournalistContact
-        fields = ("user", "journalist", "tags")
+        fields = ("id", "user", "journalist", "tags")

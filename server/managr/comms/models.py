@@ -1198,3 +1198,14 @@ class JournalistContact(TimeStampModel):
         for contact in tags_query:
             tag_list.extend(contact.tags)
         return list(set(tag_list))
+
+    @classmethod
+    def modify_tags(cls, id, tag, modifier):
+        contact = cls.objects.get(id=id)
+        if modifier == "add":
+            tags = contact.tags
+            tags.append(tag)
+            contact.tags = list(set(tags))
+        else:
+            contact.tags.remove(tag)
+        return contact.save()

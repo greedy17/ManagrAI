@@ -2407,3 +2407,16 @@ class JournalistContactViewSet(
             return contacts.filter(tags__contains=[tag])
         else:
             return contacts
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="modify_tags",
+    )
+    def modify_tags(self, request, *args, **kwargs):
+        id = request.data.get("id")
+        tag = request.data.get("tag")
+        modifier = request.data.get("modifier")
+        JournalistContact.modify_tags(id, tag, modifier)
+        Response(status=status.HTTP_200_OK)
