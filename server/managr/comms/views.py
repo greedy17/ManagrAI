@@ -1381,7 +1381,6 @@ class PitchViewSet(
         original = request.data.get("original")
         bio = request.data.get("bio")
 
-        print("BIO IS HERE:  ",bio)
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -2029,7 +2028,7 @@ class DiscoveryViewSet(
         journalist = request.data.get("journalist")
         outlet = request.data.get("publication")
         email = request.data.get("email")
-        name_list = journalist.split(" ")
+        name_list = journalist.strip().split(" ")
         db_check = []
         if len(journalist) > 2:
             first = name_list[0]
@@ -2117,14 +2116,12 @@ class DiscoveryViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                if search:                   
-                    prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(
-                        journalist, results, company, text
-                    )
+                if search:
+                    prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(journalist, results, company, text)
                 else:
                     prompt = comms_consts.OPEN_AI_DISCOVERY_RESULTS_PROMPT(
                         journalist, results, content, text
-                    )  
+                    )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,

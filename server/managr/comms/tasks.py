@@ -568,7 +568,7 @@ def _run_spider_batch(urls):
 def _add_jounralist_to_db(data, verified):
     data["verified"] = verified
     publication = data.pop("publication")
-    full_name = data.pop("journalist")
+    full_name = data.pop("journalist").strip()
     name_split = full_name.split(" ")
     if len(name_split) > 2:
         first = name_split[0]
