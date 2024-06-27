@@ -67,7 +67,24 @@ def GOOGLE_SEARCH_PARAMS(query):
 
 
 def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
-    prompt = f"Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the journalist from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then include 3 short, relevant pitching tips for {company} based on what you learned about the journalist. Lastly, if available, list out social handles and email (if email not available, exclude email details from the output). Do not include styling."
+    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the journalist from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips for {company} based on what you know about the journalist. Lastly, if available, list out journalist's social handles and email (if email not available, exclude email details from the output)
+    Output MUST follow the following rules:
+    1. All bold text MUST be returned in a strong tag instead of markdown!
+    2. All headings must be returned in a H2 tag!
+    3. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
+    4. Never include ```html``` in the response, only reply with what I asked for specifically
+    """
+    return prompt
+
+
+def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
+    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the journalist from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips based on what you know of the journalist, tailored to the user's pitch: {content}. Lastly, if available, list out journalist's social handles and email (if email not available, exclude email details from the output)
+    Output MUST follow the following rules:
+    1. All bold text MUST be returned in a strong tag instead of markdown!
+    2. All headings must be returned in a H2 tag!
+    3. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
+    4. Never include ```html``` in the response, only reply with what I asked for specifically
+    """
     return prompt
 
 
@@ -280,12 +297,19 @@ Instructions: {instructions}"""
 )
 
 OPEN_AI_REWRITE_PTICH = (
-    lambda original, details, name: f"""
-Adjust and rewrite this pitch based on what you know about the journalist (see below), while maintaining the existing writing style. This pitch will be sent via email so you must include a short intriguing subject line; no more than 3 words. Do not bold any text.\n
-pitch: {original}\n
-Journalist details: {details}
-my name {name}"""
+    lambda original, bio, name: f"""
+    Rewrite the original media pitch incoporating pitching tips from the journalist's bio below. Be sure to maintaining the existing writing style as the original pitch. Include a short intriguing subject line; no more than 3 words. Do NOT bold any text!
+    Original Pitch: {original}
+    Journalist's bio along with pitching tips: {bio}
+    Provide journalist's email: Check to see if their email is listed in the journalist bio above. If so, you must use that email. If no email can be found, then you must guess their work email. When guessing, you must base it on verified email patterns associated with their respective publication. Always return the email like this - email: (guessed email)    
+    My name: {name}
+    """
 )
+
+def OPEN_AI_WEB_SUMMARY(results, text):
+    prompt = f"Create one summary based on the information from all the search results below. Ensure the summary encompasses a variety of topics mentioned in the results. You must include the source name and date to cite where you got the information from.\nHere are the top 5 search results:{results}\nAnd here is the top article: {text}"
+    return prompt
+
 
 OPEN_AI_LEARN_WRITING_STYLE_PROMPT = (
     lambda sample: f"""Perform a detailed analysis of {sample}, focusing on discerning the author's unique style apart from content. Evaluate tone, formality, structure, and linguistic idiosyncrasies, ensuring an objective stance. Investigate the mechanisms used for establishing credibility, engaging readers informatively, avoiding persuasive or sales-oriented language. Task: Formulate concise guidelines capturing the essence of the author's style, enabling its replication across various themes. Emphasize a clear, informative, non-promotional communication style, highlighting specific stylistic techniques contributing to effective and trustworthy discourse. Output cannot exceed 1,200 characters."""
@@ -298,7 +322,7 @@ OPEN_AI_REGENERATE_ARTICLE = (
 )
 
 OPEN_AI_FIND_JOURNALISTS = (
-    lambda type, beat, location, content: f"""List up to 10 real, active journalists and their respective publications that would be interested in writing about the content provided below. Provide pitching tips based on what you know about the journalists, relevant to the user's content. User will specify whether they want journalists or influencers. Follow these instructions very carefully:
+    lambda type, beat, location, content: f"""List 10 real, active journalists and their respective publications that would be interested in writing about the content provided below. Sort by order of relevance, most relevant at the top. Provide pitching tips based on what you know about the journalists, relevant to the user's content. User will specify whether they want journalists or influencers. Follow these instructions very carefully:
     Rule #1: Ensure that all journalists listed are real, currently active professionals. Do not include fake names such as Jane Doe or John Smith.
     Rule #2: Only list journalists that have written for the publication in the past 12 months.
     Rule #3: Email addresses need to be accurate, guess the correct emails based on verified patterns.
@@ -361,7 +385,7 @@ OPEN_AI_CONTENT_ASSIST = (
 
 DISCOVER_JOURNALIST = (
     lambda type, beat, location, content: f"""
-    List up to 10 real, active journalists (or social media influencers) and their respective publications that would be interested in writing about the content provided below. Follow these instructions very carefully:
+    List 10 real, active journalists (or social media influencers) and their respective publications that would be interested in writing about the content provided below. Sort by order of relevance, most relevant at the top. Follow these instructions very carefully:
 
     * Rule #1: Ensure that all journalists or influencers listed are real, currently active professionals. Do not include fake names such as Jane Doe or John Smith.
 
@@ -371,16 +395,16 @@ DISCOVER_JOURNALIST = (
 
     * Journalist Type: The journalists or influencers must be: {type}.
     * Journalistic Beat: The journalists or influencers must cover this specific beat or topic: {beat}.
-    * Location: The journalists or influencers must be based in or primarily cover {location}.
+    * Location: journalists or influencers must be based in or primarily cover {location} stories.
     * User's Content: {content}.
 
     Content output, 3 rows:
     Name:
     Outlet:
     Reason for Selection:
-    View bio
+    View Updated Bio
 
-    "View bio" MUST be returned in a button tag!
+    "View Updated Bio" MUST be returned in a button tag!
     "Name", "Outlet", and "Reason for Selection" MUST be returned in a strong tag!
     You MUST wrap each individual journalists/influencer selection in a span tag!
     Do not add any additional text to the response. ONLY return with what I asked for.
@@ -388,15 +412,15 @@ DISCOVER_JOURNALIST = (
 )
 
 OPEN_AI_EMAIL_JOURNALIST = (
-    lambda user, org, style, author, outlet, headline, description, date,: f"""
-    {author} from {outlet} wrote this article, "{headline}", heres the article description: {description}. The date of the article is {date}. Now, here is what I need you to do:
-    1. Write a short, 100 word email to the journalist from: {user}
-    2. Make an observation about their article and use this opportunity to make a tailored pitch for {org}. Use any specific information or pitching tips you have about the journalist (e.g., how they like to be pitched, what they usually cover, their interests). If the company name seems to be a PR agency, assume it's on behalf of the agency's clients.
-    3. You must use this writing style: {style}
+    lambda user, org, style, bio, author, outlet, headline, description, date,: f"""
+    {author} from {outlet} wrote this article, "{headline}", heres the article description: {description}. The date of the article is {date}. Now, here is what I need you to do:    
+    1. Write a short, 100 word email to the journalist from: {user}    
+    2. You must use this writing style: {style}    
+    3. Subject line: email subject line must be 2-3 words.    
     4. Open with "Hey {author}," . The name here is passed via parameter from a JS function and sometimes it includes an email, ONLY include the first name in the opening line.
-    5. Subject line: email subject line must be 2-3 words.
-    6. Guess their email. You must guess their work email address. Make sure to base it on verified email patterns associated with their respective publication. The email is sometimes attached to the name, if so you must use that. Always return the email like this - email: (guessed email)
-    7. Do not bold any of the text in the response.  
+    5. Make an observation about their article and use this opportunity to make a tailored pitch for {org}. Apply relevant pitching tips based on the information you have about the journalist found in their bio here: {bio}
+    6. Check to see if their email is listed in the journalist bio above. The email is sometimes attached to the name, if so you must use that. If no email can be found, then you must guess their work email. Make sure to base it on verified email patterns associated with their respective publication. Always return the email like this - email: (guessed email)    
+    7. Do not bold any of the text in the response.
      """
 )
 

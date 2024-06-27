@@ -494,6 +494,67 @@
         </div>
       </div>
     </Modal>
+
+    <Modal v-if="googleModalOpen" class="bio-modal">
+      <div class="bio-container">
+        <header>
+          <p style="font-size: 17px">Journalist Bio</p>
+
+          <div class="row">
+            <div
+              style="margin-right: 0.5rem"
+              @click="copyBioText"
+              class="wrapper icon-button white-bg"
+            >
+              <img
+                style="cursor: pointer"
+                class="right-mar img-highlight"
+                src="@/assets/images/clipboard.svg"
+                height="14px"
+                alt=""
+              />
+              <div class="tooltip-below">{{ copyTip }}</div>
+            </div>
+          </div>
+        </header>
+
+        <section v-if="loadingDraft">
+          <div style="height: 40vh" class="bio-body">
+            <div style="margin: 0" class="loading-small">
+              <p style="margin-right: 8px">Generating bio for {{ currentJournalist }}</p>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+          </div>
+        </section>
+
+        <section v-else>
+          <div class="bio-body" v-html="currentJournalistBio"></div>
+
+          <aside>
+            <img
+              v-for="(url, i) in currentJournalistImages"
+              :key="i"
+              :src="`${url}`"
+              height="24px"
+              alt=""
+            />
+          </aside>
+        </section>
+
+        <footer>
+          <div class="row">
+            <button class="secondary-button" :disabled="loadingDraft" @click="toggleGoogleModal">
+              Close
+            </button>
+            <button class="primary-button" :disabled="loadingDraft" @click="openDraftPitch">
+              Pitch Journalist
+            </button>
+          </div>
+        </footer>
+      </div>
+    </Modal>
     <!-- class="align-top" -->
 
     <div style="margin-top: 16px" v-if="!selectedSearch">
@@ -994,7 +1055,7 @@
                       >
                         <img
                           style="margin-right: 8px"
-                          src="@/assets/images/microphone.svg"
+                          src="@/assets/images/profile.svg"
                           height="14px"
                           alt=""
                         />
@@ -1008,7 +1069,7 @@
                       }}</span>
                       <span class="divider-dot">.</span>
                       <div style="width: fit-content; left: 0" class="tooltip">
-                        Pitch Journalist
+                        View Journalist Bio
                       </div>
                     </div>
                     <div class="footer-icon-container">
@@ -1656,7 +1717,7 @@
                         class="author row"
                         style="cursor: pointer; border: none"
                       >
-                        <img src="@/assets/images/microphone.svg" height="12px" alt="" />
+                        <img src="@/assets/images/profile.svg" height="12px" alt="" />
                         {{ article.author }}</span
                       >
                       <span class="divider-dot">.</span>
@@ -1986,9 +2047,9 @@
             :style="!isMobile ? 'margin-top: 2rem; width: 89%' : 'margin-top: 2rem; width: 100%'"
             class="space-between"
           >
-            <button @click="toggleSummaryMenu" v-if="summary" class="img-button-white">
+            <button @click="toggleSummaryMenu" v-if="summary" class="img-button-blue-small">
               <img src="@/assets/images/sparkle.svg" height="16px" alt="" />
-              New Summary
+              Custom Summary
             </button>
 
             <div class="row">
@@ -2303,6 +2364,13 @@ export default {
   },
   data() {
     return {
+      loadingDraft: false,
+      googleModalOpen: false,
+      currentJournalistImages: [],
+      currentJournalistBio: '',
+      currentHeadline: '',
+      currentDescription: '',
+      currentDate: null,
       showingSources: false,
       currentJournalist: '',
       currentPublication: '',
@@ -2457,6 +2525,10 @@ export default {
           value: `Summarize the news about {TopicX} (in paragraph form, multiple short paragraphs for optimal readability). Identify what aspects of the topic are most intriguing or concerning to the public. Focus only on US stories and disregard stock related news.`,
         },
         {
+          name: `List Journalists`,
+          value: `List 5 journalists (from top pubs, what they wrote, and include pitching tips) I can pitch on behalf of {BrandX}`,
+        },
+        {
           name: `Create Press Release`,
           value: `Generate a press release for {BrandX} based on recent news on {TopicX}. Extract key trends and stats, link activities to the news, and include an expert quote. Ensure the content aligns with the mission for maximum engagement. `,
         },
@@ -2471,10 +2543,6 @@ export default {
         {
           name: `Newsjacking Ideas`,
           value: `Provide creative newsjacking ideas for {BrandX} based on this coverage`,
-        },
-        {
-          name: `List Journalists`,
-          value: `List 5 journalists (from top pubs, what they wrote, and include pitching tips) I can pitch on behalf of {BrandX}`,
         },
         {
           name: `Media Q&A`,
@@ -2671,6 +2739,46 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    async getJournalistBio() {
+      this.loadingDraft = true
+
+      console.log(
+        'INFO IS HERE : ',
+        this.currentJournalist,
+        this.currentPublication,
+        this.selectedOrg,
+      )
+
+      try {
+        const res = await Comms.api.getJournalistBio({
+          journalist: this.currentJournalist,
+          outlet: this.currentPublication,
+          company: this.selectedOrg,
+          search: true,
+        })
+        this.currentJournalistBio = res.data.summary.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+        this.currentJournalistImages = res.data.images
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.loadingDraft = false
+      }
+    },
+    async copyBioText() {
+      try {
+        await navigator.clipboard.writeText(this.currentJournalistBio)
+        this.copyTip = 'Copied!'
+
+        setTimeout(() => {
+          this.copyTip = 'Copy'
+        }, 2000)
+      } catch (err) {
+        console.error('Failed to copy text: ', err)
+      }
+    },
+    toggleGoogleModal() {
+      this.googleModalOpen = !this.googleModalOpen
+    },
     toggleSources() {
       this.showingSources = !this.showingSources
     },
@@ -2747,20 +2855,27 @@ export default {
         this.refreshUser()
       }
     },
-    async draftPitch(author, outlet, headline, description, date) {
+    openDraftPitch() {
+      const bio = this.currentJournalistBio
+      this.googleModalOpen = false
+      this.emailJournalistModalOpen = true
+      this.draftPitch(bio)
+    },
+    async draftPitch(bio = '') {
       this.loadingPitch = true
       try {
         const res = await Comms.api.draftPitch({
           user: this.user.firstName,
           org: this.selectedOrg,
           style: this.pitchStyle,
-          author: author,
-          outlet: outlet,
-          headline: headline,
-          description: description,
-          date: date,
+          bio: bio,
+          author: this.currentJournalist,
+          outlet: this.currentPublication,
+          headline: this.currentHeadline,
+          description: this.currentDescription,
+          date: this.currentDate,
         })
-        const body = res.data.replace(/^Subject(?: Line)?:[\s\S]*?\n|email:.*$/gm, '')
+        const body = res.data.replace(/^Subject(?: Line)?:[\s\S]*?\n|email:.*$/gim, '')
         const signature = this.user.emailSignature ? this.user.emailSignature : ''
         const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
           /\n/g,
@@ -2787,25 +2902,32 @@ export default {
         const description = article.summary ? article.summary : article.description
         const date = this.getTimeDifferenceInMinutes(article.publish_date)
 
-        this.emailJournalistModalOpen = true
-
+        // this.emailJournalistModalOpen = true
+        this.currentHeadline = headline
+        this.currentDescription = description
         this.currentJournalist = author
-
         this.currentPublication = outlet
-        this.draftPitch(author, outlet, headline, description, date)
+        this.currentDate = date
+
+        this.googleModalOpen = true
+        this.getJournalistBio()
+
+        // this.draftPitch(author, outlet, headline, description, date)
       } else {
         const author = this.extractJournalist(article.author)
         const outlet = article.source.name
         const headline = article.title
         const description = article.description
         const date = this.getTimeDifferenceInMinutes(article.publish_date)
-
-        this.emailJournalistModalOpen = true
-
+        this.googleModalOpen = true
+        // this.emailJournalistModalOpen = true
+        this.currentHeadline = headline
+        this.currentDescription = description
         this.currentJournalist = author
-
         this.currentPublication = outlet
-        this.draftPitch(author, outlet, headline, description, date)
+        this.currentDate = date
+        this.getJournalistBio()
+        // this.draftPitch(author, outlet, headline, description, date)
       }
     },
     extractJournalist(author) {
@@ -5047,6 +5169,28 @@ export default {
   }
 }
 
+.img-button-blue-small {
+  @include dark-blue-button();
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 8px 12px;
+  border-radius: 5px;
+  font-size: 14px;
+  img {
+    filter: invert(1000%);
+    margin-right: 8px;
+  }
+
+  @media only screen and (max-width: 600px) {
+    width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    img {
+      display: none;
+    }
+  }
+}
+
 .img-button-white {
   @include dark-blue-button();
   background-color: white;
@@ -5356,6 +5500,7 @@ button:disabled {
 
 .summary-section {
   position: absolute;
+  left: -32px;
   top: 0;
   z-index: 1000;
   background-color: white;
@@ -6810,5 +6955,137 @@ textarea::placeholder {
 
 .car-dot.active {
   background-color: $dark-black-blue;
+}
+
+.bio-modal {
+  margin-top: 132px;
+  @media only screen and (max-width: 600px) {
+    margin-top: 62px;
+  }
+
+  width: 70vw;
+}
+
+.bio-container {
+  width: 60vw;
+  max-height: 70vh;
+  position: relative;
+  overflow-y: scroll;
+  color: $base-gray;
+  font-family: $thin-font-family;
+  padding: 0 32px 0 32px;
+
+  label {
+    font-size: 14px;
+  }
+  @media only screen and (max-width: 600px) {
+    width: 95%;
+  }
+
+  header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background-color: white;
+    padding: 0 0 8px 0;
+
+    p {
+      font-weight: bold;
+    }
+  }
+
+  footer {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    position: sticky;
+    bottom: -1px;
+    background-color: white;
+    margin: 0;
+    padding: 24px 0 0 0;
+
+    .row {
+      margin-bottom: 8px;
+
+      .secondary-button {
+        margin: 0;
+      }
+    }
+  }
+
+  section {
+    padding: 24px 0 16px 0;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    overflow: scroll;
+
+    .bio-body {
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      font-size: 15px;
+      overflow: scroll;
+    }
+
+    aside {
+      display: flex;
+      flex-direction: column;
+      margin-left: 40px;
+
+      img {
+        height: 110px;
+        width: 120px;
+        margin-bottom: 16px;
+        object-fit: cover;
+        cursor: text;
+        border-radius: 4px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+      }
+    }
+  }
+}
+
+::v-deep .bio-body {
+  line-height: 1.75;
+
+  h2 {
+    padding: 0;
+    margin-bottom: 0 !important;
+    margin-block-start: 0 !important;
+    margin-block-end: 0 !important;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    line-height: 1;
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  strong {
+    font-family: $base-font-family;
+  }
+
+  ul {
+    display: block;
+    list-style-type: disc;
+    margin-block-start: 0;
+    margin-block-end: 0;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding-inline-start: 16px;
+    unicode-bidi: isolate;
+  }
+
+  li {
+    margin-top: -32px;
+    padding: 0;
+  }
 }
 </style>

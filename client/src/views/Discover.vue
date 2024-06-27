@@ -328,38 +328,56 @@
               <div class="tooltip-below">{{ copyTip }}</div>
             </div>
 
-            <div
+            <!-- <div
               style="margin-right: 0.5rem"
               @click="copyBioText"
-              class="wrapper icon-button white-bg"
+              class="wrapper icon-button green-bg"
             >
               <img
                 style="cursor: pointer"
                 class="right-mar img-highlight"
-                src="@/assets/images/clipboard.svg"
+                src="@/assets/images/disk.svg"
                 height="14px"
                 alt=""
               />
-              <div class="tooltip-below">{{ copyTip }}</div>
-            </div>
+              <div class="tooltip-below">Save Contact</div>
+            </div> -->
           </div>
         </header>
 
-        <section>
-          <div>
-            <pre class="pre-text" v-html="currentJournalistBio"></pre>
+        <section v-if="loadingDraft">
+          <div style="height: 40vh" class="bio-body">
+            <div style="margin: 0" class="loading-small">
+              <p style="margin-right: 8px">Generating bio for {{ currentJournalist }}</p>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
           </div>
+        </section>
+
+        <section v-else>
+          <div class="bio-body" v-html="currentJournalistBio"></div>
+
           <aside>
-            <img src="" alt="" />
-            <img src="" alt="" />
-            <img src="" alt="" />
+            <img
+              v-for="(url, i) in currentJournalistImages"
+              :key="i"
+              :src="`${url}`"
+              height="24px"
+              alt=""
+            />
           </aside>
         </section>
 
         <footer>
           <div class="row">
-            <button @click="toggleGoogleModal">Close</button>
-            <button>Pitch Journalist</button>
+            <button class="secondary-button" :disabled="loadingDraft" @click="toggleGoogleModal">
+              Close
+            </button>
+            <button class="primary-button" :disabled="loadingDraft" @click="draftPitch">
+              Pitch Journalist
+            </button>
           </div>
         </footer>
       </div>
@@ -369,7 +387,7 @@
       <div style="padding-top: 88px" class="content-body">
         <div style="width: 100%; padding: 0 32px; padding-top: 0" class="small-container">
           <div class="text-width">
-            <p style="margin: 0">Discover Journalists using AI</p>
+            <p style="margin: 8px 0 0 0">Discover Journalists using AI</p>
           </div>
 
           <div style="margin-top: 32px" class="large-input-container">
@@ -880,7 +898,10 @@
         class="content-body centered-content"
       >
         <div class="centered-col">
-          <p>List of journalists + details</p>
+          <div style="cursor: text" class="image-container white-bg extra-padding">
+            <img src="@/assets/images/comment.svg" height="32px" alt="" />
+          </div>
+          <p>A list of up to 10 journalists will appear here.</p>
         </div>
       </div>
 
@@ -894,7 +915,7 @@
       </div>
 
       <div style="margin-top: 0.5rem" v-else-if="summary" class="content-body">
-        <div @click="selectJournalist($event)" style="padding-top: 32px" class="small-container">
+        <div @click="selectJournalist($event)" style="padding-top: 16px" class="small-container">
           <div class="pre-text" v-html="summary"></div>
         </div>
       </div>
@@ -919,8 +940,10 @@ export default {
   },
   data() {
     return {
+      loadingDraft: false,
       googleModalOpen: false,
       currentJournalistBio: '',
+      currentJournalistImages: [],
       showPitches: false,
       pitchText: '',
       currentJournalist: '',
@@ -1050,15 +1073,20 @@ export default {
   },
   methods: {
     async getJournalistBio() {
+      this.loadingDraft = true
       try {
         const res = await Comms.api.getJournalistBio({
           journalist: this.currentJournalist,
           outlet: this.currentPublication,
+          content: this.content,
+          search: false,
         })
-        console.log(res)
+        this.currentJournalistBio = res.data.summary.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+        this.currentJournalistImages = res.data.images
       } catch (e) {
         console.error(e)
       } finally {
+        this.loadingDraft = false
       }
     },
     formatSummary() {
@@ -1149,14 +1177,29 @@ export default {
         this.refreshUser()
       }
     },
-    async rewritePitch() {
+    draftPitch() {
+      const bio = this.currentJournalistBio
+      this.googleModalOpen = false
+      this.emailJournalistModalOpen = true
+      this.rewritePitch(bio)
+    },
+    async rewritePitch(bio = '') {
       this.loadingPitch = true
       try {
         const res = await Comms.api.rewritePitch({
           original: this.content,
-          tip: this.pitchingTip,
+          bio: this.currentJournalistBio,
         })
-        const body = res.pitch.replace(/^Subject(?: Line)?:[\s\S]*?\n/i, '')
+        const emailRegex = /email: ([^"]*)/
+        const match = res.pitch.match(emailRegex)
+        if (match) {
+          const email = match[1] // extract the email address
+          // set the email property
+          this.targetEmail = email
+        }
+        const body = res.pitch
+          .replace(/^Subject(?: Line)?:[\s\S]*?\n/i, '')
+          .replace(/email: [^"]*/, '')
         const signature = this.user.emailSignature ? this.user.emailSignature : ''
         const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
           /\n/g,
@@ -1176,33 +1219,22 @@ export default {
     },
     selectJournalist(event) {
       if (event.target.tagName === 'BUTTON') {
+        this.currentJournalistBio = ''
+        this.currentJournalistImages = []
         const text = event.target.closest('span').outerHTML
-        const { name, publication } = this.extractNameAndEmail(text)
+        const { name, publication, tip } = this.extractNameAndEmail(text)
         this.currentJournalist = name
         this.currentPublication = publication
+        this.pitchingTip = tip
         this.googleModalOpen = true
         this.getJournalistBio()
 
-        // this.pitchingTip = 'The journalist is ' + name + '.' + tip
         // this.targetEmail = email
         // this.emailJournalistModalOpen = true
         // this.rewritePitch()
       }
     },
     extractNameAndEmail(text) {
-      // const parts = text.trim().split(/\s+/)
-      // let name = ''
-      // let email = ''
-
-      // parts.forEach((part) => {
-      //   if (part.includes('@')) {
-      //     email = part.replace(/[()<>]/g, '')
-      //   } else {
-      //     name += part + ' '
-      //   }
-      // })
-
-      // name = name.trim()
       const name = text
         .match(/Name:\s*(.*)/)[1]
         .trim()
@@ -1211,9 +1243,12 @@ export default {
         .match(/Outlet:\s*(.*)/)[1]
         .trim()
         .replace(/<strong>|<\/strong>/g, '')
-      // const tip = text.match(/Reason for Selection:\s*(.*)/)[1].trim()
+      const tip = text
+        .match(/Reason for Selection:\s*(.*)/)[1]
+        .trim()
+        .replace(/<strong>|<\/strong>/g, '')
 
-      return { name, publication }
+      return { name, publication, tip }
     },
     async discoverJournalists() {
       if (!this.isPaid && this.searchesUsed >= 10) {
@@ -1230,6 +1265,7 @@ export default {
             content: this.content,
           })
           .then((response) => {
+            console.log(response)
             this.summary = response
           })
       } catch (e) {
@@ -2036,8 +2072,8 @@ export default {
 ::v-deep .pre-text button {
   // border-bottom: 1px solid rgba(0, 0, 0, 0.128);
   background-color: white;
-  padding: 4px 6px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 5px 6px;
+  border: 1px solid $dark-black-blue;
   color: $dark-black-blue;
   cursor: pointer;
   transition: all 0.5s;
@@ -2047,6 +2083,11 @@ export default {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     transform: scale(1.02);
   }
+}
+
+::v-deep .pre-text span {
+  display: block;
+  margin-bottom: -32px;
 }
 
 ::v-deep .pre-text strong {
@@ -3346,11 +3387,12 @@ footer {
 
 .bio-container {
   width: 60vw;
-  // max-height: 500px;
+  max-height: 70vh;
   position: relative;
   overflow-y: scroll;
   color: $base-gray;
   font-family: $thin-font-family;
+  padding: 0 32px 0 32px;
 
   label {
     font-size: 14px;
@@ -3365,6 +3407,14 @@ footer {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background-color: white;
+    padding: 0 0 8px 0;
+
+    p {
+      font-weight: bold;
+    }
   }
 
   footer {
@@ -3373,18 +3423,88 @@ footer {
     flex-direction: row;
     align-items: center;
     justify-content: flex-end;
+    position: sticky;
+    bottom: -1px;
+    background-color: white;
+    margin: 0;
+    padding: 24px 0 0 0;
+
+    .row {
+      margin-bottom: 8px;
+
+      .secondary-button {
+        margin: 0;
+      }
+    }
   }
 
   section {
-    padding: 32px;
+    padding: 24px 0 16px 0;
     display: flex;
     flex-direction: row;
     align-items: flex-start;
+    overflow: scroll;
+
+    .bio-body {
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      font-size: 15px;
+      overflow: scroll;
+    }
 
     aside {
       display: flex;
       flex-direction: column;
+      margin-left: 40px;
+
+      img {
+        height: 110px;
+        width: 120px;
+        margin-bottom: 16px;
+        object-fit: cover;
+        cursor: text;
+        border-radius: 4px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+      }
     }
+  }
+}
+
+::v-deep .bio-body {
+  line-height: 1.75;
+
+  h2 {
+    padding: 0;
+    margin-bottom: 0 !important;
+    margin-block-start: 0 !important;
+    margin-block-end: 0 !important;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    line-height: 1;
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  strong {
+    font-family: $base-font-family;
+  }
+
+  ul {
+    display: block;
+    list-style-type: disc;
+    margin-block-start: 0;
+    margin-block-end: 0;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding-inline-start: 16px;
+    unicode-bidi: isolate;
+  }
+
+  li {
+    margin-top: -32px;
+    padding: 0;
   }
 }
 
@@ -3904,6 +4024,15 @@ button:disabled {
 }
 .white-bg {
   background: white;
+}
+.green-bg {
+  background-color: $dark-green;
+  img {
+    filter: invert(100%);
+  }
+  img:hover {
+    filter: invert(100%);
+  }
 }
 .bluee-bg {
   background: $white-blue !important;
