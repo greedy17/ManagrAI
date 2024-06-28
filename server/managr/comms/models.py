@@ -606,8 +606,8 @@ class Article(TimeStampModel):
             converted_boolean = boolean_search_to_query(boolean_string)
             articles = date_range_articles.filter(converted_boolean)
             print("c")
-        if len(articles):
-            articles = articles[:20]
+
+        articles = articles[:20]
         return list(articles)
 
 
