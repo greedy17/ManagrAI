@@ -1037,6 +1037,7 @@ export default {
         `Social Media Influencers`,
       ],
       selectedContent: 'Select content',
+      savingContact: false,
     }
   },
   watch: {
@@ -1072,6 +1073,28 @@ export default {
     this.bccEmail = this.user.email
   },
   methods: {
+    async saveContact() {
+      this.savingContact = true
+      name_list = this.currentJournalist.split(' ')
+      const first = name_list[0]
+      const last = name_list.at(-1)
+      try {
+        const res = await Comms.api.addContact({
+          user: this.user.id,
+          journalist: {
+            email: this.targetEmail,
+            first_name: first,
+            last_name: last,
+            outlet: this.currentPublication,
+          },
+        })
+        console.log(res)
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.savingContact = false
+      }
+    },
     async getJournalistBio() {
       this.loadingDraft = true
       try {
@@ -1178,12 +1201,12 @@ export default {
       }
     },
     draftPitch() {
-      const bio = this.currentJournalistBio
+      // const bio = this.currentJournalistBio
       this.googleModalOpen = false
       this.emailJournalistModalOpen = true
-      this.rewritePitch(bio)
+      this.rewritePitch()
     },
-    async rewritePitch(bio = '') {
+    async rewritePitch() {
       this.loadingPitch = true
       try {
         const res = await Comms.api.rewritePitch({
@@ -1193,8 +1216,7 @@ export default {
         const emailRegex = /email: ([^"]*)/
         const match = res.pitch.match(emailRegex)
         if (match) {
-          const email = match[1] // extract the email address
-          // set the email property
+          const email = match[1]
           this.targetEmail = email
         }
         const body = res.pitch
