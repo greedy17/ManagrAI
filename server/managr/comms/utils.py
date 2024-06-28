@@ -625,8 +625,8 @@ def test_flow():
     from newspaper import Article
 
     user = User.objects.get(email="zach@mymanagr.com")
-    journalist = "Sapna Maheshwari"
-    query = "Sapna Maheshwari AND ny times"
+    journalist = "Vanessa Friedman"
+    query = "Vanessa Friedman AND The New York Times AND articles"
     google_res = google_search(query)
     results = google_res["results"]
     images = google_res["images"]
@@ -652,3 +652,48 @@ def dumb(query):
     user = User.objects.get(email="zach@mymanagr.com")
     summary = test_open(user, "text", results, text)
     return summary
+
+
+def test_prompt(search_term):
+    from managr.core import constants as core_consts
+    from managr.core import exceptions as open_ai_exceptions
+
+    prompt = f"I am using NewsAPI to search for '{search_term}' returned no results. Generate two alternative search queries using boolean operators (AND, OR) to broaden the scope and improve the chances of finding news. The create one alternate search term. Format the output as follows:\nSearch1:\nSearch2:\nAlternateSearch:"
+    has_error = False
+    attempts = 1
+    token_amount = 1000
+    timeout = 60.0
+
+    while True:
+        try:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                "zach@mymanagr.com",
+                prompt,
+                token_amount=token_amount,
+                top_p=0.1,
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            r = open_ai_exceptions._handle_response(r)
+            pitch = r.get("choices")[0].get("message").get("content")
+            print(pitch)
+            break
+        except open_ai_exceptions.StopReasonLength:
+            if token_amount <= 2000:
+                has_error = True
+
+                message = "Token amount error"
+                break
+            else:
+                token_amount += 500
+                continue
+        except Exception as e:
+            has_error = True
+            message = f"Unknown exception: {e}"
+            break
+    return
