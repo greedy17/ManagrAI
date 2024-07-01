@@ -1381,8 +1381,6 @@ class PitchViewSet(
         user = request.user
         original = request.data.get("original")
         bio = request.data.get("bio")
-
-        print("BIO IS HERE:  ", bio)
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -2418,17 +2416,6 @@ class JournalistContactViewSet(
         else:
             return contacts
 
-    def create(self, request, *args, **kwargs):
-        try:
-            serializer = self.serializer_class(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            readSerializer = self.serializer_class(instance=serializer.instance)
-        except Exception as e:
-            logger.exception(f"Error validating data for details <{e}>")
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
-        return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
-
     @action(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
@@ -2456,7 +2443,8 @@ class JournalistContactViewSet(
     def create(self, request, *args, **kwargs):
         journalist = request.data.pop("journalist")
         email = request.data.pop("email")
-        outlet = request.data.pop("outler")
+        print('EMAIL IS HERE', email)
+        outlet = request.data.pop("outlet")
         journalist = check_journalist_validity(journalist, outlet, email)
         if journalist:
             request.data["journalist"] = journalist

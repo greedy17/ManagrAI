@@ -313,7 +313,7 @@
           <p style="font-size: 17px">Journalist Bio</p>
 
           <div class="row">
-            <div
+            <!-- <div
               style="margin-right: 0.5rem"
               @click="copyBioText"
               class="wrapper icon-button white-bg"
@@ -326,11 +326,11 @@
                 alt=""
               />
               <div class="tooltip-below">{{ copyTip }}</div>
-            </div>
+            </div> -->
 
-            <!-- <div
+            <div
               style="margin-right: 0.5rem"
-              @click="copyBioText"
+              @click="saveContact"
               class="wrapper icon-button green-bg"
             >
               <img
@@ -341,7 +341,7 @@
                 alt=""
               />
               <div class="tooltip-below">Save Contact</div>
-            </div> -->
+            </div>
           </div>
         </header>
 
@@ -1075,20 +1075,19 @@ export default {
   methods: {
     async saveContact() {
       this.savingContact = true
-      name_list = this.currentJournalist.split(' ')
-      const first = name_list[0]
-      const last = name_list.at(-1)
+      // name_list = this.currentJournalist.split(' ')
+      // const first = name_list[0]
+      // const last = name_list.at(-1)
       try {
         const res = await Comms.api.addContact({
           user: this.user.id,
-          journalist: {
-            email: this.targetEmail,
-            first_name: first,
-            last_name: last,
-            outlet: this.currentPublication,
-          },
+          email: this.targetEmail,
+          journalist: this.currentJournalist,
+          bio: this.currentJournalistBio,
+          images: this.currentJournalistImages,
+          outlet: this.currentPublication,
         })
-        console.log(res)
+        console.log('CONTACT RESPONSE', res)
       } catch (e) {
         console.error(e)
       } finally {
@@ -1104,8 +1103,20 @@ export default {
           content: this.content,
           search: false,
         })
-        this.currentJournalistBio = res.data.summary.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+        console.log(res)
+        const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i
+        const match = res.data.summary.match(emailRegex)
+        console.log(match)
+        if (match) {
+          const email = match[1]
+          this.targetEmail = email
+        }
+        this.currentJournalistBio = res.data.summary
+          .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+          .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, '')
         this.currentJournalistImages = res.data.images
+
+        console.log('TARGET EMAIL', this.targetEmail)
       } catch (e) {
         console.error(e)
       } finally {
@@ -1287,7 +1298,6 @@ export default {
             content: this.content,
           })
           .then((response) => {
-            console.log(response)
             this.summary = response
           })
       } catch (e) {

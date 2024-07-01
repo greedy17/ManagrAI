@@ -67,7 +67,7 @@ def GOOGLE_SEARCH_PARAMS(query):
 
 
 def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
-    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the journalist from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips for {company} based on what you know about the journalist. Lastly, if available, list out journalist's social handles and email (if email not available, exclude email details from the output)
+    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the journalist from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips for {company} based on what you know about the journalist. Lastly, if available, list out journalist's social handles and email. If the email is in the provided information, you must use that email. If no email can be found, then you must guess their work email. When guessing, you must base it on verified email patterns associated with their respective publication. Always return the email like this - email: guessed email
     Output MUST follow the following rules:
     1. All bold text MUST be returned in a strong tag instead of markdown!
     2. All headings must be returned in a H2 tag!
@@ -78,7 +78,7 @@ def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
 
 
 def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
-    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the journalist from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips based on what you know of the journalist, tailored to the user's pitch: {content}. Lastly, if available, list out journalist's social handles and email (if email not available, exclude email details from the output)
+    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the journalist from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips based on what you know of the journalist, tailored to the user's pitch: {content}. Lastly, if available, list out journalist's social handles and email.  If the email is mentioned in any of the provided information, you must use that email. If no email can be found, then you must guess their work email. When guessing, you must base it on verified email patterns associated with their respective publication. Always return the email like this - email: guessed email
     Output MUST follow the following rules:
     1. All bold text MUST be returned in a strong tag instead of markdown!
     2. All headings must be returned in a H2 tag!
