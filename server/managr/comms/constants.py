@@ -161,6 +161,16 @@ DEFAULT_INSTAGRAM_CLIENT_INSTRUCTIONS = """<strong>Summary of the Posts: No more
 
 DEFAULT_WRITING_STYLE = "Aim for a professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Get right to the point"
 
+OPEN_AI_EMPTY_SEARCH_SUGGESTIONS = (
+    lambda search: f"""Using NewsAPI to search for '{search}' returned no results. Generate 3 alternative terms that are similar to what the user is trying to search for just much more broad, and more likely to get news coverage. 
+    The goal is to create 3 different suggestions that will get the user news results. Use AND between select words to broaden the search term. Keep the search short, extract only the main subject or specific topic, ignoring any contextual details. 
+    Only use quotes when two words or more. Format the output must be as follows:
+    Search1:
+    Search2:
+    Search3:
+    """
+)
+
 OPEN_AI_QUERY_STRING = (
     lambda search: f"""From the search query '{search}', extract only the main subject or specific topic, ignoring any contextual details about professions, actions, or additional requests. The output must be a concise key subject that can be used for a boolean query in NewsAPI. Avoid including terms that describe professions (like 'journalists') or actions (like 'providing pitching tips'), focusing only on the core subject matter (like 'CPR'). The output must be a valid boolean query that can be used by NewsAPI following the steps below:
     1. If quotes are being used around the query then always search the exact phrase. Example: "optimized supply chain management" should return as "optimized supply chain management".

@@ -93,6 +93,7 @@ def getclips(request):
         boolean = request.GET.get("boolean", False)
         date_to = request.GET.get("date_to", False)
         date_from = request.GET.get("date_from", False)
+        suggestions = []
         if "journalist:" in search:
             internal_articles = InternalArticle.search_by_query(search, date_to, date_from, True)
             articles = normalize_article_data([], internal_articles)
@@ -129,7 +130,27 @@ def getclips(request):
         logger.info(4)
         articles = normalize_article_data(articles, internal_articles)
         logger.info(5)
-        return {"articles": articles, "string": query_input}
+
+        if len(articles) < 1:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_EMPTY_SEARCH_SUGGESTIONS(query_input)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email,
+                prompt,
+                token_amount=500,
+                top_p=0.1,
+            )
+            with Variable_Client() as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            r = open_ai_exceptions._handle_response(r)
+          
+            suggestions = r.get("choices")[0].get("message").get("content")
+       
+        return {"articles": articles, "string": query_input, "suggestions": suggestions}
 
     except Exception as e:
         has_error = True
