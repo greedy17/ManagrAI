@@ -1185,6 +1185,8 @@ class JournalistContact(TimeStampModel):
         on_delete=models.CASCADE,
     )
     tags = ArrayField(models.CharField(max_length=255), default=list)
+    bio = models.TextField()
+    images = ArrayField(models.TextField(), default=list)
 
     class Meta:
         unique_together = ("user", "journalist")
