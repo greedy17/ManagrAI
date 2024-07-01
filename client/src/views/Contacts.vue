@@ -130,13 +130,17 @@
         <div class="cards-container">
           <div class="contact-card">
             <header>
-              <img class="main-img" src="" alt="" />
               <div>
                 <p>Firstname Lastname</p>
-                <section class="row">
-                  <img src="@/assets/images/marker.svg" height="13px" alt="" />
-                  City, State
+                <section>
+                  <!-- <img src="@/assets/images/building.svg" height="13px" alt="" /> -->
+                  OutletName
                 </section>
+              </div>
+              <div style="display: flex; flex-direction: row; justify-content: flex-end">
+                <img class="main-img" src="" alt="" />
+                <img class="main-img" src="" alt="" />
+                <img class="main-img" src="" alt="" />
               </div>
             </header>
 
@@ -166,218 +170,6 @@
                 </button>
                 <button class="primary-button">Pitch</button>
               </div>
-
-              <p>OutletName</p>
-            </div>
-          </div>
-          <div class="contact-card">
-            <header>
-              <img class="main-img" src="" alt="" />
-              <div>
-                <p>Firstname Lastname</p>
-                <section class="row">
-                  <img src="@/assets/images/marker.svg" height="13px" alt="" />
-                  City, State
-                </section>
-              </div>
-            </header>
-
-            <div class="body">
-              <p>
-                Bio here lorem ipsum. Bio here lorem ipsum. Bio here lorem ipsum. Bio here lorem
-                ipsum. Bio here lorem ipsum. Bio here lorem ipsum. Bio here lorem ipsum. Bio here
-                lorem ipsum. Bio here lorem ipsum. Bio here lor ipsum. g et bgr bdtel blersnblte tb
-                dljnejbv jrwbejr bio her lorwm ips
-              </p>
-              <div class="blur"></div>
-              <div class="more">
-                Read More <img src="@/assets/images/rightarrow.svg" height="12px" alt="" />
-              </div>
-            </div>
-
-            <div class="footer">
-              <div class="row">
-                <button style="padding-left: 8px" class="secondary-button">
-                  <img
-                    style="margin-right: 2px"
-                    src="@/assets/images/add.svg"
-                    height="14px"
-                    alt=""
-                  />
-                  Tag
-                </button>
-                <button class="primary-button">Pitch</button>
-              </div>
-
-              <p>OutletName</p>
-            </div>
-          </div>
-          <div class="contact-card">
-            <header>
-              <img class="main-img" src="" alt="" />
-              <div>
-                <p>Firstname Lastname</p>
-                <section class="row">
-                  <img src="@/assets/images/marker.svg" height="13px" alt="" />
-                  City, State
-                </section>
-              </div>
-            </header>
-
-            <div class="body">
-              <p>
-                Bio here lorem ipsum. Bio here lorem ipsum. Bio here lorem ipsum. Bio here lorem
-                ipsum. Bio here lorem ipsum. Bio here lorem ipsum. Bio here lorem ipsum. Bio here
-                lorem ipsum. Bio here lorem ipsum. Bio here lor ipsum. g et bgr bdtel blersnblte tb
-                dljnejbv jrwbejr bio her lorwm ips
-              </p>
-              <div class="blur"></div>
-              <div class="more">
-                Read More <img src="@/assets/images/rightarrow.svg" height="12px" alt="" />
-              </div>
-            </div>
-
-            <div class="footer">
-              <div class="row">
-                <button style="padding-left: 8px" class="secondary-button">
-                  <img
-                    style="margin-right: 2px"
-                    src="@/assets/images/add.svg"
-                    height="14px"
-                    alt=""
-                  />
-                  Tag
-                </button>
-                <button class="primary-button">Pitch</button>
-              </div>
-
-              <p>OutletName</p>
-            </div>
-          </div>
-          <div class="contact-card">
-            <header>
-              <img class="main-img" src="" alt="" />
-              <div>
-                <p>Firstname Lastname</p>
-                <section class="row">
-                  <img src="@/assets/images/marker.svg" height="13px" alt="" />
-                  City, State
-                </section>
-              </div>
-            </header>
-
-            <div class="body">
-              <p>
-                Bio here lorem ipsum. Bio here lorem ipsum. Bio here lorem ipsum. Bio here lorem
-                ipsum. Bio here lorem ipsum. Bio here lorem ipsum. Bio here lorem ipsum. Bio here
-                lorem ipsum. Bio here lorem ipsum. Bio here lor ipsum. g et bgr bdtel blersnblte tb
-                dljnejbv jrwbejr bio her lorwm ips
-              </p>
-              <div class="blur"></div>
-              <div class="more">
-                Read More <img src="@/assets/images/rightarrow.svg" height="12px" alt="" />
-              </div>
-            </div>
-
-            <div class="footer">
-              <div class="row">
-                <button style="padding-left: 8px" class="secondary-button">
-                  <img
-                    style="margin-right: 2px"
-                    src="@/assets/images/add.svg"
-                    height="14px"
-                    alt=""
-                  />
-                  Tag
-                </button>
-                <button class="primary-button">Pitch</button>
-              </div>
-
-              <p>OutletName</p>
-            </div>
-          </div>
-          <div class="contact-card">
-            <header>
-              <img class="main-img" src="" alt="" />
-              <div>
-                <p>Firstname Lastname</p>
-                <section class="row">
-                  <img src="@/assets/images/marker.svg" height="13px" alt="" />
-                  City, State
-                </section>
-              </div>
-            </header>
-
-            <div class="body">
-              <p>
-                Bio here lorem ipsum. Bio here lorem ipsum. Bio here lorem ipsum. Bio here lorem
-                ipsum. Bio here lorem ipsum. Bio here lorem ipsum. Bio here lorem ipsum. Bio here
-                lorem ipsum. Bio here lorem ipsum. Bio here lor ipsum. g et bgr bdtel blersnblte tb
-                dljnejbv jrwbejr bio her lorwm ips
-              </p>
-              <div class="blur"></div>
-              <div class="more">
-                Read More <img src="@/assets/images/rightarrow.svg" height="12px" alt="" />
-              </div>
-            </div>
-
-            <div class="footer">
-              <div class="row">
-                <button style="padding-left: 8px" class="secondary-button">
-                  <img
-                    style="margin-right: 2px"
-                    src="@/assets/images/add.svg"
-                    height="14px"
-                    alt=""
-                  />
-                  Tag
-                </button>
-                <button class="primary-button">Pitch</button>
-              </div>
-
-              <p>OutletName</p>
-            </div>
-          </div>
-          <div class="contact-card">
-            <header>
-              <img class="main-img" src="" alt="" />
-              <div>
-                <p>Firstname Lastname</p>
-                <section class="row">
-                  <img src="@/assets/images/marker.svg" height="13px" alt="" />
-                  City, State
-                </section>
-              </div>
-            </header>
-
-            <div class="body">
-              <p>
-                Bio here lorem ipsum. Bio here lorem ipsum. Bio here lorem ipsum. Bio here lorem
-                ipsum. Bio here lorem ipsum. Bio here lorem ipsum. Bio here lorem ipsum. Bio here
-                lorem ipsum. Bio here lorem ipsum. Bio here lor ipsum. g et bgr bdtel blersnblte tb
-                dljnejbv jrwbejr bio her lorwm ips
-              </p>
-              <div class="blur"></div>
-              <div class="more">
-                Read More <img src="@/assets/images/rightarrow.svg" height="12px" alt="" />
-              </div>
-            </div>
-
-            <div class="footer">
-              <div class="row">
-                <button style="padding-left: 8px" class="secondary-button">
-                  <img
-                    style="margin-right: 2px"
-                    src="@/assets/images/add.svg"
-                    height="14px"
-                    alt=""
-                  />
-                  Tag
-                </button>
-                <button class="primary-button">Pitch</button>
-              </div>
-
-              <p>OutletName</p>
             </div>
           </div>
         </div>
@@ -527,13 +319,15 @@ export default {
     display: flex;
     flex-direction: row;
     align-items: flex-start;
+    justify-content: space-between;
     padding: 20px 0 8px 0;
+    width: 100%;
 
     .main-img {
-      margin-right: 16px;
+      //   margin-right: 16px;
       height: 50px;
-      width: 54px;
-      margin-bottom: 16px;
+      width: 50px;
+      //   margin-bottom: 16px;
       object-fit: cover;
       cursor: text;
       border-radius: 8px;
@@ -592,7 +386,7 @@ export default {
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
 
     p {
       margin: 0;
@@ -630,6 +424,9 @@ h3 {
   img {
     filter: invert(30%);
     margin-left: 4px;
+  }
+
+  &:hover {
   }
 }
 
