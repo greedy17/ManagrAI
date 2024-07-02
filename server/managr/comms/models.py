@@ -1051,8 +1051,7 @@ class Journalist(TimeStampModel):
                 if score is None:
                     score = 0
             else:
-                r = r.json()
-                return {"error": r["errors"][0]["details"]}
+                return 0
         return score
 
     @classmethod
@@ -1074,7 +1073,6 @@ class Journalist(TimeStampModel):
                 url,
             )
             r = r.json()
-            print(r)
             if "errors" in r.keys():
                 return r["errors"][0]["details"]
             response = r["data"]

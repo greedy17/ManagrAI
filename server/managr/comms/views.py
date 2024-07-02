@@ -2446,6 +2446,7 @@ class JournalistContactViewSet(
         outlet = request.data.pop("outlet").strip()
         journalist = check_journalist_validity(journalist, outlet, email)
         if isinstance(journalist, dict) and "error" in journalist.keys():
+            print(journalist)
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 data={"error": "Could not create contact"},
