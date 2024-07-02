@@ -1060,8 +1060,8 @@ class Journalist(TimeStampModel):
         url = comms_consts.HUNTER_FINDER_URI
         params = {
             "api_key": comms_consts.HUNTER_API_KEY,
-            "first_name": first_name,
-            "last_name": last_name,
+            "first_name": first_name.strip(),
+            "last_name": last_name.strip(),
         }
         if domain:
             params["domain"] = domain
@@ -1074,6 +1074,7 @@ class Journalist(TimeStampModel):
                 url,
             )
             r = r.json()
+            print(r)
             if "errors" in r.keys():
                 return r["errors"][0]["details"]
             response = r["data"]

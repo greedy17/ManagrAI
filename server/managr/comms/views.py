@@ -2025,7 +2025,7 @@ class DiscoveryViewSet(
     )
     def verify_email(self, request, *args, **kwargs):
         user = request.user
-        journalist = request.data.get("journalist")
+        journalist = request.data.get("journalist").strip()
         outlet = request.data.get("publication")
         email = request.data.get("email")
         name_list = journalist.split(" ")
