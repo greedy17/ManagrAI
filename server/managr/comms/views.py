@@ -114,22 +114,33 @@ def getclips(request):
                     headers=core_consts.OPEN_AI_HEADERS,
                 )
             r = open_ai_exceptions._handle_response(r)
-            logger.info(1)
             query_input = r.get("choices")[0].get("message").get("content")
             news_res = Search.get_clips(query_input, date_to, date_from)
             articles = news_res["articles"]
         else:
             news_res = Search.get_clips(boolean, date_to, date_from)
-            logger.info(1)
             articles = news_res["articles"]
             query_input = boolean
-        logger.info(2)
         articles = [article for article in articles if article["title"] != "[Removed]"]
-        logger.info(3)
         internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
-        logger.info(4)
         articles = normalize_article_data(articles, internal_articles)
-        logger.info(5)
+        if len(articles) == 0:
+            prompt = comms_consts.OPEN_AI_NO_RESULTS_SUGGESTION(boolean)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email,
+                prompt,
+                token_amount=500,
+                top_p=0.1,
+            )
+            with Variable_Client() as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            r = open_ai_exceptions._handle_response(r)
+            query_input = r.get("choices")[0].get("message").get("content")
+            return {"articles": articles, "string": boolean, "suggestions": query_input}
         return {"articles": articles, "string": query_input}
 
     except Exception as e:

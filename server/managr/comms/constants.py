@@ -186,6 +186,13 @@ OPEN_AI_SEARCH_SUGGESTIONS = (
     """
 )
 
+OPEN_AI_NO_RESULTS_SUGGESTION = (
+    lambda boolean: f"""Using NewsAPI to search for '{boolean}' returned no results. 
+    Generate 3 alternative terms that are similar to what the user is trying to search for just much more broad, and more likely to get news coverage. 
+    The goal is to create 3 different suggestions that will get the user news results. Use AND between select words to broaden the search term. Keep the search short, extract only the main subject or specific topic, ignoring any contextual details. Only use quotes when two words or more. Format the output must be as follows:\nSuggestion 1:\nSuggestion 2:\nSuggestion 3:
+    """
+)
+
 
 def JOURNALIST_INSTRUCTIONS(company):
     return f"Summarize the articles the journalist wrote, then you must provide a factual background on the journalist (important: do not make it up). Lastly, provide pitching tips for user who works for {company}"
@@ -305,6 +312,7 @@ OPEN_AI_REWRITE_PTICH = (
     My name: {name}
     """
 )
+
 
 def OPEN_AI_WEB_SUMMARY(results, text):
     prompt = f"Create one summary based on the information from all the search results below. Ensure the summary encompasses a variety of topics mentioned in the results. You must include the source name and date to cite where you got the information from.\nHere are the top 5 search results:{results}\nAnd here is the top article: {text}"
