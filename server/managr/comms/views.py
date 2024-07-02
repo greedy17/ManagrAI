@@ -2445,7 +2445,12 @@ class JournalistContactViewSet(
         email = request.data.pop("email").strip()
         outlet = request.data.pop("outlet").strip()
         journalist = check_journalist_validity(journalist, outlet, email)
-        if journalist:
+        if "error" in journalist.keys():
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={"error": "Could not create contact"},
+            )
+        else:
             request.data["journalist"] = journalist.id
             request.data["user"] = request.user.id
             try:
@@ -2459,8 +2464,3 @@ class JournalistContactViewSet(
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)}
                 )
             return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
-        else:
-            return Response(
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                data={"error": "Could not create contact"},
-            )

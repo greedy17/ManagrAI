@@ -1045,10 +1045,14 @@ class Journalist(TimeStampModel):
             r = client.get(
                 url,
             )
-            r = r.json()
-            score = r["data"]["score"]
-            if score is None:
-                score = 0
+            if r.status_code == 200:
+                r = r.json()
+                score = r["data"]["score"]
+                if score is None:
+                    score = 0
+            else:
+                r = r.json()
+                return {"error": r["errors"][0]["details"]}
         return score
 
     @classmethod

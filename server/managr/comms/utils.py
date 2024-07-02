@@ -679,6 +679,8 @@ def check_journalist_validity(journalist, outlet, email):
             return internal_journalist
         else:
             score = Journalist.verify_email(email)
+            if "error" in score.keys():
+                return score
             is_valid = True if score >= 85 else False
             if is_valid is False:
                 r = Journalist.email_finder(first, last, outlet=outlet)
@@ -698,5 +700,5 @@ def check_journalist_validity(journalist, outlet, email):
         serializer.save()
         return serializer.instance
     except Exception as e:
-        print(str(e))
-        return False
+        print(2, str(e))
+        return {"error": "Could not create contact."}
