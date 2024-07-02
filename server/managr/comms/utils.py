@@ -697,5 +697,6 @@ def check_journalist_validity(journalist, outlet, email):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return serializer.instance
-    except Exception:
+    except Exception as e:
+        print(str(e))
         return False

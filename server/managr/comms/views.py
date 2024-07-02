@@ -2441,14 +2441,13 @@ class JournalistContactViewSet(
         return Response(status=status.HTTP_200_OK, data={"tags": tags})
 
     def create(self, request, *args, **kwargs):
-        journalist = request.data.pop("journalist")
-        email = request.data.pop("email")
-        print('EMAIL IS HERE', email)
-        outlet = request.data.pop("outlet")
+        journalist = request.data.pop("journalist").strip()
+        email = request.data.pop("email").strip()
+        outlet = request.data.pop("outlet").strip()
         journalist = check_journalist_validity(journalist, outlet, email)
         if journalist:
-            request.data["journalist"] = journalist
-            request.data["user"] = request.user
+            request.data["journalist"] = journalist.id
+            request.data["user"] = request.user.id
             try:
                 serializer = self.serializer_class(data=request.data)
                 serializer.is_valid(raise_exception=True)
