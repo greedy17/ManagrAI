@@ -1074,7 +1074,7 @@ class Journalist(TimeStampModel):
             )
             r = r.json()
             if "errors" in r.keys():
-                return r["errors"][0]["details"]
+                return {"score": None, "email": None}
             response = r["data"]
         return response
 
@@ -1193,6 +1193,9 @@ class JournalistContact(TimeStampModel):
 
     class Meta:
         unique_together = ("user", "journalist")
+
+    def __str__(self):
+        return f"{self.user} - {self.journalist}"
 
     objects = JournalistContactQuerySet.as_manager()
 

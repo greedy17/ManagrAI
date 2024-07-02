@@ -2445,6 +2445,7 @@ class JournalistContactViewSet(
         email = request.data.pop("email").strip()
         outlet = request.data.pop("outlet").strip()
         journalist = check_journalist_validity(journalist, outlet, email)
+        print(journalist)
         if isinstance(journalist, dict) and "error" in journalist.keys():
             print(journalist)
             return Response(
