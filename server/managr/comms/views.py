@@ -124,23 +124,23 @@ def getclips(request):
         articles = [article for article in articles if article["title"] != "[Removed]"]
         internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
         articles = normalize_article_data(articles, internal_articles)
-        if len(articles) == 0:
-            prompt = comms_consts.OPEN_AI_NO_RESULTS_SUGGESTION(boolean)
-            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                user.email,
-                prompt,
-                token_amount=500,
-                top_p=0.1,
-            )
-            with Variable_Client() as client:
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=core_consts.OPEN_AI_HEADERS,
-                )
-            r = open_ai_exceptions._handle_response(r)
-            query_input = r.get("choices")[0].get("message").get("content")
-            return {"articles": articles, "string": boolean, "suggestions": query_input}
+        # if len(articles) == 0:
+        #     prompt = comms_consts.OPEN_AI_NO_RESULTS_SUGGESTION(boolean)
+        #     body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+        #         user.email,
+        #         prompt,
+        #         token_amount=500,
+        #         top_p=0.1,
+        #     )
+        #     with Variable_Client() as client:
+        #         r = client.post(
+        #             url,
+        #             data=json.dumps(body),
+        #             headers=core_consts.OPEN_AI_HEADERS,
+        #         )
+        #     r = open_ai_exceptions._handle_response(r)
+        #     query_input = r.get("choices")[0].get("message").get("content")
+        #     return {"articles": articles, "string": boolean, "suggestions": query_input}
         return {"articles": articles, "string": query_input}
 
     except Exception as e:
