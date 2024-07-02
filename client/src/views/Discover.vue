@@ -1109,7 +1109,7 @@ export default {
         console.log(match)
         if (match) {
           const email = match[1]
-          this.targetEmail = email
+          this.targetEmail = email.trim().replace(/\n/g, '')
         }
         this.currentJournalistBio = res.data.summary
           .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
