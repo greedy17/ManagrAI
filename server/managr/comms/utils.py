@@ -657,7 +657,7 @@ def dumb(query):
 def check_journalist_validity(journalist, outlet, email):
     from managr.comms.serializers import JournalistSerializer
 
-    data = {}
+    data = {"email": email, "outlet": outlet}
     name_list = journalist.split(" ")
     db_check = []
     if len(journalist) > 2:
@@ -691,10 +691,10 @@ def check_journalist_validity(journalist, outlet, email):
                 if r["email"] is not None:
                     email = r["email"]
                     data["email"] = email
+                    data["outlet"] = r["company"]
             data["accuracy_score"] = score
             data["first_name"] = first
         data["last_name"] = last
-        data["outlet"] = r["company"]
         serializer = JournalistSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
