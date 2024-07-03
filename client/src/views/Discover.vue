@@ -328,7 +328,15 @@
               <div class="tooltip-below">{{ copyTip }}</div>
             </div> -->
 
+            <div v-if="savingContact" style="margin: 0" class="loading-small">
+              <p style="margin-right: 8px">Saving</p>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+
             <div
+              v-else
               style="margin-right: 0.5rem"
               @click="saveContact"
               class="wrapper icon-button green-bg"
@@ -340,7 +348,7 @@
                 height="14px"
                 alt=""
               />
-              <div class="tooltip-below">Save Contact</div>
+              <div class="tooltip-below">Save</div>
             </div>
           </div>
         </header>
@@ -372,10 +380,18 @@
 
         <footer>
           <div class="row">
-            <button class="secondary-button" :disabled="loadingDraft" @click="toggleGoogleModal">
+            <button
+              class="secondary-button"
+              :disabled="loadingDraft || savingContact"
+              @click="toggleGoogleModal"
+            >
               Close
             </button>
-            <button class="primary-button" :disabled="loadingDraft" @click="draftPitch">
+            <button
+              class="primary-button"
+              :disabled="loadingDraft || savingContact"
+              @click="draftPitch"
+            >
               Pitch Journalist
             </button>
           </div>
@@ -1038,6 +1054,7 @@ export default {
       ],
       selectedContent: 'Select content',
       savingContact: false,
+      contacts: [],
     }
   },
   watch: {
@@ -1070,9 +1087,19 @@ export default {
   },
   created() {
     this.getWritingStyles()
+    this.getContacts()
     this.bccEmail = this.user.email
   },
   methods: {
+    async getContacts() {
+      try {
+        const res = await Comms.api.getContacts()
+        this.contacts = res.results
+        console.log(res.results)
+      } catch (e) {
+        console.error(e)
+      }
+    },
     async saveContact() {
       this.savingContact = true
       // name_list = this.currentJournalist.split(' ')
@@ -1087,9 +1114,33 @@ export default {
           images: this.currentJournalistImages,
           outlet: this.currentPublication,
         })
-        console.log('CONTACT RESPONSE', res)
+        this.$toast('Contact saved!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        console.log(res)
       } catch (e) {
-        console.error(e)
+        console.log('RESPOSNE', e.data.error)
+        if (e.data.error.includes('journalist must make a unique set')) {
+          this.$toast('Contact is already saved!', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } else {
+          this.$toast("Can't verify Journalist", {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }
       } finally {
         this.savingContact = false
       }
@@ -1106,8 +1157,9 @@ export default {
         console.log(res)
         const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i
         const match = res.data.summary.match(emailRegex)
-        console.log(match)
+
         if (match) {
+          // console.log(match)
           const email = match[1]
           this.targetEmail = email.trim().replace(/\n/g, '')
         }
@@ -1183,7 +1235,7 @@ export default {
             body: this.revisedPitch,
             recipient: this.targetEmail,
             bcc: [this.bccEmail],
-            name: this.journalistName,
+            name: this.currentJournalist,
           })
           .then((response) => {
             this.emailJournalistModalOpen = false

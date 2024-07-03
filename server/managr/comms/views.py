@@ -2427,7 +2427,7 @@ class JournalistContactViewSet(
         tag = request.data.get("tag")
         modifier = request.data.get("modifier")
         JournalistContact.modify_tags(id, tag, modifier)
-        Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)
 
     @action(
         methods=["get"],
@@ -2444,6 +2444,7 @@ class JournalistContactViewSet(
         journalist = request.data.pop("journalist").strip()
         email = request.data.pop("email").strip()
         outlet = request.data.pop("outlet").strip()
+        print("INFO IS HERE : ",email, outlet, journalist)
         journalist = check_journalist_validity(journalist, outlet, email)
         print(journalist)
         if isinstance(journalist, dict) and "error" in journalist.keys():

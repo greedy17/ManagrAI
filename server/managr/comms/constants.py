@@ -73,6 +73,7 @@ def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
     2. All headings must be returned in a H2 tag!
     3. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
     4. Never include ```html``` in the response, only reply with what I asked for specifically
+    5. Never include any additional text next to the email. example: instead of email@email.com (guessed email based on typical email patterns), simply return email@email.com
     """
     return prompt
 
@@ -84,6 +85,7 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
     2. All headings must be returned in a H2 tag!
     3. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
     4. Never include ```html``` in the response, only reply with what I asked for specifically
+    5. Never include any additional text next to the email. example: instead of email@email.com (guessed email based on typical email patterns), simply return email@email.com
     """
     return prompt
 
@@ -298,7 +300,7 @@ Instructions: {instructions}"""
 
 OPEN_AI_REWRITE_PTICH = (
     lambda original, bio, name: f"""
-    Rewrite the original media pitch incoporating pitching tips from the journalist's bio below. Be sure to maintaining the existing writing style as the original pitch. Include a short intriguing subject line; no more than 3 words. Do NOT bold any text!
+    Rewrite the original media pitch incoporating pitching tips from the journalist's bio below. Be sure to maintaining the existing writing style as the original pitch. Include a short intriguing subject line; no more than 3 words. DO NOT BOLD ANY TEXT IN YOUR RESPONSE, EVER!
     Original Pitch: {original}
     Journalist's bio along with pitching tips: {bio}
     Provide journalist's email: Check to see if their email is listed in the journalist bio above. If so, you must use that email. If no email can be found, then you must guess their work email. When guessing, you must base it on verified email patterns associated with their respective publication. Always return the email like this - email: (guessed email)    

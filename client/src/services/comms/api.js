@@ -511,7 +511,7 @@ class CommsApi extends ModelAPI {
     }
     async modifyTags(data) {
         try {
-            const res = await this.client.post('jcontact/modify_tags', data)
+            const res = await this.client.post('jcontact/modify_tags/', data)
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
