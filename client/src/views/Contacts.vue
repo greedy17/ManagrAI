@@ -144,14 +144,25 @@
             </p>
             <input
               style="margin-bottom: 0; padding-left: 26px"
-              class="primary-input-underline greenText"
+              class="primary-input-underline"
               v-model="currentContact.journalist_ref.email"
+              :class="{
+                coraltext: !currentContact.journalist_ref.verified,
+                greenText: currentContact.journalist_ref.verified,
+              }"
               type="email"
-              disabled
+              :disabled="currentContact.journalist_ref.verified"
             />
 
-            <div class="row green-img abs-placed" style="top: 35%">
+            <div
+              v-if="currentContact.journalist_ref.verified"
+              class="row green-img abs-placed"
+              style="top: 35%"
+            >
               <img src="@/assets/images/shield-check.svg" height="18px" alt="" />
+            </div>
+            <div v-else class="abs-placed red-img" style="top: 35%">
+              <img src="@/assets/images/shield-x.svg" height="14px" alt="" />
             </div>
           </div>
 
@@ -207,8 +218,18 @@
               Continue
             </button>
 
-            <button v-else :disabled="loadingPitch" class="primary-button" @click="sendEmail">
+            <button
+              v-else
+              :disabled="loadingPitch || sendingEmail"
+              class="primary-button"
+              @click="sendEmail"
+            >
               Send Email
+              <div v-if="sendingEmail" style="margin-left: 12px" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
             </button>
           </div>
         </footer>
@@ -219,7 +240,7 @@
     <div class="space-between">
       <div class="row">
         <div style="margin-right: 16px" class="relative">
-          <button
+          <!-- <button
             style="padding-top: 11px; padding-bottom: 11px"
             @click="toggleUserDropdown"
             class="secondary-button"
@@ -233,7 +254,7 @@
                 : selectedUser.full_name
             }}
             <img style="margin-left: 8px" src="@/assets/images/dropdown.svg" height="14px" alt="" />
-          </button>
+          </button> -->
 
           <div style="left: 0" v-if="showUsers" class="dropdown">
             <div class="dropdown-header">
@@ -340,7 +361,7 @@
       </aside>
 
       <section>
-        <div>
+        <div style="padding-bottom: 8px">
           <h3 style="font-size: 16px">Showing: {{ filteredContactList.length }} contacts</h3>
         </div>
 
@@ -369,9 +390,9 @@
               </div>
             </header>
 
-            <div class="body">
+            <div style="padding: 0 4px" class="body">
               <div class="bio-text" v-html="contact.bio"></div>
-              <div class="blur"></div>
+              <!-- <div class="blur"></div> -->
               <div @click="setContact(contact)" class="more">
                 Read More <img src="@/assets/images/rightarrow.svg" height="12px" alt="" />
                 <img
@@ -435,51 +456,58 @@
                     </div>
                   </div>
 
-                  <div style="opacity: 1; cursor: text" class="sticky-bottom-between">
-                    <div
-                      style="opacity: 1; margin: 0; cursor: text"
-                      v-if="showingInput"
-                      class="input-container-small"
-                    >
-                      <input
-                        :disabled="loadingTags"
-                        style="border: none; outline: none; padding: 10px 8px 10px 0px; width: 100%"
-                        class="text-area-input"
-                        type="text"
-                        v-model="newTag"
-                        placeholder="Name your tag..."
-                      />
+                  <div style="opacity: 1; cursor: text; position: relative">
+                    <div style="opacity: 1" class="sticky-bottom-between">
+                      <div
+                        style="opacity: 1; margin: 0; cursor: text"
+                        v-if="showingInput"
+                        class="input-container-small"
+                      >
+                        <input
+                          :disabled="loadingTags"
+                          style="
+                            border: none;
+                            outline: none;
+                            padding: 10px 8px 10px 0px;
+                            width: 100%;
+                          "
+                          class="text-area-input"
+                          type="text"
+                          v-model="newTag"
+                          placeholder="Name your tag..."
+                        />
 
-                      <img
-                        style="filter: invert(40%); margin-right: 20px"
-                        src="@/assets/images/user-tag.svg"
-                        height="14px"
-                        alt=""
-                      />
-                    </div>
-
-                    <button
-                      style="margin-left: auto"
-                      v-if="!showingInput"
-                      @click="showingInput = true"
-                      class="secondary-button"
-                    >
-                      Create Tag
-                    </button>
-                    <button
-                      :disabled="!newTag || loadingTags"
-                      v-if="showingInput"
-                      @click="modifyTags"
-                      style="margin-bottom: 5px"
-                      class="primary-button"
-                    >
-                      Save
-                      <div style="margin-left: 4px" v-if="loadingTags" class="loading-small">
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                        <div class="dot"></div>
+                        <img
+                          style="filter: invert(40%); margin-right: 20px"
+                          src="@/assets/images/user-tag.svg"
+                          height="14px"
+                          alt=""
+                        />
                       </div>
-                    </button>
+
+                      <button
+                        style="margin-left: auto"
+                        v-if="!showingInput"
+                        @click="showingInput = true"
+                        class="secondary-button"
+                      >
+                        Create Tag
+                      </button>
+                      <button
+                        :disabled="!newTag || loadingTags"
+                        v-if="showingInput"
+                        @click="modifyTags"
+                        style="margin-bottom: 5px"
+                        class="primary-button"
+                      >
+                        Save
+                        <div style="margin-left: 4px" v-if="loadingTags" class="loading-small">
+                          <div class="dot"></div>
+                          <div class="dot"></div>
+                          <div class="dot"></div>
+                        </div>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -669,6 +697,7 @@ export default {
         console.error(e)
       } finally {
         this.getTags()
+        this.getContacts()
         this.selectingTag = false
         this.showingTags = false
       }
@@ -700,9 +729,9 @@ export default {
             recipient: this.currentContact.journalist_ref.email,
             bcc: [this.bccEmail],
             name:
-              currentContact.journalist_ref.first_name +
+              this.currentContact.journalist_ref.first_name +
               ' ' +
-              currentContact.journalist_ref.last_name,
+              this.currentContact.journalist_ref.last_name,
           })
           .then((response) => {
             this.emailJournalistModalOpen = false
@@ -727,7 +756,8 @@ export default {
         })
         this.sendingEmail = false
       } finally {
-        this.refreshUser()
+        this.togglePitchModal()
+        // this.refreshUser()
       }
     },
     async rewritePitch() {
@@ -864,6 +894,7 @@ export default {
         console.error(e)
       } finally {
         this.getTags()
+        this.getContacts()
         this.loadingTags = false
         this.tagModalOpen = false
         this.showingTags = false
@@ -907,9 +938,10 @@ export default {
 @import '@/styles/buttons';
 
 .contacts {
-  padding: 40px;
+  padding: 40px 40px 0 40px;
   font-family: $thin-font-family;
   color: $dark-black-blue;
+  overflow: hidden;
 
   header {
     padding: 24px 0;
@@ -917,7 +949,7 @@ export default {
 }
 
 .cards-container {
-  padding-top: 16px;
+  padding: 16px 0;
   display: flex;
   flex-direction: row;
   align-items: flex-start;
@@ -945,8 +977,9 @@ export default {
     flex-direction: row;
     align-items: flex-start;
     justify-content: space-between;
-    padding: 20px 0 8px 0;
+    padding: 20px 0 16px 0;
     width: 100%;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.135);
 
     .main-img {
       //   margin-right: 16px;
@@ -1008,8 +1041,8 @@ export default {
     left: 0;
     width: 100%;
     height: 40px;
-    background: linear-gradient(to top, rgba(9, 9, 9, 0.076), rgba(255, 255, 255, 0));
-    filter: blur(2px);
+    // background: linear-gradient(to top, rgba(9, 9, 9, 0.076), rgba(255, 255, 255, 0));
+    // filter: blur(2px);
   }
 
   .footer {
@@ -1042,8 +1075,8 @@ h3 {
   flex-direction: row;
   align-items: center;
   position: absolute;
-  bottom: 4px;
-  right: 8px;
+  bottom: 8px;
+  right: 12px;
   background-color: white;
   z-index: 3;
   font-size: 16px;
@@ -1052,7 +1085,8 @@ h3 {
   padding: 3px 2px 3px 6px;
   border: 1px solid rgba(0, 0, 0, 0.185);
   border-radius: 4px;
-  border-bottom: 1px solid $dark-black-blue;
+  box-shadow: 2px 13px 18px 12px rgba(0, 0, 0, 0.1);
+  // border-bottom: 1px solid $dark-black-blue;
 
   img {
     filter: invert(30%);
@@ -1060,6 +1094,7 @@ h3 {
   }
 
   &:hover {
+    opacity: 0.9;
   }
 }
 
@@ -1085,7 +1120,7 @@ h3 {
 }
 
 .top-padding {
-  padding-top: 24px;
+  padding-top: 8px;
 }
 
 .checkbox-list {
@@ -1283,13 +1318,13 @@ h2 {
   top: 1.5rem;
   width: 25vw;
   border-radius: 20px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.135);
   font-family: $thin-font-family;
   font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding: 11px 20px 11px 10px;
+  padding: 12px 20px 12px 10px;
 }
 
 .search-input {
@@ -1322,7 +1357,7 @@ h2 {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 8px;
+    padding: 8px;
 
     img {
       margin-right: 8px;
@@ -1542,7 +1577,7 @@ h2 {
 }
 
 ::v-deep .bio-body {
-  line-height: 1.75;
+  line-height: 1.75 !important;
   padding: 0;
   margin-bottom: 0 !important;
   margin-block-start: 0 !important;
@@ -1792,8 +1827,8 @@ h2 {
 .drop-options {
   width: 24vw;
   position: absolute;
-  top: 0;
-  right: -16px;
+  bottom: 36px;
+  right: -12px;
   font-weight: 400;
   background: white;
   padding: 8px 12px;
@@ -2037,6 +2072,14 @@ textarea::placeholder {
   color: $dark-green !important;
 }
 
+.red-img {
+  img {
+    filter: invert(46%) sepia(43%) saturate(800%) hue-rotate(308deg) brightness(104%) contrast(97%);
+    margin-right: 4px;
+  }
+  color: $coral !important;
+}
+
 .abs-placed {
   position: absolute;
   right: 8px;
@@ -2049,5 +2092,8 @@ textarea::placeholder {
 }
 .greenText {
   color: $dark-green !important;
+}
+.coraltext {
+  color: $coral !important;
 }
 </style>

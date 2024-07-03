@@ -1054,7 +1054,6 @@ export default {
       ],
       selectedContent: 'Select content',
       savingContact: false,
-      contacts: [],
     }
   },
   watch: {
@@ -1087,19 +1086,9 @@ export default {
   },
   created() {
     this.getWritingStyles()
-    this.getContacts()
     this.bccEmail = this.user.email
   },
   methods: {
-    async getContacts() {
-      try {
-        const res = await Comms.api.getContacts()
-        this.contacts = res.results
-        console.log(res.results)
-      } catch (e) {
-        console.error(e)
-      }
-    },
     async saveContact() {
       this.savingContact = true
       // name_list = this.currentJournalist.split(' ')
@@ -1467,25 +1456,25 @@ export default {
     toggleSaveModal() {
       this.saveModalOpen = !this.saveModalOpen
     },
-    async getJournalists() {
-      this.loadingJournalists = true
-      try {
-        await Comms.api
-          .getJournalists({
-            type: this.pubType,
-            beat: this.beat,
-            location: this.location,
-            content: this.pitch,
-          })
-          .then((response) => {
-            this.journalists = response.journalists
-          })
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.loadingJournalists = false
-      }
-    },
+    // async getJournalists() {
+    //   this.loadingJournalists = true
+    //   try {
+    //     await Comms.api
+    //       .getJournalists({
+    //         type: this.pubType,
+    //         beat: this.beat,
+    //         location: this.location,
+    //         content: this.pitch,
+    //       })
+    //       .then((response) => {
+    //         this.journalists = response.journalists
+    //       })
+    //   } catch (e) {
+    //     console.log(e)
+    //   } finally {
+    //     this.loadingJournalists = false
+    //   }
+    // },
     async getFeedback() {
       this.loadingFeedback = true
       try {
@@ -1644,18 +1633,7 @@ export default {
         console.error('Failed to copy text: ', err)
       }
     },
-    async copyJournalText() {
-      try {
-        await navigator.clipboard.writeText(this.journalists)
-        this.copyTip = 'Copied!'
 
-        setTimeout(() => {
-          this.copyTip = 'Copy'
-        }, 2000)
-      } catch (err) {
-        console.error('Failed to copy text: ', err)
-      }
-    },
     async copyFeedbackText() {
       try {
         await navigator.clipboard.writeText(this.feedback)
