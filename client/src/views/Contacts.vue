@@ -243,6 +243,7 @@
     <div class="space-between">
       <div class="row">
         <div style="margin-right: 16px" class="relative">
+          <p style="margin-top: -8px" class="not-mobile">Saved Contacts</p>
           <!-- <button
             style="padding-top: 11px; padding-bottom: 11px"
             @click="toggleUserDropdown"
@@ -2244,5 +2245,13 @@ textarea::placeholder {
 }
 .coraltext {
   color: $coral !important;
+}
+.not-mobile {
+  font-family: $thin-font-family;
+  font-size: 22px;
+
+  @media only screen and (max-width: 750px) {
+    visibility: hidden;
+  }
 }
 </style>
