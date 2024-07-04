@@ -7053,7 +7053,7 @@ textarea::placeholder {
   overflow-y: scroll;
   color: $base-gray;
   font-family: $thin-font-family;
-  padding: 0 32px 0 32px;
+  padding: 0 24px 0 24px;
 
   label {
     font-size: 14px;

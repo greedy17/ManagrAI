@@ -35,6 +35,9 @@
             <div v-for="(tag, i) in currentContact.tags" :key="i" class="user-tag">
               <img src="@/assets/images/tags.svg" height="12px" alt="" />
               {{ tag }}
+              <div @click="modifyTags('remove', tag)" class="remove">
+                <img src="@/assets/images/close.svg" height="14px" alt="" />
+              </div>
             </div>
           </div>
           <div class="row">
@@ -362,7 +365,13 @@
 
       <section>
         <div style="padding-bottom: 8px">
-          <h3 style="font-size: 16px">Showing: {{ filteredContactList.length }} contacts</h3>
+          <div style="font-size: 16px" v-if="loading" class="loading-small">
+            <p style="margin: 0; margin-right: 8px">Gathering your contacts</p>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+          <h3 v-else style="font-size: 16px">Showing: {{ filteredContactList.length }} contacts</h3>
         </div>
 
         <div class="cards-container">
@@ -394,7 +403,7 @@
               <div class="bio-text" v-html="contact.bio"></div>
               <!-- <div class="blur"></div> -->
               <div @click="setContact(contact)" class="more">
-                Read More <img src="@/assets/images/rightarrow.svg" height="12px" alt="" />
+                Expand <img src="@/assets/images/rightarrow.svg" height="12px" alt="" />
                 <img
                   style="margin: 0 0 0 -8px"
                   src="@/assets/images/rightarrow.svg"
@@ -496,7 +505,7 @@
                       <button
                         :disabled="!newTag || loadingTags"
                         v-if="showingInput"
-                        @click="modifyTags"
+                        @click="modifyTags('add')"
                         style="margin-bottom: 5px"
                         class="primary-button"
                       >
@@ -535,6 +544,7 @@ export default {
   },
   data() {
     return {
+      loading: false,
       currentIndex: 0,
       tagIndex: 0,
       showingInput: false,
@@ -659,7 +669,7 @@ export default {
     this.selectedUser = this.user
     this.bccEmail = this.user.email
     this.getUsers()
-    this.getContacts()
+    this.getInitialContacts()
     this.getTags()
   },
   methods: {
@@ -855,6 +865,17 @@ export default {
         console.log('Error in getTrialUsers', e)
       }
     },
+    async getInitialContacts() {
+      this.loading = true
+      try {
+        const res = await Comms.api.getContacts()
+        this.contacts = res.results
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.loading = false
+      }
+    },
     async getContacts() {
       try {
         const res = await Comms.api.getContacts()
@@ -873,16 +894,16 @@ export default {
         console.error(e)
       }
     },
-    async modifyTags() {
+    async modifyTags(mod, tag) {
       this.loadingTags = true
       try {
         const res = await Comms.api.modifyTags({
           id: this.currentContact.id,
-          tag: this.newTag,
-          modifier: this.modifier,
+          tag: tag ? tag : this.newTag,
+          modifier: mod,
         })
         console.log(res)
-        this.$toast('Tag added', {
+        this.$toast('Tags updated', {
           timeout: 1000,
           position: 'top-left',
           type: 'success',
@@ -892,12 +913,20 @@ export default {
         // this.tags = res.results
       } catch (e) {
         console.error(e)
+        this.$toast('Error updating tags, try again', {
+          timeout: 1000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.getTags()
         this.getContacts()
         this.loadingTags = false
         this.tagModalOpen = false
         this.showingTags = false
+        this.googleModalOpen = false
       }
     },
     clearSearchText() {
@@ -946,6 +975,16 @@ export default {
   header {
     padding: 24px 0;
   }
+
+  @media only screen and (max-width: 750px) {
+    padding: 40px 0;
+  }
+  @media only screen and (min-width: 751px) and (max-width: 1393px) {
+    padding: 40px 16px;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 
 .cards-container {
@@ -957,6 +996,13 @@ export default {
   gap: 24px;
   height: 75vh;
   overflow: scroll;
+
+  @media only screen and (max-width: 750px) {
+    height: 85vh;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 
 .contact-card {
@@ -967,6 +1013,14 @@ export default {
   background-color: white;
   transition: all 0.5s;
   // height: 200px;
+
+  @media only screen and (max-width: 750px) {
+    width: 75vw;
+  }
+
+  @media only screen and (min-width: 751px) and (max-width: 1393px) {
+    width: 37.5vw;
+  }
 
   .contact-header {
     // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
@@ -1107,6 +1161,17 @@ h3 {
   aside {
     width: 19vw;
     padding: 0;
+    // background-color: red;
+
+    @media only screen and (max-width: 750px) {
+      width: 24vw;
+      margin-right: 10px;
+      padding-left: 8px;
+    }
+
+    @media only screen and (min-width: 751px) and (max-width: 1393px) {
+      margin-right: 8px;
+    }
 
     img {
       margin-right: 8px;
@@ -1129,6 +1194,17 @@ h3 {
   padding: 8px 0 20px 0;
   height: 75vh;
   overflow-y: scroll;
+
+  @media only screen and (max-width: 750px) {
+    height: 85vh;
+  }
+
+  @media only screen and (min-width: 751px) and (max-width: 1393px) {
+    height: 90vh;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
   //   border: 1px solid #e0e0e0;
   //   border-radius: 8px;
   //   background-color: #fff;
@@ -1157,6 +1233,13 @@ h3 {
   letter-spacing: 0.05px;
   opacity: 0.9;
   color: #333;
+
+  @media only screen and (max-width: 750px) {
+    font-size: 12px;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 
   span {
     font-family: $thin-font-family;
@@ -1312,6 +1395,23 @@ h2 {
   color: rgba(0, 0, 0, 0.4);
 }
 
+.search {
+  @media only screen and (max-width: 750px) {
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 8px 0;
+  }
+
+  @media only screen and (min-width: 751px) and (max-width: 1393px) {
+    width: 50vw;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
+}
+
 .input {
   position: sticky;
   z-index: 8;
@@ -1325,6 +1425,17 @@ h2 {
   align-items: center;
   justify-content: flex-start;
   padding: 12px 20px 12px 10px;
+
+  @media only screen and (max-width: 750px) {
+    width: 95%;
+  }
+
+  @media only screen and (min-width: 751px) and (max-width: 1393px) {
+    width: 100%;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 
 .search-input {
@@ -1475,11 +1586,16 @@ h2 {
 
 .bio-modal {
   margin-top: 132px;
-  @media only screen and (max-width: 600px) {
+  width: 70vw;
+
+  @media only screen and (max-width: 750px) {
     margin-top: 62px;
+    width: 90vw;
   }
 
-  width: 70vw;
+  @media only screen and (min-width: 751px) and (max-width: 1393px) {
+    width: 85vw;
+  }
 }
 
 .med-modal {
@@ -1503,8 +1619,13 @@ h2 {
   label {
     font-size: 14px;
   }
-  @media only screen and (max-width: 600px) {
-    width: 95%;
+
+  @media only screen and (max-width: 750px) {
+    width: 85vw;
+  }
+
+  @media only screen and (min-width: 751px) and (max-width: 1393px) {
+    width: 75vw;
   }
 
   header {
@@ -1936,12 +2057,42 @@ h2 {
 }
 
 .user-tag {
+  position: relative;
   display: flex;
   flex-direction: row;
   align-items: center;
   font-size: 12px;
+  background-color: $light-purple;
+  color: $grape;
+  font-family: $base-font-family;
+  font-weight: 100;
+  padding: 6px 32px 6px 8px;
+  border-radius: 12px;
   img {
+    filter: invert(35%) sepia(23%) saturate(810%) hue-rotate(218deg) brightness(93%) contrast(97%);
     margin-right: 4px;
+  }
+
+  .remove {
+    position: absolute;
+    right: 4px;
+    top: 6px;
+    cursor: pointer;
+
+    &:hover {
+      background-color: $grape;
+      border-radius: 100%;
+      display: flex;
+      align-items: center;
+      padding: 2px;
+      top: 4px;
+
+      img {
+        filter: invert(99%);
+        margin: 0;
+        padding: 0;
+      }
+    }
   }
 }
 
@@ -2060,7 +2211,7 @@ textarea::placeholder {
   width: 100%;
   border-radius: 8px;
 
-  @media only screen and (max-width: 600px) {
+  @media only screen and (max-width: 750px) {
     height: 140px;
   }
 }

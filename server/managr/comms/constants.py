@@ -74,6 +74,11 @@ def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
     3. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
     4. Never include ```html``` in the response, only reply with what I asked for specifically
     5. NEVER include any additional text next to the email. Examples: instead of email@email.com (guessed email based on typical email patterns), simply return email@email.com. Instead of email@email.com (guessed email), simply return email@email.com. This is very important, do not ignore
+    
+    Output must be:
+    Journalist Bio:
+    3 Pitching Tips:
+    Journalists Contact Info and Social Handles:
     """
     return prompt
 
@@ -86,6 +91,11 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
     3. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
     4. Never include ```html``` in the response, only reply with what I asked for specifically
     5. NEVER include any additional text next to the email. example: instead of email@email.com (guessed email based on typical email patterns), simply return email@email.com, Instead of email@email.com (guessed email), simply return email@email.com. This is very important, do not ignore
+    
+    Output must be:
+    Journalist Bio:
+    3 Pitching Tips:
+    Journalists Contact Info and Social Handles:
     """
     return prompt
 
