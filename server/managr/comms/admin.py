@@ -76,6 +76,12 @@ class CustomEmailTrackerAdmin(admin.ModelAdmin):
     ordering = ("-datetime_created",)
 
 
+class CustomJournalistContactAdmin(admin.ModelAdmin):
+    list_display = ("datetime_created", "user", "journalist")
+    ordering = ("-datetime_created",)
+    list_filter = ("user",)
+
+
 admin.site.register(Search, CustomSearch)
 admin.site.register(Pitch, CustomPitch)
 admin.site.register(NewsSource, CustomNewsSource)
@@ -87,4 +93,4 @@ admin.site.register(InstagramAccount)
 admin.site.register(Discovery)
 admin.site.register(Journalist, CustomJournalAdmin)
 admin.site.register(EmailTracker, CustomEmailTrackerAdmin)
-admin.site.register(JournalistContact)
+admin.site.register(JournalistContact, CustomJournalistContactAdmin)
