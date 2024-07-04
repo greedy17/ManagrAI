@@ -1048,10 +1048,13 @@ class Journalist(TimeStampModel):
             r = client.get(
                 url,
             )
-            r = r.json()
-            score = r["data"]["score"]
-            if score is None:
-                score = 0
+            if r.status_code == 200:
+                r = r.json()
+                score = r["data"]["score"]
+                if score is None:
+                    score = 0
+            else:
+                return 0
         return score
 
     @classmethod
@@ -1059,8 +1062,8 @@ class Journalist(TimeStampModel):
         url = comms_consts.HUNTER_FINDER_URI
         params = {
             "api_key": comms_consts.HUNTER_API_KEY,
-            "first_name": first_name,
-            "last_name": last_name,
+            "first_name": first_name.strip(),
+            "last_name": last_name.strip(),
         }
         if domain:
             params["domain"] = domain
@@ -1074,7 +1077,7 @@ class Journalist(TimeStampModel):
             )
             r = r.json()
             if "errors" in r.keys():
-                return r["errors"][0]["details"]
+                return {"score": None, "email": None}
             response = r["data"]
         return response
 
@@ -1188,9 +1191,14 @@ class JournalistContact(TimeStampModel):
         on_delete=models.CASCADE,
     )
     tags = ArrayField(models.CharField(max_length=255), default=list)
+    bio = models.TextField(blank=True, null=True)
+    images = ArrayField(models.TextField(), default=list)
 
     class Meta:
         unique_together = ("user", "journalist")
+
+    def __str__(self):
+        return f"{self.user} - {self.journalist}"
 
     objects = JournalistContactQuerySet.as_manager()
 

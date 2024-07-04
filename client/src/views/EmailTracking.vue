@@ -6,6 +6,7 @@
       <div class="row">
         <div class="relative">
           <button @click="toggleUserDropdown" class="secondary-button">
+            <img style="margin-right: 8px" src="@/assets/images/profile.svg" height="12px" alt="" />
             {{
               !selectedUser
                 ? 'All'
@@ -13,7 +14,7 @@
                 ? selectedUser.fullName
                 : selectedUser.full_name
             }}
-            <img src="@/assets/images/dropdown.svg" height="14px" alt="" />
+            <img style="margin-left: 8px" src="@/assets/images/dropdown.svg" height="14px" alt="" />
           </button>
 
           <div style="left: 0" v-if="showUsers" class="dropdown">

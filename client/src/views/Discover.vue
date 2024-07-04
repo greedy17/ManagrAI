@@ -313,7 +313,7 @@
           <p style="font-size: 17px">Journalist Bio</p>
 
           <div class="row">
-            <div
+            <!-- <div
               style="margin-right: 0.5rem"
               @click="copyBioText"
               class="wrapper icon-button white-bg"
@@ -326,11 +326,19 @@
                 alt=""
               />
               <div class="tooltip-below">{{ copyTip }}</div>
+            </div> -->
+
+            <div v-if="savingContact" style="margin: 0" class="loading-small">
+              <p style="margin-right: 8px">Saving</p>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
             </div>
 
-            <!-- <div
+            <div
+              v-else
               style="margin-right: 0.5rem"
-              @click="copyBioText"
+              @click="saveContact"
               class="wrapper icon-button green-bg"
             >
               <img
@@ -340,8 +348,8 @@
                 height="14px"
                 alt=""
               />
-              <div class="tooltip-below">Save Contact</div>
-            </div> -->
+              <div class="tooltip-below">Save</div>
+            </div>
           </div>
         </header>
 
@@ -372,10 +380,18 @@
 
         <footer>
           <div class="row">
-            <button class="secondary-button" :disabled="loadingDraft" @click="toggleGoogleModal">
+            <button
+              class="secondary-button"
+              :disabled="loadingDraft || savingContact"
+              @click="toggleGoogleModal"
+            >
               Close
             </button>
-            <button class="primary-button" :disabled="loadingDraft" @click="draftPitch">
+            <button
+              class="primary-button"
+              :disabled="loadingDraft || savingContact"
+              @click="draftPitch"
+            >
               Pitch Journalist
             </button>
           </div>
@@ -1037,6 +1053,7 @@ export default {
         `Social Media Influencers`,
       ],
       selectedContent: 'Select content',
+      savingContact: false,
     }
   },
   watch: {
@@ -1072,6 +1089,51 @@ export default {
     this.bccEmail = this.user.email
   },
   methods: {
+    async saveContact() {
+      this.savingContact = true
+      // name_list = this.currentJournalist.split(' ')
+      // const first = name_list[0]
+      // const last = name_list.at(-1)
+      try {
+        const res = await Comms.api.addContact({
+          user: this.user.id,
+          email: this.targetEmail,
+          journalist: this.currentJournalist,
+          bio: this.currentJournalistBio,
+          images: this.currentJournalistImages,
+          outlet: this.currentPublication,
+        })
+        this.$toast('Contact saved!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        console.log(res)
+      } catch (e) {
+        console.log('RESPOSNE', e.data.error)
+        if (e.data.error.includes('journalist must make a unique set')) {
+          this.$toast('Contact is already saved!', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } else {
+          this.$toast("Can't verify Journalist", {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }
+      } finally {
+        this.savingContact = false
+      }
+    },
     async getJournalistBio() {
       this.loadingDraft = true
       try {
@@ -1081,8 +1143,21 @@ export default {
           content: this.content,
           search: false,
         })
-        this.currentJournalistBio = res.data.summary.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+        console.log(res)
+        const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i
+        const match = res.data.summary.match(emailRegex)
+
+        if (match) {
+          // console.log(match)
+          const email = match[1]
+          this.targetEmail = email.trim().replace(/\n/g, '')
+        }
+        this.currentJournalistBio = res.data.summary
+          .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+          .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, '')
         this.currentJournalistImages = res.data.images
+
+        console.log('TARGET EMAIL', this.targetEmail)
       } catch (e) {
         console.error(e)
       } finally {
@@ -1149,7 +1224,7 @@ export default {
             body: this.revisedPitch,
             recipient: this.targetEmail,
             bcc: [this.bccEmail],
-            name: this.journalistName,
+            name: this.currentJournalist,
           })
           .then((response) => {
             this.emailJournalistModalOpen = false
@@ -1178,12 +1253,12 @@ export default {
       }
     },
     draftPitch() {
-      const bio = this.currentJournalistBio
+      // const bio = this.currentJournalistBio
       this.googleModalOpen = false
       this.emailJournalistModalOpen = true
-      this.rewritePitch(bio)
+      this.rewritePitch()
     },
-    async rewritePitch(bio = '') {
+    async rewritePitch() {
       this.loadingPitch = true
       try {
         const res = await Comms.api.rewritePitch({
@@ -1193,8 +1268,7 @@ export default {
         const emailRegex = /email: ([^"]*)/
         const match = res.pitch.match(emailRegex)
         if (match) {
-          const email = match[1] // extract the email address
-          // set the email property
+          const email = match[1]
           this.targetEmail = email
         }
         const body = res.pitch
@@ -1265,7 +1339,6 @@ export default {
             content: this.content,
           })
           .then((response) => {
-            console.log(response)
             this.summary = response
           })
       } catch (e) {
@@ -1383,25 +1456,25 @@ export default {
     toggleSaveModal() {
       this.saveModalOpen = !this.saveModalOpen
     },
-    async getJournalists() {
-      this.loadingJournalists = true
-      try {
-        await Comms.api
-          .getJournalists({
-            type: this.pubType,
-            beat: this.beat,
-            location: this.location,
-            content: this.pitch,
-          })
-          .then((response) => {
-            this.journalists = response.journalists
-          })
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.loadingJournalists = false
-      }
-    },
+    // async getJournalists() {
+    //   this.loadingJournalists = true
+    //   try {
+    //     await Comms.api
+    //       .getJournalists({
+    //         type: this.pubType,
+    //         beat: this.beat,
+    //         location: this.location,
+    //         content: this.pitch,
+    //       })
+    //       .then((response) => {
+    //         this.journalists = response.journalists
+    //       })
+    //   } catch (e) {
+    //     console.log(e)
+    //   } finally {
+    //     this.loadingJournalists = false
+    //   }
+    // },
     async getFeedback() {
       this.loadingFeedback = true
       try {
@@ -1560,18 +1633,7 @@ export default {
         console.error('Failed to copy text: ', err)
       }
     },
-    async copyJournalText() {
-      try {
-        await navigator.clipboard.writeText(this.journalists)
-        this.copyTip = 'Copied!'
 
-        setTimeout(() => {
-          this.copyTip = 'Copy'
-        }, 2000)
-      } catch (err) {
-        console.error('Failed to copy text: ', err)
-      }
-    },
     async copyFeedbackText() {
       try {
         await navigator.clipboard.writeText(this.feedback)
@@ -3392,7 +3454,7 @@ footer {
   overflow-y: scroll;
   color: $base-gray;
   font-family: $thin-font-family;
-  padding: 0 32px 0 32px;
+  padding: 0 24px 0 24px;
 
   label {
     font-size: 14px;

@@ -475,6 +475,51 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+
+    async getJournalistContacts() {
+        try {
+            const res = await this.client.get('jcontact/')
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
+    async getContacts() {
+        try {
+            const res = await this.client.get('jcontact')
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async getContactTagList() {
+        try {
+            const res = await this.client.get('jcontact/tag_list')
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async addContact(data) {
+        try {
+            const res = await this.client.post('jcontact/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async modifyTags(data) {
+        try {
+            const res = await this.client.post('jcontact/modify_tags/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
+
+
 }
 
 class TwitterAccountAPI extends ModelAPI {

@@ -166,6 +166,8 @@ class EmailTrackerSerializer(serializers.ModelSerializer):
 
 
 class JournalistContactSerializer(serializers.ModelSerializer):
+    journalist_ref = JournalistSerializer(source="journalist", read_only=True)
+
     class Meta:
         model = JournalistContact
-        fields = ("id", "user", "journalist", "tags")
+        fields = ("id", "user", "journalist","journalist_ref", "tags", "bio", "images")

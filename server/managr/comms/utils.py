@@ -16,7 +16,7 @@ from django.conf import settings
 from urllib.parse import urlparse, urlunparse
 from collections import OrderedDict
 from .exceptions import _handle_response
-from .models import NewsSource
+from .models import NewsSource, Journalist
 from botocore.exceptions import ClientError
 
 s3 = boto3.client("s3")
@@ -654,6 +654,56 @@ def dumb(query):
     return summary
 
 
+def check_journalist_validity(journalist, outlet, email):
+    from managr.comms.serializers import JournalistSerializer
+
+    data = {"email": email, "outlet": outlet}
+    name_list = journalist.split(" ")
+    db_check = []
+    if len(journalist) > 2:
+        first = name_list[0]
+        last = name_list[len(name_list) - 1]
+    else:
+        first = name_list[0]
+        last = name_list[1]
+    try:
+        email_check = Journalist.objects.filter(email=email)
+        if len(email_check):
+            db_check = email_check
+        else:
+            name_check = Journalist.objects.filter(first_name=first, last_name=last, outlet=outlet)
+            if len(name_check):
+                db_check = name_check
+        if len(db_check):
+            internal_journalist = db_check.first()
+            return internal_journalist
+        else:
+            score = Journalist.verify_email(email)
+            is_valid = True if score >= 85 else False
+            if is_valid is False:
+                r = Journalist.email_finder(first, last, outlet=outlet)
+                if isinstance(r, dict) and "error" in r.keys():
+                    return r
+                score = r["score"]
+                if score is None:
+                    score = 0
+                is_valid = True if score >= 85 else False
+                if r["email"] is not None:
+                    email = r["email"]
+                    data["email"] = email
+                    data["outlet"] = r["company"]
+            data["accuracy_score"] = score
+            data["first_name"] = first
+        data["last_name"] = last
+        serializer = JournalistSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return serializer.instance
+    except Exception as e:
+        print(2, str(e))
+        return {"error": "Could not create contact."}
+
+        
 def test_prompt(search_term):
     from managr.core import constants as core_consts
     from managr.core import exceptions as open_ai_exceptions

@@ -67,23 +67,35 @@ def GOOGLE_SEARCH_PARAMS(query):
 
 
 def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
-    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the journalist from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips for {company} based on what you know about the journalist. Lastly, if available, list out journalist's social handles and email (if email not available, exclude email details from the output)
+    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the journalist from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips for {company} based on what you know about the journalist. Lastly, if available, list out journalist's social handles and email. If the email is in the provided information, you must use that email. If no email can be found, then you must guess their work email. When guessing, you must base it on verified email patterns associated with their respective publication. Always return the email like this - email: guessed email
     Output MUST follow the following rules:
     1. All bold text MUST be returned in a strong tag instead of markdown!
     2. All headings must be returned in a H2 tag!
     3. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
     4. Never include ```html``` in the response, only reply with what I asked for specifically
+    5. NEVER include any additional text next to the email. Examples: instead of email@email.com (guessed email based on typical email patterns), simply return email@email.com. Instead of email@email.com (guessed email), simply return email@email.com. This is very important, do not ignore
+    
+    Output must be:
+    Journalist Bio:
+    3 Pitching Tips:
+    Journalists Contact Info and Social Handles:
     """
     return prompt
 
 
 def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
-    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the journalist from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips based on what you know of the journalist, tailored to the user's pitch: {content}. Lastly, if available, list out journalist's social handles and email (if email not available, exclude email details from the output)
+    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the journalist from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips based on what you know of the journalist, tailored to the user's pitch: {content}. Lastly, if available, list out journalist's social handles and email.  If the email is mentioned in any of the provided information, you must use that email. If no email can be found, then you must guess their work email. When guessing, you must base it on verified email patterns associated with their respective publication. Always return the email like this - email: guessed email
     Output MUST follow the following rules:
     1. All bold text MUST be returned in a strong tag instead of markdown!
     2. All headings must be returned in a H2 tag!
     3. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
     4. Never include ```html``` in the response, only reply with what I asked for specifically
+    5. NEVER include any additional text next to the email. example: instead of email@email.com (guessed email based on typical email patterns), simply return email@email.com, Instead of email@email.com (guessed email), simply return email@email.com. This is very important, do not ignore
+    
+    Output must be:
+    Journalist Bio:
+    3 Pitching Tips:
+    Journalists Contact Info and Social Handles:
     """
     return prompt
 
@@ -193,6 +205,13 @@ OPEN_AI_SEARCH_SUGGESTIONS = (
     Output instructions for PR firms: Start with "Hi {name}, here are some search suggestions to get you started."
     - "Brands" (guess which brands they may work with based on location of agency and their niche, list just the brand name)
     - "Industry Topic" (relevent to the PR agency's niche, up to 5, Must be 2-3 words max, use AND in between words to broaden search, if needed.) -- ex: if the agency is focused on fashion clients: AI and Fashion, GenZ and Tiktok. If the agency is focused on B2b: Embedded Finance, Commercial real-estate 
+    """
+)
+
+OPEN_AI_NO_RESULTS_SUGGESTION = (
+    lambda boolean: f"""Using NewsAPI to search for '{boolean}' returned no results. 
+    Generate 3 alternative terms that are similar to what the user is trying to search for just much more broad, and more likely to get news coverage. 
+    The goal is to create 3 different suggestions that will get the user news results. Use AND between select words to broaden the search term. Keep the search short, extract only the main subject or specific topic, ignoring any contextual details. Only use quotes when two words or more. Format the output must be as follows:\nSuggestion 1:\nSuggestion 2:\nSuggestion 3:
     """
 )
 
@@ -308,13 +327,14 @@ Instructions: {instructions}"""
 
 OPEN_AI_REWRITE_PTICH = (
     lambda original, bio, name: f"""
-    Rewrite the original media pitch incoporating pitching tips from the journalist's bio below. Be sure to maintaining the existing writing style as the original pitch. Include a short intriguing subject line; no more than 3 words. Do NOT bold any text!
+    Rewrite the original media pitch incoporating pitching tips from the journalist's bio below. Be sure to maintaining the existing writing style as the original pitch. Include a short intriguing subject line; no more than 3 words. DO NOT BOLD ANY TEXT IN YOUR RESPONSE, EVER!
     Original Pitch: {original}
     Journalist's bio along with pitching tips: {bio}
     Provide journalist's email: Check to see if their email is listed in the journalist bio above. If so, you must use that email. If no email can be found, then you must guess their work email. When guessing, you must base it on verified email patterns associated with their respective publication. Always return the email like this - email: (guessed email)    
     My name: {name}
     """
 )
+
 
 def OPEN_AI_WEB_SUMMARY(results, text):
     prompt = f"Create one summary based on the information from all the search results below. Ensure the summary encompasses a variety of topics mentioned in the results. You must include the source name and date to cite where you got the information from.\nHere are the top 5 search results:{results}\nAnd here is the top article: {text}"

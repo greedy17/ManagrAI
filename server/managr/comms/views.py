@@ -75,6 +75,7 @@ from managr.comms.utils import (
     convert_pdf_from_url,
     extract_email_address,
     google_search,
+    check_journalist_validity,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
@@ -114,20 +115,15 @@ def getclips(request):
                     headers=core_consts.OPEN_AI_HEADERS,
                 )
             r = open_ai_exceptions._handle_response(r)
-            logger.info(1)
             query_input = r.get("choices")[0].get("message").get("content")
             news_res = Search.get_clips(query_input, date_to, date_from)
             articles = news_res["articles"]
         else:
             news_res = Search.get_clips(boolean, date_to, date_from)
-            logger.info(1)
             articles = news_res["articles"]
             query_input = boolean
-        logger.info(2)
         articles = [article for article in articles if article["title"] != "[Removed]"]
-        logger.info(3)
         internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
-        logger.info(4)
         articles = normalize_article_data(articles, internal_articles)
         logger.info(5)
 
@@ -1401,7 +1397,6 @@ class PitchViewSet(
         user = request.user
         original = request.data.get("original")
         bio = request.data.get("bio")
-
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -2046,7 +2041,7 @@ class DiscoveryViewSet(
     )
     def verify_email(self, request, *args, **kwargs):
         user = request.user
-        journalist = request.data.get("journalist")
+        journalist = request.data.get("journalist").strip()
         outlet = request.data.get("publication")
         email = request.data.get("email")
         name_list = journalist.strip().split(" ")
@@ -2448,7 +2443,7 @@ class JournalistContactViewSet(
         tag = request.data.get("tag")
         modifier = request.data.get("modifier")
         JournalistContact.modify_tags(id, tag, modifier)
-        Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)
 
     @action(
         methods=["get"],
@@ -2460,3 +2455,28 @@ class JournalistContactViewSet(
         user = request.user
         tags = JournalistContact.get_tags_by_user(user)
         return Response(status=status.HTTP_200_OK, data={"tags": tags})
+
+    def create(self, request, *args, **kwargs):
+        journalist = request.data.pop("journalist").strip()
+        email = request.data.pop("email").strip()
+        outlet = request.data.pop("outlet").strip()
+        journalist = check_journalist_validity(journalist, outlet, email)
+        if isinstance(journalist, dict) and "error" in journalist.keys():
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={"error": "Could not create contact"},
+            )
+        else:
+            request.data["journalist"] = journalist.id
+            request.data["user"] = request.user.id
+            try:
+                serializer = self.serializer_class(data=request.data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                readSerializer = self.serializer_class(instance=serializer.instance)
+            except Exception as e:
+                logger.exception(f"Error validating data for details <{e}>")
+                return Response(
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)}
+                )
+            return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
