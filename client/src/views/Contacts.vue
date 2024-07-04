@@ -357,7 +357,7 @@
             </li>
           </ul>
 
-          <small v-else> Apply tags to organize journalists into specific lists. </small>
+          <small v-else> Apply tags to organize journalists into lists. </small>
         </div>
       </aside>
 
