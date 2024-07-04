@@ -594,17 +594,20 @@ class Article(TimeStampModel):
         date_to_date_obj = parser.parse(date_to)
         day_incremented = date_to_date_obj + timedelta(days=1)
         day_incremented_str = str(day_incremented)
+        print("a")
         date_range_articles = Article.objects.filter(
             publish_date__range=(date_from, day_incremented_str)
         )
+        print("b")
         if author:
             boolean_string = boolean_string.replace("journalist:", "").strip()
             articles = date_range_articles.filter(author__icontains=boolean_string)
         else:
             converted_boolean = boolean_search_to_query(boolean_string)
             articles = date_range_articles.filter(converted_boolean)
-        if len(articles):
-            articles = articles[:20]
+            print("c")
+
+        articles = articles[:20]
         return list(articles)
 
 

@@ -1044,7 +1044,21 @@
                 class="small-container letter-spacing"
               >
                 <div style="margin-top: 32px; margin-left: 2px" class="text-width">
-                  <p style="margin: 0; font-size: 22px">No results, try a new search</p>
+                  <p style="margin: 0; font-size: 22px">
+                    No results found. Try one of these suggestions:
+                  </p>
+
+                  <div style="margin: 16px 0 0 0; width: 100%" class="col-start">
+                    <p
+                      v-for="(suggestion, i) in suggestions"
+                      :key="i"
+                      style="font-size: 16px !important; width: 100%"
+                      class="example"
+                      @click="setAndSearch(suggestion)"
+                    >
+                      <img src="@/assets/images/search.svg" height="14px" alt="" />{{ suggestion }}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2395,6 +2409,7 @@ export default {
   data() {
     return {
       savingContact: false,
+      suggestions: [],
       loadingDraft: false,
       googleModalOpen: false,
       currentJournalistImages: [],
@@ -3187,6 +3202,10 @@ export default {
     },
     setNewSearch(txt) {
       this.newSearch = txt
+    },
+    setAndSearch(txt) {
+      this.newSearch = txt
+      this.generateNewSearch(false)
     },
     setNewSummary(txt) {
       this.newTemplate = txt
@@ -4154,8 +4173,22 @@ export default {
             this.controllers.getClips.controller.signal,
           )
           .then((response) => {
+            console.log('RESPONSE HERE', response)
             this.filteredArticles = response.articles
             this.booleanString = response.string
+            if (!this.filteredArticles.length) {
+              const str = response.suggestions
+              const searches = str.match(/Search\d+: "([^"]+)"|Search\d+: ([^"\n]+)/g)
+
+              const formattedSearches = searches.map((match) => {
+                const matchResult = match.match(/Search\d+: "([^"]+)"|Search\d+: ([^"\n]+)/)
+                return matchResult[1] || matchResult[2]
+              })
+
+              const [search1, search2, search3] = formattedSearches
+
+              this.suggestions = [search1, search2, search3]
+            }
             if (!saved) {
               this.clearNewSearch()
             }
@@ -5168,6 +5201,12 @@ export default {
 .col {
   display: flex;
   flex-direction: column;
+}
+.col-start {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 .blue-button {
