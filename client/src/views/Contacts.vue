@@ -41,7 +41,7 @@
             </div>
           </div>
           <div class="row">
-            <button class="primary-button" @click="toggleGoogleModal">Close</button>
+            <button class="primary-button" @click="openPitchModal()">Pitch</button>
             <!-- <button class="primary-button" :disabled="loadingDraft" @click="draftPitch">
               Pitch Journalist
             </button> -->
@@ -413,6 +413,21 @@
             </div>
 
             <div class="footer">
+              <div style="width: 52%" class="rows">
+                <div
+                  style="padding-right: 10px"
+                  v-for="(tag, i) in contact.tags"
+                  :key="i"
+                  class="user-tag"
+                >
+                  <img src="@/assets/images/tags.svg" height="12px" alt="" />
+                  {{ tag }}
+                  <!-- <div @click="modifyTags('remove', tag)" class="remove">
+                    <img src="@/assets/images/close.svg" height="14px" alt="" />
+                  </div> -->
+                </div>
+              </div>
+
               <div style="position: relative" class="row">
                 <button
                   @click="showTags(contact, i)"
@@ -676,10 +691,14 @@ export default {
       this.pitchModalOpen = !this.pitchModalOpen
     },
     openPitchModal(contact) {
+      this.googleModalOpen = false
       this.content = ''
       this.revisedPitch = ''
       this.showingEditor = false
-      this.currentContact = contact
+      if (contact) {
+        this.currentContact = contact
+      }
+
       this.pitchModalOpen = true
     },
     async selectTag(contact, tag, i) {
@@ -1103,7 +1122,7 @@ export default {
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: space-between;
 
     p {
       margin: 0;
@@ -1522,7 +1541,13 @@ h2 {
   align-items: center;
   gap: 8px;
   width: 80%;
-  overflow: hidden;
+  overflow: scroll;
+  scroll-behavior: smooth;
+}
+
+.rows::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
 }
 
 .primary-button {

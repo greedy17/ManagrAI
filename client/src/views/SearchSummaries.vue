@@ -477,13 +477,13 @@
             class="primary-button"
             :class="{ opaque: loadingPitch || !subject || !targetEmail }"
           >
-            <img
+            <!-- <img
               v-if="!loadingPitch && subject && targetEmail"
               style="filter: invert(100%); margin-right: 8px"
               src="@/assets/images/paper-plane-full.svg"
               height="12px"
               alt=""
-            />
+            /> -->
             <div v-if="sendingEmail" style="margin: 0 4px" class="loading-small">
               <div class="dot"></div>
               <div class="dot"></div>
@@ -522,11 +522,12 @@
               <div class="dot"></div>
             </div>
 
-            <div
+            <button
               v-else
               style="margin-right: 0.5rem"
               @click="saveContact"
-              class="wrapper icon-button green-bg"
+              class="wrapper icon-button green-bg clicked"
+              :disabled="buttonClicked"
             >
               <img
                 style="cursor: pointer"
@@ -536,7 +537,7 @@
                 alt=""
               />
               <div class="tooltip-below">Save</div>
-            </div>
+            </button>
           </div>
         </header>
 
@@ -577,7 +578,7 @@
             <button
               class="primary-button"
               :disabled="loadingDraft || savingContact"
-              @click="draftPitch"
+              @click="openDraftPitch"
             >
               Pitch Journalist
             </button>
@@ -2408,6 +2409,7 @@ export default {
   },
   data() {
     return {
+      buttonClicked: false,
       savingContact: false,
       suggestions: [],
       loadingDraft: false,
@@ -2775,6 +2777,11 @@ export default {
         this.emailError = false
       }
     },
+    googleModalOpen(newVal, oldVal) {
+      if (newVal !== oldVal) {
+        this.buttonClicked = false
+      }
+    },
   },
   mounted() {
     this.getEmailAlerts()
@@ -2806,6 +2813,7 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+        this.buttonClicked = true
         console.log(res)
       } catch (e) {
         console.log('RESPOSNE', e.data.error)
@@ -7215,6 +7223,16 @@ textarea::placeholder {
   }
   img:hover {
     filter: invert(100%);
+  }
+}
+
+.clicked {
+  &:disabled {
+    cursor: text !important;
+    img {
+      filter: invert(50%);
+      cursor: text !important;
+    }
   }
 }
 </style>
