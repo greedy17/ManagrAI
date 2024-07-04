@@ -357,9 +357,7 @@
             </li>
           </ul>
 
-          <small v-else>
-            A tag is a label used to group and organize contacts with shared characteristics.
-          </small>
+          <small v-else> Apply tags to organize journalists into lists. </small>
         </div>
       </aside>
 
