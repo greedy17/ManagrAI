@@ -1397,10 +1397,6 @@ class PitchViewSet(
         user = request.user
         original = request.data.get("original")
         bio = request.data.get("bio")
-<<<<<<< HEAD
-=======
-
->>>>>>> c4fa778e76028a1fd39e1c7ff16ba91403ff0a9c
         has_error = False
         attempts = 1
         token_amount = 1000
