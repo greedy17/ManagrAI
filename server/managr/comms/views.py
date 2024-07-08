@@ -37,7 +37,7 @@ from .models import (
     EmailTracker,
 )
 from .models import Article as InternalArticle
-from .models import WritingStyle, EmailAlert
+from .models import WritingStyle, EmailAlert, JournalistContact
 from managr.core.models import User
 from managr.comms import exceptions as comms_exceptions
 from .tasks import (
@@ -57,6 +57,7 @@ from .serializers import (
     WritingStyleSerializer,
     DiscoverySerializer,
     EmailTrackerSerializer,
+    JournalistContactSerializer,
 )
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
@@ -73,12 +74,14 @@ from managr.comms.utils import (
     extract_pdf_text,
     convert_pdf_from_url,
     extract_email_address,
+    google_search,
+    check_journalist_validity,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
 from managr.comms.tasks import emit_get_meta_account_info
 from managr.api.emails import send_html_email
-from django.conf import settings
+from newspaper.article import ArticleException
 
 logger = logging.getLogger("managr")
 
@@ -91,7 +94,11 @@ def getclips(request):
         boolean = request.GET.get("boolean", False)
         date_to = request.GET.get("date_to", False)
         date_from = request.GET.get("date_from", False)
-        print(date_to, date_from)
+        suggestions = []
+        if "journalist:" in search:
+            internal_articles = InternalArticle.search_by_query(search, date_to, date_from, True)
+            articles = normalize_article_data([], internal_articles)
+            return {"articles": articles, "string": search}
         if not boolean:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
             prompt = comms_consts.OPEN_AI_QUERY_STRING(search)
@@ -115,70 +122,44 @@ def getclips(request):
             news_res = Search.get_clips(boolean, date_to, date_from)
             articles = news_res["articles"]
             query_input = boolean
-
         articles = [article for article in articles if article["title"] != "[Removed]"]
         internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
         articles = normalize_article_data(articles, internal_articles)
+        logger.info(5)
 
-        return {"articles": articles, "string": query_input}
+        if len(articles) < 1:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_EMPTY_SEARCH_SUGGESTIONS(query_input)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email,
+                prompt,
+                token_amount=500,
+                top_p=0.1,
+            )
+            with Variable_Client() as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            r = open_ai_exceptions._handle_response(r)
+          
+            suggestions = r.get("choices")[0].get("message").get("content")
+       
+        return {"articles": articles, "string": query_input, "suggestions": suggestions}
 
     except Exception as e:
         has_error = True
         logger.exception(e)
         return {"error": str(e)}
-
-
-# @require_http_methods(["GET"])
-# @permission_classes([permissions.IsAuthenticated])
-# @async_to_sync
-# async def get_clips(request, *args, **kwargs):
-#     response = await sync_to_async(getclips)(request)
-#     return JsonResponse(data=response)
 
 
 @require_http_methods(["GET"])
 @permission_classes([permissions.IsAuthenticated])
-def get_clips(request, *args, **kwargs):
-    try:
-        user = User.objects.get(id=request.GET.get("user_id"))
-        has_error = False
-        search = request.GET.get("search", False)
-        boolean = request.GET.get("boolean", False)
-        date_to = request.GET.get("date_to", False)
-        date_from = request.GET.get("date_from", False)
-        print(date_to, date_from)
-        if not boolean:
-            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_QUERY_STRING(search)
-            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                user.email,
-                prompt,
-                token_amount=500,
-                top_p=0.1,
-            )
-            with Variable_Client() as client:
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=core_consts.OPEN_AI_HEADERS,
-                )
-            r = open_ai_exceptions._handle_response(r)
-            query_input = r.get("choices")[0].get("message").get("content")
-            news_res = Search.get_clips(query_input, date_to, date_from)
-            articles = news_res["articles"]
-        else:
-            news_res = Search.get_clips(boolean, date_to, date_from)
-            articles = news_res["articles"]
-            query_input = boolean
-
-        articles = [article for article in articles if article["title"] != "[Removed]"]
-        internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
-        articles = normalize_article_data(articles, internal_articles)
-        return Response(data={"articles": articles, "string": query_input})
-    except Exception as e:
-        has_error = True
-        logger.exception(e)
-        return {"error": str(e)}
+@async_to_sync
+async def get_clips(request, *args, **kwargs):
+    response = await sync_to_async(getclips)(request)
+    return JsonResponse(data=response)
 
 
 def add_timezone_and_convert_to_utc(datetime_str, user_timezone):
@@ -256,6 +237,9 @@ class PRSearchViewSet(
         clips = request.data.get("clips")
         search = request.data.get("search")
         instructions = request.data.get("instructions", False)
+        company = request.data.get("company")
+        if "journalist:" in search:
+            instructions = comms_consts.JOURNALIST_INSTRUCTIONS(company)
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -645,10 +629,11 @@ class PRSearchViewSet(
         attempts = 1
         while True:
             try:
+                if attempts >= 10:
+                    break
                 if query_input is None:
                     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                     prompt = comms_consts.OPEN_AI_TWITTER_SEARCH_CONVERSION(search)
-
                     body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                         user.email,
                         prompt,
@@ -665,10 +650,13 @@ class PRSearchViewSet(
                     r = open_ai_exceptions._handle_response(r)
                     query_input = r.get("choices")[0].get("message").get("content")
                     query_input = query_input.replace("AND", " ")
-                    query_input = query_input + " lang:en"
+                    query_input = query_input + " lang:en -is:retweet"
+                    if "from:" not in query_input:
+                        query_input = query_input + " is:verified"
                 tweet_res = twitter_account.get_tweets(query_input, next_token)
                 tweets = tweet_res.get("data", None)
                 includes = tweet_res.get("includes", None)
+                attempts += 1
                 if tweets:
                     if "next_token" in tweet_res["meta"].keys():
                         next_token = tweet_res["meta"]["next_token"]
@@ -682,7 +670,10 @@ class PRSearchViewSet(
                                     tweet["user"] = user
                                     tweet_list.append(tweet)
                                 break
+
                 else:
+                    if len(tweet_list):
+                        break
                     return Response(
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         data={"error": f"No results for {query_input}", "string": query_input},
@@ -697,7 +688,9 @@ class PRSearchViewSet(
                     data={"error": f"No results for {query_input}", "string": query_input},
                 )
             except comms_exceptions.TooManyRequestsError:
-                if attempts > 3:
+                if len(tweet_list):
+                    break
+                else:
                     return Response(
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         data={
@@ -705,17 +698,15 @@ class PRSearchViewSet(
                             "string": query_input,
                         },
                     )
-                attempts += 1
-                retry_after = int(tweet_res.headers.get("Retry-After", 5))
-                time.sleep(retry_after)
-                continue
             except Exception as e:
+                print(1)
                 has_error = True
                 logger.exception(e)
                 tweet_res = e
                 break
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": tweet_res})
+        query_input = query_input.replace("-is:retweet", "").replace("is:verified", "")
         return Response({"tweets": tweet_list, "string": query_input, "includes": includes})
 
     @action(
@@ -1405,7 +1396,7 @@ class PitchViewSet(
     def rewrite_pitch(self, request, *args, **kwargs):
         user = request.user
         original = request.data.get("original")
-        tip = request.data.get("tip")
+        bio = request.data.get("bio")
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -1414,7 +1405,7 @@ class PitchViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_REWRITE_PTICH(original, tip, user.first_name)
+                prompt = comms_consts.OPEN_AI_REWRITE_PTICH(original, bio, user.first_name)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
@@ -2021,6 +2012,7 @@ class DiscoveryViewSet(
                     "X-Managr-Id": message_id,
                     "Message-ID": message_id,
                 },
+                user=user,
             )
             user.add_meta_data("emailSent")
             serializer = EmailTrackerSerializer(
@@ -2049,10 +2041,10 @@ class DiscoveryViewSet(
     )
     def verify_email(self, request, *args, **kwargs):
         user = request.user
-        journalist = request.data.get("journalist")
+        journalist = request.data.get("journalist").strip()
         outlet = request.data.get("publication")
         email = request.data.get("email")
-        name_list = journalist.split(" ")
+        name_list = journalist.strip().split(" ")
         db_check = []
         if len(journalist) > 2:
             first = name_list[0]
@@ -2106,12 +2098,105 @@ class DiscoveryViewSet(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
+        url_path="web-context",
+    )
+    def journalist_web_context(self, request, *args, **kwargs):
+        user = request.user
+        journalist = request.data.get("journalist")
+        outlet = request.data.get("outlet")
+        content = request.data.get("content")
+        company = request.data.get("company")
+        search = request.data.get("search")
+        query = f"{journalist} AND {outlet}"
+        google_results = google_search(query)
+        if len(google_results) == 0:
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={"error": "No results could be found."},
+            )
+        results = google_results["results"]
+        images = google_results["images"]
+        art = Article(results[0]["link"], config=generate_config())
+        try:
+            art.download()
+            art.parse()
+            text = art.text
+        except ArticleException:
+            text = ""
+        except Exception:
+            text = ""
+        has_error = False
+        attempts = 1
+        token_amount = 1000
+        timeout = 60.0
+        while True:
+            try:
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                if search:
+                    prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(journalist, results, company, text)
+                else:
+                    prompt = comms_consts.OPEN_AI_DISCOVERY_RESULTS_PROMPT(
+                        journalist, results, content, text
+                    )
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    "You are a VP of Communications",
+                    token_amount=token_amount,
+                    top_p=0.1,
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                res = open_ai_exceptions._handle_response(r)
+
+                message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount <= 2000:
+                    has_error = True
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 500
+                    continue
+            except httpx.ReadTimeout as e:
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+        if has_error:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
+
+        return Response(data={"summary": message, "images": images})
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
         url_path="draft",
     )
     def draft_pitch(self, request, *args, **kwargs):
         user = request.user
         username = request.data.get("user")
         org = request.data.get("org")
+        bio = request.data.get("bio")
         style = request.data.get("style")
         author = request.data.get("author")
         outlet = request.data.get("outlet")
@@ -2126,7 +2211,7 @@ class DiscoveryViewSet(
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_EMAIL_JOURNALIST(
-                    username, org, style, author, outlet, headline, description, date
+                    username, org, style, bio, author, outlet, headline, description, date
                 )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
@@ -2207,7 +2292,7 @@ def mailgun_webhooks(request):
             tracker.clicks += 1
         tracker.save()
         tracker.add_activity(event_type)
-    except EmailTracker.DoesNotExist():
+    except EmailTracker.DoesNotExist:
         return Response(status=status.HTTP_202_ACCEPTED)
     except Exception as e:
         logger.exception(f"{e}, {message_id}\n{event_data}")
@@ -2259,3 +2344,147 @@ def get_email_tracking(request):
     serialized = EmailTrackerSerializer(trackers, many=True)
     rate_data = EmailTracker.get_user_rates(user.id)
     return Response(data={"trackers": serialized.data, "rates": rate_data})
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def get_web_summary(request):
+    user = request.user
+    query = request.data.get("query")
+    res = google_search(query)
+    results = res["results"]
+    art = Article(results[0]["link"], config=generate_config())
+    try:
+        art.download()
+        art.parse()
+        text = art.text
+    except ArticleException:
+        text = ""
+    except Exception:
+        text = ""
+    has_error = False
+    attempts = 1
+    token_amount = 1000
+    timeout = 60.0
+    while True:
+        try:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_WEB_SUMMARY(results, text)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email,
+                prompt,
+                "You are a VP of Communications",
+                token_amount=token_amount,
+                top_p=0.1,
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            res = open_ai_exceptions._handle_response(r)
+
+            message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+            break
+        except open_ai_exceptions.StopReasonLength:
+            if token_amount <= 2000:
+                has_error = True
+                message = "Token amount error"
+                break
+            else:
+                token_amount += 500
+                continue
+        except httpx.ReadTimeout as e:
+            timeout += 30.0
+            if timeout >= 120.0:
+                has_error = True
+                message = "Read timeout issue"
+                break
+            else:
+                attempts += 1
+                continue
+        except Exception as e:
+            has_error = True
+            message = f"Unknown exception: {e}"
+            break
+    if has_error:
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
+    return Response(data={"message": message})
+
+
+class JournalistContactViewSet(
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+):
+    authentication_classes = [ExpiringTokenAuthentication]
+    serializer_class = JournalistContactSerializer
+
+    def get_queryset(self):
+        contacts = JournalistContact.objects.for_user(user=self.request.user)
+        if self.request.data.get("tag", False):
+            tag = self.request.get("tag")
+            return contacts.filter(tags__contains=[tag])
+        else:
+            return contacts
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="modify_tags",
+    )
+    def modify_tags(self, request, *args, **kwargs):
+        id = request.data.get("id")
+        tag = request.data.get("tag")
+        modifier = request.data.get("modifier")
+        JournalistContact.modify_tags(id, tag, modifier)
+        return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="tag_list",
+    )
+    def get_tag_list(self, request, *args, **kwargs):
+        user = request.user
+        tags = JournalistContact.get_tags_by_user(user)
+        return Response(status=status.HTTP_200_OK, data={"tags": tags})
+
+    def create(self, request, *args, **kwargs):
+        journalist = request.data.pop("journalist").strip()
+        email = request.data.pop("email").strip()
+        outlet = request.data.pop("outlet").strip()
+        journalist = check_journalist_validity(journalist, outlet, email)
+        if isinstance(journalist, dict) and "error" in journalist.keys():
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={"error": "Could not create contact"},
+            )
+        else:
+            request.data["journalist"] = journalist.id
+            request.data["user"] = request.user.id
+            try:
+                serializer = self.serializer_class(data=request.data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                readSerializer = self.serializer_class(instance=serializer.instance)
+            except Exception as e:
+                logger.exception(f"Error validating data for details <{e}>")
+                return Response(
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)}
+                )
+            return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            instance.delete()
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_200_OK)     

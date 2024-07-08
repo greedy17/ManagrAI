@@ -177,8 +177,12 @@
           <p>Discover</p>
         </router-link>
 
+        <router-link active-class="active" :to="{ name: 'Contacts' }" id="router-pitch">
+          <p>Contacts</p>
+        </router-link>
+
         <router-link active-class="active-mobile" :to="{ name: 'EmailTracking' }" id="router-pitch">
-          <p>Track</p>
+          <p>Tracker</p>
         </router-link>
       </div>
 
@@ -504,8 +508,12 @@
           <p>Discover</p>
         </router-link>
 
+        <router-link active-class="active" :to="{ name: 'Contacts' }" id="router-pitch">
+          <p>Contacts</p>
+        </router-link>
+
         <router-link active-class="active" :to="{ name: 'EmailTracking' }" id="router-pitch">
-          <p>Track</p>
+          <p>Tracker</p>
         </router-link>
 
         <!-- <router-link

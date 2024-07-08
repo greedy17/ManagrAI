@@ -12,6 +12,7 @@ from .models import (
     Discovery,
     Journalist,
     EmailTracker,
+    JournalistContact,
 )
 from django.contrib.postgres.search import SearchVector
 
@@ -162,3 +163,11 @@ class EmailTrackerSerializer(serializers.ModelSerializer):
             "received",
             "failed",
         )
+
+
+class JournalistContactSerializer(serializers.ModelSerializer):
+    journalist_ref = JournalistSerializer(source="journalist", read_only=True)
+
+    class Meta:
+        model = JournalistContact
+        fields = ("id", "user", "journalist","journalist_ref", "tags", "bio", "images")

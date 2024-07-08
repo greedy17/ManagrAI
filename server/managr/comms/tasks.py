@@ -66,7 +66,7 @@ def emit_process_user_hashtag_list(user_id):
 
 
 def emit_send_social_summary(news_alert_id, schedule):
-    return _send_social_summary(news_alert_id, schedule={"run_at": schedule})  
+    return _send_social_summary(news_alert_id, schedule={"run_at": schedule})
 
 
 def create_new_search(payload, user_id):
@@ -417,7 +417,7 @@ def _send_news_summary(news_alert_id):
             "clips": clip_short_list,
             "website_url": f"{settings.MANAGR_URL}/login",
         }
-        email_list = [alert.user.email].extend(alert.search.recipients)
+        email_list = [alert.user.email]
         send_html_email(
             f"Managr Digest: {alert.search.name}",
             "core/email-templates/news-email.html",
@@ -568,7 +568,7 @@ def _run_spider_batch(urls):
 def _add_jounralist_to_db(data, verified):
     data["verified"] = verified
     publication = data.pop("publication")
-    full_name = data.pop("journalist")
+    full_name = data.pop("journalist").strip()
     name_split = full_name.split(" ")
     if len(name_split) > 2:
         first = name_split[0]

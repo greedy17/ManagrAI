@@ -16,7 +16,7 @@ from django.conf import settings
 from urllib.parse import urlparse, urlunparse
 from collections import OrderedDict
 from .exceptions import _handle_response
-from .models import NewsSource
+from .models import NewsSource, Journalist
 from botocore.exceptions import ClientError
 
 s3 = boto3.client("s3")
@@ -488,3 +488,262 @@ def convert_pdf_from_url(url):
     except Exception as e:
         print(str(e))
         return "", image_list
+
+
+def google_search(query):
+    url = comms_consts.GOOGLE_SEARCH_URI
+    params = comms_consts.GOOGLE_SEARCH_PARAMS(query)
+    with Variable_Client() as client:
+        res = client.get(url, params=params)
+        if res.status_code == 200:
+            results_list = []
+            images = []
+            res = res.json()
+            results = res["items"][:5]
+            for item in results:
+                result_data = {
+                    "title": item["title"],
+                    "snippet": item["snippet"],
+                    "link": item["link"],
+                }
+                try:
+                    images.append(item["pagemap"]["cse_image"][0]["src"])
+                except Exception:
+                    pass
+                results_list.append(result_data)
+            return {"images": images, "results": results_list}
+        else:
+            return {}
+
+
+def test_open(user, journalist, results, text):
+    from managr.core import constants as core_consts
+    from managr.core import exceptions as open_ai_exceptions
+    import httpx
+
+    has_error = False
+    attempts = 1
+    token_amount = 1000
+    timeout = 60.0
+    while True:
+        try:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(journalist, results, "Managr", text)
+            # prompt = f"Create one summary based on the information from all the search results below. Ensure the summary encompasses a variety of topics mentioned in the results. You must include the source name and date to cite where you got the information from.\nHere are the top 5 search results:{results}\nAnd here is the top article: {text}"
+            print(prompt)
+            print("_______________________________")
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email,
+                prompt,
+                "You are a VP of Communications",
+                token_amount=token_amount,
+                top_p=0.1,
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            res = open_ai_exceptions._handle_response(r)
+
+            message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+            print(message)
+            break
+        except open_ai_exceptions.StopReasonLength:
+            if token_amount <= 2000:
+                has_error = True
+                message = "Token amount error"
+                break
+            else:
+                token_amount += 500
+                continue
+        except httpx.ReadTimeout as e:
+            timeout += 30.0
+            if timeout >= 120.0:
+                has_error = True
+                message = "Read timeout issue"
+                break
+            else:
+                attempts += 1
+                continue
+        except Exception as e:
+            has_error = True
+            message = f"Unknown exception: {e}"
+            break
+    return message
+
+
+def test_rewrite(details):
+    from managr.core import constants as core_consts
+    from managr.core import exceptions as open_ai_exceptions
+
+    original = "Hi {Journalist first name},I admire your insightful coverage of cultural heritage. I'm reaching out to share a compelling story about the art of Gullah rag quilting. Sharon Cooper-Murray, 'The Gullah Lady,' can no longer teach this craft due to health reasons. However, Cookie Washington, an African American Quilter Artist, is dedicated to preserving this tradition. This technique, passed down through generations, combines feed and grain sacks with rag strips to create unique quilts. Would you be interested in exploring this rich cultural heritage and Cookie's efforts to honor Sharon's legacy?Thanks,[Your Name]"
+    has_error = False
+    attempts = 1
+    token_amount = 1000
+    timeout = 60.0
+
+    while True:
+        try:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_REWRITE_PTICH(original, details, "Zachary")
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                "zach@mymanagr.com",
+                prompt,
+                token_amount=token_amount,
+                top_p=0.1,
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            r = open_ai_exceptions._handle_response(r)
+            pitch = r.get("choices")[0].get("message").get("content")
+            print(pitch)
+            break
+        except open_ai_exceptions.StopReasonLength:
+            if token_amount <= 2000:
+                has_error = True
+
+                message = "Token amount error"
+                break
+            else:
+                token_amount += 500
+                continue
+        except Exception as e:
+            has_error = True
+            message = f"Unknown exception: {e}"
+            break
+    return
+
+
+def test_flow():
+    from managr.core.models import User
+    from newspaper import Article
+
+    user = User.objects.get(email="zach@mymanagr.com")
+    journalist = "Vanessa Friedman"
+    query = "Vanessa Friedman AND The New York Times AND articles"
+    google_res = google_search(query)
+    results = google_res["results"]
+    images = google_res["images"]
+    art = Article(results[0]["link"], config=generate_config())
+    art.download()
+    art.parse()
+    text = art.text
+    message = test_open(user, journalist, results, text)
+    email = test_rewrite(message)
+    return email
+
+
+def dumb(query):
+    from newspaper import Article
+    from managr.core.models import User
+
+    res = google_search(query)
+    results = res["results"][:6]
+    art = Article(results[0]["link"], config=generate_config())
+    art.download()
+    art.parse()
+    text = art.text
+    user = User.objects.get(email="zach@mymanagr.com")
+    summary = test_open(user, "text", results, text)
+    return summary
+
+
+def check_journalist_validity(journalist, outlet, email):
+    from managr.comms.serializers import JournalistSerializer
+
+    data = {"email": email, "outlet": outlet}
+    name_list = journalist.split(" ")
+    db_check = []
+    if len(journalist) > 2:
+        first = name_list[0]
+        last = name_list[len(name_list) - 1]
+    else:
+        first = name_list[0]
+        last = name_list[1]
+    try:
+        email_check = Journalist.objects.filter(email=email)
+        if len(email_check):
+            db_check = email_check
+        else:
+            name_check = Journalist.objects.filter(first_name=first, last_name=last, outlet=outlet)
+            if len(name_check):
+                db_check = name_check
+        if len(db_check):
+            internal_journalist = db_check.first()
+            return internal_journalist
+        else:
+            score = Journalist.verify_email(email)
+            is_valid = True if score >= 85 else False
+            if is_valid is False:
+                r = Journalist.email_finder(first, last, outlet=outlet)
+                if isinstance(r, dict) and "error" in r.keys():
+                    return r
+                score = r["score"]
+                if score is None:
+                    score = 0
+                is_valid = True if score >= 85 else False
+                if r["email"] is not None:
+                    email = r["email"]
+                    data["email"] = email
+                    data["outlet"] = r["company"]
+            data["accuracy_score"] = score
+            data["first_name"] = first
+        data["last_name"] = last
+        serializer = JournalistSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return serializer.instance
+    except Exception as e:
+        print(2, str(e))
+        return {"error": "Could not create contact."}
+
+        
+def test_prompt(search_term):
+    from managr.core import constants as core_consts
+    from managr.core import exceptions as open_ai_exceptions
+
+    prompt = f"I am using NewsAPI to search for '{search_term}' returned no results. Generate two alternative search queries using boolean operators (AND, OR) to broaden the scope and improve the chances of finding news. The create one alternate search term. Format the output as follows:\nSearch1:\nSearch2:\nAlternateSearch:"
+    has_error = False
+    attempts = 1
+    token_amount = 1000
+    timeout = 60.0
+
+    while True:
+        try:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                "zach@mymanagr.com",
+                prompt,
+                token_amount=token_amount,
+                top_p=0.1,
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            r = open_ai_exceptions._handle_response(r)
+            pitch = r.get("choices")[0].get("message").get("content")
+            print(pitch)
+            break
+        except open_ai_exceptions.StopReasonLength:
+            if token_amount <= 2000:
+                has_error = True
+
+                message = "Token amount error"
+                break
+            else:
+                token_amount += 500
+                continue
+        except Exception as e:
+            has_error = True
+            message = f"Unknown exception: {e}"
+            break
+    return

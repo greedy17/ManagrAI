@@ -307,12 +307,104 @@
         </div>
       </div>
     </Modal>
+    <Modal v-if="googleModalOpen" class="bio-modal">
+      <div class="bio-container">
+        <header>
+          <p style="font-size: 17px">Journalist Bio</p>
+
+          <div class="row">
+            <!-- <div
+              style="margin-right: 0.5rem"
+              @click="copyBioText"
+              class="wrapper icon-button white-bg"
+            >
+              <img
+                style="cursor: pointer"
+                class="right-mar img-highlight"
+                src="@/assets/images/clipboard.svg"
+                height="14px"
+                alt=""
+              />
+              <div class="tooltip-below">{{ copyTip }}</div>
+            </div> -->
+
+            <div v-if="savingContact" style="margin: 0" class="loading-small">
+              <p style="margin-right: 8px">Saving</p>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+
+            <button
+              v-else
+              style="margin-right: 0.5rem"
+              @click="saveContact"
+              class="wrapper icon-button green-bg clicked"
+              :disabled="buttonClicked"
+            >
+              <img
+                style="cursor: pointer"
+                class="right-mar img-highlight"
+                src="@/assets/images/disk.svg"
+                height="14px"
+                alt=""
+              />
+              <div class="tooltip-below">Save</div>
+            </button>
+          </div>
+        </header>
+
+        <section v-if="loadingDraft">
+          <div style="height: 40vh" class="bio-body">
+            <div style="margin: 0" class="loading-small">
+              <p style="margin-right: 8px">Generating bio for {{ currentJournalist }}</p>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+          </div>
+        </section>
+
+        <section v-else>
+          <div class="bio-body" v-html="currentJournalistBio"></div>
+
+          <aside>
+            <img
+              v-for="(url, i) in currentJournalistImages"
+              :key="i"
+              :src="`${url}`"
+              height="24px"
+              alt=""
+            />
+          </aside>
+        </section>
+
+        <footer>
+          <div class="row">
+            <button
+              class="secondary-button"
+              :disabled="loadingDraft || savingContact"
+              @click="toggleGoogleModal"
+            >
+              Close
+            </button>
+            <button
+              class="primary-button"
+              :disabled="loadingDraft || savingContact"
+              @click="draftPitch"
+            >
+              Pitch Journalist
+            </button>
+          </div>
+        </footer>
+      </div>
+    </Modal>
 
     <section class="container" :class="{ 'fit-content': summary && isMobile }">
       <div style="padding-top: 88px" class="content-body">
         <div style="width: 100%; padding: 0 32px; padding-top: 0" class="small-container">
           <div class="text-width">
-            <p style="margin: 0">Discover Journalists using AI</p>
+            <p style="margin: 8px 0 0 0">Discover Journalists using AI</p>
           </div>
 
           <div style="margin-top: 32px" class="large-input-container">
@@ -823,7 +915,10 @@
         class="content-body centered-content"
       >
         <div class="centered-col">
-          <p>List of journalists + details</p>
+          <div style="cursor: text" class="image-container white-bg extra-padding">
+            <img src="@/assets/images/comment.svg" height="32px" alt="" />
+          </div>
+          <p>A list of up to 10 journalists will appear here.</p>
         </div>
       </div>
 
@@ -837,8 +932,8 @@
       </div>
 
       <div style="margin-top: 0.5rem" v-else-if="summary" class="content-body">
-        <div @click="selectJournalist($event)" style="padding-top: 32px" class="small-container">
-          <pre class="pre-text" v-html="formattedResponse"></pre>
+        <div @click="selectJournalist($event)" style="padding-top: 16px" class="small-container">
+          <div class="pre-text" v-html="summary"></div>
         </div>
       </div>
 
@@ -862,6 +957,11 @@ export default {
   },
   data() {
     return {
+      buttonClicked: false,
+      loadingDraft: false,
+      googleModalOpen: false,
+      currentJournalistBio: '',
+      currentJournalistImages: [],
       showPitches: false,
       pitchText: '',
       currentJournalist: '',
@@ -955,9 +1055,15 @@ export default {
         `Social Media Influencers`,
       ],
       selectedContent: 'Select content',
+      savingContact: false,
     }
   },
   watch: {
+    googleModalOpen(newVal, oldVal) {
+      if (newVal !== oldVal) {
+        this.buttonClicked = false
+      }
+    },
     currentDiscovery(newVal, oldVal) {
       if (newVal.id !== (oldVal ? oldVal.id : null)) {
         this.setDiscovery(newVal)
@@ -985,6 +1091,88 @@ export default {
     this.bccEmail = this.user.email
   },
   methods: {
+    async saveContact() {
+      this.savingContact = true
+      // name_list = this.currentJournalist.split(' ')
+      // const first = name_list[0]
+      // const last = name_list.at(-1)
+      try {
+        const res = await Comms.api.addContact({
+          user: this.user.id,
+          email: this.targetEmail,
+          journalist: this.currentJournalist,
+          bio: this.currentJournalistBio,
+          images: this.currentJournalistImages,
+          outlet: this.currentPublication,
+        })
+        this.$toast('Contact saved!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.buttonClicked = true
+      } catch (e) {
+        console.log('RESPOSNE', e.data.error)
+        if (e.data.error.includes('journalist must make a unique set')) {
+          this.$toast('Contact is already saved!', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } else {
+          this.$toast("Can't verify Journalist", {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }
+        this.buttonClicked = true
+      } finally {
+        this.savingContact = false
+      }
+    },
+    async getJournalistBio() {
+      this.loadingDraft = true
+      try {
+        const res = await Comms.api.getJournalistBio({
+          journalist: this.currentJournalist,
+          outlet: this.currentPublication,
+          content: this.content,
+          search: false,
+        })
+        console.log(res)
+        const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i
+        const match = res.data.summary.match(emailRegex)
+
+        if (match) {
+          // console.log(match)
+          const email = match[1]
+          this.targetEmail = email.trim().replace(/\n/g, '')
+        }
+        this.currentJournalistBio = res.data.summary
+          .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+          .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, '')
+        this.currentJournalistImages = res.data.images
+
+        console.log('TARGET EMAIL', this.targetEmail)
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.loadingDraft = false
+      }
+    },
+    formatSummary() {
+      this.summary = this.summary.replace(/\*/g, '<b>').replace(/\*/g, '</b>')
+    },
+    toggleGoogleModal() {
+      this.googleModalOpen = !this.googleModalOpen
+    },
     insertPitch(pitch) {
       this.toggleShowPitches()
       this.content = pitch.generated_pitch
@@ -1039,7 +1227,7 @@ export default {
             body: this.revisedPitch,
             recipient: this.targetEmail,
             bcc: [this.bccEmail],
-            name: this.journalistName,
+            name: this.currentJournalist,
           })
           .then((response) => {
             this.emailJournalistModalOpen = false
@@ -1067,14 +1255,28 @@ export default {
         this.refreshUser()
       }
     },
+    draftPitch() {
+      // const bio = this.currentJournalistBio
+      this.googleModalOpen = false
+      this.emailJournalistModalOpen = true
+      this.rewritePitch()
+    },
     async rewritePitch() {
       this.loadingPitch = true
       try {
         const res = await Comms.api.rewritePitch({
           original: this.content,
-          tip: this.pitchingTip,
+          bio: this.currentJournalistBio,
         })
-        const body = res.pitch.replace(/^Subject(?: Line)?:[\s\S]*?\n/i, '')
+        const emailRegex = /email: ([^"]*)/
+        const match = res.pitch.match(emailRegex)
+        if (match) {
+          const email = match[1]
+          this.targetEmail = email
+        }
+        const body = res.pitch
+          .replace(/^Subject(?: Line)?:[\s\S]*?\n/i, '')
+          .replace(/email: [^"]*/, '')
         const signature = this.user.emailSignature ? this.user.emailSignature : ''
         const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
           /\n/g,
@@ -1093,37 +1295,37 @@ export default {
       }
     },
     selectJournalist(event) {
-      if (event.target.tagName === 'SPAN') {
-        const text = event.target.innerText
-        const { name, email, publication, tip } = this.extractNameAndEmail(text)
-        this.targetEmail = email
-        this.pitchingTip = 'The journalist is ' + name + '.' + tip
+      if (event.target.tagName === 'BUTTON') {
+        this.currentJournalistBio = ''
+        this.currentJournalistImages = []
+        const text = event.target.closest('span').outerHTML
+        const { name, publication, tip } = this.extractNameAndEmail(text)
         this.currentJournalist = name
         this.currentPublication = publication
-        this.emailJournalistModalOpen = true
-        this.rewritePitch()
+        this.pitchingTip = tip
+        this.googleModalOpen = true
+        this.getJournalistBio()
+
+        // this.targetEmail = email
+        // this.emailJournalistModalOpen = true
+        // this.rewritePitch()
       }
     },
     extractNameAndEmail(text) {
-      // const parts = text.trim().split(/\s+/)
-      // let name = ''
-      // let email = ''
+      const name = text
+        .match(/Name:\s*(.*)/)[1]
+        .trim()
+        .replace(/<strong>|<\/strong>/g, '')
+      const publication = text
+        .match(/Outlet:\s*(.*)/)[1]
+        .trim()
+        .replace(/<strong>|<\/strong>/g, '')
+      const tip = text
+        .match(/Reason for Selection:\s*(.*)/)[1]
+        .trim()
+        .replace(/<strong>|<\/strong>/g, '')
 
-      // parts.forEach((part) => {
-      //   if (part.includes('@')) {
-      //     email = part.replace(/[()<>]/g, '')
-      //   } else {
-      //     name += part + ' '
-      //   }
-      // })
-
-      // name = name.trim()
-      const name = text.match(/Journalist:\s*(.*)/)[1].trim()
-      const publication = text.match(/Publication:\s*(.*)/)[1].trim()
-      const email = text.match(/Email:\s*(.*)/)[1].trim()
-      const tip = text.match(/Pitching Tip:\s*(.*)/)[1].trim()
-
-      return { name, email, publication, tip }
+      return { name, publication, tip }
     },
     async discoverJournalists() {
       if (!this.isPaid && this.searchesUsed >= 10) {
@@ -1257,25 +1459,25 @@ export default {
     toggleSaveModal() {
       this.saveModalOpen = !this.saveModalOpen
     },
-    async getJournalists() {
-      this.loadingJournalists = true
-      try {
-        await Comms.api
-          .getJournalists({
-            type: this.pubType,
-            beat: this.beat,
-            location: this.location,
-            content: this.pitch,
-          })
-          .then((response) => {
-            this.journalists = response.journalists
-          })
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.loadingJournalists = false
-      }
-    },
+    // async getJournalists() {
+    //   this.loadingJournalists = true
+    //   try {
+    //     await Comms.api
+    //       .getJournalists({
+    //         type: this.pubType,
+    //         beat: this.beat,
+    //         location: this.location,
+    //         content: this.pitch,
+    //       })
+    //       .then((response) => {
+    //         this.journalists = response.journalists
+    //       })
+    //   } catch (e) {
+    //     console.log(e)
+    //   } finally {
+    //     this.loadingJournalists = false
+    //   }
+    // },
     async getFeedback() {
       this.loadingFeedback = true
       try {
@@ -1422,9 +1624,9 @@ export default {
         console.error('Failed to copy text: ', err)
       }
     },
-    async copyJournalText() {
+    async copyBioText() {
       try {
-        await navigator.clipboard.writeText(this.journalists)
+        await navigator.clipboard.writeText(this.currentJournalistBio)
         this.copyTip = 'Copied!'
 
         setTimeout(() => {
@@ -1434,6 +1636,7 @@ export default {
         console.error('Failed to copy text: ', err)
       }
     },
+
     async copyFeedbackText() {
       try {
         await navigator.clipboard.writeText(this.feedback)
@@ -1634,19 +1837,6 @@ export default {
     },
   },
   computed: {
-    formattedResponse() {
-      if (this.summary) {
-        const regex = /([1-9][0-9]*)\.\s+Journalist:\s+([^\n]+)\nEmail:\s+/g
-
-        let formattedHtml = this.summary.replace(regex, (match, index, name, email) => {
-          name = name.trim()
-          return `<span class="clickable">${index}. <strong> Journalist: ${name} - Email: ${email}</strong></span>`
-        })
-        return formattedHtml
-      } else {
-        return ''
-      }
-    },
     userWritingStyles() {
       if (this.personalStyles) {
         return this.allWritingStyles.filter((style) => style.user === this.user.id)
@@ -1944,10 +2134,29 @@ export default {
   margin-right: 4px;
 }
 
-::v-deep .pre-text span {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.128);
-  padding-bottom: 2px;
+::v-deep .pre-text button {
+  // border-bottom: 1px solid rgba(0, 0, 0, 0.128);
+  background-color: white;
+  padding: 5px 6px;
+  border: 1px solid $dark-black-blue;
+  color: $dark-black-blue;
   cursor: pointer;
+  transition: all 0.5s;
+  border-radius: 5px;
+
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: scale(1.02);
+  }
+}
+
+::v-deep .pre-text span {
+  display: block;
+  margin-bottom: -32px;
+}
+
+::v-deep .pre-text strong {
+  font-family: $base-font-family;
 }
 
 ::v-deep .ql-toolbar.ql-snow {
@@ -3231,6 +3440,139 @@ footer {
     margin-top: 62px;
   }
 }
+
+.bio-modal {
+  margin-top: 132px;
+  @media only screen and (max-width: 600px) {
+    margin-top: 62px;
+  }
+
+  width: 70vw;
+}
+
+.bio-container {
+  width: 60vw;
+  max-height: 70vh;
+  position: relative;
+  overflow-y: scroll;
+  color: $base-gray;
+  font-family: $thin-font-family;
+  padding: 0 24px 0 24px;
+
+  label {
+    font-size: 14px;
+  }
+  @media only screen and (max-width: 600px) {
+    width: 95%;
+  }
+
+  header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background-color: white;
+    padding: 0 0 8px 0;
+
+    p {
+      font-weight: bold;
+    }
+  }
+
+  footer {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    position: sticky;
+    bottom: -1px;
+    background-color: white;
+    margin: 0;
+    padding: 24px 0 0 0;
+
+    .row {
+      margin-bottom: 8px;
+
+      .secondary-button {
+        margin: 0;
+      }
+    }
+  }
+
+  section {
+    padding: 24px 0 16px 0;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    overflow: scroll;
+
+    .bio-body {
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      font-size: 15px;
+      overflow: scroll;
+    }
+
+    aside {
+      display: flex;
+      flex-direction: column;
+      margin-left: 40px;
+
+      img {
+        height: 110px;
+        width: 120px;
+        margin-bottom: 16px;
+        object-fit: cover;
+        cursor: text;
+        border-radius: 4px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+      }
+    }
+  }
+}
+
+::v-deep .bio-body {
+  line-height: 1.75;
+
+  h2 {
+    padding: 0;
+    margin-bottom: 0 !important;
+    margin-block-start: 0 !important;
+    margin-block-end: 0 !important;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    line-height: 1;
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  strong {
+    font-family: $base-font-family;
+  }
+
+  ul {
+    display: block;
+    list-style-type: disc;
+    margin-block-start: 0;
+    margin-block-end: 0;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding-inline-start: 16px;
+    unicode-bidi: isolate;
+  }
+
+  li {
+    margin-top: -32px;
+    padding: 0;
+  }
+}
+
 .regen-container {
   width: 500px;
   max-height: 500px;
@@ -3748,6 +4090,15 @@ button:disabled {
 .white-bg {
   background: white;
 }
+.green-bg {
+  background-color: $dark-green;
+  img {
+    filter: invert(100%);
+  }
+  img:hover {
+    filter: invert(100%);
+  }
+}
 .bluee-bg {
   background: $white-blue !important;
   img {
@@ -3773,6 +4124,16 @@ button:disabled {
   filter: invert(40%);
   margin: 0;
   padding-right: 1rem;
+}
+
+.clicked {
+  &:disabled {
+    cursor: text !important;
+    img {
+      filter: invert(50%);
+      cursor: text !important;
+    }
+  }
 }
 .cancel-container {
   display: flex;

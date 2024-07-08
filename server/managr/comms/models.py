@@ -3,7 +3,7 @@ import os
 import logging
 import base64
 import hashlib
-import statistics
+import requests
 from datetime import datetime, timedelta
 from dateutil import parser
 from django.db import models
@@ -588,19 +588,26 @@ class Article(TimeStampModel):
         )
 
     @classmethod
-    def search_by_query(cls, boolean_string, date_to=False, date_from=False):
+    def search_by_query(cls, boolean_string, date_to=False, date_from=False, author=False):
         from managr.comms.utils import boolean_search_to_query
 
         date_to_date_obj = parser.parse(date_to)
         day_incremented = date_to_date_obj + timedelta(days=1)
         day_incremented_str = str(day_incremented)
+        print("a")
         date_range_articles = Article.objects.filter(
             publish_date__range=(date_from, day_incremented_str)
         )
-        converted_boolean = boolean_search_to_query(boolean_string)
-        articles = date_range_articles.filter(converted_boolean)
-        if len(articles):
-            articles = articles[:20]
+        print("b")
+        if author:
+            boolean_string = boolean_string.replace("journalist:", "").strip()
+            articles = date_range_articles.filter(author__icontains=boolean_string)
+        else:
+            converted_boolean = boolean_search_to_query(boolean_string)
+            articles = date_range_articles.filter(converted_boolean)
+            print("c")
+
+        articles = articles[:20]
         return list(articles)
 
 
@@ -734,6 +741,8 @@ class TwitterAccount(TimeStampModel):
         self, user, tokens, timeout, tweets, input_text, instructions=False, for_client=False
     ):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+        if "from:" in input_text:
+            instructions = comms_consts.TWITTER_USERNAME_INSTRUCTIONS(user.organization.name)
         prompt = comms_consts.OPEN_AI_TWITTER_SUMMARY(
             datetime.now().date(), tweets, input_text, instructions, for_client
         )
@@ -787,7 +796,6 @@ class TwitterAccount(TimeStampModel):
             access_token = client.fetch_access_token(
                 comms_consts.TWITTER_ACCESS_TOKEN_URI, verifier
             )
-            print(access_token)
             return access_token
         except OAuth2Error:
             return "Invalid authorization code"
@@ -1040,10 +1048,13 @@ class Journalist(TimeStampModel):
             r = client.get(
                 url,
             )
-            r = r.json()
-            score = r["data"]["score"]
-            if score is None:
-                score = 0
+            if r.status_code == 200:
+                r = r.json()
+                score = r["data"]["score"]
+                if score is None:
+                    score = 0
+            else:
+                return 0
         return score
 
     @classmethod
@@ -1051,8 +1062,8 @@ class Journalist(TimeStampModel):
         url = comms_consts.HUNTER_FINDER_URI
         params = {
             "api_key": comms_consts.HUNTER_API_KEY,
-            "first_name": first_name,
-            "last_name": last_name,
+            "first_name": first_name.strip(),
+            "last_name": last_name.strip(),
         }
         if domain:
             params["domain"] = domain
@@ -1066,7 +1077,7 @@ class Journalist(TimeStampModel):
             )
             r = r.json()
             if "errors" in r.keys():
-                return r["errors"][0]["details"]
+                return {"score": None, "email": None}
             response = r["data"]
         return response
 
@@ -1162,3 +1173,51 @@ class EmailTracker(TimeStampModel):
             EmailTracker.objects.create(**data)
             count += 1
         return
+
+
+class JournalistContactQuerySet(models.QuerySet):
+    def for_user(self, user):
+        return self.filter(user=user.id)
+
+
+class JournalistContact(TimeStampModel):
+    user = models.ForeignKey(
+        "core.User",
+        related_name="j_contacts",
+        on_delete=models.CASCADE,
+    )
+    journalist = models.ForeignKey(
+        "comms.Journalist",
+        on_delete=models.CASCADE,
+    )
+    tags = ArrayField(models.CharField(max_length=255), default=list)
+    bio = models.TextField(blank=True, null=True)
+    images = ArrayField(models.TextField(), default=list)
+
+    class Meta:
+        unique_together = ("user", "journalist")
+        ordering = ["-datetime_created"]
+
+    def __str__(self):
+        return f"{self.user} - {self.journalist}"
+
+    objects = JournalistContactQuerySet.as_manager()
+
+    @classmethod
+    def get_tags_by_user(cls, user):
+        tags_query = cls.objects.filter(user=user)
+        tag_list = []
+        for contact in tags_query:
+            tag_list.extend(contact.tags)
+        return list(set(tag_list))
+
+    @classmethod
+    def modify_tags(cls, id, tag, modifier):
+        contact = cls.objects.get(id=id)
+        if modifier == "add":
+            tags = contact.tags
+            tags.append(tag)
+            contact.tags = list(set(tags))
+        else:
+            contact.tags.remove(tag)
+        return contact.save()
