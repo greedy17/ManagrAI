@@ -493,6 +493,16 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+
+    async deleteContact(data) {
+        try {
+            const res = await this.client.delete(`jcontact/${data.id}/`)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
     async getContactTagList() {
         try {
             const res = await this.client.get('jcontact/tag_list')

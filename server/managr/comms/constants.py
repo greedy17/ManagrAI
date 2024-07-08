@@ -67,35 +67,34 @@ def GOOGLE_SEARCH_PARAMS(query):
 
 
 def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
-    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the journalist from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips for {company} based on what you know about the journalist. Lastly, if available, list out journalist's social handles and email. If the email is in the provided information, you must use that email. If no email can be found, then you must guess their work email. When guessing, you must base it on verified email patterns associated with their respective publication. Always return the email like this - email: guessed email
+    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the journalist from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips for {company} based on what you know about the journalist. Lastly, list out all available contact details for the journalist based on the provided data, including social handles and email address. If email not available, exclude email details from the output. Output must me:
+    Journalist Bio:
+    3 Pitching Tips:
+    Contact Details:
+
     Output MUST follow the following rules:
     1. All bold text MUST be returned in a strong tag instead of markdown!
     2. All headings must be returned in a H2 tag!
     3. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
     4. Never include ```html``` in the response, only reply with what I asked for specifically
     5. NEVER include any additional text next to the email. Examples: instead of email@email.com (guessed email based on typical email patterns), simply return email@email.com. Instead of email@email.com (guessed email), simply return email@email.com. This is very important, do not ignore
-    
-    Output must be:
-    Journalist Bio:
-    3 Pitching Tips:
-    Journalists Contact Info and Social Handles:
     """
     return prompt
 
 
 def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
-    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the journalist from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips based on what you know of the journalist, tailored to the user's pitch: {content}. Lastly, if available, list out journalist's social handles and email.  If the email is mentioned in any of the provided information, you must use that email. If no email can be found, then you must guess their work email. When guessing, you must base it on verified email patterns associated with their respective publication. Always return the email like this - email: guessed email
+    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the journalist from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips based on what you know of the journalist, tailored to the user's pitch: {content}. Lastly, list out all available contact details for the journalist based on the provided data, including social handles and email address.  If the email is mentioned in any of the provided information, you must use that email. If no email can be found, then you must guess their work email. When guessing, you must base it on verified email patterns associated with their respective publication. Always return the email like this - email: guessed email
+    Output must be:
+    Journalist Bio:
+    3 Pitching Tips:
+    Contact Details:
+    
     Output MUST follow the following rules:
     1. All bold text MUST be returned in a strong tag instead of markdown!
     2. All headings must be returned in a H2 tag!
     3. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
     4. Never include ```html``` in the response, only reply with what I asked for specifically
     5. NEVER include any additional text next to the email. example: instead of email@email.com (guessed email based on typical email patterns), simply return email@email.com, Instead of email@email.com (guessed email), simply return email@email.com. This is very important, do not ignore
-    
-    Output must be:
-    Journalist Bio:
-    3 Pitching Tips:
-    Journalists Contact Info and Social Handles:
     """
     return prompt
 

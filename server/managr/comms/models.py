@@ -1196,6 +1196,7 @@ class JournalistContact(TimeStampModel):
 
     class Meta:
         unique_together = ("user", "journalist")
+        ordering = ["-datetime_created"]
 
     def __str__(self):
         return f"{self.user} - {self.journalist}"
