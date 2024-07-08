@@ -335,11 +335,11 @@
               <div class="dot"></div>
             </div>
 
-            <div
+            <button
               v-else
               style="margin-right: 0.5rem"
               @click="saveContact"
-              class="wrapper icon-button green-bg"
+              class="wrapper icon-button green-bg clicked"
               :disabled="buttonClicked"
             >
               <img
@@ -350,7 +350,7 @@
                 alt=""
               />
               <div class="tooltip-below">Save</div>
-            </div>
+            </button>
           </div>
         </header>
 
@@ -4124,6 +4124,16 @@ button:disabled {
   filter: invert(40%);
   margin: 0;
   padding-right: 1rem;
+}
+
+.clicked {
+  &:disabled {
+    cursor: text !important;
+    img {
+      filter: invert(50%);
+      cursor: text !important;
+    }
+  }
 }
 .cancel-container {
   display: flex;
