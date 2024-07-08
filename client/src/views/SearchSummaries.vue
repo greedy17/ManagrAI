@@ -2814,7 +2814,6 @@ export default {
           bodyClassName: ['custom'],
         })
         this.buttonClicked = true
-        console.log(res)
       } catch (e) {
         console.log('RESPOSNE', e.data.error)
         if (e.data.error.includes('journalist must make a unique set')) {

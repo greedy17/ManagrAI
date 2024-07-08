@@ -340,6 +340,7 @@
               style="margin-right: 0.5rem"
               @click="saveContact"
               class="wrapper icon-button green-bg"
+              :disabled="buttonClicked"
             >
               <img
                 style="cursor: pointer"
@@ -956,6 +957,7 @@ export default {
   },
   data() {
     return {
+      buttonClicked: false,
       loadingDraft: false,
       googleModalOpen: false,
       currentJournalistBio: '',
@@ -1057,11 +1059,11 @@ export default {
     }
   },
   watch: {
-    // summary(newVal, oldVal) {
-    //   if (newVal !== oldVal) {
-    //     this.formatSummary(newVal)
-    //   }
-    // },
+    googleModalOpen(newVal, oldVal) {
+      if (newVal !== oldVal) {
+        this.buttonClicked = false
+      }
+    },
     currentDiscovery(newVal, oldVal) {
       if (newVal.id !== (oldVal ? oldVal.id : null)) {
         this.setDiscovery(newVal)
@@ -1110,7 +1112,7 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-        console.log(res)
+        this.buttonClicked = true
       } catch (e) {
         console.log('RESPOSNE', e.data.error)
         if (e.data.error.includes('journalist must make a unique set')) {
@@ -1130,6 +1132,7 @@ export default {
             bodyClassName: ['custom'],
           })
         }
+        this.buttonClicked = true
       } finally {
         this.savingContact = false
       }

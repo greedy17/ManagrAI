@@ -238,6 +238,22 @@
         </footer>
       </div>
     </Modal>
+    <Modal v-if="deleteModalOpen" class="delete-modal">
+      <div class="delete-container">
+        <header style="font-size: 20px" @click="closeDeleteModal">
+          <p>x</p>
+        </header>
+        <main>
+          <h2>Delete Contact</h2>
+          <p>Are you sure you want to delete this contact ?</p>
+
+          <div style="margin-top: 20px" class="row">
+            <button @click="closeDeleteModal" class="secondary-button">Cancel</button>
+            <button @click="deleteContact(contactId)" class="red-button">Delete</button>
+          </div>
+        </main>
+      </div>
+    </Modal>
     <header></header>
 
     <div class="space-between">
@@ -375,7 +391,7 @@
 
         <div class="cards-container">
           <div v-for="(contact, i) in filteredContactList" :key="i" class="contact-card">
-            <header>
+            <header style="position: relative">
               <div class="contact-header">
                 <p class="base-font">
                   {{ contact.journalist_ref.first_name + ' ' + contact.journalist_ref.last_name }}
@@ -395,6 +411,14 @@
                 />
                 <!-- <img class="main-img" src="" alt="" />
                 <img class="main-img" src="" alt="" /> -->
+              </div>
+
+              <div
+                :class="{ removing: deleting && deletingId === contact.id }"
+                @click="openDeleteModal(contact.id)"
+                class="absolute-right"
+              >
+                <img src="@/assets/images/close.svg" height="20px" alt="" />
               </div>
             </header>
 
@@ -602,6 +626,10 @@ export default {
 
         ['clean'], // remove formatting button
       ],
+      deleting: false,
+      deletingId: null,
+      deleteModalOpen: false,
+      contactId: null,
     }
   },
   computed: {
@@ -687,6 +715,13 @@ export default {
     this.getTags()
   },
   methods: {
+    openDeleteModal(id) {
+      this.deleteModalOpen = true
+      this.contactId = id
+    },
+    closeDeleteModal() {
+      this.deleteModalOpen = false
+    },
     togglePitchModal() {
       this.pitchModalOpen = !this.pitchModalOpen
     },
@@ -947,6 +982,37 @@ export default {
         this.googleModalOpen = false
       }
     },
+    async deleteContact(id) {
+      this.deletingId = id
+      this.deleting = true
+      try {
+        const res = await Comms.api.deleteContact({
+          id: id,
+        })
+        this.deleteModalOpen = false
+        this.$toast('Contact removed', {
+          timeout: 1000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        // console.log(res)
+      } catch (e) {
+        console.error(e)
+        this.$toast('Error removing contact', {
+          timeout: 1000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.getContacts()
+        this.deleting = false
+        this.deletingId = null
+      }
+    },
     clearSearchText() {
       this.searchContactsText = ''
     },
@@ -1031,6 +1097,17 @@ export default {
   background-color: white;
   transition: all 0.5s;
   // height: 200px;
+
+  &:hover {
+    .absolute-right {
+      visibility: visible;
+    }
+  }
+
+  .removing {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 
   @media only screen and (max-width: 750px) {
     width: 75vw;
@@ -1583,6 +1660,15 @@ h2 {
     box-shadow: none;
     opacity: 0.5;
   }
+}
+
+.red-button {
+  @include dark-blue-button();
+  border: none;
+  color: white;
+  background-color: $coral;
+  border-radius: 16px;
+  margin-left: 16px;
 }
 
 .bio-text {
@@ -2277,6 +2363,57 @@ textarea::placeholder {
 
   @media only screen and (max-width: 750px) {
     visibility: hidden;
+  }
+}
+
+.absolute-right {
+  position: absolute;
+  right: -28px;
+  top: -12px;
+  background-color: $soft-gray;
+  border-radius: 100%;
+  padding: 3px 0px 2px 3px;
+  cursor: pointer;
+  visibility: hidden;
+
+  img {
+    // filter: invert(46%) sepia(35%) saturate(2345%) hue-rotate(323deg) brightness(106%) contrast(96%);
+    filter: invert(45%);
+  }
+}
+
+.delete-modal {
+  margin-top: 120px;
+  width: 100%;
+  height: 100%;
+}
+
+.delete-container {
+  width: 500px;
+  height: 220px;
+  color: $base-gray;
+  font-family: $thin-font-family;
+  font-size: 14px;
+  line-height: 24px;
+  font-weight: 400;
+
+  header {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+
+    p {
+      cursor: pointer;
+      margin-top: -24px;
+      margin-right: 12px !important;
+    }
+  }
+
+  main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 }
 </style>
