@@ -608,8 +608,9 @@ class Article(TimeStampModel):
             articles = date_range_articles.filter(author__icontains=boolean_string)
         else:
             converted_boolean = boolean_search_to_query(boolean_string)
+            print("d")
             articles = date_range_articles.filter(converted_boolean)
-
+            print("e")
         articles = articles[:20]
         return list(articles)
 
