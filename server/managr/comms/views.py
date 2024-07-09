@@ -853,9 +853,6 @@ class PRSearchViewSet(
     def share_email_summary(self, request, *args, **kwargs):
         summary = request.data.get("summary", "N/A")
         clips = request.data.get("clips", [])
-        logger.info(request.user.email)
-        logger.info(summary)
-        logger.info(clips)
         emit_share_client_summary(summary, clips, request.user.email)
         return Response(status=status.HTTP_200_OK)
 

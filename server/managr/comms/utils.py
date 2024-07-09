@@ -639,21 +639,6 @@ def test_flow():
     return email
 
 
-def dumb(query):
-    from newspaper import Article
-    from managr.core.models import User
-
-    res = google_search(query)
-    results = res["results"][:6]
-    art = Article(results[0]["link"], config=generate_config())
-    art.download()
-    art.parse()
-    text = art.text
-    user = User.objects.get(email="zach@mymanagr.com")
-    summary = test_open(user, "text", results, text)
-    return summary
-
-
 def check_journalist_validity(journalist, outlet, email):
     from managr.comms.serializers import JournalistSerializer
 
@@ -694,6 +679,7 @@ def check_journalist_validity(journalist, outlet, email):
                     data["outlet"] = r["company"]
             data["accuracy_score"] = score
             data["first_name"] = first
+        data["verified"] = is_valid
         data["last_name"] = last
         serializer = JournalistSerializer(data=data)
         serializer.is_valid(raise_exception=True)
@@ -703,7 +689,7 @@ def check_journalist_validity(journalist, outlet, email):
         print(2, str(e))
         return {"error": "Could not create contact."}
 
-        
+
 def test_prompt(search_term):
     from managr.core import constants as core_consts
     from managr.core import exceptions as open_ai_exceptions
