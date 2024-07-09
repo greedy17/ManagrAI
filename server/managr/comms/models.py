@@ -599,13 +599,16 @@ class Article(TimeStampModel):
             publish_date__range=(date_from, day_incremented_str)
         )
         print("b")
+        test_articles = Article.objects.filter(
+            publish_date__range=(date_from, day_incremented_str)
+        ).only("id", "content")
+        print("c")
         if author:
             boolean_string = boolean_string.replace("journalist:", "").strip()
             articles = date_range_articles.filter(author__icontains=boolean_string)
         else:
             converted_boolean = boolean_search_to_query(boolean_string)
             articles = date_range_articles.filter(converted_boolean)
-            print("c")
 
         articles = articles[:20]
         return list(articles)
