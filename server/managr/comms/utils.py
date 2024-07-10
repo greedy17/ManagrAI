@@ -686,7 +686,7 @@ def check_journalist_validity(journalist, outlet, email):
         serializer.save()
         return serializer.instance
     except Exception as e:
-        print(2, str(e))
+        print(data, str(e))
         return {"error": "Could not create contact."}
 
 
