@@ -125,7 +125,6 @@ def getclips(request):
         articles = [article for article in articles if article["title"] != "[Removed]"]
         internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
         articles = normalize_article_data(articles, internal_articles)
-        logger.info(5)
 
         if len(articles) < 1:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
@@ -143,9 +142,9 @@ def getclips(request):
                     headers=core_consts.OPEN_AI_HEADERS,
                 )
             r = open_ai_exceptions._handle_response(r)
-          
+
             suggestions = r.get("choices")[0].get("message").get("content")
-       
+
         return {"articles": articles, "string": query_input, "suggestions": suggestions}
 
     except Exception as e:
@@ -854,9 +853,6 @@ class PRSearchViewSet(
     def share_email_summary(self, request, *args, **kwargs):
         summary = request.data.get("summary", "N/A")
         clips = request.data.get("clips", [])
-        logger.info(request.user.email)
-        logger.info(summary)
-        logger.info(clips)
         emit_share_client_summary(summary, clips, request.user.email)
         return Response(status=status.HTTP_200_OK)
 
@@ -2181,6 +2177,7 @@ class DiscoveryViewSet(
                 message = f"Unknown exception: {e}"
                 logger.exception(e)
                 break
+        user.add_meta_data("bio")
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
 
@@ -2487,4 +2484,4 @@ class JournalistContactViewSet(
             instance.delete()
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
-        return Response(status=status.HTTP_200_OK)     
+        return Response(status=status.HTTP_200_OK)
