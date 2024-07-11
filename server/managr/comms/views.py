@@ -674,7 +674,7 @@ class PRSearchViewSet(
                 else:
                     if len(tweet_list):
                         break
-                    print('I AM HERE ::::::')
+                
                     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                     prompt = comms_consts.OPEN_AI_EMPTY_SEARCH_SUGGESTIONS(query_input.replace("-is:retweet", "").replace("is:verified", ""))
                     body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
@@ -941,10 +941,10 @@ class PRSearchViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                if social:                
-                    prompt = comms_consts.OPEN_AI_TOP_INFLUENCERS(term, clips)
+                if social:           
+                    prompt = comms_consts.OPEN_AI_TOP_INFLUENCERS(clips)
                 else:
-                    prompt = comms_consts.OPEN_AI_TOP_JOURNALISTS(term, clips)   
+                    prompt = comms_consts.OPEN_AI_TOP_JOURNALISTS(term, clips)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,

@@ -472,8 +472,8 @@ OPEN_AI_TOP_JOURNALISTS = (
 )
 
 OPEN_AI_TOP_INFLUENCERS = (
-    lambda term, tweets : f"""
-    List the top 10 influencers from the tweets about {term}. Sort by order of influence (most influential at the top) Output must me: Name, (follower count), 4-5 word post summary using quotes, - date using mm.dd format Here are the tweets: \n {tweets}:
+    lambda tweets : f"""
+    List the top 5 influencers. Sort by follower count, highest at the top. Output must be : Name, (follower count), 4-5 word post summary using quotes, - date using mm.dd format. Here are the tweets: \n {tweets}:
      """
 )
 
