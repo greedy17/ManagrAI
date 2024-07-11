@@ -835,6 +835,210 @@ class PRSearchViewSet(
         return Response(data={"suggestions": message})
 
     @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="relevant-clips",
+    )
+    def get_most_relevant(self, request, *args, **kwargs):
+        user = request.user
+        term = request.data.get("term")
+        clips = request.data.get("clips")
+        has_error = False
+        attempts = 1
+        token_amount = 1000
+        timeout = 60.0
+        while True:
+            try:
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.OPEN_AI_RELEVANT_ARTICLES(term, clips)
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    "You are a VP of Communications",
+                    token_amount=token_amount,
+                    top_p=0.1,
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                res = open_ai_exceptions._handle_response(r)
+                message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+                # user.add_meta_data("most_relevant")
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount <= 2000:
+                    has_error = True
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 500
+                    continue
+            except httpx.ReadTimeout as e:
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+        if has_error:
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"data": message}
+            )
+
+        return Response(data={"data": message})    
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="top-journalists",
+    )
+    def get_top_journalist(self, request, *args, **kwargs):
+        user = request.user
+        term = request.data.get("term")
+        clips = request.data.get("clips")
+        has_error = False
+        attempts = 1
+        token_amount = 1000
+        timeout = 60.0
+        while True:
+            try:
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.OPEN_AI_TOP_JOURNALISTS(term, clips)
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    "You are a VP of Communications",
+                    token_amount=token_amount,
+                    top_p=0.1,
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                res = open_ai_exceptions._handle_response(r)
+                message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+                # user.add_meta_data("most_relevant")
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount <= 2000:
+                    has_error = True
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 500
+                    continue
+            except httpx.ReadTimeout as e:
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+        if has_error:
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"data": message}
+            )
+
+        return Response(data={"data": message})    
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="related-topics",
+    )
+    def get_related_topics(self, request, *args, **kwargs):
+        user = request.user
+        clips = request.data.get("clips")
+        has_error = False
+        attempts = 1
+        token_amount = 1000
+        timeout = 60.0
+        while True:
+            try:
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.OPEN_AI_RELATED_TOPICS(clips)
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    "You are a VP of Communications",
+                    token_amount=token_amount,
+                    top_p=0.1,
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                res = open_ai_exceptions._handle_response(r)
+                message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+                # user.add_meta_data("most_relevant")
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount <= 2000:
+                    has_error = True
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 500
+                    continue
+            except httpx.ReadTimeout as e:
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+        if has_error:
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"data": message}
+            )
+
+        return Response(data={"data": message})
+
+
+    @action(
         methods=["get"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,

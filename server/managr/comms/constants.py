@@ -453,6 +453,31 @@ OPEN_AI_EMAIL_JOURNALIST = (
      """
 )
 
+OPEN_AI_RELEVANT_ARTICLES = (
+    lambda term, clips : f"""
+    List the top 5 most relevant stories pertaining to {term}, sort by most relevant at the top. Output must be: 4-5 word summary of the headline (Source: outlet, mm/dd/yy).Here are the news clips: \n {clips}:
+     """
+)
+
+OPEN_AI_TOP_JOURNALISTS = (
+    lambda term, clips : f"""
+    List the top 10 Journalists from top news outlets writing about {term} only list journalist from credible, newsworthy outlets. Sort by order of influence (most influential at the top) Output must be: Journalist name, Outlet, date (mm/dd/yy), 4-5 word headline summary. Here are the news clips: \n {clips}:
+     """
+)
+
+OPEN_AI_RELATED_TOPICS = (
+    lambda clips : f"""
+    Generate up to 5 related, interesting, diverse questions or topics for further exploration based on the news clips below. Focus on most interesting, impactful and engaging stories. Output must be capped at 5 words per suggestion, no numbering, and no punctuation. Format the output must be as follows:
+    Search1:
+    Search2:
+    Search3:
+    Search4:
+    Search5:
+     
+    Here are the news clips: \n {clips}:
+     """
+)
+
 DO_NOT_TRACK_LIST = [
     "https://www.wsj.com",
     "https://www.nytimes.com",
