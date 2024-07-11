@@ -501,20 +501,6 @@
           <p style="font-size: 17px">Journalist Bio</p>
 
           <div class="row">
-            <!-- <div
-              style="margin-right: 0.5rem"
-              @click="copyBioText"
-              class="wrapper icon-button white-bg"
-            >
-              <img
-                style="cursor: pointer"
-                class="right-mar img-highlight"
-                src="@/assets/images/clipboard.svg"
-                height="14px"
-                alt=""
-              />
-              <div class="tooltip-below">{{ copyTip }}</div>
-            </div> -->
             <div v-if="savingContact" style="margin: 0" class="loading-small">
               <p style="margin-right: 8px">Saving</p>
               <div class="dot"></div>
@@ -586,7 +572,6 @@
         </footer>
       </div>
     </Modal>
-    <!-- class="align-top" -->
 
     <div style="margin-top: 16px" v-if="!selectedSearch">
       <div class="text-width text-margin">
@@ -657,7 +642,7 @@
                   <img src="@/assets/images/newspaper.svg" height="12px" alt="" />
                   News
                 </div>
-                <div
+                <!-- <div
                   @click="switchMainView('social')"
                   :class="{ activeswitch: mainView === 'social' }"
                 >
@@ -670,11 +655,12 @@
                 >
                   <img src="@/assets/images/globe.svg" height="12px" alt="" />
                   URL
-                </div>
-                <div @click="switchMainView('pdf')" :class="{ activeswitch: mainView === 'pdf' }">
+                </div> -->
+
+                <!-- <div @click="switchMainView('pdf')" :class="{ activeswitch: mainView === 'pdf' }">
                   <img src="@/assets/images/pdf.svg" height="12px" alt="" />
                   PDF
-                </div>
+                </div> -->
               </div>
             </div>
           </div>
@@ -813,7 +799,7 @@
                   alt=""
                 />
 
-                <div class="tooltip">Submit</div>
+                <div style="left: -32px" class="tooltip">Submit</div>
               </div>
 
               <div
@@ -867,7 +853,7 @@
                     <img src="@/assets/images/newspaper.svg" height="12px" alt="" />
                     News
                   </div>
-                  <div
+                  <!-- <div
                     @click="switchMainView('social')"
                     :class="{ activeswitch: mainView === 'social' }"
                   >
@@ -880,11 +866,12 @@
                   >
                     <img src="@/assets/images/globe.svg" height="12px" alt="" />
                     URL
-                  </div>
-                  <div @click="switchMainView('pdf')" :class="{ activeswitch: mainView === 'pdf' }">
+                  </div> -->
+
+                  <!-- <div @click="switchMainView('pdf')" :class="{ activeswitch: mainView === 'pdf' }">
                     <img src="@/assets/images/pdf.svg" height="12px" alt="" />
                     PDF
-                  </div>
+                  </div> -->
                 </div>
               </div>
 
@@ -908,7 +895,7 @@
                 height="20px"
                 alt=""
               />
-              <p>Pitching</p>
+              <p>Your Company</p>
             </div>
 
             <div class="input-container-small">
@@ -961,7 +948,695 @@
     </div>
 
     <div v-else class="search">
-      <section id="clips" class="container">
+      <div style="height: 90vh" class="main" v-if="loading || summaryLoading">
+        <div class="body">
+          <div class="skeleton-loader">
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-medium"></div>
+            <div style="margin-top: 32px" class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-large"></div>
+            <div style="margin-top: 32px" class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-large"></div>
+          </div>
+        </div>
+
+        <aside style="margin-top: -40px">
+          <div class="section">
+            <div class="skeleton-loader">
+              <div class="skeleton skeleton-large"></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <section v-else class="main">
+        <div style="position: relative" class="body">
+          <header class="content-header">
+            <div class="row">
+              <img
+                @click="resetAll"
+                class="icon"
+                style="margin-right: 18px"
+                src="@/assets/images/goBack.svg"
+                height="17px"
+                alt=""
+              />
+
+              <p
+                v-if="
+                  mainView !== 'website' &&
+                  !(filteredArticles && filteredArticles.length) &&
+                  !summary
+                "
+                class="sub-text ellipsis-text"
+              >
+                No results found. Try one of these suggestions:
+              </p>
+
+              <p
+                v-else-if="mainView !== 'website' && mainView !== 'instagram'"
+                class="sub-text ellipsis-text"
+                style="margin: 16px 0"
+              >
+                <span :title="booleanString">{{
+                  booleanString ? booleanString.replace('lang:en', '') : ''
+                }}</span>
+              </p>
+            </div>
+
+            <div style="padding-top: 16px" v-if="summary" class="row">
+              <div class="wrapper">
+                <img
+                  style="cursor: pointer; margin-right: 16px; filter: invert(40%)"
+                  src="@/assets/images/clipboard.svg"
+                  height="15px"
+                  alt=""
+                  @click="copyText"
+                />
+
+                <div class="tooltip">{{ copyTip }}</div>
+              </div>
+
+              <div
+                @click="sendSummaryEmail"
+                class="wrapper right-margin"
+                :disabled="sentSummaryEmail"
+                v-if="mainView !== 'social' && mainView !== 'website' && mainView !== 'pdf'"
+              >
+                <img
+                  v-if="sendingSummaryEmail"
+                  class="rotate innvert"
+                  height="14px"
+                  src="@/assets/images/loading.svg"
+                  alt=""
+                />
+                <img
+                  v-else
+                  height="14px"
+                  src="@/assets/images/email-round.svg"
+                  alt=""
+                  class="invert"
+                />
+
+                <div v-if="sendSummaryEmailText !== 'Sent!'" class="tooltip">Send Email</div>
+              </div>
+
+              <div style="margin-left: 8px">
+                <div
+                  @click="toggleNotifyModal"
+                  class="wrapper right-margin"
+                  :disabled="sentSummaryEmail"
+                  v-if="
+                    (mainView === 'news' || mainView === 'social') &&
+                    !notifiedList.includes(searchId)
+                  "
+                >
+                  <img
+                    height="14px"
+                    src="@/assets/images/bell.svg"
+                    alt=""
+                    class="invert"
+                    :class="{ dim: !(searchSaved || savedSearch) }"
+                  />
+                  <div class="tooltip-wide">
+                    {{ searchSaved || savedSearch ? emailText : 'Save search to enable' }}
+                  </div>
+                </div>
+
+                <div
+                  @click="removeEmailAlert"
+                  class="wrapper right-margin"
+                  v-else-if="
+                    (mainView === 'news' || mainView === 'social') &&
+                    (searchSaved || savedSearch) &&
+                    notifiedList.includes(searchId)
+                  "
+                >
+                  <img
+                    height="14px"
+                    src="@/assets/images/bell-slash.svg"
+                    alt=""
+                    class="img-highlight"
+                  />
+                  <div class="tooltip">Disable</div>
+                </div>
+              </div>
+
+              <button
+                style="margin-left: 8px"
+                class="green-button wrapper"
+                @click="toggleSaveModal"
+                :disabled="
+                  articleSummaryLoading ||
+                  loading ||
+                  summaryLoading ||
+                  savingSearch ||
+                  savedSearch ||
+                  mainView === 'website'
+                "
+                v-if="
+                  (filteredArticles && filteredArticles.length) || tweets.length || posts.length
+                "
+              >
+                <img height="14px" src="@/assets/images/disk.svg" alt="" />
+                <div v-if="!savingSearch && !savedSearch && mainView !== 'website'" class="tooltip">
+                  Save
+                </div>
+              </button>
+            </div>
+          </header>
+          <div ref="loadedContent"></div>
+          <section class="content-container">
+            <div class="between">
+              <div style="width: 100%" v-if="summary" class="row">
+                <img
+                  style="margin-right: 8px"
+                  src="@/assets/images/sparkle.svg"
+                  height="14px"
+                  alt=""
+                />
+
+                <p class="header-p">Summary</p>
+              </div>
+            </div>
+
+            <div v-if="!(filteredArticles && filteredArticles.length) && !summary">
+              <div style="width: 100%" class="letter-spacing">
+                <div class="text-width">
+                  <div style="margin: 0 0 16px 0; width: 100%" class="col-start">
+                    <p
+                      v-for="(suggestion, i) in suggestions"
+                      :key="i"
+                      style="font-size: 16px !important; width: 100%"
+                      class="example-small"
+                      @click="setAndSearch(suggestion)"
+                    >
+                      <img src="@/assets/images/search.svg" height="14px" alt="" />{{ suggestion }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div v-else class="content-padding">
+              <pre style="" v-html="summary" class="pre-text"></pre>
+
+              <div
+                :class="{ higher: showSummaryMenu }"
+                class="absolute-bottom-right image-container"
+                @click="toggleSummaryMenu"
+              >
+                <img v-if="showSummaryMenu" src="@/assets/images/close.svg" height="16px" alt="" />
+                <img v-else src="@/assets/images/add-doc.svg" height="16px" alt="" />
+              </div>
+              <div
+                style="margin-top: 32px; margin-bottom: 12px"
+                class="input-container-gray fadein"
+                v-if="showSummaryMenu"
+              >
+                <section style="padding-bottom: 4px; padding-top: 4px">
+                  <img
+                    class="left-margin-m"
+                    style="margin-bottom: 4px"
+                    src="@/assets/images/add-doc.svg"
+                    height="18px"
+                    alt=""
+                  />
+                  <textarea
+                    style="max-height: 60px !important"
+                    class="area-input text-area-input"
+                    placeholder="Ask Managr to..."
+                    autofocus
+                    autocomplete="off"
+                    v-model="newTemplate"
+                    :disabled="!summary || loading || summaryLoading"
+                    v-autoresize
+                  />
+
+                  <div
+                    @click="getChatSummary(filteredArticles, newTemplate)"
+                    class="image-container left-margin right-margin-m white-bg"
+                    :class="newTemplate ? 'dark-blue-bg' : ''"
+                  >
+                    <img
+                      style="margin: 0"
+                      src="@/assets/images/paper-plane-full.svg"
+                      height="14px"
+                      alt=""
+                    />
+                  </div>
+                </section>
+              </div>
+            </div>
+          </section>
+
+          <section class="content">
+            <div ref="topDivider" class="between">
+              <div class="row">
+                <img
+                  style="margin-right: 8px"
+                  src="@/assets/images/newspaper.svg"
+                  height="14px"
+                  alt=""
+                />
+                <p class="header-p">
+                  Articles
+                  <span
+                    >({{
+                      mainView === 'news'
+                        ? `${filteredArticles.length}`
+                        : mainView === 'website'
+                        ? '1'
+                        : mainView === 'instagram'
+                        ? `${posts.length}`
+                        : `${tweets.length}`
+                    }})</span
+                  >
+                </p>
+              </div>
+
+              <div style="width: 100%" class="input">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
+                    fill="currentColor"
+                  ></path>
+                </svg>
+                <input
+                  v-model="searchArticleText"
+                  class="search-input"
+                  :placeholder="`Search articles...`"
+                />
+                <img
+                  v-if="searchArticleText"
+                  @click="clearSearchText"
+                  src="@/assets/images/close.svg"
+                  class="pointer"
+                  height="12px"
+                  alt=""
+                />
+              </div>
+            </div>
+
+            <div class="cards-container">
+              <div
+                v-for="article in filteredArticles"
+                :key="article.id"
+                class="card"
+                :class="{ widecard: article.summary && mainView !== 'website' }"
+              >
+                <div style="width: 100%">
+                  <div>
+                    <img
+                      @click="goToArticle(article.link)"
+                      :src="article.image_url"
+                      class="card-photo-header"
+                    />
+                  </div>
+                  <div class="main-body">
+                    <small>{{ article.source.name }}</small>
+                    <p style="font-size: 15px" class="p-header" @click="goToArticle(article.link)">
+                      {{ article.title }}
+                    </p>
+                  </div>
+                  <div class="main-footer">
+                    <div style="border-bottom: none" class="author-time">
+                      <span style="cursor: pointer" class="author row">
+                        <img
+                          style="margin-right: 4px"
+                          src="@/assets/images/profile.svg"
+                          height="12px"
+                          alt=""
+                        />
+                        <p style="text-decoration: none; border: none">
+                          {{ extractJournalist(article.author) }}
+                        </p>
+                      </span>
+                      <span class="divider-dot">.</span>
+                      <span class="off-gray time">{{
+                        getTimeDifferenceInMinutes(article.publish_date)
+                      }}</span>
+
+                      <!-- <div class="tooltip">View Bio</div> -->
+                    </div>
+                    <div class="footer-icon-container">
+                      <div v-if="mainView === 'website' && addedArticles.length === 1"></div>
+                      <div class="row" v-else>
+                        <button @click="selectJournalist(article)" class="tertiary-button-small">
+                          <img
+                            class="invert"
+                            src="@/assets/images/file-user.svg"
+                            height="17px"
+                            alt=""
+                          />
+                          <!-- <div class="tooltip">View bio</div> -->
+                        </button>
+                        <button
+                          v-if="!article.summary"
+                          @click="getArticleSummary(article.link)"
+                          class="tertiary-button-small"
+                          :disabled="
+                            articleSummaryLoading || loading || summaryLoading || savingSearch
+                          "
+                        >
+                          <img
+                            v-if="loadingUrl !== article.link"
+                            src="@/assets/images/sparkles-thin.svg"
+                            height="16px"
+                            alt=""
+                          />
+                          <div
+                            v-if="articleSummaryLoading && loadingUrl === article.link"
+                            class="loading-smallest"
+                          >
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <!-- <div class="dot"></div> -->
+                          </div>
+                        </button>
+                        <img
+                          v-else
+                          src="@/assets/images/sparkle.svg"
+                          class="right-arrow-footer blue-icon"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- <div v-if="mainView === 'website' && addedArticles.length === 1"></div> -->
+                <div
+                  class="cardwidth"
+                  style="background: #e9f3fa"
+                  v-if="article.summary && mainView !== 'website'"
+                >
+                  <div class="relative">
+                    <pre v-html="article.summary" class="pre-text blue-text-bg"></pre>
+                    <!-- <div
+                      @click="copyArticleSummary(article.summary)"
+                      class="wrapper image-container top-right"
+                    >
+                      <img
+                        style="cursor: pointer"
+                        class="img-highlight"
+                        src="@/assets/images/clipboard.svg"
+                        height="12px"
+                        alt=""
+                      />
+                      <div class="tooltip">{{ copyTip }}</div>
+                    </div> -->
+                  </div>
+
+                  <div class="regenerate-article">
+                    <div v-if="!showArticleRegenerate" class="row-end">
+                      <!-- <button
+                        @click="toggleArticleRegenerate"
+                        :disabled="
+                          articleSummaryLoading || loading || summaryLoading || savingSearch
+                        "
+                        class="tertiary-button"
+                      >
+                        Regenerate
+                      </button> -->
+
+                      <div class="relative left-margin">
+                        <div
+                          @click="toggleArticleGenerateDropdown"
+                          class="row pointer nav-text dropdownBorder"
+                        >
+                          Generate Content
+                          <img
+                            v-if="!showArticleGenerateDropdown && !contentLoading"
+                            src="@/assets/images/downArrow.svg"
+                            class=""
+                            height="14px"
+                            alt=""
+                          />
+                          <img
+                            v-if="showArticleGenerateDropdown && !contentLoading"
+                            src="@/assets/images/downArrow.svg"
+                            class="rotate"
+                            height="14px"
+                            alt=""
+                          />
+                          <div
+                            style="margin-left: 4px"
+                            v-else-if="contentLoading"
+                            class="loading-small"
+                          >
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                          </div>
+                        </div>
+
+                        <div v-if="showArticleGenerateDropdown" class="search-dropdown">
+                          <div class="searches-container">
+                            <div
+                              class="row relative"
+                              v-for="(option, i) in articleGenerateOptions"
+                              :key="option.value"
+                            >
+                              <p @click="selectArticleOption(article.link, option.value, i)">
+                                {{ option.name }}
+                              </p>
+
+                              <img
+                                v-show="contentLoading && optionIndex === i"
+                                src="@/assets/images/loading.svg"
+                                class="rotate"
+                                height="12px"
+                                alt=""
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="full-width" v-else>
+                      <textarea
+                        :disabled="
+                          articleSummaryLoading || loading || summaryLoading || savingSearch
+                        "
+                        autofocus
+                        class="area-input-outline wider"
+                        placeholder="Provide additional instructions"
+                        v-autoresize
+                        v-model="articleInstructions"
+                      />
+
+                      <div class="row">
+                        <button @click="toggleArticleRegenerate" class="secondary-button">
+                          Cancel
+                        </button>
+
+                        <button
+                          @click="
+                            regenerateArticleSummary(
+                              article.link,
+                              article.summary,
+                              articleInstructions,
+                            )
+                          "
+                          :disabled="
+                            articleSummaryLoading || loading || summaryLoading || savingSearch
+                          "
+                          class="primary-button"
+                        >
+                          {{
+                            articleSummaryLoading && loadingUrl === article.link
+                              ? 'Submitting'
+                              : 'Submit'
+                          }}
+                          <div
+                            style="margin-left: 4px"
+                            v-if="articleSummaryLoading && loadingUrl === article.link"
+                            class="loading-small"
+                          >
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div ref="contentBottom"></div>
+            </div>
+          </section>
+          <!-- <div v-if="showArrows" class="absolute-arrows">
+            <div @click="scrollToTop" style="margin-right: 10px" class="arrow">
+              <img src="@/assets/images/arrow-small-up.svg" height="18px" alt="" />
+            </div>
+            <div @click="scrollToBottom" class="arrow">
+              <img src="@/assets/images/arrow-small-down.svg" height="18px" alt="" />
+            </div>
+          </div> -->
+        </div>
+
+        <aside>
+          <div class="section">
+            <div
+              @click="toggleRelevant"
+              class="example-title"
+              :class="{ nobottomborder: showingRelevant }"
+            >
+              <div class="example-row">
+                <img
+                  style="margin-right: 8px"
+                  src="@/assets/images/stars.svg"
+                  height="14px"
+                  alt=""
+                />
+                <p>Most Relevant Articles</p>
+              </div>
+
+              <img src="@/assets/images/downArrow.svg" height="14px" alt="" />
+            </div>
+            <div v-if="showingRelevant" class="example-body">
+              <div v-if="loadingRelevant">
+                <div style="margin: 8px 16px" class="loading-small">
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                </div>
+              </div>
+              <div style="padding: 0 16px" class="example-text" v-else>
+                <p style="font-size: 14px !important" class="pre-text" v-html="relevantData"></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div
+              @click="toggleJournalists"
+              class="example-title"
+              :class="{ nobottomborder: showingJournalists }"
+            >
+              <div class="example-row">
+                <img
+                  style="margin-right: 8px"
+                  src="@/assets/images/profile.svg"
+                  height="14px"
+                  alt=""
+                />
+                <p>List Top Journalists</p>
+              </div>
+
+              <img src="@/assets/images/downArrow.svg" height="14px" alt="" />
+            </div>
+            <div v-if="showingJournalists" class="example-body">
+              <div v-if="loadingJournalists">
+                <div style="margin: 8px 16px" class="loading-small">
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                </div>
+              </div>
+              <div style="padding: 0 16px" class="example-text" v-else>
+                <div
+                  style="font-size: 14px !important"
+                  class="pre-text"
+                  v-html="journalistData"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div
+              @click="toggleRelated"
+              class="example-title"
+              :class="{ nobottomborder: showingRelated }"
+            >
+              <div class="example-row">
+                <img
+                  style="margin-right: 8px; filter: invert(50%)"
+                  src="@/assets/images/navigation.svg"
+                  height="14px"
+                  alt=""
+                />
+                <p>Explore Related Topics</p>
+              </div>
+
+              <img src="@/assets/images/downArrow.svg" height="14px" alt="" />
+            </div>
+            <div v-if="showingRelated" class="example-body">
+              <div v-if="loadingRelated">
+                <div style="margin: 8px 16px" class="loading-small">
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                </div>
+              </div>
+              <div class="example-text" v-else>
+                <div
+                  v-for="(topic, i) in relatedTopics"
+                  :key="i"
+                  class="example-small-between"
+                  @click="setAndSearch(topic)"
+                >
+                  <p>{{ topic }}</p>
+                  <img src="@/assets/images/paper-plane-full.svg" height="14px" alt="" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- <div class="section">
+            <div class="row">
+              <img
+                style="margin-right: 8px"
+                src="@/assets/images/profile.svg"
+                height="14px"
+                alt=""
+              />
+              <p class="header-p">List Journalists</p>
+            </div>
+            <p
+              v-for="(example, i) in testExamples"
+              :key="i"
+              @click="setNewSearch(example)"
+              class="example-full"
+            >
+              {{ example }}
+              <img src="@/assets/images/paper-plane-full.svg" height="14px" alt="" />
+            </p>
+          </div> -->
+
+          <!-- <div class="section">
+            <div class="row">
+              <img
+                style="margin-right: 8px"
+                src="@/assets/images/edit-note.svg"
+                height="14px"
+                alt=""
+              />
+              <p class="header-p">Related Topics</p>
+            </div>
+
+            <p
+              v-for="(example, i) in testExamples"
+              :key="i"
+              @click="setNewSearch(example)"
+              class="example-full"
+            >
+              {{ example }}
+              <img src="@/assets/images/paper-plane-full.svg" height="14px" alt="" />
+            </p>
+          </div> -->
+        </aside>
+      </section>
+
+      <!-- <section id="clips" class="container">
         <div class="header centered sticky-top padding-top mobile-header">
           <div
             style="width: 100%; margin-top: 0.5rem"
@@ -1002,12 +1677,7 @@
                   : `${tweets.length} Tweets`
               }}
             </p>
-            <!-- v-if="
-              (filteredArticles && filteredArticles.length) ||
-              (tweets && tweets.length) ||
-              addedArticles.length ||
-              posts.length
-            " -->
+          
           </div>
         </div>
 
@@ -1118,15 +1788,6 @@
                       </div>
                     </div>
                     <div class="footer-icon-container">
-                      <!-- <button
-                      :disabled="clipTitles.includes(article.title)"
-                      class="tertiary-button"
-                      @click="addClip(article)"
-                    >
-                      <img height="10px" src="@/assets/images/share.svg" alt="" />
-
-                      {{ clipTitles.includes(article.title) ? 'Shared' : 'Share' }}
-                    </button> -->
 
                       <div v-if="mainView === 'website' && addedArticles.length === 1"></div>
                       <div v-else>
@@ -1169,6 +1830,7 @@
                       </div>
                     </div>
                   </div>
+
                   <div v-if="mainView === 'website' && addedArticles.length === 1"></div>
                   <div v-else-if="article.summary">
                     <div class="relative">
@@ -1319,17 +1981,6 @@
                 style="width: 100%; padding: 0 32px; padding-top: 16px"
                 class="small-container letter-spacing"
               >
-                <!-- <div v-if="!selectedSearch" class="text-width">
-                  <p v-if="hasTwitterIntegration" style="margin: 0">
-                    Get a pulse on whats happening on X (Twitter)
-                  </p>
-
-                  <p style="margin: 0" v-else>
-                    Start by connecting your X account
-                    <span class="link" @click="goToIntegrations">here</span>.
-                  </p>
-                </div> -->
-
                 <div
                   style="width: 100%; padding: 0 8px; padding-top: 0"
                   class="small-container letter-spacing"
@@ -1528,13 +2179,6 @@
                           >
                             Social
                           </div>
-                          <!-- <div
-                            @click="switchMainView('instagram')"
-                            :class="{ activeswitch: mainView === 'instagram' }"
-                            class="switch-item"
-                          >
-                            IG
-                          </div> -->
                           <div
                             @click="switchMainView('website')"
                             :class="{ activeswitch: mainView === 'website' }"
@@ -1591,10 +2235,6 @@
                             {{ extractHashtag(hashtag) }}
                           </p>
                         </div>
-
-                        <!-- <div style="width: 100%" lass="horizontal-padding rows" v-else>
-                        <p class="">hello world</p>
-                      </div> -->
                       </div>
                     </div>
                   </div>
@@ -1683,7 +2323,6 @@
 
                     <div class="card-footer">
                       <div class="author-time">
-                        <!-- <span class="author">{{ '@' + tweet.user.username }}</span> -->
 
                         <small class="bold-text"
                           >{{ formattedNumber(post.like_count) }}
@@ -1745,14 +2384,12 @@
                         }}
                       </p>
                     </div>
-
-                    <!-- <div @click="goToArticle(article.link)"> -->
                     <img
                       @click="goToArticle(article.link)"
                       :src="article.image_url"
                       class="cover-photo"
                     />
-                    <!-- </div> -->
+        
                   </header>
 
                   <div class="card-footer">
@@ -1942,59 +2579,19 @@
           </div>
 
           <div style="width: 100%; padding: 32px 0" v-else-if="mainView === 'pdf'">
-            <!-- <div v-if="loading">
-            <div class="small-container">
-              <div class="loading">
-                <p>Summarizing PDF</p>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-              </div>
-            </div>
-          </div> -->
 
             <div
               class="small-container letter-spacing"
               style="width: 100%; padding: 0 32px; padding-top: 16px"
             >
               <div class="text-width">
-                <!-- <h3 style="margin: 0; font-size: 24px" class="beta-span">
-                Research Assistant <span>Beta</span>
-              </h3> -->
+      
                 <p style="margin: 0" class="beta-span">Summarize a short PDF <span>Beta</span></p>
               </div>
 
               <div :class="{ opaque: summaryLoading }" style="width: 100%; margin-top: 32px">
                 <div style="width: 100%" class="large-input-container">
-                  <!-- <div style="border: none; box-shadow: none" class="input-container">
-                  <img
-                    class="left-margin-m"
-                    src="@/assets/images/search.svg"
-                    height="20px"
-                    alt=""
-                  />
 
-                  <textarea
-                    class="area-input text-area-input"
-                    placeholder="Paste PDF url..."
-                    v-model="pdfLink"
-                    :disabled="loading"
-                  />
-
-                  <div
-                    class="image-container left-margin right-margin-m wrapper"
-                    :class="newSearch ? 'dark-blue-bg' : ''"
-                  >
-                    <img
-                      style="margin: 0; cursor: text"
-                      src="@/assets/images/paper-plane-top.svg"
-                      height="14px"
-                      alt=""
-                    />
-
-                    <div class="tooltip">Submit</div>
-                  </div>
-                </div> -->
                   <div style="border-top: none; padding-bottom: 16px" class="expanded-item">
                     <div class="row horizontal-padding-s img-text">
                       <img src="@/assets/images/upload.svg" height="18px" alt="" />
@@ -2055,13 +2652,7 @@
                         >
                           Social
                         </div>
-                        <!-- <div
-                          @click="switchMainView('instagram')"
-                          :class="{ activeswitch: mainView === 'instagram' }"
-                          class="switch-item"
-                        >
-                          IG
-                        </div> -->
+             
                         <div
                           @click="switchMainView('website')"
                           :class="{ activeswitch: mainView === 'website' }"
@@ -2084,9 +2675,9 @@
             </div>
           </div>
         </div>
-      </section>
+      </section> -->
 
-      <section id="summaries" class="container gray-bg">
+      <!-- <section id="summaries" class="container gray-bg">
         <div v-if="summary" class="header sticky-top padding-top-s gray-bg centered-column">
           <div
             :style="!isMobile ? 'margin-top: 2rem; width: 89%' : 'margin-top: 2rem; width: 100%'"
@@ -2098,16 +2689,7 @@
             </button>
 
             <div class="row">
-              <div @click="copyText" class="wrapper icon-button white-bg right-margin">
-                <img
-                  style="cursor: pointer"
-                  class="img-highlight"
-                  src="@/assets/images/clipboard.svg"
-                  height="14px"
-                  alt=""
-                />
-                <div class="tooltip-below">{{ copyTip }}</div>
-              </div>
+      
 
               <div
                 @click="sendSummaryEmail"
@@ -2194,10 +2776,7 @@
             </div>
           </div>
 
-          <!-- <div style="width: 100%" class="space-between vertical-padding">
-          <p class="sub-text">AI-generated summary</p>
-          <p>{{ summary.split(' ').length }} words</p>
-        </div> -->
+    
         </div>
 
         <div class="content-body" v-if="summaryLoading">
@@ -2213,11 +2792,7 @@
 
         <div v-else class="content-body">
           <div style="padding-top: 80px" class="news-container" v-if="summary">
-            <!-- <div style="width: 100%; padding: 16px 0 0 0" class="space-between">
-            <p class="sub-text">AI-generated summary</p>
-            <p>{{ summary.split(' ').length }} words</p>
-          </div> -->
-
+      
             <div class="relative">
               <pre
                 style="overflow-y: scroll; padding-bottom: 120px"
@@ -2347,24 +2922,6 @@
 
                     <div style="width: 100%; margin-top: 16px" class="flex-end small-buttons">
                       <button @click="toggleSummaryMenu">Close</button>
-
-                      <!-- <button v-if="!newTemplate">Submit</button>
-
-                    <button
-                      class="blue-button"
-                      @click="getChatSummary(filteredArticles, newTemplate)"
-                      v-else-if="mainView === 'news' && newTemplate"
-                    >
-                      Submit
-                    </button>
-
-                    <button
-                      class="blue-button"
-                      @click="getChatSummary(preparedTweets, newTemplate)"
-                      v-else-if="newTemplate"
-                    >
-                      Submit
-                    </button> -->
                     </div>
                   </div>
                 </div>
@@ -2379,16 +2936,7 @@
             <p>Your summary will appear here.</p>
           </div>
         </div>
-
-        <!-- <div class="footer sticky-bottom gray-bg">
-        <div class="centered">
-          <button @click="toggleSummaryMenu" v-if="summary" class="img-button-blueicon">
-            <img src="@/assets/images/sparkle.svg" height="18px" alt="" />
-            Generate New Summary
-          </button>
-        </div>
-      </div> -->
-      </section>
+      </section> -->
     </div>
   </div>
 </template>
@@ -2400,15 +2948,25 @@ import User from '@/services/users'
 import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
+import ScrollArrow from '../components/ScrollArrow.vue'
 
 export default {
   name: 'SearchSummaries',
   components: {
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     quillEditor,
+    ScrollArrow,
   },
   data() {
     return {
+      relevantData: '',
+      journalistData: '',
+      relatedTopics: [],
+      loadingRelevant: false,
+      loadingJournalists: false,
+      loadingRelated: false,
+      showArrows: false,
+      searchArticleText: '',
       buttonClicked: false,
       savingContact: false,
       suggestions: [],
@@ -2446,7 +3004,6 @@ export default {
       emailJournalistModalOpen: false,
       suggestionsLoading: false,
       suggestionModalOpen: false,
-      suggestions: '',
       currentIndex: 0,
       selectedFile: null,
       pdfLoaded: false,
@@ -2528,7 +3085,7 @@ export default {
       summaryLoading: false,
       shouldCancel: false,
       regenModal: false,
-      filteredArticles: [],
+      articles: [],
       summary: '',
       booleanString: null,
       metaData: { clips: [] },
@@ -2546,6 +3103,9 @@ export default {
       errorModal: false,
       selectedSearch: null,
       selectedDateTime: '',
+      showingRelevant: false,
+      showingJournalists: false,
+      showingRelated: false,
       searchExamples: [
         `List top journalist writing about Fashion`,
         `"Cancer Research"`,
@@ -2561,6 +3121,11 @@ export default {
         `from: elonmusk`,
         `#Lululemon`,
         `Latest TikTok Trends`,
+      ],
+      testExamples: [
+        'How is sustainable fashion evolving in 2024',
+        'How is sustainable fashion evolving in 2024',
+        'How is sustainable fashion evolving in 2024',
       ],
 
       summaryExamples: [
@@ -2785,13 +3350,131 @@ export default {
   },
   mounted() {
     this.getEmailAlerts()
-    window.addEventListener('scroll', this.checkScroll)
+    window.addEventListener('scroll', this.handleScroll)
+    this.handleScroll()
   },
   beforeDestroy() {
-    window.removeEventListener('scroll', this.checkScroll)
+    window.removeEventListener('scroll', this.handleScroll)
     this.abortFunctions()
   },
   methods: {
+    clearSearchText() {
+      this.searchArticleText = ''
+    },
+    toggleRelevant() {
+      if (!this.showingRelevant) {
+        this.showingRelevant = true
+        if (!this.relevantData) {
+          this.getRelevantArticles()
+        }
+      } else if (this.showingRelevant) {
+        this.showingRelevant = false
+      }
+    },
+    toggleJournalists() {
+      if (!this.showingJournalists) {
+        this.showingJournalists = true
+        if (!this.journalistData) {
+          this.listTopJournalists()
+        }
+      } else if (this.showingJournalists) {
+        this.showingJournalists = false
+      }
+    },
+    toggleRelated() {
+      if (!this.showingRelated) {
+        this.showingRelated = true
+        if (!this.relatedTopics.length) {
+          this.getRelatedTopics()
+        }
+      } else if (this.showingRelated) {
+        this.showingRelated = false
+      }
+    },
+    handleScroll() {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+      const scrollHeight = document.documentElement.scrollHeight
+      const clientHeight = document.documentElement.clientHeight
+      this.showArrows = scrollTop > 100 && scrollTop < scrollHeight - (clientHeight - 100)
+      // this.showUpArrow = scrollTop > 0
+      // this.showDownArrow = scrollTop + clientHeight < scrollHeight
+    },
+    scrollToTop() {
+      setTimeout(() => {
+        this.$refs.loadedContent.scrollIntoView({ behavior: 'smooth' })
+      }, 200)
+    },
+    scrollToBottom() {
+      setTimeout(() => {
+        this.$refs.contentBottom.scrollIntoView({ behavior: 'smooth' })
+      }, 200)
+    },
+    async getRelevantArticles() {
+      this.loadingRelevant = true
+      let clips = this.getArticleDescriptions(this.filteredArticles)
+      try {
+        const res = await Comms.api.getRelevantArticles({
+          term: this.newSearch,
+          clips: clips,
+        })
+        this.relevantData = res.data.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.loadingRelevant = false
+      }
+    },
+    async listTopJournalists() {
+      this.loadingJournalists = true
+      let clips = this.getArticleDescriptions(this.filteredArticles)
+      try {
+        const res = await Comms.api.listTopJournalists({
+          term: this.newSearch,
+          clips: clips,
+        })
+        this.journalistData = res.data.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.loadingJournalists = false
+      }
+    },
+    async getRelatedTopics() {
+      this.loadingRelated = true
+      let clips = this.getArticleDescriptions(this.filteredArticles)
+      try {
+        const res = await Comms.api.getRelatedTopics({
+          clips: clips,
+        })
+
+        console.log('data is here', res.data)
+
+        const str = res.data
+
+        let lines = str.split('\n')
+
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].startsWith('Search')) {
+            if (lines[i + 1]) {
+              this.relatedTopics.push(lines[i + 1].trim())
+            }
+          }
+        }
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.loadingRelated = false
+      }
+    },
+    async exploreTopics() {
+      this.loadingTopics = true
+      try {
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.loadingTopics = false
+      }
+    },
     async saveContact() {
       this.savingContact = true
       // name_list = this.currentJournalist.split(' ')
@@ -3068,30 +3751,29 @@ export default {
 
       return { name, email }
     },
-    async getSuggestions() {
-      this.suggestionModalOpen = true
-      if (this.suggestions) {
-        return
-      }
-      this.suggestionsLoading = true
-      try {
-        await Comms.api.getSuggestions().then((response) => {
-          console.log(response)
-          this.suggestions = response.suggestions
-        })
-      } catch (e) {
-        this.$toast(`Unable to generate suggestions at this time. Try again later`, {
-          timeout: 2500,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.suggestionsLoading = false
-      }
-    },
-
+    // async getSuggestions() {
+    //   this.suggestionModalOpen = true
+    //   if (this.suggestions) {
+    //     return
+    //   }
+    //   this.suggestionsLoading = true
+    //   try {
+    //     await Comms.api.getSuggestions().then((response) => {
+    //       console.log(response)
+    //       this.suggestions = response.suggestions
+    //     })
+    //   } catch (e) {
+    //     this.$toast(`Unable to generate suggestions at this time. Try again later`, {
+    //       timeout: 2500,
+    //       position: 'top-left',
+    //       type: 'error',
+    //       toastClassName: 'custom',
+    //       bodyClassName: ['custom'],
+    //     })
+    //   } finally {
+    //     this.suggestionsLoading = false
+    //   }
+    // },
     toggleSuggestionModal() {
       if (this.suggestionsLoading) {
         return
@@ -3706,6 +4388,12 @@ export default {
       this.summary = ''
       this.tweetError = ''
       this.showSummaryMenu = false
+      this.showingRelated = false
+      this.showingJournalists = false
+      this.showingRelevant = false
+      this.relevantData = ''
+      this.journalistData = ''
+      this.relatedTopics = []
     },
     resetSearch() {
       this.clearNewSearch()
@@ -3808,11 +4496,6 @@ export default {
       this.isTyping = true
       this.typedMessage = this.searchMessages[this.textIndex]
     },
-    scrollToTop() {
-      setTimeout(() => {
-        this.$refs.loadedContent.scrollIntoView({ behavior: 'smooth' })
-      }, 300)
-    },
     scrollToTopDivider() {
       setTimeout(() => {
         this.$refs.topDivider.scrollIntoView({ behavior: 'smooth' })
@@ -3906,6 +4589,12 @@ export default {
       this.showGenerateDropdown = false
       this.showingDropdown = false
       this.showSummaryMenu = false
+      this.showingRelated = false
+      this.showingJournalists = false
+      this.showingRelevant = false
+      this.relevantData = ''
+      this.journalistData = ''
+      this.relatedTopics = []
       if (!this.isPaid && this.searchesUsed >= 10) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
@@ -4180,7 +4869,6 @@ export default {
             this.controllers.getClips.controller.signal,
           )
           .then((response) => {
-            console.log('RESPONSE HERE', response)
             this.filteredArticles = response.articles
             this.booleanString = response.string
             if (!this.filteredArticles.length) {
@@ -4662,16 +5350,34 @@ export default {
           return null
         })
     },
-    scrollToBottom() {
-      setTimeout(() => {
-        const chatWindow = this.$refs.chatWindow
-        setTimeout(() => {
-          chatWindow.scrollTop = chatWindow.scrollHeight
-        }, 200)
-      }, 0)
-    },
   },
   computed: {
+    filteredArticles: {
+      get() {
+        let articlesFiltered = this.articles.filter((article) => {
+          const searchText = this.searchArticleText.toLowerCase()
+
+          const searchConditions = [
+            article.source.name.toLowerCase().includes(searchText),
+            article.title.toLowerCase().includes(searchText), // Fixed typo here
+            article.description.toLowerCase().includes(searchText),
+          ]
+
+          const filterConditions = []
+
+          return (
+            searchConditions.some((condition) => condition) &&
+            filterConditions.every((condition) => condition)
+          )
+        })
+
+        return articlesFiltered
+      },
+      set(newValue) {
+        this.articles = newValue
+      },
+    },
+
     usedHashtags() {
       if (this.user.instagramAccountRef && this.user.instagramAccountRef.hashtagList) {
         return this.user.instagramAccountRef.hashtagList
@@ -5009,11 +5715,12 @@ export default {
 }
 
 .dropdownBorder {
-  color: white !important;
+  color: $dark-black-blue !important;
+  font-family: $base-font-family !important;
   border-radius: 4px;
-  background-color: $dark-black-blue;
+  background-color: white;
   font-size: 12px;
-  font-family: $thin-font-family;
+  border: 0.5px solid $dark-black-blue;
   padding: 7.5px !important;
 }
 
@@ -5033,7 +5740,7 @@ export default {
 
 .nav-text {
   font-weight: 400;
-  font-family: $thin-font-family !important;
+  font-family: $thin-font-family;
   color: #6b6b6b;
   font-size: 13px;
   padding: 6px 0;
@@ -5076,7 +5783,7 @@ export default {
 .search-dropdown {
   width: 260px;
   position: absolute;
-  top: 40px;
+  bottom: 40px;
   right: -8px;
   font-size: 13px;
   font-weight: 400;
@@ -5350,12 +6057,30 @@ export default {
   }
 }
 
+.icon {
+  cursor: pointer;
+  transition: all 0.5s;
+  &:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: scale(1.15);
+  }
+}
+
 .green-button {
   @include dark-blue-button();
-  background-color: $dark-green;
-  padding: 8px 16px;
+  background-color: transparent;
+  padding: 0;
   border: none;
   margin-right: 0;
+  img {
+    filter: invert(40%);
+  }
+
+  &:disabled {
+    img {
+      filter: invert(60%);
+    }
+  }
 }
 
 .wrapper {
@@ -5377,10 +6102,10 @@ export default {
   bottom: 100%;
   color: #fff;
   display: block;
-  left: -34px;
+  left: -40px;
   margin-bottom: 15px;
   opacity: 0;
-  padding: 8px;
+  padding: 6px;
   pointer-events: none;
   position: absolute;
   width: 100px;
@@ -5432,9 +6157,39 @@ export default {
   box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
 }
 
+.wrapper .tooltip-right {
+  z-index: 10000;
+  background: $dark-black-blue;
+  border-radius: 2px;
+  color: #fff;
+  display: block;
+  left: 100%;
+  margin-left: 15px;
+  opacity: 0;
+  padding: 8px;
+  pointer-events: none;
+  position: absolute;
+  width: 100px;
+  -webkit-transform: translateX(-10px);
+  -moz-transform: translateX(-10px);
+  -ms-transform: translateX(-10px);
+  -o-transform: translateX(-10px);
+  transform: translateX(-10px);
+  -webkit-transition: all 0.25s ease-out;
+  -moz-transition: all 0.25s ease-out;
+  -ms-transition: all 0.25s ease-out;
+  -o-transition: all 0.25s ease-out;
+  transition: all 0.25s ease-out;
+  -webkit-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -moz-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -ms-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  -o-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+}
+
 .tooltip-wide {
-  width: 150px !important;
-  left: -60px !important;
+  width: 160px !important;
+  left: -72px !important;
 }
 
 .wrapper .tooltip:before,
@@ -5454,6 +6209,16 @@ export default {
   display: block;
   height: 20px;
   left: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.wrapper .tooltip-right:before {
+  left: -20px;
+  content: ' ';
+  display: block;
+  height: 20px;
+  top: 0;
   position: absolute;
   width: 100%;
 }
@@ -5485,9 +6250,23 @@ export default {
   width: 0;
 }
 
+.wrapper .tooltip-right:after {
+  border-top: solid transparent 10px;
+  border-bottom: solid transparent 10px;
+  border-right: solid $dark-black-blue 10px;
+  left: -10px;
+  content: ' ';
+  height: 0;
+  top: 60%;
+  margin-top: -13px;
+  position: absolute;
+  width: 0;
+}
+
 .wrapper:hover .tooltip,
 .wrapper:hover .tooltip-wide,
-.wrapper:hover .tooltip-below {
+.wrapper:hover .tooltip-below,
+.wrapper:hover .tooltip-right {
   opacity: 1;
   pointer-events: auto;
   -webkit-transform: translateY(0px);
@@ -5499,26 +6278,173 @@ export default {
 
 .lte8 .wrapper .tooltip,
 .lte8 .wrapper .tooltip-wide,
-.lt38 .wrapper .tooltip-below {
+.lt38 .wrapper .tooltip-below,
+.lt38 .wrapper .tooltip-right {
   display: none;
 }
 
 .lte8 .wrapper:hover .tooltip,
 .lte8 .wrapper:hover .tooltip-wide,
-.lte8 .wrapper:hover .tooltip-below {
+.lte8 .wrapper:hover .tooltip-below,
+.lte8 .wrapper:hover .tooltip-right {
   display: block;
 }
 
-.sub-text {
-  color: $light-gray-blue;
-  margin: 8px 0;
-  font-size: 14px;
-  font-family: $thin-font-family;
+// .wrapper {
+//   display: flex;
+//   align-items: center;
+//   font-family: $thin-font-family;
+//   font-size: 14px;
+//   position: relative;
+//   text-align: center;
+//   -webkit-transform: translateZ(0); /* webkit flicker fix */
+//   -webkit-font-smoothing: antialiased; /* webkit text rendering fix */
+// }
 
-  span {
-    font-weight: 200;
-    word-wrap: break-word;
-  }
+// .wrapper .tooltip,
+// .wrapper .tooltip-wide {
+//   z-index: 10000;
+//   background: $dark-black-blue;
+//   border-radius: 4px;
+//   bottom: 100%;
+//   color: #fff;
+//   display: block;
+//   left: -34px;
+//   margin-bottom: 15px;
+//   opacity: 0;
+//   padding: 8px;
+//   pointer-events: none;
+//   position: absolute;
+//   width: 100px;
+//   -webkit-transform: translateY(10px);
+//   -moz-transform: translateY(10px);
+//   -ms-transform: translateY(10px);
+//   -o-transform: translateY(10px);
+//   transform: translateY(10px);
+//   -webkit-transition: all 0.25s ease-out;
+//   -moz-transition: all 0.25s ease-out;
+//   -ms-transition: all 0.25s ease-out;
+//   -o-transition: all 0.25s ease-out;
+//   transition: all 0.25s ease-out;
+//   -webkit-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+//   -moz-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+//   -ms-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+//   -o-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+//   box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+// }
+
+// .wrapper .tooltip-below {
+//   z-index: 10000;
+//   background: $dark-black-blue;
+//   border-radius: 4px;
+//   top: 150%;
+//   color: #fff;
+//   display: block;
+//   left: -30px;
+//   margin-bottom: 15px;
+//   opacity: 0;
+//   padding: 8px;
+//   pointer-events: none;
+//   position: absolute;
+//   width: 100px;
+//   -webkit-transform: translateY(10px);
+//   -moz-transform: translateY(10px);
+//   -ms-transform: translateY(10px);
+//   -o-transform: translateY(10px);
+//   transform: translateY(10px);
+//   -webkit-transition: all 0.25s ease-out;
+//   -moz-transition: all 0.25s ease-out;
+//   -ms-transition: all 0.25s ease-out;
+//   -o-transition: all 0.25s ease-out;
+//   transition: all 0.25s ease-out;
+//   -webkit-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+//   -moz-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+//   -ms-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+//   -o-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+//   box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+// }
+
+// .tooltip-wide {
+//   width: 150px !important;
+//   left: -60px !important;
+// }
+
+// .wrapper .tooltip:before,
+// .wrapper .tooltip-wide:before {
+//   bottom: -20px;
+//   content: ' ';
+//   display: block;
+//   height: 20px;
+//   left: 0;
+//   position: absolute;
+//   width: 100%;
+// }
+
+// .wrapper .tooltip-below:before {
+//   top: -20px;
+//   content: ' ';
+//   display: block;
+//   height: 20px;
+//   left: 0;
+//   position: absolute;
+//   width: 100%;
+// }
+
+// .wrapper .tooltip:after,
+// .wrapper .tooltip-wide:after {
+//   border-left: solid transparent 10px;
+//   border-right: solid transparent 10px;
+//   border-top: solid $dark-black-blue 10px;
+//   bottom: -10px;
+//   content: ' ';
+//   height: 0;
+//   left: 50%;
+//   margin-left: -13px;
+//   position: absolute;
+//   width: 0;
+// }
+
+// .wrapper .tooltip-below:after {
+//   border-left: solid transparent 10px;
+//   border-right: solid transparent 10px;
+//   border-bottom: solid $dark-black-blue 10px;
+//   top: -10px;
+//   content: ' ';
+//   height: 0;
+//   left: 50%;
+//   margin-left: -13px;
+//   position: absolute;
+//   width: 0;
+// }
+
+// .wrapper:hover .tooltip,
+// .wrapper:hover .tooltip-wide,
+// .wrapper:hover .tooltip-below {
+//   opacity: 1;
+//   pointer-events: auto;
+//   -webkit-transform: translateY(0px);
+//   -moz-transform: translateY(0px);
+//   -ms-transform: translateY(0px);
+//   -o-transform: translateY(0px);
+//   transform: translateY(0px);
+// }
+
+// .lte8 .wrapper .tooltip,
+// .lte8 .wrapper .tooltip-wide,
+// .lt38 .wrapper .tooltip-below {
+//   display: none;
+// }
+
+// .lte8 .wrapper:hover .tooltip,
+// .lte8 .wrapper:hover .tooltip-wide,
+// .lte8 .wrapper:hover .tooltip-below {
+//   display: block;
+// }
+
+.sub-text {
+  // color: $light-gray-blue;
+  margin: 0;
+  font-size: 18px;
 }
 
 .article-copy-container {
@@ -5528,21 +6454,29 @@ export default {
 
 .author {
   display: inline-block;
+  max-width: 100%;
   overflow: hidden;
   white-space: nowrap;
-  max-width: 200px;
-  min-height: 22px;
   text-overflow: ellipsis;
-  background-color: $soft-gray;
-  padding: 4px 12px;
+  margin-right: 8px;
   color: $base-gray;
-  border-radius: 12px;
+
+  p {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 15px !important;
+    // font-family: $base-font-family;
+    // font-weight: 200;
+  }
 }
 
 .author-time {
   display: flex;
   align-items: center;
   color: $light-gray-blue;
+  max-width: 80%;
+  font-size: 13px !important;
 
   p {
     margin: 0;
@@ -5562,7 +6496,9 @@ export default {
   position: absolute;
 }
 .regenerate-article {
-  margin-top: 1rem;
+  background: $white-blue;
+  padding: 4px 24px 16px 0;
+  // margin-top: 1rem;
 }
 
 button {
@@ -5587,6 +6523,34 @@ button:disabled {
   }
 }
 
+.tertiary-button-small {
+  @include dark-blue-button();
+  padding: 0 !important;
+  border: none !important;
+  color: $dark-black-blue;
+  background-color: white;
+  margin-right: 12px;
+  svg,
+  img {
+    filter: invert(20%);
+    transition: all 0.35s;
+
+    &:hover {
+      transform: scale(1.125);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    }
+  }
+
+  &:hover {
+    transform: scale(1);
+    box-shadow: none;
+  }
+
+  &:disabled {
+    border: none !important;
+  }
+}
+
 .letter-spacing {
   //   letter-spacing: 0.25px;
 }
@@ -5607,6 +6571,7 @@ button:disabled {
 }
 
 .time {
+  margin-left: 8px;
   //   @media only screen and (max-width: 600px) {
   //     max-width: 100px;
   //     font-size: 10px !important;
@@ -5697,7 +6662,7 @@ button:disabled {
   }
 }
 .card:hover {
-  transform: scale(1.025);
+  // transform: scale(1.025);
 }
 .card-top-left {
   display: flex;
@@ -5890,7 +6855,7 @@ button:disabled {
 }
 
 .ellipsis-text {
-  max-width: 275px;
+  max-width: 40vw;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
@@ -5971,6 +6936,13 @@ button:disabled {
   padding: 0;
 }
 
+.loading-smallest {
+  display: flex;
+  align-items: center;
+  padding: 0;
+  border: none;
+}
+
 .loading-small-absolute {
   position: absolute;
   top: 80%;
@@ -5989,9 +6961,10 @@ button:disabled {
 }
 
 .right-arrow-footer {
-  padding: 2px 0;
-  height: 20px;
-  margin-left: 1rem;
+  // padding: 2px 0;
+  // height: 20px;
+  height: 17px;
+  margin-right: 12px;
   cursor: text;
 }
 
@@ -6069,6 +7042,10 @@ li {
     contrast(87%);
 }
 
+.rotate {
+  transform: rotate(180deg);
+}
+
 .rowed {
   display: flex;
   align-items: center;
@@ -6084,6 +7061,14 @@ li {
   display: flex;
   flex-direction: row;
   align-items: center;
+}
+
+.row-end {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  background: $white-blue;
 }
 
 .rows {
@@ -6106,16 +7091,6 @@ li {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-
-  @media only screen and (max-width: 600px) {
-    display: flex;
-    flex-direction: column-reverse;
-    align-items: flex-start;
-    justify-content: flex-start;
-  }
-
-  @media only screen and (min-width: 601px) and (max-width: 1024px) {
-  }
 }
 .content-body {
   display: flex;
@@ -6148,36 +7123,200 @@ li {
   padding-top: 104px;
 }
 
+.fadein {
+  transition: opacity 1s ease-out;
+  opacity: 0;
+  animation: fadeIn 1s forwards;
+}
+
 .search {
+  position: relative;
   font-family: $thin-font-family;
   font-size: 14px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
-  background-color: white;
+  height: 100%;
+  padding: 56px 0 0 0;
+  width: 100vw;
 
-  @media only screen and (max-width: 600px) {
-    flex-direction: column-reverse;
+  .content-header {
+    display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
+    width: 100%;
+    position: sticky;
+    top: 0;
+    background: $off-white;
+    // border-bottom: 1px solid rgba(0, 0, 0, 0.128);
+    padding: 24px 32px 8px 24px;
+    z-index: 10;
   }
 
-  @media only screen and (min-width: 601px) and (max-width: 1024px) {
-    /* Styles for tablets */
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+  .main {
+    width: 100vw;
+    height: 95vh;
+    position: relative;
+    padding: 12px 24px 24px 24px;
+    overflow-y: hidden;
+    transition: opacity 1s ease-out;
+    opacity: 0;
+    animation: fadeIn 1s forwards;
+
+    .body {
+      width: 62vw;
+      height: 100%;
+      overflow-y: scroll;
+      overflow-x: hidden;
+      padding: 0 16px 16px 40px;
+    }
+
+    aside {
+      position: absolute;
+      right: 24px;
+      top: 0;
+      bottom: 0;
+      width: 35vw;
+      height: 100%;
+      overflow-y: scroll;
+      overflow-x: hidden;
+      padding-top: 32px;
+
+      .section {
+        // height: 30%;
+        max-height: 50%;
+        padding: 0 64px 0 16px;
+        position: relative;
+        overflow-y: scroll;
+        margin-top: 12px;
+
+        img {
+          filter: invert(40%);
+        }
+
+        div {
+          margin-bottom: 16px;
+        }
+      }
+    }
+
+    .content {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      width: 100%;
+      min-height: 20vh;
+      padding: 16px 32px 16px 64px;
+    }
+
+    .content-container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      width: 99%;
+      min-height: 20vh;
+      padding: 16px 32px 16px 64px;
+      margin-bottom: 16px;
+      // background: white;
+      // border-radius: 8px;
+      // box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .content-padding {
+      position: relative;
+
+      // &:hover {
+      //   .absolute-bottom-right {
+      //     display: block;
+      //   }
+      // }
+    }
+
+    .between {
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      // padding-right: 30px;
+
+      p {
+        margin: 0;
+      }
+    }
   }
 
-  @media only screen and (min-width: 1025px) {
-    /* Styles for desktops */
+  .input {
+    position: sticky;
+    z-index: 8;
+    top: 1.5rem;
+    width: 50% !important;
+    border-radius: 20px;
+    border: 1px solid rgba(0, 0, 0, 0.135);
+    font-family: $thin-font-family;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 7px 14px 7px 10px;
+  }
+
+  .search-input {
+    border: none;
+    outline: none;
+    margin-left: 0.5rem;
+    width: 100%;
+
+    &:disabled {
+      background: transparent;
+    }
+  }
+
+  // display: flex;
+  // flex-direction: row;
+  // align-items: center;
+  // justify-content: flex-start;
+
+  // @media only screen and (max-width: 600px) {
+  //   flex-direction: column-reverse;
+  //   align-items: center;
+  //   justify-content: center;
+  // }
+
+  // @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  //   flex-direction: column;
+  //   align-items: center;
+  //   justify-content: center;
+  // }
+
+  // @media only screen and (min-width: 1025px) {
+  // }
+}
+
+.header-p {
+  font-family: $base-font-family;
+  font-weight: 200;
+  font-size: 16px;
+  margin: 0;
+
+  span {
+    font-family: $thin-font-family;
   }
 }
 
 .align-top {
   align-items: flex-start !important;
   height: 80vh;
+}
+
+.absolute-bottom-right {
+  position: absolute;
+  bottom: 8px;
+  right: 4px;
+}
+
+.higher {
+  bottom: 96px !important;
 }
 
 .empty-search {
@@ -6341,7 +7480,7 @@ p {
   flex-direction: column;
 
   p {
-    font-size: 18px !important;
+    font-size: 18px;
   }
 }
 
@@ -6488,8 +7627,8 @@ p {
 
 .image-container:hover,
 .image-container-blue:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
 }
 
 .image-container-blue {
@@ -6730,6 +7869,137 @@ textarea::placeholder {
   }
 }
 
+.example-small {
+  min-width: 47%;
+  padding: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  background-color: white;
+  margin: 8px 0;
+  cursor: pointer;
+  transition: all 0.5s;
+  img {
+    margin-right: 12px;
+  }
+}
+.example-small-between {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 96%;
+  padding: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background-color: white;
+  margin: 8px 0 !important;
+  cursor: pointer;
+  transition: all 0.5s;
+  // img {
+  //   margin-right: 12px;
+  // }
+
+  p {
+    font-size: 14px !important;
+  }
+
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transform: scale(1.015);
+  }
+}
+
+.example-title {
+  font-size: 14px;
+  width: 85%;
+  padding: 10px 12px;
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  background-color: white;
+  margin: 0 !important;
+  cursor: pointer;
+  transition: all 0.5s;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  .example-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: 0 !important;
+  }
+
+  p {
+    margin: 0;
+    font-family: $base-font-family;
+    font-weight: 200;
+  }
+}
+
+.nobottomborder {
+  border-bottom: none;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.example-body {
+  max-height: 32%;
+  overflow: scroll;
+  background: white;
+  width: 85%;
+  padding: 4px 16px 12px 16px;
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  border-top: none;
+  transition: opacity 0.5s ease-out;
+  opacity: 0;
+  animation: fadeIn 0.5s forwards;
+  margin: 0 !important;
+}
+
+.example-text {
+  font-size: 14px !important;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding-left: 12px;
+  p {
+    margin: 0;
+  }
+}
+
+.example-full {
+  font-size: 14px;
+  width: 85%;
+  padding: 11px 12px;
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  background-color: white;
+  margin: 0 0 8px 0;
+  cursor: pointer;
+  transition: all 0.5s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  // @media only screen and (max-width: 600px) {
+  //   width: 100%;
+  // }
+
+  // @media only screen and (min-width: 601px) and (max-width: 1250px) {
+  //   width: 60vw !important;
+  // }
+
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: scale(1.02);
+  }
+}
+
 .max-height {
   max-height: 30vh;
   overflow-y: scroll;
@@ -6840,8 +8110,8 @@ textarea::placeholder {
 
 .blue-text-bg {
   background: $white-blue;
-  padding: 32px 12px 12px 12px;
-  border-radius: 4px;
+  padding: 16px 12px 0 12px;
+  // border-radius: 4px;
   font-size: 16px;
 }
 
@@ -7032,6 +8302,9 @@ textarea::placeholder {
 }
 .inverted {
   filter: invert(100%);
+}
+.invert {
+  filter: invert(40%) !important;
 }
 .top-right {
   position: absolute;
@@ -7231,6 +8504,162 @@ textarea::placeholder {
     img {
       filter: invert(50%);
       cursor: text !important;
+    }
+  }
+}
+
+.cards-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  padding: 24px 0;
+  gap: 14px;
+}
+
+.widecard {
+  width: 51.25vw !important;
+}
+.cardwidth {
+  // width: 28.75vw !important;
+  margin-top: -16px;
+}
+
+.card {
+  width: 25.2vw;
+  padding: 0;
+  // border: 1px solid rgba(0, 0, 0, 0.335);
+  border-radius: 5px;
+  // display: flex;
+  // flex-direction: row;
+
+  .main-body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.135);
+    padding: 12px 10px 10px 10px;
+    height: 75px;
+
+    p {
+      margin: 0;
+      font-size: 13px;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-family: $base-font-family;
+      font-weight: 200;
+    }
+    small {
+      font-size: 13px;
+      margin-bottom: 8px;
+
+      color: $light-gray-blue;
+    }
+  }
+
+  .main-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    overflow: hidden;
+    padding: 14px 10px;
+    width: 100%;
+  }
+
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.card-photo-header {
+  height: 150px;
+  width: 100%;
+  margin: 0;
+  object-fit: cover;
+  cursor: pointer;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+
+  &:hover {
+    opacity: 0.7;
+  }
+}
+
+.skeleton-loader {
+  padding: 56px 32px 32px 48px;
+  overflow: hidden;
+}
+.skeleton {
+  background-color: rgb(236, 236, 236);
+  border-radius: 4px;
+  margin-bottom: 10px;
+  animation: shimmer 3s infinite;
+  background: linear-gradient(to right, #dddddde5 8%, #eeeeeef8 18%, #dddddd 33%);
+  background-size: 1000px 100%;
+}
+.skeleton-title {
+  height: 20px;
+  width: 200px;
+}
+.skeleton-text {
+  height: 20px;
+  width: 100%;
+}
+.skeleton-small {
+  height: 20px;
+  width: 200px;
+}
+
+.skeleton-medium {
+  height: 20px;
+  width: 70%;
+}
+
+.skeleton-large {
+  height: 180px;
+  width: 100%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.absolute-arrows {
+  position: fixed;
+  bottom: 50px;
+  left: 32%;
+  z-index: 1000;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  .arrow {
+    cursor: pointer;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 4px;
+    border-radius: 50%;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+      filter: invert(100%);
     }
   }
 }
