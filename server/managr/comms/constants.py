@@ -461,13 +461,13 @@ OPEN_AI_RELEVANT_ARTICLES = (
 
 OPEN_AI_TOP_JOURNALISTS = (
     lambda term, clips : f"""
-    List the top 10 Journalists from top news outlets writing about {term} only list journalist from credible, newsworthy outlets. Sort by order of influence (most influential at the top) Output must be: Journalist name, Outlet, date (mm/dd/yy), 4-5 word headline summary. Here are the news clips: \n {clips}:
+    List the top 10 Journalists from top news outlets writing about {term}. Sort by order of influence (most influential at the top) Output must be: Journalist name, (Outlet), 4-5 word headline summary using quotes, - date using mm.dd format. Here are the news clips: \n {clips}:
      """
 )
 
 OPEN_AI_RELATED_TOPICS = (
     lambda clips : f"""
-    Generate up to 5 related, interesting, diverse questions or topics for further exploration based on the news clips below. Focus on most interesting, impactful and engaging stories. Output must be capped at 5 words per suggestion, no numbering, and no punctuation. Format the output must be as follows:
+    Generate up to 5 related, interesting, diverse questions or topics for further exploration based on the news clips below. Focus on most interesting, impactful and engaging stories. Output must be capped at 3 words per suggestion, no numbering, and no punctuation. Format the output must be as follows:
     Search1:
     Search2:
     Search3:

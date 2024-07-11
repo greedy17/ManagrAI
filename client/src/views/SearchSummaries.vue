@@ -891,7 +891,7 @@
             <div style="width: 100%" class="row horizontal-padding-s img-text">
               <img
                 style="margin-left: -1px"
-                src="@/assets/images/microphone.svg"
+                src="@/assets/images/user-id.svg"
                 height="20px"
                 alt=""
               />
@@ -1144,19 +1144,19 @@
             <div v-else class="content-padding">
               <pre style="" v-html="summary" class="pre-text"></pre>
 
-              <div
+              <!-- <div
                 :class="{ higher: showSummaryMenu }"
                 class="absolute-bottom-right image-container"
                 @click="toggleSummaryMenu"
               >
                 <img v-if="showSummaryMenu" src="@/assets/images/close.svg" height="16px" alt="" />
                 <img v-else src="@/assets/images/add-doc.svg" height="16px" alt="" />
-              </div>
+              </div> -->
               <div
                 style="margin-top: 32px; margin-bottom: 12px"
                 class="input-container-gray fadein"
-                v-if="showSummaryMenu"
               >
+                <!-- v-if="showSummaryMenu" -->
                 <section style="padding-bottom: 4px; padding-top: 4px">
                   <img
                     class="left-margin-m"
@@ -1260,7 +1260,11 @@
                   </div>
                   <div class="main-body">
                     <small>{{ article.source.name }}</small>
-                    <p style="font-size: 15px" class="p-header" @click="goToArticle(article.link)">
+                    <p
+                      style="font-size: 15px; cursor: pointer"
+                      class="p-header"
+                      @click="goToArticle(article.link)"
+                    >
                       {{ article.title }}
                     </p>
                   </div>
@@ -1499,7 +1503,13 @@
                 <p>Most Relevant Articles</p>
               </div>
 
-              <img src="@/assets/images/downArrow.svg" height="14px" alt="" />
+              <img
+                v-if="!showingRelevant"
+                src="@/assets/images/downArrow.svg"
+                height="14px"
+                alt=""
+              />
+              <img v-else src="@/assets/images/downArrow.svg" class="rotate" height="14px" alt="" />
             </div>
             <div v-if="showingRelevant" class="example-body">
               <div v-if="loadingRelevant">
@@ -1531,7 +1541,13 @@
                 <p>List Top Journalists</p>
               </div>
 
-              <img src="@/assets/images/downArrow.svg" height="14px" alt="" />
+              <img
+                v-if="!showingJournalists"
+                src="@/assets/images/downArrow.svg"
+                height="14px"
+                alt=""
+              />
+              <img v-else src="@/assets/images/downArrow.svg" class="rotate" height="14px" alt="" />
             </div>
             <div v-if="showingJournalists" class="example-body">
               <div v-if="loadingJournalists">
@@ -1567,7 +1583,13 @@
                 <p>Explore Related Topics</p>
               </div>
 
-              <img src="@/assets/images/downArrow.svg" height="14px" alt="" />
+              <img
+                v-if="!showingRelated"
+                src="@/assets/images/downArrow.svg"
+                height="14px"
+                alt=""
+              />
+              <img v-else src="@/assets/images/downArrow.svg" class="rotate" height="14px" alt="" />
             </div>
             <div v-if="showingRelated" class="example-body">
               <div v-if="loadingRelated">
@@ -5359,8 +5381,9 @@ export default {
 
           const searchConditions = [
             article.source.name.toLowerCase().includes(searchText),
-            article.title.toLowerCase().includes(searchText), // Fixed typo here
+            article.title.toLowerCase().includes(searchText),
             article.description.toLowerCase().includes(searchText),
+            article.author ? article.author.toLowerCase().includes(searchText) : 'Unknown Author',
           ]
 
           const filterConditions = []
@@ -7219,11 +7242,20 @@ li {
       // background: white;
       // border-radius: 8px;
       // box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+      border-bottom: 0.5px solid transparent;
+      border-image: linear-gradient(
+        to right,
+        transparent 7%,
+        rgba(0, 0, 0, 0.1) 7%,
+        rgba(0, 0, 0, 0.1) 98%,
+        transparent 98%
+      );
+      border-image-slice: 1;
     }
 
     .content-padding {
       position: relative;
+      width: 100%;
 
       // &:hover {
       //   .absolute-bottom-right {
