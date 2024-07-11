@@ -642,113 +642,25 @@
                   <img src="@/assets/images/newspaper.svg" height="12px" alt="" />
                   News
                 </div>
+                <div
+                  @click="switchMainView('social')"
+                  :class="{ activeswitch: mainView === 'social' }"
+                >
+                  <img src="@/assets/images/comment.svg" height="12px" alt="" />
+                  Social
+                </div>
                 <!-- <div
-                  @click="switchMainView('social')"
-                  :class="{ activeswitch: mainView === 'social' }"
-                >
-                  <img src="@/assets/images/comment.svg" height="12px" alt="" />
-                  Social
-                </div>
-                <div
-                  @click="switchMainView('website')"
-                  :class="{ activeswitch: mainView === 'website' }"
-                >
-                  <img src="@/assets/images/globe.svg" height="12px" alt="" />
-                  URL
-                </div> -->
-
-                <!-- <div @click="switchMainView('pdf')" :class="{ activeswitch: mainView === 'pdf' }">
-                  <img src="@/assets/images/pdf.svg" height="12px" alt="" />
-                  PDF
-                </div> -->
-              </div>
-            </div>
-          </div>
-
-          <div
-            v-else-if="mainView === 'pdf'"
-            style="border: none; box-shadow: none; padding-bottom: 16px"
-            class="input-container-gray"
-          >
-            <section style="padding: 16px 0">
-              <img class="left-margin-m" src="@/assets/images/upload.svg" height="18px" alt="" />
-              <div class="left-margin-m">
-                <div @click="openFilePicker" class="custom-file-upload">
-                  <input
-                    :disabled="summaryLoading"
-                    @change="handleFileUpload"
-                    type="file"
-                    accept=".pdf"
-                    id="pdfile"
-                    ref="fileInput"
-                  />
-                  <label class="ellipsis-text-s" style="cursor: pointer" for="fileInput">
-                    {{ selectedFile ? selectedFile.name : 'Upload PDF' }}
-                  </label>
-
-                  <div v-if="selectedFile" class="file-img">
-                    <img src="@/assets/images/upload2.svg" height="12px" alt="" />
-                  </div>
-                </div>
-              </div>
-
-              <div
-                @click="summarizePdf"
-                class="image-container left-margin right-margin-m wrapper"
-                :class="{ 'dark-blue-bg': selectedFile, void: summaryLoading }"
-                style="margin-left: auto"
-              >
-                <img
-                  style="margin: 0"
-                  src="@/assets/images/paper-plane-top.svg"
-                  height="14px"
-                  alt=""
-                />
-
-                <div class="tooltip">Summarize</div>
-              </div>
-            </section>
-            <div class="source-dropdown">
-              <div @click="toggleSources" class="drop-header">
-                <img src="@/assets/images/pdf.svg" height="16px" alt="" />
-                <p>Source:</p>
-                <small>PDF</small>
-                <img src="@/assets/images/arrowDropUp.svg" height="18px" alt="" />
-              </div>
-
-              <div v-if="showingSources" class="drop-options">
-                <header>
-                  Select source
-                  <img
-                    @click="toggleSources"
-                    src="@/assets/images/close.svg"
-                    height="18px"
-                    alt=""
-                    style="cursor: pointer"
-                  />
-                </header>
-                <div @click="switchMainView('news')" :class="{ activeswitch: mainView === 'news' }">
-                  <img src="@/assets/images/newspaper.svg" height="12px" alt="" />
-                  News
-                </div>
-                <div
-                  @click="switchMainView('social')"
-                  :class="{ activeswitch: mainView === 'social' }"
-                >
-                  <img src="@/assets/images/comment.svg" height="12px" alt="" />
-                  Social
-                </div>
-                <div
                   @click="switchMainView('website')"
                   :class="{ activeswitch: mainView === 'website' }"
                 >
                   <img src="@/assets/images/globe.svg" height="12px" alt="" />
                   URL
                 </div>
+
                 <div @click="switchMainView('pdf')" :class="{ activeswitch: mainView === 'pdf' }">
                   <img src="@/assets/images/pdf.svg" height="12px" alt="" />
                   PDF
-                </div>
+                </div> -->
               </div>
             </div>
           </div>
@@ -853,14 +765,14 @@
                     <img src="@/assets/images/newspaper.svg" height="12px" alt="" />
                     News
                   </div>
-                  <!-- <div
+                  <div
                     @click="switchMainView('social')"
                     :class="{ activeswitch: mainView === 'social' }"
                   >
                     <img src="@/assets/images/comment.svg" height="12px" alt="" />
                     Social
                   </div>
-                  <div
+                  <!-- <div
                     @click="switchMainView('website')"
                     :class="{ activeswitch: mainView === 'website' }"
                   >
@@ -987,13 +899,18 @@
 
               <p
                 v-if="
-                  mainView !== 'website' &&
-                  !(filteredArticles && filteredArticles.length) &&
-                  !summary
+                  mainView === 'news' && !(filteredArticles && filteredArticles.length) && !summary
                 "
                 class="sub-text ellipsis-text"
               >
                 No results found. Try one of these suggestions:
+              </p>
+
+              <p
+                v-else-if="mainView === 'social' && !tweets.length && !summary"
+                class="sub-text ellipsis-text"
+              >
+                No results found. Try a new search.
               </p>
 
               <p
@@ -1024,7 +941,7 @@
                 @click="sendSummaryEmail"
                 class="wrapper right-margin"
                 :disabled="sentSummaryEmail"
-                v-if="mainView !== 'social' && mainView !== 'website' && mainView !== 'pdf'"
+                v-if="mainView === 'news'"
               >
                 <img
                   v-if="sendingSummaryEmail"
@@ -1123,7 +1040,12 @@
               </div>
             </div>
 
-            <div v-if="!(filteredArticles && filteredArticles.length) && !summary">
+            <div
+              v-if="
+                (!(filteredArticles && filteredArticles.length) && !summary) ||
+                (!(filteredTweets && filteredTweets.length) && !summary)
+              "
+            >
               <div style="width: 100%" class="letter-spacing">
                 <div class="text-width">
                   <div style="margin: 0 0 16px 0; width: 100%" class="col-start">
@@ -1143,25 +1065,15 @@
 
             <div v-else class="content-padding">
               <pre style="" v-html="summary" class="pre-text"></pre>
-
-              <!-- <div
-                :class="{ higher: showSummaryMenu }"
-                class="absolute-bottom-right image-container"
-                @click="toggleSummaryMenu"
-              >
-                <img v-if="showSummaryMenu" src="@/assets/images/close.svg" height="16px" alt="" />
-                <img v-else src="@/assets/images/add-doc.svg" height="16px" alt="" />
-              </div> -->
               <div
                 style="margin-top: 32px; margin-bottom: 12px"
                 class="input-container-gray fadein"
               >
-                <!-- v-if="showSummaryMenu" -->
                 <section style="padding-bottom: 4px; padding-top: 4px">
                   <img
                     class="left-margin-m"
                     style="margin-bottom: 4px"
-                    src="@/assets/images/add-doc.svg"
+                    src="@/assets/images/comment.svg"
                     height="18px"
                     alt=""
                   />
@@ -1177,7 +1089,22 @@
                   />
 
                   <div
+                    v-if="mainView === 'news'"
                     @click="getChatSummary(filteredArticles, newTemplate)"
+                    class="image-container left-margin right-margin-m white-bg"
+                    :class="newTemplate ? 'dark-blue-bg' : ''"
+                  >
+                    <img
+                      style="margin: 0"
+                      src="@/assets/images/paper-plane-full.svg"
+                      height="14px"
+                      alt=""
+                    />
+                  </div>
+
+                  <div
+                    v-else
+                    @click="getChatSummary(preparedTweets, newTemplate)"
                     class="image-container left-margin right-margin-m white-bg"
                     :class="newTemplate ? 'dark-blue-bg' : ''"
                   >
@@ -1197,24 +1124,27 @@
             <div ref="topDivider" class="between">
               <div class="row">
                 <img
+                  v-if="mainView === 'news'"
                   style="margin-right: 8px"
                   src="@/assets/images/newspaper.svg"
                   height="14px"
                   alt=""
                 />
+                <img
+                  v-else-if="mainView === 'social'"
+                  src="@/assets/images/twitter-x.svg"
+                  height="20px"
+                  alt=""
+                />
+
                 <p class="header-p">
-                  Articles
-                  <span
-                    >({{
-                      mainView === 'news'
-                        ? `${filteredArticles.length}`
-                        : mainView === 'website'
-                        ? '1'
-                        : mainView === 'instagram'
-                        ? `${posts.length}`
-                        : `${tweets.length}`
-                    }})</span
-                  >
+                  <span>{{
+                    mainView === 'news'
+                      ? `Articles (${articlesFiltered.length})`
+                      : mainView === 'social'
+                      ? `Posts (${filteredTweets.length})`
+                      : ''
+                  }}</span>
                 </p>
               </div>
 
@@ -1228,12 +1158,20 @@
                   ></path>
                 </svg>
                 <input
+                  v-if="mainView === 'news'"
                   v-model="searchArticleText"
                   class="search-input"
                   :placeholder="`Search articles...`"
                 />
+
+                <input
+                  v-else-if="mainView === 'social'"
+                  v-model="searchTweetText"
+                  class="search-input"
+                  :placeholder="`Search posts...`"
+                />
                 <img
-                  v-if="searchArticleText"
+                  v-if="searchTweetText || searchArticleText"
                   @click="clearSearchText"
                   src="@/assets/images/close.svg"
                   class="pointer"
@@ -1243,9 +1181,9 @@
               </div>
             </div>
 
-            <div class="cards-container">
+            <div v-if="mainView === 'news'" class="cards-container">
               <div
-                v-for="article in filteredArticles"
+                v-for="article in articlesFiltered"
                 :key="article.id"
                 class="card"
                 :class="{ widecard: article.summary && mainView !== 'website' }"
@@ -1285,8 +1223,6 @@
                       <span class="off-gray time">{{
                         getTimeDifferenceInMinutes(article.publish_date)
                       }}</span>
-
-                      <!-- <div class="tooltip">View Bio</div> -->
                     </div>
                     <div class="footer-icon-container">
                       <div v-if="mainView === 'website' && addedArticles.length === 1"></div>
@@ -1298,7 +1234,6 @@
                             height="17px"
                             alt=""
                           />
-                          <!-- <div class="tooltip">View bio</div> -->
                         </button>
                         <button
                           v-if="!article.summary"
@@ -1320,7 +1255,6 @@
                           >
                             <div class="dot"></div>
                             <div class="dot"></div>
-                            <!-- <div class="dot"></div> -->
                           </div>
                         </button>
                         <img
@@ -1333,7 +1267,6 @@
                   </div>
                 </div>
 
-                <!-- <div v-if="mainView === 'website' && addedArticles.length === 1"></div> -->
                 <div
                   class="cardwidth"
                   style="background: #e9f3fa"
@@ -1475,6 +1408,93 @@
               </div>
               <div ref="contentBottom"></div>
             </div>
+
+            <div v-else-if="mainView === 'social'" class="cards-container">
+              <div class="card" v-for="(tweet, i) in filteredTweets" :key="i">
+                <div style="width: 100%">
+                  <div v-if="tweet.attachments">
+                    <div v-for="media in tweetMedia" :key="media.media_key">
+                      <div v-if="media.media_key === tweet.attachments.media_keys[0]">
+                        <img
+                          v-if="media.type === 'photo'"
+                          :src="media.url"
+                          class="card-photo-header"
+                          alt=""
+                        />
+
+                        <video
+                          v-else-if="media.type === 'video'"
+                          class="card-photo-header"
+                          controls
+                        >
+                          <source :src="media.variants[1].url" type="video/mp4" />
+                        </video>
+
+                        <video
+                          v-else-if="media.type === 'animated_gif'"
+                          class="card-photo-header"
+                          autoplay
+                          loop
+                          muted
+                          playsinline
+                        >
+                          <source :src="media.variants[0].url" type="video/mp4" />
+                        </video>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="main-body">
+                    <div class="card-row-med">
+                      <img :src="tweet.user.profile_image_url" />
+                      <small class="pointer" @click="openTweet(tweet.user.username, tweet.id)">
+                        {{ tweet.user.name }}
+                      </small>
+                      <svg
+                        v-if="tweet.user.verified"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 22 22"
+                        aria-label="Verified account"
+                        role="img"
+                        class="twitter-blue"
+                        data-testid="icon-verified"
+                      >
+                        <g>
+                          <path
+                            d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"
+                          ></path>
+                        </g>
+                      </svg>
+                    </div>
+                    <p
+                      style="font-size: 15px; cursor: pointer"
+                      class="p-header"
+                      @click="openTweet(tweet.user.username, tweet.id)"
+                    >
+                      {{ tweet.text }}
+                    </p>
+                  </div>
+
+                  <div class="main-footer">
+                    <div class="author-time">
+                      <span class="author">{{ '@' + tweet.user.username }}</span>
+                      <span style="margin-right: 4px" class="divider-dot">.</span>
+                      <small class="bold-text"
+                        >{{ formatNumber(tweet.user.public_metrics.followers_count) }}
+                        <span>Followers</span>
+                      </small>
+                      <span style="margin-left: 4px" class="divider-dot">.</span>
+                      <span class="off-gray time">{{
+                        getTimeDifferenceInMinutes(tweet.created_at)
+                      }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div ref="contentBottom"></div>
+            </div>
           </section>
           <!-- <div v-if="showArrows" class="absolute-arrows">
             <div @click="scrollToTop" style="margin-right: 10px" class="arrow">
@@ -1500,7 +1520,8 @@
                   height="14px"
                   alt=""
                 />
-                <p>Most Relevant Articles</p>
+                <p v-if="mainView === 'news'">Most Relevant Articles</p>
+                <p v-else>Most Relevant Posts</p>
               </div>
 
               <img
@@ -1538,7 +1559,9 @@
                   height="14px"
                   alt=""
                 />
-                <p>List Top Journalists</p>
+
+                <p v-if="mainView === 'news'">List Top Journalists</p>
+                <p v-else>List Top Influencers</p>
               </div>
 
               <img
@@ -1612,49 +1635,6 @@
               </div>
             </div>
           </div>
-
-          <!-- <div class="section">
-            <div class="row">
-              <img
-                style="margin-right: 8px"
-                src="@/assets/images/profile.svg"
-                height="14px"
-                alt=""
-              />
-              <p class="header-p">List Journalists</p>
-            </div>
-            <p
-              v-for="(example, i) in testExamples"
-              :key="i"
-              @click="setNewSearch(example)"
-              class="example-full"
-            >
-              {{ example }}
-              <img src="@/assets/images/paper-plane-full.svg" height="14px" alt="" />
-            </p>
-          </div> -->
-
-          <!-- <div class="section">
-            <div class="row">
-              <img
-                style="margin-right: 8px"
-                src="@/assets/images/edit-note.svg"
-                height="14px"
-                alt=""
-              />
-              <p class="header-p">Related Topics</p>
-            </div>
-
-            <p
-              v-for="(example, i) in testExamples"
-              :key="i"
-              @click="setNewSearch(example)"
-              class="example-full"
-            >
-              {{ example }}
-              <img src="@/assets/images/paper-plane-full.svg" height="14px" alt="" />
-            </p>
-          </div> -->
         </aside>
       </section>
 
@@ -2989,6 +2969,7 @@ export default {
       loadingRelated: false,
       showArrows: false,
       searchArticleText: '',
+      searchTweetText: '',
       buttonClicked: false,
       savingContact: false,
       suggestions: [],
@@ -3382,6 +3363,7 @@ export default {
   methods: {
     clearSearchText() {
       this.searchArticleText = ''
+      this.searchTweetText = ''
     },
     toggleRelevant() {
       if (!this.showingRelevant) {
@@ -3432,12 +3414,18 @@ export default {
       }, 200)
     },
     async getRelevantArticles() {
+      let clips = []
       this.loadingRelevant = true
-      let clips = this.getArticleDescriptions(this.filteredArticles)
+      if (this.mainView === 'news') {
+        clips = this.getArticleDescriptions(this.filteredArticles)
+      } else {
+        clips = this.prepareTweetSummary(this.tweets)
+      }
       try {
         const res = await Comms.api.getRelevantArticles({
           term: this.newSearch,
           clips: clips,
+          social: this.mainView === 'social' ? true : false,
         })
         this.relevantData = res.data.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
       } catch (e) {
@@ -3447,12 +3435,18 @@ export default {
       }
     },
     async listTopJournalists() {
+      let clips = []
       this.loadingJournalists = true
-      let clips = this.getArticleDescriptions(this.filteredArticles)
+      if (this.mainView === 'news') {
+        clips = this.getArticleDescriptions(this.filteredArticles)
+      } else {
+        clips = this.prepareTweetSummary(this.tweets)
+      }
       try {
         const res = await Comms.api.listTopJournalists({
           term: this.newSearch,
           clips: clips,
+          social: this.mainView === 'social' ? true : false,
         })
         this.journalistData = res.data.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
       } catch (e) {
@@ -3462,8 +3456,14 @@ export default {
       }
     },
     async getRelatedTopics() {
+      let clips = []
       this.loadingRelated = true
-      let clips = this.getArticleDescriptions(this.filteredArticles)
+      if (this.mainView === 'news') {
+        clips = this.getArticleDescriptions(this.filteredArticles)
+      } else {
+        clips = this.prepareTweetSummary(this.tweets)
+      }
+
       try {
         const res = await Comms.api.getRelatedTopics({
           clips: clips,
@@ -4943,6 +4943,19 @@ export default {
               this.tweetMedia = response.includes.media
               this.booleanString = response.string
               this.getTweetSummary()
+            } else {
+              console.log(response.suggestions)
+              const str = response.suggestions
+              const searches = str.match(/Search\d+: "([^"]+)"|Search\d+: ([^"\n]+)/g)
+
+              const formattedSearches = searches.map((match) => {
+                const matchResult = match.match(/Search\d+: "([^"]+)"|Search\d+: ([^"\n]+)/)
+                return matchResult[1] || matchResult[2]
+              })
+
+              const [search1, search2, search3] = formattedSearches
+
+              this.suggestions = [search1, search2, search3]
             }
 
             this.showingDropdown = false
@@ -5018,6 +5031,7 @@ export default {
             tweets[i].user.public_metrics.followers_count +
             ' Date: ' +
             tweets[i].created_at,
+          'Link: ' + `https://twitter.com/${tweets[i].username}/status/${tweets[i].id}`,
         )
       }
       return tweetList
@@ -5043,7 +5057,7 @@ export default {
     getArticleDescriptions(articles) {
       return articles.map(
         (a) =>
-          `Content:${a.description} Date:${a.publish_date}, Source:${a.source.name}, Author:${a.author}`,
+          `Content:${a.description} Date:${a.publish_date}, Source:${a.source.name}, Author:${a.author}, Link: ${a.link}`,
       )
     },
     async getTweetSummary(instructions = '') {
@@ -5374,16 +5388,42 @@ export default {
     },
   },
   computed: {
-    filteredArticles: {
+    articlesFiltered: {
       get() {
-        let articlesFiltered = this.articles.filter((article) => {
+        let articles = this.filteredArticles.filter((article) => {
           const searchText = this.searchArticleText.toLowerCase()
 
           const searchConditions = [
             article.source.name.toLowerCase().includes(searchText),
             article.title.toLowerCase().includes(searchText),
             article.description.toLowerCase().includes(searchText),
-            article.author ? article.author.toLowerCase().includes(searchText) : 'Unknown Author',
+            article.author ? article.author.toLowerCase().includes(searchText) : '',
+          ]
+
+          const filterConditions = []
+
+          return (
+            searchConditions.some((condition) => condition) &&
+            filterConditions.every((condition) => condition)
+          )
+        })
+
+        return articles
+      },
+      set(newValue) {
+        this.filteredArticles = newValue
+      },
+    },
+    filteredTweets: {
+      get() {
+        let articlesFiltered = this.tweets.filter((tweet) => {
+          const searchText = this.searchTweetText.toLowerCase()
+
+          const searchConditions = [
+            // tweet.user.public_metrics.followers_count.includes(searchText),
+            tweet.user.name.toLowerCase().includes(searchText),
+            tweet.user.username.toLowerCase().includes(searchText),
+            tweet.text.toLowerCase().includes(searchText),
           ]
 
           const filterConditions = []
@@ -5397,7 +5437,7 @@ export default {
         return articlesFiltered
       },
       set(newValue) {
-        this.articles = newValue
+        this.tweets = newValue
       },
     },
 
@@ -6677,11 +6717,13 @@ button:disabled {
 .card-row-med {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-start;
+  margin-bottom: 8px;
   img {
-    height: 20px;
+    height: 12px;
     margin-right: 0.5rem;
+    margin-top: 3px;
   }
 }
 .card:hover {
@@ -6888,6 +6930,20 @@ button:disabled {
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
+}
+
+::v-deep .pre-text {
+  a {
+    color: $grape;
+    border-bottom: 1px solid $grape;
+    font-family: $base-font-family;
+    text-decoration: none;
+    padding-bottom: 2px;
+
+    &:hover {
+      opacity: 0.7;
+    }
   }
 }
 

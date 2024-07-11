@@ -4,6 +4,7 @@ import time
 import logging
 import pytz
 import uuid
+from requests.exceptions import SSLError
 from rest_framework import (
     mixins,
     viewsets,
@@ -673,9 +674,26 @@ class PRSearchViewSet(
                 else:
                     if len(tweet_list):
                         break
+                    print('I AM HERE ::::::')
+                    url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                    prompt = comms_consts.OPEN_AI_EMPTY_SEARCH_SUGGESTIONS(query_input.replace("-is:retweet", "").replace("is:verified", ""))
+                    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                        user.email,
+                        prompt,
+                        token_amount=500,
+                        top_p=0.1,
+                    )
+                    with Variable_Client() as client:
+                        r = client.post(
+                            url,
+                            data=json.dumps(body),
+                            headers=core_consts.OPEN_AI_HEADERS,
+                        )
+                    r = open_ai_exceptions._handle_response(r)
+
+                    suggestions = r.get("choices")[0].get("message").get("content")
                     return Response(
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        data={"error": f"No results for {query_input}", "string": query_input},
+                        data={"suggestions": suggestions, "string": query_input},
                     )
                 if len(tweet_list) < 40 and tweets:
                     continue
@@ -841,6 +859,7 @@ class PRSearchViewSet(
     )
     def get_most_relevant(self, request, *args, **kwargs):
         user = request.user
+        social = request.data.get("social")
         term = request.data.get("term")
         clips = request.data.get("clips")
         has_error = False
@@ -850,7 +869,10 @@ class PRSearchViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_RELEVANT_ARTICLES(term, clips)
+                if social:
+                    prompt = comms_consts.OPEN_AI_RELEVANT_POSTS(term, clips)
+                else:    
+                    prompt = comms_consts.OPEN_AI_RELEVANT_ARTICLES(term, clips)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
@@ -911,6 +933,7 @@ class PRSearchViewSet(
         user = request.user
         term = request.data.get("term")
         clips = request.data.get("clips")
+        social = request.data.get("social")
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -918,7 +941,10 @@ class PRSearchViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_TOP_JOURNALISTS(term, clips)
+                if social:                
+                    prompt = comms_consts.OPEN_AI_TOP_INFLUENCERS(term, clips)
+                else:
+                    prompt = comms_consts.OPEN_AI_TOP_JOURNALISTS(term, clips)   
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,

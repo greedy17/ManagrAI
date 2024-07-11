@@ -455,7 +455,13 @@ OPEN_AI_EMAIL_JOURNALIST = (
 
 OPEN_AI_RELEVANT_ARTICLES = (
     lambda term, clips : f"""
-    List the top 5 most relevant stories pertaining to {term}, sort by most relevant at the top. Output must be: 4-5 word summary of the headline (Source: outlet, mm/dd/yy).Here are the news clips: \n {clips}:
+    List the top 5 most relevant stories pertaining to {term}, sort by most relevant at the top. Output must be: 4-5 word summary of the headline (Source: outlet, mm/dd/yy) in an a tag that opens in a new page using the link. Here are the news clips: \n {clips}:
+     """
+)
+
+OPEN_AI_RELEVANT_POSTS = (
+    lambda term, clips : f"""
+    List the top 5 most relevant posts pertaining to {term}, sort by most relevant at the top. Output must be: 4-5 word summary of the post (Source: outlet, mm.dd) in an a tag that opens in a new page using the link. Here are the posts: \n {clips}:
      """
 )
 
@@ -465,16 +471,22 @@ OPEN_AI_TOP_JOURNALISTS = (
      """
 )
 
+OPEN_AI_TOP_INFLUENCERS = (
+    lambda term, tweets : f"""
+    List the top 10 influencers from the tweets about {term}. Sort by order of influence (most influential at the top) Output must me: Name, (follower count), 4-5 word post summary using quotes, - date using mm.dd format Here are the tweets: \n {tweets}:
+     """
+)
+
 OPEN_AI_RELATED_TOPICS = (
     lambda clips : f"""
-    Generate up to 5 related, interesting, diverse questions or topics for further exploration based on the news clips below. Focus on most interesting, impactful and engaging stories. Output must be capped at 3 words per suggestion, no numbering, and no punctuation. Format the output must be as follows:
+    Generate up to 5 related, interesting, diverse questions or topics for further exploration based on the news clips or tweets below. Focus on most interesting, impactful and engaging stories. Output must be capped at 3 words per suggestion, no numbering, and no punctuation. Format the output must be as follows:
     Search1:
     Search2:
     Search3:
     Search4:
     Search5:
      
-    Here are the news clips: \n {clips}:
+    Here are the news clips / tweets: \n {clips}:
      """
 )
 
