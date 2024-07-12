@@ -677,7 +677,7 @@
                 :placeholder="
                   mainView === 'social' && !hasTwitterIntegration
                     ? 'Connect Twitter...'
-                    : 'Enter keywords or phrases...'
+                    : 'Ask Managr to...'
                 "
                 autocomplete="off"
                 v-model="newSearch"
@@ -1036,7 +1036,7 @@
                   alt=""
                 />
 
-                <p class="header-p">Summary</p>
+                <p class="header-p">Answer</p>
               </div>
             </div>
 
@@ -4892,6 +4892,8 @@ export default {
           )
           .then((response) => {
             this.filteredArticles = response.articles
+            this.searchArticleText = 'a'
+            this.searchArticleText = ''
             this.booleanString = response.string
             if (!this.filteredArticles.length) {
               const str = response.suggestions
@@ -4940,6 +4942,8 @@ export default {
             }
             if (response.tweets) {
               this.tweets = response.tweets
+              this.searchTweetText = 'a'
+              this.searchTweetText = ''
               this.tweetMedia = response.includes.media
               this.booleanString = response.string
               this.getTweetSummary()
@@ -5416,7 +5420,7 @@ export default {
     },
     filteredTweets: {
       get() {
-        let articlesFiltered = this.tweets.filter((tweet) => {
+        let tweetsFiltered = this.tweets.filter((tweet) => {
           const searchText = this.searchTweetText.toLowerCase()
 
           const searchConditions = [
@@ -5434,7 +5438,7 @@ export default {
           )
         })
 
-        return articlesFiltered
+        return tweetsFiltered
       },
       set(newValue) {
         this.tweets = newValue
