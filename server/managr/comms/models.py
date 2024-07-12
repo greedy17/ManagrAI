@@ -538,7 +538,6 @@ class NewsSource(TimeStampModel):
                         serializer = JournalistSerializer(data=data)
                         serializer.is_valid(raise_exception=True)
                         serializer.save()
-                        print(f"Created journalist {serializer.instance.email}")
                     else:
                         print(f"Failed to find journalist: {response}")
                 except ValueError as e:
