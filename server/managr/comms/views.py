@@ -738,6 +738,7 @@ class PRSearchViewSet(
             return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         tweets = request.data.get("tweets")
         search = request.data.get("search")
+        company = request.data.get("company")
         instructions = request.data.get("instructions", False)
         twitter_account = user.twitter_account
         has_error = False
@@ -747,7 +748,7 @@ class PRSearchViewSet(
         while True:
             try:
                 res = twitter_account.get_summary(
-                    request.user, token_amount, timeout, tweets, search, instructions, True
+                    request.user, token_amount, timeout, tweets, search, company, instructions, True
                 )
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("tweet_summaries")

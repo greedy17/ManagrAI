@@ -467,7 +467,7 @@ OPEN_AI_RELEVANT_POSTS = (
 
 OPEN_AI_TOP_JOURNALISTS = (
     lambda term, clips : f"""
-    List the top 10 Journalists from top news outlets writing about {term}. Sort by order of influence (most influential at the top) Output must be: Journalist name, (Outlet), 4-5 word headline summary using quotes, - date using mm.dd format. Here are the news clips: \n {clips}:
+    List the top 10 Journalists from top news outlets writing about {term}. Sort by order of influence (most influential at the top) Output must be: Journalist name, (Outlet), 4-5 word headline summary using quotes, - date using mm.dd format. Name must be a strong tag. Here are the news clips: \n {clips}:
      """
 )
 

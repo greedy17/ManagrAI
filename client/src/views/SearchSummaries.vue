@@ -1580,10 +1580,15 @@
                   <div class="dot"></div>
                 </div>
               </div>
-              <div style="padding: 0 16px" class="example-text" v-else>
+              <div
+                @click="searchJournalist($event)"
+                style="padding: 0 16px"
+                class="example-text"
+                v-else
+              >
                 <div
                   style="font-size: 14px !important"
-                  class="pre-text"
+                  class="pre-text alternate"
                   v-html="journalistData"
                 ></div>
               </div>
@@ -3362,6 +3367,14 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    searchJournalist(event) {
+      if (event.target.tagName === 'STRONG') {
+        const text = event.target.innerText
+        this.searchArticleText = text
+        this.searchTweetText = text
+        this.scrollToTopDivider()
+      }
+    },
     clearSearchText() {
       this.searchArticleText = ''
       this.searchTweetText = ''
@@ -3469,8 +3482,6 @@ export default {
         const res = await Comms.api.getRelatedTopics({
           clips: clips,
         })
-
-        console.log('data is here', res.data)
 
         const str = res.data
 
@@ -4893,7 +4904,7 @@ export default {
           )
           .then((response) => {
             this.filteredArticles = response.articles
-            console.log('ARTICLES ARE HERE:', this.filteredArticles)
+
             this.searchArticleText = ' '
             this.searchArticleText = ''
             this.booleanString = response.string
@@ -4912,7 +4923,6 @@ export default {
             }
             if (!saved) {
               this.clearNewSearch()
-              console.log('ARTICLES ARE HERE AS WELL:', this.filteredArticles)
             }
           })
       } catch (e) {
@@ -4951,7 +4961,6 @@ export default {
               this.booleanString = response.string
               this.getTweetSummary()
             } else {
-              console.log(response.suggestions)
               const str = response.suggestions
               const searches = str.match(/Search\d+: "([^"]+)"|Search\d+: ([^"\n]+)/g)
 
@@ -4998,7 +5007,7 @@ export default {
             if (this.shouldCancel) {
               return this.stopLoading()
             }
-            console.log(response)
+
             if (response.posts.length) {
               this.posts = response.posts
                 .slice()
@@ -5081,7 +5090,7 @@ export default {
             tweets: tweets,
             search: this.newSearch,
             instructions: this.newTemplate ? this.newTemplate : this.newSearch,
-            // company: this.selectedOrg,
+            company: this.selectedOrg,
           })
           .then((response) => {
             if (this.shouldCancel) {
@@ -5638,6 +5647,13 @@ export default {
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
   padding: 8px 2px;
+}
+
+::v-deep .alternate {
+  strong {
+    font-family: $base-font-family;
+    cursor: pointer;
+  }
 }
 
 .slide-up-enter-active,
