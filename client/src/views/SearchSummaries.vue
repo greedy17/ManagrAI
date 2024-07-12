@@ -3065,6 +3065,7 @@ export default {
       mainView: 'news',
       savedSearch: null,
       tweets: [],
+      filteredArticles: [],
       posts: [],
       tweetMedia: null,
       tweetUsers: null,
@@ -4892,7 +4893,8 @@ export default {
           )
           .then((response) => {
             this.filteredArticles = response.articles
-            this.searchArticleText = 'a'
+            console.log('ARTICLES ARE HERE:', this.filteredArticles)
+            this.searchArticleText = ' '
             this.searchArticleText = ''
             this.booleanString = response.string
             if (!this.filteredArticles.length) {
@@ -4910,6 +4912,7 @@ export default {
             }
             if (!saved) {
               this.clearNewSearch()
+              console.log('ARTICLES ARE HERE AS WELL:', this.filteredArticles)
             }
           })
       } catch (e) {
@@ -4942,8 +4945,8 @@ export default {
             }
             if (response.tweets) {
               this.tweets = response.tweets
-              this.searchTweetText = 'a'
-              this.searchTweetText = ''
+              this.searchTweetText = ' '
+              this.searchtweetText = ''
               this.tweetMedia = response.includes.media
               this.booleanString = response.string
               this.getTweetSummary()
@@ -5078,6 +5081,7 @@ export default {
             tweets: tweets,
             search: this.newSearch,
             instructions: this.newTemplate ? this.newTemplate : this.newSearch,
+            // company: this.selectedOrg,
           })
           .then((response) => {
             if (this.shouldCancel) {
@@ -5301,11 +5305,13 @@ export default {
           )
           this.filteredArticles.unshift(selectedClip)
         } else {
-          this.addedArticles = this.addedArticles = this.addedArticles.filter(
+          this.addedArticles = this.addedArticles.filter(
             (clip) => clip.title !== selectedClip.title,
           )
           this.addedArticles.unshift(selectedClip)
         }
+        this.searchArticleText = ' '
+        this.searchArticleText = ''
 
         if (this.shouldCancel) {
           return this.stopLoading()
@@ -5401,7 +5407,7 @@ export default {
             article.source.name.toLowerCase().includes(searchText),
             article.title.toLowerCase().includes(searchText),
             article.description.toLowerCase().includes(searchText),
-            article.author ? article.author.toLowerCase().includes(searchText) : '',
+            article.author && article.author.toLowerCase().includes(searchText),
           ]
 
           const filterConditions = []
@@ -5414,9 +5420,7 @@ export default {
 
         return articles
       },
-      set(newValue) {
-        this.filteredArticles = newValue
-      },
+      // dependsOn: ['filteredArticles', 'searchArticleText'],
     },
     filteredTweets: {
       get() {
@@ -5440,9 +5444,7 @@ export default {
 
         return tweetsFiltered
       },
-      set(newValue) {
-        this.tweets = newValue
-      },
+      dependsOn: ['tweets', 'searchTwitterText'],
     },
 
     usedHashtags() {
