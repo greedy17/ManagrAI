@@ -1580,10 +1580,15 @@
                   <div class="dot"></div>
                 </div>
               </div>
-              <div style="padding: 0 16px" class="example-text" v-else>
+              <div
+                @click="searchJournalist($event)"
+                style="padding: 0 16px"
+                class="example-text"
+                v-else
+              >
                 <div
                   style="font-size: 14px !important"
-                  class="pre-text"
+                  class="pre-text alternate"
                   v-html="journalistData"
                 ></div>
               </div>
@@ -3065,6 +3070,7 @@ export default {
       mainView: 'news',
       savedSearch: null,
       tweets: [],
+      filteredArticles: [],
       posts: [],
       tweetMedia: null,
       tweetUsers: null,
@@ -3361,6 +3367,14 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    searchJournalist(event) {
+      if (event.target.tagName === 'STRONG') {
+        const text = event.target.innerText
+        this.searchArticleText = text
+        this.searchTweetText = text
+        this.scrollToTopDivider()
+      }
+    },
     clearSearchText() {
       this.searchArticleText = ''
       this.searchTweetText = ''
@@ -3468,8 +3482,6 @@ export default {
         const res = await Comms.api.getRelatedTopics({
           clips: clips,
         })
-
-        console.log('data is here', res.data)
 
         const str = res.data
 
@@ -4892,7 +4904,8 @@ export default {
           )
           .then((response) => {
             this.filteredArticles = response.articles
-            this.searchArticleText = 'a'
+
+            this.searchArticleText = ' '
             this.searchArticleText = ''
             this.booleanString = response.string
             if (!this.filteredArticles.length) {
@@ -4942,13 +4955,12 @@ export default {
             }
             if (response.tweets) {
               this.tweets = response.tweets
-              this.searchTweetText = 'a'
-              this.searchTweetText = ''
+              this.searchTweetText = ' '
+              this.searchtweetText = ''
               this.tweetMedia = response.includes.media
               this.booleanString = response.string
               this.getTweetSummary()
             } else {
-              console.log(response.suggestions)
               const str = response.suggestions
               const searches = str.match(/Search\d+: "([^"]+)"|Search\d+: ([^"\n]+)/g)
 
@@ -4995,7 +5007,7 @@ export default {
             if (this.shouldCancel) {
               return this.stopLoading()
             }
-            console.log(response)
+
             if (response.posts.length) {
               this.posts = response.posts
                 .slice()
@@ -5078,6 +5090,7 @@ export default {
             tweets: tweets,
             search: this.newSearch,
             instructions: this.newTemplate ? this.newTemplate : this.newSearch,
+            company: this.selectedOrg,
           })
           .then((response) => {
             if (this.shouldCancel) {
@@ -5301,11 +5314,13 @@ export default {
           )
           this.filteredArticles.unshift(selectedClip)
         } else {
-          this.addedArticles = this.addedArticles = this.addedArticles.filter(
+          this.addedArticles = this.addedArticles.filter(
             (clip) => clip.title !== selectedClip.title,
           )
           this.addedArticles.unshift(selectedClip)
         }
+        this.searchArticleText = ' '
+        this.searchArticleText = ''
 
         if (this.shouldCancel) {
           return this.stopLoading()
@@ -5401,7 +5416,7 @@ export default {
             article.source.name.toLowerCase().includes(searchText),
             article.title.toLowerCase().includes(searchText),
             article.description.toLowerCase().includes(searchText),
-            article.author ? article.author.toLowerCase().includes(searchText) : '',
+            article.author && article.author.toLowerCase().includes(searchText),
           ]
 
           const filterConditions = []
@@ -5414,9 +5429,7 @@ export default {
 
         return articles
       },
-      set(newValue) {
-        this.filteredArticles = newValue
-      },
+      // dependsOn: ['filteredArticles', 'searchArticleText'],
     },
     filteredTweets: {
       get() {
@@ -5440,9 +5453,7 @@ export default {
 
         return tweetsFiltered
       },
-      set(newValue) {
-        this.tweets = newValue
-      },
+      dependsOn: ['tweets', 'searchTwitterText'],
     },
 
     usedHashtags() {
@@ -5636,6 +5647,13 @@ export default {
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
   padding: 8px 2px;
+}
+
+::v-deep .alternate {
+  strong {
+    font-family: $base-font-family;
+    cursor: pointer;
+  }
 }
 
 .slide-up-enter-active,
