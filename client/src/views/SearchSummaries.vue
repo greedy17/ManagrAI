@@ -513,7 +513,7 @@
               style="margin-right: 0.5rem"
               @click="saveContact"
               class="wrapper icon-button green-bg clicked"
-              :disabled="buttonClicked || mainView === 'social'"
+              :disabled="buttonClicked || loadingDraft || mainView === 'social'"
             >
               <img
                 style="cursor: pointer"
@@ -3790,7 +3790,7 @@ export default {
         this.getJournalistBio()
 
         // this.draftPitch(author, outlet, headline, description, date)
-      } else if (this.mainView === 'web') {
+      } else if (this.mainView === 'news') {
         const author = this.extractJournalist(article.author)
         const outlet = article.source.name
         const headline = article.title
