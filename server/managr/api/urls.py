@@ -433,6 +433,21 @@ urlpatterns = [
         name="instagram-revoke-token",
     ),
     path(
+        "users/email/request-token/",
+        comms_views.get_email_request_token,
+        name="email-request-token",
+    ),
+    path(
+        "users/email/authenticate/",
+        comms_views.get_email_authentication,
+        name="email-authenticate",
+    ),
+    path(
+        "users/email/revoke-token/",
+        comms_views.revoke_email_auth,
+        name="email-revoke-token",
+    ),
+    path(
         "writing-styles/",
         comms_views.get_writing_styles,
         name="writing_styles",

@@ -310,8 +310,8 @@
             </div>
           </div>
         </div>
-        <!-- instagram -->
-        <div class="card">
+
+        <!-- <div class="card">
           <div class="card__header" style="">
             <img style="height: 40px" src="@/assets/images/instagram-11.svg" />
           </div>
@@ -360,8 +360,57 @@
               </button>
             </div>
           </div>
+        </div> -->
+
+        <div class="card">
+          <div class="card__header" style="">
+            <img style="height: 40px; margin-left: -12px" src="@/assets/images/google.svg" />
+          </div>
+          <div class="card__body">
+            <div class="row-center" style="display: flex">
+              <h3 class="card__title">Email</h3>
+              <div v-if="hasEmailIntegration" class="green-dot"></div>
+            </div>
+            <p class="card-text">Connect to track emails</p>
+            <div></div>
+            <div class="sep-button-container">
+              <div class="separator"></div>
+              <button
+                v-if="hasEmailIntegration"
+                class="long-button connected"
+                style="margin-top: 1rem; margin-bottom: 0.5rem"
+                @click="revokeEmail"
+              >
+                <div style="margin-left: 4px" v-if="revoking" class="loading-small">
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                </div>
+
+                <div v-else>Disconnect</div>
+              </button>
+              <button
+                v-else
+                class="long-button"
+                style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem"
+                @click="emailAuthorization"
+                :disabled="(generatingToken && selectedIntegration == 'EMAIL') || connecting"
+              >
+                <div
+                  style="margin-left: 4px"
+                  v-if="generatingToken && selectedIntegration == 'EMAIL'"
+                  class="loading-small"
+                >
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                </div>
+
+                <div v-else>Connect</div>
+              </button>
+            </div>
+          </div>
         </div>
-        <!-- Tiktok -->
       </div>
     </div>
   </div>
@@ -597,6 +646,20 @@ export default {
         this.connecting = false
       }
     },
+    async emailAuthorization() {
+      this.connecting = true
+      try {
+        await User.api.getEmailToken().then((res) => {
+          if (res.link) {
+            window.location.href = res.link
+          }
+        })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.connecting = false
+      }
+    },
   },
   mounted() {
     this.test()
@@ -623,7 +686,6 @@ export default {
             this.$route.query.scope,
           )
         } else if (this.selectedIntegration === 'INSTAGRAM') {
-          console.log('making it here')
           const data = {
             code: this.$route.query.code,
           }
@@ -738,6 +800,8 @@ export default {
         case 'TWITTER':
           return User
         case 'INSTAGRAM':
+          return User
+        case 'EMAIL':
           return User
         default:
           return null

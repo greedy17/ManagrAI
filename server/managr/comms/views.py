@@ -1743,6 +1743,54 @@ def revoke_twitter_auth(request):
         return Response({"error": str(e)})
     return Response(data={"success": True})
 
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def get_email_request_token(request):
+    res = InstagramAccount.get_token(request)
+    return Response(res)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def get_email_authentication(request):
+    user = request.user
+    data = request.data
+    access_token_response = InstagramAccount.authenticate(data.get("code"))
+    access_token_response["user"] = user.id
+    existing = InstagramAccount.objects.filter(user=request.user).first()
+    if existing:
+        serializer = InstagramAccountSerializer(data=access_token_response, instance=existing)
+    else:
+        serializer = InstagramAccountSerializer(data=access_token_response)
+    try:
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        emit_get_meta_account_info(str(user.id))
+    except Exception as e:
+        logger.exception(str(e))
+        return Response(data={"success": False})
+    return Response(data={"success": True})
+
+@api_view(["DELETE"])
+@permission_classes([permissions.IsAuthenticated])
+def revoke_email_auth(request):
+    user = request.user
+    ig_account = InstagramAccount.objects.filter(user=user)
+    try:
+        ig_account.delete()
+    except Exception as e:
+        return Response({"error": str(e)})
+    return Response(data={"success": True})
+
+def redirect_from_email(request):
+    verifier = request.GET.get("oauth_verifier", False)
+    token = request.GET.get("oauth_token", False)
+    q = urlencode({"state": "EMAIL", "oauth_verifier": verifier, "code": "code", "token": token})
+    if not verifier:
+        err = {"error": "there was an error"}
+        err = urlencode(err)
+        return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{err}")
+    return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{q}")
 
 def redirect_from_twitter(request):
     verifier = request.GET.get("oauth_verifier", False)
