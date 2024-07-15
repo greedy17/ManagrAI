@@ -2334,7 +2334,11 @@ class DiscoveryViewSet(
         content = request.data.get("content")
         company = request.data.get("company")
         search = request.data.get("search")
-        query = f"{journalist} AND {outlet}"
+        social = request.data.get("social")   
+        if social:
+            query = journalist
+        else:    
+            query = f"{journalist} AND {outlet}"
         google_results = google_search(query)
         if len(google_results) == 0:
             return Response(
@@ -2359,7 +2363,9 @@ class DiscoveryViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                if search:
+                if social:
+                    prompt = comms_consts.OPEN_AI_SOCIAL_BIO(journalist, company, results, text)
+                elif search:
                     prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(journalist, results, company, text)
                 else:
                     prompt = comms_consts.OPEN_AI_DISCOVERY_RESULTS_PROMPT(
