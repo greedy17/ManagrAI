@@ -5413,9 +5413,9 @@ export default {
           const searchText = this.searchArticleText.toLowerCase()
 
           const searchConditions = [
-            article.source.name.toLowerCase().includes(searchText),
-            article.title.toLowerCase().includes(searchText),
-            article.description.toLowerCase().includes(searchText),
+            article.source && article.source.name.toLowerCase().includes(searchText),
+            article.title && article.title.toLowerCase().includes(searchText),
+            article.description && article.description.toLowerCase().includes(searchText),
             article.author && article.author.toLowerCase().includes(searchText),
           ]
 
@@ -5429,7 +5429,6 @@ export default {
 
         return articles
       },
-      // dependsOn: ['filteredArticles', 'searchArticleText'],
     },
     filteredTweets: {
       get() {
@@ -5438,9 +5437,9 @@ export default {
 
           const searchConditions = [
             // tweet.user.public_metrics.followers_count.includes(searchText),
-            tweet.user.name.toLowerCase().includes(searchText),
-            tweet.user.username.toLowerCase().includes(searchText),
-            tweet.text.toLowerCase().includes(searchText),
+            tweet.user.name && tweet.user.name.toLowerCase().includes(searchText),
+            tweet.user.username && tweet.user.username.toLowerCase().includes(searchText),
+            tweet.text && tweet.text.toLowerCase().includes(searchText),
           ]
 
           const filterConditions = []
