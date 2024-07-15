@@ -1499,6 +1499,14 @@
                         getTimeDifferenceInMinutes(tweet.created_at)
                       }}</span>
                     </div>
+                    <button @click="selectJournalist(tweet)" class="tertiary-button-small">
+                      <img
+                        class="invert"
+                        src="@/assets/images/file-user.svg"
+                        height="17px"
+                        alt=""
+                      />
+                    </button>
                   </div>
                 </div>
               </div>
