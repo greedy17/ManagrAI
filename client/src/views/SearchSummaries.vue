@@ -513,7 +513,7 @@
               style="margin-right: 0.5rem"
               @click="saveContact"
               class="wrapper icon-button green-bg clicked"
-              :disabled="buttonClicked"
+              :disabled="buttonClicked || loadingDraft || mainView === 'social'"
             >
               <img
                 style="cursor: pointer"
@@ -672,7 +672,7 @@
                 style="padding-top: 1.25rem"
                 v-if="mainView !== 'website'"
                 id="search-input"
-                @keyup.enter="generateNewSearch(false)"
+                @keyup.enter="generateNewSearch($event, false)"
                 class="area-input text-area-input"
                 :placeholder="
                   mainView === 'social' && !hasTwitterIntegration
@@ -699,7 +699,7 @@
 
               <div
                 v-if="mainView !== 'website'"
-                @click="generateNewSearch(false)"
+                @click="generateNewSearch($event, false)"
                 class="image-container left-margin wrapper"
                 :class="newSearch ? 'dark-blue-bg' : ''"
                 style="margin-right: 16px"
@@ -1085,6 +1085,11 @@
                     autocomplete="off"
                     v-model="newTemplate"
                     :disabled="!summary || loading || summaryLoading"
+                    @keyup.enter="
+                      mainView === 'news'
+                        ? getChatSummary(filteredArticles, newTemplate)
+                        : getChatSummary(preparedTweets, newTemplate)
+                    "
                     v-autoresize
                   />
 
@@ -1478,7 +1483,12 @@
 
                   <div class="main-footer">
                     <div class="author-time">
-                      <span class="author">{{ '@' + tweet.user.username }}</span>
+                      <span
+                        style="cursor: pointer"
+                        @click="selectJournalist(tweet)"
+                        class="author"
+                        >{{ '@' + tweet.user.username }}</span
+                      >
                       <span style="margin-right: 4px" class="divider-dot">.</span>
                       <small class="bold-text"
                         >{{ formatNumber(tweet.user.public_metrics.followers_count) }}
@@ -1638,6 +1648,40 @@
                   <img src="@/assets/images/paper-plane-full.svg" height="14px" alt="" />
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div class="section-small">
+            <div @click="toggleType" class="example-title">
+              <div class="example-row">
+                <img
+                  v-if="mainView === 'social'"
+                  src="@/assets/images/newspaper.svg"
+                  height="14px"
+                  alt=""
+                  style="margin-right: 8px"
+                />
+                <img
+                  style="filter: invert(10%)"
+                  v-else
+                  src="@/assets/images/twitter-x.svg"
+                  height="18px"
+                  alt=""
+                />
+
+                <p v-if="mainView === 'news' && hasTwitterIntegration">Switch to Social</p>
+                <p v-else-if="mainView === 'news' && !hasTwitterIntegration">
+                  Switch to Social
+                  <span>(Connect X/Twitter)</span>
+                </p>
+                <p v-else>Switch to News</p>
+              </div>
+              <img
+                style="filter: invert(30%)"
+                src="@/assets/images/arrow-circle-right.svg"
+                height="14px"
+                alt=""
+              />
             </div>
           </div>
         </aside>
@@ -3367,6 +3411,19 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    toggleType() {
+      if (this.mainView === 'social') {
+        this.mainView = 'news'
+        this.generateNewSearch(null, false)
+      } else {
+        if (this.hasTwitterIntegration) {
+          this.mainView = 'social'
+          this.generateNewSearch(null, false)
+        } else {
+          this.goToIntegrations()
+        }
+      }
+    },
     searchJournalist(event) {
       if (event.target.tagName === 'STRONG') {
         const text = event.target.innerText
@@ -3554,7 +3611,7 @@ export default {
         this.savingContact = false
       }
     },
-    async getJournalistBio() {
+    async getJournalistBio(social = false) {
       this.loadingDraft = true
       try {
         const res = await Comms.api.getJournalistBio({
@@ -3562,6 +3619,7 @@ export default {
           outlet: this.currentPublication,
           company: this.selectedOrg,
           search: true,
+          social: social,
         })
         const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i
         const match = res.data.summary.match(emailRegex)
@@ -3732,7 +3790,7 @@ export default {
         this.getJournalistBio()
 
         // this.draftPitch(author, outlet, headline, description, date)
-      } else {
+      } else if (this.mainView === 'news') {
         const author = this.extractJournalist(article.author)
         const outlet = article.source.name
         const headline = article.title
@@ -3747,6 +3805,20 @@ export default {
         this.currentDate = date
         this.getJournalistBio()
         // this.draftPitch(author, outlet, headline, description, date)
+      } else {
+        const author = article.user.name + ' ' + '@' + article.user.username
+        const outlet = 'not available'
+        const headline = 'X/Twitter User'
+        const description = article.text
+        const date = this.getTimeDifferenceInMinutes(article.created_at)
+        this.googleModalOpen = true
+        // this.emailJournalistModalOpen = true
+        this.currentHeadline = headline
+        this.currentDescription = description
+        this.currentJournalist = author
+        this.currentPublication = outlet
+        this.currentDate = date
+        this.getJournalistBio(true)
       }
     },
     extractJournalist(author) {
@@ -3928,7 +4000,7 @@ export default {
     },
     setAndSearch(txt) {
       this.newSearch = txt
-      this.generateNewSearch(false)
+      this.generateNewSearch(null, false)
     },
     setNewSummary(txt) {
       this.newTemplate = txt
@@ -4513,7 +4585,7 @@ export default {
           : search.type === 'SOCIAL_MEDIA'
           ? 'social'
           : 'news'
-      this.generateNewSearch(true, search.search_boolean)
+      this.generateNewSearch(null, true, search.search_boolean)
       this.setCurrentAlert()
     },
     changeIndex() {
@@ -4615,7 +4687,10 @@ export default {
     toggleDropdowns() {
       this.expandedView = !this.expandedView
     },
-    async generateNewSearch(saved = false, boolean = '') {
+    async generateNewSearch(event, saved = false, boolean = '') {
+      if (event && event.shiftKey) {
+        return
+      }
       this.filteredArticles = []
       this.tweets = []
       this.changeSearch(null)
@@ -5154,7 +5229,10 @@ export default {
         this.showSummaryMenu = false
       }
     },
-    async getChatSummary(clips, instructions = '') {
+    async getChatSummary(event, clips, instructions = '') {
+      if (event.shiftKey) {
+        return
+      }
       this.chatSummaryLoading = true
       this.showingPromptDropdown = false
       this.showSummaryMenu = false
@@ -7295,6 +7373,22 @@ li {
           margin-bottom: 16px;
         }
       }
+
+      .section-small {
+        // height: 30%;
+
+        padding: 0 64px 0 16px;
+        position: relative;
+        margin-top: 12px;
+
+        img {
+          filter: invert(40%);
+        }
+
+        div {
+          margin-bottom: 16px;
+        }
+      }
     }
 
     .content {
@@ -8041,6 +8135,12 @@ textarea::placeholder {
     flex-direction: row;
     align-items: center;
     margin: 0 !important;
+
+    p {
+      span {
+        text-decoration: underline !important;
+      }
+    }
   }
 
   p {
