@@ -1087,15 +1087,15 @@
                     :disabled="!summary || loading || summaryLoading"
                     @keyup.enter="
                       mainView === 'news'
-                        ? getChatSummary(filteredArticles, newTemplate)
-                        : getChatSummary(preparedTweets, newTemplate)
+                        ? getChatSummary($event, filteredArticles, newTemplate)
+                        : getChatSummary($event, preparedTweets, newTemplate)
                     "
                     v-autoresize
                   />
 
                   <div
                     v-if="mainView === 'news'"
-                    @click="getChatSummary(filteredArticles, newTemplate)"
+                    @click="getChatSummary($event, filteredArticles, newTemplate)"
                     class="image-container left-margin right-margin-m white-bg"
                     :class="newTemplate ? 'dark-blue-bg' : ''"
                   >
@@ -1109,7 +1109,7 @@
 
                   <div
                     v-else
-                    @click="getChatSummary(preparedTweets, newTemplate)"
+                    @click="getChatSummary($event, preparedTweets, newTemplate)"
                     class="image-container left-margin right-margin-m white-bg"
                     :class="newTemplate ? 'dark-blue-bg' : ''"
                   >
@@ -1499,6 +1499,14 @@
                         getTimeDifferenceInMinutes(tweet.created_at)
                       }}</span>
                     </div>
+                    <button @click="selectJournalist(tweet)" class="tertiary-button-small">
+                      <img
+                        class="invert"
+                        src="@/assets/images/file-user.svg"
+                        height="17px"
+                        alt=""
+                      />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -5252,6 +5260,7 @@ export default {
     },
     async getSummary(clips, instructions = '', twitter = false) {
       let allClips
+      console.log('CLIPS ARE HERE:::', clips)
       if (!twitter) {
         allClips = this.getArticleDescriptions(clips)
       } else {
