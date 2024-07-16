@@ -1,5 +1,5 @@
 <template>
-  <div class="tracking">
+  <div class="tracking fadein">
     <h2>Track your outreach</h2>
 
     <section class="space-between">
@@ -740,5 +740,17 @@ export default {
 
 .lte8 .wrapper:hover .tooltip {
   display: block;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.fadein {
+  transition: opacity 1s ease-out;
+  opacity: 0;
+  animation: fadeIn 0.5s forwards;
 }
 </style>

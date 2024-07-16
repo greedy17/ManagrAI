@@ -2023,6 +2023,7 @@
                   <div style="width: 10%">Total Usage</div>
                   <div style="width: 10%">Usage / Day</div>
                   <div style="width: 10%">Bio's Created</div>
+                  <div style="width: 10%">Saved Contacts</div>
                   <div style="width: 12%">News Summaries</div>
                   <div style="width: 12%">Article Summaries</div>
                   <div style="width: 10%">Saved Alerts</div>
@@ -2048,6 +2049,9 @@
                     <div style="width: 10%">{{ getUsageDay(user) }}</div>
                     <div style="width: 10%">
                       {{ user.meta_data.bio ? user.meta_data.bio.total : 0 }}
+                    </div>
+                    <div style="width: 10%">
+                      {{ user.meta_data.contacts ? user.meta_data.contacts.total : 0 }}
                     </div>
                     <div style="width: 12%">
                       {{ user.meta_data.news_summaries ? user.meta_data.news_summaries.total : 0 }}
