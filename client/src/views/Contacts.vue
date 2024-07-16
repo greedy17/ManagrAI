@@ -42,7 +42,7 @@
         </section>
 
         <section v-else>
-          <div class="bio-body">
+          <div style="height: 180px" class="bio-body">
             <div class="loading-small">
               <p style="margin-right: 8px">Updating bio</p>
               <div class="dot"></div>
@@ -859,6 +859,7 @@ export default {
       } finally {
         this.getContacts()
         this.bioLoading = false
+        this.googleModalOpen = false
       }
     },
     openDeleteModal(id) {
