@@ -1,6 +1,4 @@
 from django.conf import settings
-from datetime import datetime
-import time
 
 USE_NEWS_API = settings.USE_NEWS_API
 NEWS_API_KEY = settings.NEWS_API_KEY if USE_NEWS_API else None
@@ -512,3 +510,19 @@ JOURNALIST_CHOICES = [
     ("OPT", "Opt out"),
     ("OTHER", "Other"),
 ]
+
+GOOGLE_AUTHORIZATION_URI = "https://accounts.google.com/o/oauth2/v2/auth"
+GOOGLE_SCOPES = [
+    "openid",
+    "https://www.googleapis.com/auth/userinfo.profile",
+    "https://www.googleapis.com/auth/userinfo.email",
+]
+
+
+def GOOGLE_PARAMS():
+    return {
+        "response_type": "code",
+        "state": "GOOGLE",
+        "redirect_uri": settings.GOOGLE_REDIRECT_URI,
+        "client_id": settings.GOOGLE_CLIENT_ID,
+    }

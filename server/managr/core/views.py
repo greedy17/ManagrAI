@@ -55,6 +55,7 @@ from .models import (
     Conversation,
     Report,
     StripeAdapter,
+    GoogleAccount,
 )
 from .serializers import (
     UserSerializer,
@@ -1670,7 +1671,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             stripe_account = StripeAdapter(**{"user": u})
             sub_id = stripe_account.get_sub_id()
             res = stripe_account.update_subscription(sub_id, quantity)
-            print('response is here', res)
+            print("response is here", res)
             return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         slack_id = request.data.get("slack_id", False)
         make_team_lead = request.data.pop("team_lead")
@@ -2183,3 +2184,10 @@ def session_complete_webhook(request):
             else:
                 time.sleep(30)
     return Response()
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def get_google_auth_link(request):
+    link = GoogleAccount.get_authorization(request.token)
+    return Response({"link": link})

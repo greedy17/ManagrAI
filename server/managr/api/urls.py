@@ -388,6 +388,11 @@ urlpatterns = [
         name="redirect-twitter",
     ),
     path(
+        "users/google/authorization",
+        core_views.get_google_auth_link,
+        name="google-authorization",
+    ),
+    path(
         "users/instagram/re-direct/",
         comms_views.redirect_from_instagram,
         name="redirect-instagram",

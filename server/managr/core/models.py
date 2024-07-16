@@ -996,3 +996,17 @@ class CrawlerReport(TimeStampModel):
             "errors": all_errors,
         }
         return report_data
+
+
+class GoogleAccount(TimeStampModel):
+    user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="google_account")
+    access_token = models.CharField(max_length=255, null=True)
+    account_id = models.CharField(max_length=255, null=True)
+
+    @classmethod
+    def get_authorization():
+        params = core_consts.GOOGLE_PARAMS()
+        scopes = "&".join(core_consts.GOOGLE_SCOPES)
+        params["scope"] = scopes
+        query = urlencode(params)
+        return f"{core_consts.GOOGLE_AUTHORIZATION_URI}?{query}"
