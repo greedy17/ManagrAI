@@ -543,6 +543,14 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    async updateContact(data) {
+        try {
+            const res = await this.client.patch(`jcontact/${data.id}/`, data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
     async modifyTags(data) {
         try {
             const res = await this.client.post('jcontact/modify_tags/', data)

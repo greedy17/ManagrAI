@@ -1,22 +1,33 @@
 <template>
-  <div class="contacts">
+  <div class="contacts fadein">
     <Modal v-if="googleModalOpen" class="bio-modal">
       <div class="bio-container">
         <header>
-          <p style="font-size: 20px">Journalist Bio</p>
+          <p style="font-size: 20px">
+            {{
+              currentContact.journalist_ref.first_name +
+              ' ' +
+              currentContact.journalist_ref.last_name
+            }}
+          </p>
 
-          <div class="row">
-            <img
-              style="cursor: pointer"
-              @click="toggleGoogleModal"
-              src="@/assets/images/close.svg"
-              height="18px"
-              alt=""
-            />
-          </div>
+          <!-- <div class="row">
+            <button
+              :disabled="bioLoading || loadingTags"
+              @click="updateContact(currentContact.id)"
+              class="no-borders"
+            >
+              <img
+                style="filter: invert(40%)"
+                src="@/assets/images/refresh-pr.svg"
+                height="18px"
+                alt=""
+              />
+            </button>
+          </div> -->
         </header>
 
-        <section>
+        <section v-if="!bioLoading">
           <div class="bio-body" v-html="currentContact.bio"></div>
 
           <aside>
@@ -30,6 +41,19 @@
           </aside>
         </section>
 
+        <section v-else>
+          <div class="bio-body">
+            <div class="loading-small">
+              <p style="margin-right: 8px">Updating bio</p>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+          </div>
+
+          <aside></aside>
+        </section>
+
         <footer>
           <div class="rows">
             <div v-for="(tag, i) in currentContact.tags" :key="i" class="user-tag">
@@ -41,10 +65,79 @@
             </div>
           </div>
           <div class="row">
-            <button class="primary-button" @click="openPitchModal()">Pitch</button>
-            <!-- <button class="primary-button" :disabled="loadingDraft" @click="draftPitch">
-              Pitch Journalist
-            </button> -->
+            <button
+              class="secondary-button"
+              :disabled="bioLoading || loadingTags"
+              @click="toggleGoogleModal"
+            >
+              Close
+            </button>
+            <button
+              :disabled="bioLoading || loadingTags"
+              class="primary-button"
+              @click="openPitchModal()"
+            >
+              Pitch
+            </button>
+          </div>
+        </footer>
+      </div>
+    </Modal>
+    <Modal class="bio-modal med-modal" v-if="detailsModalOpen">
+      <div class="bio-container med-container">
+        <header>
+          <p>Update Journalist bio</p>
+          <button @click="toggleDetailsModal" class="no-borders">
+            <img src="@/assets/images/close.svg" height="14px" alt="" />
+          </button>
+        </header>
+
+        <div
+          style="
+            margin-top: 40px;
+            margin-bottom: 48px;
+            min-height: 120px;
+            width: 100%;
+            height: fit-content;
+          "
+        >
+          <div class="input-container-small">
+            <textarea
+              :disabled="loadingPitch"
+              style="border: none; outline: none; padding: 16px 8px; width: 100%"
+              class="area-input text-area-input"
+              type="text"
+              v-model="contactOrg"
+              rows="5"
+              v-autoresize
+              placeholder="Provide company name and pitch details..."
+            />
+          </div>
+          <div style="font-size: 14px; margin: 12px 0 0 4px" class="row">
+            <img src="@/assets/images/profile.svg" height="12px" alt="" />
+            <p style="margin: 0 0 0 4px">
+              Managr will generate pitching tips based on this information
+            </p>
+          </div>
+        </div>
+
+        <footer>
+          <div></div>
+          <div class="row">
+            <button
+              class="secondary-button"
+              :disabled="bioLoading || loadingTags"
+              @click="toggleDetailsModal"
+            >
+              Cancel
+            </button>
+            <button
+              @click="updateContact()"
+              :disabled="bioLoading || loadingTags"
+              class="primary-button"
+            >
+              Continue
+            </button>
           </div>
         </footer>
       </div>
@@ -310,7 +403,7 @@
               </div>
             </div>
 
-            <div class="dropdown-body">
+            <!-- <div class="dropdown-body">
               <div class="col">
                 <div v-if="!searchUsersText" @click="selectAllUsers" class="dropdown-item">All</div>
                 <div
@@ -322,7 +415,7 @@
                   {{ user.full_name }}
                 </div>
               </div>
-            </div>
+            </div> -->
 
             <div class="dropdown-footer"></div>
           </div>
@@ -425,14 +518,12 @@
             <div style="padding: 0 4px" class="body">
               <div class="bio-text" v-html="contact.bio"></div>
               <!-- <div class="blur"></div> -->
+              <div @click="toggleDetailsModal(contact)" class="more-left">
+                <img src="@/assets/images/refresh-pr.svg" height="14px" alt="" />
+              </div>
+
               <div @click="setContact(contact)" class="more">
-                Expand <img src="@/assets/images/rightarrow.svg" height="12px" alt="" />
-                <img
-                  style="margin: 0 0 0 -8px"
-                  src="@/assets/images/rightarrow.svg"
-                  height="12px"
-                  alt=""
-                />
+                <img src="@/assets/images/expand-arrows.svg" height="14px" alt="" />
               </div>
             </div>
 
@@ -582,6 +673,11 @@ export default {
   },
   data() {
     return {
+      newBio: '',
+      newImages: '',
+      contactOrg: '',
+      detailsModalOpen: false,
+      bioLoading: false,
       loading: false,
       currentIndex: 0,
       tagIndex: 0,
@@ -636,11 +732,11 @@ export default {
     user() {
       return this.$store.state.user
     },
-    allUsers() {
-      return this.users.filter((user) =>
-        user.full_name.toLowerCase().includes(this.searchUsersText),
-      )
-    },
+    // allUsers() {
+    //   return this.users.filter((user) =>
+    //     user.full_name.toLowerCase().includes(this.searchUsersText),
+    //   )
+    // },
     tagCounts() {
       const tagCountMap = {}
       this.tags.forEach((tag) => {
@@ -702,19 +798,69 @@ export default {
         this.newTag = ''
       }
     },
-    selectedTags(newVal, oldVal) {
-      console.log(newVal, oldVal)
-    },
+    // selectedTags(newVal, oldVal) {
+    //   console.log(newVal, oldVal)
+    // },
   },
   mounted() {},
   created() {
     this.selectedUser = this.user
     this.bccEmail = this.user.email
-    this.getUsers()
+    // this.getUsers()
     this.getInitialContacts()
     this.getTags()
   },
   methods: {
+    toggleDetailsModal(contact = null) {
+      if (contact) {
+        this.currentContact = contact
+      }
+      this.detailsModalOpen = !this.detailsModalOpen
+    },
+    async updateContact() {
+      this.detailsModalOpen = false
+      this.googleModalOpen = true
+      this.bioLoading = true
+      console.log(this.currentContact)
+      try {
+        const res = await Comms.api.getJournalistBio({
+          journalist:
+            this.currentContact.journalist_ref.first_name +
+            ' ' +
+            this.currentContact.journalist_ref.last_name,
+          outlet: this.currentContact.journalist_ref.outlet,
+          company: this.contactOrg,
+          search: true,
+          social: false,
+        })
+        this.newBio = res.data.summary
+        this.newImages = res.data.images
+        Comms.api.updateContact({
+          id: this.currentContact.id,
+          bio: this.newBio,
+          images: this.newImages,
+        })
+        this.$toast('Contact updated!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch (e) {
+        console.log('RESPOSNE', e)
+        this.$toast('Error updating bio, try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.getContacts()
+        this.bioLoading = false
+      }
+    },
     openDeleteModal(id) {
       this.deleteModalOpen = true
       this.contactId = id
@@ -747,7 +893,6 @@ export default {
           tag: this.newTag,
           modifier: this.modifier,
         })
-        console.log(res)
         this.$toast('Tag added', {
           timeout: 1000,
           position: 'top-left',
@@ -910,14 +1055,15 @@ export default {
     toggleListDropdown() {
       this.showList = !this.showList
     },
-    async getUsers() {
-      try {
-        const res = await User.api.getAllUsers()
-        this.users = res.results.filter((user) => user.organization == this.user.organization)
-      } catch (e) {
-        console.log('Error in getTrialUsers', e)
-      }
-    },
+    // async getUsers() {
+    //   try {
+    //     const res = await User.api.getAllUsers()
+    //     this.users = res.results.filter((user) => user.organization == this.user.organization)
+    //     console.log(res)
+    //   } catch (e) {
+    //     console.log('Error in getTrialUsers', e)
+    //   }
+    // },
     async getInitialContacts() {
       this.loading = true
       try {
@@ -933,7 +1079,6 @@ export default {
       try {
         const res = await Comms.api.getContacts()
         this.contacts = res.results
-        console.log(res.results)
       } catch (e) {
         console.error(e)
       }
@@ -941,7 +1086,6 @@ export default {
     async getTags() {
       try {
         const res = await Comms.api.getContactTagList()
-        console.log(res.tags)
         this.tags = res.tags
       } catch (e) {
         console.error(e)
@@ -955,7 +1099,6 @@ export default {
           tag: tag ? tag : this.newTag,
           modifier: mod,
         })
-        console.log(res)
         this.$toast('Tags updated', {
           timeout: 1000,
           position: 'top-left',
@@ -1224,14 +1367,14 @@ h3 {
   flex-direction: row;
   align-items: center;
   position: absolute;
-  bottom: 8px;
-  right: 12px;
+  bottom: 4px;
+  right: 4px;
   background-color: white;
   z-index: 3;
   font-size: 16px;
   cursor: pointer;
 
-  padding: 3px 2px 3px 6px;
+  padding: 3px;
   border: 1px solid rgba(0, 0, 0, 0.185);
   border-radius: 4px;
   box-shadow: 2px 13px 18px 12px rgba(0, 0, 0, 0.1);
@@ -1239,7 +1382,33 @@ h3 {
 
   img {
     filter: invert(30%);
-    margin-left: 4px;
+  }
+
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+.more-left {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  position: absolute;
+  bottom: 4px;
+  right: 32px;
+  background-color: white;
+  z-index: 3;
+  font-size: 16px;
+  cursor: pointer;
+
+  padding: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.185);
+  border-radius: 4px;
+  box-shadow: 2px 6px 12px 6px rgba(0, 0, 0, 0.1);
+  // border-bottom: 1px solid $dark-black-blue;
+
+  img {
+    filter: invert(30%);
   }
 
   &:hover {
@@ -1659,6 +1828,22 @@ h2 {
   &:hover {
     box-shadow: none;
     opacity: 0.5;
+  }
+}
+
+.no-borders {
+  border: none;
+  background: transparent;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+
+  img {
+    transition: all 0.3s;
+  }
+  img:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: scale(1.075);
   }
 }
 
@@ -2415,5 +2600,17 @@ textarea::placeholder {
     align-items: center;
     justify-content: center;
   }
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.fadein {
+  transition: opacity 1s ease-out;
+  opacity: 0;
+  animation: fadeIn 0.5s forwards;
 }
 </style>

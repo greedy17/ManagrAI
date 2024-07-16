@@ -2334,7 +2334,7 @@ class DiscoveryViewSet(
         content = request.data.get("content")
         company = request.data.get("company")
         search = request.data.get("search")
-        social = request.data.get("social")   
+        social = request.data.get("social")
         if social:
             query = journalist
         else:    
@@ -2691,6 +2691,7 @@ class JournalistContactViewSet(
         return Response(status=status.HTTP_200_OK, data={"tags": tags})
 
     def create(self, request, *args, **kwargs):
+        user = request.user
         journalist = request.data.pop("journalist").strip()
         email = request.data.pop("email").strip()
         outlet = request.data.pop("outlet").strip()
@@ -2708,12 +2709,21 @@ class JournalistContactViewSet(
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
                 readSerializer = self.serializer_class(instance=serializer.instance)
+                user.add_meta_data("contacts") 
             except Exception as e:
                 logger.exception(f"Error validating data for details <{e}>")
                 return Response(
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)}
                 )
             return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
+            
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = self.request.data
+        serializer = self.serializer_class(instance=instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()

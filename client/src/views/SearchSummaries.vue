@@ -1,5 +1,5 @@
 <template>
-  <div class="empty-search">
+  <div class="empty-search fadein">
     <Modal v-if="promptModalOpen" class="paid-modal">
       <div class="regen-container">
         <div style="background-color: white" class="paid-header sticky-header">
