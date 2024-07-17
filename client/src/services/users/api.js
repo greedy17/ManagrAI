@@ -67,6 +67,7 @@ const DELETE_MESSAGES = 'users/chat/delete-messages/'
 const CONVERSATIONS = 'users/conversations/'
 const REPORTS = 'users/reports/'
 const SHARED_REPORT = '/shared/'
+const GOOGLE_AUTH_TOKEN = 'users/google/authorization/'
 
 export default class UserAPI {
   get client() {
@@ -816,28 +817,28 @@ export default class UserAPI {
     }
   }
 
-  async getEmailToken() {
+  async getGoogleToken() {
     try {
-      const res = await this.client.post(EMAIL_REQUEST_TOKEN)
+      const res = await this.client.post(GOOGLE_AUTH_TOKEN)
       return res.data
     } catch (e) {
-      apiErrorHandler({ apiName: 'User.getEmailToken' })
+      apiErrorHandler({ apiName: 'User.getGoogleToken' })
     }
   }
-  async getEmailAuthorization(data) {
-    try {
-      const res = await this.client.post(EMAIL_AUTHENTICATION, data)
-      return res.data
-    } catch (e) {
-      apiErrorHandler({ apiName: 'User.getEmailAuthentication' })
-    }
-  }
-  async revokeEmail() {
-    try {
-      const res = await this.client.delete(EMAIL_REVOKE)
-      return res.data
-    } catch (e) {
-      apiErrorHandler({ apiName: 'User.revokeEmailAuthentication' })
-    }
-  }
+  // async getEmailAuthorization(data) {
+  //   try {
+  //     const res = await this.client.post(EMAIL_AUTHENTICATION, data)
+  //     return res.data
+  //   } catch (e) {
+  //     apiErrorHandler({ apiName: 'User.getEmailAuthentication' })
+  //   }
+  // }
+  // async revokeEmail() {
+  //   try {
+  //     const res = await this.client.delete(EMAIL_REVOKE)
+  //     return res.data
+  //   } catch (e) {
+  //     apiErrorHandler({ apiName: 'User.revokeEmailAuthentication' })
+  //   }
+  // }
 }

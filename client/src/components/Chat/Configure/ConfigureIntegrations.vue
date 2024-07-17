@@ -371,7 +371,7 @@
               <h3 class="card__title">Email</h3>
               <div v-if="hasEmailIntegration" class="green-dot"></div>
             </div>
-            <p class="card-text">Connect to track emails</p>
+            <p class="card-text">Connect to send emails</p>
             <div></div>
             <div class="sep-button-container">
               <div class="separator"></div>
@@ -394,11 +394,11 @@
                 class="long-button"
                 style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem"
                 @click="emailAuthorization"
-                :disabled="(generatingToken && selectedIntegration == 'EMAIL') || connecting"
+                :disabled="(generatingToken && selectedIntegration == 'GOOGLE') || connecting"
               >
                 <div
                   style="margin-left: 4px"
-                  v-if="generatingToken && selectedIntegration == 'EMAIL'"
+                  v-if="generatingToken && selectedIntegration == 'GOOGLE'"
                   class="loading-small"
                 >
                   <div class="dot"></div>
@@ -649,11 +649,11 @@ export default {
     async emailAuthorization() {
       this.connecting = true
       try {
-        await User.api.getEmailToken().then((res) => {
-          if (res.link) {
-            window.location.href = res.link
-          }
-        })
+        const res = await User.api.getGoogleToken()
+        console.log('GOOGLE RESPONSE', res)
+        if (res.link) {
+          window.location.href = res.link
+        }
       } catch (e) {
         console.log(e)
       } finally {
@@ -801,7 +801,7 @@ export default {
           return User
         case 'INSTAGRAM':
           return User
-        case 'EMAIL':
+        case 'GOOGLE':
           return User
         default:
           return null
