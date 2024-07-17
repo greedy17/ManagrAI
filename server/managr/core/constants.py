@@ -438,3 +438,20 @@ def REMINDERS():
         REMINDER_MESSAGE_REP: True,
         REMINDER_MESSAGE_MANAGER: True,
     }
+
+
+GOOGLE_AUTHORIZATION_URI = "https://accounts.google.com/o/oauth2/v2/auth"
+GOOGLE_SCOPES = [
+    "openid",
+    "https://www.googleapis.com/auth/userinfo.profile",
+    "https://www.googleapis.com/auth/userinfo.email",
+]
+
+
+def GOOGLE_PARAMS():
+    return {
+        "response_type": "code",
+        "state": "GOOGLE",
+        "redirect_uri": settings.GOOGLE_REDIRECT_URI,
+        "client_id": settings.GOOGLE_CLIENT_ID,
+    }
