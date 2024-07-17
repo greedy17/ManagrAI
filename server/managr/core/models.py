@@ -1004,7 +1004,7 @@ class GoogleAccount(TimeStampModel):
     account_id = models.CharField(max_length=255, null=True)
 
     @classmethod
-    def get_authorization():
+    def get_authorization(self):
         params = core_consts.GOOGLE_PARAMS()
         scopes = "&".join(core_consts.GOOGLE_SCOPES)
         params["scope"] = scopes

@@ -2189,5 +2189,5 @@ def session_complete_webhook(request):
 @api_view(["GET"])
 @permission_classes([permissions.IsAuthenticated])
 def get_google_auth_link(request):
-    link = GoogleAccount.get_authorization(request.token)
+    link = GoogleAccount.get_authorization()
     return Response({"link": link})
