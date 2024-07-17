@@ -1743,6 +1743,7 @@ def revoke_twitter_auth(request):
         return Response({"error": str(e)})
     return Response(data={"success": True})
 
+
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def get_email_request_token(request):
@@ -1771,6 +1772,7 @@ def get_email_authentication(request):
         return Response(data={"success": False})
     return Response(data={"success": True})
 
+
 @api_view(["DELETE"])
 @permission_classes([permissions.IsAuthenticated])
 def revoke_email_auth(request):
@@ -1782,6 +1784,7 @@ def revoke_email_auth(request):
         return Response({"error": str(e)})
     return Response(data={"success": True})
 
+
 def redirect_from_email(request):
     verifier = request.GET.get("oauth_verifier", False)
     token = request.GET.get("oauth_token", False)
@@ -1791,6 +1794,7 @@ def redirect_from_email(request):
         err = urlencode(err)
         return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{err}")
     return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{q}")
+
 
 def redirect_from_twitter(request):
     verifier = request.GET.get("oauth_verifier", False)
