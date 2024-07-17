@@ -83,6 +83,7 @@ class UserClientSerializer(serializers.ModelSerializer):
             "has_salesforce_integration",
             "has_twitter_integration",
             "has_instagram_integration",
+            "has_google_integration",
             "salesforce_account_ref",
             "slack_ref",
             "slack_account",

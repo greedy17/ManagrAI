@@ -68,7 +68,7 @@ const CONVERSATIONS = 'users/conversations/'
 const REPORTS = 'users/reports/'
 const SHARED_REPORT = '/shared/'
 const GOOGLE_AUTH_TOKEN = 'users/google/authorization'
-const GOOGLE_AUTHENTICATION = 'users/google/authenticate/'
+const GOOGLE_AUTHENTICATION = 'users/google/authenticate'
 
 export default class UserAPI {
   get client() {

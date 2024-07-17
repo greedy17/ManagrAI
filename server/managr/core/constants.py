@@ -444,6 +444,7 @@ GOOGLE_AUTHORIZATION_URI = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_AUTHENTICATION_URI = "https://oauth2.googleapis.com/token"
 GOOGLE_CLIENT_ID = settings.GOOGLE_CLIENT_ID
 GOOGLE_CLIENT_SECRET = settings.GOOGLE_CLIENT_SECRET
+GOOGLE_REDIRECT_URI = settings.GOOGLE_REDIRECT_URI
 GOOGLE_SCOPES = [
     "openid",
     "https://www.googleapis.com/auth/userinfo.profile",
@@ -455,8 +456,10 @@ def GOOGLE_PARAMS():
     return {
         "response_type": "code",
         "state": "GOOGLE",
-        "redirect_uri": settings.GOOGLE_REDIRECT_URI,
+        "redirect_uri": GOOGLE_REDIRECT_URI,
         "client_id": GOOGLE_CLIENT_ID,
+        "access_type": "offline",
+        "prompt": "consent",
     }
 
 

@@ -68,7 +68,7 @@ from .serializers import (
     ConversationSerializer,
     ReportSerializer,
     UserAdminRegistrationSerializer,
-    GoogleAccountSerializer
+    GoogleAccountSerializer,
 )
 from managr.organization.models import Team
 from .permissions import IsStaff
@@ -2200,11 +2200,13 @@ def get_google_auth_link(request):
 def get_google_authentication(request):
     user = request.user
     data = request.data
-    access_token = GoogleAccount.authenticate(data.get("code"))
+    print(data)
+    res = GoogleAccount.authenticate(data.get("code"))
+    print(res)
     data = {
         "user": user.id,
-        "access_token": access_token.get("oauth_token"),
-        "access_token_secret": access_token.get("oauth_token_secret"),
+        "access_token": res.get("access_token"),
+        "refresh_token": res.get("refresh_token"),
     }
     existing = GoogleAccount.objects.filter(user=request.user).first()
     if existing:

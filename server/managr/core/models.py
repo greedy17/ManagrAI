@@ -484,6 +484,10 @@ class User(AbstractUser, TimeStampModel):
         return hasattr(self, "instagram_account")
 
     @property
+    def has_google_integration(self):
+        return hasattr(self, "google_account")
+
+    @property
     def as_slack_option(self):
         return block_builders.option(self.full_name, str(self.id))
 
@@ -1019,10 +1023,10 @@ class GoogleAccount(TimeStampModel):
             "client_secret": core_consts.GOOGLE_CLIENT_SECRET,
             "grant_type": "authorization_code",
             "code": code,
-            "redirect_uri": core_consts.GOOGLE_FRONTEND_REDIRECT,
+            "redirect_uri": core_consts.GOOGLE_REDIRECT_URI,
         }
         url = core_consts.GOOGLE_AUTHENTICATION_URI
         with Variable_Client() as client:
             res = client.post(url, params=params)
-            print(res)
-        return
+            res = res.json()
+        return res
