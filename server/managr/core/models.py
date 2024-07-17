@@ -1001,6 +1001,7 @@ class CrawlerReport(TimeStampModel):
 class GoogleAccount(TimeStampModel):
     user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="google_account")
     access_token = models.CharField(max_length=255, null=True)
+    refresh_token = models.CharField(max_length=255, null=True)
     account_id = models.CharField(max_length=255, null=True)
 
     @classmethod
@@ -1010,3 +1011,18 @@ class GoogleAccount(TimeStampModel):
         params["scope"] = scopes
         query = urlencode(params)
         return f"{core_consts.GOOGLE_AUTHORIZATION_URI}?{query}"
+
+    @classmethod
+    def authenticate(cls, code):
+        params = {
+            "client_id": core_consts.GOOGLE_CLIENT_ID,
+            "client_secret": core_consts.GOOGLE_CLIENT_SECRET,
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": core_consts.GOOGLE_FRONTEND_REDIRECT,
+        }
+        url = core_consts.GOOGLE_AUTHENTICATION_URI
+        with Variable_Client() as client:
+            res = client.post(url, params=params)
+            print(res)
+        return

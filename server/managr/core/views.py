@@ -68,6 +68,7 @@ from .serializers import (
     ConversationSerializer,
     ReportSerializer,
     UserAdminRegistrationSerializer,
+    GoogleAccountSerializer
 )
 from managr.organization.models import Team
 from .permissions import IsStaff
@@ -2199,17 +2200,17 @@ def get_google_auth_link(request):
 def get_google_authentication(request):
     user = request.user
     data = request.data
-    access_token = GoogleAccount.authenticate(data.get("oauth_token"), data.get("oauth_verifier"))
+    access_token = GoogleAccount.authenticate(data.get("code"))
     data = {
         "user": user.id,
         "access_token": access_token.get("oauth_token"),
         "access_token_secret": access_token.get("oauth_token_secret"),
     }
     existing = GoogleAccount.objects.filter(user=request.user).first()
-    # if existing:
-    #     serializer = TwitterAccountSerializer(data=data, instance=existing)
-    # else:
-    #     serializer = TwitterAccountSerializer(data=data)
+    if existing:
+        serializer = GoogleAccountSerializer(data=data, instance=existing)
+    else:
+        serializer = GoogleAccountSerializer(data=data)
     try:
         serializer.is_valid(raise_exception=True)
         serializer.save()

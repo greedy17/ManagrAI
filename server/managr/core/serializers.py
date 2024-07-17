@@ -23,6 +23,7 @@ from .models import (
     Message,
     Conversation,
     Report,
+    GoogleAccount,
 )
 from managr.comms.serializers import WritingStyleSerializer
 
@@ -451,3 +452,9 @@ class ReportSerializer(serializers.ModelSerializer):
     def get_share_url(self, instance):
         url = instance.generate_url()
         return url
+
+
+class GoogleAccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GoogleAccount
+        fields = ("user", "access_token", "refresh_token")
