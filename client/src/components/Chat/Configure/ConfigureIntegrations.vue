@@ -696,10 +696,9 @@ export default {
           const data = {
             code: this.$route.query.code,
           }
-          console.log(data)
-          // await modelClass.api.getGoogleAuthorization(data).then((response) => {
-          //   console.log('IG RESPONSE', response)
-          // })
+          await modelClass.api.getGoogleAuthentication(data).then((response) => {
+            console.log('GOOGLE RESPONSE', response)
+          })
         }
       } catch (e) {
         let { response } = e

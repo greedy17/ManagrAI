@@ -68,6 +68,7 @@ const CONVERSATIONS = 'users/conversations/'
 const REPORTS = 'users/reports/'
 const SHARED_REPORT = '/shared/'
 const GOOGLE_AUTH_TOKEN = 'users/google/authorization'
+const GOOGLE_AUTHENTICATION = 'users/google/authenticate/'
 
 export default class UserAPI {
   get client() {
@@ -823,6 +824,14 @@ export default class UserAPI {
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'User.getGoogleToken' })
+    }
+  }
+  async getGoogleAuthentication(data) {
+    try {
+      const res = await this.client.post(GOOGLE_AUTHENTICATION, data)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'User.getTwiiterAuthentication' })
     }
   }
   // async getEmailAuthorization(data) {
