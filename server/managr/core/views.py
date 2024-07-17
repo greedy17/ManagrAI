@@ -2192,3 +2192,39 @@ def get_google_auth_link(request):
     link = GoogleAccount.get_authorization()
     print(link)
     return Response({"link": link})
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def get_google_authentication(request):
+    user = request.user
+    data = request.data
+    access_token = GoogleAccount.authenticate(data.get("oauth_token"), data.get("oauth_verifier"))
+    data = {
+        "user": user.id,
+        "access_token": access_token.get("oauth_token"),
+        "access_token_secret": access_token.get("oauth_token_secret"),
+    }
+    existing = GoogleAccount.objects.filter(user=request.user).first()
+    # if existing:
+    #     serializer = TwitterAccountSerializer(data=data, instance=existing)
+    # else:
+    #     serializer = TwitterAccountSerializer(data=data)
+    try:
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+    except Exception as e:
+        logger.exception(str(e))
+        return Response(data={"success": False})
+    return Response(data={"success": True})
+
+
+def redirect_from_google(request):
+    code = request.GET.get("code", False)
+    q = urlencode({"state": "GOOGLE", "code": code})
+    if not code:
+        err = {"error": "there was an error"}
+        err = urlencode(err)
+        return redirect(f"{core_consts.GOOGLE_FRONTEND_REDIRECT}?{err}")
+    return redirect(f"{core_consts.GOOGLE_FRONTEND_REDIRECT}?{q}")

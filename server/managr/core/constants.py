@@ -455,3 +455,11 @@ def GOOGLE_PARAMS():
         "redirect_uri": settings.GOOGLE_REDIRECT_URI,
         "client_id": settings.GOOGLE_CLIENT_ID,
     }
+
+
+if settings.IN_DEV:
+    GOOGLE_FRONTEND_REDIRECT = "http://localhost:8080/pr-integrations"
+elif settings.IN_STAGING:
+    GOOGLE_FRONTEND_REDIRECT = "https://staging.managr.ai/pr-integrations"
+else:
+    GOOGLE_FRONTEND_REDIRECT = "https://app.managr.ai/pr-integrations"

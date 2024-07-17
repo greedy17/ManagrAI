@@ -393,6 +393,16 @@ urlpatterns = [
         name="google-authorization",
     ),
     path(
+        "users/google/re-direct",
+        core_views.redirect_from_google,
+        name="redirect-google",
+    ),
+    path(
+        "users/google/authenticate",
+        core_views.get_google_authentication,
+        name="google-authentication",
+    ),
+    path(
         "users/instagram/re-direct/",
         comms_views.redirect_from_instagram,
         name="redirect-instagram",
