@@ -692,6 +692,14 @@ export default {
           await modelClass.api.getIgAuthorization(data).then((response) => {
             console.log('IG RESPONSE', response)
           })
+        } else if (this.selectedIntegration === 'GOOGLE') {
+          const data = {
+            code: this.$route.query.code,
+          }
+          console.log(data)
+          // await modelClass.api.getGoogleAuthorization(data).then((response) => {
+          //   console.log('IG RESPONSE', response)
+          // })
         }
       } catch (e) {
         let { response } = e
@@ -743,7 +751,7 @@ export default {
       return !!this.$store.state.user.hasTwitterIntegration
     },
     hasEmailIntegration() {
-      return false
+      return !!this.$store.state.user.hasGoogleIntegration
     },
     hasGongIntegration() {
       return !!this.$store.state.user.gongAccount && this.$store.state.user.hasGongIntegration
