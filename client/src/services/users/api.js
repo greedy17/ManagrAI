@@ -67,7 +67,7 @@ const DELETE_MESSAGES = 'users/chat/delete-messages/'
 const CONVERSATIONS = 'users/conversations/'
 const REPORTS = 'users/reports/'
 const SHARED_REPORT = '/shared/'
-const GOOGLE_AUTH_TOKEN = 'users/google/authorization/'
+const GOOGLE_AUTH_TOKEN = 'users/google/authorization'
 
 export default class UserAPI {
   get client() {
@@ -819,7 +819,7 @@ export default class UserAPI {
 
   async getGoogleToken() {
     try {
-      const res = await this.client.post(GOOGLE_AUTH_TOKEN)
+      const res = await this.client.get(GOOGLE_AUTH_TOKEN)
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'User.getGoogleToken' })
