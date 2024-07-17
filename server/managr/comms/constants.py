@@ -496,7 +496,7 @@ OPEN_AI_TOP_INFLUENCERS = (
 
 OPEN_AI_RELATED_TOPICS = (
     lambda clips : f"""
-    Generate up to 5 related, interesting, diverse questions or topics for further exploration based on the news clips or tweets below. Focus on most interesting, impactful and engaging stories. Output must be capped at 3 words per suggestion, no numbering, and no punctuation. Format the output must be as follows:
+    Generate up to 5 related, interesting, diverse questions or topics for further exploration based on the news clips below. Focus on most interesting, impactful and engaging stories. Output must be capped at 2 words per suggestion, no numbering, and no punctuation. Format the output must be as follows:
     Search1:
     Search2:
     Search3:

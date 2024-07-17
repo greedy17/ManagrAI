@@ -519,11 +519,13 @@
               <div class="bio-text" v-html="contact.bio"></div>
               <!-- <div class="blur"></div> -->
               <div @click="toggleDetailsModal(contact)" class="more-left">
-                <img src="@/assets/images/refresh-pr.svg" height="14px" alt="" />
+                Update
+                <!-- <img src="@/assets/images/refresh-pr.svg" height="14px" alt="" /> -->
               </div>
 
               <div @click="setContact(contact)" class="more">
-                <img src="@/assets/images/expand-arrows.svg" height="14px" alt="" />
+                Expand
+                <!-- <img src="@/assets/images/expand-arrows.svg" height="14px" alt="" /> -->
               </div>
             </div>
 
@@ -834,6 +836,8 @@ export default {
           social: false,
         })
         this.newBio = res.data.summary
+          .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+          .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, '')
         this.newImages = res.data.images
         Comms.api.updateContact({
           id: this.currentContact.id,
@@ -1372,22 +1376,25 @@ h3 {
   right: 4px;
   background-color: white;
   z-index: 3;
-  font-size: 16px;
+  font-size: 13px;
   cursor: pointer;
-
   padding: 3px;
-  border: 1px solid rgba(0, 0, 0, 0.185);
+  border: 1px solid rgba(0, 0, 0, 0.285);
   border-radius: 4px;
-  box-shadow: 2px 13px 18px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 4px 6px 3px rgba(0, 0, 0, 0.1);
   // border-bottom: 1px solid $dark-black-blue;
+  transition: all 0.2s;
+  &:hover {
+    transform: scale(1.075);
+  }
 
   img {
     filter: invert(30%);
   }
 
-  &:hover {
-    opacity: 0.9;
-  }
+  // &:hover {
+  //   opacity: 0.9;
+  // }
 }
 
 .more-left {
@@ -1396,25 +1403,28 @@ h3 {
   align-items: center;
   position: absolute;
   bottom: 4px;
-  right: 32px;
+  right: 64px;
   background-color: white;
   z-index: 3;
-  font-size: 16px;
+  font-size: 13px;
   cursor: pointer;
-
   padding: 3px;
-  border: 1px solid rgba(0, 0, 0, 0.185);
+  border: 1px solid rgba(0, 0, 0, 0.285);
   border-radius: 4px;
-  box-shadow: 2px 6px 12px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 4px 6px 3px rgba(0, 0, 0, 0.1);
   // border-bottom: 1px solid $dark-black-blue;
+  transition: all 0.2s;
+  &:hover {
+    transform: scale(1.075);
+  }
 
   img {
     filter: invert(30%);
   }
 
-  &:hover {
-    opacity: 0.9;
-  }
+  // &:hover {
+  //   opacity: 0.9;
+  // }
 }
 
 .top-row {
