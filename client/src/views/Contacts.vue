@@ -862,6 +862,7 @@ export default {
         })
       } finally {
         this.getContacts()
+        this.contactOrg = ''
         this.bioLoading = false
         this.googleModalOpen = false
       }
