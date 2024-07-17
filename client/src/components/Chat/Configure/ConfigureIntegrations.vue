@@ -379,7 +379,6 @@
                 v-if="hasEmailIntegration"
                 class="long-button connected"
                 style="margin-top: 1rem; margin-bottom: 0.5rem"
-                @click="revokeEmail"
               >
                 <div style="margin-left: 4px" v-if="revoking" class="loading-small">
                   <div class="dot"></div>
