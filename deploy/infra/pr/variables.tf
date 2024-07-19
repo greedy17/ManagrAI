@@ -170,6 +170,11 @@ variable "app_config" {
     instagram_redirect_uri = string
 
     hunter_api_key         = string
+
+    google_search_api_key  = string
+    google_search_id       = string
+    google_client_secret   = string
+    google_redirect_uri    = string
   })
 }
 

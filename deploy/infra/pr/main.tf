@@ -337,6 +337,11 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     instagramRedirectUri = each.app_config.instagram_redirect_uri
 
     hunterApiKey         = each.app_config.hunter_api_key
+
+    googleSearchApiKey   = each.app_config.google_search_api_key
+    googleSearchId       = each.app_config.google_search_id
+    googleClientSecret   = each.app_config.google_client_secret
+    googleRedirectUri    = each.app_config.google_redirect_uri
   })
 }
 
