@@ -69,6 +69,7 @@ const REPORTS = 'users/reports/'
 const SHARED_REPORT = '/shared/'
 const GOOGLE_AUTH_TOKEN = 'users/google/authorization'
 const GOOGLE_AUTHENTICATION = 'users/google/authenticate'
+const GOOGLE_REVOKE = '/users/google/revoke-token/'
 
 export default class UserAPI {
   get client() {
@@ -807,7 +808,6 @@ export default class UserAPI {
       apiErrorHandler({ apiName: 'User.getTwiiterAuthentication' })
     }
   }
-  TWITTER_REVOKE
   async upgrade(data) {
     try {
       const res = await this.client.post(UPGRADE, data)
@@ -829,6 +829,14 @@ export default class UserAPI {
   async getGoogleAuthentication(data) {
     try {
       const res = await this.client.post(GOOGLE_AUTHENTICATION, data)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'User.getTwiiterAuthentication' })
+    }
+  }
+  async revokeGoogle() {
+    try {
+      const res = await this.client.delete(GOOGLE_REVOKE)
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'User.getTwiiterAuthentication' })
