@@ -516,6 +516,36 @@ def google_search(query):
             return {}
 
 
+def alternate_google_search(query):
+    url = comms_consts.GOOGLE_SEARCH_URI
+    params = comms_consts.GOOGLE_SEARCH_PARAMS(query)
+    with Variable_Client() as client:
+        res = client.get(url, params=params)
+        results_list = []
+        if res.status_code == 200:
+            res = res.json()
+            results = res["items"][:6]
+            for item in results:
+                metatags = item["pagemap"]["metatags"][0]
+                metatags_cse = item["pagemap"].get("cse_image", [])
+                cse_img = metatags_cse[0] if metatags_cse else {}
+                author = metatags.get("article:author") if "article:author" in metatags else metatags.get("author", "Unknown")
+                result_data = {
+                    "title": item["title"],
+                    "snippet": item["snippet"],
+                    "link": item["link"],
+                    "source": metatags.get("og:site_name", "unknown"),
+                    "source_img": metatags.get("og:image", ''),
+                    # "description": metatags.get("og:description", ''),
+                    "image": cse_img.get("src", ''),
+                    "author": author,
+                }
+                results_list.append(result_data)
+            return {"results": results_list}
+        else:
+            return {}    
+
+
 def test_open(user, journalist, results, text):
     from managr.core import constants as core_consts
     from managr.core import exceptions as open_ai_exceptions

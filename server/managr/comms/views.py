@@ -76,6 +76,7 @@ from managr.comms.utils import (
     convert_pdf_from_url,
     extract_email_address,
     google_search,
+    alternate_google_search,
     check_journalist_validity,
 )
 from django.views.decorators.http import require_http_methods
@@ -1062,7 +1063,6 @@ class PRSearchViewSet(
             )
 
         return Response(data={"data": message})
-
 
     @action(
         methods=["get"],
@@ -2582,10 +2582,15 @@ def get_email_tracking(request):
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
-def get_web_summary(request):
+def get_google_summary(request):
     user = request.user
     query = request.data.get("query")
-    res = google_search(query)
+    res = alternate_google_search(query)
+    if len(res) == 0:
+        return Response(
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            data={"message": "No results could be found."},
+        )
     results = res["results"]
     art = Article(results[0]["link"], config=generate_config())
     try:
@@ -2595,7 +2600,7 @@ def get_web_summary(request):
     except ArticleException:
         text = ""
     except Exception:
-        text = ""
+        text = ""  
     has_error = False
     attempts = 1
     token_amount = 1000
@@ -2603,7 +2608,7 @@ def get_web_summary(request):
     while True:
         try:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_WEB_SUMMARY(results, text)
+            prompt = comms_consts.OPEN_AI_WEB_SUMMARY(query, results, text)
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
                 prompt,
@@ -2644,7 +2649,7 @@ def get_web_summary(request):
             break
     if has_error:
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
-    return Response(data={"message": message})
+    return Response(data={"message": message, "results": results, "article": text, })
 
 
 class JournalistContactViewSet(
