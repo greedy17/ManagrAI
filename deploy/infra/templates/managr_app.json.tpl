@@ -323,6 +323,22 @@
       {
         "name": "HUNTER_API_KEY",
         "valueFrom": "${config_secret_arn}:hunterApiKey::"
+      },
+      {
+        "name": "GOOGLE_SEARCH_API_KEY",
+        "valueFrom": "${config_secret_arn}:googleSearchApiKey::"
+      },
+      {
+        "name": "GOOGLE_SEARCH_ID",
+        "valueFrom": "${config_secret_arn}:googleSearchId::"
+      },
+      {
+        "name": "GOOGLE_CLIENT_SECRET",
+        "valueFrom": "${config_secret_arn}:googleClientSecret::"
+      },
+      {
+        "name": "GOOGLE_REDIRECT_URI",
+        "valueFrom": "${config_secret_arn}:googleRedirectUri::"
       }
     ],
     "logConfiguration": {

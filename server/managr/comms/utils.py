@@ -508,7 +508,8 @@ def google_search(query):
                 }
                 try:
                     images.append(item["pagemap"]["cse_image"][0]["src"])
-                except Exception:
+                except Exception as e:
+                    print(e)
                     pass
                 results_list.append(result_data)
             return {"images": images, "results": results_list}

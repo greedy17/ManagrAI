@@ -388,6 +388,26 @@ urlpatterns = [
         name="redirect-twitter",
     ),
     path(
+        "users/google/authorization",
+        core_views.get_google_auth_link,
+        name="google-authorization",
+    ),
+    path(
+        "users/google/re-direct",
+        core_views.redirect_from_google,
+        name="redirect-google",
+    ),
+    path(
+        "users/google/authenticate",
+        core_views.get_google_authentication,
+        name="google-authentication",
+    ),
+    path(
+        "users/google/revoke-token/",
+        core_views.revoke_google_account,
+        name="google-revoke",
+    ),
+    path(
         "users/instagram/re-direct/",
         comms_views.redirect_from_instagram,
         name="redirect-instagram",
@@ -433,6 +453,21 @@ urlpatterns = [
         name="instagram-revoke-token",
     ),
     path(
+        "users/email/request-token/",
+        comms_views.get_email_request_token,
+        name="email-request-token",
+    ),
+    path(
+        "users/email/authenticate/",
+        comms_views.get_email_authentication,
+        name="email-authenticate",
+    ),
+    path(
+        "users/email/revoke-token/",
+        comms_views.revoke_email_auth,
+        name="email-revoke-token",
+    ),
+    path(
         "writing-styles/",
         comms_views.get_writing_styles,
         name="writing_styles",
@@ -452,7 +487,12 @@ urlpatterns = [
         comms_views.get_email_tracking,
         name="email-tracking",
     ),
-      path(
+    path(
+        "users/google/email-tracking",
+        comms_views.email_tracking_endpoint,
+        name="track-email",
+    ),
+    path(
         "google-search/",
         comms_views.get_google_summary,
         name="google-search",

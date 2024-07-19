@@ -179,6 +179,11 @@ variable "environments" {
     instagram_redirect_uri = string
 
     hunter_api_key         = string
+
+    google_search_api_key  = string
+    google_search_id       = string
+    google_client_secret   = string
+    google_redirect_uri    = string
   }))
 }
 
@@ -218,7 +223,7 @@ variable "scheduled_tasks" {
     {
       name       = "spiderstatus"
       command    = "spider_status"
-      cron       = "cron(15/15 1-12 * * ? *)"
+      cron       = "cron(15/15 1-14 * * ? *)"
       task_count = 1
     },
   ]

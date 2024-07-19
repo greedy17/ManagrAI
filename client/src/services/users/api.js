@@ -27,6 +27,9 @@ const GENERATE_ACTIVATE_ENDPOINT = uid => `/users/${uid}/activate/`
 const CHECK_STATUS_ENDPOINT = '/account-status/'
 const CHECK_TASKS_ENDPOINT = '/task-status/'
 const SSO_DATA_ENDPOINT = '/sso-data/'
+const EMAIL_REQUEST_TOKEN = '/users/email/request-token/'
+const EMAIL_AUTHENTICATION = '/users/email/authenticate/'
+const EMAIL_REVOKE = '/users/email/revoke-token/'
 const IG_REQUEST_TOKEN = '/users/instagram/request-token/'
 const IG_AUTHENTICATION = '/users/instagram/authenticate/'
 const IG_REVOKE = '/users/instagram/revoke-token/'
@@ -64,6 +67,9 @@ const DELETE_MESSAGES = 'users/chat/delete-messages/'
 const CONVERSATIONS = 'users/conversations/'
 const REPORTS = 'users/reports/'
 const SHARED_REPORT = '/shared/'
+const GOOGLE_AUTH_TOKEN = 'users/google/authorization'
+const GOOGLE_AUTHENTICATION = 'users/google/authenticate'
+const GOOGLE_REVOKE = '/users/google/revoke-token/'
 
 export default class UserAPI {
   get client() {
@@ -751,7 +757,7 @@ export default class UserAPI {
       const res = await this.client.post(IG_REQUEST_TOKEN)
       return res.data
     } catch (e) {
-      apiErrorHandler({ apiName: 'User.getTwitterToken' })
+      apiErrorHandler({ apiName: 'User.getIgToken' })
     }
   }
   async getIgAuthorization(data) {
@@ -759,7 +765,7 @@ export default class UserAPI {
       const res = await this.client.post(IG_AUTHENTICATION, data)
       return res.data
     } catch (e) {
-      apiErrorHandler({ apiName: 'User.getTwitterToken' })
+      apiErrorHandler({ apiName: 'User.getInstagramAuthentication' })
     }
   }
   async revokeInstagram() {
@@ -767,7 +773,7 @@ export default class UserAPI {
       const res = await this.client.delete(IG_REVOKE)
       return res.data
     } catch (e) {
-      apiErrorHandler({ apiName: 'User.getInstagramAuthentication' })
+      apiErrorHandler({ apiName: 'User.revokeInstagramAuthentication' })
     }
   }
   async getTwitterToken() {
@@ -802,7 +808,6 @@ export default class UserAPI {
       apiErrorHandler({ apiName: 'User.getTwiiterAuthentication' })
     }
   }
-  TWITTER_REVOKE
   async upgrade(data) {
     try {
       const res = await this.client.post(UPGRADE, data)
@@ -812,4 +817,45 @@ export default class UserAPI {
       apiErrorHandler({ apiName: 'User.upgrade' })
     }
   }
+
+  async getGoogleToken() {
+    try {
+      const res = await this.client.get(GOOGLE_AUTH_TOKEN)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'User.getGoogleToken' })
+    }
+  }
+  async getGoogleAuthentication(data) {
+    try {
+      const res = await this.client.post(GOOGLE_AUTHENTICATION, data)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'User.getTwiiterAuthentication' })
+    }
+  }
+  async revokeGoogle() {
+    try {
+      const res = await this.client.delete(GOOGLE_REVOKE)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'User.getTwiiterAuthentication' })
+    }
+  }
+  // async getEmailAuthorization(data) {
+  //   try {
+  //     const res = await this.client.post(EMAIL_AUTHENTICATION, data)
+  //     return res.data
+  //   } catch (e) {
+  //     apiErrorHandler({ apiName: 'User.getEmailAuthentication' })
+  //   }
+  // }
+  // async revokeEmail() {
+  //   try {
+  //     const res = await this.client.delete(EMAIL_REVOKE)
+  //     return res.data
+  //   } catch (e) {
+  //     apiErrorHandler({ apiName: 'User.revokeEmailAuthentication' })
+  //   }
+  // }
 }

@@ -23,6 +23,7 @@ from .models import (
     Message,
     Conversation,
     Report,
+    GoogleAccount,
 )
 from managr.comms.serializers import WritingStyleSerializer
 
@@ -82,6 +83,7 @@ class UserClientSerializer(serializers.ModelSerializer):
             "has_salesforce_integration",
             "has_twitter_integration",
             "has_instagram_integration",
+            "has_google_integration",
             "salesforce_account_ref",
             "slack_ref",
             "slack_account",
@@ -451,3 +453,9 @@ class ReportSerializer(serializers.ModelSerializer):
     def get_share_url(self, instance):
         url = instance.generate_url()
         return url
+
+
+class GoogleAccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GoogleAccount
+        fields = ("user", "access_token", "refresh_token")

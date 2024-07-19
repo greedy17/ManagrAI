@@ -132,7 +132,11 @@ ENV SECRET_KEY='secret123' \
   INSTAGRAM_APP_KEY='' \
   INSTAGRAM_APP_SECRET='' \
   INSTAGRAM_REDIRECT_URI='' \
-  HUNTER_API_KEY=''
+  HUNTER_API_KEY='' \
+  GOOGLE_SEARCH_API_KEY='' \
+  GOOGLE_SEARCH_ID='' \
+  GOOGLE_CLIENT_SECRET='' \
+  GOOGLE_REDIRECT_URI=''
 
 
 # Set the name of the working directory inside the docker container
