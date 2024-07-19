@@ -173,7 +173,7 @@ DEFAULT_TWITTER_INSTRUCTIONS = """*Executive summary:*\n Highlighting 5 key poin
 *Sentiment*\n Evaluate the overall tone or sentiment of the coverage. Is it primarily positive, neutral, or negative and why.\n
 *Influencers:*\n Identify key influencers based on follower count"""
 
-DEFAULT_CLIENT_INSTRUCTIONS = "Summary: Summarize the news in paragraph format, in less than 600 characters. \n Top Sources: List top 10 sources (based on popularity and size, no newswire sources)"
+DEFAULT_CLIENT_INSTRUCTIONS = "Summary: Summarize the news in paragraph format, in less than 600 characters. \n Top Sources: List top 10 sources (based on popularity and size, no newswire sources)."
 
 
 DEFAULT_TWITTER_CLIENT_INSTRUCTIONS = """<strong>Summary of the Tweets: No more than 400 characters long </strong>\n
@@ -243,7 +243,7 @@ def TWITTER_USERNAME_INSTRUCTIONS(company):
 def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_client=False):
     if not instructions:
         instructions = DEFAULT_CLIENT_INSTRUCTIONS
-    body = f"""Today's date is {date}. Read the news coverage below and carefully follow these instructions, output has to be less than 1000 characters. Do not bold any text in your response. \n Here are the instructions:{instructions}. \n Here is the news coverage: {clips}.
+    body = f"""Today's date is {date}. Read the news coverage below and carefully follow the instructions. Output has to be less than 1000 characters. Do not return links or urls in any other format besides proper html "a" tags with target="_blank" so that it opens in a new window! \n Here are the instructions:{instructions}. \n Here is the news coverage: {clips}.
     """
     return body
 
@@ -252,7 +252,7 @@ def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, instructions, for_client=False
     if not instructions:
         instructions = DEFAULT_TWITTER_CLIENT_INSTRUCTIONS
     body = f"""Today's date is {date}.Summarize the twitter coverage based on these tweets.\n Tweets: {tweets}\n
-    You must follow these instructions: {instructions}. Summary cannot be longer than 1,000 characters. Do not bold any text in your response.
+    You must follow these instructions: {instructions}. Summary cannot be longer than 1,000 characters.
     """
     return body
 
@@ -261,7 +261,7 @@ def OPEN_AI_INSTAGRAM_SUMMARY(date, posts, instructions, for_client=False):
     if not instructions:
         instructions = DEFAULT_INSTAGRAM_CLIENT_INSTRUCTIONS
     body = f"""Today's date is {date}.Summarize the instagram coverage based on these posts.\n Posts: {posts}\n
-    You must follow these instructions: {instructions}. Summary cannot be longer than 1,000 characters. Do not bold any text in your response.
+    You must follow these instructions: {instructions}. Summary cannot be longer than 1,000 characters. 
     """
     return body
 
@@ -353,10 +353,13 @@ OPEN_AI_REWRITE_PTICH = (
 
 
 def OPEN_AI_WEB_SUMMARY(query, results, text):
-    prompt = f"""Answer this question based on all the information below: {query} 
-    You must cite your sources (outlet name and date), if the result includes a source_img, you must use that as a icon (very small, and aligns nicely in the text) that opens up to the cited work in a new tab , otherwise use an html citation tag that opens in a new tab. Your response must be concise and cannot exceed 1500 characters. Please ensure brevity by focusing only on the key points and relevant information.
-    Here are the top 6 search results:{results}
-    And Here is the top article: {text}"""
+    prompt = f"""Please provide a concise and accurate response to my query, using the given search results. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation. 
+    For example: 'Paris is the capital of France.' Only use this format to cite search results. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge.
+    
+    query: {query}
+    search results: {results}
+    full text from the top result: {text}
+    """
     return prompt
 
 # def OPEN_AI_WEB_SUMMARY(query, results):
