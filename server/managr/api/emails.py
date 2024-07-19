@@ -7,6 +7,19 @@ from django.core.mail import get_connection
 from django.template.loader import render_to_string
 from django.core.mail import get_connection
 from email.mime.application import MIMEApplication
+import base64
+from email.mime.text import MIMEText
+
+
+def create_message(sender, sent_to, subject, template, context={}):
+    html_body = render_to_string(template, context)
+    message = MIMEText(html_body, "html")
+    message["to"] = sent_to
+    message["from"] = sender
+    message["subject"] = subject
+    raw = base64.urlsafe_b64encode(message.as_bytes())
+    raw = raw.decode()
+    return {"raw": raw}
 
 
 def send_html_email(

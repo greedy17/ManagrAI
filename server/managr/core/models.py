@@ -20,6 +20,7 @@ from managr.utils.misc import (
     phrase_to_snake_case,
     bucket_upload_filepath,
 )
+from managr.api.emails import create_message
 from managr.utils.client import HttpClient, Variable_Client
 from managr.core import constants as core_consts
 from managr.organization import constants as org_consts
@@ -1003,7 +1004,9 @@ class CrawlerReport(TimeStampModel):
 
 
 class GoogleAccount(TimeStampModel):
-    user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="google_account")
+    user = models.OneToOneField(
+        "core.User", on_delete=models.CASCADE, related_name="google_account"
+    )
     access_token = models.CharField(max_length=255, null=True)
     refresh_token = models.CharField(max_length=255, null=True)
     account_id = models.CharField(max_length=255, null=True)
@@ -1030,3 +1033,18 @@ class GoogleAccount(TimeStampModel):
             res = client.post(url, params=params)
             res = res.json()
         return res
+
+    def send_email(self, recipient, subject, body):
+        url = core_consts.GOOGLE_SEND_EMAIL_URI("me")
+        headers = core_consts.GOOGLE_HEADERS(self.access_token)
+        email = create_message(
+            self.user.email,
+            recipient,
+            subject,
+            "core/email-templates/user-email.html",
+            {"body": body},
+        )
+        with Variable_Client() as client:
+            res = client.post(url, headers=headers, json=email)
+            print(res.json())
+        return

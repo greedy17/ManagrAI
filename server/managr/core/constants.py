@@ -442,6 +442,10 @@ def REMINDERS():
 
 GOOGLE_AUTHORIZATION_URI = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_AUTHENTICATION_URI = "https://oauth2.googleapis.com/token"
+GOOGLE_SEND_EMAIL_URI = (
+    lambda user_id: f"https://gmail.googleapis.com/gmail/v1/users/{user_id}/messages/send"
+)
+
 GOOGLE_CLIENT_ID = settings.GOOGLE_CLIENT_ID
 GOOGLE_CLIENT_SECRET = settings.GOOGLE_CLIENT_SECRET
 GOOGLE_REDIRECT_URI = settings.GOOGLE_REDIRECT_URI
@@ -449,6 +453,7 @@ GOOGLE_SCOPES = [
     "openid",
     "https://www.googleapis.com/auth/userinfo.profile",
     "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/gmail.send",
 ]
 
 
@@ -469,3 +474,7 @@ elif settings.IN_STAGING:
     GOOGLE_FRONTEND_REDIRECT = "https://staging.managr.ai/pr-integrations"
 else:
     GOOGLE_FRONTEND_REDIRECT = "https://app.managr.ai/pr-integrations"
+
+
+def GOOGLE_HEADERS(access_token):
+    return {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
