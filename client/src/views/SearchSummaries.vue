@@ -768,9 +768,15 @@
               </div>
 
               <div class="mobile-margin-left" v-if="mainView === 'news'" style="margin-right: 16px">
-                <input class="area-input-smallest" type="date" v-model="dateStart" />
+                <input
+                  class="area-input-smallest"
+                  type="date"
+                  :min="minDate"
+                  @input="validateDate"
+                  v-model="dateStart"
+                />
                 -
-                <input class="area-input-smallest" type="date" v-model="dateEnd" />
+                <input class="area-input-smallest" type="date" :min="minDate" v-model="dateEnd" />
               </div>
             </div>
           </div>
@@ -1017,9 +1023,8 @@
               </button>
             </div>
           </header>
-          <div ref="loadedContent"></div>
           <section class="content-container">
-            <div class="between">
+            <div ref="loadedContent" class="between">
               <div style="width: 100%" v-if="summary" class="row">
                 <img
                   style="margin-right: 8px"
@@ -1056,7 +1061,18 @@
             </div>
 
             <div v-else class="content-padding">
-              <pre style="" v-html="summary" class="pre-text bio-body"></pre>
+              <div
+                style="padding-top: 32px"
+                v-if="mainView !== 'website'"
+                v-html="summary"
+                class="pre-text bio-body"
+              ></div>
+              <div
+                style="padding-top: 32px"
+                v-else
+                class="pre-text bio-body"
+                v-html="insertCitations(summary)"
+              ></div>
               <div
                 style="margin-top: 32px; margin-bottom: 12px"
                 class="input-container-gray fadein"
@@ -1466,7 +1482,7 @@
                           alt=""
                         />
                         <p style="text-decoration: none; border: none">
-                          {{ extractJournalist(result.author) }}
+                          {{ result.author }}
                         </p>
                       </span>
                       <!-- <span class="divider-dot">.</span>
@@ -3485,7 +3501,7 @@ export default {
       googleSearchExamples: [
         `Who is NYT Journalist David Brooks`,
         `Emerging fashion journalists`,
-        `Prominent travel writers`,
+        `Top luxury hotels in US`,
         `Top business podcasts`,
         `Best restaurants in ATL`,
         `Which is better: Salesforce or Hubspot`,
@@ -3726,17 +3742,35 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    insertCitations(text) {
+      return text.replace(/\[(\d+)\]/g, (match, p1) => {
+        const citationId = parseInt(p1)
+        const citation = this.googleResults.find((c) => c.id === citationId)
+        return citation
+          ? `<sup><a href="${citation.link}" target="_blank" class="citation-link">${citationId}</a></sup>`
+          : match
+      })
+    },
+    validateDate(event) {
+      const userInput = event.target.value
+      const minDate = this.minDate
+      if (userInput < minDate) {
+        this.dateStart = minDate
+      }
+    },
     toggleType(type) {
       if (type === 'social') {
         if (this.hasTwitterIntegration) {
           this.mainView = type
           this.generateNewSearch(null, false)
+          this.clearSearchText()
         } else {
           this.goToIntegrations()
         }
       } else {
         this.mainView = type
         this.generateNewSearch(null, false)
+        this.clearSearchText()
       }
     },
     searchJournalist(event) {
@@ -4141,13 +4175,12 @@ export default {
       }
     },
     extractJournalist(author) {
-      if (!author || (author.includes('.com') && !author.includes(',')) || author.includes('@')) {
+      if (!author || (author.includes('.com') && !author.includes(',') && !author.includes('|'))) {
         author = 'Unknown Author'
       } else {
         if (author.includes(',')) {
           author = author.split(',')[0]
         }
-
         const authorParts = author.trim().split(' ')
         if (authorParts.length === 3) {
           author = `${authorParts[0]} ${authorParts[2]}`
@@ -5519,7 +5552,7 @@ export default {
             if (this.shouldCancel) {
               return this.stopLoading()
             }
-            this.summary = response.summary
+            this.summary = response.summary.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
             if (this.searchSaved) {
               this.updateSearch()
             }
@@ -5535,6 +5568,7 @@ export default {
           bodyClassName: ['custom'],
         })
       } finally {
+        this.scrollToTop()
         this.summarizing = true
         this.summaryLoading = false
       }
@@ -5707,7 +5741,7 @@ export default {
             if (this.searchSaved) {
               this.updateSearch()
             }
-            this.summary = response.summary
+            this.summary = response.summary.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
           })
       } catch (e) {
         console.log('Error in getSummary', e)
@@ -5733,6 +5767,7 @@ export default {
           })
         }
       } finally {
+        this.scrollToTop()
         if (openAiDown) {
           // this.changeSearch({ search: null, template: null })
           this.resetSearch()
@@ -5918,6 +5953,11 @@ export default {
     },
   },
   computed: {
+    minDate() {
+      const currentDate = new Date()
+      const priorDate = new Date(currentDate.getTime() - 30 * 24 * 60 * 60 * 1000)
+      return priorDate.toISOString().slice(0, 10)
+    },
     articlesFiltered: {
       get() {
         let articles = this.filteredArticles.filter((article) => {
@@ -6169,6 +6209,29 @@ export default {
   border-bottom: 1px solid rgba(0, 0, 0, 0.128);
   padding-bottom: 2px;
   cursor: pointer;
+}
+
+::v-deep .pre-text {
+  .citation-link {
+    color: $dark-black-blue;
+    padding: 1.5px 5px 2px 4.5px;
+    margin: 0 2px;
+    font-size: 9.5px;
+    border: 0.5px solid rgba(0, 0, 0, 0.575);
+    background-color: white;
+    border-radius: 100%;
+    text-decoration: none;
+    cursor: pointer;
+    font-family: $base-font-family;
+    font-weight: 100;
+  }
+
+  .citation-link:hover {
+    text-decoration: underline;
+    background-color: $dark-black-blue;
+    color: white;
+    opacity: 1;
+  }
 }
 
 ::v-deep .ql-toolbar.ql-snow {
@@ -8508,9 +8571,10 @@ textarea::placeholder {
 
 .example {
   min-width: 47%;
+  font-size: 14px;
   padding: 6px 8px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
+  border: 0.5px solid rgba(0, 0, 0, 0.275);
+  border-radius: 9px;
   background-color: white;
   margin: 8px 0;
   cursor: pointer;
