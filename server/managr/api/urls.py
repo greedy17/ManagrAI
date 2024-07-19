@@ -482,6 +482,11 @@ urlpatterns = [
         comms_views.get_email_tracking,
         name="email-tracking",
     ),
+    path(
+        "users/google/email-tracking",
+        comms_views.email_tracking_endpoint,
+        name="track-email",
+    ),
 ]
 router.register("users/reports", core_views.ReportViewSet, "reports"),
 router.register("users/conversations", core_views.ConversationViewSet, "conversations"),

@@ -470,10 +470,13 @@ def GOOGLE_PARAMS():
 
 if settings.IN_DEV:
     GOOGLE_FRONTEND_REDIRECT = "http://localhost:8080/pr-integrations"
+    TRACKING_PIXEL_LINK = "https://managr-zach.ngrok.io/api/users/google/email-tracking"
 elif settings.IN_STAGING:
     GOOGLE_FRONTEND_REDIRECT = "https://staging.managr.ai/pr-integrations"
+    TRACKING_PIXEL_LINK = "https://staging.managr.ai/api/users/google/email-tracking"
 else:
     GOOGLE_FRONTEND_REDIRECT = "https://app.managr.ai/pr-integrations"
+    TRACKING_PIXEL_LINK = "https://app.managr.ai/api/users/google/email-tracking"
 
 
 def GOOGLE_HEADERS(access_token):

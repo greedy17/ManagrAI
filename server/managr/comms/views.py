@@ -1,14 +1,12 @@
 import json
 import httpx
-import time
 import logging
 import pytz
-import uuid
 from rest_framework import (
     mixins,
     viewsets,
 )
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from asgiref.sync import async_to_sync, sync_to_async
 from pytz import timezone
 from datetime import datetime, timedelta
@@ -22,7 +20,6 @@ from rest_framework import (
     viewsets,
 )
 from urllib.parse import urlencode
-from dateutil import parser
 from django.shortcuts import redirect
 from rest_framework.decorators import action
 from . import constants as comms_consts
@@ -80,7 +77,7 @@ from managr.comms.utils import (
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
 from managr.comms.tasks import emit_get_meta_account_info
-from managr.api.emails import send_html_email
+from managr.api.emails import send_html_email, send_mailgun_email
 from newspaper.article import ArticleException
 
 logger = logging.getLogger("managr")
@@ -2044,43 +2041,20 @@ class DiscoveryViewSet(
         body = request.data.get("body").replace("[Your Name]", f"\n\n{user.full_name}")
         recipient = request.data.get("recipient")
         name = request.data.get("name")
-        bcc = request.data.get("bcc")
-        context = {"body": body}
-        print(body)
-        message_id = f"{uuid.uuid4()}-{user.email}"
-        try:
-            send_html_email(
-                subject,
-                "core/email-templates/user-email.html",
-                f"{user.full_name} <{user.email}>",
-                [recipient],
-                context=context,
-                bcc_emails=bcc,
-                headers={
-                    "Reply-To": f"{user.full_name} <{user.first_name}.{user.last_name}@mg.managr.ai>",
-                    "X-Managr-Id": message_id,
-                    "Message-ID": message_id,
-                },
-                user=user,
-            )
-            user.add_meta_data("emailSent")
-            serializer = EmailTrackerSerializer(
-                data={
-                    "user": user.id,
-                    "recipient": recipient,
-                    "body": body,
-                    "subject": subject,
-                    "message_id": message_id,
-                    "name": name,
-                }
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            serializer.instance.add_activity("sent")
+        bcc = request.data.get("bcc", [])
+
+        if user.has_google_integration:
+            res = user.google_account.send_email(recipient, subject, body, name)
+        else:
+            res = send_mailgun_email(user, name, subject, recipient, body, bcc)
+        sent = res["sent"]
+        print(res)
+        if sent:
             return Response(status=status.HTTP_204_NO_CONTENT)
-        except Exception as e:
-            logger.exception(str(e))
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        else:
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": res["error"]}
+            )
 
     @action(
         methods=["post"],
@@ -2312,6 +2286,54 @@ class DiscoveryViewSet(
         return Response(data=message)
 
 
+@permission_classes([])
+def email_tracking_endpoint(request):
+    params = request.META["QUERY_STRING"]
+    params = params.split("&")
+    param_dict = {}
+    for param in params:
+        param_split = param.split("=")
+        param_dict[param_split[0]] = param_split[1]
+
+    response = HttpResponse(content_type="image/png")
+    event_type = param_dict["type"]
+    message_id = param_dict["id"]
+    try:
+        tracker = EmailTracker.objects.get(id=message_id)
+        if event_type == "opened":
+            last_log = tracker.activity_log[len(tracker.activity_log) - 1]
+            event, time = last_log.split("|")
+            if event == "opened":
+                message_timestamp = datetime.now().timestamp()
+                datetime_obj = datetime.strptime(time, "%Y-%m-%dT%H:%M:%S.%f")
+                unix_time = datetime_obj.timestamp()
+                if unix_time - message_timestamp < 60:
+                    raise Exception()
+                else:
+                    tracker.opens += 1
+            else:
+                tracker.opens += 1
+        elif event_type == "delivered":
+            tracker.received = True
+        elif event_type == "failed":
+            tracker.failed = True
+        elif event_type == "clicked":
+            tracker.clicks += 1
+        tracker.save()
+        tracker.add_activity(event_type)
+    except EmailTracker.DoesNotExist:
+        pass
+    except Exception as e:
+        logger.exception(f"{e}, {message_id}")
+    response.write(
+        b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
+        b"\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDAT\x08\xd7c`\x00\x00"
+        b"\x00\x02\x00\x01\xe2!\xbc\x33\x00\x00\x00\x00IEND\xaeB`\x82"
+    )
+    response["Content-Length"] = len(response.content)
+    return response
+
+
 @api_view(["POST"])
 @permission_classes([])
 def mailgun_webhooks(request):
@@ -2362,7 +2384,6 @@ def email_recieved_webhook(request):
     original_subject = subject.replace("Re: ", "")
     user = User.objects.get(first_name=first, last_name=last)
     try:
-        print(subject, from_email, user)
         trackers = EmailTracker.objects.filter(recipient__icontains=from_email, user=user)
         filtered_trackers = [email for email in trackers if email.subject in original_subject]
         if len(filtered_trackers):

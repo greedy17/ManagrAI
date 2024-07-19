@@ -28,7 +28,7 @@ from managr.slack.helpers import block_builders
 from managr.core.nylas.auth import convert_local_time_to_unix
 from .nylas.exceptions import NylasAPIError
 from managr.core.nylas.auth import gen_auth_url, revoke_access_token
-from .exceptions import StripeException
+from .exceptions import StripeException, GoogleException, GoogleAuthExpired
 
 client = HttpClient().client
 logger = logging.getLogger("managr")
@@ -1011,6 +1011,36 @@ class GoogleAccount(TimeStampModel):
     refresh_token = models.CharField(max_length=255, null=True)
     account_id = models.CharField(max_length=255, null=True)
 
+    @staticmethod
+    def _handle_response(response, fn_name=None):
+        if not hasattr(response, "status_code"):
+            raise ValueError
+
+        elif response.status_code == 200 or response.status_code == 201:
+            try:
+                data = response.json()
+            except Exception as e:
+                NylasAPIError(e)
+            except json.decoder.JSONDecodeError as e:
+                return logger.error(f"An error occured with a nylas integration, {e}")
+
+        else:
+            status_code = response.status_code
+            error_data = response.json()
+            error_param = error_data.get("error", None)
+            error_message = error_param.get("message", None)
+            error_code = error_param.get("code", None)
+            error_status = error_param.get("status", None)
+            kwargs = {
+                "status_code": status_code,
+                "error_code": error_code,
+                "error_param": error_param,
+                "error_message": error_message,
+                "error_status": error_status,
+            }
+            return GoogleException(kwargs)
+        return data
+
     @classmethod
     def get_authorization(cls):
         params = core_consts.GOOGLE_PARAMS()
@@ -1034,17 +1064,65 @@ class GoogleAccount(TimeStampModel):
             res = res.json()
         return res
 
-    def send_email(self, recipient, subject, body):
+    def refresh_access_token(self):
+        url = core_consts.GOOGLE_AUTHENTICATION_URI
+        params = {
+            "client_id": core_consts.GOOGLE_CLIENT_ID,
+            "client_secret": core_consts.GOOGLE_CLIENT_SECRET,
+            "grant_type": "refresh_token",
+            "refresh_token": self.refresh_token,
+        }
+        with Variable_Client() as client:
+            res = client.post(
+                url, params=params, headers={"Content-Type": "application/x-www-form-urlencoded"}
+            )
+            res = res.json()
+            print(res)
+            access_token = res["access_token"]
+            self.access_token = access_token
+        return self.save()
+
+    def send_email(self, recipient, subject, body, name):
+        from managr.comms.serializers import EmailTrackerSerializer
+
         url = core_consts.GOOGLE_SEND_EMAIL_URI("me")
         headers = core_consts.GOOGLE_HEADERS(self.access_token)
-        email = create_message(
-            self.user.email,
-            recipient,
-            subject,
-            "core/email-templates/user-email.html",
-            {"body": body},
-        )
-        with Variable_Client() as client:
-            res = client.post(url, headers=headers, json=email)
-            print(res.json())
-        return
+        tracker_link = core_consts.TRACKING_PIXEL_LINK + "?type=opened"
+        email_res = {"sent": False}
+        while True:
+            try:
+                serializer = EmailTrackerSerializer(
+                    data={
+                        "user": self.user.id,
+                        "recipient": recipient,
+                        "body": body,
+                        "subject": subject,
+                        "name": name,
+                    }
+                )
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                tracker = serializer.instance
+                tracker_link += f"&id={str(tracker.id)}"
+                email = create_message(
+                    self.user.email,
+                    recipient,
+                    subject,
+                    "core/email-templates/user-email.html",
+                    {"body": body, "tracking_pixel_url": tracker_link},
+                )
+                with Variable_Client() as client:
+                    res = client.post(url, headers=headers, json=email)
+                    response = self._handle_response(res)
+                    tracker.message_id = response["id"]
+                    tracker.save()
+                    tracker.add_activity("sent")
+                    email_res["sent"] = True
+                    break
+            except GoogleAuthExpired:
+                self.refresh_access_token()
+                continue
+            except Exception as e:
+                email_res["error"] = str(e)
+                break
+        return email_res

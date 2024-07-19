@@ -23,6 +23,12 @@ class ServerError(Exception):
         super().__init__(self.message)
 
 
+class GoogleAuthExpired(Exception):
+    def __init__(self, error="Access token needs to be refreshed"):
+        self.message = error
+        super().__init__(self.message)
+
+
 class OpenAIException:
     def __init__(self, e, fn_name=None, retries=0):
         self.error = e
@@ -51,6 +57,34 @@ class OpenAIException:
             raise ServerError()
         else:
             raise Exception(f"OpenAI error: {self.message}")
+
+
+class GoogleException:
+    def __init__(self, e, fn_name=None, retries=0, **kwargs):
+        self.error = e
+        self.error_class_name = e.__class__.__name__
+        self.status_code = e["status_code"]
+        self.param = e["error_param"]
+        self.message = e["error_message"]
+        self.status = e["error_status"]
+        self.fn_name = fn_name
+        self.retry_attempts = 0
+        self.raise_error()
+
+    def raise_error(self):
+        # if an invalid Basic auth is sent the response is still a 200 success
+        # instead we check data.json() which will return a JSONDecodeError
+        if self.error_class_name == "JSONDecodeError":
+            logger.error(f"An error occured decoding the json, {self.fn_name}")
+            return
+        elif self.status_code == 401 and self.status == "UNAUTHENTICATED":
+            raise GoogleAuthExpired()
+        elif self.status_code == 404 and self.param == "EXPIRED_AUTHENTICATION":
+            return
+        elif self.status_code == 500:
+            raise ServerError()
+        else:
+            raise Exception(f"Google error: {self.message}")
 
 
 def _handle_response(response, fn_name=None):
