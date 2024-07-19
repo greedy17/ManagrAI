@@ -2191,7 +2191,6 @@ def session_complete_webhook(request):
 @permission_classes([permissions.IsAuthenticated])
 def get_google_auth_link(request):
     link = GoogleAccount.get_authorization()
-    print(link)
     return Response({"link": link})
 
 
@@ -2200,9 +2199,7 @@ def get_google_auth_link(request):
 def get_google_authentication(request):
     user = request.user
     data = request.data
-    print(data)
     res = GoogleAccount.authenticate(data.get("code"))
-    print(res)
     data = {
         "user": user.id,
         "access_token": res.get("access_token"),
@@ -2231,3 +2228,12 @@ def redirect_from_google(request):
         err = urlencode(err)
         return redirect(f"{core_consts.GOOGLE_FRONTEND_REDIRECT}?{err}")
     return redirect(f"{core_consts.GOOGLE_FRONTEND_REDIRECT}?{q}")
+
+
+@api_view(["DELETE"])
+@permission_classes([permissions.IsAuthenticated])
+def revoke_google_account(request):
+    user = request.user
+    google_account = user.google_account
+    google_account.delete()
+    return Response(data={"success": True})

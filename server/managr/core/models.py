@@ -1009,7 +1009,10 @@ class GoogleAccount(TimeStampModel):
     )
     access_token = models.CharField(max_length=255, null=True)
     refresh_token = models.CharField(max_length=255, null=True)
-    account_id = models.CharField(max_length=255, null=True)
+    account_id = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user}"
 
     @staticmethod
     def _handle_response(response, fn_name=None):
@@ -1077,33 +1080,33 @@ class GoogleAccount(TimeStampModel):
                 url, params=params, headers={"Content-Type": "application/x-www-form-urlencoded"}
             )
             res = res.json()
-            print(res)
             access_token = res["access_token"]
             self.access_token = access_token
-        return self.save()
+            self.save()
 
     def send_email(self, recipient, subject, body, name):
         from managr.comms.serializers import EmailTrackerSerializer
 
         url = core_consts.GOOGLE_SEND_EMAIL_URI("me")
-        headers = core_consts.GOOGLE_HEADERS(self.access_token)
         tracker_link = core_consts.TRACKING_PIXEL_LINK + "?type=opened"
         email_res = {"sent": False}
+        instance = False
         while True:
             try:
-                serializer = EmailTrackerSerializer(
-                    data={
-                        "user": self.user.id,
-                        "recipient": recipient,
-                        "body": body,
-                        "subject": subject,
-                        "name": name,
-                    }
-                )
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-                tracker = serializer.instance
-                tracker_link += f"&id={str(tracker.id)}"
+                if not instance:
+                    serializer = EmailTrackerSerializer(
+                        data={
+                            "user": self.user.id,
+                            "recipient": recipient,
+                            "body": body,
+                            "subject": subject,
+                            "name": name,
+                        }
+                    )
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
+                    instance = serializer.instance
+                tracker_link += f"&id={str(instance.id)}"
                 email = create_message(
                     self.user.email,
                     recipient,
@@ -1112,11 +1115,12 @@ class GoogleAccount(TimeStampModel):
                     {"body": body, "tracking_pixel_url": tracker_link},
                 )
                 with Variable_Client() as client:
+                    headers = core_consts.GOOGLE_HEADERS(self.access_token)
                     res = client.post(url, headers=headers, json=email)
                     response = self._handle_response(res)
-                    tracker.message_id = response["id"]
-                    tracker.save()
-                    tracker.add_activity("sent")
+                    instance.message_id = response["id"]
+                    instance.save()
+                    instance.add_activity("sent")
                     email_res["sent"] = True
                     break
             except GoogleAuthExpired:

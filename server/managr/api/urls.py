@@ -403,6 +403,11 @@ urlpatterns = [
         name="google-authentication",
     ),
     path(
+        "users/google/revoke-token/",
+        core_views.revoke_google_account,
+        name="google-revoke",
+    ),
+    path(
         "users/instagram/re-direct/",
         comms_views.redirect_from_instagram,
         name="redirect-instagram",
