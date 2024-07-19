@@ -581,7 +581,7 @@
         >
           Connect <span class="link" @click="goToIntegrations">Twitter</span> to continue
         </h2>
-        <h1 v-else style="font-size: 24px; font-weight: 200">Search the news with AI</h1>
+        <h1 v-else style="font-size: 24px; font-weight: 200">AI search assistant</h1>
       </div>
 
       <div class="small-container letter-spacing">
@@ -592,21 +592,23 @@
             class="input-container-gray"
           >
             <section>
-              <img class="left-margin-m" src="@/assets/images/search.svg" height="20px" alt="" />
+              <img class="left-margin-l" src="@/assets/images/search.svg" height="16px" alt="" />
 
               <textarea
-                @keyup.enter="uploadArticle"
+                autofocus="true"
+                @keyup.enter="googleSearch"
                 class="area-input text-area-input"
                 style="padding-top: 1.5rem"
-                placeholder="Paste article url..."
-                v-model="uploadLink"
-                :disabled="contentLoading"
+                placeholder="Ask a question..."
+                v-model="newSearch"
+                :disabled="loading"
+                v-autoresize
               />
 
               <div
-                @click="uploadArticle"
+                @click="googleSearch"
                 class="image-container left-margin right-margin-m wrapper"
-                :class="uploadLink ? 'dark-blue-bg' : ''"
+                :class="newSearch ? 'dark-blue-bg' : ''"
               >
                 <img
                   style="margin: 0; cursor: text"
@@ -620,10 +622,10 @@
             </section>
             <div class="source-dropdown">
               <div @click="toggleSources" class="drop-header">
-                <img src="@/assets/images/globe.svg" height="16px" alt="" />
+                <img src="@/assets/images/google.svg" height="14px" alt="" />
 
                 <p>Source:</p>
-                <small>URL</small>
+                <small>Web</small>
                 <img src="@/assets/images/arrowDropUp.svg" height="16px" alt="" />
               </div>
 
@@ -649,18 +651,13 @@
                   <img src="@/assets/images/comment.svg" height="12px" alt="" />
                   Social
                 </div>
-                <!-- <div
+                <div
                   @click="switchMainView('website')"
                   :class="{ activeswitch: mainView === 'website' }"
                 >
-                  <img src="@/assets/images/globe.svg" height="12px" alt="" />
-                  URL
+                  <img src="@/assets/images/google.svg" height="12px" alt="" />
+                  Web
                 </div>
-
-                <div @click="switchMainView('pdf')" :class="{ activeswitch: mainView === 'pdf' }">
-                  <img src="@/assets/images/pdf.svg" height="12px" alt="" />
-                  PDF
-                </div> -->
               </div>
             </div>
           </div>
@@ -670,14 +667,13 @@
               <img class="left-margin-m" src="@/assets/images/search.svg" height="18px" alt="" />
               <textarea
                 style="padding-top: 1.25rem"
-                v-if="mainView !== 'website'"
                 id="search-input"
                 @keyup.enter="generateNewSearch($event, false)"
                 class="area-input text-area-input"
                 :placeholder="
                   mainView === 'social' && !hasTwitterIntegration
                     ? 'Connect Twitter...'
-                    : 'Ask Managr to...'
+                    : 'Ask a question...'
                 "
                 autocomplete="off"
                 v-model="newSearch"
@@ -687,18 +683,7 @@
                 "
               />
 
-              <textarea
-                style="padding-top: 1.25rem"
-                v-else
-                @keyup.enter="uploadArticle"
-                class="area-input text-area-input"
-                placeholder="Paste article url..."
-                v-model="uploadLink"
-                :disabled="contentLoading"
-              />
-
               <div
-                v-if="mainView !== 'website'"
                 @click="generateNewSearch($event, false)"
                 class="image-container left-margin wrapper"
                 :class="newSearch ? 'dark-blue-bg' : ''"
@@ -713,7 +698,7 @@
 
                 <div style="left: -32px" class="tooltip">Submit</div>
               </div>
-
+              <!-- 
               <div
                 v-else
                 @click="uploadArticle"
@@ -728,7 +713,7 @@
                 />
 
                 <div class="tooltip">Submit</div>
-              </div>
+              </div> -->
             </section>
 
             <div class="space-between mobile-col">
@@ -772,18 +757,13 @@
                     <img src="@/assets/images/comment.svg" height="12px" alt="" />
                     Social
                   </div>
-                  <!-- <div
+                  <div
                     @click="switchMainView('website')"
                     :class="{ activeswitch: mainView === 'website' }"
                   >
-                    <img src="@/assets/images/globe.svg" height="12px" alt="" />
-                    URL
-                  </div> -->
-
-                  <!-- <div @click="switchMainView('pdf')" :class="{ activeswitch: mainView === 'pdf' }">
-                    <img src="@/assets/images/pdf.svg" height="12px" alt="" />
-                    PDF
-                  </div> -->
+                    <img src="@/assets/images/google.svg" height="12px" alt="" />
+                    Web
+                  </div>
                 </div>
               </div>
 
@@ -795,11 +775,8 @@
             </div>
           </div>
 
-          <div
-            v-if="mainView === 'news' || mainView === 'social'"
-            class="expanded-item borderless"
-            style="margin-top: 8px"
-          >
+          <!-- v-if="mainView === 'news' || mainView === 'social'" -->
+          <div class="expanded-item borderless" style="margin-top: 8px">
             <div style="width: 100%" class="row horizontal-padding-s img-text">
               <img
                 style="margin-left: -1px"
@@ -847,6 +824,20 @@
           <div class="rows">
             <p
               v-for="(example, i) in socialSearchExamples"
+              :key="i"
+              @click="setNewSearch(example)"
+              class="example"
+            >
+              <img src="@/assets/images/arrow-trend-up.svg" height="14px" alt="" />
+              {{ example }}
+            </p>
+          </div>
+        </div>
+
+        <div v-else-if="mainView === 'website'" class="expanded-item-column">
+          <div class="rows">
+            <p
+              v-for="(example, i) in googleSearchExamples"
               :key="i"
               @click="setNewSearch(example)"
               class="example"
@@ -914,13 +905,14 @@
               </p>
 
               <p
-                v-else-if="mainView !== 'website' && mainView !== 'instagram'"
+                v-else-if="mainView === 'website' && !googleResults.length && !summary"
                 class="sub-text ellipsis-text"
-                style="margin: 16px 0"
               >
-                <span :title="booleanString">{{
-                  booleanString ? booleanString.replace('lang:en', '') : ''
-                }}</span>
+                No results found. Try a new search.
+              </p>
+
+              <p v-else class="sub-text ellipsis-text" style="margin: 16px 0">
+                <span :title="newSearch">{{ newSearch }}</span>
               </p>
             </div>
 
@@ -1064,7 +1056,7 @@
             </div>
 
             <div v-else class="content-padding">
-              <pre style="" v-html="summary" class="pre-text"></pre>
+              <pre style="" v-html="summary" class="pre-text bio-body"></pre>
               <div
                 style="margin-top: 32px; margin-bottom: 12px"
                 class="input-container-gray fadein"
@@ -1080,7 +1072,7 @@
                   <textarea
                     style="max-height: 60px !important"
                     class="area-input text-area-input"
-                    placeholder="Ask Managr to..."
+                    placeholder="Ask follow-up question..."
                     autofocus
                     autocomplete="off"
                     v-model="newTemplate"
@@ -1088,7 +1080,9 @@
                     @keyup.enter="
                       mainView === 'news'
                         ? getChatSummary($event, filteredArticles, newTemplate)
-                        : getChatSummary($event, preparedTweets, newTemplate)
+                        : mainView === 'social'
+                        ? getChatSummary($event, preparedTweets, newTemplate)
+                        : getChatSummary($event, googleResults, newTemplate)
                     "
                     v-autoresize
                   />
@@ -1108,8 +1102,22 @@
                   </div>
 
                   <div
-                    v-else
+                    v-else-if="mainView === 'social'"
                     @click="getChatSummary($event, preparedTweets, newTemplate)"
+                    class="image-container left-margin right-margin-m white-bg"
+                    :class="newTemplate ? 'dark-blue-bg' : ''"
+                  >
+                    <img
+                      style="margin: 0"
+                      src="@/assets/images/paper-plane-full.svg"
+                      height="14px"
+                      alt=""
+                    />
+                  </div>
+
+                  <div
+                    v-else
+                    @click="getChatSummary($event, googleResults, newTemplate)"
                     class="image-container left-margin right-margin-m white-bg"
                     :class="newTemplate ? 'dark-blue-bg' : ''"
                   >
@@ -1148,7 +1156,7 @@
                       ? `Articles (${articlesFiltered.length})`
                       : mainView === 'social'
                       ? `Posts (${filteredTweets.length})`
-                      : ''
+                      : `Results (${googleResults.length})`
                   }}</span>
                 </p>
               </div>
@@ -1175,8 +1183,14 @@
                   class="search-input"
                   :placeholder="`Search posts...`"
                 />
+                <input
+                  v-else-if="mainView === 'website'"
+                  v-model="searchResultText"
+                  class="search-input"
+                  :placeholder="`Search results...`"
+                />
                 <img
-                  v-if="searchTweetText || searchArticleText"
+                  v-if="searchTweetText || searchArticleText || searchResultText"
                   @click="clearSearchText"
                   src="@/assets/images/close.svg"
                   class="pointer"
@@ -1414,6 +1428,222 @@
               <div ref="contentBottom"></div>
             </div>
 
+            <div v-else-if="mainView === 'website'" class="cards-container">
+              <div
+                v-for="(result, i) in filteredResults"
+                :key="i"
+                class="card"
+                :class="{ widecard: result.summary }"
+              >
+                <div style="width: 100%">
+                  <div>
+                    <img
+                      @click="goToArticle(result.link)"
+                      :src="result.image"
+                      class="card-photo-header"
+                    />
+                  </div>
+                  <div class="main-body">
+                    <small>
+                      <!-- <img class="small-photo" :src="result.source_img" alt="" /> -->
+                      {{ result.source }}</small
+                    >
+                    <p
+                      style="font-size: 15px; cursor: pointer"
+                      class="p-header"
+                      @click="goToArticle(result.link)"
+                    >
+                      {{ result.title }}
+                    </p>
+                  </div>
+                  <div class="main-footer">
+                    <div style="border-bottom: none" class="author-time">
+                      <span style="cursor: pointer" class="author row">
+                        <img
+                          style="margin-right: 4px"
+                          src="@/assets/images/profile.svg"
+                          height="12px"
+                          alt=""
+                        />
+                        <p style="text-decoration: none; border: none">
+                          {{ extractJournalist(result.author) }}
+                        </p>
+                      </span>
+                      <!-- <span class="divider-dot">.</span>
+                      <span class="off-gray time">{{
+                        getTimeDifferenceInMinutes(article.publish_date)
+                      }}</span> -->
+                    </div>
+                    <div class="footer-icon-container">
+                      <div class="row">
+                        <button
+                          @click="selectJournalist(result, true)"
+                          class="tertiary-button-small"
+                        >
+                          <img
+                            class="invert"
+                            src="@/assets/images/file-user.svg"
+                            height="17px"
+                            alt=""
+                          />
+                        </button>
+                        <button
+                          v-if="!result.summary"
+                          @click="getArticleSummary(result.link)"
+                          class="tertiary-button-small"
+                          :disabled="
+                            articleSummaryLoading || loading || summaryLoading || savingSearch
+                          "
+                        >
+                          <img
+                            v-if="loadingUrl !== result.link"
+                            src="@/assets/images/sparkles-thin.svg"
+                            height="16px"
+                            alt=""
+                          />
+                          <div
+                            v-if="articleSummaryLoading && loadingUrl === result.link"
+                            class="loading-smallest"
+                          >
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                          </div>
+                        </button>
+                        <img
+                          v-else
+                          src="@/assets/images/sparkle.svg"
+                          class="right-arrow-footer blue-icon"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="cardwidth" style="background: #e9f3fa" v-if="result.summary">
+                  <div class="relative">
+                    <pre v-html="result.summary" class="pre-text blue-text-bg"></pre>
+                  </div>
+
+                  <div class="regenerate-article">
+                    <div v-if="!showArticleRegenerate" class="row-end">
+                      <!-- <button
+                        @click="toggleArticleRegenerate"
+                        :disabled="
+                          articleSummaryLoading || loading || summaryLoading || savingSearch
+                        "
+                        class="tertiary-button"
+                      >
+                        Regenerate
+                      </button> -->
+
+                      <div class="relative left-margin">
+                        <div
+                          @click="toggleArticleGenerateDropdown"
+                          class="row pointer nav-text dropdownBorder"
+                        >
+                          Generate Content
+                          <img
+                            v-if="!showArticleGenerateDropdown && !contentLoading"
+                            src="@/assets/images/downArrow.svg"
+                            class=""
+                            height="14px"
+                            alt=""
+                          />
+                          <img
+                            v-if="showArticleGenerateDropdown && !contentLoading"
+                            src="@/assets/images/downArrow.svg"
+                            class="rotate"
+                            height="14px"
+                            alt=""
+                          />
+                          <div
+                            style="margin-left: 4px"
+                            v-else-if="contentLoading"
+                            class="loading-small"
+                          >
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                          </div>
+                        </div>
+
+                        <div v-if="showArticleGenerateDropdown" class="search-dropdown">
+                          <div class="searches-container">
+                            <div
+                              class="row relative"
+                              v-for="(option, i) in articleGenerateOptions"
+                              :key="option.value"
+                            >
+                              <p @click="selectArticleOption(result.link, option.value, i)">
+                                {{ option.name }}
+                              </p>
+
+                              <img
+                                v-show="contentLoading && optionIndex === i"
+                                src="@/assets/images/loading.svg"
+                                class="rotate"
+                                height="12px"
+                                alt=""
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="full-width" v-else>
+                      <textarea
+                        :disabled="
+                          articleSummaryLoading || loading || summaryLoading || savingSearch
+                        "
+                        autofocus
+                        class="area-input-outline wider"
+                        placeholder="Provide additional instructions"
+                        v-autoresize
+                        v-model="articleInstructions"
+                      />
+
+                      <div class="row">
+                        <button @click="toggleArticleRegenerate" class="secondary-button">
+                          Cancel
+                        </button>
+
+                        <button
+                          @click="
+                            regenerateArticleSummary(
+                              result.link,
+                              result.summary,
+                              articleInstructions,
+                            )
+                          "
+                          :disabled="
+                            articleSummaryLoading || loading || summaryLoading || savingSearch
+                          "
+                          class="primary-button"
+                        >
+                          {{
+                            articleSummaryLoading && loadingUrl === result.link
+                              ? 'Submitting'
+                              : 'Submit'
+                          }}
+                          <div
+                            style="margin-left: 4px"
+                            v-if="articleSummaryLoading && loadingUrl === result.link"
+                            class="loading-small"
+                          >
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div ref="contentBottom"></div>
+            </div>
+
             <div v-else-if="mainView === 'social'" class="cards-container">
               <div class="card" v-for="(tweet, i) in filteredTweets" :key="i">
                 <div style="width: 100%">
@@ -1525,7 +1755,7 @@
         </div>
 
         <aside>
-          <div class="section">
+          <div v-if="mainView !== 'website'" class="section">
             <div
               @click="toggleRelevant"
               class="example-title"
@@ -1539,7 +1769,7 @@
                   alt=""
                 />
                 <p v-if="mainView === 'news'">Most Relevant Articles</p>
-                <p v-else>Most Relevant Posts</p>
+                <p v-else-if="mainView === 'social'">Most Relevant Posts</p>
               </div>
 
               <img
@@ -1564,7 +1794,7 @@
             </div>
           </div>
 
-          <div class="section">
+          <div v-if="mainView !== 'website'" class="section">
             <div
               @click="toggleJournalists"
               class="example-title"
@@ -1579,7 +1809,7 @@
                 />
 
                 <p v-if="mainView === 'news'">List Top Journalists</p>
-                <p v-else>List Top Influencers</p>
+                <p v-else-if="mainView === 'social'">List Top Influencers</p>
               </div>
 
               <img
@@ -1659,8 +1889,8 @@
             </div>
           </div>
 
-          <div class="section-small">
-            <div @click="toggleType" class="example-title">
+          <div v-if="mainView !== 'website'" class="section-small">
+            <div @click="toggleType(mainView === 'news' ? 'social' : 'news')" class="example-title">
               <div class="example-row">
                 <img
                   v-if="mainView === 'social'"
@@ -1670,7 +1900,7 @@
                   style="margin-right: 8px"
                 />
                 <img
-                  style="filter: invert(10%)"
+                  style="filter: invert(10%); margin-left: -4px"
                   v-else
                   src="@/assets/images/twitter-x.svg"
                   height="18px"
@@ -1683,6 +1913,73 @@
                   <span>(Connect X/Twitter)</span>
                 </p>
                 <p v-else>Switch to News</p>
+              </div>
+              <img
+                style="filter: invert(30%)"
+                src="@/assets/images/arrow-circle-right.svg"
+                height="14px"
+                alt=""
+              />
+            </div>
+          </div>
+
+          <div v-else-if="mainView === 'website'" class="section-small">
+            <div @click="toggleType('social')" class="example-title">
+              <div class="example-row">
+                <img
+                  style="filter: invert(10%); margin-left: -4px"
+                  src="@/assets/images/twitter-x.svg"
+                  height="18px"
+                  alt=""
+                />
+
+                <p v-if="hasTwitterIntegration">Switch to Social</p>
+                <p v-else>
+                  Switch to Social
+                  <span>(Connect X/Twitter)</span>
+                </p>
+              </div>
+              <img
+                style="filter: invert(30%)"
+                src="@/assets/images/arrow-circle-right.svg"
+                height="14px"
+                alt=""
+              />
+            </div>
+          </div>
+
+          <div v-if="mainView === 'website'" class="section-small">
+            <div @click="toggleType('news')" class="example-title">
+              <div class="example-row">
+                <img
+                  src="@/assets/images/newspaper.svg"
+                  height="14px"
+                  alt=""
+                  style="margin-right: 8px"
+                />
+
+                <p>Switch to News</p>
+              </div>
+              <img
+                style="filter: invert(30%)"
+                src="@/assets/images/arrow-circle-right.svg"
+                height="14px"
+                alt=""
+              />
+            </div>
+          </div>
+
+          <div v-if="mainView !== 'website'" class="section-small">
+            <div @click="toggleType('website')" class="example-title">
+              <div class="example-row">
+                <img
+                  style="filter: invert(10%); margin-right: 6px"
+                  src="@/assets/images/google.svg"
+                  height="14px"
+                  alt=""
+                />
+
+                <p>Switch to Web</p>
               </div>
               <img
                 style="filter: invert(30%)"
@@ -3018,6 +3315,7 @@ export default {
   },
   data() {
     return {
+      googleResults: [],
       relevantData: '',
       journalistData: '',
       relatedTopics: [],
@@ -3027,6 +3325,7 @@ export default {
       showArrows: false,
       searchArticleText: '',
       searchTweetText: '',
+      searchResultText: '',
       buttonClicked: false,
       savingContact: false,
       suggestions: [],
@@ -3182,6 +3481,14 @@ export default {
         `from: elonmusk`,
         `#Lululemon`,
         `Latest TikTok Trends`,
+      ],
+      googleSearchExamples: [
+        `Who is NYT Journalist David Brooks`,
+        `Emerging fashion journalists`,
+        `Prominent travel writers`,
+        `Top business podcasts`,
+        `Best restaurants in ATL`,
+        `Which is better: Salesforce or Hubspot`,
       ],
       testExamples: [
         'How is sustainable fashion evolving in 2024',
@@ -3419,17 +3726,17 @@ export default {
     this.abortFunctions()
   },
   methods: {
-    toggleType() {
-      if (this.mainView === 'social') {
-        this.mainView = 'news'
-        this.generateNewSearch(null, false)
-      } else {
+    toggleType(type) {
+      if (type === 'social') {
         if (this.hasTwitterIntegration) {
-          this.mainView = 'social'
+          this.mainView = type
           this.generateNewSearch(null, false)
         } else {
           this.goToIntegrations()
         }
+      } else {
+        this.mainView = type
+        this.generateNewSearch(null, false)
       }
     },
     searchJournalist(event) {
@@ -3437,12 +3744,14 @@ export default {
         const text = event.target.innerText
         this.searchArticleText = text
         this.searchTweetText = text
+        this.searchResultText = text
         this.scrollToTopDivider()
       }
     },
     clearSearchText() {
       this.searchArticleText = ''
       this.searchTweetText = ''
+      this.searchResultText = ''
     },
     toggleRelevant() {
       if (!this.showingRelevant) {
@@ -3539,6 +3848,8 @@ export default {
       this.loadingRelated = true
       if (this.mainView === 'news') {
         clips = this.getArticleDescriptions(this.filteredArticles)
+      } else if (this.mainView === 'website') {
+        clips = this.googleResults
       } else {
         clips = this.prepareTweetSummary(this.tweets)
       }
@@ -3781,13 +4092,13 @@ export default {
     },
     selectJournalist(article, web = false) {
       if (web) {
-        const author = this.extractJournalist(article.author)
+        const author = article.author
         const outlet = article.source
         const headline = article.title
-        const description = article.summary ? article.summary : article.description
-        const date = this.getTimeDifferenceInMinutes(article.publish_date)
+        const description = article.snippet
+        const rawDate = new Date()
+        const date = this.getTimeDifferenceInMinutes(rawDate)
 
-        // this.emailJournalistModalOpen = true
         this.currentHeadline = headline
         this.currentDescription = description
         this.currentJournalist = author
@@ -4300,6 +4611,33 @@ export default {
         this.ShowReport = !this.ShowReport
       }
     },
+    async googleSearch() {
+      // this.resetAll()
+      if (!this.newSearch) {
+        return
+      }
+      this.changeSearch({ search: this.newSearch, template: this.newTemplate })
+      this.loading = true
+      try {
+        const res = await Comms.api.googleSearch({
+          query: this.newSearch,
+        })
+        this.searchResponseText = ' '
+        this.searchResponseText = ''
+        this.googleText = res.article
+        this.googleResults = res.results
+        this.summary = res.message
+          .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+          .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, '')
+      } catch (e) {
+        this.googleResults = []
+        this.summary = ''
+        console.log(e)
+      } finally {
+        this.scrollToTop()
+        this.loading = false
+      }
+    },
     async uploadArticle() {
       this.resetAll()
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
@@ -4493,6 +4831,7 @@ export default {
       this.newSearch = ''
       this.addedClips = []
       this.filteredArticles = []
+      this.googleResults = []
       this.addedArticles = []
       this.tweets = []
       this.posts = []
@@ -4701,6 +5040,7 @@ export default {
       }
       this.filteredArticles = []
       this.tweets = []
+      this.googleResults = []
       this.changeSearch(null)
       this.savedSearch = null
       this.showGenerateDropdown = false
@@ -4735,7 +5075,7 @@ export default {
         this.getPosts(saved)
       } else if (this.mainView === 'website') {
         this.closeRegenModal()
-        this.getSourceSummary()
+        this.googleSearch()
       } else {
         this.closeRegenModal()
         this.loading = true
@@ -5039,7 +5379,7 @@ export default {
             if (response.tweets) {
               this.tweets = response.tweets
               this.searchTweetText = ' '
-              this.searchtweetText = ''
+              this.searchTweetText = ''
               this.tweetMedia = response.includes.media
               this.booleanString = response.string
               this.getTweetSummary()
@@ -5249,18 +5589,89 @@ export default {
           await this.getSummary(clips, instructions)
         } else if (this.mainView === 'social') {
           await this.getSummary(clips, instructions, true)
-        } else if (this.mainView === 'social') {
-        } else {
-          await this.getSourceSummary()
+        } else if (this.mainView === 'website') {
+          this.regenerateGoogleSummary(clips, instructions)
         }
       } catch (e) {
         console.log('error in getChatSummary', e)
       }
       this.chatSummaryLoading = false
     },
+    async regenerateGoogleSummary(clips, instructions = '') {
+      this.summaryLoading = true
+      let openAiDown = false
+      this.summary = ''
+      clips[0]['full_text'] = this.googleText
+
+      console.log('CLIPS ARE HERE:: ', clips)
+
+      try {
+        if (this.shouldCancel) {
+          return this.stopLoading()
+        }
+        this.$store.dispatch('updateAbortController', {
+          ...this.$store.state.abortControllers,
+          getSummary: { name: 'getSummary', controller: new AbortController() },
+        })
+        await Comms.api
+          .getSummary(
+            {
+              clips: clips,
+              search: this.newSearch,
+              instructions: instructions,
+              company: this.selectedOrg,
+            },
+            this.controllers.getSummary.controller.signal,
+          )
+          .then((response) => {
+            if (this.shouldCancel) {
+              return this.stopLoading()
+            }
+            if (this.searchSaved) {
+              this.updateSearch()
+            }
+            this.summary = response.summary
+          })
+      } catch (e) {
+        console.log('Error in getSummary', e)
+        if (
+          e.data &&
+          e.data.summary === "Unknown exception: 'NoneType' object is not subscriptable"
+        ) {
+          this.$toast('OpenAI is down, please try again later.', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          openAiDown = true
+        } else {
+          this.$toast('Something went wrong, please try again.', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }
+      } finally {
+        if (openAiDown) {
+          // this.changeSearch({ search: null, template: null })
+          this.resetSearch()
+          this.abortFunctions()
+          return this.stopLoading()
+        }
+        const newAbortControllers = { ...this.$store.state.abortControllers }
+        delete newAbortControllers.getClips
+        this.$store.dispatch('updateAbortController', newAbortControllers)
+        this.summarizing = true
+        this.summaryLoading = false
+        this.refreshUser()
+      }
+    },
     async getSummary(clips, instructions = '', twitter = false) {
       let allClips
-      console.log('CLIPS ARE HERE:::', clips)
       if (!twitter) {
         allClips = this.getArticleDescriptions(clips)
       } else {
@@ -5374,9 +5785,16 @@ export default {
       }
     },
     async getArticleSummary(url, instructions = null, length = 1000) {
-      let selectedClip = this.addedArticles.length
-        ? this.addedArticles.filter((art) => art.link === url)[0]
-        : this.filteredArticles.filter((art) => art.link === url)[0]
+      let selectedClip = []
+      if (this.mainView === 'website') {
+        selectedClip = this.googleResults.length
+          ? this.googleResults.filter((art) => art.link === url)[0]
+          : this.googleResults.filter((art) => art.link === url)[0]
+      } else {
+        selectedClip = this.addedArticles.length
+          ? this.addedArticles.filter((art) => art.link === url)[0]
+          : this.filteredArticles.filter((art) => art.link === url)[0]
+      }
 
       this.articleSummaryLoading = true
       this.loadingUrl = url
@@ -5395,11 +5813,17 @@ export default {
           return this.stopLoading()
         }
         selectedClip['summary'] = response.summary
-        if (!this.addedArticles.length) {
+
+        if (!this.addedArticles.length && this.mainView !== 'website') {
           this.filteredArticles = this.filteredArticles.filter(
             (clip) => clip.title !== selectedClip.title,
           )
           this.filteredArticles.unshift(selectedClip)
+        } else if (this.mainView === 'website') {
+          this.googleResults = this.googleResults.filter(
+            (clip) => clip.title !== selectedClip.title,
+          )
+          this.googleResults.unshift(selectedClip)
         } else {
           this.addedArticles = this.addedArticles.filter(
             (clip) => clip.title !== selectedClip.title,
@@ -5503,6 +5927,29 @@ export default {
             article.source && article.source.name.toLowerCase().includes(searchText),
             article.title && article.title.toLowerCase().includes(searchText),
             article.description && article.description.toLowerCase().includes(searchText),
+            article.author && article.author.toLowerCase().includes(searchText),
+          ]
+
+          const filterConditions = []
+
+          return (
+            searchConditions.some((condition) => condition) &&
+            filterConditions.every((condition) => condition)
+          )
+        })
+
+        return articles
+      },
+    },
+    filteredResults: {
+      get() {
+        let articles = this.googleResults.filter((article) => {
+          const searchText = this.searchResultText.toLowerCase()
+
+          const searchConditions = [
+            article.source && article.source.toLowerCase().includes(searchText),
+            article.title && article.title.toLowerCase().includes(searchText),
+            article.snippet && article.snippet.toLowerCase().includes(searchText),
             article.author && article.author.toLowerCase().includes(searchText),
           ]
 
@@ -7004,12 +7451,14 @@ button:disabled {
 }
 
 .small-photo {
-  height: 28px;
-  width: 28px;
+  height: 18px;
+  width: 18px;
   margin-bottom: 8px;
   object-fit: cover;
   cursor: text;
-  border-radius: 100%;
+  border-radius: 4px;
+
+  margin-right: 4px;
 }
 
 .ellipsis-text-s {
@@ -7671,6 +8120,9 @@ p {
 }
 .left-margin-m {
   margin-left: 12px;
+}
+.left-margin-l {
+  margin-left: 16px;
 }
 
 .right-margin {
@@ -8773,8 +9225,11 @@ textarea::placeholder {
     small {
       font-size: 13px;
       margin-bottom: 8px;
-
       color: $light-gray-blue;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 

@@ -200,12 +200,14 @@ OPEN_AI_EMPTY_SEARCH_SUGGESTIONS = (
 )
 
 OPEN_AI_QUERY_STRING = (
-    lambda search: f"""From the search query '{search}', extract only the main subject or specific topic, ignoring any contextual details about professions, actions, or additional requests. The output must be a concise key subject that can be used for a boolean query in NewsAPI. Avoid including terms that describe professions (like 'journalists') or actions (like 'providing pitching tips'), focusing only on the core subject matter (like 'CPR'). The output must be a valid boolean query that can be used by NewsAPI following the steps below:
-    1. If quotes are being used around the query then always search the exact phrase. Example: "optimized supply chain management" should return as "optimized supply chain management".
-    2. Do not include AND or OR within quotes, unless it's part of an entity name. Example: 'AI and farming' should return as 'AI' AND 'farming'.
-    3. If the query includes negative qualifiers like 'not', transform them into appropriate boolean operators like 'NOT'. Replace general concepts with specific key terms relevant for NewsAPI boolean queries. For instance, 'not stock related' should be translated into 'NOT stocks', 'NOT shares', 'NOT Nasdaq'
-    4. When asked to write content on behalf of an organization or entity, omit the organization or entity name. Example: "Write a media pitch for Mayo Clinic about AI and Cancer" should return "AI and Cancer"
-    5. Disregard any reference to a date, like 'last night', 'yesterday', etc.
+    lambda search: f"""Extract the main topic, company, organization or entity from '{search}' for a NewsAPI boolean query. Follow these steps:
+    1. When quotes are present, use the exact phrase
+    2. Do not include AND or OR within quotes unless part of an entity name.
+    3. Convert negative qualifiers to boolean operators, e.g., 'not stock related' becomes 'NOT stocks', 'NOT shares', 'NOT Nasdaq'.
+    4. Ignore date references like 'last night', 'yesterday', 'latest', etc.
+    5. Omit words like 'News', 'Coverage', 'Journalists', 'Sentiment', 'Newsjacking' or anything similar. Focus only on the entity or topic.
+    6. Never use more than one AND in the boolean search
+    7. Output must only be the boolean search
     """
 )
 
@@ -284,13 +286,13 @@ DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS = (
 )
 
 
-def OPEN_AI_WEB_SUMMARY(
-    date,
-    article,
-    instructions,
-):
-    body = f"Today's date is {date}. Summarize this news article:\n {article}. \nOutput format must be:\n {instructions}. It cannot be longer than 1500 characters."
-    return body
+# def OPEN_AI_WEB_SUMMARY(
+#     date,
+#     article,
+#     instructions,
+# ):
+#     body = f"Today's date is {date}. Summarize this news article:\n {article}. \nOutput format must be:\n {instructions}. It cannot be longer than 1500 characters."
+#     return body
 
 
 def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, for_client=False):
@@ -352,9 +354,19 @@ OPEN_AI_REWRITE_PTICH = (
 )
 
 
-def OPEN_AI_WEB_SUMMARY(results, text):
-    prompt = f"Create one summary based on the information from all the search results below. Ensure the summary encompasses a variety of topics mentioned in the results. You must include the source name and date to cite where you got the information from.\nHere are the top 5 search results:{results}\nAnd here is the top article: {text}"
+def OPEN_AI_WEB_SUMMARY(query, results, text):
+    prompt = f"""Answer this question based on all the information below: {query} 
+    You must cite your sources (outlet name and date), if the result includes a source_img, you must use that as a icon (very small, and aligns nicely in the text) that opens up to the cited work in a new tab , otherwise use an html citation tag that opens in a new tab. Your response must be concise and cannot exceed 1500 characters. Please ensure brevity by focusing only on the key points and relevant information.
+    Here are the top 6 search results:{results}
+    And Here is the top article: {text}"""
     return prompt
+
+# def OPEN_AI_WEB_SUMMARY(query, results):
+#     prompt = f"""Answer this question based on all the information below: {query} 
+#     You must cite your sources (outlet name and date) using a valid html citation tag that opens in a new tab. Your response must be concise and cannot exceed 1500 characters. Please ensure brevity by focusing only on the key points and relevant information.
+#     Here are the top 6 search results:{results}
+#     """
+#     return prompt    
 
 
 OPEN_AI_LEARN_WRITING_STYLE_PROMPT = (
@@ -496,7 +508,7 @@ OPEN_AI_TOP_INFLUENCERS = (
 
 OPEN_AI_RELATED_TOPICS = (
     lambda clips : f"""
-    Generate up to 5 related, interesting, diverse questions or topics for further exploration based on the news clips below. Focus on most interesting, impactful and engaging stories. Output must be capped at 2 words per suggestion, no numbering, and no punctuation. Format the output must be as follows:
+    Generate up to 5 related, interesting, diverse questions or topics for further exploration based on the news clips below. Focus on most interesting, impactful and engaging stories. Output must be capped at 4 words per suggestion, no numbering, and no punctuation. Format the output must be as follows:
     Search1:
     Search2:
     Search3:
@@ -505,6 +517,14 @@ OPEN_AI_RELATED_TOPICS = (
      
     Here are the news clips / tweets: \n {clips}:
      """
+)
+
+OPEN_AI_GOOGLE_SEARCH = (
+    lambda search, results, text : f"""
+    Answer this question based on all the information below: {search}. You must site your sources (outlet name and date).
+    Here are the top 5 search results:{results}
+    And here is the top article: {text}  
+    """
 )
 
 DO_NOT_TRACK_LIST = [
