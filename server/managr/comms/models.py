@@ -733,11 +733,11 @@ class TwitterAccount(TimeStampModel):
             return self._handle_response(response)
 
     def get_summary(
-        self, user, tokens, timeout, tweets, input_text, instructions=False, for_client=False
+        self, user, tokens, timeout, tweets, input_text, company, instructions=False, for_client=False
     ):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
         if "from:" in input_text:
-            instructions = comms_consts.TWITTER_USERNAME_INSTRUCTIONS(user.organization.name)
+            instructions = comms_consts.TWITTER_USERNAME_INSTRUCTIONS(company)
         prompt = comms_consts.OPEN_AI_TWITTER_SUMMARY(
             datetime.now().date(), tweets, input_text, instructions, for_client
         )

@@ -1,5 +1,5 @@
 <template>
-  <div ref="pitchTop" class="pitch-view" :class="{ 'reverse-column': pitch && isMobile }">
+  <div ref="pitchTop" class="pitch-view fadein" :class="{ 'reverse-column': pitch && isMobile }">
     <!-- paidModal -->
     <Modal v-if="paidModal" class="paid-modal">
       <div class="regen-container">
@@ -3767,5 +3767,17 @@ textarea::placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.fadein {
+  transition: opacity 1s ease-out;
+  opacity: 0;
+  animation: fadeIn 0.5s forwards;
 }
 </style>

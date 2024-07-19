@@ -1,6 +1,6 @@
 
 <template>
-  <div class="container" ref="container" :class="{ dimmed: dimmed }" @click="emitCloseModal">
+  <div class="container fadein" ref="container" :class="{ dimmed: dimmed }" @click="emitCloseModal">
     <div class="modal" :class="{ 'box-shadow white': !dimmed }">
       <div :class="{ content: includeMargin }">
         <slot />
@@ -118,6 +118,18 @@ export default {
   @media only screen and (max-width: 600px) {
     width: 94vw;
   }
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.fadein {
+  transition: opacity 1s ease-out;
+  opacity: 0;
+  animation: fadeIn 0.25s forwards;
 }
 
 .white {

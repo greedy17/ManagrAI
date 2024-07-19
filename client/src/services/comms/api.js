@@ -467,6 +467,30 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    async getRelevantArticles(data) {
+        try {
+            const res = await this.client.post(CommsApi.ENDPOINT + 'relevant-clips/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async listTopJournalists(data) {
+        try {
+            const res = await this.client.post(CommsApi.ENDPOINT + 'top-journalists/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async getRelatedTopics(data) {
+        try {
+            const res = await this.client.post(CommsApi.ENDPOINT + 'related-topics/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
     async getTrackedEmails() {
         try {
             const res = await this.client.get('email-tracking/')
@@ -519,9 +543,25 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    async updateContact(data) {
+        try {
+            const res = await this.client.patch(`jcontact/${data.id}/`, data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
     async modifyTags(data) {
         try {
             const res = await this.client.post('jcontact/modify_tags/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async googleSearch(data) {
+        try {
+            const res = await this.client.post('google-search/', data)
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
