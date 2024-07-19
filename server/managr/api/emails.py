@@ -1,12 +1,25 @@
 import os
+import uuid
 from io import StringIO
-import smtplib
 from django.conf import settings
 from django.core.mail.message import EmailMultiAlternatives
 from django.core.mail import get_connection
 from django.template.loader import render_to_string
 from django.core.mail import get_connection
 from email.mime.application import MIMEApplication
+import base64
+from email.mime.text import MIMEText
+
+
+def create_message(sender, sent_to, subject, template, context={}):
+    html_body = render_to_string(template, context)
+    message = MIMEText(html_body, "html")
+    message["to"] = sent_to
+    message["from"] = sender
+    message["subject"] = subject
+    raw = base64.urlsafe_b64encode(message.as_bytes())
+    raw = raw.decode()
+    return {"raw": raw}
 
 
 def send_html_email(
@@ -112,3 +125,45 @@ def send_test_email(email_from, email_to):
         email_from,
         [email_to],
     )
+
+
+def send_mailgun_email(user, name, subject, recipient, body, bcc=[]):
+    from managr.comms.serializers import EmailTrackerSerializer
+
+    context = {"body": body}
+    message_id = f"{uuid.uuid4()}-{user.email}"
+    res = {"sent": False}
+    try:
+        send_html_email(
+            subject,
+            "core/email-templates/user-email.html",
+            f"{user.full_name} <{user.email}>",
+            [recipient],
+            context=context,
+            bcc_emails=bcc,
+            headers={
+                "Reply-To": f"{user.full_name} <{user.first_name}.{user.last_name}@mg.managr.ai>",
+                "X-Managr-Id": message_id,
+                "Message-ID": message_id,
+            },
+            user=user,
+        )
+        user.add_meta_data("emailSent")
+        serializer = EmailTrackerSerializer(
+            data={
+                "user": user.id,
+                "recipient": recipient,
+                "body": body,
+                "subject": subject,
+                "message_id": message_id,
+                "name": name,
+            }
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        serializer.instance.add_activity("sent")
+        res["sent"] = True
+        return res
+    except Exception as e:
+        res["error"] = str(e)
+        return res

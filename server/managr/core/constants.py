@@ -438,3 +438,46 @@ def REMINDERS():
         REMINDER_MESSAGE_REP: True,
         REMINDER_MESSAGE_MANAGER: True,
     }
+
+
+GOOGLE_AUTHORIZATION_URI = "https://accounts.google.com/o/oauth2/v2/auth"
+GOOGLE_AUTHENTICATION_URI = "https://oauth2.googleapis.com/token"
+GOOGLE_SEND_EMAIL_URI = (
+    lambda user_id: f"https://gmail.googleapis.com/gmail/v1/users/{user_id}/messages/send"
+)
+
+GOOGLE_CLIENT_ID = settings.GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET = settings.GOOGLE_CLIENT_SECRET
+GOOGLE_REDIRECT_URI = settings.GOOGLE_REDIRECT_URI
+GOOGLE_SCOPES = [
+    "openid",
+    "https://www.googleapis.com/auth/userinfo.profile",
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/gmail.send",
+]
+
+
+def GOOGLE_PARAMS():
+    return {
+        "response_type": "code",
+        "state": "GOOGLE",
+        "redirect_uri": GOOGLE_REDIRECT_URI,
+        "client_id": GOOGLE_CLIENT_ID,
+        "access_type": "offline",
+        "prompt": "consent",
+    }
+
+
+if settings.IN_DEV:
+    GOOGLE_FRONTEND_REDIRECT = "http://localhost:8080/pr-integrations"
+    TRACKING_PIXEL_LINK = "https://managr-zach.ngrok.io/api/users/google/email-tracking"
+elif settings.IN_STAGING:
+    GOOGLE_FRONTEND_REDIRECT = "https://staging.managr.ai/pr-integrations"
+    TRACKING_PIXEL_LINK = "https://staging.managr.ai/api/users/google/email-tracking"
+else:
+    GOOGLE_FRONTEND_REDIRECT = "https://app.managr.ai/pr-integrations"
+    TRACKING_PIXEL_LINK = "https://app.managr.ai/api/users/google/email-tracking"
+
+
+def GOOGLE_HEADERS(access_token):
+    return {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}

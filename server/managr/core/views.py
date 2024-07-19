@@ -55,6 +55,7 @@ from .models import (
     Conversation,
     Report,
     StripeAdapter,
+    GoogleAccount,
 )
 from .serializers import (
     UserSerializer,
@@ -67,6 +68,7 @@ from .serializers import (
     ConversationSerializer,
     ReportSerializer,
     UserAdminRegistrationSerializer,
+    GoogleAccountSerializer,
 )
 from managr.organization.models import Team
 from .permissions import IsStaff
@@ -1670,7 +1672,7 @@ class UserInvitationView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             stripe_account = StripeAdapter(**{"user": u})
             sub_id = stripe_account.get_sub_id()
             res = stripe_account.update_subscription(sub_id, quantity)
-            print('response is here', res)
+            print("response is here", res)
             return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         slack_id = request.data.get("slack_id", False)
         make_team_lead = request.data.pop("team_lead")
@@ -2183,3 +2185,55 @@ def session_complete_webhook(request):
             else:
                 time.sleep(30)
     return Response()
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def get_google_auth_link(request):
+    link = GoogleAccount.get_authorization()
+    return Response({"link": link})
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def get_google_authentication(request):
+    user = request.user
+    data = request.data
+    res = GoogleAccount.authenticate(data.get("code"))
+    data = {
+        "user": user.id,
+        "access_token": res.get("access_token"),
+        "refresh_token": res.get("refresh_token"),
+    }
+    existing = GoogleAccount.objects.filter(user=request.user).first()
+    if existing:
+        serializer = GoogleAccountSerializer(data=data, instance=existing)
+    else:
+        serializer = GoogleAccountSerializer(data=data)
+    try:
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+    except Exception as e:
+        logger.exception(str(e))
+        return Response(data={"success": False})
+    return Response(data={"success": True})
+
+
+def redirect_from_google(request):
+    code = request.GET.get("code", False)
+    q = urlencode({"state": "GOOGLE", "code": code})
+    if not code:
+        err = {"error": "there was an error"}
+        err = urlencode(err)
+        return redirect(f"{core_consts.GOOGLE_FRONTEND_REDIRECT}?{err}")
+    return redirect(f"{core_consts.GOOGLE_FRONTEND_REDIRECT}?{q}")
+
+
+@api_view(["DELETE"])
+@permission_classes([permissions.IsAuthenticated])
+def revoke_google_account(request):
+    user = request.user
+    google_account = user.google_account
+    google_account.delete()
+    return Response(data={"success": True})
