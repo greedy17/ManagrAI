@@ -347,6 +347,124 @@
         </main>
       </div>
     </Modal>
+
+    <Modal class="bio-modal med-modal" v-if="contactsModalOpen">
+      <div class="bio-container med-container">
+        <header>
+          <h2 style="margin: 12px 0">Add Contact</h2>
+        </header>
+
+        <div style="margin-top: 16px; margin-bottom: 24px; min-height: 120px; width: 100%">
+          <label for="contact">Contact Name</label>
+          <input
+            :disabled="loadingContacts"
+            class="primary-input"
+            type="text"
+            name="contact"
+            v-model="contactName"
+          />
+          <label for="outlet">Outlet Name</label>
+          <input
+            :disabled="loadingContacts"
+            class="primary-input"
+            type="text"
+            name="outlet"
+            v-model="outletName"
+          />
+          <label for="details">Your company details</label>
+          <div class="input-container-small">
+            <textarea
+              :disabled="loadingContacts"
+              style="
+                border: none;
+                outline: none;
+                padding: 16px 8px;
+                width: 100%;
+                max-height: 100px !important;
+              "
+              class="area-input text-area-input"
+              type="text"
+              v-model="orgInfo"
+              rows="2"
+              v-autoresize
+              placeholder="Provide company name and pitch details..."
+              name="details"
+            />
+          </div>
+          <div style="font-size: 14px; margin: 12px 0 0 4px" class="row">
+            <img src="@/assets/images/profile.svg" height="12px" alt="" />
+            <p style="margin: 0 0 0 4px">
+              Managr will generate pitching tips based on this information
+            </p>
+          </div>
+        </div>
+
+        <footer>
+          <div></div>
+          <div class="row">
+            <button
+              class="secondary-button"
+              :disabled="loadingContacts"
+              @click="toggleContactsModal"
+            >
+              Cancel
+            </button>
+            <button
+              @click="getJournalistBio"
+              :disabled="loadingContacts || !orgInfo || !outletName || !contactName"
+              class="primary-button"
+            >
+              Continue
+              <div v-if="loadingContacts" style="margin-left: 12px" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
+            </button>
+          </div>
+        </footer>
+      </div>
+    </Modal>
+
+    <Modal v-if="bioModalOpen" class="bio-modal">
+      <div class="bio-container">
+        <header>
+          <p style="font-size: 20px">New Contact</p>
+        </header>
+
+        <section>
+          <div class="bio-body" v-html="newContactBio"></div>
+
+          <aside>
+            <img
+              v-for="(url, i) in newContactImages"
+              :key="i"
+              :src="`${url}`"
+              height="24px"
+              alt=""
+            />
+          </aside>
+        </section>
+
+        <footer>
+          <div></div>
+          <div class="row">
+            <button class="secondary-button" :disabled="savingContact" @click="toggleBioModal">
+              Cancel
+            </button>
+            <button :disabled="savingContact" class="primary-button" @click="saveContact">
+              Save
+              <div v-if="savingContact" style="margin-left: 12px" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
+            </button>
+          </div>
+        </footer>
+      </div>
+    </Modal>
+
     <header></header>
 
     <div class="space-between">
@@ -472,7 +590,7 @@
       </aside>
 
       <section>
-        <div style="padding-bottom: 8px">
+        <div class="row" style="padding-bottom: 8px">
           <div style="font-size: 16px" v-if="loading" class="loading-small">
             <p style="margin: 0; margin-right: 8px">Gathering your contacts</p>
             <div class="dot"></div>
@@ -480,6 +598,14 @@
             <div class="dot"></div>
           </div>
           <h3 v-else style="font-size: 16px">Showing: {{ filteredContactList.length }} contacts</h3>
+          <button
+            @click="toggleContactsModal"
+            v-if="!loading"
+            class="secondary-button"
+            style="margin-left: 12px"
+          >
+            <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Contact
+          </button>
         </div>
 
         <div class="cards-container">
@@ -675,6 +801,15 @@ export default {
   },
   data() {
     return {
+      newContactImages: [],
+      newContactBio: '',
+      outletName: '',
+      contactName: '',
+      orgInfo: '',
+      savingContact: false,
+      bioModalOpen: false,
+      contactsModalOpen: false,
+      loadingContacts: false,
       newBio: '',
       newImages: '',
       contactOrg: '',
@@ -813,17 +948,106 @@ export default {
     this.getTags()
   },
   methods: {
+    async getJournalistBio() {
+      this.newContactBio = ''
+      this.newContactImages = []
+      this.loadingContacts = true
+      try {
+        const res = await Comms.api.getJournalistBio({
+          journalist: this.contactName,
+          outlet: this.outletName,
+          content: this.orgInfo,
+          search: false,
+          social: false,
+        })
+        const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i
+        const match = res.data.summary.match(emailRegex)
+
+        if (match) {
+          const email = match[1]
+          this.targetEmail = email.trim().replace(/\n/g, '')
+        }
+        this.newContactBio = res.data.summary
+          .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+          .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, '')
+        this.newContactImages = res.data.images
+        this.contactsModalOpen = false
+        setTimeout(() => {
+          this.bioModalOpen = true
+        }, 300)
+      } catch (e) {
+        console.error(e)
+        this.$toast('Error creating bio, please try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.loadingContacts = false
+      }
+    },
+    toggleContactsModal() {
+      this.contactsModalOpen = !this.contactsModalOpen
+    },
+    toggleBioModal() {
+      this.bioModalOpen = !this.bioModalOpen
+    },
     toggleDetailsModal(contact = null) {
       if (contact) {
         this.currentContact = contact
       }
       this.detailsModalOpen = !this.detailsModalOpen
     },
+    async saveContact() {
+      this.savingContact = true
+
+      try {
+        const res = await Comms.api.addContact({
+          user: this.user.id,
+          email: this.targetEmail,
+          journalist: this.contactName,
+          bio: this.newContactBio,
+          images: this.newContactImages,
+          outlet: this.outletName,
+        })
+        this.$toast('Contact saved!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch (e) {
+        console.log('RESPOSNE', e.data.error)
+        if (e.data.error.includes('journalist must make a unique set')) {
+          this.$toast('Contact is already saved!', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } else {
+          this.$toast("Can't verify Journalist", {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }
+      } finally {
+        this.savingContact = false
+        this.getContacts()
+        this.bioModalOpen = false
+      }
+    },
     async updateContact() {
       this.detailsModalOpen = false
       this.googleModalOpen = true
       this.bioLoading = true
-      console.log(this.currentContact)
       try {
         const res = await Comms.api.getJournalistBio({
           journalist:
@@ -2301,7 +2525,7 @@ h2 {
   border: 1px solid rgba(0, 0, 0, 0.185);
   transition: box-shadow 0.3s ease;
   padding: 2px 0;
-  border-radius: 16px;
+  border-radius: 9px;
   width: 100%;
   color: $base-gray;
   position: relative;
@@ -2494,6 +2718,17 @@ textarea::placeholder {
   background-color: white;
   font-size: 13px;
   padding: 8px 20px 16px 18px;
+  outline: none;
+}
+.primary-input {
+  width: 100%;
+  margin: 1rem 0;
+  border: 1px solid rgba(0, 0, 0, 0.135);
+  border-radius: 9px;
+  font-family: $thin-font-family !important;
+  background-color: white;
+  font-size: 13px;
+  padding: 12px 20px 12px 18px;
   outline: none;
 }
 .loading-small-absolute {
