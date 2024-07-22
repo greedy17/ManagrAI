@@ -1,6 +1,9 @@
+import os
 import uuid
 import json
 import logging
+import base64
+import hashlib
 from managr.utils.sites import get_site_url
 from urllib.parse import urlencode
 from datetime import datetime
@@ -28,7 +31,7 @@ from managr.slack.helpers import block_builders
 from managr.core.nylas.auth import convert_local_time_to_unix
 from .nylas.exceptions import NylasAPIError
 from managr.core.nylas.auth import gen_auth_url, revoke_access_token
-from .exceptions import StripeException, GoogleException, GoogleAuthExpired
+from .exceptions import StripeException, GoogleException, GoogleAuthExpired, MicrosoftException
 
 client = HttpClient().client
 logger = logging.getLogger("managr")
@@ -1041,7 +1044,7 @@ class GoogleAccount(TimeStampModel):
                 "error_message": error_message,
                 "error_status": error_status,
             }
-            return GoogleException(kwargs)
+            return MicrosoftException(kwargs)
         return data
 
     @classmethod
@@ -1130,3 +1133,93 @@ class GoogleAccount(TimeStampModel):
                 email_res["error"] = str(e)
                 break
         return email_res
+
+
+class MicrosoftAccount(TimeStampModel):
+    user = models.OneToOneField(
+        "core.User", on_delete=models.CASCADE, related_name="microsoft_account"
+    )
+    access_token = models.CharField(max_length=255, null=True)
+    refresh_token = models.CharField(max_length=255, null=True)
+    account_id = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user}"
+
+    @staticmethod
+    def _handle_response(response, fn_name=None):
+        if not hasattr(response, "status_code"):
+            raise ValueError
+
+        elif response.status_code == 200 or response.status_code == 201:
+            try:
+                data = response.json()
+            except Exception as e:
+                NylasAPIError(e)
+            except json.decoder.JSONDecodeError as e:
+                return logger.error(f"An error occured with a nylas integration, {e}")
+
+        else:
+            status_code = response.status_code
+            error_data = response.json()
+            error_param = error_data.get("error", None)
+            error_message = error_param.get("message", None)
+            error_code = error_param.get("code", None)
+            error_status = error_param.get("status", None)
+            kwargs = {
+                "status_code": status_code,
+                "error_code": error_code,
+                "error_param": error_param,
+                "error_message": error_message,
+                "error_status": error_status,
+            }
+            return MicrosoftException(kwargs)
+        return data
+
+    @classmethod
+    def get_authorization(cls):
+        CODE_VERIFIER = os.urandom(32)
+        CODE_CHALLENGE = (
+            base64.urlsafe_b64encode(hashlib.sha256(CODE_VERIFIER).digest())
+            .rstrip(b"=")
+            .decode("utf-8")
+        )
+        params = core_consts.MICROSOFT_AUTH_PARAMS()
+        scopes = " ".join(core_consts.MICROSOFT_SCOPES)
+        params["scope"] = scopes
+        params["code_challenge_method"] = "S256"
+        params["code_challenge"] = CODE_CHALLENGE
+        query = urlencode(params)
+        return f"{core_consts.MICROSOFT_AUTHORIZATION_URI}?{query}", str(CODE_VERIFIER)
+
+    @classmethod
+    def authenticate(cls, code):
+        params = {
+            "client_id": core_consts.GOOGLE_CLIENT_ID,
+            "client_secret": core_consts.GOOGLE_CLIENT_SECRET,
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": core_consts.GOOGLE_REDIRECT_URI,
+        }
+        url = core_consts.GOOGLE_AUTHENTICATION_URI
+        with Variable_Client() as client:
+            res = client.post(url, params=params)
+            res = res.json()
+        return res
+
+    def refresh_access_token(self):
+        url = core_consts.GOOGLE_AUTHENTICATION_URI
+        params = {
+            "client_id": core_consts.GOOGLE_CLIENT_ID,
+            "client_secret": core_consts.GOOGLE_CLIENT_SECRET,
+            "grant_type": "refresh_token",
+            "refresh_token": self.refresh_token,
+        }
+        with Variable_Client() as client:
+            res = client.post(
+                url, params=params, headers={"Content-Type": "application/x-www-form-urlencoded"}
+            )
+            res = res.json()
+            access_token = res["access_token"]
+            self.access_token = access_token
+            self.save()

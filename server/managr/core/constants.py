@@ -471,13 +471,39 @@ def GOOGLE_PARAMS():
 if settings.IN_DEV:
     GOOGLE_FRONTEND_REDIRECT = "http://localhost:8080/pr-integrations"
     TRACKING_PIXEL_LINK = "https://managr-zach.ngrok.io/api/users/google/email-tracking"
+    MICROSOFT_FRONTEND_REDIRECT = "http://localhost:8080/pr-integrations"
 elif settings.IN_STAGING:
     GOOGLE_FRONTEND_REDIRECT = "https://staging.managr.ai/pr-integrations"
     TRACKING_PIXEL_LINK = "https://staging.managr.ai/api/users/google/email-tracking"
+    MICROSOFT_FRONTEND_REDIRECT = "https://staging.managr.ai/pr-integrations"
 else:
     GOOGLE_FRONTEND_REDIRECT = "https://app.managr.ai/pr-integrations"
     TRACKING_PIXEL_LINK = "https://app.managr.ai/api/users/google/email-tracking"
+    MICROSOFT_FRONTEND_REDIRECT = "https://app.managr.ai/pr-integrations"
 
 
 def GOOGLE_HEADERS(access_token):
     return {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+
+
+MICROSOFT_CLIENT_ID = settings.MICROSOFT_CLIENT_ID
+MICROSOFT_CLIENT_SECRET = settings.MICROSOFT_CLIENT_SECRET
+MICROSOFT_REDIRECT_URI = settings.MICROSOFT_REDIRECT_URI
+MICROSOFT_AUTHORIZATION_URI = "https://login.microsoftonline.com/common/v2.0/oauth2/token"
+MICROSOFT_SCOPES = [
+    "Mail.Send",
+    "offline_access",
+    "openid",
+    "profile",
+    "User.Read",
+]
+
+
+def MICROSOFT_AUTH_PARAMS():
+    return {
+        "response_type": "code",
+        "redirect_uri": MICROSOFT_REDIRECT_URI,
+        "response_mode": "query",
+        "prompt": "none",
+        "state": "MICROSOFT",
+    }

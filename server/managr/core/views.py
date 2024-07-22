@@ -56,6 +56,7 @@ from .models import (
     Report,
     StripeAdapter,
     GoogleAccount,
+    MicrosoftAccount,
 )
 from .serializers import (
     UserSerializer,
@@ -2237,3 +2238,20 @@ def revoke_google_account(request):
     google_account = user.google_account
     google_account.delete()
     return Response(data={"success": True})
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def get_microsoft_auth_link(request):
+    link, verifier = MicrosoftAccount.get_authorization()
+    return Response({"link": link, "verifier": verifier})
+
+
+def redirect_from_microsoft(request):
+    code = request.GET.get("code", False)
+    q = urlencode({"state": "MICROSOFT", "code": code})
+    if not code:
+        err = {"error": "there was an error"}
+        err = urlencode(err)
+        return redirect(f"{core_consts.MICROSOFT_FRONTEND_REDIRECT}?{err}")
+    return redirect(f"{core_consts.MICROSOFT_FRONTEND_REDIRECT}?{q}")
