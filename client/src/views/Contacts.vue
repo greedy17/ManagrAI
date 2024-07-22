@@ -83,24 +83,35 @@
         </footer>
       </div>
     </Modal>
-    <Modal class="bio-modal med-modal" v-if="detailsModalOpen">
+    <Modal v-if="detailsModalOpen" class="delete-modal">
+      <div style="height: 200px" class="delete-container">
+        <header style="font-size: 20px"></header>
+        <main style="height: 100px">
+          <h2 style="margin-bottom: 16px">Updating Contact</h2>
+          <div class="row">
+            This will only take a moment
+            <div style="margin-left: 12px" class="loading-small">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+          </div>
+
+          <!-- <div style="margin-top: 20px" class="row">
+            <button @click="closeDeleteModal" class="secondary-button">Cancel</button>
+            <button @click="deleteContact(contactId)" class="red-button">Delete</button>
+          </div> -->
+        </main>
+      </div>
+    </Modal>
+
+    <!-- <Modal class="bio-modal med-modal" >
       <div class="bio-container med-container">
         <header>
-          <p>Update Journalist bio</p>
-          <button @click="toggleDetailsModal" class="no-borders">
-            <img src="@/assets/images/close.svg" height="14px" alt="" />
-          </button>
-        </header>
+          <p>Updating Journalist bio</p>
+        
 
-        <div
-          style="
-            margin-top: 40px;
-            margin-bottom: 48px;
-            min-height: 120px;
-            width: 100%;
-            height: fit-content;
-          "
-        >
+        <div style="margin-top: 40px; margin-bottom: 48px; height: 100px; width: 100%">
           <div class="input-container-small">
             <textarea
               :disabled="loadingPitch"
@@ -123,25 +134,10 @@
 
         <footer>
           <div></div>
-          <div class="row">
-            <button
-              class="secondary-button"
-              :disabled="bioLoading || loadingTags"
-              @click="toggleDetailsModal"
-            >
-              Cancel
-            </button>
-            <button
-              @click="updateContact()"
-              :disabled="bioLoading || loadingTags"
-              class="primary-button"
-            >
-              Continue
-            </button>
-          </div>
+       
         </footer>
       </div>
-    </Modal>
+    </Modal> -->
     <Modal v-if="pitchModalOpen" class="bio-modal med-modal">
       <div class="bio-container med-container">
         <header>
@@ -644,7 +640,7 @@
             <div style="padding: 0 4px" class="body">
               <div class="bio-text" v-html="contact.bio"></div>
               <!-- <div class="blur"></div> -->
-              <div @click="toggleDetailsModal(contact)" class="more-left">
+              <div @click="updateContact(contact)" class="more-left">
                 Update
                 <!-- <img src="@/assets/images/refresh-pr.svg" height="14px" alt="" /> -->
               </div>
@@ -997,6 +993,7 @@ export default {
     toggleDetailsModal(contact = null) {
       if (contact) {
         this.currentContact = contact
+        this.updateContact()
       }
       this.detailsModalOpen = !this.detailsModalOpen
     },
@@ -1044,8 +1041,8 @@ export default {
         this.bioModalOpen = false
       }
     },
-    async updateContact() {
-      this.detailsModalOpen = false
+    async updateContact(contact) {
+      this.currentContact = contact
       this.googleModalOpen = true
       this.bioLoading = true
       try {
@@ -1055,7 +1052,7 @@ export default {
             ' ' +
             this.currentContact.journalist_ref.last_name,
           outlet: this.currentContact.journalist_ref.outlet,
-          company: this.contactOrg,
+          company: 'me',
           search: true,
           social: false,
         })
