@@ -124,26 +124,26 @@ def getclips(request):
         internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
         articles = normalize_article_data(articles, internal_articles)
 
-        if len(articles) < 1:
-            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_EMPTY_SEARCH_SUGGESTIONS(query_input)
-            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                user.email,
-                prompt,
-                token_amount=500,
-                top_p=0.1,
-            )
-            with Variable_Client() as client:
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=core_consts.OPEN_AI_HEADERS,
-                )
-            r = open_ai_exceptions._handle_response(r)
+        # if len(articles) < 1:
+        #     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+        #     prompt = comms_consts.OPEN_AI_EMPTY_SEARCH_SUGGESTIONS(query_input)
+        #     body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+        #         user.email,
+        #         prompt,
+        #         token_amount=500,
+        #         top_p=0.1,
+        #     )
+        #     with Variable_Client() as client:
+        #         r = client.post(
+        #             url,
+        #             data=json.dumps(body),
+        #             headers=core_consts.OPEN_AI_HEADERS,
+        #         )
+        #     r = open_ai_exceptions._handle_response(r)
 
-            suggestions = r.get("choices")[0].get("message").get("content")
+        #     suggestions = r.get("choices")[0].get("message").get("content")
 
-        return {"articles": articles, "string": query_input, "suggestions": suggestions}
+        return {"articles": articles, "string": query_input}
 
     except Exception as e:
         has_error = True
@@ -668,32 +668,32 @@ class PRSearchViewSet(
                                     tweet_list.append(tweet)
                                 break
 
-                else:
-                    if len(tweet_list):
-                        break
+                # else:
+                #     if len(tweet_list):
+                #         break
 
-                    url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                    prompt = comms_consts.OPEN_AI_EMPTY_SEARCH_SUGGESTIONS(
-                        query_input.replace("-is:retweet", "").replace("is:verified", "")
-                    )
-                    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                        user.email,
-                        prompt,
-                        token_amount=500,
-                        top_p=0.1,
-                    )
-                    with Variable_Client() as client:
-                        r = client.post(
-                            url,
-                            data=json.dumps(body),
-                            headers=core_consts.OPEN_AI_HEADERS,
-                        )
-                    r = open_ai_exceptions._handle_response(r)
+                #     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                #     prompt = comms_consts.OPEN_AI_EMPTY_SEARCH_SUGGESTIONS(
+                #         query_input.replace("-is:retweet", "").replace("is:verified", "")
+                #     )
+                #     body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                #         user.email,
+                #         prompt,
+                #         token_amount=500,
+                #         top_p=0.1,
+                #     )
+                #     with Variable_Client() as client:
+                #         r = client.post(
+                #             url,
+                #             data=json.dumps(body),
+                #             headers=core_consts.OPEN_AI_HEADERS,
+                #         )
+                #     r = open_ai_exceptions._handle_response(r)
 
-                    suggestions = r.get("choices")[0].get("message").get("content")
-                    return Response(
-                        data={"suggestions": suggestions, "string": query_input},
-                    )
+                #     suggestions = r.get("choices")[0].get("message").get("content")
+                #     return Response(
+                #         data={"suggestions": suggestions, "string": query_input},
+                #     )
                 if len(tweet_list) < 40 and tweets:
                     continue
                 break

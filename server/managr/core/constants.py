@@ -446,7 +446,7 @@ GOOGLE_SEND_EMAIL_URI = (
     lambda user_id: f"https://gmail.googleapis.com/gmail/v1/users/{user_id}/messages/send"
 )
 
-GOOGLE_CLIENT_ID = settings.GOOGLE_CLIENT_ID
+# GOOGLE_CLIENT_ID = settings.GOOGLE_CLIENT_ID
 GOOGLE_CLIENT_SECRET = settings.GOOGLE_CLIENT_SECRET
 GOOGLE_REDIRECT_URI = settings.GOOGLE_REDIRECT_URI
 GOOGLE_SCOPES = [

@@ -900,7 +900,7 @@
                 "
                 class="sub-text ellipsis-text"
               >
-                No results found. Try one of these suggestions:
+                No results found. Try a web or social search…
               </p>
 
               <p
@@ -1043,8 +1043,61 @@
                 (!(filteredTweets && filteredTweets.length) && !summary)
               "
             >
-              <div style="width: 100%" class="letter-spacing">
-                <div class="text-width">
+              <div style="width: 100%">
+                <div
+                  style="width: 40vw; margin-top: 12px"
+                  v-if="mainView !== 'website'"
+                  class="section-small"
+                >
+                  <div @click="toggleType('website')" class="example-title">
+                    <div class="example-row">
+                      <img
+                        style="filter: invert(10%); margin-right: 6px"
+                        src="@/assets/images/google.svg"
+                        height="14px"
+                        alt=""
+                      />
+
+                      <p>Web Search</p>
+                    </div>
+                    <img
+                      style="filter: invert(30%)"
+                      src="@/assets/images/arrow-circle-right.svg"
+                      height="14px"
+                      alt=""
+                    />
+                  </div>
+                </div>
+                <div
+                  style="width: 40vw; margin-top: 12px"
+                  v-if="mainView !== 'social'"
+                  class="section-small"
+                >
+                  <div @click="toggleType('social')" class="example-title">
+                    <div class="example-row">
+                      <img
+                        style="filter: invert(10%); margin-left: -4px"
+                        src="@/assets/images/twitter-x.svg"
+                        height="18px"
+                        alt=""
+                      />
+
+                      <p v-if="hasTwitterIntegration">Social Search</p>
+                      <p v-else>
+                        Social Search
+                        <span>(Connect X/Twitter)</span>
+                      </p>
+                    </div>
+                    <img
+                      style="filter: invert(30%)"
+                      src="@/assets/images/arrow-circle-right.svg"
+                      height="14px"
+                      alt=""
+                    />
+                  </div>
+                </div>
+
+                <!-- <div class="text-width">
                   <div style="margin: 0 0 16px 0; width: 100%" class="col-start">
                     <p
                       v-for="(suggestion, i) in suggestions"
@@ -1056,7 +1109,7 @@
                       <img src="@/assets/images/search.svg" height="14px" alt="" />{{ suggestion }}
                     </p>
                   </div>
-                </div>
+                </div> -->
               </div>
             </div>
 
@@ -5364,19 +5417,19 @@ export default {
             this.searchArticleText = ' '
             this.searchArticleText = ''
             this.booleanString = response.string
-            if (!this.filteredArticles.length) {
-              const str = response.suggestions
-              const searches = str.match(/Search\d+: "([^"]+)"|Search\d+: ([^"\n]+)/g)
+            // if (!this.filteredArticles.length) {
+            //   const str = response.suggestions
+            //   const searches = str.match(/Search\d+: "([^"]+)"|Search\d+: ([^"\n]+)/g)
 
-              const formattedSearches = searches.map((match) => {
-                const matchResult = match.match(/Search\d+: "([^"]+)"|Search\d+: ([^"\n]+)/)
-                return matchResult[1] || matchResult[2]
-              })
+            //   const formattedSearches = searches.map((match) => {
+            //     const matchResult = match.match(/Search\d+: "([^"]+)"|Search\d+: ([^"\n]+)/)
+            //     return matchResult[1] || matchResult[2]
+            //   })
 
-              const [search1, search2, search3] = formattedSearches
+            //   const [search1, search2, search3] = formattedSearches
 
-              this.suggestions = [search1, search2, search3]
-            }
+            //   this.suggestions = [search1, search2, search3]
+            // }
             if (!saved) {
               this.clearNewSearch()
             }
@@ -5416,19 +5469,20 @@ export default {
               this.tweetMedia = response.includes.media
               this.booleanString = response.string
               this.getTweetSummary()
-            } else {
-              const str = response.suggestions
-              const searches = str.match(/Search\d+: "([^"]+)"|Search\d+: ([^"\n]+)/g)
-
-              const formattedSearches = searches.map((match) => {
-                const matchResult = match.match(/Search\d+: "([^"]+)"|Search\d+: ([^"\n]+)/)
-                return matchResult[1] || matchResult[2]
-              })
-
-              const [search1, search2, search3] = formattedSearches
-
-              this.suggestions = [search1, search2, search3]
             }
+            // else {
+            //   const str = response.suggestions
+            //   const searches = str.match(/Search\d+: "([^"]+)"|Search\d+: ([^"\n]+)/g)
+
+            //   const formattedSearches = searches.map((match) => {
+            //     const matchResult = match.match(/Search\d+: "([^"]+)"|Search\d+: ([^"\n]+)/)
+            //     return matchResult[1] || matchResult[2]
+            //   })
+
+            //   const [search1, search2, search3] = formattedSearches
+
+            //   this.suggestions = [search1, search2, search3]
+            // }
 
             this.showingDropdown = false
           })
