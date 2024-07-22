@@ -70,6 +70,7 @@ from .serializers import (
     ReportSerializer,
     UserAdminRegistrationSerializer,
     GoogleAccountSerializer,
+    MicrosoftAccountSerializer,
 )
 from managr.organization.models import Team
 from .permissions import IsStaff
@@ -2262,22 +2263,21 @@ def redirect_from_microsoft(request):
 def get_microsoft_authentication(request):
     user = request.user
     data = request.data
-    res = MicrosoftAccount.authenticate(data.get("code"))
+    res = MicrosoftAccount.authenticate(data.get("code"), data.get("verifier"))
     data = {
         "user": user.id,
         "access_token": res.get("access_token"),
         "refresh_token": res.get("refresh_token"),
+        "account_id": res.get("id_token"),
     }
     existing = MicrosoftAccount.objects.filter(user=request.user).first()
-    # if existing:
-    #     serializer = GoogleAccountSerializer(data=data, instance=existing)
-    # else:
-    #     serializer = GoogleAccountSerializer(data=data)
+    if existing:
+        serializer = MicrosoftAccountSerializer(data=data, instance=existing)
+    else:
+        serializer = MicrosoftAccountSerializer(data=data)
     try:
-        print(1)
-    #     serializer.is_valid(raise_exception=True)
-    #     serializer.save()
-
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
     except Exception as e:
         logger.exception(str(e))
         return Response(data={"success": False})

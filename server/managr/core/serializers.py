@@ -24,6 +24,7 @@ from .models import (
     Conversation,
     Report,
     GoogleAccount,
+    MicrosoftAccount,
 )
 from managr.comms.serializers import WritingStyleSerializer
 
@@ -459,3 +460,9 @@ class GoogleAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = GoogleAccount
         fields = ("user", "access_token", "refresh_token")
+
+
+class MicrosoftAccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MicrosoftAccount
+        fields = ("user", "access_token", "refresh_token", "account_id")

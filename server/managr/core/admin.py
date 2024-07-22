@@ -14,6 +14,7 @@ from .models import (
     Report,
     CrawlerReport,
     GoogleAccount,
+    MicrosoftAccount,
 )
 
 TRUE_FALSE_CHOICES = (
@@ -237,4 +238,5 @@ admin.site.register(User, CustomUserAdmin)
 admin.site.register(NoteTemplate, CustomNoteTemplate)
 admin.site.register(Report, CustomReportAdmin)
 admin.site.register(GoogleAccount)
+admin.site.register(MicrosoftAccount)
 admin.site.register(CrawlerReport, CustomCrawlerReportAdmin)

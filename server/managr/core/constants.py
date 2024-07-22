@@ -489,7 +489,8 @@ def GOOGLE_HEADERS(access_token):
 MICROSOFT_CLIENT_ID = settings.MICROSOFT_CLIENT_ID
 MICROSOFT_CLIENT_SECRET = settings.MICROSOFT_CLIENT_SECRET
 MICROSOFT_REDIRECT_URI = settings.MICROSOFT_REDIRECT_URI
-MICROSOFT_AUTHORIZATION_URI = "https://login.microsoftonline.com/common/v2.0/oauth2/token"
+MICROSOFT_AUTHORIZATION_URI = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
+MICROSOFT_AUTHENTICATION_URI = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
 MICROSOFT_SCOPES = [
     "Mail.Send",
     "offline_access",
@@ -499,11 +500,21 @@ MICROSOFT_SCOPES = [
 ]
 
 
-def MICROSOFT_AUTH_PARAMS():
+def MICROSOFT_AUTHORIZATION_PARAMS():
     return {
         "response_type": "code",
         "redirect_uri": MICROSOFT_REDIRECT_URI,
         "response_mode": "query",
         "prompt": "none",
         "state": "MICROSOFT",
+    }
+
+
+def MICROSOFT_AUTHENTICATE_PARAMS(code, verifier):
+    return {
+        "grant_type": "authorization_code",
+        "redirect_uri": MICROSOFT_REDIRECT_URI,
+        "client_secret": MICROSOFT_CLIENT_SECRET,
+        "code": code,
+        "code_verifier": verifier,
     }

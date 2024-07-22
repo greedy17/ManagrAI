@@ -1184,7 +1184,7 @@ class MicrosoftAccount(TimeStampModel):
             .rstrip(b"=")
             .decode("utf-8")
         )
-        params = core_consts.MICROSOFT_AUTH_PARAMS()
+        params = core_consts.MICROSOFT_AUTHORIZATION_PARAMS()
         scopes = " ".join(core_consts.MICROSOFT_SCOPES)
         params["scope"] = scopes
         params["code_challenge_method"] = "S256"
@@ -1193,15 +1193,11 @@ class MicrosoftAccount(TimeStampModel):
         return f"{core_consts.MICROSOFT_AUTHORIZATION_URI}?{query}", str(CODE_VERIFIER)
 
     @classmethod
-    def authenticate(cls, code):
-        params = {
-            "client_id": core_consts.GOOGLE_CLIENT_ID,
-            "client_secret": core_consts.GOOGLE_CLIENT_SECRET,
-            "grant_type": "authorization_code",
-            "code": code,
-            "redirect_uri": core_consts.GOOGLE_REDIRECT_URI,
-        }
-        url = core_consts.GOOGLE_AUTHENTICATION_URI
+    def authenticate(cls, code, verifier):
+        params = core_consts.MICROSOFT_AUTHENTICATE_PARAMS(code, verifier)
+        scopes = " ".join(core_consts.MICROSOFT_SCOPES)
+        params["scope"] = scopes
+        url = core_consts.MICROSOFT_AUTHENTICATION_URI
         with Variable_Client() as client:
             res = client.post(url, params=params)
             res = res.json()
