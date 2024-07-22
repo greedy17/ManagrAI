@@ -2282,3 +2282,12 @@ def get_microsoft_authentication(request):
         logger.exception(str(e))
         return Response(data={"success": False})
     return Response(data={"success": True})
+
+
+@api_view(["DELETE"])
+@permission_classes([permissions.IsAuthenticated])
+def revoke_microsoft_account(request):
+    user = request.user
+    microsoft_account = user.microsoft_account
+    microsoft_account.delete()
+    return Response(data={"success": True})

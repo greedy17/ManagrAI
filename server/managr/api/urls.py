@@ -423,6 +423,11 @@ urlpatterns = [
         name="microsoft-authentication",
     ),
     path(
+        "users/microsoft/revoke-token/",
+        core_views.revoke_microsoft_account,
+        name="microsoft-revoke",
+    ),
+    path(
         "users/instagram/re-direct/",
         comms_views.redirect_from_instagram,
         name="redirect-instagram",
