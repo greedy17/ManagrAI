@@ -2255,3 +2255,30 @@ def redirect_from_microsoft(request):
         err = urlencode(err)
         return redirect(f"{core_consts.MICROSOFT_FRONTEND_REDIRECT}?{err}")
     return redirect(f"{core_consts.MICROSOFT_FRONTEND_REDIRECT}?{q}")
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def get_microsoft_authentication(request):
+    user = request.user
+    data = request.data
+    res = MicrosoftAccount.authenticate(data.get("code"))
+    data = {
+        "user": user.id,
+        "access_token": res.get("access_token"),
+        "refresh_token": res.get("refresh_token"),
+    }
+    existing = MicrosoftAccount.objects.filter(user=request.user).first()
+    # if existing:
+    #     serializer = GoogleAccountSerializer(data=data, instance=existing)
+    # else:
+    #     serializer = GoogleAccountSerializer(data=data)
+    try:
+        print(1)
+    #     serializer.is_valid(raise_exception=True)
+    #     serializer.save()
+
+    except Exception as e:
+        logger.exception(str(e))
+        return Response(data={"success": False})
+    return Response(data={"success": True})

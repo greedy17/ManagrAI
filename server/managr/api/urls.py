@@ -408,6 +408,21 @@ urlpatterns = [
         name="google-revoke",
     ),
     path(
+        "users/microsoft/authorization",
+        core_views.get_microsoft_auth_link,
+        name="microsoft-authorization",
+    ),
+    path(
+        "users/microsoft/re-direct",
+        core_views.redirect_from_microsoft,
+        name="redirect-microsoft",
+    ),
+    path(
+        "users/microsoft/authenticate",
+        core_views.get_microsoft_authentication,
+        name="microsoft-authentication",
+    ),
+    path(
         "users/instagram/re-direct/",
         comms_views.redirect_from_instagram,
         name="redirect-instagram",
