@@ -304,6 +304,7 @@ class NewsSpider(scrapy.Spider):
                         serializer = ArticleSerializer(data=cleaned_data)
                     serializer.is_valid(raise_exception=True)
                     serializer.save()
+                    serializer.instance.update_search_vector()
                 else:
                     raise Exception(cleaned_data)
             else:
