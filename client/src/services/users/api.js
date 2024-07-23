@@ -70,6 +70,9 @@ const SHARED_REPORT = '/shared/'
 const GOOGLE_AUTH_TOKEN = 'users/google/authorization'
 const GOOGLE_AUTHENTICATION = 'users/google/authenticate'
 const GOOGLE_REVOKE = '/users/google/revoke-token/'
+const MICROSOFT_AUTH_TOKEN = 'users/microsoft/authorization'
+const MICROSOFT_AUTHENTICATION = 'users/microsoft/authenticate'
+const MICROSOFT_REVOKE = "users/microsoft/revoke-token"
 
 export default class UserAPI {
   get client() {
@@ -840,6 +843,31 @@ export default class UserAPI {
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'User.getTwiiterAuthentication' })
+    }
+  }
+
+  async getMicrosoftToken() {
+    try {
+      const res = await this.client.get(MICROSOFT_AUTH_TOKEN)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'User.getMicrosoftToken' })
+    }
+  }
+  async getMicrosoftAuthentication(data) {
+    try {
+      const res = await this.client.post(MICROSOFT_AUTHENTICATION, data)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'User.getMicrosoftAuthentication' })
+    }
+  }
+  async revokeMicrosoft() {
+    try {
+      const res = await this.client.delete(MICROSOFT_REVOKE)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'User.revokeMicrosoft' })
     }
   }
   // async getEmailAuthorization(data) {

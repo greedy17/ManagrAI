@@ -502,19 +502,19 @@ MICROSOFT_SCOPES = [
 
 def MICROSOFT_AUTHORIZATION_PARAMS():
     return {
+        "client_id": MICROSOFT_CLIENT_ID,
         "response_type": "code",
         "redirect_uri": MICROSOFT_REDIRECT_URI,
         "response_mode": "query",
-        "prompt": "none",
-        "state": "MICROSOFT",
+        "prompt": "login",
     }
 
 
-def MICROSOFT_AUTHENTICATE_PARAMS(code, verifier):
+def MICROSOFT_AUTHENTICATE_PARAMS(code):
     return {
         "grant_type": "authorization_code",
         "redirect_uri": MICROSOFT_REDIRECT_URI,
         "client_secret": MICROSOFT_CLIENT_SECRET,
         "code": code,
-        "code_verifier": verifier,
+        "client_id": MICROSOFT_CLIENT_ID,
     }

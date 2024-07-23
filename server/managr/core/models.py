@@ -492,6 +492,10 @@ class User(AbstractUser, TimeStampModel):
         return hasattr(self, "google_account")
 
     @property
+    def has_microsoft_integration(self):
+        return hasattr(self, "microsoft_account")
+
+    @property
     def as_slack_option(self):
         return block_builders.option(self.full_name, str(self.id))
 
@@ -1010,8 +1014,8 @@ class GoogleAccount(TimeStampModel):
     user = models.OneToOneField(
         "core.User", on_delete=models.CASCADE, related_name="google_account"
     )
-    access_token = models.CharField(max_length=255, null=True)
-    refresh_token = models.CharField(max_length=255, null=True)
+    access_token = models.CharField(max_length=255)
+    refresh_token = models.CharField(max_length=255)
     account_id = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
@@ -1139,9 +1143,9 @@ class MicrosoftAccount(TimeStampModel):
     user = models.OneToOneField(
         "core.User", on_delete=models.CASCADE, related_name="microsoft_account"
     )
-    access_token = models.CharField(max_length=255, null=True)
-    refresh_token = models.CharField(max_length=255, null=True)
-    account_id = models.CharField(max_length=255, null=True, blank=True)
+    access_token = models.TextField()
+    refresh_token = models.TextField()
+    account_id = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.user}"
@@ -1178,28 +1182,23 @@ class MicrosoftAccount(TimeStampModel):
 
     @classmethod
     def get_authorization(cls):
-        CODE_VERIFIER = os.urandom(32)
-        CODE_CHALLENGE = (
-            base64.urlsafe_b64encode(hashlib.sha256(CODE_VERIFIER).digest())
-            .rstrip(b"=")
-            .decode("utf-8")
-        )
         params = core_consts.MICROSOFT_AUTHORIZATION_PARAMS()
         scopes = " ".join(core_consts.MICROSOFT_SCOPES)
         params["scope"] = scopes
-        params["code_challenge_method"] = "S256"
-        params["code_challenge"] = CODE_CHALLENGE
+        params["state"] = f"MICROSOFT"
         query = urlencode(params)
-        return f"{core_consts.MICROSOFT_AUTHORIZATION_URI}?{query}", str(CODE_VERIFIER)
+        return f"{core_consts.MICROSOFT_AUTHORIZATION_URI}?{query}"
 
     @classmethod
-    def authenticate(cls, code, verifier):
-        params = core_consts.MICROSOFT_AUTHENTICATE_PARAMS(code, verifier)
+    def authenticate(cls, code):
+        params = core_consts.MICROSOFT_AUTHENTICATE_PARAMS(code)
         scopes = " ".join(core_consts.MICROSOFT_SCOPES)
         params["scope"] = scopes
         url = core_consts.MICROSOFT_AUTHENTICATION_URI
         with Variable_Client() as client:
-            res = client.post(url, params=params)
+            res = client.post(
+                url, data=params, headers={"Content-Type": "application/x-www-form-urlencoded"}
+            )
             res = res.json()
         return res
 

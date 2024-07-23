@@ -2244,8 +2244,8 @@ def revoke_google_account(request):
 @api_view(["GET"])
 @permission_classes([permissions.IsAuthenticated])
 def get_microsoft_auth_link(request):
-    link, verifier = MicrosoftAccount.get_authorization()
-    return Response({"link": link, "verifier": verifier})
+    link = MicrosoftAccount.get_authorization()
+    return Response({"link": link})
 
 
 def redirect_from_microsoft(request):
@@ -2263,7 +2263,7 @@ def redirect_from_microsoft(request):
 def get_microsoft_authentication(request):
     user = request.user
     data = request.data
-    res = MicrosoftAccount.authenticate(data.get("code"), data.get("verifier"))
+    res = MicrosoftAccount.authenticate(data.get("code"))
     data = {
         "user": user.id,
         "access_token": res.get("access_token"),
