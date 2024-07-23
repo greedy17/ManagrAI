@@ -22,6 +22,19 @@ def create_message(sender, sent_to, subject, template, context={}):
     return {"raw": raw}
 
 
+def create_ms_message(sender, sent_to, subject, template, context={}):
+    html_body = render_to_string(template, context)
+    email_message = {
+        "message": {
+            "subject": subject,
+            "body": {"contentType": "HTML", "content": html_body},
+            "from": {"emailAddress": {"address": sender}},
+            "toRecipients": [{"emailAddress": {"address": sent_to}}],
+        }
+    }
+    return email_message
+
+
 def send_html_email(
     subject,
     template,

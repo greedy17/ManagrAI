@@ -491,6 +491,7 @@ MICROSOFT_CLIENT_SECRET = settings.MICROSOFT_CLIENT_SECRET
 MICROSOFT_REDIRECT_URI = settings.MICROSOFT_REDIRECT_URI
 MICROSOFT_AUTHORIZATION_URI = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
 MICROSOFT_AUTHENTICATION_URI = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+MICROSOFT_SEND_MAIL = "https://graph.microsoft.com/v1.0/me/sendMail"
 MICROSOFT_SCOPES = [
     "Mail.Send",
     "offline_access",
@@ -518,3 +519,7 @@ def MICROSOFT_AUTHENTICATE_PARAMS(code):
         "code": code,
         "client_id": MICROSOFT_CLIENT_ID,
     }
+
+
+def MICROSOFT_HEADERS(access_token):
+    return {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}

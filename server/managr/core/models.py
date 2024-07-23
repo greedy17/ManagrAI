@@ -23,7 +23,7 @@ from managr.utils.misc import (
     phrase_to_snake_case,
     bucket_upload_filepath,
 )
-from managr.api.emails import create_message
+from managr.api.emails import create_message, create_ms_message
 from managr.utils.client import HttpClient, Variable_Client
 from managr.core import constants as core_consts
 from managr.organization import constants as org_consts
@@ -437,6 +437,15 @@ class User(AbstractUser, TimeStampModel):
             return self.salesforce_account
         else:
             return self.hubspot_account
+
+    @property
+    def email_account(self):
+        if hasattr(self, "google_account"):
+            return self.google_account
+        elif hasattr(self, "microsoft_account"):
+            return self.microsoft_account
+        else:
+            return None
 
     @property
     def engagement_account(self):
@@ -1218,3 +1227,51 @@ class MicrosoftAccount(TimeStampModel):
             access_token = res["access_token"]
             self.access_token = access_token
             self.save()
+
+    def send_email(self, recipient, subject, body, name):
+        from managr.comms.serializers import EmailTrackerSerializer
+
+        url = core_consts.MICROSOFT_SEND_MAIL
+        tracker_link = core_consts.TRACKING_PIXEL_LINK + "?type=opened"
+        email_res = {"sent": False}
+        instance = False
+        while True:
+            try:
+                if not instance:
+                    serializer = EmailTrackerSerializer(
+                        data={
+                            "user": self.user.id,
+                            "recipient": recipient,
+                            "body": body,
+                            "subject": subject,
+                            "name": name,
+                        }
+                    )
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
+                    instance = serializer.instance
+                tracker_link += f"&id={str(instance.id)}"
+                email = create_ms_message(
+                    self.user.email,
+                    recipient,
+                    subject,
+                    "core/email-templates/user-email.html",
+                    {"body": body, "tracking_pixel_url": tracker_link},
+                )
+                with Variable_Client() as client:
+                    headers = core_consts.MICROSOFT_HEADERS(self.access_token)
+                    res = client.post(url, headers=headers, json=email)
+                    response = self._handle_response(res)
+                    print(response)
+                    instance.message_id = response["id"]
+                    instance.save()
+                    instance.add_activity("sent")
+                    email_res["sent"] = True
+                    break
+            except GoogleAuthExpired:
+                self.refresh_access_token()
+                continue
+            except Exception as e:
+                email_res["error"] = str(e)
+                break
+        return email_res
