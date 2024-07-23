@@ -18,6 +18,7 @@ from collections import OrderedDict
 from .exceptions import _handle_response
 from .models import NewsSource, Journalist
 from botocore.exceptions import ClientError
+from django.contrib.postgres.search import SearchQuery
 
 s3 = boto3.client("s3")
 
@@ -155,8 +156,6 @@ def boolean_search_to_query(search_string):
     current_query = None
     is_negative = False
     for idx, term in enumerate(term_list):
-        # escaped_term = re.escape(term)
-        # print(escaped_term)
         if idx == len(term_list) - 1:
             current_query = Q(content__iregex=r"{}".format(term))
             if len(current_q_objects):
@@ -196,6 +195,57 @@ def boolean_search_to_query(search_string):
             current_query = Q(content__iregex=r"\m{}\M".format(term))
 
     return query
+
+
+def boolean_search_to_searchquery(search_string):
+    term_list = split_and_combine_terms(search_string)
+    search_query = None
+    current_search_queries = []
+    current_query = None
+    is_negative = False
+
+    for idx, term in enumerate(term_list):
+        if idx == len(term_list) - 1:
+            current_query = SearchQuery(term, search_type="plain")
+            if current_search_queries:
+                if current_query is not None:
+                    current_search_queries.append(current_query)
+                current_query = reduce(lambda q1, q2: q1 | q2, current_search_queries)
+                current_search_queries = []
+            if is_negative:
+                search_query &= ~current_query
+            else:
+                search_query &= current_query
+        elif term == "AND":
+            if current_search_queries:
+                current_query = reduce(lambda q1, q2: q1 | q2, current_search_queries)
+                current_search_queries = []
+            search_query &= current_query
+            current_query = None
+            is_negative = False
+        elif term == "OR":
+            if current_query is not None:
+                current_search_queries.append(current_query)
+            current_query = None
+        elif term == "NOT":
+            if current_search_queries:
+                if current_query is not None:
+                    current_search_queries.append(current_query)
+                current_query = reduce(lambda q1, q2: q1 | q2, current_search_queries)
+                current_search_queries = []
+            if current_query:
+                if is_negative:
+                    search_query &= ~current_query
+                else:
+                    search_query &= current_query
+            current_query = None
+            is_negative = True
+        else:
+            current_query = SearchQuery(term, search_type="plain")
+
+    if search_query is None:
+        search_query = current_query
+    return search_query
 
 
 def get_search_boolean(search):
@@ -530,16 +580,20 @@ def alternate_google_search(query):
                 metatags = item["pagemap"]["metatags"][0]
                 metatags_cse = item["pagemap"].get("cse_image", [])
                 cse_img = metatags_cse[0] if metatags_cse else {}
-                author = metatags.get("article:author") if "article:author" in metatags else metatags.get("author", "Unknown")
+                author = (
+                    metatags.get("article:author")
+                    if "article:author" in metatags
+                    else metatags.get("author", "Unknown")
+                )
                 result_data = {
                     "id": index + 1,
                     "title": item["title"],
                     "snippet": item["snippet"],
                     "link": item["link"],
                     "source": metatags.get("og:site_name", "unknown"),
-                    "source_img": metatags.get("og:image", ''),
+                    "source_img": metatags.get("og:image", ""),
                     # "description": metatags.get("og:description", ''),
-                    "image": cse_img.get("src", ''),
+                    "image": cse_img.get("src", ""),
                     "author": author,
                 }
                 results_list.append(result_data)
