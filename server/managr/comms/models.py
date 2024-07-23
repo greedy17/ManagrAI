@@ -607,11 +607,14 @@ class Article(TimeStampModel):
             boolean_string = boolean_string.replace("journalist:", "").strip()
             articles = date_range_articles.filter(author__icontains=boolean_string)
         else:
+            print(datetime.now())
             converted_boolean = boolean_search_to_searchquery(boolean_string)
+            print(datetime.now())
             # articles = date_range_articles.filter(converted_boolean)
             articles = date_range_articles.annotate(search=SearchVector("content")).filter(
                 search=converted_boolean
             )
+            print(datetime.now())
         articles = articles[:20]
         return list(articles)
 

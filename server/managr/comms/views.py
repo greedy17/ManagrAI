@@ -119,8 +119,11 @@ def getclips(request):
             articles = news_res["articles"]
             query_input = boolean
         articles = [article for article in articles if article["title"] != "[Removed]"]
+        print(1)
         internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
+        print(2)
         articles = normalize_article_data(articles, internal_articles)
+        print(3)
         return {"articles": articles, "string": query_input}
 
     except Exception as e:
@@ -224,7 +227,7 @@ class PRSearchViewSet(
                 res = Search.get_summary(
                     request.user, token_amount, timeout, clips, search, instructions, True
                 )
-                print(7)
+                print(2)
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("news_summaries")
                 break
