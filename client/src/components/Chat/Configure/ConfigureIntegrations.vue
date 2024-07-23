@@ -263,51 +263,65 @@
         <!-- Twitter -->
         <div class="card">
           <div class="card__header" style="">
-            <img style="height: 40px; margin-left: -12px" src="@/assets/images/twitter-x.svg" />
+            <img class="cover-photo" src="@/assets/images/twitter-x.svg" />
           </div>
           <div class="card__body">
             <div class="row-center" style="display: flex">
               <h3 class="card__title">X/Twitter</h3>
               <div v-if="hasTwitterIntegration" class="green-dot"></div>
             </div>
-            <p class="card-text">Connect to search Twitter</p>
-            <div></div>
-            <div class="sep-button-container">
-              <div class="separator"></div>
-              <button
-                v-if="hasTwitterIntegration"
-                class="long-button connected"
-                style="margin-top: 1rem; margin-bottom: 0.5rem"
-                @click="revokeTwitter"
-              >
-                <div style="margin-left: 4px" v-if="revoking" class="loading-small">
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                </div>
+            <p>Connect to search Twitter</p>
+          </div>
 
-                <div v-else>Disconnect</div>
-              </button>
-              <button
-                v-else
-                class="long-button"
-                style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem"
-                @click="twitterAuthorization"
-                :disabled="(generatingToken && selectedIntegration == 'TWITTER') || connecting"
-              >
-                <div
-                  style="margin-left: 4px"
-                  v-if="generatingToken && selectedIntegration == 'TWITTER'"
-                  class="loading-small"
-                >
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                </div>
+          <div class="card__footer">
+            <button
+              v-if="hasTwitterIntegration"
+              class="long-button connected"
+              @click="revokeTwitter"
+            >
+              <div style="margin-left: 4px" v-if="revoking" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
 
-                <div v-else>Connect</div>
-              </button>
-            </div>
+              <div v-else>Disconnect</div>
+            </button>
+
+            <button
+              v-else
+              @click="twitterAuthorization"
+              :disabled="(generatingToken && selectedIntegration == 'TWITTER') || connecting"
+              class="gsi-material-button"
+            >
+              <div class="gsi-material-button-state"></div>
+              <div class="gsi-material-button-content-wrapper">
+                <div class="gsi-material-button-icon">
+                  <img height="22px" src="@/assets/images/twitter-x.svg" alt="" />
+                </div>
+                <span class="gsi-material-button-contents">Connect X/Twitter</span>
+                <span style="display: none">Connect X/Twitter</span>
+              </div>
+            </button>
+
+            <!-- <button
+              v-else
+              class="long-button"
+              @click="twitterAuthorization"
+              :disabled="(generatingToken && selectedIntegration == 'TWITTER') || connecting"
+            >
+              <div
+                style="margin-left: 4px"
+                v-if="generatingToken && selectedIntegration == 'TWITTER'"
+                class="loading-small"
+              >
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
+
+              <div v-else>Connect</div>
+            </button> -->
           </div>
         </div>
 
@@ -364,135 +378,139 @@
 
         <div class="card">
           <div class="card__header" style="">
-            <img style="height: 40px; margin-left: -4px" src="@/assets/images/google.svg" />
+            <!-- <img class="cover-photo" height="40px" src="@/assets/images/google.svg" /> -->
+            <div class="cover-photo">
+              <svg
+                version="1.1"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 48 48"
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                style="display: block"
+              >
+                <path
+                  fill="#EA4335"
+                  d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+                ></path>
+                <path
+                  fill="#4285F4"
+                  d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+                ></path>
+                <path
+                  fill="#FBBC05"
+                  d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+                ></path>
+                <path
+                  fill="#34A853"
+                  d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+                ></path>
+                <path fill="none" d="M0 0h48v48H0z"></path>
+              </svg>
+            </div>
           </div>
           <div class="card__body">
             <div class="row-center" style="display: flex">
-              <h3 class="card__title">Gmail</h3>
+              <h3>Gmail</h3>
               <div v-if="hasEmailIntegration" class="green-dot"></div>
             </div>
-            <p class="card-text">Connect to send emails</p>
-            <div></div>
-            <div class="sep-button-container">
-              <div class="separator"></div>
-              <button
-                @click="revokeGoogle"
-                v-if="hasEmailIntegration"
-                class="long-button connected"
-                style="margin-top: 1rem; margin-bottom: 0.5rem"
-              >
-                <div style="margin-left: 4px" v-if="revoking" class="loading-small">
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                  <div class="dot"></div>
+            <p>Connect to send emails</p>
+          </div>
+
+          <div class="card__footer">
+            <button @click="revokeGoogle" v-if="hasEmailIntegration" class="long-button connected">
+              <div style="margin-left: 4px" v-if="revoking" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
+
+              <div v-else>Disconnect</div>
+            </button>
+
+            <button
+              @click="emailAuthorization"
+              :disabled="(generatingToken && selectedIntegration == 'GOOGLE') || connecting"
+              v-else
+              class="gsi-material-button"
+            >
+              <div class="gsi-material-button-state"></div>
+              <div class="gsi-material-button-content-wrapper">
+                <div class="gsi-material-button-icon">
+                  <svg
+                    version="1.1"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 48 48"
+                    xmlns:xlink="http://www.w3.org/1999/xlink"
+                    style="display: block"
+                  >
+                    <path
+                      fill="#EA4335"
+                      d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+                    ></path>
+                    <path
+                      fill="#4285F4"
+                      d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+                    ></path>
+                    <path
+                      fill="#FBBC05"
+                      d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+                    ></path>
+                    <path
+                      fill="#34A853"
+                      d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+                    ></path>
+                    <path fill="none" d="M0 0h48v48H0z"></path>
+                  </svg>
                 </div>
-
-                <div v-else>Disconnect</div>
-              </button>
-
-              <button
-                @click="emailAuthorization"
-                :disabled="(generatingToken && selectedIntegration == 'GOOGLE') || connecting"
-                v-else
-                class="gsi-material-button"
-              >
-                <div class="gsi-material-button-state"></div>
-                <div class="gsi-material-button-content-wrapper">
-                  <div class="gsi-material-button-icon">
-                    <svg
-                      version="1.1"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 48 48"
-                      xmlns:xlink="http://www.w3.org/1999/xlink"
-                      style="display: block"
-                    >
-                      <path
-                        fill="#EA4335"
-                        d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
-                      ></path>
-                      <path
-                        fill="#4285F4"
-                        d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
-                      ></path>
-                      <path
-                        fill="#FBBC05"
-                        d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
-                      ></path>
-                      <path
-                        fill="#34A853"
-                        d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
-                      ></path>
-                      <path fill="none" d="M0 0h48v48H0z"></path>
-                    </svg>
-                  </div>
-                  <span class="gsi-material-button-contents">Continue with Google</span>
-                  <span style="display: none">Continue with Google</span>
-                </div>
-              </button>
-
-              <!-- <button
-               
-                class="long-button"
-                style="margin-right: 0; margin-top: 1rem; margin-bottom: 0.5rem"
-                @click="emailAuthorization"
-                :disabled="(generatingToken && selectedIntegration == 'GOOGLE') || connecting"
-              >
-                <div
-                  style="margin-left: 4px"
-                  v-if="generatingToken && selectedIntegration == 'GOOGLE'"
-                  class="loading-small"
-                >
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                </div>
-
-                <div v-else>Connect</div>
-              </button> -->
-            </div>
+                <span class="gsi-material-button-contents">Continue with Google</span>
+                <span style="display: none">Continue with Google</span>
+              </div>
+            </button>
           </div>
         </div>
+
         <div class="card">
           <div class="card__header" style="">
-            <img style="height: 40px; margin-left: -4px" src="@/assets/images/outlookMail.png" />
+            <img class="cover-photo" src="@/assets/images/outlookMail.png" />
           </div>
           <div class="card__body">
             <div class="row-center" style="display: flex">
-              <h3 class="card__title">Microsoft</h3>
+              <h3 class="card__title">Outlook</h3>
               <div v-if="hasMicrosoftIntegration" class="green-dot"></div>
             </div>
-            <p class="card-text">Connect to send emails</p>
-            <div></div>
-            <div class="sep-button-container">
-              <div class="separator"></div>
-              <button
-                @click="revokeMicrosoft"
-                v-if="hasMicrosoftIntegration"
-                class="long-button connected"
-                style="margin-top: 1rem; margin-bottom: 0.5rem"
-              >
-                <div style="margin-left: 4px" v-if="revoking" class="loading-small">
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                </div>
+            <p>Connect to send emails</p>
+          </div>
 
-                <div v-else>Disconnect</div>
-              </button>
+          <div class="card__footer">
+            <button
+              @click="revokeMicrosoft"
+              v-if="hasMicrosoftIntegration"
+              class="long-button connected"
+              style="margin-top: 1rem; margin-bottom: 0.5rem"
+            >
+              <div style="margin-left: 4px" v-if="revoking" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
 
-              <button
-                @click="microsoftAuthorization"
-                :disabled="(generatingToken && selectedIntegration == 'MICROSOFT') || connecting"
-                v-else
-                class="gsi-material-button"
-              >
-                <div class="gsi-material-button-state"></div>
-                <div class="gsi-material-button-content-wrapper">
-                  <span class="gsi-material-button-contents">Continue with Microsoft</span>
-                  <span style="display: none">Continue with Microsoft</span>
+              <div v-else>Disconnect</div>
+            </button>
+
+            <button
+              @click="microsoftAuthorization"
+              :disabled="(generatingToken && selectedIntegration == 'MICROSOFT') || connecting"
+              v-else
+              class="gsi-material-button"
+            >
+              <div class="gsi-material-button-state"></div>
+              <div class="gsi-material-button-content-wrapper">
+                <div class="gsi-material-button-icon">
+                  <img height="22px" src="@/assets/images/outlookMail.png" alt="" />
                 </div>
-              </button>
-            </div>
+                <span class="gsi-material-button-contents">Continue with Microsoft</span>
+                <span style="display: none">Continue with Microsoft</span>
+              </div>
+            </button>
           </div>
         </div>
       </div>
@@ -1112,18 +1130,17 @@ a {
 
 // }
 .card {
-  background-color: $white;
-  // padding: 16px 24px;
-  padding: 16px;
-  border: 1px solid $soft-gray;
-  border-radius: 8px;
+  background-color: white;
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
   display: flex;
   flex-direction: column;
-  margin-right: 1rem;
+  margin-right: 32px;
   margin-bottom: 1rem;
   // width: 420px;
   // width: 320px;
-  width: 18.5vw;
+  width: 270px;
   min-height: 144px;
   transition: all 0.25s;
   @media only screen and (max-width: 600px) {
@@ -1133,32 +1150,39 @@ a {
   &__header {
     display: flex;
     align-items: center;
-    // justify-content: center;
-    padding: 4px 0px;
-    border-radius: 6px;
-    margin-left: 12px;
-
-    img {
-      margin: 0;
-      height: 25px;
-    }
+    justify-content: center;
+    padding: 24px 0;
+    // background-color: $off-white;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   }
 
   &__body {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    justify-content: center;
-    margin-left: 12px;
+    justify-content: flex-start;
+    padding: 16px 24px 0 26px;
+
     h3 {
-      margin-top: 0.5rem;
-      margin-bottom: 0;
+      margin: 0;
+      margin-bottom: 4px;
       padding: 0;
-      font-size: 18px;
+      font-size: 16px;
+      font-family: $base-font-family;
+      font-weight: 200;
     }
     p {
-      font-size: 12px;
+      font-size: 15px;
+      margin: 0;
+      padding: 0;
     }
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 0 24px 0;
   }
 }
 .card-img-border {
@@ -1542,23 +1566,23 @@ a {
 
 .connected {
   background-color: white !important;
+  border: 1px solid $coral !important;
   color: $coral !important;
+  font-family: $base-font-family !important;
 }
 
 .long-button {
   @include white-button();
   border: 1px solid rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  width: 15vw;
+  width: 80%;
   display: flex;
   align-items: center;
   padding: 10px 8px;
   font-family: $thin-font-family;
+  font-size: 14px;
   color: white;
   background-color: $dark-black-blue;
-  @media only screen and (max-width: 600px) {
-    width: 60vw;
-  }
 }
 
 .long-button:disabled {
@@ -1815,10 +1839,9 @@ a {
   transition: background-color 0.218s, border-color 0.218s, box-shadow 0.218s;
   vertical-align: middle;
   white-space: nowrap;
-  width: auto;
-  max-width: 400px;
+  width: 80%;
+  // max-width: 400px;
   min-width: min-content;
-  margin: 16px 12px 0 0;
 }
 
 .gsi-material-button .gsi-material-button-icon {
@@ -1894,5 +1917,16 @@ a {
 .gsi-material-button:not(:disabled):hover .gsi-material-button-state {
   background-color: #001d35;
   opacity: 8%;
+}
+
+.cover-photo {
+  height: 60px;
+  width: 60px;
+  object-fit: cover;
+  cursor: pointer;
+
+  // &:hover {
+  //   opacity: 0.7;
+  // }
 }
 </style>
