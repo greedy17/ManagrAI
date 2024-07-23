@@ -881,7 +881,7 @@
         </aside>
       </div>
 
-      <section v-else class="main">
+      <section ref="loadedContent" v-else class="main">
         <div style="position: relative" class="body">
           <header class="content-header">
             <div class="row">
@@ -1024,7 +1024,7 @@
             </div>
           </header>
           <section class="content-container">
-            <div ref="loadedContent" class="between">
+            <div class="between">
               <div style="width: 100%" v-if="summary" class="row">
                 <img
                   style="margin-right: 8px"
@@ -1313,8 +1313,7 @@
                       }}</span>
                     </div>
                     <div class="footer-icon-container">
-                      <div v-if="mainView === 'website' && addedArticles.length === 1"></div>
-                      <div class="row" v-else>
+                      <div class="row">
                         <button @click="selectJournalist(article)" class="tertiary-button-small">
                           <img
                             class="invert"
@@ -1355,11 +1354,7 @@
                   </div>
                 </div>
 
-                <div
-                  class="cardwidth"
-                  style="background: #e9f3fa"
-                  v-if="article.summary && mainView !== 'website'"
-                >
+                <div class="cardwidth" style="background: #e9f3fa" v-if="article.summary">
                   <div class="relative">
                     <pre v-html="article.summary" class="pre-text blue-text-bg"></pre>
                     <!-- <div
@@ -5930,13 +5925,13 @@ export default {
         return response.summary
       } catch (e) {
         console.log(e)
-        // this.$toast('Could not access article URL', {
-        //   timeout: 2000,
-        //   position: 'top-left',
-        //   type: 'error',
-        //   toastClassName: 'custom',
-        //   bodyClassName: ['custom'],
-        // })
+        this.$toast('Request blocked by article source', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.showArticleRegenerate = false
         this.articleSummaryLoading = false
@@ -5945,9 +5940,12 @@ export default {
     },
     async generateContent() {
       this.contentLoading = true
-      let selectedClip = this.addedArticles.length
-        ? this.addedArticles.filter((art) => art.link === this.contentUrl)[0]
-        : this.filteredArticles.filter((art) => art.link === this.contentUrl)[0]
+      let selectedClip =
+        this.mainView === 'website'
+          ? this.googleResults.filter((art) => art.link === this.contentUrl)[0]
+          : this.addedArticles.length
+          ? this.addedArticles.filter((art) => art.link === this.contentUrl)[0]
+          : this.filteredArticles.filter((art) => art.link === this.contentUrl)[0]
 
       try {
         await Comms.api
@@ -5957,21 +5955,22 @@ export default {
             style: '',
           })
           .then((response) => {
-            if (this.mainView === 'website' && this.addedArticles.length === 1) {
-              this.summary = response.content
+            selectedClip['summary'] = response.content
+            if (this.mainView === 'website') {
+              this.googleResults = this.googleResults.filter(
+                (clip) => clip.link !== this.contentUrl,
+              )
+              this.googleResults.unshift(selectedClip)
+            } else if (!this.addedArticles.length) {
+              this.filteredArticles = this.filteredArticles.filter(
+                (clip) => clip.title !== selectedClip.title,
+              )
+              this.filteredArticles.unshift(selectedClip)
             } else {
-              selectedClip['summary'] = response.content
-              if (!this.addedArticles.length) {
-                this.filteredArticles = this.filteredArticles.filter(
-                  (clip) => clip.title !== selectedClip.title,
-                )
-                this.filteredArticles.unshift(selectedClip)
-              } else {
-                this.addedArticles = this.addedArticles = this.addedArticles.filter(
-                  (clip) => clip.title !== selectedClip.title,
-                )
-                this.addedArticles.unshift(selectedClip)
-              }
+              this.addedArticles = this.addedArticles = this.addedArticles.filter(
+                (clip) => clip.title !== selectedClip.title,
+              )
+              this.addedArticles.unshift(selectedClip)
             }
 
             this.refreshUser()
@@ -9277,13 +9276,14 @@ textarea::placeholder {
 }
 
 .green-bg {
-  background-color: $dark-green;
-  img {
-    filter: invert(100%);
-  }
-  img:hover {
-    filter: invert(100%);
-  }
+  background-color: white;
+  border: 1px solid $dark-black-blue;
+  // img {
+  //   filter: invert(100%);
+  // }
+  //   img:hover {
+  //     filter: invert(100%);
+  //   }
 }
 
 .clicked {

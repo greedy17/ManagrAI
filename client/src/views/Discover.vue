@@ -4091,13 +4091,18 @@ button:disabled {
   background: white;
 }
 .green-bg {
-  background-color: $dark-green;
-  img {
-    filter: invert(100%);
-  }
-  img:hover {
-    filter: invert(100%);
-  }
+  background-color: white;
+  border: 1px solid $dark-black-blue;
+  background-color: white;
+  border: 1px solid $dark-black-blue;
+
+  // background-color: $dark-green;
+  // img {
+  //   filter: invert(100%);
+  // }
+  // img:hover {
+  //   filter: invert(100%);
+  // }
 }
 .bluee-bg {
   background: $white-blue !important;
