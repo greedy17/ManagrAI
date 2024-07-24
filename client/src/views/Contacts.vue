@@ -377,6 +377,7 @@
                 padding: 16px 8px;
                 width: 100%;
                 max-height: 100px !important;
+                background: transparent;
               "
               class="area-input text-area-input"
               type="text"
@@ -2530,7 +2531,7 @@ h2 {
   align-items: center;
   justify-content: flex-start;
   flex-direction: row;
-  background-color: $off-white;
+  background-color: white;
   margin-top: 16px;
 
   img {

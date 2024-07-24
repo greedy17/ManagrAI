@@ -553,7 +553,7 @@
                         :disabled="loading"
                         maxlength="300"
                         style="padding-top: 8px; padding-bottom: 8px"
-                        placeholder="(e.g. Journalists, Influencer)"
+                        placeholder="(e.g. Journalist, CMO, CTO)"
                         autocomplete="off"
                       />
 
@@ -580,14 +580,14 @@
 
                 <div style="padding-top: 16px" class="expanded-item">
                   <div class="row horizontal-padding-s img-text">
-                    <img src="@/assets/images/comment.svg" height="18px" alt="" />
+                    <img src="@/assets/images/building.svg" height="18px" alt="" />
                     <p style="margin-left: 6px">Industry</p>
                   </div>
 
                   <div class="display-end">
                     <input
                       class="area-input-end"
-                      placeholder="(e.g. Health, Travel, Local)"
+                      placeholder="(e.g. Health, Travel, Tech)"
                       v-model="beat"
                       :disabled="loading"
                       style="padding-top: 12px; padding-bottom: 8px"
