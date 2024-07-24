@@ -7690,6 +7690,48 @@ button:disabled {
       opacity: 0.7;
     }
   }
+
+  h2 {
+    padding: 0;
+    margin-bottom: 0 !important;
+    margin-block-start: 0 !important;
+    margin-block-end: 0 !important;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    line-height: 1;
+  }
+
+  h3 {
+    padding: 0;
+    margin: 0;
+    margin-bottom: 0 !important;
+    margin-block-start: 0 !important;
+    margin-block-end: 0 !important;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    line-height: 1;
+    font-size: 18px;
+  }
+
+  strong {
+    font-family: $base-font-family;
+  }
+
+  ul {
+    display: block;
+    list-style-type: disc;
+    margin-block-start: 0;
+    margin-block-end: 0;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding-inline-start: 16px;
+    unicode-bidi: isolate;
+  }
+
+  li {
+    margin-top: -32px;
+    padding: 0;
+  }
 }
 
 .pre-text {

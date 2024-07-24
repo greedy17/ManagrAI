@@ -65,7 +65,7 @@ def GOOGLE_SEARCH_PARAMS(query):
 
 
 def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
-    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the person from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips for {company} based on what you know about the person. Lastly, list out all available contact details for the person based on the provided data, including social handles and email address. If email not available, exclude email details from the output. Output must me:
+    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the person from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips for {company} based on what you know about the person. Lastly, list out all available contact details for the person based on the provided data, including social handles and email address. If email not available, exclude email details from the output. Output must be:
     Bio:
     3 Pitching Tips:
     Contact Details:
@@ -262,6 +262,11 @@ def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, instructions, for_client=False
         instructions = DEFAULT_TWITTER_CLIENT_INSTRUCTIONS
     body = f"""Today's date is {date}.Summarize the twitter coverage based on these tweets.\n Tweets: {tweets}\n
     You must follow these instructions: {instructions}. Summary cannot be longer than 1,000 characters.
+    
+    important output instructions:
+
+    1.If there are any lists in your response it must be returned in proper html ul tags!
+
     """
     return body
 
