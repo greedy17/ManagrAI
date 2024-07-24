@@ -65,7 +65,7 @@ def GOOGLE_SEARCH_PARAMS(query):
 
 
 def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
-    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the person from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips for {company} based on what you know about the person. Lastly, list out all available contact details for the person based on the provided data, including social handles and email address. If email not available, exclude email details from the output. Output must me:
+    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the person from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips for {company} based on what you know about the person. Lastly, list out all available contact details for the person based on the provided data, including social handles and email address. If email not available, exclude email details from the output. Output must be:
     Bio:
     3 Pitching Tips:
     Contact Details:
@@ -243,7 +243,16 @@ def TWITTER_USERNAME_INSTRUCTIONS(company):
 def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_client=False):
     if not instructions:
         instructions = DEFAULT_CLIENT_INSTRUCTIONS
-    body = f"""Today's date is {date}. Read the news coverage below and carefully follow the instructions. Output has to be less than 1000 characters. Do not return links or urls in any other format besides proper html "a" tags with target="_blank" so that it opens in a new window! \n Here are the instructions:{instructions}. \n Here is the news coverage: {clips}.
+    body = f"""Today's date is {date}. Read the news coverage below and carefully follow the instructions. Keep the output under 1000 characters. All URLs must be formatted as HTML hyperlinks. Only use the following exact format for URLs:
+
+    Example format:
+    <a href="URL" target="_blank">Link Text</a>
+
+    Ensure every URL in your response strictly follows this format. Do not provide plain text URLs or markdown links.
+
+    Here is the news coverage: {clips}.
+
+    Here are the instructions: {instructions}.
     """
     return body
 
@@ -253,6 +262,11 @@ def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, instructions, for_client=False
         instructions = DEFAULT_TWITTER_CLIENT_INSTRUCTIONS
     body = f"""Today's date is {date}.Summarize the twitter coverage based on these tweets.\n Tweets: {tweets}\n
     You must follow these instructions: {instructions}. Summary cannot be longer than 1,000 characters.
+    
+    important output instructions:
+
+    1.If there are any lists in your response it must be returned in proper html ul tags!
+
     """
     return body
 
