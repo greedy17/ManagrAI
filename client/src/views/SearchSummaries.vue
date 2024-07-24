@@ -498,7 +498,7 @@
     <Modal v-if="googleModalOpen" class="bio-modal">
       <div class="bio-container">
         <header>
-          <p style="font-size: 17px">Journalist Bio</p>
+          <p style="font-size: 17px">Bio</p>
 
           <div class="row">
             <div v-if="savingContact" style="margin: 0" class="loading-small">
@@ -3368,14 +3368,12 @@ import User from '@/services/users'
 import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
-import ScrollArrow from '../components/ScrollArrow.vue'
 
 export default {
   name: 'SearchSummaries',
   components: {
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     quillEditor,
-    ScrollArrow,
   },
   data() {
     return {

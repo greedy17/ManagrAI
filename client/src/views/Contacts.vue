@@ -359,7 +359,7 @@
             name="contact"
             v-model="contactName"
           />
-          <label for="outlet">Outlet Name</label>
+          <label for="outlet">Company Name</label>
           <input
             :disabled="loadingContacts"
             class="primary-input"
