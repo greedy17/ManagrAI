@@ -65,8 +65,8 @@ def GOOGLE_SEARCH_PARAMS(query):
 
 
 def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
-    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the journalist from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips for {company} based on what you know about the journalist. Lastly, list out all available contact details for the journalist based on the provided data, including social handles and email address. If email not available, exclude email details from the output. Output must me:
-    Journalist Bio:
+    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the person from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips for {company} based on what you know about the person. Lastly, list out all available contact details for the person based on the provided data, including social handles and email address. If email not available, exclude email details from the output. Output must me:
+    Bio:
     3 Pitching Tips:
     Contact Details:
 
@@ -81,9 +81,9 @@ def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
 
 
 def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
-    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the journalist from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips based on what you know of the journalist, tailored to the user's pitch: {content}. Lastly, list out all available contact details for the journalist based on the provided data, including social handles and email address.  If the email is mentioned in any of the provided information, you must use that email. If no email can be found, then you must guess their work email. When guessing, you must base it on verified email patterns associated with their respective publication. Always return the email like this - email: guessed email
+    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the person from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips based on what you know of the person, tailored to the user's pitch: {content}. Lastly, list out all available contact details for the person based on the provided data, including social handles and email address.  If the email is mentioned in any of the provided information, you must use that email. If no email can be found, then you must guess their work email. When guessing, you must base it on verified email patterns associated with their respective publication. Always return the email like this - email: guessed email
     Output must be:
-    Journalist Bio:
+    Bio:
     3 Pitching Tips:
     Contact Details:
     
@@ -444,27 +444,22 @@ OPEN_AI_CONTENT_ASSIST = (
 
 DISCOVER_JOURNALIST = (
     lambda type, beat, location, content: f"""
-    List 10 real, active journalists (or social media influencers) and their respective publications that would be interested in writing about the content provided below. Sort by order of relevance, most relevant at the top. Follow these instructions very carefully:
-
-    * Rule #1: Ensure that all journalists or influencers listed are real, currently active professionals. Do not include fake names such as Jane Doe or John Smith.
-
-    * Rule #2: Prioritize journalists that you have the highest confidence in that they still work there and are still active journalists.
-
-    Additional journalist criteria:
-
-    * Journalist Type: The journalists or influencers must be: {type}.
-    * Journalistic Beat: The journalists or influencers must cover this specific beat or topic: {beat}.
-    * Location: journalists or influencers must be based in or primarily cover {location} stories.
-    * User's Content: {content}.
+    List up to 10 real, active people would be interested in this pitch: {content}. Follow these instructions very carefully:
+    * Rule #1: Ensure that all people are real, currently active professionals. Do not include fake names such as Jane Doe or John Smith.
+    * Rule #2: Only list people that you have the highest confidence (90% or above) in that they still work there and you can correctly guess their email address. If you lack confidence do not list all 10, just the ones you're most confident in
+    * Person Type: The person must be: {type}.
+    * Industry: The person (if a journalist) must cover this specific beat, or be working in this industry: {beat}.
+    * Location: The person must be based in or primarily cover (if a journalist) {location}.
+    * Guess their email: Do your best to guess their email address. Make sure to base it on verified email patterns associated with their respective publication (if a journalist) or company. Guessing the correct email is incredibly important.
 
     Content output, 3 rows:
     Name:
-    Outlet:
+    Company:
     Reason for Selection:
     View Updated Bio
 
     "View Updated Bio" MUST be returned in a button tag!
-    "Name", "Outlet", and "Reason for Selection" MUST be returned in a strong tag!
+    "Name", "Company", and "Reason for Selection" MUST be returned in a strong tag!
     You MUST wrap each individual journalists/influencer selection in a span tag!
     Do not add any additional text to the response. ONLY return with what I asked for.
 """
