@@ -243,7 +243,16 @@ def TWITTER_USERNAME_INSTRUCTIONS(company):
 def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_client=False):
     if not instructions:
         instructions = DEFAULT_CLIENT_INSTRUCTIONS
-    body = f"""Today's date is {date}. Read the news coverage below and carefully follow the instructions. Output has to be less than 1000 characters. Do not return links or urls in any other format besides proper html "a" tags with target="_blank" so that it opens in a new window! \n Here are the instructions:{instructions}. \n Here is the news coverage: {clips}.
+    body = f"""Today's date is {date}. Read the news coverage below and carefully follow the instructions. Keep the output under 1000 characters. All URLs must be formatted as HTML hyperlinks. Only use the following exact format for URLs:
+
+    Example format:
+    <a href="URL" target="_blank">Link Text</a>
+
+    Ensure every URL in your response strictly follows this format. Do not provide plain text URLs or markdown links.
+
+    Here is the news coverage: {clips}.
+
+    Here are the instructions: {instructions}.
     """
     return body
 

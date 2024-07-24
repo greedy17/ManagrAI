@@ -1123,7 +1123,7 @@
               <div
                 style="padding-top: 32px"
                 v-else
-                class="pre-text bio-body"
+                class="citation-text bio-body"
                 v-html="insertCitations(summary)"
               ></div>
               <div
@@ -3788,13 +3788,36 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    // insertCitations(text) {
+    //   return text.replace(/\[(\d+)\]/g, (match, p1) => {
+    //     const citationId = parseInt(p1)
+    //     const citation = this.googleResults.find((c) => c.id === citationId)
+    //     return citation
+    //       ? `<sup><a href="${citation.link}" target="_blank" class="citation-link">${citationId}</a></sup>`
+    //       : match
+    //   })
+    // },
     insertCitations(text) {
       return text.replace(/\[(\d+)\]/g, (match, p1) => {
         const citationId = parseInt(p1)
         const citation = this.googleResults.find((c) => c.id === citationId)
-        return citation
-          ? `<sup><a href="${citation.link}" target="_blank" class="citation-link">${citationId}</a></sup>`
-          : match
+        if (citation) {
+          return `
+        <sup>
+          <span class="citation-wrapper" >
+            <a href="${citation.link}" target="_blank" class="citation-link" ">${citationId}</a>
+            <span class="citation-tooltip">
+              <img src="${citation.image}" alt="">
+              <strong> ${citation.source}</strong>
+              <br>
+              <br>
+              ${citation.title}
+            </span>
+          </span>
+        </sup>
+      `
+        }
+        return match
       })
     },
     validateDate(event) {
@@ -5599,7 +5622,9 @@ export default {
             if (this.shouldCancel) {
               return this.stopLoading()
             }
-            this.summary = response.summary.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+            this.summary = response.summary
+              .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+              .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
             if (this.searchSaved) {
               this.updateSearch()
             }
@@ -5788,7 +5813,9 @@ export default {
             if (this.searchSaved) {
               this.updateSearch()
             }
-            this.summary = response.summary.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+            this.summary = response.summary
+              .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+              .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
           })
       } catch (e) {
         console.log('Error in getSummary', e)
@@ -6262,9 +6289,13 @@ export default {
   cursor: pointer;
 }
 
-::v-deep .pre-text {
+::v-deep .citation-text {
+  sup {
+    line-height: 1;
+    display: inline;
+    vertical-align: super;
+  }
   .citation-link {
-    color: $dark-black-blue;
     padding: 1.5px 5px 2px 4.5px;
     margin: 0 2px;
     font-size: 9.5px;
@@ -6275,12 +6306,54 @@ export default {
     cursor: pointer;
     font-family: $base-font-family;
     font-weight: 100;
+    color: #5383ec;
   }
 
   .citation-link:hover {
     text-decoration: underline;
-    background-color: $dark-black-blue;
+    background-color: #5383ec;
     color: white;
+    opacity: 1;
+  }
+
+  .citation-tooltip {
+    visibility: hidden;
+    width: 200px;
+    background-color: #fff;
+    color: #333;
+    text-align: left;
+    border-radius: 4px;
+    padding: 10px;
+    position: absolute;
+    z-index: 100;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.128);
+    font-size: 13px;
+    line-height: 1.4;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+
+    strong {
+      font-size: 14px;
+    }
+    img {
+      width: 16px;
+      height: 16px;
+      vertical-align: middle;
+    }
+  }
+
+  .citation-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+
+  .citation-wrapper:hover .citation-tooltip {
+    visibility: visible;
     opacity: 1;
   }
 }
@@ -7604,7 +7677,8 @@ button:disabled {
   }
 }
 
-::v-deep .pre-text {
+::v-deep .pre-text,
+.citation-text {
   a {
     color: $grape;
     border-bottom: 1px solid $grape;
@@ -7625,6 +7699,21 @@ button:disabled {
   line-height: 32px;
   word-wrap: break-word;
   white-space: pre-wrap;
+
+  @media only screen and (max-width: 600px) {
+    padding-bottom: 16px;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
+}
+
+.citation-text {
+  color: $base-gray;
+  font-family: $thin-font-family;
+  font-size: 16px;
+  line-height: 32px;
+  word-wrap: break-word;
 
   @media only screen and (max-width: 600px) {
     padding-bottom: 16px;
