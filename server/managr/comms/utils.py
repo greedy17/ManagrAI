@@ -641,7 +641,6 @@ def test_open(user, journalist, results, text):
             res = open_ai_exceptions._handle_response(r)
 
             message = res.get("choices")[0].get("message").get("content").replace("**", "*")
-            print(message)
             break
         except open_ai_exceptions.StopReasonLength:
             if token_amount <= 2000:
