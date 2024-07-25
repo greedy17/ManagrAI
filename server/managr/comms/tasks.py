@@ -252,14 +252,21 @@ def _process_news_summary(payload, context):
             break
     try:
         blocks = [
-            block_builders.simple_section(
-                f"*Summary for {search}*", "mrkdwn", block_id="NEWS_SUMMARY"
+            block_builders.context_block(f"{search}", "mrkdwn"),
+            block_builders.header_block(
+                "Answer:",
             ),
-            block_builders.context_block(f"AI-generated search: {input_text}", "mrkdwn"),
-            block_builders.divider_block(),
             block_builders.simple_section(message, "mrkdwn"),
+            block_builders.section_with_button_block(
+                "Ask Follow-Up",
+                "FOLLOWUP",
+                "*Ask a follow up question...*",
+                action_id=action_with_params(
+                    slack_const.PROCESS_SHOW_REGENERATE_NEWS_SUMMARY_FORM,
+                ),
+            ),
             block_builders.divider_block(),
-            block_builders.simple_section("*Clips:*", "mrkdwn"),
+            block_builders.header_block("Clips:"),
             # block_builders.actions_block(
             #     [
             #         block_builders.simple_button_block(
@@ -282,9 +289,12 @@ def _process_news_summary(payload, context):
         ]
         for i in range(0, 5):
             article = articles[i]
-            article_text = f"*{article['title']}*\n{article['description']}\n_{article['author']} - {article['publish_date'][:9]}_"
+            date = article["publish_date"][:9]
+            fixed_date = f"{date[5:7]}/{date[8:]}/{date[0:4]}"
+            article_text = f"{article['source']['name']}\n*{article['title']}*\n<{article['link']}|Read More>\n_{article['author'].replace('_','')}_ - {fixed_date}"
             blocks.append(block_builders.simple_section(article_text, "mrkdwn"))
-        print(blocks)
+            blocks.append(block_builders.divider_block())
+        blocks.append(block_builders.context_block(f"{search}", "mrkdwn"))
         slack_res = slack_requests.update_channel_message(
             user.slack_integration.channel,
             context.get("ts"),
