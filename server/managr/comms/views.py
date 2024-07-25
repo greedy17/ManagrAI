@@ -2246,12 +2246,11 @@ class DiscoveryViewSet(
         name = request.data.get("name")
         bcc = request.data.get("bcc", [])
 
-        if user.has_google_integration:
-            res = user.google_account.send_email(recipient, subject, body, name)
+        if user.has_google_integration or user.has_microsoft_integration:
+            res = user.email_account.send_email(recipient, subject, body, name)
         else:
             res = send_mailgun_email(user, name, subject, recipient, body, bcc)
         sent = res["sent"]
-        print(res)
         if sent:
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:

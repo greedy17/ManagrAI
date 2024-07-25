@@ -1,6 +1,9 @@
+import os
 import uuid
 import json
 import logging
+import base64
+import hashlib
 from managr.utils.sites import get_site_url
 from urllib.parse import urlencode
 from datetime import datetime
@@ -20,7 +23,7 @@ from managr.utils.misc import (
     phrase_to_snake_case,
     bucket_upload_filepath,
 )
-from managr.api.emails import create_message
+from managr.api.emails import create_message, create_ms_message
 from managr.utils.client import HttpClient, Variable_Client
 from managr.core import constants as core_consts
 from managr.organization import constants as org_consts
@@ -28,7 +31,13 @@ from managr.slack.helpers import block_builders
 from managr.core.nylas.auth import convert_local_time_to_unix
 from .nylas.exceptions import NylasAPIError
 from managr.core.nylas.auth import gen_auth_url, revoke_access_token
-from .exceptions import StripeException, GoogleException, GoogleAuthExpired
+from .exceptions import (
+    StripeException,
+    GoogleAuthExpired,
+    MicrosoftException,
+    MicrosoftAuthExpired,
+    GoogleException,
+)
 
 client = HttpClient().client
 logger = logging.getLogger("managr")
@@ -436,6 +445,15 @@ class User(AbstractUser, TimeStampModel):
             return self.hubspot_account
 
     @property
+    def email_account(self):
+        if hasattr(self, "google_account"):
+            return self.google_account
+        elif hasattr(self, "microsoft_account"):
+            return self.microsoft_account
+        else:
+            return None
+
+    @property
     def engagement_account(self):
         if not self.has_outreach_integration and not self.has_salesloft_integration:
             return None
@@ -487,6 +505,10 @@ class User(AbstractUser, TimeStampModel):
     @property
     def has_google_integration(self):
         return hasattr(self, "google_account")
+
+    @property
+    def has_microsoft_integration(self):
+        return hasattr(self, "microsoft_account")
 
     @property
     def as_slack_option(self):
@@ -1007,8 +1029,8 @@ class GoogleAccount(TimeStampModel):
     user = models.OneToOneField(
         "core.User", on_delete=models.CASCADE, related_name="google_account"
     )
-    access_token = models.CharField(max_length=255, null=True)
-    refresh_token = models.CharField(max_length=255, null=True)
+    access_token = models.CharField(max_length=255)
+    refresh_token = models.CharField(max_length=255)
     account_id = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
@@ -1023,7 +1045,7 @@ class GoogleAccount(TimeStampModel):
             try:
                 data = response.json()
             except Exception as e:
-                NylasAPIError(e)
+                Exception(e)
             except json.decoder.JSONDecodeError as e:
                 return logger.error(f"An error occured with a nylas integration, {e}")
 
@@ -1127,6 +1149,133 @@ class GoogleAccount(TimeStampModel):
                 self.refresh_access_token()
                 continue
             except Exception as e:
+                email_res["error"] = str(e)
+                break
+        return email_res
+
+
+class MicrosoftAccount(TimeStampModel):
+    user = models.OneToOneField(
+        "core.User", on_delete=models.CASCADE, related_name="microsoft_account"
+    )
+    access_token = models.TextField()
+    refresh_token = models.TextField()
+    account_id = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user}"
+
+    @staticmethod
+    def _handle_response(response, fn_name=None):
+        if not hasattr(response, "status_code"):
+            raise ValueError
+
+        elif response.status_code in [200, 201]:
+            try:
+                data = response.json()
+            except Exception as e:
+                Exception(e)
+            except json.decoder.JSONDecodeError as e:
+                return logger.error(f"An error occured with a nylas integration, {e}")
+        elif response.status_code == 202:
+            return response
+        else:
+            status_code = response.status_code
+            error_data = response.json()
+            error_param = error_data.get("error", None)
+            error_message = error_param.get("message", None)
+            error_code = error_param.get("code", None)
+            error_code = error_param.get("code", None)
+            kwargs = {
+                "status_code": status_code,
+                "error_code": error_code,
+                "error_param": error_param,
+                "error_message": error_message,
+            }
+            return MicrosoftException(kwargs)
+        return data
+
+    @classmethod
+    def get_authorization(cls):
+        params = core_consts.MICROSOFT_AUTHORIZATION_PARAMS()
+        scopes = " ".join(core_consts.MICROSOFT_SCOPES)
+        params["scope"] = scopes
+        params["state"] = f"MICROSOFT"
+        query = urlencode(params)
+        return f"{core_consts.MICROSOFT_AUTHORIZATION_URI}?{query}"
+
+    @classmethod
+    def authenticate(cls, code):
+        params = core_consts.MICROSOFT_AUTHENTICATE_PARAMS(code)
+        scopes = " ".join(core_consts.MICROSOFT_SCOPES)
+        params["scope"] = scopes
+        url = core_consts.MICROSOFT_AUTHENTICATION_URI
+        with Variable_Client() as client:
+            res = client.post(
+                url, data=params, headers={"Content-Type": "application/x-www-form-urlencoded"}
+            )
+            res = res.json()
+        return res
+
+    def refresh_access_token(self):
+        url = core_consts.MICROSOFT_AUTHENTICATION_URI
+        params = core_consts.MICROSOFT_REFRESH_PARAMS(self.refresh_token)
+        scopes = " ".join(core_consts.MICROSOFT_SCOPES)
+        params["scope"] = scopes
+        with Variable_Client() as client:
+            res = client.post(
+                url, data=params, headers={"Content-Type": "application/x-www-form-urlencoded"}
+            )
+            res = res.json()
+            access_token = res["access_token"]
+            self.access_token = access_token
+            self.save()
+
+    def send_email(self, recipient, subject, body, name):
+        from managr.comms.serializers import EmailTrackerSerializer
+
+        url = core_consts.MICROSOFT_SEND_MAIL
+        tracker_link = core_consts.TRACKING_PIXEL_LINK + "?type=opened"
+        email_res = {"sent": False}
+        instance = False
+        try:
+            serializer = EmailTrackerSerializer(
+                data={
+                    "user": self.user.id,
+                    "recipient": recipient,
+                    "body": body,
+                    "subject": subject,
+                    "name": name,
+                }
+            )
+            serializer.is_valid(raise_exception=False)
+            serializer.save()
+            instance = serializer.instance
+            tracker_link += f"&id={str(instance.id)}"
+            instance.add_activity("sent")
+        except Exception as e:
+            logger.exception(str(e))
+            pass
+        while True:
+            try:
+                email = create_ms_message(
+                    self.user.email,
+                    recipient,
+                    subject,
+                    "core/email-templates/user-email.html",
+                    {"body": body, "tracking_pixel_url": tracker_link},
+                )
+                with Variable_Client() as client:
+                    headers = core_consts.MICROSOFT_HEADERS(self.access_token)
+                    res = client.post(url, headers=headers, json=email)
+                    response = self._handle_response(res)
+                    email_res["sent"] = True
+                    break
+            except MicrosoftAuthExpired:
+                self.refresh_access_token()
+                continue
+            except Exception as e:
+                instance.delete()
                 email_res["error"] = str(e)
                 break
         return email_res

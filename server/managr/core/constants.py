@@ -472,13 +472,65 @@ def GOOGLE_PARAMS():
 if settings.IN_DEV:
     GOOGLE_FRONTEND_REDIRECT = "http://localhost:8080/pr-integrations"
     TRACKING_PIXEL_LINK = "https://managr-zach.ngrok.io/api/users/google/email-tracking"
+    MICROSOFT_FRONTEND_REDIRECT = "http://localhost:8080/pr-integrations"
 elif settings.IN_STAGING:
     GOOGLE_FRONTEND_REDIRECT = "https://staging.managr.ai/pr-integrations"
     TRACKING_PIXEL_LINK = "https://staging.managr.ai/api/users/google/email-tracking"
+    MICROSOFT_FRONTEND_REDIRECT = "https://staging.managr.ai/pr-integrations"
 else:
     GOOGLE_FRONTEND_REDIRECT = "https://app.managr.ai/pr-integrations"
     TRACKING_PIXEL_LINK = "https://app.managr.ai/api/users/google/email-tracking"
+    MICROSOFT_FRONTEND_REDIRECT = "https://app.managr.ai/pr-integrations"
 
 
 def GOOGLE_HEADERS(access_token):
+    return {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+
+
+MICROSOFT_CLIENT_ID = settings.MICROSOFT_CLIENT_ID
+MICROSOFT_CLIENT_SECRET = settings.MICROSOFT_CLIENT_SECRET
+MICROSOFT_REDIRECT_URI = settings.MICROSOFT_REDIRECT_URI
+MICROSOFT_AUTHORIZATION_URI = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
+MICROSOFT_AUTHENTICATION_URI = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+MICROSOFT_SEND_MAIL = "https://graph.microsoft.com/v1.0/me/sendMail"
+MICROSOFT_SCOPES = [
+    "Mail.Send",
+    "offline_access",
+    "openid",
+    "profile",
+    "User.Read",
+]
+
+
+def MICROSOFT_AUTHORIZATION_PARAMS():
+    return {
+        "client_id": MICROSOFT_CLIENT_ID,
+        "response_type": "code",
+        "redirect_uri": MICROSOFT_REDIRECT_URI,
+        "response_mode": "query",
+        "prompt": "login",
+    }
+
+
+def MICROSOFT_AUTHENTICATE_PARAMS(code):
+    return {
+        "grant_type": "authorization_code",
+        "redirect_uri": MICROSOFT_REDIRECT_URI,
+        "client_secret": MICROSOFT_CLIENT_SECRET,
+        "code": code,
+        "client_id": MICROSOFT_CLIENT_ID,
+    }
+
+
+def MICROSOFT_REFRESH_PARAMS(refresh_token):
+    return {
+        "grant_type": "refresh_token",
+        "redirect_uri": MICROSOFT_REDIRECT_URI,
+        "client_secret": MICROSOFT_CLIENT_SECRET,
+        "refresh_token": refresh_token,
+        "client_id": MICROSOFT_CLIENT_ID,
+    }
+
+
+def MICROSOFT_HEADERS(access_token):
     return {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}

@@ -56,6 +56,7 @@ from .models import (
     Report,
     StripeAdapter,
     GoogleAccount,
+    MicrosoftAccount,
 )
 from .serializers import (
     UserSerializer,
@@ -69,6 +70,7 @@ from .serializers import (
     ReportSerializer,
     UserAdminRegistrationSerializer,
     GoogleAccountSerializer,
+    MicrosoftAccountSerializer,
 )
 from managr.organization.models import Team
 from .permissions import IsStaff
@@ -2236,4 +2238,56 @@ def revoke_google_account(request):
     user = request.user
     google_account = user.google_account
     google_account.delete()
+    return Response(data={"success": True})
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def get_microsoft_auth_link(request):
+    link = MicrosoftAccount.get_authorization()
+    return Response({"link": link})
+
+
+def redirect_from_microsoft(request):
+    code = request.GET.get("code", False)
+    q = urlencode({"state": "MICROSOFT", "code": code})
+    if not code:
+        err = {"error": "there was an error"}
+        err = urlencode(err)
+        return redirect(f"{core_consts.MICROSOFT_FRONTEND_REDIRECT}?{err}")
+    return redirect(f"{core_consts.MICROSOFT_FRONTEND_REDIRECT}?{q}")
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def get_microsoft_authentication(request):
+    user = request.user
+    data = request.data
+    res = MicrosoftAccount.authenticate(data.get("code"))
+    data = {
+        "user": user.id,
+        "access_token": res.get("access_token"),
+        "refresh_token": res.get("refresh_token"),
+        "account_id": res.get("id_token"),
+    }
+    existing = MicrosoftAccount.objects.filter(user=request.user).first()
+    if existing:
+        serializer = MicrosoftAccountSerializer(data=data, instance=existing)
+    else:
+        serializer = MicrosoftAccountSerializer(data=data)
+    try:
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+    except Exception as e:
+        logger.exception(str(e))
+        return Response(data={"success": False})
+    return Response(data={"success": True})
+
+
+@api_view(["DELETE"])
+@permission_classes([permissions.IsAuthenticated])
+def revoke_microsoft_account(request):
+    user = request.user
+    microsoft_account = user.microsoft_account
+    microsoft_account.delete()
     return Response(data={"success": True})
