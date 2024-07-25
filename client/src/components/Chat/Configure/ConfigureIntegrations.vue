@@ -513,6 +513,53 @@
             </button>
           </div>
         </div>
+
+        <div class="card">
+          <div class="card__header lr-bg" style="padding-left: 36px; padding-right: 36px">
+            <img style="height: 40px" src="@/assets/images/slackLogo.png" />
+          </div>
+
+          <div class="card__body">
+            <h3>
+              Slack
+              <span class="required" v-if="!hasSlackIntegration">
+                <img src="@/assets/images/required.svg" height="14px" alt=""
+              /></span>
+            </h3>
+            <p class="card-text">Interact with Managr through Slack</p>
+            <div>
+              <PulseLoadingSpinnerButton
+                v-if="!hasSlackIntegration"
+                :disabled="
+                  (!orgHasSlackIntegration && !userCanIntegrateSlack) || hasSlackIntegration
+                "
+                @click="onIntegrateSlack"
+                class="orange_button"
+                :text="slackButtonMessage"
+                :loading="generatingToken && selectedIntegration == 'SLACK'"
+              ></PulseLoadingSpinnerButton>
+
+              <div class="row" v-else>
+                <div class="img-border">
+                  <img
+                    @click="setRemoveApp('SLACK')"
+                    src="@/assets/images/revoke.svg"
+                    height="16"
+                    alt=""
+                  />
+                </div>
+                <div class="img-border">
+                  <img
+                    @click="onGetAuthLink('SLACK')"
+                    src="@/assets/images/refresh.svg"
+                    height="16"
+                    alt=""
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -845,6 +892,10 @@ export default {
           }
           await modelClass.api.getMicrosoftAuthentication(data).then((response) => {
             console.log('MICROSOFT RESPONSE', response)
+          })
+        } else if (this.selectedIntegration === 'SLACK') {
+          await modelClass.api.generateAccessToken(this.$route.query.code).then((response) => {
+            console.log('SLACK RESPONSE', response)
           })
         }
       } catch (e) {

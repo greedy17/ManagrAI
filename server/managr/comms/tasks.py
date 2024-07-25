@@ -10,7 +10,8 @@ from managr.utils.client import Variable_Client
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_clips_paginator_block
 from . import constants as comms_consts
-from .models import Search, NewsSource, EmailAlert, Journalist
+from .models import Search, NewsSource, EmailAlert
+from .models import Article as InternalArticle
 from .serializers import (
     SearchSerializer,
     NewsSourceSerializer,
@@ -26,7 +27,12 @@ from managr.slack import constants as slack_const
 from managr.slack.models import UserSlackIntegration
 from newspaper import Article
 from managr.slack.helpers.utils import block_finder
-from managr.comms.utils import generate_config, extract_base_domain, normalize_newsapi_to_model
+from managr.comms.utils import (
+    generate_config,
+    extract_base_domain,
+    normalize_newsapi_to_model,
+    normalize_article_data,
+)
 from managr.api.emails import send_html_email
 
 logger = logging.getLogger("managr")
@@ -72,15 +78,9 @@ def emit_send_social_summary(news_alert_id, schedule):
 def create_new_search(payload, user_id):
     state = payload["view"]["state"]["values"]
     input_text = state["SEARCH"]["plain_input"]["value"]
-    try:
-        instructions = state["OUTPUT_INSTRUCTIONS"]["plain_input"]["value"]
-    except KeyError:
-        instructions = False
     while True:
         try:
             data = {"input_text": input_text, "user": user_id, "name": input_text[:70]}
-            if instructions:
-                data["instructions"] = instructions
             serializer = SearchSerializer(data=data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -92,6 +92,91 @@ def create_new_search(payload, user_id):
             search = False
             break
     return search
+
+
+def get_clips(user, search, date_to, date_from):
+    try:
+        if "journalist:" in search:
+            internal_articles = InternalArticle.search_by_query(search, date_to, date_from, True)
+            articles = normalize_article_data([], internal_articles)
+            return {"articles": articles, "string": search}
+        else:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_QUERY_STRING(search)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email,
+                prompt,
+                token_amount=500,
+                top_p=0.1,
+            )
+            with Variable_Client() as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            r = open_ai_exceptions._handle_response(r)
+            query_input = r.get("choices")[0].get("message").get("content")
+            news_res = Search.get_clips(query_input, date_to, date_from)
+            articles = news_res["articles"]
+    except Exception as e:
+        print(str(e))
+    articles = [article for article in articles if article["title"] != "[Removed]"]
+    internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
+    articles = normalize_article_data(articles, internal_articles)
+    return {"articles": articles, "string": search}
+
+
+def get_summary(user, clips, search, company):
+    instructions = False
+    if "journalist:" in search:
+        instructions = comms_consts.JOURNALIST_INSTRUCTIONS(company)
+    has_error = False
+    attempts = 1
+    token_amount = 1000
+    timeout = 60.0
+    clip_strings = [
+        f"Content: {clip['description']}, Date: {clip['publish_date']} , Source:{clip['source']}, Author:{clip['author']}, Link:{clip['source']}"
+        for clip in clips
+    ]
+    while True:
+        try:
+            res = Search.get_summary(
+                user, token_amount, timeout, clip_strings, search, instructions, True
+            )
+            message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+            user.add_meta_data("news_summaries")
+            break
+        except open_ai_exceptions.StopReasonLength:
+            logger.exception(
+                f"Retrying again due to token amount, amount currently at: {token_amount}"
+            )
+            if token_amount <= 2000:
+                has_error = True
+                message = "Token amount error"
+                break
+            else:
+                token_amount += 500
+                continue
+        except httpx.ReadTimeout as e:
+            timeout += 30.0
+            if timeout >= 120.0:
+                has_error = True
+                message = "Read timeout issue"
+                logger.exception(f"Read timeout from Open AI {e}")
+                break
+            else:
+                attempts += 1
+                continue
+        except Exception as e:
+            has_error = True
+            message = f"Unknown exception: {e}"
+            logger.exception(e)
+            break
+    if has_error:
+        return {"has_error": has_error, "summary": message}
+
+    return {"has_error": has_error, "summary": message}
 
 
 def update_search(payload, context):
@@ -123,31 +208,22 @@ def update_search(payload, context):
 
 @background()
 def _process_news_summary(payload, context):
+    state = payload["view"]["state"]["values"]
+    search = state["SEARCH"]["plain_input"]["value"]
+    company = state["COMPANY"]["plain_input"]["value"]
+    start_date = state["START_DATE"][list(state["START_DATE"].keys())[0]]["selected_date"]
+    end_date = state["STOP_DATE"][list(state["STOP_DATE"].keys())[0]]["selected_date"]
     user = User.objects.get(id=context.get("u"))
-    while True:
-        try:
-            search = (
-                update_search(payload, context)
-                if context.get("search_id", False)
-                else create_new_search(payload, str(user.id))
-            )
-            news_res = Search.get_clips(search.search_boolean)
-            articles = news_res["articles"]
-            descriptions = [article["description"] for article in articles]
-            break
-        except Exception as e:
-            logger.exception(e)
-            break
     attempts = 1
     token_amount = 500
     timeout = 60.0
     while True:
         try:
-            instructions = search.instructions if search.instructions else False
-            res = Search.get_summary(
-                user, token_amount, timeout, descriptions, search.input_text, instructions
-            )
-            message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+            clips_res = get_clips(user, search, start_date, end_date)
+            articles = clips_res["articles"]
+            input_text = clips_res["string"]
+            summary_res = get_summary(user, articles, search, company)
+            message = summary_res["summary"]
             user.add_meta_data("news_summaries")
             user.save()
             break
@@ -177,32 +253,38 @@ def _process_news_summary(payload, context):
     try:
         blocks = [
             block_builders.simple_section(
-                f"*Summary for {search.input_text}*", "mrkdwn", block_id="NEWS_SUMMARY"
+                f"*Summary for {search}*", "mrkdwn", block_id="NEWS_SUMMARY"
             ),
-            block_builders.context_block(f"AI-generated search: {search.search_boolean}", "mrkdwn"),
+            block_builders.context_block(f"AI-generated search: {input_text}", "mrkdwn"),
             block_builders.divider_block(),
             block_builders.simple_section(message, "mrkdwn"),
             block_builders.divider_block(),
-            block_builders.actions_block(
-                [
-                    block_builders.simple_button_block(
-                        "Regenerate",
-                        "REGENERATE",
-                        action_id=action_with_params(
-                            slack_const.PROCESS_SHOW_REGENERATE_NEWS_SUMMARY_FORM,
-                            params=[f"search_id={str(search.id)}"],
-                        ),
-                    ),
-                    block_builders.simple_button_block(
-                        "Show Clips",
-                        "SHOW_CLIPS",
-                        action_id=action_with_params(
-                            slack_const.PROCESS_SEND_CLIPS, params=[f"search_id={str(search.id)}"]
-                        ),
-                    ),
-                ]
-            ),
+            block_builders.simple_section("*Clips:*", "mrkdwn"),
+            # block_builders.actions_block(
+            #     [
+            #         block_builders.simple_button_block(
+            #             "Regenerate",
+            #             "REGENERATE",
+            #             action_id=action_with_params(
+            #                 slack_const.PROCESS_SHOW_REGENERATE_NEWS_SUMMARY_FORM,
+            #                 params=[f"search_id={str(search.id)}"],
+            #             ),
+            #         ),
+            #         block_builders.simple_button_block(
+            #             "Show Clips",
+            #             "SHOW_CLIPS",
+            #             action_id=action_with_params(
+            #                 slack_const.PROCESS_SEND_CLIPS, params=[f"search_id={str(search.id)}"]
+            #             ),
+            #         ),
+            #     ]
+            # ),
         ]
+        for i in range(0, 5):
+            article = articles[i]
+            article_text = f"*{article['title']}*\n{article['description']}\n_{article['author']} - {article['publish_date'][:9]}_"
+            blocks.append(block_builders.simple_section(article_text, "mrkdwn"))
+        print(blocks)
         slack_res = slack_requests.update_channel_message(
             user.slack_integration.channel,
             context.get("ts"),
