@@ -1115,17 +1115,12 @@
 
             <div v-else class="content-padding">
               <div
-                style="padding-top: 32px"
+                style="margin-top: 32px"
                 v-if="mainView !== 'website'"
                 v-html="summary"
-                class="pre-text bio-body"
+                class="pre-text"
               ></div>
-              <div
-                style="padding-top: 32px"
-                v-else
-                class="citation-text bio-body"
-                v-html="insertCitations(summary)"
-              ></div>
+              <div v-else class="citation-text" v-html="insertCitations(summary)"></div>
               <div
                 style="margin-top: 32px; margin-bottom: 12px"
                 class="input-container-gray fadein"
@@ -1216,6 +1211,13 @@
                   v-else-if="mainView === 'social'"
                   src="@/assets/images/twitter-x.svg"
                   height="20px"
+                  alt=""
+                />
+                <img
+                  v-else-if="mainView === 'website'"
+                  style="margin-right: 8px"
+                  src="@/assets/images/google.svg"
+                  height="15px"
                   alt=""
                 />
 
@@ -1314,36 +1316,43 @@
                     </div>
                     <div class="footer-icon-container">
                       <div class="row">
-                        <button @click="selectJournalist(article)" class="tertiary-button-small">
-                          <img
-                            class="invert"
-                            src="@/assets/images/file-user.svg"
-                            height="17px"
-                            alt=""
-                          />
-                        </button>
-                        <button
-                          v-if="!article.summary"
-                          @click="getArticleSummary(article.link)"
-                          class="tertiary-button-small"
-                          :disabled="
-                            articleSummaryLoading || loading || summaryLoading || savingSearch
-                          "
-                        >
-                          <img
-                            v-if="loadingUrl !== article.link"
-                            src="@/assets/images/sparkles-thin.svg"
-                            height="16px"
-                            alt=""
-                          />
-                          <div
-                            v-if="articleSummaryLoading && loadingUrl === article.link"
-                            class="loading-smallest"
+                        <span class="s-wrapper">
+                          <button @click="selectJournalist(article)" class="tertiary-button-small">
+                            <img
+                              class="invert"
+                              src="@/assets/images/file-user.svg"
+                              height="17px"
+                              alt=""
+                            />
+                          </button>
+                          <span class="s-tooltip"> View Bio </span>
+                        </span>
+
+                        <span v-if="!article.summary" class="s-wrapper">
+                          <button
+                            @click="getArticleSummary(article.link)"
+                            class="tertiary-button-small"
+                            :disabled="
+                              articleSummaryLoading || loading || summaryLoading || savingSearch
+                            "
                           >
-                            <div class="dot"></div>
-                            <div class="dot"></div>
-                          </div>
-                        </button>
+                            <img
+                              v-if="loadingUrl !== article.link"
+                              src="@/assets/images/sparkles-thin.svg"
+                              height="16px"
+                              alt=""
+                            />
+                            <div
+                              v-if="articleSummaryLoading && loadingUrl === article.link"
+                              class="loading-smallest"
+                            >
+                              <div class="dot"></div>
+                              <div class="dot"></div>
+                            </div>
+                          </button>
+                          <span class="s-tooltip">Summarize</span>
+                        </span>
+
                         <img
                           v-else
                           src="@/assets/images/sparkle.svg"
@@ -1540,39 +1549,47 @@
                     </div>
                     <div class="footer-icon-container">
                       <div class="row">
-                        <button
-                          @click="selectJournalist(result, true)"
-                          class="tertiary-button-small"
-                        >
-                          <img
-                            class="invert"
-                            src="@/assets/images/file-user.svg"
-                            height="17px"
-                            alt=""
-                          />
-                        </button>
-                        <button
-                          v-if="!result.summary"
-                          @click="getArticleSummary(result.link)"
-                          class="tertiary-button-small"
-                          :disabled="
-                            articleSummaryLoading || loading || summaryLoading || savingSearch
-                          "
-                        >
-                          <img
-                            v-if="loadingUrl !== result.link"
-                            src="@/assets/images/sparkles-thin.svg"
-                            height="16px"
-                            alt=""
-                          />
-                          <div
-                            v-if="articleSummaryLoading && loadingUrl === result.link"
-                            class="loading-smallest"
+                        <span class="s-wrapper">
+                          <button
+                            @click="selectJournalist(result, true)"
+                            class="tertiary-button-small"
                           >
-                            <div class="dot"></div>
-                            <div class="dot"></div>
-                          </div>
-                        </button>
+                            <img
+                              class="invert"
+                              src="@/assets/images/file-user.svg"
+                              height="17px"
+                              alt=""
+                            />
+                          </button>
+                          <span class="s-tooltip"> View Bio</span>
+                        </span>
+
+                        <span v-if="!result.summary" class="s-wrapper">
+                          <button
+                            v-if="!result.summary"
+                            @click="getArticleSummary(result.link)"
+                            class="tertiary-button-small"
+                            :disabled="
+                              articleSummaryLoading || loading || summaryLoading || savingSearch
+                            "
+                          >
+                            <img
+                              v-if="loadingUrl !== result.link"
+                              src="@/assets/images/sparkles-thin.svg"
+                              height="16px"
+                              alt=""
+                            />
+                            <div
+                              v-if="articleSummaryLoading && loadingUrl === result.link"
+                              class="loading-smallest"
+                            >
+                              <div class="dot"></div>
+                              <div class="dot"></div>
+                            </div>
+                          </button>
+                          <span class="s-tooltip"> Summarize </span>
+                        </span>
+
                         <img
                           v-else
                           src="@/assets/images/sparkle.svg"
@@ -1777,12 +1794,7 @@
 
                   <div class="main-footer">
                     <div class="author-time">
-                      <span
-                        style="cursor: pointer"
-                        @click="selectJournalist(tweet)"
-                        class="author"
-                        >{{ '@' + tweet.user.username }}</span
-                      >
+                      <span class="author">{{ '@' + tweet.user.username }}</span>
                       <span style="margin-right: 4px" class="divider-dot">.</span>
                       <small class="bold-text"
                         >{{ formatNumber(tweet.user.public_metrics.followers_count) }}
@@ -1793,14 +1805,18 @@
                         getTimeDifferenceInMinutes(tweet.created_at)
                       }}</span>
                     </div>
-                    <button @click="selectJournalist(tweet)" class="tertiary-button-small">
-                      <img
-                        class="invert"
-                        src="@/assets/images/file-user.svg"
-                        height="17px"
-                        alt=""
-                      />
-                    </button>
+
+                    <span class="s-wrapper">
+                      <button @click="selectJournalist(tweet)" class="tertiary-button-small">
+                        <img
+                          class="invert"
+                          src="@/assets/images/file-user.svg"
+                          height="17px"
+                          alt=""
+                        />
+                      </button>
+                      <span class="s-tooltip">View Bio</span>
+                    </span>
                   </div>
                 </div>
               </div>
@@ -6277,6 +6293,39 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+.s-tooltip {
+  visibility: hidden;
+  width: 100px;
+  background-color: $dark-black-blue;
+  color: white;
+  text-align: center;
+  border-radius: 4px;
+  padding: 6px 2px;
+  position: absolute;
+  z-index: 100;
+  bottom: 150%;
+  left: 50%;
+  margin-left: -50px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  // border: 1px solid rgba(0, 0, 0, 0.328);
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  font-family: $base-font-family;
+}
+
+.s-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.s-wrapper:hover .s-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
 ::v-deep .ql-snow.ql-toolbar button {
   background: $soft-gray;
   border-radius: 4px;
@@ -6356,6 +6405,41 @@ export default {
     visibility: visible;
     opacity: 1;
   }
+
+  a {
+    color: $grape;
+    border-bottom: 1px solid $grape;
+    font-family: $base-font-family;
+    text-decoration: none;
+    padding-bottom: 2px;
+
+    &:hover {
+      opacity: 0.7;
+    }
+  }
+
+  strong,
+  h1,
+  h2,
+  h3 {
+    font-family: $base-font-family;
+  }
+
+  // ul {
+  //   display: block;
+  //   list-style-type: disc;
+  //   margin-block-start: 0;
+  //   margin-block-end: 0;
+  //   margin-inline-start: 0px;
+  //   margin-inline-end: 0px;
+  //   padding-inline-start: 16px;
+  //   unicode-bidi: isolate;
+  // }
+
+  // li {
+  //   margin-top: -32px;
+  //   padding: 0;
+  // }
 }
 
 ::v-deep .ql-toolbar.ql-snow {
@@ -7341,7 +7425,7 @@ button:disabled {
     transition: all 0.35s;
 
     &:hover {
-      transform: scale(1.125);
+      transform: scale(1.025);
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
     }
   }
@@ -7677,8 +7761,7 @@ button:disabled {
   }
 }
 
-::v-deep .pre-text,
-.citation-text {
+::v-deep .pre-text {
   a {
     color: $grape;
     border-bottom: 1px solid $grape;
@@ -7691,47 +7774,28 @@ button:disabled {
     }
   }
 
-  h2 {
-    padding: 0;
-    margin-bottom: 0 !important;
-    margin-block-start: 0 !important;
-    margin-block-end: 0 !important;
-    margin-inline-start: 0px;
-    margin-inline-end: 0px;
-    line-height: 1;
-  }
-
+  strong,
+  h1,
+  h2,
   h3 {
-    padding: 0;
-    margin: 0;
-    margin-bottom: 0 !important;
-    margin-block-start: 0 !important;
-    margin-block-end: 0 !important;
-    margin-inline-start: 0px;
-    margin-inline-end: 0px;
-    line-height: 1;
-    font-size: 18px;
-  }
-
-  strong {
     font-family: $base-font-family;
   }
 
-  ul {
-    display: block;
-    list-style-type: disc;
-    margin-block-start: 0;
-    margin-block-end: 0;
-    margin-inline-start: 0px;
-    margin-inline-end: 0px;
-    padding-inline-start: 16px;
-    unicode-bidi: isolate;
-  }
+  // ul {
+  //   display: block;
+  //   list-style-type: disc;
+  //   margin-block-start: 0;
+  //   margin-block-end: 0;
+  //   margin-inline-start: 0px;
+  //   margin-inline-end: 0px;
+  //   padding-inline-start: 16px;
+  //   unicode-bidi: isolate;
+  // }
 
-  li {
-    margin-top: -32px;
-    padding: 0;
-  }
+  // li {
+  //   margin-top: -32px;
+  //   padding: 0;
+  // }
 }
 
 .pre-text {
@@ -9484,7 +9548,7 @@ textarea::placeholder {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    overflow: hidden;
+    // overflow: hidden;
     padding: 14px 10px;
     width: 100%;
   }
