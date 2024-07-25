@@ -29,6 +29,12 @@ class GoogleAuthExpired(Exception):
         super().__init__(self.message)
 
 
+class MicrosoftAuthExpired(Exception):
+    def __init__(self, error="Access token needs to be refreshed"):
+        self.message = error
+        super().__init__(self.message)
+
+
 class OpenAIException:
     def __init__(self, e, fn_name=None, retries=0):
         self.error = e
@@ -154,7 +160,7 @@ class MicrosoftException:
         self.status_code = e["status_code"]
         self.param = e["error_param"]
         self.message = e["error_message"]
-        self.status = e["error_status"]
+        self.code = e["error_code"]
         self.fn_name = fn_name
         self.retry_attempts = 0
         self.raise_error()
@@ -164,9 +170,9 @@ class MicrosoftException:
         # instead we check data.json() which will return a JSONDecodeError
         if self.error_class_name == "JSONDecodeError":
             logger.error(f"An error occured decoding the json, {self.fn_name}")
-            return
-        elif self.status_code == 401 and self.status == "UNAUTHENTICATED":
-            raise Exception()
+            return Exception()
+        elif self.status_code == 401 and self.code == "InvalidAuthenticationToken":
+            raise MicrosoftAuthExpired()
         elif self.status_code == 404 and self.param == "EXPIRED_AUTHENTICATION":
             return
         elif self.status_code == 500:

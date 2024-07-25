@@ -31,7 +31,13 @@ from managr.slack.helpers import block_builders
 from managr.core.nylas.auth import convert_local_time_to_unix
 from .nylas.exceptions import NylasAPIError
 from managr.core.nylas.auth import gen_auth_url, revoke_access_token
-from .exceptions import StripeException, GoogleException, GoogleAuthExpired, MicrosoftException
+from .exceptions import (
+    StripeException,
+    GoogleAuthExpired,
+    MicrosoftException,
+    MicrosoftAuthExpired,
+    GoogleException,
+)
 
 client = HttpClient().client
 logger = logging.getLogger("managr")
@@ -1039,7 +1045,7 @@ class GoogleAccount(TimeStampModel):
             try:
                 data = response.json()
             except Exception as e:
-                NylasAPIError(e)
+                Exception(e)
             except json.decoder.JSONDecodeError as e:
                 return logger.error(f"An error occured with a nylas integration, {e}")
 
@@ -1057,7 +1063,7 @@ class GoogleAccount(TimeStampModel):
                 "error_message": error_message,
                 "error_status": error_status,
             }
-            return MicrosoftException(kwargs)
+            return GoogleException(kwargs)
         return data
 
     @classmethod
@@ -1164,27 +1170,27 @@ class MicrosoftAccount(TimeStampModel):
         if not hasattr(response, "status_code"):
             raise ValueError
 
-        elif response.status_code == 200 or response.status_code == 201:
+        elif response.status_code in [200, 201]:
             try:
                 data = response.json()
             except Exception as e:
-                NylasAPIError(e)
+                Exception(e)
             except json.decoder.JSONDecodeError as e:
                 return logger.error(f"An error occured with a nylas integration, {e}")
-
+        elif response.status_code == 202:
+            return response
         else:
             status_code = response.status_code
             error_data = response.json()
             error_param = error_data.get("error", None)
             error_message = error_param.get("message", None)
             error_code = error_param.get("code", None)
-            error_status = error_param.get("status", None)
+            error_code = error_param.get("code", None)
             kwargs = {
                 "status_code": status_code,
                 "error_code": error_code,
                 "error_param": error_param,
                 "error_message": error_message,
-                "error_status": error_status,
             }
             return MicrosoftException(kwargs)
         return data
@@ -1212,16 +1218,13 @@ class MicrosoftAccount(TimeStampModel):
         return res
 
     def refresh_access_token(self):
-        url = core_consts.GOOGLE_AUTHENTICATION_URI
-        params = {
-            "client_id": core_consts.GOOGLE_CLIENT_ID,
-            "client_secret": core_consts.GOOGLE_CLIENT_SECRET,
-            "grant_type": "refresh_token",
-            "refresh_token": self.refresh_token,
-        }
+        url = core_consts.MICROSOFT_AUTHENTICATION_URI
+        params = core_consts.MICROSOFT_REFRESH_PARAMS(self.refresh_token)
+        scopes = " ".join(core_consts.MICROSOFT_SCOPES)
+        params["scope"] = scopes
         with Variable_Client() as client:
             res = client.post(
-                url, params=params, headers={"Content-Type": "application/x-www-form-urlencoded"}
+                url, data=params, headers={"Content-Type": "application/x-www-form-urlencoded"}
             )
             res = res.json()
             access_token = res["access_token"]
@@ -1235,22 +1238,26 @@ class MicrosoftAccount(TimeStampModel):
         tracker_link = core_consts.TRACKING_PIXEL_LINK + "?type=opened"
         email_res = {"sent": False}
         instance = False
+        try:
+            serializer = EmailTrackerSerializer(
+                data={
+                    "user": self.user.id,
+                    "recipient": recipient,
+                    "body": body,
+                    "subject": subject,
+                    "name": name,
+                }
+            )
+            serializer.is_valid(raise_exception=False)
+            serializer.save()
+            instance = serializer.instance
+            tracker_link += f"&id={str(instance.id)}"
+            instance.add_activity("sent")
+        except Exception as e:
+            logger.exception(str(e))
+            pass
         while True:
             try:
-                if not instance:
-                    serializer = EmailTrackerSerializer(
-                        data={
-                            "user": self.user.id,
-                            "recipient": recipient,
-                            "body": body,
-                            "subject": subject,
-                            "name": name,
-                        }
-                    )
-                    serializer.is_valid(raise_exception=True)
-                    serializer.save()
-                    instance = serializer.instance
-                tracker_link += f"&id={str(instance.id)}"
                 email = create_ms_message(
                     self.user.email,
                     recipient,
@@ -1262,16 +1269,13 @@ class MicrosoftAccount(TimeStampModel):
                     headers = core_consts.MICROSOFT_HEADERS(self.access_token)
                     res = client.post(url, headers=headers, json=email)
                     response = self._handle_response(res)
-                    print(response)
-                    instance.message_id = response["id"]
-                    instance.save()
-                    instance.add_activity("sent")
                     email_res["sent"] = True
                     break
-            except GoogleAuthExpired:
+            except MicrosoftAuthExpired:
                 self.refresh_access_token()
                 continue
             except Exception as e:
+                instance.delete()
                 email_res["error"] = str(e)
                 break
         return email_res

@@ -521,5 +521,15 @@ def MICROSOFT_AUTHENTICATE_PARAMS(code):
     }
 
 
+def MICROSOFT_REFRESH_PARAMS(refresh_token):
+    return {
+        "grant_type": "refresh_token",
+        "redirect_uri": MICROSOFT_REDIRECT_URI,
+        "client_secret": MICROSOFT_CLIENT_SECRET,
+        "refresh_token": refresh_token,
+        "client_id": MICROSOFT_CLIENT_ID,
+    }
+
+
 def MICROSOFT_HEADERS(access_token):
     return {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
