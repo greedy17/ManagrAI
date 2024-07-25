@@ -260,7 +260,7 @@ def _process_news_summary(payload, context):
             block_builders.section_with_button_block(
                 "Ask Follow-Up",
                 "FOLLOWUP",
-                "*Ask a follow up question...*",
+                ":speech_balloon: *Ask a follow up question...*",
                 action_id=action_with_params(
                     slack_const.PROCESS_SHOW_REGENERATE_NEWS_SUMMARY_FORM,
                 ),
