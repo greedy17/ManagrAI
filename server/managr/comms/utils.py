@@ -5,7 +5,7 @@ import csv
 import fitz
 import tempfile
 import requests
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from functools import reduce
 from managr.core.utils import Variable_Client
 from newspaper import Config
@@ -203,7 +203,6 @@ def boolean_search_to_searchquery(search_string):
     current_search_queries = []
     current_query = None
     is_negative = False
-
     for idx, term in enumerate(term_list):
         if idx == len(term_list) - 1:
             current_query = SearchQuery(term, search_type="plain")
@@ -213,14 +212,24 @@ def boolean_search_to_searchquery(search_string):
                 current_query = reduce(lambda q1, q2: q1 | q2, current_search_queries)
                 current_search_queries = []
             if is_negative:
-                search_query &= ~current_query
+                if search_query:
+                    search_query &= ~current_query
+                else:
+                    search_query = ~current_query
             else:
-                search_query &= current_query
+                if search_query:
+                    search_query &= current_query
+                else:
+                    search_query = current_query
         elif term == "AND":
             if current_search_queries:
                 current_query = reduce(lambda q1, q2: q1 | q2, current_search_queries)
                 current_search_queries = []
-            search_query &= current_query
+            if search_query:
+                print(search_query)
+                search_query &= current_query
+            else:
+                search_query = current_query
             current_query = None
             is_negative = False
         elif term == "OR":
@@ -242,7 +251,6 @@ def boolean_search_to_searchquery(search_string):
             is_negative = True
         else:
             current_query = SearchQuery(term, search_type="plain")
-
     if search_query is None:
         search_query = current_query
     return search_query
@@ -298,7 +306,7 @@ def merge_sort_dates(arr, key="publish_date"):
         while i < len(sub_array1) and j < len(sub_array2):
             parsed_value1 = parser.parse(sub_array1[i][key]).replace(tzinfo=timezone.utc)
             parsed_value2 = parser.parse(sub_array2[j][key]).replace(tzinfo=timezone.utc)
-            if parsed_value1 < parsed_value2:
+            if parsed_value1 > parsed_value2:
                 arr[k] = sub_array1[i]
                 i += 1
             else:
@@ -324,7 +332,6 @@ def normalize_article_data(api_data, article_models):
     normalized_list.extend(normalized_model_list)
     sorted_arr = merge_sort_dates(normalized_list)
     ordered_dict = OrderedDict()
-    sorted_arr.reverse()
     for obj in sorted_arr:
         if obj["title"] not in ordered_dict.keys():
             ordered_dict[obj["title"]] = obj
@@ -634,7 +641,6 @@ def test_open(user, journalist, results, text):
             res = open_ai_exceptions._handle_response(r)
 
             message = res.get("choices")[0].get("message").get("content").replace("**", "*")
-            print(message)
             break
         except open_ai_exceptions.StopReasonLength:
             if token_amount <= 2000:
@@ -819,3 +825,14 @@ def test_prompt(search_term):
             message = f"Unknown exception: {e}"
             break
     return
+
+
+def separate_weeks(weeks, delta=7):
+    dates = []
+    now = datetime.now()
+    current_to = now
+    for week in range(1, weeks):
+        date_from = current_to - timedelta(days=delta)
+        dates.append((date_from, current_to))
+        current_to = date_from
+    return dates

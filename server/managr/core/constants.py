@@ -173,9 +173,10 @@ def OPEN_AI_CHAT_COMPLETIONS_BODY(
     token_amount=2000,
     temperature=False,
     top_p=False,
+    model="gpt-4o",
 ):
     body = {
-        "model": "gpt-4o",
+        "model": model,
         "messages": [
             {"role": "user", "content": prompt},
         ],

@@ -359,7 +359,7 @@
             name="contact"
             v-model="contactName"
           />
-          <label for="outlet">Outlet Name</label>
+          <label for="outlet">Company Name</label>
           <input
             :disabled="loadingContacts"
             class="primary-input"
@@ -377,6 +377,7 @@
                 padding: 16px 8px;
                 width: 100%;
                 max-height: 100px !important;
+                background: transparent;
               "
               class="area-input text-area-input"
               type="text"
@@ -2529,7 +2530,7 @@ h2 {
   align-items: center;
   justify-content: flex-start;
   flex-direction: row;
-  background-color: $off-white;
+  background-color: white;
   margin-top: 16px;
 
   img {

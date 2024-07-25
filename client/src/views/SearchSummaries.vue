@@ -498,7 +498,7 @@
     <Modal v-if="googleModalOpen" class="bio-modal">
       <div class="bio-container">
         <header>
-          <p style="font-size: 17px">Journalist Bio</p>
+          <p style="font-size: 17px">Bio</p>
 
           <div class="row">
             <div v-if="savingContact" style="margin: 0" class="loading-small">
@@ -881,7 +881,7 @@
         </aside>
       </div>
 
-      <section v-else class="main">
+      <section ref="loadedContent" v-else class="main">
         <div style="position: relative" class="body">
           <header class="content-header">
             <div class="row">
@@ -1024,7 +1024,7 @@
             </div>
           </header>
           <section class="content-container">
-            <div ref="loadedContent" class="between">
+            <div class="between">
               <div style="width: 100%" v-if="summary" class="row">
                 <img
                   style="margin-right: 8px"
@@ -1123,7 +1123,7 @@
               <div
                 style="padding-top: 32px"
                 v-else
-                class="pre-text bio-body"
+                class="citation-text bio-body"
                 v-html="insertCitations(summary)"
               ></div>
               <div
@@ -1313,8 +1313,7 @@
                       }}</span>
                     </div>
                     <div class="footer-icon-container">
-                      <div v-if="mainView === 'website' && addedArticles.length === 1"></div>
-                      <div class="row" v-else>
+                      <div class="row">
                         <button @click="selectJournalist(article)" class="tertiary-button-small">
                           <img
                             class="invert"
@@ -1355,11 +1354,7 @@
                   </div>
                 </div>
 
-                <div
-                  class="cardwidth"
-                  style="background: #e9f3fa"
-                  v-if="article.summary && mainView !== 'website'"
-                >
+                <div class="cardwidth" style="background: #e9f3fa" v-if="article.summary">
                   <div class="relative">
                     <pre v-html="article.summary" class="pre-text blue-text-bg"></pre>
                     <!-- <div
@@ -3373,14 +3368,12 @@ import User from '@/services/users'
 import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
-import ScrollArrow from '../components/ScrollArrow.vue'
 
 export default {
   name: 'SearchSummaries',
   components: {
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     quillEditor,
-    ScrollArrow,
   },
   data() {
     return {
@@ -3795,13 +3788,36 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    // insertCitations(text) {
+    //   return text.replace(/\[(\d+)\]/g, (match, p1) => {
+    //     const citationId = parseInt(p1)
+    //     const citation = this.googleResults.find((c) => c.id === citationId)
+    //     return citation
+    //       ? `<sup><a href="${citation.link}" target="_blank" class="citation-link">${citationId}</a></sup>`
+    //       : match
+    //   })
+    // },
     insertCitations(text) {
       return text.replace(/\[(\d+)\]/g, (match, p1) => {
         const citationId = parseInt(p1)
         const citation = this.googleResults.find((c) => c.id === citationId)
-        return citation
-          ? `<sup><a href="${citation.link}" target="_blank" class="citation-link">${citationId}</a></sup>`
-          : match
+        if (citation) {
+          return `
+        <sup>
+          <span class="citation-wrapper" >
+            <a href="${citation.link}" target="_blank" class="citation-link" ">${citationId}</a>
+            <span class="citation-tooltip">
+              <img src="${citation.image}" alt="">
+              <strong> ${citation.source}</strong>
+              <br>
+              <br>
+              ${citation.title}
+            </span>
+          </span>
+        </sup>
+      `
+        }
+        return match
       })
     },
     validateDate(event) {
@@ -5605,7 +5621,9 @@ export default {
             if (this.shouldCancel) {
               return this.stopLoading()
             }
-            this.summary = response.summary.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+            this.summary = response.summary
+              .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+              .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
             if (this.searchSaved) {
               this.updateSearch()
             }
@@ -5794,7 +5812,9 @@ export default {
             if (this.searchSaved) {
               this.updateSearch()
             }
-            this.summary = response.summary.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+            this.summary = response.summary
+              .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+              .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
           })
       } catch (e) {
         console.log('Error in getSummary', e)
@@ -5929,13 +5949,13 @@ export default {
         return response.summary
       } catch (e) {
         console.log(e)
-        // this.$toast('Could not access article URL', {
-        //   timeout: 2000,
-        //   position: 'top-left',
-        //   type: 'error',
-        //   toastClassName: 'custom',
-        //   bodyClassName: ['custom'],
-        // })
+        this.$toast('Request blocked by article source', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.showArticleRegenerate = false
         this.articleSummaryLoading = false
@@ -5944,9 +5964,12 @@ export default {
     },
     async generateContent() {
       this.contentLoading = true
-      let selectedClip = this.addedArticles.length
-        ? this.addedArticles.filter((art) => art.link === this.contentUrl)[0]
-        : this.filteredArticles.filter((art) => art.link === this.contentUrl)[0]
+      let selectedClip =
+        this.mainView === 'website'
+          ? this.googleResults.filter((art) => art.link === this.contentUrl)[0]
+          : this.addedArticles.length
+          ? this.addedArticles.filter((art) => art.link === this.contentUrl)[0]
+          : this.filteredArticles.filter((art) => art.link === this.contentUrl)[0]
 
       try {
         await Comms.api
@@ -5956,21 +5979,22 @@ export default {
             style: '',
           })
           .then((response) => {
-            if (this.mainView === 'website' && this.addedArticles.length === 1) {
-              this.summary = response.content
+            selectedClip['summary'] = response.content
+            if (this.mainView === 'website') {
+              this.googleResults = this.googleResults.filter(
+                (clip) => clip.link !== this.contentUrl,
+              )
+              this.googleResults.unshift(selectedClip)
+            } else if (!this.addedArticles.length) {
+              this.filteredArticles = this.filteredArticles.filter(
+                (clip) => clip.title !== selectedClip.title,
+              )
+              this.filteredArticles.unshift(selectedClip)
             } else {
-              selectedClip['summary'] = response.content
-              if (!this.addedArticles.length) {
-                this.filteredArticles = this.filteredArticles.filter(
-                  (clip) => clip.title !== selectedClip.title,
-                )
-                this.filteredArticles.unshift(selectedClip)
-              } else {
-                this.addedArticles = this.addedArticles = this.addedArticles.filter(
-                  (clip) => clip.title !== selectedClip.title,
-                )
-                this.addedArticles.unshift(selectedClip)
-              }
+              this.addedArticles = this.addedArticles = this.addedArticles.filter(
+                (clip) => clip.title !== selectedClip.title,
+              )
+              this.addedArticles.unshift(selectedClip)
             }
 
             this.refreshUser()
@@ -6264,9 +6288,13 @@ export default {
   cursor: pointer;
 }
 
-::v-deep .pre-text {
+::v-deep .citation-text {
+  sup {
+    line-height: 1;
+    display: inline;
+    vertical-align: super;
+  }
   .citation-link {
-    color: $dark-black-blue;
     padding: 1.5px 5px 2px 4.5px;
     margin: 0 2px;
     font-size: 9.5px;
@@ -6277,12 +6305,54 @@ export default {
     cursor: pointer;
     font-family: $base-font-family;
     font-weight: 100;
+    color: #5383ec;
   }
 
   .citation-link:hover {
     text-decoration: underline;
-    background-color: $dark-black-blue;
+    background-color: #5383ec;
     color: white;
+    opacity: 1;
+  }
+
+  .citation-tooltip {
+    visibility: hidden;
+    width: 200px;
+    background-color: #fff;
+    color: #333;
+    text-align: left;
+    border-radius: 4px;
+    padding: 10px;
+    position: absolute;
+    z-index: 100;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.128);
+    font-size: 13px;
+    line-height: 1.4;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+
+    strong {
+      font-size: 14px;
+    }
+    img {
+      width: 16px;
+      height: 16px;
+      vertical-align: middle;
+    }
+  }
+
+  .citation-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+
+  .citation-wrapper:hover .citation-tooltip {
+    visibility: visible;
     opacity: 1;
   }
 }
@@ -7606,7 +7676,8 @@ button:disabled {
   }
 }
 
-::v-deep .pre-text {
+::v-deep .pre-text,
+.citation-text {
   a {
     color: $grape;
     border-bottom: 1px solid $grape;
@@ -7618,6 +7689,48 @@ button:disabled {
       opacity: 0.7;
     }
   }
+
+  h2 {
+    padding: 0;
+    margin-bottom: 0 !important;
+    margin-block-start: 0 !important;
+    margin-block-end: 0 !important;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    line-height: 1;
+  }
+
+  h3 {
+    padding: 0;
+    margin: 0;
+    margin-bottom: 0 !important;
+    margin-block-start: 0 !important;
+    margin-block-end: 0 !important;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    line-height: 1;
+    font-size: 18px;
+  }
+
+  strong {
+    font-family: $base-font-family;
+  }
+
+  ul {
+    display: block;
+    list-style-type: disc;
+    margin-block-start: 0;
+    margin-block-end: 0;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding-inline-start: 16px;
+    unicode-bidi: isolate;
+  }
+
+  li {
+    margin-top: -32px;
+    padding: 0;
+  }
 }
 
 .pre-text {
@@ -7627,6 +7740,21 @@ button:disabled {
   line-height: 32px;
   word-wrap: break-word;
   white-space: pre-wrap;
+
+  @media only screen and (max-width: 600px) {
+    padding-bottom: 16px;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
+}
+
+.citation-text {
+  color: $base-gray;
+  font-family: $thin-font-family;
+  font-size: 16px;
+  line-height: 32px;
+  word-wrap: break-word;
 
   @media only screen and (max-width: 600px) {
     padding-bottom: 16px;
@@ -9276,13 +9404,14 @@ textarea::placeholder {
 }
 
 .green-bg {
-  background-color: $dark-green;
-  img {
-    filter: invert(100%);
-  }
-  img:hover {
-    filter: invert(100%);
-  }
+  background-color: white;
+  border: 1px solid $dark-black-blue;
+  // img {
+  //   filter: invert(100%);
+  // }
+  //   img:hover {
+  //     filter: invert(100%);
+  //   }
 }
 
 .clicked {

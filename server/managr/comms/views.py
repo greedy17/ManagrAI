@@ -104,7 +104,6 @@ def getclips(request):
                 token_amount=500,
                 top_p=0.1,
             )
-            print(1)
             with Variable_Client() as client:
                 r = client.post(
                     url,
@@ -113,21 +112,15 @@ def getclips(request):
                 )
             r = open_ai_exceptions._handle_response(r)
             query_input = r.get("choices")[0].get("message").get("content")
-            print(2)
             news_res = Search.get_clips(query_input, date_to, date_from)
-            print(3)
             articles = news_res["articles"]
         else:
             news_res = Search.get_clips(boolean, date_to, date_from)
             articles = news_res["articles"]
             query_input = boolean
-        print(4)
         articles = [article for article in articles if article["title"] != "[Removed]"]
-        print(5)
         internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
-        print(6)
         articles = normalize_article_data(articles, internal_articles)
-        print(7)
         return {"articles": articles, "string": query_input}
 
     except Exception as e:

@@ -3,7 +3,6 @@ import os
 import logging
 import base64
 import hashlib
-import requests
 from datetime import datetime, timedelta
 from dateutil import parser
 from django.db import models
@@ -94,6 +93,7 @@ class Search(TimeStampModel):
             "You are a VP of Communications",
             token_amount=tokens,
             top_p=0.1,
+            model="gpt-4o-mini",
         )
         with Variable_Client(timeout) as client:
             r = client.post(
@@ -569,8 +569,12 @@ class Article(TimeStampModel):
         constraints = [UniqueConstraint(fields=["source", "title"], name="unique_article")]
 
     def update_search_vector(self):
-        self.content_search_vector = SearchVector("content")
-        return self.save()
+        try:
+            self.content_search_vector = SearchVector("content")
+            self.save()
+        except Exception as e:
+            return str(e)
+        return True
 
     def fields_to_dict(self):
         site_name = (
@@ -588,7 +592,7 @@ class Article(TimeStampModel):
 
     @classmethod
     def search_by_query(cls, boolean_string, date_to=False, date_from=False, author=False):
-        from managr.comms.utils import boolean_search_to_query
+        from managr.comms.utils import boolean_search_to_query, boolean_search_to_searchquery
 
         date_to_date_obj = parser.parse(date_to)
         day_incremented = date_to_date_obj + timedelta(days=1)
@@ -602,6 +606,9 @@ class Article(TimeStampModel):
         else:
             converted_boolean = boolean_search_to_query(boolean_string)
             articles = date_range_articles.filter(converted_boolean)
+            # articles = date_range_articles.annotate(search=SearchVector("content")).filter(
+            #     search=converted_boolean
+            # )
         articles = articles[:20]
         return list(articles)
 
@@ -733,7 +740,15 @@ class TwitterAccount(TimeStampModel):
             return self._handle_response(response)
 
     def get_summary(
-        self, user, tokens, timeout, tweets, input_text, company, instructions=False, for_client=False
+        self,
+        user,
+        tokens,
+        timeout,
+        tweets,
+        input_text,
+        company,
+        instructions=False,
+        for_client=False,
     ):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
         if "from:" in input_text:

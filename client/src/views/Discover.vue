@@ -304,7 +304,7 @@
     <Modal v-if="googleModalOpen" class="bio-modal">
       <div class="bio-container">
         <header>
-          <p style="font-size: 17px">Journalist Bio</p>
+          <p style="font-size: 17px">Bio</p>
 
           <div class="row">
             <!-- <div
@@ -387,7 +387,7 @@
               :disabled="loadingDraft || savingContact"
               @click="draftPitch"
             >
-              Pitch Journalist
+              Pitch
             </button>
           </div>
         </footer>
@@ -398,7 +398,7 @@
       <div style="padding-top: 88px" class="content-body">
         <div style="width: 100%; padding: 0 32px; padding-top: 0" class="small-container">
           <div class="text-width">
-            <p style="margin: 8px 0 0 0">Discover Journalists using AI</p>
+            <p style="margin: 8px 0 0 0">Identify contacts based on your pitch</p>
           </div>
 
           <div style="margin-top: 32px" class="large-input-container">
@@ -416,7 +416,7 @@
                     name="content-type"
                     v-model="content"
                     :disabled="loading"
-                    placeholder="Paste content..."
+                    placeholder="Paste pitch..."
                     v-autoresize
                     autocomplete="off"
                     maxlength="8000"
@@ -538,7 +538,7 @@
                     <p style="margin-left: 6px">Popular Examples:</p> -->
 
                     <img src="@/assets/images/profile.svg" height="19px" alt="" />
-                    <p style="white-space: nowrap">Journalist Type</p>
+                    <p style="white-space: nowrap">Contact Type</p>
 
                     <div style="margin-left: auto" class="display-end">
                       <input
@@ -547,7 +547,7 @@
                         :disabled="loading"
                         maxlength="300"
                         style="padding-top: 8px; padding-bottom: 8px"
-                        placeholder="(e.g. T1 Journalists, Local Journalists)"
+                        placeholder="(e.g. Journalist, CMO, CTO)"
                         autocomplete="off"
                       />
 
@@ -574,14 +574,14 @@
 
                 <div style="padding-top: 16px" class="expanded-item">
                   <div class="row horizontal-padding-s img-text">
-                    <img src="@/assets/images/comment.svg" height="18px" alt="" />
-                    <p style="margin-left: 6px">Beat</p>
+                    <img src="@/assets/images/building.svg" height="18px" alt="" />
+                    <p style="margin-left: 6px">Industry</p>
                   </div>
 
                   <div class="display-end">
                     <input
                       class="area-input-end"
-                      placeholder="(e.g. Health, Travel, Local)"
+                      placeholder="(e.g. Health, Travel, Tech)"
                       v-model="beat"
                       :disabled="loading"
                       style="padding-top: 12px; padding-bottom: 8px"
@@ -1041,12 +1041,13 @@ export default {
       personalStyles: true,
       allWritingStyles: [],
       popularExamples: [
-        `Tier 1 Journalists`,
-        `Local Journalists`,
-        `Niche Journalists`,
-        `Broadcast Journalist `,
-        `Podcasters`,
-        `Social Media Influencers`,
+        `Journalist`,
+        `Influencer`,
+        `CTO`,
+        `CXO `,
+        `VP of Sales`,
+        `CMO`,
+        `Podcaster`,
       ],
       selectedContent: 'Select content',
       savingContact: false,
@@ -1309,10 +1310,13 @@ export default {
         .match(/Name:\s*(.*)/)[1]
         .trim()
         .replace(/<strong>|<\/strong>/g, '')
-      const publication = text
-        .match(/Outlet:\s*(.*)/)[1]
-        .trim()
-        .replace(/<strong>|<\/strong>/g, '')
+
+      // Check for either "Outlet" or "Company"
+      const publicationMatch = text.match(/(Outlet|Company):\s*(.*)/)
+      const publication = publicationMatch
+        ? publicationMatch[2].trim().replace(/<strong>|<\/strong>/g, '')
+        : ''
+
       const tip = text
         .match(/Reason for Selection:\s*(.*)/)[1]
         .trim()
@@ -4084,13 +4088,18 @@ button:disabled {
   background: white;
 }
 .green-bg {
-  background-color: $dark-green;
-  img {
-    filter: invert(100%);
-  }
-  img:hover {
-    filter: invert(100%);
-  }
+  background-color: white;
+  border: 1px solid $dark-black-blue;
+  background-color: white;
+  border: 1px solid $dark-black-blue;
+
+  // background-color: $dark-green;
+  // img {
+  //   filter: invert(100%);
+  // }
+  // img:hover {
+  //   filter: invert(100%);
+  // }
 }
 .bluee-bg {
   background: $white-blue !important;
