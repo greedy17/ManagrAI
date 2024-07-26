@@ -1248,6 +1248,8 @@ export default {
           bodyClassName: ['custom'],
         })
         this.sendingEmail = false
+        this.loadingPitch = false
+        this.verifying = false
       } finally {
         this.refreshUser()
       }
