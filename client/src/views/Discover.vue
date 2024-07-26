@@ -886,19 +886,22 @@
               <div class="tooltip-below">{{ copyTip }}</div>
             </div>
 
-            <button
-              @click="toggleSaveModal"
-              class="no-borders"
-              :disabled="savingList || discoverySaved"
-            >
-              <img
-                style="cursor: pointe; margin-top: 3px"
-                class="right-mar img-highlight"
-                src="@/assets/images/disk.svg"
-                height="14px"
-                alt=""
-              />
-            </button>
+            <div class="wrapper">
+              <button
+                @click="toggleSaveModal"
+                class="no-borders"
+                :disabled="savingList || discoverySaved"
+              >
+                <img
+                  style="cursor: pointe; margin-top: 3px"
+                  class="right-mar img-highlight"
+                  src="@/assets/images/disk.svg"
+                  height="14px"
+                  alt=""
+                />
+              </button>
+              <div class="tooltip-below">Save</div>
+            </div>
           </div>
         </div>
       </div>
@@ -1611,7 +1614,8 @@ export default {
     },
     async copyText() {
       try {
-        await navigator.clipboard.writeText(this.summary)
+        const cleanedSummary = this.summary.replace(/<\/?[^>]+(>|$)/g, '')
+        await navigator.clipboard.writeText(cleanedSummary)
         this.copyTip = 'Copied!'
 
         setTimeout(() => {
@@ -3162,10 +3166,10 @@ footer {
   z-index: 10000;
   background: $dark-black-blue;
   border-radius: 4px;
-  top: 150%;
+  top: 175%;
   color: #fff;
   display: block;
-  left: -30px;
+  left: -40px;
   margin-bottom: 15px;
   opacity: 0;
   padding: 8px;

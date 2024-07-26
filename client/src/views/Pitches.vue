@@ -830,19 +830,22 @@
               <div class="tooltip-below">{{ copyTip }}</div>
             </div>
 
-            <button
-              @click="toggleSaveModal"
-              class="no-borders"
-              :disabled="savingPitch || pitchSaved"
-            >
-              <img
-                style="cursor: pointe; margin-top: 2px"
-                class="right-mar img-highlight"
-                src="@/assets/images/disk.svg"
-                height="14px"
-                alt=""
-              />
-            </button>
+            <div class="wrapper">
+              <button
+                @click="toggleSaveModal"
+                class="no-borders"
+                :disabled="savingPitch || pitchSaved"
+              >
+                <img
+                  style="cursor: pointe; margin-top: 2px"
+                  class="right-mar img-highlight"
+                  src="@/assets/images/disk.svg"
+                  height="14px"
+                  alt=""
+                />
+              </button>
+              <div class="tooltip-below">Save</div>
+            </div>
           </div>
         </div>
       </div>
@@ -2791,10 +2794,10 @@ footer {
   z-index: 10000;
   background: $dark-black-blue;
   border-radius: 4px;
-  top: 150%;
+  top: 175%;
   color: #fff;
   display: block;
-  left: -30px;
+  left: -40px;
   margin-bottom: 15px;
   opacity: 0;
   padding: 8px;
