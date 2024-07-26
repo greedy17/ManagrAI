@@ -148,15 +148,15 @@
                 style="
                   padding-bottom: 12px;
                   border-bottom: 1px solid rgba(0, 0, 0, 0.135);
-                  width: 50%;
+                  width: 100%;
                 "
               >
                 <p style="margin: 0; padding: 0; font-size: 18px; margin-right: 8px">From:</p>
 
-                <p class="e-container" style="margin: 0">{{ user.email + ' via managr.ai' }}</p>
+                <p class="e-container" style="margin: 0">{{ user.email }}</p>
               </div>
 
-              <div
+              <!-- <div
                 class="row"
                 style="
                   padding-bottom: 12px;
@@ -166,14 +166,8 @@
               >
                 <p style="margin: 0; padding: 0; font-size: 18px; margin-right: 8px">Bcc:</p>
                 <p :title="bccEmail" class="b-container" style="margin: 0">{{ bccEmail }}</p>
-                <!-- <input
-                  style="margin-bottom: 0; padding-left: 34px"
-                  class="primary-input-underline"
-                  v-model="bccEmail"
-                  type="email"
-                  :disabled="loadingPitch || sendingEmail"
-                /> -->
-              </div>
+            
+              </div> -->
             </div>
 
             <div style="position: relative">
@@ -1227,7 +1221,6 @@ export default {
             subject: this.subject,
             body: this.revisedPitch,
             recipient: this.targetEmail,
-            bcc: [this.bccEmail],
             name: this.currentJournalist,
           })
           .then((response) => {

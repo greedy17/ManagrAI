@@ -681,9 +681,11 @@ def _process_workflow_config_check(user_id):
                         config_copy = copy(new_config_base)
                         config_copy["alert_targets"] = [str(rep.id)]
                         config_copy["recipients"] = [
-                            rep.slack_integration.zoom_channel
-                            if rep.slack_integration.zoom_channel
-                            else rep.slack_integration.channel
+                            (
+                                rep.slack_integration.zoom_channel
+                                if rep.slack_integration.zoom_channel
+                                else rep.slack_integration.channel
+                            )
                         ]
                         try:
                             serializer = AlertConfigWriteSerializer(
@@ -1964,10 +1966,13 @@ def _process_send_ask_managr_to_dm(payload, context):
 @background()
 def _send_activation_email(user_id):
     user = User.objects.get(id=user_id)
+    activation_link = user.activation_link
     content = {
         "first_name": user.first_name,
-        "activation_link": user.activation_link,
+        "activation_link": activation_link,
     }
+    if settings.IN_DEV:
+        print(activation_link)
     send_html_email(
         "Managr Activation",
         "core/email-templates/admin-activation.html",
