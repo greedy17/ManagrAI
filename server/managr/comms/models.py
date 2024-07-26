@@ -93,7 +93,7 @@ class Search(TimeStampModel):
             "You are a VP of Communications",
             token_amount=tokens,
             top_p=0.1,
-            model="gpt-4o-mini",
+            # model="gpt-4o-mini",
         )
         with Variable_Client(timeout) as client:
             r = client.post(

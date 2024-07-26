@@ -243,9 +243,7 @@ def TWITTER_USERNAME_INSTRUCTIONS(company):
 def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_client=False):
     if not instructions:
         instructions = DEFAULT_CLIENT_INSTRUCTIONS
-    body = f"""Today's date is {date}. Read the news coverage below and carefully follow the instructions. Make sure that your all URLs in the response are hyperlinks that open in a new window.
-    Only use the following format for URLs: <a href="URL" target="_blank">Link Text</a>. Do not provide plain text URLs or markdown.
-
+    body = f"""Today's date is {date}. Read the news coverage below and carefully follow the instructions. Be concise, keep the summary brief-- get straight to the point. Make sure that your response is properly a formatted html body with good spacing and easy to read. No outside padding.
     Here is the news coverage: {clips}.
 
     Here are the instructions: {instructions}.
@@ -256,9 +254,8 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_clie
 def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, instructions, for_client=False):
     if not instructions:
         instructions = DEFAULT_TWITTER_CLIENT_INSTRUCTIONS
-    body = f"""Today's date is {date}.Summarize the twitter coverage based on these tweets.\n Tweets: {tweets}\n
-    You must follow these instructions: {instructions}. Make sure that your response is properly formatted html with good spacing and easy to read. Be concise 
-    
+    body = f"""Today's date is {date}. Summarize the twitter coverage based on these tweets.\n Tweets: {tweets}\n
+    You must follow these instructions: {instructions}. Make sure that your response is properly a formatted html body with good spacing and easy to read. No outside padding. Do not include ```html``` in your response. Keep it brief, The response should be under 800 characters.   
     """
     return body
 

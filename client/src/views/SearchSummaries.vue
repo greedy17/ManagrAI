@@ -1118,7 +1118,7 @@
                 style="margin-top: 32px"
                 v-if="mainView !== 'website'"
                 v-html="summary"
-                class="pre-text"
+                class="citation-text"
               ></div>
               <div v-else class="citation-text" v-html="insertCitations(summary)"></div>
               <div
@@ -8166,13 +8166,13 @@ li {
       height: 100%;
       overflow-y: scroll;
       overflow-x: hidden;
-      padding: 0 16px 16px 40px;
+      padding: 16px 16px 16px 40px;
     }
 
     aside {
       position: absolute;
       right: 24px;
-      top: 0;
+      top: 24px;
       bottom: 0;
       width: 35vw;
       height: 100%;
@@ -8355,6 +8355,7 @@ li {
   height: 100vh;
   width: 100vw;
   padding: 0 24vw;
+  overflow: hidden;
 
   @media only screen and (max-width: 600px) {
     padding: 0 16px;
