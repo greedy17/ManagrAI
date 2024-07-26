@@ -8,7 +8,7 @@
 </head>
 
 <body
-    style="margin: 0; padding: 0; background-color: #FAFAFA; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; font-weight:200;">
+    style="margin: 0; padding: 0; background-color: #FAFAFA; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; font-weight: 200;">
     <center>
         <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600"
             style="margin: auto; background-color: #FFFFFF; color:#27292c;">
@@ -22,19 +22,21 @@
             <tr>
                 <td style="padding: 30px;">
                     <div style="border-bottom: 1px solid #DDDDDD; margin-bottom:16px; padding-bottom:16px;">
-                        <pre
-                            style="color: #2f4656; font-family: Arial, sans-serif; font-size: 16px; line-height: 24px; word-wrap: break-word; white-space: pre-wrap; padding: 16px; background-color:#e9f3fa;">{{summary}}</pre>
+                        <div
+                            style="color: #2f4656; font-family: Arial, sans-serif; font-size: 16px; line-height: 24px; padding: 16px; background-color:#e9f3fa;white-space: pre-wrap;">
+                            {{ summary | safe }}
+                        </div>
                     </div>
                     {% for value in clips %}
                     <div style="border-bottom: 1px solid #DDDDDD; padding-bottom: 15px; margin-bottom: 15px;">
                         <table role="presentation" width="100%">
                             <tr>
                                 <td style="width:400px; text-overflow: ellipsis;">
-                                    <a href={{value.link}}
+                                    <a href="{{value.link}}"
                                         style="text-decoration: none; cursor:pointer; font-size: 20px; color: #333333; font-weight: 300; text-overflow: ellipsis;">
-                                        {{value.title }}</a>
+                                        {{value.title}}</a>
                                     <p style="margin: 10px 0; color: #555555; text-overflow: ellipsis;">
-                                        {{value.description }}</p>
+                                        {{value.description}}</p>
                                 </td>
                                 <td>
                                     <img src="{{value.image_url}}" alt="{{value.title}}" width="120" height="120"
@@ -48,8 +50,10 @@
                             <span style="font-size: 12px;">{{value.publish_date}}</span>
                         </div>
                         {% if clips|length != 1 and value.summary %}
-                        <pre
-                            style="color: #2f4656; font-family: Arial, sans-serif; font-size: 16px; line-height: 24px; word-wrap: break-word; white-space: pre-wrap; padding: 8px; border-radius: 4px; background-color: #e9f3fa;">{{ value.summary }}</pre>
+                        <div
+                            style="color: #2f4656; font-family: Arial, sans-serif; font-size: 16px; line-height: 24px; padding: 8px; border-radius: 4px; background-color: #e9f3fa;">
+                            {{ value.summary | safe }}
+                        </div>
                         {% endif %}
                     </div>
                     {% endfor %}
@@ -57,12 +61,3 @@
             </tr>
             <tr>
                 <td style="padding: 20px 30px 40px 30px; text-align: center; color: #999999;">
-                    <a href={{website_url}} style="text-decoration: none; color: #2f4656;">Go to search →</a>
-                    <p style="font-size: 14px;">Contact your account manager: mike@mymanagr.com</p>
-                </td>
-            </tr>
-        </table>
-    </center>
-</body>
-
-</html>

@@ -881,7 +881,7 @@
         </aside>
       </div>
 
-      <section ref="loadedContent" v-else class="main">
+      <section v-else class="main">
         <div style="position: relative" class="body">
           <header class="content-header">
             <div class="row">
@@ -1023,7 +1023,7 @@
               </button>
             </div>
           </header>
-          <section class="content-container">
+          <section ref="loadedContent" class="content-container">
             <div class="between">
               <div style="width: 100%" v-if="summary" class="row">
                 <img
@@ -3913,12 +3913,12 @@ export default {
     scrollToTop() {
       setTimeout(() => {
         this.$refs.loadedContent.scrollIntoView({ behavior: 'smooth' })
-      }, 200)
+      }, 300)
     },
     scrollToBottom() {
       setTimeout(() => {
         this.$refs.contentBottom.scrollIntoView({ behavior: 'smooth' })
-      }, 200)
+      }, 300)
     },
     async getRelevantArticles() {
       let clips = []
@@ -4079,9 +4079,22 @@ export default {
         this.loadingDraft = false
       }
     },
+    // async copyBioText() {
+    //   try {
+    //     await navigator.clipboard.writeText(this.currentJournalistBio)
+    //     this.copyTip = 'Copied!'
+
+    //     setTimeout(() => {
+    //       this.copyTip = 'Copy'
+    //     }, 2000)
+    //   } catch (err) {
+    //     console.error('Failed to copy text: ', err)
+    //   }
+    // },
     async copyBioText() {
       try {
-        await navigator.clipboard.writeText(this.currentJournalistBio)
+        const cleanedBio = this.currentJournalistBio.replace(/<\/?[^>]+(>|$)/g, '')
+        await navigator.clipboard.writeText(cleanedBio)
         this.copyTip = 'Copied!'
 
         setTimeout(() => {
@@ -4729,6 +4742,25 @@ export default {
         this.ShowReport = !this.ShowReport
       }
     },
+    async regenerateGoogleSearch(clips, instructions) {
+      this.loading = true
+      try {
+        const res = await Comms.api.googleSearch({
+          query: this.newSearch,
+          instructions: instructions,
+          summary: this.summary,
+          results: clips,
+        })
+        this.summary = res.message
+          .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+          .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, '')
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.scrollToTop()
+        this.loading = false
+      }
+    },
     async googleSearch() {
       // this.resetAll()
       if (!this.newSearch) {
@@ -4894,15 +4926,47 @@ export default {
       this.newTemplate = ex
       this.hidePromptDropdown()
     },
-    async copyArticleSummary(article) {
+    // async copyArticleSummary(article) {
+    //   try {
+    //     const cleanedSummary = article
+    //       .split('<strong>')
+    //       .filter((item) => item !== '<strong>')
+    //       .join('')
+    //       .split('</strong>')
+    //       .filter((item) => item !== '</strong>')
+    //       .join('')
+    //     await navigator.clipboard.writeText(cleanedSummary)
+    //     this.copyTip = 'Copied!'
+
+    //     setTimeout(() => {
+    //       this.copyTip = 'Copy'
+    //     }, 2000)
+    //   } catch (err) {
+    //     console.error('Failed to copy text: ', err)
+    //   }
+    // },
+    // async copyText() {
+    //   try {
+    //     const cleanedSummary = this.summary
+    //       .split('<strong>')
+    //       .filter((item) => item !== '<strong>')
+    //       .join('')
+    //       .split('</strong>')
+    //       .filter((item) => item !== '</strong>')
+    //       .join('')
+    //     await navigator.clipboard.writeText(cleanedSummary)
+    //     this.copyTip = 'Copied!'
+
+    //     setTimeout(() => {
+    //       this.copyTip = 'Copy'
+    //     }, 2000)
+    //   } catch (err) {
+    //     console.error('Failed to copy text: ', err)
+    //   }
+    // },
+    async copyText() {
       try {
-        const cleanedSummary = article
-          .split('<strong>')
-          .filter((item) => item !== '<strong>')
-          .join('')
-          .split('</strong>')
-          .filter((item) => item !== '</strong>')
-          .join('')
+        const cleanedSummary = this.summary.replace(/<\/?[^>]+(>|$)/g, '')
         await navigator.clipboard.writeText(cleanedSummary)
         this.copyTip = 'Copied!'
 
@@ -4913,15 +4977,9 @@ export default {
         console.error('Failed to copy text: ', err)
       }
     },
-    async copyText() {
+    async copyArticleSummary(article) {
       try {
-        const cleanedSummary = this.summary
-          .split('<strong>')
-          .filter((item) => item !== '<strong>')
-          .join('')
-          .split('</strong>')
-          .filter((item) => item !== '</strong>')
-          .join('')
+        const cleanedSummary = article.replace(/<\/?[^>]+(>|$)/g, '')
         await navigator.clipboard.writeText(cleanedSummary)
         this.copyTip = 'Copied!'
 
@@ -5712,7 +5770,7 @@ export default {
         } else if (this.mainView === 'social') {
           await this.getSummary(clips, instructions, true)
         } else if (this.mainView === 'website') {
-          this.regenerateGoogleSummary(clips, instructions)
+          this.regenerateGoogleSearch(clips, instructions)
         }
       } catch (e) {
         console.log('error in getChatSummary', e)
@@ -6313,7 +6371,6 @@ export default {
   opacity: 0;
   transition: opacity 0.3s;
   pointer-events: none;
-  font-family: $base-font-family;
 }
 
 .s-wrapper {
