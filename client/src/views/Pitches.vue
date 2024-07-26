@@ -819,11 +819,7 @@
               </div>
             </div> -->
 
-            <div
-              style="margin-right: 0.5rem"
-              @click="copyText"
-              class="wrapper icon-button white-bg"
-            >
+            <div style="margin-right: 1rem" @click="copyText" class="wrapper">
               <img
                 style="cursor: pointer"
                 class="right-mar img-highlight"
@@ -834,15 +830,19 @@
               <div class="tooltip-below">{{ copyTip }}</div>
             </div>
 
-            <div>
-              <button
-                @click="toggleSaveModal"
-                class="green-button"
-                :disabled="savingPitch || pitchSaved"
-              >
-                Save
-              </button>
-            </div>
+            <button
+              @click="toggleSaveModal"
+              class="no-borders"
+              :disabled="savingPitch || pitchSaved"
+            >
+              <img
+                style="cursor: pointe; margin-top: 2px"
+                class="right-mar img-highlight"
+                src="@/assets/images/disk.svg"
+                height="14px"
+                alt=""
+              />
+            </button>
           </div>
         </div>
       </div>
@@ -2222,6 +2222,26 @@ label {
 
 .no-text-margin {
   margin: 0;
+}
+
+.no-borders {
+  border: none;
+  background: transparent;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+
+  img {
+    transition: all 0.3s;
+  }
+  img:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: scale(1.075);
+  }
+
+  &:disabled {
+    border: none !important;
+  }
 }
 
 .centered-content {

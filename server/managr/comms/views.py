@@ -2630,22 +2630,27 @@ def get_email_tracking(request):
 def get_google_summary(request):
     user = request.user
     query = request.data.get("query")
-    res = alternate_google_search(query)
-    if len(res) == 0:
-        return Response(
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            data={"message": "No results could be found."},
-        )
-    results = res["results"]
-    art = Article(results[0]["link"], config=generate_config())
-    try:
-        art.download()
-        art.parse()
-        text = art.text
-    except ArticleException:
-        text = ""
-    except Exception:
-        text = ""
+    instructions = request.data.get("instructions")
+    summary = request.data.get("summary")
+    results = request.data.get("results", None)
+    text = ''
+    if not instructions:
+        res = alternate_google_search(query)
+        if len(res) == 0:
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={"message": "No results could be found."},
+            )
+        results = res["results"]
+        art = Article(results[0]["link"], config=generate_config())
+        try:
+            art.download()
+            art.parse()
+            text = art.text
+        except ArticleException:
+            text = ""
+        except Exception:
+            text = ""
     has_error = False
     attempts = 1
     token_amount = 1000
@@ -2653,7 +2658,7 @@ def get_google_summary(request):
     while True:
         try:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_WEB_SUMMARY(query, results, text)
+            prompt = comms_consts.OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary)
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
                 prompt,
