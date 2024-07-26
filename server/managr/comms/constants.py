@@ -243,10 +243,16 @@ def TWITTER_USERNAME_INSTRUCTIONS(company):
 def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_client=False):
     if not instructions:
         instructions = DEFAULT_CLIENT_INSTRUCTIONS
-    body = f"""Today's date is {date}. Read the news coverage below and carefully follow the instructions. Be concise, keep the summary brief-- get straight to the point. Make sure that your response is properly a formatted html body with good spacing and easy to read. No outside padding.
-    Here is the news coverage: {clips}.
+    body = f"""
+    Today is {date}. Please provide a concise and accurate response per my instructions, using the given news coverage. If the instructions don't ask for anything specific, just provide a brief summary of the news in 150 words or less. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation. 
+        For example: 'Paris is the capital of France.' Only use this format to cite search results. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
+        Make sure that your response is properly formatted html. Do not include any styling and/or <meta> tags. Do not include ```html``` in your response
 
-    Here are the instructions: {instructions}.
+    Here is the news coverage:
+    {clips}
+
+    Here are the instructions:
+    {instructions}
     """
     return body
 
@@ -255,7 +261,7 @@ def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, instructions, for_client=False
     if not instructions:
         instructions = DEFAULT_TWITTER_CLIENT_INSTRUCTIONS
     body = f"""Today's date is {date}. Summarize the twitter coverage based on these tweets.\n Tweets: {tweets}\n
-    You must follow these instructions: {instructions}. Make sure that your response is properly a formatted html body with good spacing and easy to read. No outside padding. Do not include ```html``` in your response. Keep it brief, The response should be under 800 characters.   
+    You must follow these instructions: {instructions}. Make sure that your response is properly a formatted html. Do not include any styling and/or <meta> tags. Do not include ```html``` in your response. Keep it brief, The response should be under 800 characters.   
     """
     return body
 
