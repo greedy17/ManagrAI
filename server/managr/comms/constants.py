@@ -245,7 +245,7 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_clie
         instructions = DEFAULT_CLIENT_INSTRUCTIONS
     body = f"""
     Today is {date}. Please provide a concise and accurate response per my instructions, using the given news coverage. If the instructions don't ask for anything specific, just provide a brief summary of the news in 150 words or less. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation. 
-        For example: 'Paris is the capital of France.' Only use this format to cite search results. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
+        For example: 'Paris is the capital of France[1].' Only use this format to cite search results. Never cite more than 3 sources in a row. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
         Make sure that your response is properly formatted html. Do not include any styling and/or <meta> tags. Do not include ```html``` in your response
 
     Here is the news coverage:
@@ -364,7 +364,7 @@ OPEN_AI_REWRITE_PTICH = (
 def OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary):
     if not instructions:
         prompt = f"""Please provide a concise and accurate response to my query, using the given search results. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation. 
-        For example: 'Paris is the capital of France.' Only use this format to cite search results. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
+        For example: 'Paris is the capital of France[1].' Only use this format to cite search results. Never cite more than 3 sources in a row. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
         Make sure that your response is properly formatted html with good spacing and easy to read. No padding on the body since it will be going into a container that already has it.
         
         query: {query}
@@ -373,7 +373,7 @@ def OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary):
         """
     else:
         prompt = f"""Based on the initial summary and the additional search results, please provide a concise and accurate response to the follow-up question. Use the given search results and the initial summary to ensure the response is comprehensive. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation.
-        For example: 'Paris is the capital of France.' Only use this format to cite search results. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge and the initial summary.
+        For example: 'Paris is the capital of France[1].' Only use this format to cite search results. Never cite more than 3 sources in a row. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge and the initial summary.
         Make sure that your response is properly formatted html with good spacing and easy to read. No padding on the body since it will be going into a container that already has it.
         
         initial summary: {summary}

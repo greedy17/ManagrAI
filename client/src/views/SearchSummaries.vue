@@ -1,41 +1,5 @@
 <template>
   <div class="empty-search fadein">
-    <Modal v-if="promptModalOpen" class="paid-modal">
-      <div class="regen-container">
-        <div style="background-color: white" class="paid-header sticky-header">
-          <div>
-            <h3 class="regen-header-title">Popular Prompts</h3>
-            <p class="regen-header-subtitle"></p>
-          </div>
-          <div class="pointer" @click="togglePromptModal"><small>X</small></div>
-        </div>
-        <div class="paid-body">
-          <div>
-            <div class="paid-center aligned-left">
-              <p
-                class="paid-item"
-                @click="selectPrompt(prompt)"
-                v-for="(prompt, i) in searchSuggestions"
-                :key="i"
-              >
-                {{ prompt }}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div class="paid-footer">
-          <div class="row">
-            <div
-              style="padding-top: 9px; padding-bottom: 9px"
-              class="cancel-button"
-              @click="togglePromptModal"
-            >
-              Close
-            </div>
-          </div>
-        </div>
-      </div>
-    </Modal>
     <Modal v-if="contentModalOpen" class="regen-modal">
       <div :class="{ dim: contentLoading }" class="regen-container">
         <div class="regen-header">
@@ -91,11 +55,9 @@
                 {{ upgradeMessage }}
               </h5>
             </div>
-            <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
           </div>
         </div>
         <div class="paid-footer">
-          <!-- <div></div> -->
           <div class="row">
             <div
               style="padding-top: 9px; padding-bottom: 9px"
@@ -126,11 +88,9 @@
                 If you have any questions, email us at support@mymanagr.com
               </h5>
             </div>
-            <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
           </div>
         </div>
         <div class="paid-footer">
-          <!-- <div></div> -->
           <div class="row">
             <div
               style="padding-top: 9px; padding-bottom: 9px"
@@ -159,7 +119,6 @@
               <h3 class="paid-title">Something went wrong</h3>
               <h5 class="regen-body-title">Please try again later.</h5>
             </div>
-            <!-- <textarea v-autoresize v-model="newTemplate" class="regen-body-text" /> -->
           </div>
         </div>
         <div class="paid-footer">
@@ -278,41 +237,8 @@
         </div>
       </div>
     </Modal>
-    <Modal v-if="suggestionModalOpen" class="regen-modal">
-      <div :class="{ dim: suggestionsLoading }" class="regen-container">
-        <div class="paid-header">
-          <div>
-            <h3 class="regen-header-title">Search suggestions</h3>
-          </div>
-          <div @click="toggleSuggestionModal" class="pointer"><small>X</small></div>
-        </div>
-
-        <div class="paid-body">
-          <div class="row">
-            <pre v-if="suggestions" v-html="suggestions" class="pre-text"></pre>
-            <p v-else>Generating</p>
-
-            <div style="margin-left: 4px" v-if="suggestionsLoading" class="loading-small">
-              <div class="dot"></div>
-              <div class="dot"></div>
-              <div class="dot"></div>
-            </div>
-          </div>
-        </div>
-
-        <div style="margin: 0; padding-bottom: 0" class="paid-footer aligned-right">
-          <button
-            :disabled="suggestionsLoading"
-            @click="toggleSuggestionModal"
-            class="cancel-button"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </Modal>
     <Modal v-if="emailJournalistModalOpen" class="paid-modal">
-      <div :style="isMobile ? '' : 'width: 610px; min-height: 100px; '" class="regen-container">
+      <div class="regen-container">
         <div style="background-color: white; z-index: 1000" class="paid-header">
           <div class="space-between">
             <h2>Email Pitch</h2>
@@ -350,18 +276,6 @@
 
                 <p class="e-container" style="margin: 0">{{ user.email }}</p>
               </div>
-
-              <!-- <div
-                class="rowed"
-                style="
-                  padding-bottom: 12px;
-                  border-bottom: 1px solid rgba(0, 0, 0, 0.135);
-                  width: 50%;
-                "
-              >
-                <p style="margin: 0; padding: 0; font-size: 18px; margin-right: 8px">Bcc:</p>
-                <p :title="bccEmail" class="b-container" style="margin: 0">{{ bccEmail }}</p>
-              </div> -->
             </div>
 
             <div style="position: relative">
@@ -394,18 +308,6 @@
                 :class="{ coraltext: emailError, greenText: emailVerified }"
                 disabled
               />
-
-              <!-- <button
-                v-if="targetEmail && !emailVerified && !verifying && !emailError"
-                :disabled="loadingPitch || sendingEmail"
-                @click="verifyEmail"
-                class="abs-placed secondary-button"
-              >
-                <div class="rowed base-img">
-                  <img src="@/assets/images/shield-x.svg" height="14px" alt="" />
-                  Verify
-                </div>
-              </button> -->
 
               <div v-if="verifying" style="top: 50%" class="abs-placed loading-small">
                 Finding email
@@ -477,13 +379,6 @@
             class="primary-button"
             :class="{ opaque: loadingPitch || !subject || !targetEmail }"
           >
-            <!-- <img
-              v-if="!loadingPitch && subject && targetEmail"
-              style="filter: invert(100%); margin-right: 8px"
-              src="@/assets/images/paper-plane-full.svg"
-              height="12px"
-              alt=""
-            /> -->
             <div v-if="sendingEmail" style="margin: 0 4px" class="loading-small">
               <div class="dot"></div>
               <div class="dot"></div>
@@ -494,7 +389,6 @@
         </div>
       </div>
     </Modal>
-
     <Modal v-if="googleModalOpen" class="bio-modal">
       <div class="bio-container">
         <header>
@@ -574,107 +468,28 @@
     </Modal>
 
     <div style="margin-top: 16px" v-if="!selectedSearch">
-      <div class="text-width text-margin">
+      <div style="margin: 16px 0" class="text-width">
         <h2
           v-if="mainView === 'social' && !hasTwitterIntegration"
           style="font-size: 22px; font-weight: 200"
         >
           Connect <span class="link" @click="goToIntegrations">Twitter</span> to continue
         </h2>
-        <h1 v-else style="font-size: 24px; font-weight: 200">AI search assistant</h1>
+        <!-- <h1 v-else>ManagrAI</h1> -->
+        <img src="@/assets/images/newLogo.png" class="image-bg" height="60px" alt="" />
       </div>
 
       <div class="small-container letter-spacing">
-        <div style="width: 100%; margin-bottom: 8px" class="large-input-container">
-          <div
-            v-if="mainView === 'website'"
-            style="border: none; box-shadow: none; padding-bottom: 16px"
-            class="input-container-gray"
-          >
+        <div class="large-input-container">
+          <div style="box-shadow: none; padding-bottom: 16px" class="input-container-gray">
             <section>
-              <img class="left-margin-l" src="@/assets/images/search.svg" height="16px" alt="" />
-
+              <img class="left-margin-m" src="@/assets/images/search.svg" height="17px" alt="" />
               <textarea
-                autofocus="true"
-                @keyup.enter="googleSearch"
-                class="area-input text-area-input"
-                style="padding-top: 1.5rem"
-                placeholder="Ask a question..."
-                v-model="newSearch"
-                :disabled="loading"
-                v-autoresize
-              />
-
-              <div
-                @click="googleSearch"
-                class="image-container left-margin right-margin-m wrapper"
-                :class="newSearch ? 'dark-blue-bg' : ''"
-              >
-                <img
-                  style="margin: 0; cursor: text"
-                  src="@/assets/images/paper-plane-top.svg"
-                  height="14px"
-                  alt=""
-                />
-
-                <div class="tooltip">Submit</div>
-              </div>
-            </section>
-            <div class="source-dropdown">
-              <div @click="toggleSources" class="drop-header">
-                <img src="@/assets/images/google.svg" height="14px" alt="" />
-
-                <p>Source:</p>
-                <small>Web</small>
-                <img src="@/assets/images/arrowDropUp.svg" height="16px" alt="" />
-              </div>
-
-              <div v-if="showingSources" class="drop-options">
-                <header>
-                  Select source
-                  <img
-                    @click="toggleSources"
-                    src="@/assets/images/close.svg"
-                    height="18px"
-                    alt=""
-                    style="cursor: pointer"
-                  />
-                </header>
-                <div @click="switchMainView('news')" :class="{ activeswitch: mainView === 'news' }">
-                  <img src="@/assets/images/newspaper.svg" height="12px" alt="" />
-                  News
-                </div>
-                <div
-                  @click="switchMainView('social')"
-                  :class="{ activeswitch: mainView === 'social' }"
-                >
-                  <img src="@/assets/images/comment.svg" height="12px" alt="" />
-                  Social
-                </div>
-                <div
-                  @click="switchMainView('website')"
-                  :class="{ activeswitch: mainView === 'website' }"
-                >
-                  <img src="@/assets/images/google.svg" height="12px" alt="" />
-                  Web
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div v-else style="box-shadow: none; padding-bottom: 16px" class="input-container-gray">
-            <section>
-              <img class="left-margin-m" src="@/assets/images/search.svg" height="18px" alt="" />
-              <textarea
-                style="padding-top: 1.25rem"
+                style="padding-top: 1.35rem"
                 id="search-input"
                 @keyup.enter="generateNewSearch($event, false)"
                 class="area-input text-area-input"
-                :placeholder="
-                  mainView === 'social' && !hasTwitterIntegration
-                    ? 'Connect Twitter...'
-                    : 'Ask a question...'
-                "
+                :placeholder="placeHolderText"
                 autocomplete="off"
                 v-model="newSearch"
                 v-autoresize
@@ -683,131 +498,159 @@
                 "
               />
 
-              <div
-                @click="generateNewSearch($event, false)"
-                class="image-container left-margin wrapper"
-                :class="newSearch ? 'dark-blue-bg' : ''"
-                style="margin-right: 16px"
-              >
+              <div v-if="!newSearch" class="left-margin" style="margin-right: 20px">
                 <img
                   style="margin: 0"
                   src="@/assets/images/paper-plane-top.svg"
                   height="14px"
                   alt=""
                 />
-
-                <div style="left: -32px" class="tooltip">Submit</div>
               </div>
-              <!-- 
+
               <div
                 v-else
-                @click="uploadArticle"
-                class="image-container left-margin wrapper"
-                :class="newSearch ? 'dark-blue-bg' : ''"
+                @click="generateNewSearch($event, false)"
+                class="left-margin pointer"
+                style="margin-right: 20px"
               >
                 <img
-                  style="margin: 0; cursor: text"
-                  src="@/assets/images/paper-plane-top.svg"
+                  style="margin: 0"
+                  src="@/assets/images/paper-plane-full.svg"
                   height="14px"
                   alt=""
                 />
-
-                <div class="tooltip">Submit</div>
-              </div> -->
+              </div>
             </section>
-
-            <div class="space-between mobile-col">
-              <div class="source-dropdown">
-                <div @click="toggleSources" class="drop-header">
-                  <img
-                    v-if="mainView === 'news'"
-                    src="@/assets/images/newspaper.svg"
-                    height="16px"
-                    alt=""
-                  />
-                  <img v-else src="@/assets/images/comment.svg" height="16px" alt="" />
-
-                  <p>Source:</p>
-                  <small>{{ toCamelCase(mainView) }}</small>
-                  <img src="@/assets/images/arrowDropUp.svg" height="16px" alt="" />
-                </div>
-
-                <div v-if="showingSources" class="drop-options">
-                  <header>
-                    Select source
-                    <img
-                      @click="toggleSources"
-                      src="@/assets/images/close.svg"
-                      height="18px"
-                      alt=""
-                      style="cursor: pointer"
-                    />
-                  </header>
-                  <div
-                    @click="switchMainView('news')"
-                    :class="{ activeswitch: mainView === 'news' }"
-                  >
-                    <img src="@/assets/images/newspaper.svg" height="12px" alt="" />
-                    News
-                  </div>
-                  <div
-                    @click="switchMainView('social')"
-                    :class="{ activeswitch: mainView === 'social' }"
-                  >
-                    <img src="@/assets/images/comment.svg" height="12px" alt="" />
-                    Social
-                  </div>
-                  <div
-                    @click="switchMainView('website')"
-                    :class="{ activeswitch: mainView === 'website' }"
-                  >
-                    <img src="@/assets/images/google.svg" height="12px" alt="" />
-                    Web
-                  </div>
-                </div>
-              </div>
-
-              <div class="mobile-margin-left" v-if="mainView === 'news'" style="margin-right: 16px">
-                <input
-                  class="area-input-smallest"
-                  type="date"
-                  :min="minDate"
-                  @input="validateDate"
-                  v-model="dateStart"
-                />
-                -
-                <input class="area-input-smallest" type="date" :min="minDate" v-model="dateEnd" />
-              </div>
-            </div>
           </div>
 
-          <!-- v-if="mainView === 'news' || mainView === 'social'" -->
-          <div class="expanded-item borderless" style="margin-top: 8px">
-            <div style="width: 100%" class="row horizontal-padding-s img-text">
-              <img
-                style="margin-left: -1px"
-                src="@/assets/images/user-id.svg"
-                height="20px"
-                alt=""
-              />
-              <p>Your Company</p>
+          <div class="space-between mobile-col">
+            <div class="source-dropdown fadein">
+              <div @click.stop="toggleSources" class="drop-header">
+                <img
+                  v-if="mainView === 'news'"
+                  src="@/assets/images/newspaper.svg"
+                  height="14px"
+                  alt=""
+                />
+                <img v-else src="@/assets/images/comment.svg" height="16px" alt="" />
+
+                <p>Source:</p>
+                <small>{{ toCamelCase(mainView) }}</small>
+                <img src="@/assets/images/arrowDropUp.svg" height="16px" alt="" />
+              </div>
+
+              <div v-if="showingSources" class="drop-options">
+                <div @click="switchMainView('news')" :class="{ activeswitch: mainView === 'news' }">
+                  <span>
+                    <img src="@/assets/images/newspaper.svg" height="11px" alt="" />
+                    News
+                  </span>
+                  <p>Search through real-time news</p>
+                </div>
+                <div
+                  @click="switchMainView('social')"
+                  :class="{ activeswitch: mainView === 'social' }"
+                >
+                  <span>
+                    <img src="@/assets/images/comment.svg" height="11px" alt="" />
+                    Social
+                  </span>
+
+                  <p>Search through top X/Twitter posts</p>
+                </div>
+                <div @click="switchMainView('web')" :class="{ activeswitch: mainView === 'web' }">
+                  <span>
+                    <img src="@/assets/images/google.svg" height="11px" alt="" />
+                    Web
+                  </span>
+
+                  <p>Search the web</p>
+                </div>
+                <div @click="goToPage('Pitches')" :class="{ activeswitch: mainView === 'write' }">
+                  <span>
+                    <img src="@/assets/images/edit-note.svg" height="11px" alt="" />
+                    Write
+                  </span>
+
+                  <p>Create content that sounds like you</p>
+                </div>
+                <div
+                  @click="goToPage('Discover')"
+                  :class="{ activeswitch: mainView === 'discover' }"
+                >
+                  <span>
+                    <img src="@/assets/images/profile.svg" height="11px" alt="" />
+                    Discover
+                  </span>
+
+                  <p>Identify the right contacts for your pitch</p>
+                </div>
+              </div>
             </div>
 
-            <div class="input-container-small">
-              <input
-                style="border: none; outline: none; padding: 10px 8px 10px 0px; width: 100%"
-                class="text-area-input"
-                type="text"
-                v-model="selectedOrg"
-                placeholder="Company..."
-              />
+            <div style="margin-top: 16px" class="row relative">
+              <div class="img-container right-margin-s">
+                <img
+                  v-if="mainView === 'news'"
+                  @click.stop="toggleDate"
+                  class="invert"
+                  :class="{ lbfilter: showDateSelection }"
+                  src="@/assets/images/calendar.svg"
+                  height="14px"
+                  alt=""
+                />
+              </div>
 
-              <img
-                style="filter: invert(40%); margin-right: 20px"
-                src="@/assets/images/pencil.svg"
-                height="14px"
-                alt=""
-              />
+              <div class="img-container right-margin-s">
+                <img
+                  @click.stop="toggleCompany"
+                  class=""
+                  :class="{ lbfilter: showCompanySelection }"
+                  src="@/assets/images/user-id.svg"
+                  height="14px"
+                  alt=""
+                />
+              </div>
+
+              <div
+                v-outside-click="hideAllDropdowns"
+                class="container-right-abs"
+                v-show="showDateSelection"
+              >
+                <p>Date Range</p>
+                <div class="row">
+                  <input
+                    class="area-input-smallest"
+                    type="date"
+                    :min="minDate"
+                    @input="validateDate"
+                    v-model="dateStart"
+                  />
+                  <span style="margin: 0 12px"> - </span>
+
+                  <input class="area-input-smallest" type="date" :min="minDate" v-model="dateEnd" />
+                </div>
+              </div>
+
+              <div class="container-right-abs" v-if="showCompanySelection">
+                <p>Company</p>
+                <div class="input-container-small">
+                  <input
+                    style="border: none; outline: none; padding: 10px 8px 10px 0px; width: 100%"
+                    class="text-area-input"
+                    type="text"
+                    v-model="selectedOrg"
+                    placeholder="Company..."
+                  />
+
+                  <img
+                    style="filter: invert(40%); margin-right: 20px"
+                    src="@/assets/images/pencil.svg"
+                    height="14px"
+                    alt=""
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -817,7 +660,7 @@
             <p
               v-for="(example, i) in searchExamples"
               :key="i"
-              @click="setNewSearch(example)"
+              @click="setAndSearch(example)"
               class="example"
             >
               <img src="@/assets/images/arrow-trend-up.svg" height="14px" alt="" />
@@ -831,7 +674,7 @@
             <p
               v-for="(example, i) in socialSearchExamples"
               :key="i"
-              @click="setNewSearch(example)"
+              @click="setAndSearch(example)"
               class="example"
             >
               <img src="@/assets/images/arrow-trend-up.svg" height="14px" alt="" />
@@ -840,12 +683,12 @@
           </div>
         </div>
 
-        <div v-else-if="mainView === 'website'" class="expanded-item-column">
+        <div v-else-if="mainView === 'web'" class="expanded-item-column">
           <div class="rows">
             <p
               v-for="(example, i) in googleSearchExamples"
               :key="i"
-              @click="setNewSearch(example)"
+              @click="setAndSearch(example)"
               class="example"
             >
               <img src="@/assets/images/arrow-trend-up.svg" height="14px" alt="" />
@@ -911,7 +754,7 @@
               </p>
 
               <p
-                v-else-if="mainView === 'website' && !googleResults.length && !summary"
+                v-else-if="mainView === 'web' && !googleResults.length && !summary"
                 class="sub-text ellipsis-text"
               >
                 No results found. Try a new search.
@@ -1010,14 +853,14 @@
                   summaryLoading ||
                   savingSearch ||
                   savedSearch ||
-                  mainView === 'website'
+                  mainView === 'web'
                 "
                 v-if="
                   (filteredArticles && filteredArticles.length) || tweets.length || posts.length
                 "
               >
                 <img height="14px" src="@/assets/images/disk.svg" alt="" />
-                <div v-if="!savingSearch && !savedSearch && mainView !== 'website'" class="tooltip">
+                <div v-if="!savingSearch && !savedSearch && mainView !== 'web'" class="tooltip">
                   Save
                 </div>
               </button>
@@ -1046,10 +889,10 @@
               <div style="width: 100%">
                 <div
                   style="width: 40vw; margin-top: 12px"
-                  v-if="mainView !== 'website'"
+                  v-if="mainView !== 'web'"
                   class="section-small"
                 >
-                  <div @click="toggleType('website')" class="example-title">
+                  <div @click="toggleType('web')" class="example-title">
                     <div class="example-row">
                       <img
                         style="filter: invert(10%); margin-right: 6px"
@@ -1129,7 +972,7 @@
 
               <div v-else class="citation-text" v-html="insertCitations(summary)"></div>
               <div
-                style="margin-top: 32px; margin-bottom: 12px"
+                style="margin-top: 32px; margin-bottom: 12px; background: white"
                 class="input-container-gray fadein"
               >
                 <section style="padding-bottom: 4px; padding-top: 4px">
@@ -1141,9 +984,9 @@
                     alt=""
                   />
                   <textarea
-                    style="max-height: 60px !important"
+                    style="max-height: 140px !important"
                     class="area-input text-area-input"
-                    placeholder="Ask follow-up question..."
+                    placeholder="Ask follow-up..."
                     autofocus
                     autocomplete="off"
                     v-model="newTemplate"
@@ -1158,11 +1001,18 @@
                     v-autoresize
                   />
 
+                  <img
+                    v-if="!newTemplate"
+                    class="left-margin right-margin-l"
+                    src="@/assets/images/paper-plane-top.svg"
+                    height="14px"
+                    alt=""
+                  />
+
                   <div
-                    v-if="mainView === 'news'"
+                    v-else-if="mainView === 'news'"
                     @click="getChatSummary($event, filteredArticles, newTemplate)"
-                    class="image-container left-margin right-margin-m white-bg"
-                    :class="newTemplate ? 'dark-blue-bg' : ''"
+                    class="left-margin right-margin-m"
                   >
                     <img
                       style="margin: 0"
@@ -1175,8 +1025,7 @@
                   <div
                     v-else-if="mainView === 'social'"
                     @click="getChatSummary($event, preparedTweets, newTemplate)"
-                    class="image-container left-margin right-margin-m white-bg"
-                    :class="newTemplate ? 'dark-blue-bg' : ''"
+                    class="left-margin right-margin-m"
                   >
                     <img
                       style="margin: 0"
@@ -1189,8 +1038,7 @@
                   <div
                     v-else
                     @click="getChatSummary($event, googleResults, newTemplate)"
-                    class="image-container left-margin right-margin-m white-bg"
-                    :class="newTemplate ? 'dark-blue-bg' : ''"
+                    class="left-margin right-margin-m"
                   >
                     <img
                       style="margin: 0"
@@ -1221,7 +1069,7 @@
                   alt=""
                 />
                 <img
-                  v-else-if="mainView === 'website'"
+                  v-else-if="mainView === 'web'"
                   style="margin-right: 8px"
                   src="@/assets/images/google.svg"
                   height="15px"
@@ -1262,7 +1110,7 @@
                   :placeholder="`Search posts...`"
                 />
                 <input
-                  v-else-if="mainView === 'website'"
+                  v-else-if="mainView === 'web'"
                   v-model="searchResultText"
                   class="search-input"
                   :placeholder="`Search results...`"
@@ -1283,7 +1131,7 @@
                 v-for="article in articlesFiltered"
                 :key="article.id"
                 class="card"
-                :class="{ widecard: article.summary && mainView !== 'website' }"
+                :class="{ widecard: article.summary && mainView !== 'web' }"
               >
                 <div style="width: 100%">
                   <div>
@@ -1508,7 +1356,7 @@
               <div ref="contentBottom"></div>
             </div>
 
-            <div v-else-if="mainView === 'website'" class="cards-container">
+            <div v-else-if="mainView === 'web'" class="cards-container">
               <div
                 v-for="(result, i) in filteredResults"
                 :key="i"
@@ -1842,7 +1690,7 @@
         </div>
 
         <aside>
-          <div v-if="mainView !== 'website'" class="section">
+          <div v-if="mainView !== 'web'" class="section">
             <div
               @click="toggleRelevant"
               class="example-title"
@@ -1881,7 +1729,7 @@
             </div>
           </div>
 
-          <div v-if="mainView !== 'website'" class="section">
+          <div v-if="mainView !== 'web'" class="section">
             <div
               @click="toggleJournalists"
               class="example-title"
@@ -1976,7 +1824,7 @@
             </div>
           </div>
 
-          <div v-if="mainView !== 'website'" class="section-small">
+          <div v-if="mainView !== 'web'" class="section-small">
             <div @click="toggleType(mainView === 'news' ? 'social' : 'news')" class="example-title">
               <div class="example-row">
                 <img
@@ -2010,7 +1858,7 @@
             </div>
           </div>
 
-          <div v-else-if="mainView === 'website'" class="section-small">
+          <div v-else-if="mainView === 'web'" class="section-small">
             <div @click="toggleType('social')" class="example-title">
               <div class="example-row">
                 <img
@@ -2035,7 +1883,7 @@
             </div>
           </div>
 
-          <div v-if="mainView === 'website'" class="section-small">
+          <div v-if="mainView === 'web'" class="section-small">
             <div @click="toggleType('news')" class="example-title">
               <div class="example-row">
                 <img
@@ -2056,8 +1904,8 @@
             </div>
           </div>
 
-          <div v-if="mainView !== 'website'" class="section-small">
-            <div @click="toggleType('website')" class="example-title">
+          <div v-if="mainView !== 'web'" class="section-small">
+            <div @click="toggleType('web')" class="example-title">
               <div class="example-row">
                 <img
                   style="filter: invert(10%); margin-right: 6px"
@@ -2098,6 +1946,8 @@ export default {
   },
   data() {
     return {
+      showCompanySelection: false,
+      showDateSelection: false,
       googleResults: [],
       relevantData: '',
       journalistData: '',
@@ -2145,14 +1995,12 @@ export default {
       emailError: false,
       emailJournalistModalOpen: false,
       suggestionsLoading: false,
-      suggestionModalOpen: false,
       currentIndex: 0,
       selectedFile: null,
       pdfLoaded: false,
       pdfLink: null,
       showSummaryMenu: false,
       expandedView: false,
-      promptModalOpen: false,
       dateOpen: false,
       preparedTweets: null,
       addedClip: false,
@@ -2250,7 +2098,7 @@ export default {
       showingJournalists: false,
       showingRelated: false,
       searchExamples: [
-        `List top journalist writing about Fashion`,
+        `List top journalists writing about Fashion`,
         `"Cancer Research"`,
         `List newsjacking ideas around Sustainability`,
         `Apple AND OpenAI`,
@@ -2509,6 +2357,21 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    hideAllDropdowns() {
+      this.showDateSelection = false
+      this.showingSources = false
+      this.showCompanySelection = false
+    },
+    toggleDate() {
+      this.showDateSelection = !this.showDateSelection
+      this.showingSources = false
+      this.showCompanySelection = false
+    },
+    toggleCompany() {
+      this.showCompanySelection = !this.showCompanySelection
+      this.showingSources = false
+      this.showDateSelection = false
+    },
     insertNewsCitations(text) {
       return text.replace(/\[(\d+)\]/g, (match, p1) => {
         const citationIndex = parseInt(p1)
@@ -2695,7 +2558,7 @@ export default {
       this.loadingRelated = true
       if (this.mainView === 'news') {
         clips = this.getArticleDescriptions(this.filteredArticles)
-      } else if (this.mainView === 'website') {
+      } else if (this.mainView === 'web') {
         clips = this.googleResults
       } else {
         clips = this.prepareTweetSummary(this.tweets)
@@ -2837,6 +2700,8 @@ export default {
     },
     toggleSources() {
       this.showingSources = !this.showingSources
+      this.showDateSelection = false
+      this.showCompanySelection = false
     },
     toCamelCase(text) {
       return text.charAt(0).toUpperCase() + text.slice(1)
@@ -3034,36 +2899,6 @@ export default {
 
       return { name, email }
     },
-    // async getSuggestions() {
-    //   this.suggestionModalOpen = true
-    //   if (this.suggestions) {
-    //     return
-    //   }
-    //   this.suggestionsLoading = true
-    //   try {
-    //     await Comms.api.getSuggestions().then((response) => {
-    //       console.log(response)
-    //       this.suggestions = response.suggestions
-    //     })
-    //   } catch (e) {
-    //     this.$toast(`Unable to generate suggestions at this time. Try again later`, {
-    //       timeout: 2500,
-    //       position: 'top-left',
-    //       type: 'error',
-    //       toastClassName: 'custom',
-    //       bodyClassName: ['custom'],
-    //     })
-    //   } finally {
-    //     this.suggestionsLoading = false
-    //   }
-    // },
-    toggleSuggestionModal() {
-      if (this.suggestionsLoading) {
-        return
-      } else {
-        this.suggestionModalOpen = !this.suggestionModalOpen
-      }
-    },
     goTo(post, index) {
       const postIndex = this.posts.findIndex((p) => p === post)
       if (postIndex !== -1) {
@@ -3182,9 +3017,6 @@ export default {
     setNewSummary(txt) {
       this.newTemplate = txt
     },
-    togglePromptModal() {
-      this.promptModalOpen = !this.promptModalOpen
-    },
     selectPrompt(prompt) {
       this.newTemplate = prompt
       this.togglePromptModal()
@@ -3194,6 +3026,9 @@ export default {
     },
     goToIntegrations() {
       this.$router.push({ name: 'PRIntegrations' })
+    },
+    goToPage(page) {
+      this.$router.push({ name: page })
     },
     toggleSaveModal() {
       this.saveModalOpen = !this.saveModalOpen
@@ -3393,14 +3228,7 @@ export default {
         this.$router.push({ name: 'Pitches' })
       }, 500)
     },
-    unbindClickOutsidePromptMenu() {
-      const el = document.getElementById('instructions')
 
-      if (el && el._clickOutsideHandler) {
-        // Remove the event listener
-        document.body.removeEventListener('click', el._clickOutsideHandler)
-      }
-    },
     bindClickOutsidePromptMenu() {
       // Get the directive element where you want to bind the listener
       const el = document.getElementById('instructions')
@@ -3760,41 +3588,10 @@ export default {
       this.$store.dispatch('setSearch', null)
       this.summary = ''
     },
-    bindClickOutsideSearchMenu() {
-      const el = document.getElementById('prompt-search')
-
-      if (el) {
-        function clickOutsideSearchMenuHandler(e) {
-          if (!el.contains(e.target)) {
-            // Trigger the functionality to close the search menu dropdown
-            this.hideDropdown() // Replace with your actual functionality
-          }
-        }
-
-        el._clickOutsideSearchMenuHandler = clickOutsideSearchMenuHandler.bind(this)
-
-        document.body.addEventListener('click', el._clickOutsideSearchMenuHandler)
-      }
-    },
     switchMainView(view) {
       this.resetAll()
-      // if (view === 'news') {
-      //   this.deselectOpp()
-      // } else if (view !== 'meetings') {
-      //   this.deselectMeeting()
-      // }
       if (view !== this.mainView) {
-        if (this.mainView === 'website') {
-          this.unbindClickOutsidePromptMenu()
-          this.mainView = view
-        } else {
-          this.mainView = view
-        }
-        if (this.mainView !== 'website') {
-          setTimeout(() => {
-            this.bindClickOutsideSearchMenu()
-          }, 200)
-        }
+        this.mainView = view
       }
       this.toggleSources()
     },
@@ -3967,7 +3764,7 @@ export default {
       if (this.shouldCancel) {
         return this.stopLoading()
       }
-      if (this.mainView !== 'website' && (!this.newSearch || this.newSearch.length < 3)) {
+      if (this.mainView !== 'web' && (!this.newSearch || this.newSearch.length < 3)) {
         return
       } else if (this.mainView === 'social') {
         this.closeRegenModal()
@@ -3976,7 +3773,7 @@ export default {
         this.closeRegenModal()
         this.removeHashtags()
         this.getPosts(saved)
-      } else if (this.mainView === 'website') {
+      } else if (this.mainView === 'web') {
         this.closeRegenModal()
         this.googleSearch()
       } else {
@@ -4497,7 +4294,7 @@ export default {
           await this.getSummary(clips, instructions)
         } else if (this.mainView === 'social') {
           await this.getSummary(clips, instructions, true)
-        } else if (this.mainView === 'website') {
+        } else if (this.mainView === 'web') {
           this.regenerateGoogleSearch(clips, instructions)
         }
       } catch (e) {
@@ -4697,7 +4494,7 @@ export default {
     },
     async getArticleSummary(url, instructions = null, length = 1000) {
       let selectedClip = []
-      if (this.mainView === 'website') {
+      if (this.mainView === 'web') {
         selectedClip = this.googleResults.length
           ? this.googleResults.filter((art) => art.link === url)[0]
           : this.googleResults.filter((art) => art.link === url)[0]
@@ -4725,12 +4522,12 @@ export default {
         }
         selectedClip['summary'] = response.summary
 
-        if (!this.addedArticles.length && this.mainView !== 'website') {
+        if (!this.addedArticles.length && this.mainView !== 'web') {
           this.filteredArticles = this.filteredArticles.filter(
             (clip) => clip.title !== selectedClip.title,
           )
           this.filteredArticles.unshift(selectedClip)
-        } else if (this.mainView === 'website') {
+        } else if (this.mainView === 'web') {
           this.googleResults = this.googleResults.filter(
             (clip) => clip.title !== selectedClip.title,
           )
@@ -4768,7 +4565,7 @@ export default {
     async generateContent() {
       this.contentLoading = true
       let selectedClip =
-        this.mainView === 'website'
+        this.mainView === 'web'
           ? this.googleResults.filter((art) => art.link === this.contentUrl)[0]
           : this.addedArticles.length
           ? this.addedArticles.filter((art) => art.link === this.contentUrl)[0]
@@ -4783,7 +4580,7 @@ export default {
           })
           .then((response) => {
             selectedClip['summary'] = response.content
-            if (this.mainView === 'website') {
+            if (this.mainView === 'web') {
               this.googleResults = this.googleResults.filter(
                 (clip) => clip.link !== this.contentUrl,
               )
@@ -4833,6 +4630,20 @@ export default {
     },
   },
   computed: {
+    placeHolderText() {
+      let text = ''
+      if (this.mainView === 'social' && !this.hasTwitterIntegration) {
+        text = 'Connect Twitter...'
+      } else if (this.mainView === 'news') {
+        text = 'Search news...'
+      } else if (this.mainView === 'social') {
+        text = 'Search social media...'
+      } else if (this.mainView === 'web') {
+        text = 'Search the web...'
+      }
+
+      return text
+    },
     minDate() {
       const currentDate = new Date()
       const priorDate = new Date(currentDate.getTime() - 30 * 24 * 60 * 60 * 1000)
@@ -5140,12 +4951,12 @@ export default {
     cursor: pointer;
     font-family: $base-font-family;
     font-weight: 100;
-    color: #5383ec;
+    color: $lite-blue;
   }
 
   .citation-link:hover {
     text-decoration: underline;
-    background-color: #5383ec;
+    background-color: $lite-blue;
     color: white;
     opacity: 1;
   }
@@ -5209,22 +5020,6 @@ export default {
   h3 {
     font-family: $base-font-family;
   }
-
-  // ul {
-  //   display: block;
-  //   list-style-type: disc;
-  //   margin-block-start: 0;
-  //   margin-block-end: 0;
-  //   margin-inline-start: 0px;
-  //   margin-inline-end: 0px;
-  //   padding-inline-start: 16px;
-  //   unicode-bidi: isolate;
-  // }
-
-  // li {
-  //   margin-top: -32px;
-  //   padding: 0;
-  // }
 }
 
 ::v-deep .ql-toolbar.ql-snow {
@@ -5486,8 +5281,8 @@ export default {
 }
 
 .source-dropdown {
+  z-index: 1;
   @media only screen and (max-width: 600px) {
-    // margin-left: 0;
     margin-top: 8px;
   }
 
@@ -5498,14 +5293,13 @@ export default {
     font-size: 14px !important;
   }
   position: relative;
-  margin-left: 16px;
-
+  margin-top: 16px;
   .drop-header {
     padding: 4px 6px;
     background-color: white;
     font-size: 14px !important;
-    // border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 12px;
+    // border: 0.5px solid rgba(0, 0, 0, 0.355);
+    border-radius: 16px;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -5527,62 +5321,72 @@ export default {
       margin: 0;
       padding: 0;
     }
+
+    &:hover {
+      background-color: $soft-gray;
+    }
   }
 
   .drop-options {
-    width: 240px;
+    width: 450px;
     position: absolute;
     top: 40px;
     left: 0;
     font-weight: 400;
     background: white;
-    padding: 8px 12px;
+    padding: 8px;
     border-radius: 5px;
     font-size: 14px;
     box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
     line-height: 1.5;
     z-index: 1000;
     border: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
 
     div {
       font-size: 14px;
-      width: 100%;
-      margin-bottom: 6px;
+      width: 138px;
+      height: 80px;
       cursor: pointer;
-    }
+      padding: 8px;
+      border-radius: 4px;
 
-    header {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-      padding: 4px 0 8px 0;
-      margin-bottom: 12px;
+      p {
+        font-size: 12px !important;
+        font-family: $thin-font-family;
+        margin: 4px 0 0 0;
+      }
 
-      img {
-        margin: 0;
+      &:hover {
+        background-color: $soft-gray;
+      }
+
+      span {
+        font-family: $base-font-family;
       }
     }
 
-    div:hover {
-      opacity: 0.55;
-    }
+    // header {
+    //   width: 100%;
+    //   display: flex;
+    //   align-items: center;
+    //   justify-content: space-between;
+    //   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    //   padding: 4px 0 8px 0;
+    //   margin-bottom: 12px;
+
+    //   img {
+    //     margin: 0;
+    //   }
+    // }
 
     img {
-      margin-right: 8px;
+      margin-right: 4px;
     }
-
-    // p {
-    //   padding: 8px 16px;
-    //   color: #7c7b7b;
-    //   cursor: pointer;
-    //   width: 245px;
-    //   overflow: hidden;
-    //   white-space: nowrap;
-    //   text-overflow: ellipsis;
-    //   margin: 0;
-    // }
   }
 }
 
@@ -5964,159 +5768,7 @@ export default {
   display: block;
 }
 
-// .wrapper {
-//   display: flex;
-//   align-items: center;
-//   font-family: $thin-font-family;
-//   font-size: 14px;
-//   position: relative;
-//   text-align: center;
-//   -webkit-transform: translateZ(0); /* webkit flicker fix */
-//   -webkit-font-smoothing: antialiased; /* webkit text rendering fix */
-// }
-
-// .wrapper .tooltip,
-// .wrapper .tooltip-wide {
-//   z-index: 10000;
-//   background: $dark-black-blue;
-//   border-radius: 4px;
-//   bottom: 100%;
-//   color: #fff;
-//   display: block;
-//   left: -34px;
-//   margin-bottom: 15px;
-//   opacity: 0;
-//   padding: 8px;
-//   pointer-events: none;
-//   position: absolute;
-//   width: 100px;
-//   -webkit-transform: translateY(10px);
-//   -moz-transform: translateY(10px);
-//   -ms-transform: translateY(10px);
-//   -o-transform: translateY(10px);
-//   transform: translateY(10px);
-//   -webkit-transition: all 0.25s ease-out;
-//   -moz-transition: all 0.25s ease-out;
-//   -ms-transition: all 0.25s ease-out;
-//   -o-transition: all 0.25s ease-out;
-//   transition: all 0.25s ease-out;
-//   -webkit-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
-//   -moz-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
-//   -ms-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
-//   -o-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
-//   box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
-// }
-
-// .wrapper .tooltip-below {
-//   z-index: 10000;
-//   background: $dark-black-blue;
-//   border-radius: 4px;
-//   top: 150%;
-//   color: #fff;
-//   display: block;
-//   left: -30px;
-//   margin-bottom: 15px;
-//   opacity: 0;
-//   padding: 8px;
-//   pointer-events: none;
-//   position: absolute;
-//   width: 100px;
-//   -webkit-transform: translateY(10px);
-//   -moz-transform: translateY(10px);
-//   -ms-transform: translateY(10px);
-//   -o-transform: translateY(10px);
-//   transform: translateY(10px);
-//   -webkit-transition: all 0.25s ease-out;
-//   -moz-transition: all 0.25s ease-out;
-//   -ms-transition: all 0.25s ease-out;
-//   -o-transition: all 0.25s ease-out;
-//   transition: all 0.25s ease-out;
-//   -webkit-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
-//   -moz-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
-//   -ms-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
-//   -o-box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
-//   box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
-// }
-
-// .tooltip-wide {
-//   width: 150px !important;
-//   left: -60px !important;
-// }
-
-// .wrapper .tooltip:before,
-// .wrapper .tooltip-wide:before {
-//   bottom: -20px;
-//   content: ' ';
-//   display: block;
-//   height: 20px;
-//   left: 0;
-//   position: absolute;
-//   width: 100%;
-// }
-
-// .wrapper .tooltip-below:before {
-//   top: -20px;
-//   content: ' ';
-//   display: block;
-//   height: 20px;
-//   left: 0;
-//   position: absolute;
-//   width: 100%;
-// }
-
-// .wrapper .tooltip:after,
-// .wrapper .tooltip-wide:after {
-//   border-left: solid transparent 10px;
-//   border-right: solid transparent 10px;
-//   border-top: solid $dark-black-blue 10px;
-//   bottom: -10px;
-//   content: ' ';
-//   height: 0;
-//   left: 50%;
-//   margin-left: -13px;
-//   position: absolute;
-//   width: 0;
-// }
-
-// .wrapper .tooltip-below:after {
-//   border-left: solid transparent 10px;
-//   border-right: solid transparent 10px;
-//   border-bottom: solid $dark-black-blue 10px;
-//   top: -10px;
-//   content: ' ';
-//   height: 0;
-//   left: 50%;
-//   margin-left: -13px;
-//   position: absolute;
-//   width: 0;
-// }
-
-// .wrapper:hover .tooltip,
-// .wrapper:hover .tooltip-wide,
-// .wrapper:hover .tooltip-below {
-//   opacity: 1;
-//   pointer-events: auto;
-//   -webkit-transform: translateY(0px);
-//   -moz-transform: translateY(0px);
-//   -ms-transform: translateY(0px);
-//   -o-transform: translateY(0px);
-//   transform: translateY(0px);
-// }
-
-// .lte8 .wrapper .tooltip,
-// .lte8 .wrapper .tooltip-wide,
-// .lt38 .wrapper .tooltip-below {
-//   display: none;
-// }
-
-// .lte8 .wrapper:hover .tooltip,
-// .lte8 .wrapper:hover .tooltip-wide,
-// .lte8 .wrapper:hover .tooltip-below {
-//   display: block;
-// }
-
 .sub-text {
-  // color: $light-gray-blue;
   margin: 0;
   font-size: 18px;
 }
@@ -6140,8 +5792,6 @@ export default {
     white-space: nowrap;
     text-overflow: ellipsis;
     font-size: 15px !important;
-    // font-family: $base-font-family;
-    // font-weight: 200;
   }
 }
 
@@ -7220,13 +6870,19 @@ p {
   margin-left: 16px;
 }
 
+.right-margin-s {
+  margin-right: 4px;
+}
+
 .right-margin {
   margin-right: 8px;
 }
 .right-margin-m {
   margin-right: 12px;
 }
-
+.right-margin-l {
+  margin-right: 16px;
+}
 .bottom-margin-xl {
   margin-bottom: 32px;
 }
@@ -7241,10 +6897,6 @@ p {
   p {
     font-size: 18px;
   }
-}
-
-.text-margin {
-  margin: 16px 0;
 }
 
 .regular-font {
@@ -7362,6 +7014,8 @@ p {
   // background-color: white;
   // padding: 6px 4px;
   // box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  background-color: $soft-gray;
   color: $dark-black-blue;
   font-family: $base-font-family;
   img {
@@ -7412,12 +7066,15 @@ textarea {
 }
 
 .large-input-container {
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 16px;
-  padding: 16px;
+  // border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 0.5px solid rgba(0, 0, 0, 0.275);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.025);
+  border-radius: 8px;
+  padding: 24px;
   background-color: white;
   min-width: 45vw;
+  width: 100%;
+  margin-bottom: 8px;
 
   @media only screen and (max-width: 600px) {
     width: 94vw !important;
@@ -7451,7 +7108,7 @@ textarea {
   border: 0.5px solid rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.3s ease;
   padding: 2px 0;
-  border-radius: 16px;
+  border-radius: 6px;
   width: 100%;
   color: $base-gray;
   position: relative;
@@ -7477,6 +7134,7 @@ textarea {
   transition: box-shadow 0.3s ease;
   padding: 0;
   border-radius: 16px;
+  border-radius: 6px;
   width: 100%;
   color: $base-gray;
   position: relative;
@@ -7484,7 +7142,7 @@ textarea {
   align-items: flex-start;
   justify-content: flex-start;
   flex-direction: column;
-  background-color: #f8f7f7;
+  background-color: $off-white;
 
   section {
     width: 100%;
@@ -7502,7 +7160,7 @@ textarea {
 .area-input {
   width: 100%;
   margin-bottom: 0.25rem;
-  max-height: 250px !important;
+  max-height: 120px !important;
   padding: 0 1.25rem;
   line-height: 1.25;
   outline: none;
@@ -7520,13 +7178,17 @@ textarea {
   background-color: transparent;
 }
 .area-input::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
   height: 0px;
 }
 .area-input::-webkit-scrollbar-thumb {
   background-color: $soft-gray;
   box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
   border-radius: 6px;
+}
+
+.area-input::-webkit-scrollbar-track {
+  margin-top: 24px;
 }
 
 .text-area-input {
@@ -7602,17 +7264,23 @@ textarea::placeholder {
 }
 
 .example {
-  min-width: 47%;
+  width: 31%;
+  height: 70px;
   font-size: 14px;
-  padding: 6px 8px;
+  padding: 8px 12px;
   border: 0.5px solid rgba(0, 0, 0, 0.275);
-  border-radius: 9px;
+  border-radius: 6px;
   background-color: white;
   margin: 8px 0;
   cursor: pointer;
-  transition: all 0.5s;
+  transition: all 0.25s;
+  position: relative;
   img {
-    margin-right: 8px;
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+    filter: invert(40%);
+    // margin-right: 8px;
   }
 
   @media only screen and (max-width: 600px) {
@@ -7853,6 +7521,7 @@ textarea::placeholder {
   position: relative;
   overflow-y: scroll;
   font-family: $thin-font-family;
+  // :style="isMobile ? '' : 'width: 610px; min-height: 100px; '"
 
   @media only screen and (max-width: 600px) {
     font-size: 13px !important;
@@ -8029,11 +7698,11 @@ textarea::placeholder {
 }
 
 .area-input-smallest {
-  background-color: white;
+  background-color: $off-white;
   margin-bottom: 0.25rem;
   max-height: 250px;
-  padding: 0.25rem;
-  border-radius: 12px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
   line-height: 1.75;
   outline: none;
   border: none;
@@ -8041,8 +7710,8 @@ textarea::placeholder {
   font-size: 14px !important;
   font-family: $thin-font-family !important;
   font-weight: 400;
-  border: none !important;
-  //  border: 1px solid rgba(0, 0, 0, 0.1);
+  // border: none !important;
+  border: 1px solid rgba(0, 0, 0, 0.1);
   resize: none;
   text-align: left;
   overflow: auto;
@@ -8432,5 +8101,62 @@ textarea::placeholder {
       filter: invert(100%);
     }
   }
+}
+
+// .soft-gray-filter {
+//   filter: invert(64%) sepia(0%) saturate(0%) hue-rotate(161deg) brightness(96%) contrast(92%);
+// }
+// .purple-filter {
+//   filter: invert(33%) sepia(62%) saturate(374%) hue-rotate(218deg) brightness(88%) contrast(89%);
+// }
+.img-container {
+  cursor: pointer;
+  padding: 1px 7px 0 7px;
+  border-radius: 50%;
+  &:hover {
+    background-color: $soft-gray;
+  }
+
+  img {
+    margin: 0;
+    padding: 0;
+  }
+}
+.lb-filter {
+  &:hover {
+    filter: invert(45%) sepia(52%) saturate(1248%) hue-rotate(196deg) brightness(97%) contrast(90%) !important;
+  }
+}
+
+.lbfilter {
+  filter: invert(45%) sepia(52%) saturate(1248%) hue-rotate(196deg) brightness(97%) contrast(90%) !important;
+}
+
+.container-right-abs {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  position: absolute;
+  right: 0;
+  top: 24px;
+  height: 120px;
+  width: 350px;
+  padding: 32px 16px;
+  background-color: white;
+  box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+
+  p {
+    margin: 0 0 8px 0;
+  }
+}
+
+.image-bg {
+  mix-blend-mode: multiply;
+  background-color: white;
+  margin-bottom: 12px;
 }
 </style>
