@@ -190,7 +190,7 @@
         <div>
           <div
             v-if="$route.name === 'PRSummaries'"
-            @click="toggleShowSearches"
+            @click.stop="toggleShowSearches"
             class="row pointer nav-text"
           >
             Saved Searches
@@ -211,7 +211,7 @@
 
           <div
             v-else-if="$route.name === 'Pitches'"
-            @click="toggleShowPitches"
+            @click.stop="toggleShowPitches"
             class="row pointer nav-text"
           >
             Saved Content
@@ -232,7 +232,7 @@
 
           <div
             v-else-if="$route.name === 'Assist'"
-            @click="toggleShowAssist"
+            @click.stop="toggleShowAssist"
             class="row pointer nav-text"
           >
             Saved Assists
@@ -248,7 +248,7 @@
 
           <div
             v-else-if="$route.name === 'Discover'"
-            @click="toggleShowDiscoveries"
+            @click.stop="toggleShowDiscoveries"
             class="row pointer nav-text"
           >
             Saved Lists
@@ -267,7 +267,7 @@
             />
           </div>
 
-          <div v-if="showSavedSearches" class="search-dropdown">
+          <div v-outside-click="toggleAllMenus" v-show="showSavedSearches" class="search-dropdown">
             <div class="input">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <path
@@ -328,7 +328,7 @@
               </div>
             </div>
           </div>
-          <div v-else-if="showSavedPitches" class="search-dropdown">
+          <div v-outside-click="toggleAllMenus" v-show="showSavedPitches" class="search-dropdown">
             <div class="input">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <path
@@ -390,7 +390,7 @@
             </div>
           </div>
 
-          <div v-else-if="showSavedAssist" class="search-dropdown">
+          <div v-outside-click="toggleAllMenus" v-show="showSavedAssist" class="search-dropdown">
             <div class="input">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <path
@@ -436,7 +436,11 @@
             </div>
           </div>
 
-          <div v-else-if="showSavedDiscoveries" class="search-dropdown">
+          <div
+            v-outside-click="toggleAllMenus"
+            v-show="showSavedDiscoveries"
+            class="search-dropdown"
+          >
             <div class="input">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <path
@@ -551,7 +555,7 @@
           <div class="relative">
             <div
               v-if="$route.name === 'PRSummaries'"
-              @click="toggleShowSearches"
+              @click.stop="toggleShowSearches"
               class="row pointer nav-text"
             >
               Saved Searches
@@ -572,7 +576,7 @@
 
             <div
               v-else-if="$route.name === 'Pitches'"
-              @click="toggleShowPitches"
+              @click.stop="toggleShowPitches"
               class="row pointer nav-text"
             >
               Saved Content
@@ -593,7 +597,7 @@
 
             <div
               v-else-if="$route.name === 'Assist'"
-              @click="toggleShowAssist"
+              @click.stop="toggleShowAssist"
               class="row pointer nav-text"
             >
               Saved Assists
@@ -614,7 +618,7 @@
 
             <div
               v-else-if="$route.name === 'Discover'"
-              @click="toggleShowDiscoveries"
+              @click.stop="toggleShowDiscoveries"
               class="row pointer nav-text"
             >
               Saved Lists
@@ -633,7 +637,7 @@
               />
             </div>
 
-            <div v-if="showSavedSearches" class="search-dropdown">
+            <div v-show="showSavedSearches" class="search-dropdown">
               <div class="input">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <path
@@ -706,7 +710,7 @@
                 </div>
               </div>
             </div>
-            <div v-else-if="showSavedPitches" class="search-dropdown">
+            <div v-show="showSavedPitches" class="search-dropdown">
               <div class="input">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <path
@@ -768,7 +772,7 @@
               </div>
             </div>
 
-            <div v-else-if="showSavedAssist" class="search-dropdown">
+            <div v-show="showSavedAssist" class="search-dropdown">
               <div class="input">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <path
@@ -814,7 +818,7 @@
               </div>
             </div>
 
-            <div v-else-if="showSavedDiscoveries" class="search-dropdown">
+            <div v-show="showSavedDiscoveries" class="search-dropdown">
               <div class="input">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <path
@@ -873,37 +877,8 @@
             </div>
           </div>
 
-          <!-- <div class="row pointer">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-label="Lists">
-              <path
-                d="M6.44 6.69h0a1.5 1.5 0 0 1 1.06-.44h9c.4 0 .78.16 1.06.44l.35-.35-.35.35c.28.28.44.66.44 1.06v14l-5.7-4.4-.3-.23-.3.23-5.7 4.4v-14c0-.4.16-.78.44-1.06z"
-                stroke="currentColor"
-              ></path>
-              <path
-                d="M12.5 2.75h-8a2 2 0 0 0-2 2v11.5"
-                stroke="currentColor"
-                stroke-linecap="round"
-              ></path>
-            </svg>
-          </div> -->
-
           <div class="row right-mar avatar-container">
-            <div @click="toggleMenu" class="avatar">{{ getInitials() }}</div>
-            <!-- <img
-              @click="toggleMenu"
-              v-if="!menuOpen"
-              src="@/assets/images/rightarrow.svg"
-              height="14px"
-              alt=""
-            />
-            <img
-              v-else
-              @click="toggleMenu"
-              class="pointer"
-              src="@/assets/images/downArrow.svg"
-              height="14px"
-              alt=""
-            /> -->
+            <div @click.stop="toggleMenu" class="avatar">{{ getInitials() }}</div>
 
             <div v-if="menuOpen" class="avatar-dropdown">
               <p class="dropdown-item" @click="goToSettings">
@@ -1202,6 +1177,13 @@ export default {
     },
   },
   methods: {
+    toggleAllMenus() {
+      this.$emit('close-menu')
+      this.showSavedSearches = false
+      this.showSavedPitches = false
+      this.showSavedAssist = false
+      this.showSavedDiscoveries = false
+    },
     togglePersonal() {
       this.personalSearches = !this.personalSearches
     },
