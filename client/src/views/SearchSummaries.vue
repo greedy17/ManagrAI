@@ -1023,6 +1023,7 @@
                   <div class="row relative">
                     <div
                       class="left-margin img-container s-wrapper"
+                      :class="{ 'img-container-stay': showSuggestions }"
                       style="padding: 8px 8px 6px 9px"
                       @click.stop="toggleSuggestions"
                     >
@@ -5015,7 +5016,7 @@ export default {
     vertical-align: super;
   }
   .citation-link {
-    padding: 3.25px 4px;
+    padding: 4px 5.25px;
     margin: 0 1px;
     font-size: 9px;
     border: 0.5px solid $lite-blue;
