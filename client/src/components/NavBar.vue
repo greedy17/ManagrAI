@@ -267,7 +267,7 @@
             />
           </div>
 
-          <div v-outside-click="toggleAllMenus" v-show="showSavedSearches" class="search-dropdown">
+          <div v-show="showSavedSearches" class="search-dropdown">
             <div class="input">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <path
@@ -328,7 +328,7 @@
               </div>
             </div>
           </div>
-          <div v-outside-click="toggleAllMenus" v-show="showSavedPitches" class="search-dropdown">
+          <div v-show="showSavedPitches" class="search-dropdown">
             <div class="input">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <path
@@ -390,7 +390,7 @@
             </div>
           </div>
 
-          <div v-outside-click="toggleAllMenus" v-show="showSavedAssist" class="search-dropdown">
+          <div v-show="showSavedAssist" class="search-dropdown">
             <div class="input">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <path
@@ -436,11 +436,7 @@
             </div>
           </div>
 
-          <div
-            v-outside-click="toggleAllMenus"
-            v-show="showSavedDiscoveries"
-            class="search-dropdown"
-          >
+          <div v-show="showSavedDiscoveries" class="search-dropdown">
             <div class="input">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <path
@@ -637,7 +633,7 @@
               />
             </div>
 
-            <div v-show="showSavedSearches" class="search-dropdown">
+            <div v-outside-click="hideSearches" v-show="showSavedSearches" class="search-dropdown">
               <div class="input">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <path
@@ -710,7 +706,7 @@
                 </div>
               </div>
             </div>
-            <div v-show="showSavedPitches" class="search-dropdown">
+            <div v-outside-click="hidePitches" v-show="showSavedPitches" class="search-dropdown">
               <div class="input">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <path
@@ -772,7 +768,7 @@
               </div>
             </div>
 
-            <div v-show="showSavedAssist" class="search-dropdown">
+            <div v-outside-click="hideAssists" v-show="showSavedAssist" class="search-dropdown">
               <div class="input">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <path
@@ -818,7 +814,11 @@
               </div>
             </div>
 
-            <div v-show="showSavedDiscoveries" class="search-dropdown">
+            <div
+              v-outside-click="hideDiscoveries"
+              v-show="showSavedDiscoveries"
+              class="search-dropdown"
+            >
               <div class="input">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <path
@@ -880,7 +880,7 @@
           <div class="row right-mar avatar-container">
             <div @click.stop="toggleMenu" class="avatar">{{ getInitials() }}</div>
 
-            <div v-if="menuOpen" class="avatar-dropdown">
+            <div v-outside-click="hideMenu" v-show="menuOpen" class="avatar-dropdown">
               <p class="dropdown-item" @click="goToSettings">
                 <!-- <img class="mar-right" src="@/assets/images/settings.svg" height="14px" alt="" /> -->
                 <img class="mar-right" src="@/assets/images/profile.svg" height="13px" alt="" />
@@ -1177,12 +1177,20 @@ export default {
     },
   },
   methods: {
-    toggleAllMenus() {
-      this.$emit('close-menu')
+    hideSearches() {
       this.showSavedSearches = false
-      this.showSavedPitches = false
-      this.showSavedAssist = false
+    },
+    hideDiscoveries() {
       this.showSavedDiscoveries = false
+    },
+    hidePitches() {
+      this.showSavedPitches = false
+    },
+    hideAssists() {
+      this.showSavedAssist = false
+    },
+    hideMenu() {
+      this.$emit('close-menu')
     },
     togglePersonal() {
       this.personalSearches = !this.personalSearches

@@ -1,4 +1,4 @@
-let instances = [];
+const handlers = new WeakMap();
 
 function onDocumentClick(e, el, fn) {
     let target = e.target;
@@ -9,25 +9,21 @@ function onDocumentClick(e, el, fn) {
 
 export default {
     bind(el, binding) {
-        el.dataset.outsideClickIndex = instances.length;
-
         const fn = binding.value;
-        const click = function (e) {
+        const clickHandler = function (e) {
             onDocumentClick(e, el, fn);
         };
 
-        document.addEventListener("click", click);
-        document.addEventListener("touchstart", click);
-        instances.push(click);
+        document.addEventListener("click", clickHandler);
+        document.addEventListener("touchstart", clickHandler);
+        handlers.set(el, clickHandler);
     },
     unbind(el) {
-        const click = function (e) {
-            onDocumentClick(e, el, fn);
-        };
-        const index = el.dataset.outsideClickIndex;
-        const handler = instances[index];
-        document.removeEventListener("click", handler);
-        document.removeEventListener("touchstart", click);
-        instances.splice(index, 1);
+        const handler = handlers.get(el);
+        if (handler) {
+            document.removeEventListener("click", handler);
+            document.removeEventListener("touchstart", handler);
+            handlers.delete(el);
+        }
     },
 };

@@ -2634,7 +2634,7 @@ def get_google_summary(request):
     summary = request.data.get("summary")
     results = request.data.get("results", None)
     text = ''
-    if not instructions:
+    if not instructions or not summary:
         res = alternate_google_search(query)
         if len(res) == 0:
             return Response(
