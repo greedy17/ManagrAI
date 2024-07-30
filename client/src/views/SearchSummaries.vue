@@ -2172,8 +2172,8 @@ export default {
       showingJournalists: false,
       showingRelated: false,
       summarySuggestions: [
-        `Craft a pitch about [BrandX] incorporating relevant news, use citations. Pitch details: [here]`,
-        `Craft a press release about [BrandX] incorporating relevant news, use citations. Pitch details: [here]`,
+        `Craft a pitch for [BrandX] incorporating relevant news, use citations. Pitch details: [here]`,
+        `Craft a press release for [BrandX] incorporating relevant news, use citations. Pitch details: [here]`,
         `Which of these journalists would be interested in learning more about [BrandX], explain why`,
         `Provide creative pitching angles for [BrandX] based on this coverage`,
         `Provide sentiment analysis and key messages for [BrandX]`,
