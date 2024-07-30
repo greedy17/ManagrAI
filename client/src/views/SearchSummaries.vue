@@ -1020,54 +1020,82 @@
                     v-autoresize
                   />
 
-                  <div
-                    v-if="!newTemplate"
-                    class="left-margin right-margin-l img-container-stay"
-                    style="padding: 8px 8px 6px 9px"
-                  >
-                    <img src="@/assets/images/paper-plane-top.svg" height="14px" alt="" />
-                  </div>
+                  <div class="row relative">
+                    <div
+                      class="left-margin img-container s-wrapper"
+                      style="padding: 8px 8px 6px 9px"
+                      @click.stop="toggleSuggestions"
+                    >
+                      <img src="@/assets/images/lightbulb.svg" height="16px" alt="" />
+                      <div class="s-tooltip">Suggestions</div>
+                    </div>
 
-                  <div
-                    v-else-if="mainView === 'news'"
-                    @click="getChatSummary($event, filteredArticles, newTemplate)"
-                    style="padding: 8px 8px 6px 9px"
-                    class="left-margin right-margin-l pointer lite-bg img-container-stay"
-                  >
-                    <img
-                      style="margin: 0"
-                      src="@/assets/images/paper-plane-full.svg"
-                      height="14px"
-                      alt=""
-                    />
-                  </div>
+                    <div
+                      v-show="showSuggestions"
+                      v-outside-click="hideSuggestions"
+                      class="container-right-above"
+                    >
+                      <h3>Follow-up Suggestions</h3>
+                      <div>
+                        <p
+                          v-for="(suggestion, i) in summarySuggestions"
+                          :key="i"
+                          @click="selectSuggestion(suggestion)"
+                        >
+                          {{ suggestion }}
+                        </p>
+                      </div>
+                    </div>
 
-                  <div
-                    v-else-if="mainView === 'social'"
-                    @click="getChatSummary($event, preparedTweets, newTemplate)"
-                    style="padding: 8px 8px 6px 9px"
-                    class="left-margin right-margin-l pointer lite-bg img-container-stay"
-                  >
-                    <img
-                      style="margin: 0"
-                      src="@/assets/images/paper-plane-full.svg"
-                      height="14px"
-                      alt=""
-                    />
-                  </div>
+                    <div
+                      v-if="!newTemplate"
+                      class="left-margin right-margin-l img-container-stay"
+                      style="padding: 8px 8px 6px 9px"
+                    >
+                      <img src="@/assets/images/paper-plane-top.svg" height="14px" alt="" />
+                    </div>
 
-                  <div
-                    v-else
-                    @click="getChatSummary($event, googleResults, newTemplate)"
-                    style="padding: 8px 8px 6px 9px"
-                    class="left-margin right-margin-l pointer lite-bg img-container-stayr"
-                  >
-                    <img
-                      style="margin: 0"
-                      src="@/assets/images/paper-plane-full.svg"
-                      height="14px"
-                      alt=""
-                    />
+                    <div
+                      v-else-if="mainView === 'news'"
+                      @click="getChatSummary($event, filteredArticles, newTemplate)"
+                      style="padding: 8px 8px 6px 9px"
+                      class="left-margin right-margin-l pointer lite-bg img-container-stay"
+                    >
+                      <img
+                        style="margin: 0"
+                        src="@/assets/images/paper-plane-full.svg"
+                        height="14px"
+                        alt=""
+                      />
+                    </div>
+
+                    <div
+                      v-else-if="mainView === 'social'"
+                      @click="getChatSummary($event, preparedTweets, newTemplate)"
+                      style="padding: 8px 8px 6px 9px"
+                      class="left-margin right-margin-l pointer lite-bg img-container-stay"
+                    >
+                      <img
+                        style="margin: 0"
+                        src="@/assets/images/paper-plane-full.svg"
+                        height="14px"
+                        alt=""
+                      />
+                    </div>
+
+                    <div
+                      v-else
+                      @click="getChatSummary($event, googleResults, newTemplate)"
+                      style="padding: 8px 8px 6px 9px"
+                      class="left-margin right-margin-l pointer lite-bg img-container-stayr"
+                    >
+                      <img
+                        style="margin: 0"
+                        src="@/assets/images/paper-plane-full.svg"
+                        height="14px"
+                        alt=""
+                      />
+                    </div>
                   </div>
                 </section>
               </div>
@@ -1990,6 +2018,7 @@ export default {
   },
   data() {
     return {
+      showSuggestions: false,
       contentType: 'Content',
       showCompanySelection: false,
       showDateSelection: false,
@@ -2141,6 +2170,14 @@ export default {
       showingRelevant: false,
       showingJournalists: false,
       showingRelated: false,
+      summarySuggestions: [
+        `Craft a pitch about [BrandX] incorporating relevant news, use citations. Pitch details: [here]`,
+        `Craft a press release about [BrandX] incorporating relevant news, use citations. Pitch details: [here]`,
+        `Which of these journalists would be interested in learning more about [BrandX], explain why`,
+        `Provide creative pitching angles for [BrandX] based on this coverage`,
+        `Provide sentiment analysis and key messages for [BrandX]`,
+        `List 5 questions the media will ask [BrandX] based on this news`,
+      ],
       searchExamples: [
         `List top journalists writing about Fashion`,
         `"Cancer Research"`,
@@ -2401,6 +2438,16 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    selectSuggestion(txt) {
+      this.newTemplate = txt
+      this.showSuggestions = false
+    },
+    toggleSuggestions() {
+      this.showSuggestions = !this.showSuggestions
+    },
+    hideSuggestions() {
+      this.showSuggestions = false
+    },
     hideArticleDropdown() {
       this.showArticleGenerateDropdown = false
     },
@@ -4968,17 +5015,20 @@ export default {
     vertical-align: super;
   }
   .citation-link {
-    padding: 1.5px 5px 2px 4.5px;
-    margin: 0 2px;
-    font-size: 9.5px;
-    border: 0.5px solid rgba(0, 0, 0, 0.575);
+    padding: 3.25px 4px;
+    margin: 0 1px;
+    font-size: 9px;
+    border: 0.5px solid $lite-blue;
     background-color: white;
     border-radius: 100%;
     text-decoration: none;
     cursor: pointer;
     font-family: $base-font-family;
-    font-weight: 100;
+    font-weight: 900;
     color: $lite-blue;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .citation-link:hover {
@@ -8254,5 +8304,41 @@ textarea::placeholder {
   mix-blend-mode: multiply;
   background-color: white;
   margin-bottom: 12px;
+}
+
+.container-right-above {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  position: absolute;
+  right: 0;
+  bottom: 54px;
+  height: 285px;
+  width: 650px;
+  padding: 16px 0;
+  background-color: white;
+  box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+  overflow-y: scroll;
+
+  p {
+    margin: 0;
+    padding: 8px 16px;
+    width: 100%;
+    font-size: 14px;
+    &:hover {
+      background-color: $soft-gray;
+      cursor: pointer;
+    }
+  }
+
+  h3 {
+    font-family: $base-font-family;
+    font-weight: 100;
+    margin-left: 16px;
+  }
+
+  div {
+    margin-top: 12px;
+  }
 }
 </style>
