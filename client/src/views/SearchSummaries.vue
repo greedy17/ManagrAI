@@ -494,11 +494,15 @@
                 "
               />
 
-              <div v-if="!newSearch" class="left-margin" style="margin-right: 20px">
+              <div
+                v-if="!newSearch"
+                class="left-margin img-container-stay"
+                style="margin-right: 12px"
+              >
                 <img
                   style="margin: 0"
                   src="@/assets/images/paper-plane-top.svg"
-                  height="15px"
+                  height="14px"
                   alt=""
                 />
               </div>
@@ -506,13 +510,13 @@
               <div
                 v-else
                 @click="generateNewSearch($event, false)"
-                class="left-margin pointer lb-filter"
-                style="margin-right: 20px"
+                class="left-margin pointer lite-bg img-container-stay"
+                style="margin-right: 12px"
               >
                 <img
                   style="margin: 0"
                   src="@/assets/images/paper-plane-full.svg"
-                  height="16px"
+                  height="14px"
                   alt=""
                 />
               </div>
@@ -1016,23 +1020,24 @@
                     v-autoresize
                   />
 
-                  <img
+                  <div
                     v-if="!newTemplate"
-                    class="left-margin right-margin-l"
-                    src="@/assets/images/paper-plane-top.svg"
-                    height="16px"
-                    alt=""
-                  />
+                    class="left-margin right-margin-l img-container-stay"
+                    style="padding: 8px 8px 6px 9px"
+                  >
+                    <img src="@/assets/images/paper-plane-top.svg" height="14px" alt="" />
+                  </div>
 
                   <div
                     v-else-if="mainView === 'news'"
                     @click="getChatSummary($event, filteredArticles, newTemplate)"
-                    class="left-margin right-margin-l lb-filter"
+                    style="padding: 8px 8px 6px 9px"
+                    class="left-margin right-margin-l pointer lite-bg img-container-stay"
                   >
                     <img
                       style="margin: 0"
                       src="@/assets/images/paper-plane-full.svg"
-                      height="15px"
+                      height="14px"
                       alt=""
                     />
                   </div>
@@ -1040,12 +1045,13 @@
                   <div
                     v-else-if="mainView === 'social'"
                     @click="getChatSummary($event, preparedTweets, newTemplate)"
-                    class="left-margin right-margin-l lb-filter"
+                    style="padding: 8px 8px 6px 9px"
+                    class="left-margin right-margin-l pointer lite-bg img-container-stay"
                   >
                     <img
                       style="margin: 0"
                       src="@/assets/images/paper-plane-full.svg"
-                      height="15px"
+                      height="14px"
                       alt=""
                     />
                   </div>
@@ -1053,12 +1059,13 @@
                   <div
                     v-else
                     @click="getChatSummary($event, googleResults, newTemplate)"
-                    class="left-margin right-margin-l lb-filter"
+                    style="padding: 8px 8px 6px 9px"
+                    class="left-margin right-margin-l pointer lite-bg img-container-stayr"
                   >
                     <img
                       style="margin: 0"
                       src="@/assets/images/paper-plane-full.svg"
-                      height="15px"
+                      height="14px"
                       alt=""
                     />
                   </div>
@@ -8164,6 +8171,17 @@ textarea::placeholder {
   }
 }
 
+.img-container-stay {
+  padding: 2px 7px 0 9px;
+  border-radius: 50%;
+  background-color: $soft-gray;
+
+  img {
+    margin: 0;
+    padding: 0;
+  }
+}
+
 .img-container {
   cursor: pointer;
   padding: 1px 7px 0 7px;
@@ -8180,6 +8198,13 @@ textarea::placeholder {
 
 .lb-filter {
   filter: invert(45%) sepia(52%) saturate(1248%) hue-rotate(196deg) brightness(97%) contrast(90%) !important;
+}
+
+.lite-bg {
+  background-color: $lite-blue;
+  img {
+    filter: invert(100%);
+  }
 }
 
 .lbborder {
