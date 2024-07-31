@@ -6748,7 +6748,7 @@ li {
 
   .input {
     position: sticky;
-    z-index: 8;
+    z-index: 2;
     top: 1.5rem;
     width: 50% !important;
     border-radius: 20px;
@@ -8119,6 +8119,7 @@ textarea::placeholder {
   cursor: pointer;
   border-top-left-radius: 5px;
   border-top-right-radius: 5px;
+  z-index: 1;
 
   &:hover {
     opacity: 0.7;
@@ -8311,21 +8312,21 @@ textarea::placeholder {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 5px;
   position: absolute;
-  right: 48px;
-  top: 40px;
-  height: 285px;
-  width: 650px;
+  right: 96px;
+  top: -140px;
+  height: 250px;
+  width: 570px;
   padding: 16px 0;
   background-color: white;
   box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
-  z-index: 9 !important;
+  z-index: 9;
   overflow-y: scroll;
 
   p {
     margin: 0;
     padding: 8px 16px;
     width: 100%;
-    font-size: 14px;
+    font-size: 13px;
     &:hover {
       background-color: $soft-gray;
       cursor: pointer;
@@ -8339,7 +8340,7 @@ textarea::placeholder {
   }
 
   div {
-    margin-top: 12px;
+    margin-top: 8px;
   }
 }
 </style>
