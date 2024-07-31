@@ -1321,7 +1321,7 @@ def get_notes_command(request):
 @api_view(["post"])
 @permission_classes([permissions.AllowAny])
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
-def launch_action(request):
+def launch_search(request):
     slack_id = request.data.get("user_id")
     if slack_id:
         slack = (
@@ -1342,19 +1342,8 @@ def launch_action(request):
         "u": str(user.id),
         "trigger_id": trigger_id,
     }
-    if user.role == "PR":
-        blockset = "news_summary_blockset"
-        title = "AI search assistant"
-    else:
-        options = (
-            ["Contact", "Opportunity", "Account", "Lead"]
-            if user.crm == "SALESFORCE"
-            else ["Contact", "Deal", "Company"]
-        )
-        options = "%".join(options)
-        context.update(options=options, action_id=slack_const.PROCESS_SEND_RESOURCE_MESSAGE)
-        blockset = "pick_resource_modal_block_set"
-        title = "Choose Record"
+    blockset = "news_summary_blockset"
+    title = "News Summary"
     data = {
         "trigger_id": trigger_id,
         "view": {
@@ -1365,12 +1354,11 @@ def launch_action(request):
             "external_id": f"{blockset}.{str(uuid.uuid4())}",
         },
     }
-    if user.role == "PR":
-        data["view"]["callback_id"] = slack_const.PROCESS_NEWS_SUMMARY
-        data["view"]["submit"] = {
-            "type": "plain_text",
-            "text": "Submit",
-        }
+    data["view"]["callback_id"] = slack_const.PROCESS_NEWS_SUMMARY
+    data["view"]["submit"] = {
+        "type": "plain_text",
+        "text": "Submit",
+    }
     slack_requests.generic_request(url, data, access_token=access_token)
     return Response()
 

@@ -327,9 +327,9 @@ urlpatterns = [
         name="get-notes",
     ),
     path(
-        "slack/commands/actions",
-        slack_views.launch_action,
-        name="launch-action",
+        "slack/commands/search",
+        slack_views.launch_search,
+        name="launch-search",
     ),
     path(
         "slack/commands/create-resource",
