@@ -6350,6 +6350,7 @@ button:disabled {
   font-size: 16px;
   line-height: 32px;
   word-wrap: break-word;
+  min-height: 150px;
 
   @media only screen and (max-width: 600px) {
     padding-bottom: 16px;
@@ -8312,8 +8313,8 @@ textarea::placeholder {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 5px;
   position: absolute;
-  right: 96px;
-  top: -140px;
+  right: 48px;
+  bottom: 40px;
   height: 250px;
   width: 570px;
   padding: 16px 0;
