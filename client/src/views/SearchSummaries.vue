@@ -468,7 +468,7 @@
           Connect <span class="link" @click="goToIntegrations">Twitter</span> to continue
         </h2>
         <!-- <h1 v-else>ManagrAI</h1> -->
-        <img src="@/assets/images/newLogo.png" class="image-bg" height="60px" alt="" />
+        <img src="@/assets/images/newLogo2.png" class="image-bg" height="60px" alt="" />
       </div>
 
       <div class="small-container letter-spacing">
@@ -709,6 +709,33 @@
               <img src="@/assets/images/arrow-trend-up.svg" height="14px" alt="" />
               {{ example }}
             </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="abs-bottom-right">
+        <img
+          @click.stop="toggleHelpMenu"
+          src="@/assets/images/help.svg"
+          class="pointer"
+          height="26px"
+          alt=""
+        />
+        <div v-outside-click="closeHelp" v-show="showingHelp" class="relative pointer">
+          <div class="help-menu">
+            <h4>Need Help ?</h4>
+            <div>
+              <img src="@/assets/images/camera.svg" height="14px" alt="" />
+              <a
+                href="https://www.loom.com/share/67b6640bd4a84de0aee9dd7fe63b6258?sid=6d7793ff-2303-4cbf-8202-f5b254d731ee"
+                target="_blank"
+                >Onboarding Video</a
+              >
+            </div>
+            <div>
+              <img src="@/assets/images/email-round.svg" height="14px" alt="" />
+              <a :href="mailtoLink">Contact Support</a>
+            </div>
           </div>
         </div>
       </div>
@@ -2019,6 +2046,8 @@ export default {
   },
   data() {
     return {
+      showingHelp: false,
+      supportEmail: 'support@example.com',
       showSuggestions: false,
       contentType: 'Content',
       showCompanySelection: false,
@@ -2172,7 +2201,7 @@ export default {
       showingJournalists: false,
       showingRelated: false,
       summarySuggestions: [
-        `Craft a pitch about [BrandX] incorporating relevant news, use citations. Pitch details: [here]`,
+        `Craft a media pitch for [BrandX] incorporating relevant news, use citations. Pitch details: [here]`,
         `Craft a press release for [BrandX] incorporating relevant news, use citations. Pitch details: [here]`,
         `Which of these journalists would be interested in learning more about [BrandX], explain why`,
         `Provide creative pitching angles for [BrandX] based on this coverage`,
@@ -2439,6 +2468,12 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    toggleHelpMenu() {
+      this.showingHelp = !this.showingHelp
+    },
+    closeHelp() {
+      this.showingHelp = false
+    },
     selectSuggestion(txt) {
       this.newTemplate = txt
       this.showSuggestions = false
@@ -4683,6 +4718,9 @@ export default {
     },
   },
   computed: {
+    mailtoLink() {
+      return `mailto:${this.supportEmail}`
+    },
     placeHolderText() {
       let text = ''
       if (this.mainView === 'social' && !this.hasTwitterIntegration) {
@@ -4996,6 +5034,19 @@ export default {
   visibility: visible;
   opacity: 1;
 }
+
+// .menu-wrapper {
+//   position: relative;
+//   display: inline-block;
+
+//   &:hover {
+//     background-color: red;
+//     .help-menu {
+//       visibility: visible !important;
+//       opacity: 1;
+//     }
+//   }
+// }
 
 ::v-deep .ql-snow.ql-toolbar button {
   background: $soft-gray;
@@ -8342,6 +8393,71 @@ textarea::placeholder {
 
   div {
     margin-top: 8px;
+  }
+}
+
+.abs-bottom-right {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+
+  img {
+    filter: invert(22%) sepia(18%) saturate(1212%) hue-rotate(162deg) brightness(89%) contrast(82%);
+  }
+}
+
+.menu-wrapper {
+  position: relative;
+  &:hover {
+    .help-menu {
+      opacity: 1;
+    }
+  }
+}
+
+.help-menu {
+  cursor: pointer;
+  position: absolute;
+  bottom: 32px;
+  right: 0;
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.275);
+  border-radius: 4px;
+  width: 160px;
+
+  h4 {
+    margin: 0;
+    margin: 12px;
+  }
+  div {
+    width: 100%;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    img {
+      filter: invert(40%);
+      margin-right: 8px;
+    }
+
+    &:hover {
+      background-color: $off-white;
+
+      a {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  div:last-of-type {
+    padding-bottom: 16px;
+  }
+
+  a {
+    text-decoration: none;
+    font-size: 13px;
+    color: $dark-black-blue;
   }
 }
 </style>
