@@ -235,7 +235,7 @@
       </div>
     </Modal>
     <Modal v-if="emailJournalistModalOpen" class="regen-modal">
-      <div style="width: 600px" class="regen-container">
+      <div style="width: 55vw; min-width: 500px" class="regen-container">
         <div style="background-color: white; z-index: 1000" class="paid-header">
           <div class="space-between">
             <h2>Email Pitch</h2>
