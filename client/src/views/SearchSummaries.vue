@@ -2172,7 +2172,7 @@ export default {
       showingJournalists: false,
       showingRelated: false,
       summarySuggestions: [
-        `Craft a pitch for [BrandX] incorporating relevant news, use citations. Pitch details: [here]`,
+        `Craft a pitch about [BrandX] incorporating relevant news, use citations. Pitch details: [here]`,
         `Craft a press release for [BrandX] incorporating relevant news, use citations. Pitch details: [here]`,
         `Which of these journalists would be interested in learning more about [BrandX], explain why`,
         `Provide creative pitching angles for [BrandX] based on this coverage`,
@@ -5016,7 +5016,7 @@ export default {
     vertical-align: super;
   }
   .citation-link {
-    padding: 4px 5.25px;
+    padding: 4px 6px 4.5px 5px;
     margin: 0 1px;
     font-size: 9px;
     border: 0.5px solid $lite-blue;
@@ -8311,14 +8311,14 @@ textarea::placeholder {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 5px;
   position: absolute;
-  right: 0;
-  bottom: 54px;
+  right: 48px;
+  top: 40px;
   height: 285px;
   width: 650px;
   padding: 16px 0;
   background-color: white;
   box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
-  z-index: 1;
+  z-index: 9 !important;
   overflow-y: scroll;
 
   p {
