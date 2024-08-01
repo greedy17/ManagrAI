@@ -246,7 +246,7 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_clie
     body = f"""
     Today is {date}. Please provide a concise and accurate response per my instructions, using the given news coverage. If the instructions don't ask for anything specific, just provide a brief summary of the news in 150 words or less. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation. 
         For example: 'Paris is the capital of France[1].' Only use this format to cite search results. Never cite more than 3 sources in a row. Do not include a references section at the end of your answer. Never make an entire list item a link. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
-        Make sure that your response is properly formatted html. Do not include any styling and/or <meta> tags. Do not include ```html``` in your response
+        Make sure that your response is properly formatted html. Do not include any styling and/or <meta> tags. Do not include ```html``` in your response.
 
     Here is the news coverage:
     {clips}
@@ -314,15 +314,13 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
         body = f"Today's date is {date}. At least one of the terms in the boolean search were mentioned in the provided news article. Follow the instructions carefully. Do not bold any text in your response. \nBoolean Search: {search} \n Instructions: {instructions} \n News Article: {article}"
     return body
 
+def OPEN_AI_PITCH(date, type, instructions,data, style=False):
+    body = f"""Today's date is {date}. You are tasked with generating content. You must follow the instructions below:
 
-def OPEN_AI_PITCH(date, type, instructions, style=False):
-    if not style:
-        style = "Begin with a precise introduction, without informal salutations. Be clear, concise, and informative, avoiding metaphors. Offer coherent data without persuasion. Aim for depth, not sensationalism and avoid commercial bias."
-    body = f"""Today's date is {date}. You are tasked with generating content. You must follow the instructions below. Strictly adhere to any specified word count in the instructions:
-    1. Here are the instructions: {type}.
-    2. If provided, generate content must be based on this information: {instructions}.
-    3. You must Mirror this writing style: {style}.
-    4. Again, please adhere to the specified word count.
+    1. Instructions: {type}
+    2. If provided, generated content must be based on this information: {instructions}
+    3. You must Mirror this writing style: {style}
+    4. Make sure that your response is properly formatted html. Do not include any styling and/or <meta> tags. Do not include ```html``` in your response.
     """
     return body
 
@@ -525,7 +523,11 @@ OPEN_AI_RELEVANT_POSTS = (
 
 OPEN_AI_TOP_JOURNALISTS = (
     lambda term, clips : f"""
-    List the top 10 Journalists from top news outlets writing about {term}. Sort by order of influence (most influential at the top) Output must be: Journalist name, (Outlet), 4-5 word headline summary using quotes, - date using mm.dd format. Name must be a strong tag. Here are the news clips: \n {clips}:
+    List the top 10 Journalists from top news outlets in the clips below writing about {term}. Sort by order of influence (most influential at the top). 
+    Only list real journalists found in the news coverage, do not use fake names like John Doe or Jane Smith. Output must be: Journalist name, (Outlet), 4-5 word headline summary using quotes, - date using mm.dd format.
+    Name must be a strong tag. 
+    
+    Here are the news clips: \n {clips}:
      """
 )
 
@@ -555,6 +557,13 @@ OPEN_AI_GOOGLE_SEARCH = (
     And here is the top article: {text}  
     """
 )
+
+def OPEN_AI_GOOGLE_QUERY(date,question):
+    prompt = f"""Today is {date}. Given the user's question, extract a search query that captures the essential information needed to find relevant results from the google search API.
+    question: {question}
+    """    
+    
+    return prompt
 
 DO_NOT_TRACK_LIST = [
     "https://www.wsj.com",
