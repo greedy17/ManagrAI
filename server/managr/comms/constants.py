@@ -261,8 +261,9 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_clie
 def OPEN_AI_NEWS_CLIPS_SLACK_SUMMARY(date, clips, search, instructions=False, for_client=False):
     if not instructions:
         instructions = DEFAULT_CLIENT_INSTRUCTIONS
-    body = f"""Today's date is {date}. Read the news coverage below and carefully follow the instructions. Keep the output under 1000 characters. All URLs must be formatted as Slack hyperlinks. Only use the following exact format for URLs:
-
+    body = f"""Today's date is {date}. Read the news coverage below and carefully follow the instructions. 
+    Keep the output under 1000 characters. All URLs must be formatted as Slack hyperlinks. 
+    Only use the following exact format for URLs:
     Example format:
     <URL|Read More>
 
