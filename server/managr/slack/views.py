@@ -1361,6 +1361,42 @@ def launch_search(request):
     return Response()
 
 
+@api_view(["post"])
+@permission_classes([permissions.AllowAny])
+@authentication_classes((slack_auth.SlackWebhookAuthentication,))
+def send_to_slack(request):
+    from managr.comms.tasks import emit_process_news_summary
+
+    data = request.data
+    user = request.user
+    company = data.get("company", user.organization.name)
+    search = data.get("search")
+    start_date = data.get("start_date")
+    end_date = data.get("end_date")
+    instructions = data.get("instructions")
+    context = {
+        "u": str(user.id),
+        "company": company,
+        "search": search,
+        "start_date": start_date,
+        "end_date": end_date,
+    }
+    try:
+        res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=get_block_set(
+                "loading", {"message": ":robot_face: Processing your summary..."}
+            ),
+        )
+        context.update(ts=res["ts"])
+    except Exception as e:
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+    payload = {"view": {"state": {"INSTRUCTIONS": {"plain_input": {"value": instructions}}}}}
+    emit_process_news_summary(payload, context)
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class SlackFormInstanceViewSet(
     viewsets.GenericViewSet,
     mixins.RetrieveModelMixin,

@@ -352,6 +352,11 @@ urlpatterns = [
         name="list-tasks",
     ),
     path(
+        "slack/send-slack",
+        slack_views.send_to_slack,
+        name="send-slack",
+    ),
+    path(
         "auto/clear-stale-data",
         auto_views.init_clear_stale_data,
         name="clear-stale-data",
