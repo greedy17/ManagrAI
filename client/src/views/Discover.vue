@@ -875,11 +875,7 @@
         <div class="space-between margin-top-s horizontal-padding">
           <div></div>
           <div class="rows">
-            <div
-              style="margin-right: 0.5rem"
-              @click="copyText"
-              class="wrapper icon-button white-bg"
-            >
+            <div style="margin-right: 1rem" @click="copyText" class="wrapper">
               <img
                 style="cursor: pointer"
                 class="right-mar img-highlight"
@@ -890,14 +886,21 @@
               <div class="tooltip-below">{{ copyTip }}</div>
             </div>
 
-            <div>
+            <div class="wrapper">
               <button
                 @click="toggleSaveModal"
-                class="green-button"
+                class="no-borders"
                 :disabled="savingList || discoverySaved"
               >
-                Save
+                <img
+                  style="cursor: pointe; margin-top: 3px"
+                  class="right-mar img-highlight"
+                  src="@/assets/images/disk.svg"
+                  height="14px"
+                  alt=""
+                />
               </button>
+              <div class="tooltip-below">Save</div>
             </div>
           </div>
         </div>
@@ -1245,6 +1248,8 @@ export default {
           bodyClassName: ['custom'],
         })
         this.sendingEmail = false
+        this.loadingPitch = false
+        this.verifying = false
       } finally {
         this.refreshUser()
       }
@@ -1611,7 +1616,8 @@ export default {
     },
     async copyText() {
       try {
-        await navigator.clipboard.writeText(this.summary)
+        const cleanedSummary = this.summary.replace(/<\/?[^>]+(>|$)/g, '')
+        await navigator.clipboard.writeText(cleanedSummary)
         this.copyTip = 'Copied!'
 
         setTimeout(() => {
@@ -3162,10 +3168,10 @@ footer {
   z-index: 10000;
   background: $dark-black-blue;
   border-radius: 4px;
-  top: 150%;
+  top: 175%;
   color: #fff;
   display: block;
-  left: -30px;
+  left: -40px;
   margin-bottom: 15px;
   opacity: 0;
   padding: 8px;
@@ -4378,5 +4384,25 @@ textarea::placeholder {
   transition: opacity 1s ease-out;
   opacity: 0;
   animation: fadeIn 0.5s forwards;
+}
+
+.no-borders {
+  border: none;
+  background: transparent;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+
+  img {
+    transition: all 0.3s;
+  }
+  img:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: scale(1.075);
+  }
+
+  &:disabled {
+    border: none !important;
+  }
 }
 </style>

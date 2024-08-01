@@ -2115,7 +2115,6 @@ class ReportViewSet(
         return Report.objects.for_user(self.request.user)
 
     def create(self, request, *args, **kwargs):
-        print("data is right here ------ > ", request.data)
         try:
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)

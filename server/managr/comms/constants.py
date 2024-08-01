@@ -173,7 +173,7 @@ DEFAULT_TWITTER_INSTRUCTIONS = """*Executive summary:*\n Highlighting 5 key poin
 *Sentiment*\n Evaluate the overall tone or sentiment of the coverage. Is it primarily positive, neutral, or negative and why.\n
 *Influencers:*\n Identify key influencers based on follower count"""
 
-DEFAULT_CLIENT_INSTRUCTIONS = "Summary: Summarize the news in paragraph format, in less than 600 characters. \n Top Sources: List top 10 sources (based on popularity and size, no newswire sources)."
+DEFAULT_CLIENT_INSTRUCTIONS = "Summarize the news in paragraph format. list the top 3 sources (based on popularity and size, no newswire sources). Be concise, keep the output short."
 
 
 DEFAULT_TWITTER_CLIENT_INSTRUCTIONS = """<strong>Summary of the Tweets: No more than 400 characters long </strong>\n
@@ -241,22 +241,36 @@ def TWITTER_USERNAME_INSTRUCTIONS(company):
 
 
 def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_client=False):
-    structure_type = "HTML" if for_client else "Slack"
-    example_format = (
-        '<a href="URL" target="_blank">Link Text</a>' if for_client else "<URL|Read More>"
-    )
     if not instructions:
         instructions = DEFAULT_CLIENT_INSTRUCTIONS
-    body = f"""Today's date is {date}. Read the news coverage below and carefully follow the instructions. Keep the output under 1000 characters. All URLs must be formatted as {structure_type} hyperlinks. Only use the following exact format for URLs:
+
+    body = f"""
+    Today is {date}. Please provide a concise and accurate response per my instructions, using the given news coverage. If the instructions don't ask for anything specific, just provide a brief summary of the news in 150 words or less. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation. 
+        For example: 'Paris is the capital of France[1].' Only use this format to cite search results. Never cite more than 3 sources in a row. Do not include a references section at the end of your answer. Never make an entire list item a link. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
+        Make sure that your response is properly formatted html. Do not include any styling and/or <meta> tags. Do not include ```html``` in your response
+
+    Here is the news coverage:
+    {clips}
+
+    Here are the instructions:
+    {instructions}
+    """
+    return body
+
+
+def OPEN_AI_NEWS_CLIPS_SLACK_SUMMARY(date, clips, search, instructions=False, for_client=False):
+    if not instructions:
+        instructions = DEFAULT_CLIENT_INSTRUCTIONS
+    body = f"""Today's date is {date}. Read the news coverage below and carefully follow the instructions. Keep the output under 1000 characters. All URLs must be formatted as Slack hyperlinks. Only use the following exact format for URLs:
 
     Example format:
-    {example_format}
+    <URL|Read More>
 
-    Ensure every URL in your response strictly follows this format. Do not provide plain text URLs or markdown links.
+    Here is the news coverage:
+    {clips}
 
-    Here is the news coverage: {clips}.
-
-    Here are the instructions: {instructions}.
+    Here are the instructions:
+    {instructions}
     """
     return body
 
@@ -264,13 +278,11 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_clie
 def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, instructions, for_client=False):
     if not instructions:
         instructions = DEFAULT_TWITTER_CLIENT_INSTRUCTIONS
-    body = f"""Today's date is {date}.Summarize the twitter coverage based on these tweets.\n Tweets: {tweets}\n
-    You must follow these instructions: {instructions}. Summary cannot be longer than 1,000 characters.
-    
-    important output instructions:
+    body = f"""Today's date is {date}. Summarize the twitter coverage based on the twets below. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation. 
+    For example: 'Paris is the capital of France[1].' Only use this format to cite search results. Never cite more than 3 sources in a row. Do not include a references section at the end of your answer.
+    You must follow these instructions: {instructions}. Make sure that your response is properly a formatted html. Do not include any styling and/or <meta> tags. Do not include ```html``` in your response. Keep it brief, The response should be under 800 characters.   
 
-    1.If there are any lists in your response it must be returned in proper html ul tags!
-
+    Tweets: {tweets}
     """
     return body
 
@@ -300,15 +312,6 @@ DEFAULT_ARTICLE_INSTRUCTIONS = (
 DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS = (
     lambda boolean: f"Summary: summarize the article and its relation to any of these terms {boolean} in under 250 characters. \n Sentiment: what is the sentiment of any of these terms {boolean} within the article, keep under 200 characters"
 )
-
-
-# def OPEN_AI_WEB_SUMMARY(
-#     date,
-#     article,
-#     instructions,
-# ):
-#     body = f"Today's date is {date}. Summarize this news article:\n {article}. \nOutput format must be:\n {instructions}. It cannot be longer than 1500 characters."
-#     return body
 
 
 def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, for_client=False):
@@ -370,23 +373,36 @@ OPEN_AI_REWRITE_PTICH = (
 )
 
 
-def OPEN_AI_WEB_SUMMARY(query, results, text):
-    prompt = f"""Please provide a concise and accurate response to my query, using the given search results. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation. 
-    For example: 'Paris is the capital of France.' Only use this format to cite search results. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge.
-    
-    query: {query}
-    search results: {results}
-    full text from the top result: {text}
-    """
+def OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary):
+    if not instructions:
+        prompt = f"""Please provide a concise and accurate response to my query, using the given search results. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation. 
+        For example: 'Paris is the capital of France[1].' Only use this format to cite search results. Never cite more than 3 sources in a row. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
+        Make sure that your response is properly formatted html with good spacing and easy to read. No padding on the body since it will be going into a container that already has it.
+        
+        query: {query}
+        search results: {results}
+        full text from the top result: {text}
+        """
+    elif summary:
+        prompt = f"""Based on the initial summary and the additional search results, please provide a concise and accurate response to the follow-up question. Use the given search results and the initial summary to ensure the response is comprehensive. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation.
+        For example: 'Paris is the capital of France[1].' Only use this format to cite search results. Never cite more than 3 sources in a row. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge and the initial summary.
+        Make sure that your response is properly formatted html with good spacing and easy to read. No padding on the body since it will be going into a container that already has it.
+        
+        initial summary: {summary}
+        follow-up question: {instructions}
+        search results: {results}
+        """
+    else:
+        prompt = f"""Please provide a concise and accurate response to my query, using the given search results. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation. 
+        For example: 'Paris is the capital of France[1].' Only use this format to cite search results. Never cite more than 3 sources in a row. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
+        Make sure that your response is properly formatted html with good spacing and easy to read. No padding on the body since it will be going into a container that already has it.
+        
+        query: {instructions}
+        search results: {results}
+        full text from the top result: {text}
+        """
+
     return prompt
-
-
-# def OPEN_AI_WEB_SUMMARY(query, results):
-#     prompt = f"""Answer this question based on all the information below: {query}
-#     You must cite your sources (outlet name and date) using a valid html citation tag that opens in a new tab. Your response must be concise and cannot exceed 1500 characters. Please ensure brevity by focusing only on the key points and relevant information.
-#     Here are the top 6 search results:{results}
-#     """
-#     return prompt
 
 
 OPEN_AI_LEARN_WRITING_STYLE_PROMPT = (
