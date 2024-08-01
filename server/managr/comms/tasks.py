@@ -127,8 +127,7 @@ def get_clips(user, search, date_to, date_from):
     return {"articles": articles, "string": search}
 
 
-def get_summary(user, clips, search, company):
-    instructions = False
+def get_summary(user, clips, search, company, instructions=" "):
     if "journalist:" in search:
         instructions = comms_consts.JOURNALIST_INSTRUCTIONS(company)
     has_error = False
@@ -136,13 +135,13 @@ def get_summary(user, clips, search, company):
     token_amount = 1000
     timeout = 60.0
     clip_strings = [
-        f"Content: {clip['description']}, Date: {clip['publish_date']} , Source:{clip['source']}, Author:{clip['author']}, Link:{clip['source']}"
+        f"Content: {clip['description']}, Date: {clip['publish_date']} , Source:{clip['source']}, Author:{clip['author']}, Link:{clip['link']}"
         for clip in clips
     ]
     while True:
         try:
             res = Search.get_summary(
-                user, token_amount, timeout, clip_strings, search, instructions, True
+                user, token_amount, timeout, clip_strings, search, instructions
             )
             message = res.get("choices")[0].get("message").get("content").replace("**", "*")
             user.add_meta_data("news_summaries")
@@ -209,10 +208,25 @@ def update_search(payload, context):
 @background()
 def _process_news_summary(payload, context):
     state = payload["view"]["state"]["values"]
-    search = state["SEARCH"]["plain_input"]["value"]
-    company = state["COMPANY"]["plain_input"]["value"]
-    start_date = state["START_DATE"][list(state["START_DATE"].keys())[0]]["selected_date"]
-    end_date = state["STOP_DATE"][list(state["STOP_DATE"].keys())[0]]["selected_date"]
+    if "INSTRUCTIONS" in state.keys():
+        instructions = state["INSTRUCTIONS"]["plain_input"]["value"]
+        company = context.get("c", None)
+        search = context.get("s")
+        start_date = context.get("sd")
+        end_date = context.get("ed")
+    elif context.get("search_id", False):
+        saved_search = Search.objects.get(id=context.get("search_id"))
+        instructions = saved_search.instructions
+        search = saved_search.input_text
+        company = state["COMPANY"]["plain_input"]["value"]
+        start_date = state["START_DATE"][list(state["START_DATE"].keys())[0]]["selected_date"]
+        end_date = state["STOP_DATE"][list(state["STOP_DATE"].keys())[0]]["selected_date"]
+    else:
+        instructions = " "
+        search = state["SEARCH"]["plain_input"]["value"]
+        company = state["COMPANY"]["plain_input"]["value"]
+        start_date = state["START_DATE"][list(state["START_DATE"].keys())[0]]["selected_date"]
+        end_date = state["STOP_DATE"][list(state["STOP_DATE"].keys())[0]]["selected_date"]
     user = User.objects.get(id=context.get("u"))
     attempts = 1
     token_amount = 500
@@ -222,7 +236,7 @@ def _process_news_summary(payload, context):
             clips_res = get_clips(user, search, start_date, end_date)
             articles = clips_res["articles"]
             input_text = clips_res["string"]
-            summary_res = get_summary(user, articles, search, company)
+            summary_res = get_summary(user, articles, search, company, instructions)
             message = summary_res["summary"]
             user.add_meta_data("news_summaries")
             user.save()
@@ -256,42 +270,28 @@ def _process_news_summary(payload, context):
             block_builders.header_block(
                 "Answer:",
             ),
-            block_builders.simple_section(message, "mrkdwn"),
-            block_builders.section_with_button_block(
-                "Ask Follow-Up",
-                "FOLLOWUP",
-                ":speech_balloon: *Ask a follow up question...*",
-                action_id=action_with_params(
-                    slack_const.PROCESS_SHOW_REGENERATE_NEWS_SUMMARY_FORM,
-                ),
+            block_builders.simple_section(f"{message}\n", "mrkdwn", "SUMMARY"),
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "Ask Follow-Up",
+                        "FOLLOWUP",
+                        action_id=action_with_params(
+                            slack_const.PROCESS_SHOW_REGENERATE_NEWS_SUMMARY_FORM,
+                            [f"sd={start_date}", f"ed={end_date}", f"s={search}", f"c={company}"],
+                        ),
+                    )
+                ]
             ),
             block_builders.divider_block(),
             block_builders.header_block("Clips:"),
-            # block_builders.actions_block(
-            #     [
-            #         block_builders.simple_button_block(
-            #             "Regenerate",
-            #             "REGENERATE",
-            #             action_id=action_with_params(
-            #                 slack_const.PROCESS_SHOW_REGENERATE_NEWS_SUMMARY_FORM,
-            #                 params=[f"search_id={str(search.id)}"],
-            #             ),
-            #         ),
-            #         block_builders.simple_button_block(
-            #             "Show Clips",
-            #             "SHOW_CLIPS",
-            #             action_id=action_with_params(
-            #                 slack_const.PROCESS_SEND_CLIPS, params=[f"search_id={str(search.id)}"]
-            #             ),
-            #         ),
-            #     ]
-            # ),
         ]
         for i in range(0, 5):
             article = articles[i]
             date = article["publish_date"][:9]
             fixed_date = f"{date[5:7]}/{date[8:]}/{date[0:4]}"
-            article_text = f"{article['source']['name']}\n*{article['title']}*\n<{article['link']}|Read More>\n_{article['author'].replace('_','')}_ - {fixed_date}"
+            author = article["author"].replace("_", "") if article["author"] is not None else "N/A"
+            article_text = f"{article['source']['name']}\n*{article['title']}*\n<{article['link']}|Read More>\n_{author}_ - {fixed_date}"
             blocks.append(block_builders.simple_section(article_text, "mrkdwn"))
             blocks.append(block_builders.divider_block())
         blocks.append(block_builders.context_block(f"{search}", "mrkdwn"))
@@ -511,7 +511,7 @@ def _send_news_summary(news_alert_id):
         }
         email_list = [alert.user.email]
         send_html_email(
-            f"Managr Digest: {alert.search.name}",
+            f"ManagrAI Digest: {alert.search.name}",
             "core/email-templates/news-email.html",
             settings.DEFAULT_FROM_EMAIL,
             email_list,
@@ -567,7 +567,7 @@ def _send_social_summary(news_alert_id):
             "website_url": f"{settings.MANAGR_URL}/login",
         }
         send_html_email(
-            f"Managr Digest: {alert.search.name}",
+            f"ManagrAI Digest: {alert.search.name}",
             "core/email-templates/social-email.html",
             settings.DEFAULT_FROM_EMAIL,
             [alert.user.email],
@@ -594,7 +594,7 @@ def _share_client_summary(summary, clips, user_email):
     }
     try:
         send_html_email(
-            f"Managr Digest",
+            f"ManagrAI Digest",
             "core/email-templates/news-email.html",
             settings.DEFAULT_FROM_EMAIL,
             [user_email],

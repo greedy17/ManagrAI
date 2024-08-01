@@ -1340,15 +1340,13 @@ def launch_search(request):
     trigger_id = request.data.get("trigger_id")
     context = {
         "u": str(user.id),
-        "trigger_id": trigger_id,
     }
     blockset = "news_summary_blockset"
-    title = "News Summary"
     data = {
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
-            "title": {"type": "plain_text", "text": title},
+            "title": {"type": "plain_text", "text": "News"},
             "blocks": get_block_set(blockset, context=context),
             "private_metadata": json.dumps(context),
             "external_id": f"{blockset}.{str(uuid.uuid4())}",

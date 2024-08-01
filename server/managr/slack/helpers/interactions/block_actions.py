@@ -4056,42 +4056,20 @@ def process_show_regenerate_news_summary_form(payload, context):
     slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
     user = slack_account.user
     access_token = user.organization.slack_integration.access_token
-    blocks = payload["message"]["blocks"]
-    trigger_id = payload["trigger_id"]
-    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
-    search = Search.objects.get(id=context.get("search_id"))
     blocks = [
         block_builders.input_block(
-            "Enter your new search",
-            optional=False,
-            block_id="SEARCH",
-            multiline=True,
-            initial_value=search.input_text,
-        ),
-        block_builders.input_block(
-            "What would you like included in your summary?",
-            block_id="OUTPUT_INSTRUCTIONS",
-            initial_value=f"{search.instructions if search.instructions else ''}",
-            multiline=True,
-        ),
-        block_builders.actions_block(
-            [
-                block_builders.simple_button_block(
-                    "Use a template",
-                    "USE_TEMPLATE",
-                    action_id=slack_const.ADD_NEWS_SUMMARY_TEMPLATE,
-                )
-            ],
-            block_id="USE_TEMPLATE_BLOCK",
-        ),
+            "Ask a follow-up", multiline=True, optional=False, block_id="INSTRUCTIONS"
+        )
     ]
+    trigger_id = payload["trigger_id"]
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     context.update(ts=payload["message"]["ts"], u=str(user.id))
     data = {
         "trigger_id": trigger_id,
         "view": {
             "type": "modal",
             "callback_id": slack_const.PROCESS_NEWS_SUMMARY,
-            "title": {"type": "plain_text", "text": "News Summary"},
+            "title": {"type": "plain_text", "text": "News"},
             "blocks": blocks,
             "submit": {
                 "type": "plain_text",
@@ -4186,10 +4164,10 @@ def process_summary_for_saved_search(payload, context):
             "view_id": payload["view"]["id"],
             "view": {
                 "type": "modal",
-                "title": {"type": "plain_text", "text": "News Summary"},
+                "title": {"type": "plain_text", "text": "News"},
                 "blocks": [
                     block_builders.simple_section(
-                        "Getting summary for your saved clips, check your DM!"
+                        ":robot_face: Processing your news summary, check your DM!", "mrkdwn"
                     )
                 ],
             },

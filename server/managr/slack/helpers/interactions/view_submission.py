@@ -166,7 +166,9 @@ def process_stage_next_page(payload, context):
 @log_all_exceptions
 @slack_api_exceptions(rethrow=True)
 @processor(
-    required_context=["w",]
+    required_context=[
+        "w",
+    ]
 )
 def process_zoom_meeting_data(payload, context):
     # get context
@@ -273,7 +275,9 @@ def process_zoom_meeting_data(payload, context):
         blocks = get_block_set("meeting_blockset", context)
         try:
             res = slack_requests.send_channel_message(
-                user.slack_integration.channel, block_set=blocks, access_token=slack_access_token,
+                user.slack_integration.channel,
+                block_set=blocks,
+                access_token=slack_access_token,
             )
             workflow.slack_interaction = f"{res['ts']}|{user.slack_integration.channel}"
             workflow.save()
@@ -399,7 +403,11 @@ def process_submit_resource_data(payload, context):
                 "type": "modal",
                 "title": {"type": "plain_text", "text": "Loading"},
                 "blocks": get_block_set(
-                    "loading", {"message": ":rocket: Sending your data", "fill": True,},
+                    "loading",
+                    {
+                        "message": ":rocket: Sending your data",
+                        "fill": True,
+                    },
                 ),
             },
         }
@@ -564,7 +572,9 @@ def process_submit_custom_object(payload, context):
 
 def CRM_FILTERS(crm, integration_id):
     filters = {
-        "HUBSPOT": [{"propertyName": "hs_object_id", "operator": "EQ", "value": integration_id},],
+        "HUBSPOT": [
+            {"propertyName": "hs_object_id", "operator": "EQ", "value": integration_id},
+        ],
         "SALESFORCE": [f"AND Id = '{integration_id}'"],
     }
     return filters[crm]
@@ -595,7 +605,8 @@ def process_zoom_meeting_attach_resource(payload, context):
         except CRM_SWITCHER[user.crm][meeting_resource]["model"].DoesNotExist:
             try:
                 resource_res = user.crm_account.adapter_class.list_resource_data(
-                    meeting_resource, filter=CRM_FILTERS(user.crm, integration_id),
+                    meeting_resource,
+                    filter=CRM_FILTERS(user.crm, integration_id),
                 )
                 serializer = CRM_SWITCHER[user.crm][meeting_resource]["serializer"](
                     data=resource_res[0].as_dict
@@ -628,7 +639,9 @@ def process_zoom_meeting_attach_resource(payload, context):
     else:
         # check to see if it already has the create form added and save that instead
         main_form = (
-            workflow.forms.filter(template__form_type=slack_const.FORM_TYPE_CREATE,)
+            workflow.forms.filter(
+                template__form_type=slack_const.FORM_TYPE_CREATE,
+            )
             .exclude(template__resource__in=["Contact", "OpportunityLineItem"])
             .first()
         )
@@ -1149,7 +1162,10 @@ def process_add_contacts_to_cadence(payload, context):
             "title": {"type": "plain_text", "text": "Loading"},
             "blocks": get_block_set(
                 "loading",
-                {"message": ":rocket: Putting contacts into your Cadence", "fill": True,},
+                {
+                    "message": ":rocket: Putting contacts into your Cadence",
+                    "fill": True,
+                },
             ),
         },
     }
@@ -1234,7 +1250,10 @@ def process_add_contacts_to_sequence(payload, context):
             "title": {"type": "plain_text", "text": "Loading"},
             "blocks": get_block_set(
                 "loading",
-                {"message": ":rocket: Putting contacts into your Cadence", "fill": True,},
+                {
+                    "message": ":rocket: Putting contacts into your Cadence",
+                    "fill": True,
+                },
             ),
         },
     }
@@ -1815,7 +1834,8 @@ def process_submit_product(payload, context):
                         "Add Product",
                         "ADD_PRODUCT",
                         action_id=action_with_params(
-                            slack_const.PROCESS_ADD_PRODUCTS_FORM, params=params,
+                            slack_const.PROCESS_ADD_PRODUCTS_FORM,
+                            params=params,
                         ),
                     )
                 ],
@@ -2033,7 +2053,8 @@ def process_meeting_convert_lead(payload, context):
                 logger.exception(f"CONVERT LEAD EXCEPTION: {e}")
                 blocks = [
                     block_builders.simple_section(
-                        f":exclamation: There was an error converting your lead", "mrkdwn",
+                        f":exclamation: There was an error converting your lead",
+                        "mrkdwn",
                     )
                 ]
                 break
@@ -2058,7 +2079,8 @@ def process_meeting_convert_lead(payload, context):
                 "title": {"type": "plain_text", "text": "Lead Converted"},
                 "blocks": [
                     block_builders.simple_section(
-                        ":white_check_mark: Your Lead was successfully converted :clap:", "mrkdwn",
+                        ":white_check_mark: Your Lead was successfully converted :clap:",
+                        "mrkdwn",
                     )
                 ],
             },
@@ -2462,7 +2484,10 @@ def process_submit_chat_prompt(payload, context):
     prompt = state["values"]["CHAT_PROMPT"]["plain_input"]["value"]
 
     block_set = [
-        *get_block_set("loading", {"message": f":robot_face: Processing your submission..."},),
+        *get_block_set(
+            "loading",
+            {"message": f":robot_face: Processing your submission..."},
+        ),
     ]
     try:
         if "w" in context.keys():
@@ -2486,7 +2511,9 @@ def process_submit_chat_prompt(payload, context):
         )
         context.update(ts=res["ts"])
         emit_process_submit_chat_prompt(
-            context.get("u"), prompt, context,
+            context.get("u"),
+            prompt,
+            context,
         )
     except Exception as e:
         logger.exception(f"Failed submit chat data {e}")
@@ -2505,7 +2532,10 @@ def process_send_recap_modal(payload, context):
         "view": {
             "type": "modal",
             "callback_id": slack_const.PROCESS_SEND_RECAPS,
-            "title": {"type": "plain_text", "text": f"{'Send Summary'}",},
+            "title": {
+                "type": "plain_text",
+                "text": f"{'Send Summary'}",
+            },
             "blocks": get_block_set("send_recap_block_set", {"u": context.get("u")}),
             "submit": {"type": "plain_text", "text": "Send"},
             "private_metadata": json.dumps(context),
@@ -2591,7 +2621,7 @@ def process_news_summary(payload, context):
                 ts,
                 user.organization.slack_integration.access_token,
                 block_set=get_block_set(
-                    "loading", {"message": ":robot_face: Processing your news summary..."}
+                    "loading", {"message": ":robot_face: Processing your summary..."}
                 ),
             )
         else:
@@ -2599,7 +2629,7 @@ def process_news_summary(payload, context):
                 user.slack_integration.channel,
                 user.organization.slack_integration.access_token,
                 block_set=get_block_set(
-                    "loading", {"message": ":robot_face: Processing your news summary..."}
+                    "loading", {"message": ":robot_face: Processing your summary..."}
                 ),
             )
             context.update(ts=res["ts"])
@@ -2620,7 +2650,10 @@ def process_submit_ask_managr(payload, context):
         CRM_SWITCHER[user.crm][resource_type]["model"].objects.filter(id=resource_id).first()
     )
     block_set = [
-        *get_block_set("loading", {"message": f":robot_face: Processing your submission..."},),
+        *get_block_set(
+            "loading",
+            {"message": f":robot_face: Processing your submission..."},
+        ),
     ]
 
     try:
