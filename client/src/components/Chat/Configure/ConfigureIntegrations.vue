@@ -515,49 +515,43 @@
         </div>
 
         <div class="card">
-          <div class="card__header lr-bg" style="padding-left: 36px; padding-right: 36px">
-            <img style="height: 40px" src="@/assets/images/slackLogo.png" />
+          <div class="card__header" style="">
+            <img class="cover-photo" src="@/assets/images/slackLogo.png" />
+          </div>
+          <div class="card__body">
+            <div class="row-center" style="display: flex">
+              <h3 class="card__title">Slack</h3>
+              <div v-if="hasSlackIntegration" class="green-dot"></div>
+            </div>
+            <p>Connect to Slack</p>
           </div>
 
-          <div class="card__body">
-            <h3>
-              Slack
-              <span class="required" v-if="!hasSlackIntegration">
-                <img src="@/assets/images/required.svg" height="14px" alt=""
-              /></span>
-            </h3>
-            <p class="card-text">Interact with Managr through Slack</p>
-            <div>
-              <PulseLoadingSpinnerButton
-                v-if="!hasSlackIntegration"
-                :disabled="
-                  (!orgHasSlackIntegration && !userCanIntegrateSlack) || hasSlackIntegration
-                "
-                @click="onIntegrateSlack"
-                class="orange_button"
-                :text="slackButtonMessage"
-                :loading="generatingToken && selectedIntegration == 'SLACK'"
-              ></PulseLoadingSpinnerButton>
-
-              <div class="row" v-else>
-                <div class="img-border">
-                  <img
-                    @click="setRemoveApp('SLACK')"
-                    src="@/assets/images/revoke.svg"
-                    height="16"
-                    alt=""
-                  />
-                </div>
-                <div class="img-border">
-                  <img
-                    @click="onGetAuthLink('SLACK')"
-                    src="@/assets/images/refresh.svg"
-                    height="16"
-                    alt=""
-                  />
-                </div>
+          <div class="card__footer">
+            <button @click="revokeSlack" v-if="hasSlackIntegration" class="long-button connected">
+              <div style="margin-left: 4px" v-if="revoking" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
               </div>
-            </div>
+
+              <div v-else>Disconnect</div>
+            </button>
+
+            <button
+              @click="onIntegrateSlack"
+              :disabled="(generatingToken && selectedIntegration == 'SLACK') || connecting"
+              v-else
+              class="gsi-material-button"
+            >
+              <div class="gsi-material-button-state"></div>
+              <div class="gsi-material-button-content-wrapper">
+                <div class="gsi-material-button-icon">
+                  <img height="22px" src="@/assets/images/slackLogo.png" alt="" />
+                </div>
+                <span class="gsi-material-button-contents">Continue with Slack</span>
+                <span style="display: none">Continue with Slack</span>
+              </div>
+            </button>
           </div>
         </div>
       </div>
