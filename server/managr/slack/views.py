@@ -1386,7 +1386,7 @@ def send_to_slack(request):
             user.slack_integration.channel,
             user.organization.slack_integration.access_token,
             block_set=get_block_set(
-                "loading", {"message": ":robot_face: Processing your summary..."}
+                "loading", {"message": ":robot_face: Scanning the news..."}
             ),
         )
         context.update(ts=res["ts"])

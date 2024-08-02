@@ -2621,7 +2621,7 @@ def process_news_summary(payload, context):
                 ts,
                 user.organization.slack_integration.access_token,
                 block_set=get_block_set(
-                    "loading", {"message": ":robot_face: Processing your summary..."}
+                    "loading", {"message": ":robot_face: Scanning the news..."}
                 ),
             )
         else:
@@ -2629,7 +2629,7 @@ def process_news_summary(payload, context):
                 user.slack_integration.channel,
                 user.organization.slack_integration.access_token,
                 block_set=get_block_set(
-                    "loading", {"message": ":robot_face: Processing your summary..."}
+                    "loading", {"message": ":robot_face: Scanning the news..."}
                 ),
             )
             context.update(ts=res["ts"])
@@ -2652,7 +2652,7 @@ def process_submit_ask_managr(payload, context):
     block_set = [
         *get_block_set(
             "loading",
-            {"message": f":robot_face: Processing your submission..."},
+            {"message": f":robot_face: Scanning the news..."},
         ),
     ]
 

@@ -232,11 +232,14 @@ def _process_news_summary(payload, context):
         try:
             clips_res = get_clips(user, search, start_date, end_date)
             articles = clips_res["articles"]
-            input_text = clips_res["string"]
-            summary_res = get_summary(user, articles, search, instructions)
-            message = summary_res["summary"]
-            user.add_meta_data("news_summaries")
-            user.save()
+            if len(articles):
+                input_text = clips_res["string"]
+                summary_res = get_summary(user, articles, search, instructions)
+                message = summary_res["summary"]
+                user.add_meta_data("news_summaries")
+                user.save()
+            else:
+                message = "No results found. Try a new search…"
             break
         except open_ai_exceptions.StopReasonLength:
             logger.exception(
@@ -262,28 +265,42 @@ def _process_news_summary(payload, context):
             logger.exception(e)
             break
     try:
-        blocks = [
-            block_builders.context_block(f"{search}", "mrkdwn"),
-            block_builders.header_block(
-                "Answer:",
-            ),
-            block_builders.simple_section(f"{message}\n", "mrkdwn", "SUMMARY"),
-            block_builders.actions_block(
-                [
-                    block_builders.simple_button_block(
-                        "Ask Follow-Up",
-                        "FOLLOWUP",
-                        action_id=action_with_params(
-                            slack_const.PROCESS_SHOW_REGENERATE_NEWS_SUMMARY_FORM,
-                            [f"sd={start_date}", f"ed={end_date}", f"s={search}"],
-                        ),
-                    )
-                ]
-            ),
-            block_builders.divider_block(),
-            block_builders.header_block("Clips:"),
-        ]
-        print(len(articles))
+        if len(articles):
+            blocks = [
+                block_builders.context_block(f"{search}", "mrkdwn"),
+                block_builders.header_block(
+                    "Answer:",
+                ),
+                block_builders.simple_section(f"{message}\n", "mrkdwn", "SUMMARY"),
+                block_builders.actions_block(
+                    [
+                        block_builders.simple_button_block(
+                            "Ask Follow-Up",
+                            "FOLLOWUP",
+                            action_id=action_with_params(
+                                slack_const.PROCESS_SHOW_REGENERATE_NEWS_SUMMARY_FORM,
+                                [f"sd={start_date}", f"ed={end_date}", f"s={search}"],
+                            ),
+                        )
+                    ]
+                ),
+                block_builders.divider_block(),
+                block_builders.header_block("Clips:"),
+            ]
+        else:
+            blocks = [
+                block_builders.simple_section(f"{message}\n", "mrkdwn", "SUMMARY"),
+                block_builders.actions_block(
+                    [
+                        block_builders.simple_button_block(
+                            "New Search",
+                            "FOLLOWUP",
+                            action_id=slack_const.PROCESS_SHOW_SEARCH_MODAL,
+                        )
+                    ]
+                ),
+            ]
+
         if len(articles):
             end_index = 5 if len(articles) > 5 else len(articles)
             for i in range(0, end_index):
@@ -296,9 +313,6 @@ def _process_news_summary(payload, context):
                 article_text = f"{article['source']['name']}\n*{article['title']}*\n<{article['link']}|Read More>\n_{author}_ - {fixed_date}"
                 blocks.append(block_builders.simple_section(article_text, "mrkdwn"))
                 blocks.append(block_builders.divider_block())
-        else:
-            blocks.append(block_builders.simple_section(f"No articles found for search: {search}"))
-            blocks.append(block_builders.divider_block())
         blocks.append(block_builders.context_block(f"{search}", "mrkdwn"))
         slack_res = slack_requests.update_channel_message(
             user.slack_integration.channel,

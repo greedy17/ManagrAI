@@ -739,7 +739,7 @@ def news_summary_blockset(context):
     date_start = date - timedelta(days=7)
     blocks = [
         block_builders.input_block(
-            "Ask A Question", optional=False, block_id="SEARCH", multiline=True
+            "Search news", optional=False, block_id="SEARCH", multiline=True
         ),
         block_builders.datepicker(str(date_start), label="Date Start", block_id="START_DATE"),
         block_builders.datepicker(str(date), label="Date End", block_id="STOP_DATE"),
