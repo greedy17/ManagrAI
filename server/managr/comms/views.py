@@ -2757,6 +2757,8 @@ class JournalistContactViewSet(
         email = request.data.pop("email").strip()
         outlet = request.data.pop("outlet").strip()
         journalist = check_journalist_validity(journalist, outlet, email)
+        print(user)
+        print(journalist)
         if isinstance(journalist, dict) and "error" in journalist.keys():
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -2765,6 +2767,7 @@ class JournalistContactViewSet(
         else:
             request.data["journalist"] = journalist.id
             request.data["user"] = request.user.id
+            print(request.data)
             try:
                 serializer = self.serializer_class(data=request.data)
                 serializer.is_valid(raise_exception=True)
