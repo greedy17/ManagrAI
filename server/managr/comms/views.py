@@ -1233,6 +1233,7 @@ class PitchViewSet(
         user = request.user
         instructions = request.data.get("instructions")
         pitch = request.data.get("pitch")
+        style = request.data.get("style")
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -1241,7 +1242,7 @@ class PitchViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS(pitch, instructions)
+                prompt = comms_consts.OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS(pitch, instructions,style)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
@@ -2171,9 +2172,7 @@ class DiscoveryViewSet(
         user = request.user
         # if user.has_hit_summary_limit:
         #     return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
-        type = request.data.get("type")
-        beat = request.data.get("beat")
-        location = request.data.get("location")
+        info = request.data.get("info")
         content = request.data.get("content")
         has_error = False
         attempts = 1
@@ -2182,7 +2181,7 @@ class DiscoveryViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.DISCOVER_JOURNALIST(type, beat, location, content)
+                prompt = comms_consts.DISCOVER_JOURNALIST(content,info)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
@@ -2757,8 +2756,6 @@ class JournalistContactViewSet(
         email = request.data.pop("email").strip()
         outlet = request.data.pop("outlet").strip()
         journalist = check_journalist_validity(journalist, outlet, email)
-        print(user)
-        print(journalist)
         if isinstance(journalist, dict) and "error" in journalist.keys():
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -2767,7 +2764,6 @@ class JournalistContactViewSet(
         else:
             request.data["journalist"] = journalist.id
             request.data["user"] = request.user.id
-            print(request.data)
             try:
                 serializer = self.serializer_class(data=request.data)
                 serializer.is_valid(raise_exception=True)

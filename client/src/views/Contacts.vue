@@ -1258,6 +1258,7 @@ export default {
     //   }
     // },
     setContact(contact) {
+      console.log(contact)
       this.toggleGoogleModal()
       this.currentContact = contact
     },
@@ -2591,7 +2592,7 @@ h2 {
   align-items: center;
   font-size: 12px;
   background-color: $light-purple;
-  color: $grape;
+  color: $graper;
   font-family: $base-font-family;
   font-weight: 100;
   padding: 6px 32px 6px 8px;
@@ -2608,7 +2609,7 @@ h2 {
     cursor: pointer;
 
     &:hover {
-      background-color: $grape;
+      background-color: $graper;
       border-radius: 100%;
       display: flex;
       align-items: center;

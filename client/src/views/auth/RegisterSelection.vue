@@ -1,7 +1,7 @@
 <template>
   <div class="registration">
     <header>
-      <img class="blue-filter" src="@/assets/images/logo.png" height="36px" alt="" />
+      <img src="@/assets/images/newLogo.png" height="36px" alt="" />
       <div class="header">
         <small>Already a member ?</small>
         <router-link class="secondary-button" :to="{ name: 'Login' }">Log in</router-link>
@@ -10,7 +10,7 @@
 
     <div :class="{ disable: generatingToken }" class="form-card">
       <div class="center">
-        <h1 class="logo-title">Welcome to Managr</h1>
+        <h1 class="logo-title">AI</h1>
         <!-- <small class="gray-blue" style="margin: 0px 0px 16px 8px"
                 >Register with Google to continue</small
               > -->
@@ -29,7 +29,9 @@
       <!-- <div class="seperator">
               <span> OR </span>
             </div> -->
-      <button id="register-button" class="primary-button" @click="goToRegister">Register with company email</button>
+      <button id="register-button" class="primary-button" @click="goToRegister">
+        Register with company email
+      </button>
     </div>
     <div class="links">
       <p>

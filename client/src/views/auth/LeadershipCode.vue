@@ -3,8 +3,9 @@
     <header>
       <img
         @click="goToManagr"
-        class="blue-filter pointer"
-        src="@/assets/images/logo.png"
+        class="pointer"
+        style="mix-blend-mode: multiply; background-color: #fafafa"
+        src="@/assets/images/newLogo.png"
         height="36px"
         alt=""
       />
@@ -20,7 +21,7 @@
 
       <div v-if="!sentEmail" class="leadership-card">
         <h2 class="h2-text" style="margin-bottom: -0.5rem">Sign up for a free account</h2>
-        <p class="small-text">Fill in the information below to get started with Managr</p>
+        <p class="small-text">Fill in the information below to get started with ManagrAI</p>
         <div class="input__container">
           <p class="input__container_label">Company Name:</p>
           <input id="access-code" autofocus v-model="orgName" type="text" />
@@ -342,11 +343,12 @@ header {
   padding-top: 12px;
 }
 .h2-text {
-  font-size: 1.4rem;
+  font-family: $base-font-family;
+  font-size: 1.5rem;
   color: $dark-black-blue;
 }
 .small-text {
-  font-size: 12px;
+  font-size: 14px;
   margin-top: 0;
   margin-bottom: 1rem;
   color: $base-gray;

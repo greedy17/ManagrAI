@@ -247,7 +247,7 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_clie
     body = f"""
     Today is {date}. Please provide a concise and accurate response per my instructions, using the given news coverage. If the instructions don't ask for anything specific, just provide a brief summary of the news in 150 words or less. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation. 
         For example: 'Paris is the capital of France[1].' Only use this format to cite search results. Never cite more than 3 sources in a row. Do not include a references section at the end of your answer. Never make an entire list item a link. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
-        Make sure that your response is properly formatted html. Do not include any styling and/or <meta> tags. Do not include ```html``` in your response
+        Make sure that your response is properly formatted simple html with good spacing. Do not include any styling and/or <meta> tags. Do not include ```html``` in your response.
 
     Here is the news coverage:
     {clips}
@@ -281,7 +281,7 @@ def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, instructions, for_client=False
         instructions = DEFAULT_TWITTER_CLIENT_INSTRUCTIONS
     body = f"""Today's date is {date}. Summarize the twitter coverage based on the twets below. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation. 
     For example: 'Paris is the capital of France[1].' Only use this format to cite search results. Never cite more than 3 sources in a row. Do not include a references section at the end of your answer.
-    You must follow these instructions: {instructions}. Make sure that your response is properly a formatted html. Do not include any styling and/or <meta> tags. Do not include ```html``` in your response. Keep it brief, The response should be under 800 characters.   
+    You must follow these instructions: {instructions}. Make sure that your response is properly formatted simple html with good spacing. Do not include any styling and/or <meta> tags. Do not include ```html``` in your response. Keep it brief, The response should be under 800 characters.   
 
     Tweets: {tweets}
     """
@@ -325,14 +325,12 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
     return body
 
 
-def OPEN_AI_PITCH(date, type, instructions, style=False):
-    if not style:
-        style = "Begin with a precise introduction, without informal salutations. Be clear, concise, and informative, avoiding metaphors. Offer coherent data without persuasion. Aim for depth, not sensationalism and avoid commercial bias."
-    body = f"""Today's date is {date}. You are tasked with generating content. You must follow the instructions below. Strictly adhere to any specified word count in the instructions:
-    1. Here are the instructions: {type}.
-    2. If provided, generate content must be based on this information: {instructions}.
-    3. You must Mirror this writing style: {style}.
-    4. Again, please adhere to the specified word count.
+def OPEN_AI_PITCH(date, type, instructions, data, style=False):
+    body = f"""Today's date is {date}. You are tasked with generating content. You must follow the instructions below:
+
+    1. Instructions: {type}
+    2. You must Mirror this writing style: {style}
+    3. Make sure that your response is properly formatted simple html with good spacing. Do not include any styling and/or <meta> tags. Do not include ```html``` in your response.
     """
     return body
 
@@ -357,10 +355,12 @@ def OPEN_AI_IMAGE_CONTENT(images, instructions, tokens):
 
 
 OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS = (
-    lambda pitch, instructions: f"""
-Adjust and rewrite the content per the instructions, while maintaining the existing writing style.\n
-Content: {pitch}\n
-Instructions: {instructions}"""
+    lambda pitch, instructions, style: f"""
+Adjust and rewrite the content per the instructions. Content must be written in the writing style below.\n
+Content: {pitch}
+Instructions: {instructions}
+writing style: {style}
+"""
 )
 
 OPEN_AI_REWRITE_PTICH = (
@@ -378,7 +378,7 @@ def OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary):
     if not instructions:
         prompt = f"""Please provide a concise and accurate response to my query, using the given search results. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation. 
         For example: 'Paris is the capital of France[1].' Only use this format to cite search results. Never cite more than 3 sources in a row. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
-        Make sure that your response is properly formatted html with good spacing and easy to read. No padding on the body since it will be going into a container that already has it.
+        Make sure that your response is properly formatted simple html with good spacing and easy to read. No padding on the body since it will be going into a container that already has it.
         
         query: {query}
         search results: {results}
@@ -387,7 +387,7 @@ def OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary):
     elif summary:
         prompt = f"""Based on the initial summary and the additional search results, please provide a concise and accurate response to the follow-up question. Use the given search results and the initial summary to ensure the response is comprehensive. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation.
         For example: 'Paris is the capital of France[1].' Only use this format to cite search results. Never cite more than 3 sources in a row. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge and the initial summary.
-        Make sure that your response is properly formatted html with good spacing and easy to read. No padding on the body since it will be going into a container that already has it.
+        Make sure that your response is properly formatted simple html with good spacing and easy to read. No padding on the body since it will be going into a container that already has it.
         
         initial summary: {summary}
         follow-up question: {instructions}
@@ -396,7 +396,7 @@ def OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary):
     else:
         prompt = f"""Please provide a concise and accurate response to my query, using the given search results. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation. 
         For example: 'Paris is the capital of France[1].' Only use this format to cite search results. Never cite more than 3 sources in a row. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
-        Make sure that your response is properly formatted html with good spacing and easy to read. No padding on the body since it will be going into a container that already has it.
+        Make sure that your response is properly formatted simple html with good spacing and easy to read. No padding on the body since it will be going into a container that already has it.
         
         query: {instructions}
         search results: {results}
@@ -479,14 +479,15 @@ OPEN_AI_CONTENT_ASSIST = (
 
 
 DISCOVER_JOURNALIST = (
-    lambda type, beat, location, content: f"""
-    List up to 10 real, active people would be interested in this pitch: {content}. Follow these instructions very carefully:
+    lambda content, info: f"""
+   List up to 10 real, active people would be interested in this pitch: {content}. Here is more information regarding who they are looking for: {info}.
+   Now, you must follow the instructions below very carefully:
+
     * Rule #1: Ensure that all people are real, currently active professionals. Do not include fake names such as Jane Doe or John Smith.
+
     * Rule #2: Only list people that you have the highest confidence (90% or above) in that they still work there and you can correctly guess their email address. If you lack confidence do not list all 10, just the ones you're most confident in
-    * Person Type: The person must be: {type}.
-    * Industry: The person (if a journalist) must cover this specific beat, or be working in this industry: {beat}.
-    * Location: The person must be based in or primarily cover (if a journalist) {location}.
-    * Guess their email: Do your best to guess their email address. Make sure to base it on verified email patterns associated with their respective publication (if a journalist) or company. Guessing the correct email is incredibly important.
+
+    * Guess their email: Do your best to guess their email address. Make sure to base it on verified email patterns associated with their respective publication or company. Guessing the correct email is incredibly important.
 
     Content output, 3 rows:
     Name:
@@ -528,7 +529,9 @@ OPEN_AI_RELEVANT_POSTS = (
 
 OPEN_AI_TOP_JOURNALISTS = (
     lambda term, clips: f"""
-    List the top 10 Journalists from top news outlets writing about {term}. Sort by order of influence (most influential at the top) Output must be: Journalist name, (Outlet), 4-5 word headline summary using quotes, - date using mm.dd format. Name must be a strong tag. Here are the news clips: \n {clips}:
+    List the top 10 Journalists from top news outlets writing about {term}. Sort by order of influence (most influential at the 
+    top) Output must be: Journalist name, (Outlet), 4-5 word headline summary using quotes, - date using mm.dd format. 
+    Name must be a strong tag. Here are the news clips: \n {clips}:
      """
 )
 
@@ -558,6 +561,15 @@ OPEN_AI_GOOGLE_SEARCH = (
     And here is the top article: {text}  
     """
 )
+
+
+def OPEN_AI_GOOGLE_QUERY(date, question):
+    prompt = f"""Today is {date}. Given the user's question, extract a search query that captures the essential information needed to find relevant results from the google search API.
+    question: {question}
+    """
+
+    return prompt
+
 
 DO_NOT_TRACK_LIST = [
     "https://www.wsj.com",

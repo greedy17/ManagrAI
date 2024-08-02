@@ -6,9 +6,22 @@
         <div :class="{ disable: generatingToken }" class="form-card">
           <div class="center">
             <img src="@/assets/images/logo.png" height="60px" alt="" />
-            <h2 class="logo-title">Welcome to Managr{{ this.$store.state.googleSignIn ? `, ${this.$store.state.googleSignIn.given_name}` : ''}}</h2>
-            <small v-if="this.$store.state.googleSignIn" class="gray-blue centered" style="margin: 8px 0px 8px 8px"
-              ><img class="google-signing-pic__small" :src="this.$store.state.googleSignIn.picture" /> Logged in as {{ this.$store.state.googleSignIn.email }}</small
+            <h2 class="logo-title">
+              Welcome to ManagrAI{{
+                this.$store.state.googleSignIn
+                  ? `, ${this.$store.state.googleSignIn.given_name}`
+                  : ''
+              }}
+            </h2>
+            <small
+              v-if="this.$store.state.googleSignIn"
+              class="gray-blue centered"
+              style="margin: 8px 0px 8px 8px"
+              ><img
+                class="google-signing-pic__small"
+                :src="this.$store.state.googleSignIn.picture"
+              />
+              Logged in as {{ this.$store.state.googleSignIn.email }}</small
             >
             <div class="separator"></div>
           </div>
@@ -110,7 +123,7 @@
           <div class="form-card__footer">
             <div>
               By signing up, I agree to Managr's
-              <a href="https://managr.ai/terms-of-service" target="_blank">Terms & Conditions.</a> 
+              <a href="https://managr.ai/terms-of-service" target="_blank">Terms & Conditions.</a>
               <!-- and -->
               <!-- <a href="https://managr.ai/privacy-policy" target="_blank"></a>. -->
             </div>

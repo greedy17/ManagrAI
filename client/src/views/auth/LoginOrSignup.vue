@@ -4,14 +4,14 @@
       <img class="blue-filter" src="@/assets/images/logo.png" height="36px" alt="" />
 
       <div class="header">
-        <small>Welcome!</small>
+        <p>Welcome!</p>
       </div>
     </header>
 
     <div class="column">
       <div class="column">
-        <h1>Welcome to Managr</h1>
-        <h4>Log in with your Managr account to continue</h4>
+        <h1>Welcome to ManagrAI</h1>
+        <h4>Your AI-powered PR assistant</h4>
       </div>
 
       <div class="row">
@@ -173,8 +173,9 @@ a {
   display: flex;
   flex-direction: row;
   align-items: center;
-  small {
-    margin-right: 16px;
+
+  p {
+    font-size: 18px;
   }
 }
 header {
