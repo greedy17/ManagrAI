@@ -169,9 +169,9 @@
           <p>Search</p>
         </router-link>
 
-        <router-link active-class="active-mobile" :to="{ name: 'Pitches' }" id="router-pitch">
+        <!-- <router-link active-class="active-mobile" :to="{ name: 'Pitches' }" id="router-pitch">
           <p>Write</p>
-        </router-link>
+        </router-link> -->
 
         <router-link active-class="active-mobile" :to="{ name: 'Discover' }" id="router-pitch">
           <p>Discover</p>
@@ -487,12 +487,12 @@
       <nav id="nav">
         <router-link :to="{ name: 'PRSummaries' }">
           <div class="logo">
-            <img @click="goHome" style="height: 28px" src="@/assets/images/logo.png" />
-            <div class="beta-tag">
+            <img @click="goHome" style="height: 28px" src="@/assets/images/newLogo.png" />
+            <!-- <div class="beta-tag">
               <p id="pro-free-version" :class="!isPaid ? 'pointer' : ''" @click="openPlansModal">
                 {{ isPaid ? 'PRO' : 'Upgrade Plan' }}
               </p>
-            </div>
+            </div> -->
           </div>
         </router-link>
 
@@ -500,9 +500,9 @@
           <p>Search</p>
         </router-link>
 
-        <router-link active-class="active" :to="{ name: 'Pitches' }" id="router-pitch">
+        <!-- <router-link active-class="active" :to="{ name: 'Pitches' }" id="router-pitch">
           <p>Write</p>
-        </router-link>
+        </router-link> -->
 
         <router-link active-class="active" :to="{ name: 'Discover' }" id="router-pitch">
           <p>Discover</p>
@@ -2136,12 +2136,11 @@ nav {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  img {
-    // filter: brightness(0) invert(48%) sepia(33%) saturate(348%) hue-rotate(161deg) brightness(91%)
-    //   contrast(90%);
-    filter: brightness(0) invert(23%) sepia(19%) saturate(984%) hue-rotate(162deg) brightness(92%)
-      contrast(87%);
-  }
+  // img {
+
+  //   filter: brightness(0) invert(23%) sepia(19%) saturate(984%) hue-rotate(162deg) brightness(92%)
+  //     contrast(87%);
+  // }
   margin-right: 0.5rem;
 }
 

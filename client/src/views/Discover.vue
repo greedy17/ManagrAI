@@ -1304,10 +1304,6 @@ export default {
         this.pitchingTip = tip
         this.googleModalOpen = true
         this.getJournalistBio()
-
-        // this.targetEmail = email
-        // this.emailJournalistModalOpen = true
-        // this.rewritePitch()
       }
     },
     extractNameAndEmail(text) {
