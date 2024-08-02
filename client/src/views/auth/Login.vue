@@ -1,9 +1,15 @@
 <template>
   <div class="login-page">
     <header>
-      <img class="blue-filter pointer" src="@/assets/images/logo.png" height="36px" alt="" @click="goToManagr" />
+      <img
+        class="blue-filter pointer"
+        src="@/assets/images/logo.png"
+        height="36px"
+        alt=""
+        @click="goToManagr"
+      />
       <div class="header">
-        <small>New to Managr ?</small>
+        <small>New to ManagrAI ?</small>
         <router-link class="secondary-button" :to="{ name: 'Register' }"
           >Create Account
         </router-link>
@@ -132,8 +138,7 @@ export default {
     this.$store.dispatch('updateGoogleSignIn', {})
     if (this.$route.query.free) {
       this.showFreeSignup = true
-    }
-    else if (this.$route.query.code) {
+    } else if (this.$route.query.code) {
       this.selectedCrm = this.$route.query.state
       let modelClass = this.selectedCrmSwitcher
       this.loggingIn = true

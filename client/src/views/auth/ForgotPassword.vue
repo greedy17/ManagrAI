@@ -1,7 +1,12 @@
 <template>
   <div class="password-reset">
     <header>
-      <img class="blue-filter" src="@/assets/images/logo.png" height="36px" alt="" />
+      <img
+        style="mix-blend-mode: multiply; background-color: #fafafa"
+        src="@/assets/images/newLogo.png"
+        height="36px"
+        alt=""
+      />
       <div class="header">
         <small>Sign In</small>
         <router-link class="secondary-button" :to="{ name: 'Login' }">Back to login</router-link>
@@ -13,7 +18,7 @@
 
       <input v-model="email" type="text" placeholder="Email" />
 
-      <button :disabled="!email" type="submit">Send Link</button>
+      <button :disabled="!email" type="submit" class="primary-button">Send Link</button>
     </form>
 
     <div></div>
@@ -175,5 +180,29 @@ header {
   font-family: $thin-font-family;
   font-size: 16px;
   padding-top: 12px;
+}
+
+h2 {
+  font-family: $base-font-family;
+}
+
+.primary-button {
+  @include dark-blue-button();
+  padding: 8px 12px;
+  border: none;
+  margin: 0;
+
+  &:disabled {
+    background-color: $off-white;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+}
+
+input {
+  font-family: $thin-font-family !important;
+}
+
+::placeholder {
+  font-family: $thin-font-family !important;
 }
 </style>
