@@ -4058,7 +4058,7 @@ def process_show_regenerate_news_summary_form(payload, context):
     access_token = user.organization.slack_integration.access_token
     blocks = [
         block_builders.input_block(
-            "Ask a follow-up", multiline=True, optional=False, block_id="INSTRUCTIONS"
+            "Ask follow-up", multiline=True, optional=False, block_id="INSTRUCTIONS"
         )
     ]
     trigger_id = payload["trigger_id"]
@@ -4188,6 +4188,32 @@ def process_summary_for_saved_search(payload, context):
     return
 
 
+def process_show_search_modal(payload, context):
+    slack_account = UserSlackIntegration.objects.get(slack_id=payload["user"]["id"])
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
+    user = slack_account.user
+    access_token = user.organization.slack_integration.access_token
+    trigger_id = payload["trigger_id"]
+    context = {"u": str(user.id), "ts": payload.get("container").get("message_ts")}
+    blockset = "news_summary_blockset"
+    data = {
+        "trigger_id": trigger_id,
+        "view": {
+            "type": "modal",
+            "title": {"type": "plain_text", "text": "News"},
+            "blocks": get_block_set(blockset, context=context),
+            "private_metadata": json.dumps(context),
+            "external_id": f"{blockset}.{str(uuid.uuid4())}",
+        },
+    }
+    data["view"]["callback_id"] = slack_const.PROCESS_NEWS_SUMMARY
+    data["view"]["submit"] = {
+        "type": "plain_text",
+        "text": "Submit",
+    }
+    slack_requests.generic_request(url, data, access_token=access_token)
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -4268,6 +4294,7 @@ def handle_block_actions(payload):
         slack_const.PROCESS_SEND_CLIPS: process_send_clips,
         slack_const.PROCESS_SUMMARIZE_ARTICLE: process_summarize_article,
         slack_const.PROCESS_SELECT_SAVED_SEARCH: process_summary_for_saved_search,
+        slack_const.PROCESS_SHOW_SEARCH_MODAL: process_show_search_modal,
     }
 
     action_query_string = payload["actions"][0]["action_id"]
