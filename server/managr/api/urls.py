@@ -327,9 +327,9 @@ urlpatterns = [
         name="get-notes",
     ),
     path(
-        "slack/commands/actions",
-        slack_views.launch_action,
-        name="launch-action",
+        "slack/commands/search",
+        slack_views.launch_search,
+        name="launch-search",
     ),
     path(
         "slack/commands/create-resource",
@@ -350,6 +350,11 @@ urlpatterns = [
         "slack/commands/list-tasks",
         slack_views.list_tasks,
         name="list-tasks",
+    ),
+    path(
+        "slack/send-slack",
+        slack_views.send_to_slack,
+        name="send-slack",
     ),
     path(
         "auto/clear-stale-data",

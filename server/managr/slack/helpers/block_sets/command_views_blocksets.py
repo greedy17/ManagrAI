@@ -1,5 +1,6 @@
 import json
 from django.conf import settings
+from datetime import datetime, timedelta
 from urllib.parse import urlencode
 from managr.utils.sites import get_site_url
 from managr.salesforce import constants as sf_consts
@@ -310,9 +311,9 @@ def update_modal_block_set(context, *args, **kwargs):
             resource_opts,
             action_id=f"{slack_const.UPDATE_TASK_SELECTED_RESOURCE}?u={user_id}",
             block_id="managr_task_related_to_resource",
-            initial_option=block_builders.option(resource_type, resource_type)
-            if resource_type
-            else None,
+            initial_option=(
+                block_builders.option(resource_type, resource_type) if resource_type else None
+            ),
         )
     )
     if (not resource_id and resource_type) or (resource_id and resource_type):
@@ -322,9 +323,9 @@ def update_modal_block_set(context, *args, **kwargs):
                 f"{slack_const.GET_CRM_RESOURCE_OPTIONS}?u={user_id}&resource_type={resource_type}&type={type}",
                 block_id="select_existing",
                 placeholder="Type to search",
-                initial_option=block_builders.option(resource_id, resource_id)
-                if resource_id
-                else None,
+                initial_option=(
+                    block_builders.option(resource_id, resource_id) if resource_id else None
+                ),
             ),
         )
 
@@ -367,9 +368,9 @@ def update_meeting_block_set(context, *args, **kwargs):
             resource_opts,
             action_id=f"{slack_const.UPDATE_TASK_SELECTED_RESOURCE}?u={user_id}&w={context.get('w')}",
             block_id="managr_task_related_to_resource",
-            initial_option=block_builders.option(resource_type, resource_type)
-            if resource_type
-            else None,
+            initial_option=(
+                block_builders.option(resource_type, resource_type) if resource_type else None
+            ),
         )
     )
     if (not resource_id and resource_type) or (resource_id and resource_type):
@@ -386,9 +387,9 @@ def update_meeting_block_set(context, *args, **kwargs):
                 f"{slack_const.ZOOM_MEETING__SELECTED_RESOURCE_OPTION}?u={user_id}&resource_type={resource_type}&add_opts={json.dumps(additional_opts)}",
                 block_id="select_existing",
                 placeholder="Type to search",
-                initial_option=block_builders.option(resource_id, resource_id)
-                if resource_id
-                else None,
+                initial_option=(
+                    block_builders.option(resource_id, resource_id) if resource_id else None
+                ),
             ),
         )
     return blocks
@@ -603,9 +604,9 @@ def pick_resource_modal_block_set(context, *args, **kwargs):
             options,
             action_id=f"{slack_const.PROCESS_SELECT_RESOURCE}?u={user_id}&options={context.get('options')}&action_id={context.get('action_id')}",
             block_id="selected_object_type",
-            initial_option=block_builders.option(resource_type, resource_type)
-            if resource_type
-            else None,
+            initial_option=(
+                block_builders.option(resource_type, resource_type) if resource_type else None
+            ),
         )
     )
     if (not resource_id and resource_type) or (resource_id and resource_type):
@@ -615,9 +616,9 @@ def pick_resource_modal_block_set(context, *args, **kwargs):
                 action_id=f"{context.get('action_id')}?u={user_id}&resource_type={resource_type}",
                 block_id="selected_object",
                 placeholder="Type to search",
-                initial_option=block_builders.option(resource_id, resource_id)
-                if resource_id
-                else None,
+                initial_option=(
+                    block_builders.option(resource_id, resource_id) if resource_id else None
+                ),
             ),
         )
     return blocks
@@ -629,7 +630,7 @@ def ask_managr_blockset(context, *args, **kwargs):
     blocks = [
         block_builders.input_block(
             "Type your request here",
-            placeholder=f"What's the next steps?",
+            placeholder=f"What's the latest news on...?",
             block_id="CHAT_PROMPT",
             multiline=True,
             optional=False,
@@ -734,24 +735,16 @@ def news_summary_blockset(context):
     user = User.objects.get(id=context.get("u"))
     searches = Search.objects.filter(user=user)
     search_options = [block_builders.option(search.name, str(search.id)) for search in searches]
+    date = datetime.now().date()
+    date_start = date - timedelta(days=7)
     blocks = [
         block_builders.input_block(
-            "Enter your new search", optional=False, block_id="SEARCH", multiline=True
+            "Ask A Question", optional=False, block_id="SEARCH", multiline=True
         ),
+        block_builders.datepicker(str(date_start), label="Date Start", block_id="START_DATE"),
+        block_builders.datepicker(str(date), label="Date End", block_id="STOP_DATE"),
         block_builders.input_block(
-            "What would you like included in your summary?",
-            block_id="OUTPUT_INSTRUCTIONS",
-            multiline=True,
-        ),
-        block_builders.actions_block(
-            [
-                block_builders.simple_button_block(
-                    "Use a template",
-                    "USE_TEMPLATE",
-                    action_id=slack_const.ADD_NEWS_SUMMARY_TEMPLATE,
-                )
-            ],
-            block_id="USE_TEMPLATE_BLOCK",
+            "Your Company", block_id="COMPANY", initial_value=user.organization.name
         ),
         block_builders.static_select(
             "Saved Searches",

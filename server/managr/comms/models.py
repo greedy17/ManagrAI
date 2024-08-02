@@ -84,8 +84,15 @@ class Search(TimeStampModel):
         cls, user, tokens, timeout, clips, input_text, instructions=False, for_client=False
     ):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-        prompt = comms_consts.OPEN_AI_NEWS_CLIPS_SUMMARY(
-            datetime.now().date(), clips, input_text, instructions, for_client
+
+        prompt = (
+            comms_consts.OPEN_AI_NEWS_CLIPS_SUMMARY(
+                datetime.now().date(), clips, input_text, instructions, for_client
+            )
+            if for_client
+            else comms_consts.OPEN_AI_NEWS_CLIPS_SLACK_SUMMARY(
+                datetime.now().date(), clips, input_text, instructions, for_client
+            )
         )
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
             user.email,
