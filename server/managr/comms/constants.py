@@ -243,10 +243,29 @@ def TWITTER_USERNAME_INSTRUCTIONS(company):
 def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_client=False):
     if not instructions:
         instructions = DEFAULT_CLIENT_INSTRUCTIONS
+
     body = f"""
     Today is {date}. Please provide a concise and accurate response per my instructions, using the given news coverage. If the instructions don't ask for anything specific, just provide a brief summary of the news in 150 words or less. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation. 
         For example: 'Paris is the capital of France[1].' Only use this format to cite search results. Never cite more than 3 sources in a row. Do not include a references section at the end of your answer. Never make an entire list item a link. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
         Make sure that your response is properly formatted html. Do not include any styling and/or <meta> tags. Do not include ```html``` in your response.
+
+    Here is the news coverage:
+    {clips}
+
+    Here are the instructions:
+    {instructions}
+    """
+    return body
+
+
+def OPEN_AI_NEWS_CLIPS_SLACK_SUMMARY(date, clips, search, instructions=False, for_client=False):
+    if not instructions:
+        instructions = DEFAULT_CLIENT_INSTRUCTIONS
+    body = f"""Today's date is {date}. Read the news coverage below and carefully follow the instructions. 
+    Keep the output under 1000 characters. All URLs must be formatted as Slack hyperlinks. 
+    Only use the following exact format for URLs:
+    Example format:
+    <URL|Read More>
 
     Here is the news coverage:
     {clips}
@@ -296,15 +315,6 @@ DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS = (
 )
 
 
-# def OPEN_AI_WEB_SUMMARY(
-#     date,
-#     article,
-#     instructions,
-# ):
-#     body = f"Today's date is {date}. Summarize this news article:\n {article}. \nOutput format must be:\n {instructions}. It cannot be longer than 1500 characters."
-#     return body
-
-
 def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, for_client=False):
     if not instructions:
         instructions = DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS(search)
@@ -314,7 +324,8 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
         body = f"Today's date is {date}. At least one of the terms in the boolean search were mentioned in the provided news article. Follow the instructions carefully. Do not bold any text in your response. \nBoolean Search: {search} \n Instructions: {instructions} \n News Article: {article}"
     return body
 
-def OPEN_AI_PITCH(date, type, instructions,data, style=False):
+
+def OPEN_AI_PITCH(date, type, instructions, data, style=False):
     body = f"""Today's date is {date}. You are tasked with generating content. You must follow the instructions below:
 
     1. Instructions: {type}
@@ -381,7 +392,7 @@ def OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary):
         follow-up question: {instructions}
         search results: {results}
         """
-    else :
+    else:
         prompt = f"""Please provide a concise and accurate response to my query, using the given search results. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation. 
         For example: 'Paris is the capital of France[1].' Only use this format to cite search results. Never cite more than 3 sources in a row. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
         Make sure that your response is properly formatted html with good spacing and easy to read. No padding on the body since it will be going into a container that already has it.
@@ -389,16 +400,9 @@ def OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary):
         query: {instructions}
         search results: {results}
         full text from the top result: {text}
-        """    
-    
-    return prompt
+        """
 
-# def OPEN_AI_WEB_SUMMARY(query, results):
-#     prompt = f"""Answer this question based on all the information below: {query} 
-#     You must cite your sources (outlet name and date) using a valid html citation tag that opens in a new tab. Your response must be concise and cannot exceed 1500 characters. Please ensure brevity by focusing only on the key points and relevant information.
-#     Here are the top 6 search results:{results}
-#     """
-#     return prompt    
+    return prompt
 
 
 OPEN_AI_LEARN_WRITING_STYLE_PROMPT = (
@@ -510,35 +514,33 @@ OPEN_AI_EMAIL_JOURNALIST = (
 )
 
 OPEN_AI_RELEVANT_ARTICLES = (
-    lambda term, clips : f"""
+    lambda term, clips: f"""
     List the top 5 most relevant stories pertaining to {term}, sort by most relevant at the top. Output must be: 4-5 word summary of the headline (Source: outlet, mm/dd/yy) in an a tag that opens in a new page using the link. Here are the news clips: \n {clips}:
      """
 )
 
 OPEN_AI_RELEVANT_POSTS = (
-    lambda term, clips : f"""
+    lambda term, clips: f"""
     List the top 5 most relevant posts pertaining to {term}, sort by most relevant at the top. Output must be: 4-5 word summary of the post (Source: outlet, mm.dd) in an a tag that opens in a new page using the link. Here are the posts: \n {clips}:
      """
 )
 
 OPEN_AI_TOP_JOURNALISTS = (
-    lambda term, clips : f"""
-    List the top 10 Journalists from top news outlets in the clips below writing about {term}. Sort by order of influence (most influential at the top). 
-    Only list real journalists found in the news coverage, do not use fake names like John Doe or Jane Smith. Output must be: Journalist name, (Outlet), 4-5 word headline summary using quotes, - date using mm.dd format.
-    Name must be a strong tag. 
-    
-    Here are the news clips: \n {clips}:
+    lambda term, clips: f"""
+    List the top 10 Journalists from top news outlets writing about {term}. Sort by order of influence (most influential at the 
+    top) Output must be: Journalist name, (Outlet), 4-5 word headline summary using quotes, - date using mm.dd format. 
+    Name must be a strong tag. Here are the news clips: \n {clips}:
      """
 )
 
 OPEN_AI_TOP_INFLUENCERS = (
-    lambda tweets : f"""
+    lambda tweets: f"""
     List the top 5 influencers. Sort by follower count, highest at the top. Output must be : Name, (follower count), 4-5 word post summary using quotes, - date using mm.dd format. Here are the tweets: \n {tweets}:
      """
 )
 
 OPEN_AI_RELATED_TOPICS = (
-    lambda clips : f"""
+    lambda clips: f"""
     Generate up to 5 related, interesting, diverse questions or topics for further exploration based on the news clips below. Focus on most interesting, impactful and engaging stories. Output must be capped at 4 words per suggestion, no numbering, and no punctuation. Format the output must be as follows:
     Search1:
     Search2:
@@ -551,19 +553,21 @@ OPEN_AI_RELATED_TOPICS = (
 )
 
 OPEN_AI_GOOGLE_SEARCH = (
-    lambda search, results, text : f"""
+    lambda search, results, text: f"""
     Answer this question based on all the information below: {search}. You must site your sources (outlet name and date).
     Here are the top 5 search results:{results}
     And here is the top article: {text}  
     """
 )
 
-def OPEN_AI_GOOGLE_QUERY(date,question):
+
+def OPEN_AI_GOOGLE_QUERY(date, question):
     prompt = f"""Today is {date}. Given the user's question, extract a search query that captures the essential information needed to find relevant results from the google search API.
     question: {question}
-    """    
-    
+    """
+
     return prompt
+
 
 DO_NOT_TRACK_LIST = [
     "https://www.wsj.com",
@@ -613,6 +617,9 @@ EXCLUDE_DOMAINS = [
     "fly4free.com",
     "antaranews.com",
     "investorsobserver.com",
+    "https://www.dealcatcher.com",
+    "https://www.dansdeals.com",
+    "https://www.superpunch.net",
 ]
 
 JOURNALIST_CHOICES = [

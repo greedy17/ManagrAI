@@ -49,7 +49,10 @@ def open_chat(payload, context):
             "view": {
                 "type": "modal",
                 "callback_id": slack_const.COMMAND_FORMS__SUBMIT_CHAT,
-                "title": {"type": "plain_text", "text": "Update CRM",},
+                "title": {
+                    "type": "plain_text",
+                    "text": "Update CRM",
+                },
                 "blocks": blocks,
                 "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
                 "private_metadata": json.dumps(context),
@@ -76,7 +79,10 @@ def update_resource(payload, context):
                 "response_type": "ephemeral",
                 "text": "Sorry I cant find your managr account",
             }
-        blocks = get_block_set("update_modal_block_set", {"u": str(user.id), "type": "command"},)
+        blocks = get_block_set(
+            "update_modal_block_set",
+            {"u": str(user.id), "type": "command"},
+        )
         access_token = user.organization.slack_integration.access_token
         view_id = context.get("view_id", None)
         url = (
@@ -123,7 +129,12 @@ def create_resource(payload, context):
         blocks = [
             block_builders.static_select(
                 "Create a new...",
-                [*map(lambda resource: block_builders.option(resource, resource), options,)],
+                [
+                    *map(
+                        lambda resource: block_builders.option(resource, resource),
+                        options,
+                    )
+                ],
                 action_id=action_with_params(
                     slack_const.COMMAND_FORMS__PROCESS_ADD_CREATE_FORM, [f"u={str(user.id)}"]
                 ),
@@ -218,7 +229,12 @@ def create_task(payload, context):
                 "type": "modal",
                 "callback_id": slack_const.COMMAND_CREATE_TASK,
                 "title": {"type": "plain_text", "text": "Create a Task"},
-                "blocks": get_block_set("create_task_modal", context={"u": context.get("u"),},),
+                "blocks": get_block_set(
+                    "create_task_modal",
+                    context={
+                        "u": context.get("u"),
+                    },
+                ),
                 "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
                 "private_metadata": json.dumps(context),
                 "external_id": f"create_task_modal.{str(uuid.uuid4())}",
@@ -389,7 +405,10 @@ def schedule_meeting(payload, context):
             "callback_id": slack_const.ZOOM_MEETING__SCHEDULE_MEETING,
             "title": {"type": "plain_text", "text": "Zoom Meeting Scheduler"},
             "blocks": get_block_set("schedule_meeting_modal", context=context),
-            "submit": {"type": "plain_text", "text": "Submit",},
+            "submit": {
+                "type": "plain_text",
+                "text": "Submit",
+            },
             "private_metadata": json.dumps(context),
         },
     }
@@ -546,7 +565,12 @@ def reset_meetings(payload, context):
         "view": {
             "type": "modal",
             "title": {"type": "plain_text", "text": "Reset Meetings"},
-            "blocks": get_block_set("reset_meeting_block_set", {"u": str(user.id),},),
+            "blocks": get_block_set(
+                "reset_meeting_block_set",
+                {
+                    "u": str(user.id),
+                },
+            ),
             "external_id": f"reset_meeting_block_set.{str(uuid.uuid4())}",
         },
     }
@@ -571,7 +595,7 @@ def news_summary(payload, context):
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
     blocks = [
         block_builders.input_block(
-            "Enter your new search", optional=False, block_id="SEARCH", multiline=True
+            "AI search assistant", optional=False, block_id="SEARCH", multiline=True
         ),
         block_builders.input_block(
             "What would you like included in your summary?",
@@ -595,7 +619,10 @@ def news_summary(payload, context):
             "callback_id": slack_const.PROCESS_NEWS_SUMMARY,
             "title": {"type": "plain_text", "text": "News Summary"},
             "blocks": blocks,
-            "submit": {"type": "plain_text", "text": "Submit",},
+            "submit": {
+                "type": "plain_text",
+                "text": "Submit",
+            },
             "private_metadata": json.dumps(context),
         },
     }
@@ -656,4 +683,3 @@ def get_action(action_name, payload={}, context={}, *args, **kwargs):
         "REVIEW": deal_review,
     }
     return switcher.get(action_name)(payload, context, *args, **kwargs)
-

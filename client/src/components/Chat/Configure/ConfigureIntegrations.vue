@@ -513,6 +513,47 @@
             </button>
           </div>
         </div>
+
+        <div class="card">
+          <div class="card__header" style="">
+            <img class="cover-photo" src="@/assets/images/slackLogo.png" />
+          </div>
+          <div class="card__body">
+            <div class="row-center" style="display: flex">
+              <h3 class="card__title">Slack</h3>
+              <div v-if="hasSlackIntegration" class="green-dot"></div>
+            </div>
+            <p>Connect to Slack</p>
+          </div>
+
+          <div class="card__footer">
+            <button @click="revokeSlack" v-if="hasSlackIntegration" class="long-button connected">
+              <div style="margin-left: 4px" v-if="revoking" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
+
+              <div v-else>Disconnect</div>
+            </button>
+
+            <button
+              @click="onIntegrateSlack"
+              :disabled="(generatingToken && selectedIntegration == 'SLACK') || connecting"
+              v-else
+              class="gsi-material-button"
+            >
+              <div class="gsi-material-button-state"></div>
+              <div class="gsi-material-button-content-wrapper">
+                <div class="gsi-material-button-icon">
+                  <img height="22px" src="@/assets/images/slackLogo.png" alt="" />
+                </div>
+                <span class="gsi-material-button-contents">Continue with Slack</span>
+                <span style="display: none">Continue with Slack</span>
+              </div>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -845,6 +886,10 @@ export default {
           }
           await modelClass.api.getMicrosoftAuthentication(data).then((response) => {
             console.log('MICROSOFT RESPONSE', response)
+          })
+        } else if (this.selectedIntegration === 'SLACK') {
+          await modelClass.api.generateAccessToken(this.$route.query.code).then((response) => {
+            console.log('SLACK RESPONSE', response)
           })
         }
       } catch (e) {
