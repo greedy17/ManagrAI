@@ -66,7 +66,7 @@
         </div>
       </div>
     </Modal>
-    <table @click="test">
+    <table>
       <thead>
         <tr style="position: relative">
           <th v-resizableColumn @click="sortBy('subject')">
@@ -105,7 +105,7 @@
                 >{{ openRate }}%</span
               >
             </div>
-            <div class="stat" v-else-if="value === 'Replies' && replyRate && userId === user.id">
+            <!-- <div class="stat" v-else-if="value === 'Replies' && replyRate && userId === user.id">
               <span
                 :class="{
                   red: replyRate <= 30,
@@ -114,7 +114,7 @@
                 }"
                 >{{ replyRate }}%</span
               >
-            </div>
+            </div> -->
             <img
               v-if="sortKey === value.charAt(0).toLowerCase() + value.slice(1) && sortOrder === -1"
               src="@/assets/images/arrowDrop.svg"
@@ -176,8 +176,10 @@
             <div class="blur"></div>
           </td>
           <td :class="i % 2 !== 0 ? 'gray-bg' : ''" class="set-width">
-            <div class="base-font" style="margin-bottom: 4px">{{ email.name }}</div>
-            <div style="color: #808080; font-size: 15px">
+            <div style="margin-bottom: 4px; font-size: 14px">
+              {{ email.name }}
+            </div>
+            <div style="color: #808080; font-size: 14px">
               {{ email.recipient }}
             </div>
           </td>
@@ -188,7 +190,7 @@
           </td>
           <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.opens }}</td>
           <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.clicks }}</td>
-          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.replies }}</td>
+          <!-- <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.replies }}</td> -->
           <!-- @click="toggleActivityModal(email)" style="cursor: zoom-in"-->
           <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
             <div>
@@ -197,14 +199,14 @@
                   border: 0.5px solid rgba(0, 0, 0, 0.1);
                   width: fit-content;
                   border-radius: 8px; -->
-              <div class="base-font" style="margin-bottom: 4px">
+              <div style="margin-bottom: 4px; font-size: 14px">
                 {{
                   email.activity_log.at(-1).split('|')[0].charAt(0).toUpperCase() +
                   email.activity_log.at(-1).split('|')[0].slice(1)
                 }}
               </div>
 
-              <div style="color: #808080; font-size: 15px">
+              <div style="color: #808080; font-size: 14px">
                 {{ formatActivityLog(email.activity_log.at(-1)) }}
               </div>
             </div>
@@ -212,11 +214,19 @@
         </tr>
       </tbody>
       <tbody v-else>
-        <div class="loading">
+        <div v-if="loading" class="loading">
           Generating
           <div style="margin-left: 12px" class="dot"></div>
           <div class="dot"></div>
           <div class="dot"></div>
+        </div>
+
+        <div style="margin: 16px" v-else>
+          Your tracked emails
+          <span>
+            <img style="margin-right: 4px" src="@/assets/images/email.svg" height="12px" alt="" />
+            will appear here.</span
+          >
         </div>
       </tbody>
     </table>
@@ -233,12 +243,13 @@ export default {
       emails: [],
       sortKey: '',
       sortOrder: 1,
-      statsKeys: ['To', 'Status', 'Opens', 'Clicks', 'Replies'],
+      statsKeys: ['To', 'Status', 'Opens', 'Clicks'],
       openRate: 0,
       replyRate: 0,
       emailModalOpen: false,
       activityModalOpen: false,
       selectedEmail: null,
+      loading: false,
     }
   },
   components: {
@@ -376,9 +387,6 @@ export default {
   },
 
   methods: {
-    test() {
-      console.log(this.sortedEmails)
-    },
     toggleEmailModal(email = null) {
       this.emailModalOpen = !this.emailModalOpen
       this.selectedEmail = email
@@ -391,8 +399,8 @@ export default {
       try {
         const response = await Comms.api.getTrackedEmails()
         this.emails = response.trackers
-        this.openRate = response.rates.open_rate
-        this.replyRate = response.rates.reply_rate
+        this.openRate = Math.round(response.rates.open_rate)
+        // this.replyRate = response.rates.reply_rate
       } catch (error) {
         console.error('Error fetching email data:', error)
       }
@@ -469,10 +477,22 @@ export default {
     }
   }
 
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+    }
+  }
+
   table {
     width: 100%;
     border-collapse: collapse;
     background-color: white;
+
+    tr {
+      transition: opacity 1s ease-out;
+      opacity: 0;
+      animation: fadeIn 1s forwards;
+    }
 
     th,
     td {
@@ -492,11 +512,12 @@ export default {
 
     th {
       background-color: $off-white;
+      // font-family: $base-font-family;
       border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
       color: $dark-blue;
       position: sticky;
       top: 0;
-      z-index: 5;
+      z-index: 8;
       cursor: pointer;
     }
 
@@ -526,17 +547,15 @@ export default {
         .subject {
           font-family: $base-font-family;
           margin-bottom: 4px;
-          // background-color: $off-white;
-          // padding: 3px 6px;
-          // border-radius: 8px;
-          // border: 0.5px solid rgba(0, 0, 0, 0.1);
-          // width: fit-content;
+          font-weight: 200;
+          font-size: 14px;
+          line-height: 24px;
         }
 
         .email {
           color: gray;
           font-family: $thin-font-family;
-          font-size: 15px;
+          font-size: 14px;
         }
       }
     }
@@ -632,6 +651,8 @@ export default {
 
     .base-font {
       font-family: $base-font-family;
+      font-weight: 200;
+      line-height: 24px;
     }
 
     .dot {
@@ -666,36 +687,33 @@ export default {
     .stat {
       position: absolute;
       right: 4px;
-      top: 16px;
+      top: 14px;
       font-family: $base-font-family;
-      font-size: 11px;
+      font-size: 10px;
 
       span {
-        font-size: 11px;
-        padding: 4px 3px;
-        border-radius: 4px;
+        font-size: 12px;
+        padding: 4px 6px;
+        border-radius: 11px;
       }
 
       .red {
-        background-color: $light-red !important;
-        color: $coral !important;
+        color: $pinky !important;
       }
 
       .yellow {
-        background-color: $light-yellow;
-        color: $yellow;
+        color: $turq !important;
       }
 
       .green {
-        background-color: $light-green !important;
-        color: $dark-green !important;
+        color: $lite-blue !important;
       }
     }
   }
 
   .redbox {
-    background-color: $light-red !important;
-    color: $coral !important;
+    background-color: $lite-pink !important;
+    color: $pinky !important;
     font-family: $base-font-family;
     font-size: 14px;
     padding: 4px 8px;
@@ -704,12 +722,12 @@ export default {
   }
 
   .greenbox {
-    background-color: $light-green !important;
-    color: $dark-green !important;
+    background-color: $light-purple !important;
+    color: $graper !important;
     font-family: $base-font-family;
-    font-size: 14px;
-    padding: 4px 8px;
-    border-radius: 4px;
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 16px;
     width: fit-content;
   }
 

@@ -1,35 +1,47 @@
 <template>
   <div class="tracking fadein">
-    <h2>Track your outreach</h2>
-
     <section class="space-between">
       <div class="row">
         <div class="relative">
-          <button @click="toggleUserDropdown" class="secondary-button">
-            <img style="margin-right: 8px" src="@/assets/images/profile.svg" height="12px" alt="" />
-            {{
-              !selectedUser
-                ? 'All'
-                : selectedUser.fullName
-                ? selectedUser.fullName
-                : selectedUser.full_name
-            }}
-            <img style="margin-left: 8px" src="@/assets/images/dropdown.svg" height="14px" alt="" />
-          </button>
+          <div
+            style="margin-left: -4px"
+            @click.stop="toggleUserDropdown"
+            class="drop-header"
+            :class="{ 'soft-gray-bg': showUsers }"
+          >
+            <img src="@/assets/images/profile.svg" height="12px" alt="" />
+            User:
+            <small>
+              {{
+                !selectedUser
+                  ? 'All'
+                  : selectedUser.fullName
+                  ? selectedUser.fullName
+                  : selectedUser.full_name
+              }}
+            </small>
+            <img
+              v-if="!showUsers"
+              style="margin-left: 8px"
+              src="@/assets/images/arrowDropUp.svg"
+              height="14px"
+              alt=""
+            />
+            <img
+              v-else
+              class="rotate-img"
+              src="@/assets/images/arrowDropUp.svg"
+              height="14px"
+              alt=""
+            />
+          </div>
 
-          <div style="left: 0" v-if="showUsers" class="dropdown">
+          <div v-outside-click="hideUsers" style="left: 0" v-show="showUsers" class="dropdown">
             <div class="dropdown-header">
               <h3>Select User</h3>
-              <img
-                @click="toggleUserDropdown"
-                src="@/assets/images/close.svg"
-                class="pointer"
-                height="18px"
-                alt=""
-              />
             </div>
 
-            <div style="margin: 8px 0 16px 0; padding-right: 12px" class="search">
+            <!-- <div style="margin: 8px 0 16px 0; padding-right: 12px" class="search">
               <div style="width: 100%" class="input">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <path
@@ -49,7 +61,7 @@
                   alt=""
                 />
               </div>
-            </div>
+            </div> -->
 
             <div class="dropdown-body">
               <div class="col">
@@ -68,12 +80,21 @@
             <div class="dropdown-footer"></div>
           </div>
         </div>
+        <div style="margin: 0 8px" class="relative">
+          <div
+            @click="toggleFilterDropdown"
+            class="img-container s-wrapper"
+            :class="{ 'img-container-stay': showFilters }"
+          >
+            <img src="@/assets/images/filter.svg" height="13px" alt="" />
+            <div class="s-tooltip">Add filter</div>
+          </div>
 
-        <div class="relative">
-          <button @click="toggleFilterDropdown" class="primary-button">
-            <img src="@/assets/images/add.svg" height="12px" alt="" /> Filter
-          </button>
-          <div v-if="showFilters" class="dropdown">
+          <!-- <button @click="toggleFilterDropdown" class="secondary-button-no-border">
+            <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Filter
+          </button> -->
+
+          <div v-show="showFilters" class="dropdown" style="left: 0">
             <div class="dropdown-header">
               <h3>Filters</h3>
               <img
@@ -82,10 +103,11 @@
                 class="pointer"
                 height="18px"
                 alt=""
+                style="margin-right: 12px"
               />
             </div>
 
-            <div class="dropdown-body">
+            <div style="padding: 0 16px" class="dropdown-body">
               <div class="col">
                 <p>Status</p>
                 <div class="radio-group">
@@ -114,7 +136,9 @@
             </div>
 
             <div class="dropdown-footer">
-              <button @click="applyFilters" class="primary-button">Apply</button>
+              <button @click="applyFilters" class="primary-button" style="margin-right: 12px">
+                Apply
+              </button>
             </div>
           </div>
         </div>
@@ -139,9 +163,9 @@
           </button>
         </div>
 
-        <div @click="convertData" class="image-container wrapper">
-          <img src="@/assets/images/download.svg" height="14px" alt="" />
-          <div class="tooltip">Export</div>
+        <div style="margin-left: 8px" @click="convertData" class="img-container s-wrapper">
+          <img src="@/assets/images/download.svg" height="13px" alt="" />
+          <div class="s-tooltip">Export table</div>
         </div>
       </div>
 
@@ -317,8 +341,14 @@ export default {
     toggleFilterDropdown() {
       this.showFilters = !this.showFilters
     },
+    hideFilters() {
+      this.showFilters = false
+    },
     toggleUserDropdown() {
       this.showUsers = !this.showUsers
+    },
+    hideUsers() {
+      this.showUsers = false
     },
     applyFilters() {
       if (this.dateStart && this.dateEnd) {
@@ -363,10 +393,12 @@ export default {
 
 .tracking {
   width: 100vw;
-  height: 80vh;
+  height: 88vh;
   margin: 0 auto;
-  padding: 72px 32px 16px 32px;
+  // padding: 72px 32px 16px 32px;
+  padding: 108px 132px 64px 132px;
   font-family: $thin-font-family;
+  color: $dark-black-blue;
 }
 
 .image-container {
@@ -394,6 +426,7 @@ export default {
 
 .table-container {
   border: 1px solid rgba(0, 0, 0, 0.1);
+  // box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-radius: 6px;
   margin-top: 24px;
   height: 100%;
@@ -426,12 +459,39 @@ export default {
   border-radius: 16px;
 }
 
+.secondary-button-no-border {
+  @include dark-blue-button();
+  border-radius: 16px;
+  padding: 6px 12px;
+  border: none;
+  color: $dark-black-blue;
+  background-color: white;
+  margin: 0;
+  transition: none;
+  font-size: 14px;
+
+  img {
+    margin-right: 4px;
+  }
+
+  &:hover {
+    background-color: $soft-gray;
+    transform: none !important;
+    box-shadow: none;
+  }
+}
+
 .space-between {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: white;
+  padding: 24px 16px;
+  border-radius: 6px;
+  // box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 ::placeholder {
@@ -442,7 +502,7 @@ export default {
   position: sticky;
   z-index: 8;
   top: 1.5rem;
-  width: 300px;
+  width: 28vw;
   border-radius: 20px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   font-family: $thin-font-family;
@@ -471,7 +531,7 @@ export default {
   position: absolute;
   top: 40px;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 8px;
+  // padding: 8px;
   left: 16px;
   z-index: 6;
   min-width: 25vw;
@@ -483,7 +543,14 @@ export default {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 8px;
+    // padding: 0 8px;
+
+    h3 {
+      font-family: $base-font-family;
+      font-weight: 200;
+      width: 100%;
+      padding: 0 16px;
+    }
 
     img {
       margin-right: 8px;
@@ -491,15 +558,19 @@ export default {
   }
 
   .dropdown-body {
-    padding: 0 8px;
+    // padding: 0 8px;
     max-height: 250px;
     overflow: scroll;
   }
 
   .dropdown-item {
-    padding: 8px 0;
+    padding: 8px 16px;
     cursor: pointer;
     width: 100%;
+
+    &:hover {
+      background-color: $soft-gray;
+    }
   }
 
   .dropdown-item:last-of-type {
@@ -752,5 +823,137 @@ export default {
   transition: opacity 1s ease-out;
   opacity: 0;
   animation: fadeIn 0.5s forwards;
+}
+
+.img-container {
+  cursor: pointer;
+  padding: 5px 7px 4px 7px;
+  border-radius: 50%;
+  &:hover {
+    background-color: $soft-gray;
+  }
+
+  img {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.img-container-stay {
+  padding: 5px 7px 4px 7px;
+  border-radius: 50%;
+  background-color: $soft-gray;
+
+  img {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.s-tooltip {
+  visibility: hidden;
+  width: 100px;
+  background-color: $graper;
+  color: white;
+  text-align: center;
+  border-radius: 4px;
+  padding: 6px 2px;
+  position: absolute;
+  z-index: 100;
+  bottom: 130%;
+  left: 50%;
+  margin-left: -50px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  // border: 1px solid rgba(0, 0, 0, 0.328);
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.s-tooltip-below {
+  visibility: hidden;
+  width: 80px;
+  background-color: $graper;
+  color: white;
+  text-align: center;
+  border-radius: 4px;
+  padding: 6px 2px;
+  position: absolute;
+  z-index: 100;
+  top: 130%;
+  left: 50%;
+  margin-left: -40px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.s-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.s-wrapper:hover .s-tooltip,
+.s-wrapper:hover .s-tooltip-below {
+  visibility: visible;
+  opacity: 1;
+}
+
+.drop-header {
+  padding: 8px;
+  background-color: white;
+  font-size: 14px !important;
+  // border: 0.5px solid rgba(0, 0, 0, 0.355);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  cursor: pointer;
+
+  img {
+    margin: 0 4px 0 8px;
+  }
+
+  small {
+    font-size: 14px;
+    margin-left: 4px !important;
+    font-family: $base-font-family;
+  }
+
+  p,
+  small {
+    margin: 0;
+    padding: 0;
+  }
+
+  &:hover {
+    background-color: $soft-gray;
+  }
+}
+
+.rotate-img {
+  transform: rotate(180deg);
+}
+
+.soft-gray-bg {
+  background-color: $soft-gray;
+}
+
+input {
+  font-family: $thin-font-family;
+}
+
+::placeholder {
+  font-family: $thin-font-family;
+}
+
+::v-deep ::selection {
+  background-color: $lite-blue !important;
+  color: white;
 }
 </style>
