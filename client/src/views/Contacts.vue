@@ -57,7 +57,7 @@
         <footer>
           <div class="rows">
             <div v-for="(tag, i) in currentContact.tags" :key="i" class="user-tag">
-              <img src="@/assets/images/tags.svg" height="12px" alt="" />
+              <img class="pink-filter" src="@/assets/images/tags.svg" height="12px" alt="" />
               {{ tag }}
               <div @click="modifyTags('remove', tag)" class="remove">
                 <img src="@/assets/images/close.svg" height="14px" alt="" />
@@ -462,150 +462,88 @@
       </div>
     </Modal>
 
-    <header></header>
+    <div class="top-row">
+      <section>
+        <div class="space-between white-container">
+          <div class="row" style="padding-bottom: 8px">
+            <div style="font-size: 16px" v-if="loading" class="loading-small">
+              <p style="margin: 0; margin-right: 8px">Gathering your contacts</p>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+            <h3 style="font-size: 16px" class="thin-font">
+              Contacts : <span>{{ filteredContactList.length }}</span>
+            </h3>
 
-    <div class="space-between">
-      <div class="row">
-        <div style="margin-right: 16px" class="relative">
-          <p style="margin-top: -8px" class="not-mobile">Saved Contacts</p>
-          <!-- <button
-            style="padding-top: 11px; padding-bottom: 11px"
-            @click="toggleUserDropdown"
-            class="secondary-button"
-          >
-            <img style="margin-right: 8px" src="@/assets/images/profile.svg" height="12px" alt="" />
-            {{
-              !selectedUser
-                ? 'All'
-                : selectedUser.fullName
-                ? selectedUser.fullName
-                : selectedUser.full_name
-            }}
-            <img style="margin-left: 8px" src="@/assets/images/dropdown.svg" height="14px" alt="" />
-          </button> -->
+            <div
+              style="margin-left: 32px"
+              @click="toggleContactsModal"
+              class="img-container s-wrapper"
+            >
+              <img src="@/assets/images/addcontact.svg" height="14px" alt="" />
+            </div>
 
-          <div style="left: 0" v-if="showUsers" class="dropdown">
-            <div class="dropdown-header">
-              <h3>Select User</h3>
+            <!-- <button
+              @click="toggleContactsModal"
+              v-if="!loading"
+              class="secondary-button-no-border"
+              style="margin-left: 12px; background-color: transparent"
+            >
+              <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Contact
+            </button> -->
+          </div>
+
+          <div class="search">
+            <div class="input">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
+                  fill="currentColor"
+                ></path>
+              </svg>
+              <input
+                v-model="searchContactsText"
+                class="search-input"
+                :placeholder="`Search contacts...`"
+              />
               <img
-                @click="toggleUserDropdown"
+                v-if="searchContactsText"
+                @click="clearSearchText"
                 src="@/assets/images/close.svg"
                 class="pointer"
-                height="18px"
+                height="12px"
                 alt=""
               />
             </div>
-
-            <div style="margin: 8px 0 16px 0; padding-right: 12px">
-              <div style="width: 100%" class="input">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path
-                    fill-rule="evenodd"
-                    clip-rule="evenodd"
-                    d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
-                    fill="currentColor"
-                  ></path>
-                </svg>
-                <input v-model="searchUsersText" class="search-input" :placeholder="`Search...`" />
-                <img
-                  v-if="searchUsersText"
-                  @click="clearUsersText"
-                  src="@/assets/images/close.svg"
-                  class="pointer"
-                  height="12px"
-                  alt=""
-                />
-              </div>
-            </div>
-
-            <!-- <div class="dropdown-body">
-              <div class="col">
-                <div v-if="!searchUsersText" @click="selectAllUsers" class="dropdown-item">All</div>
-                <div
-                  @click="selectUser(user)"
-                  class="dropdown-item"
-                  v-for="(user, i) in allUsers"
-                  :key="i"
-                >
-                  {{ user.full_name }}
-                </div>
-              </div>
-            </div> -->
-
-            <div class="dropdown-footer"></div>
           </div>
         </div>
-      </div>
 
-      <div class="search">
-        <div class="input">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path
-              fill-rule="evenodd"
-              clip-rule="evenodd"
-              d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
-              fill="currentColor"
-            ></path>
-          </svg>
-          <input
-            v-model="searchContactsText"
-            class="search-input"
-            :placeholder="`Search contacts...`"
-          />
-          <img
-            v-if="searchContactsText"
-            @click="clearSearchText"
-            src="@/assets/images/close.svg"
-            class="pointer"
-            height="12px"
-            alt=""
-          />
-        </div>
-      </div>
-    </div>
-
-    <div class="top-row top-padding">
-      <aside>
-        <div style="margin-left: 2px" class="row">
-          <img src="@/assets/images/tags.svg" height="14px" alt="" />
-          <h3>Tags</h3>
-        </div>
-
-        <div class="checkbox-list">
-          <ul v-if="tags.length">
-            <li v-for="tag in tagCounts" :key="tag.name">
-              <label class="custom-checkbox">
-                <input type="checkbox" id="checkbox" :value="tag" v-model="selectedTags" />
-                <span class="checkmark"></span>
-                {{ tag.name }} <span>({{ tag.count }})</span>
-              </label>
-            </li>
-          </ul>
-
-          <small v-else> Apply tags to organize journalists into lists. </small>
-        </div>
-      </aside>
-
-      <section>
-        <div class="row" style="padding-bottom: 8px">
-          <div style="font-size: 16px" v-if="loading" class="loading-small">
-            <p style="margin: 0; margin-right: 8px">Gathering your contacts</p>
+        <div v-if="loading" class="cards-container">
+          <div style="font-size: 16px; margin: 24px 0 0 12px" class="loading-small">
+            <p class="bold-font" style="margin: 0; margin-right: 8px">Gathering contacts</p>
             <div class="dot"></div>
             <div class="dot"></div>
             <div class="dot"></div>
           </div>
-          <h3 v-else style="font-size: 16px">Showing: {{ filteredContactList.length }} contacts</h3>
-          <button
-            @click="toggleContactsModal"
-            v-if="!loading"
-            class="secondary-button"
-            style="margin-left: 12px"
+        </div>
+
+        <div class="cards-container" v-else-if="!filteredContactList.length">
+          Your saved contacts
+          <span>
+            <img
+              style="margin-left: -16px; margin-right: 4px"
+              src="@/assets/images/addcontact.svg"
+              height="12px"
+              alt=""
+            />
+            will appear here.</span
           >
-            <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Contact
-          </button>
         </div>
 
-        <div class="cards-container">
+        <div v-else class="cards-container">
           <div v-for="(contact, i) in filteredContactList" :key="i" class="contact-card">
             <header style="position: relative">
               <div class="contact-header">
@@ -641,35 +579,46 @@
             <div style="padding: 0 4px" class="body">
               <div class="bio-text" v-html="contact.bio"></div>
               <!-- <div class="blur"></div> -->
-              <div @click="updateContact(contact)" class="more-left">
-                Update
-                <!-- <img src="@/assets/images/refresh-pr.svg" height="14px" alt="" /> -->
-              </div>
-
-              <div @click="setContact(contact)" class="more">
-                Expand
-                <!-- <img src="@/assets/images/expand-arrows.svg" height="14px" alt="" /> -->
-              </div>
             </div>
 
             <div class="footer">
-              <div style="width: 52%" class="rows">
+              <div style="width: 50%" class="rows">
                 <div
                   style="padding-right: 10px"
                   v-for="(tag, i) in contact.tags"
                   :key="i"
                   class="user-tag"
                 >
-                  <img src="@/assets/images/tags.svg" height="12px" alt="" />
+                  <img class="pink-filter" src="@/assets/images/tags.svg" height="12px" alt="" />
                   {{ tag }}
-                  <!-- <div @click="modifyTags('remove', tag)" class="remove">
-                    <img src="@/assets/images/close.svg" height="14px" alt="" />
-                  </div> -->
                 </div>
               </div>
 
               <div style="position: relative" class="row">
-                <button
+                <div
+                  @click.stop="showTags(contact, i)"
+                  class="img-container s-wrapper"
+                  :class="{ 'img-container-stay': showingTags && currentIndex === i }"
+                >
+                  <img src="@/assets/images/tags.svg" height="14px" alt="" />
+                  <div class="s-tooltip">Add Tag</div>
+                </div>
+
+                <div @click="openPitchModal(contact)" class="img-container s-wrapper">
+                  <img src="@/assets/images/microphone.svg" height="14px" alt="" />
+                  <div class="s-tooltip">Create Pitch</div>
+                </div>
+
+                <div @click="updateContact(contact)" class="img-container s-wrapper">
+                  <img src="@/assets/images/refresh-pr.svg" height="14px" alt="" />
+                  <div class="s-tooltip">Refresh Bio</div>
+                </div>
+                <div @click="setContact(contact)" class="img-container s-wrapper">
+                  <img src="@/assets/images/overview.svg" height="14px" alt="" />
+                  <div class="s-tooltip">View Bio</div>
+                </div>
+
+                <!-- <button
                   @click="showTags(contact, i)"
                   style="padding-left: 8px"
                   class="secondary-button"
@@ -681,18 +630,23 @@
                     alt=""
                   />
                   Tag
-                </button>
-                <button @click="openPitchModal(contact)" class="primary-button">Pitch</button>
+                </button> -->
 
-                <div class="drop-options" v-if="showingTags && currentIndex === i">
-                  <header>
+                <!-- v-outside-click="closeTags" -->
+
+                <div
+                  class="drop-options"
+                  style="padding-left: 0; padding-right: 0"
+                  v-show="showingTags && currentIndex === i"
+                >
+                  <header style="padding-left: 8px">
                     Apply Tag
                     <img
-                      @click="toggleShowTags"
+                      @click="closeTags"
+                      style="margin-right: 12px; cursor: pointer"
                       src="@/assets/images/close.svg"
-                      height="18px"
+                      height="16px"
                       alt=""
-                      style="cursor: pointer"
                     />
                   </header>
 
@@ -702,24 +656,31 @@
                     v-else
                   >
                     <div
-                      style="opacity: 1; cursor: text; font-size: 15px"
+                      style="
+                        opacity: 1;
+                        cursor: text;
+                        font-size: 15px;
+                        padding: 4px 8px;
+                        cursor: pointer;
+                      "
                       v-for="(tag, i) in tags"
+                      @click="selectTag(contact, tag, i)"
                       :key="i"
-                      class="space-between"
+                      class="space-between hover-bg"
                     >
                       {{ tag }}
 
-                      <button
+                      <!-- <button
                         :disabled="selectingTag"
                         @click="selectTag(contact, tag, i)"
                         class="tertiary-button"
                       >
                         Select
-                      </button>
+                      </button> -->
                     </div>
                   </div>
 
-                  <div style="opacity: 1; cursor: text; position: relative">
+                  <div style="opacity: 1; cursor: text; position: relative; padding: 0 8px">
                     <div style="opacity: 1" class="sticky-bottom-between">
                       <div
                         style="opacity: 1; margin: 0; cursor: text"
@@ -750,10 +711,11 @@
 
                       <button
                         style="margin-left: auto"
-                        v-if="!showingInput"
+                        v-else
                         @click="showingInput = true"
-                        class="secondary-button"
+                        class="secondary-button-no-border"
                       >
+                        <img src="@/assets/images/add.svg" height="14px" alt="" />
                         Create Tag
                       </button>
                       <button
@@ -778,6 +740,27 @@
           </div>
         </div>
       </section>
+
+      <aside>
+        <div style="margin-left: 4px" class="row">
+          <img src="@/assets/images/tags.svg" height="14px" alt="" />
+          <h3>Tags</h3>
+        </div>
+
+        <div class="checkbox-list">
+          <ul v-if="tags.length">
+            <li v-for="tag in tagCounts" :key="tag.name">
+              <label class="custom-checkbox">
+                <input type="checkbox" id="checkbox" :value="tag" v-model="selectedTags" />
+                <span class="checkmark"></span>
+                {{ tag.name }} <span>({{ tag.count }})</span>
+              </label>
+            </li>
+          </ul>
+
+          <small v-else> Apply tags to organize journalists into lists. </small>
+        </div>
+      </aside>
     </div>
   </div>
 </template>
@@ -1145,6 +1128,9 @@ export default {
       this.currentIndex = i
       this.showingTags = true
     },
+    closeTags() {
+      this.showingTags = false
+    },
     toggleShowTags() {
       this.showingTags = !this.showingTags
     },
@@ -1422,7 +1408,7 @@ export default {
 @import '@/styles/buttons';
 
 .contacts {
-  padding: 40px 40px 0 40px;
+  padding: 96px 80px 0 80px;
   font-family: $thin-font-family;
   color: $dark-black-blue;
   overflow: hidden;
@@ -1442,14 +1428,27 @@ export default {
   }
 }
 
+.thin-font {
+  font-family: $thin-font-family;
+}
+
+.bold-font {
+  font-family: $base-font-family;
+  color: $dark-black-blue;
+  font-weight: 200;
+}
+
 .cards-container {
-  padding: 16px 0;
+  // background-color: red;
+  padding: 16px 0 0 0;
   display: flex;
   flex-direction: row;
   align-items: flex-start;
   flex-wrap: wrap;
   gap: 24px;
-  height: 75vh;
+  height: 70vh;
+  margin-top: 16px;
+
   overflow: scroll;
 
   @media only screen and (max-width: 750px) {
@@ -1464,7 +1463,7 @@ export default {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 4px;
   padding: 0 16px;
-  width: 25vw;
+  width: 27.175vw;
   background-color: white;
   transition: all 0.5s;
   // height: 200px;
@@ -1503,8 +1502,8 @@ export default {
 
     .main-img {
       //   margin-right: 16px;
-      height: 50px;
-      width: 50px;
+      height: 40px;
+      width: 40px;
       //   margin-bottom: 16px;
       object-fit: cover;
       cursor: text;
@@ -1542,7 +1541,7 @@ export default {
 
   .body {
     line-height: 1.5;
-    height: 200px;
+    height: 180px;
     position: relative;
     overflow: hidden;
 
@@ -1588,6 +1587,10 @@ h3 {
   margin: 0;
   font-family: $base-font-family;
   font-weight: 400;
+
+  span {
+    font-family: $base-font-family !important;
+  }
 }
 
 .more {
@@ -1655,11 +1658,11 @@ h3 {
   flex-direction: row;
   align-items: flex-start;
   justify-content: flex-start;
+  padding: 0 24px;
 
   aside {
-    width: 19vw;
-    padding: 0;
-    // background-color: red;
+    width: 29vw;
+    padding: 28px 24px 16px 64px;
 
     @media only screen and (max-width: 750px) {
       width: 24vw;
@@ -1678,19 +1681,16 @@ h3 {
   }
 
   section {
-    width: 100%;
+    width: 68vw;
+    padding: 16px 16px 16px 32px;
   }
-}
-
-.top-padding {
-  padding-top: 8px;
 }
 
 .checkbox-list {
   //   max-width: 300px;
   margin: 0 auto;
-  padding: 8px 0 20px 0;
-  height: 75vh;
+  padding: 16px 0 20px 0;
+  height: 80vh;
   overflow-y: scroll;
 
   @media only screen and (max-width: 750px) {
@@ -1771,7 +1771,7 @@ h3 {
 }
 
 .custom-checkbox input[type='checkbox']:checked + .checkmark {
-  background-color: $dark-black-blue; /* Change this to your desired color */
+  background-color: $lite-blue;
 }
 
 .custom-checkbox .checkmark::after {
@@ -1889,13 +1889,19 @@ h2 {
   width: 100%;
 }
 
+.hover-bg {
+  &:hover {
+    background-color: $soft-gray;
+  }
+}
+
 ::placeholder {
   color: rgba(0, 0, 0, 0.4);
 }
 
 .search {
   @media only screen and (max-width: 750px) {
-    width: 100vw;
+    width: 50vw;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2053,6 +2059,25 @@ h2 {
   }
 }
 
+.secondary-button-no-border {
+  @include dark-blue-button();
+  border-radius: 16px;
+  padding: 6px 12px;
+  border: none;
+  // border: 1px solid rgba(0, 0, 0, 0.2);
+  color: $dark-black-blue;
+  background-color: white;
+  margin: 0;
+  transition: none;
+  font-size: 14px;
+
+  &:hover {
+    background-color: $soft-gray !important;
+    transform: none !important;
+    box-shadow: none;
+  }
+}
+
 .tertiary-button {
   @include dark-blue-button();
   background-color: white;
@@ -2174,7 +2199,7 @@ h2 {
   }
 
   footer {
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    // border-top: 1px solid rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -2475,10 +2500,10 @@ h2 {
 }
 
 .drop-options {
-  width: 24vw;
+  width: 20vw;
   position: absolute;
   bottom: 36px;
-  right: -12px;
+  right: 0;
   font-weight: 400;
   background: white;
   padding: 8px 12px;
@@ -2501,9 +2526,11 @@ h2 {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    padding: 6px 2px 10px 2px;
+    padding: 6px 2px 2px 2px;
     margin-bottom: 12px;
+    font-family: $base-font-family;
+    font-size: 16px;
+    border: none;
 
     img {
       margin: 0;
@@ -2591,8 +2618,8 @@ h2 {
   flex-direction: row;
   align-items: center;
   font-size: 12px;
-  background-color: $light-purple;
-  color: $graper;
+  background-color: $lite-pink;
+  color: $pinky;
   font-family: $base-font-family;
   font-weight: 100;
   padding: 6px 32px 6px 8px;
@@ -2857,5 +2884,105 @@ textarea::placeholder {
   transition: opacity 1s ease-out;
   opacity: 0;
   animation: fadeIn 0.5s forwards;
+}
+
+.img-container {
+  cursor: pointer;
+  padding: 5px 7px 4px 7px;
+  border-radius: 50%;
+  &:hover {
+    background-color: $soft-gray;
+  }
+
+  img {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.img-container-stay {
+  padding: 5px 7px 4px 7px;
+  border-radius: 50%;
+  background-color: $soft-gray;
+
+  img {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.s-tooltip {
+  visibility: hidden;
+  width: 100px;
+  background-color: $graper;
+  color: white;
+  text-align: center;
+  border-radius: 4px;
+  padding: 6px 2px;
+  position: absolute;
+  z-index: 100;
+  bottom: 130%;
+  left: 50%;
+  margin-left: -50px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  // border: 1px solid rgba(0, 0, 0, 0.328);
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.s-tooltip-below {
+  visibility: hidden;
+  width: 80px;
+  background-color: $graper;
+  color: white;
+  text-align: center;
+  border-radius: 4px;
+  padding: 6px 2px;
+  position: absolute;
+  z-index: 100;
+  top: 130%;
+  left: 50%;
+  margin-left: -40px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.s-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.s-wrapper:hover .s-tooltip,
+.s-wrapper:hover .s-tooltip-below {
+  visibility: visible;
+  opacity: 1;
+}
+
+::v-deep ::selection {
+  background-color: $lite-blue !important;
+  color: white;
+}
+.lb-text {
+  color: $lite-blue;
+}
+.lb-filter {
+  filter: invert(54%) sepia(16%) saturate(1723%) hue-rotate(159deg) brightness(89%) contrast(89%) !important;
+}
+.pink-filter {
+  filter: invert(43%) sepia(88%) saturate(559%) hue-rotate(280deg) brightness(86%) contrast(83%) !important;
+}
+
+.white-container {
+  background-color: white;
+  padding: 24px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 </style>
