@@ -482,6 +482,7 @@
               class="img-container s-wrapper"
             >
               <img src="@/assets/images/addcontact.svg" height="14px" alt="" />
+              <div class="s-tooltip">Add contact</div>
             </div>
 
             <!-- <button
@@ -614,7 +615,7 @@
                   <div class="s-tooltip">Refresh Bio</div>
                 </div>
                 <div @click="setContact(contact)" class="img-container s-wrapper">
-                  <img src="@/assets/images/overview.svg" height="14px" alt="" />
+                  <img src="@/assets/images/file-user.svg" height="14px" alt="" />
                   <div class="s-tooltip">View Bio</div>
                 </div>
 

@@ -510,14 +510,17 @@ export default {
       }
     }
 
+    thead {
+      position: sticky;
+      top: 0;
+      z-index: 8;
+    }
+
     th {
       background-color: $off-white;
       // font-family: $base-font-family;
       border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
       color: $dark-blue;
-      position: sticky;
-      top: 0;
-      z-index: 8;
       cursor: pointer;
     }
 

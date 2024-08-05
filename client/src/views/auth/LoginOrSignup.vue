@@ -1,17 +1,17 @@
 <template>
   <div class="login-signup-page">
     <header>
-      <img class="blue-filter" src="@/assets/images/logo.png" height="36px" alt="" />
+      <img class="bg-blend" src="@/assets/images/newLogo.png" height="36px" alt="" />
 
-      <div class="header">
+      <!-- <div class="header">
         <p>Welcome!</p>
-      </div>
+      </div> -->
     </header>
 
     <div class="column">
       <div class="column">
         <h1>Welcome to ManagrAI</h1>
-        <h4>Your AI-powered PR assistant</h4>
+        <h4>Your AI-Powered PR Assistant</h4>
       </div>
 
       <div class="row">
@@ -191,5 +191,10 @@ header {
 .blue-filter {
   filter: brightness(0) invert(48%) sepia(33%) saturate(348%) hue-rotate(161deg) brightness(91%)
     contrast(90%);
+}
+
+.bg-blend {
+  mix-blend-mode: multiply;
+  background-color: $off-white;
 }
 </style>

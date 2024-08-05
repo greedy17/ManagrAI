@@ -2448,7 +2448,11 @@
               <img v-else src="@/assets/images/downArrow.svg" class="rotate" height="14px" alt="" />
             </div>
 
-            <div v-if="showingJournalistsList" class="example-body fadein" style="max-height: 80%">
+            <div
+              v-if="showingJournalistsList"
+              style="padding-bottom: 0"
+              class="example-body fadein"
+            >
               <div v-if="loadingJournalists">
                 <div style="margin: 8px 16px" class="loading-small">
                   <div class="dot"></div>
@@ -2457,30 +2461,34 @@
                 </div>
               </div>
 
-              <div style="padding: 0 16px" class="example-text" v-else>
-                <div v-if="!journalisListtData">
+              <div style="padding: 0 16px !important" class="example-text" v-else>
+                <div class="scrolltainer" style="height: 280px" v-if="!journalisListtData">
                   <div class="col-start">
                     <p style="font-size: 14px; margin: 12px 0">Provide additional details</p>
                     <textarea
                       autofocus
                       class="area-input-outline wider"
-                      placeholder="e.g., Tier 1 Journalists covering lifestyle or fashion in the U.S"
-                      style="width: 100%; min-height: 200px; max-height: 300px"
+                      placeholder="(e.g., Tier 1 Journalists covering lifestyle or fashion in the U.S)"
+                      style="width: 100%; min-height: 200px; max-height: 200px"
                       v-autoresize
                       v-model="journalistInfo"
                     />
                     <div style="background-color: white" class="row-end-bottom">
-                      <button @click="discoverJournalists" class="primary-button">
+                      <button style="margin: 0" @click="discoverJournalists" class="primary-button">
                         Find Journalists
                       </button>
                     </div>
                   </div>
                 </div>
 
-                <div v-else @click="grabJournalist($event)">
-                  <div class="pre-text scrolltainer" v-html="journalisListtData"></div>
+                <div class="relative" v-else @click="grabJournalist($event)">
+                  <div class="pre-text" v-html="journalisListtData"></div>
                 </div>
               </div>
+            </div>
+
+            <div v-if="journalisListtData" class="sticky-bottom-right">
+              <button @click="clearList" class="secondary-button">Clear</button>
             </div>
           </div>
         </aside>
@@ -2718,7 +2726,7 @@ export default {
         },
         {
           name: `Write a press release for...`,
-          value: `Write a press release for {Topic}. Emphasize key statistics and link them to industry trends. Use an attention-grabbing headline, crucial details early on, and compelling quotes. Aim for an engaging narrative that appeals to journalists.
+          value: `Write a press release for {Brand}. Emphasize key statistics and link them to industry trends. Use an attention-grabbing headline, crucial details early on, and compelling quotes. Aim for an engaging narrative that appeals to journalists.
           `,
         },
         {
@@ -2738,7 +2746,7 @@ export default {
       searchExamples: [
         `Provide sentiment around Lululemon`,
         `Top storylines covering the Atlanta Falcons`,
-        `Apple AND OpenAI`,
+        ` Cybersecurity AND AI`,
       ],
       socialSearchExamples: [`Top fashion trends`, `Why is Taylor Swift trending`, `from: nytimes`],
       googleSearchExamples: [
@@ -2979,6 +2987,11 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    clearList() {
+      this.journalisListtData = ''
+      this.journalistInfo = ''
+      this.showingJournalistsList = false
+    },
     async discoverJournalists() {
       this.loadingJournalists = true
       try {
@@ -9353,6 +9366,18 @@ textarea::placeholder {
   }
 }
 
+.sticky-bottom-right {
+  position: sticky;
+  bottom: 12px;
+  right: 148px;
+  z-index: 12;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: flex-end;
+  width: 80%;
+}
+
 .menu-wrapper {
   position: relative;
   &:hover {
@@ -9450,9 +9475,8 @@ textarea::placeholder {
 }
 
 .scrolltainer {
-  padding: 8px 0;
   &::-webkit-scrollbar {
-    width: 4px;
+    width: 32px !important;
     height: 0px;
   }
   &::-webkit-scrollbar-thumb {
