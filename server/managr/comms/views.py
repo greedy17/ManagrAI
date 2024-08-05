@@ -1178,6 +1178,7 @@ class PitchViewSet(
         type = request.data.get("type")
         instructions = request.data.get("instructions")
         style = request.data.get("style")
+        print('TYPE IS HERE',style)
         pitch_id = request.data.get("pitch_id", False)
         has_error = False
         attempts = 1

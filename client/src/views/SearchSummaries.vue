@@ -200,12 +200,25 @@
         <div class="paid-header">
           <div>
             <h3 class="regen-header-title">Save</h3>
-            <p class="regen-header-subtitle">Save your current search</p>
+            <p v-if="mainView === 'write'" class="regen-header-subtitle">Save your Content</p>
+            <p v-else class="regen-header-subtitle">Save your current search</p>
           </div>
           <div @click="toggleSaveModal" class="pointer"><small>X</small></div>
         </div>
 
-        <div class="paid-body">
+        <div v-if="mainView === 'write'" class="paid-body">
+          <label style="font-size: 13px" for="detail-title">Name:</label>
+          <input
+            id="detail-title"
+            style="width: 100%; margin: 0.5rem 0 1rem 0"
+            class="area-input-outline"
+            type="text"
+            placeholder="Name your content"
+            v-model="pitchName"
+          />
+        </div>
+
+        <div v-else class="paid-body">
           <label style="font-size: 13px" for="detail-title">Name:</label>
           <input
             id="detail-title"
@@ -222,7 +235,22 @@
             <button :disabled="savingSearch" @click="toggleSaveModal" class="cancel-button">
               Cancel
             </button>
-            <button @click="createSearch" :disabled="savingSearch" class="save-button">
+
+            <button
+              v-if="mainView === 'write'"
+              @click="savePitch"
+              :disabled="savingSearch"
+              class="save-button"
+            >
+              {{ savingSearch ? 'Saving' : 'Save' }}
+              <div style="margin-left: 4px" v-if="savingSearch" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
+            </button>
+
+            <button v-else @click="createSearch" :disabled="savingSearch" class="save-button">
               {{ savingSearch ? 'Saving' : 'Save' }}
               <div style="margin-left: 4px" v-if="savingSearch" class="loading-small">
                 <div class="dot"></div>
@@ -1221,10 +1249,14 @@
                   summaryLoading ||
                   savingSearch ||
                   savedSearch ||
+                  savedPitch ||
                   mainView === 'web'
                 "
                 v-if="
-                  (filteredArticles && filteredArticles.length) || tweets.length || posts.length
+                  (filteredArticles && filteredArticles.length) ||
+                  tweets.length ||
+                  posts.length ||
+                  (mainView === 'write' && summary)
                 "
               >
                 <img height="14px" src="@/assets/images/disk.svg" alt="" />
@@ -1365,7 +1397,7 @@
                   <textarea
                     style="max-height: 140px !important"
                     class="area-input text-area-input"
-                    placeholder="Ask follow-up..."
+                    :placeholder="mainView === 'write' ? 'Make edits...' : 'Ask follow-up...'"
                     autofocus
                     autocomplete="off"
                     v-model="newTemplate"
@@ -2424,11 +2456,8 @@
 
         <aside v-else>
           <div class="section" style="max-height: 70vh">
-            <div
-              @click="toggleJournalistsList"
-              class="example-title"
-              :class="{ nobottomborder: showingJournalistsList }"
-            >
+            <!-- @click="toggleJournalistsList" :class="{ nobottomborder: showingJournalistsList }" -->
+            <div style="cursor: text" class="example-title nobottomborder">
               <div class="example-row">
                 <img
                   style="margin-right: 8px"
@@ -2436,23 +2465,32 @@
                   height="14px"
                   alt=""
                 />
-                <p>Find relevant Journalists</p>
+                <p>Find Relevant Journalists</p>
               </div>
 
-              <img
+              <!-- <img
                 v-if="!showingJournalistsList"
                 src="@/assets/images/downArrow.svg"
                 height="14px"
                 alt=""
               />
-              <img v-else src="@/assets/images/downArrow.svg" class="rotate" height="14px" alt="" />
+              <img v-else src="@/assets/images/downArrow.svg" class="rotate" height="14px" alt="" /> -->
+              <button
+                :disabled="!journalisListtData"
+                @click="clearList"
+                class="secondary-button-no-border borderless"
+              >
+                <img
+                  style="margin-right: 4px"
+                  src="@/assets/images/remove.svg"
+                  height="14px"
+                  alt=""
+                />
+                Clear
+              </button>
             </div>
 
-            <div
-              v-if="showingJournalistsList"
-              style="padding-bottom: 0"
-              class="example-body fadein"
-            >
+            <div style="padding-bottom: 0" class="example-body fadein">
               <div v-if="loadingJournalists">
                 <div style="margin: 8px 16px" class="loading-small">
                   <div class="dot"></div>
@@ -2487,9 +2525,9 @@
               </div>
             </div>
 
-            <div v-if="journalisListtData" class="sticky-bottom-right">
+            <!-- <div v-if="journalisListtData" class="sticky-bottom-right">
               <button @click="clearList" class="secondary-button">Clear</button>
-            </div>
+            </div> -->
           </div>
         </aside>
       </section>
@@ -2513,6 +2551,8 @@ export default {
   },
   data() {
     return {
+      pitchName: '',
+      savedPitch: false,
       inputModalOpen: false,
       styleName: '',
       sample: '',
@@ -2525,16 +2565,17 @@ export default {
         },
         {
           title: 'Media Pitch',
-          style: `Author's Style Guidelines:
-        0. Start email with "Hi {Journalist first name}", end with "Thanks,". Get right to it, no opening fluff like "I hope this message finds you well"
-        1. Tone: Maintain a professional, respectful tone. Show appreciation for the journalist's work and express interest in collaboration.
-        2. Formality: Use formal language, but avoid jargon. Keep sentences clear and concise.
-        3. Structure: Start with a personalized greeting. Follow with a brief appreciation of the journalist's work, then introduce your topic. Provide key insights, then propose collaboration. End with a forward-looking statement and a thank you.
-        4. Linguistic Idiosyncrasies: Use active voice and precise, impactful words. Include statistics and expert opinions for credibility.
-        5. Credibility: Establish credibility by referencing recent research, expert opinions, and relevant industry trends.
-        6. Engagement: Engage the reader by offering exclusive insights and proposing collaboration.
-        7. Non-Promotional: Avoid promotional language. Focus on providing valuable, informative content.
-        8. Stylistic Techniques: Use a mix of short and long sentences for rhythm. Use rhetorical questions to engage the reader and provoke thought.`,
+          style: `
+        1. Start email with "Hi {Journalist first name}", end with "Thanks,". Get right to it, no opening fluff like "I hope this message finds you well"
+        2. Tone: Maintain a professional, respectful tone. Show appreciation for the journalist's work and express interest in collaboration.
+        3. Formality: Use formal language, but avoid jargon. Keep sentences clear and concise.
+        4. Structure: Start with a personalized greeting. Follow with a brief appreciation of the journalist's work, then introduce your topic. Provide key insights, then propose collaboration. End with a forward-looking statement and a thank you.
+        5. Linguistic Idiosyncrasies: Use active voice and precise, impactful words. Include statistics and expert opinions for credibility.
+        6. Credibility: Establish credibility by referencing recent research, expert opinions, and relevant industry trends.
+        7. Engagement: Engage the reader by offering exclusive insights and proposing collaboration.
+        8. Non-Promotional: Avoid promotional language. Focus on providing valuable, informative content.
+        9. Stylistic Techniques: Use a mix of short and long sentences for rhythm. Use rhetorical questions to engage the reader and provoke thought.
+        `,
         },
         {
           title: 'Blog Post',
@@ -2571,7 +2612,7 @@ export default {
       relevantData: '',
       journalistData: '',
       journalistListData: '',
-      showingJournalistsList: false,
+
       relatedTopics: [],
       loadingRelevant: false,
       loadingJournalists: false,
@@ -2954,6 +2995,7 @@ export default {
   watch: {
     typedMessage: 'changeIndex',
     currentSearch(newVal, oldVal) {
+      console.log(newVal)
       if (newVal && newVal.id !== (oldVal ? oldVal.id : null)) {
         this.setSearch(newVal)
       }
@@ -2990,7 +3032,7 @@ export default {
     clearList() {
       this.journalisListtData = ''
       this.journalistInfo = ''
-      this.showingJournalistsList = false
+      // this.showingJournalistsList = false
     },
     async discoverJournalists() {
       this.loadingJournalists = true
@@ -3257,16 +3299,16 @@ export default {
         this.showingJournalists = false
       }
     },
-    toggleJournalistsList() {
-      if (!this.showingJournalistsList) {
-        this.showingJournalistsList = true
-        if (!this.journalistListData) {
-          //  getJournalistfunction here
-        }
-      } else if (this.showingJournalistsList) {
-        this.showingJournalistsList = false
-      }
-    },
+    // toggleJournalistsList() {
+    //   if (!this.showingJournalistsList) {
+    //     this.showingJournalistsList = true
+    //     if (!this.journalistListData) {
+    //       //  getJournalistfunction here
+    //     }
+    //   } else if (this.showingJournalistsList) {
+    //     this.showingJournalistsList = false
+    //   }
+    // },
     toggleRelated() {
       if (!this.showingRelated) {
         this.showingRelated = true
@@ -3904,6 +3946,37 @@ export default {
     toggleSaveModal() {
       this.saveModalOpen = !this.saveModalOpen
     },
+    async savePitch() {
+      this.savingSearch = true
+      try {
+        const response = await Comms.api.savePitch({
+          name: this.pitchName || this.pitch.slice(0, 60),
+          user: this.user.id,
+          type: this.newSearch,
+          audience: '',
+          generated_pitch: this.summary,
+          instructions: this.newTemplate,
+        })
+        if (response.id) {
+          // this.searchId = response.id
+          this.$toast('Content saved', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          this.savedPitch = true
+
+          await this.$store.dispatch('getPitches')
+        }
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.savingSearch = false
+        this.saveModalOpen = false
+      }
+    },
     changeEmailText() {
       if (!this.isPaid) {
         this.emailText = 'Upgrade to Pro!'
@@ -4209,6 +4282,7 @@ export default {
       }
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       this.loading = true
+      console.log(this.writingStyle)
       try {
         const res = await Comms.api.generatePitch({
           type: this.newSearch,
@@ -4220,6 +4294,7 @@ export default {
         this.refreshUser()
         this.$store.dispatch('getPitches')
         this.scrollToTop()
+        this.savedPitch = false
       } catch (e) {
         console.log('ERROR CREATING PITCH', e)
       } finally {
@@ -4445,6 +4520,7 @@ export default {
     },
     resetAll() {
       this.clearNewSearch()
+      this.journalistInfo = ''
       this.newSearch = ''
       this.addedClips = []
       this.filteredArticles = []
@@ -4479,6 +4555,7 @@ export default {
       this.resetAll()
       if (view !== this.mainView) {
         this.mainView = view
+        this.$store.dispatch('updateListName', view)
       }
     },
     formatNumber(num) {
@@ -4500,26 +4577,46 @@ export default {
       this.showSaveName = !this.showSaveName
     },
     setSearch(search) {
+      console.log('BASE IT OFF SOMETHING HERE :', search)
       this.showSummaryInstructions = true
       this.summarizing = false
       this.savedSearch = search
-      this.summary = ''
       this.searchId = search.id
       this.searchName = search.name
-      this.newSearch = search.input_text
-      this.booleanString = search.search_boolean
-      this.newTemplate = search.instructions
-      this.metaData = search.meta_data
-      this.addedClips = this.$store.state.currentReportClips
+
+      if (search.hasOwnProperty('audience')) {
+        this.newTemplate = search.instructions
+        this.summary = search.generated_pitch
+        this.newSearch = search.type
+        this.savedPitch = true
+      } else {
+        this.newSearch = search.input_text
+        this.newTemplate = search.instructions
+        this.booleanString = search.search_boolean
+        this.metaData = search.meta_data
+        this.summary = ''
+        this.addedClips = this.$store.state.currentReportClips
+      }
+
       // this.addedClips = search.meta_data.clips ? search.meta_data.clips : []
       this.mainView =
         search.search_boolean === 'Ig'
           ? 'instagram'
           : search.type === 'SOCIAL_MEDIA'
           ? 'social'
-          : 'news'
-      //Discovery and Pitches need to be added
-      this.generateNewSearch(null, true, search.search_boolean)
+          : search.type === 'NEWS'
+          ? 'news'
+          : search.hasOwnProperty('audience')
+          ? 'write'
+          : ''
+      //Discovery need to be added
+      if (this.mainView !== 'write' && this.mainView !== 'discover') {
+        this.generateNewSearch(null, true, search.search_boolean)
+      } else if (this.mainView === 'write') {
+        console.log('I SHOULD BE HITTING')
+        this.changeSearch(search.type)
+      } else {
+      }
       this.setCurrentAlert()
     },
     changeIndex() {
@@ -8328,6 +8425,15 @@ textarea::placeholder {
 
 .borderless {
   border: none !important;
+
+  &:disabled {
+    border: none !important;
+    cursor: text;
+
+    img {
+      opacity: 0.6;
+    }
+  }
 }
 
 .expanded-item {
@@ -9368,7 +9474,7 @@ textarea::placeholder {
 
 .sticky-bottom-right {
   position: sticky;
-  bottom: 12px;
+  bottom: 32px;
   right: 148px;
   z-index: 12;
   display: flex;

@@ -65,9 +65,13 @@ const state = {
   generatedContent: null,
   abortControllers: {},
   stripeKey: null,
+  listName: 'news'
 }
 
 const mutations = {
+  UPDATE_LIST: (state, payload) => {
+    state.listName = payload
+  },
   setGeneratedContent(state, payload) {
     state.generatedContent = payload;
   },
@@ -290,6 +294,10 @@ const actions = {
     const res = await Status.api.list({})
 
     commit('UPDATE_STAGES', res.results ? res.results : null)
+  },
+  updateListName({ commit }, title) {
+    console.log('TITLE IS HERE :', title)
+    commit('UPDATE_LIST', title)
   },
   updateChatTitle({ commit }, title) {
     commit('UPDATE_CHAT_TITLE', title)
