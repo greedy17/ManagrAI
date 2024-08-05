@@ -528,7 +528,7 @@
           Connect <span class="link" @click="goToIntegrations">Twitter</span> to continue
         </h2>
         <!-- <img src="@/assets/images/newLogo2.png" class="image-bg" height="40px" alt="" /> -->
-        <h1 style="margin-top: 4px">Your AI-powered PR assistant</h1>
+        <h1 style="margin-top: 4px">Your AI-Powered PR Assistant</h1>
       </div>
 
       <div class="small-container letter-spacing">
@@ -726,7 +726,7 @@
 
                   <button
                     @click="toggleLearnInputModal('')"
-                    class="secondary-button-no-bordeer"
+                    class="secondary-button-no-border"
                     style="margin-right: 12px"
                   >
                     <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Style
@@ -1019,13 +1019,23 @@
         <div v-outside-click="closeHelp" v-show="showingHelp" class="relative pointer">
           <div class="help-menu">
             <h4>Need Help ?</h4>
+            <div v-if="!isPaid">
+              <img src="@/assets/images/medal.svg" height="14px" alt="" />
+              <a :href="upgradeLink" target="_blank">Upgrade to Pro</a>
+            </div>
+            <div style="background-color: white; cursor: text" v-else>
+              <img
+                class="image-bg"
+                style="filter: none"
+                src="@/assets/images/smallLogo.png"
+                height="14px"
+                alt=""
+              />
+              <a style="text-decoration: none" class="pink-text">ManagrAI Pro</a>
+            </div>
             <div>
               <img src="@/assets/images/camera.svg" height="14px" alt="" />
-              <a
-                href="https://www.loom.com/share/67b6640bd4a84de0aee9dd7fe63b6258?sid=6d7793ff-2303-4cbf-8202-f5b254d731ee"
-                target="_blank"
-                >Onboarding Video</a
-              >
+              <a :href="onboardingLink" target="_blank">Onboarding Video</a>
             </div>
             <div>
               <img src="@/assets/images/email-round.svg" height="14px" alt="" />
@@ -1096,7 +1106,15 @@
                 No results found. Try a new search.
               </p>
 
-              <p v-else class="sub-text ellipsis-text-test" style="margin: 16px 0">
+              <p
+                v-else-if="mainView !== 'write' && mainView !== 'discover'"
+                class="sub-text ellipsis-text-test"
+                style="margin: 16px 0"
+              >
+                <span>{{ newSearch }}</span>
+              </p>
+
+              <p v-else class="sub-text ellipsis-text-bold" style="margin: 16px 0">
                 <span :title="newSearch">{{ newSearch }}</span>
               </p>
             </div>
@@ -1170,8 +1188,8 @@
                     class="invert"
                     :class="{ dim: !(searchSaved || savedSearch) }"
                   />
-                  <div class="s-tooltip">
-                    {{ searchSaved || savedSearch ? emailText : 'Save Search 1st' }}
+                  <div style="bottom: 115%" class="s-tooltip">
+                    {{ searchSaved || savedSearch ? emailText : 'Save search to enable alerts' }}
                   </div>
                 </div>
 
@@ -2536,7 +2554,7 @@ export default {
       showingWritingStyles: false,
       showingStyles: false,
       showingHelp: false,
-      supportEmail: 'support@example.com',
+      supportEmail: 'support@mymanagr.com',
       showSuggestions: false,
       contentType: 'Content',
       showCompanySelection: false,
@@ -4635,6 +4653,9 @@ export default {
       } else if (this.mainView === 'write') {
         this.closeRegenModal()
         this.generatePitch()
+      } else if (this.mainView === 'discover') {
+        // this.closeRegenModal()
+        // this.generatePitch()
       } else {
         this.closeRegenModal()
         this.loading = true
@@ -5451,6 +5472,12 @@ export default {
     mailtoLink() {
       return `mailto:${this.supportEmail}`
     },
+    upgradeLink() {
+      return 'https://managr.ai/contact'
+    },
+    onboardingLink() {
+      return 'https://www.loom.com/share/67b6640bd4a84de0aee9dd7fe63b6258?sid=6d7793ff-2303-4cbf-8202-f5b254d731ee'
+    },
     placeHolderText() {
       let text = ''
       if (this.mainView === 'social' && !this.hasTwitterIntegration) {
@@ -5982,7 +6009,7 @@ export default {
   margin-right: -2px;
 }
 
-.secondary-button-no-bordeer {
+.secondary-button-no-border {
   @include dark-blue-button();
   border-radius: 16px;
   padding: 6px 12px;
@@ -6193,6 +6220,7 @@ export default {
   }
   position: relative;
   margin-top: 16px;
+
   .drop-header {
     padding: 4px 6px;
     background-color: white;
@@ -7148,6 +7176,23 @@ button:disabled {
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
+
+  @media only screen and (max-width: 600px) {
+    max-width: 320px;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
+}
+
+.ellipsis-text-bold {
+  max-width: 40vw;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  font-size: 22px;
+  font-weight: 200;
+  font-family: $base-font-family;
 
   @media only screen and (max-width: 600px) {
     max-width: 320px;
@@ -8999,6 +9044,9 @@ textarea::placeholder {
   padding: 0;
   // border: 1px solid rgba(0, 0, 0, 0.335);
   border-radius: 5px;
+  transition: opacity 1s ease-out;
+  opacity: 0;
+  animation: fadeIn 1s forwards;
   // display: flex;
   // flex-direction: row;
 
@@ -9185,6 +9233,10 @@ textarea::placeholder {
   filter: invert(45%) sepia(52%) saturate(1248%) hue-rotate(196deg) brightness(97%) contrast(90%) !important;
 }
 
+.lb-text {
+  color: $lite-blue !important;
+}
+
 .lite-bg {
   background-color: $lite-blue;
   img {
@@ -9236,8 +9288,8 @@ textarea::placeholder {
 }
 
 .image-bg {
-  mix-blend-mode: multiply;
-  background-color: white;
+  mix-blend-mode: multiply !important;
+  background-color: white !important;
 }
 
 .container-right-above {
@@ -9415,7 +9467,7 @@ textarea::placeholder {
 }
 
 .blueish-filter {
-  filter: invert(26%) sepia(74%) saturate(1811%) hue-rotate(193deg) brightness(97%) contrast(95%);
+  filter: invert(26%) sepia(74%) saturate(1811%) hue-rotate(193deg) brightness(97%) contrast(95%) !important;
 }
 
 .turq-filter {
@@ -9427,7 +9479,7 @@ textarea::placeholder {
 }
 
 .pink-text {
-  color: $pinky;
+  color: $pinky !important;
 }
 
 .purple-filter {

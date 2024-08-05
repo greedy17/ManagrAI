@@ -2,9 +2,10 @@
   <div class="login-page">
     <header>
       <img
-        class="blue-filter pointer"
-        src="@/assets/images/logo.png"
+        class="pointer"
+        src="@/assets/images/newLogo.png"
         height="36px"
+        style="mix-blend-mode: multiply; background-color: #fafafa"
         alt=""
         @click="goToManagr"
       />
