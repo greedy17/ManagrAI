@@ -401,6 +401,8 @@ BACKGROUND_TASKS = {
     "enabled": True,
     "backend": "django_background_tasks.backend.DatabaseBackend",
     "MAX_RUNNING": 4,
+    "BACKGROUND_TASK_ASYNC_THREADS": 4,
+    "BACKGROUND_TASK_RUN_ASYNC": True,
 }
 
 #
