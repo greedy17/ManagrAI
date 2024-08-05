@@ -325,14 +325,23 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
     return body
 
 
-def OPEN_AI_PITCH(date, type, instructions, data, style=False):
-    body = f"""Today's date is {date}. You are tasked with generating content. You must follow the instructions below:
+def OPEN_AI_PITCH(date, type, instructions, style=False):
+    body = f"""Today's date is {date}. Generate content in HTML format with proper spacing and separate paragraphs for each section (greeting, introduction, closing, etc). Do not include ```html``` in your response.
 
-    1. Instructions: {type}
-    2. You must Mirror this writing style: {style}
-    3. Make sure that your response is properly formatted simple html with good spacing. Do not include any styling and/or <meta> tags. Do not include ```html``` in your response.
+    Content Instructions: {type}
+    Writing Style: {style}
     """
     return body
+    
+
+OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS = (
+    lambda pitch, instructions, style: f"""
+    Adjust and rewrite the content according to the instructions. The content should be in HTML format with proper spacing and separate paragraphs for each section (greeting, introduction, closing, etc). Do not include ```html``` in your response.\n
+    Content: {pitch}\n
+    Instructions: {instructions}\n
+    Writing Style: {style}
+    """
+)   
 
 
 def OPEN_AI_GENERATE_CONTENT(date, article, style, instructions):
@@ -353,15 +362,6 @@ def OPEN_AI_IMAGE_CONTENT(images, instructions, tokens):
     body = {"model": "gpt-4-vision-preview", "messages": [messages], "max_tokens": tokens}
     return body
 
-
-OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS = (
-    lambda pitch, instructions, style: f"""
-Adjust and rewrite the content per the instructions. Content must be written in the writing style below.\n
-Content: {pitch}
-Instructions: {instructions}
-writing style: {style}
-"""
-)
 
 OPEN_AI_REWRITE_PTICH = (
     lambda original, bio, name: f"""

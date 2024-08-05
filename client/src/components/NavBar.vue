@@ -166,7 +166,7 @@
           :to="{ name: 'PRSummaries' }"
           id="router-summarize"
         >
-          <p>Search</p>
+          <p>Assist</p>
         </router-link>
 
         <!-- <router-link active-class="active-mobile" :to="{ name: 'Pitches' }" id="router-pitch">
@@ -178,18 +178,18 @@
         </router-link> -->
 
         <router-link active-class="active" :to="{ name: 'Contacts' }" id="router-pitch">
-          <p>Contacts</p>
+          <p>Network</p>
         </router-link>
 
         <router-link active-class="active-mobile" :to="{ name: 'EmailTracking' }" id="router-pitch">
-          <p>Tracker</p>
+          <p>Track</p>
         </router-link>
       </div>
 
       <div id="relative-mobile">
         <div>
           <div
-            v-if="$route.name === 'PRSummaries'"
+            v-if="listName === 'news' || listName === 'social'"
             @click.stop="toggleShowSearches"
             class="row pointer nav-text"
           >
@@ -210,7 +210,7 @@
           </div>
 
           <div
-            v-else-if="$route.name === 'Pitches'"
+            v-else-if="listName === 'write'"
             @click.stop="toggleShowPitches"
             class="row pointer nav-text"
           >
@@ -230,7 +230,7 @@
             />
           </div>
 
-          <div
+          <!-- <div
             v-else-if="$route.name === 'Assist'"
             @click.stop="toggleShowAssist"
             class="row pointer nav-text"
@@ -244,7 +244,7 @@
               height="14px"
               alt=""
             />
-          </div>
+          </div> -->
 
           <div
             v-else-if="$route.name === 'Discover'"
@@ -364,7 +364,7 @@
                   src="@/assets/images/memo.svg"
                   height="12px"
                   alt=""
-                  @click="selectPitch(pitch)"
+                  @click="selectSearch(pitch)"
                 />
                 <img
                   class="search-icon"
@@ -372,9 +372,9 @@
                   src="@/assets/images/comment.svg"
                   height="12px"
                   alt=""
-                  @click="selectPitch(pitch)"
+                  @click="selectSearch(pitch)"
                 />
-                <p @click="selectPitch(pitch)">
+                <p @click="selectSearch(pitch)">
                   {{ pitch.name }}
                 </p>
 
@@ -497,7 +497,7 @@
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'PRSummaries' }" id="router-summarize">
-          <p>Search</p>
+          <p>Assist</p>
         </router-link>
 
         <!-- <router-link active-class="active" :to="{ name: 'Pitches' }" id="router-pitch">
@@ -509,11 +509,11 @@
         </router-link> -->
 
         <router-link active-class="active" :to="{ name: 'Contacts' }" id="router-pitch">
-          <p>Contacts</p>
+          <p>Network</p>
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'EmailTracking' }" id="router-pitch">
-          <p>Tracker</p>
+          <p>Track</p>
         </router-link>
 
         <!-- <router-link
@@ -550,7 +550,7 @@
           </div>
           <div class="relative">
             <div
-              v-if="$route.name === 'PRSummaries'"
+              v-if="listName === 'news' || listName === 'social'"
               @click.stop="toggleShowSearches"
               class="row pointer nav-text"
             >
@@ -571,7 +571,7 @@
             </div>
 
             <div
-              v-else-if="$route.name === 'Pitches'"
+              v-else-if="listName === 'write'"
               @click.stop="toggleShowPitches"
               class="row pointer nav-text"
             >
@@ -742,7 +742,7 @@
                     src="@/assets/images/memo.svg"
                     height="12px"
                     alt=""
-                    @click="selectPitch(pitch)"
+                    @click="selectSearch(pitch)"
                   />
                   <img
                     class="search-icon"
@@ -750,9 +750,9 @@
                     src="@/assets/images/comment.svg"
                     height="12px"
                     alt=""
-                    @click="selectPitch(pitch)"
+                    @click="selectSearch(pitch)"
                   />
-                  <p :title="pitch.name" @click="selectPitch(pitch)">
+                  <p :title="pitch.name" @click="selectSearch(pitch)">
                     {{ pitch.name }}
                   </p>
 
@@ -1393,8 +1393,14 @@ export default {
         console.log('Error in purchasePro: ', e)
       }
     },
+    toggleAllSearches() {
+      this.$emit('close-menu')
+      this.showSavedSearches = false
+      this.showSavedPitches = false
+      this.showSavedDiscoveries = false
+    },
     selectSearch(search) {
-      this.toggleShowSearches()
+      this.toggleAllSearches()
       this.$store.dispatch('setSearch', search)
     },
     selectPitch(pitch) {
@@ -1480,6 +1486,9 @@ export default {
       } else {
         return this.$store.state.allSearches
       }
+    },
+    listName() {
+      return this.$store.state.listName
     },
     activeUsers() {
       return this.team.list.filter((user) => user.isActive)
