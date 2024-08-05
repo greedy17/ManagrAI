@@ -112,6 +112,7 @@ def getclips(request):
                 )
             r = open_ai_exceptions._handle_response(r)
             query_input = r.get("choices")[0].get("message").get("content")
+            print(query_input, date_to, date_from)
             news_res = Search.get_clips(query_input, date_to, date_from)
             articles = news_res["articles"]
         else:
@@ -119,7 +120,9 @@ def getclips(request):
             articles = news_res["articles"]
             query_input = boolean
         articles = [article for article in articles if article["title"] != "[Removed]"]
+        print(len(articles))
         internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
+        print(len(internal_articles))
         articles = normalize_article_data(articles, internal_articles)
         return {"articles": articles, "string": query_input}
 
@@ -1242,7 +1245,9 @@ class PitchViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS(pitch, instructions,style)
+                prompt = comms_consts.OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS(
+                    pitch, instructions, style
+                )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
@@ -2181,7 +2186,7 @@ class DiscoveryViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.DISCOVER_JOURNALIST(content,info)
+                prompt = comms_consts.DISCOVER_JOURNALIST(content, info)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
