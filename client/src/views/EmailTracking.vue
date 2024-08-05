@@ -533,7 +533,7 @@ export default {
   border: 1px solid rgba(0, 0, 0, 0.1);
   // padding: 8px;
   left: 16px;
-  z-index: 6;
+  z-index: 9;
   min-width: 25vw;
   background-color: white;
   border-radius: 4px;
