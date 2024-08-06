@@ -3133,7 +3133,7 @@ export default {
     if (this.user) {
       this.selectedOrg = this.user.organizationRef.name
     }
-
+    this.$store.dispatch('updateListName', 'news')
     this.getWritingStyles()
   },
   watch: {
