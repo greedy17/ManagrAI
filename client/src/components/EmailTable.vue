@@ -152,7 +152,7 @@
           </th>
         </tr>
       </thead>
-      <tbody v-if="sortedEmails">
+      <tbody v-if="sortedEmails.length">
         <tr v-for="(email, i) in sortedEmails" :key="i">
           <td
             :class="i % 2 !== 0 ? 'gray-bg' : ''"
@@ -387,6 +387,9 @@ export default {
   },
 
   methods: {
+    test() {
+      console.log(this.sortedEmails)
+    },
     toggleEmailModal(email = null) {
       this.emailModalOpen = !this.emailModalOpen
       this.selectedEmail = email

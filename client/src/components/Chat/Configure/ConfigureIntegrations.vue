@@ -255,10 +255,10 @@
     </div> -->
 
     <div class="pr-integrations-container">
-      <div class="title-container">
+      <!-- <div class="title-container">
         <h1 class="no-text-margin">Integrations</h1>
         <p class="sub-text">Connect your apps to expand functionality.</p>
-      </div>
+      </div> -->
       <div class="integrations__cards">
         <!-- Twitter -->
         <div class="card">
@@ -1139,9 +1139,11 @@ a {
   &__cards {
     display: flex;
     flex-direction: row;
-    padding: 0.5rem 1.5rem;
+    gap: 32px;
+    padding: 0.5rem 1rem;
     flex-wrap: wrap;
-    justify-content: flex-start;
+    align-items: center;
+    justify-content: center;
     // width: 96vw;
     margin-top: 4px;
     @media only screen and (max-width: 600px) {
@@ -1181,11 +1183,9 @@ a {
   border-radius: 5px;
   display: flex;
   flex-direction: column;
-  margin-right: 32px;
-  margin-bottom: 1rem;
   // width: 420px;
   // width: 320px;
-  width: 270px;
+  width: 265px;
   min-height: 144px;
   transition: all 0.25s;
   @media only screen and (max-width: 600px) {
@@ -1721,7 +1721,7 @@ a {
 }
 .pr-integrations-container {
   width: 100vw;
-  padding-left: 32px;
+  padding: 48px 88px 48px 96px;
   font-family: $thin-font-family;
 }
 .wrapper {

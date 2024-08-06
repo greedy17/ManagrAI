@@ -337,7 +337,7 @@
               </p>
               <input
                 v-if="!verifying || loadingPitch"
-                style="margin-bottom: 0; padding-left: 26px"
+                style="margin-bottom: 0; padding-left: 26px; padding-top: 6px"
                 class="primary-input-underline"
                 v-model="targetEmail"
                 type="email"
@@ -387,7 +387,7 @@
                 v-model="subject"
                 type="text"
                 placeholder=""
-                style="padding-left: 64px"
+                style="padding-left: 64px; padding-top: 6px"
                 :disabled="loadingPitch || sendingEmail"
               />
             </div>
@@ -423,19 +423,21 @@
           >
             Close
           </button>
+
+          <div v-if="sendingEmail" style="margin: 0 12px" class="loading-small">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
           <button
+            v-else
             @click="sendEmail"
             :disabled="loadingPitch || !subject || !targetEmail || sendingEmail || verifying"
             style="margin-right: 4px"
             class="primary-button"
             :class="{ opaque: loadingPitch || !subject || !targetEmail }"
           >
-            <div v-if="sendingEmail" style="margin: 0 4px" class="loading-small">
-              <div class="dot"></div>
-              <div class="dot"></div>
-              <div class="dot"></div>
-            </div>
-            <span v-else> Send</span>
+            <span> Send</span>
           </button>
         </div>
       </div>
@@ -447,7 +449,7 @@
             {{ currentJournalist }}
           </p>
 
-          <div class="row">
+          <div style="margin-right: -2px" class="row">
             <div v-if="savingContact" style="margin: 0" class="loading-small">
               <div class="dot"></div>
               <div class="dot"></div>
@@ -456,12 +458,11 @@
 
             <button
               v-else
-              style="margin-right: 0.5rem"
               @click="saveContact"
               class="s-wrapper img-container-button borderless clicked"
               :disabled="buttonClicked || loadingDraft || mainView === 'social'"
             >
-              <img class="right-mar invert" src="@/assets/images/disk.svg" height="15px" alt="" />
+              <img class="invert" src="@/assets/images/disk.svg" height="16px" alt="" />
               <div class="s-tooltip-below">Save</div>
             </button>
           </div>
@@ -3771,25 +3772,23 @@ export default {
     async sendEmail() {
       this.sendingEmail = true
       try {
-        Comms.api
-          .sendEmail({
-            subject: this.subject,
-            body: this.revisedPitch,
-            recipient: this.targetEmail,
-            name: this.currentJournalist,
-          })
-          .then((response) => {
-            this.emailJournalistModalOpen = false
-            this.$toast('Pitch sent', {
-              timeout: 2000,
-              position: 'top-left',
-              type: 'success',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            })
-            this.revisedPitch = ''
-            this.sendingEmail = false
-          })
+        const res = Comms.api.sendEmail({
+          subject: this.subject,
+          body: this.revisedPitch,
+          recipient: this.targetEmail,
+          name: this.currentJournalist,
+        })
+
+        this.emailJournalistModalOpen = false
+        this.$toast('Pitch sent', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.revisedPitch = ''
+        this.sendingEmail = false
       } catch (e) {
         console.log(e)
         this.$toast('Error sending email, try again', {
@@ -6248,6 +6247,11 @@ export default {
   }
 }
 
+::v-deep .ql-editor {
+  font-family: $thin-font-family;
+  font-size: 14px;
+}
+
 .slide-up-enter-active,
 .slide-up-leave-active {
   transition: all 0.5s ease-in;
@@ -6319,6 +6323,7 @@ export default {
   @include dark-blue-button();
   padding: 8px 12px;
   border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
   color: $dark-black-blue;
   background-color: white;
   margin-right: -2px;
@@ -6374,7 +6379,7 @@ export default {
 }
 
 .e-container {
-  background-color: $dark-black-blue;
+  background-color: $lite-blue;
   color: white;
   border-radius: 6px;
   padding: 4px;
@@ -6719,6 +6724,7 @@ export default {
   @include dark-blue-button();
   padding: 8px 12px;
   border: none;
+  border-radius: 16px;
   img {
     filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
     margin-right: 8px;
@@ -8993,6 +8999,10 @@ textarea::placeholder {
 }
 .paid-body {
   margin: 0.5rem 0;
+
+  // input {
+  //   font-family: ;
+  // }
 }
 .regen-body-title {
   font-size: 14px;
@@ -9219,7 +9229,7 @@ textarea::placeholder {
   }
 
   header {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: row;
     align-items: center;

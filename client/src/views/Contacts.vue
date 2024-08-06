@@ -150,7 +150,7 @@
             }}
           </p>
 
-          <div @click="togglePitchModal">
+          <!-- <div @click="togglePitchModal">
             <img
               style="cursor: pointer"
               class="right-mar img-highlight"
@@ -158,7 +158,7 @@
               height="18px"
               alt=""
             />
-          </div>
+          </div> -->
         </header>
 
         <div
@@ -243,7 +243,6 @@
                 greenText: currentContact.journalist_ref.verified,
               }"
               type="email"
-              :disabled="currentContact.journalist_ref.verified"
             />
 
             <div
@@ -2193,6 +2192,7 @@ h2 {
     top: 0;
     background-color: white;
     padding: 0 0 8px 0;
+    font-family: $base-font-family;
 
     p {
       font-weight: bold;
@@ -2715,7 +2715,7 @@ textarea::placeholder {
   font-family: $thin-font-family;
 }
 .e-container {
-  background-color: $dark-black-blue;
+  background-color: $lite-blue;
   color: white;
   border-radius: 6px;
   padding: 4px;
@@ -2985,5 +2985,16 @@ textarea::placeholder {
   padding: 24px 12px;
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+::v-deep .ql-editor {
+  font-family: $thin-font-family;
+  font-size: 14px;
+}
+
+::v-deep .ql-snow.ql-toolbar button {
+  background: $soft-gray;
+  border-radius: 4px;
+  margin-right: 4px;
 }
 </style>
