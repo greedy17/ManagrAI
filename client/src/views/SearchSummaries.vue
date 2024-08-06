@@ -201,6 +201,7 @@
           <div>
             <h3 class="regen-header-title">Save</h3>
             <p v-if="mainView === 'write'" class="regen-header-subtitle">Save your Content</p>
+            <p v-else-if="mainView === 'discover'" class="regen-header-subtitle">Save your List</p>
             <p v-else class="regen-header-subtitle">Save your current search</p>
           </div>
           <div @click="toggleSaveModal" class="pointer"><small>X</small></div>
@@ -213,8 +214,20 @@
             style="width: 100%; margin: 0.5rem 0 1rem 0"
             class="area-input-outline"
             type="text"
-            placeholder="Name your content"
+            placeholder="Name your content..."
             v-model="pitchName"
+          />
+        </div>
+
+        <div v-if="mainView === 'discover'" class="paid-body">
+          <label style="font-size: 13px" for="detail-title">Name:</label>
+          <input
+            id="detail-title"
+            style="width: 100%; margin: 0.5rem 0 1rem 0"
+            class="area-input-outline"
+            type="text"
+            placeholder="Name your list..."
+            v-model="listName"
           />
         </div>
 
@@ -225,7 +238,7 @@
             style="width: 100%; margin: 0.5rem 0 1rem 0"
             class="area-input-outline"
             type="text"
-            placeholder="Name your search"
+            placeholder="Name your search..."
             v-model="searchName"
           />
         </div>
@@ -239,6 +252,20 @@
             <button
               v-if="mainView === 'write'"
               @click="savePitch"
+              :disabled="savingSearch"
+              class="save-button"
+            >
+              {{ savingSearch ? 'Saving' : 'Save' }}
+              <div style="margin-left: 4px" v-if="savingSearch" class="loading-small">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
+            </button>
+
+            <button
+              v-if="mainView === 'discover'"
+              @click="saveDiscovery"
               :disabled="savingSearch"
               class="save-button"
             >
@@ -642,6 +669,12 @@
                   height="14px"
                   alt=""
                 />
+                <img
+                  v-else-if="mainView === 'discover'"
+                  src="@/assets/images/profile.svg"
+                  height="14px"
+                  alt=""
+                />
 
                 <p>Source:</p>
                 <small>{{ toCamelCase(mainView) }}</small>
@@ -700,7 +733,7 @@
                   <p>Create content that sounds like you</p>
                 </div>
                 <div
-                  @click="goToPage('Discover')"
+                  @click="switchMainView('discover')"
                   :class="{ activeswitch: mainView === 'discover' }"
                 >
                   <span>
@@ -829,7 +862,11 @@
 
             <div v-if="mainView === 'write'" style="width: 12vw"></div>
 
-            <div v-if="mainView !== 'write'" style="margin-top: 16px" class="row relative">
+            <div
+              v-if="mainView !== 'write' && mainView !== 'discover'"
+              style="margin-top: 16px"
+              class="row relative"
+            >
               <div
                 @click.stop="toggleDate"
                 :class="{ 'soft-gray-bg': showDateSelection }"
@@ -1031,6 +1068,40 @@
                 alt=""
               />
               {{ example.name }}
+            </p>
+          </div>
+        </div>
+
+        <div v-else-if="mainView === 'discover'" class="expanded-item-column">
+          <div class="rows">
+            <p
+              v-for="(example, i) in discoverExamples"
+              :key="i"
+              @click="setNewSearch(example)"
+              class="example"
+            >
+              <img
+                class="purple-filter"
+                v-if="i === 0"
+                src="@/assets/images/newspaper.svg"
+                height="14px"
+                alt=""
+              />
+              <img
+                class="pink-filter"
+                v-else-if="i === 1"
+                src="@/assets/images/podcast.svg"
+                height="14px"
+                alt=""
+              />
+              <img
+                class="blueish-filter"
+                v-else-if="i === 2"
+                src="@/assets/images/heart.svg"
+                height="16px"
+                alt=""
+              />
+              {{ example }}
             </p>
           </div>
         </div>
@@ -1250,13 +1321,15 @@
                   savingSearch ||
                   savedSearch ||
                   savedPitch ||
+                  savedDiscovery ||
                   mainView === 'web'
                 "
                 v-if="
                   (filteredArticles && filteredArticles.length) ||
                   tweets.length ||
                   posts.length ||
-                  (mainView === 'write' && summary)
+                  (mainView === 'write' && summary) ||
+                  (mainView === 'discover' && summary)
                 "
               >
                 <img height="14px" src="@/assets/images/disk.svg" alt="" />
@@ -1375,8 +1448,18 @@
                 class="citation-text"
                 v-html="insertCitations(summary)"
               ></div>
-              <div style="margin-top: 16px" v-else class="citation-text" v-html="summary"></div>
               <div
+                style="margin-top: 16px"
+                v-else-if="mainView === 'write'"
+                class="citation-text"
+                v-html="summary"
+              ></div>
+
+              <div @click="grabJournalist($event)" style="margin-top: 16px" class="" v-else>
+                <div class="pre-text alternate" v-html="summary"></div>
+              </div>
+              <div
+                v-if="mainView !== 'discover'"
                 style="
                   margin-top: 32px;
                   margin-bottom: 12px;
@@ -1566,7 +1649,7 @@
             </div>
           </section>
 
-          <section v-if="mainView !== 'write'" class="content">
+          <section v-if="mainView !== 'write' && mainView !== 'discover'" class="content">
             <div ref="topDivider" class="between">
               <div class="row">
                 <img
@@ -2217,7 +2300,7 @@
           </section>
         </div>
 
-        <aside v-if="mainView !== 'write'">
+        <aside v-if="mainView !== 'write' && mainView !== 'discover'">
           <div v-if="mainView !== 'web'" class="section">
             <div
               @click="toggleRelevant"
@@ -2455,7 +2538,7 @@
         </aside>
 
         <aside v-else>
-          <div class="section" style="max-height: 70vh">
+          <div v-if="mainView === 'write'" class="section" style="max-height: 70vh">
             <!-- @click="toggleJournalistsList" :class="{ nobottomborder: showingJournalistsList }" -->
             <div style="cursor: text" class="example-title nobottomborder">
               <div class="example-row">
@@ -2529,6 +2612,62 @@
               <button @click="clearList" class="secondary-button">Clear</button>
             </div> -->
           </div>
+
+          <div v-else class="section" style="max-height: 70vh">
+            <!-- @click="toggleJournalistsList" :class="{ nobottomborder: showingJournalistsList }" -->
+            <div style="cursor: text" class="example-title nobottomborder">
+              <div class="example-row">
+                <img
+                  style="margin-right: 8px"
+                  src="@/assets/images/admin-alt.svg"
+                  height="14px"
+                  alt=""
+                />
+                <p>Modify</p>
+              </div>
+
+              <!-- <button
+                :disabled="!journalisListtData"
+                @click="clearList"
+                class="secondary-button-no-border borderless"
+              >
+                <img
+                  style="margin-right: 4px"
+                  src="@/assets/images/remove.svg"
+                  height="14px"
+                  alt=""
+                />
+                Clear
+              </button> -->
+            </div>
+
+            <div style="padding-bottom: 0" class="example-body fadein">
+              <div style="padding: 0 16px !important" class="example-text">
+                <div class="scrolltainer" style="height: 280px" v-if="!journalisListtData">
+                  <div class="col-start">
+                    <p style="font-size: 14px; margin: 12px 0">Journalist details</p>
+                    <textarea
+                      autofocus
+                      class="area-input-outline wider"
+                      placeholder="Journalist details..."
+                      style="width: 100%; min-height: 200px; max-height: 200px"
+                      v-autoresize
+                      v-model="newSearch"
+                    />
+                    <div style="background-color: white" class="row-end-bottom">
+                      <button style="margin: 0" @click="generateNewSearch" class="primary-button">
+                        Find Journalists
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- <div class="relative" v-else @click="grabJournalist($event)">
+                  <div class="pre-text" v-html="journalisListtData"></div>
+                </div> -->
+              </div>
+            </div>
+          </div>
         </aside>
       </section>
     </div>
@@ -2553,6 +2692,7 @@ export default {
     return {
       pitchName: '',
       savedPitch: false,
+      savedDiscovery: false,
       inputModalOpen: false,
       styleName: '',
       sample: '',
@@ -2612,7 +2752,7 @@ export default {
       relevantData: '',
       journalistData: '',
       journalistListData: '',
-
+      listName: '',
       relatedTopics: [],
       loadingRelevant: false,
       loadingJournalists: false,
@@ -2775,7 +2915,11 @@ export default {
           value: `Draft a LinkedIn post about {Topic}`,
         },
       ],
-
+      discoverExamples: [
+        `Tier 1 Journalist, covering health & wellness in the US`,
+        `Podcaster in New York, covering tech`,
+        `Social media influencer, fashion, in LA or Miami`,
+      ],
       summarySuggestions: [
         `Craft a media pitch for [BrandX] incorporating relevant news, use citations. Pitch details: [here]`,
         `Craft a press release for [BrandX] incorporating relevant news, use citations. Pitch details: [here]`,
@@ -3034,22 +3178,38 @@ export default {
       this.journalistInfo = ''
       // this.showingJournalistsList = false
     },
-    async discoverJournalists() {
-      this.loadingJournalists = true
+
+    async getDiscoveries() {
+      this.$store.dispatch('getDiscoveries')
+    },
+    async discoverJournalists(discover = false) {
+      if (discover) {
+        this.loading = true
+        this.changeSearch({ search: this.newSearch, template: this.newTemplate })
+      } else {
+        this.loadingJournalists = true
+      }
       try {
-        await Comms.api
-          .discoverJournalists({
-            info: this.journalistInfo,
-            content: this.summary,
-          })
-          .then((response) => {
-            this.journalisListtData = response
-          })
+        const res = await Comms.api.discoverJournalists({
+          info: discover ? this.newSearch : this.journalistInfo,
+          content: this.summary,
+          discover: discover,
+        })
+        if (discover) {
+          this.summary = res
+        } else {
+          this.journalisListtData = res
+        }
       } catch (e) {
         console.log(e)
       } finally {
+        if (discover) {
+          this.loading = false
+        } else {
+          this.loadingJournalists = false
+        }
+        this.scrollToTop()
         this.refreshUser()
-        this.loadingJournalists = false
       }
     },
     async saveWritingStyle() {
@@ -3977,6 +4137,46 @@ export default {
         this.saveModalOpen = false
       }
     },
+    async saveDiscovery() {
+      this.savingSearch = true
+
+      try {
+        const res = await Comms.api.saveDiscovery({
+          user: this.user.id,
+          name: this.listName,
+          content: this.newSearch,
+          type: this.newSearch,
+          beat: 'beat',
+          location: 'location',
+          list: this.summary,
+        })
+
+        if (res.id) {
+          this.$toast('List saved', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          this.savedDiscovery = true
+
+          this.getDiscoveries()
+        }
+      } catch (e) {
+        console.log(e)
+        this.$toast(`${e}`, {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.saveModalOpen = false
+      }
+    },
+
     changeEmailText() {
       if (!this.isPaid) {
         this.emailText = 'Upgrade to Pro!'
@@ -4282,7 +4482,6 @@ export default {
       }
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       this.loading = true
-      console.log(this.writingStyle)
       try {
         const res = await Comms.api.generatePitch({
           type: this.newSearch,
@@ -4589,6 +4788,11 @@ export default {
         this.summary = search.generated_pitch
         this.newSearch = search.type
         this.savedPitch = true
+      } else if (search.hasOwnProperty('location')) {
+        this.newTemplate = search.content
+        this.summary = search.list
+        this.newSearch = search.type || search.name
+        this.savedDiscovery = true
       } else {
         this.newSearch = search.input_text
         this.newTemplate = search.instructions
@@ -4608,14 +4812,13 @@ export default {
           ? 'news'
           : search.hasOwnProperty('audience')
           ? 'write'
+          : search.hasOwnProperty('location')
+          ? 'discover'
           : ''
-      //Discovery need to be added
       if (this.mainView !== 'write' && this.mainView !== 'discover') {
         this.generateNewSearch(null, true, search.search_boolean)
-      } else if (this.mainView === 'write') {
-        console.log('I SHOULD BE HITTING')
-        this.changeSearch(search.type)
       } else {
+        this.changeSearch(search.type)
       }
       this.setCurrentAlert()
     },
@@ -4764,8 +4967,8 @@ export default {
         this.closeRegenModal()
         this.generatePitch()
       } else if (this.mainView === 'discover') {
-        // this.closeRegenModal()
-        // this.generatePitch()
+        this.closeRegenModal()
+        this.discoverJournalists(true)
       } else {
         this.closeRegenModal()
         this.loading = true
@@ -5600,6 +5803,8 @@ export default {
         text = 'Search the web...'
       } else if (this.mainView === 'write') {
         text = 'Provide content instructions...'
+      } else if (this.mainView === 'discover') {
+        text = 'Provide journalist details...'
       }
 
       return text

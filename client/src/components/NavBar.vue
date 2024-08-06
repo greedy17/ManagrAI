@@ -247,7 +247,7 @@
           </div> -->
 
           <div
-            v-else-if="$route.name === 'Discover'"
+            v-else-if="listName === 'discover'"
             @click.stop="toggleShowDiscoveries"
             class="row pointer nav-text"
           >
@@ -613,7 +613,7 @@
             </div>
 
             <div
-              v-else-if="$route.name === 'Discover'"
+              v-else-if="listName === 'discover'"
               @click.stop="toggleShowDiscoveries"
               class="row pointer nav-text"
             >
@@ -848,7 +848,7 @@
                   v-for="(discovery, i) in discoveries"
                   :key="discovery.id"
                 >
-                  <p :title="discovery.name" @click="selectDiscovery(discovery)">
+                  <p :title="discovery.name" @click="selectSearch(discovery)">
                     {{ discovery.name }}
                   </p>
 

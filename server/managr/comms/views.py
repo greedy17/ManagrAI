@@ -2180,6 +2180,7 @@ class DiscoveryViewSet(
         #     return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         info = request.data.get("info")
         content = request.data.get("content")
+        is_discover = request.data.get("discover", None)
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -2187,7 +2188,10 @@ class DiscoveryViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.DISCOVER_JOURNALIST(content, info)
+                if not is_discover:
+                    prompt = comms_consts.DISCOVER_JOURNALIST(content, info)
+                else:
+                    prompt = comms_consts.OPEN_AI_DISCOVER_JOURNALIST(info)   
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
