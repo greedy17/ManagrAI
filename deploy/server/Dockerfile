@@ -136,7 +136,10 @@ ENV SECRET_KEY='secret123' \
   GOOGLE_SEARCH_API_KEY='' \
   GOOGLE_SEARCH_ID='' \
   GOOGLE_CLIENT_SECRET='' \
-  GOOGLE_REDIRECT_URI=''
+  GOOGLE_REDIRECT_URI='' \
+  MICROSOFT_CLIENT_ID='' \
+  MICROSOFT_CLIENT_SECRET='' \
+  MICROSOFT_REDIRECT_URI=''
 
 
 # Set the name of the working directory inside the docker container
