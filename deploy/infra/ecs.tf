@@ -396,5 +396,9 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     googleSearchId       = each.value.google_search_id
     googleClientSecret   = each.value.google_client_secret
     googleRedirectUri    = each.value.google_redirect_uri
+
+    microsoftClientId    = each.value.microsoft_client_id
+    microsoftClientSecret= each.value.microsoft_client_secret
+    microsoftRedirectUri = each.value.microsoft_redirect_uri
   })
 }

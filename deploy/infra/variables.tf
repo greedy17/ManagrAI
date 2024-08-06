@@ -184,6 +184,10 @@ variable "environments" {
     google_search_id       = string
     google_client_secret   = string
     google_redirect_uri    = string
+
+    microsoft_client_id    = string
+    microsoft_client_secret= string
+    microsoft_redirect_uri = string
   }))
 }
 

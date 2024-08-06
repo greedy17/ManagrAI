@@ -342,6 +342,10 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     googleSearchId       = each.app_config.google_search_id
     googleClientSecret   = each.app_config.google_client_secret
     googleRedirectUri    = each.app_config.google_redirect_uri
+
+    microsoftClientId    = each.app_config.microsoft_client_id
+    microsoftClientSecret= each.app_config.microsoft_client_secret
+    microsoftRedirectUri = each.app_config.microsoft_redirect_uri
   })
 }
 

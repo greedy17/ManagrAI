@@ -334,6 +334,18 @@
       {
         "name": "GOOGLE_REDIRECT_URI",
         "valueFrom": "${config_secret_arn}:googleRedirectUri::"
+      },
+      {
+        "name": "MICROSOFT_CLIENT_ID",
+        "valueFrom": "${config_secret_arn}:microsoftClientId::"
+      },
+      {
+        "name": "MICROSOFT_CLIENT_SECRET",
+        "valueFrom": "${config_secret_arn}:microsoftClientSecret::"
+      },
+      {
+        "name": "MICROSOFT_REDIRECT_URI",
+        "valueFrom": "${config_secret_arn}:microsoftRedirectUri::"
       }
     ],
     "logConfiguration": {
