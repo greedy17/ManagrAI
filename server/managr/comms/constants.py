@@ -332,7 +332,7 @@ def OPEN_AI_PITCH(date, type, instructions, style=False):
     Writing Style: {style}
     """
     return body
-    
+
 
 OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS = (
     lambda pitch, instructions, style: f"""
@@ -501,6 +501,32 @@ DISCOVER_JOURNALIST = (
     Do not add any additional text to the response. ONLY return with what I asked for.
 """
 )
+
+
+OPEN_AI_DISCOVER_JOURNALIST = (
+    lambda info: f"""
+   List up to 10 real, active people based on this information: {info}. \n
+   
+   You must follow the instructions below very carefully:
+
+    * Rule #1: Ensure that all people are real, currently active professionals. Do not include fake names such as Jane Doe or John Smith.
+
+    * Rule #2: Only list people that you have the highest confidence (90% or above) in that they still work there and you can correctly guess their email address. If you lack confidence do not list all 10, just the ones you're most confident in
+
+    * Guess their email: Do your best to guess their email address. Make sure to base it on verified email patterns associated with their respective publication or company. Guessing the correct email is incredibly important.
+    * Output format must be: 
+    Name:
+    Company:
+    Reason for Selection:
+    View Updated Bio
+
+    "View Updated Bio" MUST be returned in a button tag!
+    "Name", "Company", and "Reason for Selection" MUST be returned in a strong tag!
+    You MUST wrap each individual journalists/influencer selection in a span tag!
+    Do not add any additional text to the response. ONLY return with what I asked for.
+"""
+)
+
 
 OPEN_AI_EMAIL_JOURNALIST = (
     lambda user, org, style, bio, author, outlet, headline, description, date,: f"""
