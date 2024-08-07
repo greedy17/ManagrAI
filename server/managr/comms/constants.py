@@ -202,7 +202,7 @@ OPEN_AI_QUERY_STRING = (
     1. When quotes are present, use the exact phrase
     2. Do not include AND or OR within quotes unless part of an entity name.
     3. Convert negative qualifiers to boolean operators, e.g., 'not stock related' becomes 'NOT stocks', 'NOT shares', 'NOT Nasdaq'.
-    4. Ignore date references like 'last night', 'yesterday', 'latest', etc.
+    4. Ignore date references like 'last night', 'yesterday', 'latest', 'current', etc.
     5. Omit words like 'News', 'Coverage', 'Journalists', 'Sentiment', 'Newsjacking' or anything similar. Focus only on the entity or topic.
     6. Never use more than one AND in the boolean search
     7. Output must only be the boolean search

@@ -2194,7 +2194,7 @@ nav {
   font-weight: 400;
   font-family: $thin-font-family;
   // color: #6b6b6b;
-  color: $light-gray-blue;
+  color: $dark-black-blue;
   font-size: 14px;
   padding: 6px 4px;
   margin: 0 12px;
@@ -2204,11 +2204,12 @@ nav {
   }
 }
 a:hover {
-  color: rgba(0, 0, 0, 0.5);
+  opacity: 0.7;
 }
 .active {
-  color: $dark-black-blue;
+  // color: $turq !important;
   position: relative;
+  font-family: $base-font-family !important;
   border-bottom: 1px solid $dark-black-blue;
   // background-color: $white-blue;
 }

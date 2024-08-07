@@ -252,34 +252,46 @@
     </Modal>
 
     <div>
-      <!-- <h1>Settings</h1> -->
-      <h1>{{ user.organizationRef.name }} - Users</h1>
-
       <div class="bar-header">
-        <small
-          @click="changeActivePage('users')"
-          class="pointer"
-          :class="{ active: page === 'users' }"
-          >Users</small
-        >
-        <small
-          @click="changeActivePage('invite')"
-          class="pointer"
-          :class="{ active: page === 'invite' }"
-          >Invite</small
-        >
-        <small
-          @click="changeActivePage('profile')"
-          class="pointer"
-          :class="{ active: page === 'profile' }"
-          >Email Signature</small
-        >
+        <div class="header">
+          <!-- <p>Users: {{ orderedActive.length }}</p> -->
+          <p>{{ user.organizationRef.name }}</p>
+          <small
+            @click="changeActivePage('users')"
+            class="pointer"
+            :class="{ active: page === 'users' }"
+          >
+            <img style="margin-right: 4px" src="@/assets/images/profile.svg" height="12px" alt="" />
+            Users</small
+          >
+          <small
+            @click="changeActivePage('invite')"
+            class="pointer"
+            :class="{ active: page === 'invite' }"
+          >
+            <img style="margin-right: 4px" src="@/assets/images/adduser.svg" height="12px" alt="" />
+            Invite</small
+          >
+          <small
+            @click="changeActivePage('profile')"
+            class="pointer"
+            :class="{ active: page === 'profile' }"
+          >
+            <img
+              style="margin-right: 4px"
+              src="@/assets/images/signature.svg"
+              height="12px"
+              alt=""
+            />
+            Email Signature</small
+          >
+        </div>
       </div>
 
-      <div v-if="page === 'invite'">
+      <div style="padding: 0 16px" v-if="page === 'invite'">
         <div>
           <div class="vertical-margin">
-            <h3>Invite Users</h3>
+            <h4>Invite Users</h4>
           </div>
         </div>
 
@@ -333,23 +345,17 @@
           </div>
         </div>
       </div>
-      <div v-if="page === 'users'">
-        <!-- <div>
-          <div class="vertical-margin">
-            <h3>Users</h3>
-          </div>
-        </div> -->
-
+      <div style="padding: 0 16px" v-if="page === 'users'">
         <div class="row margin-top margin-bottom">
-          <h3 class="team-width thin-font">Name</h3>
-          <h3 class="team-width thin-font">Email</h3>
+          <h4 class="team-width thin-font">Name</h4>
+          <h4 class="team-width thin-font">Email</h4>
           <!-- <h3 class="less-team-width thin-font extra-mar-left">Invite</h3> -->
-          <h3 v-if="user.isAdmin" class="team-width thin-font extra-mar-left">Actions</h3>
+          <h4 v-if="user.isAdmin" class="team-width thin-font extra-mar-left">Actions</h4>
         </div>
 
         <div class="users-container">
           <div class="row smaller-text">
-            <div class="team-width">{{ user.fullName.trim() ? user.fullName : '[INVITED]' }}</div>
+            <div class="team-width">{{ user.fullName.trim() ? user.fullName : 'INVITED' }}</div>
             <div class="team-width">{{ user.email }}</div>
             <div class="team-width"></div>
             <div class="team-width"></div>
@@ -380,10 +386,11 @@
               <div
                 v-if="teamUser.id !== user.id && teamUser.isActive"
                 @click="openDeleteModal(teamUser)"
-                class="invite-link-button-container red-background wrapper thin-font"
+                class="img-container s-wrapper"
+                style="margin-left: 5rem"
               >
-                <img src="@/assets/images/remove-user.svg" class="invite-link-button" />
-                <div style="margin-left: -20px" class="tooltip">{{ 'Deactivate' }}</div>
+                <img src="@/assets/images/remove-user.svg" height="14px" />
+                <div class="s-tooltip">Deactivate</div>
               </div>
               <div
                 v-else-if="
@@ -408,7 +415,7 @@
           </div>
         </div>
       </div>
-      <div class="profile" v-if="page === 'profile'">
+      <div style="padding: 0 16px" class="profile" v-if="page === 'profile'">
         <!-- <div>
          
           <div class="row org-timezone-container">
@@ -1002,7 +1009,7 @@ export default {
 }
 
 .settings {
-  padding: 96px 144px 32px 144px;
+  padding: 124px 144px 32px 144px;
   height: 100vh;
   font-weight: 400;
   font-family: $base-font-family;
@@ -1018,25 +1025,40 @@ export default {
 
 .bar-header {
   display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  flex-direction: row;
-  position: sticky;
-  top: 0;
-  margin: 0;
-  padding: 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  flex-direction: column;
+  padding: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
   width: 100%;
-  // height: 66px;
-  // background-color: white;
+  border-radius: 6px;
+  background-color: white;
   z-index: 10;
   font-family: $thin-font-family;
+  margin-bottom: 24px;
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-direction: row;
+    position: sticky;
+    top: 0;
+    margin: 0;
+  }
 
   small {
-    font-size: 14px;
+    font-size: 16px;
     margin-right: 2rem;
     color: $off-gray;
     padding: 16px 0;
+
+    &:hover {
+      opacity: 0.6;
+    }
+  }
+
+  p {
+    font-size: 20px;
+    font-family: $base-font-family;
+    margin-right: 32px;
   }
 }
 
@@ -1103,8 +1125,13 @@ export default {
 }
 
 .active {
-  color: $dark-black-blue !important;
-  border-bottom: 0.75px solid $dark-black-blue;
+  color: $turq !important;
+  font-family: $base-font-family;
+  font-weight: 200;
+
+  img {
+    filter: invert(56%) sepia(96%) saturate(331%) hue-rotate(139deg) brightness(90%) contrast(87%);
+  }
 }
 
 .not-allowed {
@@ -1113,12 +1140,17 @@ export default {
 .pointer {
   cursor: pointer;
 }
-h3 {
+h3,
+h4 {
   margin: 0;
 }
 h1,
 h3 {
   font-family: $thin-font-family;
+}
+
+h4 {
+  font-size: 16px;
 }
 
 .team-width {
@@ -1634,5 +1666,84 @@ h3 {
   @media only screen and (max-width: 600px) {
     height: 140px;
   }
+}
+
+.img-container-stay {
+  padding: 2px 7px 0 9px;
+  border-radius: 50%;
+  background-color: $soft-gray;
+
+  img {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.img-container {
+  cursor: pointer;
+  padding: 6px 7px 5px 7px;
+  border-radius: 50%;
+  &:hover {
+    background-color: $soft-gray;
+  }
+
+  img {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.s-tooltip {
+  visibility: hidden;
+  width: 100px;
+  background-color: $graper;
+  color: white;
+  text-align: center;
+  border-radius: 4px;
+  padding: 6px 2px;
+  position: absolute;
+  z-index: 100;
+  bottom: 130%;
+  left: 50%;
+  margin-left: -50px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  // border: 1px solid rgba(0, 0, 0, 0.328);
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.s-tooltip-below {
+  visibility: hidden;
+  width: 80px;
+  background-color: $graper;
+  color: white;
+  text-align: center;
+  border-radius: 4px;
+  padding: 6px 2px;
+  position: absolute;
+  z-index: 100;
+  top: 130%;
+  left: 50%;
+  margin-left: -40px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.s-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.s-wrapper:hover .s-tooltip,
+.s-wrapper:hover .s-tooltip-below {
+  visibility: visible;
+  opacity: 1;
 }
 </style>
