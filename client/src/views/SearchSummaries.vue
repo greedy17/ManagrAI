@@ -2596,7 +2596,11 @@
                       v-model="journalistInfo"
                     />
                     <div style="background-color: white" class="row-end-bottom">
-                      <button style="margin: 0" @click="discoverJournalists" class="primary-button">
+                      <button
+                        style="margin: 0"
+                        @click="discoverJournalists(false)"
+                        class="primary-button"
+                      >
                         Find Journalists
                       </button>
                     </div>
