@@ -2760,7 +2760,6 @@ export default {
       googleResults: [],
       relevantData: '',
       journalistData: '',
-      journalistListData: '',
       listName: '',
       relatedTopics: [],
       loadingRelevant: false,
@@ -4779,6 +4778,7 @@ export default {
       this.journalistData = ''
       this.relatedTopics = []
       this.showingSources = false
+      this.journalisListtData = ''
     },
     resetSearch() {
       this.clearNewSearch()
@@ -9639,15 +9639,20 @@ textarea::placeholder {
 }
 
 .mobile-body {
-  display: flex;
-  flex-direction: column-reverse !important;
-  overflow-x: hidden !important;
-
-  aside {
+  @media only screen and (max-width: 600px) {
     display: flex;
-    flex-direction: row !important;
-    padding: 0;
-    margin: 0 !important;
+    flex-direction: column-reverse !important;
+    overflow-x: hidden !important;
+
+    aside {
+      display: flex;
+      flex-direction: row !important;
+      padding: 0;
+      margin: 0 !important;
+    }
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
   }
 }
 
