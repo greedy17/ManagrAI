@@ -1043,6 +1043,7 @@ export default {
         this.newBio = res.data.summary
           .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
           .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, '')
+          .replace(/<h2>Company:<\/h2>\s*<strong>([^<]+)<\/strong>/i, '')
         this.newImages = res.data.images
         Comms.api.updateContact({
           id: this.currentContact.id,

@@ -219,7 +219,7 @@
           />
         </div>
 
-        <div v-if="mainView === 'discover'" class="paid-body">
+        <div v-else-if="mainView === 'discover'" class="paid-body">
           <label style="font-size: 13px" for="detail-title">Name:</label>
           <input
             id="detail-title"
@@ -264,7 +264,7 @@
             </button>
 
             <button
-              v-if="mainView === 'discover'"
+              v-else-if="mainView === 'discover'"
               @click="saveDiscovery"
               :disabled="savingSearch"
               class="save-button"
@@ -479,7 +479,7 @@
           </div>
         </section>
 
-        <section v-else>
+        <section class="mobile-body" v-else>
           <div class="bio-body" v-html="currentJournalistBio"></div>
 
           <aside>
@@ -610,6 +610,19 @@
                 "
               />
 
+              <!-- <div
+                @click="slackTest"
+                class="left-margin img-container-stay"
+                style="margin-right: 12px"
+              >
+                <img
+                  style="margin: 0"
+                  src="@/assets/images/paper-plane-top.svg"
+                  height="14px"
+                  alt=""
+                />
+              </div> -->
+
               <div
                 v-if="!newSearch"
                 class="left-margin img-container-stay"
@@ -639,7 +652,7 @@
             </section>
           </div>
 
-          <div class="space-between mobile-col">
+          <div class="space-between">
             <div class="source-dropdown fadein">
               <div
                 @click.stop="toggleSources"
@@ -677,7 +690,7 @@
                   alt=""
                 />
 
-                <p>Source:</p>
+                <p class="mobile-text-hide">Source:</p>
                 <small>{{ toCamelCase(mainView) }}</small>
                 <img
                   v-if="!showingSources"
@@ -755,7 +768,7 @@
               >
                 <img src="@/assets/images/wand.svg" height="14px" alt="" />
 
-                <p>Writing Style:</p>
+                <p class="mobile-text-hide">Writing Style:</p>
                 <small>{{ writingStyleTitle ? writingStyleTitle : 'Select style' }}</small>
                 <img
                   v-if="!showingStyles"
@@ -1175,11 +1188,7 @@
         <div style="position: relative" class="body">
           <header class="content-header-test">
             <div class="row-top">
-              <div
-                style="margin-right: 18px; margin-top: 16px"
-                class="image-container"
-                @click="resetAll"
-              >
+              <div class="image-container xxl-margin" @click="resetAll">
                 <img src="@/assets/images/goBack.svg" height="17px" alt="" />
               </div>
 
@@ -1461,13 +1470,7 @@
               </div>
               <div
                 v-if="mainView !== 'discover'"
-                style="
-                  margin-top: 32px;
-                  margin-bottom: 12px;
-                  background: white;
-                  position: sticky;
-                  bottom: 0;
-                "
+                style="background: white; position: sticky; bottom: 0"
                 class="input-container-gray fadein"
               >
                 <section style="padding-bottom: 4px; padding-top: 4px">
@@ -1500,7 +1503,7 @@
 
                   <div class="row relative">
                     <div
-                      class="left-margin img-container s-wrapper"
+                      class="left-margin img-container s-wrapper m-cntnr"
                       :class="{ 'img-container-stay': showSuggestions }"
                       style="padding: 8px 8px 6px 9px"
                       @click.stop="toggleSuggestions"
@@ -1511,7 +1514,7 @@
                     </div>
 
                     <div
-                      class="left-margin img-container s-wrapper"
+                      class="left-margin img-container s-wrapper m-cntnr"
                       :class="{ 'img-container-stay': showingWritingStyles }"
                       style="padding: 8px 8px 6px 9px"
                       @click.stop="toggleWritingStyles"
@@ -2683,6 +2686,7 @@
 import { Comms } from '@/services/comms'
 import { quillEditor } from 'vue-quill-editor'
 import User from '@/services/users'
+import SlackOAuth from '@/services/slack'
 import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
@@ -3178,6 +3182,14 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    async slackTest() {
+      try {
+        const res = await SlackOAuth.api.sendToSlack({})
+        console.log(res)
+      } catch (e) {
+        console.log(e)
+      }
+    },
     clearList() {
       this.journalisListtData = ''
       this.journalistInfo = ''
@@ -3641,7 +3653,19 @@ export default {
           content: this.summary,
           search: false,
         })
-        const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i
+
+        console.log('RESPONSE IS HERE :', res)
+
+        const companyRegex = /company:\s*([^<]+)/i
+        const companyMatch = res.data.summary.match(companyRegex)
+
+        if (companyMatch) {
+          console.log('MATCH IS HERE :', companyMatch)
+          const newCompany = companyMatch[1]
+          this.currentPublication = newCompany.trim()
+        }
+
+        const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*|Email:\s*)([^<"\s]+)/i
         const match = res.data.summary.match(emailRegex)
 
         if (match) {
@@ -3657,10 +3681,10 @@ export default {
 
         this.currentJournalistBio = res.data.summary
           .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
-          .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, '')
-        this.currentJournalistImages = res.data.images
+          .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*|Email:\s*)([^<"\s]+)/i, '')
+          .replace(/company:\s*([^<]+)/i, '')
 
-        console.log('TARGET EMAIL', this.targetEmail)
+        this.currentJournalistImages = res.data.images
       } catch (e) {
         console.error(e)
       } finally {
@@ -3679,8 +3703,18 @@ export default {
           social: social,
         })
 
-        console.log('SUMMARY IS HERE!!!!! ----- >', res.data)
-        const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i
+        console.log('RESPONSE IS HERE :', res)
+
+        const companyRegex = /company:\s*([^<]+)/i
+        const companyMatch = res.data.summary.match(companyRegex)
+
+        if (companyMatch) {
+          console.log('MATCH IS HERE :', companyMatch)
+          const newCompany = companyMatch[1]
+          this.currentPublication = newCompany.trim()
+        }
+
+        const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*|Email:\s*)([^<"\s]+)/i
         const match = res.data.summary.match(emailRegex)
 
         if (match) {
@@ -3696,7 +3730,9 @@ export default {
 
         this.currentJournalistBio = res.data.summary
           .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
-          .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, '')
+          .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*|Email:\s*)([^<"\s]+)/i, '')
+          .replace(/company:\s*([^<]+)/i, '')
+
         this.currentJournalistImages = res.data.images
       } catch (e) {
         console.error(e)
@@ -6530,8 +6566,15 @@ export default {
   }
 }
 
+.mobile-text-hide {
+  @media only screen and (max-width: 600px) {
+    display: none;
+  }
+}
+
 .source-dropdown {
   z-index: 1;
+
   @media only screen and (max-width: 600px) {
     margin-top: 8px;
   }
@@ -6549,16 +6592,23 @@ export default {
     padding: 4px 6px;
     background-color: white;
     font-size: 14px !important;
-    // border: 0.5px solid rgba(0, 0, 0, 0.355);
     border-radius: 16px;
     display: flex;
     flex-direction: row;
     align-items: center;
     cursor: pointer;
 
+    @media only screen and (max-width: 600px) {
+      font-size: 12px !important;
+    }
+
     img {
       margin: 0 8px;
       filter: invert(40%);
+
+      @media only screen and (max-width: 600px) {
+        // display: none;
+      }
     }
 
     small {
@@ -6596,6 +6646,11 @@ export default {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+
+    @media only screen and (max-width: 600px) {
+      left: -120%;
+      width: 85vw;
+    }
 
     section:last-of-type {
       display: flex;
@@ -6674,6 +6729,14 @@ export default {
     flex-wrap: wrap;
     gap: 8px;
 
+    @media only screen and (max-width: 600px) {
+      width: 85vw;
+      gap: 0px;
+    }
+
+    @media only screen and (min-width: 601px) and (max-width: 1250px) {
+    }
+
     div {
       font-size: 14px;
       width: 138px;
@@ -6682,8 +6745,15 @@ export default {
       padding: 8px;
       border-radius: 4px;
 
+      @media only screen and (max-width: 600px) {
+        width: 33.3%;
+        white-space: normal;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
       p {
-        font-size: 12px !important;
+        font-size: 11px !important;
         font-family: $thin-font-family;
         margin: 4px 0 0 0;
       }
@@ -7107,6 +7177,16 @@ export default {
     text-overflow: ellipsis;
     font-size: 15px !important;
   }
+
+  @media only screen and (max-width: 600px) {
+    p {
+      font-size: 13px;
+      max-width: 90%;
+    }
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 
 .author-time {
@@ -7206,14 +7286,24 @@ button:disabled {
 .divider-dot {
   position: relative;
   bottom: 0.2rem;
+
+  @media only screen and (max-width: 600px) {
+    display: none;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 
 .time {
   margin-left: 8px;
-  //   @media only screen and (max-width: 600px) {
-  //     max-width: 100px;
-  //     font-size: 10px !important;
-  //   }
+
+  @media only screen and (max-width: 600px) {
+    display: none;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 
 .news-container {
@@ -7888,6 +7978,41 @@ li {
   animation: fadeIn 1s forwards;
 }
 
+.m-cntnr {
+  @media only screen and (max-width: 600px) {
+    display: none;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
+}
+
+.xxl-margin-top {
+  margin-top: 32px;
+  margin-bottom: 12px;
+
+  @media only screen and (max-width: 600px) {
+    margin-top: 16px;
+    margin-bottom: 12px;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
+}
+
+.xxl-margin {
+  margin-right: 18px;
+  margin-top: 16px;
+
+  @media only screen and (max-width: 600px) {
+    margin-right: 0;
+    margin-left: -8px;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
+}
+
 .search {
   position: relative;
   font-family: $thin-font-family;
@@ -7920,6 +8045,13 @@ li {
     // border-bottom: 1px solid rgba(0, 0, 0, 0.128);
     padding: 48px 32px 8px 24px;
     z-index: 10;
+
+    @media only screen and (max-width: 600px) {
+      padding: 48px 0 0 0;
+    }
+
+    @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    }
   }
 
   .main {
@@ -7938,6 +8070,14 @@ li {
       overflow-y: scroll;
       overflow-x: hidden;
       padding: 16px 16px 16px 40px;
+
+      @media only screen and (max-width: 600px) {
+        padding: 0;
+        width: 100%;
+      }
+
+      @media only screen and (min-width: 601px) and (max-width: 1024px) {
+      }
     }
 
     aside {
@@ -7950,6 +8090,13 @@ li {
       overflow-y: scroll;
       overflow-x: hidden;
       padding-top: 32px;
+
+      @media only screen and (max-width: 600px) {
+        display: none;
+      }
+
+      @media only screen and (min-width: 601px) and (max-width: 1024px) {
+      }
 
       .section {
         // height: 30%;
@@ -7993,6 +8140,13 @@ li {
       width: 100%;
       min-height: 20vh;
       padding: 16px 32px 16px 64px;
+
+      @media only screen and (max-width: 600px) {
+        padding: 0;
+      }
+
+      @media only screen and (min-width: 601px) and (max-width: 1024px) {
+      }
     }
 
     .content-container {
@@ -8016,6 +8170,13 @@ li {
         transparent 98%
       );
       border-image-slice: 1;
+
+      @media only screen and (max-width: 600px) {
+        padding: 0;
+      }
+
+      @media only screen and (min-width: 601px) and (max-width: 1024px) {
+      }
     }
 
     .content-padding {
@@ -8687,7 +8848,15 @@ textarea::placeholder {
   overflow: hidden;
 
   @media only screen and (max-width: 600px) {
-    width: 29vw;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    height: 50px;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1250px) {
@@ -9230,6 +9399,7 @@ textarea::placeholder {
   }
   @media only screen and (max-width: 600px) {
     width: 95%;
+    padding: 0;
   }
 
   header {
@@ -9367,10 +9537,24 @@ textarea::placeholder {
   flex-wrap: wrap;
   padding: 24px 0;
   gap: 14px;
+
+  @media only screen and (max-width: 600px) {
+    // gap: 8px;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 
 .widecard {
   width: 51.25vw !important;
+
+  @media only screen and (max-width: 600px) {
+    width: 88vw !important;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 .cardwidth {
   // width: 28.75vw !important;
@@ -9387,6 +9571,13 @@ textarea::placeholder {
   animation: fadeIn 1s forwards;
   // display: flex;
   // flex-direction: row;
+
+  @media only screen and (max-width: 600px) {
+    width: 88vw;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 
   .main-body {
     display: flex;
@@ -9447,9 +9638,29 @@ textarea::placeholder {
   }
 }
 
+.mobile-body {
+  display: flex;
+  flex-direction: column-reverse !important;
+  overflow-x: hidden !important;
+
+  aside {
+    display: flex;
+    flex-direction: row !important;
+    padding: 0;
+    margin: 0 !important;
+  }
+}
+
 .skeleton-loader {
   padding: 56px 32px 32px 48px;
   overflow: hidden;
+
+  @media only screen and (max-width: 600px) {
+    padding: 72px 8px 32px 8px;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 .skeleton {
   background-color: rgb(236, 236, 236);
