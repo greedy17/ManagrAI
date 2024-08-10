@@ -583,7 +583,9 @@
         <div class="paid-header">
           <div>
             <h4 class="regen-header-title">Add Company Details</h4>
-            <p class="regen-header-subtitle">Provide details blah blah , Mike help ?</p>
+            <p class="regen-header-subtitle">
+              Provide additional details about a company, person, product, etc
+            </p>
           </div>
         </div>
         <div class="paid-body" style="overflow: hidden !important">
@@ -938,7 +940,9 @@
                 <img src="@/assets/images/building.svg" height="14px" alt="" />
 
                 <p class="mobile-text-hide">Company Details:</p>
-                <small>{{ detailTitle ? detailTitle : 'None' }}</small>
+                <small :title="detailTitle ? detailTitle : 'None'">{{
+                  detailTitle ? detailTitle : 'None'
+                }}</small>
                 <img
                   v-if="!showingDetails"
                   src="@/assets/images/arrowDropUp.svg"
@@ -954,14 +958,22 @@
                 />
               </div>
 
-              <div v-outside-click="hideDetails" v-show="showingDetails" class="drop-options-alt">
+              <div
+                v-outside-click="hideDetails"
+                v-show="showingDetails"
+                class="drop-options-alt-thin"
+              >
                 <header class="space-between">
-                  <section style="height: 50px"></section>
+                  <section class="h-padding">
+                    <section>
+                      <p style="margin: 0; padding: 4px 0 0 4px; color: #9596b4">Personal</p>
+                    </section>
+                  </section>
 
                   <button
                     @click="toggleDetailsInputModal"
                     class="secondary-button-no-border"
-                    style="margin-right: 12px"
+                    style="margin-right: 4px"
                   >
                     <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Details
                   </button>
@@ -969,10 +981,9 @@
 
                 <section v-if="allCompanyDetails.length">
                   <div
-                    @mouseenter="setIndex(i)"
-                    @mouseLeave="removeIndex"
+                    style="position: relative"
                     @click="addDetails(detail.title, detail.details)"
-                    v-for="(detail, i) in allCompanyDetails"
+                    v-for="detail in allCompanyDetails"
                     :key="detail.title"
                     :class="{ activesquare: detailTitle === detail.title }"
                   >
@@ -986,6 +997,10 @@
                       {{ detail.title }}
                     </span>
                     <p :title="detail.details">{{ detail.details }}</p>
+
+                    <!-- <span @click="deleteCompanyDetails(detail.id)" class="absolute-icon">
+                      <img src="@/assets/images/close.svg" height="10px" alt="" />
+                    </span> -->
                   </div>
                 </section>
 
@@ -1592,7 +1607,7 @@
                   background: white;
                   position: sticky;
                   bottom: 0;
-                  margin-top: 16px;
+                  margin-top: 32px;
                   margin-bottom: 12px;
                 "
                 class="input-container-gray fadein"
@@ -2823,6 +2838,7 @@ export default {
   },
   data() {
     return {
+      hoverIndex: null,
       allCompanyDetails: [],
       detailTitle: '',
       detailsName: '',
@@ -3314,6 +3330,15 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    async deleteCompanyDetails(id) {
+      try {
+        const res = await Comms.api.deleteCompanyDetails(id)
+        console.log(res)
+      } catch (e) {
+        conosole.log(e)
+      } finally {
+      }
+    },
     async getCompanyDetails() {
       try {
         const res = await Comms.api.getCompanyDetails()
@@ -6847,6 +6872,10 @@ export default {
       font-size: 14px;
       margin-left: 4px !important;
       font-family: $base-font-family;
+      max-width: 55px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
 
     p,
@@ -6857,6 +6886,93 @@ export default {
 
     &:hover {
       background-color: $soft-gray;
+    }
+  }
+
+  .drop-options-alt-thin {
+    width: 300px;
+    max-height: 225px;
+    position: absolute;
+    top: 40px;
+    left: 0;
+    font-weight: 400;
+    background: white;
+    padding: 8px;
+    border-radius: 5px;
+    font-size: 14px;
+    box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+    line-height: 1.5;
+    z-index: 1000;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    // @media only screen and (max-width: 600px) {
+    //   left: -120%;
+    //   width: 85vw;
+    // }
+
+    section:last-of-type {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 8px;
+      overflow-y: scroll;
+
+      &::-webkit-scrollbar {
+        width: 4px;
+        height: 0px;
+      }
+      &::-webkit-scrollbar-thumb {
+        background-color: $soft-gray;
+        box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+        border-radius: 6px;
+      }
+
+      &::-webkit-scrollbar-track {
+        margin-top: 12px;
+      }
+
+      &:hover {
+        .absolute-icon {
+          visibility: visible;
+        }
+      }
+    }
+
+    div {
+      font-size: 14px;
+      width: 100px;
+      height: 60px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+
+      p {
+        font-size: 12px !important;
+        font-family: $thin-font-family;
+        margin: 4px 0 0 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      &:hover {
+        background-color: $soft-gray;
+      }
+
+      span {
+        font-family: $base-font-family;
+      }
+    }
+
+    img {
+      margin-right: 4px;
     }
   }
 
@@ -10291,5 +10407,26 @@ filter ::selection {
 ::v-deep ::selection {
   background-color: $lite-blue !important;
   color: white;
+}
+
+.absolute-icon {
+  position: absolute;
+  right: 2px;
+  top: 2px;
+  background-color: $dark-black-blue;
+  border-radius: 100%;
+  padding: 3px 0 3px 3px;
+  cursor: pointer;
+  visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    // filter: invert(46%) sepia(35%) saturate(2345%) hue-rotate(323deg) brightness(106%) contrast(96%);
+    filter: invert(100%);
+    margin: 0;
+    padding: 0;
+  }
 }
 </style>
