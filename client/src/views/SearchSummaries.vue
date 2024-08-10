@@ -887,7 +887,7 @@
                     @mouseenter="setIndex(i)"
                     @mouseLeave="removeIndex"
                     @click="addWritingStyle(style.style, style.title)"
-                    class="dropdown-item"
+                    class="dropdown-item relative"
                     v-for="(style, i) in userWritingStyles"
                     :key="i"
                     :class="{ activeswitch: writingStyleTitle === style.title }"
@@ -903,14 +903,13 @@
                     </span>
                     <p class="pink-text" :title="style.style">{{ style.style }}</p>
 
-                    <!-- <span class="absolute-icon">
-                      <img
-                        v-if="hoverIndex === i"
-                        src="@/assets/images/trash.svg"
-                        height="12px"
-                        alt=""
-                      />
-                    </span> -->
+                    <span
+                      v-if="hoverIndex === i"
+                      @click="deleteWritingStyle(style.id)"
+                      class="absolute-icon"
+                    >
+                      <img src="@/assets/images/close.svg" height="12px" alt="" />
+                    </span>
                   </div>
                 </section>
 
@@ -3330,6 +3329,25 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    async deleteWritingStyle(id) {
+      try {
+        await Comms.api.deleteWritingStyle({ style_id: id })
+        this.$toast('Writing Style removed', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.writingStyleTitle = ''
+        this.writingStyle = ''
+        this.getWritingStyles()
+        this.refreshUser()
+      }
+    },
     async deleteCompanyDetails(id) {
       try {
         const res = await Comms.api.deleteCompanyDetails(id)
@@ -7020,6 +7038,12 @@ export default {
 
       &::-webkit-scrollbar-track {
         margin-top: 12px;
+      }
+
+      &:hover {
+        .absolute-icon {
+          visibility: visible;
+        }
       }
     }
 
