@@ -1238,3 +1238,15 @@ class JournalistContact(TimeStampModel):
         else:
             contact.tags.remove(tag)
         return contact.save()
+        
+
+class CompanyDetails(models.Model):
+    details = models.TextField()
+    title = models.TextField()
+    user = models.ForeignKey(
+        "core.User",
+        related_name="company_details",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
+    )

@@ -575,6 +575,61 @@
       </div>
     </Modal>
 
+    <Modal v-if="detailsInputModalOpen" class="paid-modal">
+      <div
+        :style="isMobile ? 'width: 95%; min-height: 275px' : 'width: 610px; min-height: 275px'"
+        class="regen-container"
+      >
+        <div class="paid-header">
+          <div>
+            <h4 class="regen-header-title">Add Company Details</h4>
+            <p class="regen-header-subtitle">Provide details blah blah , Mike help ?</p>
+          </div>
+        </div>
+        <div class="paid-body" style="overflow: hidden !important">
+          <!-- <label for="styleName">Name</label> -->
+          <input
+            id="styleName"
+            style="width: 100%; margin: 0.5rem 0 1rem 0"
+            class="area-input-outline"
+            placeholder="Company Name..."
+            type="text"
+            v-model="detailsName"
+            :disabled="savingStyle"
+          />
+
+          <!-- <label for="sample">Sample</label> -->
+          <textarea
+            id="sample"
+            :disabled="savingStyle"
+            maxlength="8000"
+            class="area-input-outline wider"
+            style="width: 100%; margin: 0.5rem 0 0 0; max-height: 280px"
+            placeholder="Paste details here..."
+            v-model="detailsBody"
+            v-autoresize
+          />
+        </div>
+        <footer class="paid-footer aligned-right">
+          <button :disabled="savingStyle" @click="toggleDetailsInputModal" class="secondary-button">
+            Cancel
+          </button>
+          <button
+            :disabled="savingStyle || !detailsName || !detailsBody"
+            @click="addCompanyDetails"
+            class="primary-button"
+          >
+            {{ savingStyle ? 'Adding' : 'Add' }}
+            <div style="margin-left: 4px" v-if="savingStyle" class="loading-small">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+          </button>
+        </footer>
+      </div>
+    </Modal>
+
     <div style="margin-top: 16px" v-if="!selectedSearch">
       <div style="margin: 16px 0" class="text-width">
         <h2
@@ -824,7 +879,7 @@
                       />
                       {{ style.title }}
                     </span>
-                    <p>{{ style.style }}</p>
+                    <p :title="style.style">{{ style.style }}</p>
                   </div>
                   <div
                     @mouseenter="setIndex(i)"
@@ -844,7 +899,7 @@
                       />
                       {{ style.title }}
                     </span>
-                    <p class="pink-text">{{ style.style }}</p>
+                    <p class="pink-text" :title="style.style">{{ style.style }}</p>
 
                     <!-- <span class="absolute-icon">
                       <img
@@ -874,7 +929,80 @@
               </div>
             </div>
 
-            <div v-if="mainView === 'write'" style="width: 12vw"></div>
+            <div v-if="mainView === 'write'" class="source-dropdown fadein">
+              <div
+                @click.stop="toggleShowDetails"
+                :class="{ 'soft-gray-bg': showingDetails }"
+                class="drop-header"
+              >
+                <img src="@/assets/images/building.svg" height="14px" alt="" />
+
+                <p class="mobile-text-hide">Company Details:</p>
+                <small>{{ detailTitle ? detailTitle : 'None' }}</small>
+                <img
+                  v-if="!showingDetails"
+                  src="@/assets/images/arrowDropUp.svg"
+                  height="15px"
+                  alt=""
+                />
+                <img
+                  v-else
+                  class="rotate-img"
+                  src="@/assets/images/arrowDropUp.svg"
+                  height="15px"
+                  alt=""
+                />
+              </div>
+
+              <div v-outside-click="hideDetails" v-show="showingDetails" class="drop-options-alt">
+                <header class="space-between">
+                  <section style="height: 50px"></section>
+
+                  <button
+                    @click="toggleDetailsInputModal"
+                    class="secondary-button-no-border"
+                    style="margin-right: 12px"
+                  >
+                    <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Details
+                  </button>
+                </header>
+
+                <section v-if="allCompanyDetails.length">
+                  <div
+                    @mouseenter="setIndex(i)"
+                    @mouseLeave="removeIndex"
+                    @click="addDetails(detail.title, detail.details)"
+                    v-for="(detail, i) in allCompanyDetails"
+                    :key="detail.title"
+                    :class="{ activesquare: detailTitle === detail.title }"
+                  >
+                    <span>
+                      <img
+                        class="blue-filter"
+                        src="@/assets/images/logo.png"
+                        height="11px"
+                        alt=""
+                      />
+                      {{ detail.title }}
+                    </span>
+                    <p :title="detail.details">{{ detail.details }}</p>
+                  </div>
+                </section>
+
+                <section style="padding: 16px" v-else>
+                  Your saved details
+                  <span>
+                    <img
+                      style="margin-right: 4px"
+                      src="@/assets/images/building.svg"
+                      height="12px"
+                      alt=""
+                    />
+                    will appear here.</span
+                  >
+                </section>
+              </div>
+            </div>
 
             <div
               v-if="mainView !== 'write' && mainView !== 'discover'"
@@ -1369,7 +1497,7 @@
                 (!(filteredTweets && filteredTweets.length) && !summary)
               "
             >
-              <div style="width: 100%">
+              <div v-if="mainView !== 'write'" style="width: 100%">
                 <div
                   style="width: 40vw; margin-top: 12px"
                   v-if="mainView !== 'web'"
@@ -1422,20 +1550,10 @@
                     />
                   </div>
                 </div>
+              </div>
 
-                <!-- <div class="text-width">
-                  <div style="margin: 0 0 16px 0; width: 100%" class="col-start">
-                    <p
-                      v-for="(suggestion, i) in suggestions"
-                      :key="i"
-                      style="font-size: 16px !important; width: 100%"
-                      class="example-small"
-                      @click="setAndSearch(suggestion)"
-                    >
-                      <img src="@/assets/images/search.svg" height="14px" alt="" />{{ suggestion }}
-                    </p>
-                  </div>
-                </div> -->
+              <div style="padding: 0 8px" v-else>
+                <p>Error creating content. Try again</p>
               </div>
             </div>
 
@@ -1470,7 +1588,13 @@
               </div>
               <div
                 v-if="mainView !== 'discover'"
-                style="background: white; position: sticky; bottom: 0"
+                style="
+                  background: white;
+                  position: sticky;
+                  bottom: 0;
+                  margin-top: 16px;
+                  margin-bottom: 12px;
+                "
                 class="input-container-gray fadein"
               >
                 <section style="padding-bottom: 4px; padding-top: 4px">
@@ -2699,6 +2823,14 @@ export default {
   },
   data() {
     return {
+      allCompanyDetails: [],
+      detailTitle: '',
+      detailsName: '',
+      detailsBody: '',
+      currentDetails: '',
+      showingDetails: false,
+      showingAllDetails: false,
+      detailsInputModalOpen: false,
       pitchName: '',
       savedPitch: false,
       savedDiscovery: false,
@@ -2751,6 +2883,8 @@ export default {
       allWritingStyles: [],
       showingWritingStyles: false,
       showingStyles: false,
+      showingDetails: false,
+      showingAllDetails: false,
       showingHelp: false,
       supportEmail: 'support@mymanagr.com',
       showSuggestions: false,
@@ -2820,8 +2954,6 @@ export default {
       showingViews: false,
       summarizing: false,
       saveModalOpen: false,
-      detialText: null,
-      detailTitle: null,
       currentAlertId: null,
       alertSet: false,
       emailText: 'Activate Alerts',
@@ -3143,6 +3275,7 @@ export default {
     }
     this.$store.dispatch('updateListName', 'news')
     this.getWritingStyles()
+    this.getCompanyDetails()
   },
   watch: {
     typedMessage: 'changeIndex',
@@ -3181,6 +3314,40 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    async getCompanyDetails() {
+      try {
+        const res = await Comms.api.getCompanyDetails()
+        console.log(res.results)
+        this.allCompanyDetails = res.results
+      } catch (e) {}
+    },
+    async addCompanyDetails() {
+      this.savingStyle = true
+      try {
+        const res = await Comms.api.addCompanyDetails({
+          user: this.user.id,
+          title: this.detailsName,
+          details: this.detailsBody,
+        })
+        this.$toast('Details saved', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.refreshUser()
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.detailsName = ''
+        this.detailsBody = ''
+        // this.getDetails()
+        this.savingStyle = false
+        this.getCompanyDetails()
+        this.toggleDetailsInputModal()
+      }
+    },
     async slackTest() {
       try {
         const res = await SlackOAuth.api.sendToSlack({})
@@ -3194,11 +3361,16 @@ export default {
       this.journalistInfo = ''
       // this.showingJournalistsList = false
     },
-
     async getDiscoveries() {
       this.$store.dispatch('getDiscoveries')
     },
     async discoverJournalists(discover = false) {
+      if (!this.isPaid && this.searchesUsed >= 10) {
+        this.openPaidModal(
+          'You have reached your usage limit for the month. Please upgrade your plan.',
+        )
+        return
+      }
       if (discover) {
         this.loading = true
         this.changeSearch({ search: this.newSearch, template: this.newTemplate })
@@ -3261,11 +3433,21 @@ export default {
       this.inputModalOpen = !this.inputModalOpen
       this.showingStyles = false
     },
+    toggleDetailsInputModal() {
+      this.detailsInputModalOpen = !this.detailsInputModalOpen
+      this.showingDetails = false
+    },
     addWritingStyle(ex, title) {
       this.writingStyle = ex
       this.writingStyleTitle = title
       this.showingStyles = false
       this.showingWritingStyles = false
+    },
+    addDetails(title, deets) {
+      this.currentDetails = deets
+      this.detailTitle = title
+      this.showingDetails = false
+      this.showingAllDetails = false
     },
     setIndex(i) {
       this.hoverIndex = i
@@ -3290,8 +3472,14 @@ export default {
     hideStyles() {
       this.showingStyles = false
     },
+    hideDetails() {
+      this.showingDetails = false
+    },
     toggleShowStyles() {
       this.showingStyles = !this.showingStyles
+    },
+    toggleShowDetails() {
+      this.showingDetails = !this.showingDetails
     },
     toggleHelpMenu() {
       this.showingHelp = !this.showingHelp
@@ -3597,6 +3785,12 @@ export default {
       }
     },
     async saveContact() {
+      if (!this.isPaid && this.searchesUsed >= 10) {
+        this.openPaidModal(
+          'You have reached your usage limit for the month. Please upgrade your plan.',
+        )
+        return
+      }
       this.savingContact = true
       // name_list = this.currentJournalist.split(' ')
       // const first = name_list[0]
@@ -3619,8 +3813,6 @@ export default {
         })
         this.buttonClicked = true
       } catch (e) {
-        console.log('RESPOSNE ERROR HERE -- >', e.data.error)
-        console.log('RESPONSE DATA HERE ===== >>>', e.data)
         if (e.data.error.includes('journalist must make a unique set')) {
           this.$toast('Contact is already saved!', {
             timeout: 2000,
@@ -3643,6 +3835,13 @@ export default {
       }
     },
     async getJournalistBioDiscover() {
+      if (!this.isPaid && this.searchesUsed >= 10) {
+        this.openPaidModal(
+          'You have reached your usage limit for the month. Please upgrade your plan.',
+        )
+        return
+      }
+
       this.loadingDraft = true
       this.targetEmail = ''
       try {
@@ -3653,13 +3852,10 @@ export default {
           search: false,
         })
 
-        console.log('RESPONSE IS HERE :', res)
-
         const companyRegex = /company:\s*([^<]+)/i
         const companyMatch = res.data.summary.match(companyRegex)
 
         if (companyMatch) {
-          console.log('MATCH IS HERE :', companyMatch)
           const newCompany = companyMatch[1]
           this.currentPublication = newCompany.trim()
         }
@@ -3843,36 +4039,60 @@ export default {
       }
     },
     openDraftPitch() {
-      const bio = this.currentJournalistBio
       this.googleModalOpen = false
       this.emailJournalistModalOpen = true
-      this.draftPitch(bio)
+      this.draftPitch()
     },
-    async draftPitch(bio = '') {
+    async draftPitch() {
       this.loadingPitch = true
       try {
-        const res = await Comms.api.draftPitch({
-          user: this.user.firstName,
-          org: this.selectedOrg,
-          style: this.pitchStyle,
-          bio: bio,
-          author: this.currentJournalist,
-          outlet: this.currentPublication,
-          headline: this.currentHeadline,
-          description: this.currentDescription,
-          date: this.currentDate,
-        })
-        const body = res.data.replace(/^Subject(?: Line)?:[\s\S]*?\n|email:.*$/gim, '')
-        const signature = this.user.emailSignature ? this.user.emailSignature : ''
-        const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
-          /\n/g,
-          '</p><p>',
-        )}  </p>`
+        if (this.mainView !== 'write') {
+          const res = await Comms.api.draftPitch({
+            user: this.user.firstName,
+            org: this.selectedOrg,
+            style: this.pitchStyle,
+            bio: this.currentJournalistBio,
+            author: this.currentJournalist,
+            outlet: this.currentPublication,
+            headline: this.currentHeadline,
+            description: this.currentDescription,
+            date: this.currentDate,
+          })
+          const body = res.data.replace(/^Subject(?: Line)?:[\s\S]*?\n|email:.*$/gim, '')
+          const signature = this.user.emailSignature ? this.user.emailSignature : ''
+          const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
+            /\n/g,
+            '</p><p>',
+          )}  </p>`
 
-        const quill = this.$refs.quill.quill
-        quill.clipboard.dangerouslyPasteHTML(html)
-        this.subject = res.data.match(/^Subject(?: Line)?:(.*)\n/i)[1].trim()
-        this.targetEmail = res.data.match(/email:\s*(.*)$/m)[1].trim()
+          const quill = this.$refs.quill.quill
+          quill.clipboard.dangerouslyPasteHTML(html)
+          this.subject = res.data.match(/^Subject(?: Line)?:(.*)\n/i)[1].trim()
+          this.targetEmail = res.data.match(/email:\s*(.*)$/m)[1].trim()
+        } else {
+          const res = await Comms.api.rewritePitch({
+            original: this.summary,
+            bio: this.currentJournalistBio,
+          })
+          const emailRegex = /email: ([^"]*)/
+          const match = res.pitch.match(emailRegex)
+          if (match) {
+            const email = match[1]
+            this.targetEmail = email
+          }
+          const body = res.pitch
+            .replace(/^Subject(?: Line)?:[\s\S]*?\n/i, '')
+            .replace(/email: [^"]*/, '')
+          const signature = this.user.emailSignature ? this.user.emailSignature : ''
+          const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
+            /\n/g,
+            '</p><p>',
+          )}  </p>`.trim()
+          const quill = this.$refs.quill.quill
+          quill.clipboard.dangerouslyPasteHTML(html)
+          this.subject = res.pitch.match(/^Subject(?: Line)?:(.*)\n/)[1].trim()
+        }
+
         this.verifyEmail()
       } catch (e) {
         console.error(e)
@@ -4341,6 +4561,11 @@ export default {
       if ((this.searchSaved || this.savedSearch) && this.isPaid) {
         this.alertSet = false
         this.notifyModalOpen = !this.notifyModalOpen
+      } else if (!this.isPaid) {
+        if (!this.isPaid && this.searchesUsed >= 10) {
+          this.openPaidModal('Upgrade your plan to activate alerts')
+          return
+        }
       }
     },
     closeContentModal() {
@@ -4515,6 +4740,13 @@ export default {
       }
     },
     async generatePitch() {
+      if (!this.isPaid && this.searchesUsed >= 10) {
+        this.openPaidModal(
+          'You have reached your usage limit for the month. Please upgrade your plan.',
+        )
+        return
+      }
+
       if (!this.newSearch) {
         return
       }
@@ -4523,7 +4755,7 @@ export default {
       try {
         const res = await Comms.api.generatePitch({
           type: this.newSearch,
-          instructions: this.newTemplate,
+          instructions: this.currentDetails,
           style: this.writingStyle,
         })
         this.summary = res.pitch.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
@@ -7610,7 +7842,7 @@ button:disabled {
   font-family: $base-font-family;
 
   @media only screen and (max-width: 600px) {
-    max-width: 320px;
+    max-width: 80%;
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
@@ -8007,6 +8239,7 @@ li {
   @media only screen and (max-width: 600px) {
     margin-right: 0;
     margin-left: -8px;
+    margin-top: 10px;
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {

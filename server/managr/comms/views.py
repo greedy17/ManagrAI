@@ -24,6 +24,7 @@ from django.shortcuts import redirect
 from rest_framework.decorators import action
 from . import constants as comms_consts
 from .models import (
+    CompanyDetails,
     Search,
     TwitterAccount,
     Pitch,
@@ -55,6 +56,7 @@ from .serializers import (
     DiscoverySerializer,
     EmailTrackerSerializer,
     JournalistContactSerializer,
+    CompanyDetailsSerializer,
 )
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
@@ -1178,7 +1180,6 @@ class PitchViewSet(
         type = request.data.get("type")
         instructions = request.data.get("instructions")
         style = request.data.get("style")
-        print('TYPE IS HERE',style)
         pitch_id = request.data.get("pitch_id", False)
         has_error = False
         attempts = 1
@@ -1199,13 +1200,13 @@ class PitchViewSet(
                 logger.exception(
                     f"Retrying again due to token amount, amount currently at: {token_amount}"
                 )
-                if token_amount <= 2000:
+                if token_amount >= 3000:
                     has_error = True
 
                     message = "Token amount error"
                     break
                 else:
-                    token_amount += 500
+                    token_amount += 1000
                     continue
             except httpx.ReadTimeout as e:
                 print(e)
@@ -2394,6 +2395,7 @@ class DiscoveryViewSet(
                 res = open_ai_exceptions._handle_response(r)
 
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+                user.add_meta_data("bio")
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -2421,7 +2423,6 @@ class DiscoveryViewSet(
                 message = f"Unknown exception: {e}"
                 logger.exception(e)
                 break
-        user.add_meta_data("bio")
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
 
@@ -2684,6 +2685,7 @@ def get_google_summary(request):
             res = open_ai_exceptions._handle_response(r)
 
             message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+            user.add_meta_data("google_search")
             break
         except open_ai_exceptions.StopReasonLength:
             if token_amount <= 2000:
@@ -2786,6 +2788,48 @@ class JournalistContactViewSet(
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)}
                 )
             return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = self.request.data
+        serializer = self.serializer_class(instance=instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            instance.delete()
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_200_OK)
+
+
+class CompanyDetailsViewSet(
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+):
+    serializer_class = CompanyDetailsSerializer
+
+    def get_queryset(self):
+        details = CompanyDetails.objects.filter(user=self.request.user)
+        return details
+
+    def create(self, request, *args, **kwargs):
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            readSerializer = self.serializer_class(instance=serializer.instance)
+        except Exception as e:
+            logger.exception(f"Error validating data for details <{e}>")
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
 
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
