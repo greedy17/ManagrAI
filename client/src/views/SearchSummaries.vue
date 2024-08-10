@@ -584,7 +584,7 @@
           <div>
             <h4 class="regen-header-title">Add Company Details</h4>
             <p class="regen-header-subtitle">
-              Provide additional details about a company, person, product, etc
+              Provide additional details about a company, person, product, etc.
             </p>
           </div>
         </div>
@@ -960,7 +960,7 @@
               <div
                 v-outside-click="hideDetails"
                 v-show="showingDetails"
-                class="drop-options-alt-thin"
+                class="drop-options-alternate"
               >
                 <header class="space-between">
                   <section class="h-padding">
@@ -984,22 +984,22 @@
                     @click="addDetails(detail.title, detail.details)"
                     v-for="detail in allCompanyDetails"
                     :key="detail.title"
-                    :class="{ activesquare: detailTitle === detail.title }"
+                    :class="{ activesquareTile: detailTitle === detail.title }"
                   >
-                    <span>
+                    <span class="turq-text">
                       <img
-                        class="blue-filter"
+                        class="turq-filter"
                         src="@/assets/images/logo.png"
                         height="11px"
                         alt=""
                       />
                       {{ detail.title }}
                     </span>
-                    <p :title="detail.details">{{ detail.details }}</p>
+                    <p class="turq-text" :title="detail.details">{{ detail.details }}</p>
 
-                    <!-- <span @click="deleteCompanyDetails(detail.id)" class="absolute-icon">
+                    <span @click="deleteCompanyDetails(detail.id)" class="absolute-icon">
                       <img src="@/assets/images/close.svg" height="10px" alt="" />
-                    </span> -->
+                    </span>
                   </div>
                 </section>
 
@@ -3350,11 +3350,24 @@ export default {
     },
     async deleteCompanyDetails(id) {
       try {
-        const res = await Comms.api.deleteCompanyDetails(id)
+        const res = await Comms.api.deleteCompanyDetails({
+          id: id,
+        })
+        this.$toast('Details removed', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
         console.log(res)
       } catch (e) {
         conosole.log(e)
       } finally {
+        this.detailTitle = ''
+        this.currentDetails = ''
+        this.getCompanyDetails()
+        this.refreshUser()
       }
     },
     async getCompanyDetails() {
@@ -4601,14 +4614,12 @@ export default {
       this.formattedDate = `${year}-${month}-${day}T${formattedTime}`
     },
     toggleNotifyModal() {
-      if ((this.searchSaved || this.savedSearch) && this.isPaid) {
+      if (!this.isPaid) {
+        this.openPaidModal('Upgrade your plan to activate alerts')
+        return
+      } else if ((this.searchSaved || this.savedSearch) && this.isPaid) {
         this.alertSet = false
         this.notifyModalOpen = !this.notifyModalOpen
-      } else if (!this.isPaid) {
-        if (!this.isPaid && this.searchesUsed >= 10) {
-          this.openPaidModal('Upgrade your plan to activate alerts')
-          return
-        }
       }
     },
     closeContentModal() {
@@ -6907,12 +6918,12 @@ export default {
     }
   }
 
-  .drop-options-alt-thin {
-    width: 300px;
+  .drop-options-alternate {
+    width: 450px;
     max-height: 225px;
     position: absolute;
     top: 40px;
-    left: 0;
+    right: 0;
     font-weight: 400;
     background: white;
     padding: 8px;
@@ -6962,7 +6973,7 @@ export default {
 
     div {
       font-size: 14px;
-      width: 100px;
+      width: 135px;
       height: 60px;
       cursor: pointer;
       padding: 8px;
@@ -8936,6 +8947,13 @@ p {
   }
 }
 
+.activesquareTile {
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  background-color: $soft-gray;
+  color: $turq;
+  font-family: $base-font-family;
+}
+
 .activesquare {
   border: 0.5px solid rgba(0, 0, 0, 0.1);
   background-color: $soft-gray;
@@ -10410,6 +10428,10 @@ textarea::placeholder {
 
 .turq-filter {
   filter: invert(56%) sepia(96%) saturate(331%) hue-rotate(139deg) brightness(90%) contrast(87%);
+}
+
+.turq-text {
+  color: $turq;
 }
 
 .pink-filter {

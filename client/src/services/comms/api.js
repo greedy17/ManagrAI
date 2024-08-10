@@ -585,7 +585,7 @@ class CommsApi extends ModelAPI {
     }
     async deleteCompanyDetails(data) {
         try {
-            const res = await this.client.delete(`company-details/${data.id}/`)
+            const res = await this.client.post(`company-details/delete-details/`, { params: data })
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)

@@ -2846,3 +2846,15 @@ class CompanyDetailsViewSet(
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="delete-details",
+    )
+    def delete_details(self, request, *args, **kwargs):
+        detail_id = request.data["params"]["id"]
+        detail = CompanyDetails.objects.get(id=detail_id)
+        detail.delete()
+        return Response(status=status.HTTP_200_OK)
