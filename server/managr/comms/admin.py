@@ -12,6 +12,7 @@ from .models import (
     Journalist,
     EmailTracker,
     JournalistContact,
+    CompanyDetails,
 )
 
 # Register your models here.
@@ -94,3 +95,4 @@ admin.site.register(Discovery)
 admin.site.register(Journalist, CustomJournalAdmin)
 admin.site.register(EmailTracker, CustomEmailTrackerAdmin)
 admin.site.register(JournalistContact, CustomJournalistContactAdmin)
+admin.site.register(CompanyDetails)
