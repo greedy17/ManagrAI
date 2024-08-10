@@ -296,7 +296,6 @@ const actions = {
     commit('UPDATE_STAGES', res.results ? res.results : null)
   },
   updateListName({ commit }, title) {
-    console.log('TITLE IS HERE :', title)
     commit('UPDATE_LIST', title)
   },
   updateChatTitle({ commit }, title) {

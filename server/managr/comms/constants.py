@@ -359,20 +359,23 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
 
 
 def OPEN_AI_PITCH(date, type, instructions, style=False):
-    body = f"""Today's date is {date}. Generate content in HTML format with proper spacing and separate paragraphs for each section (greeting, introduction, closing, etc). Do not include ```html``` in your response.
+    body = f"""Today's date is {date}. Generate the content below in HTML format with proper spacing and separate paragraphs for each section (greeting, introduction, closing, etc). Do not include ```html``` in your response.
 
-    Content Instructions: {type}
-    Writing Style: {style}
+    1. Here is what you are asked to generate: {type}
+    2. If provided, generated content must be based on this information: {instructions}.
+    3. Lastly, you must follow this Writing Style: {style}
     """
     return body
 
 
 OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS = (
     lambda pitch, instructions, style: f"""
-    Adjust and rewrite the content according to the instructions. The content should be in HTML format with proper spacing and separate paragraphs for each section (greeting, introduction, closing, etc). Do not include ```html``` in your response.\n
+    Adjust and rewrite the content per the instructions below, adhering to the desired writing style guidelines. The content should be in HTML format with proper spacing and separate paragraphs for each section (greeting, introduction, closing, etc). Do not include ```html``` in your response.\n
+    
     Content: {pitch}\n
     Instructions: {instructions}\n
     Writing Style: {style}
+    
     """
 )   
 
