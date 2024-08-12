@@ -65,34 +65,67 @@ def GOOGLE_SEARCH_PARAMS(query):
 
 
 def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
-    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the person from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips for {company} based on what you know about the person. Lastly, list out all available contact details for the person based on the provided data, including social handles and email address. If email not available, exclude email details from the output. Output must be:
-    Bio:
-    3 Pitching Tips:
-    Contact Details:
+    prompt = f"""Here are the top 5 search results for {journalist}:
+    
+    Results: {results}
+    
+    Additional info on the person from a publisher site:{text}
+    
+    Combine the data from search results and the publisher site to craft one bio for {journalist}. Give me the company the person works for, then offer 3 short relevant pitching tips for {company} based on what you know about the person. Lastly, list out all available contact details for the person based on the provided data, including social handles and email address. If email not available, exclude email details from the output. Output must be:
+    
+    <h2>Bio:</h2>
+    [Bio content]
 
-    Output MUST follow the following rules:
-    1. All bold text MUST be returned in a strong tag instead of markdown!
-    2. All headings must be returned in a H2 tag!
-    3. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
-    4. Never include ```html``` in the response, only reply with what I asked for specifically
-    5. NEVER include any additional text next to the email. Examples: instead of email@email.com (guessed email based on typical email patterns), simply return email@email.com. Instead of email@email.com (guessed email), simply return email@email.com. This is very important, do not ignore
+    <h2>3 Pitching Tips:</h2>
+    [Pitching tips]
+
+    <h2>Contact Details:</h2>
+    [Contact details]
+
+    Company: [Company name]
+
+    Output MUST follow these rules:
+    1. Separate each section with one new line, no additional spacing or padding.
+    2. Use <strong> tags for bold text.
+    3. Use <h2> tags for headings, except for the company name, which should be inline with 'Company:'.
+    4. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
+    5. Do not include additional text next to the email.
+    6. Exclude domain extensions from company names.
+    7. Do not add name : [name] and company: [company] at the top of the bio
     """
     return prompt
 
 
 def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
-    prompt = f"""Here are the top 5 search results for {journalist}: \nResults: {results}\n And here is additional info on the person from a publisher site:{text}. \n Combine the data from search results and the publisher site to craft one bio for {journalist}. Then offer 3 short relevant pitching tips based on what you know of the person, tailored to the user's pitch: {content}. Lastly, list out all available contact details for the person based on the provided data, including social handles and email address.  If the email is mentioned in any of the provided information, you must use that email. If no email can be found, then you must guess their work email. When guessing, you must base it on verified email patterns associated with their respective publication. Always return the email like this - email: guessed email
-    Output must be:
-    Bio:
-    3 Pitching Tips:
-    Contact Details:
-    
-    Output MUST follow the following rules:
-    1. All bold text MUST be returned in a strong tag instead of markdown!
-    2. All headings must be returned in a H2 tag!
-    3. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
-    4. Never include ```html``` in the response, only reply with what I asked for specifically
-    5. NEVER include any additional text next to the email. example: instead of email@email.com (guessed email based on typical email patterns), simply return email@email.com, Instead of email@email.com (guessed email), simply return email@email.com. This is very important, do not ignore
+    prompt = f"""Here are the top 5 search results for {journalist}:
+
+    Results: {results}
+
+    Additional info on the person from a publisher site: {text}.
+
+    Combine the data from the search results and publisher site to craft one bio for {journalist}. Include the company the person works for, then offer 3 short pitching tips based on what you know of the person, tailored to the user's pitch: {content}. Lastly, list all available contact details for the person based on the provided data, including social handles and email address. If the email is mentioned in the provided information, use that email. If no email is found, guess their work email based on verified email patterns for their publication. Always return the email like this - email: guessed email
+
+    Output must be :
+
+    <h2>Bio:</h2>
+    [Bio content]
+
+    <h2>3 Pitching Tips:</h2>
+    [Pitching tips]
+
+    <h2>Contact Details:</h2>
+    [Contact details]
+
+    Company: [Company name]
+
+    Output MUST follow these rules:
+    1. Separate each section with one new line, no additional spacing or padding.
+    2. Use <strong> tags for bold text.
+    3. Use <h2> tags for headings, except for the company name, which should be inline with 'Company:'.
+    4. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
+    5. Do not include additional text next to the email.
+    6. Exclude domain extensions from company names.
+    7. Do not add name : [name] and company: [company] at the top of the bio
     """
     return prompt
 
@@ -326,20 +359,23 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
 
 
 def OPEN_AI_PITCH(date, type, instructions, style=False):
-    body = f"""Today's date is {date}. Generate content in HTML format with proper spacing and separate paragraphs for each section (greeting, introduction, closing, etc). Do not include ```html``` in your response.
+    body = f"""Today's date is {date}. Generate the content below in HTML format with proper spacing and separate paragraphs for each section (greeting, introduction, closing, etc). Do not include ```html``` in your response.
 
-    Content Instructions: {type}
-    Writing Style: {style}
+    1. Here is what you are asked to generate: {type}
+    2. If provided, generated content must be based on this information: {instructions}.
+    3. Lastly, you must follow this Writing Style: {style}
     """
     return body
 
 
 OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS = (
     lambda pitch, instructions, style: f"""
-    Adjust and rewrite the content according to the instructions. The content should be in HTML format with proper spacing and separate paragraphs for each section (greeting, introduction, closing, etc). Do not include ```html``` in your response.\n
+    Adjust and rewrite the content per the instructions below, adhering to the desired writing style guidelines. The content should be in HTML format with proper spacing and separate paragraphs for each section (greeting, introduction, closing, etc). Do not include ```html``` in your response.\n
+    
     Content: {pitch}\n
     Instructions: {instructions}\n
     Writing Style: {style}
+    
     """
 )   
 

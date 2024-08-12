@@ -1043,6 +1043,7 @@ export default {
         this.newBio = res.data.summary
           .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
           .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, '')
+          .replace(/<h2>Company:<\/h2>\s*<strong>([^<]+)<\/strong>/i, '')
         this.newImages = res.data.images
         Comms.api.updateContact({
           id: this.currentContact.id,
@@ -1417,8 +1418,8 @@ export default {
     padding: 24px 0;
   }
 
-  @media only screen and (max-width: 750px) {
-    padding: 40px 0;
+  @media only screen and (max-width: 600px) {
+    padding: 96px 0 48px 0;
   }
   @media only screen and (min-width: 751px) and (max-width: 1393px) {
     padding: 40px 16px;
@@ -1479,8 +1480,8 @@ export default {
     cursor: not-allowed;
   }
 
-  @media only screen and (max-width: 750px) {
-    width: 75vw;
+  @media only screen and (max-width: 600px) {
+    width: 100%;
   }
 
   @media only screen and (min-width: 751px) and (max-width: 1393px) {
@@ -1660,14 +1661,19 @@ h3 {
   justify-content: flex-start;
   padding: 0 24px;
 
+  @media only screen and (max-width: 600px) {
+    padding: 0;
+  }
+
   aside {
     width: 29vw;
     padding: 28px 24px 16px 64px;
 
     @media only screen and (max-width: 750px) {
-      width: 24vw;
-      margin-right: 10px;
-      padding-left: 8px;
+      // width: 24vw;
+      // margin-right: 10px;
+      // padding-left: 8px;
+      display: none;
     }
 
     @media only screen and (min-width: 751px) and (max-width: 1393px) {
@@ -1681,8 +1687,12 @@ h3 {
   }
 
   section {
-    width: 68vw;
+    width: 99%;
     padding: 16px 16px 16px 32px;
+
+    @media only screen and (max-width: 600px) {
+      padding: 16px 8px 16px 12px;
+    }
   }
 }
 

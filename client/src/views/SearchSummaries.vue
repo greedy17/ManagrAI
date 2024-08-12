@@ -219,7 +219,7 @@
           />
         </div>
 
-        <div v-if="mainView === 'discover'" class="paid-body">
+        <div v-else-if="mainView === 'discover'" class="paid-body">
           <label style="font-size: 13px" for="detail-title">Name:</label>
           <input
             id="detail-title"
@@ -264,7 +264,7 @@
             </button>
 
             <button
-              v-if="mainView === 'discover'"
+              v-else-if="mainView === 'discover'"
               @click="saveDiscovery"
               :disabled="savingSearch"
               class="save-button"
@@ -479,7 +479,7 @@
           </div>
         </section>
 
-        <section v-else>
+        <section class="mobile-body" v-else>
           <div class="bio-body" v-html="currentJournalistBio"></div>
 
           <aside>
@@ -575,6 +575,63 @@
       </div>
     </Modal>
 
+    <Modal v-if="detailsInputModalOpen" class="paid-modal">
+      <div
+        :style="isMobile ? 'width: 95%; min-height: 275px' : 'width: 610px; min-height: 275px'"
+        class="regen-container"
+      >
+        <div class="paid-header">
+          <div>
+            <h4 class="regen-header-title">Add Company Details</h4>
+            <p class="regen-header-subtitle">
+              Provide additional details about a company, person, product, etc.
+            </p>
+          </div>
+        </div>
+        <div class="paid-body" style="overflow: hidden !important">
+          <!-- <label for="styleName">Name</label> -->
+          <input
+            id="styleName"
+            style="width: 100%; margin: 0.5rem 0 1rem 0"
+            class="area-input-outline"
+            placeholder="Company Name..."
+            type="text"
+            v-model="detailsName"
+            :disabled="savingStyle"
+          />
+
+          <!-- <label for="sample">Sample</label> -->
+          <textarea
+            id="sample"
+            :disabled="savingStyle"
+            maxlength="8000"
+            class="area-input-outline wider"
+            style="width: 100%; margin: 0.5rem 0 0 0; max-height: 280px"
+            placeholder="Paste details here..."
+            v-model="detailsBody"
+            v-autoresize
+          />
+        </div>
+        <footer class="paid-footer aligned-right">
+          <button :disabled="savingStyle" @click="toggleDetailsInputModal" class="secondary-button">
+            Cancel
+          </button>
+          <button
+            :disabled="savingStyle || !detailsName || !detailsBody"
+            @click="addCompanyDetails"
+            class="primary-button"
+          >
+            {{ savingStyle ? 'Adding' : 'Add' }}
+            <div style="margin-left: 4px" v-if="savingStyle" class="loading-small">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+          </button>
+        </footer>
+      </div>
+    </Modal>
+
     <div style="margin-top: 16px" v-if="!selectedSearch">
       <div style="margin: 16px 0" class="text-width">
         <h2
@@ -610,6 +667,19 @@
                 "
               />
 
+              <!-- <div
+                @click="slackTest"
+                class="left-margin img-container-stay"
+                style="margin-right: 12px"
+              >
+                <img
+                  style="margin: 0"
+                  src="@/assets/images/paper-plane-top.svg"
+                  height="14px"
+                  alt=""
+                />
+              </div> -->
+
               <div
                 v-if="!newSearch"
                 class="left-margin img-container-stay"
@@ -639,7 +709,7 @@
             </section>
           </div>
 
-          <div class="space-between mobile-col">
+          <div class="space-between">
             <div class="source-dropdown fadein">
               <div
                 @click.stop="toggleSources"
@@ -677,7 +747,7 @@
                   alt=""
                 />
 
-                <p>Source:</p>
+                <p class="mobile-text-hide">Source:</p>
                 <small>{{ toCamelCase(mainView) }}</small>
                 <img
                   v-if="!showingSources"
@@ -755,7 +825,7 @@
               >
                 <img src="@/assets/images/wand.svg" height="14px" alt="" />
 
-                <p>Writing Style:</p>
+                <p class="mobile-text-hide">Writing Style:</p>
                 <small>{{ writingStyleTitle ? writingStyleTitle : 'Select style' }}</small>
                 <img
                   v-if="!showingStyles"
@@ -811,13 +881,13 @@
                       />
                       {{ style.title }}
                     </span>
-                    <p>{{ style.style }}</p>
+                    <p :title="style.style">{{ style.style }}</p>
                   </div>
                   <div
                     @mouseenter="setIndex(i)"
                     @mouseLeave="removeIndex"
                     @click="addWritingStyle(style.style, style.title)"
-                    class="dropdown-item"
+                    class="dropdown-item relative"
                     v-for="(style, i) in userWritingStyles"
                     :key="i"
                     :class="{ activeswitch: writingStyleTitle === style.title }"
@@ -831,16 +901,15 @@
                       />
                       {{ style.title }}
                     </span>
-                    <p class="pink-text">{{ style.style }}</p>
+                    <p class="pink-text" :title="style.style">{{ style.style }}</p>
 
-                    <!-- <span class="absolute-icon">
-                      <img
-                        v-if="hoverIndex === i"
-                        src="@/assets/images/trash.svg"
-                        height="12px"
-                        alt=""
-                      />
-                    </span> -->
+                    <span
+                      v-if="hoverIndex === i"
+                      @click="deleteWritingStyle(style.id)"
+                      class="absolute-icon"
+                    >
+                      <img src="@/assets/images/close.svg" height="12px" alt="" />
+                    </span>
                   </div>
                 </section>
 
@@ -861,7 +930,93 @@
               </div>
             </div>
 
-            <div v-if="mainView === 'write'" style="width: 12vw"></div>
+            <div v-if="mainView === 'write'" class="source-dropdown fadein">
+              <div
+                @click.stop="toggleShowDetails"
+                :class="{ 'soft-gray-bg': showingDetails }"
+                class="drop-header"
+              >
+                <img src="@/assets/images/building.svg" height="14px" alt="" />
+
+                <p class="mobile-text-hide">Company Details:</p>
+                <small :title="detailTitle ? detailTitle : 'None'">{{
+                  detailTitle ? detailTitle : 'None'
+                }}</small>
+                <img
+                  v-if="!showingDetails"
+                  src="@/assets/images/arrowDropUp.svg"
+                  height="15px"
+                  alt=""
+                />
+                <img
+                  v-else
+                  class="rotate-img"
+                  src="@/assets/images/arrowDropUp.svg"
+                  height="15px"
+                  alt=""
+                />
+              </div>
+
+              <div
+                v-outside-click="hideDetails"
+                v-show="showingDetails"
+                class="drop-options-alternate"
+              >
+                <header class="space-between">
+                  <section class="h-padding">
+                    <section>
+                      <p style="margin: 0; padding: 4px 0 0 4px; color: #9596b4">Personal</p>
+                    </section>
+                  </section>
+
+                  <button
+                    @click="toggleDetailsInputModal"
+                    class="secondary-button-no-border"
+                    style="margin-right: 4px"
+                  >
+                    <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Details
+                  </button>
+                </header>
+
+                <section v-if="allCompanyDetails.length">
+                  <div
+                    style="position: relative"
+                    @click="addDetails(detail.title, detail.details)"
+                    v-for="detail in allCompanyDetails"
+                    :key="detail.title"
+                    :class="{ activesquareTile: detailTitle === detail.title }"
+                  >
+                    <span class="turq-text">
+                      <img
+                        class="turq-filter"
+                        src="@/assets/images/logo.png"
+                        height="11px"
+                        alt=""
+                      />
+                      {{ detail.title }}
+                    </span>
+                    <p class="turq-text" :title="detail.details">{{ detail.details }}</p>
+
+                    <span @click="deleteCompanyDetails(detail.id)" class="absolute-icon">
+                      <img src="@/assets/images/close.svg" height="10px" alt="" />
+                    </span>
+                  </div>
+                </section>
+
+                <section style="padding: 16px" v-else>
+                  Your saved details
+                  <span>
+                    <img
+                      style="margin-right: 4px"
+                      src="@/assets/images/building.svg"
+                      height="12px"
+                      alt=""
+                    />
+                    will appear here.</span
+                  >
+                </section>
+              </div>
+            </div>
 
             <div
               v-if="mainView !== 'write' && mainView !== 'discover'"
@@ -1175,11 +1330,7 @@
         <div style="position: relative" class="body">
           <header class="content-header-test">
             <div class="row-top">
-              <div
-                style="margin-right: 18px; margin-top: 16px"
-                class="image-container"
-                @click="resetAll"
-              >
+              <div class="image-container xxl-margin" @click="resetAll">
                 <img src="@/assets/images/goBack.svg" height="17px" alt="" />
               </div>
 
@@ -1360,7 +1511,7 @@
                 (!(filteredTweets && filteredTweets.length) && !summary)
               "
             >
-              <div style="width: 100%">
+              <div v-if="mainView !== 'write'" style="width: 100%">
                 <div
                   style="width: 40vw; margin-top: 12px"
                   v-if="mainView !== 'web'"
@@ -1413,20 +1564,10 @@
                     />
                   </div>
                 </div>
+              </div>
 
-                <!-- <div class="text-width">
-                  <div style="margin: 0 0 16px 0; width: 100%" class="col-start">
-                    <p
-                      v-for="(suggestion, i) in suggestions"
-                      :key="i"
-                      style="font-size: 16px !important; width: 100%"
-                      class="example-small"
-                      @click="setAndSearch(suggestion)"
-                    >
-                      <img src="@/assets/images/search.svg" height="14px" alt="" />{{ suggestion }}
-                    </p>
-                  </div>
-                </div> -->
+              <div style="padding: 0 8px" v-else>
+                <p>Error creating content. Try again</p>
               </div>
             </div>
 
@@ -1462,11 +1603,11 @@
               <div
                 v-if="mainView !== 'discover'"
                 style="
-                  margin-top: 32px;
-                  margin-bottom: 12px;
                   background: white;
                   position: sticky;
                   bottom: 0;
+                  margin-top: 32px;
+                  margin-bottom: 12px;
                 "
                 class="input-container-gray fadein"
               >
@@ -1500,7 +1641,7 @@
 
                   <div class="row relative">
                     <div
-                      class="left-margin img-container s-wrapper"
+                      class="left-margin img-container s-wrapper m-cntnr"
                       :class="{ 'img-container-stay': showSuggestions }"
                       style="padding: 8px 8px 6px 9px"
                       @click.stop="toggleSuggestions"
@@ -1511,7 +1652,7 @@
                     </div>
 
                     <div
-                      class="left-margin img-container s-wrapper"
+                      class="left-margin img-container s-wrapper m-cntnr"
                       :class="{ 'img-container-stay': showingWritingStyles }"
                       style="padding: 8px 8px 6px 9px"
                       @click.stop="toggleWritingStyles"
@@ -2683,6 +2824,7 @@
 import { Comms } from '@/services/comms'
 import { quillEditor } from 'vue-quill-editor'
 import User from '@/services/users'
+import SlackOAuth from '@/services/slack'
 import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
@@ -2695,6 +2837,15 @@ export default {
   },
   data() {
     return {
+      hoverIndex: null,
+      allCompanyDetails: [],
+      detailTitle: '',
+      detailsName: '',
+      detailsBody: '',
+      currentDetails: '',
+      showingDetails: false,
+      showingAllDetails: false,
+      detailsInputModalOpen: false,
       pitchName: '',
       savedPitch: false,
       savedDiscovery: false,
@@ -2747,6 +2898,8 @@ export default {
       allWritingStyles: [],
       showingWritingStyles: false,
       showingStyles: false,
+      showingDetails: false,
+      showingAllDetails: false,
       showingHelp: false,
       supportEmail: 'support@mymanagr.com',
       showSuggestions: false,
@@ -2756,7 +2909,6 @@ export default {
       googleResults: [],
       relevantData: '',
       journalistData: '',
-      journalistListData: '',
       listName: '',
       relatedTopics: [],
       loadingRelevant: false,
@@ -2817,8 +2969,6 @@ export default {
       showingViews: false,
       summarizing: false,
       saveModalOpen: false,
-      detialText: null,
-      detailTitle: null,
       currentAlertId: null,
       alertSet: false,
       emailText: 'Activate Alerts',
@@ -3140,6 +3290,7 @@ export default {
     }
     this.$store.dispatch('updateListName', 'news')
     this.getWritingStyles()
+    this.getCompanyDetails()
   },
   watch: {
     typedMessage: 'changeIndex',
@@ -3178,16 +3329,104 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    async deleteWritingStyle(id) {
+      try {
+        await Comms.api.deleteWritingStyle({ style_id: id })
+        this.$toast('Writing Style removed', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.writingStyleTitle = ''
+        this.writingStyle = ''
+        this.getWritingStyles()
+        this.refreshUser()
+      }
+    },
+    async deleteCompanyDetails(id) {
+      try {
+        const res = await Comms.api.deleteCompanyDetails({
+          id: id,
+        })
+        this.$toast('Details removed', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        console.log(res)
+      } catch (e) {
+        conosole.log(e)
+      } finally {
+        this.detailTitle = ''
+        this.currentDetails = ''
+        this.getCompanyDetails()
+        this.refreshUser()
+      }
+    },
+    async getCompanyDetails() {
+      try {
+        const res = await Comms.api.getCompanyDetails()
+        console.log(res.results)
+        this.allCompanyDetails = res.results
+      } catch (e) {}
+    },
+    async addCompanyDetails() {
+      this.savingStyle = true
+      try {
+        const res = await Comms.api.addCompanyDetails({
+          user: this.user.id,
+          title: this.detailsName,
+          details: this.detailsBody,
+        })
+        this.$toast('Details saved', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.refreshUser()
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.detailsName = ''
+        this.detailsBody = ''
+        // this.getDetails()
+        this.savingStyle = false
+        this.getCompanyDetails()
+        this.toggleDetailsInputModal()
+      }
+    },
+    async slackTest() {
+      try {
+        const res = await SlackOAuth.api.sendToSlack({})
+        console.log(res)
+      } catch (e) {
+        console.log(e)
+      }
+    },
     clearList() {
       this.journalisListtData = ''
       this.journalistInfo = ''
       // this.showingJournalistsList = false
     },
-
     async getDiscoveries() {
       this.$store.dispatch('getDiscoveries')
     },
     async discoverJournalists(discover = false) {
+      if (!this.isPaid && this.searchesUsed >= 10) {
+        this.openPaidModal(
+          'You have reached your usage limit for the month. Please upgrade your plan.',
+        )
+        return
+      }
       if (discover) {
         this.loading = true
         this.changeSearch({ search: this.newSearch, template: this.newTemplate })
@@ -3250,11 +3489,21 @@ export default {
       this.inputModalOpen = !this.inputModalOpen
       this.showingStyles = false
     },
+    toggleDetailsInputModal() {
+      this.detailsInputModalOpen = !this.detailsInputModalOpen
+      this.showingDetails = false
+    },
     addWritingStyle(ex, title) {
       this.writingStyle = ex
       this.writingStyleTitle = title
       this.showingStyles = false
       this.showingWritingStyles = false
+    },
+    addDetails(title, deets) {
+      this.currentDetails = deets
+      this.detailTitle = title
+      this.showingDetails = false
+      this.showingAllDetails = false
     },
     setIndex(i) {
       this.hoverIndex = i
@@ -3279,8 +3528,14 @@ export default {
     hideStyles() {
       this.showingStyles = false
     },
+    hideDetails() {
+      this.showingDetails = false
+    },
     toggleShowStyles() {
       this.showingStyles = !this.showingStyles
+    },
+    toggleShowDetails() {
+      this.showingDetails = !this.showingDetails
     },
     toggleHelpMenu() {
       this.showingHelp = !this.showingHelp
@@ -3586,6 +3841,12 @@ export default {
       }
     },
     async saveContact() {
+      if (!this.isPaid && this.searchesUsed >= 10) {
+        this.openPaidModal(
+          'You have reached your usage limit for the month. Please upgrade your plan.',
+        )
+        return
+      }
       this.savingContact = true
       // name_list = this.currentJournalist.split(' ')
       // const first = name_list[0]
@@ -3608,8 +3869,6 @@ export default {
         })
         this.buttonClicked = true
       } catch (e) {
-        console.log('RESPOSNE ERROR HERE -- >', e.data.error)
-        console.log('RESPONSE DATA HERE ===== >>>', e.data)
         if (e.data.error.includes('journalist must make a unique set')) {
           this.$toast('Contact is already saved!', {
             timeout: 2000,
@@ -3632,6 +3891,13 @@ export default {
       }
     },
     async getJournalistBioDiscover() {
+      if (!this.isPaid && this.searchesUsed >= 10) {
+        this.openPaidModal(
+          'You have reached your usage limit for the month. Please upgrade your plan.',
+        )
+        return
+      }
+
       this.loadingDraft = true
       this.targetEmail = ''
       try {
@@ -3641,7 +3907,16 @@ export default {
           content: this.summary,
           search: false,
         })
-        const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i
+
+        const companyRegex = /company:\s*([^<]+)/i
+        const companyMatch = res.data.summary.match(companyRegex)
+
+        if (companyMatch) {
+          const newCompany = companyMatch[1]
+          this.currentPublication = newCompany.trim()
+        }
+
+        const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*|Email:\s*)([^<"\s]+)/i
         const match = res.data.summary.match(emailRegex)
 
         if (match) {
@@ -3657,10 +3932,10 @@ export default {
 
         this.currentJournalistBio = res.data.summary
           .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
-          .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, '')
-        this.currentJournalistImages = res.data.images
+          .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*|Email:\s*)([^<"\s]+)/i, '')
+          .replace(/company:\s*([^<]+)/i, '')
 
-        console.log('TARGET EMAIL', this.targetEmail)
+        this.currentJournalistImages = res.data.images
       } catch (e) {
         console.error(e)
       } finally {
@@ -3679,8 +3954,18 @@ export default {
           social: social,
         })
 
-        console.log('SUMMARY IS HERE!!!!! ----- >', res.data)
-        const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i
+        console.log('RESPONSE IS HERE :', res)
+
+        const companyRegex = /company:\s*([^<]+)/i
+        const companyMatch = res.data.summary.match(companyRegex)
+
+        if (companyMatch) {
+          console.log('MATCH IS HERE :', companyMatch)
+          const newCompany = companyMatch[1]
+          this.currentPublication = newCompany.trim()
+        }
+
+        const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*|Email:\s*)([^<"\s]+)/i
         const match = res.data.summary.match(emailRegex)
 
         if (match) {
@@ -3696,7 +3981,9 @@ export default {
 
         this.currentJournalistBio = res.data.summary
           .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
-          .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, '')
+          .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*|Email:\s*)([^<"\s]+)/i, '')
+          .replace(/company:\s*([^<]+)/i, '')
+
         this.currentJournalistImages = res.data.images
       } catch (e) {
         console.error(e)
@@ -3808,36 +4095,60 @@ export default {
       }
     },
     openDraftPitch() {
-      const bio = this.currentJournalistBio
       this.googleModalOpen = false
       this.emailJournalistModalOpen = true
-      this.draftPitch(bio)
+      this.draftPitch()
     },
-    async draftPitch(bio = '') {
+    async draftPitch() {
       this.loadingPitch = true
       try {
-        const res = await Comms.api.draftPitch({
-          user: this.user.firstName,
-          org: this.selectedOrg,
-          style: this.pitchStyle,
-          bio: bio,
-          author: this.currentJournalist,
-          outlet: this.currentPublication,
-          headline: this.currentHeadline,
-          description: this.currentDescription,
-          date: this.currentDate,
-        })
-        const body = res.data.replace(/^Subject(?: Line)?:[\s\S]*?\n|email:.*$/gim, '')
-        const signature = this.user.emailSignature ? this.user.emailSignature : ''
-        const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
-          /\n/g,
-          '</p><p>',
-        )}  </p>`
+        if (this.mainView !== 'write') {
+          const res = await Comms.api.draftPitch({
+            user: this.user.firstName,
+            org: this.selectedOrg,
+            style: this.pitchStyle,
+            bio: this.currentJournalistBio,
+            author: this.currentJournalist,
+            outlet: this.currentPublication,
+            headline: this.currentHeadline,
+            description: this.currentDescription,
+            date: this.currentDate,
+          })
+          const body = res.data.replace(/^Subject(?: Line)?:[\s\S]*?\n|email:.*$/gim, '')
+          const signature = this.user.emailSignature ? this.user.emailSignature : ''
+          const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
+            /\n/g,
+            '</p><p>',
+          )}  </p>`
 
-        const quill = this.$refs.quill.quill
-        quill.clipboard.dangerouslyPasteHTML(html)
-        this.subject = res.data.match(/^Subject(?: Line)?:(.*)\n/i)[1].trim()
-        this.targetEmail = res.data.match(/email:\s*(.*)$/m)[1].trim()
+          const quill = this.$refs.quill.quill
+          quill.clipboard.dangerouslyPasteHTML(html)
+          this.subject = res.data.match(/^Subject(?: Line)?:(.*)\n/i)[1].trim()
+          this.targetEmail = res.data.match(/email:\s*(.*)$/m)[1].trim()
+        } else {
+          const res = await Comms.api.rewritePitch({
+            original: this.summary,
+            bio: this.currentJournalistBio,
+          })
+          const emailRegex = /email: ([^"]*)/
+          const match = res.pitch.match(emailRegex)
+          if (match) {
+            const email = match[1]
+            this.targetEmail = email
+          }
+          const body = res.pitch
+            .replace(/^Subject(?: Line)?:[\s\S]*?\n/i, '')
+            .replace(/email: [^"]*/, '')
+          const signature = this.user.emailSignature ? this.user.emailSignature : ''
+          const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
+            /\n/g,
+            '</p><p>',
+          )}  </p>`.trim()
+          const quill = this.$refs.quill.quill
+          quill.clipboard.dangerouslyPasteHTML(html)
+          this.subject = res.pitch.match(/^Subject(?: Line)?:(.*)\n/)[1].trim()
+        }
+
         this.verifyEmail()
       } catch (e) {
         console.error(e)
@@ -4303,7 +4614,10 @@ export default {
       this.formattedDate = `${year}-${month}-${day}T${formattedTime}`
     },
     toggleNotifyModal() {
-      if ((this.searchSaved || this.savedSearch) && this.isPaid) {
+      if (!this.isPaid) {
+        this.openPaidModal('Upgrade your plan to activate alerts')
+        return
+      } else if ((this.searchSaved || this.savedSearch) && this.isPaid) {
         this.alertSet = false
         this.notifyModalOpen = !this.notifyModalOpen
       }
@@ -4480,6 +4794,13 @@ export default {
       }
     },
     async generatePitch() {
+      if (!this.isPaid && this.searchesUsed >= 10) {
+        this.openPaidModal(
+          'You have reached your usage limit for the month. Please upgrade your plan.',
+        )
+        return
+      }
+
       if (!this.newSearch) {
         return
       }
@@ -4488,7 +4809,7 @@ export default {
       try {
         const res = await Comms.api.generatePitch({
           type: this.newSearch,
-          instructions: this.newTemplate,
+          instructions: this.currentDetails,
           style: this.writingStyle,
         })
         this.summary = res.pitch.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
@@ -4743,6 +5064,7 @@ export default {
       this.journalistData = ''
       this.relatedTopics = []
       this.showingSources = false
+      this.journalisListtData = ''
     },
     resetSearch() {
       this.clearNewSearch()
@@ -6530,8 +6852,15 @@ export default {
   }
 }
 
+.mobile-text-hide {
+  @media only screen and (max-width: 600px) {
+    display: none;
+  }
+}
+
 .source-dropdown {
   z-index: 1;
+
   @media only screen and (max-width: 600px) {
     margin-top: 8px;
   }
@@ -6549,22 +6878,33 @@ export default {
     padding: 4px 6px;
     background-color: white;
     font-size: 14px !important;
-    // border: 0.5px solid rgba(0, 0, 0, 0.355);
     border-radius: 16px;
     display: flex;
     flex-direction: row;
     align-items: center;
     cursor: pointer;
 
+    @media only screen and (max-width: 600px) {
+      font-size: 12px !important;
+    }
+
     img {
       margin: 0 8px;
       filter: invert(40%);
+
+      @media only screen and (max-width: 600px) {
+        // display: none;
+      }
     }
 
     small {
       font-size: 14px;
       margin-left: 4px !important;
       font-family: $base-font-family;
+      max-width: 55px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
 
     p,
@@ -6575,6 +6915,93 @@ export default {
 
     &:hover {
       background-color: $soft-gray;
+    }
+  }
+
+  .drop-options-alternate {
+    width: 450px;
+    max-height: 225px;
+    position: absolute;
+    top: 40px;
+    right: 0;
+    font-weight: 400;
+    background: white;
+    padding: 8px;
+    border-radius: 5px;
+    font-size: 14px;
+    box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+    line-height: 1.5;
+    z-index: 1000;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    // @media only screen and (max-width: 600px) {
+    //   left: -120%;
+    //   width: 85vw;
+    // }
+
+    section:last-of-type {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 8px;
+      overflow-y: scroll;
+
+      &::-webkit-scrollbar {
+        width: 4px;
+        height: 0px;
+      }
+      &::-webkit-scrollbar-thumb {
+        background-color: $soft-gray;
+        box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+        border-radius: 6px;
+      }
+
+      &::-webkit-scrollbar-track {
+        margin-top: 12px;
+      }
+
+      &:hover {
+        .absolute-icon {
+          visibility: visible;
+        }
+      }
+    }
+
+    div {
+      font-size: 14px;
+      width: 135px;
+      height: 60px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+
+      p {
+        font-size: 12px !important;
+        font-family: $thin-font-family;
+        margin: 4px 0 0 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      &:hover {
+        background-color: $soft-gray;
+      }
+
+      span {
+        font-family: $base-font-family;
+      }
+    }
+
+    img {
+      margin-right: 4px;
     }
   }
 
@@ -6597,6 +7024,11 @@ export default {
     flex-direction: column;
     align-items: flex-start;
 
+    @media only screen and (max-width: 600px) {
+      left: -120%;
+      width: 85vw;
+    }
+
     section:last-of-type {
       display: flex;
       flex-direction: row;
@@ -6617,6 +7049,12 @@ export default {
 
       &::-webkit-scrollbar-track {
         margin-top: 12px;
+      }
+
+      &:hover {
+        .absolute-icon {
+          visibility: visible;
+        }
       }
     }
 
@@ -6674,6 +7112,14 @@ export default {
     flex-wrap: wrap;
     gap: 8px;
 
+    @media only screen and (max-width: 600px) {
+      width: 85vw;
+      gap: 0px;
+    }
+
+    @media only screen and (min-width: 601px) and (max-width: 1250px) {
+    }
+
     div {
       font-size: 14px;
       width: 138px;
@@ -6682,8 +7128,15 @@ export default {
       padding: 8px;
       border-radius: 4px;
 
+      @media only screen and (max-width: 600px) {
+        width: 33.3%;
+        white-space: normal;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
       p {
-        font-size: 12px !important;
+        font-size: 11px !important;
         font-family: $thin-font-family;
         margin: 4px 0 0 0;
       }
@@ -7107,6 +7560,16 @@ export default {
     text-overflow: ellipsis;
     font-size: 15px !important;
   }
+
+  @media only screen and (max-width: 600px) {
+    p {
+      font-size: 13px;
+      max-width: 90%;
+    }
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 
 .author-time {
@@ -7206,14 +7669,24 @@ button:disabled {
 .divider-dot {
   position: relative;
   bottom: 0.2rem;
+
+  @media only screen and (max-width: 600px) {
+    display: none;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 
 .time {
   margin-left: 8px;
-  //   @media only screen and (max-width: 600px) {
-  //     max-width: 100px;
-  //     font-size: 10px !important;
-  //   }
+
+  @media only screen and (max-width: 600px) {
+    display: none;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 
 .news-container {
@@ -7520,7 +7993,7 @@ button:disabled {
   font-family: $base-font-family;
 
   @media only screen and (max-width: 600px) {
-    max-width: 320px;
+    max-width: 80%;
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
@@ -7888,6 +8361,42 @@ li {
   animation: fadeIn 1s forwards;
 }
 
+.m-cntnr {
+  @media only screen and (max-width: 600px) {
+    display: none;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
+}
+
+.xxl-margin-top {
+  margin-top: 32px;
+  margin-bottom: 12px;
+
+  @media only screen and (max-width: 600px) {
+    margin-top: 16px;
+    margin-bottom: 12px;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
+}
+
+.xxl-margin {
+  margin-right: 18px;
+  margin-top: 16px;
+
+  @media only screen and (max-width: 600px) {
+    margin-right: 0;
+    margin-left: -8px;
+    margin-top: 10px;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
+}
+
 .search {
   position: relative;
   font-family: $thin-font-family;
@@ -7920,6 +8429,13 @@ li {
     // border-bottom: 1px solid rgba(0, 0, 0, 0.128);
     padding: 48px 32px 8px 24px;
     z-index: 10;
+
+    @media only screen and (max-width: 600px) {
+      padding: 48px 0 0 0;
+    }
+
+    @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    }
   }
 
   .main {
@@ -7938,6 +8454,14 @@ li {
       overflow-y: scroll;
       overflow-x: hidden;
       padding: 16px 16px 16px 40px;
+
+      @media only screen and (max-width: 600px) {
+        padding: 0;
+        width: 100%;
+      }
+
+      @media only screen and (min-width: 601px) and (max-width: 1024px) {
+      }
     }
 
     aside {
@@ -7950,6 +8474,13 @@ li {
       overflow-y: scroll;
       overflow-x: hidden;
       padding-top: 32px;
+
+      @media only screen and (max-width: 600px) {
+        display: none;
+      }
+
+      @media only screen and (min-width: 601px) and (max-width: 1024px) {
+      }
 
       .section {
         // height: 30%;
@@ -7993,6 +8524,13 @@ li {
       width: 100%;
       min-height: 20vh;
       padding: 16px 32px 16px 64px;
+
+      @media only screen and (max-width: 600px) {
+        padding: 0;
+      }
+
+      @media only screen and (min-width: 601px) and (max-width: 1024px) {
+      }
     }
 
     .content-container {
@@ -8016,6 +8554,13 @@ li {
         transparent 98%
       );
       border-image-slice: 1;
+
+      @media only screen and (max-width: 600px) {
+        padding: 0;
+      }
+
+      @media only screen and (min-width: 601px) and (max-width: 1024px) {
+      }
     }
 
     .content-padding {
@@ -8402,6 +8947,13 @@ p {
   }
 }
 
+.activesquareTile {
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  background-color: $soft-gray;
+  color: $turq;
+  font-family: $base-font-family;
+}
+
 .activesquare {
   border: 0.5px solid rgba(0, 0, 0, 0.1);
   background-color: $soft-gray;
@@ -8687,7 +9239,15 @@ textarea::placeholder {
   overflow: hidden;
 
   @media only screen and (max-width: 600px) {
-    width: 29vw;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    height: 50px;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1250px) {
@@ -9230,6 +9790,7 @@ textarea::placeholder {
   }
   @media only screen and (max-width: 600px) {
     width: 95%;
+    padding: 0;
   }
 
   header {
@@ -9367,10 +9928,24 @@ textarea::placeholder {
   flex-wrap: wrap;
   padding: 24px 0;
   gap: 14px;
+
+  @media only screen and (max-width: 600px) {
+    // gap: 8px;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 
 .widecard {
   width: 51.25vw !important;
+
+  @media only screen and (max-width: 600px) {
+    width: 88vw !important;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 .cardwidth {
   // width: 28.75vw !important;
@@ -9387,6 +9962,13 @@ textarea::placeholder {
   animation: fadeIn 1s forwards;
   // display: flex;
   // flex-direction: row;
+
+  @media only screen and (max-width: 600px) {
+    width: 88vw;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 
   .main-body {
     display: flex;
@@ -9447,9 +10029,34 @@ textarea::placeholder {
   }
 }
 
+.mobile-body {
+  @media only screen and (max-width: 600px) {
+    display: flex;
+    flex-direction: column-reverse !important;
+    overflow-x: hidden !important;
+
+    aside {
+      display: flex;
+      flex-direction: row !important;
+      padding: 0;
+      margin: 0 !important;
+    }
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
+}
+
 .skeleton-loader {
   padding: 56px 32px 32px 48px;
   overflow: hidden;
+
+  @media only screen and (max-width: 600px) {
+    padding: 72px 8px 32px 8px;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
 }
 .skeleton {
   background-color: rgb(236, 236, 236);
@@ -9823,6 +10430,10 @@ textarea::placeholder {
   filter: invert(56%) sepia(96%) saturate(331%) hue-rotate(139deg) brightness(90%) contrast(87%);
 }
 
+.turq-text {
+  color: $turq;
+}
+
 .pink-filter {
   filter: invert(43%) sepia(88%) saturate(559%) hue-rotate(280deg) brightness(86%) contrast(83%) !important;
 }
@@ -9842,5 +10453,26 @@ filter ::selection {
 ::v-deep ::selection {
   background-color: $lite-blue !important;
   color: white;
+}
+
+.absolute-icon {
+  position: absolute;
+  right: 2px;
+  top: 2px;
+  background-color: $dark-black-blue;
+  border-radius: 100%;
+  padding: 3px 0 3px 3px;
+  cursor: pointer;
+  visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    // filter: invert(46%) sepia(35%) saturate(2345%) hue-rotate(323deg) brightness(106%) contrast(96%);
+    filter: invert(100%);
+    margin: 0;
+    padding: 0;
+  }
 }
 </style>

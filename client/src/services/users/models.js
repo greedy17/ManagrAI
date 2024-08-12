@@ -65,6 +65,8 @@ export default class User extends Model {
   static hasInstagramIntegration = new fields.Field({ readOnly: true })
   static instagramAccountRef = new fields.Field()
   static emailSignature = new fields.Field()
+  static companyDetails = new fields.Field()
+  static companyDetialsRef = new fields.Field()
 
 
   static fromAPI(json = {}) {

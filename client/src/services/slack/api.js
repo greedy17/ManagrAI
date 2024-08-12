@@ -21,6 +21,7 @@ const SLACK_CHANNEL_DETAILS = '/slack/channel-details/'
 const ADMIN_FORMS = '/slack/forms/admin/'
 const FORMS_REFRESH = '/slack/forms/form-refresh/'
 const ADMIN_FORM_INSTANCES = '/slack/instances/admin/'
+const SEND_TO_SLACK = '/slack/send-slack/'
 
 export default class SlackAPI {
   constructor(cls) {
@@ -178,7 +179,7 @@ export default class SlackAPI {
     try {
       const response = await this.client.get(ADMIN_FORMS, { params: { org_id } })
       return response.data
-    } catch(e) {
+    } catch (e) {
       apiErrorHandler({ apiName: 'SlackApi.getStaffForms' })
     }
   }
@@ -186,7 +187,7 @@ export default class SlackAPI {
     try {
       const response = await this.client.get(FORMS_REFRESH)
       return response
-    } catch(e) {
+    } catch (e) {
       apiErrorHandler({ apiName: 'SlackApi.getStaffForms' })
     }
   }
@@ -194,8 +195,16 @@ export default class SlackAPI {
     try {
       const response = await this.client.get(ADMIN_FORM_INSTANCES, { params: { org_id } })
       return response.data
-    } catch(e) {
+    } catch (e) {
       apiErrorHandler({ apiName: 'SlackApi.getStaffFormInstances' })
     }
+  }
+  async sendToSlack(data) {
+    return this.client
+      .post(SEND_TO_SLACK, { data })
+      .then(response => {
+        return SlackListResponse.fromAPI(response.data)
+      })
+      .catch(apiErrorHandler({ apiName: 'SlackAPI.listUserChannels' }))
   }
 }

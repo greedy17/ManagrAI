@@ -567,8 +567,30 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
-
-
+    async getCompanyDetails() {
+        try {
+            const res = await this.client.get('company-details')
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async addCompanyDetails(data) {
+        try {
+            const res = await this.client.post('company-details/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async deleteCompanyDetails(data) {
+        try {
+            const res = await this.client.post(`company-details/delete-details/`, { params: data })
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
 
 }
 
