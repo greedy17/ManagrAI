@@ -1238,7 +1238,7 @@ class JournalistContact(TimeStampModel):
         else:
             contact.tags.remove(tag)
         return contact.save()
-        
+
 
 class CompanyDetails(models.Model):
     details = models.TextField()

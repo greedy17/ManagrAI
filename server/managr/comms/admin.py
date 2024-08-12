@@ -37,6 +37,7 @@ class CustomNewsSource(admin.ModelAdmin):
         "is_active",
         "is_crawling",
         "last_scraped",
+        "newest_article_date",
         "article_link_attribute",
         "article_link_selector",
     )

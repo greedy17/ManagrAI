@@ -1005,19 +1005,27 @@ class CrawlerReport(TimeStampModel):
         total_url_count = 0
         total_spider_time = 0
         pair_time = 0
-        for i in range(len(self.task_times)):
-            if i % 2 != 0:
-                total_pair_time = max(self.task_times[i], pair_time)
-                total_spider_time += total_pair_time
+        # Iterate through `self.task_times` and process in intervals of 16
+        for i in range(0, len(self.task_times), 16):
+            # Ensure we don't go out of bounds
+            if i + 16 <= len(self.task_times):
+                current_interval = self.task_times[i : i + 16]
+                if len(current_interval) == 16:
+                    max_pair_time = max(current_interval)
+                    total_spider_time += max_pair_time
+                total_start_urls += sum(self.start_url_counts[i : i + 16])
+                total_url_count += sum(self.total_url_counts[i : i + 16])
             else:
-                pair_time = self.task_times[i]
-            total_start_urls += self.start_url_counts[i]
-            total_url_count += self.total_url_counts[i]
+                # Handle the last interval if it has less than 16 elements
+                remaining_time = self.task_times[i:]
+                total_spider_time += max(remaining_time, default=0)
+                total_start_urls += sum(self.start_url_counts[i:])
+                total_url_count += sum(self.total_url_counts[i:])
         minutes = int(round((total_spider_time / 60), 0))
         completed_in = f"{minutes} minutes"
         report_data = {
             "start_urls": total_start_urls,
-            "urls_processed": total_start_urls,
+            "urls_processed": total_url_count,
             "seconds": str(total_spider_time),
             "time": completed_in,
             "errors": all_errors,
