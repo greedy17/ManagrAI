@@ -446,7 +446,7 @@ class NewsSource(TimeStampModel):
         return stopped_sources
 
     @classmethod
-    def domain_list(cls, scrape_ready=False, new=False):
+    def domain_list(cls, scrape_ready=False, new=False, run_now=False):
         twelve_hours = datetime.now() - timedelta(hours=14)
         active_sources = cls.objects.filter(is_active=True).order_by("last_scraped")
         # filters sources that have been filled out but haven't been run yet to create the regex and scrape for the first time
@@ -456,7 +456,7 @@ class NewsSource(TimeStampModel):
             )
         # filters sources that are already scrapping
         elif scrape_ready and not new:
-            if settings.IN_DEV:
+            if settings.IN_DEV or run_now:
                 active_sources = active_sources.filter(is_crawling=True)
             else:
                 active_sources = active_sources.filter(

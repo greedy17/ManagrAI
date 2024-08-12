@@ -2,6 +2,7 @@ import scrapy
 import logging
 import datetime
 import time
+import json
 from scrapy import signals
 from django.utils import timezone
 from django.conf import settings
@@ -265,7 +266,8 @@ class NewsSpider(scrapy.Spider):
                         if "text" not in path:
                             try:
                                 parser.parse(selector)
-                            except Exception:
+                            except Exception as e:
+                                print(e)
                                 continue
                     if selector is not None:
                         fields_dict[key] = path
@@ -313,6 +315,7 @@ class NewsSpider(scrapy.Spider):
         except IntegrityError:
             return
         except Exception as e:
+            print(e)
             self.error_log.append(f"URL: {source.domain} | Error: {str(e)}")
             if source.error_log is None or len(source.error_log) <= 5:
                 source.add_error(f"{str(e)} {meta_tag_data}\n")

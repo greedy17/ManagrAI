@@ -50,6 +50,9 @@ def get_domain(url):
 
 
 def extract_date_from_text(text):
+    if "Published" in text and "Updated" in text:
+        text = text.split("Updated")
+        text[0] = text[0].replace("Publish:", "")
     if isinstance(text, list):
         if len(text) > 0:
             text = text[0]
@@ -60,13 +63,15 @@ def extract_date_from_text(text):
         return str(parsed_date)
     except parser.ParserError:
         pass
-    text = text.replace("\n", "").strip()
+    text = text.replace("\n", "").replace("\t", "").strip()
     patterns = [
         r"(\d{1,2} [A-Za-z]+ \d{4})",
         r"([A-Za-z]+(?: \d{1,2},)? \d{4})",
         r"([A-Za-z]{3}\. \d{1,2}, \d{4} \d{1,2}:\d{2} [apAP]\.m\.)",
         r"(\w+\s\d+,\s\d{4})",
         r"(?P<date>\w+ \d{1,2}, \d{4}) at (?P<time>\d{1,2}:\d{2} \w{2})",
+        r"(\d{1,2}:\d{2} [ap]\.m\. ET [A-Za-z]{3}\. \d{1,2}, \d{4})",
+        r"(\w+ \d{1,2}, \d{4}) at (\d{1,2}:\d{2}[ap]m)(?: \w{3})?",
     ]
     date_str = text
     strptime_formats = [
@@ -76,6 +81,7 @@ def extract_date_from_text(text):
         "%b. %d, %Y %I:%M %p",
         "%Y-%m-%dT%H:%M:%S%z",
         "%B %d, %Y at %I:%M %p",
+        "%I:%M %p ET %b. %d, %Y",
     ]
     for pattern in patterns:
         match = re.search(pattern, text)
@@ -83,7 +89,8 @@ def extract_date_from_text(text):
             date_str = match.group(1)
             if ":" in date_str:
                 colon_idx = date_str.index(":")
-                hour = date_str[colon_idx - 2 : colon_idx]
+                start_index = colon_idx - 2 if colon_idx >= 2 else 0
+                hour = date_str[start_index:colon_idx]
                 if int(hour) < 10 and " " in hour:
                     hour = " 0" + str(int(hour))
                     date_str = date_str[: colon_idx - 2] + hour + date_str[colon_idx:]
@@ -836,3 +843,13 @@ def separate_weeks(weeks, delta=7):
         dates.append((date_from, current_to))
         current_to = date_from
     return dates
+
+
+# def submit_job(url, id):
+#     response = batch_client.submit_job(
+#         jobName=f"crawler-{id}",
+#         jobQueue="crawler-queue",
+#         jobDefinition="web-scraper-prod",
+#         containerOverrides={"command": ["server/manage.py", "crawl_spider.py", url]},
+#     )
+#     return response
