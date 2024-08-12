@@ -624,7 +624,7 @@ def _share_client_summary(summary, clips, user_email):
     return
 
 
-@background
+@background()
 def _get_meta_account_info(user_id):
     user = User.objects.get(id=user_id)
     ig_account = user.instagram_account
@@ -635,7 +635,7 @@ def _get_meta_account_info(user_id):
     return
 
 
-@background
+@background()
 def _process_user_hashtag_list(user_id):
     user = User.objects.get(id=user_id)
     ig = user.instagram_account
@@ -662,7 +662,7 @@ def _process_user_hashtag_list(user_id):
     return
 
 
-@background
+@background()
 def _run_spider_batch(urls):
     from subprocess import Popen
 
@@ -697,3 +697,33 @@ def _add_jounralist_to_db(data, verified):
     except Exception as e:
         logger.exception(str(e))
     return
+
+
+@background()
+def news_source_report(report_type):
+    user = User.objects.get(email="zach@mymanagr.com")
+    if report_type == "problem":
+        domains = NewsSource.problem_urls()
+    elif report_type == "stopped":
+        domains = NewsSource.get_stopped_sources()
+
+    try:
+        blocks = [
+            block_builders.simple_section(f"Report type: {report_type}"),
+            block_builders.simple_section(domains),
+        ]
+        slack_res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+    except Exception as e:
+        blocks = [
+            block_builders.simple_section(f"Report type: {report_type}"),
+            block_builders.simple_section(str(e)),
+        ]
+        slack_res = slack_requests.send_channel_message(
+            user.slack_integration.channel,
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )

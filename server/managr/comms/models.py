@@ -441,8 +441,8 @@ class NewsSource(TimeStampModel):
         news = NewsSource.objects.filter(is_crawling=True)
         for n in news:
             article = n.newest_article_date()
-            if article and (today - article).days >= 7:
-                stopped_sources.append((n.domain, article))
+            if article and (today - article).days >= 3:
+                stopped_sources.append((n.domain, str(article.publish_date)))
         return stopped_sources
 
     @classmethod
