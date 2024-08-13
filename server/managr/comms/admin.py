@@ -37,12 +37,11 @@ class CustomNewsSource(admin.ModelAdmin):
         "is_active",
         "is_crawling",
         "last_scraped",
-        "newest_article_date",
         "article_link_attribute",
         "article_link_selector",
     )
     ordering = ("-last_scraped", "is_active")
-    readonly_fields = ("access_count",)
+    readonly_fields = ("access_count", "newest_article_date")
     search_fields = ("domain", "site_name")
     list_filter = ("is_active", "is_crawling")
 

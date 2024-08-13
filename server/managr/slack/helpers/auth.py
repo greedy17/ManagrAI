@@ -109,6 +109,7 @@ class OAuthLinkBuilder:
             self.state_param,
             self.redirect_uri_param,
             self.workspace_scopes_param,
+            self.user_scopes_param,
         ]
         return slack_const.SLACK_OAUTH_AUTHORIZE_ROOT + "?" + "&".join(params)
 

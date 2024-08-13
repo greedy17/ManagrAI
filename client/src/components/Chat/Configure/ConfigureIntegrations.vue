@@ -750,7 +750,7 @@ export default {
     async onIntegrateSlack() {
       if (this.user.isAdmin) {
         const confirmation = confirm(
-          'Integrating Managr to your slack workspace will request access to a channel (you can choose a new one or an existing one) we will post a message letting the members of that channel know they can now integrate their Slack accounts',
+          'Integrating Managr to your Slack workspace will request access to a channel (you can choose a new one or an existing one) we will post a message letting the members of that channel know they can now integrate their Slack accounts',
         )
         if (!confirmation) {
           return

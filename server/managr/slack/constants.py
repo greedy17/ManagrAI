@@ -71,7 +71,8 @@ USER_SCOPES = ["channels:read"]
 # Link Types to determine which type of OAuth link to generate
 WORKSPACE = "WORKSPACE"
 USER = "USER"
-OAUTH_LINK_TYPES = [WORKSPACE, USER]
+OAUTH_LINK_TYPES = [WORKSPACE]
+
 
 TOKEN_TYPE_BOT = "bot"
 
