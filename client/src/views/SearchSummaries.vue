@@ -871,6 +871,7 @@
                     v-for="style in defaultWritingStyles"
                     :key="style.title"
                     :class="{ activesquare: writingStyleTitle === style.title }"
+                    :title="style.title"
                   >
                     <span>
                       <img
@@ -881,7 +882,7 @@
                       />
                       {{ style.title }}
                     </span>
-                    <p :title="style.style">{{ style.style }}</p>
+                    <p>{{ style.style }}</p>
                   </div>
                   <div
                     @mouseenter="setIndex(i)"
@@ -891,6 +892,7 @@
                     v-for="(style, i) in userWritingStyles"
                     :key="i"
                     :class="{ activeswitch: writingStyleTitle === style.title }"
+                    :title="style.title"
                   >
                     <span class="pink-text">
                       <img
@@ -901,7 +903,7 @@
                       />
                       {{ style.title }}
                     </span>
-                    <p class="pink-text" :title="style.style">{{ style.style }}</p>
+                    <p class="pink-text">{{ style.style }}</p>
 
                     <span
                       v-if="hoverIndex === i"
@@ -962,12 +964,12 @@
                 v-show="showingDetails"
                 class="drop-options-alternate"
               >
-                <header class="space-between">
-                  <section class="h-padding">
+                <header style="padding-top: 8px; padding-bottom: 8px" class="space-between">
+                  <!-- <section class="h-padding">
                     <section>
                       <p style="margin: 0; padding: 4px 0 0 4px; color: #9596b4">Personal</p>
                     </section>
-                  </section>
+                  </section> -->
 
                   <button
                     @click="toggleDetailsInputModal"
@@ -975,6 +977,20 @@
                     style="margin-right: 4px"
                   >
                     <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Details
+                  </button>
+
+                  <button
+                    :disabled="!detailTitle"
+                    @click="clearDetails"
+                    class="secondary-button-no-border borderless"
+                  >
+                    <img
+                      style="margin-right: 4px"
+                      src="@/assets/images/remove.svg"
+                      height="14px"
+                      alt=""
+                    />
+                    Clear
                   </button>
                 </header>
 
@@ -985,6 +1001,7 @@
                     v-for="detail in allCompanyDetails"
                     :key="detail.title"
                     :class="{ activesquareTile: detailTitle === detail.title }"
+                    :title="detail.title"
                   >
                     <span class="turq-text">
                       <img
@@ -995,7 +1012,7 @@
                       />
                       {{ detail.title }}
                     </span>
-                    <p class="turq-text" :title="detail.details">{{ detail.details }}</p>
+                    <p class="turq-text">{{ detail.details }}</p>
 
                     <span @click="deleteCompanyDetails(detail.id)" class="absolute-icon">
                       <img src="@/assets/images/close.svg" height="10px" alt="" />
@@ -1018,6 +1035,8 @@
               </div>
             </div>
 
+            <!-- <div style="width: 30%" v-if="mainView === 'discover'"></div> -->
+
             <div
               v-if="mainView !== 'write' && mainView !== 'discover'"
               style="margin-top: 16px"
@@ -1038,14 +1057,6 @@
               </div>
 
               <div
-                @click.stop="toggleCompany"
-                :class="{ 'soft-gray-bg': showCompanySelection }"
-                class="img-container right-margin-s"
-              >
-                <img class="" src="@/assets/images/user-id.svg" height="14px" alt="" />
-              </div>
-
-              <div
                 v-outside-click="hideDate"
                 class="container-right-abs"
                 v-show="showDateSelection"
@@ -1062,30 +1073,6 @@
                   <span style="margin: 0 12px"> - </span>
 
                   <input class="area-input-smallest" type="date" :min="minDate" v-model="dateEnd" />
-                </div>
-              </div>
-
-              <div
-                v-outside-click="hideCompany"
-                class="container-right-abs"
-                v-show="showCompanySelection"
-              >
-                <p>Company</p>
-                <div class="input-container-small">
-                  <input
-                    style="border: none; outline: none; padding: 10px 8px 10px 0px; width: 100%"
-                    class="text-area-input"
-                    type="text"
-                    v-model="selectedOrg"
-                    placeholder="Company..."
-                  />
-
-                  <img
-                    style="filter: invert(40%); margin-right: 20px"
-                    src="@/assets/images/pencil.svg"
-                    height="14px"
-                    alt=""
-                  />
                 </div>
               </div>
             </div>
@@ -1386,16 +1373,24 @@
                 <div class="s-tooltip">Learn this style</div>
               </div>
 
-              <div class="image-container s-wrapper">
-                <img
-                  style="cursor: pointer; filter: invert(40%)"
-                  src="@/assets/images/clipboard.svg"
-                  height="14px"
-                  alt=""
-                  @click="copyText"
-                />
-
-                <div class="s-tooltip">{{ copyTip }}</div>
+              <div
+                @click.stop="toggleCompany"
+                :class="{ 'soft-gray-bg': showCompanySelection || detailTitle }"
+                class="image-container s-wrapper"
+                v-if="mainView !== 'web'"
+              >
+                <!-- :class="{ 'turq-filter': detailTitle }" -->
+                <img src="@/assets/images/building.svg" height="14px" alt="" />
+                <div
+                  style="bottom: 115%; width: 200px; left: -40px"
+                  v-if="mainView !== 'discover'"
+                  class="s-tooltip"
+                >
+                  Company Details: for pitching
+                </div>
+                <div style="bottom: 115%; width: 200px; left: -40px" v-else class="s-tooltip">
+                  Company Details: for pitching tips
+                </div>
               </div>
 
               <div
@@ -1439,7 +1434,7 @@
                     class="invert"
                     :class="{ dim: !(searchSaved || savedSearch) }"
                   />
-                  <div style="bottom: 115%" class="s-tooltip">
+                  <div style="bottom: 115%; width: 200px; left: -40px" class="s-tooltip">
                     {{ searchSaved || savedSearch ? emailText : 'Save search to enable alerts' }}
                   </div>
                 </div>
@@ -1461,6 +1456,18 @@
                   />
                   <div class="s-tooltip">Disable</div>
                 </div>
+              </div>
+
+              <div class="image-container s-wrapper">
+                <img
+                  style="cursor: pointer; filter: invert(40%)"
+                  src="@/assets/images/clipboard.svg"
+                  height="14px"
+                  alt=""
+                  @click="copyText"
+                />
+
+                <div class="s-tooltip">{{ copyTip }}</div>
               </div>
 
               <button
@@ -1489,6 +1496,90 @@
                   Save
                 </div>
               </button>
+
+              <div
+                v-outside-click="hideCompany"
+                v-show="showCompanySelection && mainView !== 'web'"
+                class="source-dropdown"
+                style="margin: 0; bottom: 16px"
+              >
+                <div class="drop-options-alternate">
+                  <header style="padding-top: 8px; padding-bottom: 8px" class="space-between">
+                    <!-- <section class="h-padding">
+                      <section>
+                        <p style="margin: 4px 0 0 4px; color: #9596b4">Personal</p>
+
+                        
+                      </section>
+                    </section> -->
+
+                    <button
+                      @click="toggleDetailsInputModal"
+                      class="secondary-button-no-border"
+                      style="margin-right: 4px"
+                    >
+                      <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Details
+                    </button>
+
+                    <button
+                      :disabled="!detailTitle"
+                      @click="clearDetails"
+                      class="secondary-button-no-border borderless"
+                    >
+                      <img
+                        style="margin-right: 4px"
+                        src="@/assets/images/remove.svg"
+                        height="14px"
+                        alt=""
+                      />
+                      Clear
+                    </button>
+                  </header>
+
+                  <section v-if="allCompanyDetails.length">
+                    <div
+                      style="position: relative"
+                      @click="addDetailsAlt(detail.title, detail.details)"
+                      v-for="(detail, i) in allCompanyDetails"
+                      :key="detail.title"
+                      :class="{ activesquareTile: detailTitle === detail.title }"
+                      :title="detail.title"
+                    >
+                      <span class="turq-text">
+                        <img
+                          class="turq-filter"
+                          src="@/assets/images/logo.png"
+                          height="11px"
+                          alt=""
+                        />
+                        {{ detail.title }}
+                      </span>
+                      <p class="turq-text">{{ detail.details }}</p>
+
+                      <span
+                        v-if="detailIndex === i"
+                        @click="deleteCompanyDetails(detail.id)"
+                        class="absolute-icon"
+                      >
+                        <img src="@/assets/images/close.svg" height="10px" alt="" />
+                      </span>
+                    </div>
+                  </section>
+
+                  <section style="padding: 16px" v-else>
+                    Your saved details
+                    <span>
+                      <img
+                        style="margin-right: 4px"
+                        src="@/assets/images/building.svg"
+                        height="12px"
+                        alt=""
+                      />
+                      will appear here.</span
+                    >
+                  </section>
+                </div>
+              </div>
             </div>
           </header>
           <section ref="loadedContent" class="content-container">
@@ -1597,7 +1688,12 @@
                 v-html="summary"
               ></div>
 
-              <div @click="grabJournalist($event)" style="margin-top: 16px" class="" v-else>
+              <div
+                @click="grabJournalist($event, 'the person')"
+                style="margin-top: 16px"
+                class=""
+                v-else
+              >
                 <div class="pre-text alternate" v-html="summary"></div>
               </div>
               <div
@@ -1867,7 +1963,7 @@
 
             <div v-if="mainView === 'news'" class="cards-container">
               <div
-                v-for="article in articlesFiltered"
+                v-for="(article, i) in articlesFiltered"
                 :key="article.id"
                 class="card"
                 :class="{ widecard: article.summary && mainView !== 'web' }"
@@ -1892,17 +1988,33 @@
                   </div>
                   <div class="main-footer">
                     <div style="border-bottom: none" class="author-time">
-                      <span style="cursor: pointer" class="author row">
+                      <div
+                        @mouseenter="changeJournalistName(i)"
+                        @mouseleave="removeNameIndex"
+                        @click="selectJournalist(article)"
+                        style="cursor: pointer"
+                        class="author row"
+                        title="View Bio"
+                      >
                         <img
                           style="margin-right: 4px"
                           src="@/assets/images/profile.svg"
                           height="12px"
                           alt=""
                         />
-                        <p style="text-decoration: none; border: none">
+                        <p
+                          v-if="journalistIndex === i && showingName"
+                          style="text-decoration: none; border: none"
+                        >
+                          View Bio
+                        </p>
+
+                        <p v-else style="text-decoration: none; border: none">
                           {{ extractJournalist(article.author) }}
                         </p>
-                      </span>
+
+                        <!-- <div class="s-tooltip">View Bio</div> -->
+                      </div>
                       <span class="divider-dot">.</span>
                       <span class="off-gray time">{{
                         getTimeDifferenceInMinutes(article.publish_date)
@@ -1910,7 +2022,7 @@
                     </div>
                     <div class="footer-icon-container">
                       <div class="row">
-                        <span class="s-wrapper">
+                        <!-- <span class="s-wrapper">
                           <button
                             @click="selectJournalist(article)"
                             class="borderless img-container-button"
@@ -1924,7 +2036,7 @@
                             />
                           </button>
                           <span class="s-tooltip"> View Bio </span>
-                        </span>
+                        </span> -->
 
                         <span v-if="!article.summary" class="s-wrapper">
                           <div
@@ -1951,7 +2063,7 @@
                             />
                           </button>
 
-                          <span class="s-tooltip">Summarize</span>
+                          <span style="width: 80px" class="s-tooltip">Summarize</span>
                         </span>
 
                         <img
@@ -2837,6 +2949,9 @@ export default {
   },
   data() {
     return {
+      detailIndex: null,
+      journalistIndex: null,
+      showingName: false,
       hoverIndex: null,
       allCompanyDetails: [],
       detailTitle: '',
@@ -2943,7 +3058,7 @@ export default {
 
         ['clean'], // remove formatting button
       ],
-      selectedOrg: null,
+      selectedOrg: '',
       bccEmail: '',
       targetEmail: '',
       revisedPitch: '',
@@ -3285,9 +3400,6 @@ export default {
     defaultTime.setHours(8, 0)
     this.selectedTime = defaultTime.toISOString().slice(0, 16)
 
-    if (this.user) {
-      this.selectedOrg = this.user.organizationRef.name
-    }
     this.$store.dispatch('updateListName', 'news')
     this.getWritingStyles()
     this.getCompanyDetails()
@@ -3366,6 +3478,7 @@ export default {
       } finally {
         this.detailTitle = ''
         this.currentDetails = ''
+        this.selectedOrg = ''
         this.getCompanyDetails()
         this.refreshUser()
       }
@@ -3500,13 +3613,54 @@ export default {
       this.showingWritingStyles = false
     },
     addDetails(title, deets) {
-      this.currentDetails = deets
+      if (title === this.detailTitle) {
+        console.log('TITLE HERE', title, this.detailTitle)
+        this.detailTitle = ''
+        this.selectedOrg = ''
+        this.showingDetails = false
+        this.showingAllDetails = false
+      }
+      this.selectedOrg = deets
       this.detailTitle = title
       this.showingDetails = false
       this.showingAllDetails = false
     },
+    addDetailsAlt(title, deets) {
+      if (title === this.detailTitle) {
+        console.log('TITLE HERE', title, this.detailTitle)
+        this.detailTitle = ''
+        this.selectedOrg = ''
+        this.showCompanySelection = false
+      }
+      this.selectedOrg = deets
+      this.detailTitle = title
+      this.showCompanySelection = false
+    },
+    clearDetails() {
+      this.currentDetails = ''
+      this.detailTitle = ''
+      this.selectedOrg = ''
+      this.showingDetails = false
+      this.showingAllDetails = false
+      this.showCompanySelection = false
+    },
     setIndex(i) {
       this.hoverIndex = i
+    },
+    // setDetailIndex(i) {
+    //   this.detailIndex === i
+    // },
+    // removeDetailIndex() {
+    //   this.detailIndex === null
+    // },
+    changeJournalistName(i) {
+      this.journalistIndex = i
+      this.showingName = true
+    },
+    removeNameIndex() {
+      console.log('HERE IM LEAVING')
+      this.journalistIndex = 475
+      this.showingName = false
     },
     removeIndex() {
       this.hoverIndex = null
@@ -3904,7 +4058,7 @@ export default {
         const res = await Comms.api.getJournalistBio({
           journalist: this.currentJournalist,
           outlet: this.currentPublication,
-          content: this.summary,
+          company: this.selectedOrg,
           search: false,
         })
 
@@ -4158,6 +4312,12 @@ export default {
       }
     },
     grabJournalist(event) {
+      if (!this.isPaid && this.searchesUsed >= 10) {
+        this.openPaidModal(
+          'You have reached your usage limit for the month. Please upgrade your plan.',
+        )
+        return
+      }
       if (event.target.tagName === 'BUTTON') {
         this.currentJournalistBio = ''
         this.currentJournalistImages = []
@@ -4809,7 +4969,7 @@ export default {
       try {
         const res = await Comms.api.generatePitch({
           type: this.newSearch,
-          instructions: this.currentDetails,
+          instructions: this.selectedOrg,
           style: this.writingStyle,
         })
         this.summary = res.pitch.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
@@ -5077,6 +5237,7 @@ export default {
     },
     switchMainView(view) {
       this.resetAll()
+      this.clearDetails()
       if (view !== this.mainView) {
         this.mainView = view
         this.$store.dispatch('updateListName', view)
@@ -5833,6 +5994,7 @@ export default {
           pitch: this.summary,
           instructions: this.newTemplate,
           style: this.writingStyle,
+          details: this.selectedOrg,
         })
 
         this.summary = res.pitch
@@ -7546,19 +7708,24 @@ export default {
 }
 
 .author {
-  display: inline-block;
   max-width: 100%;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   margin-right: 8px;
   color: $base-gray;
+  border-radius: 16px;
+  padding: 5px 6px;
 
   p {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
     font-size: 15px !important;
+  }
+
+  &:hover {
+    background-color: $soft-gray;
   }
 
   @media only screen and (max-width: 600px) {
@@ -8985,6 +9152,21 @@ p {
   img {
     filter: invert(40%);
   }
+
+  &:hover {
+    background-color: $soft-gray;
+  }
+}
+
+.image-container-nf {
+  border-radius: 50%;
+  padding: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: $off-white;
 
   &:hover {
     background-color: $soft-gray;

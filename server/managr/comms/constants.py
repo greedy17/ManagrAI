@@ -369,13 +369,13 @@ def OPEN_AI_PITCH(date, type, instructions, style=False):
 
 
 OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS = (
-    lambda pitch, instructions, style: f"""
+    lambda pitch, instructions, style, details: f"""
     Adjust and rewrite the content per the instructions below, adhering to the desired writing style guidelines. The content should be in HTML format with proper spacing and separate paragraphs for each section (greeting, introduction, closing, etc). Do not include ```html``` in your response.\n
     
     Content: {pitch}\n
     Instructions: {instructions}\n
     Writing Style: {style}
-    
+    Additional details {details}
     """
 )   
 

@@ -1239,6 +1239,7 @@ class PitchViewSet(
         instructions = request.data.get("instructions")
         pitch = request.data.get("pitch")
         style = request.data.get("style")
+        details = request.data.get("details")
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -1248,7 +1249,7 @@ class PitchViewSet(
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS(
-                    pitch, instructions, style
+                    pitch, instructions, style, details
                 )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
@@ -2339,7 +2340,6 @@ class DiscoveryViewSet(
         user = request.user
         journalist = request.data.get("journalist")
         outlet = request.data.get("outlet")
-        content = request.data.get("content")
         company = request.data.get("company")
         search = request.data.get("search")
         social = request.data.get("social")
@@ -2376,8 +2376,9 @@ class DiscoveryViewSet(
                 elif search:
                     prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(journalist, results, company, text)
                 else:
+                    print('CONTENT HERE', company)
                     prompt = comms_consts.OPEN_AI_DISCOVERY_RESULTS_PROMPT(
-                        journalist, results, content, text
+                        journalist, results, company, text
                     )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
