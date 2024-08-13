@@ -527,7 +527,11 @@
           </div>
 
           <div class="card__footer">
-            <button @click="revokeSlack" v-if="hasSlackIntegration" class="long-button connected">
+            <button
+              @click="onRevoke('SLACK')"
+              v-if="hasSlackIntegration"
+              class="long-button connected"
+            >
               <div style="margin-left: 4px" v-if="revoking" class="loading-small">
                 <div class="dot"></div>
                 <div class="dot"></div>
@@ -548,8 +552,8 @@
                 <div class="gsi-material-button-icon">
                   <img height="22px" src="@/assets/images/slackLogo.png" alt="" />
                 </div>
-                <span class="gsi-material-button-contents">Continue with Slack</span>
-                <span style="display: none">Continue with Slack</span>
+                <span class="gsi-material-button-contents">Add to Slack</span>
+                <span style="display: none">Add to Slack</span>
               </div>
             </button>
           </div>
@@ -750,7 +754,7 @@ export default {
     async onIntegrateSlack() {
       if (this.user.isAdmin) {
         const confirmation = confirm(
-          'Integrating Managr to your slack workspace will request access to a channel (you can choose a new one or an existing one) we will post a message letting the members of that channel know they can now integrate their Slack accounts',
+          'Integrating ManagrAI to your Slack workspace will request access to a channel (you can choose a new one or an existing one) we will post a message letting the members of that channel know they can now integrate their Slack accounts',
         )
         if (!confirmation) {
           return
