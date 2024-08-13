@@ -441,13 +441,13 @@ class NewsSource(TimeStampModel):
         news = NewsSource.objects.filter(is_crawling=True)
         for n in news:
             article = n.newest_article_date()
-            if article and (today - article).days >= 7:
-                stopped_sources.append((n.domain, article))
+            if article and (today - article).days >= 3:
+                stopped_sources.append((n.domain, str(article.publish_date)))
         return stopped_sources
 
     @classmethod
-    def domain_list(cls, scrape_ready=False, new=False):
-        twelve_hours = datetime.now() - timedelta(hours=14)
+    def domain_list(cls, scrape_ready=False, new=False, run_now=False):
+        six_hours = datetime.now() - timedelta(hours=6)
         active_sources = cls.objects.filter(is_active=True).order_by("last_scraped")
         # filters sources that have been filled out but haven't been run yet to create the regex and scrape for the first time
         if scrape_ready and new:
@@ -456,12 +456,10 @@ class NewsSource(TimeStampModel):
             )
         # filters sources that are already scrapping
         elif scrape_ready and not new:
-            if settings.IN_DEV:
+            if settings.IN_DEV or run_now:
                 active_sources = active_sources.filter(is_crawling=True)
             else:
-                active_sources = active_sources.filter(
-                    is_crawling=True, last_scraped__lt=twelve_hours
-                )
+                active_sources = active_sources.filter(is_crawling=True, last_scraped__lt=six_hours)
         # filters sources that were just added and don't have scrape data yet
         elif not scrape_ready and new:
             active_sources = active_sources.filter(article_link_attribute__isnull=True)
@@ -1238,7 +1236,7 @@ class JournalistContact(TimeStampModel):
         else:
             contact.tags.remove(tag)
         return contact.save()
-        
+
 
 class CompanyDetails(models.Model):
     details = models.TextField()

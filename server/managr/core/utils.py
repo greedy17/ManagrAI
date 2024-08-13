@@ -1,5 +1,6 @@
 import calendar
 import json
+import base64
 from copy import copy
 from django.conf import settings
 from django.utils import timezone
@@ -529,3 +530,10 @@ def ask_managr_data_collector(user_id, resource_type, resource_id):
         if workflow_check.transcript_analysis:
             data_from_resource["analysis"] = workflow_check.transcript_analysis
     return data_from_resource
+
+
+def decode_jwt(token):
+    header, payload, signature = token.split(".")
+    padding = "=" * (4 - (len(payload) % 4))
+    payload += padding
+    return base64.urlsafe_b64decode(payload).decode("utf-8")
