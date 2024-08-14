@@ -255,7 +255,7 @@
       <div class="bar-header">
         <div class="header">
           <!-- <p>Users: {{ orderedActive.length }}</p> -->
-          <p>{{ user.organizationRef.name }}</p>
+          <p class="mobile-width">{{ user.organizationRef.name }}</p>
           <small
             @click="changeActivePage('users')"
             class="pointer"
@@ -355,8 +355,10 @@
 
         <div class="users-container">
           <div class="row smaller-text">
-            <div class="team-width">{{ user.fullName.trim() ? user.fullName : 'INVITED' }}</div>
-            <div class="team-width">{{ user.email }}</div>
+            <div class="team-width mobile-width">
+              {{ user.fullName.trim() ? user.fullName : 'INVITED' }}
+            </div>
+            <div class="team-width mobile-width">{{ user.email }}</div>
             <div class="team-width"></div>
             <div class="team-width"></div>
           </div>
@@ -1015,11 +1017,25 @@ export default {
   font-family: $base-font-family;
   color: $dark-black-blue;
   @media only screen and (max-width: 600px) {
-    padding: 0rem 2rem 0.5rem 2rem;
+    padding: 120px 10px 0.5rem 10px;
     height: 90vh;
     h1 {
       margin: 0.55rem 0 0.25rem;
     }
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    padding: 120px 24px 0.5rem 24px;
+    height: 90vh;
+  }
+}
+
+.mobile-width {
+  @media only screen and (max-width: 600px) {
+    max-width: 20vw;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
@@ -1052,6 +1068,12 @@ export default {
 
     &:hover {
       opacity: 0.6;
+    }
+
+    @media only screen and (max-width: 600px) {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 

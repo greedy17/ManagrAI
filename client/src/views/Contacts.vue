@@ -463,7 +463,7 @@
 
     <div class="top-row">
       <section>
-        <div class="space-between white-container">
+        <div style="margin-left: -2px" class="space-between white-container">
           <div class="row" style="padding-bottom: 8px">
             <div style="font-size: 16px" v-if="loading" class="loading-small">
               <p style="margin: 0; margin-right: 8px">Gathering your contacts</p>
@@ -1412,7 +1412,7 @@ export default {
   padding: 96px 80px 0 80px;
   font-family: $thin-font-family;
   color: $dark-black-blue;
-  overflow: hidden;
+  overflow: hidden !important;
 
   header {
     padding: 24px 0;
@@ -1421,11 +1421,9 @@ export default {
   @media only screen and (max-width: 600px) {
     padding: 96px 0 48px 0;
   }
-  @media only screen and (min-width: 751px) and (max-width: 1393px) {
-    padding: 40px 16px;
-  }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    padding: 96px 0 48px 0;
   }
 }
 
@@ -1446,7 +1444,7 @@ export default {
   flex-direction: row;
   align-items: flex-start;
   flex-wrap: wrap;
-  gap: 24px;
+  gap: 22px;
   height: 70vh;
   margin-top: 16px;
 
@@ -1454,9 +1452,11 @@ export default {
 
   @media only screen and (max-width: 750px) {
     height: 85vh;
+    width: 100%;
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    height: 78vh;
   }
 }
 
@@ -1464,7 +1464,7 @@ export default {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 4px;
   padding: 0 16px;
-  width: 27.175vw;
+  width: 48.3%;
   background-color: white;
   transition: all 0.5s;
   // height: 200px;
@@ -1484,8 +1484,8 @@ export default {
     width: 100%;
   }
 
-  @media only screen and (min-width: 751px) and (max-width: 1393px) {
-    width: 37.5vw;
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    width: 48%;
   }
 
   .contact-header {
@@ -1665,19 +1665,20 @@ h3 {
     padding: 0;
   }
 
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    padding: 0;
+  }
+
   aside {
     width: 29vw;
     padding: 28px 24px 16px 64px;
 
-    @media only screen and (max-width: 750px) {
-      // width: 24vw;
-      // margin-right: 10px;
-      // padding-left: 8px;
+    @media only screen and (max-width: 600px) {
       display: none;
     }
 
-    @media only screen and (min-width: 751px) and (max-width: 1393px) {
-      margin-right: 8px;
+    @media only screen and (min-width: 601px) and (max-width: 1024px) {
+      padding: 28px 16px 16px 24px;
     }
 
     img {
@@ -1691,6 +1692,10 @@ h3 {
     padding: 16px 16px 16px 32px;
 
     @media only screen and (max-width: 600px) {
+      padding: 16px 8px 16px 12px;
+    }
+
+    @media only screen and (min-width: 601px) and (max-width: 1024px) {
       padding: 16px 8px 16px 12px;
     }
   }
@@ -1910,7 +1915,7 @@ h2 {
 }
 
 .search {
-  @media only screen and (max-width: 750px) {
+  @media only screen and (max-width: 600px) {
     width: 50vw;
     display: flex;
     align-items: center;
@@ -1918,7 +1923,7 @@ h2 {
     margin: 8px 0;
   }
 
-  @media only screen and (min-width: 751px) and (max-width: 1393px) {
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
     width: 50vw;
   }
 
@@ -1940,12 +1945,12 @@ h2 {
   justify-content: flex-start;
   padding: 12px 20px 12px 10px;
 
-  @media only screen and (max-width: 750px) {
+  @media only screen and (max-width: 600px) {
     width: 95%;
   }
 
-  @media only screen and (min-width: 751px) and (max-width: 1393px) {
-    width: 100%;
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    width: 50%;
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
