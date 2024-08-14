@@ -346,6 +346,7 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     microsoftClientId    = each.app_config.microsoft_client_id
     microsoftClientSecret= each.app_config.microsoft_client_secret
     microsoftRedirectUri = each.app_config.microsoft_redirect_uri
+    scraperApiKey        = each.app_config.scraper_api_key
   })
 }
 

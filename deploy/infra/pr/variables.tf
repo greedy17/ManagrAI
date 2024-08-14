@@ -179,6 +179,8 @@ variable "app_config" {
     microsoft_client_id    = string
     microsoft_client_secret= string
     microsoft_redirect_uri = string
+
+    scraper_api_key        = string
   })
 }
 

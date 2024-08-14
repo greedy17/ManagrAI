@@ -4,6 +4,8 @@
     "image": "${app_image_scheduled_tasks}",
     "networkMode": "awsvpc",
     "command": ${command},
+    "fargate_cpu": ${fargate_cpu},
+    "fargate_memory":${fargate_memory},
     "environment": [
       { "name": "DD_SERVICE", "value": "managr-server-scheduled-tasks" },
       { "name": "DD_ENV", "value": "fargate:${environment}" },
@@ -346,6 +348,10 @@
       {
         "name": "MICROSOFT_REDIRECT_URI",
         "valueFrom": "${config_secret_arn}:microsoftRedirectUri::"
+      },
+      {
+        "name": "SCRAPER_API_KEY",
+        "valueFrom": "${config_secret_arn}:scraperApiKey::"
       }
     ],
     "logConfiguration": {

@@ -139,7 +139,8 @@ ENV SECRET_KEY='secret123' \
   GOOGLE_REDIRECT_URI='' \
   MICROSOFT_CLIENT_ID='' \
   MICROSOFT_CLIENT_SECRET='' \
-  MICROSOFT_REDIRECT_URI=''
+  MICROSOFT_REDIRECT_URI='' \
+  SCRAPER_API_KEY=''
 
 
 # Set the name of the working directory inside the docker container

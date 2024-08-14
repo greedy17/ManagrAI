@@ -114,3 +114,54 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role" {
   role       = aws_iam_role.ecs_task_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
+
+
+resource "aws_iam_role" "batch_job_definition_role" {
+  name = "batch_job_definition_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "batch.amazonaws.com"
+        },
+        Action: "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "batch_job_definition_policy" {
+  name   = "batch_job_definition_policy"
+  role   = aws_iam_role.batch_job_definition_role.id
+  policy = jsonencode({
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "batch:CreateJobDefinition",
+        "batch:RegisterJobDefinition",
+        "batch:DescribeJobDefinitions"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetSecretValue"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iam:PassRole"
+      ],
+      "Resource": "*"
+    }
+  ]
+  })
+}

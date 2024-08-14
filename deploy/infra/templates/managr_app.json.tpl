@@ -351,6 +351,10 @@
       {
         "name": "MICROSOFT_REDIRECT_URI",
         "valueFrom": "${config_secret_arn}:microsoftRedirectUri::"
+      },
+      {
+        "name": "SCRAPER_API_KEY",
+        "valueFrom": "${config_secret_arn}:scraperApiKey::"
       }
     ],
     "logConfiguration": {
