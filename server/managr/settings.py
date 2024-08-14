@@ -538,6 +538,7 @@ HTTPCACHE_DIR = os.path.join(os.getcwd(), "server", "scrapy_cache")
 HTTPCACHE_IGNORE_HTTP_CODES = [404, 500]
 HTTPCACHE_IGNORE_MISSING = True
 ROBOTSTXT_OBEY = True
+COOKIES_ENABLED = True
 USE_ELASTICACHE = False
 if USE_ELASTICACHE:
     HTTPCACHE_DIR = "/scrapy_cache/"

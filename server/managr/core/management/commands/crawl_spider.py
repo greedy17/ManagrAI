@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from scrapy.crawler import CrawlerProcess
-from managr.comms.webcrawler.crawler import NewsSpider
+from managr.comms.webcrawler.crawler import NewsSpider, SitemapSpider, XMLSpider
 from managr.comms.models import NewsSource
 from managr.comms.utils import remove_api_sources
 
@@ -39,20 +39,41 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         url = options.get("url", False)
         new = options["new"]
+        html_urls = []
+        xml_urls = []
         if url:
             urls = url.split(",")
+            if options["article"]:
+                html_urls = urls
+            else:
+                sources = NewsSource.objects.filter(domain__in=urls)
+                html_urls = list(
+                    sources.filter(scrape_type="HTML").values_list("domain", flat=True)
+                )
+                xml_urls = list(sources.filter(scrape_type="XML").values_list("sitemap", flat=True))
         else:
             remove_api_sources()
             scrape_ready = True if options["active"] else False
-            urls = NewsSource.domain_list(scrape_ready, new)
+            html_urls = NewsSource.domain_list(scrape_ready, new, type="HTML")
+            xml_urls = NewsSource.domain_list(scrape_ready, new, type="XML")
         first_only = True if (options["active"] and options["new"]) else False
         process = CrawlerProcess()
-        process.crawl(
-            NewsSpider,
-            start_urls=urls,
-            first_only=first_only,
-            test=options["test"],
-            no_report=options["noreport"],
-            article_only=options["article"],
-        )
+        if html_urls:
+            process.crawl(
+                NewsSpider,
+                start_urls=html_urls,
+                first_only=first_only,
+                test=options["test"],
+                no_report=options["noreport"],
+                article_only=options["article"],
+            )
+        if xml_urls:
+            process.crawl(
+                XMLSpider,
+                start_urls=xml_urls,
+                first_only=first_only,
+                test=options["test"],
+                no_report=options["noreport"],
+                article_only=options["article"],
+            )
         process.start()
