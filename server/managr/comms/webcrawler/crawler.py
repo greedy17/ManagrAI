@@ -134,6 +134,7 @@ class NewsSpider(scrapy.Spider):
         self.urls_processed = 0
         self.error_log = []
         self.start_time = time.time()
+        self.blocked_urls = 0
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -154,6 +155,7 @@ class NewsSpider(scrapy.Spider):
             report.error_log.append(f"No errors for task urls {','.join(self.start_urls)}")
         report.start_url_counts.append(len(self.start_urls))
         report.total_url_counts.append(self.urls_processed)
+        report.blocked_urls += self.blocked_urls
         report.save()
         return
 
@@ -183,6 +185,8 @@ class NewsSpider(scrapy.Spider):
         return site_name
 
     def parse(self, response):
+        if response.status == 403:
+            self.blocked_urls += 1
         url = response.request.url
         if url[len(url) - 1] == "/":
             url = url[: len(url) - 1]
