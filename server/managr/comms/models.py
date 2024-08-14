@@ -288,10 +288,15 @@ class Pitch(TimeStampModel):
 class NewsSource(TimeStampModel):
     domain = models.CharField(max_length=255, unique=True)
     site_name = models.CharField(max_length=255, blank=True, null=True)
-    rss_feed_url = models.URLField(blank=True, null=True)
+    sitemap = models.CharField(max_length=255, blank=True, null=True)
     last_scraped = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_crawling = models.BooleanField(default=False)
+    scrape_type = models.CharField(
+        choices=[("HTML", "HTML"), ("SITEMAP", "Sitemap"), ("XML", "XML")],
+        max_length=50,
+        default="HTML",
+    )
     access_count = JSONField(default=dict, null=True, blank=True)
     # Web Scraping Fields
     category_link_selector = models.CharField(max_length=255, blank=True, null=True)
@@ -435,20 +440,25 @@ class NewsSource(TimeStampModel):
         return False
 
     @classmethod
-    def get_stopped_sources(cls):
+    def get_stopped_sources(cls, include_date=False):
         today = datetime.today()
         stopped_sources = []
         news = NewsSource.objects.filter(is_crawling=True)
         for n in news:
             article = n.newest_article_date()
             if article and (today - article).days >= 3:
-                stopped_sources.append((n.domain, str(article.publish_date)))
+                if include_date:
+                    stopped_sources.append(f"{n.domain}, {str(article.publish_date)}")
+                else:
+                    stopped_sources.append(n.domain)
         return stopped_sources
 
     @classmethod
-    def domain_list(cls, scrape_ready=False, new=False, run_now=False):
+    def domain_list(cls, scrape_ready=False, new=False, type="HTML", run_now=False):
         six_hours = datetime.now() - timedelta(hours=6)
-        active_sources = cls.objects.filter(is_active=True).order_by("last_scraped")
+        active_sources = cls.objects.filter(is_active=True, scrape_type=type).order_by(
+            "last_scraped"
+        )
         # filters sources that have been filled out but haven't been run yet to create the regex and scrape for the first time
         if scrape_ready and new:
             active_sources = active_sources.filter(

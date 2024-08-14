@@ -25,6 +25,16 @@ from .. import constants as comms_consts
 
 logger = logging.getLogger("managr")
 
+SCRAPPY_HEADERS = {
+    "Referer": "https://www.google.com",
+    "Cache-Control": "no-cache",
+    "Upgrade-Insecure-Requests": "1",
+    "DNT": "1",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+}
+
 XPATH_STRING_OBJ = {
     "title": ["//meta[contains(@property, 'title')]/@content"],
     "author": [
@@ -58,6 +68,21 @@ XPATH_TO_FIELD = {
     "content": "article_content_selector",
 }
 
+MONTH_DAY_TO_NAME = {
+    1: "January",
+    2: "February",
+    3: "March",
+    4: "April",
+    5: "May",
+    6: "June",
+    7: "July",
+    8: "August",
+    9: "September",
+    10: "October",
+    11: "November",
+    12: "December",
+}
+
 
 def data_cleaner(data):
     try:
@@ -84,7 +109,7 @@ def data_cleaner(data):
 
 class NewsSpider(scrapy.Spider):
     name = "news_spider"
-
+    handle_httpstatus_list = [403, 400]
     custom_settings = {
         "DOWNLOAD_DELAY_RANDOMIZE": True,
         "DOWNLOAD_DELAY": 2,
@@ -109,6 +134,7 @@ class NewsSpider(scrapy.Spider):
         self.urls_processed = 0
         self.error_log = []
         self.start_time = time.time()
+        self.blocked_urls = 0
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -121,25 +147,17 @@ class NewsSpider(scrapy.Spider):
             return
         report = CrawlerReport.objects.all().order_by("-datetime_created").first()
         seconds = int((time.time() - self.start_time))
-        # minutes = 0
-        # if seconds >= 60:
-        #     minutes = round((seconds / 60), 0)
-        # completed_in = f"{seconds} seconds" if minutes == 0 else f"{minutes} minutes"
-        # report_data = {
-        #     "start_urls": len(self.start_urls),
-        #     "urls_processed": self.urls_processed,
-        #     "seconds": str(seconds),
-        #     "time": completed_in,
-        #     "errors": self.error_log,
-        # }
-        report_str = ",".join(self.error_log)
-        report.task_times.append(seconds)
-        report.error_log.append(report_str)
+        if len(self.error_log):
+            report_str = ",".join(self.error_log)
+            report.task_times.append(seconds)
+            report.error_log.append(report_str)
+        else:
+            report.error_log.append(f"No errors for task urls {','.join(self.start_urls)}")
         report.start_url_counts.append(len(self.start_urls))
         report.total_url_counts.append(self.urls_processed)
+        report.blocked_urls += self.blocked_urls
         report.save()
         return
-        # self.generate_report(report_data)
 
     def generate_report(self, data):
         try:
@@ -155,23 +173,30 @@ class NewsSpider(scrapy.Spider):
         return
 
     def get_site_name(self, response):
-        site_name = response.xpath(
-            "//meta[contains(@property,'og:url') or contains(@property, 'og:site_name')]/@content"
-        ).getall()
-        if len(site_name) > 1:
-            return site_name[1]
-        elif not len(site_name):
-            return response.request.url
-        if isinstance(site_name, list):
-            site_name = site_name[0]
+        xpaths = [
+            "//meta[contains(@property, 'og:site_name')]/@content",
+            "//meta[contains(@property,'og:url')]/@content",
+        ]
+        site_name = response.request.url
+        for xpath in xpaths:
+            site_name = response.xpath(xpath).get()
+            if site_name:
+                break
         return site_name
 
     def parse(self, response):
+        if response.status == 403:
+            self.blocked_urls += 1
         url = response.request.url
         if url[len(url) - 1] == "/":
             url = url[: len(url) - 1]
         try:
             source = NewsSource.objects.get(domain=url)
+            if response.status == 403:
+                source.sitemap = f"{source.domain}/sitemap.xml"
+                source.scrape_type = "XML"
+                source.save()
+                return
         except NewsSource.DoesNotExist:
             original_urls = response.meta.get("redirect_urls", [])
             if len(original_urls):
@@ -213,10 +238,10 @@ class NewsSpider(scrapy.Spider):
                         yield scrapy.Request(
                             article_url,
                             callback=self.parse_article,
-                            headers={"Referer": "https://www.google.com"},
+                            headers=SCRAPPY_HEADERS,
                             cb_kwargs={"source": source},
                         )
-                if source.site_name is None:
+                if source.site_name is None and response.status != 403:
                     site_name = self.get_site_name(response)
                     source.site_name = site_name
                 current_datetime = datetime.datetime.now()
@@ -316,7 +341,7 @@ class NewsSpider(scrapy.Spider):
             return
         except Exception as e:
             print(e)
-            self.error_log.append(f"URL: {source.domain} | Error: {str(e)}")
+            self.error_log.append(f"URL: {response.url} ({str(e)})")
             if source.error_log is None or len(source.error_log) <= 5:
                 source.add_error(f"{str(e)} {meta_tag_data}\n")
         if len(fields_dict):
@@ -378,11 +403,500 @@ class NewsSpider(scrapy.Spider):
         for url in self.start_urls:
             callback = self.parse_article if self.article_only else self.parse
             try:
-                yield scrapy.Request(
-                    url, headers={"Referer": "https://www.google.com"}, callback=callback
-                )
+                yield scrapy.Request(url, headers=SCRAPPY_HEADERS, callback=callback)
             except Exception as e:
-                self.error_log.append(str(e))
+                self.error_log.append(f"Failed on {url} ({str(e)})")
+
+
+class SitemapSpider(scrapy.Spider):
+    name = "sitemap_spider"
+
+    handle_httpstatus_list = [403]
+    custom_settings = {
+        "DOWNLOAD_DELAY_RANDOMIZE": True,
+        "DOWNLOAD_DELAY": 2,
+        "DOWNLOADER_MIDDLEWARES": {
+            "scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware": 100,
+        },
+        "AUTOTHROTTLE_ENABLED": True,
+        "USER_AGENT": "Mozilla/5.0 (compatible; ManagrCrawler/2.0; +https://managr.ai/documentation; bot-friendly)",
+        "HTTPCACHE_ENABLED": True,
+        "HTTPCACHE_DIR": settings.HTTPCACHE_DIR,
+        "HTTPCACHE_EXPIRATION_SECS": 43200,
+        "LOG_LEVEL": settings.SCRAPY_LOG_LEVEL,
+    }
+
+    def __init__(self, *args, **kwargs):
+        super(SitemapSpider, self).__init__(*args, **kwargs)
+        self.start_urls = kwargs.get("start_urls")
+        self.first_only = kwargs.get("first_only")
+        self.test = kwargs.get("test")
+        self.no_report = kwargs.get("no_report")
+        self.article_only = kwargs.get("article_only")
+        self.urls_processed = 0
+        self.error_log = []
+        self.start_time = time.time()
+
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = super(SitemapSpider, cls).from_crawler(crawler, *args, **kwargs)
+        crawler.signals.connect(spider.spider_closed_handler, signal=signals.spider_closed)
+        return spider
+
+    def spider_closed_handler(self, spider):
+        if self.no_report:
+            return
+        report = CrawlerReport.objects.all().order_by("-datetime_created").first()
+        seconds = int((time.time() - self.start_time))
+        if len(self.error_log):
+            report_str = ",".join(self.error_log)
+            report.task_times.append(seconds)
+            report.error_log.append(report_str)
+        else:
+            report.error_log.append(f"No errors for task urls {','.join(self.start_urls)}")
+        report.start_url_counts.append(len(self.start_urls))
+        report.total_url_counts.append(self.urls_processed)
+        report.save()
+        return
+
+    def generate_report(self, data):
+        try:
+            send_html_email(
+                f"Managr Crawler Report",
+                "core/email-templates/crawler-email.html",
+                settings.DEFAULT_FROM_EMAIL,
+                ["zach@mymanagr.com"],
+                context=data,
+            )
+        except Exception as e:
+            logger.exception(e)
+        return
+
+    def get_site_name(self, response):
+        site_name = response.xpath(
+            "//meta[contains(@property,'og:url') or contains(@property, 'og:site_name')]/@content"
+        ).getall()
+        if len(site_name) > 1:
+            return site_name[1]
+        elif not len(site_name):
+            return response.request.url
+        if isinstance(site_name, list):
+            site_name = site_name[0]
+        return site_name
+
+    def parse(self, response):
+        if response.status == 403:
+            print(response.body)
+        url = response.request.url
+        if url[len(url) - 1] == "/":
+            url = url[: len(url) - 1]
+        try:
+            source = NewsSource.objects.get(sitemap=url)
+        except NewsSource.DoesNotExist:
+            return
+        year = datetime.datetime().now().year
+        year_url = source.sitemap + "/" + str(year)
+        yield scrapy.Request(
+            year_url,
+            callback=self.parse_months,
+            headers=SCRAPPY_HEADERS,
+            cb_kwargs={"source": source},
+        )
+        if source.site_name is None:
+            site_name = self.get_site_name(response)
+            source.site_name = site_name
+        current_datetime = datetime.datetime.now()
+        source.last_scraped = timezone.make_aware(current_datetime, timezone.get_current_timezone())
+        source.save()
+        self.urls_processed += 1
+        return
+
+    def parse_months(self, response, source):
+        date = datetime.datetime()
+        current_month = date.month
+        months = []
+        for i in range(current_month + 1):
+            months.append(MONTH_DAY_TO_NAME[i])
+        month_urls = []
+        for month in months:
+            xpath = f"//a[contains(@href,'{month}')]/@href"
+            day_urls = response.xpath(xpath)
+            month_urls.extend(day_urls)
+        for url in month_urls:
+            yield scrapy.Request(
+                url,
+                callback=self.parse_day,
+                headers=SCRAPPY_HEADERS,
+                cb_kwargs={"source": source},
+            )
+
+    def parse_day(self, response, source):
+        regex = source.create_search_regex()
+        article_links = response.xpath(regex)
+        do_not_track_str = ",".join(comms_consts.DO_NOT_TRACK_LIST)
+        if source.last_scraped and source.article_link_attribute:
+            if len(article_links) and (self.first_only or self.test):
+                article_links = [article_links[0]]
+            for anchor in article_links:
+                skip = False
+                article_url = anchor.xpath("@href").extract_first()
+                if article_url is None:
+                    continue
+                for word in comms_consts.DO_NOT_INCLUDE_WORDS:
+                    if word in article_url:
+                        skip = True
+                        break
+                if skip:
+                    continue
+                article_domain = get_domain(article_url)
+                if (len(article_domain) and article_domain not in do_not_track_str) or not len(
+                    article_domain
+                ):
+                    article_url = complete_url(article_url, source.domain)
+
+                    yield scrapy.Request(
+                        article_url,
+                        callback=self.parse_article,
+                        headers=SCRAPPY_HEADERS,
+                        cb_kwargs={"source": source},
+                    )
+
+                self.urls_processed += 1
+        return
+
+    def parse_article(self, response, source=False):
+        xpath_copy = copy(XPATH_STRING_OBJ)
+        if source is False:
+            instance = Article.objects.get(link=response.url)
+            source = instance.source
+        meta_tag_data = {"link": response.url, "source": source.id}
+        article_selectors = source.article_selectors()
+        fields_dict = {}
+        article_tags = None
+        if source.selectors_defined:
+            for key in article_selectors.keys():
+                selector = response.xpath(article_selectors[key]).getall()
+                if len(selector) and key != "content" and key != "publish_date":
+                    selector = ",".join(selector)
+                if key == "publish_date":
+                    if isinstance(selector, list) and len(selector):
+                        selector = selector[0]
+                    selector = extract_date_from_text(selector)
+                if key == "content":
+                    article_tags = selector
+                    continue
+                if selector is not None:
+                    meta_tag_data[key] = selector
+                else:
+                    meta_tag_data[key] = "N/A"
+        else:
+            for key in xpath_copy.keys():
+                if article_selectors[key] is not None:
+                    xpath_copy[key] = [article_selectors[key]]
+                for path in xpath_copy[key]:
+                    selector = response.xpath(path).get()
+                    if key == "publish_date":
+                        if "text" in path and selector is not None:
+                            selector = extract_date_from_text(selector)
+                        if "text" not in path:
+                            try:
+                                parser.parse(selector)
+                            except Exception as e:
+                                print(e)
+                                continue
+                    if selector is not None:
+                        fields_dict[key] = path
+                        meta_tag_data[key] = selector
+                        break
+                if key not in meta_tag_data.keys() or not len(meta_tag_data[key]):
+                    meta_tag_data[key] = "N/A"
+            article_tag_list = ["article", "story", "content"]
+            article_xpaths = ["//article//p//text()"]
+            for a in article_tag_list:
+                article_xpaths.append(
+                    f"//*[contains(@class, '{a}') or contains(@id, '{a}') and .//p]//p//text()"
+                )
+            if article_selectors["content"] is not None:
+                article_xpaths = [article_selectors["content"]]
+            for tag in article_xpaths:
+                tags = response.xpath(tag).getall()
+                if len(tags):
+                    fields_dict["content"] = tag
+                    article_tags = tags
+                    break
+        full_article = ""
+        cleaned_data = None
+        if article_tags is not None:
+            for article in article_tags:
+                article = article.replace("\n", "").strip()
+                full_article += article
+            meta_tag_data["content"] = full_article
+        try:
+            if "content" in meta_tag_data.keys():
+                cleaned_data = data_cleaner(meta_tag_data)
+                if isinstance(cleaned_data, dict):
+                    if self.article_only:
+                        serializer = ArticleSerializer(instance=instance, data=cleaned_data)
+                    else:
+                        serializer = ArticleSerializer(data=cleaned_data)
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
+                    serializer.instance.update_search_vector()
+                else:
+                    raise Exception(cleaned_data)
+            else:
+                logger.info(f"No content for article: {response.url}")
+                return
+        except IntegrityError:
+            return
+        except Exception as e:
+            print(e)
+            self.error_log.append(f"URL: {response.url} ({str(e)})")
+            if source.error_log is None or len(source.error_log) <= 5:
+                source.add_error(f"{str(e)} {meta_tag_data}\n")
+        if len(fields_dict):
+            for key in fields_dict.keys():
+                path = fields_dict[key]
+                field = XPATH_TO_FIELD[key]
+                setattr(source, field, path)
+            source.save()
+            source.crawling
+        self.urls_processed += 1
+        return
+
+    def start_requests(self):
+        self.total_urls = len(self.start_urls)
+        for url in self.start_urls:
+            callback = self.parse_article if self.article_only else self.parse
+            try:
+                yield scrapy.Request(url, headers=SCRAPPY_HEADERS, callback=callback)
+            except Exception as e:
+                self.error_log.append(f"Failed on {url} ({str(e)})")
+
+
+class XMLSpider(scrapy.Spider):
+    name = "xml_spider"
+
+    handle_httpstatus_list = [403, 400]
+    custom_settings = {
+        "DOWNLOAD_DELAY_RANDOMIZE": True,
+        "DOWNLOAD_DELAY": 5,
+        "AUTOTHROTTLE_ENABLED": True,
+        "USER_AGENT": "ScraperAPI (+https://www.scraperapi.com)",
+        "HTTPCACHE_ENABLED": True,
+        "HTTPCACHE_DIR": settings.HTTPCACHE_DIR,
+        "HTTPCACHE_EXPIRATION_SECS": 43200,
+        "LOG_LEVEL": settings.SCRAPY_LOG_LEVEL,
+    }
+
+    def __init__(self, *args, **kwargs):
+        super(XMLSpider, self).__init__(*args, **kwargs)
+        self.start_urls = kwargs.get("start_urls")
+        self.first_only = kwargs.get("first_only")
+        self.test = kwargs.get("test")
+        self.no_report = kwargs.get("no_report")
+        self.article_only = kwargs.get("article_only")
+        self.urls_processed = 0
+        self.error_log = []
+        self.start_time = time.time()
+        self.namespaces = {
+            "sitemap": "http://www.sitemaps.org/schemas/sitemap/0.9",
+        }
+
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = super(XMLSpider, cls).from_crawler(crawler, *args, **kwargs)
+        crawler.signals.connect(spider.spider_closed_handler, signal=signals.spider_closed)
+        return spider
+
+    def spider_closed_handler(self, spider):
+        if self.no_report:
+            return
+        report = CrawlerReport.objects.all().order_by("-datetime_created").first()
+        seconds = int((time.time() - self.start_time))
+        if len(self.error_log):
+            report_str = ",".join(self.error_log)
+            report.task_times.append(seconds)
+            report.error_log.append(report_str)
+        else:
+            report.error_log.append(f"No errors for task urls {','.join(self.start_urls)}")
+        report.start_url_counts.append(len(self.start_urls))
+        report.total_url_counts.append(self.urls_processed)
+        report.save()
+        return
+
+    def generate_report(self, data):
+        try:
+            send_html_email(
+                f"Managr Crawler Report",
+                "core/email-templates/crawler-email.html",
+                settings.DEFAULT_FROM_EMAIL,
+                ["zach@mymanagr.com"],
+                context=data,
+            )
+        except Exception as e:
+            logger.exception(e)
+        return
+
+    def get_site_name(self, response):
+        site_name = response.xpath(
+            "//meta[contains(@property,'og:url') or contains(@property, 'og:site_name')]/@content"
+        ).getall()
+        if len(site_name) > 1:
+            return site_name[1]
+        elif not len(site_name):
+            return response.request.url
+        if isinstance(site_name, list):
+            site_name = site_name[0]
+        return site_name
+
+    def parse(self, response):
+        url = response.request.url
+        if url[len(url) - 1] == "/":
+            url = url[: len(url) - 1]
+        try:
+            source = NewsSource.objects.get(sitemap=url)
+        except NewsSource.DoesNotExist:
+            return
+        year = datetime.datetime.now().year
+        regex = f"//sitemap:loc[contains(text(),'{year}')]/text()"
+        day_links = response.xpath(regex, namespaces=self.namespaces).getall()
+        for day in day_links:
+            yield scrapy.Request(
+                day,
+                callback=self.parse_day,
+                headers=SCRAPPY_HEADERS,
+                cb_kwargs={"source": source},
+            )
+        current_datetime = datetime.datetime.now()
+        source.last_scraped = timezone.make_aware(current_datetime, timezone.get_current_timezone())
+        source.save()
+        self.urls_processed += 1
+        return
+
+    def parse_day(self, response, source):
+        regex = regex = f"//sitemap:url/sitemap:loc/text()"
+        article_links = response.xpath(regex, namespaces=self.namespaces).getall()
+        for article in article_links:
+            url = f"http://api.scraperapi.com/?api_key={comms_consts.SCRAPER_API_KEY}&url={article}&render=true"
+            yield scrapy.Request(
+                url,
+                callback=self.parse_article,
+                cb_kwargs={"source": source},
+            )
+
+    def parse_article(self, response, source=False):
+        xpath_copy = copy(XPATH_STRING_OBJ)
+        if source is False:
+            instance = Article.objects.get(link=response.url)
+            source = instance.source
+        meta_tag_data = {"link": response.url, "source": source.id}
+        article_selectors = source.article_selectors()
+        fields_dict = {}
+        article_tags = None
+        if source.selectors_defined:
+            for key in article_selectors.keys():
+                selector = response.xpath(article_selectors[key]).getall()
+                if len(selector) and key != "content" and key != "publish_date":
+                    selector = ",".join(selector)
+                if key == "publish_date":
+                    if isinstance(selector, list) and len(selector):
+                        selector = selector[0]
+                    selector = extract_date_from_text(selector)
+                if key == "content":
+                    article_tags = selector
+                    continue
+                if selector is not None:
+                    meta_tag_data[key] = selector
+                else:
+                    meta_tag_data[key] = "N/A"
+        else:
+            for key in xpath_copy.keys():
+                if article_selectors[key] is not None:
+                    xpath_copy[key] = [article_selectors[key]]
+                for path in xpath_copy[key]:
+                    selector = response.xpath(path).get()
+                    if key == "publish_date":
+                        if "text" in path and selector is not None:
+                            selector = extract_date_from_text(selector)
+                        if "text" not in path:
+                            try:
+                                parser.parse(selector)
+                            except Exception as e:
+                                print(e)
+                                continue
+                    if selector is not None:
+                        fields_dict[key] = path
+                        meta_tag_data[key] = selector
+                        break
+                if key not in meta_tag_data.keys() or not len(meta_tag_data[key]):
+                    meta_tag_data[key] = "N/A"
+            article_tag_list = ["article", "story", "content"]
+            article_xpaths = ["//article//p//text()"]
+            for a in article_tag_list:
+                article_xpaths.append(
+                    f"//*[contains(@class, '{a}') or contains(@id, '{a}') and .//p]//p//text()"
+                )
+            if article_selectors["content"] is not None:
+                article_xpaths = [article_selectors["content"]]
+            for tag in article_xpaths:
+                tags = response.xpath(tag).getall()
+                if len(tags):
+                    fields_dict["content"] = tag
+                    article_tags = tags
+                    break
+        full_article = ""
+        cleaned_data = None
+        if article_tags is not None:
+            for article in article_tags:
+                article = article.replace("\n", "").strip()
+                full_article += article
+            meta_tag_data["content"] = full_article
+        try:
+            if "content" in meta_tag_data.keys():
+                cleaned_data = data_cleaner(meta_tag_data)
+                if isinstance(cleaned_data, dict):
+                    if self.article_only:
+                        serializer = ArticleSerializer(instance=instance, data=cleaned_data)
+                    else:
+                        serializer = ArticleSerializer(data=cleaned_data)
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
+                    serializer.instance.update_search_vector()
+                else:
+                    raise Exception(cleaned_data)
+            else:
+                logger.info(f"No content for article: {response.url}")
+                return
+        except IntegrityError:
+            return
+        except Exception as e:
+            print(e)
+            self.error_log.append(f"URL: {response.url} ({str(e)})")
+            if source.error_log is None or len(source.error_log) <= 5:
+                source.add_error(f"{str(e)} {meta_tag_data}\n")
+        if len(fields_dict):
+            for key in fields_dict.keys():
+                path = fields_dict[key]
+                field = XPATH_TO_FIELD[key]
+                setattr(source, field, path)
+        if source.site_name is None:
+            site_name = self.get_site_name(response)
+            source.site_name = site_name
+            source.save()
+        if not source.is_crawling:
+            source.crawling
+        self.urls_processed += 1
+        return
+
+    def start_requests(self):
+        self.total_urls = len(self.start_urls)
+        for url in self.start_urls:
+            callback = self.parse_article if self.article_only else self.parse
+            try:
+                yield scrapy.Request(url, headers=SCRAPPY_HEADERS, callback=callback)
+            except Exception as e:
+                self.error_log.append(f"Failed on {url} ({str(e)})")
 
 
 class SubstackSpider(scrapy.Spider):
