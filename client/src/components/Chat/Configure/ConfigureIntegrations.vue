@@ -1154,9 +1154,10 @@ a {
       flex-direction: column;
     }
   }
+
   @media only screen and (max-width: 600px) {
     margin-top: 0;
-    height: 90vh;
+    height: 96vh;
   }
 }
 // .gold-filter {
@@ -1193,7 +1194,7 @@ a {
   min-height: 144px;
   transition: all 0.25s;
   @media only screen and (max-width: 600px) {
-    width: 70vw;
+    width: 90vw;
   }
 
   &__header {
@@ -1727,6 +1728,14 @@ a {
   width: 100vw;
   padding: 48px 88px 48px 96px;
   font-family: $thin-font-family;
+
+  @media only screen and (max-width: 600px) {
+    padding: 80px 10px 48px 10px;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    padding: 80px 0 48px 0;
+  }
 }
 .wrapper {
   display: flex;

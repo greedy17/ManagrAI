@@ -133,7 +133,7 @@
 
             <div class="resizer"></div>
           </th>
-          <th v-resizableColumn @click="sortBy('lastActivity')">
+          <th class="mobile-width" v-resizableColumn @click="sortBy('lastActivity')">
             Last Activity
             <img
               v-if="sortKey === 'lastActivity' && sortOrder === -1"
@@ -192,7 +192,7 @@
           <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.clicks }}</td>
           <!-- <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.replies }}</td> -->
           <!-- @click="toggleActivityModal(email)" style="cursor: zoom-in"-->
-          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
+          <td class="mobile-width" :class="i % 2 !== 0 ? 'gray-bg' : ''">
             <div>
               <!-- background-color: #fafafa;
                   padding: 2px 6px;
@@ -221,7 +221,7 @@
           <div class="dot"></div>
         </div>
 
-        <div style="margin: 16px" v-else>
+        <div class="mobile-text" style="margin: 16px" v-else>
           Your tracked emails
           <span>
             <img style="margin-right: 4px" src="@/assets/images/email.svg" height="12px" alt="" />
@@ -510,6 +510,10 @@ export default {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      @media only screen and (max-width: 600px) {
+        font-size: 12px;
       }
     }
 
@@ -830,6 +834,19 @@ export default {
     scale: 1;
     opacity: 0.7;
     box-shadow: none;
+  }
+}
+
+.mobile-text {
+  font-size: 13px;
+}
+
+.mobile-width {
+  // width: 15vw;
+  @media only screen and (max-width: 600px) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 

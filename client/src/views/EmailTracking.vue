@@ -9,7 +9,7 @@
             class="drop-header"
             :class="{ 'soft-gray-bg': showUsers }"
           >
-            <img src="@/assets/images/profile.svg" height="12px" alt="" />
+            <img class="mobile-img" src="@/assets/images/profile.svg" height="12px" alt="" />
             User:
             <small>
               {{
@@ -83,7 +83,7 @@
         <div style="margin: 0 8px" class="relative">
           <div
             @click="toggleFilterDropdown"
-            class="img-container s-wrapper"
+            class="img-container s-wrapper mobile-img"
             :class="{ 'img-container-stay': showFilters }"
           >
             <img src="@/assets/images/filter.svg" height="13px" alt="" />
@@ -163,7 +163,11 @@
           </button>
         </div>
 
-        <div style="margin-left: 8px" @click="convertData" class="img-container s-wrapper">
+        <div
+          style="margin-left: 8px"
+          @click="convertData"
+          class="img-container s-wrapper mobile-img"
+        >
           <img src="@/assets/images/download.svg" height="13px" alt="" />
           <div class="s-tooltip">Export table</div>
         </div>
@@ -399,6 +403,14 @@ export default {
   padding: 108px 132px 64px 132px;
   font-family: $thin-font-family;
   color: $dark-black-blue;
+
+  @media only screen and (max-width: 600px) {
+    padding: 108px 10px 64px 10px;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    padding: 108px 10px 64px 10px;
+  }
 }
 
 .image-container {
@@ -511,6 +523,10 @@ export default {
   align-items: center;
   justify-content: flex-start;
   padding: 10px 20px 10px 10px;
+
+  @media only screen and (max-width: 600px) {
+    width: 40vw;
+  }
 }
 
 .search-input {
@@ -950,6 +966,12 @@ input {
 
 ::placeholder {
   font-family: $thin-font-family;
+}
+
+.mobile-img {
+  @media only screen and (max-width: 600px) {
+    display: none;
+  }
 }
 
 ::v-deep ::selection {
