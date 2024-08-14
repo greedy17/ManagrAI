@@ -192,6 +192,10 @@ class NewsSpider(scrapy.Spider):
             url = url[: len(url) - 1]
         try:
             source = NewsSource.objects.get(domain=url)
+            if response.status == 403:
+                source.sitemap = f"{source.domain}/sitemap.xml"
+                source.scrape_type = "XML"
+                source.save()
         except NewsSource.DoesNotExist:
             original_urls = response.meta.get("redirect_urls", [])
             if len(original_urls):
@@ -206,13 +210,7 @@ class NewsSpider(scrapy.Spider):
                     )
                     source.save()
             return
-        if source.scrape_type == "SITEMAP":
-
-            return
-        elif source.scrape_type == "XML":
-            namespaces = {"sitemap": "http://www.sitemaps.org/schemas/sitemap/0.9"}
-            return
-        elif source.article_link_attribute is not None:
+        if source.article_link_attribute is not None:
             regex = source.create_search_regex()
             article_links = response.xpath(regex)
             do_not_track_str = ",".join(comms_consts.DO_NOT_TRACK_LIST)
@@ -678,15 +676,12 @@ class SitemapSpider(scrapy.Spider):
 class XMLSpider(scrapy.Spider):
     name = "xml_spider"
 
-    handle_httpstatus_list = [403]
+    handle_httpstatus_list = [403, 400]
     custom_settings = {
         "DOWNLOAD_DELAY_RANDOMIZE": True,
         "DOWNLOAD_DELAY": 10,
-        "DOWNLOADER_MIDDLEWARES": {
-            "scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware": 100,
-        },
         "AUTOTHROTTLE_ENABLED": True,
-        "USER_AGENT": "Mozilla/5.0 (compatible; ManagrCrawler/2.0; +https://managr.ai/documentation; bot-friendly)",
+        "USER_AGENT": "ScraperAPI (+https://www.scraperapi.com)",
         "HTTPCACHE_ENABLED": True,
         "HTTPCACHE_DIR": settings.HTTPCACHE_DIR,
         "HTTPCACHE_EXPIRATION_SECS": 43200,
@@ -755,8 +750,6 @@ class XMLSpider(scrapy.Spider):
         return site_name
 
     def parse(self, response):
-        if response.status == 403:
-            print(response.body)
         url = response.request.url
         if url[len(url) - 1] == "/":
             url = url[: len(url) - 1]
@@ -784,10 +777,10 @@ class XMLSpider(scrapy.Spider):
         regex = regex = f"//sitemap:url/sitemap:loc/text()"
         article_links = response.xpath(regex, namespaces=self.namespaces).getall()
         for article in article_links:
+            url = f"http://api.scraperapi.com/?api_key={comms_consts.SCRAPER_API_KEY}&url={article}&render=true"
             yield scrapy.Request(
-                article,
+                url,
                 callback=self.parse_article,
-                headers=SCRAPPY_HEADERS,
                 cb_kwargs={"source": source},
             )
 

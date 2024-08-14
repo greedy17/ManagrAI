@@ -58,6 +58,8 @@ GOOGLE_SEARCH_URI = "https://www.googleapis.com/customsearch/v1"
 GOOGLE_SEARCH_KEY = settings.GOOGLE_SEARCH_API_KEY
 GOOGLE_SEARCH_ID = settings.GOOGLE_SEARCH_ID
 
+SCRAPER_API_KEY = settings.SCRAPER_API_KEY
+
 
 def GOOGLE_SEARCH_PARAMS(query):
     params = {"q": query, "key": GOOGLE_SEARCH_KEY, "cx": GOOGLE_SEARCH_ID}
@@ -377,7 +379,7 @@ OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS = (
     Writing Style: {style}
     Additional details {details}
     """
-)   
+)
 
 
 def OPEN_AI_GENERATE_CONTENT(date, article, style, instructions):
