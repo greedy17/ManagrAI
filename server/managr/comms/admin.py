@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Q
 from .models import (
     Search,
     Pitch,
@@ -42,8 +43,18 @@ class CustomNewsSource(admin.ModelAdmin):
     )
     ordering = ("-last_scraped", "is_active")
     readonly_fields = ("access_count", "newest_article_date")
-    search_fields = ("domain", "site_name")
+    search_fields = ["domain"]
     list_filter = ("is_active", "is_crawling")
+
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        if search_term:
+            search_terms = search_term.split(",")
+            query = Q()
+            for term in search_terms:
+                query |= Q(domain=term.strip())
+            queryset = self.model.objects.filter(query)
+        return queryset, use_distinct
 
 
 class CustomArticle(admin.ModelAdmin):

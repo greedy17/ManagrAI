@@ -109,7 +109,7 @@ def data_cleaner(data):
 
 class NewsSpider(scrapy.Spider):
     name = "news_spider"
-
+    handle_httpstatus_list = [403, 400]
     custom_settings = {
         "DOWNLOAD_DELAY_RANDOMIZE": True,
         "DOWNLOAD_DELAY": 2,
@@ -173,15 +173,15 @@ class NewsSpider(scrapy.Spider):
         return
 
     def get_site_name(self, response):
-        site_name = response.xpath(
-            "//meta[contains(@property,'og:url') or contains(@property, 'og:site_name')]/@content"
-        ).getall()
-        if len(site_name) > 1:
-            return site_name[1]
-        elif not len(site_name):
-            return response.request.url
-        if isinstance(site_name, list):
-            site_name = site_name[0]
+        xpaths = [
+            "//meta[contains(@property, 'og:site_name')]/@content",
+            "//meta[contains(@property,'og:url')]/@content",
+        ]
+        site_name = response.request.url
+        for xpath in xpaths:
+            site_name = response.xpath(xpath).get()
+            if site_name:
+                break
         return site_name
 
     def parse(self, response):
@@ -196,6 +196,7 @@ class NewsSpider(scrapy.Spider):
                 source.sitemap = f"{source.domain}/sitemap.xml"
                 source.scrape_type = "XML"
                 source.save()
+                return
         except NewsSource.DoesNotExist:
             original_urls = response.meta.get("redirect_urls", [])
             if len(original_urls):
@@ -240,7 +241,7 @@ class NewsSpider(scrapy.Spider):
                             headers=SCRAPPY_HEADERS,
                             cb_kwargs={"source": source},
                         )
-                if source.site_name is None:
+                if source.site_name is None and response.status != 403:
                     site_name = self.get_site_name(response)
                     source.site_name = site_name
                 current_datetime = datetime.datetime.now()
@@ -679,7 +680,7 @@ class XMLSpider(scrapy.Spider):
     handle_httpstatus_list = [403, 400]
     custom_settings = {
         "DOWNLOAD_DELAY_RANDOMIZE": True,
-        "DOWNLOAD_DELAY": 10,
+        "DOWNLOAD_DELAY": 5,
         "AUTOTHROTTLE_ENABLED": True,
         "USER_AGENT": "ScraperAPI (+https://www.scraperapi.com)",
         "HTTPCACHE_ENABLED": True,
@@ -879,9 +880,9 @@ class XMLSpider(scrapy.Spider):
                 path = fields_dict[key]
                 field = XPATH_TO_FIELD[key]
                 setattr(source, field, path)
-            if source.site_name is None:
-                site_name = self.get_site_name(response)
-                source.site_name = site_name
+        if source.site_name is None:
+            site_name = self.get_site_name(response)
+            source.site_name = site_name
             source.save()
         if not source.is_crawling:
             source.crawling
