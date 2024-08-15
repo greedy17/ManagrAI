@@ -13,11 +13,12 @@ resource "aws_db_instance" "managrdb" {
   allocated_storage          = 100
   engine                     = "postgres"
   engine_version             = "12.19"
-  instance_class             = "db.t3.medium"
+  instance_class             = "db.r5.xlarge"
   name                       = each.value.rds_db_name
   username                   = each.value.rds_username
   password                   = each.value.rds_password
-  storage_type               = "gp2"
+  storage_type               = "io1"
+  iops                       = 1000
   skip_final_snapshot        = true
   port                       = 5432
   db_subnet_group_name       = aws_db_subnet_group.managrdb.id

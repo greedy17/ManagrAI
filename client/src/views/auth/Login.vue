@@ -478,6 +478,14 @@ input:focus {
   align-items: center;
   justify-content: space-between;
   flex-direction: column;
+
+  @media only screen and (max-width: 600px) {
+    padding: 0 10px 10px 10px;
+    overflow: hidden;
+  }
+
+  @media only screen and (min-width: 1025px) and (max-width: 1300px) {
+  }
 }
 .login-form {
   display: flex;
@@ -491,6 +499,14 @@ input:focus {
   padding: 64px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   font-family: $thin-font-family;
+
+  @media only screen and (max-width: 600px) {
+    width: 94vw;
+    padding: 64px 0 64px 32px;
+  }
+
+  @media only screen and (min-width: 1025px) and (max-width: 1300px) {
+  }
 }
 .login-button {
   @include dark-blue-button();

@@ -1317,7 +1317,7 @@
         <div style="position: relative" class="body">
           <header class="content-header-test">
             <div class="row-top">
-              <div class="image-container xxl-margin" @click="resetAll">
+              <div class="image-container xxl-margin mobile-img" @click="resetAll">
                 <img src="@/assets/images/goBack.svg" height="17px" alt="" />
               </div>
 
@@ -2519,7 +2519,21 @@
 
                   <div class="main-footer">
                     <div class="author-time">
-                      <span class="author">{{ '@' + tweet.user.username }}</span>
+                      <span
+                        @mouseenter="changeJournalistName(i)"
+                        @mouseleave="removeNameIndex"
+                        @click="selectJournalist(tweet)"
+                        style="cursor: pointer"
+                        class="author"
+                      >
+                        <span style="padding: 2px 4px" v-if="journalistIndex === i && showingName">
+                          View Bio
+                        </span>
+
+                        <span v-else>
+                          {{ '@' + tweet.user.username }}
+                        </span>
+                      </span>
                       <span style="margin-right: 4px" class="divider-dot">.</span>
                       <small class="bold-text"
                         >{{ formatNumber(tweet.user.public_metrics.followers_count) }}
@@ -2531,7 +2545,7 @@
                       }}</span>
                     </div>
 
-                    <span class="s-wrapper">
+                    <!-- <span class="s-wrapper">
                       <button
                         @click="selectJournalist(tweet)"
                         class="borderless img-container-button"
@@ -2544,7 +2558,7 @@
                         />
                       </button>
                       <span class="s-tooltip">View Bio</span>
-                    </span>
+                    </span> -->
                   </div>
                 </div>
               </div>
@@ -7018,6 +7032,18 @@ export default {
   @media only screen and (max-width: 600px) {
     display: none;
   }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    // overflow: hidden;
+    // text-overflow: ellipsis;
+    // white-space: nowrap;
+    display: none;
+  }
+  @media only screen and (min-width: 1025px) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 .source-dropdown {
@@ -7027,7 +7053,15 @@ export default {
     margin-top: 8px;
   }
 
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    width: 32%;
+  }
+
   @media only screen and (min-width: 1025px) and (max-width: 1300px) {
+    // overflow: hidden;
+    // text-overflow: ellipsis;
+    // white-space: nowrap;
+    width: 32%;
   }
 
   p {
@@ -8176,10 +8210,17 @@ button:disabled {
   font-family: $base-font-family;
 
   @media only screen and (max-width: 600px) {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
     max-width: 320px;
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 27vw;
   }
 }
 
@@ -8397,8 +8438,8 @@ li {
   }
 }
 .small-container {
-  padding-left: 42px;
-  padding-right: 32px;
+  padding-left: 24px;
+  padding-right: 24px;
   font-size: 16px !important;
   line-height: 1.75;
 
@@ -8408,6 +8449,12 @@ li {
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    padding-left: 8px;
+    padding-right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
   }
 }
 
@@ -8476,12 +8523,20 @@ li {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 0 12px;
+  gap: 0 8px;
 
   @media only screen and (max-width: 600px) {
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    // width: 100%;
+  }
+
+  @media only screen and (min-width: 1025px) {
+    gap: 7px;
   }
 }
 
@@ -8602,6 +8657,7 @@ li {
     }
 
     @media only screen and (min-width: 601px) and (max-width: 1024px) {
+      padding: 48px 8px 8px 0;
     }
   }
 
@@ -8647,6 +8703,10 @@ li {
       }
 
       @media only screen and (min-width: 601px) and (max-width: 1024px) {
+        width: 40vw;
+        right: 0;
+        padding-left: 24px;
+        top: 40px;
       }
 
       .section {
@@ -8664,6 +8724,10 @@ li {
         div {
           margin-bottom: 16px;
         }
+
+        @media only screen and (min-width: 601px) and (max-width: 1024px) {
+          padding: 0 0 0 24px;
+        }
       }
 
       .section-small {
@@ -8679,6 +8743,10 @@ li {
 
         div {
           margin-bottom: 16px;
+        }
+
+        @media only screen and (min-width: 601px) and (max-width: 1024px) {
+          padding: 0 0 0 24px;
         }
       }
     }
@@ -8697,6 +8765,7 @@ li {
       }
 
       @media only screen and (min-width: 601px) and (max-width: 1024px) {
+        padding: 0;
       }
     }
 
@@ -8727,6 +8796,7 @@ li {
       }
 
       @media only screen and (min-width: 601px) and (max-width: 1024px) {
+        padding: 0;
       }
     }
 
@@ -8845,7 +8915,7 @@ li {
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
-    padding: 0 15vw;
+    padding: 0 16px;
   }
 
   // @media only screen and (min-width: 1025px) {
@@ -9158,6 +9228,10 @@ p {
   }
 }
 
+.mobile-img {
+  margin-top: 16px;
+}
+
 .image-container-nf {
   border-radius: 50%;
   padding: 7px;
@@ -9209,8 +9283,8 @@ textarea {
     width: 94vw !important;
   }
 
-  @media only screen and (min-width: 601px) and (max-width: 1250px) {
-    width: 60vw !important;
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    width: 70vw !important;
   }
 }
 
@@ -9432,8 +9506,28 @@ textarea::placeholder {
     text-overflow: ellipsis;
   }
 
-  @media only screen and (min-width: 601px) and (max-width: 1250px) {
-    width: 19.25vw !important;
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    // width: 19.25vw !important;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    width: 70vw !important;
+    height: 50px;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  @media only screen and (min-width: 1025px) {
+    width: 15.7vw;
+    // width: 32%;
+    height: 116px;
+    gap: 8px;
+  }
+
+  @media only screen and (min-width: 1250px) {
+    width: 15.8vw;
   }
 
   &:hover {
@@ -10116,6 +10210,13 @@ textarea::placeholder {
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    // gap: 24px;
+    width: 100%;
+  }
+
+  @media only screen and (min-width: 1025px) {
+    // width: 15.6275vw;
+    width: 100%;
   }
 }
 
@@ -10150,6 +10251,12 @@ textarea::placeholder {
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    width: 47.5%;
+  }
+
+  @media only screen and (min-width: 1025px) {
+    // width: 15.6275vw;
+    width: 48.5%;
   }
 
   .main-body {
@@ -10238,6 +10345,7 @@ textarea::placeholder {
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
+    padding: 72px 0 32px 0;
   }
 }
 .skeleton {

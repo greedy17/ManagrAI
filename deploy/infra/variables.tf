@@ -188,6 +188,8 @@ variable "environments" {
     microsoft_client_id    = string
     microsoft_client_secret= string
     microsoft_redirect_uri = string
+
+    scraper_api_key        = string
   }))
 }
 
@@ -197,38 +199,82 @@ variable "scheduled_tasks" {
     command    = string
     cron       = string
     task_count = number
+    cpu        = number
+    memory     = number
   }))
 
   default = [
     {
       name       = "processalltasks"
       command    = "process_tasks --duration 3600"
-      cron       = "cron(*/10 * * * ? *)"
+      cron       = "cron(*/10 0-11,9-22 * * ? *)"
       task_count = 1
+      cpu        = 2048
+      memory     = 4096
+    },
+    {
+      name       = "processalltaskscrawleram"
+      command    = "process_tasks --duration 3600"
+      cron       = "cron(*/10 11-1 * * ? *)"
+      task_count = 1
+      cpu        = 16384
+      memory     = 32768
+    },
+    {
+      name       = "processalltaskscrawlerpm"
+      command    = "process_tasks --duration 3600"
+      cron       = "cron(*/10 22-0 * * ? *)"
+      task_count = 1
+      cpu        = 16384
+      memory     = 32768
     },
     {
       name       = "processsyncqueues"
       command    = "process_tasks --queue SALESFORCE_RESOURCE_SYNC --duration 3600"
       cron       = "cron(0 */11 * * ? *)"
       task_count = 1
+      cpu        = 1024
+      memory     = 2048
     },
     {
-      name       = "batchspider"
+      name       = "batchspideram"
       command    = "batch_spiders"
-      cron       = "cron(0 1 * * ? *)"
+      cron       = "cron(0 11 * * ? *)"
       task_count = 1
+      cpu        = 1024
+      memory     = 2048
+    },
+    {
+      name       = "batchspiderpm"
+      command    = "batch_spiders"
+      cron       = "cron(0 22 * * ? *)"
+      task_count = 1
+      cpu        = 1024
+      memory     = 2048
     },
     {
       name       = "runalerts"
       command    = "triggeralerts"
       cron       = "cron(0 8 ? * MON-FRI *)"
       task_count = 1
+      cpu        = 1024
+      memory     = 2048
     },
     {
-      name       = "spiderstatus"
+      name       = "spiderstatusam"
       command    = "spider_status"
-      cron       = "cron(15/15 1-14 * * ? *)"
+      cron       = "cron(15/15 11-1 * * ? *)"
       task_count = 1
+      cpu        = 1024
+      memory     = 2048
+    },
+    {
+      name       = "spiderstatuspm"
+      command    = "spider_status"
+      cron       = "cron(15/15 22-0 * * ? *)"
+      task_count = 1
+      cpu        = 1024
+      memory     = 2048
     },
   ]
 }

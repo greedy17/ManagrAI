@@ -151,8 +151,8 @@ data "template_file" "managr_app_scheduled_tasks" {
     bash_image                = "${aws_ecr_repository.managr["thinknimble/managr/bash"].repository_url}:latest"
     datadog_image             = "${aws_ecr_repository.managr["thinknimble/managr/datadog/agent"].repository_url}:latest"
 
-    fargate_cpu       = var.fargate_cpu
-    fargate_memory    = var.fargate_memory
+    fargate_cpu       = each.value.task.cpu
+    fargate_memory    = each.value.task.memory
     aws_region        = data.aws_region.current.name
     config_secret_arn = aws_secretsmanager_secret.managr_config[each.value.env.name].arn
     allowed_hosts  = each.value.env.allowed_hosts != "" ? each.value.env.allowed_hosts : "*"
@@ -186,6 +186,50 @@ data "template_file" "managr_app_scheduled_tasks" {
   }
 }
 
+data "template_file" "managr_app_batch_task" {
+  for_each = { for e in var.environments : e.name => e }
+  template = file("${path.module}/templates/managr_app_batch.json.tpl")
+
+  vars = {
+    execution_role_arn = aws_iam_role.batch_job_definition_role.arn
+    nginx_config   = base64encode(data.template_file.nginx_config[each.value.name].rendered)
+    environment       = each.value.environment
+    app_image         = each.value.app_image != "" ? each.value.app_image : "${aws_ecr_repository.managr["thinknimble/managr/server"].repository_url}:latest"
+    app_image_scheduled_tasks = each.value.app_image_scheduled_tasks != "" ? each.value.app_image_scheduled_tasks : "${aws_ecr_repository.managr["thinknimble/managr/server-tasks"].repository_url}:latest"
+    nginx_image       = "${aws_ecr_repository.managr["thinknimble/managr/nginx"].repository_url}:latest"
+    bash_image        = "${aws_ecr_repository.managr["thinknimble/managr/bash"].repository_url}:latest"
+    datadog_image     = "${aws_ecr_repository.managr["thinknimble/managr/datadog/agent"].repository_url}:latest"
+    aws_region        = data.aws_region.current.name
+    config_secret_arn = aws_secretsmanager_secret.managr_config[each.value.name].arn
+    allowed_hosts  = each.value.allowed_hosts != "" ? each.value.allowed_hosts : "*"
+    current_domain = each.value.current_domain != "" ? each.value.current_domain : aws_alb.main.dns_name
+    current_port   = 8000
+    debug          = title(each.value.debug)
+    use_rollbar    = title(each.value.use_rollbar)
+    use_custom_smtp            = title(each.value.use_custom_smtp)
+    smtp_use_tls               = title(each.value.smtp_use_tls)
+    smtp_port                  = each.value.smtp_port
+    smtp_valid_testing_domains = each.value.smtp_valid_testing_domains
+    use_aws_storage = title(each.value.use_aws_storage)
+    aws_location = each.value.s3_bucket_location
+    use_nylas      = title(each.value.use_nylas)
+    use_twilio     = title(each.value.use_twilio)
+    use_zoom       = title(each.value.use_zoom)
+    use_slack      = title(each.value.use_slack)
+    use_salesforce = title(each.value.use_salesforce)
+    use_salesloft  = title(each.value.use_salesloft)
+    use_gong       = title(each.value.use_gong)
+    use_outreach   = title(each.value.use_outreach)
+    use_hubspot    = title(each.value.use_hubspot)
+    use_open_ai    = title(each.value.use_open_ai)
+    use_sso        = title(each.value.use_sso)
+    use_news_api   = title(each.value.use_news_api)
+    use_twitter_api = title(each.value.use_twitter_api)
+    use_instagram_api = title(each.value.use_instagram_api)
+  }
+}
+
+
 resource "aws_ecs_task_definition" "app" {
   for_each                 = { for e in var.environments : e.name => e }
   family                   = "managr-app-task-${lower(each.value.name)}"
@@ -211,8 +255,8 @@ resource "aws_ecs_task_definition" "app_scheduled_tasks" {
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = var.fargate_cpu
-  memory                   = var.fargate_memory
+  cpu                      = each.value.task.cpu
+  memory                   = each.value.task.memory
   container_definitions    = data.template_file.managr_app_scheduled_tasks[each.key].rendered
   task_role_arn            = aws_iam_role.ecs_task_role_ecs_exec.arn
   volume {
@@ -400,5 +444,21 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     microsoftClientId    = each.value.microsoft_client_id
     microsoftClientSecret= each.value.microsoft_client_secret
     microsoftRedirectUri = each.value.microsoft_redirect_uri
+
+    scraperApiKey        = each.value.scraper_api_key
   })
+}
+
+resource "aws_batch_job_definition" "web_scraping_job" {
+  for_each  = { for e in var.environments : e.name => e }
+  name = "web-scraper-${each.value.name}"
+  type = "container"
+  container_properties = data.template_file.managr_app_batch_task[each.key].rendered
+  platform_capabilities = ["FARGATE"]
+  retry_strategy {
+    attempts = 3
+  }
+  tags = {
+    "app" = "web-scraper"
+  }
 }

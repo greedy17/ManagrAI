@@ -177,13 +177,17 @@
           <p>Discover</p>
         </router-link> -->
 
-        <router-link active-class="active" :to="{ name: 'Contacts' }" id="router-pitch">
+        <router-link active-class="active-mobile" :to="{ name: 'Contacts' }" id="router-pitch">
           <p>Network</p>
         </router-link>
 
         <router-link active-class="active-mobile" :to="{ name: 'EmailTracking' }" id="router-pitch">
           <p>Track</p>
         </router-link>
+        <router-link active-class="active-mobile" :to="{ name: 'PRSettings' }" id="router-pitch">
+          <p>Settings</p>
+        </router-link>
+        <p style="text-align: center" @click="logOut">Logout</p>
       </div>
 
       <div id="relative-mobile">
@@ -1612,7 +1616,7 @@ export default {
     // right: 80px;
     top: 0;
     right: 0;
-    padding: 24px 32px 24px 0;
+    padding: 16px 32px 16px 0;
     z-index: 20100;
     background: white;
   }
@@ -1690,7 +1694,7 @@ export default {
   // left: 32px;
   top: 0;
   left: 0;
-  padding: 24px 0 24px 32px;
+  padding: 16px 0 16px 16px;
   z-index: 20100;
   background-color: white;
   width: 100%;
@@ -1702,7 +1706,7 @@ export default {
 
 .close-menu {
   font-family: $thin-font-family;
-  font-size: 18px;
+  font-size: 14px;
 }
 
 #relative-mobile {
@@ -2110,7 +2114,8 @@ nav {
 
 .mobile-nav {
   z-index: 200000;
-  height: 25vh;
+  min-height: 22vh;
+  height: fit-content;
   width: 60vw;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 5px;
@@ -2118,8 +2123,8 @@ nav {
   display: flex;
   flex-direction: column;
   position: absolute;
-  top: 56px;
-  left: 30px;
+  top: 36px;
+  left: 10px;
 
   a {
     text-decoration: none;
