@@ -683,9 +683,10 @@ EXCLUDE_DOMAINS = [
     "fly4free.com",
     "antaranews.com",
     "investorsobserver.com",
-    "https://www.dealcatcher.com",
-    "https://www.dansdeals.com",
-    "https://www.superpunch.net",
+    "dealcatcher.com",
+    "dansdeals.com",
+    "superpunch.net",
+    "securityaffairs.com",
 ]
 
 JOURNALIST_CHOICES = [
