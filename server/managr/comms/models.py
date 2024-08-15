@@ -455,7 +455,7 @@ class NewsSource(TimeStampModel):
 
     @classmethod
     def domain_list(cls, scrape_ready=False, new=False, type="HTML", run_now=False):
-        six_hours = datetime.now() - timedelta(hours=6)
+        six_hours = datetime.now() - timedelta(hours=10)
         active_sources = cls.objects.filter(is_active=True, scrape_type=type).order_by(
             "last_scraped"
         )
