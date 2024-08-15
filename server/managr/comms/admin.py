@@ -52,7 +52,7 @@ class CustomNewsSource(admin.ModelAdmin):
             search_terms = search_term.split(",")
             query = Q()
             for term in search_terms:
-                query |= Q(domain=term.strip())
+                query |= Q(domain__icontains=term.strip())
             queryset = self.model.objects.filter(query)
         return queryset, use_distinct
 

@@ -28,11 +28,8 @@ logger = logging.getLogger("managr")
 SCRAPPY_HEADERS = {
     "Referer": "https://www.google.com",
     "Cache-Control": "no-cache",
-    "Upgrade-Insecure-Requests": "1",
-    "DNT": "1",
     "Accept-Encoding": "gzip, deflate, br",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+    "Pragma": "no-cache",
 }
 
 XPATH_STRING_OBJ = {
@@ -82,6 +79,73 @@ MONTH_DAY_TO_NAME = {
     11: "November",
     12: "December",
 }
+
+COMMON_SELECTORS = {
+    "value": ["/news/.a", "article_.a", "/article/.a", "year.a"],
+    "class": [
+        "tnt-asset-link.a",
+        "article-link.a",
+        "entry-title.*,a",
+        "td-image-wrap.a",
+        "title-link.a",
+        "title-link.a",
+    ],
+}
+
+
+def check_values(href):
+    found_value = None
+    found_attribute = None
+    for value_set in COMMON_SELECTORS["value"]:
+        value, attribute = value_set.split(".")
+        if value == "year":
+            year = datetime.datetime.now().year
+            if f"/{year}/" in href:
+                found_value = f"value,{value}"
+                found_attribute = attribute
+                break
+        elif value != "year" and value in href:
+            found_value = value
+            found_attribute = attribute
+            break
+    return found_value, found_attribute
+
+
+def check_classes(classes_str):
+    found_value = None
+    found_attribute = None
+    class_list = classes_str.split(" ")
+    for class_set in COMMON_SELECTORS["class"]:
+        class_value, attribute = class_set.split(".")
+        if class_value in class_list:
+            found_value = f"class,{class_value}"
+            found_attribute = attribute
+    return found_value, found_attribute
+
+
+def common_selectors_check(source):
+    check = False
+    selector = None
+    attribute = None
+    for dataset in source.scrape_data.values():
+        href = dataset["href"]
+        classes = dataset["classes"]
+        found_value, found_attribute = check_values(href)
+        if found_value:
+            selector = found_value
+            attribute = found_attribute
+        elif classes:
+            found_class, found_attribute = check_classes(classes)
+            if found_class:
+                selector = found_class
+                attribute = found_attribute
+        if selector:
+            source.article_link_selector = selector
+            source.article_link_attribute = attribute
+            source.save()
+            check = True
+            break
+    return check
 
 
 def data_cleaner(data):
@@ -251,6 +315,7 @@ class NewsSpider(scrapy.Spider):
                 source.save()
         else:
             self.process_new_url(source, response)
+
         self.urls_processed += 1
         return
 
@@ -369,18 +434,20 @@ class NewsSpider(scrapy.Spider):
             "/category",
         ]
         exclude_words = " or ".join(f"contains(@href, '{word}')" for word in exclude_word_list)
-        anchor_tags = response.xpath(
+        xpath = (
             "//body//a["
             + "(starts-with(@href, '/') or starts-with(@href, 'https'))"
             + f" and not({exclude_classes})"
             + f" and not({exclude_words})"
             + "]"
         )
+        anchor_tags = response.xpath(xpath)
         scrape_dict = {}
         for idx, link in enumerate(anchor_tags):
             href = link.css("::attr(href)").get()
             is_potential_link = potential_link_check(href, source.domain)
             if is_potential_link:
+                parent = response.xpath(f"//a[@href='{href}']/parent::*").css("::attr(class)").get()
                 classes = link.css("::attr(class)").get()
                 data_attributes = {}
                 for key, value in link.attrib.items():
@@ -390,13 +457,15 @@ class NewsSpider(scrapy.Spider):
                     "href": href,
                     "data_attributes": data_attributes,
                     "classes": classes,
+                    "parent_classes": parent,
                 }
         source.scrape_data = scrape_dict
         source.site_name = self.get_site_name(response)
         current_datetime = datetime.datetime.now()
         source.last_scraped = timezone.make_aware(current_datetime, timezone.get_current_timezone())
         source.save()
-        return
+        selectors_check = common_selectors_check(source)
+        return selectors_check
 
     def start_requests(self):
         self.total_urls = len(self.start_urls)
@@ -756,11 +825,15 @@ class XMLSpider(scrapy.Spider):
             url = url[: len(url) - 1]
         try:
             source = NewsSource.objects.get(sitemap=url)
+            article_check = source.newest_article_date()
         except NewsSource.DoesNotExist:
             return
         year = datetime.datetime.now().year
         regex = f"//sitemap:loc[contains(text(),'{year}')]/text()"
-        day_links = response.xpath(regex, namespaces=self.namespaces).getall()
+        if article_check:
+            day_links = [response.xpath(regex, namespaces=self.namespaces).get()]
+        else:
+            day_links = response.xpath(regex, namespaces=self.namespaces).getall()[:3]
         for day in day_links:
             yield scrapy.Request(
                 day,
