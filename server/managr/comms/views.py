@@ -82,6 +82,7 @@ from django.http import JsonResponse
 from managr.comms.tasks import emit_get_meta_account_info
 from managr.api.emails import send_html_email, send_mailgun_email
 from newspaper.article import ArticleException
+from managr.slack.helpers.utils import send_to_error_channel
 
 logger = logging.getLogger("managr")
 
@@ -129,7 +130,7 @@ def getclips(request):
         return {"articles": articles, "string": query_input}
 
     except Exception as e:
-        logger.exception(e)
+        send_to_error_channel(str(e), user.email, "get clips (platform)")
         return {"error": str(e)}
 
 
@@ -194,15 +195,6 @@ class PRSearchViewSet(
         search.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    # @action(
-    #     methods=["get"],
-    #     permission_classes=[permissions.IsAuthenticated],
-    #     detail=False,
-    #     url_path="clips",
-    # )
-    # async def get_clips(self, request, *args, **kwargs):
-    #     return await getclips(request)
-
     @action(
         methods=["post"],
         permission_classes=[permissions.IsAuthenticated],
@@ -258,6 +250,7 @@ class PRSearchViewSet(
                 logger.exception(e)
                 break
         if has_error:
+            send_to_error_channel(message, user.email, "news summary (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
 
         return Response(data={"summary": message})
@@ -341,6 +334,7 @@ class PRSearchViewSet(
                 logger.exception(e)
                 break
         if has_error:
+            send_to_error_channel(message, user.email, "article summary (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
 
         return Response(data={"summary": message})
@@ -423,6 +417,7 @@ class PRSearchViewSet(
                 logger.exception(e)
                 break
         if has_error:
+            send_to_error_channel(message, user.email, "regenerate article summary (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
 
         return Response(data={"summary": message})
@@ -505,6 +500,7 @@ class PRSearchViewSet(
                 logger.exception(e)
                 break
         if has_error:
+            send_to_error_channel(message, user.email, "generate content (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
 
         return Response(data={"content": message})
@@ -588,6 +584,7 @@ class PRSearchViewSet(
                 logger.exception(e)
                 break
         if has_error:
+            send_to_error_channel(message, user.email, "web summary (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
         return Response(data={"summary": message})
 
@@ -703,6 +700,7 @@ class PRSearchViewSet(
                 tweet_res = e
                 break
         if has_error:
+            send_to_error_channel(tweet_res, user.email, "get tweets (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": tweet_res})
         query_input = query_input.replace("-is:retweet", "").replace("is:verified", "")
         return Response({"tweets": tweet_list, "string": query_input, "includes": includes})
@@ -761,6 +759,7 @@ class PRSearchViewSet(
                 logger.exception(e)
                 break
         if has_error:
+            send_to_error_channel(message, user.email, "tweet summary (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
 
         return Response(data={"summary": message})
@@ -827,6 +826,7 @@ class PRSearchViewSet(
                 logger.exception(e)
                 break
         if has_error:
+            send_to_error_channel(message, user.email, "get suggestions (platform)")
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"suggestions": message}
             )
@@ -969,6 +969,7 @@ class PRSearchViewSet(
                 logger.exception(e)
                 break
         if has_error:
+            send_to_error_channel(message, user.email, "get top journalists (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"data": message})
 
         return Response(data={"data": message})
@@ -1225,6 +1226,7 @@ class PitchViewSet(
                 logger.exception(e)
                 break
         if has_error:
+            send_to_error_channel(message, user.email, "generate pitch (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
         return Response({"pitch": pitch})
 
@@ -1296,6 +1298,7 @@ class PitchViewSet(
                 logger.exception(e)
                 break
         if has_error:
+            send_to_error_channel(message, user.email, "regenerate pitch (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
         return Response({"pitch": pitch})
 
@@ -1448,6 +1451,7 @@ class PitchViewSet(
                 logger.exception(e)
                 break
         if has_error:
+            send_to_error_channel(message, user.email, "find journalists (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
         return Response({"journalists": journalists})
 
@@ -1521,6 +1525,7 @@ class PitchViewSet(
                 logger.exception(e)
                 break
         if has_error:
+            send_to_error_channel(message, user.email, "get feedback (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
         return Response({"feedback": feedback})
 
@@ -2193,7 +2198,7 @@ class DiscoveryViewSet(
                 if not is_discover:
                     prompt = comms_consts.DISCOVER_JOURNALIST(content, info)
                 else:
-                    prompt = comms_consts.OPEN_AI_DISCOVER_JOURNALIST(info)   
+                    prompt = comms_consts.OPEN_AI_DISCOVER_JOURNALIST(info)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
@@ -2239,6 +2244,7 @@ class DiscoveryViewSet(
                 logger.exception(e)
                 break
         if has_error:
+            send_to_error_channel(message, user.email, "run discovery (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
 
         return Response(data=message)
@@ -2376,7 +2382,7 @@ class DiscoveryViewSet(
                 elif search:
                     prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(journalist, results, company, text)
                 else:
-                    print('CONTENT HERE', company)
+                    print("CONTENT HERE", company)
                     prompt = comms_consts.OPEN_AI_DISCOVERY_RESULTS_PROMPT(
                         journalist, results, company, text
                     )
@@ -2425,6 +2431,7 @@ class DiscoveryViewSet(
                 logger.exception(e)
                 break
         if has_error:
+            send_to_error_channel(message, user.email, "journalist web context (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
 
         return Response(data={"summary": message, "images": images})
@@ -2501,6 +2508,7 @@ class DiscoveryViewSet(
                 logger.exception(e)
                 break
         if has_error:
+            send_to_error_channel(message, user.email, "draft pitch (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
 
         return Response(data=message)
@@ -2710,6 +2718,7 @@ def get_google_summary(request):
             message = f"Unknown exception: {e}"
             break
     if has_error:
+        send_to_error_channel(message, user.email, "get google summary (platform)")
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
     return Response(
         data={
@@ -2784,6 +2793,7 @@ class JournalistContactViewSet(
                 readSerializer = self.serializer_class(instance=serializer.instance)
                 user.add_meta_data("contacts")
             except Exception as e:
+                send_to_error_channel(str(e), user.email, "creating journalist contact (platform)")
                 logger.exception(f"Error validating data for details <{e}>")
                 return Response(
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)}

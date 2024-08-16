@@ -31,7 +31,7 @@ from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import interactions as slack_interactions
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.block_sets import get_block_set
-from managr.slack.helpers.utils import block_finder
+from managr.slack.helpers.utils import block_finder, send_to_error_channel
 from managr.core.permissions import IsStaff
 from managr.core.serializers import UserSerializer
 from managr.core.models import User
@@ -1357,7 +1357,7 @@ def launch_search(request):
                 block_set=blockset,
             )
         except Exception as e:
-            print(e)
+            send_to_error_channel(str(e), user.email, "news summary command")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
     else:
         blockset = "news_summary_blockset"
@@ -1408,6 +1408,7 @@ def send_to_slack(request):
         )
         context.update(ts=res["ts"])
     except Exception as e:
+        send_to_error_channel(str(e), user.email, "send summary to slack")
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
     payload = {"view": {"state": {"INSTRUCTIONS": {"plain_input": {"value": instructions}}}}}
     emit_process_news_summary(payload, context)
