@@ -96,7 +96,15 @@ class OAuthLinkBuilder:
 
     @property
     def state_param(self):
-        return "state=SLACK"
+        import random
+
+        r_str = random.sample(
+            str(
+                self.user.id,
+            ),
+            3,
+        )
+        return f"state=SLACK-{r_str}"
 
     @property
     def team_id_param(self):
