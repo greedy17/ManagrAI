@@ -1607,7 +1607,13 @@ def revoke_access_token(request):
 @permission_classes([])
 def send_activation_email(request):
     user_id = request.data.get("user_id")
+    user = User.objects.get(id=user_id)
     emit_send_activation_email(user_id)
+    from managr.slack.helpers.utils import send_to_error_channel
+
+    send_to_error_channel(
+        f"{user.full_name} <{user.email}> just signed up!", user.email, None, "User Sign Up!"
+    )
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 

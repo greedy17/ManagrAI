@@ -22,7 +22,7 @@ from managr.core.models import User
 from managr.core import exceptions as open_ai_exceptions
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import block_builders
-from managr.slack.helpers.utils import action_with_params
+from managr.slack.helpers.utils import action_with_params, send_to_error_channel
 from managr.slack import constants as slack_const
 from managr.slack.models import UserSlackIntegration
 from newspaper import Article
@@ -505,42 +505,51 @@ def _send_news_summary(news_alert_id):
     start_time = end_time - datetime.timedelta(hours=24)
     clips = alert.search.get_clips(boolean, end_time, start_time)["articles"]
     if len(clips):
-        clips = [article for article in clips if article["title"] != "[Removed]"]
-        normalized_clips = normalize_newsapi_to_model(clips)
-        descriptions = [clip["description"] for clip in normalized_clips]
-        res = Search.get_summary(
-            alert.user,
-            2000,
-            60.0,
-            descriptions,
-            alert.search.search_boolean,
-            alert.search.instructions,
-            False,
-        )
-        message = res.get("choices")[0].get("message").get("content").replace("**", "<b>").replace("*", "</b>")
-        clip_short_list = normalized_clips[:5]
-        for clip in clip_short_list:
-            if clip["author"] is None:
-                clip["author"] = "N/A"
-            clip["publish_date"] = clip["publish_date"][:10]
-        content = {
-            "summary": message,
-            "clips": clip_short_list,
-            "website_url": f"{settings.MANAGR_URL}/login",
-        }
-        email_list = [alert.user.email]
-        send_html_email(
-            f"ManagrAI Digest: {alert.search.name}",
-            "core/email-templates/news-email.html",
-            settings.DEFAULT_FROM_EMAIL,
-            email_list,
-            context=content,
-        )
-        if "sent_count" in alert.meta_data.keys():
-            alert.meta_data["sent_count"] += 1
-        else:
-            alert.meta_data["sent_count"] = 1
-        alert.save()
+        try:
+            clips = [article for article in clips if article["title"] != "[Removed]"]
+            normalized_clips = normalize_newsapi_to_model(clips)
+            descriptions = [clip["description"] for clip in normalized_clips]
+            res = Search.get_summary(
+                alert.user,
+                2000,
+                60.0,
+                descriptions,
+                alert.search.search_boolean,
+                alert.search.instructions,
+                False,
+            )
+            message = (
+                res.get("choices")[0]
+                .get("message")
+                .get("content")
+                .replace("**", "<b>")
+                .replace("*", "</b>")
+            )
+            clip_short_list = normalized_clips[:5]
+            for clip in clip_short_list:
+                if clip["author"] is None:
+                    clip["author"] = "N/A"
+                clip["publish_date"] = clip["publish_date"][:10]
+            content = {
+                "summary": message,
+                "clips": clip_short_list,
+                "website_url": f"{settings.MANAGR_URL}/login",
+            }
+            email_list = [alert.user.email]
+            send_html_email(
+                f"ManagrAI Digest: {alert.search.name}",
+                "core/email-templates/news-email.html",
+                settings.DEFAULT_FROM_EMAIL,
+                email_list,
+                context=content,
+            )
+            if "sent_count" in alert.meta_data.keys():
+                alert.meta_data["sent_count"] += 1
+            else:
+                alert.meta_data["sent_count"] = 1
+            alert.save()
+        except Exception as e:
+            send_to_error_channel(str(e), alert.email, "send news alert")
     return
 
 
@@ -706,11 +715,12 @@ def news_source_report(report_type):
         domains = NewsSource.problem_urls()
     elif report_type == "stopped":
         domains = NewsSource.get_stopped_sources()
-
+    if not len(domains):
+        domains = [f"No {report_type} domains"]
     try:
         blocks = [
             block_builders.simple_section(f"Report type: {report_type}"),
-            block_builders.simple_section(domains),
+            block_builders.simple_section(f"{','.join(domains)}"),
         ]
         slack_res = slack_requests.send_channel_message(
             user.slack_integration.channel,
