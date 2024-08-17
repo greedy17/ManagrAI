@@ -484,13 +484,20 @@ def USER_APP_OPTIONS(user, resource_type):
     return options
 
 
-def send_to_error_channel(error, user_email, process):
-    error_channel = "C032VEDLSHW"
+def send_to_error_channel(
+    error,
+    user_email,
+    process,
+    header=False,
+):
+    error_channel = "C07GWFNBX9V" if header else "C032VEDLSHW"
+    header_text = header if header else f"Error from process {process} in {settings.ENVIRONMENT}"
+    block_text = error if header else f"User {user_email} had this error:\n{error}"
     try:
-        managr_int = OrganizationSlackIntegration.objects.get(team="mymanagr")
+        managr_int = OrganizationSlackIntegration.objects.get(team_name="mymanagr")
         blocks = [
-            block_builders.header_block(f"Error from process {process}"),
-            block_builders.simple_section(f"User {user_email} had this error:\n{error}"),
+            block_builders.header_block(header_text),
+            block_builders.simple_section(block_text),
         ]
         res = requests.send_channel_message(
             error_channel,
