@@ -6,7 +6,7 @@ from managr.comms.tasks import _run_spider_batch
 from background_task.models import Task
 from django.conf import settings
 from managr.api.emails import send_html_email
-from slack.helpers.utils import send_to_error_channel
+from managr.slack.helpers.utils import send_to_error_channel
 
 
 class Command(BaseCommand):
