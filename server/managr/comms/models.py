@@ -366,11 +366,11 @@ class NewsSource(TimeStampModel):
                 for idx, value in enumerate(values):
                     if "=" in value:
                         value = value.replace("=", "")
-                        selector = f"@class='{value}'"
+                        selector += f"@class='{value}'"
                     else:
-                        selector = f"contains(@class, '{value}')"
+                        selector += f"contains(@class, '{value}')"
                     if idx != len(values) - 1:
-                        selector += "or"
+                        selector += " or "
             else:
                 if "=" in selector_split[1]:
                     value = selector_split[1].replace("=", "")
@@ -389,7 +389,7 @@ class NewsSource(TimeStampModel):
         # add the link selector
         attribute_list = self.article_link_attribute.split(",")
         regex = "//body//" + attribute_list[0]
-        if self.article_link_selector:
+        if self.article_link_selector or self.data_attribute_key:
             regex += "["
         # check for data attribute
         if self.data_attribute_key:
@@ -446,7 +446,7 @@ class NewsSource(TimeStampModel):
         news = NewsSource.objects.filter(is_crawling=True)
         for n in news:
             article = n.newest_article_date()
-            if article and (today - article).days >= 3:
+            if article and (today - article).days >= 7:
                 if include_date:
                     stopped_sources.append(f"{n.domain}, {str(article.publish_date)}")
                 else:

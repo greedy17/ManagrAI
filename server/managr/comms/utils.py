@@ -52,7 +52,7 @@ def get_domain(url):
 def extract_date_from_text(text):
     if "Published" in text and "Updated" in text:
         text = text.split("Updated")
-        text[0] = text[0].replace("Publish:", "")
+        text[0] = text[0].replace("Published:", "")
     if isinstance(text, list):
         if len(text) > 0:
             text = text[0]
