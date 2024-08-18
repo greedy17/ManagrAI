@@ -6,8 +6,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily Digest</title>
     <style>
-        p {
+        p,
+        b,
+        div {
             margin: 16px 0;
+            padding: 0;
+        }
+
+        .im {
+            color: #2f4656 !important;
+            white-space: nowrap;
+        }
+
+        h1,
+        h2,
+        h3 {
+            margin: 0;
+        }
+
+        ol {
+            margin-top: -24px !important;
+        }
+
+        h2 {
+            margin-block-start: 0;
         }
     </style>
 </head>
@@ -32,10 +54,10 @@
                         style="border-bottom: 1px solid #DDDDDD; margin-bottom: 16px; padding-bottom: 16px;">
                         <tr>
                             <td>
-                                <div
-                                    style="color: #2f4656; font-family: Arial, sans-serif; font-size: 16px; line-height: 32px; padding: 16px; background-color: #e9f3fa;">
+                                <pre
+                                    style="color: #2f4656; font-family: Arial, sans-serif; font-size: 16px; line-height: 32px; background-color: #e9f3fa; padding:16px; white-space: pre-line !important;  word-wrap: break-word; margin-top: -32px; font-weight: 200;">
                                     {{ summary | safe }}
-                                </div>
+                                </pre>
                             </td>
                         </tr>
                     </table>
