@@ -523,9 +523,7 @@ DISCOVER_JOURNALIST = (
 
     * Rule #1: Ensure that all people are real, currently active professionals. Do not include fake names such as Jane Doe or John Smith.
 
-    * Rule #2: Only list people that you have the highest confidence (90% or above) in that they still work there and you can correctly guess their email address. If you lack confidence do not list all 10, just the ones you're most confident in
-
-    * Guess their email: Do your best to guess their email address. Make sure to base it on verified email patterns associated with their respective publication or company. Guessing the correct email is incredibly important.
+    * Rule #2: Only list people that you have the highest confidence (90% or above) in that they still work there. If you lack confidence do not list all 10, just the ones you're most confident in
 
     Content output, 3 rows:
     Name:
@@ -549,9 +547,8 @@ OPEN_AI_DISCOVER_JOURNALIST = (
 
     * Rule #1: Ensure that all people are real, currently active professionals. Do not include fake names such as Jane Doe or John Smith.
 
-    * Rule #2: Only list people that you have the highest confidence (90% or above) in that they still work there and you can correctly guess their email address. If you lack confidence do not list all 10, just the ones you're most confident in
+    * Rule #2: Only list people that you have the highest confidence (90% or above) in that they still work there. If you lack confidence do not list all 10, just the ones you're most confident in
 
-    * Guess their email: Do your best to guess their email address. Make sure to base it on verified email patterns associated with their respective publication or company. Guessing the correct email is incredibly important.
     * Output format must be: 
     Name:
     Company:

@@ -3,6 +3,7 @@ import json
 import uuid
 import httpx
 import datetime
+import html
 from dateutil import parser
 from django.conf import settings
 from background_task import background
@@ -518,20 +519,15 @@ def _send_news_summary(news_alert_id):
                 alert.search.instructions,
                 False,
             )
-            message = (
-                res.get("choices")[0]
-                .get("message")
-                .get("content")
-                .replace("**", "<b>")
-                .replace("*", "</b>")
-            )
+            message = res.get("choices")[0].get("message").get("content")
+            html_message = "<p>{}</p>".format(html.escape(message))
             clip_short_list = normalized_clips[:5]
             for clip in clip_short_list:
                 if clip["author"] is None:
                     clip["author"] = "N/A"
                 clip["publish_date"] = clip["publish_date"][:10]
             content = {
-                "summary": message,
+                "summary": html_message,
                 "clips": clip_short_list,
                 "website_url": f"{settings.MANAGR_URL}/login",
             }

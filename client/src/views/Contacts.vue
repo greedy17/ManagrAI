@@ -139,8 +139,8 @@
       </div>
     </Modal> -->
     <Modal v-if="pitchModalOpen" class="bio-modal med-modal">
-      <div class="bio-container med-container">
-        <header>
+      <div style="overflow: hidden" class="bio-container med-container">
+        <header style="z-index: 10">
           <p style="font-size: 22px; margin: 8px 0">
             Pitch
             {{
