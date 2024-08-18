@@ -2,7 +2,6 @@ import scrapy
 import logging
 import datetime
 import time
-import json
 from scrapy import signals
 from django.utils import timezone
 from django.conf import settings
@@ -18,7 +17,6 @@ from ..utils import (
     get_domain,
     extract_date_from_text,
     potential_link_check,
-    extract_base_domain,
     complete_url,
 )
 from .. import constants as comms_consts
@@ -28,7 +26,6 @@ logger = logging.getLogger("managr")
 SCRAPPY_HEADERS = {
     "Referer": "https://www.google.com",
     "Cache-Control": "no-cache",
-    "Accept-Encoding": "gzip, deflate, br",
     "Pragma": "no-cache",
 }
 
@@ -175,10 +172,13 @@ class NewsSpider(scrapy.Spider):
     name = "news_spider"
     handle_httpstatus_list = [403, 400]
     custom_settings = {
+        "FEED_EXPORT_ENCODING": "utf-8",
         "DOWNLOAD_DELAY_RANDOMIZE": True,
         "DOWNLOAD_DELAY": 2,
         "DOWNLOADER_MIDDLEWARES": {
             "scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware": 100,
+            "scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware": 810,
+            "managr.comms.webcrawler.middleware.ClearCacheMiddleware": 543,
         },
         "AUTOTHROTTLE_ENABLED": True,
         "USER_AGENT": "Mozilla/5.0 (compatible; managr-webcrawler/1.0; +https://managr.ai/documentation)",
@@ -199,6 +199,8 @@ class NewsSpider(scrapy.Spider):
         self.error_log = []
         self.start_time = time.time()
         self.blocked_urls = 0
+        self.remove_urls = kwargs.get("remove_urls", [])
+        self.print_response = kwargs.get("print_response")
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -249,6 +251,10 @@ class NewsSpider(scrapy.Spider):
         return site_name
 
     def parse(self, response):
+        if self.print_response:
+            for attribute in response.attributes:
+                print(attribute, ": ", getattr(response, attribute))
+                print("----------------------------------")
         if response.status == 403:
             self.blocked_urls += 1
         url = response.request.url
@@ -298,7 +304,6 @@ class NewsSpider(scrapy.Spider):
                         article_domain
                     ):
                         article_url = complete_url(article_url, source.domain)
-
                         yield scrapy.Request(
                             article_url,
                             callback=self.parse_article,

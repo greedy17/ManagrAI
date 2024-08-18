@@ -52,7 +52,7 @@ def get_domain(url):
 def extract_date_from_text(text):
     if "Published" in text and "Updated" in text:
         text = text.split("Updated")
-        text[0] = text[0].replace("Publish:", "")
+        text[0] = text[0].replace("Published:", "")
     if isinstance(text, list):
         if len(text) > 0:
             text = text[0]
@@ -72,6 +72,7 @@ def extract_date_from_text(text):
         r"(?P<date>\w+ \d{1,2}, \d{4}) at (?P<time>\d{1,2}:\d{2} \w{2})",
         r"(\d{1,2}:\d{2} [ap]\.m\. ET [A-Za-z]{3}\. \d{1,2}, \d{4})",
         r"(\w+ \d{1,2}, \d{4}) at (\d{1,2}:\d{2}[ap]m)(?: \w{3})?",
+        r"\b[A-Za-z]+\s\d{1,2},\s\d{4}\b",
     ]
     date_str = text
     strptime_formats = [

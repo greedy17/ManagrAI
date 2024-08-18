@@ -689,7 +689,7 @@ export default {
       let modelClass = this.selectedIntegrationSwitcher
       try {
         let res
-        if (integration === 'SLACK') {
+        if ('SLACK' in integration) {
           res = this.onIntegrateSlack()
         } else {
           res = await modelClass.api.getAuthLink()

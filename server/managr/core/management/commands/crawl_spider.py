@@ -9,7 +9,10 @@ class Command(BaseCommand):
     help = "Run your Scrapy spider"
 
     def add_arguments(self, parser):
-        parser.add_argument("url", nargs="?", type=str, help="The URL to scrape (optional)")
+        parser.add_argument("url", nargs="?", type=str, help="The URL to scrape (optional)"),
+        parser.add_argument(
+            "--remove_url", nargs="?", type=str, help="URLs to remove from the cache"
+        )
         parser.add_argument(
             "--active",
             action="store_true",
@@ -34,11 +37,19 @@ class Command(BaseCommand):
             "--article",
             action="store_true",
             help="Runs the spider with parse article instead of parse",
+        ),
+        parser.add_argument(
+            "--response",
+            action="store_true",
+            help="Prints response of the inital url",
         )
 
     def handle(self, *args, **options):
         url = options.get("url", False)
         new = options["new"]
+        ru = options.get("remove_url", False)
+        remove_urls = ru.split(",") if ru else []
+        response = options.get("response", False)
         html_urls = []
         xml_urls = []
         if url:
@@ -66,6 +77,8 @@ class Command(BaseCommand):
                 test=options["test"],
                 no_report=options["noreport"],
                 article_only=options["article"],
+                remove_urls=remove_urls,
+                print_response=response,
             )
         if xml_urls:
             process.crawl(

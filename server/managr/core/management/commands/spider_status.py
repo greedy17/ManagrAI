@@ -6,6 +6,7 @@ from managr.comms.tasks import _run_spider_batch
 from background_task.models import Task
 from django.conf import settings
 from managr.api.emails import send_html_email
+from managr.slack.helpers.utils import send_to_error_channel
 
 
 class Command(BaseCommand):
@@ -36,6 +37,12 @@ class Command(BaseCommand):
             else:
                 report = CrawlerReport.objects.all().order_by("-datetime_created").first()
                 data = report.create_report_data()
+                send_to_error_channel(
+                    f"Crawler finished at: {datetime.datetime.now()}, Completed in: {data['time']}",
+                    None,
+                    "crawler",
+                    f"Crawler Update {settings.ENVIRONMENT}",
+                )
                 problem_urls = NewsSource.problem_urls()
                 problem_urls = ", ".join(problem_urls)
                 data["problem_urls"] = problem_urls

@@ -31,7 +31,7 @@ from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import interactions as slack_interactions
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.block_sets import get_block_set
-from managr.slack.helpers.utils import block_finder
+from managr.slack.helpers.utils import block_finder, send_to_error_channel
 from managr.core.permissions import IsStaff
 from managr.core.serializers import UserSerializer
 from managr.core.models import User
@@ -1323,6 +1323,7 @@ def get_notes_command(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 def launch_search(request):
     slack_id = request.data.get("user_id")
+    text = request.data.get("text", None)
     if slack_id:
         slack = (
             UserSlackIntegration.objects.filter(slack_id=slack_id).select_related("user").first()
@@ -1341,23 +1342,41 @@ def launch_search(request):
     context = {
         "u": str(user.id),
     }
-    blockset = "news_summary_blockset"
-    data = {
-        "trigger_id": trigger_id,
-        "view": {
-            "type": "modal",
-            "title": {"type": "plain_text", "text": "News"},
-            "blocks": get_block_set(blockset, context=context),
-            "private_metadata": json.dumps(context),
-            "external_id": f"{blockset}.{str(uuid.uuid4())}",
-        },
-    }
-    data["view"]["callback_id"] = slack_const.PROCESS_NEWS_SUMMARY
-    data["view"]["submit"] = {
-        "type": "plain_text",
-        "text": "Submit",
-    }
-    slack_requests.generic_request(url, data, access_token=access_token)
+    if text == "help":
+        blockset = [
+            block_builders.header_block("Search Help:"),
+            block_builders.simple_section(
+                "The search command lets you find news clips relevent to the terms in the news search field.\nEnter a date range to expand or focus your search (Default is 1 week).\nThe saved search field contains all of the previously saved search in your account.",
+                "mrkdwn",
+            ),
+        ]
+        try:
+            res = slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                block_set=blockset,
+            )
+        except Exception as e:
+            send_to_error_channel(str(e), user.email, "news summary command")
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+    else:
+        blockset = "news_summary_blockset"
+        data = {
+            "trigger_id": trigger_id,
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "News"},
+                "blocks": get_block_set(blockset, context=context),
+                "private_metadata": json.dumps(context),
+                "external_id": f"{blockset}.{str(uuid.uuid4())}",
+            },
+        }
+        data["view"]["callback_id"] = slack_const.PROCESS_NEWS_SUMMARY
+        data["view"]["submit"] = {
+            "type": "plain_text",
+            "text": "Submit",
+        }
+        slack_requests.generic_request(url, data, access_token=access_token)
     return Response()
 
 
@@ -1385,12 +1404,11 @@ def send_to_slack(request):
         res = slack_requests.send_channel_message(
             user.slack_integration.channel,
             user.organization.slack_integration.access_token,
-            block_set=get_block_set(
-                "loading", {"message": ":robot_face: Scanning the news..."}
-            ),
+            block_set=get_block_set("loading", {"message": ":robot_face: Scanning the news..."}),
         )
         context.update(ts=res["ts"])
     except Exception as e:
+        send_to_error_channel(str(e), user.email, "send summary to slack")
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
     payload = {"view": {"state": {"INSTRUCTIONS": {"plain_input": {"value": instructions}}}}}
     emit_process_news_summary(payload, context)
