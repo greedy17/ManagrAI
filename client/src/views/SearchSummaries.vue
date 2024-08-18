@@ -1539,7 +1539,7 @@
                     <div
                       style="position: relative"
                       @click="addDetailsAlt(detail.title, detail.details)"
-                      v-for="(detail, i) in allCompanyDetails"
+                      v-for="detail in allCompanyDetails"
                       :key="detail.title"
                       :class="{ activesquareTile: detailTitle === detail.title }"
                       :title="detail.title"
@@ -1555,11 +1555,7 @@
                       </span>
                       <p class="turq-text">{{ detail.details }}</p>
 
-                      <span
-                        v-if="detailIndex === i"
-                        @click="deleteCompanyDetails(detail.id)"
-                        class="absolute-icon"
-                      >
+                      <span @click="deleteCompanyDetails(detail.id)" class="absolute-icon">
                         <img src="@/assets/images/close.svg" height="10px" alt="" />
                       </span>
                     </div>
