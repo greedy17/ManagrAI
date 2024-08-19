@@ -1177,7 +1177,8 @@ def redirect_from_slack(request):
     ## this is only for dev, since the redirect url to localhost will not work
     if settings.IN_DEV:
         code = request.GET.get("code", None)
-        q = urlencode({"code": code, "state": "SLACK"})
+        state = request.GET.get("state")
+        q = urlencode({"code": code, "state": state})
         if not code:
             err = {"error": "there was an error"}
             err = urlencode(err)

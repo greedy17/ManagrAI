@@ -986,6 +986,9 @@ export default {
       return this.$store.state.user.crm
     },
     selectedIntegrationSwitcher() {
+      if (this.selectedIntegration.includes('SLACK')) {
+        return SlackOAuth
+      }
       switch (this.selectedIntegration) {
         case 'SALESFORCE':
           return Salesforce
@@ -995,8 +998,6 @@ export default {
           return ZoomAccount
         case 'NYLAS':
           return Nylas
-        case 'SLACK':
-          return SlackOAuth
         case 'SALESLOFT':
           return SalesloftAccount
         case 'GONG':
