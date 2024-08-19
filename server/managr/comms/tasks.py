@@ -3,6 +3,7 @@ import json
 import uuid
 import httpx
 import datetime
+import re
 import html
 from dateutil import parser
 from django.conf import settings
@@ -519,19 +520,27 @@ def _send_news_summary(news_alert_id):
                 alert.search.instructions,
                 False,
             )
-            message = res.get("choices")[0].get("message").get("content").replace("**", "<b>")
-            html_message = "<p>{}</p>".format(html.escape(message))
+            email_list = [alert.user.email]
+
+            if "@outlook" in email_list[0]:
+                message = html.escape(res.get("choices")[0].get("message").get("content"))
+                message = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', message)
+            else:
+                message = res.get("choices")[0].get("message").get("content")
+                message = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', message)
+                
+            message = res.get("choices")[0].get("message").get("content")
+            message = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', message)
             clip_short_list = normalized_clips[:5]
             for clip in clip_short_list:
                 if clip["author"] is None:
                     clip["author"] = "N/A"
                 clip["publish_date"] = clip["publish_date"][:10]
             content = {
-                "summary": html_message,
+                "summary": message,
                 "clips": clip_short_list,
                 "website_url": f"{settings.MANAGR_URL}/login",
-            }
-            email_list = [alert.user.email]
+            }     
             send_html_email(
                 f"ManagrAI Digest: {alert.search.name}",
                 "core/email-templates/news-email.html",
@@ -619,7 +628,7 @@ def _share_client_summary(summary, clips, user_email):
     try:
         send_html_email(
             f"ManagrAI Digest",
-            "core/email-templates/news-email.html",
+            "core/email-templates/news-preview.html",
             settings.DEFAULT_FROM_EMAIL,
             [user_email],
             context=content,
