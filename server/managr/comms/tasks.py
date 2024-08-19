@@ -519,7 +519,7 @@ def _send_news_summary(news_alert_id):
                 alert.search.instructions,
                 False,
             )
-            message = res.get("choices")[0].get("message").get("content")
+            message = res.get("choices")[0].get("message").get("content").replace("**", "<b>")
             html_message = "<p>{}</p>".format(html.escape(message))
             clip_short_list = normalized_clips[:5]
             for clip in clip_short_list:
