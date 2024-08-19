@@ -1002,36 +1002,3 @@ class SubstackSpider(scrapy.Spider):
         article_links = response.xpath("//div[@class='reader2-page-body']/div/div")
         print(article_links)
         return {"results": article_links}
-
-
-[
-    "https://www.dcnewsnow.com",
-    "https://stacker.com",
-    "https://www.simplyrecipes.com",
-    "https://metro.co.uk",
-    "https://www.rd.com",
-    "https://www.atlantanewsfirst.com",
-    "https://www.eatingwell.com",
-    "https://www.popularmechanics.com",
-    "https://www.caranddriver.com",
-    "https://hoodline.com",
-    "https://mommypoppins.com",
-    "https://1057thehawk.com",
-    "https://wobm.com",
-    "https://nybreaking.com",
-    "https://www.dexerto.com",
-    "https://www.nashvillepost.com",
-    "https://nashvillebanner.com",
-    "https://electronics360.globalspec.com",
-    "https://www.flyingmag.com",
-    "https://www.themanual.com",
-    "https://www.rgj.com",
-    "https://www.thinkadvisor.com",
-    "https://fair.org",
-    "https://www.complex.com",
-    "https://www.sportico.com",
-    "https://spectator.org",
-    "https://www.sportsbusinessjournal.com",
-    "https://awfulannouncing.com",
-    "https://www.nbcboston.com",
-]
