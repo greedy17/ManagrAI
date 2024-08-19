@@ -2741,7 +2741,9 @@ class JournalistContactViewSet(
     serializer_class = JournalistContactSerializer
 
     def get_queryset(self):
-        contacts = JournalistContact.objects.for_user(user=self.request.user)
+        # contacts = JournalistContact.objects.for_user(user=self.request.user)
+        user = self.request.user
+        contacts = JournalistContact.objects.filter(user__organization=user.organization).order_by("-datetime_created")
         if self.request.data.get("tag", False):
             tag = self.request.get("tag")
             return contacts.filter(tags__contains=[tag])

@@ -464,16 +464,63 @@
     <div class="top-row">
       <section>
         <div style="margin-left: -2px" class="space-between white-container">
-          <div class="row" style="padding-bottom: 8px">
-            <div style="font-size: 16px" v-if="loading" class="loading-small">
-              <p style="margin: 0; margin-right: 8px">Gathering your contacts</p>
-              <div class="dot"></div>
-              <div class="dot"></div>
-              <div class="dot"></div>
+          <div class="row relative" style="padding-bottom: 8px">
+            <div
+              @click.stop="toggleUserDropdown"
+              :class="{ 'soft-gray-bg': showUsers }"
+              class="drop-header"
+              style="border: none"
+            >
+              <h3 style="font-size: 16px" class="thin-font row">
+                <span class="thin-font-ellipsis">{{
+                  !selectedUser
+                    ? 'All'
+                    : selectedUser.fullName
+                    ? selectedUser.fullName + "'s"
+                    : selectedUser.full_name + "'s"
+                }}</span>
+                contacts : <span style="margin-left: 4px">{{ filteredContactList.length }}</span>
+              </h3>
+
+              <img
+                v-if="!showUsers"
+                style="margin-left: 8px"
+                src="@/assets/images/arrowDropUp.svg"
+                height="14px"
+                alt=""
+              />
+              <img
+                v-else
+                class="rotate-img"
+                src="@/assets/images/arrowDropUp.svg"
+                height="14px"
+                alt=""
+              />
             </div>
-            <h3 style="font-size: 16px" class="thin-font">
-              Contacts : <span>{{ filteredContactList.length }}</span>
-            </h3>
+
+            <div v-outside-click="hideUsers" style="left: 0" v-show="showUsers" class="dropdown">
+              <div class="dropdown-header">
+                <h3>Select User</h3>
+              </div>
+
+              <div class="dropdown-body">
+                <div class="col">
+                  <div v-if="!searchUsersText" @click="selectAllUsers" class="dropdown-item">
+                    All
+                  </div>
+                  <div
+                    @click="selectUser(user)"
+                    class="dropdown-item"
+                    v-for="(user, i) in allUsers"
+                    :key="i"
+                  >
+                    {{ user.full_name }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="dropdown-footer"></div>
+            </div>
 
             <div
               style="margin-left: 32px"
@@ -810,6 +857,7 @@ export default {
       users: [],
       showList: false,
       contacts: [],
+      allContacts: [],
       tagModalOpen: false,
       // 'Test', 'Hello', 'World', 'Tags', 'Will', 'Appear', 'Right Here'
       tags: [],
@@ -849,11 +897,11 @@ export default {
     user() {
       return this.$store.state.user
     },
-    // allUsers() {
-    //   return this.users.filter((user) =>
-    //     user.full_name.toLowerCase().includes(this.searchUsersText),
-    //   )
-    // },
+    allUsers() {
+      return this.users.filter((user) =>
+        user.full_name.toLowerCase().includes(this.searchUsersText),
+      )
+    },
     tagCounts() {
       const tagCountMap = {}
       this.tags.forEach((tag) => {
@@ -876,7 +924,7 @@ export default {
     filteredContactList() {
       let filteredContacts = this.contacts.filter((contact) => {
         const searchText = this.searchContactsText.toLowerCase()
-        // const userFilter = this.userId !== undefined ? this.userId : null
+        // const userFilter = this.selectedUser.id !== undefined ? this.selectedUser.id : null
         const userFilter = null
         const tagFilter = this.selectedTags.map((tag) => tag.name.toLowerCase())
 
@@ -923,11 +971,14 @@ export default {
   created() {
     this.selectedUser = this.user
     this.bccEmail = this.user.email
-    // this.getUsers()
+    this.getUsers()
     this.getInitialContacts()
     this.getTags()
   },
   methods: {
+    hideUsers() {
+      this.showUsers = false
+    },
     async getJournalistBio() {
       this.newContactBio = ''
       this.newContactImages = []
@@ -1021,7 +1072,7 @@ export default {
         }
       } finally {
         this.savingContact = false
-        this.getContacts()
+        this.getAllContacts()
         this.bioModalOpen = false
       }
     },
@@ -1067,7 +1118,7 @@ export default {
           bodyClassName: ['custom'],
         })
       } finally {
-        this.getContacts()
+        this.getAllContacts()
         this.contactOrg = ''
         this.bioLoading = false
         this.googleModalOpen = false
@@ -1117,7 +1168,7 @@ export default {
         console.error(e)
       } finally {
         this.getTags()
-        this.getContacts()
+        this.getAllContacts()
         this.selectingTag = false
         this.showingTags = false
       }
@@ -1270,30 +1321,41 @@ export default {
     toggleListDropdown() {
       this.showList = !this.showList
     },
-    // async getUsers() {
-    //   try {
-    //     const res = await User.api.getAllUsers()
-    //     this.users = res.results.filter((user) => user.organization == this.user.organization)
-    //     console.log(res)
-    //   } catch (e) {
-    //     console.log('Error in getTrialUsers', e)
-    //   }
-    // },
+    async getUsers() {
+      try {
+        const res = await User.api.getAllUsers()
+        this.users = res.results.filter((user) => user.organization == this.user.organization)
+      } catch (e) {
+        console.log('Error in getTrialUsers', e)
+      }
+    },
     async getInitialContacts() {
       this.loading = true
       try {
         const res = await Comms.api.getContacts()
-        this.contacts = res.results
+        this.allContacts = res.results
+        this.contacts = res.results.filter((contact) => contact.user === this.user.id)
       } catch (e) {
         console.error(e)
       } finally {
         this.loading = false
       }
     },
-    async getContacts() {
+    async setAllContacts() {
+      this.contacts = this.allContacts
+    },
+    async getAllContacts() {
+      let user = this.selectUser
+      this.selectUser = ''
+      this.selectUser = user
       try {
         const res = await Comms.api.getContacts()
-        this.contacts = res.results
+        this.allContacts = res.results
+        if (this.selectUser) {
+          this.contacts = res.results.filter((contact) => contact.user === this.selectedUser.id)
+        } else {
+          this.contacts = res.results
+        }
       } catch (e) {
         console.error(e)
       }
@@ -1333,7 +1395,7 @@ export default {
         })
       } finally {
         this.getTags()
-        this.getContacts()
+        this.getAllContacts()
         this.loadingTags = false
         this.tagModalOpen = false
         this.showingTags = false
@@ -1366,7 +1428,7 @@ export default {
           bodyClassName: ['custom'],
         })
       } finally {
-        this.getContacts()
+        this.getAllContacts()
         this.deleting = false
         this.deletingId = null
       }
@@ -1379,10 +1441,12 @@ export default {
     },
     selectUser(user) {
       this.selectedUser = user
+      this.contacts = this.allContacts.filter((contact) => contact.user === this.selectedUser.id)
       this.toggleUserDropdown()
     },
     selectAllUsers() {
       this.selectedUser = null
+      this.setAllContacts()
       this.toggleUserDropdown()
     },
   },
@@ -1429,6 +1493,16 @@ export default {
 
 .thin-font {
   font-family: $thin-font-family;
+}
+
+.thin-font-ellipsis {
+  display: inline-block;
+  font-family: $thin-font-family;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 140px;
+  text-overflow: ellipsis;
+  margin-right: 4px;
 }
 
 .bold-font {
@@ -2494,6 +2568,10 @@ h2 {
   align-items: center;
   cursor: pointer;
 
+  &:hover {
+    background-color: $soft-gray;
+  }
+
   img {
     margin: 0 8px;
     filter: invert(40%);
@@ -3011,5 +3089,9 @@ textarea::placeholder {
   background: $soft-gray;
   border-radius: 4px;
   margin-right: 4px;
+}
+
+.soft-gray-bg {
+  background-color: $soft-gray;
 }
 </style>
