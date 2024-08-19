@@ -1377,7 +1377,6 @@
                 @click.stop="toggleCompany"
                 :class="{ 'soft-gray-bg': showCompanySelection || detailTitle }"
                 class="image-container s-wrapper"
-                v-if="mainView !== 'web'"
               >
                 <!-- :class="{ 'turq-filter': detailTitle }" -->
                 <img src="@/assets/images/building.svg" height="14px" alt="" />
@@ -1540,7 +1539,7 @@
                     <div
                       style="position: relative"
                       @click="addDetailsAlt(detail.title, detail.details)"
-                      v-for="(detail, i) in allCompanyDetails"
+                      v-for="detail in allCompanyDetails"
                       :key="detail.title"
                       :class="{ activesquareTile: detailTitle === detail.title }"
                       :title="detail.title"
@@ -1556,11 +1555,7 @@
                       </span>
                       <p class="turq-text">{{ detail.details }}</p>
 
-                      <span
-                        v-if="detailIndex === i"
-                        @click="deleteCompanyDetails(detail.id)"
-                        class="absolute-icon"
-                      >
+                      <span @click="deleteCompanyDetails(detail.id)" class="absolute-icon">
                         <img src="@/assets/images/close.svg" height="10px" alt="" />
                       </span>
                     </div>
@@ -2262,8 +2257,19 @@
                           height="12px"
                           alt=""
                         />
-                        <p style="text-decoration: none; border: none">
-                          {{ result.author }}
+                        <p
+                          @mouseenter="changeJournalistName(i)"
+                          @mouseleave="removeNameIndex"
+                          @click="selectJournalist(result, true)"
+                          style="text-decoration: none; border: none; cursor: pointer"
+                        >
+                          <span
+                            v-if="journalistIndex === i && showingName"
+                            style="text-decoration: none; border: none"
+                          >
+                            View Bio
+                          </span>
+                          <span v-else>{{ result.author }}</span>
                         </p>
                       </span>
                       <!-- <span class="divider-dot">.</span>
@@ -2273,7 +2279,7 @@
                     </div>
                     <div class="footer-icon-container">
                       <div class="row">
-                        <span class="s-wrapper">
+                        <!-- <span class="s-wrapper">
                           <button
                             @click="selectJournalist(result, true)"
                             class="borderless img-container-button"
@@ -2286,7 +2292,7 @@
                             />
                           </button>
                           <span class="s-tooltip"> View Bio</span>
-                        </span>
+                        </span> -->
 
                         <span v-if="!result.summary" class="s-wrapper">
                           <div
@@ -2857,7 +2863,7 @@
                     <textarea
                       autofocus
                       class="area-input-outline wider"
-                      placeholder="(e.g., Tier 1 Journalists covering lifestyle or fashion in the U.S)"
+                      placeholder="(e.g. List US journalists that would be interested in covering this story)"
                       style="width: 100%; min-height: 200px; max-height: 200px"
                       v-autoresize
                       v-model="journalistInfo"
@@ -3185,9 +3191,8 @@ export default {
       showingRelated: false,
       contentExamples: [
         {
-          name: `Craft a 100 word media pitch for...`,
-          value: `Craft a 100 word media pitch for {Brand}.
-          `,
+          name: `Craft a short media pitch for...`,
+          value: `Craft a short media pitch for [BrandX]`,
         },
         {
           name: `Write a press release for...`,
@@ -3200,7 +3205,7 @@ export default {
         },
       ],
       discoverExamples: [
-        `Tier 1 Journalist, covering health & wellness in the US`,
+        `Which US journalists would be interested in covering this story:`,
         `Podcaster in New York, covering tech`,
         `Social media influencer, fashion, in LA or Miami`,
       ],
