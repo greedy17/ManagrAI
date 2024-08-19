@@ -85,8 +85,6 @@ class SlackViewSet(
     )
     def generate_access_token(self, request, *args, **kwargs):
         code = request.data.get("code", None)
-        print(request.data)
-        print(code)
         redirect_uri = request.data.get("redirect_uri", None)
         if code is None:
             raise ValidationError("Missing data.code")
@@ -180,13 +178,15 @@ class SlackViewSet(
 
             integration = serializer.instance
 
-            text = f"<!here> your organization has connected Managr to your Slack workspace.\nYou can now configure your account by going to the integrations portal here {site_utils.get_site_url()}/settings/integrations"
+            text = f"ManagrAI has successfully connected to your Slack workspace"
 
             channel = integration.incoming_webhook.get("channel_id", None)
             slack_requests.generic_request(
                 integration.incoming_webhook.get("url"),
                 dict(
-                    text=text,
+                    blocks=[
+                        block_builders.simple_section(f"{text}", "mrkdwn"),
+                    ]
                 ),
                 integration.access_token,
             )
@@ -215,6 +215,11 @@ class SlackViewSet(
                 channel = res.get("channel", {}).get("id")
                 user_slack.channel = channel
                 user_slack.save()
+                slack_requests.send_channel_message(
+                    user_slack.channel,
+                    user_slack.organization_slack.access_token,
+                    block_set=[block_builders.simple_section("Welcome to ManagrAI!")],
+                )
             # return serialized user because client-side needs updated slackRef(s)
         return Response(data=UserSerializer(request.user).data, status=status.HTTP_200_OK)
 

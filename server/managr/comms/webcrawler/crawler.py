@@ -127,14 +127,15 @@ def common_selectors_check(source):
     for dataset in source.scrape_data.values():
         href = dataset["href"]
         classes = dataset["classes"]
-        found_value, found_attribute = check_values(href)
-        if found_value:
-            selector = found_value
-            attribute = found_attribute
-        elif classes:
+        if classes:
             found_class, found_attribute = check_classes(classes)
-            if found_class:
-                selector = found_class
+        if found_class:
+            selector = found_class
+            attribute = found_attribute
+        else:
+            found_value, found_attribute = check_values(href)
+            if found_value:
+                selector = found_value
                 attribute = found_attribute
         if selector:
             source.article_link_selector = selector

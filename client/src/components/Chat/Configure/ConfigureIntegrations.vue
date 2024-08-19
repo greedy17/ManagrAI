@@ -543,7 +543,7 @@
 
             <button
               @click="onIntegrateSlack"
-              :disabled="(generatingToken && selectedIntegration == 'SLACK') || connecting"
+              :disabled="(generatingToken && selectedIntegration.includes('SLACK')) || connecting"
               v-else
               class="gsi-material-button"
             >
@@ -689,7 +689,7 @@ export default {
       let modelClass = this.selectedIntegrationSwitcher
       try {
         let res
-        if ('SLACK' in integration) {
+        if (integration.includes('SLACK')) {
           res = this.onIntegrateSlack()
         } else {
           res = await modelClass.api.getAuthLink()
@@ -891,7 +891,7 @@ export default {
           await modelClass.api.getMicrosoftAuthentication(data).then((response) => {
             console.log('MICROSOFT RESPONSE', response)
           })
-        } else if (this.selectedIntegration === 'SLACK') {
+        } else if (this.selectedIntegration.includes('SLACK')) {
           await modelClass.api.generateAccessToken(this.$route.query.code).then((response) => {
             console.log('SLACK RESPONSE', response)
           })
