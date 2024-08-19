@@ -98,11 +98,11 @@ def check_values(href):
         if value == "year":
             year = datetime.datetime.now().year
             if f"/{year}/" in href:
-                found_value = f"value,{value}"
+                found_value = value
                 found_attribute = attribute
                 break
         elif value != "year" and value in href:
-            found_value = value
+            found_value = f"value,{value}"
             found_attribute = attribute
             break
     return found_value, found_attribute
