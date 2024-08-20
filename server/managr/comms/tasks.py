@@ -317,7 +317,6 @@ def _process_news_summary(payload, context):
                 article_text = f"{article['source']['name']}\n*{article['title']}*\n<{article['link']}|Read More>\n_{author}_ - {fixed_date}"
                 blocks.append(block_builders.simple_section(article_text, "mrkdwn"))
                 blocks.append(block_builders.divider_block())
-        blocks.append(block_builders.context_block(f"{search}", "mrkdwn"))
         slack_res = slack_requests.update_channel_message(
             user.slack_integration.channel,
             context.get("ts"),
