@@ -208,7 +208,7 @@ class SlackViewSet(
                     user_slack.organization_slack.access_token,
                     block_set=[
                         block_builders.simple_section(
-                            "ManagrAI successfully connect to your Slack workspace!"
+                            "ManagrAI successfully connected to your Slack workspace!"
                         )
                     ],
                 )
