@@ -10,10 +10,13 @@ if settings.USE_SLACK:
 
 if settings.IN_DEV:
     MANAGR_URL = "http://localhost:8080"
+    BOT_TOKEN = "xoxb-1571091193634-2662995888208-SW5SmgwM03hLyL9UNAgdtvtZ"
 elif settings.IN_STAGING:
     MANAGR_URL = "https://staging.managr.ai"
+    BOT_TOKEN = "xoxb-1571091193634-1570990854502-a7dGpuqFFQKDlpVGj673kRdI"
 else:
     MANAGR_URL = "https://app.managr.ai"
+    BOT_TOKEN = "xoxb-1571091193634-2662995888208-SW5SmgwM03hLyL9UNAgdtvtZ"
 
 # https://api.slack.com/methods/oauth.v2.access
 OAUTH_V2_ACCESS = "oauth.v2.access"
