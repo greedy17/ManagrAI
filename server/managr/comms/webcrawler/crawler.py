@@ -132,11 +132,11 @@ def common_selectors_check(source):
             if found_class:
                 selector = found_class
                 attribute = found_attribute
-        else:
-            found_value, found_attribute = check_values(href)
-            if found_value:
-                selector = found_value
-                attribute = found_attribute
+            else:
+                found_value, found_attribute = check_values(href)
+                if found_value:
+                    selector = found_value
+                    attribute = found_attribute
         if selector:
             source.article_link_selector = selector
             source.article_link_attribute = attribute
@@ -299,10 +299,11 @@ class NewsSpider(scrapy.Spider):
                         if word in article_url:
                             skip = True
                             break
-                    for class_word in comms_consts.NON_VIABLE_CLASSES:
-                        if class_word in classes:
-                            skip = True
-                            break
+                    if classes:
+                        for class_word in comms_consts.NON_VIABLE_CLASSES:
+                            if class_word in classes:
+                                skip = True
+                                break
                     if skip:
                         continue
                     article_domain = get_domain(article_url)
@@ -375,7 +376,7 @@ class NewsSpider(scrapy.Spider):
                         meta_tag_data[key] = selector
                         break
                 if key not in meta_tag_data.keys() or not len(meta_tag_data[key]):
-                    meta_tag_data[key] = "N/A"
+                    meta_tag_data[key] = None
             article_tag_list = ["article", "story", "content"]
             article_xpaths = ["//article//p//text()"]
             for a in article_tag_list:

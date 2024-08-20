@@ -87,7 +87,7 @@ def extract_date_from_text(text):
     for pattern in patterns:
         match = re.search(pattern, text)
         if match:
-            date_str = match.group(1)
+            date_str = match.group()
             if ":" in date_str:
                 colon_idx = date_str.index(":")
                 start_index = colon_idx - 2 if colon_idx >= 2 else 0
