@@ -713,14 +713,15 @@ def test_prompt(search_term):
     return
 
 
-def separate_weeks(weeks, delta=7):
+def separate_weeks(start_date, end_date, delta=7):
     dates = []
-    now = datetime.now()
-    current_to = now
-    for week in range(1, weeks):
+    current_to = end_date
+    while current_to > start_date:
         date_from = current_to - timedelta(days=delta)
         dates.append((date_from, current_to))
         current_to = date_from
+    if dates[-1][0] > start_date:
+        dates[-1] = (start_date, dates[-1][1])
     return dates
 
 

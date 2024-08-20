@@ -15,6 +15,7 @@ from .models import (
     CrawlerReport,
     GoogleAccount,
     MicrosoftAccount,
+    TaskResults,
 )
 
 TRUE_FALSE_CHOICES = (
@@ -233,10 +234,17 @@ class CustomCrawlerReportAdmin(admin.ModelAdmin):
     ordering = ("-datetime_created",)
 
 
+class TaskResultsReportAdmin(admin.ModelAdmin):
+    model = TaskResults
+    list_display = ("datetime_created",)
+    ordering = ("-datetime_created",)
+
+
 admin.site.register(User, CustomUserAdmin)
 # admin.site.register(NylasAuthAccount, CustomNylasAuthAccount)
 admin.site.register(NoteTemplate, CustomNoteTemplate)
 admin.site.register(Report, CustomReportAdmin)
 admin.site.register(GoogleAccount)
 admin.site.register(MicrosoftAccount)
+admin.site.register(TaskResults, TaskResultsReportAdmin)
 admin.site.register(CrawlerReport, CustomCrawlerReportAdmin)

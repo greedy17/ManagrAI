@@ -1,9 +1,6 @@
-import os
 import uuid
 import json
 import logging
-import base64
-import hashlib
 from managr.utils.sites import get_site_url
 from urllib.parse import urlencode
 from datetime import datetime
@@ -14,6 +11,7 @@ from managr.utils.sites import get_site_url
 from requests.exceptions import HTTPError
 from managr.utils.misc import encrypt_dict
 from django.db import models, IntegrityError
+from background_task.models import Task
 from django.contrib.auth.models import AbstractUser, BaseUserManager, AnonymousUser
 from django.db.models import Q
 from django.contrib.auth import login
@@ -1288,3 +1286,22 @@ class MicrosoftAccount(TimeStampModel):
                 email_res["error"] = str(e)
                 break
         return email_res
+
+
+class TaskResults(TimeStampModel):
+    task = models.OneToOneField(
+        Task, on_delete=models.SET_NULL, related_name="result", null=True, blank=True
+    )
+    json_result = JSONField(default=dict)
+    text_result = models.TextField(null=True, blank=True)
+
+    @classmethod
+    def ready(cls, task):
+        from background_task.models import Task
+
+        try:
+            if hasattr(task, "task"):
+                return False
+        except Task.DoesNotExist:
+            return True
+        return True

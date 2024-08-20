@@ -19,8 +19,9 @@ from .serializers import (
     NewsSourceSerializer,
     JournalistSerializer,
 )
+from managr.core.models import TaskResults
 from managr.core import constants as core_consts
-from managr.core.models import User
+from managr.core.models import User, TaskResults
 from managr.core import exceptions as open_ai_exceptions
 from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import block_builders
@@ -34,6 +35,7 @@ from managr.comms.utils import (
     extract_base_domain,
     normalize_newsapi_to_model,
     normalize_article_data,
+    separate_weeks,
 )
 from managr.api.emails import send_html_email
 
@@ -524,17 +526,25 @@ def _send_news_summary(news_alert_id):
 
             if "@outlook" in email_list[0]:
                 message = html.escape(res.get("choices")[0].get("message").get("content"))
-                message = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', message)
+                message = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", message)
                 for i in range(6, 0, -1):
-                    message = re.sub(rf'^{"#" * i} (.*?)$', rf'<h{i}>\1</h{i}>', message, flags=re.MULTILINE)   
-                message = re.sub(r'\[(.*?)\]\((.*?)\)|<([^|>]+)\|([^>]+)>', r'<a href="\2\3">\1\4</a>', message)
+                    message = re.sub(
+                        rf'^{"#" * i} (.*?)$', rf"<h{i}>\1</h{i}>", message, flags=re.MULTILINE
+                    )
+                message = re.sub(
+                    r"\[(.*?)\]\((.*?)\)|<([^|>]+)\|([^>]+)>", r'<a href="\2\3">\1\4</a>', message
+                )
 
             else:
                 message = res.get("choices")[0].get("message").get("content")
-                message = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', message)
+                message = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", message)
                 for i in range(6, 0, -1):
-                    message = re.sub(rf'^{"#" * i} (.*?)$', rf'<h{i}>\1</h{i}>', message, flags=re.MULTILINE)
-                message = re.sub(r'\[(.*?)\]\((.*?)\)|<([^|>]+)\|([^>]+)>', r'<a href="\2\3">\1\4</a>', message)
+                    message = re.sub(
+                        rf'^{"#" * i} (.*?)$', rf"<h{i}>\1</h{i}>", message, flags=re.MULTILINE
+                    )
+                message = re.sub(
+                    r"\[(.*?)\]\((.*?)\)|<([^|>]+)\|([^>]+)>", r'<a href="\2\3">\1\4</a>', message
+                )
 
             clip_short_list = normalized_clips[:5]
             for clip in clip_short_list:
@@ -545,7 +555,7 @@ def _send_news_summary(news_alert_id):
                 "summary": message,
                 "clips": clip_short_list,
                 "website_url": f"{settings.MANAGR_URL}/login",
-            }     
+            }
             send_html_email(
                 f"ManagrAI Digest: {alert.search.name}",
                 "core/email-templates/news-email.html",
@@ -747,3 +757,49 @@ def news_source_report(report_type):
             user.organization.slack_integration.access_token,
             block_set=blocks,
         )
+
+
+@background(schedule=2)
+def get_article_by_week(result_id, search, date_from, date_to):
+
+    articles = InternalArticle.search_by_query(search, date_to, date_from)
+    article_data = [article.fields_to_dict() for article in articles]
+    try:
+        result = TaskResults.objects.get(id=result_id)
+        result.json_result = article_data
+        result.save()
+    except Exception as e:
+        print(e)
+    return
+
+
+@background()
+def test_database_pull(date_to, date_from, search, result_id):
+    date_to = parser.parse(date_to)
+    date_from = parser.parse(date_from)
+    dates = separate_weeks(date_from, date_to)
+    articles = []
+    task_ids = []
+    print(datetime.datetime.now())
+    for date_set in dates:
+        try:
+            result = TaskResults.objects.create()
+            task = get_article_by_week(str(result.id), search, str(date_set[0]), str(date_set[1]))
+            result.task = task
+            result.save()
+            task_ids.append(str(result.id))
+        except Exception as e:
+            print(e)
+    while True:
+        for task_id in task_ids:
+            task = TaskResults.objects.get(id=task_id)
+            if TaskResults.ready(task):
+                articles.append(task.json_result)
+                task_ids = task_ids.remove(task_id)
+        if not task_ids:
+            break
+        all_data = TaskResults.objects.get(id=result_id)
+        all_data.json_result = articles
+        all_data.save()
+    print(datetime.datetime.now())
+    return
