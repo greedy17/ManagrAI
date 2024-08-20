@@ -115,7 +115,6 @@ def getclips(request):
                 )
             r = open_ai_exceptions._handle_response(r)
             query_input = r.get("choices")[0].get("message").get("content")
-            print(query_input, date_to, date_from)
             news_res = Search.get_clips(query_input, date_to, date_from)
             articles = news_res["articles"]
         else:
@@ -123,9 +122,7 @@ def getclips(request):
             articles = news_res["articles"]
             query_input = boolean
         articles = [article for article in articles if article["title"] != "[Removed]"]
-        print(len(articles))
         internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
-        print(len(internal_articles))
         articles = normalize_article_data(articles, internal_articles)
         return {"articles": articles, "string": query_input}
 
@@ -2743,7 +2740,9 @@ class JournalistContactViewSet(
     def get_queryset(self):
         # contacts = JournalistContact.objects.for_user(user=self.request.user)
         user = self.request.user
-        contacts = JournalistContact.objects.filter(user__organization=user.organization).order_by("-datetime_created")
+        contacts = JournalistContact.objects.filter(user__organization=user.organization).order_by(
+            "-datetime_created"
+        )
         if self.request.data.get("tag", False):
             tag = self.request.get("tag")
             return contacts.filter(tags__contains=[tag])

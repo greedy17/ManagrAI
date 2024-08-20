@@ -591,11 +591,11 @@ class Article(TimeStampModel):
             return str(e)
         return True
 
-    def fields_to_dict(self):
+    def fields_to_dict(self, internal_flag=True):
         site_name = (
             self.source.site_name if hasattr(self.source, "site_name") else self.source.domain
         )
-        return dict(
+        fields = dict(
             title=self.title,
             description=self.description,
             author=self.author,
@@ -604,6 +604,9 @@ class Article(TimeStampModel):
             image_url=self.image_url,
             source={"name": site_name},
         )
+        if internal_flag:
+            fields["i"] = True
+        return fields
 
     @classmethod
     def search_by_query(cls, boolean_string, date_to=False, date_from=False, author=False):

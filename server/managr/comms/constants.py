@@ -654,6 +654,8 @@ DO_NOT_INCLUDE_WORDS = [
     "/video",
 ]
 
+NON_VIABLE_CLASSES = ["menu", "nav"]
+
 EXCLUDE_DOMAINS = [
     "globenewswire.com",
     "marketscreener.com",

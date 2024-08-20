@@ -129,9 +129,9 @@ def common_selectors_check(source):
         classes = dataset["classes"]
         if classes:
             found_class, found_attribute = check_classes(classes)
-        if found_class:
-            selector = found_class
-            attribute = found_attribute
+            if found_class:
+                selector = found_class
+                attribute = found_attribute
         else:
             found_value, found_attribute = check_values(href)
             if found_value:
@@ -290,12 +290,17 @@ class NewsSpider(scrapy.Spider):
                 if len(article_links) and (self.first_only or self.test):
                     article_links = [article_links[0]]
                 for anchor in article_links:
+                    classes = anchor.xpath("@class").get()
                     skip = False
                     article_url = anchor.xpath("@href").extract_first()
                     if article_url is None:
                         continue
                     for word in comms_consts.DO_NOT_INCLUDE_WORDS:
                         if word in article_url:
+                            skip = True
+                            break
+                    for class_word in comms_consts.NON_VIABLE_CLASSES:
+                        if class_word in classes:
                             skip = True
                             break
                     if skip:

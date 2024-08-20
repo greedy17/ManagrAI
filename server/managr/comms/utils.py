@@ -332,11 +332,11 @@ def merge_sort_dates(arr, key="publish_date"):
     return arr
 
 
-def normalize_article_data(api_data, article_models):
+def normalize_article_data(api_data, article_models, for_test=False):
     normalized_list = []
     normalized_api_list = normalize_newsapi_to_model(api_data)
     normalized_list.extend(normalized_api_list)
-    normalized_model_list = [article.fields_to_dict() for article in article_models]
+    normalized_model_list = [article.fields_to_dict(for_test) for article in article_models]
     normalized_list.extend(normalized_model_list)
     sorted_arr = merge_sort_dates(normalized_list)
     ordered_dict = OrderedDict()
@@ -732,3 +732,58 @@ def separate_weeks(weeks, delta=7):
 #         containerOverrides={"command": ["server/manage.py", "crawl_spider.py", url]},
 #     )
 #     return response
+
+
+def test_get_clips(search, boolean=False):
+    from managr.comms.models import Article, Search
+    from managr.core.constants import (
+        OPEN_AI_CHAT_COMPLETIONS_URI,
+        OPEN_AI_CHAT_COMPLETIONS_BODY,
+        OPEN_AI_HEADERS,
+    )
+    from managr.core.exceptions import _handle_response
+
+    try:
+        today = datetime.now()
+        date_to = str(datetime.now().date())
+        date_from = str((today - timedelta(days=7)).date())
+        if "journalist:" in search:
+            internal_articles = Article.search_by_query(search, date_to, date_from, True)
+            articles = normalize_article_data([], internal_articles)
+            return {"articles": articles, "string": search}
+        if not boolean:
+            url = OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_QUERY_STRING(search)
+            body = OPEN_AI_CHAT_COMPLETIONS_BODY(
+                "support@mymanagr.com",
+                prompt,
+                token_amount=500,
+                top_p=0.1,
+            )
+            with Variable_Client() as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=OPEN_AI_HEADERS,
+                )
+            r = _handle_response(r)
+            query_input = r.get("choices")[0].get("message").get("content")
+            print("BOOLEAN:", query_input)
+            print("---------------------------------------")
+            news_res = Search.get_clips(query_input, date_to, date_from)
+            articles = news_res["articles"]
+            print("NEWSAPI CLIPS:", len(articles), articles)
+            print("---------------------------------------")
+        else:
+            news_res = Search.get_clips(boolean, date_to, date_from)
+            articles = news_res["articles"]
+            query_input = boolean
+        articles = [article for article in articles if article["title"] != "[Removed]"]
+        internal_articles = Article.search_by_query(query_input, date_to, date_from)
+        dict_articles = [article.fields_to_dict() for article in internal_articles]
+        print("INTERNAL ARTICLES:", len(dict_articles), dict_articles)
+        print("---------------------------------------")
+        articles = normalize_article_data(articles, internal_articles, True)
+        return {"articles": articles, "string": query_input}
+    except Exception as e:
+        return {"error": str(e)}

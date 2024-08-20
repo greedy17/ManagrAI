@@ -179,18 +179,6 @@ class SlackViewSet(
             integration = serializer.instance
 
             text = f"ManagrAI has successfully connected to your Slack workspace"
-
-            channel = integration.incoming_webhook.get("channel_id", None)
-            slack_requests.generic_request(
-                integration.incoming_webhook.get("url"),
-                dict(
-                    blocks=[
-                        block_builders.simple_section(f"{text}", "mrkdwn"),
-                    ]
-                ),
-                integration.access_token,
-            )
-
         else:
             team_id = data.get("team", {}).get("id")
 
@@ -218,7 +206,11 @@ class SlackViewSet(
                 slack_requests.send_channel_message(
                     user_slack.channel,
                     user_slack.organization_slack.access_token,
-                    block_set=[block_builders.simple_section("Welcome to ManagrAI!")],
+                    block_set=[
+                        block_builders.simple_section(
+                            "ManagrAI successfully connect to you Slack workspace!"
+                        )
+                    ],
                 )
             # return serialized user because client-side needs updated slackRef(s)
         return Response(data=UserSerializer(request.user).data, status=status.HTTP_200_OK)
