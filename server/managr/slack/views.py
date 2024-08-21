@@ -1087,12 +1087,13 @@ def list_tasks(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 def slack_events(request):
+    print(request.data)
     if request.data.get("type") == "url_verification":
         return Response(request.data.get("challenge"))
     slack_event = request.data.get("event", None)
     if slack_event:
         slack_id = slack_event.get("user")
-        bot_check = OrganizationSlackIntegration.objects.filter(bot_user_id=slack_id)
+        bot_check = slack_event.get("bot_profile", None)
         if bot_check:
             return Response()
         user = User.objects.filter(slack_integration__slack_id=slack_id).first()
