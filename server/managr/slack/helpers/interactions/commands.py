@@ -26,7 +26,7 @@ def open_chat(payload, context):
         if not slack:
             data = {
                 "response_type": "ephemeral",
-                "text": "Sorry I cant find your managr account",
+                "text": "Sorry, I can't find your ManagrAI account",
             }
         blocks = [
             block_builders.input_block(
@@ -77,7 +77,7 @@ def update_resource(payload, context):
         if not slack:
             data = {
                 "response_type": "ephemeral",
-                "text": "Sorry I cant find your managr account",
+                "text": "Sorry, I can't find your ManagrAI account",
             }
         blocks = get_block_set(
             "update_modal_block_set",
@@ -124,7 +124,7 @@ def create_resource(payload, context):
         if not slack:
             data = {
                 "response_type": "ephemeral",
-                "text": "Sorry I cant find your managr account",
+                "text": "Sorry, I can't find your ManagrAI account",
             }
         blocks = [
             block_builders.static_select(
@@ -179,7 +179,7 @@ def convert_lead(payload, context):
         if not slack:
             data = {
                 "response_type": "ephemeral",
-                "text": "Sorry I cant find your managr account",
+                "text": "Sorry, I can't find your ManagrAI account",
             }
         blocks = [
             block_builders.external_select(
@@ -214,7 +214,7 @@ def create_task(payload, context):
         if not slack:
             data = {
                 "response_type": "ephemeral",
-                "text": "Sorry I cant find your managr account",
+                "text": "Sorry, I can't find your ManagrAI account",
             }
 
         access_token = user.organization.slack_integration.access_token
@@ -255,7 +255,7 @@ def log_new_activity(payload, context):
         if not slack:
             data = {
                 "response_type": "ephemeral",
-                "text": "Sorry I cant find your managr account",
+                "text": "Sorry, I can't find your ManagrAI account",
             }
 
         access_token = user.organization.slack_integration.access_token

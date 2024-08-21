@@ -671,7 +671,7 @@ def update_resource(request):
             return Response(
                 data={
                     "response_type": "ephemeral",
-                    "text": "Sorry I cant find your managr account",
+                    "text": "Sorry, I can't find your ManagrAI account",
                 }
             )
     user = slack.user
@@ -748,7 +748,7 @@ def update_resource(request):
 #             return Response(
 #                 data={
 #                     "response_type": "ephemeral",
-#                     "text": "Sorry I cant find your managr account",
+#                     "text": "Sorry, I can't find your ManagrAI account",
 #                 }
 #             )
 #     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
@@ -793,7 +793,7 @@ def create_resource(request):
             return Response(
                 data={
                     "response_type": "ephemeral",
-                    "text": "Sorry I cant find your managr account",
+                    "text": "Sorry, I can't find your ManagrAI account",
                 }
             )
     user = slack.user
@@ -928,7 +928,7 @@ def meeting_summary(request):
             return Response(
                 data={
                     "response_type": "ephemeral",
-                    "text": "Sorry I cant find your managr account",
+                    "text": "Sorry, I can't find your ManagrAI account",
                 }
             )
     user = slack.user
@@ -986,7 +986,7 @@ def create_task(request):
             return Response(
                 data={
                     "response_type": "ephemeral",
-                    "text": "Sorry I cant find your managr account",
+                    "text": "Sorry, I can't find your ManagrAI account",
                 }
             )
     user = slack.user
@@ -1073,7 +1073,7 @@ def list_tasks(request):
             return Response(
                 data={
                     "response_type": "ephemeral",
-                    "text": "Sorry I cant find your managr account",
+                    "text": "Sorry, I can't find your ManagrAI account",
                 }
             )
     user = slack.user
@@ -1137,7 +1137,7 @@ def slack_events(request):
                 user.organization.slack_integration.access_token,
                 block_set=[
                     block_builders.simple_section(
-                        f"Hi there! :wave: I'm ManagrAI, your AI-powered PR assistant.\nTo get started, run this command: /managrai-search\nIf you need further assistance please email us at support@mymanagr.com"
+                        f"Hi there! :wave: I'm ManagrAI, your AI-powered PR assistant.\nTo get a news summary, run this command: /managrai-search\nIf you need further assistance please email us at support@mymanagr.com"
                     )
                 ],
             )
@@ -1184,7 +1184,7 @@ def add_to_cadence(request):
             return Response(
                 data={
                     "response_type": "ephemeral",
-                    "text": "Sorry I cant find your managr account",
+                    "text": "Sorry, I can't find your ManagrAI account",
                 }
             )
     user = slack.user
@@ -1230,7 +1230,7 @@ def schedule_meeting_command(request):
             return Response(
                 data={
                     "response_type": "ephemeral",
-                    "text": "Sorry I cant find your managr account",
+                    "text": "Sorry, I can't find your ManagrAI account",
                 }
             )
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
@@ -1269,7 +1269,7 @@ def get_notes_command(request):
             return Response(
                 data={
                     "response_type": "ephemeral",
-                    "text": "Sorry I cant find your managr account",
+                    "text": "Sorry, I can't find your ManagrAI account",
                 }
             )
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
@@ -1313,7 +1313,7 @@ def launch_search(request):
             return Response(
                 data={
                     "response_type": "ephemeral",
-                    "text": "Sorry I cant find your managr account",
+                    "text": "Sorry, I can't find your ManagrAI account",
                 }
             )
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
