@@ -2030,7 +2030,7 @@
                   <div style="width: 10%">Sent Alerts</div>
                   <div style="width: 10%">Pitches</div>
                   <div style="width: 10%">Discoveries</div>
-                  <div style="width: 12%">Emails Verified</div>
+                  <!-- <div style="width: 12%">Emails Verified</div> -->
                   <div style="width: 10%">Emails Sent</div>
                   <div style="width: 10%">Emails Drafted</div>
                   <div style="width: 10%">Saved News</div>
@@ -2077,9 +2077,9 @@
                     <div style="width: 10%">
                       {{ user.meta_data.discovery ? user.meta_data.discovery.total : 0 }}
                     </div>
-                    <div style="width: 12%">
+                    <!-- <div style="width: 12%">
                       {{ user.meta_data.verify ? user.meta_data.verify.total : 0 }}
-                    </div>
+                    </div> -->
                     <div style="width: 10%">
                       {{ user.meta_data.emailSent ? user.meta_data.emailSent.total : 0 }}
                     </div>
@@ -2631,7 +2631,8 @@ export default {
           ? this.calculateSentCountSum(this.allEmailAlerts[user.id])
           : 0,
         pitches: user.meta_data.pitches ? user.meta_data.pitches.total : 0,
-        assists: user.meta_data.assist ? user.meta_data.assist.total : 0,
+        bios: user.meta_data.bio ? user.meta_data.bio.total : 0,
+        discoveries: user.meta_data.discovery ? user.meta_data.discovery.total : 0,
         savedNews: user.searches_ref.filter((search) => search.type === 'NEWS').length,
         savedSocial: user.searches_ref.filter((search) => search.type === 'SOCIAL_MEDIA').length,
       }))

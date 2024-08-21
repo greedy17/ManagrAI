@@ -62,9 +62,9 @@ def emit_send_news_summary(news_alert_id, schedule):
     return _send_news_summary(news_alert_id, schedule={"run_at": schedule})
 
 
-def emit_share_client_summary(summary, clips, user_email):
+def emit_share_client_summary(summary, clips, title, user_email):
     logger.info("emit function")
-    return _share_client_summary(summary, clips, user_email)
+    return _share_client_summary(summary, clips, title, user_email)
 
 
 def emit_get_meta_account_info(user_id):
@@ -554,6 +554,7 @@ def _send_news_summary(news_alert_id):
                 "summary": message,
                 "clips": clip_short_list,
                 "website_url": f"{settings.MANAGR_URL}/login",
+                "title": f"{alert.search.name}",
             }
             send_html_email(
                 f"ManagrAI Digest: {alert.search.name}",
@@ -629,7 +630,7 @@ def _send_social_summary(news_alert_id):
 
 
 @background()
-def _share_client_summary(summary, clips, user_email):
+def _share_client_summary(summary, clips, title, user_email):
     for clip in clips:
         if clip["author"] is None:
             clip["author"] = "N/A"
@@ -638,10 +639,11 @@ def _share_client_summary(summary, clips, user_email):
         "summary": summary,
         "clips": clips,
         "website_url": f"{settings.MANAGR_URL}/login",
+        "title": f"{title}"
     }
     try:
         send_html_email(
-            f"ManagrAI Digest",
+            "ManagrAI Digest",
             "core/email-templates/news-preview.html",
             settings.DEFAULT_FROM_EMAIL,
             [user_email],

@@ -208,7 +208,7 @@
         </div>
 
         <div v-if="mainView === 'write'" class="paid-body">
-          <label style="font-size: 13px" for="detail-title">Name:</label>
+          <label style="font-size: 13px" for="detail-title">Name</label>
           <input
             id="detail-title"
             style="width: 100%; margin: 0.5rem 0 1rem 0"
@@ -220,7 +220,7 @@
         </div>
 
         <div v-else-if="mainView === 'discover'" class="paid-body">
-          <label style="font-size: 13px" for="detail-title">Name:</label>
+          <label style="font-size: 13px" for="detail-title">Name</label>
           <input
             id="detail-title"
             style="width: 100%; margin: 0.5rem 0 1rem 0"
@@ -232,7 +232,7 @@
         </div>
 
         <div v-else class="paid-body">
-          <label style="font-size: 13px" for="detail-title">Name:</label>
+          <label style="font-size: 13px" for="detail-title">Name</label>
           <input
             id="detail-title"
             style="width: 100%; margin: 0.5rem 0 1rem 0"
@@ -1392,30 +1392,7 @@
                 </div>
               </div>
 
-              <div
-                @click="sendSummaryEmail"
-                class="image-container s-wrapper"
-                :disabled="sentSummaryEmail"
-                v-if="mainView === 'news'"
-              >
-                <img
-                  v-if="sendingSummaryEmail"
-                  class="rotate innvert"
-                  height="14px"
-                  src="@/assets/images/loading.svg"
-                  alt=""
-                />
-                <img
-                  v-else
-                  height="14px"
-                  src="@/assets/images/email-round.svg"
-                  alt=""
-                  class="invert"
-                />
-
-                <div v-if="sendSummaryEmailText !== 'Sent!'" class="s-tooltip">Send Email</div>
-              </div>
-
+              <!-- ALERT STARTS HERE -----
               <div>
                 <div
                   @click="toggleNotifyModal"
@@ -1457,43 +1434,97 @@
                 </div>
               </div>
 
-              <div class="image-container s-wrapper">
+
+              ALERT END ----- -->
+
+              <div
+                @click.stop="showShare"
+                class="image-container s-wrapper"
+                :class="{ 'soft-gray-bg': showingShare }"
+              >
                 <img
                   style="cursor: pointer; filter: invert(40%)"
-                  src="@/assets/images/clipboard.svg"
+                  src="@/assets/images/upload2.svg"
                   height="14px"
                   alt=""
-                  @click="copyText"
                 />
 
-                <div class="s-tooltip">{{ copyTip }}</div>
+                <div class="s-tooltip">Share</div>
               </div>
+
+              <!-- SAVE STUFF HERE -->
 
               <button
                 class="image-container borderless s-wrapper"
-                @click="toggleSaveModal"
-                :disabled="
-                  articleSummaryLoading ||
-                  loading ||
-                  summaryLoading ||
-                  savingSearch ||
-                  savedSearch ||
-                  savedPitch ||
-                  savedDiscovery ||
-                  mainView === 'web'
-                "
+                :class="{ 'soft-gray-bg': showingSave }"
+                @click.stop="showSave"
                 v-if="
                   (filteredArticles && filteredArticles.length) ||
                   tweets.length ||
-                  posts.length ||
                   (mainView === 'write' && summary) ||
                   (mainView === 'discover' && summary)
                 "
               >
-                <img height="14px" src="@/assets/images/disk.svg" alt="" />
-                <div v-if="!savingSearch && !savedSearch && mainView !== 'web'" class="s-tooltip">
-                  Save
+                <img
+                  v-if="
+                    (mainView === 'news' || mainView === 'social') &&
+                    (searchSaved || savedSearch) &&
+                    !notifiedList.includes(searchId)
+                  "
+                  src="@/assets/images/bell.svg"
+                  height="14p"
+                  alt=""
+                />
+
+                <img
+                  v-else-if="
+                    (mainView === 'news' || mainView === 'social') &&
+                    (searchSaved || savedSearch) &&
+                    notifiedList.includes(searchId)
+                  "
+                  src="@/assets/images/bell-slash.svg"
+                  height="14p"
+                  alt=""
+                />
+
+                <img
+                  v-else-if="
+                    mainView !== 'news' &&
+                    mainView !== 'social' &&
+                    (savedDiscovery || savedPitch) &&
+                    !notifiedList.includes(searchId)
+                  "
+                  height="14px"
+                  src="@/assets/images/disk.svg"
+                  style="opacity: 0.4"
+                  alt=""
+                />
+
+                <img v-else height="14px" src="@/assets/images/disk.svg" alt="" />
+
+                <div
+                  v-if="
+                    (mainView === 'news' || mainView === 'social') &&
+                    (searchSaved || savedSearch) &&
+                    !notifiedList.includes(searchId)
+                  "
+                  class="s-tooltip"
+                >
+                  Schedule Digest
                 </div>
+
+                <div
+                  v-else-if="
+                    (mainView === 'news' || mainView === 'social') &&
+                    (searchSaved || savedSearch) &&
+                    notifiedList.includes(searchId)
+                  "
+                  class="s-tooltip"
+                >
+                  Disable Digest
+                </div>
+
+                <div v-else class="s-tooltip">Save</div>
               </button>
 
               <div
@@ -1575,6 +1606,282 @@
                   </section>
                 </div>
               </div>
+
+              <div class="dropdown-small" v-outside-click="hideShare" v-show="showingShare">
+                <div class="dropdown-small-header">Share with others</div>
+                <div class="dropdown-small-section dropdown-small-bb">
+                  <label for="shareEmail">Email</label>
+                  <input
+                    class="area-input-outline"
+                    name="shareEmail"
+                    v-model="shareEmail"
+                    type="text"
+                    style="width: 100%"
+                  />
+                  <div>
+                    <button
+                      @click="sendSummaryEmail"
+                      :disabled="!shareEmail"
+                      class="primary-button"
+                    >
+                      <img
+                        v-if="sendingSummaryEmail"
+                        class="rotate innvert"
+                        height="14px"
+                        src="@/assets/images/loading.svg"
+                        alt=""
+                      />
+                      <img v-else src="@/assets/images/email-round.svg" height="14px" alt="" /> Send
+                      Email
+                    </button>
+                  </div>
+                </div>
+                <div class="dropdown-small-section">
+                  <label for="slackChannel">Slack</label>
+                  <!-- <small>Select a slack channel</small> -->
+                  <input
+                    class="area-input-outline"
+                    disabled
+                    name="slackChannel"
+                    placeholder="Coming Soon..."
+                    type="text"
+                    style="width: 100%"
+                  />
+
+                  <div>
+                    <button style="cursor: text" disabled class="secondary-button">
+                      <img src="@/assets/images/slackLogo.png" height="14px" alt="" /> Coming Soon
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dropdown-small" v-outside-click="hideSave" v-show="showingSave">
+                <div v-if="mainView === 'write' && !savedPitch" class="dropdown-small-header">
+                  Save this content
+                </div>
+                <div v-else-if="mainView === 'write'" class="dropdown-small-header opaquest">
+                  Save this content
+                </div>
+
+                <div
+                  v-else-if="mainView === 'discover' && !savedDiscovery"
+                  class="dropdown-small-header"
+                >
+                  Save this list
+                </div>
+                <div v-else-if="mainView === 'discover'" class="dropdown-small-header opaquest">
+                  Save this list
+                </div>
+
+                <div
+                  v-else-if="
+                    (mainView === 'news' || mainView === 'social') && (searchSaved || savedSearch)
+                  "
+                  class="dropdown-small-header opaquest"
+                >
+                  Save this search
+                </div>
+                <div v-else class="dropdown-small-header">Save this search</div>
+
+                <div v-if="mainView === 'write'" class="dropdown-small-section">
+                  <label style="font-size: 13px" for="detail-title">Name</label>
+                  <input
+                    id="detail-title"
+                    style="width: 100%"
+                    class="area-input-outline"
+                    type="text"
+                    placeholder="Name your content..."
+                    v-model="pitchName"
+                    :disabled="savedPitch"
+                  />
+
+                  <div>
+                    <button
+                      @click="savePitch"
+                      class="primary-button"
+                      :disabled="
+                        articleSummaryLoading || loading || savingSearch || savedPitch || !pitchName
+                      "
+                    >
+                      <img
+                        v-if="savingSearch"
+                        class="rotate innvert"
+                        height="14px"
+                        src="@/assets/images/loading.svg"
+                        alt=""
+                      />
+                      Save
+                    </button>
+                  </div>
+                </div>
+
+                <div v-else-if="mainView === 'discover'" class="dropdown-small-section">
+                  <label style="font-size: 13px" for="detail-title">Name</label>
+                  <input
+                    id="detail-title"
+                    style="width: 100%"
+                    class="area-input-outline"
+                    type="text"
+                    placeholder="Name your list..."
+                    v-model="listName"
+                    :disabled="savedDiscovery"
+                  />
+
+                  <div>
+                    <button
+                      @click="saveDiscovery"
+                      class="primary-button"
+                      :disabled="
+                        articleSummaryLoading ||
+                        loading ||
+                        summaryLoading ||
+                        savingSearch ||
+                        savedDiscovery ||
+                        !listName
+                      "
+                    >
+                      <img
+                        v-if="savingSearch"
+                        class="rotate innvert"
+                        height="14px"
+                        src="@/assets/images/loading.svg"
+                        alt=""
+                      />
+                      Save
+                    </button>
+                  </div>
+                </div>
+
+                <div v-else class="dropdown-small-section dropdown-small-bb">
+                  <label style="font-size: 13px" for="detail-title">Name</label>
+                  <input
+                    id="detail-title"
+                    style="width: 100%"
+                    class="area-input-outline"
+                    type="text"
+                    placeholder="Name your search..."
+                    v-model="searchName"
+                    :disabled="savedSearch"
+                  />
+
+                  <div>
+                    <button
+                      @click="createSearch"
+                      class="primary-button"
+                      :disabled="
+                        articleSummaryLoading ||
+                        loading ||
+                        summaryLoading ||
+                        savingSearch ||
+                        savedSearch ||
+                        mainView === 'web' ||
+                        !searchName
+                      "
+                    >
+                      <img
+                        v-if="savingSearch"
+                        class="rotate innvert"
+                        height="14px"
+                        src="@/assets/images/loading.svg"
+                        alt=""
+                      />
+                      Save
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  v-if="
+                    (mainView === 'news' || mainView === 'social') &&
+                    !notifiedList.includes(searchId)
+                  "
+                  class="dropdown-small-section"
+                >
+                  <label v-if="savedSearch || savedDiscovery || savedPitch" for="time-select"
+                    >Schedule Daily Digest</label
+                  >
+                  <label class="opaquest" v-else for="time-select">Schedule Daily Digest</label>
+
+                  <input
+                    id="time-select"
+                    style="width: 100%"
+                    class="area-input-outline"
+                    required
+                    @input="calculateDate(alertTIme)"
+                    type="time"
+                    v-model="alertTIme"
+                    :disabled="
+                      savingAlert || !isPaid || (!savedSearch && !savedDiscovery && !savedPitch)
+                    "
+                  />
+
+                  <small v-if="isPaid && (savedSearch || savedDiscovery || savedPitch)"
+                    >Get daily emails with news clips and summary</small
+                  >
+                  <small class="opaquer" v-else-if="isPaid"
+                    >Get daily emails with news clips and summary</small
+                  >
+                  <small v-else>Upgrade your plan to activate alerts</small>
+
+                  <div class="row-end-bottom" style="margin-top: 0">
+                    <button @click="hideSave" class="secondary-button">Close</button>
+
+                    <button
+                      @click="addEmailAlert"
+                      :disabled="
+                        savingAlert ||
+                        !alertTIme ||
+                        !isPaid ||
+                        (!savedSearch && !savedDiscovery && !savedPitch)
+                      "
+                      style="margin-left: 8px"
+                      class="primary-button"
+                      v-if="!alertSet"
+                    >
+                      Schedule
+                    </button>
+
+                    <button
+                      style="margin-left: 8px"
+                      v-else
+                      class="primary-button fadein"
+                      @click="testEmailAlert"
+                    >
+                      Send Preview
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  class="dropdown-small-section"
+                  v-else-if="
+                    (mainView === 'news' || mainView === 'social') &&
+                    (searchSaved || savedSearch) &&
+                    notifiedList.includes(searchId)
+                  "
+                >
+                  <label>Disable Digest</label>
+                  <input
+                    style="width: 100%"
+                    class="area-input-outline"
+                    disabled
+                    type="text"
+                    :placeholder="searchTime"
+                  />
+
+                  <div class="row-end-bottom" style="margin-top: 0">
+                    <button @click="hideSave" class="secondary-button">Close</button>
+                    <button
+                      style="margin-left: 8px"
+                      class="primary-button"
+                      @click="removeEmailAlert"
+                    >
+                      Disable Digest
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </header>
           <section ref="loadedContent" class="content-container">
@@ -1588,6 +1895,18 @@
                 />
 
                 <p class="header-p">Answer</p>
+
+                <div style="margin: 2px 0 0 4px" class="image-container s-wrapper">
+                  <img
+                    style="cursor: pointer; filter: invert(40%)"
+                    src="@/assets/images/clipboard.svg"
+                    height="16px"
+                    alt=""
+                    @click="copyText"
+                  />
+
+                  <div class="s-tooltip">{{ copyTip }}</div>
+                </div>
               </div>
             </div>
 
@@ -2969,6 +3288,10 @@ export default {
   },
   data() {
     return {
+      searchTime: '',
+      showingSave: false,
+      showingShare: false,
+      shareEmail: '',
       detailIndex: null,
       journalistIndex: null,
       showingName: false,
@@ -3149,7 +3472,6 @@ export default {
       tweetMedia: null,
       tweetUsers: null,
       articleInstructions: null,
-      showUpdateBanner: false,
       showArticleRegenerate: false,
       showSaveName: false,
       isTyping: false,
@@ -3192,7 +3514,7 @@ export default {
       contentExamples: [
         {
           name: `Craft a short media pitch for...`,
-          value: `Craft a short media pitch for [BrandX]`,
+          value: `Craft a short media pitch for {BrandX}`,
         },
         {
           name: `Write a press release for...`,
@@ -3422,11 +3744,11 @@ export default {
     this.$store.dispatch('updateListName', 'news')
     this.getWritingStyles()
     this.getCompanyDetails()
+    this.shareEmail = this.user.email
   },
   watch: {
     typedMessage: 'changeIndex',
     currentSearch(newVal, oldVal) {
-      console.log(newVal)
       if (newVal && newVal.id !== (oldVal ? oldVal.id : null)) {
         this.setSearch(newVal)
       }
@@ -3460,6 +3782,18 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    showSave() {
+      this.showingSave = true
+    },
+    hideSave() {
+      this.showingSave = false
+    },
+    showShare() {
+      this.showingShare = true
+    },
+    hideShare() {
+      this.showingShare = false
+    },
     async deleteWritingStyle(id) {
       try {
         await Comms.api.deleteWritingStyle({ style_id: id })
@@ -3491,7 +3825,6 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-        console.log(res)
       } catch (e) {
         conosole.log(e)
       } finally {
@@ -3505,7 +3838,6 @@ export default {
     async getCompanyDetails() {
       try {
         const res = await Comms.api.getCompanyDetails()
-        console.log(res.results)
         this.allCompanyDetails = res.results
       } catch (e) {}
     },
@@ -3834,6 +4166,7 @@ export default {
           this.mainView = type
           this.generateNewSearch(null, false)
           this.clearSearchText()
+          this.notifiedList = []
         } else {
           this.goToIntegrations()
         }
@@ -3845,6 +4178,7 @@ export default {
         this.mainView = type
         this.generateNewSearch(null, false)
         this.clearSearchText()
+        this.notifiedList = []
       }
     },
     async getWritingStyles() {
@@ -4627,7 +4961,7 @@ export default {
         console.log(e)
       } finally {
         this.savingSearch = false
-        this.saveModalOpen = false
+        this.showingSave = false
       }
     },
     async saveDiscovery() {
@@ -4666,7 +5000,8 @@ export default {
           bodyClassName: ['custom'],
         })
       } finally {
-        this.saveModalOpen = false
+        this.savingSearch = false
+        this.showingSave = false
       }
     },
 
@@ -4692,33 +5027,40 @@ export default {
       }
       this.getEmailAlerts()
     },
-    test() {
-      console.log(this.emailAlerts)
-    },
     async testEmailAlert() {
       try {
-        Comms.api
-          .testEmailAlert({
-            alert_id: this.currentAlertId,
-            social: this.mainView === 'social' ? true : false,
-          })
-          .then((response) => {
-            this.toggleShowNotifyBanner()
-            this.toggleNotifyModal()
-          })
+        Comms.api.testEmailAlert({
+          alert_id: this.currentAlertId,
+          social: this.mainView === 'social' ? true : false,
+        })
+        this.showingSave = false
+        this.$toast('Preview sent', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } catch (e) {
         console.log(e)
       }
     },
     async removeEmailAlert() {
-      console.log(this.currentAlert)
       try {
-        Comms.api.removeEmailAlert({ id: this.currentAlert.id }).then((response) => {
-          this.getEmailAlerts()
-          this.toggleShowNotifyBanner()
+        Comms.api.removeEmailAlert({ id: this.currentAlert.id })
+        this.getEmailAlerts()
+        this.hideSave()
+        this.$toast('Digest removed', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
         })
       } catch (e) {
         console.log(e)
+      } finally {
+        this.getEmailAlerts()
       }
     },
     async getEmailAlerts() {
@@ -4731,38 +5073,70 @@ export default {
         console.log(e)
       }
     },
+    setAlertTime() {
+      let alert = this.emailAlerts.filter((alert) => alert.search === this.searchId)[0]
+
+      const datetimeString = alert.run_at
+
+      let date = new Date(datetimeString)
+
+      let hours = date.getHours()
+      let minutes = date.getMinutes()
+      let ampm = hours >= 12 ? 'PM' : 'AM'
+
+      hours = hours % 12
+      hours = hours ? hours : 12
+
+      this.searchTime = `${hours.toString().padStart(2, '0')}:${minutes
+        .toString()
+        .padStart(2, '0')} ${ampm} (UTC)`
+    },
+
+    setCurrentAlertTime(alert) {
+      // console.log(this.alertTIme)
+      // console.log(alert.run_at)
+
+      const datetimeString = this.alertTime
+
+      let date = new Date(datetimeString)
+
+      let hours = date.getHours()
+      let minutes = date.getMinutes()
+      let ampm = hours >= 12 ? 'PM' : 'AM'
+
+      hours = hours % 12
+      hours = hours ? hours : 12
+
+      this.searchTime = `${this.alertTIme} ${ampm}`
+    },
     async addEmailAlert() {
       this.savingAlert = true
       try {
-        Comms.api
-          .addEmailAlert({
-            search: this.searchId,
-            run_at: this.formattedDate,
-            user: this.user.id,
-            title: this.searchName,
-          })
-          .then((response) => {
-            this.currentAlert = response
-            this.currentAlertId = response.id
-            this.getEmailAlerts()
-            this.toggleShowNotifyBanner()
-          })
+        const response = Comms.api.addEmailAlert({
+          search: this.searchId,
+          run_at: this.formattedDate,
+          user: this.user.id,
+          title: this.searchName,
+        })
+
+        this.currentAlert = response
+        this.currentAlertId = response.id
+        this.getEmailAlerts()
+        this.showingSave = false
+        this.setCurrentAlertTime(response)
+        this.$toast('Successfully scheduled Daily Digest', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } catch (e) {
         console.log(e)
       } finally {
-        setTimeout(() => {
-          this.savingAlert = false
-          this.alertSet = true
-        }, 1000)
+        this.getEmailAlerts()
+        this.savingAlert = false
       }
-    },
-    toggleShowNotifyBanner() {
-      setTimeout(() => {
-        this.showNotifyBanner = true
-      }, 1000)
-      setTimeout(() => {
-        this.showNotifyBanner = false
-      }, 3000)
     },
     calculateDate(selectedTime) {
       const [hours, minutes] = selectedTime.split(':').map(Number)
@@ -5281,12 +5655,12 @@ export default {
       this.showSaveName = !this.showSaveName
     },
     setSearch(search) {
-      console.log('BASE IT OFF SOMETHING HERE :', search)
       this.showSummaryInstructions = true
       this.summarizing = false
       this.savedSearch = search
       this.searchId = search.id
       this.searchName = search.name
+      this.setAlertTime()
 
       if (search.hasOwnProperty('audience')) {
         this.newTemplate = search.instructions
@@ -5636,20 +6010,13 @@ export default {
         console.log(e)
       } finally {
         this.$store.dispatch('getSearches')
-
         setTimeout(() => {
           this.saveModalOpen = false
           this.savingSearch = false
-          this.successToggle()
-        }, 2000)
+        }, 1000)
       }
     },
-    successToggle() {
-      this.showUpdateBanner = true
-      setTimeout(() => {
-        this.showUpdateBanner = false
-      }, 2000)
-    },
+
     async sendSummaryEmail() {
       this.sendingSummaryEmail = true
       try {
@@ -5671,7 +6038,12 @@ export default {
         } else {
           clips = this.addedArticles
         }
-        await Comms.api.sendSummaryEmail({ summary: this.summary, clips })
+        await Comms.api.sendSummaryEmail({
+          summary: this.summary,
+          clips,
+          title: this.newSearch,
+          email: this.shareEmail,
+        })
         this.sendSummaryEmailText = 'Sent!'
         this.$toast('Email sent!', {
           timeout: 2000,
@@ -5691,6 +6063,7 @@ export default {
           bodyClassName: ['custom'],
         })
       } finally {
+        this.showingShare = false
         this.sendingSummaryEmail = false
       }
     },
@@ -5725,24 +6098,11 @@ export default {
           )
           .then((response) => {
             this.filteredArticles = response.articles
-            console.log(this.filteredArticles)
 
             this.searchArticleText = ' '
             this.searchArticleText = ''
             this.booleanString = response.string
-            // if (!this.filteredArticles.length) {
-            //   const str = response.suggestions
-            //   const searches = str.match(/Search\d+: "([^"]+)"|Search\d+: ([^"\n]+)/g)
 
-            //   const formattedSearches = searches.map((match) => {
-            //     const matchResult = match.match(/Search\d+: "([^"]+)"|Search\d+: ([^"\n]+)/)
-            //     return matchResult[1] || matchResult[2]
-            //   })
-
-            //   const [search1, search2, search3] = formattedSearches
-
-            //   this.suggestions = [search1, search2, search3]
-            // }
             if (!saved) {
               this.clearNewSearch()
             }
@@ -7051,6 +7411,65 @@ export default {
   }
 }
 
+.dropdown-small {
+  position: absolute;
+  top: 96px;
+  width: 340px;
+  right: 32px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: white;
+  z-index: 10;
+  padding: 16px 16px 0 16px;
+  border-radius: 6px;
+  box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+
+  label {
+    font-family: $base-font-family;
+  }
+
+  small {
+    font-size: 13px;
+  }
+
+  &-header {
+    padding: 0;
+    position: sticky;
+    top: 0;
+    background-color: white;
+    font-size: 18px;
+    font-family: $base-font-family;
+    font-weight: 200;
+  }
+
+  &-section {
+    padding: 16px 0;
+    display: flex;
+    flex-direction: column !important;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  &-bb {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  div {
+    width: 100%;
+
+    button {
+      margin-left: auto;
+      img {
+        margin-right: 8px;
+      }
+    }
+  }
+
+  @media only screen and (max-width: 600px) {
+    width: 60vw;
+  }
+}
+
 .source-dropdown {
   z-index: 1;
 
@@ -7399,6 +7818,14 @@ export default {
 
 .opaque {
   opacity: 0.75;
+}
+
+.opaquer {
+  opacity: 0.45;
+}
+
+.opaquest {
+  opacity: 0.3;
 }
 
 .img-button {
