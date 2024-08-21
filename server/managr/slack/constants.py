@@ -59,14 +59,10 @@ CHAT_UPDATE = "chat.update"
 WORKSPACE_SCOPES = [
     "chat:write",
     "commands",
-    "channels:read",
-    "groups:read",
     "im:write",
     "incoming-webhook",
-    "channels:manage",
-    "groups:write",
+    "im:history",
     "users:read",
-    "users:read.email",
 ]
 
 USER_SCOPES = ["channels:read"]
