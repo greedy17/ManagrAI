@@ -3,7 +3,7 @@
     <Modal v-if="deleteModelOpen" class="delete-modal">
       <div class="delete-container">
         <header @click="toggleDeleteModal">
-          <p>X</p>
+          <img src="@/assets/images/close.svg" height="18px" alt="" />
         </header>
         <main>
           <h2>Delete Search</h2>
@@ -19,7 +19,7 @@
     <Modal v-if="plansModal" class="pricing-modal">
       <div class="pricing-container">
         <header @click="closePlansModal">
-          <p>X</p>
+          <img src="@/assets/images/close.svg" height="18px" alt="" />
         </header>
         <main>
           <h2 class="pricing-header">Upgrade to PRO</h2>
@@ -99,7 +99,7 @@
     <Modal v-if="deletePitchModelOpen" class="delete-modal">
       <div class="delete-container">
         <header @click="togglePitchDeleteModal">
-          <p>X</p>
+          <img src="@/assets/images/close.svg" height="18px" alt="" />
         </header>
         <main>
           <h2>Delete Pitch</h2>
@@ -115,7 +115,7 @@
     <Modal v-if="deleteAssistModelOpen" class="delete-modal">
       <div class="delete-container">
         <header @click="toggleAssistDeleteModal">
-          <p>X</p>
+          <img src="@/assets/images/close.svg" height="18px" alt="" />
         </header>
         <main>
           <h2>Delete Assist</h2>
@@ -131,7 +131,7 @@
     <Modal v-if="deleteDiscoveryModelOpen" class="delete-modal">
       <div class="delete-container">
         <header @click="toggleDiscoveryDeleteModal">
-          <p>X</p>
+          <img src="@/assets/images/close.svg" height="18px" alt="" />
         </header>
         <main>
           <h2>Delete List</h2>
@@ -1277,7 +1277,13 @@ export default {
           .then(() => {
             this.$store.dispatch('getSearches')
             this.deleteModelOpen = false
-            this.showUpdateBanner = true
+            this.$toast('Search removed', {
+              timeout: 2000,
+              position: 'top-left',
+              type: 'success',
+              toastClassName: 'custom',
+              bodyClassName: ['custom'],
+            })
           })
       } catch (e) {
         console.log('ERROR DELETING SEARCH', e)
@@ -1296,7 +1302,7 @@ export default {
           .then(() => {
             this.$store.dispatch('getPitches')
             this.deletePitchModelOpen = false
-            this.$toast('Content deleted', {
+            this.$toast('Content removed', {
               timeout: 2000,
               position: 'top-left',
               type: 'success',
