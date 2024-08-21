@@ -75,6 +75,7 @@ class SlackViewSet(
         data = {
             "link": slack_auth.OAuthLinkBuilder(request.user, redirect_uri).link_for_type(link_type)
         }
+        print(data)
         return Response(data=data, status=status.HTTP_200_OK)
 
     @action(
@@ -1086,12 +1087,14 @@ def list_tasks(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 def slack_events(request):
-    print(request.data)
     if request.data.get("type") == "url_verification":
         return Response(request.data.get("challenge"))
     slack_event = request.data.get("event", None)
     if slack_event:
         slack_id = slack_event.get("user")
+        bot_check = OrganizationSlackIntegration.objects.filter(bot_user_id=slack_id)
+        if bot_check:
+            return Response()
         user = User.objects.filter(slack_integration__slack_id=slack_id).first()
         if not user:
             slack_requests.send_channel_message(
@@ -1104,7 +1107,7 @@ def slack_events(request):
                 ],
             )
             return Response()
-        if slack_event.get("type") == "app_home_opened" and slack_event.get("tab") == "messages":
+        elif slack_event.get("type") == "app_home_opened" and slack_event.get("tab") == "messages":
             slack_id = slack_event.get("user")
             user = User.objects.filter(slack_integration__slack_id=slack_id).first()
             if user and user.slack_integration.is_onboarded:
@@ -1114,10 +1117,12 @@ def slack_events(request):
                     user.slack_integration.channel,
                     user.organization.slack_integration.access_token,
                     text="Welcome to AI!",
-                    block_set=get_block_set(
-                        f"Welcome <@{user.slack_integration.slack_id}> I'm the ManagrAI bot designed to help you automate PR tasks",
-                        {"u": str(user.id)},
-                    ),
+                    block_set=[
+                        block_builders.simple_section(
+                            f"Welcome <@{user.slack_integration.slack_id}> I'm the ManagrAI bot designed to help you automate PR tasks",
+                            "mrkdwn",
+                        ),
+                    ],
                 )
                 user_slack = user.slack_integration
                 user_slack.is_onboarded = True
