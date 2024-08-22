@@ -1438,6 +1438,7 @@
               ALERT END ----- -->
 
               <div
+                v-if="mainView === 'news'"
                 @click.stop="showShare"
                 class="image-container s-wrapper"
                 :class="{ 'soft-gray-bg': showingShare }"
@@ -4570,7 +4571,7 @@ export default {
     async sendEmail() {
       this.sendingEmail = true
       try {
-        const res = Comms.api.sendEmail({
+        const res = await Comms.api.sendEmail({
           subject: this.subject,
           body: this.revisedPitch,
           recipient: this.targetEmail,
@@ -5047,8 +5048,7 @@ export default {
     },
     async removeEmailAlert() {
       try {
-        Comms.api.removeEmailAlert({ id: this.currentAlert.id })
-        this.getEmailAlerts()
+        const res = await Comms.api.removeEmailAlert({ id: this.currentAlert.id })
         this.hideSave()
         this.$toast('Digest removed', {
           timeout: 2000,
@@ -5057,10 +5057,13 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+
+        this.$nextTick(() => {
+          this.getEmailAlerts()
+          this.refreshUser()
+        })
       } catch (e) {
         console.log(e)
-      } finally {
-        this.getEmailAlerts()
       }
     },
     async getEmailAlerts() {
@@ -5112,7 +5115,7 @@ export default {
     async addEmailAlert() {
       this.savingAlert = true
       try {
-        const response = Comms.api.addEmailAlert({
+        const response = await Comms.api.addEmailAlert({
           search: this.searchId,
           run_at: this.formattedDate,
           user: this.user.id,
@@ -5121,6 +5124,13 @@ export default {
 
         this.currentAlert = response
         this.currentAlertId = response.id
+
+        console.log(
+          'current alert here after save ----- >',
+          this.currentAlert,
+          this.currentAlert.id,
+        )
+
         this.getEmailAlerts()
         this.showingSave = false
         this.setCurrentAlertTime(response)
