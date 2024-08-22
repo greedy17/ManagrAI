@@ -193,7 +193,7 @@ def init_fake_meeting(request):
             return Response(
                 data={
                     "response_type": "ephemeral",
-                    "text": "Sorry I cant find your managr account",
+                    "text": "Sorry, I can't find your ManagrAI account",
                 }
             )
     user = slack.user
@@ -330,7 +330,7 @@ def score_meetings(request):
             return Response(
                 data={
                     "response_type": "ephemeral",
-                    "text": "Sorry I cant find your managr account",
+                    "text": "Sorry I can't find your ManagrAI account",
                 }
             )
     call_command("generatemeetingscores")

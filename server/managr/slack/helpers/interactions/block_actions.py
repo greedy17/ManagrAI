@@ -3325,7 +3325,7 @@ def process_log_activity(payload, context):
         if not slack:
             data = {
                 "response_type": "ephemeral",
-                "text": "Sorry I cant find your managr account",
+                "text": "Sorry, I can't find your ManagrAI account",
             }
         access_token = user.organization.slack_integration.access_token
         url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_PUSH
@@ -3370,7 +3370,7 @@ def reopen_chat_modal(payload, context):
         if not slack:
             data = {
                 "response_type": "ephemeral",
-                "text": "Sorry I cant find your managr account",
+                "text": "Sorry, I can't find your ManagrAI account",
             }
         blocks = [
             block_builders.input_block(
@@ -3415,7 +3415,7 @@ def process_open_generative_action_modal(payload, context):
         if not slack:
             data = {
                 "response_type": "ephemeral",
-                "text": "Sorry I cant find your managr account",
+                "text": "Sorry, I can't find your ManagrAI account",
             }
         options = [
             block_builders.option("Draft Follow-up Email", "DRAFT_EMAIL"),

@@ -75,6 +75,7 @@ class SlackViewSet(
         data = {
             "link": slack_auth.OAuthLinkBuilder(request.user, redirect_uri).link_for_type(link_type)
         }
+        print(data)
         return Response(data=data, status=status.HTTP_200_OK)
 
     @action(
@@ -670,7 +671,7 @@ def update_resource(request):
             return Response(
                 data={
                     "response_type": "ephemeral",
-                    "text": "Sorry I cant find your managr account",
+                    "text": "Sorry, I can't find your ManagrAI account",
                 }
             )
     user = slack.user
@@ -747,7 +748,7 @@ def update_resource(request):
 #             return Response(
 #                 data={
 #                     "response_type": "ephemeral",
-#                     "text": "Sorry I cant find your managr account",
+#                     "text": "Sorry, I can't find your ManagrAI account",
 #                 }
 #             )
 #     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
@@ -792,7 +793,7 @@ def create_resource(request):
             return Response(
                 data={
                     "response_type": "ephemeral",
-                    "text": "Sorry I cant find your managr account",
+                    "text": "Sorry, I can't find your ManagrAI account",
                 }
             )
     user = slack.user
@@ -927,7 +928,7 @@ def meeting_summary(request):
             return Response(
                 data={
                     "response_type": "ephemeral",
-                    "text": "Sorry I cant find your managr account",
+                    "text": "Sorry, I can't find your ManagrAI account",
                 }
             )
     user = slack.user
@@ -985,7 +986,7 @@ def create_task(request):
             return Response(
                 data={
                     "response_type": "ephemeral",
-                    "text": "Sorry I cant find your managr account",
+                    "text": "Sorry, I can't find your ManagrAI account",
                 }
             )
     user = slack.user
@@ -1072,7 +1073,7 @@ def list_tasks(request):
             return Response(
                 data={
                     "response_type": "ephemeral",
-                    "text": "Sorry I cant find your managr account",
+                    "text": "Sorry, I can't find your ManagrAI account",
                 }
             )
     user = slack.user
@@ -1086,78 +1087,60 @@ def list_tasks(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 def slack_events(request):
+    print(request.data)
     if request.data.get("type") == "url_verification":
-        # respond to challenge (should only happen once)
         return Response(request.data.get("challenge"))
-    slack_data = request.data
     slack_event = request.data.get("event", None)
     if slack_event:
         slack_id = slack_event.get("user")
+        bot_check = slack_event.get("bot_profile", None)
+        if bot_check:
+            return Response()
         user = User.objects.filter(slack_integration__slack_id=slack_id).first()
-        if slack_event.get("type") == "app_home_opened" and slack_event.get("tab") == "home":
+        if not user:
+            slack_requests.send_channel_message(
+                slack_event["channel"],
+                slack_const.BOT_TOKEN,
+                block_set=[
+                    block_builders.simple_section(
+                        f"Looks like you're not a ManagrAI user. Contact your admin to get invited."
+                    )
+                ],
+            )
+            return Response()
+        elif slack_event.get("type") == "app_home_opened" and slack_event.get("tab") == "messages":
             slack_id = slack_event.get("user")
             user = User.objects.filter(slack_integration__slack_id=slack_id).first()
-            if user and user.is_active:
-                slack_requests.publish_view(
-                    slack_id,
-                    user.organization.slack_integration.access_token,
-                    get_block_set("home_modal", {"u": str(user.id)}),
-                )
-            else:
-                # get the user's team and check for the org
-                org = OrganizationSlackIntegration.objects.filter(
-                    team_id=slack_data.get("team_id")
-                ).first()
-                # send a generic home page assuming their org has the token
-                if org:
-                    slack_requests.publish_view(
-                        slack_id,
-                        org.access_token,
-                        get_block_set(
-                            "home_modal_generic",
-                            {"slack_id": slack_id, "org_name": org.organization.name},
-                        ),
-                    )
-                    return Response()
-                else:
-                    return Response()
             if user and user.slack_integration.is_onboarded:
-
                 return Response()
             elif user and not user.slack_integration.is_onboarded:
                 slack_requests.send_channel_message(
                     user.slack_integration.channel,
                     user.organization.slack_integration.access_token,
-                    text="Welcome to Managr!",
-                    block_set=get_block_set("onboarding_interaction", {"u": str(user.id)}),
+                    text="Welcome to AI!",
+                    block_set=[
+                        block_builders.simple_section(
+                            f"Welcome <@{user.slack_integration.slack_id}> I'm the ManagrAI bot designed to help you automate PR tasks",
+                            "mrkdwn",
+                        ),
+                    ],
                 )
                 user_slack = user.slack_integration
                 user_slack.is_onboarded = True
                 user_slack.save()
-
                 return Response()
             else:
                 return Response()
-        elif slack_event.get("type") == "app_mention":
-            text = slack_event["text"]
-            if "summary" in text:
-                resource_type = None
-                for object in ["opportunity", "account", "contact", "lead"]:
-                    if object in text:
-                        resource_type = object
-                        break
-                words = text.split(" ")
-                resource_index = words.index(resource_type)
-                resource_name = " ".join(words[resource_index + 1 :])
-                slack_requests.send_channel_message(
-                    slack_event["channel"],
-                    user.organization.slack_integration.access_token,
-                    block_set=[
-                        block_builders.simple_section(
-                            f"Checking for the latest on {resource_type} {resource_name}"
-                        )
-                    ],
-                )
+        elif slack_event.get("type") == "message":
+            slack_requests.send_channel_message(
+                slack_event["channel"],
+                user.organization.slack_integration.access_token,
+                block_set=[
+                    block_builders.simple_section(
+                        f"Hi there! :wave: I'm ManagrAI, your AI-powered PR assistant.\nTo get a news summary, run this command: /managrai-search\nIf you need further assistance please email us at support@mymanagr.com"
+                    )
+                ],
+            )
             return Response()
         else:
             return Response()
@@ -1201,7 +1184,7 @@ def add_to_cadence(request):
             return Response(
                 data={
                     "response_type": "ephemeral",
-                    "text": "Sorry I cant find your managr account",
+                    "text": "Sorry, I can't find your ManagrAI account",
                 }
             )
     user = slack.user
@@ -1247,7 +1230,7 @@ def schedule_meeting_command(request):
             return Response(
                 data={
                     "response_type": "ephemeral",
-                    "text": "Sorry I cant find your managr account",
+                    "text": "Sorry, I can't find your ManagrAI account",
                 }
             )
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
@@ -1286,7 +1269,7 @@ def get_notes_command(request):
             return Response(
                 data={
                     "response_type": "ephemeral",
-                    "text": "Sorry I cant find your managr account",
+                    "text": "Sorry, I can't find your ManagrAI account",
                 }
             )
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
@@ -1330,7 +1313,7 @@ def launch_search(request):
             return Response(
                 data={
                     "response_type": "ephemeral",
-                    "text": "Sorry I cant find your managr account",
+                    "text": "Sorry, I can't find your ManagrAI account",
                 }
             )
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN

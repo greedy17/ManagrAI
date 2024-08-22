@@ -10,10 +10,13 @@ if settings.USE_SLACK:
 
 if settings.IN_DEV:
     MANAGR_URL = "http://localhost:8080"
+    BOT_TOKEN = "xoxb-1571091193634-2662995888208-SW5SmgwM03hLyL9UNAgdtvtZ"
 elif settings.IN_STAGING:
     MANAGR_URL = "https://staging.managr.ai"
+    BOT_TOKEN = "xoxb-1571091193634-1570990854502-a7dGpuqFFQKDlpVGj673kRdI"
 else:
     MANAGR_URL = "https://app.managr.ai"
+    BOT_TOKEN = "xoxb-1571091193634-2662995888208-SW5SmgwM03hLyL9UNAgdtvtZ"
 
 # https://api.slack.com/methods/oauth.v2.access
 OAUTH_V2_ACCESS = "oauth.v2.access"
@@ -56,14 +59,10 @@ CHAT_UPDATE = "chat.update"
 WORKSPACE_SCOPES = [
     "chat:write",
     "commands",
-    "channels:read",
-    "groups:read",
     "im:write",
     "incoming-webhook",
-    "channels:manage",
-    "groups:write",
+    "im:history",
     "users:read",
-    "users:read.email",
 ]
 
 USER_SCOPES = ["channels:read"]
@@ -71,7 +70,7 @@ USER_SCOPES = ["channels:read"]
 # Link Types to determine which type of OAuth link to generate
 WORKSPACE = "WORKSPACE"
 USER = "USER"
-OAUTH_LINK_TYPES = [WORKSPACE]
+OAUTH_LINK_TYPES = [WORKSPACE, USER]
 
 
 TOKEN_TYPE_BOT = "bot"

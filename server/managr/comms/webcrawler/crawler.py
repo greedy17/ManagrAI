@@ -252,13 +252,14 @@ class NewsSpider(scrapy.Spider):
         return site_name
 
     def parse(self, response):
+        original_check = response.meta.get("redirect_urls", [])
         if self.print_response:
             for attribute in response.attributes:
                 print(attribute, ": ", getattr(response, attribute))
                 print("----------------------------------")
         if response.status == 403:
             self.blocked_urls += 1
-        url = response.request.url
+        url = original_check[0] if original_check else response.request.url
         if url[len(url) - 1] == "/":
             url = url[: len(url) - 1]
         try:
@@ -427,6 +428,7 @@ class NewsSpider(scrapy.Spider):
                 field = XPATH_TO_FIELD[key]
                 setattr(source, field, path)
             source.save()
+        if not source.is_crawling:
             source.crawling
         self.urls_processed += 1
         return
@@ -840,19 +842,31 @@ class XMLSpider(scrapy.Spider):
             article_check = source.newest_article_date()
         except NewsSource.DoesNotExist:
             return
-        year = datetime.datetime.now().year
-        regex = f"//sitemap:loc[contains(text(),'{year}')]/text()"
-        if article_check:
-            day_links = [response.xpath(regex, namespaces=self.namespaces).get()]
+        if "rss" in url:
+            regex = "//item//link/text()"
+            links = response.xpath(regex).getall()
+            for link in links:
+                new_url = f"http://api.scraperapi.com/?api_key={comms_consts.SCRAPER_API_KEY}&url={link}&render=true"
+                yield scrapy.Request(
+                    new_url,
+                    self.parse_article,
+                    headers=SCRAPPY_HEADERS,
+                    cb_kwargs={"source": source},
+                )
         else:
-            day_links = response.xpath(regex, namespaces=self.namespaces).getall()[:3]
-        for day in day_links:
-            yield scrapy.Request(
-                day,
-                callback=self.parse_day,
-                headers=SCRAPPY_HEADERS,
-                cb_kwargs={"source": source},
-            )
+            year = datetime.datetime.now().year
+            regex = f"//sitemap:loc[contains(text(),'{year}')]/text()"
+            if article_check:
+                day_links = [response.xpath(regex, namespaces=self.namespaces).get()]
+            else:
+                day_links = response.xpath(regex, namespaces=self.namespaces).getall()[:3]
+            for day in day_links:
+                yield scrapy.Request(
+                    day,
+                    callback=self.parse_day,
+                    headers=SCRAPPY_HEADERS,
+                    cb_kwargs={"source": source},
+                )
         current_datetime = datetime.datetime.now()
         source.last_scraped = timezone.make_aware(current_datetime, timezone.get_current_timezone())
         source.save()
