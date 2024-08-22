@@ -745,7 +745,7 @@ def news_summary_blockset(context):
         block_builders.datepicker(str(date), label="Date End", block_id="STOP_DATE"),
     ]
     if search_options:
-        blocks.extend(
+        blocks.append(
             block_builders.static_select(
                 "Saved Searches",
                 search_options,

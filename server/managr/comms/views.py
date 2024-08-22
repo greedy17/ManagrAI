@@ -210,7 +210,7 @@ class PRSearchViewSet(
             instructions = comms_consts.JOURNALIST_INSTRUCTIONS(company)
         has_error = False
         attempts = 1
-        token_amount = 1000
+        token_amount = 2000
         timeout = 60.0
         while True:
             try:
@@ -224,12 +224,12 @@ class PRSearchViewSet(
                 logger.exception(
                     f"Retrying again due to token amount, amount currently at: {token_amount}"
                 )
-                if token_amount <= 2000:
+                if token_amount <= 6000:
                     has_error = True
                     message = "Token amount error"
                     break
                 else:
-                    token_amount += 500
+                    token_amount += 2000
                     continue
             except httpx.ReadTimeout as e:
                 timeout += 30.0
@@ -1058,7 +1058,7 @@ class PRSearchViewSet(
         clips = request.data.get("clips", [])
         email = request.data.get("email", request.user.email)
         title = request.data.get("title", "")
-        emit_share_client_summary(summary, clips,title, email)
+        emit_share_client_summary(summary, clips, title, email)
         return Response(status=status.HTTP_200_OK)
 
     @action(
