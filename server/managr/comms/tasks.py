@@ -240,7 +240,7 @@ def _process_news_summary(payload, context):
                 input_text = clips_res["string"]
                 summary_res = get_summary(user, articles, search, instructions)
                 message = summary_res["summary"]
-                user.add_meta_data("news_summaries")
+                user.add_meta_data("news_summaries_slack")
                 user.save()
             else:
                 message = "No results found. Try a new search…"
@@ -639,7 +639,7 @@ def _share_client_summary(summary, clips, title, user_email):
         "summary": summary,
         "clips": clips,
         "website_url": f"{settings.MANAGR_URL}/login",
-        "title": f"{title}"
+        "title": f"{title}",
     }
     try:
         send_html_email(
