@@ -5079,20 +5079,24 @@ export default {
     setAlertTime() {
       let alert = this.emailAlerts.filter((alert) => alert.search === this.searchId)[0]
 
-      const datetimeString = alert.run_at
+      if (alert) {
+        const datetimeString = alert.run_at
 
-      let date = new Date(datetimeString)
+        let date = new Date(datetimeString)
 
-      let hours = date.getHours()
-      let minutes = date.getMinutes()
-      let ampm = hours >= 12 ? 'PM' : 'AM'
+        let hours = date.getHours()
+        let minutes = date.getMinutes()
+        let ampm = hours >= 12 ? 'PM' : 'AM'
 
-      hours = hours % 12
-      hours = hours ? hours : 12
+        hours = hours % 12
+        hours = hours ? hours : 12
 
-      this.searchTime = `${hours.toString().padStart(2, '0')}:${minutes
-        .toString()
-        .padStart(2, '0')} ${ampm} (UTC)`
+        this.searchTime = `${hours.toString().padStart(2, '0')}:${minutes
+          .toString()
+          .padStart(2, '0')} ${ampm} (UTC)`
+      } else {
+        return
+      }
     },
 
     setCurrentAlertTime(alert) {
