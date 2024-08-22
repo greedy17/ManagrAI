@@ -743,11 +743,14 @@ def news_summary_blockset(context):
         ),
         block_builders.datepicker(str(date_start), label="Date Start", block_id="START_DATE"),
         block_builders.datepicker(str(date), label="Date End", block_id="STOP_DATE"),
-        block_builders.static_select(
-            "Saved Searches",
-            search_options,
-            slack_const.PROCESS_SELECT_SAVED_SEARCH,
-            block_id="SAVED_SEARCH",
-        ),
     ]
+    if search_options:
+        blocks.extend(
+            block_builders.static_select(
+                "Saved Searches",
+                search_options,
+                slack_const.PROCESS_SELECT_SAVED_SEARCH,
+                block_id="SAVED_SEARCH",
+            ),
+        )
     return blocks
