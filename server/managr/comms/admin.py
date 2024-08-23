@@ -94,6 +94,11 @@ class CustomJournalistContactAdmin(admin.ModelAdmin):
     list_filter = ("user",)
 
 
+class CustomCompanyDetail(admin.ModelAdmin):
+    list_display = ("user", "title")
+    list_filter = ("user__organization",)
+
+
 admin.site.register(Search, CustomSearch)
 admin.site.register(Pitch, CustomPitch)
 admin.site.register(NewsSource, CustomNewsSource)
@@ -106,4 +111,4 @@ admin.site.register(Discovery)
 admin.site.register(Journalist, CustomJournalAdmin)
 admin.site.register(EmailTracker, CustomEmailTrackerAdmin)
 admin.site.register(JournalistContact, CustomJournalistContactAdmin)
-admin.site.register(CompanyDetails)
+admin.site.register(CompanyDetails, CustomCompanyDetail)

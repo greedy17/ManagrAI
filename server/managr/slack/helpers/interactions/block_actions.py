@@ -66,7 +66,7 @@ from managr.salesforce.routes import routes as sf_routes
 from managr.hubspot.routes import routes as hs_routes
 from managr.outreach.exceptions import TokenExpired as OutreachTokenExpired
 from managr.zoom.background import emit_process_get_transcript_and_update_crm
-from managr.comms.tasks import emit_process_news_summary
+from managr.comms.tasks import emit_process_news_summary, emit_process_regenerate_pitch_slack
 
 CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 logger = logging.getLogger("managr")
@@ -4214,6 +4214,49 @@ def process_show_search_modal(payload, context):
     slack_requests.generic_request(url, data, access_token=access_token)
 
 
+def add_edit_field(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    params = []
+    for key in context.keys():
+        params.append(f"{key}={context[key]}")
+    blocks = payload["message"]["blocks"]
+    blocks.pop(len(blocks) - 1)
+    blocks.append(
+        block_builders.input_block("Edit", None, "Make edits...", True, block_id="EDIT_TEXT")
+    )
+    blocks.append(
+        block_builders.actions_block(
+            [
+                block_builders.simple_button_block(
+                    "Submit",
+                    "SUBMIT_EDIT",
+                    action_id=action_with_params(slack_const.PROCESS_SUBMIT_WRITE_EDIT, params),
+                )
+            ]
+        )
+    )
+    slack_res = slack_requests.update_channel_message(
+        payload["container"]["channel_id"],
+        payload["container"]["message_ts"],
+        user.organization.slack_integration.access_token,
+        block_set=blocks,
+    )
+    return
+
+
+def submit_write_edit(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    blocks = [block_builders.simple_section(":robot_face: Regenerating your pitch...", "mrkdwn")]
+    slack_res = slack_requests.update_channel_message(
+        payload["container"]["channel_id"],
+        payload["container"]["message_ts"],
+        user.organization.slack_integration.access_token,
+        block_set=blocks,
+    )
+    emit_process_regenerate_pitch_slack(payload, context)
+    return
+
+
 def handle_block_actions(payload):
     """
     This takes place when user completes a general interaction,
@@ -4295,6 +4338,8 @@ def handle_block_actions(payload):
         slack_const.PROCESS_SUMMARIZE_ARTICLE: process_summarize_article,
         slack_const.PROCESS_SELECT_SAVED_SEARCH: process_summary_for_saved_search,
         slack_const.PROCESS_SHOW_SEARCH_MODAL: process_show_search_modal,
+        slack_const.PROCESS_ADD_EDIT_FIELD: add_edit_field,
+        slack_const.PROCESS_SUBMIT_WRITE_EDIT: submit_write_edit,
     }
 
     action_query_string = payload["actions"][0]["action_id"]

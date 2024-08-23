@@ -383,6 +383,18 @@ OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS = (
 )
 
 
+OPEN_AI_PTICH_SLACK_DRAFT_WITH_INSTRUCTIONS = (
+    lambda pitch, instructions, style, details: f"""
+    Adjust and rewrite the content per the instructions below, adhering to the desired writing style guidelines. The content should be a format to display in markdown with proper spacing and separate paragraphs for each section (greeting, introduction, closing, etc). Do not include ```markdown``` in your response.\n
+    
+    Content: {pitch}\n
+    Instructions: {instructions}\n
+    Writing Style: {style}
+    Additional details {details}
+    """
+)
+
+
 def OPEN_AI_GENERATE_CONTENT(date, article, style, instructions):
     if not style:
         style = "Begin with a precise introduction, without informal salutations. Be clear, concise, and informative, avoiding metaphors. Offer coherent data without persuasion. Aim for depth, not sensationalism and avoid commercial bias."
