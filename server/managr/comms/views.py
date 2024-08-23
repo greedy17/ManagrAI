@@ -2876,8 +2876,7 @@ class EmailTrackerViewSet(
     def get_queryset(self):
         user = self.request.user
         trackers = EmailTracker.objects.filter(user=user).order_by("-datetime_created")
-        serialized = self.serializer_class(trackers, many=True)
-        return Response(data={"trackers": serialized.data})
+        return trackers
 
     def create(self, request, *args, **kwargs):
         user = request.user
@@ -2894,7 +2893,7 @@ class EmailTrackerViewSet(
             serializer.is_valid(raise_exception=True)
             serializer.save()
             serializer.instance.add_activity("draft_created")
-            return Response(status=status.HTTP_201_CREATED, dat={"tracker": serializer.data})
+            return Response(status=status.HTTP_201_CREATED, data={"tracker": serializer.data})
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
 
