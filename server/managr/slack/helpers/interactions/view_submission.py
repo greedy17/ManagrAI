@@ -2610,7 +2610,7 @@ def process_chat_action_submit(payload, context):
 
 
 def process_news_summary(payload, context):
-    from managr.comms.tasks import emit_process_news_summary
+    from managr.comms.tasks import emit_process_slack_news_summary
 
     ts = context.get("ts", False)
     user = User.objects.get(id=context.get("u"))
@@ -2636,7 +2636,7 @@ def process_news_summary(payload, context):
     except Exception as e:
         logger.exception(f"Failed to send DM to {user.email} because of <{e}>")
 
-    emit_process_news_summary(payload, context)
+    emit_process_slack_news_summary(payload, context)
     return {"response_action": "clear"}
 
 
@@ -2738,6 +2738,33 @@ def process_submit_transcript_prompt_modal(payload, context):
     return
 
 
+def process_write_submit(payload, context):
+    from managr.comms.tasks import emit_process_regenerate_pitch_slack
+
+    ts = context.get("ts", False)
+    user = User.objects.get(id=context.get("u"))
+    try:
+        if ts:
+            res = slack_requests.update_channel_message(
+                user.slack_integration.channel,
+                ts,
+                user.organization.slack_integration.access_token,
+                block_set=get_block_set("loading", {"message": ":robot_face: Generating pitch..."}),
+            )
+        else:
+            res = slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                block_set=get_block_set("loading", {"message": ":robot_face: Generating pitch..."}),
+            )
+            context.update(ts=res["ts"])
+    except Exception as e:
+        logger.exception(f"Failed to send DM to {user.email} because of <{e}>")
+
+    emit_process_regenerate_pitch_slack(payload, context)
+    return {"response_action": "clear"}
+
+
 def handle_view_submission(payload):
     """
     This takes place when a modal's Submit button is clicked.
@@ -2772,6 +2799,7 @@ def handle_view_submission(payload):
         slack_const.PROCESS_ASK_MANAGR: process_submit_ask_managr,
         slack_const.RESET_SELECTED_MEETING_DAYS: process_reset_selected_meeting_days,
         slack_const.PROCESS_NEWS_SUMMARY: process_news_summary,
+        slack_const.PROCESS_WRITE: process_write_submit,
         slack_const.MEETING__SUBMIT_TRANSCRIPT_PROMPT_MODAL: process_submit_transcript_prompt_modal,
     }
     callback_id = payload["view"]["callback_id"]

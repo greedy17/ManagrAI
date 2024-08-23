@@ -1351,7 +1351,7 @@ def launch_search(request):
             "trigger_id": trigger_id,
             "view": {
                 "type": "modal",
-                "title": {"type": "plain_text", "text": "News"},
+                "title": {"type": "plain_text", "text": "Assist"},
                 "blocks": get_block_set(blockset, context=context),
                 "private_metadata": json.dumps(context),
                 "external_id": f"{blockset}.{str(uuid.uuid4())}",
@@ -1370,7 +1370,7 @@ def launch_search(request):
 @permission_classes([permissions.AllowAny])
 @authentication_classes([ExpiringTokenAuthentication])
 def send_summary_to_slack(request):
-    from managr.comms.tasks import emit_process_news_summary
+    from managr.comms.tasks import emit_process_slack_news_summary
     import re
 
     data = request.data.get("data")

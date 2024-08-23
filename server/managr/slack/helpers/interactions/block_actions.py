@@ -66,7 +66,7 @@ from managr.salesforce.routes import routes as sf_routes
 from managr.hubspot.routes import routes as hs_routes
 from managr.outreach.exceptions import TokenExpired as OutreachTokenExpired
 from managr.zoom.background import emit_process_get_transcript_and_update_crm
-from managr.comms.tasks import emit_process_news_summary, emit_process_regenerate_pitch_slack
+from managr.comms.tasks import emit_process_slack_news_summary, emit_process_regenerate_pitch_slack
 
 CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
 logger = logging.getLogger("managr")
@@ -4184,7 +4184,7 @@ def process_summary_for_saved_search(payload, context):
     except Exception as e:
         logger.exception(f"Failed to send DM to {user.email} because of <{e}>")
 
-    emit_process_news_summary(payload, context)
+    emit_process_slack_news_summary(payload, context)
     return
 
 
@@ -4254,6 +4254,56 @@ def submit_write_edit(payload, context):
         block_set=blocks,
     )
     emit_process_regenerate_pitch_slack(payload, context)
+    return
+
+
+def change_source_view(payload, context):
+    user = User.objects.get(slack_integration__slack_id=payload["user"]["id"])
+    context["u"] = str(user.id)
+    source = payload["view"]["state"]["values"]["SOURCE"]["PROCESS_CHANGE_SOURCE_VIEW"][
+        "selected_option"
+    ]["value"]
+    source_switcher = {"NEWS": "news_summary_blockset", "WRITE": "write_blockset"}
+    blockset = source_switcher[source]
+    blocks = get_block_set(
+        blockset,
+        context,
+    )
+    access_token = user.organization.slack_integration.access_token
+    url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_UPDATE
+    trigger_id = payload["trigger_id"]
+
+    view_id = payload["view"]["id"]
+    data = {
+        "view_id": view_id,
+        "view": {
+            "type": "modal",
+            "callback_id": "TEST",
+            "title": {"type": "plain_text", "text": "Assist"},
+            "blocks": blocks,
+            "external_id": f"{blockset}.{str(uuid.uuid4())}",
+            "private_metadata": json.dumps(context),
+            "submit": {"type": "plain_text", "text": "Submit"},
+        },
+    }
+    try:
+        res = slack_requests.generic_request(url, data, access_token=access_token)
+    except InvalidBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidBlocksFormatException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except UnHandeledBlocksException as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
+    except InvalidAccessToken as e:
+        return logger.exception(
+            f"Failed To Generate Slack Workflow Interaction for user  with workflow {str(workflow.id)} email {workflow.user.email} {e}"
+        )
     return
 
 
@@ -4340,6 +4390,7 @@ def handle_block_actions(payload):
         slack_const.PROCESS_SHOW_SEARCH_MODAL: process_show_search_modal,
         slack_const.PROCESS_ADD_EDIT_FIELD: add_edit_field,
         slack_const.PROCESS_SUBMIT_WRITE_EDIT: submit_write_edit,
+        slack_const.PROCESS_CHANGE_SOURCE_VIEW: change_source_view,
     }
 
     action_query_string = payload["actions"][0]["action_id"]

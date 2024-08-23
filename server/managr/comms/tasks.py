@@ -42,8 +42,8 @@ from managr.api.emails import send_html_email
 logger = logging.getLogger("managr")
 
 
-def emit_process_news_summary(payload, context, schedule=datetime.datetime.now()):
-    return _process_news_summary(payload, context, schedule=schedule)
+def emit_process_slack_news_summary(payload, context, schedule=datetime.datetime.now()):
+    return _process_slack_news_summary(payload, context, schedule=schedule)
 
 
 def emit_process_send_clips(payload, context):
@@ -214,7 +214,7 @@ def update_search(payload, context):
 
 
 @background()
-def _process_news_summary(payload, context):
+def _process_slack_news_summary(payload, context):
     state = payload["view"]["state"]["values"]
     if context.get("ts", False):
         title = "Answer"
@@ -331,11 +331,13 @@ def _process_news_summary(payload, context):
                 block_set=blocks,
             )
         else:
-            slack_res = slack_requests.send_channel_message(
-                user.slack_integration.channel,
-                user.organization.slack_integration.access_token,
-                block_set=blocks,
-            )
+            channels = context.get("r").split("|")
+            for channel in channels:
+                slack_res = slack_requests.send_channel_message(
+                    channel,
+                    user.organization.slack_integration.access_token,
+                    block_set=blocks,
+                )
     except Exception as e:
         logger.exception(
             f"ERROR sending update channel message for chat submission because of <{e}>"
@@ -595,9 +597,12 @@ def _send_news_summary(news_alert_id):
             except Exception as e:
                 send_to_error_channel(str(e), alert.email, "send news alert")
         if type == "BOTH":
-            emit_process_news_summary(payload, context)
+            recipients = "|".join(alert.recipients)
+            context.update("r", recipients)
+            emit_process_slack_news_summary(payload, context)
     else:
-        emit_process_news_summary(payload, context)
+        context.update("r", recipients)
+        emit_process_slack_news_summary(payload, context)
     if "sent_count" in alert.meta_data.keys():
         alert.meta_data["sent_count"] += 1
     else:

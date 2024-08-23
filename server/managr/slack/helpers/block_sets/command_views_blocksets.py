@@ -741,6 +741,13 @@ def news_summary_blockset(context):
         block_builders.input_block(
             "Search news", optional=False, block_id="SEARCH", multiline=True
         ),
+        block_builders.static_select(
+            "Source",
+            [block_builders.option("News", "NEWS"), block_builders.option("Write", "WRITE")],
+            slack_const.PROCESS_CHANGE_SOURCE_VIEW,
+            block_builders.option("News", "NEWS"),
+            block_id="SOURCE",
+        ),
         block_builders.datepicker(str(date_start), label="Date Start", block_id="START_DATE"),
         block_builders.datepicker(str(date), label="Date End", block_id="STOP_DATE"),
     ]
@@ -753,4 +760,34 @@ def news_summary_blockset(context):
                 block_id="SAVED_SEARCH",
             ),
         )
+    return blocks
+
+
+@block_set()
+def write_blockset(context):
+    user = User.objects.get(id=context.get("u"))
+    company_details = user.company_details.all()
+    writing_styles = user.writing_styles.all()
+    blocks = [
+        block_builders.input_block(
+            "Write",
+            optional=False,
+            block_id="WRITE",
+            multiline=True,
+            placeholder="Provide content instructions...",
+        ),
+        block_builders.static_select(
+            "Source",
+            [block_builders.option("News", "NEWS"), block_builders.option("Write", "WRITE")],
+            slack_const.PROCESS_CHANGE_SOURCE_VIEW,
+            block_builders.option("News", "NEWS"),
+            block_id="SOURCE",
+        ),
+    ]
+    if company_details:
+        company_options = [company.as_slack_option for company in company_details]
+        blocks.append(block_builders.static_select("Company Details", company_options))
+    if writing_styles:
+        style_options = [style.as_slack_option for style in writing_styles]
+        blocks.append(block_builders.static_select("Writing Styles", style_options))
     return blocks

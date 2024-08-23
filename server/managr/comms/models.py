@@ -10,6 +10,7 @@ from managr.core.models import TimeStampModel
 from django.db.models.constraints import UniqueConstraint
 from managr.core import constants as core_consts
 from . import constants as comms_consts
+from managr.slack.helpers import block_builders
 from .exceptions import (
     _handle_response as _handle_news_response,
     TwitterApiException,
@@ -642,6 +643,10 @@ class WritingStyle(models.Model):
         on_delete=models.CASCADE,
     )
 
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.title[:74], str(self.id))
+
 
 class EmailAlert(TimeStampModel):
     user = models.ForeignKey(
@@ -1265,3 +1270,7 @@ class CompanyDetails(models.Model):
         null=False,
         on_delete=models.CASCADE,
     )
+
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.title[:74], str(self.id))
