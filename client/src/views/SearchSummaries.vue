@@ -1392,51 +1392,6 @@
                 </div>
               </div>
 
-              <!-- ALERT STARTS HERE -----
-              <div>
-                <div
-                  @click="toggleNotifyModal"
-                  class="image-container s-wrapper"
-                  :disabled="sentSummaryEmail"
-                  v-if="
-                    (mainView === 'news' || mainView === 'social') &&
-                    !notifiedList.includes(searchId)
-                  "
-                >
-                  <img
-                    height="14px"
-                    src="@/assets/images/bell.svg"
-                    alt=""
-                    class="invert"
-                    :class="{ dim: !(searchSaved || savedSearch) }"
-                  />
-                  <div style="bottom: 115%; width: 200px; left: -40px" class="s-tooltip">
-                    {{ searchSaved || savedSearch ? emailText : 'Save search to enable alerts' }}
-                  </div>
-                </div>
-
-                <div
-                  @click="removeEmailAlert"
-                  class="image-container s-wrapper"
-                  v-else-if="
-                    (mainView === 'news' || mainView === 'social') &&
-                    (searchSaved || savedSearch) &&
-                    notifiedList.includes(searchId)
-                  "
-                >
-                  <img
-                    height="14px"
-                    src="@/assets/images/bell-slash.svg"
-                    alt=""
-                    class="img-highlight"
-                  />
-                  <div class="s-tooltip">Disable</div>
-                </div>
-              </div>
-
-
-              ALERT END ----- -->
-
               <div
                 v-if="mainView === 'news'"
                 @click.stop="showShare"
@@ -1452,8 +1407,6 @@
 
                 <div class="s-tooltip">Share</div>
               </div>
-
-              <!-- SAVE STUFF HERE -->
 
               <button
                 class="image-container borderless s-wrapper"
@@ -1536,14 +1489,6 @@
               >
                 <div class="drop-options-alternate">
                   <header style="padding-top: 8px; padding-bottom: 8px" class="space-between">
-                    <!-- <section class="h-padding">
-                      <section>
-                        <p style="margin: 4px 0 0 4px; color: #9596b4">Personal</p>
-
-                        
-                      </section>
-                    </section> -->
-
                     <button
                       @click="toggleDetailsInputModal"
                       class="secondary-button-no-border"
@@ -1639,18 +1584,39 @@
                 </div>
                 <div class="dropdown-small-section">
                   <label for="slackChannel">Slack</label>
-                  <!-- <small>Select a slack channel</small> -->
-                  <input
-                    class="area-input-outline"
-                    disabled
-                    name="slackChannel"
-                    placeholder="Coming Soon..."
-                    type="text"
-                    style="width: 100%"
-                  />
 
                   <div>
-                    <button @click="sendToSlack" class="secondary-button">
+                    <select
+                      :disabled="!user.slackRef"
+                      v-model="channelId"
+                      class="area-input-outline dropdown-select"
+                    >
+                      <option value="" disabled>Select a Slack channel</option>
+                      <option
+                        v-for="channel in userChannelOpts.channels"
+                        :key="channel.id"
+                        :value="channel.id"
+                      >
+                        {{ channel.name }}
+                      </option>
+                      <option v-if="userChannelOpts.nextCursor" disabled>──────────</option>
+                      <option
+                        v-if="userChannelOpts.nextCursor"
+                        @click="listUserChannels(userChannelOpts.nextCursor)"
+                        class="load-more-option"
+                      >
+                        Load More Channels...
+                      </option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <button
+                      v-if="user.slackRef"
+                      :disabled="!user.slackRef || !channelId"
+                      @click="sendToSlack"
+                      class="secondary-button"
+                    >
                       <img
                         v-if="sendingSlack"
                         class="rotate innvert"
@@ -1660,6 +1626,11 @@
                       />
                       <img v-else src="@/assets/images/slackLogo.png" height="14px" alt="" /> Send
                       to Slack
+                    </button>
+
+                    <button v-else @click="goToIntegrations" class="secondary-button">
+                      <img src="@/assets/images/slackLogo.png" height="14px" alt="" />
+                      Connect Slack
                     </button>
                   </div>
                 </div>
@@ -1694,7 +1665,12 @@
                 <div v-else class="dropdown-small-header">Save this search</div>
 
                 <div v-if="mainView === 'write'" class="dropdown-small-section">
-                  <label style="font-size: 13px" for="detail-title">Name</label>
+                  <label
+                    :class="{ opaquest: savedPitch }"
+                    style="font-size: 13px"
+                    for="detail-title"
+                    >Name</label
+                  >
                   <input
                     id="detail-title"
                     style="width: 100%"
@@ -1726,7 +1702,12 @@
                 </div>
 
                 <div v-else-if="mainView === 'discover'" class="dropdown-small-section">
-                  <label style="font-size: 13px" for="detail-title">Name</label>
+                  <label
+                    :class="{ opaquest: savedDiscovery }"
+                    style="font-size: 13px"
+                    for="detail-title"
+                    >Name</label
+                  >
                   <input
                     id="detail-title"
                     style="width: 100%"
@@ -1763,7 +1744,12 @@
                 </div>
 
                 <div v-else class="dropdown-small-section dropdown-small-bb">
-                  <label style="font-size: 13px" for="detail-title">Name</label>
+                  <label
+                    :class="{ opaquest: searchSaved || savedSearch }"
+                    style="font-size: 13px"
+                    for="detail-title"
+                    >Name</label
+                  >
                   <input
                     id="detail-title"
                     style="width: 100%"
@@ -1820,18 +1806,106 @@
                     @input="calculateDate(alertTIme)"
                     type="time"
                     v-model="alertTIme"
+                    @focus="clearPlaceholder"
+                    @blur="setPlaceholder"
+                    :class="{ 'has-placeholder': !alertTIme }"
+                    :data-placeholder="placeholderTime"
                     :disabled="
                       savingAlert || !isPaid || (!savedSearch && !savedDiscovery && !savedPitch)
                     "
                   />
 
-                  <small v-if="isPaid && (savedSearch || savedDiscovery || savedPitch)"
+                  <div style="margin: 8px 0" class="space-between">
+                    <div class="row">
+                      <img
+                        src="@/assets/images/email-round.svg"
+                        height="14px"
+                        alt=""
+                        style="margin-right: 8px; opacity: 0.7"
+                      />
+                      Send digest to email
+                    </div>
+
+                    <label class="switch">
+                      <input
+                        :checked="alertType === 'NEWS'"
+                        @change="toggleAlert('NEWS')"
+                        type="checkbox"
+                      />
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+
+                  <div v-if="user.slackRef" style="margin-bottom: 16px" class="space-between">
+                    <div class="row">
+                      <img
+                        src="@/assets/images/slackLogo.png"
+                        height="14px"
+                        alt=""
+                        style="margin-right: 8px"
+                      />
+                      Send digest to Slack channel
+                    </div>
+
+                    <label class="switch">
+                      <input
+                        :checked="alertType === 'SLACK'"
+                        @change="toggleAlert('SLACK')"
+                        type="checkbox"
+                      />
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+
+                  <div v-else style="margin-bottom: 16px" class="space-between">
+                    <div class="row">
+                      <img
+                        src="@/assets/images/slackLogo.png"
+                        height="14px"
+                        alt=""
+                        style="margin-right: 8px"
+                      />
+                      Connect slack to recieve digest
+                    </div>
+
+                    <button @click="goToIntegrations" class="secondary-button">
+                      <img src="@/assets/images/slackLogo.png" height="14px" alt="" />
+                      Connect Slack
+                    </button>
+                  </div>
+
+                  <div style="width: 100%" class="fadein" v-show="alertType === 'SLACK'">
+                    <select
+                      style="width: 100%"
+                      v-model="alertChannel"
+                      class="area-input-outline dropdown-select"
+                    >
+                      <option value="" disabled>Select a Slack channel</option>
+                      <option
+                        v-for="channel in userChannelOpts.channels"
+                        :key="channel.id"
+                        :value="channel.id"
+                      >
+                        {{ channel.name }}
+                      </option>
+                      <option v-if="userChannelOpts.nextCursor" disabled>──────────</option>
+                      <option
+                        v-if="userChannelOpts.nextCursor"
+                        @click="listUserChannels(userChannelOpts.nextCursor)"
+                        class="load-more-option"
+                      >
+                        Load More Channels...
+                      </option>
+                    </select>
+                  </div>
+
+                  <!-- <small v-if="isPaid && (savedSearch || savedDiscovery || savedPitch)"
                     >Get daily emails with news clips and summary</small
                   >
                   <small class="opaquer" v-else-if="isPaid"
                     >Get daily emails with news clips and summary</small
                   >
-                  <small v-else>Upgrade your plan to activate alerts</small>
+                  <small v-else>Upgrade your plan to activate alerts</small> -->
 
                   <div class="row-end-bottom" style="margin-top: 0">
                     <button @click="hideSave" class="secondary-button">Close</button>
@@ -1842,7 +1916,9 @@
                         savingAlert ||
                         !alertTIme ||
                         !isPaid ||
-                        (!savedSearch && !savedDiscovery && !savedPitch)
+                        (!savedSearch && !savedDiscovery && !savedPitch) ||
+                        !alertType ||
+                        (alertType === 'SLACK' && !alertChannel)
                       "
                       style="margin-left: 8px"
                       class="primary-button"
@@ -3284,7 +3360,7 @@
 import { Comms } from '@/services/comms'
 import { quillEditor } from 'vue-quill-editor'
 import User from '@/services/users'
-import SlackOAuth from '@/services/slack'
+import SlackOAuth, { SlackListResponse } from '@/services/slack'
 import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
@@ -3297,6 +3373,11 @@ export default {
   },
   data() {
     return {
+      placeholderTime: 'Select a time',
+      alertType: '',
+      alertChannel: '',
+      userChannelOpts: new SlackListResponse(),
+      channelId: '',
       sendingSlack: false,
       searchTime: '',
       showingSave: false,
@@ -3727,6 +3808,7 @@ export default {
 6. Engagement: Engage the reader by offering exclusive insights and proposing collaboration.
 7. Non-Promotional: Avoid promotional language. Focus on providing valuable, informative content.
 8. Stylistic Techniques: Use a mix of short and long sentences for rhythm. Use rhetorical questions to engage the reader and provoke thought.`,
+      dropdownLoading: false,
     }
   },
   created() {
@@ -3755,6 +3837,10 @@ export default {
     this.getWritingStyles()
     this.getCompanyDetails()
     this.shareEmail = this.user.email
+
+    if (this.user.slackRef) {
+      this.listUserChannels()
+    }
   },
   watch: {
     typedMessage: 'changeIndex',
@@ -3787,11 +3873,43 @@ export default {
   mounted() {
     this.getEmailAlerts()
     this.writeSetup()
+    this.setPlaceholder()
   },
   beforeDestroy() {
     this.abortFunctions()
   },
   methods: {
+    clearPlaceholder() {
+      this.placeholderTime = ''
+    },
+    setPlaceholder() {
+      if (!this.alertTIme) {
+        this.placeholderTime = 'Select a time'
+      }
+    },
+    toggleAlert(type) {
+      if (this.alertType === type) {
+        this.alertType = null
+      } else {
+        this.alertType = type
+      }
+    },
+    async listUserChannels(cursor = null) {
+      this.dropdownLoading = true
+      try {
+        const res = await SlackOAuth.api.listUserChannels(cursor)
+        const results = new SlackListResponse({
+          channels: [...this.userChannelOpts.channels, ...res.channels],
+          responseMetadata: { nextCursor: res.nextCursor },
+        })
+        this.userChannelOpts = results
+        console.log('Channels here', this.userChannelOpts)
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.dropdownLoading = false
+      }
+    },
     showSave() {
       this.showingSave = true
     },
@@ -3879,7 +3997,6 @@ export default {
       }
     },
     async sendToSlack() {
-      console.log(this.articlesFiltered.slice(0, 5))
       this.sendingSlack = true
       try {
         const res = await SlackOAuth.api.sendToSlack({
@@ -3887,6 +4004,7 @@ export default {
           start_date: this.dateStart,
           end_date: this.dateEnd,
           summary: this.summary,
+          channel_id: this.channelId,
           clips:
             this.mainView === 'news'
               ? this.articlesFiltered.slice(0, 5)
@@ -5140,7 +5258,7 @@ export default {
       // console.log(this.alertTIme)
       // console.log(alert.run_at)
 
-      const datetimeString = this.alertTime
+      const datetimeString = this.alertTIme
 
       let date = new Date(datetimeString)
 
@@ -5161,6 +5279,8 @@ export default {
           run_at: this.formattedDate,
           user: this.user.id,
           title: this.searchName,
+          type: this.alertType,
+          recipients: [this.alertChannel],
         })
 
         this.currentAlert = response
@@ -11247,5 +11367,100 @@ filter ::selection {
     margin: 0;
     padding: 0;
   }
+}
+
+.dropdown-select {
+  padding: 8px;
+}
+
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  background: url('~@/assets/images/downArrow.svg') no-repeat calc(100% - 8px) center;
+  background-size: 16px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 20px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: '';
+  height: 12px;
+  width: 12px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+
+input:checked + .slider {
+  background-color: $turq;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px $turq;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(30px);
+  -ms-transform: translateX(30px);
+  transform: translateX(30px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+input[type='time'] {
+  position: relative;
+  z-index: 1;
+}
+
+input[type='time'].has-placeholder::before {
+  content: attr(data-placeholder);
+  color: #999;
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+input[type='time'].has-placeholder::-webkit-datetime-edit {
+  color: transparent;
 }
 </style>

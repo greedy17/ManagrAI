@@ -153,6 +153,52 @@
         </tr>
       </thead>
       <tbody v-if="sortedEmails.length">
+        <tr v-show="emailDrafts.length" v-for="(email, i) in emailDrafts" :key="i">
+          <td
+            :class="i % 2 !== 0 ? 'gray-bg' : ''"
+            style="cursor: zoom-in"
+            @click="toggleEmailModal(email)"
+          >
+            <div class="email-details">
+              <div class="email-info">
+                <div class="subject">
+                  {{ email.subject }}
+                </div>
+                <div class="email">{{ email.body.replace(/<[^>]*>/g, '') }}</div>
+              </div>
+            </div>
+            <div class="blur"></div>
+          </td>
+          <td :class="i % 2 !== 0 ? 'gray-bg' : ''" class="set-width">
+            <div style="margin-bottom: 4px; font-size: 14px">
+              {{ email.name }}
+            </div>
+            <div style="color: #808080; font-size: 14px">
+              {{ email.recipient }}
+            </div>
+          </td>
+          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
+            <div class="turqbox">
+              {{ email.status }}
+            </div>
+          </td>
+          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">0</td>
+          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">0</td>
+          <td class="mobile-width" :class="i % 2 !== 0 ? 'gray-bg' : ''">
+            <div>
+              <div style="margin-bottom: 4px; font-size: 14px">
+                {{
+                  email.activity_log.at(-1).split('|')[0].charAt(0).toUpperCase() +
+                  email.activity_log.at(-1).split('|')[0].slice(1)
+                }}
+              </div>
+              <div style="color: #808080; font-size: 14px">
+                {{ formatActivityLog(email.activity_log.at(-1)) }}
+              </div>
+            </div>
+          </td>
+        </tr>
+
         <tr v-for="(email, i) in sortedEmails" :key="i">
           <td
             :class="i % 2 !== 0 ? 'gray-bg' : ''"
@@ -250,6 +296,7 @@ export default {
       activityModalOpen: false,
       selectedEmail: null,
       loading: false,
+      emailDrafts: [],
     }
   },
   components: {

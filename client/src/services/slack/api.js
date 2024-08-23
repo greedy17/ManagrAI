@@ -21,7 +21,7 @@ const SLACK_CHANNEL_DETAILS = '/slack/channel-details/'
 const ADMIN_FORMS = '/slack/forms/admin/'
 const FORMS_REFRESH = '/slack/forms/form-refresh/'
 const ADMIN_FORM_INSTANCES = '/slack/instances/admin/'
-const SEND_TO_SLACK = '/slack/send-slack/'
+const SEND_TO_SLACK = 'slack/send-slack-summary/'
 
 export default class SlackAPI {
   constructor(cls) {

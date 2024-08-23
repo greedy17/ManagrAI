@@ -1262,3 +1262,48 @@ class CompanyDetails(models.Model):
         null=False,
         on_delete=models.CASCADE,
     )
+
+    
+class EmailDraft(TimeStampModel):
+    user = models.ForeignKey(
+        "core.User",
+        related_name="drafts",
+        on_delete=models.CASCADE,
+    )
+    recipient = models.CharField(max_length=255)
+    status = models.CharField(max_length=255, default="Draft")
+    name = models.CharField(max_length=255, default="N/A")
+    subject = models.CharField(max_length=255)
+    body = models.TextField()
+    activity_log = ArrayField(models.CharField(max_length=255), default=list)
+
+    def __str__(self):
+        return f"{self.user.email} - {self.recipient}: {self.subject}"
+
+    def add_activity(self, type):
+        date = datetime.now()
+        date_str = date.isoformat()
+        new_item = f"{type}|{date_str}"
+        self.activity_log.append(new_item)
+        return self.save()
+
+    @classmethod
+    def create(cls, user, recipient, subject, body, name, status="Draft"):
+        draft = cls(
+            user=user,
+            recipient=recipient,
+            subject=subject,
+            body=body,
+            name=name,
+            status=status
+        )
+        draft.save()
+        return draft
+    
+    def update(self, **kwargs):
+        for field, value in kwargs.items():
+            if hasattr(self, field):
+                setattr(self, field, value)
+        
+        self.add_activity("updated")
+        self.save()

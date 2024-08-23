@@ -25,6 +25,7 @@ from rest_framework.decorators import action
 from . import constants as comms_consts
 from .models import (
     CompanyDetails,
+    EmailDraft,
     Search,
     TwitterAccount,
     Pitch,
@@ -57,6 +58,7 @@ from .serializers import (
     EmailTrackerSerializer,
     JournalistContactSerializer,
     CompanyDetailsSerializer,
+    EmailDraftSerializer,
 )
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
@@ -2872,3 +2874,62 @@ class CompanyDetailsViewSet(
         detail = CompanyDetails.objects.get(id=detail_id)
         detail.delete()
         return Response(status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@permission_classes([])
+def get_email_drafts(request):
+    user = request.user
+    drafts = EmailDraft.objects.filter(user__organization=user.organization).order_by(
+        "-datetime_created"
+    )
+    serialized = EmailDraftSerializer(drafts, many=True)
+    return Response(data={"drafts": serialized.data})
+
+@api_view(["POST"])
+@permission_classes([])
+def create_email_draft(request):
+    user = request.user
+    subject = request.data.get("subject")
+    body = request.data.get("body").replace("[Your Name]", f"\n\n{user.full_name}")
+    recipient = request.data.get("recipient")
+    name = request.data.get("name")
+
+    new_draft = EmailDraft.create(
+        user=user, 
+        recipient=recipient, 
+        subject=subject, 
+        body=body, 
+        name=name
+    )
+
+    # Add activity to the activity log
+    new_draft.add_activity("created")
+
+    return Response(status=status.HTTP_200_OK)
+
+@api_view(["POST"])
+@permission_classes([])
+def update_draft(request):
+    id = request.data.get("id")
+    subject = request.data.get("subject")
+    body = request.data.get("body")
+    recipient = request.data.get("recipient")
+    name = request.data.get("name")
+    sts = request.data.get("status")
+
+    draft = EmailDraft.objects.get(id=id)
+    draft.update(recipient=recipient,subject=subject,body=body,name=name,status=sts)
+
+    return Response(status=status.HTTP_200_OK)
+
+@api_view(["DELETE"])
+@permission_classes([permissions.IsAuthenticated])
+def delete_draft(request):
+    id = request.data.get("id")
+    draft = EmailDraft.objects.filter(id=id)
+    try:
+        draft.delete()
+    except Exception as e:
+        return Response({"error": str(e)})
+    return Response(data={"success": True})
