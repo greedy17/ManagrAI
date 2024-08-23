@@ -1139,6 +1139,15 @@ class EmailTracker(TimeStampModel):
     def __str__(self):
         return f"{self.user.email} - {self.recipient}: {self.subject}"
 
+    @property
+    def is_draft(self):
+        if self.activity_log:
+            first = self.activity_log[0]
+            event, time = first.split("|")
+            if event == "draft_created":
+                return True
+        return False
+
     def add_activity(self, type):
         date = datetime.now()
         date_str = date.isoformat()

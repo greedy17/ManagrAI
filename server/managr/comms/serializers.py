@@ -14,7 +14,6 @@ from .models import (
     EmailTracker,
     JournalistContact,
     CompanyDetails,
-    EmailDraft,
 )
 from django.contrib.postgres.search import SearchVector
 
@@ -179,18 +178,3 @@ class CompanyDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = CompanyDetails
         fields = ("id", "details", "user", "title")
-
-
-class EmailDraftSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EmailDraft
-        fields = (
-            "id",
-            "user",
-            "status",
-            "recipient",
-            "name",
-            "subject",
-            "body",
-            "activity_log",
-        )

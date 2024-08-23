@@ -25,7 +25,6 @@ from rest_framework.decorators import action
 from . import constants as comms_consts
 from .models import (
     CompanyDetails,
-    EmailDraft,
     Search,
     TwitterAccount,
     Pitch,
@@ -58,7 +57,6 @@ from .serializers import (
     EmailTrackerSerializer,
     JournalistContactSerializer,
     CompanyDetailsSerializer,
-    EmailDraftSerializer,
 )
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
@@ -2633,18 +2631,6 @@ def email_recieved_webhook(request):
     return Response(status=status.HTTP_202_ACCEPTED)
 
 
-@api_view(["GET"])
-@permission_classes([])
-def get_email_tracking(request):
-    user = request.user
-    trackers = EmailTracker.objects.filter(user__organization=user.organization).order_by(
-        "-datetime_created"
-    )
-    serialized = EmailTrackerSerializer(trackers, many=True)
-    rate_data = EmailTracker.get_user_rates(user.id)
-    return Response(data={"trackers": serialized.data, "rates": rate_data})
-
-
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def get_google_summary(request):
@@ -2876,60 +2862,57 @@ class CompanyDetailsViewSet(
         return Response(status=status.HTTP_200_OK)
 
 
-@api_view(["GET"])
-@permission_classes([])
-def get_email_drafts(request):
-    user = request.user
-    drafts = EmailDraft.objects.filter(user__organization=user.organization).order_by(
-        "-datetime_created"
-    )
-    serialized = EmailDraftSerializer(drafts, many=True)
-    return Response(data={"drafts": serialized.data})
+class EmailTrackerViewSet(
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+):
+    authentication_classes = [ExpiringTokenAuthentication]
+    serializer_class = EmailTrackerSerializer
 
-@api_view(["POST"])
-@permission_classes([])
-def create_email_draft(request):
-    user = request.user
-    subject = request.data.get("subject")
-    body = request.data.get("body").replace("[Your Name]", f"\n\n{user.full_name}")
-    recipient = request.data.get("recipient")
-    name = request.data.get("name")
+    def get_queryset(self):
+        user = self.request.user
+        trackers = EmailTracker.objects.filter(user__organization=user.organization).order_by(
+            "-datetime_created"
+        )
+        serialized = self.serializer_class(trackers, many=True)
+        rate_data = EmailTracker.get_user_rates(user.id)
+        return Response(data={"trackers": serialized.data, "rates": rate_data})
 
-    new_draft = EmailDraft.create(
-        user=user, 
-        recipient=recipient, 
-        subject=subject, 
-        body=body, 
-        name=name
-    )
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        try:
+            serializer = EmailTrackerSerializer(
+                data={
+                    "user": user.id,
+                    "recipient": request.data.get("recipient"),
+                    "body": request.data.get("body"),
+                    "subject": request.data.get("subject"),
+                    "name": request.data.get("name"),
+                }
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            serializer.instance.add_activity("draft_created")
+            return Response(status=status.HTTP_201_CREATED, dat={"tracker": serializer.data})
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
 
-    # Add activity to the activity log
-    new_draft.add_activity("created")
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = self.request.data
+        serializer = self.serializer_class(instance=instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
 
-    return Response(status=status.HTTP_200_OK)
-
-@api_view(["POST"])
-@permission_classes([])
-def update_draft(request):
-    id = request.data.get("id")
-    subject = request.data.get("subject")
-    body = request.data.get("body")
-    recipient = request.data.get("recipient")
-    name = request.data.get("name")
-    sts = request.data.get("status")
-
-    draft = EmailDraft.objects.get(id=id)
-    draft.update(recipient=recipient,subject=subject,body=body,name=name,status=sts)
-
-    return Response(status=status.HTTP_200_OK)
-
-@api_view(["DELETE"])
-@permission_classes([permissions.IsAuthenticated])
-def delete_draft(request):
-    id = request.data.get("id")
-    draft = EmailDraft.objects.filter(id=id)
-    try:
-        draft.delete()
-    except Exception as e:
-        return Response({"error": str(e)})
-    return Response(data={"success": True})
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            instance.delete()
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_200_OK)

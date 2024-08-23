@@ -457,11 +457,6 @@ urlpatterns = [
         comms_views.upload_pdf,
         name="upload_pdf",
     ),
-    # path(
-    #     "web-summary/",
-    #     comms_views.get_web_summary,
-    #     name="web-summary",
-    # ),
     path(
         "users/instagram/request-token/",
         comms_views.get_instagram_request_token,
@@ -508,11 +503,6 @@ urlpatterns = [
         name="email-received-webhook",
     ),
     path(
-        "email-tracking/",
-        comms_views.get_email_tracking,
-        name="email-tracking",
-    ),
-    path(
         "users/google/email-tracking",
         comms_views.email_tracking_endpoint,
         name="track-email",
@@ -521,26 +511,6 @@ urlpatterns = [
         "google-search/",
         comms_views.get_google_summary,
         name="google-search",
-    ),
-    path(
-        "get-email-drafts/",
-        comms_views.get_email_drafts,
-        name="email-drafts",
-    ),
-    path(
-        "create-draft/",
-        comms_views.create_email_draft,
-        name="create-email-draft",
-    ),
-    path(
-        "update-email-draft/",
-        comms_views.update_draft,
-        name="update-email-draft",
-    ),
-    path(
-        "delete-draft/",
-        comms_views.delete_draft,
-        name="delete-draft",
     ),
 ]
 router.register("users/reports", core_views.ReportViewSet, "reports"),
@@ -588,4 +558,5 @@ router.register("process", comms_views.ProcessViewSet, "process")
 router.register("discovery", comms_views.DiscoveryViewSet, "discovery")
 router.register("jcontact", comms_views.JournalistContactViewSet, "jcontact")
 router.register("company-details", comms_views.CompanyDetailsViewSet, "company-details")
+router.register("tracker", comms_views.EmailTrackerViewSet, "tracker")
 urlpatterns += router.urls
