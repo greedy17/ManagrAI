@@ -171,7 +171,7 @@ class JournalistContactSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = JournalistContact
-        fields = ("id", "user", "journalist", "journalist_ref", "tags", "bio", "images")
+        fields = ("id", "user", "journalist", "journalist_ref", "tags", "bio", "images", "notes")
 
 
 class CompanyDetailsSerializer(serializers.ModelSerializer):
