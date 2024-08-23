@@ -1650,8 +1650,16 @@
                   />
 
                   <div>
-                    <button style="cursor: text" disabled class="secondary-button">
-                      <img src="@/assets/images/slackLogo.png" height="14px" alt="" /> Coming Soon
+                    <button @click="sendToSlack" class="secondary-button">
+                      <img
+                        v-if="sendingSlack"
+                        class="rotate innvert"
+                        height="14px"
+                        src="@/assets/images/loading.svg"
+                        alt=""
+                      />
+                      <img v-else src="@/assets/images/slackLogo.png" height="14px" alt="" /> Send
+                      to Slack
                     </button>
                   </div>
                 </div>
@@ -3289,6 +3297,7 @@ export default {
   },
   data() {
     return {
+      sendingSlack: false,
       searchTime: '',
       showingSave: false,
       showingShare: false,
@@ -3869,12 +3878,40 @@ export default {
         this.toggleDetailsInputModal()
       }
     },
-    async slackTest() {
+    async sendToSlack() {
+      console.log(this.articlesFiltered.slice(0, 5))
+      this.sendingSlack = true
       try {
-        const res = await SlackOAuth.api.sendToSlack({})
+        const res = await SlackOAuth.api.sendToSlack({
+          search: this.newSearch,
+          start_date: this.dateStart,
+          end_date: this.dateEnd,
+          summary: this.summary,
+          clips:
+            this.mainView === 'news'
+              ? this.articlesFiltered.slice(0, 5)
+              : this.filteredTweets.slice(0, 5),
+        })
+        this.$toast('Sent to Slack', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
         console.log(res)
       } catch (e) {
         console.log(e)
+        this.$toast('Error sending content, please try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.sendingSlack = false
+        this.hideShare()
       }
     },
     clearList() {
