@@ -30,10 +30,7 @@ class Command(BaseCommand):
         if len(tasks) == 0:
             sources = NewsSource.domain_list(True)
             if len(sources):
-                for i in range(0, len(sources), int(batch_size)):
-                    batch = sources[i : i + int(batch_size)]
-                    batch_url_list = ",".join(batch)
-                    _run_spider_batch(batch_url_list)
+                print(f"SOURCE NOT RAN: {sources}")
             else:
                 report = CrawlerReport.objects.all().order_by("-datetime_created").first()
                 data = report.create_report_data()

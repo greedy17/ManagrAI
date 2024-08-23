@@ -494,7 +494,7 @@ def send_to_error_channel(
     header_text = header if header else f"Error from process {process} in {settings.ENVIRONMENT}"
     block_text = error if header else f"User {user_email} had this error:\n{error}"
     try:
-        managr_int = OrganizationSlackIntegration.objects.get(team_name="mymanagr")
+        managr_int = OrganizationSlackIntegration.objects.get(team_id="T01GT2P5PJN")
         blocks = [
             block_builders.header_block(header_text),
             block_builders.simple_section(block_text),
