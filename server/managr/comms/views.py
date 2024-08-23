@@ -2875,12 +2875,9 @@ class EmailTrackerViewSet(
 
     def get_queryset(self):
         user = self.request.user
-        trackers = EmailTracker.objects.filter(user__organization=user.organization).order_by(
-            "-datetime_created"
-        )
+        trackers = EmailTracker.objects.filter(user=user).order_by("-datetime_created")
         serialized = self.serializer_class(trackers, many=True)
-        rate_data = EmailTracker.get_user_rates(user.id)
-        return Response(data={"trackers": serialized.data, "rates": rate_data})
+        return Response(data={"trackers": serialized.data})
 
     def create(self, request, *args, **kwargs):
         user = request.user
