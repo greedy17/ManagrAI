@@ -1087,13 +1087,19 @@ def list_tasks(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 def slack_events(request):
+    print(request.data)
     if request.data.get("type") == "url_verification":
         return Response(request.data.get("challenge"))
     slack_event = request.data.get("event", None)
     if slack_event:
         slack_id = slack_event.get("user")
-        bot_check = slack_event.get("bot_profile", None)
-        if bot_check or slack_event.get("sub_type") == "message_changed":
+        message_key = slack_event.get("message", False)
+        bot_check = (
+            slack_event.get("message", {}).get("bot_profile", False)
+            if message_key
+            else slack_event.get("bot_profile", False)
+        )
+        if bot_check or slack_event.get("sub_type") in ["message_changed"]:
             return Response()
         user = User.objects.filter(slack_integration__slack_id=slack_id).first()
         if not user:
@@ -1405,6 +1411,53 @@ def send_summary_to_slack(request):
             article_text = f"{article['source']['name']}\n*{article['title']}*\n<{article['link']}|Read More>\n_{author}_ - {fixed_date}"
             blocks.append(block_builders.simple_section(article_text, "mrkdwn"))
             blocks.append(block_builders.divider_block())
+        channel = channel_id if channel_id else user.slack_integration.channel
+        slack_res = slack_requests.send_channel_message(
+            channel,
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+    except Exception as e:
+        print(e)
+        send_to_error_channel(str(e), user.email, "send summary to slack")
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(["post"])
+@permission_classes([permissions.AllowAny])
+@authentication_classes([ExpiringTokenAuthentication])
+def send_write_to_slack(request):
+    data = request.data
+    user = request.user
+    pitch = data.get("pitch")
+    prompt = data.get("prompt")
+    detail_id = data.get("detail_id")
+    writing_style_id = data.get("writing_style_id")
+    channel_id = data.get("channel_id", False)
+    params = [f"u={str(user.id)}"]
+    if detail_id:
+        params.append(f"d={detail_id}")
+    if writing_style_id:
+        params.append(f"ws={writing_style_id}")
+    try:
+        blocks = [
+            block_builders.context_block(f"{prompt}", "mrkdwn"),
+            block_builders.header_block("Answer:"),
+            block_builders.simple_section(f"{pitch}\n", "mrkdwn", "PITCH"),
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "Make Edits",
+                        "EDIT",
+                        action_id=action_with_params(
+                            slack_const.PROCESS_ADD_EDIT_FIELD,
+                            params,
+                        ),
+                    )
+                ]
+            ),
+        ]
         channel = channel_id if channel_id else user.slack_integration.channel
         slack_res = slack_requests.send_channel_message(
             channel,

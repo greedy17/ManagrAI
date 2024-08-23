@@ -75,6 +75,10 @@ def emit_process_user_hashtag_list(user_id):
     return _process_user_hashtag_list(user_id)
 
 
+def emit_process_regenerate_pitch_slack(payload, context):
+    return _process_regenerate_pitch_slack(payload, context)
+
+
 def emit_send_social_summary(news_alert_id, schedule):
     return _send_social_summary(news_alert_id, schedule={"run_at": schedule})
 
@@ -832,4 +836,148 @@ def test_database_pull(date_to, date_from, search, result_id):
         all_data.json_result = articles
         all_data.save()
     print(datetime.datetime.now())
+    return
+
+
+@background()
+def _process_regenerate_pitch_slack(payload, context):
+    user = User.objects.get(id=context.get("u"))
+    params = [f"{key}={context[key]}" for key in context.keys()]
+    state = payload["state"]["values"]
+    instructions = state["EDIT_TEXT"]["plain_input"]["value"]
+    style = context.get("ws", None)
+    details = context.get("d", None)
+    blocks = payload["message"]["blocks"]
+    pitch = None
+    try:
+        pitch_index, pitch_block = block_finder("PITCH", blocks)
+        input_index, input_block = block_finder("EDIT_TEXT", blocks)
+    except ValueError:
+        # did not find the block
+        pitch_block = None
+        input_block = None
+        pass
+    pitch = pitch_block["text"]["text"]
+    blocks = blocks[:input_index]
+    has_error = False
+    attempts = 1
+    token_amount = 1000
+    timeout = 60.0
+
+    while True:
+        try:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_PTICH_SLACK_DRAFT_WITH_INSTRUCTIONS(
+                pitch, instructions, style, details
+            )
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email,
+                prompt,
+                token_amount=token_amount,
+                top_p=0.1,
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            r = open_ai_exceptions._handle_response(r)
+            pitch = r.get("choices")[0].get("message").get("content")
+            blocks[pitch_index] = block_builders.simple_section(pitch, "mrkdwn", "PITCH")
+            blocks.append(
+                block_builders.actions_block(
+                    [
+                        block_builders.simple_button_block(
+                            "Make Edits",
+                            "EDIT",
+                            action_id=action_with_params(
+                                slack_const.PROCESS_ADD_EDIT_FIELD,
+                                params,
+                            ),
+                        )
+                    ]
+                )
+            )
+            user.add_meta_data("pitch_slack")
+            slack_res = slack_requests.update_channel_message(
+                payload["container"]["channel_id"],
+                payload["container"]["message_ts"],
+                user.organization.slack_integration.access_token,
+                block_set=blocks,
+            )
+            break
+        except open_ai_exceptions.StopReasonLength:
+            logger.exception(
+                f"Retrying again due to token amount, amount currently at: {token_amount}"
+            )
+            if token_amount <= 2000:
+                has_error = True
+
+                message = "Token amount error"
+                break
+            else:
+                token_amount += 500
+                continue
+        except httpx.ReadTimeout as e:
+            print(e)
+            timeout += 30.0
+            if timeout >= 120.0:
+                has_error = True
+                message = "Read timeout issue"
+                logger.exception(f"Read timeout from Open AI {e}")
+                break
+            else:
+                attempts += 1
+                continue
+        except Exception as e:
+            has_error = True
+            message = f"Unknown exception: {e}"
+            logger.exception(e)
+            break
+    if has_error:
+        send_to_error_channel(message, user.email, "regenerate pitch (platform)")
+        return
+    return
+
+
+@background()
+def test_send_pitch():
+    user = User.objects.get(email="zach@mymanagr.com")
+    pitch = "Hi [Journalist first name],\n\nYour insightful coverage on aerospace technology advancements has been noted. An exclusive story about SpaceX's latest achievements might pique your interest.\n\nRecently, the Starship prototype was launched by SpaceX, marking a significant stride in space exploration. This development is poised to revolutionize interplanetary travel and aligns with the trend of private companies leading space missions, as highlighted in recent industry reports.\n\nAn exclusive opportunity is offered to explore the technical innovations and strategic vision driving SpaceX's success. Detailed insights and access to key experts can be provided to discuss the implications of these advancements for the future of space exploration.\n\nWould a collaboration on a feature exploring these groundbreaking developments interest you? Your expertise and perspective would bring a unique angle to this story.\n\nLooking forward to your thoughts.\n\nThanks,"
+    prompt = "Craft a short media pitch for Space X"
+    detail_id = None
+    writing_style_id = None
+    channel_id = False
+    params = [f"u={str(user.id)}"]
+    if detail_id:
+        params.append(f"d={detail_id}")
+    if writing_style_id:
+        params.append(f"ws={writing_style_id}")
+    try:
+        blocks = [
+            block_builders.context_block(f"{prompt}", "mrkdwn"),
+            block_builders.header_block("Answer:"),
+            block_builders.simple_section(f"{pitch}\n", "mrkdwn", "PITCH"),
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "Edit",
+                        "EDIT",
+                        action_id=action_with_params(
+                            slack_const.PROCESS_ADD_EDIT_FIELD,
+                            params,
+                        ),
+                    )
+                ]
+            ),
+        ]
+        channel = channel_id if channel_id else user.slack_integration.channel
+        slack_res = slack_requests.send_channel_message(
+            channel,
+            user.organization.slack_integration.access_token,
+            block_set=blocks,
+        )
+    except Exception as e:
+        print(e)
     return

@@ -662,6 +662,8 @@ class EmailAlert(TimeStampModel):
         on_delete=models.CASCADE,
     )
     recipients = ArrayField(models.CharField(max_length=255), default=list, blank=True)
+    is_approved = models.BooleanField(default=False)
+    is_rejected = models.BooleanField(default=False)
     meta_data = JSONField(
         default=dict,
         null=True,
@@ -1222,6 +1224,7 @@ class JournalistContact(TimeStampModel):
     tags = ArrayField(models.CharField(max_length=255), default=list)
     bio = models.TextField(blank=True, null=True)
     images = ArrayField(models.TextField(), default=list)
+    notes = models.TextField(null=True, blank=True)
 
     class Meta:
         unique_together = ("user", "journalist")
