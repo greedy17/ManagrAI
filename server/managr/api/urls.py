@@ -457,11 +457,6 @@ urlpatterns = [
         comms_views.upload_pdf,
         name="upload_pdf",
     ),
-    # path(
-    #     "web-summary/",
-    #     comms_views.get_web_summary,
-    #     name="web-summary",
-    # ),
     path(
         "users/instagram/request-token/",
         comms_views.get_instagram_request_token,
@@ -521,6 +516,11 @@ urlpatterns = [
         "google-search/",
         comms_views.get_google_summary,
         name="google-search",
+    ),
+    path(
+        "read-column-names/",
+        comms_views.read_column_names,
+        name="read-column-names",
     ),
 ]
 router.register("users/reports", core_views.ReportViewSet, "reports"),

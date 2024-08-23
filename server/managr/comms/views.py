@@ -1,4 +1,5 @@
 import json
+import pandas
 import httpx
 import logging
 import pytz
@@ -2874,3 +2875,18 @@ class CompanyDetailsViewSet(
         detail = CompanyDetails.objects.get(id=detail_id)
         detail.delete()
         return Response(status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def read_column_names(request):
+    file_obj = request.FILES.get("file")
+    if file_obj:
+        try:
+            df = pandas.read_excel(file_obj)
+            column_names = df.columns.tolist()
+            return Response({"columns": column_names}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
