@@ -651,6 +651,7 @@ class EmailAlert(TimeStampModel):
         null=False,
         on_delete=models.CASCADE,
     )
+    type = models.CharField(choices=comms_consts.ALERT_TYPES, max_length=50, default="EMAIL")
     title = models.CharField(max_length=255)
     run_at = models.DateTimeField()
     search = models.ForeignKey(

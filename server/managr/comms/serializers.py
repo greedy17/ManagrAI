@@ -86,7 +86,7 @@ class WritingStyleSerializer(serializers.ModelSerializer):
 class EmailAlertSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmailAlert
-        fields = ("id", "user", "title", "search", "run_at", "meta_data")
+        fields = ("id", "user", "type", "title", "search", "run_at", "meta_data")
 
 
 class ProcessSerializer(serializers.ModelSerializer):
@@ -171,7 +171,7 @@ class JournalistContactSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = JournalistContact
-        fields = ("id", "user", "journalist","journalist_ref", "tags", "bio", "images")
+        fields = ("id", "user", "journalist", "journalist_ref", "tags", "bio", "images")
 
 
 class CompanyDetailsSerializer(serializers.ModelSerializer):

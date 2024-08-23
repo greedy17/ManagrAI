@@ -58,7 +58,7 @@ def emit_process_website_domain(url, organization_name):
     return _process_website_domain(url, organization_name)
 
 
-def emit_send_news_summary(news_alert_id, schedule):
+def emit_send_news_summary(news_alert_id, schedule=datetime.datetime.now()):
     return _send_news_summary(news_alert_id, schedule={"run_at": schedule})
 
 
@@ -212,6 +212,10 @@ def update_search(payload, context):
 @background()
 def _process_news_summary(payload, context):
     state = payload["view"]["state"]["values"]
+    if context.get("ts", False):
+        title = "Answer"
+    else:
+        title = "ManagrAI Digest"
     if "INSTRUCTIONS" in state.keys():
         instructions = state["INSTRUCTIONS"]["plain_input"]["value"]
         search = context.get("s")
@@ -230,7 +234,7 @@ def _process_news_summary(payload, context):
         end_date = state["STOP_DATE"][list(state["STOP_DATE"].keys())[0]]["selected_date"]
     user = User.objects.get(id=context.get("u"))
     attempts = 1
-    token_amount = 500
+    token_amount = 1000
     timeout = 60.0
     while True:
         try:
@@ -272,9 +276,7 @@ def _process_news_summary(payload, context):
         if len(articles):
             blocks = [
                 block_builders.context_block(f"{search}", "mrkdwn"),
-                block_builders.header_block(
-                    "Answer:",
-                ),
+                block_builders.header_block(title),
                 block_builders.simple_section(f"{message}\n", "mrkdwn", "SUMMARY"),
                 block_builders.actions_block(
                     [
@@ -317,12 +319,19 @@ def _process_news_summary(payload, context):
                 article_text = f"{article['source']['name']}\n*{article['title']}*\n<{article['link']}|Read More>\n_{author}_ - {fixed_date}"
                 blocks.append(block_builders.simple_section(article_text, "mrkdwn"))
                 blocks.append(block_builders.divider_block())
-        slack_res = slack_requests.update_channel_message(
-            user.slack_integration.channel,
-            context.get("ts"),
-            user.organization.slack_integration.access_token,
-            block_set=blocks,
-        )
+        if context.get("ts", False):
+            slack_res = slack_requests.update_channel_message(
+                user.slack_integration.channel,
+                context.get("ts"),
+                user.organization.slack_integration.access_token,
+                block_set=blocks,
+            )
+        else:
+            slack_res = slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                block_set=blocks,
+            )
     except Exception as e:
         logger.exception(
             f"ERROR sending update channel message for chat submission because of <{e}>"
@@ -506,70 +515,90 @@ def _send_news_summary(news_alert_id):
     boolean = alert.search.search_boolean
     end_time = datetime.datetime.now()
     start_time = end_time - datetime.timedelta(hours=24)
-    clips = alert.search.get_clips(boolean, end_time, start_time)["articles"]
-    if len(clips):
-        try:
-            clips = [article for article in clips if article["title"] != "[Removed]"]
-            normalized_clips = normalize_newsapi_to_model(clips)
-            descriptions = [clip["description"] for clip in normalized_clips]
-            res = Search.get_summary(
-                alert.user,
-                2000,
-                60.0,
-                descriptions,
-                alert.search.search_boolean,
-                alert.search.instructions,
-                False,
-            )
-            email_list = [alert.user.email]
-
-            if "@outlook" in email_list[0]:
-                message = html.escape(res.get("choices")[0].get("message").get("content"))
-                message = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", message)
-                for i in range(6, 0, -1):
-                    message = re.sub(
-                        rf'^{"#" * i} (.*?)$', rf"<h{i}>\1</h{i}>", message, flags=re.MULTILINE
-                    )
-                message = re.sub(
-                    r"\[(.*?)\]\((.*?)\)|<([^|>]+)\|([^>]+)>", r'<a href="\2\3">\1\4</a>', message
-                )
-
-            else:
-                message = res.get("choices")[0].get("message").get("content")
-                message = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", message)
-                for i in range(6, 0, -1):
-                    message = re.sub(
-                        rf'^{"#" * i} (.*?)$', rf"<h{i}>\1</h{i}>", message, flags=re.MULTILINE
-                    )
-                message = re.sub(
-                    r"\[(.*?)\]\((.*?)\)|<([^|>]+)\|([^>]+)>", r'<a href="\2\3">\1\4</a>', message
-                )
-
-            clip_short_list = normalized_clips[:5]
-            for clip in clip_short_list:
-                if clip["author"] is None:
-                    clip["author"] = "N/A"
-                clip["publish_date"] = clip["publish_date"][:10]
-            content = {
-                "summary": message,
-                "clips": clip_short_list,
-                "website_url": f"{settings.MANAGR_URL}/login",
-                "title": f"{alert.search.name}",
+    context = {"search_id": str(alert.search.id), "u": str(alert.user.id)}
+    payload = {
+        "view": {
+            "state": {
+                "values": {
+                    "START_DATE": {"start": {"selected_date": str(start_time.date())}},
+                    "STOP_DATE": {"stop": {"selected_date": str(start_time.date())}},
+                }
             }
-            send_html_email(
-                f"ManagrAI Digest: {alert.search.name}",
-                "core/email-templates/news-email.html",
-                settings.DEFAULT_FROM_EMAIL,
-                email_list,
-                context=content,
-            )
-            if "sent_count" in alert.meta_data.keys():
-                alert.meta_data["sent_count"] += 1
-            else:
-                alert.meta_data["sent_count"] = 1
-            alert.save()
-        except Exception as e:
-            send_to_error_channel(str(e), alert.email, "send news alert")
+        }
+    }
+    if alert.type in ["NEWS", "BOTH"]:
+        clips = alert.search.get_clips(boolean, end_time, start_time)["articles"]
+        if len(clips):
+            try:
+                clips = [article for article in clips if article["title"] != "[Removed]"]
+                normalized_clips = normalize_newsapi_to_model(clips)
+                descriptions = [clip["description"] for clip in normalized_clips]
+                res = Search.get_summary(
+                    alert.user,
+                    2000,
+                    60.0,
+                    descriptions,
+                    alert.search.search_boolean,
+                    alert.search.instructions,
+                    False,
+                )
+                email_list = [alert.user.email]
+
+                if "@outlook" in email_list[0]:
+                    message = html.escape(res.get("choices")[0].get("message").get("content"))
+                    message = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", message)
+                    for i in range(6, 0, -1):
+                        message = re.sub(
+                            rf'^{"#" * i} (.*?)$', rf"<h{i}>\1</h{i}>", message, flags=re.MULTILINE
+                        )
+                    message = re.sub(
+                        r"\[(.*?)\]\((.*?)\)|<([^|>]+)\|([^>]+)>",
+                        r'<a href="\2\3">\1\4</a>',
+                        message,
+                    )
+
+                else:
+                    message = res.get("choices")[0].get("message").get("content")
+                    message = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", message)
+                    for i in range(6, 0, -1):
+                        message = re.sub(
+                            rf'^{"#" * i} (.*?)$', rf"<h{i}>\1</h{i}>", message, flags=re.MULTILINE
+                        )
+                    message = re.sub(
+                        r"\[(.*?)\]\((.*?)\)|<([^|>]+)\|([^>]+)>",
+                        r'<a href="\2\3">\1\4</a>',
+                        message,
+                    )
+
+                clip_short_list = normalized_clips[:5]
+                for clip in clip_short_list:
+                    if clip["author"] is None:
+                        clip["author"] = "N/A"
+                    clip["publish_date"] = clip["publish_date"][:10]
+                content = {
+                    "summary": message,
+                    "clips": clip_short_list,
+                    "website_url": f"{settings.MANAGR_URL}/login",
+                    "title": f"{alert.search.name}",
+                }
+                send_html_email(
+                    f"ManagrAI Digest: {alert.search.name}",
+                    "core/email-templates/news-email.html",
+                    settings.DEFAULT_FROM_EMAIL,
+                    email_list,
+                    context=content,
+                )
+            except Exception as e:
+                send_to_error_channel(str(e), alert.email, "send news alert")
+        if type == "BOTH":
+            emit_process_news_summary(payload, context)
+    else:
+        emit_process_news_summary(payload, context)
+    if "sent_count" in alert.meta_data.keys():
+        alert.meta_data["sent_count"] += 1
+    else:
+        alert.meta_data["sent_count"] = 1
+    alert.save()
     return
 
 
