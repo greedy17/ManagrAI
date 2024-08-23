@@ -448,9 +448,8 @@ export default {
     async fetchEmails() {
       try {
         const response = await Comms.api.getTrackedEmails()
-        console.log(response)
-        this.emails = response.trackers
-        this.openRate = Math.round(response.rates.open_rate)
+        this.emails = response.results
+        // this.openRate = Math.round(response.rates.open_rate)
         // this.replyRate = response.rates.reply_rate
       } catch (error) {
         console.error('Error fetching email data:', error)
