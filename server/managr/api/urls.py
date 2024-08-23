@@ -522,6 +522,26 @@ urlpatterns = [
         comms_views.get_google_summary,
         name="google-search",
     ),
+    path(
+        "get-email-drafts/",
+        comms_views.get_email_drafts,
+        name="email-drafts",
+    ),
+    path(
+        "create-draft/",
+        comms_views.create_email_draft,
+        name="create-email-draft",
+    ),
+    path(
+        "update-email-draft/",
+        comms_views.update_draft,
+        name="update-email-draft",
+    ),
+    path(
+        "delete-draft/",
+        comms_views.delete_draft,
+        name="delete-draft",
+    ),
 ]
 router.register("users/reports", core_views.ReportViewSet, "reports"),
 router.register("users/conversations", core_views.ConversationViewSet, "conversations"),
