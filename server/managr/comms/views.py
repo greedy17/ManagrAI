@@ -2796,7 +2796,9 @@ class JournalistContactViewSet(
                 readSerializer = self.serializer_class(instance=serializer.instance)
                 user.add_meta_data("contacts")
             except Exception as e:
-                send_to_error_channel(str(e), user.email, "creating journalist contact (platform)")
+                send_to_error_channel(
+                    str(e), user.email, f"creating journalist contact (platform):\n{request.data}"
+                )
                 logger.exception(f"Error validating data for details <{e}>")
                 return Response(
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)}

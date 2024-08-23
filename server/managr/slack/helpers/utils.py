@@ -490,6 +490,9 @@ def send_to_error_channel(
     process,
     header=False,
 ):
+    from managr.slack.helpers import block_builders, requests
+    from django.conf import settings
+
     error_channel = "C07GWFNBX9V" if header else "C032VEDLSHW"
     header_text = header if header else f"Error from process {process} in {settings.ENVIRONMENT}"
     block_text = error if header else f"User {user_email} had this error:\n{error}"
