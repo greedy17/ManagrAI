@@ -3903,7 +3903,6 @@ export default {
           responseMetadata: { nextCursor: res.nextCursor },
         })
         this.userChannelOpts = results
-        console.log('Channels here', this.userChannelOpts)
       } catch (e) {
         console.log(e)
       } finally {
@@ -4165,7 +4164,6 @@ export default {
       this.showingName = true
     },
     removeNameIndex() {
-      console.log('HERE IM LEAVING')
       this.journalistIndex = 475
       this.showingName = false
     },
@@ -5285,12 +5283,6 @@ export default {
 
         this.currentAlert = response
         this.currentAlertId = response.id
-
-        console.log(
-          'current alert here after save ----- >',
-          this.currentAlert,
-          this.currentAlert.id,
-        )
 
         this.getEmailAlerts()
         this.showingSave = false
