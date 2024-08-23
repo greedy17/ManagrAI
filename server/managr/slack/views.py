@@ -3,7 +3,7 @@ import logging
 from urllib.parse import urlencode
 import uuid
 from datetime import datetime
-from managr.utils import sites as site_utils
+from managr.api.models import ExpiringTokenAuthentication
 from django.db.models import Q
 from django.conf import settings
 from django.shortcuts import redirect
@@ -1094,7 +1094,7 @@ def slack_events(request):
     if slack_event:
         slack_id = slack_event.get("user")
         bot_check = slack_event.get("bot_profile", None)
-        if bot_check:
+        if bot_check or slack_event.get("sub_type") == "message_changed":
             return Response()
         user = User.objects.filter(slack_integration__slack_id=slack_id).first()
         if not user:
@@ -1363,11 +1363,11 @@ def launch_search(request):
 
 @api_view(["post"])
 @permission_classes([permissions.AllowAny])
-@authentication_classes((slack_auth.SlackWebhookAuthentication,))
+@authentication_classes([ExpiringTokenAuthentication])
 def send_to_slack(request):
     from managr.comms.tasks import emit_process_news_summary
 
-    data = request.data
+    data = request.data.get("data")
     user = request.user
     search = data.get("search")
     start_date = data.get("start_date")
@@ -1409,6 +1409,7 @@ def send_to_slack(request):
             block_set=blocks,
         )
     except Exception as e:
+        print(e)
         send_to_error_channel(str(e), user.email, "send summary to slack")
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
     return Response(status=status.HTTP_204_NO_CONTENT)
