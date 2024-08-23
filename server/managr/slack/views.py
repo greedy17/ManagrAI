@@ -1087,7 +1087,6 @@ def list_tasks(request):
 @authentication_classes((slack_auth.SlackWebhookAuthentication,))
 @permission_classes([permissions.AllowAny])
 def slack_events(request):
-    print(request.data)
     if request.data.get("type") == "url_verification":
         return Response(request.data.get("challenge"))
     slack_event = request.data.get("event", None)
@@ -1366,6 +1365,7 @@ def launch_search(request):
 @authentication_classes([ExpiringTokenAuthentication])
 def send_to_slack(request):
     from managr.comms.tasks import emit_process_news_summary
+    import re
 
     data = request.data.get("data")
     user = request.user
@@ -1373,12 +1373,13 @@ def send_to_slack(request):
     start_date = data.get("start_date")
     end_date = data.get("end_date")
     summary = data.get("summary")
+    cleaned_text = re.sub(r"\[\d+\]", "", summary).replace("<p>", "").replace("</p>", "\n")
     clips = data.get("clips")
     try:
         blocks = [
             block_builders.context_block(f"{search}", "mrkdwn"),
             block_builders.header_block("Answer"),
-            block_builders.simple_section(f"{summary}\n", "mrkdwn", "SUMMARY"),
+            block_builders.simple_section(f"{cleaned_text}\n", "mrkdwn", "SUMMARY"),
             block_builders.actions_block(
                 [
                     block_builders.simple_button_block(
