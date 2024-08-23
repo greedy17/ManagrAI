@@ -366,7 +366,7 @@
             name="outlet"
             v-model="outletName"
           />
-          <label for="details">Your company details</label>
+          <!-- <label for="details">Your company details</label>
           <div class="input-container-small">
             <textarea
               :disabled="loadingContacts"
@@ -386,13 +386,13 @@
               placeholder="Provide company name and pitch details..."
               name="details"
             />
-          </div>
-          <div style="font-size: 14px; margin: 12px 0 0 4px" class="row">
+          </div> -->
+          <!-- <div style="font-size: 14px; margin: 12px 0 0 4px" class="row">
             <img src="@/assets/images/profile.svg" height="12px" alt="" />
             <p style="margin: 0 0 0 4px">
               Managr will generate pitching tips based on this information
             </p>
-          </div>
+          </div> -->
         </div>
 
         <footer>
@@ -832,7 +832,8 @@ export default {
       newContactBio: '',
       outletName: '',
       contactName: '',
-      orgInfo: '',
+      orgInfo:
+        'No pitch yet so just base the pitching tips off of what you know of the person and whats available in the prompt.',
       savingContact: false,
       bioModalOpen: false,
       contactsModalOpen: false,
