@@ -1870,7 +1870,7 @@
 
                     <button @click="goToIntegrations" class="secondary-button">
                       <img src="@/assets/images/slackLogo.png" height="14px" alt="" />
-                      Connect Slack
+                      Connect
                     </button>
                   </div>
 
