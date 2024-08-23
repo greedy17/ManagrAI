@@ -5,7 +5,7 @@ from .models import (
     NewsSource,
     Article,
     WritingStyle,
-    EmailAlert,
+    AssistAlert,
     Process,
     TwitterAccount,
     InstagramAccount,
@@ -83,9 +83,9 @@ class WritingStyleSerializer(serializers.ModelSerializer):
         fields = ("id", "style", "user", "title")
 
 
-class EmailAlertSerializer(serializers.ModelSerializer):
+class AssistAlertSerializer(serializers.ModelSerializer):
     class Meta:
-        model = EmailAlert
+        model = AssistAlert
         fields = ("id", "user", "type", "title", "search", "run_at", "meta_data")
 
 

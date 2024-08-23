@@ -648,10 +648,10 @@ class WritingStyle(models.Model):
         return block_builders.option(self.title[:74], str(self.id))
 
 
-class EmailAlert(TimeStampModel):
+class AssistAlert(TimeStampModel):
     user = models.ForeignKey(
         "core.User",
-        related_name="news_alert",
+        related_name="assist_alerts",
         blank=False,
         null=False,
         on_delete=models.CASCADE,
@@ -667,8 +667,6 @@ class EmailAlert(TimeStampModel):
         on_delete=models.CASCADE,
     )
     recipients = ArrayField(models.CharField(max_length=255), default=list, blank=True)
-    is_approved = models.BooleanField(default=False)
-    is_rejected = models.BooleanField(default=False)
     meta_data = JSONField(
         default=dict,
         null=True,
@@ -1135,6 +1133,8 @@ class EmailTracker(TimeStampModel):
     received = models.BooleanField(default=False)
     failed = models.BooleanField(default=False)
     activity_log = ArrayField(models.CharField(max_length=255), default=list)
+    is_approved = models.BooleanField(default=False)
+    is_rejected = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.user.email} - {self.recipient}: {self.subject}"
@@ -1270,6 +1270,10 @@ class CompanyDetails(models.Model):
         null=False,
         on_delete=models.CASCADE,
     )
+
+    class Meta:
+        verbose_name = "Company Detail"
+        verbose_name_plural = "Company Details"
 
     @property
     def as_slack_option(self):

@@ -35,7 +35,7 @@ from .models import (
     EmailTracker,
 )
 from .models import Article as InternalArticle
-from .models import WritingStyle, EmailAlert, JournalistContact
+from .models import WritingStyle, AssistAlert, JournalistContact
 from managr.core.models import User
 from managr.comms import exceptions as comms_exceptions
 from .tasks import (
@@ -48,7 +48,7 @@ from .tasks import (
 from .serializers import (
     SearchSerializer,
     PitchSerializer,
-    EmailAlertSerializer,
+    AssistAlertSerializer,
     ProcessSerializer,
     TwitterAccountSerializer,
     InstagramAccountSerializer,
@@ -1664,17 +1664,17 @@ class PitchViewSet(
         return Response({"pitch": pitch})
 
 
-class EmailAlertViewSet(
+class AssistAlertViewSet(
     viewsets.GenericViewSet,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     mixins.ListModelMixin,
 ):
-    serializer_class = EmailAlertSerializer
+    serializer_class = AssistAlertSerializer
 
     def get_queryset(self):
-        return EmailAlert.objects.filter(user=self.request.user)
+        return AssistAlert.objects.filter(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
         datetime = request.data.pop("run_at")
@@ -1729,8 +1729,8 @@ class EmailAlertViewSet(
         url_path="get-email-alerts",
     )
     def get_email_alerts(self, request, *args, **kwargs):
-        alerts = EmailAlert.objects
-        serialized = EmailAlertSerializer(alerts, many=True)
+        alerts = AssistAlert.objects
+        serialized = AssistAlertSerializer(alerts, many=True)
         return Response(data=serialized.data, status=status.HTTP_200_OK)
 
 

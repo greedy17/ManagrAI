@@ -12,7 +12,7 @@ from managr.utils.client import Variable_Client
 from managr.utils.misc import custom_paginator
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_clips_paginator_block
 from . import constants as comms_consts
-from .models import Search, NewsSource, EmailAlert
+from .models import Search, NewsSource, AssistAlert
 from .models import Article as InternalArticle
 from .serializers import (
     SearchSerializer,
@@ -517,7 +517,7 @@ def _process_website_domain(url, organization_name):
 
 @background()
 def _send_news_summary(news_alert_id):
-    alert = EmailAlert.objects.get(id=news_alert_id)
+    alert = AssistAlert.objects.get(id=news_alert_id)
     boolean = alert.search.search_boolean
     end_time = datetime.datetime.now()
     start_time = end_time - datetime.timedelta(hours=24)
@@ -613,7 +613,7 @@ def _send_news_summary(news_alert_id):
 
 @background()
 def _send_social_summary(news_alert_id):
-    alert = EmailAlert.objects.get(id=news_alert_id)
+    alert = AssistAlert.objects.get(id=news_alert_id)
     boolean = alert.search.search_boolean
     tweet_res = alert.user.twitter_account.get_tweets(boolean)
     if len(tweet_res):

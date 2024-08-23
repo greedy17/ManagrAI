@@ -563,7 +563,7 @@ router.register("alerts/instances", alert_views.AlertInstanceViewSet, "alert-ins
 router.register("alerts/real-time", alert_views.RealTimeAlertViewSet, "real-time-alerts")
 router.register("prsearch", comms_views.PRSearchViewSet, "prsearch")
 router.register("pitches", comms_views.PitchViewSet, "pitches")
-router.register("email-alerts", comms_views.EmailAlertViewSet, "email-alerts")
+router.register("email-alerts", comms_views.AssistAlertViewSet, "email-alerts")
 router.register("process", comms_views.ProcessViewSet, "process")
 router.register("discovery", comms_views.DiscoveryViewSet, "discovery")
 router.register("jcontact", comms_views.JournalistContactViewSet, "jcontact")
