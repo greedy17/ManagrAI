@@ -1363,7 +1363,7 @@ def launch_search(request):
 @api_view(["post"])
 @permission_classes([permissions.AllowAny])
 @authentication_classes([ExpiringTokenAuthentication])
-def send_to_slack(request):
+def send_summary_to_slack(request):
     from managr.comms.tasks import emit_process_news_summary
     import re
 
@@ -1373,6 +1373,7 @@ def send_to_slack(request):
     start_date = data.get("start_date")
     end_date = data.get("end_date")
     summary = data.get("summary")
+    channel_id = data.get("channel_id", False)
     cleaned_text = re.sub(r"\[\d+\]", "", summary).replace("<p>", "").replace("</p>", "\n")
     clips = data.get("clips")
     try:
@@ -1404,8 +1405,9 @@ def send_to_slack(request):
             article_text = f"{article['source']['name']}\n*{article['title']}*\n<{article['link']}|Read More>\n_{author}_ - {fixed_date}"
             blocks.append(block_builders.simple_section(article_text, "mrkdwn"))
             blocks.append(block_builders.divider_block())
+        channel = channel_id if channel_id else user.slack_integration.channel
         slack_res = slack_requests.send_channel_message(
-            user.slack_integration.channel,
+            channel,
             user.organization.slack_integration.access_token,
             block_set=blocks,
         )

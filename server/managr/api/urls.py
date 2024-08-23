@@ -352,8 +352,8 @@ urlpatterns = [
         name="list-tasks",
     ),
     path(
-        "slack/send-slack/",
-        slack_views.send_to_slack,
+        "slack/send-slack-summary/",
+        slack_views.send_summary_to_slack,
         name="send-slack",
     ),
     path(
