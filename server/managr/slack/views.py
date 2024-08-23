@@ -31,7 +31,7 @@ from managr.slack.helpers import requests as slack_requests
 from managr.slack.helpers import interactions as slack_interactions
 from managr.slack.helpers import block_builders
 from managr.slack.helpers.block_sets import get_block_set
-from managr.slack.helpers.utils import block_finder, send_to_error_channel
+from managr.slack.helpers.utils import block_finder, send_to_error_channel, action_with_params
 from managr.core.permissions import IsStaff
 from managr.core.serializers import UserSerializer
 from managr.core.models import User
@@ -1369,30 +1369,48 @@ def send_to_slack(request):
 
     data = request.data
     user = request.user
-    company = data.get("company", user.organization.name)
     search = data.get("search")
     start_date = data.get("start_date")
     end_date = data.get("end_date")
-    instructions = data.get("instructions")
-    context = {
-        "u": str(user.id),
-        "company": company,
-        "search": search,
-        "start_date": start_date,
-        "end_date": end_date,
-    }
+    summary = data.get("summary")
+    clips = data.get("clips")
     try:
-        res = slack_requests.send_channel_message(
+        blocks = [
+            block_builders.context_block(f"{search}", "mrkdwn"),
+            block_builders.header_block("Answer"),
+            block_builders.simple_section(f"{summary}\n", "mrkdwn", "SUMMARY"),
+            block_builders.actions_block(
+                [
+                    block_builders.simple_button_block(
+                        "Ask Follow-Up",
+                        "FOLLOWUP",
+                        action_id=action_with_params(
+                            slack_const.PROCESS_SHOW_REGENERATE_NEWS_SUMMARY_FORM,
+                            [f"sd={start_date}", f"ed={end_date}", f"s={search}"],
+                        ),
+                    )
+                ]
+            ),
+            block_builders.divider_block(),
+            block_builders.header_block("Clips:"),
+        ]
+        end_index = 5 if len(clips) > 5 else len(clips)
+        for i in range(0, end_index):
+            article = clips[i]
+            date = article["publish_date"][:9]
+            fixed_date = f"{date[5:7]}/{date[8:]}/{date[0:4]}"
+            author = article["author"].replace("_", "") if article["author"] is not None else "N/A"
+            article_text = f"{article['source']['name']}\n*{article['title']}*\n<{article['link']}|Read More>\n_{author}_ - {fixed_date}"
+            blocks.append(block_builders.simple_section(article_text, "mrkdwn"))
+            blocks.append(block_builders.divider_block())
+        slack_res = slack_requests.send_channel_message(
             user.slack_integration.channel,
             user.organization.slack_integration.access_token,
-            block_set=get_block_set("loading", {"message": ":robot_face: Scanning the news..."}),
+            block_set=blocks,
         )
-        context.update(ts=res["ts"])
     except Exception as e:
         send_to_error_channel(str(e), user.email, "send summary to slack")
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
-    payload = {"view": {"state": {"INSTRUCTIONS": {"plain_input": {"value": instructions}}}}}
-    emit_process_news_summary(payload, context)
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
