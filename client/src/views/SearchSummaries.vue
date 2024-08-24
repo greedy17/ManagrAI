@@ -3625,7 +3625,7 @@ export default {
       summarySuggestions: [
         `Craft a media pitch for [BrandX] incorporating relevant news, use citations. Pitch details: [here]`,
         `Craft a press release for [BrandX] incorporating relevant news, use citations. Pitch details: [here]`,
-        `Which of these journalists would be interested in learning more about [BrandX], explain why`,
+        `List up to 10 journalists that would be interested in writing about [BrandX], explain why`,
         `Provide creative pitching angles for [BrandX] based on this coverage`,
         `Provide sentiment analysis and key messages for [BrandX]`,
         `List 5 questions the media will ask [BrandX] based on this news`,
@@ -3962,10 +3962,14 @@ export default {
         this.refreshUser()
       }
     },
-    async getCompanyDetails() {
+    async getCompanyDetails(newDeets = false) {
       try {
         const res = await Comms.api.getCompanyDetails()
         this.allCompanyDetails = res.results
+        if (newDeets) {
+          let detail = res.results.at(-1)
+          this.addDetailsAlt(detail.title, detail.details)
+        }
       } catch (e) {}
     },
     async addCompanyDetails() {
@@ -3991,7 +3995,7 @@ export default {
         this.detailsBody = ''
         // this.getDetails()
         this.savingStyle = false
-        this.getCompanyDetails()
+        this.getCompanyDetails(true)
         this.toggleDetailsInputModal()
       }
     },

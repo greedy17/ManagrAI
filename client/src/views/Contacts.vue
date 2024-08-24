@@ -992,8 +992,16 @@ export default {
           search: false,
           social: false,
         })
-        const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i
+        const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*|Email:\s*)([^<"\s]+)/i
         const match = res.data.summary.match(emailRegex)
+
+        const companyRegex = /company:\s*([^<]+)/i
+        const companyMatch = res.data.summary.match(companyRegex)
+
+        if (companyMatch) {
+          const newCompany = companyMatch[1]
+          this.currentPublication = newCompany.trim()
+        }
 
         if (match) {
           const email = match[1]
@@ -1002,6 +1010,7 @@ export default {
         this.newContactBio = res.data.summary
           .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
           .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, '')
+          .replace(/company:\s*([^<]+)/i, '')
         this.newContactImages = res.data.images
         this.contactsModalOpen = false
         setTimeout(() => {
