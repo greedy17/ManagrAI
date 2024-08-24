@@ -65,7 +65,7 @@ WORKSPACE_SCOPES = [
     "users:read",
 ]
 
-USER_SCOPES = ["channels:read"]
+USER_SCOPES = ["channels:read", "groups:read"]
 
 # Link Types to determine which type of OAuth link to generate
 WORKSPACE = "WORKSPACE"
