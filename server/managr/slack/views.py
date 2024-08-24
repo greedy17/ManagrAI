@@ -75,7 +75,6 @@ class SlackViewSet(
         data = {
             "link": slack_auth.OAuthLinkBuilder(request.user, redirect_uri).link_for_type(link_type)
         }
-        print(data)
         return Response(data=data, status=status.HTTP_200_OK)
 
     @action(
@@ -188,6 +187,8 @@ class SlackViewSet(
                     "You signed into the wrong Slack workspace, please try again."
                 )
         slack_id = data.get("authed_user").get("id")
+        user_access_token = data.get("authed_user").get("access_token")
+        user_scope = data.get("authed_user").get("scope")
         org = request.user.organization
         if hasattr(org, "slack_integration"):
             if not request.user.has_slack_integration:
@@ -195,6 +196,8 @@ class SlackViewSet(
                     user=request.user,
                     slack_id=slack_id,
                     organization_slack=org.slack_integration,
+                    access_token=user_access_token,
+                    scope=user_scope,
                 )
                 # get the user's channel
                 res = slack_requests.request_user_dm_channel(
@@ -266,10 +269,10 @@ class SlackViewSet(
     )
     def slack_channels(self, request, *args, **kwargs):
         cursor = request.data.get("cursor")
-        organization_slack = request.user.organization.slack_integration
-        if organization_slack:
+        slack_integration = request.user.slack_integration
+        if slack_integration:
             channels = slack_requests.list_channels(
-                organization_slack.access_token,
+                slack_integration.access_token,
                 cursor=cursor,
                 types=["public_channel", "private_channel"],
                 limit=100,
@@ -286,10 +289,10 @@ class SlackViewSet(
     )
     def slack_user_channels(self, request, *args, **kwargs):
         cursor = request.data.get("cursor")
-        organization_slack = request.user.organization.slack_integration
-        if organization_slack:
+        slack_integration = request.user.slack_integration
+        if slack_integration:
             channels = slack_requests.list_user_channels(
-                organization_slack.access_token,
+                slack_integration.access_token,
                 request.user.slack_integration.slack_id,
                 cursor=cursor,
                 types=["public_channel", "private_channel"],
