@@ -5,7 +5,7 @@ from .models import (
     Pitch,
     NewsSource,
     Article,
-    EmailAlert,
+    AssistAlert,
     WritingStyle,
     TwitterAccount,
     InstagramAccount,
@@ -64,7 +64,7 @@ class CustomArticle(admin.ModelAdmin):
     search_fields = ("title",)
 
 
-class CustomEmailAlertAdmin(admin.ModelAdmin):
+class CustomAssistAlertAdmin(admin.ModelAdmin):
     list_display = ("user", "search", "run_at", "times_sent")
     ordering = ("run_at",)
 
@@ -94,11 +94,16 @@ class CustomJournalistContactAdmin(admin.ModelAdmin):
     list_filter = ("user",)
 
 
+class CustomCompanyDetail(admin.ModelAdmin):
+    list_display = ("user", "title")
+    list_filter = ("user__organization",)
+
+
 admin.site.register(Search, CustomSearch)
 admin.site.register(Pitch, CustomPitch)
 admin.site.register(NewsSource, CustomNewsSource)
 admin.site.register(Article, CustomArticle)
-admin.site.register(EmailAlert, CustomEmailAlertAdmin)
+admin.site.register(AssistAlert, CustomAssistAlertAdmin)
 admin.site.register(WritingStyle)
 admin.site.register(TwitterAccount)
 admin.site.register(InstagramAccount)
@@ -106,4 +111,4 @@ admin.site.register(Discovery)
 admin.site.register(Journalist, CustomJournalAdmin)
 admin.site.register(EmailTracker, CustomEmailTrackerAdmin)
 admin.site.register(JournalistContact, CustomJournalistContactAdmin)
-admin.site.register(CompanyDetails)
+admin.site.register(CompanyDetails, CustomCompanyDetail)

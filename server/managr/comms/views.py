@@ -35,7 +35,7 @@ from .models import (
     EmailTracker,
 )
 from .models import Article as InternalArticle
-from .models import WritingStyle, EmailAlert, JournalistContact
+from .models import WritingStyle, AssistAlert, JournalistContact
 from managr.core.models import User
 from managr.comms import exceptions as comms_exceptions
 from .tasks import (
@@ -48,7 +48,7 @@ from .tasks import (
 from .serializers import (
     SearchSerializer,
     PitchSerializer,
-    EmailAlertSerializer,
+    AssistAlertSerializer,
     ProcessSerializer,
     TwitterAccountSerializer,
     InstagramAccountSerializer,
@@ -1664,17 +1664,17 @@ class PitchViewSet(
         return Response({"pitch": pitch})
 
 
-class EmailAlertViewSet(
+class AssistAlertViewSet(
     viewsets.GenericViewSet,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     mixins.ListModelMixin,
 ):
-    serializer_class = EmailAlertSerializer
+    serializer_class = AssistAlertSerializer
 
     def get_queryset(self):
-        return EmailAlert.objects.filter(user=self.request.user)
+        return AssistAlert.objects.filter(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
         datetime = request.data.pop("run_at")
@@ -1729,8 +1729,8 @@ class EmailAlertViewSet(
         url_path="get-email-alerts",
     )
     def get_email_alerts(self, request, *args, **kwargs):
-        alerts = EmailAlert.objects
-        serialized = EmailAlertSerializer(alerts, many=True)
+        alerts = AssistAlert.objects
+        serialized = AssistAlertSerializer(alerts, many=True)
         return Response(data=serialized.data, status=status.HTTP_200_OK)
 
 
@@ -2631,18 +2631,6 @@ def email_recieved_webhook(request):
     return Response(status=status.HTTP_202_ACCEPTED)
 
 
-@api_view(["GET"])
-@permission_classes([])
-def get_email_tracking(request):
-    user = request.user
-    trackers = EmailTracker.objects.filter(user__organization=user.organization).order_by(
-        "-datetime_created"
-    )
-    serialized = EmailTrackerSerializer(trackers, many=True)
-    rate_data = EmailTracker.get_user_rates(user.id)
-    return Response(data={"trackers": serialized.data, "rates": rate_data})
-
-
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def get_google_summary(request):
@@ -2873,4 +2861,56 @@ class CompanyDetailsViewSet(
         detail_id = request.data["params"]["id"]
         detail = CompanyDetails.objects.get(id=detail_id)
         detail.delete()
+        return Response(status=status.HTTP_200_OK)
+
+
+class EmailTrackerViewSet(
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+):
+    authentication_classes = [ExpiringTokenAuthentication]
+    serializer_class = EmailTrackerSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        trackers = EmailTracker.objects.filter(user=user).order_by("-datetime_created")
+        return trackers
+
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        try:
+            serializer = EmailTrackerSerializer(
+                data={
+                    "user": user.id,
+                    "recipient": request.data.get("recipient"),
+                    "body": request.data.get("body"),
+                    "subject": request.data.get("subject"),
+                    "name": request.data.get("name"),
+                }
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            serializer.instance.add_activity("draft_created")
+            return Response(status=status.HTTP_201_CREATED, data={"tracker": serializer.data})
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = self.request.data
+        serializer = self.serializer_class(instance=instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            instance.delete()
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)

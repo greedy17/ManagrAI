@@ -10,6 +10,7 @@ from managr.core.models import TimeStampModel
 from django.db.models.constraints import UniqueConstraint
 from managr.core import constants as core_consts
 from . import constants as comms_consts
+from managr.slack.helpers import block_builders
 from .exceptions import (
     _handle_response as _handle_news_response,
     TwitterApiException,
@@ -642,15 +643,20 @@ class WritingStyle(models.Model):
         on_delete=models.CASCADE,
     )
 
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.title[:74], str(self.id))
 
-class EmailAlert(TimeStampModel):
+
+class AssistAlert(TimeStampModel):
     user = models.ForeignKey(
         "core.User",
-        related_name="news_alert",
+        related_name="assist_alerts",
         blank=False,
         null=False,
         on_delete=models.CASCADE,
     )
+    type = models.CharField(choices=comms_consts.ALERT_TYPES, max_length=50, default="EMAIL")
     title = models.CharField(max_length=255)
     run_at = models.DateTimeField()
     search = models.ForeignKey(
@@ -1127,9 +1133,20 @@ class EmailTracker(TimeStampModel):
     received = models.BooleanField(default=False)
     failed = models.BooleanField(default=False)
     activity_log = ArrayField(models.CharField(max_length=255), default=list)
+    is_approved = models.BooleanField(default=False)
+    is_rejected = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.user.email} - {self.recipient}: {self.subject}"
+
+    @property
+    def is_draft(self):
+        if self.activity_log:
+            first = self.activity_log[0]
+            event, time = first.split("|")
+            if event == "draft_created":
+                return True
+        return False
 
     def add_activity(self, type):
         date = datetime.now()
@@ -1221,6 +1238,7 @@ class JournalistContact(TimeStampModel):
     tags = ArrayField(models.CharField(max_length=255), default=list)
     bio = models.TextField(blank=True, null=True)
     images = ArrayField(models.TextField(), default=list)
+    notes = models.TextField(null=True, blank=True)
 
     class Meta:
         unique_together = ("user", "journalist")
@@ -1261,3 +1279,11 @@ class CompanyDetails(models.Model):
         null=False,
         on_delete=models.CASCADE,
     )
+
+    class Meta:
+        verbose_name = "Company Detail"
+        verbose_name_plural = "Company Details"
+
+    @property
+    def as_slack_option(self):
+        return block_builders.option(self.title[:74], str(self.id))

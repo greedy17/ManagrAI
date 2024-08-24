@@ -493,7 +493,7 @@ class CommsApi extends ModelAPI {
     }
     async getTrackedEmails() {
         try {
-            const res = await this.client.get('email-tracking/')
+            const res = await this.client.get('tracker/')
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)

@@ -199,6 +199,7 @@ NEW_API_EVERYTHING_DATE_URI = (
 
 SEARCH_TYPE_CHOICES = (("NEWS", "News"), ("SOCIAL_MEDIA", "Social Media"), ("MIXED", "Mixed"))
 COVERAGE_TYPE_CHOICES = (("NATIONAL", "National"), ("LOCAL", "Local"), ("BOTH", "Both"))
+ALERT_TYPES = (("NEWS", "News"), ("SLACK", "Slack"), ("BOTH", "Both"))
 
 DEFAULT_INSTRUCTIONS = """*Executive summary:*\n Highlighting 5 key points from today's clips.\n
 *Sentiment*\n Evaluate the overall tone or sentiment of the coverage. Is it primarily positive, neutral, or negative and why.\n
@@ -373,6 +374,18 @@ def OPEN_AI_PITCH(date, type, instructions, style=False):
 OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS = (
     lambda pitch, instructions, style, details: f"""
     Adjust and rewrite the content per the instructions below, adhering to the desired writing style guidelines. The content should be in HTML format with proper spacing and separate paragraphs for each section (greeting, introduction, closing, etc). Do not include ```html``` in your response.\n
+    
+    Content: {pitch}\n
+    Instructions: {instructions}\n
+    Writing Style: {style}
+    Additional details {details}
+    """
+)
+
+
+OPEN_AI_PTICH_SLACK_DRAFT_WITH_INSTRUCTIONS = (
+    lambda pitch, instructions, style, details: f"""
+    Adjust and rewrite the content per the instructions below, adhering to the desired writing style guidelines. The content should be a format to display in markdown with proper spacing and separate paragraphs for each section (greeting, introduction, closing, etc). Do not include ```markdown``` in your response.\n
     
     Content: {pitch}\n
     Instructions: {instructions}\n
