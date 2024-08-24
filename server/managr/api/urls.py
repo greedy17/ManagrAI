@@ -522,6 +522,11 @@ urlpatterns = [
         comms_views.read_column_names,
         name="read-column-names",
     ),
+    path(
+        "process-contacts/",
+        comms_views.process_excel_file,
+        name="process-contacts",
+    ),
 ]
 router.register("users/reports", core_views.ReportViewSet, "reports"),
 router.register("users/conversations", core_views.ConversationViewSet, "conversations"),
