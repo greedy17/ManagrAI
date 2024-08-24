@@ -22,10 +22,10 @@ class Command(BaseCommand):
                 task_locked = task.locked_at.replace(tzinfo=datetime.timezone.utc)
                 seconds_since_locked = dt - task_locked
                 if seconds_since_locked.seconds >= 1500:
-                    # params = task.params()[0]
+                    params = task.params()[0]
                     task.delete()
-                    # url_list = ",".join(params)
-                    # _run_spider_batch(url_list)
+                    url_list = ",".join(params)
+                    _run_spider_batch(url_list)
 
         if len(tasks) == 0:
             sources = NewsSource.domain_list(True)

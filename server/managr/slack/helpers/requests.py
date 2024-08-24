@@ -115,7 +115,7 @@ def send_channel_message(channel, access_token, text="Managr", block_set=[]):
     **Channel Id required to send DM's or Channel
     """
     url = slack_const.SLACK_API_ROOT + slack_const.POST_MESSAGE
-    data = {}
+    data = {"unfurl_links": False}
     data["channel"] = channel
     data["text"] = text
     data["blocks"] = block_set
