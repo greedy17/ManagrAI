@@ -994,6 +994,8 @@ class CrawlerReport(TimeStampModel):
     start_url_counts = ArrayField(models.IntegerField(), null=True, default=list)
     total_url_counts = ArrayField(models.IntegerField(), null=True, default=list)
     blocked_urls = models.IntegerField(default=0)
+    start_ts = models.CharField(max_length=255, blank=True, null=True)
+    end_ts = models.CharField(max_length=255, blank=True, null=True)
 
     def create_report_data(self):
         all_errors = []

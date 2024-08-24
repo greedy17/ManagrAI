@@ -33,23 +33,25 @@ class Command(BaseCommand):
                 print(f"SOURCE NOT RAN: {sources}")
             else:
                 report = CrawlerReport.objects.all().order_by("-datetime_created").first()
-                data = report.create_report_data()
-                send_to_error_channel(
-                    f"Crawler finished at: {datetime.datetime.now()}, Completed in: {data['time']}",
-                    None,
-                    "crawler",
-                    f"Crawler Update {settings.ENVIRONMENT}",
-                )
-                problem_urls = NewsSource.problem_urls()
-                problem_urls = ", ".join(problem_urls)
-                data["problem_urls"] = problem_urls
-                try:
-                    send_html_email(
-                        f"Managr Crawler Report",
-                        "core/email-templates/crawler-email.html",
-                        settings.DEFAULT_FROM_EMAIL,
-                        ["zach@mymanagr.com"],
-                        context=data,
+                if not report.end_ts:
+                    data = report.create_report_data()
+                    send_to_error_channel(
+                        f"Crawler finished at: {datetime.datetime.now()}, Completed in: {data['time']}",
+                        None,
+                        "crawler",
+                        f"Crawler Update {settings.ENVIRONMENT}",
+                        str(report.id),
                     )
-                except Exception as e:
-                    print(str(e))
+                    problem_urls = NewsSource.problem_urls()
+                    problem_urls = ", ".join(problem_urls)
+                    data["problem_urls"] = problem_urls
+                    try:
+                        send_html_email(
+                            f"Managr Crawler Report",
+                            "core/email-templates/crawler-email.html",
+                            settings.DEFAULT_FROM_EMAIL,
+                            ["zach@mymanagr.com"],
+                            context=data,
+                        )
+                    except Exception as e:
+                        print(str(e))
