@@ -229,8 +229,8 @@ def _process_news_summary(payload, context):
         start_date = state["START_DATE"][list(state["START_DATE"].keys())[0]]["selected_date"]
         end_date = state["STOP_DATE"][list(state["STOP_DATE"].keys())[0]]["selected_date"]
     else:
-        instructions = " "
         search = state["SEARCH"]["plain_input"]["value"]
+        instructions = search
         start_date = state["START_DATE"][list(state["START_DATE"].keys())[0]]["selected_date"]
         end_date = state["STOP_DATE"][list(state["STOP_DATE"].keys())[0]]["selected_date"]
     user = User.objects.get(id=context.get("u"))

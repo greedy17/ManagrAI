@@ -296,11 +296,10 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_clie
 def OPEN_AI_NEWS_CLIPS_SLACK_SUMMARY(date, clips, search, instructions=False, for_client=False):
     if not instructions:
         instructions = DEFAULT_CLIENT_INSTRUCTIONS
-    body = f"""Today's date is {date}. Read the news coverage below and carefully follow the instructions. 
-    Keep the output under 1000 characters. All URLs must be formatted as Slack hyperlinks. 
-    Only use the following exact format for URLs:
-    Example format:
-    <URL|Read More>
+    body = f"""Today's date is {date}. Please provide a concise and accurate response per my instructions, using the given news coverage. If the instructions don't ask for anything specific, just provide a brief summary of the news in 250 words or less.
+    Cite the most relevant sources by enclosing the index of the search result in a Slack hyperlink with the index at the end of the corresponding sentence, without a space between the last word and the citation. Example: <URL|[INDEX]>.
+    Never cite more than 3 sources in a row. Do not include a references section at the end of your answer. Never make an entire list item a link. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge.
+    Keep the output under 1000 characters. All URLs must be formatted as Slack hyperlinks. Do NOT insert only a URL into the text. Make sure that your response is properly formatted markdown with good spacing.
 
     Here is the news coverage:
     {clips}
