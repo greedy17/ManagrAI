@@ -741,13 +741,13 @@ def news_summary_blockset(context):
         block_builders.input_block(
             "Search news", optional=False, block_id="SEARCH", multiline=True
         ),
-        block_builders.static_select(
-            "Source",
-            [block_builders.option("News", "NEWS"), block_builders.option("Write", "WRITE")],
-            slack_const.PROCESS_CHANGE_SOURCE_VIEW,
-            block_builders.option("News", "NEWS"),
-            block_id="SOURCE",
-        ),
+        # block_builders.static_select(
+        #     "Source",
+        #     [block_builders.option("News", "NEWS"), block_builders.option("Write", "WRITE")],
+        #     slack_const.PROCESS_CHANGE_SOURCE_VIEW,
+        #     block_builders.option("News", "NEWS"),
+        #     block_id="SOURCE",
+        # ),
         block_builders.datepicker(str(date_start), label="Date Start", block_id="START_DATE"),
         block_builders.datepicker(str(date), label="Date End", block_id="STOP_DATE"),
     ]
