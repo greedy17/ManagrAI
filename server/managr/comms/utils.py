@@ -287,6 +287,29 @@ def get_search_boolean(search):
     return query_input
 
 
+def convert_html_to_markdown(summary, clips):
+    from managr.core import exceptions as open_ai_exceptions
+    from managr.core import constants as core_consts
+
+    url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+    prompt = core_consts.OPEN_AI_CONVERT_HTML(summary, clips)
+    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+        "ManagrAI",
+        prompt,
+        token_amount=500,
+        top_p=0.1,
+    )
+    with Variable_Client() as client:
+        r = client.post(
+            url,
+            data=json.dumps(body),
+            headers=core_consts.OPEN_AI_HEADERS,
+        )
+    r = open_ai_exceptions._handle_response(r)
+    new_summary = r.get("choices")[0].get("message").get("content")
+    return new_summary
+
+
 def normalize_newsapi_to_model(api_data):
     normalized_data = [
         dict(

@@ -121,11 +121,10 @@ class CustomAPIException:
             )
         if "is_archived" in self.message:
             raise ChannelArchived
-        elif self.code == 200 and (
-            self.param == "not_in_channel" or self.param == "channel_not_found"
-        ):
-            logger.error(f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message}")
-            raise CannotSendToChannel(f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message}")
+        elif self.code == 200 and self.param == "not_in_channel":
+            raise CannotSendToChannel("ManagrAI is not invited to that channel")
+        elif self.code == 200 and self.param == "channel_not_found":
+            raise CannotSendToChannel("We could not find that channel")
         else:
             # we may not have come accross this error yet
             logger.error(f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message}")

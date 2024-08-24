@@ -241,6 +241,19 @@ OPEN_AI_TRANSCRIPT_GENERATE_CONTENT = (
     Here is call summary {summary} from {date}. Generate content based on these instructions {instructions}."""
 )
 
+OPEN_AI_CONVERT_HTML = (
+    lambda summary, clips: f"""
+    Convert this html summary to markdown to use in Slack. The bolding and header format should only be one asterisk on each side of the text.
+    For the citations, replace them with a slack hyperlink using the URL of the clip at the same index in the square brackets. Example: <URL|[INDEX]>.
+    
+    Summary:
+    {summary}
+
+    Clips:
+    {clips}
+    """
+)
+
 
 # OAuth permission scopes to request from Nylas
 SCOPE_CALENDAR = "calendar"
