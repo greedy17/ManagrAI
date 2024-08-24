@@ -1,8 +1,8 @@
 import json
-import pandas
 import httpx
 import logging
 import pytz
+from openpyxl import load_workbook
 from rest_framework import (
     mixins,
     viewsets,
@@ -45,6 +45,7 @@ from .tasks import (
     emit_send_social_summary,
     emit_share_client_summary,
     _add_jounralist_to_db,
+    emit_process_contacts_excel
 )
 from .serializers import (
     SearchSerializer,
@@ -2883,10 +2884,23 @@ def read_column_names(request):
     file_obj = request.FILES.get("file")
     if file_obj:
         try:
-            df = pandas.read_excel(file_obj)
-            column_names = df.columns.tolist()
+            workbook = load_workbook(file_obj, data_only=True)
+            sheet = workbook.active
+            column_names = [cell.value for cell in sheet[1]]
             return Response({"columns": column_names}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def process_excel_file(request):
+    file_obj = request.FILES.get("file")
+    labels = request.data.get("labels")
+    if file_obj:
+            emit_process_contacts_excel(file_obj, labels)
+            return Response(status=status.HTTP_204_NO_CONTENT)
     else:
         return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)

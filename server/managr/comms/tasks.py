@@ -6,6 +6,7 @@ import datetime
 import re
 import html
 from dateutil import parser
+from openpyxl import load_workbook
 from django.conf import settings
 from background_task import background
 from managr.utils.client import Variable_Client
@@ -73,6 +74,10 @@ def emit_get_meta_account_info(user_id):
 
 def emit_process_user_hashtag_list(user_id):
     return _process_user_hashtag_list(user_id)
+
+
+def emit_process_contacts_excel(file, labels):
+    return _process_contacts_excel(file, labels)
 
 
 def emit_send_social_summary(news_alert_id, schedule):
@@ -803,4 +808,25 @@ def test_database_pull(date_to, date_from, search, result_id):
         all_data.json_result = articles
         all_data.save()
     print(datetime.datetime.now())
+    return
+
+
+@background()
+def _process_contacts_excel(file, labels):
+    workbook = load_workbook(file, data_only=True)
+    sheet = workbook.active
+    column_names = [cell.value for cell in sheet[1]]
+    data = []
+    column_indices = [
+        (column_names.index(label), label) for label in labels if label in column_names
+    ]
+    for row in sheet.iter_rows(min_row=2, values_only=True):
+        data_obj = {}
+        for column in column_indices:
+            idx = column[0]
+            column_label = column[1]
+            value = row[idx]
+            key = labels[column_label]
+            data_obj[key] = value
+    print(data)
     return

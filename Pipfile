@@ -42,7 +42,7 @@ requests-oauthlib = "*"
 pymupdf = "*"
 psycopg2-binary = "*"
 lxml-html-clean = "*"
-pandas = "*"
+openpyxl = "*"
 
 [requires]
 python_version = "3.9"
