@@ -1374,6 +1374,7 @@ def launch_search(request):
 @authentication_classes([ExpiringTokenAuthentication])
 def send_summary_to_slack(request):
     from managr.comms.tasks import emit_process_slack_news_summary
+    from managr.comms.utils import convert_html_to_markdown
     import re
 
     data = request.data.get("data")
@@ -1383,8 +1384,8 @@ def send_summary_to_slack(request):
     end_date = data.get("end_date")
     summary = data.get("summary")
     channel_id = data.get("channel_id", False)
-    cleaned_text = re.sub(r"\[\d+\]", "", summary).replace("<p>", "").replace("</p>", "\n")
     clips = data.get("clips")
+    cleaned_text = convert_html_to_markdown(summary, clips)
     try:
         blocks = [
             block_builders.context_block(f"{search}", "mrkdwn"),
