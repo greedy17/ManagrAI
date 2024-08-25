@@ -324,8 +324,9 @@ def _process_slack_news_summary(payload, context):
                 blocks.append(block_builders.simple_section(article_text, "mrkdwn"))
                 blocks.append(block_builders.divider_block())
         if context.get("ts", False):
+            channel = context.get("channel")
             slack_res = slack_requests.update_channel_message(
-                user.slack_integration.channel,
+                channel,
                 context.get("ts"),
                 user.organization.slack_integration.access_token,
                 block_set=blocks,
