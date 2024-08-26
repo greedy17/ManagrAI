@@ -296,7 +296,7 @@ def convert_html_to_markdown(summary, clips):
     body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
         "ManagrAI",
         prompt,
-        token_amount=500,
+        token_amount=2000,
         top_p=0.1,
     )
     with Variable_Client() as client:
