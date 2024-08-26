@@ -270,19 +270,33 @@ def get_search_boolean(search):
 
     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
     prompt = core_consts.OPEN_AI_NEWS_BOOLEAN_CONVERSION(search)
-    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-        "dev",
-        prompt,
-        token_amount=500,
-        top_p=0.1,
-    )
-    with Variable_Client() as client:
-        r = client.post(
-            url,
-            data=json.dumps(body),
-            headers=core_consts.OPEN_AI_HEADERS,
+    tokens = 2000
+    while True:
+        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+            "dev",
+            prompt,
+            token_amount=tokens,
+            top_p=0.1,
         )
-    r = open_ai_exceptions._handle_response(r)
+        try:
+            with Variable_Client() as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            r = open_ai_exceptions._handle_response(r)
+            break
+        except open_ai_exceptions.StopReasonLength:
+            if token_amount <= 5000:
+                has_error = True
+
+                message = "Token amount error"
+                break
+            else:
+                token_amount += 1000
+                continue
+
     query_input = r.get("choices")[0].get("message").get("content")
     return query_input
 

@@ -50,6 +50,12 @@ class InvalidAccessToken(Exception):
         super().__init__(self.message)
 
 
+class TextTooLong(Exception):
+    def __init__(self, message="Message text if over Slack character limit"):
+        self.message = message
+        super().__init__(self.message)
+
+
 class CannotSendToChannel(Exception):
     def __init__(
         self, message="Unable to post in channel most likely because bot/user not in channel"
@@ -95,6 +101,8 @@ class CustomAPIException:
             raise TokenExpired()
         elif self.code == 403:
             raise ApiRateLimitExceeded()
+        elif self.code == 200 and "less than 3001 characters" in self.message:
+            raise TextTooLong()
         elif self.code == 200 and self.param == "invalid_blocks":
             # find the block_indexes
             blocks = [self._extract_invalid_block(error) for error in self.message]
