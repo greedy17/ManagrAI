@@ -599,10 +599,11 @@ def _send_news_summary(news_alert_id):
                 send_to_error_channel(str(e), alert.email, "send news alert")
         if type == "BOTH":
             recipients = "|".join(alert.recipients)
-            context.update("r", recipients)
+            context.update(r=recipients)
             emit_process_slack_news_summary(payload, context)
     else:
-        context.update("r", recipients)
+        recipients = "|".join(alert.recipients)
+        context.update(r=recipients)
         emit_process_slack_news_summary(payload, context)
     if "sent_count" in alert.meta_data.keys():
         alert.meta_data["sent_count"] += 1
