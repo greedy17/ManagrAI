@@ -1373,9 +1373,7 @@ def launch_search(request):
 @permission_classes([permissions.AllowAny])
 @authentication_classes([ExpiringTokenAuthentication])
 def send_summary_to_slack(request):
-    from managr.comms.tasks import emit_process_slack_news_summary
     from managr.comms.utils import convert_html_to_markdown
-    import re
 
     data = request.data.get("data")
     user = request.user
