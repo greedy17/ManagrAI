@@ -328,7 +328,7 @@ export default {
 }
 
 .Vue-Toastification__toast--success.custom {
-  background-color: $dark-green;
+  background-color: $turq;
 }
 .Vue-Toastification__toast--default.custom {
   background-color: $base-gray;
