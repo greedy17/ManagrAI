@@ -1669,7 +1669,7 @@
                     >
                       <img
                         v-if="sendingSlack"
-                        class="rotate innvert"
+                        class="rotation innvert"
                         height="14px"
                         src="@/assets/images/loading.svg"
                         alt=""
@@ -2046,19 +2046,19 @@
                       "
                       style="margin-left: 8px"
                       class="primary-button"
-                      v-if="!alertSet"
+                      v-if="!alertSet && !showingAlertChannels"
                     >
                       Schedule
                     </button>
 
-                    <button
+                    <!-- <button
                       style="margin-left: 8px"
                       v-else
                       class="primary-button fadein"
                       @click="testEmailAlert"
                     >
                       Send Preview
-                    </button>
+                    </button> -->
                   </div>
                 </div>
 
@@ -4176,14 +4176,23 @@ export default {
         })
         console.log(res)
       } catch (e) {
-        console.log(e)
-        this.$toast('Error sending content, please try again', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        if (e.data.error) {
+          this.$toast(`${e.data.error}`, {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } else {
+          this.$toast('Error sending content, try again later', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }
       } finally {
         this.sendingSlack = false
         this.hideShare()
@@ -5428,6 +5437,7 @@ export default {
 
       this.searchTime = `${this.alertTIme} ${ampm}`
     },
+    // sendtoslack
     async addEmailAlert() {
       this.savingAlert = true
       try {
@@ -5454,7 +5464,23 @@ export default {
           bodyClassName: ['custom'],
         })
       } catch (e) {
-        console.log(e)
+        if (e.data.error) {
+          this.$toast(`${e.data.error}`, {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } else {
+          this.$toast('Error sending content, try again later', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }
       } finally {
         this.getEmailAlerts()
         this.savingAlert = false
@@ -9237,6 +9263,19 @@ li {
     contrast(87%) !important;
 }
 
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
+}
+
+.rotation {
+  animation: rotation 1s infinite linear;
+}
+
 .rotate {
   transform: rotate(180deg);
 }
@@ -11536,6 +11575,7 @@ filter ::selection {
   border-radius: 6px;
   padding: 8px;
   width: 100%;
+  z-index: 900000000000000000000000;
 
   &-header {
     font-size: 14px;
@@ -11550,14 +11590,15 @@ filter ::selection {
 
   &-body-up {
     position: absolute;
-    bottom: 44px;
+    top: 8px;
     left: 0;
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 6px;
     box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
-    height: 250px;
+    height: 230px;
     background-color: white;
-    z-index: 100;
+    width: 100%;
+    z-index: 900000000000000000000001;
     overflow-y: scroll;
 
     &::-webkit-scrollbar {
@@ -11584,7 +11625,7 @@ filter ::selection {
     box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
     height: 250px;
     background-color: white;
-    z-index: 100;
+    z-index: 100000000;
     overflow-y: scroll;
 
     &::-webkit-scrollbar {
