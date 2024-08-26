@@ -4061,6 +4061,9 @@ def process_show_regenerate_news_summary_form(payload, context):
             "Ask follow-up", multiline=True, optional=False, block_id="INSTRUCTIONS"
         )
     ]
+    channel = payload["container"]["channel_id"]
+    ts = payload["container"]["message_ts"]
+    context.update(ts=ts, channel=channel)
     trigger_id = payload["trigger_id"]
     url = slack_const.SLACK_API_ROOT + slack_const.VIEWS_OPEN
     context.update(ts=payload["message"]["ts"], u=str(user.id))

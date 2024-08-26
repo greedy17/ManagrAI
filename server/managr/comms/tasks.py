@@ -232,8 +232,8 @@ def _process_slack_news_summary(payload, context):
         start_date = state["START_DATE"][list(state["START_DATE"].keys())[0]]["selected_date"]
         end_date = state["STOP_DATE"][list(state["STOP_DATE"].keys())[0]]["selected_date"]
     else:
-        instructions = " "
         search = state["SEARCH"]["plain_input"]["value"]
+        instructions = search
         start_date = state["START_DATE"][list(state["START_DATE"].keys())[0]]["selected_date"]
         end_date = state["STOP_DATE"][list(state["STOP_DATE"].keys())[0]]["selected_date"]
     user = User.objects.get(id=context.get("u"))
@@ -324,8 +324,9 @@ def _process_slack_news_summary(payload, context):
                 blocks.append(block_builders.simple_section(article_text, "mrkdwn"))
                 blocks.append(block_builders.divider_block())
         if context.get("ts", False):
+            channel = context.get("channel")
             slack_res = slack_requests.update_channel_message(
-                user.slack_integration.channel,
+                channel,
                 context.get("ts"),
                 user.organization.slack_integration.access_token,
                 block_set=blocks,
@@ -598,10 +599,11 @@ def _send_news_summary(news_alert_id):
                 send_to_error_channel(str(e), alert.email, "send news alert")
         if type == "BOTH":
             recipients = "|".join(alert.recipients)
-            context.update("r", recipients)
+            context.update(r=recipients)
             emit_process_slack_news_summary(payload, context)
     else:
-        context.update("r", recipients)
+        recipients = "|".join(alert.recipients)
+        context.update(r=recipients)
         emit_process_slack_news_summary(payload, context)
     if "sent_count" in alert.meta_data.keys():
         alert.meta_data["sent_count"] += 1

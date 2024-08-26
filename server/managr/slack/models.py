@@ -95,6 +95,15 @@ class UserSlackIntegration(TimeStampModel):
         null=False,
         on_delete=models.CASCADE,
     )
+    scope = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text="permissions that the user has in the Organization's Slack Workspace",
+    )
+    access_token = models.CharField(
+        max_length=255, null=True, blank=True, help_text="Slack API user access token"
+    )
     slack_id = models.CharField(
         max_length=255, null=False, help_text="Slack ID of the User, for this workspace"
     )

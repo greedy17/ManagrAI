@@ -86,7 +86,7 @@ class WritingStyleSerializer(serializers.ModelSerializer):
 class AssistAlertSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssistAlert
-        fields = ("id", "user", "type", "title", "search", "run_at", "meta_data")
+        fields = ("id", "user", "type", "title", "search", "run_at", "meta_data", "recipients")
 
 
 class ProcessSerializer(serializers.ModelSerializer):
