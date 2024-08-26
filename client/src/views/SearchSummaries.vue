@@ -1586,28 +1586,78 @@
                   <label for="slackChannel">Slack</label>
 
                   <div>
-                    <select
-                      :disabled="!user.slackRef"
-                      v-model="channelId"
-                      class="area-input-outline dropdown-select"
-                    >
-                      <option value="" disabled>Select a Slack channel</option>
-                      <option
-                        v-for="channel in userChannelOpts.channels"
-                        :key="channel.id"
-                        :value="channel.id"
+                    <div class="dropdown-select">
+                      <div @click.stop="showChannels" class="dropdown-select-header">
+                        {{ channelId ? channelName : 'Select a Slack channel' }}
+                        <img src="@/assets/images/downArrow.svg" height="14px" alt="" />
+                      </div>
+
+                      <div
+                        v-outside-click="hideChannels"
+                        v-show="showingChannels"
+                        class="dropdown-select-body"
                       >
-                        {{ channel.name }}
-                      </option>
-                      <option v-if="userChannelOpts.nextCursor" disabled>──────────</option>
-                      <option
-                        v-if="userChannelOpts.nextCursor"
-                        @click="listUserChannels(userChannelOpts.nextCursor)"
-                        class="load-more-option"
-                      >
-                        Load More Channels...
-                      </option>
-                    </select>
+                        <div class="dropdown-select-top">
+                          <div style="width: 100% !important" class="input">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                              <path
+                                fill-rule="evenodd"
+                                clip-rule="evenodd"
+                                d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
+                                fill="currentColor"
+                              ></path>
+                            </svg>
+                            <input
+                              v-model="searchChannelText"
+                              class="search-input"
+                              :placeholder="`Search...`"
+                            />
+
+                            <img
+                              v-if="searchChannelText"
+                              @click="clearSearchText"
+                              src="@/assets/images/close.svg"
+                              class="pointer"
+                              height="12px"
+                              alt=""
+                            />
+                          </div>
+                        </div>
+
+                        <div v-show="filteredChannels.length" style="min-height: 180px">
+                          <div
+                            v-for="(channel, i) in filteredChannels"
+                            :key="i"
+                            class="dropdown-select-item"
+                            @click="selectChannel(channel)"
+                          >
+                            {{ channel.name }}
+                          </div>
+                        </div>
+
+                        <div style="height: 180px" v-show="!filteredChannels.length">
+                          <p style="margin-left: 12px">No results...</p>
+                        </div>
+
+                        <div class="dropdown-select-bottom">
+                          <button
+                            style="position: sticky; bottom: 0"
+                            class="secondary-button"
+                            @click="listUserChannels(userChannelOpts.nextCursor)"
+                            :disabled="dropdownLoading || !userChannelOpts.nextCursor"
+                          >
+                            <img
+                              v-if="dropdownLoading"
+                              class="rotate innvert"
+                              src="@/assets/images/loading.svg"
+                              height="14px"
+                              alt=""
+                            />
+                            Load more
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <div>
@@ -1806,14 +1856,16 @@
                     @input="calculateDate(alertTIme)"
                     type="time"
                     v-model="alertTIme"
-                    @focus="clearPlaceholder"
-                    @blur="setPlaceholder"
-                    :class="{ 'has-placeholder': !alertTIme }"
-                    :data-placeholder="placeholderTime"
                     :disabled="
                       savingAlert || !isPaid || (!savedSearch && !savedDiscovery && !savedPitch)
                     "
                   />
+                  <!-- 
+                     :class="{ 'has-placeholder': !alertTIme }"
+                    :data-placeholder="placeholderTime"
+                     @focus="clearPlaceholder"
+                    @blur="setPlaceholder"
+                     -->
 
                   <div style="margin: 8px 0" class="space-between">
                     <div class="row">
@@ -1875,7 +1927,79 @@
                   </div>
 
                   <div style="width: 100%" class="fadein" v-show="alertType === 'SLACK'">
-                    <select
+                    <div class="dropdown-select">
+                      <div @click.stop="showAlertChannels" class="dropdown-select-header">
+                        {{ alertChannel ? alertChannelName : 'Select a Slack channel' }}
+                        <img src="@/assets/images/downArrow.svg" height="14px" alt="" />
+                      </div>
+
+                      <div
+                        v-outside-click="hideAlertChannels"
+                        v-show="showingAlertChannels"
+                        class="dropdown-select-body-up"
+                      >
+                        <div class="dropdown-select-top">
+                          <div style="width: 100% !important" class="input">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                              <path
+                                fill-rule="evenodd"
+                                clip-rule="evenodd"
+                                d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
+                                fill="currentColor"
+                              ></path>
+                            </svg>
+                            <input
+                              v-model="searchChannelText"
+                              class="search-input"
+                              :placeholder="`Search...`"
+                            />
+
+                            <img
+                              v-if="searchChannelText"
+                              @click="clearSearchText"
+                              src="@/assets/images/close.svg"
+                              class="pointer"
+                              height="12px"
+                              alt=""
+                            />
+                          </div>
+                        </div>
+
+                        <div v-show="filteredChannels.length" style="min-height: 180px">
+                          <div
+                            v-for="(channel, i) in filteredChannels"
+                            :key="i"
+                            class="dropdown-select-item"
+                            @click="selectAlertChannel(channel)"
+                          >
+                            {{ channel.name }}
+                          </div>
+                        </div>
+
+                        <div style="height: 180px" v-show="!filteredChannels.length">
+                          <p style="margin-left: 12px">No results...</p>
+                        </div>
+
+                        <div class="dropdown-select-bottom">
+                          <button
+                            style="position: sticky; bottom: 0"
+                            class="secondary-button"
+                            @click="listUserChannels(userChannelOpts.nextCursor)"
+                            :disabled="dropdownLoading || !userChannelOpts.nextCursor"
+                          >
+                            <img
+                              v-if="dropdownLoading"
+                              class="rotate innvert"
+                              src="@/assets/images/loading.svg"
+                              height="14px"
+                              alt=""
+                            />
+                            Load more
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- <select
                       style="width: 100%"
                       v-model="alertChannel"
                       class="area-input-outline dropdown-select"
@@ -1896,7 +2020,7 @@
                       >
                         Load More Channels...
                       </option>
-                    </select>
+                    </select> -->
                   </div>
 
                   <!-- <small v-if="isPaid && (savedSearch || savedDiscovery || savedPitch)"
@@ -3373,11 +3497,14 @@ export default {
   },
   data() {
     return {
+      originalSummary: null,
       placeholderTime: 'Select a time',
       alertType: '',
       alertChannel: '',
+      alertChannelName: '',
       userChannelOpts: new SlackListResponse(),
       channelId: '',
+      channelName: '',
       sendingSlack: false,
       searchTime: '',
       showingSave: false,
@@ -3468,6 +3595,9 @@ export default {
       searchArticleText: '',
       searchTweetText: '',
       searchResultText: '',
+      searchChannelText: '',
+      showingChannels: false,
+      showingAlertChannels: false,
       buttonClicked: false,
       savingContact: false,
       suggestions: [],
@@ -3879,6 +4009,30 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    selectAlertChannel(channel) {
+      this.alertChannelName = channel.name
+      this.alertChannel = channel.id
+      this.hideAlertChannels()
+    },
+    selectChannel(channel) {
+      this.channelName = channel.name
+      this.channelId = channel.id
+      this.hideChannels()
+    },
+    showAlertChannels() {
+      this.showingAlertChannels = true
+    },
+    hideAlertChannels() {
+      this.showingAlertChannels = false
+      this.searchChannelText = ''
+    },
+    showChannels() {
+      this.showingChannels = true
+    },
+    hideChannels() {
+      this.showingChannels = false
+      this.searchChannelText = ''
+    },
     clearPlaceholder() {
       this.placeholderTime = ''
     },
@@ -4006,7 +4160,7 @@ export default {
           search: this.newSearch,
           start_date: this.dateStart,
           end_date: this.dateEnd,
-          summary: this.summary,
+          summary: this.originalSummary,
           channel_id: this.channelId,
           clips:
             this.mainView === 'news'
@@ -4363,6 +4517,7 @@ export default {
       this.searchArticleText = ''
       this.searchTweetText = ''
       this.searchResultText = ''
+      this.searchChannelText = ''
     },
     toggleRelevant() {
       if (!this.showingRelevant) {
@@ -6590,6 +6745,7 @@ export default {
             if (this.searchSaved) {
               this.updateSearch()
             }
+            this.originalSummary = response.summary
             this.summary = response.summary
               .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
               .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
@@ -6808,6 +6964,15 @@ export default {
     },
   },
   computed: {
+    filteredChannels() {
+      if (this.userChannelOpts) {
+        return this.userChannelOpts.channels.filter((channel) =>
+          channel.name.toLowerCase().includes(this.searchChannelText.toLowerCase()),
+        )
+      } else {
+        return ['Nothing here...']
+      }
+    },
     userWritingStyles() {
       if (this.personalStyles) {
         return this.allWritingStyles.filter((style) => style.user === this.user.id)
@@ -11366,7 +11531,101 @@ filter ::selection {
 }
 
 .dropdown-select {
+  position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
   padding: 8px;
+  width: 100%;
+
+  &-header {
+    font-size: 14px;
+    width: 100% !important;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 4px 0;
+  }
+
+  &-body-up {
+    position: absolute;
+    bottom: 44px;
+    left: 0;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+    height: 250px;
+    background-color: white;
+    z-index: 100;
+    overflow-y: scroll;
+
+    &::-webkit-scrollbar {
+      width: 5px !important;
+      height: 0px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background-color: $soft-gray;
+      box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+      border-radius: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      margin-top: 48px;
+    }
+  }
+
+  &-body {
+    position: absolute;
+    top: 44px;
+    left: 0;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+    height: 250px;
+    background-color: white;
+    z-index: 100;
+    overflow-y: scroll;
+
+    &::-webkit-scrollbar {
+      width: 5px !important;
+      height: 0px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background-color: $soft-gray;
+      box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+      border-radius: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      margin-top: 48px;
+    }
+  }
+
+  &-item {
+    padding: 8px 12px;
+
+    &:hover {
+      color: $light-gray-blue;
+      cursor: pointer;
+    }
+  }
+
+  &-bottom {
+    position: sticky;
+    bottom: 0;
+    padding: 8px 12px;
+    width: 100%;
+    background-color: white;
+  }
+
+  &-top {
+    position: sticky;
+    top: 0;
+    padding: 8px;
+    width: 100%;
+    background-color: white;
+  }
 }
 
 select {
