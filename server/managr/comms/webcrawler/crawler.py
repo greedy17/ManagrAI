@@ -797,6 +797,11 @@ class XMLSpider(scrapy.Spider):
             return
         report = CrawlerReport.objects.all().order_by("-datetime_created").first()
         seconds = int((time.time() - self.start_time))
+        if seconds == 0:
+            sec_str = (
+                f"CRAWLER RAN FOR 0 SECONDS: {self.start_time}/{int(time.time())} {self.start_urls}"
+            )
+            self.error_log.insert(0, sec_str)
         if len(self.error_log):
             report_str = ",".join(self.error_log)
             report.task_times.append(seconds)

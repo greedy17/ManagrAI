@@ -22,6 +22,7 @@ class Command(BaseCommand):
                 task_locked = task.locked_at.replace(tzinfo=datetime.timezone.utc)
                 seconds_since_locked = dt - task_locked
                 if seconds_since_locked.seconds >= 1500:
+                    print(f"TASK RESTARTED: {params}")
                     params = task.params()[0]
                     task.delete()
                     url_list = ",".join(params)
@@ -42,6 +43,8 @@ class Command(BaseCommand):
                         f"Crawler Update {settings.ENVIRONMENT}",
                         str(report.id),
                     )
+                    report.end_ts = datetime.datetime.now()
+                    report.save()
                     problem_urls = NewsSource.problem_urls()
                     problem_urls = ", ".join(problem_urls)
                     data["problem_urls"] = problem_urls

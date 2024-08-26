@@ -998,30 +998,15 @@ class CrawlerReport(TimeStampModel):
     end_ts = models.CharField(max_length=255, blank=True, null=True)
 
     def create_report_data(self):
+        from managr.core.utils import calculate_total_time
+
         all_errors = []
         for error_str in self.error_log:
             error_arr = error_str.split(",")
             all_errors.extend(error_arr)
         total_start_urls = 0
         total_url_count = 0
-        total_spider_time = 0
-        pair_time = 0
-        # Iterate through `self.task_times` and process in intervals of 16
-        for i in range(0, len(self.task_times), 16):
-            # Ensure we don't go out of bounds
-            if i + 16 <= len(self.task_times):
-                current_interval = self.task_times[i : i + 16]
-                if len(current_interval) == 16:
-                    max_pair_time = max(current_interval)
-                    total_spider_time += max_pair_time
-                total_start_urls += sum(self.start_url_counts[i : i + 16])
-                total_url_count += sum(self.total_url_counts[i : i + 16])
-            else:
-                # Handle the last interval if it has less than 16 elements
-                remaining_time = self.task_times[i:]
-                total_spider_time += max(remaining_time, default=0)
-                total_start_urls += sum(self.start_url_counts[i:])
-                total_url_count += sum(self.total_url_counts[i:])
+        total_spider_time = calculate_total_time(self.task_times)
         minutes = int(round((total_spider_time / 60), 0))
         completed_in = f"{minutes} minutes"
         report_data = {
