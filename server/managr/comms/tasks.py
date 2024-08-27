@@ -315,7 +315,7 @@ def _process_slack_news_summary(payload, context):
             end_index = 5 if len(articles) > 5 else len(articles)
             for i in range(0, end_index):
                 article = articles[i]
-                date = article["publish_date"][:9]
+                date = article["publish_date"][:10]
                 fixed_date = f"{date[5:7]}/{date[8:]}/{date[0:4]}"
                 author = (
                     article["author"].replace("_", "") if article["author"] is not None else "N/A"

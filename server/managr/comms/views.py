@@ -2261,6 +2261,7 @@ class DiscoveryViewSet(
         recipient = request.data.get("recipient")
         name = request.data.get("name")
         bcc = request.data.get("bcc", [])
+        draftId = request.data.get("draftId", None)
 
         if user.has_google_integration or user.has_microsoft_integration:
             res = user.email_account.send_email(recipient, subject, body, name)
@@ -2268,6 +2269,9 @@ class DiscoveryViewSet(
             res = send_mailgun_email(user, name, subject, recipient, body, bcc)
         sent = res["sent"]
         if sent:
+            if draftId:
+                tracker = EmailTracker.objects.filter(id=draftId)
+                tracker.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             return Response(
@@ -2902,6 +2906,9 @@ class EmailTrackerViewSet(
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
         data = self.request.data
+        print("here i am --- >", data.get("activity_type"))
+        activity_type = data.get("activity_type", "Updated")
+        instance.add_activity(activity_type)
         serializer = self.serializer_class(instance=instance, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()

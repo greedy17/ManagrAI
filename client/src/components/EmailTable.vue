@@ -4,7 +4,7 @@
       <div class="regen-container">
         <div style="background-color: white" class="paid-header sticky-header">
           <div>
-            <h3 class="regen-header-title">{{ selectedEmail.subject }}</h3>
+            <h3 class="regen-header-title bold-font">{{ selectedEmail.subject }}</h3>
           </div>
 
           <img
@@ -23,8 +23,8 @@
 
         <div style="padding-top: 1rem" class="flex-end sticky-bottom">
           <div
-            style="padding-top: 9px; padding-bottom: 9px"
-            class="cancel-button"
+            style="padding-top: 9px; padding-bottom: 9px; margin-right: 4px"
+            class="secondary-button"
             @click="toggleEmailModal"
           >
             Close
@@ -58,7 +58,7 @@
         <div style="padding-top: 1rem" class="flex-end sticky-bottom">
           <div
             style="padding-top: 9px; padding-bottom: 9px"
-            class="cancel-button"
+            class="secondary-button"
             @click="toggleActivityModal"
           >
             Close
@@ -66,6 +66,237 @@
         </div>
       </div>
     </Modal>
+
+    <Modal v-if="draftEmailModalOpen" class="regen-modal">
+      <div style="width: 55vw; min-width: 500px" class="regen-container">
+        <div style="background-color: white; z-index: 1000" class="paid-header">
+          <div class="space-between">
+            <h2>Email Draft</h2>
+
+            <!-- <p style="margin-right: 8px">
+              {{ selectedEmail.name }}
+            </p> -->
+            <div class="row">
+              <button
+                :disabled="loadingDraft"
+                @click="updateDraft(false, true, 'Rejected', false)"
+                class="secondary-button pinker"
+                style="margin-right: 8px"
+              >
+                <img
+                  style="margin-right: 4px"
+                  src="@/assets/images/close.svg"
+                  height="14px"
+                  alt=""
+                />
+                Reject
+              </button>
+
+              <button
+                :disabled="loadingDraft"
+                @click="updateDraft(true, false, 'Approved', false)"
+                class="secondary-button teal"
+                style="margin-right: 8px"
+              >
+                <img
+                  style="margin-right: 4px"
+                  src="@/assets/images/check.svg"
+                  height="12px"
+                  alt=""
+                />
+                Approve
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 8px; overflow: hidden; height: 400px" class="paid-body">
+          <div style="position: relative">
+            <!-- <div class="row">
+              <div
+                class="rowed"
+                style="
+                  padding-bottom: 12px;
+                  border-bottom: 1px solid rgba(0, 0, 0, 0.135);
+                  width: 100%;
+                "
+              >
+                <p style="margin: 0; padding: 0; font-size: 18px; margin-right: 8px">From:</p>
+
+                <p class="e-container" style="margin: 0">{{ user.email }}</p>
+              </div>
+            </div> -->
+
+            <div style="position: relative">
+              <p
+                style="
+                  margin: 0 8px 0 0;
+                  padding: 0;
+                  font-size: 18px;
+                  position: absolute;
+                  left: 0;
+                  top: 20px;
+                "
+                class="bold-font"
+              >
+                To:
+              </p>
+              <input
+                style="margin-bottom: 0; padding-left: 26px; padding-top: 6px"
+                class="primary-input-underline"
+                v-model="targetEmail"
+                type="email"
+              />
+              <!-- <input
+                v-else
+                style="margin-bottom: 0; padding-left: 26px"
+                class="primary-input-underline"
+                type="email"
+                :class="{ coraltext: emailError, greenText: emailVerified }"
+                disabled
+              /> -->
+              <!-- 
+              <div v-if="verifying" style="top: 50%" class="abs-placed loading-small">
+                Finding email
+                <div style="margin-left: 8px" class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
+
+              <div v-else-if="emailVerified" class="rowed green-img abs-placed" style="top: 35%">
+                <img src="@/assets/images/shield-check.svg" height="18px" alt="" />
+              </div>
+
+              <div v-else-if="emailError" class="abs-placed red-img" style="top: 35%">
+                <img src="@/assets/images/shield-x.svg" height="14px" alt="" />
+              </div> -->
+            </div>
+
+            <div style="position: relative; margin-bottom: 8px">
+              <p
+                style="
+                  margin: 0 8px 0 0;
+                  padding: 0;
+                  font-size: 18px;
+                  position: absolute;
+                  left: 0;
+                  top: 20px;
+                "
+                class="bold-font"
+              >
+                Subject:
+              </p>
+              <input
+                class="primary-input-underline"
+                v-model="subject"
+                type="text"
+                placeholder=""
+                style="padding-left: 64px; padding-top: 6px"
+              />
+            </div>
+
+            <quill-editor
+              :disabled="loadingDraft || sendingEmail"
+              ref="quill"
+              :options="{
+                modules: {
+                  toolbar: toolbarOptions,
+                },
+                theme: 'snow',
+                placeholder: '',
+              }"
+              v-model:content="revisedPitch"
+              class="text-editor"
+            />
+
+            <!-- <div v-if="loadingDraft" style="margin-left: 12px" class="loading-small-absolute">
+              <p>Generating email</p>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div> -->
+          </div>
+        </div>
+
+        <div class="space-between">
+          <div class="row">
+            <button
+              :disabled="loadingDraft || !subject || !targetEmail || sendingEmail || !adviseUpdate"
+              @click="
+                updateDraft(selectedEmail.is_approved, selectedEmail.is_rejected, 'Updated', true)
+              "
+              class="secondary-button"
+            >
+              <img
+                v-if="loadingDraft"
+                style="margin-right: 4px"
+                class="invert rotation"
+                src="@/assets/images/loading.svg"
+                height="14px"
+                alt=""
+              />
+              Update draft
+            </button>
+
+            <div class="row warning-txt" v-show="adviseUpdate">
+              <img
+                style="margin-left: 16px"
+                src="@/assets/images/warning.svg"
+                height="12px"
+                alt=""
+              />
+              <p style="padding: 0; margin: 0 0 0 4px; font-size: 13px">
+                Update draft before closing
+              </p>
+            </div>
+
+            <!-- <div style="margin-left: 8px" class="img-container s-wrapper">
+              <img
+                style="filter: invert(30%)"
+                src="@/assets/images/close.svg"
+                height="18px"
+                alt=""
+              />
+              <div class="s-tooltip">Reject</div>
+            </div>
+
+            <div class="img-container s-wrapper">
+              <img class="turq-filter" src="@/assets/images/check.svg" height="14px" alt="" />
+              <div class="s-tooltip">Approve</div>
+            </div> -->
+          </div>
+
+          <div class="row">
+            <button
+              class="secondary-button"
+              :disabled="loadingDraft"
+              @click="draftEmailModalOpen = false"
+            >
+              Close
+            </button>
+
+            <button
+              @click="sendEmail"
+              :disabled="loadingDraft || !subject || !targetEmail || sendingEmail"
+              style="margin-right: 4px"
+              class="primary-button"
+              :class="{ opaque: loadingDraft || !subject || !targetEmail }"
+            >
+              <img
+                v-if="sendingEmail"
+                style="margin-right: 4px"
+                class="invert rotation"
+                src="@/assets/images/loading.svg"
+                height="14px"
+                alt=""
+              />
+              Send
+            </button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+
     <table>
       <thead>
         <tr style="position: relative">
@@ -95,7 +326,7 @@
             @click="sortBy(value.charAt(0).toLowerCase() + value.slice(1))"
           >
             {{ value }}
-            <div class="stat" v-if="value === 'Opens' && openRate && userId === user.id">
+            <!-- <div class="stat" v-if="value === 'Opens' && openRate && userId === user.id">
               <span
                 :class="{
                   red: openRate <= 30,
@@ -104,7 +335,7 @@
                 }"
                 >{{ openRate }}%</span
               >
-            </div>
+            </div> -->
             <!-- <div class="stat" v-else-if="value === 'Replies' && replyRate && userId === user.id">
               <span
                 :class="{
@@ -153,56 +384,10 @@
         </tr>
       </thead>
       <tbody v-if="sortedEmails.length">
-        <tr v-show="emailDrafts.length" v-for="(email, i) in emailDrafts" :key="i">
-          <td
-            :class="i % 2 !== 0 ? 'gray-bg' : ''"
-            style="cursor: zoom-in"
-            @click="toggleEmailModal(email)"
-          >
-            <div class="email-details">
-              <div class="email-info">
-                <div class="subject">
-                  {{ email.subject }}
-                </div>
-                <div class="email">{{ email.body.replace(/<[^>]*>/g, '') }}</div>
-              </div>
-            </div>
-            <div class="blur"></div>
-          </td>
-          <td :class="i % 2 !== 0 ? 'gray-bg' : ''" class="set-width">
-            <div style="margin-bottom: 4px; font-size: 14px">
-              {{ email.name }}
-            </div>
-            <div style="color: #808080; font-size: 14px">
-              {{ email.recipient }}
-            </div>
-          </td>
-          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
-            <div class="turqbox">
-              {{ email.status }}
-            </div>
-          </td>
-          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">0</td>
-          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">0</td>
-          <td class="mobile-width" :class="i % 2 !== 0 ? 'gray-bg' : ''">
-            <div>
-              <div style="margin-bottom: 4px; font-size: 14px">
-                {{
-                  email.activity_log.at(-1).split('|')[0].charAt(0).toUpperCase() +
-                  email.activity_log.at(-1).split('|')[0].slice(1)
-                }}
-              </div>
-              <div style="color: #808080; font-size: 14px">
-                {{ formatActivityLog(email.activity_log.at(-1)) }}
-              </div>
-            </div>
-          </td>
-        </tr>
-
         <tr v-for="(email, i) in sortedEmails" :key="i">
           <td
             :class="i % 2 !== 0 ? 'gray-bg' : ''"
-            style="cursor: zoom-in"
+            style="cursor: pointer"
             @click="toggleEmailModal(email)"
           >
             <div class="email-details">
@@ -215,6 +400,13 @@
               <div class="email-info">
                 <div class="subject">
                   {{ email.subject }}
+                  <!-- <img
+                    v-if="email.is_draft"
+                    class="abs-img"
+                    src="@/assets/images/edit.svg"
+                    height="14px"
+                    alt=""
+                  /> -->
                 </div>
                 <div class="email">{{ email.body.replace(/<[^>]*>/g, '') }}</div>
               </div>
@@ -229,10 +421,20 @@
               {{ email.recipient }}
             </div>
           </td>
-          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
+          <td v-if="!email.is_draft" :class="i % 2 !== 0 ? 'gray-bg' : ''">
             <div :class="{ redbox: email.failed, greenbox: !email.failed }">
               {{ email.failed ? 'Failed' : 'Delivered' }}
             </div>
+          </td>
+          <td
+            @click="toggleEmailModal(email)"
+            style="cursor: pointer"
+            v-else
+            :class="i % 2 !== 0 ? 'gray-bg' : ''"
+          >
+            <div v-if="email.is_approved" class="orangebox">Approved</div>
+            <div v-else-if="email.is_rejected" class="redbox">Rejected</div>
+            <div v-else class="purplebox">Draft</div>
           </td>
           <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.opens }}</td>
           <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.clicks }}</td>
@@ -245,7 +447,14 @@
                   border: 0.5px solid rgba(0, 0, 0, 0.1);
                   width: fit-content;
                   border-radius: 8px; -->
-              <div style="margin-bottom: 4px; font-size: 14px">
+              <div
+                v-if="email.is_draft && !email.is_rejected && !email.is_approved"
+                style="margin-bottom: 4px; font-size: 14px"
+              >
+                Draft created
+              </div>
+
+              <div v-else style="margin-bottom: 4px; font-size: 14px">
                 {{
                   email.activity_log.at(-1).split('|')[0].charAt(0).toUpperCase() +
                   email.activity_log.at(-1).split('|')[0].slice(1)
@@ -281,31 +490,65 @@
 
 <script>
 import { Comms } from '@/services/comms'
+import { quillEditor } from 'vue-quill-editor'
+import 'quill/dist/quill.core.css'
+import 'quill/dist/quill.snow.css'
+import 'quill/dist/quill.bubble.css'
 
 export default {
   name: 'EmailTable',
+  components: {
+    Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
+    quillEditor,
+  },
+
   data() {
     return {
+      loadingDraft: false,
+      showingStatus: false,
       emails: [],
       sortKey: '',
       sortOrder: 1,
       statsKeys: ['To', 'Status', 'Opens', 'Clicks'],
       openRate: 0,
       replyRate: 0,
+      draftEmailModalOpen: false,
       emailModalOpen: false,
       activityModalOpen: false,
       selectedEmail: null,
       loading: false,
       emailDrafts: [],
+      targetEmail: '',
+      subject: '',
+      revisedPitch: '',
+      journalistName: '',
+      approved: false,
+      rejected: false,
+      sendingEmail: false,
+      originalSubject: '',
+      originalRecipient: '',
+      originalRevisedPitch: '',
+      adviseUpdate: false,
+      toolbarOptions: [
+        ['bold', 'italic', 'underline', 'strike'], // toggled buttons
+        ['link'],
+        // next to link - 'image'
+        [{ header: 1 }, { header: 2 }], // custom button values
+        [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
+
+        [{ size: ['small', false, 'large', 'huge'] }], // custom dropdown
+
+        ['clean'], // remove formatting button
+      ],
     }
-  },
-  components: {
-    Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
   },
   props: {
     searchText: {},
     failedFilter: {
       type: Boolean,
+      default: null,
+    },
+    statusFilter: {
       default: null,
     },
     activityFilter: {
@@ -320,6 +563,7 @@ export default {
       let filteredEmails = this.emails.filter((email) => {
         const searchText = this.searchText.toLowerCase()
         const failedFilter = this.failedFilter !== undefined ? this.failedFilter : null
+        const statusFilter = this.statusFilter !== undefined ? this.statusFilter : null
         const activityFilter = this.activityFilter !== undefined ? this.activityFilter : null
         const userFilter = this.userId !== undefined ? this.userId : null
 
@@ -344,6 +588,14 @@ export default {
 
         if (failedFilter !== null) {
           filterConditions.push(email.failed === failedFilter)
+        }
+
+        if (statusFilter !== null) {
+          if (statusFilter === 'is_approved') {
+            filterConditions.push(email.is_approved === true)
+          } else {
+            filterConditions.push(email.is_rejected === true)
+          }
         }
 
         if (activityFilter !== null) {
@@ -399,6 +651,35 @@ export default {
     sortedEmails(newValue) {
       this.$emit('emails-updated', newValue)
     },
+
+    selectedEmail(val) {
+      if (val) {
+        this.targetEmail = val.recipient
+        this.subject = val.subject
+        this.revisedPitch = val.body
+        this.journalistName = val.name
+      }
+    },
+    draftEmailModalOpen(val) {
+      if (val === true) {
+        // Store the original values when the modal opens
+        this.originalSubject = this.subject
+        this.originalRecipient = this.targetEmail
+        this.originalRevisedPitch = this.revisedPitch
+      } else {
+        // Reset adviseUpdate when the modal closes
+        this.adviseUpdate = false
+      }
+    },
+    subject() {
+      this.checkForChanges()
+    },
+    targetEmail() {
+      this.checkForChanges()
+    },
+    revisedPitch() {
+      this.checkForChanges()
+    },
   },
   directives: {
     resizableColumn: {
@@ -434,12 +715,107 @@ export default {
   },
 
   methods: {
+    checkForChanges() {
+      console.log('changing')
+      if (
+        this.subject !== this.originalSubject ||
+        this.targetEmail !== this.originalRecipient ||
+        this.revisedPitch !== this.originalRevisedPitch
+      ) {
+        this.adviseUpdate = true
+      } else {
+        this.adviseUpdate = false
+      }
+    },
+    async sendEmail() {
+      this.sendingEmail = true
+      try {
+        const res = await Comms.api.sendEmail({
+          subject: this.subject,
+          body: this.revisedPitch,
+          recipient: this.targetEmail,
+          name: this.journalistName,
+          draftId: this.selectedEmail.id,
+        })
+
+        this.draftEmailModalOpen = false
+        this.$toast('Pitch sent', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+
+        this.sendingEmail = false
+      } catch (e) {
+        console.log(e)
+        this.$toast('Error sending email, try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.sendingEmail = false
+      } finally {
+        this.fetchEmails()
+      }
+    },
+
+    async updateDraft(approved = false, rejected = false, type, stayOpen) {
+      this.loadingDraft = true
+      try {
+        const res = await Comms.api.updateDraft({
+          id: this.selectedEmail.id,
+          recipient: this.targetEmail,
+          subject: this.subject,
+          body: this.revisedPitch,
+          name: this.journalistName,
+          is_approved: approved,
+          is_rejected: rejected,
+          activity_type: type,
+        })
+        this.$toast('Draft saved', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch (e) {
+        this.$toast('Error updating draft, try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.loadingDraft = false
+        this.adviseUpdate = false
+        if (!stayOpen) {
+          this.draftEmailModalOpen = false
+        }
+        this.fetchEmails()
+      }
+    },
+    openStatusMenu() {
+      this.showingStatus = true
+    },
+    hideStatus() {
+      this.showingStatus = false
+    },
     test() {
       console.log(this.sortedEmails)
     },
     toggleEmailModal(email = null) {
-      this.emailModalOpen = !this.emailModalOpen
       this.selectedEmail = email
+      if (email.is_draft) {
+        this.draftEmailModalOpen = !this.draftEmailModalOpen
+      } else {
+        this.emailModalOpen = !this.emailModalOpen
+      }
     },
     toggleActivityModal(email = null) {
       this.activityModalOpen = !this.activityModalOpen
@@ -449,6 +825,7 @@ export default {
       try {
         const response = await Comms.api.getTrackedEmails()
         this.emails = response.results
+        console.log(this.emails)
         // this.openRate = Math.round(response.rates.open_rate)
         // this.replyRate = response.rates.reply_rate
       } catch (error) {
@@ -769,23 +1146,49 @@ export default {
   }
 
   .redbox {
-    background-color: $lite-pink !important;
-    color: $pinky !important;
+    // background-color: $lite-pink !important;
+    // color: $pinky !important;
+    background-color: $pinky !important;
+    color: white !important;
     font-family: $base-font-family;
     font-size: 14px;
-    padding: 4px 8px;
-    border-radius: 4px;
-    width: fit-content;
+    padding: 6px 12px;
+    border-radius: 16px;
+    width: 100px;
+    text-align: center;
   }
 
-  .greenbox {
+  .purplebox {
     background-color: $light-purple !important;
     color: $graper !important;
     font-family: $base-font-family;
-    font-size: 12px;
+    font-size: 14px;
     padding: 6px 12px;
     border-radius: 16px;
-    width: fit-content;
+    width: 100px;
+    text-align: center;
+  }
+
+  .orangebox {
+    background-color: $new-orange !important;
+    color: white !important;
+    font-family: $base-font-family;
+    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: 16px;
+    width: 100px;
+    text-align: center;
+  }
+
+  .greenbox {
+    background-color: $turq !important;
+    color: $white !important;
+    font-family: $base-font-family;
+    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: 16px;
+    width: 100px;
+    text-align: center;
   }
 
   .pre-text {
@@ -804,6 +1207,7 @@ export default {
     margin-top: 132px;
     font-family: $thin-font-family;
   }
+
   .regen-container {
     width: 500px;
     max-height: 500px;
@@ -877,6 +1281,7 @@ export default {
 
 .cancel-button {
   @include gray-text-button();
+  border: 1px solid rgba(0, 0, 0, 0.2);
   &:hover {
     scale: 1;
     opacity: 0.7;
@@ -886,6 +1291,117 @@ export default {
 
 .mobile-text {
   font-size: 13px;
+}
+
+.text-editor {
+  height: 160px;
+  width: 100%;
+  border-radius: 8px;
+  @media only screen and (max-width: 600px) {
+    height: 140px;
+  }
+}
+
+::v-deep .ql-toolbar.ql-snow {
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+
+::v-deep .ql-container {
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  padding: 8px 2px;
+}
+
+::v-deep .ql-editor {
+  font-family: $thin-font-family;
+  font-size: 14px;
+}
+
+::v-deep .ql-snow.ql-toolbar button {
+  background: $soft-gray;
+  border-radius: 4px;
+  margin-right: 4px;
+}
+
+.primary-input-underline {
+  width: 100%;
+  margin: 1rem 0;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.135);
+  font-family: $thin-font-family !important;
+  background-color: white;
+  font-size: 16px;
+  padding: 4px 20px 16px 18px;
+  outline: none;
+
+  @media only screen and (max-width: 600px) {
+  }
+
+  @media only screen and (min-width: 1025px) and (max-width: 1300px) {
+  }
+}
+
+.space-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.paid-body {
+  margin: 0.5rem 0;
+}
+
+.status-dropdown {
+  position: absolute;
+  top: 40px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  padding: 12px;
+  height: 300px;
+  width: 200px;
+  z-index: 1000000000000000;
+
+  .status-dropdown-body {
+  }
+
+  .status-dropdown-footer {
+    position: sticky;
+    bottom: 0;
+    width: 100%;
+    background-color: white;
+  }
+}
+
+.abs-img {
+  position: absolute;
+  right: 0;
+  top: 20px;
+  z-index: 3;
+  filter: invert(40%);
+}
+
+.primary-button {
+  @include dark-blue-button();
+  padding: 8px 12px;
+  border: none;
+  border-radius: 16px;
+  img {
+    filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
+    margin-right: 8px;
+  }
+}
+
+.secondary-button {
+  @include dark-blue-button();
+  padding: 8px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  color: $dark-black-blue;
+  background-color: white;
+  margin-right: -2px;
 }
 
 .mobile-width {
@@ -935,6 +1451,113 @@ export default {
         font-size: 14px;
       }
     }
+  }
+}
+
+.img-container {
+  cursor: pointer;
+  padding: 5px 7px 4px 7px;
+  border-radius: 50%;
+  &:hover {
+    background-color: $soft-gray;
+  }
+
+  img {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.img-container-wide {
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 16px;
+  &:hover {
+    background-color: $soft-gray;
+  }
+
+  img {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.turq-filter {
+  filter: invert(56%) sepia(96%) saturate(331%) hue-rotate(139deg) brightness(90%) contrast(87%);
+}
+
+.s-tooltip {
+  visibility: hidden;
+  width: 100px;
+  background-color: $graper;
+  color: white;
+  text-align: center;
+  border-radius: 4px;
+  padding: 6px 2px;
+  position: absolute;
+  z-index: 100;
+  bottom: 130%;
+  left: 50%;
+  margin-left: -50px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  // border: 1px solid rgba(0, 0, 0, 0.328);
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.s-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.s-wrapper:hover .s-tooltip,
+.s-wrapper:hover .s-tooltip-below {
+  visibility: visible;
+  opacity: 1;
+}
+
+.bold-font {
+  font-family: $base-font-family;
+}
+
+.no-button-borders {
+  button {
+    border: none;
+    background-color: transparent;
+  }
+}
+
+.warning-txt {
+  color: $pinky;
+
+  img {
+    filter: invert(43%) sepia(88%) saturate(559%) hue-rotate(280deg) brightness(86%) contrast(83%) !important;
+  }
+}
+
+.teal {
+  border: 1px solid $turq;
+  color: $turq;
+  img {
+    filter: invert(56%) sepia(96%) saturate(331%) hue-rotate(139deg) brightness(90%) contrast(87%);
+  }
+  &:hover {
+    color: $turq;
+  }
+}
+
+.pinker {
+  border: 1px solid $pinky;
+  color: $pinky;
+  img {
+    filter: invert(43%) sepia(88%) saturate(559%) hue-rotate(280deg) brightness(86%) contrast(83%) !important;
+  }
+
+  &:hover {
+    color: $pinky;
   }
 }
 </style>

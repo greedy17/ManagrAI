@@ -163,6 +163,9 @@ class EmailTrackerSerializer(serializers.ModelSerializer):
             "activity_log",
             "received",
             "failed",
+            "is_approved",
+            "is_rejected",
+            "is_draft",
         )
 
 

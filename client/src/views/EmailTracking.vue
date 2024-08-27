@@ -121,6 +121,26 @@
                     <span class="custom-radio"></span>
                     Failed
                   </label>
+                  <label class="radio-label">
+                    <input
+                      type="radio"
+                      name="option"
+                      value="is_approved"
+                      v-model="selectedStatus"
+                    />
+                    <span class="custom-radio"></span>
+                    Approved
+                  </label>
+                  <label class="radio-label">
+                    <input
+                      type="radio"
+                      name="option"
+                      value="is_rejected"
+                      v-model="selectedStatus"
+                    />
+                    <span class="custom-radio"></span>
+                    Rejected
+                  </label>
                 </div>
               </div>
               <div class="col top-border">
@@ -143,6 +163,11 @@
           </div>
         </div>
 
+        <div @click="convertData" class="img-container s-wrapper mobile-img">
+          <img src="@/assets/images/download.svg" height="13px" alt="" />
+          <div class="s-tooltip">Export table</div>
+        </div>
+
         <div v-if="failedFilter !== null">
           <button class="primary-button lb-bg">
             <div @click="removeFailedFilter">
@@ -150,6 +175,16 @@
             </div>
             Status -
             {{ failedFilter === true ? 'failed' : 'delivered' }}
+          </button>
+        </div>
+
+        <div v-if="statusFilter !== null">
+          <button class="primary-button lb-bg">
+            <div @click="removeStatusFilter">
+              <img src="@/assets/images/close.svg" height="14px" alt="" />
+            </div>
+            Status -
+            {{ statusFilter === 'is_approved' ? 'approved' : 'rejected' }}
           </button>
         </div>
 
@@ -161,15 +196,6 @@
 
             {{ convertDates(activityFilter) }}
           </button>
-        </div>
-
-        <div
-          style="margin-left: 8px"
-          @click="convertData"
-          class="img-container s-wrapper mobile-img"
-        >
-          <img src="@/assets/images/download.svg" height="13px" alt="" />
-          <div class="s-tooltip">Export table</div>
         </div>
       </div>
 
@@ -200,6 +226,7 @@
       <EmailTable
         :searchText="searchEmailText"
         :failedFilter="failedFilter"
+        :statusFilter="statusFilter"
         :activityFilter="activityFilter"
         :userId="selectedUser ? selectedUser.id : null"
         @emails-updated="setEmailValues"
@@ -225,9 +252,11 @@ export default {
       showFilters: false,
       showUsers: false,
       selectedOption: null,
+      selectedStatus: null,
       dateStart: '',
       dateEnd: '',
       failedFilter: null,
+      statusFilter: null,
       activityFilter: null,
       selectedUser: null,
       users: [],
@@ -362,6 +391,10 @@ export default {
       if (this.selectedOption !== null) {
         this.failedFilter = this.selectedOption
       }
+
+      if (this.selectedStatus !== null) {
+        this.statusFilter = this.selectedStatus
+      }
       this.toggleFilterDropdown()
     },
     selectUser(user) {
@@ -374,6 +407,9 @@ export default {
     },
     removeFailedFilter() {
       this.failedFilter = null
+    },
+    removeStatusFilter() {
+      this.statusFilter = null
     },
     removeActivityFilter() {
       this.activityFilter = null
