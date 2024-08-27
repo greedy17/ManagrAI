@@ -415,30 +415,51 @@
           </div>
         </div>
 
-        <div style="margin-top: -16px" class="flex-end">
+        <div style="margin-top: -16px" class="space-between">
           <button
+            :disabled="
+              loadingPitch || !subject || !targetEmail || sendingEmail || verifying || drafting
+            "
+            @click="createDraft"
             class="secondary-button"
-            :disabled="loadingDraft || savingContact"
-            @click="toggleEmailJournalistModal"
           >
-            Close
+            <img
+              v-if="drafting"
+              style="margin-right: 4px"
+              class="invert rotation"
+              src="@/assets/images/loading.svg"
+              height="14px"
+              alt=""
+            />
+            Save draft
           </button>
+          <div class="row">
+            <button
+              class="secondary-button"
+              :disabled="loadingDraft || savingContact"
+              @click="toggleEmailJournalistModal"
+            >
+              Close
+            </button>
 
-          <div v-if="sendingEmail" style="margin: 0 12px" class="loading-small">
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
+            <div v-if="sendingEmail" style="margin: 0 12px" class="loading-small">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+            <button
+              v-else
+              @click="sendEmail"
+              :disabled="
+                loadingPitch || !subject || !targetEmail || sendingEmail || verifying || drafting
+              "
+              style="margin-right: 4px"
+              class="primary-button"
+              :class="{ opaque: loadingPitch || !subject || !targetEmail }"
+            >
+              <span> Send</span>
+            </button>
           </div>
-          <button
-            v-else
-            @click="sendEmail"
-            :disabled="loadingPitch || !subject || !targetEmail || sendingEmail || verifying"
-            style="margin-right: 4px"
-            class="primary-button"
-            :class="{ opaque: loadingPitch || !subject || !targetEmail }"
-          >
-            <span> Send</span>
-          </button>
         </div>
       </div>
     </Modal>
@@ -1572,7 +1593,7 @@
                     >
                       <img
                         v-if="sendingSummaryEmail"
-                        class="rotate innvert"
+                        class="rotation innvert"
                         height="14px"
                         src="@/assets/images/loading.svg"
                         alt=""
@@ -1648,7 +1669,7 @@
                           >
                             <img
                               v-if="dropdownLoading"
-                              class="rotate innvert"
+                              class="rotation innvert"
                               src="@/assets/images/loading.svg"
                               height="14px"
                               alt=""
@@ -1741,7 +1762,7 @@
                     >
                       <img
                         v-if="savingSearch"
-                        class="rotate innvert"
+                        class="rotation innvert"
                         height="14px"
                         src="@/assets/images/loading.svg"
                         alt=""
@@ -1783,7 +1804,7 @@
                     >
                       <img
                         v-if="savingSearch"
-                        class="rotate innvert"
+                        class="rotation innvert"
                         height="14px"
                         src="@/assets/images/loading.svg"
                         alt=""
@@ -1826,7 +1847,7 @@
                     >
                       <img
                         v-if="savingSearch"
-                        class="rotate innvert"
+                        class="rotation innvert"
                         height="14px"
                         src="@/assets/images/loading.svg"
                         alt=""
@@ -1989,7 +2010,7 @@
                           >
                             <img
                               v-if="dropdownLoading"
-                              class="rotate innvert"
+                              class="rotation innvert"
                               src="@/assets/images/loading.svg"
                               height="14px"
                               alt=""
@@ -2685,7 +2706,7 @@
                               <img
                                 v-show="contentLoading && optionIndex === i"
                                 src="@/assets/images/loading.svg"
-                                class="rotate"
+                                class="rotation"
                                 height="12px"
                                 alt=""
                               />
@@ -2921,7 +2942,7 @@
                               <img
                                 v-show="contentLoading && optionIndex === i"
                                 src="@/assets/images/loading.svg"
-                                class="rotate"
+                                class="rotation"
                                 height="12px"
                                 alt=""
                               />
@@ -3497,6 +3518,7 @@ export default {
   },
   data() {
     return {
+      drafting: false,
       originalSummary: null,
       placeholderTime: 'Select a time',
       alertType: '',
@@ -4887,6 +4909,39 @@ export default {
     toggleEmailJournalistModal() {
       if (!this.loadingPitch && !this.sendingEmail && !this.verifying) {
         this.emailJournalistModalOpen = !this.emailJournalistModalOpen
+      }
+    },
+    async createDraft() {
+      this.drafting = true
+      try {
+        const res = await Comms.api.createDraft({
+          subject: this.subject,
+          body: this.revisedPitch,
+          recipient: this.targetEmail,
+          name: this.currentJournalist,
+        })
+        this.emailJournalistModalOpen = false
+        this.$toast('Draft created', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.revisedPitch = ''
+        this.sendingEmail = false
+      } catch (e) {
+        console.log(e)
+        this.$toast('Error creating draft, try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.drafting = false
+      } finally {
+        this.refreshUser()
       }
     },
     async sendEmail() {
@@ -9273,7 +9328,7 @@ li {
 }
 
 .rotation {
-  animation: rotation 1s infinite linear;
+  animation: rotation 2s infinite linear;
 }
 
 .rotate {

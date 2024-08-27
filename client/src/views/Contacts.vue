@@ -296,7 +296,22 @@
         </div>
 
         <footer>
-          <div></div>
+          <button
+            :disabled="loadingPitch || sendingEmail || drafting"
+            @click="createDraft"
+            class="secondary-button"
+          >
+            <img
+              v-if="drafting"
+              style="margin-right: 4px"
+              class="invert rotation"
+              src="@/assets/images/loading.svg"
+              height="14px"
+              alt=""
+            />
+            Save draft
+          </button>
+
           <div class="row">
             <button class="secondary-button" @click="togglePitchModal">Cancel</button>
 
@@ -828,6 +843,7 @@ export default {
   },
   data() {
     return {
+      drafting: false,
       newContactImages: [],
       newContactBio: '',
       outletName: '',
@@ -977,6 +993,40 @@ export default {
     this.getTags()
   },
   methods: {
+    async createDraft() {
+      this.drafting = true
+      try {
+        const res = await Comms.api.createDraft({
+          subject: this.subject,
+          body: this.revisedPitch,
+          recipient: this.currentContact.journalist_ref.email,
+          name:
+            this.currentContact.journalist_ref.first_name +
+            ' ' +
+            this.currentContact.journalist_ref.last_name,
+        })
+        this.pitchModalOpen = false
+        this.$toast('Draft created', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch (e) {
+        console.log(e)
+        this.$toast('Error creating draft, try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.drafting = false
+      } finally {
+        this.refreshUser()
+      }
+    },
     hideUsers() {
       this.showUsers = false
     },

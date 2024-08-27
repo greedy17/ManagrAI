@@ -2025,6 +2025,7 @@
                   <div style="width: 10%">Bio's Created</div>
                   <div style="width: 10%">Saved Contacts</div>
                   <div style="width: 12%">News Summaries</div>
+                  <div style="width: 10%">Slack Searches</div>
                   <div style="width: 12%">Article Summaries</div>
                   <div style="width: 10%">Saved Alerts</div>
                   <div style="width: 10%">Sent Alerts</div>
@@ -2053,8 +2054,16 @@
                     <div style="width: 10%">
                       {{ user.meta_data.contacts ? user.meta_data.contacts.total : 0 }}
                     </div>
+
                     <div style="width: 12%">
                       {{ user.meta_data.news_summaries ? user.meta_data.news_summaries.total : 0 }}
+                    </div>
+                    <div style="width: 10%">
+                      {{
+                        user.meta_data.news_summaries_slack
+                          ? user.meta_data.news_summaries_slack.total
+                          : 0
+                      }}
                     </div>
                     <div style="width: 12%">
                       {{
@@ -2632,6 +2641,9 @@ export default {
           : 0,
         pitches: user.meta_data.pitches ? user.meta_data.pitches.total : 0,
         bios: user.meta_data.bio ? user.meta_data.bio.total : 0,
+        slackSearches: user.meta_data.news_summaries_slack
+          ? user.meta_data.news_summaries_slack
+          : 0,
         discoveries: user.meta_data.discovery ? user.meta_data.discovery.total : 0,
         savedNews: user.searches_ref.filter((search) => search.type === 'NEWS').length,
         savedSocial: user.searches_ref.filter((search) => search.type === 'SOCIAL_MEDIA').length,

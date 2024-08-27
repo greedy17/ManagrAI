@@ -333,6 +333,9 @@ export default {
 .Vue-Toastification__toast--default.custom {
   background-color: $base-gray;
 }
+.Vue-Toastification__toast--error.custom {
+  background-color: $pinky;
+}
 * {
   box-sizing: border-box;
 }
