@@ -2261,7 +2261,7 @@ class DiscoveryViewSet(
         recipient = request.data.get("recipient")
         name = request.data.get("name")
         bcc = request.data.get("bcc", [])
-        draftId = request.data.get("draftId",None)
+        draftId = request.data.get("draftId", None)
 
         if user.has_google_integration or user.has_microsoft_integration:
             res = user.email_account.send_email(recipient, subject, body, name)
@@ -2811,7 +2811,6 @@ class JournalistContactViewSet(
             instance.delete()
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
-<<<<<<< Updated upstream
         return Response(status=status.HTTP_200_OK)
 
 
@@ -2907,8 +2906,8 @@ class EmailTrackerViewSet(
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
         data = self.request.data
-        print('here i am --- >', data.get('activity_type'))
-        activity_type = data.get('activity_type', 'Updated')
+        print("here i am --- >", data.get("activity_type"))
+        activity_type = data.get("activity_type", "Updated")
         instance.add_activity(activity_type)
         serializer = self.serializer_class(instance=instance, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -2922,6 +2921,3 @@ class EmailTrackerViewSet(
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)
-=======
-        return Response(status=status.HTTP_200_OK)
->>>>>>> Stashed changes
