@@ -2611,7 +2611,6 @@ def process_chat_action_submit(payload, context):
 
 def process_news_summary(payload, context):
     from managr.comms.tasks import emit_process_slack_news_summary
-
     pm = json.loads(payload["view"]["private_metadata"])
     ts = pm.get("ts", False)
     user = User.objects.get(id=pm.get("u"))

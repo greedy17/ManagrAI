@@ -32,7 +32,8 @@ def _handle_response(response, fn_name=None, blocks=[]):
             error_param = res_data.get("error")
             if res_data.get("response_metadata", None):
                 error_message = res_data.get("response_metadata", {}).get("messages")
-                error_message = ",".join(error_message)
+                if len(error_message) > 1:
+                    error_message = ",".join(error_message)
             elif res_data.get("error", None):
                 error_message = res_data.get("error")
             else:

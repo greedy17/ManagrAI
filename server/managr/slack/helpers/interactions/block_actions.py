@@ -4197,7 +4197,11 @@ def process_show_search_modal(payload, context):
     user = slack_account.user
     access_token = user.organization.slack_integration.access_token
     trigger_id = payload["trigger_id"]
-    context = {"u": str(user.id), "ts": payload.get("container").get("message_ts")}
+    context = {
+        "u": str(user.id),
+        "ts": payload.get("container").get("message_ts"),
+        "channel": payload.get("container").get("channel"),
+    }
     blockset = "news_summary_blockset"
     data = {
         "trigger_id": trigger_id,

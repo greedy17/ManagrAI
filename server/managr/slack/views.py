@@ -1328,9 +1328,7 @@ def launch_search(request):
     user = slack.user
     access_token = user.organization.slack_integration.access_token
     trigger_id = request.data.get("trigger_id")
-    context = {
-        "u": str(user.id),
-    }
+    context = {"u": str(user.id), "channel": user.slack_integration.channel}
     if text == "help":
         blockset = [
             block_builders.header_block("Search Help:"),
