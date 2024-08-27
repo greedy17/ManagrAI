@@ -2811,6 +2811,7 @@ class JournalistContactViewSet(
             instance.delete()
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+<<<<<<< Updated upstream
         return Response(status=status.HTTP_200_OK)
 
 
@@ -2921,3 +2922,6 @@ class EmailTrackerViewSet(
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)
+=======
+        return Response(status=status.HTTP_200_OK)
+>>>>>>> Stashed changes
