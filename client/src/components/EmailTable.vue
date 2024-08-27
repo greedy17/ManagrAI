@@ -422,7 +422,7 @@
             </div>
           </td>
           <td v-if="!email.is_draft" :class="i % 2 !== 0 ? 'gray-bg' : ''">
-            <div :class="{ redbox: email.failed, greenbox: !email.failed }">
+            <div :class="{ redbox: email.failed, purplebox: !email.failed }">
               {{ email.failed ? 'Failed' : 'Delivered' }}
             </div>
           </td>
@@ -432,9 +432,9 @@
             v-else
             :class="i % 2 !== 0 ? 'gray-bg' : ''"
           >
-            <div v-if="email.is_approved" class="orangebox">Approved</div>
+            <div v-if="email.is_approved" class="greenbox">Approved</div>
             <div v-else-if="email.is_rejected" class="redbox">Rejected</div>
-            <div v-else class="purplebox">Draft</div>
+            <div v-else class="orangebox">Draft</div>
           </td>
           <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.opens }}</td>
           <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.clicks }}</td>
@@ -551,6 +551,9 @@ export default {
     statusFilter: {
       default: null,
     },
+    draftFilter: {
+      default: null,
+    },
     activityFilter: {
       default: null,
     },
@@ -564,6 +567,7 @@ export default {
         const searchText = this.searchText.toLowerCase()
         const failedFilter = this.failedFilter !== undefined ? this.failedFilter : null
         const statusFilter = this.statusFilter !== undefined ? this.statusFilter : null
+        const draftFilter = this.draftFilter !== undefined ? this.draftFilter : null
         const activityFilter = this.activityFilter !== undefined ? this.activityFilter : null
         const userFilter = this.userId !== undefined ? this.userId : null
 
@@ -588,6 +592,10 @@ export default {
 
         if (failedFilter !== null) {
           filterConditions.push(email.failed === failedFilter)
+        }
+
+        if (draftFilter !== null) {
+          filterConditions.push(email.is_draft === true)
         }
 
         if (statusFilter !== null) {
@@ -776,13 +784,31 @@ export default {
           is_rejected: rejected,
           activity_type: type,
         })
-        this.$toast('Draft saved', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        if (type === 'Approved') {
+          this.$toast('Draft approved', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } else if (type === 'Rejected') {
+          this.$toast('Draft rejected', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } else {
+          this.$toast('Draft updated', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }
       } catch (e) {
         this.$toast('Error updating draft, try again', {
           timeout: 2000,
@@ -1158,9 +1184,9 @@ export default {
     text-align: center;
   }
 
-  .purplebox {
-    background-color: $light-purple !important;
-    color: $graper !important;
+  .greenbox {
+    background-color: $turq !important;
+    color: white !important;
     font-family: $base-font-family;
     font-size: 14px;
     padding: 6px 12px;
@@ -1180,8 +1206,8 @@ export default {
     text-align: center;
   }
 
-  .greenbox {
-    background-color: $turq !important;
+  .purplebox {
+    background-color: $graper !important;
     color: $white !important;
     font-family: $base-font-family;
     font-size: 14px;

@@ -186,7 +186,7 @@
           <div style="font-size: 14px; margin: 12px 0 0 4px" class="row">
             <img src="@/assets/images/profile.svg" height="12px" alt="" />
             <p style="margin: 0 0 0 4px">
-              Managr will automatically personalize your pitch based on the Journalist's bio
+              ManagrAI will automatically personalize your pitch based on the Journalist's bio
             </p>
           </div>
         </div>
@@ -297,6 +297,7 @@
 
         <footer>
           <button
+            v-if="showingEditor"
             :disabled="loadingPitch || sendingEmail || drafting"
             @click="createDraft"
             class="secondary-button"
@@ -311,6 +312,7 @@
             />
             Save draft
           </button>
+          <div v-else></div>
 
           <div class="row">
             <button class="secondary-button" @click="togglePitchModal">Cancel</button>
@@ -365,7 +367,7 @@
         </header>
 
         <div style="margin-top: 16px; margin-bottom: 24px; min-height: 120px; width: 100%">
-          <label for="contact">Contact Name</label>
+          <label for="contact">Name</label>
           <input
             :disabled="loadingContacts"
             class="primary-input"
@@ -373,7 +375,7 @@
             name="contact"
             v-model="contactName"
           />
-          <label for="outlet">Company Name</label>
+          <label for="outlet">Publication</label>
           <input
             :disabled="loadingContacts"
             class="primary-input"

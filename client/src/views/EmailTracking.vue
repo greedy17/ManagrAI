@@ -110,6 +110,17 @@
             <div style="padding: 0 16px" class="dropdown-body">
               <div class="col">
                 <p>Status</p>
+                <!-- <div class="status-dropdown">
+                  <div class="status-dropdown-header">Select status</div>
+
+                  <div class="status-dropdown-body">
+                    <div class="status-dropdown-item">Delivered</div>
+                    <div class="status-dropdown-item">Failed</div>
+                    <div class="status-dropdown-item">Approved</div>
+                    <div class="status-dropdown-item">Rejected</div>
+                    <div class="status-dropdown-item">Draft</div>
+                  </div>
+                </div> -->
                 <div class="radio-group">
                   <label class="radio-label">
                     <input type="radio" name="option" :value="false" v-model="selectedOption" />
@@ -121,7 +132,7 @@
                     <span class="custom-radio"></span>
                     Failed
                   </label>
-                  <label class="radio-label">
+                  <label style="margin-left: -8px" class="radio-label">
                     <input
                       type="radio"
                       name="option"
@@ -141,12 +152,17 @@
                     <span class="custom-radio"></span>
                     Rejected
                   </label>
+                  <label class="radio-label">
+                    <input type="radio" name="option" value="is_rejected" v-model="draftStatus" />
+                    <span class="custom-radio"></span>
+                    Draft
+                  </label>
                 </div>
               </div>
               <div class="col top-border">
                 <p>Last Activity</p>
 
-                <div>
+                <div style="width: 100%">
                   <input class="area-input-smallest" type="date" v-model="dateStart" />
                   -
                   <input class="area-input-smallest" type="date" v-model="dateEnd" />
@@ -185,6 +201,15 @@
             </div>
             Status -
             {{ statusFilter === 'is_approved' ? 'approved' : 'rejected' }}
+          </button>
+        </div>
+
+        <div v-if="draftFilter !== null">
+          <button class="primary-button lb-bg">
+            <div @click="removeDraftFilter">
+              <img src="@/assets/images/close.svg" height="14px" alt="" />
+            </div>
+            Status - draft
           </button>
         </div>
 
@@ -227,6 +252,7 @@
         :searchText="searchEmailText"
         :failedFilter="failedFilter"
         :statusFilter="statusFilter"
+        :draftFilter="draftFilter"
         :activityFilter="activityFilter"
         :userId="selectedUser ? selectedUser.id : null"
         @emails-updated="setEmailValues"
@@ -253,10 +279,12 @@ export default {
       showUsers: false,
       selectedOption: null,
       selectedStatus: null,
+      draftStatus: null,
       dateStart: '',
       dateEnd: '',
       failedFilter: null,
       statusFilter: null,
+      draftFilter: null,
       activityFilter: null,
       selectedUser: null,
       users: [],
@@ -395,6 +423,10 @@ export default {
       if (this.selectedStatus !== null) {
         this.statusFilter = this.selectedStatus
       }
+
+      if (this.draftStatus !== null) {
+        this.draftFilter = this.draftStatus
+      }
       this.toggleFilterDropdown()
     },
     selectUser(user) {
@@ -410,6 +442,9 @@ export default {
     },
     removeStatusFilter() {
       this.statusFilter = null
+    },
+    removeDraftFilter() {
+      this.draftFilter = null
     },
     removeActivityFilter() {
       this.activityFilter = null
@@ -652,9 +687,11 @@ export default {
 }
 
 .radio-group {
+  width: 300px;
   display: flex;
   flex-direction: row;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 16px 20px;
 }
 
 .radio-label {
@@ -665,6 +702,7 @@ export default {
   padding-left: 24px;
   font-size: 14px;
   user-select: none;
+  width: 80px;
 }
 
 .radio-label input {
@@ -678,17 +716,17 @@ export default {
   top: 50%;
   left: 0;
   transform: translateY(-50%);
-  height: 16px;
-  width: 16px;
-  background-color: #f0f0f0;
+  height: 12px;
+  width: 12px;
+  background-color: white;
   border-radius: 50%;
-  border: 2px solid #dcdcdc;
+  border: 3px solid rgba(0, 0, 0, 0.1);
   transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .radio-label input:checked ~ .custom-radio {
-  background-color: $dark-blue;
-  border-color: $dark-black-blue;
+  background-color: $lite-blue;
+  border-color: $lite-blue;
 }
 
 .custom-radio::after {
@@ -704,10 +742,11 @@ export default {
 .radio-label .custom-radio::after {
   top: 50%;
   left: 50%;
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: white;
+  border: 3px solid $lite-blue;
   transform: translate(-50%, -50%);
 }
 
@@ -715,15 +754,16 @@ export default {
   background-color: $off-white;
   margin-bottom: 0.25rem;
   max-height: 250px;
-  padding: 2px 0.5rem 2px 2px;
+  padding: 4px 8px 5px 8px;
   line-height: 1.75;
+  width: 48%;
   outline: none;
   border: none;
   letter-spacing: 0.5px;
   font-size: 13px;
   font-family: $thin-font-family !important;
   font-weight: 400;
-  border: none !important;
+  border: 1px solid rgba(0, 0, 0, 0.1);
   resize: none;
   text-align: left;
   overflow: auto;
@@ -734,8 +774,6 @@ export default {
 }
 
 .area-input-smallest:last-of-type {
-  padding-left: 0.5rem;
-
   @media only screen and (max-width: 600px) {
   }
 }
@@ -1013,5 +1051,32 @@ input {
 ::v-deep ::selection {
   background-color: $lite-blue !important;
   color: white;
+}
+
+.status-dropdown {
+  position: relative;
+  width: 100%;
+  &-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    padding: 8px;
+  }
+
+  &-body {
+    position: absolute;
+    width: 100%;
+    background-color: white;
+    z-index: 1000;
+    top: 40px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 8px;
+    box-shadow: 3px 11px 16px;
+  }
+
+  &-item {
+  }
 }
 </style>
