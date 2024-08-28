@@ -23,6 +23,7 @@ class Command(BaseCommand):
                 seconds_since_locked = dt - task_locked
                 if seconds_since_locked.seconds >= 1500:
                     params = task.params()[0]
+                    print(f"TASK RESTARTED: {params}")
                     task.delete()
                     url_list = ",".join(params)
                     _run_spider_batch(url_list)
@@ -33,23 +34,27 @@ class Command(BaseCommand):
                 print(f"SOURCE NOT RAN: {sources}")
             else:
                 report = CrawlerReport.objects.all().order_by("-datetime_created").first()
-                data = report.create_report_data()
-                send_to_error_channel(
-                    f"Crawler finished at: {datetime.datetime.now()}, Completed in: {data['time']}",
-                    None,
-                    "crawler",
-                    f"Crawler Update {settings.ENVIRONMENT}",
-                )
-                problem_urls = NewsSource.problem_urls()
-                problem_urls = ", ".join(problem_urls)
-                data["problem_urls"] = problem_urls
-                try:
-                    send_html_email(
-                        f"Managr Crawler Report",
-                        "core/email-templates/crawler-email.html",
-                        settings.DEFAULT_FROM_EMAIL,
-                        ["zach@mymanagr.com"],
-                        context=data,
+                if not report.end_ts:
+                    data = report.create_report_data()
+                    send_to_error_channel(
+                        f"Crawler finished at: {datetime.datetime.now()}, Completed in: {data['time']}",
+                        None,
+                        "crawler",
+                        f"Crawler Update {settings.ENVIRONMENT}",
+                        str(report.id),
                     )
-                except Exception as e:
-                    print(str(e))
+                    report.end_ts = datetime.datetime.now()
+                    report.save()
+                    problem_urls = NewsSource.problem_urls()
+                    problem_urls = ", ".join(problem_urls)
+                    data["problem_urls"] = problem_urls
+                    try:
+                        send_html_email(
+                            f"Managr Crawler Report",
+                            "core/email-templates/crawler-email.html",
+                            settings.DEFAULT_FROM_EMAIL,
+                            ["zach@mymanagr.com"],
+                            context=data,
+                        )
+                    except Exception as e:
+                        print(str(e))

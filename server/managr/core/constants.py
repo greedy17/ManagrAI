@@ -174,6 +174,8 @@ def OPEN_AI_CHAT_COMPLETIONS_BODY(
     temperature=False,
     top_p=False,
     model="gpt-4o",
+    response_format=False,
+    count=1,
 ):
     body = {
         "model": model,
@@ -181,6 +183,7 @@ def OPEN_AI_CHAT_COMPLETIONS_BODY(
             {"role": "user", "content": prompt},
         ],
         "user": user_name,
+        "n": count,
     }
     if system_role:
         first_message = [{"role": "system", "content": system_role}]
@@ -192,6 +195,8 @@ def OPEN_AI_CHAT_COMPLETIONS_BODY(
         body["temperature"] = temperature
     if top_p:
         body["top_p"] = top_p
+    if response_format:
+        body["response_format"] = response_format
     return body
 
 
@@ -245,6 +250,7 @@ OPEN_AI_CONVERT_HTML = (
     lambda summary, clips: f"""
     Convert this html summary to markdown to use in Slack. The bolding and header format should only be one asterisk on each side of the text.
     For the citations, replace them with a slack hyperlink using the URL of the clip at the same index in the square brackets. Example: <URL|[INDEX]>.
+    Replace double quotes with single quotes in the text.
     
     Summary:
     {summary}

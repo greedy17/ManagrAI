@@ -5,7 +5,7 @@ from .models import (
     NewsSource,
     Article,
     WritingStyle,
-    EmailAlert,
+    AssistAlert,
     Process,
     TwitterAccount,
     InstagramAccount,
@@ -83,10 +83,10 @@ class WritingStyleSerializer(serializers.ModelSerializer):
         fields = ("id", "style", "user", "title")
 
 
-class EmailAlertSerializer(serializers.ModelSerializer):
+class AssistAlertSerializer(serializers.ModelSerializer):
     class Meta:
-        model = EmailAlert
-        fields = ("id", "user", "title", "search", "run_at", "meta_data")
+        model = AssistAlert
+        fields = ("id", "user", "type", "title", "search", "run_at", "meta_data", "recipients")
 
 
 class ProcessSerializer(serializers.ModelSerializer):
@@ -163,6 +163,9 @@ class EmailTrackerSerializer(serializers.ModelSerializer):
             "activity_log",
             "received",
             "failed",
+            "is_approved",
+            "is_rejected",
+            "is_draft",
         )
 
 
@@ -171,7 +174,7 @@ class JournalistContactSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = JournalistContact
-        fields = ("id", "user", "journalist","journalist_ref", "tags", "bio", "images")
+        fields = ("id", "user", "journalist", "journalist_ref", "tags", "bio", "images", "notes")
 
 
 class CompanyDetailsSerializer(serializers.ModelSerializer):

@@ -435,6 +435,22 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    async createDraft(data) {
+        try {
+            const res = await this.client.post('tracker/', data)
+            return res
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async updateDraft(data) {
+        try {
+            const res = await this.client.patch(`tracker/${data.id}/`, data)
+            return res
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
     async verifyEmail(data) {
         try {
             const res = await this.client.post('discovery/verify/', data)
@@ -493,7 +509,7 @@ class CommsApi extends ModelAPI {
     }
     async getTrackedEmails() {
         try {
-            const res = await this.client.get('email-tracking/')
+            const res = await this.client.get('tracker/')
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)

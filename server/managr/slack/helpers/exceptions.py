@@ -14,6 +14,12 @@ class TokenExpired(Exception):
         super().__init__(self.message)
 
 
+class TokenRevoked(Exception):
+    def __init__(self, message="Your token is revoked, please reconnect Slack"):
+        self.message = message
+        super().__init__(self.message)
+
+
 class ApiRateLimitExceeded(Exception):
     def __init__(self, message="Token Expired"):
         self.message = message
@@ -46,6 +52,18 @@ class InvalidArgumentsException(Exception):
 
 class InvalidAccessToken(Exception):
     def __init__(self, message="Slack Token Invalid"):
+        self.message = message
+        super().__init__(self.message)
+
+
+class CannotUpdateMessage(Exception):
+    def __init__(self, message="You do not have permission to update this message"):
+        self.message = message
+        super().__init__(self.message)
+
+
+class TextTooLong(Exception):
+    def __init__(self, message="Message text if over Slack character limit"):
         self.message = message
         super().__init__(self.message)
 
@@ -95,36 +113,44 @@ class CustomAPIException:
             raise TokenExpired()
         elif self.code == 403:
             raise ApiRateLimitExceeded()
-        elif self.code == 200 and self.param == "invalid_blocks":
-            # find the block_indexes
-            blocks = [self._extract_invalid_block(error) for error in self.message]
-            message = f"Invalid Blocks {'------'.join(blocks)}"
-            logger.error(f"{api_consts.SLACK_ERROR} ---An error occured building blocks {message}")
-            raise InvalidBlocksException(message)
-        elif self.code == 200 and self.param == "invalid_auth":
-            logger.error(
-                f"{api_consts.SLACK_ERROR} ---An error occured with the access token this access token is org level {self.message}"
-            )
-            raise InvalidAccessToken(self.message)
-        elif self.code == 200 and self.param == "invalid_blocks_format":
-            logger.error(
-                f"{api_consts.SLACK_ERROR} An error occured building blocks because of an invalid format"
-            )
-            raise InvalidBlocksFormatException(self.message)
-        elif self.code == 200 and self.param == "invalid_arguments":
-
-            blocks = [self._extract_invalid_args_block(error) for error in self.message]
-            message = f"Invalid Args {'------'.join(blocks)}"
-            logger.error(f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message} blocks {blocks}")
-            raise InvalidArgumentsException(
-                f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message} blocks {blocks}"
-            )
+        elif self.code == 200:
+            if "less than 3001 characters" in self.message:
+                raise TextTooLong()
+            elif self.param == "token_revoked":
+                raise TokenRevoked()
+            elif self.param == "invalid_blocks":
+                # find the block_indexes
+                blocks = [self._extract_invalid_block(error) for error in self.message]
+                message = f"Invalid Blocks {'------'.join(blocks)}"
+                logger.error(
+                    f"{api_consts.SLACK_ERROR} ---An error occured building blocks {message}"
+                )
+                raise InvalidBlocksException(message)
+            elif self.param == "cant_update_message":
+                raise CannotUpdateMessage()
+            elif self.param == "invalid_auth":
+                logger.error(
+                    f"{api_consts.SLACK_ERROR} ---An error occured with the access token this access token is org level {self.message}"
+                )
+                raise InvalidAccessToken(self.message)
+            elif self.param == "invalid_blocks_format":
+                logger.error(
+                    f"{api_consts.SLACK_ERROR} An error occured building blocks because of an invalid format"
+                )
+                raise InvalidBlocksFormatException(self.message)
+            elif self.param == "invalid_arguments":
+                blocks = [self._extract_invalid_args_block(error) for error in self.message]
+                message = f"Invalid Args {'------'.join(blocks)}"
+                logger.error(
+                    f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message} blocks {blocks}"
+                )
+                raise InvalidArgumentsException(
+                    f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message} blocks {blocks}"
+                )
+            elif self.param == "not_in_channel" or self.param == "channel_not_found":
+                raise CannotSendToChannel("ManagrAI is not in this channel")
         if "is_archived" in self.message:
             raise ChannelArchived
-        elif self.code == 200 and self.param == "not_in_channel":
-            raise CannotSendToChannel("ManagrAI is not invited to that channel")
-        elif self.code == 200 and self.param == "channel_not_found":
-            raise CannotSendToChannel("We could not find that channel")
         else:
             # we may not have come accross this error yet
             logger.error(f"{api_consts.SLACK_ERROR} ---{self.param}-{self.message}")

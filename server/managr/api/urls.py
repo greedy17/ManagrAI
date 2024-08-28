@@ -352,8 +352,8 @@ urlpatterns = [
         name="list-tasks",
     ),
     path(
-        "slack/send-slack",
-        slack_views.send_to_slack,
+        "slack/send-slack-summary/",
+        slack_views.send_summary_to_slack,
         name="send-slack",
     ),
     path(
@@ -503,11 +503,6 @@ urlpatterns = [
         name="email-received-webhook",
     ),
     path(
-        "email-tracking/",
-        comms_views.get_email_tracking,
-        name="email-tracking",
-    ),
-    path(
         "users/google/email-tracking",
         comms_views.email_tracking_endpoint,
         name="track-email",
@@ -568,9 +563,10 @@ router.register("alerts/instances", alert_views.AlertInstanceViewSet, "alert-ins
 router.register("alerts/real-time", alert_views.RealTimeAlertViewSet, "real-time-alerts")
 router.register("prsearch", comms_views.PRSearchViewSet, "prsearch")
 router.register("pitches", comms_views.PitchViewSet, "pitches")
-router.register("email-alerts", comms_views.EmailAlertViewSet, "email-alerts")
+router.register("email-alerts", comms_views.AssistAlertViewSet, "email-alerts")
 router.register("process", comms_views.ProcessViewSet, "process")
 router.register("discovery", comms_views.DiscoveryViewSet, "discovery")
 router.register("jcontact", comms_views.JournalistContactViewSet, "jcontact")
 router.register("company-details", comms_views.CompanyDetailsViewSet, "company-details")
+router.register("tracker", comms_views.EmailTrackerViewSet, "tracker")
 urlpatterns += router.urls

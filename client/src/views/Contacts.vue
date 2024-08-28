@@ -186,7 +186,7 @@
           <div style="font-size: 14px; margin: 12px 0 0 4px" class="row">
             <img src="@/assets/images/profile.svg" height="12px" alt="" />
             <p style="margin: 0 0 0 4px">
-              Managr will automatically personalize your pitch based on the Journalist's bio
+              ManagrAI will automatically personalize your pitch based on the Journalist's bio
             </p>
           </div>
         </div>
@@ -296,7 +296,24 @@
         </div>
 
         <footer>
-          <div></div>
+          <button
+            v-if="showingEditor"
+            :disabled="loadingPitch || sendingEmail || drafting"
+            @click="createDraft"
+            class="secondary-button"
+          >
+            <img
+              v-if="drafting"
+              style="margin-right: 4px"
+              class="invert rotation"
+              src="@/assets/images/loading.svg"
+              height="14px"
+              alt=""
+            />
+            Save draft
+          </button>
+          <div v-else></div>
+
           <div class="row">
             <button class="secondary-button" @click="togglePitchModal">Cancel</button>
 
@@ -373,7 +390,7 @@
         </header>
 
         <div style="margin-top: 16px; margin-bottom: 24px; min-height: 120px; width: 100%">
-          <label for="contact">Contact Name</label>
+          <label for="contact">Name</label>
           <input
             :disabled="loadingContacts"
             class="primary-input"
@@ -381,7 +398,7 @@
             name="contact"
             v-model="contactName"
           />
-          <label for="outlet">Company Name</label>
+          <label for="outlet">Publication</label>
           <input
             :disabled="loadingContacts"
             class="primary-input"
@@ -389,7 +406,7 @@
             name="outlet"
             v-model="outletName"
           />
-          <label for="details">Your company details</label>
+          <!-- <label for="details">Your company details</label>
           <div class="input-container-small">
             <textarea
               :disabled="loadingContacts"
@@ -409,13 +426,13 @@
               placeholder="Provide company name and pitch details..."
               name="details"
             />
-          </div>
-          <div style="font-size: 14px; margin: 12px 0 0 4px" class="row">
+          </div> -->
+          <!-- <div style="font-size: 14px; margin: 12px 0 0 4px" class="row">
             <img src="@/assets/images/profile.svg" height="12px" alt="" />
             <p style="margin: 0 0 0 4px">
               Managr will generate pitching tips based on this information
             </p>
-          </div>
+          </div> -->
         </div>
 
         <footer>
@@ -862,11 +879,13 @@ export default {
       isMappingConfirmed: false,
       mappings: {},
       bulkModalOpen: false,
+      drafting: false,
       newContactImages: [],
       newContactBio: '',
       outletName: '',
       contactName: '',
-      orgInfo: '',
+      orgInfo:
+        'No pitch yet so just base the pitching tips off of what you know of the person and whats available in the prompt.',
       savingContact: false,
       bioModalOpen: false,
       contactsModalOpen: false,
@@ -1025,6 +1044,40 @@ export default {
       //   console.log(e)
       // }
     },
+    async createDraft() {
+      this.drafting = true
+      try {
+        const res = await Comms.api.createDraft({
+          subject: this.subject,
+          body: this.revisedPitch,
+          recipient: this.currentContact.journalist_ref.email,
+          name:
+            this.currentContact.journalist_ref.first_name +
+            ' ' +
+            this.currentContact.journalist_ref.last_name,
+        })
+        this.pitchModalOpen = false
+        this.$toast('Draft created', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch (e) {
+        console.log(e)
+        this.$toast('Error creating draft, try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.drafting = false
+      } finally {
+        this.refreshUser()
+      }
+    },
     hideUsers() {
       this.showUsers = false
     },
@@ -1040,8 +1093,16 @@ export default {
           search: false,
           social: false,
         })
-        const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i
+        const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*|Email:\s*)([^<"\s]+)/i
         const match = res.data.summary.match(emailRegex)
+
+        const companyRegex = /company:\s*([^<]+)/i
+        const companyMatch = res.data.summary.match(companyRegex)
+
+        if (companyMatch) {
+          const newCompany = companyMatch[1]
+          this.currentPublication = newCompany.trim()
+        }
 
         if (match) {
           const email = match[1]
@@ -1050,6 +1111,7 @@ export default {
         this.newContactBio = res.data.summary
           .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
           .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, '')
+          .replace(/company:\s*([^<]+)/i, '')
         this.newContactImages = res.data.images
         this.contactsModalOpen = false
         setTimeout(() => {

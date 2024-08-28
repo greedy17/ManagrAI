@@ -537,3 +537,21 @@ def decode_jwt(token):
     padding = "=" * (4 - (len(payload) % 4))
     payload += padding
     return base64.urlsafe_b64decode(payload).decode("utf-8")
+
+
+def calculate_total_time(task_times):
+    task_times.sort(reverse=True)
+    total_time = 0
+    running_tasks = []
+    for time in task_times:
+        if len(running_tasks) < 16:
+            running_tasks.append(time)
+        else:
+            earliest_finish_time = min(running_tasks)
+            total_time += earliest_finish_time
+            running_tasks = [t - earliest_finish_time for t in running_tasks]
+            running_tasks.remove(0)
+            running_tasks.append(time)
+    if running_tasks:
+        total_time += max(running_tasks)
+    return total_time

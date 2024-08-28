@@ -36,7 +36,7 @@ from .models import (
     EmailTracker,
 )
 from .models import Article as InternalArticle
-from .models import WritingStyle, EmailAlert, JournalistContact
+from .models import WritingStyle, AssistAlert, JournalistContact
 from managr.core.models import User
 from managr.comms import exceptions as comms_exceptions
 from .tasks import (
@@ -45,12 +45,12 @@ from .tasks import (
     emit_send_social_summary,
     emit_share_client_summary,
     _add_jounralist_to_db,
-    emit_process_contacts_excel
+    emit_process_contacts_excel,
 )
 from .serializers import (
     SearchSerializer,
     PitchSerializer,
-    EmailAlertSerializer,
+    AssistAlertSerializer,
     ProcessSerializer,
     TwitterAccountSerializer,
     InstagramAccountSerializer,
@@ -78,6 +78,7 @@ from managr.comms.utils import (
     google_search,
     alternate_google_search,
     check_journalist_validity,
+    get_journalists,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
@@ -1666,17 +1667,17 @@ class PitchViewSet(
         return Response({"pitch": pitch})
 
 
-class EmailAlertViewSet(
+class AssistAlertViewSet(
     viewsets.GenericViewSet,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     mixins.ListModelMixin,
 ):
-    serializer_class = EmailAlertSerializer
+    serializer_class = AssistAlertSerializer
 
     def get_queryset(self):
-        return EmailAlert.objects.filter(user=self.request.user)
+        return AssistAlert.objects.filter(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
         datetime = request.data.pop("run_at")
@@ -1731,8 +1732,8 @@ class EmailAlertViewSet(
         url_path="get-email-alerts",
     )
     def get_email_alerts(self, request, *args, **kwargs):
-        alerts = EmailAlert.objects
-        serialized = EmailAlertSerializer(alerts, many=True)
+        alerts = AssistAlert.objects
+        serialized = AssistAlertSerializer(alerts, many=True)
         return Response(data=serialized.data, status=status.HTTP_200_OK)
 
 
@@ -2187,68 +2188,12 @@ class DiscoveryViewSet(
         # if user.has_hit_summary_limit:
         #     return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         info = request.data.get("info")
-        content = request.data.get("content")
-        is_discover = request.data.get("discover", None)
-        has_error = False
-        attempts = 1
-        token_amount = 1000
-        timeout = 60.0
-        while True:
-            try:
-                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                if not is_discover:
-                    prompt = comms_consts.DISCOVER_JOURNALIST(content, info)
-                else:
-                    prompt = comms_consts.OPEN_AI_DISCOVER_JOURNALIST(info)
-                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                    user.email,
-                    prompt,
-                    "You are a VP of Communications",
-                    token_amount=token_amount,
-                    top_p=0.1,
-                )
-                with Variable_Client(timeout) as client:
-                    r = client.post(
-                        url,
-                        data=json.dumps(body),
-                        headers=core_consts.OPEN_AI_HEADERS,
-                    )
-                res = open_ai_exceptions._handle_response(r)
-
-                message = res.get("choices")[0].get("message").get("content").replace("**", "*")
-                user.add_meta_data("discovery")
-                break
-            except open_ai_exceptions.StopReasonLength:
-                logger.exception(
-                    f"Retrying again due to token amount, amount currently at: {token_amount}"
-                )
-                if token_amount <= 2000:
-                    has_error = True
-                    message = "Token amount error"
-                    break
-                else:
-                    token_amount += 500
-                    continue
-            except httpx.ReadTimeout as e:
-                timeout += 30.0
-                if timeout >= 120.0:
-                    has_error = True
-                    message = "Read timeout issue"
-                    logger.exception(f"Read timeout from Open AI {e}")
-                    break
-                else:
-                    attempts += 1
-                    continue
-            except Exception as e:
-                has_error = True
-                message = f"Unknown exception: {e}"
-                logger.exception(e)
-                break
-        if has_error:
+        content = request.data.get("content", None)
+        message = get_journalists(info, content)
+        if isinstance(message, str):
             send_to_error_channel(message, user.email, "run discovery (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
-
-        return Response(data=message)
+        return Response(data={"journalists": message})
 
     @action(
         methods=["post"],
@@ -2263,6 +2208,7 @@ class DiscoveryViewSet(
         recipient = request.data.get("recipient")
         name = request.data.get("name")
         bcc = request.data.get("bcc", [])
+        draftId = request.data.get("draftId", None)
 
         if user.has_google_integration or user.has_microsoft_integration:
             res = user.email_account.send_email(recipient, subject, body, name)
@@ -2270,6 +2216,9 @@ class DiscoveryViewSet(
             res = send_mailgun_email(user, name, subject, recipient, body, bcc)
         sent = res["sent"]
         if sent:
+            if draftId:
+                tracker = EmailTracker.objects.filter(id=draftId)
+                tracker.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             return Response(
@@ -2353,7 +2302,7 @@ class DiscoveryViewSet(
         if social:
             query = journalist
         else:
-            query = f"{journalist} AND {outlet}"
+            query = f"Journalist AND {journalist} AND {outlet}"
         google_results = google_search(query)
         if len(google_results) == 0:
             return Response(
@@ -2633,18 +2582,6 @@ def email_recieved_webhook(request):
     return Response(status=status.HTTP_202_ACCEPTED)
 
 
-@api_view(["GET"])
-@permission_classes([])
-def get_email_tracking(request):
-    user = request.user
-    trackers = EmailTracker.objects.filter(user__organization=user.organization).order_by(
-        "-datetime_created"
-    )
-    serialized = EmailTrackerSerializer(trackers, many=True)
-    rate_data = EmailTracker.get_user_rates(user.id)
-    return Response(data={"trackers": serialized.data, "rates": rate_data})
-
-
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def get_google_summary(request):
@@ -2900,7 +2837,62 @@ def process_excel_file(request):
     file_obj = request.FILES.get("file")
     labels = request.data.get("labels")
     if file_obj:
-            emit_process_contacts_excel(file_obj, labels)
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        emit_process_contacts_excel(file_obj, labels)
+        return Response(status=status.HTTP_204_NO_CONTENT)
     else:
         return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class EmailTrackerViewSet(
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+):
+    authentication_classes = [ExpiringTokenAuthentication]
+    serializer_class = EmailTrackerSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        trackers = EmailTracker.objects.filter(user=user).order_by("-datetime_created")
+        return trackers
+
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        try:
+            serializer = EmailTrackerSerializer(
+                data={
+                    "user": user.id,
+                    "recipient": request.data.get("recipient"),
+                    "body": request.data.get("body"),
+                    "subject": request.data.get("subject"),
+                    "name": request.data.get("name"),
+                }
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            serializer.instance.add_activity("draft_created")
+            return Response(status=status.HTTP_201_CREATED, data={"tracker": serializer.data})
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = self.request.data
+        print("here i am --- >", data.get("activity_type"))
+        activity_type = data.get("activity_type", "Updated")
+        instance.add_activity(activity_type)
+        serializer = self.serializer_class(instance=instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            instance.delete()
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_200_OK)

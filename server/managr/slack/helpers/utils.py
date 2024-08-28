@@ -484,14 +484,10 @@ def USER_APP_OPTIONS(user, resource_type):
     return options
 
 
-def send_to_error_channel(
-    error,
-    user_email,
-    process,
-    header=False,
-):
+def send_to_error_channel(error, user_email, process, header=False, report_id=False):
     from managr.slack.helpers import block_builders, requests
     from django.conf import settings
+    from managr.core.models import CrawlerReport
 
     error_channel = "C07GWFNBX9V" if header else "C032VEDLSHW"
     header_text = header if header else f"Error from process {process} in {settings.ENVIRONMENT}"
@@ -507,6 +503,13 @@ def send_to_error_channel(
             managr_int.access_token,
             block_set=blocks,
         )
+        if report_id:
+            report = CrawlerReport.objects.get(id=report_id)
+            if report.start_ts:
+                report.end_ts = res["ts"]
+            else:
+                report.start_ts = res["ts"]
+            report.save()
     except OrganizationSlackIntegration.DoesNotExist:
         return
     except Exception as e:

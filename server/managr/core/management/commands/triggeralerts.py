@@ -1,7 +1,7 @@
 import datetime
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from managr.comms.models import EmailAlert
+from managr.comms.models import AssistAlert
 from managr.comms.tasks import emit_send_news_summary
 
 
@@ -16,7 +16,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        alerts = EmailAlert.objects.all()
+        alerts = AssistAlert.objects.all()
         current_day = datetime.datetime.now()
         for alert in alerts:
             if settings.IN_DEV or options["test"]:

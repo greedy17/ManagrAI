@@ -415,30 +415,51 @@
           </div>
         </div>
 
-        <div style="margin-top: -16px" class="flex-end">
+        <div style="margin-top: -16px" class="space-between">
           <button
+            :disabled="
+              loadingPitch || !subject || !targetEmail || sendingEmail || verifying || drafting
+            "
+            @click="createDraft"
             class="secondary-button"
-            :disabled="loadingDraft || savingContact"
-            @click="toggleEmailJournalistModal"
           >
-            Close
+            <img
+              v-if="drafting"
+              style="margin-right: 4px"
+              class="invert rotation"
+              src="@/assets/images/loading.svg"
+              height="14px"
+              alt=""
+            />
+            Save draft
           </button>
+          <div class="row">
+            <button
+              class="secondary-button"
+              :disabled="loadingDraft || savingContact"
+              @click="toggleEmailJournalistModal"
+            >
+              Close
+            </button>
 
-          <div v-if="sendingEmail" style="margin: 0 12px" class="loading-small">
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
+            <div v-if="sendingEmail" style="margin: 0 12px" class="loading-small">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+            <button
+              v-else
+              @click="sendEmail"
+              :disabled="
+                loadingPitch || !subject || !targetEmail || sendingEmail || verifying || drafting
+              "
+              style="margin-right: 4px"
+              class="primary-button"
+              :class="{ opaque: loadingPitch || !subject || !targetEmail }"
+            >
+              <span> Send</span>
+            </button>
           </div>
-          <button
-            v-else
-            @click="sendEmail"
-            :disabled="loadingPitch || !subject || !targetEmail || sendingEmail || verifying"
-            style="margin-right: 4px"
-            class="primary-button"
-            :class="{ opaque: loadingPitch || !subject || !targetEmail }"
-          >
-            <span> Send</span>
-          </button>
         </div>
       </div>
     </Modal>
@@ -932,7 +953,10 @@
               </div>
             </div>
 
-            <div v-if="mainView === 'write'" class="source-dropdown fadein">
+            <div
+              v-if="mainView === 'write' || mainView === 'discover'"
+              class="source-dropdown fadein"
+            >
               <div
                 @click.stop="toggleShowDetails"
                 :class="{ 'soft-gray-bg': showingDetails }"
@@ -1392,51 +1416,6 @@
                 </div>
               </div>
 
-              <!-- ALERT STARTS HERE -----
-              <div>
-                <div
-                  @click="toggleNotifyModal"
-                  class="image-container s-wrapper"
-                  :disabled="sentSummaryEmail"
-                  v-if="
-                    (mainView === 'news' || mainView === 'social') &&
-                    !notifiedList.includes(searchId)
-                  "
-                >
-                  <img
-                    height="14px"
-                    src="@/assets/images/bell.svg"
-                    alt=""
-                    class="invert"
-                    :class="{ dim: !(searchSaved || savedSearch) }"
-                  />
-                  <div style="bottom: 115%; width: 200px; left: -40px" class="s-tooltip">
-                    {{ searchSaved || savedSearch ? emailText : 'Save search to enable alerts' }}
-                  </div>
-                </div>
-
-                <div
-                  @click="removeEmailAlert"
-                  class="image-container s-wrapper"
-                  v-else-if="
-                    (mainView === 'news' || mainView === 'social') &&
-                    (searchSaved || savedSearch) &&
-                    notifiedList.includes(searchId)
-                  "
-                >
-                  <img
-                    height="14px"
-                    src="@/assets/images/bell-slash.svg"
-                    alt=""
-                    class="img-highlight"
-                  />
-                  <div class="s-tooltip">Disable</div>
-                </div>
-              </div>
-
-
-              ALERT END ----- -->
-
               <div
                 v-if="mainView === 'news'"
                 @click.stop="showShare"
@@ -1452,8 +1431,6 @@
 
                 <div class="s-tooltip">Share</div>
               </div>
-
-              <!-- SAVE STUFF HERE -->
 
               <button
                 class="image-container borderless s-wrapper"
@@ -1536,14 +1513,6 @@
               >
                 <div class="drop-options-alternate">
                   <header style="padding-top: 8px; padding-bottom: 8px" class="space-between">
-                    <!-- <section class="h-padding">
-                      <section>
-                        <p style="margin: 4px 0 0 4px; color: #9596b4">Personal</p>
-
-                        
-                      </section>
-                    </section> -->
-
                     <button
                       @click="toggleDetailsInputModal"
                       class="secondary-button-no-border"
@@ -1627,7 +1596,7 @@
                     >
                       <img
                         v-if="sendingSummaryEmail"
-                        class="rotate innvert"
+                        class="rotation innvert"
                         height="14px"
                         src="@/assets/images/loading.svg"
                         alt=""
@@ -1639,19 +1608,103 @@
                 </div>
                 <div class="dropdown-small-section">
                   <label for="slackChannel">Slack</label>
-                  <!-- <small>Select a slack channel</small> -->
-                  <input
-                    class="area-input-outline"
-                    disabled
-                    name="slackChannel"
-                    placeholder="Coming Soon..."
-                    type="text"
-                    style="width: 100%"
-                  />
 
                   <div>
-                    <button style="cursor: text" disabled class="secondary-button">
-                      <img src="@/assets/images/slackLogo.png" height="14px" alt="" /> Coming Soon
+                    <div class="dropdown-select">
+                      <div @click.stop="showChannels" class="dropdown-select-header">
+                        {{ channelId ? channelName : 'Select a Slack channel' }}
+                        <img src="@/assets/images/downArrow.svg" height="14px" alt="" />
+                      </div>
+
+                      <div
+                        v-outside-click="hideChannels"
+                        v-show="showingChannels"
+                        class="dropdown-select-body"
+                      >
+                        <div class="dropdown-select-top">
+                          <div style="width: 100% !important" class="input">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                              <path
+                                fill-rule="evenodd"
+                                clip-rule="evenodd"
+                                d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
+                                fill="currentColor"
+                              ></path>
+                            </svg>
+                            <input
+                              v-model="searchChannelText"
+                              class="search-input"
+                              :placeholder="`Search...`"
+                            />
+
+                            <img
+                              v-if="searchChannelText"
+                              @click="clearSearchText"
+                              src="@/assets/images/close.svg"
+                              class="pointer"
+                              height="12px"
+                              alt=""
+                            />
+                          </div>
+                        </div>
+
+                        <div v-show="filteredChannels.length" style="min-height: 180px">
+                          <div
+                            v-for="(channel, i) in filteredChannels"
+                            :key="i"
+                            class="dropdown-select-item"
+                            @click="selectChannel(channel)"
+                          >
+                            {{ channel.name }}
+                          </div>
+                        </div>
+
+                        <div style="height: 180px" v-show="!filteredChannels.length">
+                          <p style="margin-left: 12px">No results...</p>
+                        </div>
+
+                        <div class="dropdown-select-bottom">
+                          <button
+                            style="position: sticky; bottom: 0"
+                            class="secondary-button"
+                            @click="listUserChannels(userChannelOpts.nextCursor)"
+                            :disabled="dropdownLoading || !userChannelOpts.nextCursor"
+                          >
+                            <img
+                              v-if="dropdownLoading"
+                              class="rotation innvert"
+                              src="@/assets/images/loading.svg"
+                              height="14px"
+                              alt=""
+                            />
+                            Load more
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <button
+                      v-if="user.slackRef"
+                      :disabled="!user.slackRef || !channelId"
+                      @click="sendToSlack"
+                      class="secondary-button"
+                    >
+                      <img
+                        v-if="sendingSlack"
+                        class="rotation innvert"
+                        height="14px"
+                        src="@/assets/images/loading.svg"
+                        alt=""
+                      />
+                      <img v-else src="@/assets/images/slackLogo.png" height="14px" alt="" /> Send
+                      to Slack
+                    </button>
+
+                    <button v-else @click="goToIntegrations" class="secondary-button">
+                      <img src="@/assets/images/slackLogo.png" height="14px" alt="" />
+                      Connect Slack
                     </button>
                   </div>
                 </div>
@@ -1686,7 +1739,12 @@
                 <div v-else class="dropdown-small-header">Save this search</div>
 
                 <div v-if="mainView === 'write'" class="dropdown-small-section">
-                  <label style="font-size: 13px" for="detail-title">Name</label>
+                  <label
+                    :class="{ opaquest: savedPitch }"
+                    style="font-size: 13px"
+                    for="detail-title"
+                    >Name</label
+                  >
                   <input
                     id="detail-title"
                     style="width: 100%"
@@ -1707,7 +1765,7 @@
                     >
                       <img
                         v-if="savingSearch"
-                        class="rotate innvert"
+                        class="rotation innvert"
                         height="14px"
                         src="@/assets/images/loading.svg"
                         alt=""
@@ -1718,7 +1776,12 @@
                 </div>
 
                 <div v-else-if="mainView === 'discover'" class="dropdown-small-section">
-                  <label style="font-size: 13px" for="detail-title">Name</label>
+                  <label
+                    :class="{ opaquest: savedDiscovery }"
+                    style="font-size: 13px"
+                    for="detail-title"
+                    >Name</label
+                  >
                   <input
                     id="detail-title"
                     style="width: 100%"
@@ -1744,7 +1807,7 @@
                     >
                       <img
                         v-if="savingSearch"
-                        class="rotate innvert"
+                        class="rotation innvert"
                         height="14px"
                         src="@/assets/images/loading.svg"
                         alt=""
@@ -1755,7 +1818,12 @@
                 </div>
 
                 <div v-else class="dropdown-small-section dropdown-small-bb">
-                  <label style="font-size: 13px" for="detail-title">Name</label>
+                  <label
+                    :class="{ opaquest: searchSaved || savedSearch }"
+                    style="font-size: 13px"
+                    for="detail-title"
+                    >Name</label
+                  >
                   <input
                     id="detail-title"
                     style="width: 100%"
@@ -1782,7 +1850,7 @@
                     >
                       <img
                         v-if="savingSearch"
-                        class="rotate innvert"
+                        class="rotation innvert"
                         height="14px"
                         src="@/assets/images/loading.svg"
                         alt=""
@@ -1816,14 +1884,176 @@
                       savingAlert || !isPaid || (!savedSearch && !savedDiscovery && !savedPitch)
                     "
                   />
+                  <!-- 
+                     :class="{ 'has-placeholder': !alertTIme }"
+                    :data-placeholder="placeholderTime"
+                     @focus="clearPlaceholder"
+                    @blur="setPlaceholder"
+                     -->
 
-                  <small v-if="isPaid && (savedSearch || savedDiscovery || savedPitch)"
+                  <div style="margin: 8px 0" class="space-between">
+                    <div class="row">
+                      <img
+                        src="@/assets/images/email-round.svg"
+                        height="14px"
+                        alt=""
+                        style="margin-right: 8px; opacity: 0.7"
+                      />
+                      Send digest to email
+                    </div>
+
+                    <label class="switch">
+                      <input
+                        :checked="alertType === 'EMAIL'"
+                        @change="toggleAlert('EMAIL')"
+                        type="checkbox"
+                      />
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+
+                  <div v-if="user.slackRef" style="margin-bottom: 16px" class="space-between">
+                    <div class="row">
+                      <img
+                        src="@/assets/images/slackLogo.png"
+                        height="14px"
+                        alt=""
+                        style="margin-right: 8px"
+                      />
+                      Send digest to Slack
+                    </div>
+
+                    <label class="switch">
+                      <input
+                        :checked="alertType === 'SLACK'"
+                        @change="toggleAlert('SLACK')"
+                        type="checkbox"
+                      />
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+
+                  <div v-else style="margin-bottom: 16px" class="space-between">
+                    <div class="row">
+                      <img
+                        src="@/assets/images/slackLogo.png"
+                        height="14px"
+                        alt=""
+                        style="margin-right: 8px"
+                      />
+                      Send digest to Slack
+                    </div>
+
+                    <button @click="goToIntegrations" class="secondary-button">
+                      <img src="@/assets/images/slackLogo.png" height="14px" alt="" />
+                      Connect
+                    </button>
+                  </div>
+
+                  <div style="width: 100%" class="fadein" v-show="alertType === 'SLACK'">
+                    <div class="dropdown-select">
+                      <div @click.stop="showAlertChannels" class="dropdown-select-header">
+                        {{ alertChannel ? alertChannelName : 'Select a Slack channel' }}
+                        <img src="@/assets/images/downArrow.svg" height="14px" alt="" />
+                      </div>
+
+                      <div
+                        v-outside-click="hideAlertChannels"
+                        v-show="showingAlertChannels"
+                        class="dropdown-select-body-up"
+                      >
+                        <div class="dropdown-select-top">
+                          <div style="width: 100% !important" class="input">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                              <path
+                                fill-rule="evenodd"
+                                clip-rule="evenodd"
+                                d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
+                                fill="currentColor"
+                              ></path>
+                            </svg>
+                            <input
+                              v-model="searchChannelText"
+                              class="search-input"
+                              :placeholder="`Search...`"
+                            />
+
+                            <img
+                              v-if="searchChannelText"
+                              @click="clearSearchText"
+                              src="@/assets/images/close.svg"
+                              class="pointer"
+                              height="12px"
+                              alt=""
+                            />
+                          </div>
+                        </div>
+
+                        <div v-show="filteredChannels.length" style="min-height: 180px">
+                          <div
+                            v-for="(channel, i) in filteredChannels"
+                            :key="i"
+                            class="dropdown-select-item"
+                            @click="selectAlertChannel(channel)"
+                          >
+                            {{ channel.name }}
+                          </div>
+                        </div>
+
+                        <div style="height: 180px" v-show="!filteredChannels.length">
+                          <p style="margin-left: 12px">No results...</p>
+                        </div>
+
+                        <div class="dropdown-select-bottom">
+                          <button
+                            style="position: sticky; bottom: 0"
+                            class="secondary-button"
+                            @click="listUserChannels(userChannelOpts.nextCursor)"
+                            :disabled="dropdownLoading || !userChannelOpts.nextCursor"
+                          >
+                            <img
+                              v-if="dropdownLoading"
+                              class="rotation innvert"
+                              src="@/assets/images/loading.svg"
+                              height="14px"
+                              alt=""
+                            />
+                            Load more
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- <select
+                      style="width: 100%"
+                      v-model="alertChannel"
+                      class="area-input-outline dropdown-select"
+                    >
+                      <option value="" disabled>Select a Slack channel</option>
+                      <option
+                        v-for="channel in userChannelOpts.channels"
+                        :key="channel.id"
+                        :value="channel.id"
+                      >
+                        {{ channel.name }}
+                      </option>
+                      <option v-if="userChannelOpts.nextCursor" disabled>──────────</option>
+                      <option
+                        v-if="userChannelOpts.nextCursor"
+                        @click="listUserChannels(userChannelOpts.nextCursor)"
+                        class="load-more-option"
+                      >
+                        Load More Channels...
+                      </option>
+                    </select> -->
+                  </div>
+
+                  <!-- <small v-if="isPaid && (savedSearch || savedDiscovery || savedPitch)"
                     >Get daily emails with news clips and summary</small
                   >
                   <small class="opaquer" v-else-if="isPaid"
                     >Get daily emails with news clips and summary</small
                   >
-                  <small v-else>Upgrade your plan to activate alerts</small>
+                  <small v-else>Upgrade your plan to activate alerts</small> -->
 
                   <div class="row-end-bottom" style="margin-top: 0">
                     <button @click="hideSave" class="secondary-button">Close</button>
@@ -1834,23 +2064,25 @@
                         savingAlert ||
                         !alertTIme ||
                         !isPaid ||
-                        (!savedSearch && !savedDiscovery && !savedPitch)
+                        (!savedSearch && !savedDiscovery && !savedPitch) ||
+                        !alertType ||
+                        (alertType === 'SLACK' && !alertChannel)
                       "
                       style="margin-left: 8px"
                       class="primary-button"
-                      v-if="!alertSet"
+                      v-if="!alertSet && !showingAlertChannels"
                     >
                       Schedule
                     </button>
 
-                    <button
+                    <!-- <button
                       style="margin-left: 8px"
                       v-else
                       class="primary-button fadein"
                       @click="testEmailAlert"
                     >
                       Send Preview
-                    </button>
+                    </button> -->
                   </div>
                 </div>
 
@@ -1897,13 +2129,29 @@
 
                 <p class="header-p">Answer</p>
 
-                <div style="margin: 2px 0 0 4px" class="image-container s-wrapper">
+                <div
+                  v-if="mainView !== 'discover'"
+                  style="margin: 2px 0 0 4px"
+                  class="image-container s-wrapper"
+                >
                   <img
                     style="cursor: pointer; filter: invert(40%)"
                     src="@/assets/images/clipboard.svg"
                     height="16px"
                     alt=""
                     @click="copyText"
+                  />
+
+                  <div class="s-tooltip">{{ copyTip }}</div>
+                </div>
+
+                <div v-else style="margin: 2px 0 0 4px" class="image-container s-wrapper">
+                  <img
+                    style="cursor: pointer; filter: invert(40%)"
+                    src="@/assets/images/clipboard.svg"
+                    height="16px"
+                    alt=""
+                    @click="copyDiscoverText"
                   />
 
                   <div class="s-tooltip">{{ copyTip }}</div>
@@ -2003,13 +2251,15 @@
                 v-html="summary"
               ></div>
 
-              <div
-                @click="grabJournalist($event, 'the person')"
-                style="margin-top: 16px"
-                class=""
-                v-else
-              >
-                <div class="pre-text alternate" v-html="summary"></div>
+              <div class="journalistCol" v-else-if="mainView === 'discover'">
+                <div class="journalistSection" v-for="(j, i) in discoverList" :key="i">
+                  <p><span>Name</span>: {{ j.name }}</p>
+                  <p><span>Publication</span>: {{ j.publication }}</p>
+                  <p><span>Reason for selection</span>: {{ j.reason }}</p>
+                  <button @click="grabJournalist(j.name, j.pub)" class="secondary-button">
+                    View bio
+                  </button>
+                </div>
               </div>
               <div
                 v-if="mainView !== 'discover'"
@@ -2477,7 +2727,7 @@
                               <img
                                 v-show="contentLoading && optionIndex === i"
                                 src="@/assets/images/loading.svg"
-                                class="rotate"
+                                class="rotation"
                                 height="12px"
                                 alt=""
                               />
@@ -2713,7 +2963,7 @@
                               <img
                                 v-show="contentLoading && optionIndex === i"
                                 src="@/assets/images/loading.svg"
-                                class="rotate"
+                                class="rotation"
                                 height="12px"
                                 alt=""
                               />
@@ -3132,8 +3382,7 @@
         </aside>
 
         <aside v-else>
-          <div v-if="mainView === 'write'" class="section" style="max-height: 70vh">
-            <!-- @click="toggleJournalistsList" :class="{ nobottomborder: showingJournalistsList }" -->
+          <!-- <div v-if="mainView === 'write'" class="section" style="max-height: 70vh">
             <div style="cursor: text" class="example-title nobottomborder">
               <div class="example-row">
                 <img
@@ -3144,14 +3393,6 @@
                 />
                 <p>Find Relevant Journalists</p>
               </div>
-
-              <!-- <img
-                v-if="!showingJournalistsList"
-                src="@/assets/images/downArrow.svg"
-                height="14px"
-                alt=""
-              />
-              <img v-else src="@/assets/images/downArrow.svg" class="rotate" height="14px" alt="" /> -->
               <button
                 :disabled="!journalisListtData"
                 @click="clearList"
@@ -3206,13 +3447,10 @@
               </div>
             </div>
 
-            <!-- <div v-if="journalisListtData" class="sticky-bottom-right">
-              <button @click="clearList" class="secondary-button">Clear</button>
-            </div> -->
-          </div>
 
-          <div v-else class="section" style="max-height: 70vh">
-            <!-- @click="toggleJournalistsList" :class="{ nobottomborder: showingJournalistsList }" -->
+          </div> -->
+
+          <div v-if="mainView === 'discover'" class="section" style="max-height: 70vh">
             <div style="cursor: text" class="example-title nobottomborder">
               <div class="example-row">
                 <img
@@ -3223,20 +3461,6 @@
                 />
                 <p>Modify</p>
               </div>
-
-              <!-- <button
-                :disabled="!journalisListtData"
-                @click="clearList"
-                class="secondary-button-no-border borderless"
-              >
-                <img
-                  style="margin-right: 4px"
-                  src="@/assets/images/remove.svg"
-                  height="14px"
-                  alt=""
-                />
-                Clear
-              </button> -->
             </div>
 
             <div style="padding-bottom: 0" class="example-body fadein">
@@ -3259,10 +3483,6 @@
                     </div>
                   </div>
                 </div>
-
-                <!-- <div class="relative" v-else @click="grabJournalist($event)">
-                  <div class="pre-text" v-html="journalisListtData"></div>
-                </div> -->
               </div>
             </div>
           </div>
@@ -3276,7 +3496,7 @@
 import { Comms } from '@/services/comms'
 import { quillEditor } from 'vue-quill-editor'
 import User from '@/services/users'
-import SlackOAuth from '@/services/slack'
+import SlackOAuth, { SlackListResponse } from '@/services/slack'
 import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
@@ -3289,6 +3509,17 @@ export default {
   },
   data() {
     return {
+      discoverList: [],
+      drafting: false,
+      originalSummary: null,
+      placeholderTime: 'Select a time',
+      alertType: '',
+      alertChannel: '',
+      alertChannelName: '',
+      userChannelOpts: new SlackListResponse(),
+      channelId: '',
+      channelName: '',
+      sendingSlack: false,
       searchTime: '',
       showingSave: false,
       showingShare: false,
@@ -3378,6 +3609,9 @@ export default {
       searchArticleText: '',
       searchTweetText: '',
       searchResultText: '',
+      searchChannelText: '',
+      showingChannels: false,
+      showingAlertChannels: false,
       buttonClicked: false,
       savingContact: false,
       suggestions: [],
@@ -3535,7 +3769,7 @@ export default {
       summarySuggestions: [
         `Craft a media pitch for [BrandX] incorporating relevant news, use citations. Pitch details: [here]`,
         `Craft a press release for [BrandX] incorporating relevant news, use citations. Pitch details: [here]`,
-        `Which of these journalists would be interested in learning more about [BrandX], explain why`,
+        `List up to 10 journalists that would be interested in writing about [BrandX], explain why`,
         `Provide creative pitching angles for [BrandX] based on this coverage`,
         `Provide sentiment analysis and key messages for [BrandX]`,
         `List 5 questions the media will ask [BrandX] based on this news`,
@@ -3718,6 +3952,7 @@ export default {
 6. Engagement: Engage the reader by offering exclusive insights and proposing collaboration.
 7. Non-Promotional: Avoid promotional language. Focus on providing valuable, informative content.
 8. Stylistic Techniques: Use a mix of short and long sentences for rhythm. Use rhetorical questions to engage the reader and provoke thought.`,
+      dropdownLoading: false,
     }
   },
   created() {
@@ -3746,6 +3981,10 @@ export default {
     this.getWritingStyles()
     this.getCompanyDetails()
     this.shareEmail = this.user.email
+
+    if (this.user.slackRef) {
+      this.listUserChannels()
+    }
   },
   watch: {
     typedMessage: 'changeIndex',
@@ -3778,11 +4017,66 @@ export default {
   mounted() {
     this.getEmailAlerts()
     this.writeSetup()
+    this.setPlaceholder()
   },
   beforeDestroy() {
     this.abortFunctions()
   },
   methods: {
+    selectAlertChannel(channel) {
+      this.alertChannelName = channel.name
+      this.alertChannel = channel.id
+      this.hideAlertChannels()
+    },
+    selectChannel(channel) {
+      this.channelName = channel.name
+      this.channelId = channel.id
+      this.hideChannels()
+    },
+    showAlertChannels() {
+      this.showingAlertChannels = true
+    },
+    hideAlertChannels() {
+      this.showingAlertChannels = false
+      this.searchChannelText = ''
+    },
+    showChannels() {
+      this.showingChannels = true
+    },
+    hideChannels() {
+      this.showingChannels = false
+      this.searchChannelText = ''
+    },
+    clearPlaceholder() {
+      this.placeholderTime = ''
+    },
+    setPlaceholder() {
+      if (!this.alertTIme) {
+        this.placeholderTime = 'Select a time'
+      }
+    },
+    toggleAlert(type) {
+      if (this.alertType === type) {
+        this.alertType = null
+      } else {
+        this.alertType = type
+      }
+    },
+    async listUserChannels(cursor = null) {
+      this.dropdownLoading = true
+      try {
+        const res = await SlackOAuth.api.listUserChannels(cursor)
+        const results = new SlackListResponse({
+          channels: [...this.userChannelOpts.channels, ...res.channels],
+          responseMetadata: { nextCursor: res.nextCursor },
+        })
+        this.userChannelOpts = results
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.dropdownLoading = false
+      }
+    },
     showSave() {
       this.showingSave = true
     },
@@ -3836,10 +4130,14 @@ export default {
         this.refreshUser()
       }
     },
-    async getCompanyDetails() {
+    async getCompanyDetails(newDeets = false) {
       try {
         const res = await Comms.api.getCompanyDetails()
         this.allCompanyDetails = res.results
+        if (newDeets) {
+          let detail = res.results.at(-1)
+          this.addDetailsAlt(detail.title, detail.details)
+        }
       } catch (e) {}
     },
     async addCompanyDetails() {
@@ -3865,16 +4163,53 @@ export default {
         this.detailsBody = ''
         // this.getDetails()
         this.savingStyle = false
-        this.getCompanyDetails()
+        this.getCompanyDetails(true)
         this.toggleDetailsInputModal()
       }
     },
-    async slackTest() {
+    async sendToSlack() {
+      this.sendingSlack = true
       try {
-        const res = await SlackOAuth.api.sendToSlack({})
+        const res = await SlackOAuth.api.sendToSlack({
+          search: this.newSearch,
+          start_date: this.dateStart,
+          end_date: this.dateEnd,
+          summary: this.originalSummary,
+          channel_id: this.channelId,
+          clips:
+            this.mainView === 'news'
+              ? this.articlesFiltered.slice(0, 5)
+              : this.filteredTweets.slice(0, 5),
+        })
+        this.$toast('Sent to Slack', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
         console.log(res)
       } catch (e) {
-        console.log(e)
+        if (e.data.error) {
+          this.$toast(`${e.data.error}`, {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } else {
+          this.$toast('Error sending content, try again later', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }
+      } finally {
+        this.sendingSlack = false
+        this.hideShare()
       }
     },
     clearList() {
@@ -3901,11 +4236,13 @@ export default {
       try {
         const res = await Comms.api.discoverJournalists({
           info: discover ? this.newSearch : this.journalistInfo,
-          content: this.summary,
+          content: '',
           discover: discover,
         })
+
         if (discover) {
           this.summary = res
+          this.discoverList = res.journalists
         } else {
           this.journalisListtData = res
         }
@@ -4010,7 +4347,6 @@ export default {
       this.showingName = true
     },
     removeNameIndex() {
-      console.log('HERE IM LEAVING')
       this.journalistIndex = 475
       this.showingName = false
     },
@@ -4206,6 +4542,7 @@ export default {
       this.searchArticleText = ''
       this.searchTweetText = ''
       this.searchResultText = ''
+      this.searchChannelText = ''
     },
     toggleRelevant() {
       if (!this.showingRelevant) {
@@ -4356,9 +4693,11 @@ export default {
         return
       }
       this.savingContact = true
-      // name_list = this.currentJournalist.split(' ')
-      // const first = name_list[0]
-      // const last = name_list.at(-1)
+
+      if (!this.targetEmail.includes('@')) {
+        this.targetEmail = this.currentJournalist.replace(/\s+/g, '') + '@gmail.com'
+        console.log(this.targetEmail)
+      }
       try {
         const res = await Comms.api.addContact({
           user: this.user.id,
@@ -4568,6 +4907,39 @@ export default {
         this.emailJournalistModalOpen = !this.emailJournalistModalOpen
       }
     },
+    async createDraft() {
+      this.drafting = true
+      try {
+        const res = await Comms.api.createDraft({
+          subject: this.subject,
+          body: this.revisedPitch,
+          recipient: this.targetEmail,
+          name: this.currentJournalist,
+        })
+        this.emailJournalistModalOpen = false
+        this.$toast('Draft created', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.revisedPitch = ''
+        this.sendingEmail = false
+      } catch (e) {
+        console.log(e)
+        this.$toast('Error creating draft, try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.drafting = false
+      } finally {
+        this.refreshUser()
+      }
+    },
     async sendEmail() {
       this.sendingEmail = true
       try {
@@ -4665,23 +5037,19 @@ export default {
         this.loadingPitch = false
       }
     },
-    grabJournalist(event) {
+    grabJournalist(name, pub) {
       if (!this.isPaid && this.searchesUsed >= 10) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
         return
       }
-      if (event.target.tagName === 'BUTTON') {
-        this.currentJournalistBio = ''
-        this.currentJournalistImages = []
-        const text = event.target.closest('span').outerHTML
-        const { name, publication, tip } = this.extractNameEmailTip(text)
-        this.currentJournalist = name
-        this.currentPublication = publication
-        this.googleModalOpen = true
-        this.getJournalistBioDiscover()
-      }
+      this.currentJournalistBio = ''
+      this.currentJournalistImages = []
+      this.currentJournalist = name
+      this.currentPublication = pub
+      this.googleModalOpen = true
+      this.getJournalistBioDiscover()
     },
     extractNameEmailTip(text) {
       const name = text
@@ -5103,7 +5471,7 @@ export default {
       // console.log(this.alertTIme)
       // console.log(alert.run_at)
 
-      const datetimeString = this.alertTime
+      const datetimeString = this.alertTIme
 
       let date = new Date(datetimeString)
 
@@ -5116,6 +5484,7 @@ export default {
 
       this.searchTime = `${this.alertTIme} ${ampm}`
     },
+    // sendtoslack
     async addEmailAlert() {
       this.savingAlert = true
       try {
@@ -5124,16 +5493,11 @@ export default {
           run_at: this.formattedDate,
           user: this.user.id,
           title: this.searchName,
+          type: this.alertType,
+          recipients: [this.alertChannel ? this.alertChannel : this.user.email],
         })
-
         this.currentAlert = response
         this.currentAlertId = response.id
-
-        console.log(
-          'current alert here after save ----- >',
-          this.currentAlert,
-          this.currentAlert.id,
-        )
 
         this.getEmailAlerts()
         this.showingSave = false
@@ -5146,7 +5510,23 @@ export default {
           bodyClassName: ['custom'],
         })
       } catch (e) {
-        console.log(e)
+        if (e.data.error) {
+          this.$toast(`${e.data.error}`, {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } else {
+          this.$toast('Error sending content, try again later', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }
       } finally {
         this.getEmailAlerts()
         this.savingAlert = false
@@ -5570,6 +5950,34 @@ export default {
     //     console.error('Failed to copy text: ', err)
     //   }
     // },
+    async copyDiscoverText() {
+      try {
+        // Extract and clean the text from each object in discoverList
+        const cleanedSummary = this.discoverList
+          .map((item) => {
+            // Clean each property of HTML tags
+            const name = item.name.replace(/<\/?[^>]+(>|$)/g, '')
+            const publication = item.publication.replace(/<\/?[^>]+(>|$)/g, '')
+            const reason = item.reason.replace(/<\/?[^>]+(>|$)/g, '')
+
+            // Concatenate the cleaned properties
+            return `${name} - ${publication}: ${reason}`
+          })
+          .join('\n') // Join all the text into a single string, each object on a new line
+
+        // Copy the cleaned text to the clipboard
+        await navigator.clipboard.writeText(cleanedSummary)
+        this.copyTip = 'Copied!'
+
+        // Reset the copyTip after 2 seconds
+        setTimeout(() => {
+          this.copyTip = 'Copy'
+        }, 2000)
+      } catch (err) {
+        console.error('Failed to copy text: ', err)
+      }
+    },
+
     async copyText() {
       try {
         const cleanedSummary = this.summary.replace(/<\/?[^>]+(>|$)/g, '')
@@ -6437,6 +6845,7 @@ export default {
             if (this.searchSaved) {
               this.updateSearch()
             }
+            this.originalSummary = response.summary
             this.summary = response.summary
               .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
               .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
@@ -6655,6 +7064,15 @@ export default {
     },
   },
   computed: {
+    filteredChannels() {
+      if (this.userChannelOpts) {
+        return this.userChannelOpts.channels.filter((channel) =>
+          channel.name.toLowerCase().includes(this.searchChannelText.toLowerCase()),
+        )
+      } else {
+        return ['Nothing here...']
+      }
+    },
     userWritingStyles() {
       if (this.personalStyles) {
         return this.allWritingStyles.filter((style) => style.user === this.user.id)
@@ -8917,6 +9335,19 @@ li {
 .blue-filter {
   filter: brightness(0) invert(23%) sepia(19%) saturate(984%) hue-rotate(162deg) brightness(92%)
     contrast(87%) !important;
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
+}
+
+.rotation {
+  animation: rotation 2s infinite linear;
 }
 
 .rotate {
@@ -11210,5 +11641,215 @@ filter ::selection {
     margin: 0;
     padding: 0;
   }
+}
+
+.dropdown-select {
+  position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  padding: 8px;
+  width: 100%;
+  z-index: 900000000000000000000000;
+
+  &-header {
+    font-size: 14px;
+    width: 100% !important;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 4px 0;
+  }
+
+  &-body-up {
+    position: absolute;
+    top: 8px;
+    left: 0;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+    height: 230px;
+    background-color: white;
+    width: 100%;
+    z-index: 900000000000000000000001;
+    overflow-y: scroll;
+
+    &::-webkit-scrollbar {
+      width: 5px !important;
+      height: 0px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background-color: $soft-gray;
+      box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+      border-radius: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      margin-top: 48px;
+    }
+  }
+
+  &-body {
+    position: absolute;
+    top: 44px;
+    left: 0;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+    height: 250px;
+    background-color: white;
+    z-index: 100000000;
+    overflow-y: scroll;
+
+    &::-webkit-scrollbar {
+      width: 5px !important;
+      height: 0px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background-color: $soft-gray;
+      box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+      border-radius: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      margin-top: 48px;
+    }
+  }
+
+  &-item {
+    padding: 8px 12px;
+
+    &:hover {
+      color: $light-gray-blue;
+      cursor: pointer;
+    }
+  }
+
+  &-bottom {
+    position: sticky;
+    bottom: 0;
+    padding: 8px 12px;
+    width: 100%;
+    background-color: white;
+  }
+
+  &-top {
+    position: sticky;
+    top: 0;
+    padding: 8px;
+    width: 100%;
+    background-color: white;
+  }
+}
+
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  background: url('~@/assets/images/downArrow.svg') no-repeat calc(100% - 8px) center;
+  background-size: 16px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: '';
+  height: 12px;
+  width: 12px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+
+input:checked + .slider {
+  background-color: $turq;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px $turq;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(16px);
+  -ms-transform: translateX(16px);
+  transform: translateX(16px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+input[type='time'] {
+  position: relative;
+  z-index: 1;
+}
+
+input[type='time'].has-placeholder::before {
+  content: attr(data-placeholder);
+  color: #999;
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+input[type='time'].has-placeholder::-webkit-datetime-edit {
+  color: transparent;
+}
+
+.journalistSection {
+  p {
+    margin: 6px 0;
+    padding: 0;
+    span {
+      font-family: $base-font-family;
+    }
+  }
+}
+
+.journalistCol {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 24px;
 }
 </style>
