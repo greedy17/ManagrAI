@@ -777,6 +777,8 @@ def fill_journalist_info(search, journalists, content):
             message = r.get("choices")[0].get("message").get("content")
             message = json.loads(message)
             journalist_data = message["journalists"]
+            if len(journalists) > 10:
+                journalists[:11]
             break
         except open_ai_exceptions.StopReasonLength:
             if token_amount >= 6000:
