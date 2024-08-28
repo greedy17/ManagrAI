@@ -2822,8 +2822,8 @@ def read_column_names(request):
     if file_obj:
         try:
             workbook = load_workbook(file_obj, data_only=True)
-            sheet = workbook.active
-            column_names = [cell.value for cell in sheet[1]]
+            sheet = workbook["All Media Targets"]
+            column_names = [cell.value for cell in sheet[1] if cell.value not in [None, False, True]]
             return Response({"columns": column_names}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
