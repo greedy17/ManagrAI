@@ -36,7 +36,7 @@
     <div v-else class="table-border-center">
       <div class="file-input-wrapper">
         <label class="file-input-label">
-          <input type="file" @change="handleFileUpload" class="file-input" />
+          <input type="file" @change="readColumnNames" class="file-input" />
           <span style="margin-right: 4px" class="secondary-button">Upload File</span>
         </label>
         <p class="file-name">{{ fileName ? fileName : 'No file selected' }}</p>
@@ -47,6 +47,8 @@
 </template>
 
 <script>
+import { Comms } from '@/services/comms'
+
 export default {
   data() {
     return {
@@ -57,22 +59,31 @@ export default {
     }
   },
   methods: {
-    handleFileUpload(event) {
+    async readColumnNames(event) {
       const file = event.target.files[0]
-      this.fileName = file.name
-      if (file) {
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          try {
-            const text = e.target.result // Read the file content as text
-            this.processFile(text)
-          } catch (error) {
-            console.error('Error reading the file:', error)
-          }
-        }
-        reader.readAsText(file) // Read the file as text
+      try {
+        const res = await Comms.api.readColumnNames(file)
+        console.log(res)
+      } catch (e) {
+        console.log(e)
       }
     },
+    //  async handleFileUpload(event) {
+    //     const file = event.target.files[0]
+    //     this.fileName = file.name
+    //     if (file) {
+    //       const reader = new FileReader()
+    //       reader.onload = (e) => {
+    //         try {
+    //           const text = e.target.result
+    //           this.processFile(text)
+    //         } catch (error) {
+    //           console.error('Error reading the file:', error)
+    //         }
+    //       }
+    //       reader.readAsText(file)
+    //     }
+    //   },
     processFile(text) {
       if (!text || text.trim().length === 0) {
         console.error('Empty or invalid file data.')

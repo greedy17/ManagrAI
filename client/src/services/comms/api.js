@@ -591,6 +591,21 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    async readColumnNames(file) {
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await this.client.post(`read-column-names/`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            return res.data;
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e);
+        }
+    }
 
 }
 
