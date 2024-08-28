@@ -2881,7 +2881,6 @@ class EmailTrackerViewSet(
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
         data = self.request.data
-        print("here i am --- >", data.get("activity_type"))
         activity_type = data.get("activity_type", "Updated")
         instance.add_activity(activity_type)
         serializer = self.serializer_class(instance=instance, data=data, partial=True)

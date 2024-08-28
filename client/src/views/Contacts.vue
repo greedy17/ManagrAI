@@ -367,7 +367,7 @@
         </header>
 
         <div style="margin: 16px 0; min-height: 300px; width: 100%">
-          <ContactMapping @mappingConfirmed="handleMappingConfirmed"></ContactMapping>
+          <ContactMapping @fieldsFullyMapped="updateMappedField"></ContactMapping>
         </div>
 
         <footer>
@@ -375,7 +375,15 @@
 
           <div class="row">
             <button class="secondary-button" @click="bulkModalOpen = false">Cancel</button>
-            <button class="primary-button" :disabled="!isMappingConfirmed" @click="handleSubmit">
+            <button class="primary-button" :disabled="!mapped" @click="handleFileUpload">
+              <img
+                v-if="uploading"
+                style="margin-right: 4px"
+                class="invert rotation"
+                src="@/assets/images/loading.svg"
+                height="14px"
+                alt=""
+              />
               Import
             </button>
           </div>
@@ -876,6 +884,7 @@ export default {
   },
   data() {
     return {
+      mapped: false,
       isMappingConfirmed: false,
       mappings: {},
       bulkModalOpen: false,
@@ -944,6 +953,8 @@ export default {
       deletingId: null,
       deleteModalOpen: false,
       contactId: null,
+      currentFile: null,
+      uploading: false,
     }
   },
   computed: {
@@ -1029,11 +1040,26 @@ export default {
     this.getTags()
   },
   methods: {
-    handleMappingConfirmed(mappings) {
-      this.mappings = mappings
-      this.isMappingConfirmed = true
+    async handleFileUpload() {
+      console.log(this.mappings)
+      console.log(this.currentFile)
+      this.uploading = true
+      try {
+        // Directly pass the arguments to the uploadContacts function
+        const res = await Comms.api.uploadContacts(this.currentFile, this.mappings)
+        console.log(res)
+        this.uploading = false
+      } catch (error) {
+        console.error('Error reading the file:', error)
+        this.uploading = false
+      }
     },
-    async handleSubmit() {
+    updateMappedField(mappings, file) {
+      this.mappings = mappings
+      this.currentFile = file
+      this.mapped = true
+    },
+    async handleSub() {
       const payload = this.mappings
       console.log('PAYLOAD IS HERE', payload)
       // try {

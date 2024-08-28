@@ -1,48 +1,46 @@
 <template>
   <div>
-    <div>
-      <p>
-        Import your contact list and link columns to fields like publication, name, and email. (MIKE
-        WILL FIX)
+    <div v-if="!headers.length">
+      <p>Import your contacts using an Excel file.</p>
+    </div>
+    <div v-else>
+      <p @click="test" class="spantext">
+        Select the columns that contain the <span>Publication</span>,
+        <span>Journalist's first</span> and <span>last name</span>, and <span>Email address</span>.
+        Ignore all other fields.
       </p>
     </div>
     <div class="table-border" v-if="headers.length">
-      <table>
-        <thead>
-          <tr>
-            <th v-for="(header, index) in headers" :key="index">
-              <select v-model="columnMappings[header]" :key="header">
-                <option value="">Select a field</option>
-                <option value="email">Email</option>
-                <option value="first_name">First Name</option>
-                <option value="last_name">Last Name</option>
-                <option value="publication">Publication</option>
-                <option value="ignore">Ignore</option>
-              </select>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(row, rowIndex) in previewData" :key="rowIndex">
-            <td v-for="(cell, cellIndex) in row" :key="cellIndex">
-              <div class="set-width">
-                {{ cell }}
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div v-for="(header, i) in headers" :key="i" class="header">
+        <p>{{ header }}</p>
+        <select v-model="columnMappings[header]">
+          <option value="">Select a field</option>
+          <option value="email">Email</option>
+          <option value="first_name">First Name</option>
+          <option value="last_name">Last Name</option>
+          <option value="publication">Publication</option>
+        </select>
+      </div>
     </div>
     <div v-else class="table-border-center">
       <div class="file-input-wrapper">
         <label class="file-input-label">
           <input type="file" @change="readColumnNames" class="file-input" />
-          <span style="margin-right: 4px" class="secondary-button">Upload File</span>
+          <span style="margin-right: 4px" class="secondary-button">
+            <img
+              v-if="loading"
+              style="margin-right: 4px"
+              class="invert rotation"
+              src="@/assets/images/loading.svg"
+              height="14px"
+              alt=""
+            />
+            Upload File
+          </span>
         </label>
         <p class="file-name">{{ fileName ? fileName : 'No file selected' }}</p>
       </div>
     </div>
-    <button v-if="previewData" @click="confirmMapping">Confirm Mapping</button>
   </div>
 </template>
 
@@ -56,72 +54,56 @@ export default {
       previewData: [],
       columnMappings: {},
       fileName: '',
+      loading: false,
+      selectedFile: null,
+      fieldsmapped: false,
     }
   },
-  methods: {
-    async readColumnNames(event) {
-      const file = event.target.files[0]
-      try {
-        const res = await Comms.api.readColumnNames(file)
-        console.log(res)
-      } catch (e) {
-        console.log(e)
-      }
+  watch: {
+    columnMappings: {
+      handler(newMappings) {
+        const requiredFields = ['publication', 'first_name', 'last_name', 'email']
+        const allMapped = requiredFields.every((field) =>
+          Object.values(newMappings).includes(field),
+        )
+        console.log(allMapped)
+
+        this.fieldsmapped = allMapped
+      },
+      deep: true,
     },
-    //  async handleFileUpload(event) {
-    //     const file = event.target.files[0]
-    //     this.fileName = file.name
-    //     if (file) {
-    //       const reader = new FileReader()
-    //       reader.onload = (e) => {
-    //         try {
-    //           const text = e.target.result
-    //           this.processFile(text)
-    //         } catch (error) {
-    //           console.error('Error reading the file:', error)
-    //         }
-    //       }
-    //       reader.readAsText(file)
-    //     }
-    //   },
-    processFile(text) {
-      if (!text || text.trim().length === 0) {
-        console.error('Empty or invalid file data.')
-        return
-      }
-
-      // Split the text by new lines to get rows
-      const rows = text.split('\n').filter((row) => row.trim() !== '')
-
-      if (rows.length === 0) {
-        console.error('No valid data rows found in the file.')
-        return
-      }
-
-      // Split each row by tabs to get cells
-      const sheet = rows.map((row) => row.split('\t'))
-
-      // Extract headers (first row)
-      this.headers = sheet[0] || []
-
-      // Extract data (next rows) and limit preview to first 5 rows
-      this.previewData = sheet.slice(1, 6)
-
-      // Initialize column mappings with empty values
-      this.headers.forEach((header) => {
-        this.$set(this.columnMappings, header, '')
-      })
-    },
-    confirmMapping() {
+    fieldsmapped() {
       const mappedColumns = {}
       Object.keys(this.columnMappings).forEach((header) => {
         if (this.columnMappings[header] && this.columnMappings[header] !== 'ignore') {
           mappedColumns[this.columnMappings[header]] = header
         }
       })
+      this.$emit('fieldsFullyMapped', mappedColumns, this.selectedFile)
+    },
+  },
+  methods: {
+    test() {
+      console.log(this.columnMappings)
+    },
+    async readColumnNames(event) {
+      this.loading = true
+      const file = event.target.files[0]
+      this.selectedFile = file
+      try {
+        const res = await Comms.api.readColumnNames(file)
+        this.headers = res.columns
 
-      // Emit the mappings to the parent component
-      this.$emit('mappingConfirmed', mappedColumns)
+        // Initialize columnMappings with reactive properties
+        this.$set(this, 'columnMappings', {}) // Ensure columnMappings is reactive
+        this.headers.forEach((header) => {
+          this.$set(this.columnMappings, header, '')
+        })
+
+        this.loading = false
+      } catch (e) {
+        console.log(e)
+      }
     },
   },
 }
@@ -130,6 +112,17 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 12px;
+  p {
+    font-family: $base-font-family;
+  }
+}
 
 p {
   font-size: 14px;
@@ -147,60 +140,26 @@ p {
 }
 
 .table-border {
-  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
   height: 340px;
   overflow: scroll;
   margin-top: 16px;
-}
+  overflow-y: scroll;
+  scroll-behavior: smooth;
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background-color: white;
-
-  th,
-  td {
-    padding: 12px;
-    font-size: 14px;
-    text-align: left;
-    position: relative;
+  &::-webkit-scrollbar {
+    width: 5px;
+    height: 0px;
   }
-
-  thead {
-    position: sticky;
-    top: 0;
-    z-index: 8;
+  &::-webkit-scrollbar-thumb {
+    background-color: $soft-gray;
+    box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+    border-radius: 6px;
   }
-
-  th {
-    background-color: $off-white;
-    border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
-    color: $dark-blue;
-    cursor: pointer;
-  }
-
-  td {
-    z-index: 1;
-    background-color: white;
-    overflow: hidden;
-    width: 10vw;
-    height: 50px;
-  }
-}
-
-.set-width {
-  width: 10vw;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.gray-bg {
-  background-color: $off-white !important;
 }
 
 select {
-  width: 100%;
+  width: 200px;
   padding: 8px 12px;
   font-family: $thin-font-family;
   font-size: 14px;
@@ -209,8 +168,8 @@ select {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 4px;
   transition: background-color 0.3s ease, border-color 0.3s ease;
-  appearance: none; // Hide the default arrow
-  background-image: url('~@/assets/images/dropdown.svg'); // Replace with the actual path to your custom image
+  appearance: none;
+  background-image: url('~@/assets/images/dropdown.svg');
   background-repeat: no-repeat;
   background-position: right 8px center;
   background-size: 16px;
@@ -224,12 +183,12 @@ select {
     border-color: $dark-black-blue;
   }
 }
+
 .file-input-wrapper {
   display: flex;
   flex-direction: row;
   align-items: center;
   font-family: $thin-font-family;
-  //   'Inter', sans-serif; You can use a clean, modern font like Inter
 }
 
 .file-input-label {
@@ -257,5 +216,27 @@ select {
   font-size: 14px;
   color: #333333;
   font-weight: 400;
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
+}
+
+.rotation {
+  animation: rotation 2s infinite linear;
+}
+
+.invert {
+  filter: invert(40%) !important;
+}
+.spantext {
+  span {
+    font-family: $base-font-family;
+  }
 }
 </style>
