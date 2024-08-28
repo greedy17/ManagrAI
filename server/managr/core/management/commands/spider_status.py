@@ -22,8 +22,8 @@ class Command(BaseCommand):
                 task_locked = task.locked_at.replace(tzinfo=datetime.timezone.utc)
                 seconds_since_locked = dt - task_locked
                 if seconds_since_locked.seconds >= 1500:
-                    print(f"TASK RESTARTED: {params}")
                     params = task.params()[0]
+                    print(f"TASK RESTARTED: {params}")
                     task.delete()
                     url_list = ",".join(params)
                     _run_spider_batch(url_list)

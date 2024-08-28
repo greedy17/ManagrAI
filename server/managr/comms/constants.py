@@ -61,8 +61,13 @@ GOOGLE_SEARCH_ID = settings.GOOGLE_SEARCH_ID
 SCRAPER_API_KEY = settings.SCRAPER_API_KEY
 
 
-def GOOGLE_SEARCH_PARAMS(query):
-    params = {"q": query, "key": GOOGLE_SEARCH_KEY, "cx": GOOGLE_SEARCH_ID}
+def GOOGLE_SEARCH_PARAMS(query, number_of_results):
+    params = {
+        "q": query,
+        "key": GOOGLE_SEARCH_KEY,
+        "cx": GOOGLE_SEARCH_ID,
+        "num": number_of_results,
+    }
     return params
 
 
@@ -105,7 +110,12 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
 
     Additional info on the person from a publisher site: {text}.
 
-    Combine the data from the search results and publisher site to craft one bio for {journalist}. Include the company the person works for, then offer 3 short pitching tips based on what you know of the person, tailored to the user's pitch: {content}. Lastly, list all available contact details for the person based on the provided data, including social handles and email address. If the email is mentioned in the provided information, use that email. If no email is found, guess their work email based on verified email patterns for their publication. Always return the email like this - email: guessed email
+    Combine the data from the search results and publisher site to craft one bio for {journalist}. 
+    Include the company the person works for, make sure the company name is the most widely used version of the company name. 
+    Then offer 3 short pitching tips based on what you know of the person, tailored to the user's pitch: {content}. 
+    Lastly, list all available contact details for the person based on the provided data, including social handles and email address. 
+    If the email is mentioned in the provided information, use that email. If no email is found, guess their work email based on verified email patterns for their publication. 
+    Always return the email like this - email: guessed email
 
     Output must be :
 
@@ -551,26 +561,64 @@ DISCOVER_JOURNALIST = (
 )
 
 
+# OPEN_AI_DISCOVER_JOURNALIST = (
+#     lambda info: f"""
+#    List up to 10 real, active people based on this information: {info}.
+#    Providing their name, company they are currently employed at, and reason for selection.\n
+#    You must follow the instructions below very carefully:
+
+#     * Rule #1: Ensure that all people are real, currently active professionals. Do not include fake names such as Jane Doe or John Smith.
+
+#     * Rule #2: Only list people that you have the highest confidence (90% or above) in that they still work there. If you lack confidence do not list all 10, just the ones you're most confident in
+
+#     * Output format must be:
+#     Name:
+#     Company:
+#     Reason for Selection:
+#     View Updated Bio
+
+#     "View Updated Bio" MUST be returned in a button tag!
+#     "Name", "Company", and "Reason for Selection" MUST be returned in a strong tag!
+#     You MUST wrap each individual journalists/influencer selection in a span tag!
+#     Do not add any additional text to the response. ONLY return with what I asked for.
+# """
+# )
+
 OPEN_AI_DISCOVER_JOURNALIST = (
+    lambda info, journalists: f"""
+    Follow these steps carefully based on the object data below
+    1. Which publication does journalist currently work for (or freelance for)? Only use the full name of the publication and do not include two names with a slash.
+    2. Based on the most recent data, do these journalist still fit this criteria: {info}. If journalist does not meet the criteria, do not list in the output. It is Important that you only list journalist that fit the criteria.
+    3. Reason why the journalist (that fits the criteria) would be interested in this: {info}
+    JSON OUTPUT FORMAT: [{'{'}
+        'name': NAME,
+        'publication': CURRENT EMPLOYER,
+        'reason': REASON FOR SELECTION{'}'}]
+    Journalists:
+    {journalists}
+"""
+)
+
+
+# OPEN_AI_TEST_JOURNALIST = (
+#     lambda info, journalists, publicastion: f"""
+#     Journalists is a dictionary of journalist names as a key and google results as the value based on this Info: {info}.
+#     For each journalist tell me their currently employer based on the google results
+#     Journalists:
+#     {journalists}
+# """
+# )
+
+
+OPEN_AI_GET_JOURNALIST_LIST = (
     lambda info: f"""
-   List up to 10 real, active people based on this information: {info}. \n
+    List 20 journalists based on this search: {info}. \n
    
-   You must follow the instructions below very carefully:
-
-    * Rule #1: Ensure that all people are real, currently active professionals. Do not include fake names such as Jane Doe or John Smith.
-
-    * Rule #2: Only list people that you have the highest confidence (90% or above) in that they still work there. If you lack confidence do not list all 10, just the ones you're most confident in
-
-    * Output format must be: 
-    Name:
-    Company:
-    Reason for Selection:
-    View Updated Bio
-
-    "View Updated Bio" MUST be returned in a button tag!
-    "Name", "Company", and "Reason for Selection" MUST be returned in a strong tag!
-    You MUST wrap each individual journalists/influencer selection in a span tag!
-    Do not add any additional text to the response. ONLY return with what I asked for.
+    You must follow the instructions below very carefully:
+    * Ensure that all journalists are real, currently active professionals. 
+    * Do not include fake names such as Jane Doe or John Smith or make names up.
+    * Output format must a ONLY JSON object:
+    {'{'}'journalists': [LIST OF NAMES]{'}'}
 """
 )
 

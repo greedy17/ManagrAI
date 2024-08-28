@@ -76,6 +76,7 @@ from managr.comms.utils import (
     google_search,
     alternate_google_search,
     check_journalist_validity,
+    get_journalists,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse

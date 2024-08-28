@@ -19,6 +19,8 @@ from .exceptions import _handle_response
 from .models import NewsSource, Journalist
 from botocore.exceptions import ClientError
 from django.contrib.postgres.search import SearchQuery
+from managr.core import constants as core_consts
+from managr.core import exceptions as open_ai_exceptions
 
 s3 = boto3.client("s3")
 
@@ -592,27 +594,28 @@ def convert_pdf_from_url(url):
         return "", image_list
 
 
-def google_search(query):
+def google_search(query, number_of_results=5, include_images=True):
     url = comms_consts.GOOGLE_SEARCH_URI
-    params = comms_consts.GOOGLE_SEARCH_PARAMS(query)
+    params = comms_consts.GOOGLE_SEARCH_PARAMS(query, number_of_results)
     with Variable_Client() as client:
         res = client.get(url, params=params)
         if res.status_code == 200:
             results_list = []
             images = []
             res = res.json()
-            results = res["items"][:5]
+            results = res["items"]
             for item in results:
                 result_data = {
                     "title": item["title"],
                     "snippet": item["snippet"],
                     "link": item["link"],
                 }
-                try:
-                    images.append(item["pagemap"]["cse_image"][0]["src"])
-                except Exception as e:
-                    print(e)
-                    pass
+                if include_images:
+                    try:
+                        images.append(item["pagemap"]["cse_image"][0]["src"])
+                    except Exception as e:
+                        print(e)
+                        pass
                 results_list.append(result_data)
             return {"images": images, "results": results_list}
         else:
@@ -705,24 +708,62 @@ def check_journalist_validity(journalist, outlet, email):
         return {"error": "Could not create contact."}
 
 
-def test_prompt(search_term):
-    from managr.core import constants as core_consts
-    from managr.core import exceptions as open_ai_exceptions
-
-    prompt = f"I am using NewsAPI to search for '{search_term}' returned no results. Generate two alternative search queries using boolean operators (AND, OR) to broaden the scope and improve the chances of finding news. The create one alternate search term. Format the output as follows:\nSearch1:\nSearch2:\nAlternateSearch:"
-    has_error = False
-    attempts = 1
+def get_journalist_list(search):
     token_amount = 1000
     timeout = 60.0
-
+    journalist_list = []
     while True:
         try:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            if not journalist_list:
+                prompt = comms_consts.OPEN_AI_GET_JOURNALIST_LIST(search)
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    "zach@mymanagr.com",
+                    prompt,
+                    token_amount=token_amount,
+                    temperature=0,
+                    response_format={"type": "json_object"},
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                r = open_ai_exceptions._handle_response(r)
+                message = r.get("choices")[0].get("message").get("content")
+                message = json.loads(message)
+                message = message["journalists"]
+                if len(message):
+                    journalist_list = message
+                break
+        except open_ai_exceptions.StopReasonLength:
+            if token_amount >= 6000:
+                journalist_list = "Token amount error"
+                break
+            else:
+                token_amount += 1000
+                continue
+        except Exception as e:
+            journalist_list = str(e)
+            break
+    return journalist_list
+
+
+def fill_journalist_info(search, journalists):
+    token_amount = 1000
+    timeout = 60.0
+    journalist_data = []
+    while True:
+        try:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_DISCOVER_JOURNALIST(search, journalists)
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 "zach@mymanagr.com",
                 prompt,
                 token_amount=token_amount,
-                top_p=0.1,
+                temperature=0,
+                response_format={"type": "json_object"},
             )
             with Variable_Client(timeout) as client:
                 r = client.post(
@@ -731,23 +772,43 @@ def test_prompt(search_term):
                     headers=core_consts.OPEN_AI_HEADERS,
                 )
             r = open_ai_exceptions._handle_response(r)
-            pitch = r.get("choices")[0].get("message").get("content")
-            print(pitch)
+            message = r.get("choices")[0].get("message").get("content")
+            message = json.loads(message)
+            journalist_data = message
             break
         except open_ai_exceptions.StopReasonLength:
-            if token_amount <= 2000:
-                has_error = True
-
-                message = "Token amount error"
+            if token_amount >= 6000:
+                journalist_data = "Token amount error"
                 break
             else:
-                token_amount += 500
+                token_amount += 1000
                 continue
         except Exception as e:
-            has_error = True
-            message = f"Unknown exception: {e}"
+            journalist_data = f"Unknown exception: {e}"
             break
-    return
+    return journalist_data
+
+
+def get_journalists(search):
+    journalist_data = []
+    while True:
+        try:
+            journalist_list = get_journalist_list(search)
+            if isinstance(journalist_list, "str"):
+                journalist_data = journalist_list
+                break
+            results = {}
+            for j in journalist_list:
+                res = google_search(f"{j} AND journalist AND publication", 3)
+                res = res["results"]
+                str_list = [f"{r['title']},{r['snippet']}" for r in res]
+                results[j] = str_list
+            journalist_data = fill_journalist_info(search, results)
+            break
+        except Exception as e:
+            journalist_data = str(e)
+            break
+    return journalist_data
 
 
 def separate_weeks(start_date, end_date, delta=7):
