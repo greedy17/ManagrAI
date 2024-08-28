@@ -561,43 +561,28 @@ DISCOVER_JOURNALIST = (
 )
 
 
-# OPEN_AI_DISCOVER_JOURNALIST = (
-#     lambda info: f"""
-#    List up to 10 real, active people based on this information: {info}.
-#    Providing their name, company they are currently employed at, and reason for selection.\n
-#    You must follow the instructions below very carefully:
-
-#     * Rule #1: Ensure that all people are real, currently active professionals. Do not include fake names such as Jane Doe or John Smith.
-
-#     * Rule #2: Only list people that you have the highest confidence (90% or above) in that they still work there. If you lack confidence do not list all 10, just the ones you're most confident in
-
-#     * Output format must be:
-#     Name:
-#     Company:
-#     Reason for Selection:
-#     View Updated Bio
-
-#     "View Updated Bio" MUST be returned in a button tag!
-#     "Name", "Company", and "Reason for Selection" MUST be returned in a strong tag!
-#     You MUST wrap each individual journalists/influencer selection in a span tag!
-#     Do not add any additional text to the response. ONLY return with what I asked for.
-# """
-# )
-
-OPEN_AI_DISCOVER_JOURNALIST = (
-    lambda info, journalists: f"""
+def OPEN_AI_DISCOVER_JOURNALIST(info, journalists, content):
+    if content:
+        two = f"2. Based on the most recent data, do these journalist still fit this criteria: {info} and would be interested in the provided pitch. If journalist does not meet the criteria, do not list in the output. It is Important that you only list journalist that fit the criteria."
+        three = f"3. Reason why the journalist (that fits the criteria) would be interested in this: {info}"
+    else:
+        two = f"2. Based on the most recent data, do these journalist still fit this criteria: {info}. If journalist does not meet the criteria, do not list in the output. It is Important that you only list journalist that fit the criteria."
+        three = f"3. Reason why the journalist (that fits the criteria) would be interested in this: {info}"
+    prompt = f"""
     Follow these steps carefully based on the object data below
     1. Which publication does journalist currently work for (or freelance for)? Only use the full name of the publication and do not include two names with a slash.
-    2. Based on the most recent data, do these journalist still fit this criteria: {info}. If journalist does not meet the criteria, do not list in the output. It is Important that you only list journalist that fit the criteria.
-    3. Reason why the journalist (that fits the criteria) would be interested in this: {info}
+    {two}
+    {three}
     JSON OUTPUT FORMAT: [{'{'}
         'name': NAME,
         'publication': CURRENT EMPLOYER,
         'reason': REASON FOR SELECTION{'}'}]
     Journalists:
     {journalists}
-"""
-)
+    """
+    if content:
+        prompt += f"\nPitch:\n{content}"
+    return prompt
 
 
 # OPEN_AI_TEST_JOURNALIST = (
@@ -610,17 +595,20 @@ OPEN_AI_DISCOVER_JOURNALIST = (
 # )
 
 
-OPEN_AI_GET_JOURNALIST_LIST = (
-    lambda info: f"""
-    List 20 journalists based on this search: {info}. \n
+def OPEN_AI_GET_JOURNALIST_LIST(info, content):
+    initial_sentence = f"List 20 journalists based on this search: {info}"
+    if content:
+        initial_sentence += f" and would be interested in this pitch: {content}"
+    prompt = f"""
+    {initial_sentence}.\n
    
     You must follow the instructions below very carefully:
     * Ensure that all journalists are real, currently active professionals. 
     * Do not include fake names such as Jane Doe or John Smith or make names up.
     * Output format must a ONLY JSON object:
     {'{'}'journalists': [LIST OF NAMES]{'}'}
-"""
-)
+    """
+    return prompt
 
 
 OPEN_AI_EMAIL_JOURNALIST = (

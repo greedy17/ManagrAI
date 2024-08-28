@@ -612,7 +612,9 @@ def google_search(query, number_of_results=5, include_images=True):
                 }
                 if include_images:
                     try:
-                        images.append(item["pagemap"]["cse_image"][0]["src"])
+                        image = item.get("pagemap", {}).get("cse_image", None)
+                        if image:
+                            images.append(image[0]["src"])
                     except Exception as e:
                         print(e)
                         pass
@@ -622,15 +624,15 @@ def google_search(query, number_of_results=5, include_images=True):
             return {}
 
 
-def alternate_google_search(query):
+def alternate_google_search(query, number_of_results=5):
     url = comms_consts.GOOGLE_SEARCH_URI
-    params = comms_consts.GOOGLE_SEARCH_PARAMS(query)
+    params = comms_consts.GOOGLE_SEARCH_PARAMS(query, number_of_results)
     with Variable_Client() as client:
         res = client.get(url, params=params)
         results_list = []
         if res.status_code == 200:
             res = res.json()
-            results = res["items"][:6]
+            results = res["items"]
             for index, item in enumerate(results):
                 metatags = item["pagemap"]["metatags"][0]
                 metatags_cse = item["pagemap"].get("cse_image", [])
@@ -708,7 +710,7 @@ def check_journalist_validity(journalist, outlet, email):
         return {"error": "Could not create contact."}
 
 
-def get_journalist_list(search):
+def get_journalist_list(search, content):
     token_amount = 1000
     timeout = 60.0
     journalist_list = []
@@ -716,7 +718,7 @@ def get_journalist_list(search):
         try:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
             if not journalist_list:
-                prompt = comms_consts.OPEN_AI_GET_JOURNALIST_LIST(search)
+                prompt = comms_consts.OPEN_AI_GET_JOURNALIST_LIST(search, content)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     "zach@mymanagr.com",
                     prompt,
@@ -750,14 +752,14 @@ def get_journalist_list(search):
     return journalist_list
 
 
-def fill_journalist_info(search, journalists):
+def fill_journalist_info(search, journalists, content):
     token_amount = 1000
     timeout = 60.0
     journalist_data = []
     while True:
         try:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_DISCOVER_JOURNALIST(search, journalists)
+            prompt = comms_consts.OPEN_AI_DISCOVER_JOURNALIST(search, journalists, content)
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 "zach@mymanagr.com",
                 prompt,
@@ -789,12 +791,12 @@ def fill_journalist_info(search, journalists):
     return journalist_data
 
 
-def get_journalists(search):
+def get_journalists(search, content):
     journalist_data = []
     while True:
         try:
-            journalist_list = get_journalist_list(search)
-            if isinstance(journalist_list, "str"):
+            journalist_list = get_journalist_list(search, content)
+            if isinstance(journalist_list, str):
                 journalist_data = journalist_list
                 break
             results = {}
@@ -803,7 +805,7 @@ def get_journalists(search):
                 res = res["results"]
                 str_list = [f"{r['title']},{r['snippet']}" for r in res]
                 results[j] = str_list
-            journalist_data = fill_journalist_info(search, results)
+            journalist_data = fill_journalist_info(search, results, content)
             break
         except Exception as e:
             journalist_data = str(e)
