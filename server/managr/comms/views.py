@@ -2300,7 +2300,7 @@ class DiscoveryViewSet(
         if social:
             query = journalist
         else:
-            query = f"{journalist} AND {outlet}"
+            query = f"Journalist AND {journalist} AND {outlet}"
         google_results = google_search(query)
         if len(google_results) == 0:
             return Response(

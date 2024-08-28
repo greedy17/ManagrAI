@@ -566,18 +566,18 @@ def OPEN_AI_DISCOVER_JOURNALIST(info, journalists, content):
         two = f"2. Based on the most recent data, do these journalist still fit this criteria: {info} and would be interested in the provided pitch. If journalist does not meet the criteria, do not list in the output. It is Important that you only list journalist that fit the criteria."
         three = f"3. Reason why the journalist would be interested in this: {info}"
     else:
-        two = f"2. Based on the most recent data, do these journalist still fit this criteria: {info}. If journalist does not meet the criteria, do not list in the output. It is Important that you only list journalist that fit the criteria."
+        two = f"2. List up to 15 journalist from the data below that are still active and currently writing for a recognizable news publication. Do not include in the list: inactive, former, or retired Journalists."
         three = f"3. Reason why the journalist would be interested in this: {info}"
     prompt = f"""
     Follow these steps carefully based on the object data below
-    1. Which publication does journalist currently work for (or freelance for)? Only use the full name of the publication and do not include two names with a slash.
+    1. Identify which publication the journalist currently works for (label "freelancer" if applicable) ? Only use the full name of the publication and do not include two names with a slash.
     {two}
     {three}
     JSON OUTPUT FORMAT: {'{'}'journalists':[{'{'}
         'name': NAME,
         'publication': CURRENT EMPLOYER,
         'reason': REASON FOR SELECTION{'}'}] {'}'}
-    Journalists:
+    Journalists data:
     {journalists}
     """
     if content:
@@ -596,14 +596,14 @@ def OPEN_AI_DISCOVER_JOURNALIST(info, journalists, content):
 
 
 def OPEN_AI_GET_JOURNALIST_LIST(info, content):
-    initial_sentence = f"List 20 journalists based on this search: {info}"
+    initial_sentence = f"List 20 real, active journalists based on this information: {info}"
     if content:
         initial_sentence += f" and would be interested in this pitch: {content}"
     prompt = f"""
     {initial_sentence}.\n
    
     You must follow the instructions below very carefully:
-    * Ensure that all journalists are real, currently active professionals. 
+    * Ensure that all journalists are real, currently active writers. 
     * Do not include fake names such as Jane Doe or John Smith or make names up.
     * Output format must a ONLY JSON object:
     {'{'}'journalists': [LIST OF NAMES]{'}'}

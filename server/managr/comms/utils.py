@@ -603,6 +603,7 @@ def google_search(query, number_of_results=5, include_images=True):
             results_list = []
             images = []
             res = res.json()
+            # print('RESPONSE IS HERE -- >', res)
             results = res["items"]
             for item in results:
                 result_data = {
@@ -777,8 +778,8 @@ def fill_journalist_info(search, journalists, content):
             message = r.get("choices")[0].get("message").get("content")
             message = json.loads(message)
             journalist_data = message["journalists"]
-            if len(journalist_data) > 10:
-                journalist_data = journalist_data[:11]
+            if len(journalist_data) > 15:
+                journalist_data = journalist_data[:16]
             break
         except open_ai_exceptions.StopReasonLength:
             if token_amount >= 6000:
@@ -803,7 +804,7 @@ def get_journalists(search, content):
                 break
             results = {}
             for j in journalist_list:
-                res = google_search(f"{j} AND journalist AND publication", 3)
+                res = google_search(f"{j} AND journalist AND 2024", 3)
                 res = res["results"]
                 str_list = [f"{r['title']},{r['snippet']}" for r in res]
                 results[j] = str_list
