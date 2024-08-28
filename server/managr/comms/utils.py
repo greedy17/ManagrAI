@@ -776,7 +776,7 @@ def fill_journalist_info(search, journalists, content):
             r = open_ai_exceptions._handle_response(r)
             message = r.get("choices")[0].get("message").get("content")
             message = json.loads(message)
-            journalist_data = message
+            journalist_data = message["journalists"]
             break
         except open_ai_exceptions.StopReasonLength:
             if token_amount >= 6000:

@@ -2191,7 +2191,6 @@ class DiscoveryViewSet(
         if isinstance(message, str):
             send_to_error_channel(message, user.email, "run discovery (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
-
         return Response(data=message)
 
     @action(
