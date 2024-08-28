@@ -6,11 +6,12 @@ import datetime
 import re
 import html
 from dateutil import parser
-from openpyxl import load_workbook
 from django.conf import settings
 from background_task import background
 from managr.utils.client import Variable_Client
 from managr.utils.misc import custom_paginator
+from django.db import IntegrityError
+from rest_framework.exceptions import ValidationError
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_clips_paginator_block
 from . import constants as comms_consts
 from .models import Search, NewsSource, AssistAlert
@@ -76,8 +77,8 @@ def emit_process_user_hashtag_list(user_id):
     return _process_user_hashtag_list(user_id)
 
 
-def emit_process_contacts_excel(file, labels):
-    return _process_contacts_excel(file, labels)
+def emit_process_contacts_excel(data):
+    return _process_contacts_excel(data)
 
 
 def emit_process_regenerate_pitch_slack(payload, context):
@@ -852,23 +853,34 @@ def test_database_pull(date_to, date_from, search, result_id):
 
 
 @background()
-def _process_contacts_excel(file, labels):
-    workbook = load_workbook(file, data_only=True)
-    sheet = workbook.active
-    column_names = [cell.value for cell in sheet[1]]
-    data = []
-    column_indices = [
-        (column_names.index(label), label) for label in labels if label in column_names
-    ]
-    for row in sheet.iter_rows(min_row=2, values_only=True):
-        data_obj = {}
-        for column in column_indices:
-            idx = column[0]
-            column_label = column[1]
-            value = row[idx]
-            key = labels[column_label]
-            data_obj[key] = value
-    print(data)
+def _process_contacts_excel(data):
+    data_length = len(data["email"])
+    failed_list = []
+    succeeded = 0
+    for idx in range(5):
+        try:
+            journalist_data = {
+                "outlet": data["publication"][idx],
+                "email": data["email"][idx],
+                "first_name": data["first_name"][idx],
+                "last_name": data["last_name"][idx],
+            }
+            if all(value is None for value in journalist_data.values()):
+                pass
+            serializer = JournalistSerializer(data=journalist_data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            succeeded += 1
+        except ValidationError as e:
+            if "unique" in str(e):
+                succeeded += 1
+            else:
+                email = journalist_data["email"]
+                if email:
+                    failed_list.append(email)
+        except Exception as e:
+            pass
+    return
 
 
 def _process_regenerate_pitch_slack(payload, context):

@@ -2823,6 +2823,7 @@ def read_column_names(request):
     file_obj = request.FILES.get("file")
     if file_obj:
         file_name = file_obj.name
+        print(file_name)
         try:
             if file_name.endswith(".xlsx") or file_name.endswith(".xls"):
                 workbook = load_workbook(file_obj, data_only=True)
@@ -2850,9 +2851,24 @@ def read_column_names(request):
 @permission_classes([permissions.IsAuthenticated])
 def process_excel_file(request):
     file_obj = request.FILES.get("file")
-    labels = request.data.get("labels")
+    labels = json.loads(request.data.get("labels"))
     if file_obj:
-        emit_process_contacts_excel(file_obj, labels)
+        index_values = {}
+        journalist_values = {}
+        workbook = load_workbook(file_obj, data_only=True)
+        sheet = workbook["All Media Targets"]
+        for key in labels.keys():
+            label = labels[key]
+            for cell in sheet[1]:
+                if cell.value == label:
+                    index_values[cell.column] = key
+        for idx in index_values.keys():
+            row_values = []
+            for row in sheet.iter_rows(min_row=2, min_col=idx, max_col=idx, values_only=True):
+                row_values.append(row[0])
+            print(len(row_values))
+            journalist_values[index_values[idx]] = row_values
+        emit_process_contacts_excel(journalist_values)
         return Response(status=status.HTTP_204_NO_CONTENT)
     else:
         return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
