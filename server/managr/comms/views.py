@@ -76,6 +76,7 @@ from managr.comms.utils import (
     google_search,
     alternate_google_search,
     check_journalist_validity,
+    get_journalists,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
@@ -2185,68 +2186,12 @@ class DiscoveryViewSet(
         # if user.has_hit_summary_limit:
         #     return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         info = request.data.get("info")
-        content = request.data.get("content")
-        is_discover = request.data.get("discover", None)
-        has_error = False
-        attempts = 1
-        token_amount = 1000
-        timeout = 60.0
-        while True:
-            try:
-                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                if not is_discover:
-                    prompt = comms_consts.DISCOVER_JOURNALIST(content, info)
-                else:
-                    prompt = comms_consts.OPEN_AI_DISCOVER_JOURNALIST(info)
-                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                    user.email,
-                    prompt,
-                    "You are a VP of Communications",
-                    token_amount=token_amount,
-                    top_p=0.1,
-                )
-                with Variable_Client(timeout) as client:
-                    r = client.post(
-                        url,
-                        data=json.dumps(body),
-                        headers=core_consts.OPEN_AI_HEADERS,
-                    )
-                res = open_ai_exceptions._handle_response(r)
-
-                message = res.get("choices")[0].get("message").get("content").replace("**", "*")
-                user.add_meta_data("discovery")
-                break
-            except open_ai_exceptions.StopReasonLength:
-                logger.exception(
-                    f"Retrying again due to token amount, amount currently at: {token_amount}"
-                )
-                if token_amount <= 2000:
-                    has_error = True
-                    message = "Token amount error"
-                    break
-                else:
-                    token_amount += 500
-                    continue
-            except httpx.ReadTimeout as e:
-                timeout += 30.0
-                if timeout >= 120.0:
-                    has_error = True
-                    message = "Read timeout issue"
-                    logger.exception(f"Read timeout from Open AI {e}")
-                    break
-                else:
-                    attempts += 1
-                    continue
-            except Exception as e:
-                has_error = True
-                message = f"Unknown exception: {e}"
-                logger.exception(e)
-                break
-        if has_error:
+        content = request.data.get("content", None)
+        message = get_journalists(info, content)
+        if isinstance(message, str):
             send_to_error_channel(message, user.email, "run discovery (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
-
-        return Response(data=message)
+        return Response(data={"journalists": message})
 
     @action(
         methods=["post"],
@@ -2355,7 +2300,7 @@ class DiscoveryViewSet(
         if social:
             query = journalist
         else:
-            query = f"{journalist} AND {outlet}"
+            query = f"Journalist AND {journalist} AND {outlet}"
         google_results = google_search(query)
         if len(google_results) == 0:
             return Response(

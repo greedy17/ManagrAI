@@ -2611,6 +2611,7 @@ def process_chat_action_submit(payload, context):
 
 def process_news_summary(payload, context):
     from managr.comms.tasks import emit_process_slack_news_summary
+
     pm = json.loads(payload["view"]["private_metadata"])
     ts = pm.get("ts", False)
     user = User.objects.get(id=pm.get("u"))
@@ -2636,6 +2637,15 @@ def process_news_summary(payload, context):
             pm.update(ts=res["ts"])
     except Exception as e:
         logger.exception(f"Failed to send DM to {user.email} because of <{e}>")
+        text = f"We ran into an issue: {str(e)}"
+        return {
+            "response_action": "update",
+            "view": {
+                "type": "modal",
+                "title": {"type": "plain_text", "text": "Error"},
+                "blocks": [block_builders.simple_section(text)],
+            },
+        }
 
     emit_process_slack_news_summary(payload, pm)
     return {"response_action": "clear"}

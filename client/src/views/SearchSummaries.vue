@@ -953,7 +953,10 @@
               </div>
             </div>
 
-            <div v-if="mainView === 'write'" class="source-dropdown fadein">
+            <div
+              v-if="mainView === 'write' || mainView === 'discover'"
+              class="source-dropdown fadein"
+            >
               <div
                 @click.stop="toggleShowDetails"
                 :class="{ 'soft-gray-bg': showingDetails }"
@@ -1917,7 +1920,7 @@
                         alt=""
                         style="margin-right: 8px"
                       />
-                      Send digest to Slack channel
+                      Send digest to Slack
                     </div>
 
                     <label class="switch">
@@ -1938,7 +1941,7 @@
                         alt=""
                         style="margin-right: 8px"
                       />
-                      Connect slack to recieve digest
+                      Send digest to Slack
                     </div>
 
                     <button @click="goToIntegrations" class="secondary-button">
@@ -2126,13 +2129,29 @@
 
                 <p class="header-p">Answer</p>
 
-                <div style="margin: 2px 0 0 4px" class="image-container s-wrapper">
+                <div
+                  v-if="mainView !== 'discover'"
+                  style="margin: 2px 0 0 4px"
+                  class="image-container s-wrapper"
+                >
                   <img
                     style="cursor: pointer; filter: invert(40%)"
                     src="@/assets/images/clipboard.svg"
                     height="16px"
                     alt=""
                     @click="copyText"
+                  />
+
+                  <div class="s-tooltip">{{ copyTip }}</div>
+                </div>
+
+                <div v-else style="margin: 2px 0 0 4px" class="image-container s-wrapper">
+                  <img
+                    style="cursor: pointer; filter: invert(40%)"
+                    src="@/assets/images/clipboard.svg"
+                    height="16px"
+                    alt=""
+                    @click="copyDiscoverText"
                   />
 
                   <div class="s-tooltip">{{ copyTip }}</div>
@@ -2232,13 +2251,15 @@
                 v-html="summary"
               ></div>
 
-              <div
-                @click="grabJournalist($event, 'the person')"
-                style="margin-top: 16px"
-                class=""
-                v-else
-              >
-                <div class="pre-text alternate" v-html="summary"></div>
+              <div class="journalistCol" v-else-if="mainView === 'discover'">
+                <div class="journalistSection" v-for="(j, i) in discoverList" :key="i">
+                  <p><span>Name</span>: {{ j.name }}</p>
+                  <p><span>Publication</span>: {{ j.publication }}</p>
+                  <p><span>Reason for selection</span>: {{ j.reason }}</p>
+                  <button @click="grabJournalist(j.name, j.pub)" class="secondary-button">
+                    View bio
+                  </button>
+                </div>
               </div>
               <div
                 v-if="mainView !== 'discover'"
@@ -3361,8 +3382,7 @@
         </aside>
 
         <aside v-else>
-          <div v-if="mainView === 'write'" class="section" style="max-height: 70vh">
-            <!-- @click="toggleJournalistsList" :class="{ nobottomborder: showingJournalistsList }" -->
+          <!-- <div v-if="mainView === 'write'" class="section" style="max-height: 70vh">
             <div style="cursor: text" class="example-title nobottomborder">
               <div class="example-row">
                 <img
@@ -3373,14 +3393,6 @@
                 />
                 <p>Find Relevant Journalists</p>
               </div>
-
-              <!-- <img
-                v-if="!showingJournalistsList"
-                src="@/assets/images/downArrow.svg"
-                height="14px"
-                alt=""
-              />
-              <img v-else src="@/assets/images/downArrow.svg" class="rotate" height="14px" alt="" /> -->
               <button
                 :disabled="!journalisListtData"
                 @click="clearList"
@@ -3435,13 +3447,10 @@
               </div>
             </div>
 
-            <!-- <div v-if="journalisListtData" class="sticky-bottom-right">
-              <button @click="clearList" class="secondary-button">Clear</button>
-            </div> -->
-          </div>
 
-          <div v-else class="section" style="max-height: 70vh">
-            <!-- @click="toggleJournalistsList" :class="{ nobottomborder: showingJournalistsList }" -->
+          </div> -->
+
+          <div v-if="mainView === 'discover'" class="section" style="max-height: 70vh">
             <div style="cursor: text" class="example-title nobottomborder">
               <div class="example-row">
                 <img
@@ -3452,20 +3461,6 @@
                 />
                 <p>Modify</p>
               </div>
-
-              <!-- <button
-                :disabled="!journalisListtData"
-                @click="clearList"
-                class="secondary-button-no-border borderless"
-              >
-                <img
-                  style="margin-right: 4px"
-                  src="@/assets/images/remove.svg"
-                  height="14px"
-                  alt=""
-                />
-                Clear
-              </button> -->
             </div>
 
             <div style="padding-bottom: 0" class="example-body fadein">
@@ -3488,10 +3483,6 @@
                     </div>
                   </div>
                 </div>
-
-                <!-- <div class="relative" v-else @click="grabJournalist($event)">
-                  <div class="pre-text" v-html="journalisListtData"></div>
-                </div> -->
               </div>
             </div>
           </div>
@@ -3518,6 +3509,7 @@ export default {
   },
   data() {
     return {
+      discoverList: [],
       drafting: false,
       originalSummary: null,
       placeholderTime: 'Select a time',
@@ -4244,11 +4236,13 @@ export default {
       try {
         const res = await Comms.api.discoverJournalists({
           info: discover ? this.newSearch : this.journalistInfo,
-          content: this.summary,
+          content: '',
           discover: discover,
         })
+
         if (discover) {
           this.summary = res
+          this.discoverList = res.journalists
         } else {
           this.journalisListtData = res
         }
@@ -4699,9 +4693,11 @@ export default {
         return
       }
       this.savingContact = true
-      // name_list = this.currentJournalist.split(' ')
-      // const first = name_list[0]
-      // const last = name_list.at(-1)
+
+      if (!this.targetEmail.includes('@')) {
+        this.targetEmail = this.currentJournalist.replace(/\s+/g, '') + '@gmail.com'
+        console.log(this.targetEmail)
+      }
       try {
         const res = await Comms.api.addContact({
           user: this.user.id,
@@ -5041,23 +5037,19 @@ export default {
         this.loadingPitch = false
       }
     },
-    grabJournalist(event) {
+    grabJournalist(name, pub) {
       if (!this.isPaid && this.searchesUsed >= 10) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
         return
       }
-      if (event.target.tagName === 'BUTTON') {
-        this.currentJournalistBio = ''
-        this.currentJournalistImages = []
-        const text = event.target.closest('span').outerHTML
-        const { name, publication, tip } = this.extractNameEmailTip(text)
-        this.currentJournalist = name
-        this.currentPublication = publication
-        this.googleModalOpen = true
-        this.getJournalistBioDiscover()
-      }
+      this.currentJournalistBio = ''
+      this.currentJournalistImages = []
+      this.currentJournalist = name
+      this.currentPublication = pub
+      this.googleModalOpen = true
+      this.getJournalistBioDiscover()
     },
     extractNameEmailTip(text) {
       const name = text
@@ -5502,9 +5494,8 @@ export default {
           user: this.user.id,
           title: this.searchName,
           type: this.alertType,
-          recipients: [this.alertChannel],
+          recipients: [this.alertChannel ? this.alertChannel : this.user.email],
         })
-
         this.currentAlert = response
         this.currentAlertId = response.id
 
@@ -5959,6 +5950,34 @@ export default {
     //     console.error('Failed to copy text: ', err)
     //   }
     // },
+    async copyDiscoverText() {
+      try {
+        // Extract and clean the text from each object in discoverList
+        const cleanedSummary = this.discoverList
+          .map((item) => {
+            // Clean each property of HTML tags
+            const name = item.name.replace(/<\/?[^>]+(>|$)/g, '')
+            const publication = item.publication.replace(/<\/?[^>]+(>|$)/g, '')
+            const reason = item.reason.replace(/<\/?[^>]+(>|$)/g, '')
+
+            // Concatenate the cleaned properties
+            return `${name} - ${publication}: ${reason}`
+          })
+          .join('\n') // Join all the text into a single string, each object on a new line
+
+        // Copy the cleaned text to the clipboard
+        await navigator.clipboard.writeText(cleanedSummary)
+        this.copyTip = 'Copied!'
+
+        // Reset the copyTip after 2 seconds
+        setTimeout(() => {
+          this.copyTip = 'Copy'
+        }, 2000)
+      } catch (err) {
+        console.error('Failed to copy text: ', err)
+      }
+    },
+
     async copyText() {
       try {
         const cleanedSummary = this.summary.replace(/<\/?[^>]+(>|$)/g, '')
@@ -11813,5 +11832,24 @@ input[type='time'].has-placeholder::before {
 
 input[type='time'].has-placeholder::-webkit-datetime-edit {
   color: transparent;
+}
+
+.journalistSection {
+  p {
+    margin: 6px 0;
+    padding: 0;
+    span {
+      font-family: $base-font-family;
+    }
+  }
+}
+
+.journalistCol {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 24px;
 }
 </style>
