@@ -343,6 +343,29 @@
       </div>
     </Modal>
 
+    <Modal class="bio-modal med-modal" v-if="bulkModalOpen">
+      <div class="bio-container med-container">
+        <header>
+          <h2 style="margin: 12px 0">Import Contacts</h2>
+        </header>
+
+        <div style="margin: 16px 0; min-height: 300px; width: 100%">
+          <ContactMapping @mappingConfirmed="handleMappingConfirmed"></ContactMapping>
+        </div>
+
+        <footer>
+          <div></div>
+
+          <div class="row">
+            <button class="secondary-button" @click="bulkModalOpen = false">Cancel</button>
+            <button class="primary-button" :disabled="!isMappingConfirmed" @click="handleSubmit">
+              Import
+            </button>
+          </div>
+        </footer>
+      </div>
+    </Modal>
+
     <Modal class="bio-modal med-modal" v-if="contactsModalOpen">
       <div class="bio-container med-container">
         <header>
@@ -522,14 +545,21 @@
               <div class="dropdown-footer"></div>
             </div>
 
-            <div
-              style="margin-left: 32px"
-              @click="toggleContactsModal"
-              class="img-container s-wrapper"
-            >
+            <div @click="toggleContactsModal" class="img-container s-wrapper">
               <img src="@/assets/images/addcontact.svg" height="14px" alt="" />
               <div class="s-tooltip">Add contact</div>
             </div>
+
+            <div
+              style="margin-left: 8px"
+              @click="bulkModalOpen = true"
+              class="img-container s-wrapper"
+            >
+              <img src="@/assets/images/address-book.svg" height="16px" alt="" />
+              <div class="s-tooltip">Import contacts</div>
+            </div>
+
+            <!-- {"column_label": field(email,first_name,last_name,publication)} -->
 
             <!-- <button
               @click="toggleContactsModal"
@@ -825,9 +855,13 @@ export default {
   components: {
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     quillEditor,
+    ContactMapping: () => import(/* webpackPrefetch: true */ '@/components/ContactMapping'),
   },
   data() {
     return {
+      isMappingConfirmed: false,
+      mappings: {},
+      bulkModalOpen: false,
       newContactImages: [],
       newContactBio: '',
       outletName: '',
@@ -976,6 +1010,21 @@ export default {
     this.getTags()
   },
   methods: {
+    handleMappingConfirmed(mappings) {
+      this.mappings = mappings
+      this.isMappingConfirmed = true
+    },
+    async handleSubmit() {
+      const payload = this.mappings
+      console.log('PAYLOAD IS HERE', payload)
+      // try {
+      //   const res = await Comms.api.importContacts(payload)
+      //   console.log(res)
+      //   this.bulkModalOpen = false
+      // } catch (e) {
+      //   console.log(e)
+      // }
+    },
     hideUsers() {
       this.showUsers = false
     },
