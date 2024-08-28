@@ -564,19 +564,19 @@ DISCOVER_JOURNALIST = (
 def OPEN_AI_DISCOVER_JOURNALIST(info, journalists, content):
     if content:
         two = f"2. Based on the most recent data, do these journalist still fit this criteria: {info} and would be interested in the provided pitch. If journalist does not meet the criteria, do not list in the output. It is Important that you only list journalist that fit the criteria."
-        three = f"3. Reason why the journalist (that fits the criteria) would be interested in this: {info}"
+        three = f"3. Reason why the journalist would be interested in this: {info}"
     else:
         two = f"2. Based on the most recent data, do these journalist still fit this criteria: {info}. If journalist does not meet the criteria, do not list in the output. It is Important that you only list journalist that fit the criteria."
-        three = f"3. Reason why the journalist (that fits the criteria) would be interested in this: {info}"
+        three = f"3. Reason why the journalist would be interested in this: {info}"
     prompt = f"""
     Follow these steps carefully based on the object data below
     1. Which publication does journalist currently work for (or freelance for)? Only use the full name of the publication and do not include two names with a slash.
     {two}
     {three}
-    JSON OUTPUT FORMAT: [{'{'}
+    JSON OUTPUT FORMAT: {'{'}'journalists':[{'{'}
         'name': NAME,
         'publication': CURRENT EMPLOYER,
-        'reason': REASON FOR SELECTION{'}'}]
+        'reason': REASON FOR SELECTION{'}'}] {'}'}
     Journalists:
     {journalists}
     """
