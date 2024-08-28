@@ -533,7 +533,7 @@ def _send_news_summary(news_alert_id):
             }
         }
     }
-    if alert.type in ["NEWS", "BOTH"]:
+    if alert.type in ["EMAIL", "BOTH"]:
         clips = alert.search.get_clips(boolean, end_time, start_time)["articles"]
         if len(clips):
             try:
