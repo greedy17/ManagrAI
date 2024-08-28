@@ -2,6 +2,8 @@ import json
 import httpx
 import logging
 import pytz
+import io
+import csv
 from openpyxl import load_workbook
 from rest_framework import (
     mixins,
@@ -2820,10 +2822,23 @@ class CompanyDetailsViewSet(
 def read_column_names(request):
     file_obj = request.FILES.get("file")
     if file_obj:
+        file_name = file_obj.name
         try:
-            workbook = load_workbook(file_obj, data_only=True)
-            sheet = workbook["All Media Targets"]
-            column_names = [cell.value for cell in sheet[1] if cell.value not in [None, False, True]]
+            if file_name.endswith(".xlsx") or file_name.endswith(".xls"):
+                workbook = load_workbook(file_obj, data_only=True)
+                sheet = workbook["All Media Targets"]
+                column_names = [
+                    cell.value for cell in sheet[1] if cell.value not in [None, False, True]
+                ]
+            elif file_name.endswith(".csv"):
+                csv_file = io.TextIOWrapper(file_obj.file, encoding="utf-8")
+                reader = csv.reader(csv_file)
+                column_names = next(reader)
+                column_names = [col for col in column_names if col not in [None, "", False, True]]
+            else:
+                return Response(
+                    {"error": "Unsupported file type"}, status=status.HTTP_400_BAD_REQUEST
+                )
             return Response({"columns": column_names}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
