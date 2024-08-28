@@ -1904,8 +1904,8 @@
 
                     <label class="switch">
                       <input
-                        :checked="alertType === 'NEWS'"
-                        @change="toggleAlert('NEWS')"
+                        :checked="alertType === 'EMAIL'"
+                        @change="toggleAlert('EMAIL')"
                         type="checkbox"
                       />
                       <span class="slider round"></span>
