@@ -58,7 +58,7 @@ def add_user_to_admin_team(sender, instance, created, **kwargs):
 
 @receiver(pre_delete, sender=Task)
 def before_task_deleted(sender, instance, **kwargs):
-    if instance.result:
+    if instance.result.all().first():
         if not instance.failed_at:
             result = instance.result.all().first()
             result.completed = True

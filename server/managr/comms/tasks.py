@@ -854,7 +854,8 @@ def test_database_pull(date_to, date_from, search, result_id):
 
 def create_contacts_from_file(journalist_ids, user_id):
     user = User.objects.get(id=user_id)
-    journalists = Journalist.objects.filter(id__in=journalist_ids)
+    s = 0
+    journalists = Journalist.objects.filter(id__in=journalist_ids).values_list("id", flat=True)
     for journalist in journalists:
         try:
             serializer = JournalistContactSerializer(
@@ -862,8 +863,10 @@ def create_contacts_from_file(journalist_ids, user_id):
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()
+            s += 1
         except Exception as e:
             continue
+    return
 
 
 @background()
@@ -886,9 +889,14 @@ def _process_contacts_excel(user_id, data, result_id):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             succeeded += 1
+            contacts_to_create.append(str(serializer.instance.id))
         except ValidationError as e:
             if "unique" in str(e):
                 succeeded += 1
+                journalist = Journalist.objects.filter(email=journalist_data["email"]).first()
+
+                if journalist:
+                    contacts_to_create.append(str(journalist.id))
             else:
                 email = journalist_data["email"]
                 if email:
@@ -899,7 +907,7 @@ def _process_contacts_excel(user_id, data, result_id):
     result = TaskResults.objects.get(id=result_id)
     result.json_result = {"success": succeeded, "failed": failed_list}
     result.save()
-    return
+    return "Done"
 
 
 def _process_regenerate_pitch_slack(payload, context):
