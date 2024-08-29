@@ -16,11 +16,12 @@ from django.conf import settings
 from urllib.parse import urlparse, urlunparse
 from collections import OrderedDict
 from .exceptions import _handle_response
-from .models import NewsSource, Journalist
+from .models import NewsSource, Journalist, JournalistContact
 from botocore.exceptions import ClientError
 from django.contrib.postgres.search import SearchQuery
 from managr.core import constants as core_consts
 from managr.core import exceptions as open_ai_exceptions
+from managr.core.models import User
 
 s3 = boto3.client("s3")
 
@@ -914,3 +915,47 @@ def test_get_clips(search, boolean=False):
         return {"articles": articles, "string": query_input}
     except Exception as e:
         return {"error": str(e)}
+
+
+def test_prompt(pitch, user_id):
+    user = User.objects.get(email="zach@mymanagr.com")
+    token_amount = 4000
+    timeout = 60.0
+    while True:
+        try:
+            journalists_query = JournalistContact.objects.filter(user=user)
+            journalists = [
+                f"{journalist.journalist.full_name}-{journalist.journalist.outlet}"
+                for journalist in journalists_query
+            ]
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_PITCH_JOURNALIST_LIST(journalists, pitch)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                "zach@mymanagr.com",
+                prompt,
+                token_amount=token_amount,
+                temperature=0,
+                response_format={"type": "json_object"},
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            r = open_ai_exceptions._handle_response(r)
+            message = r.get("choices")[0].get("message").get("content")
+            message = json.loads(message)
+            journalist_data = message["journalists"]
+            break
+        except open_ai_exceptions.StopReasonLength:
+            if token_amount >= 6000:
+                journalist_data = "Token amount error"
+                break
+            else:
+                token_amount += 1000
+                continue
+        except Exception as e:
+            journalist_data = f"Unknown exception: {e}"
+            break
+    return journalist_data
