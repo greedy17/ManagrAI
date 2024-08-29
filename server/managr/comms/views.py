@@ -10,6 +10,7 @@ from rest_framework import (
     viewsets,
 )
 from django.http import JsonResponse, HttpResponse
+from .pagination import PageNumberPagination
 from asgiref.sync import async_to_sync, sync_to_async
 from pytz import timezone
 from datetime import datetime, timedelta
@@ -2678,6 +2679,7 @@ class JournalistContactViewSet(
 ):
     authentication_classes = [ExpiringTokenAuthentication]
     serializer_class = JournalistContactSerializer
+    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         # contacts = JournalistContact.objects.for_user(user=self.request.user)
@@ -2854,9 +2856,10 @@ def read_column_names(request):
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def process_excel_file(request):
+    print(request.data)
     file_obj = request.FILES.get("file")
-    labels = json.loads(request.data.get("labels"))
     sheet_name = request.data.get("sheet")
+    labels = json.loads(request.data.get("labels"))
     if file_obj:
         index_values = {}
         journalist_values = {}
