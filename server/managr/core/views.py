@@ -1842,25 +1842,14 @@ def request_reset_link(request):
 @api_view(["GET"])
 @permission_classes(
     [
-        permissions.AllowAny,
+        permissions.IsAuthenticated,
     ]
 )
 def get_task_status(request):
-    data = {}
-    verbose_string = request.GET.get("verbose_name", None)
-    response_data = json.loads(verbose_string)
-    verbose_name = response_data.get("verbose_name")
-    if verbose_name:
-        try:
-            task = CompletedTask.objects.get(verbose_name=verbose_name)
-            if task:
-                data = {"completed": True}
-        except CompletedTask.DoesNotExist:
-            data = {"completed": False}
-        except Exception as e:
-            logger.exception(f"Uncaught exception on task status: {e}")
-    logger.info(f"Task status for: {verbose_name}, {data}")
-    return Response(data=data)
+    id = request.GET.get("task_id", None)
+    task = CompletedTask.objects.get(id=id)
+    results = task.results()
+    return Response(data={"completed": task.completed, "results": results})
 
 
 class NoteTemplateViewSet(

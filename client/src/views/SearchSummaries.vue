@@ -802,7 +802,7 @@
                     Social
                   </span>
 
-                  <p>AI summaries based on social-media</p>
+                  <p>AI summaries based on social media</p>
                 </div>
                 <div @click="switchMainView('web')" :class="{ activeswitch: mainView === 'web' }">
                   <span>

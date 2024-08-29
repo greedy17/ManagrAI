@@ -10,16 +10,16 @@ from django.conf import settings
 from background_task import background
 from managr.utils.client import Variable_Client
 from managr.utils.misc import custom_paginator
-from django.db import IntegrityError
 from rest_framework.exceptions import ValidationError
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_clips_paginator_block
 from . import constants as comms_consts
-from .models import Search, NewsSource, AssistAlert
+from .models import Search, NewsSource, AssistAlert, Journalist
 from .models import Article as InternalArticle
 from .serializers import (
     SearchSerializer,
     NewsSourceSerializer,
     JournalistSerializer,
+    JournalistContactSerializer,
 )
 from managr.core.models import TaskResults
 from managr.core import constants as core_consts
@@ -77,8 +77,8 @@ def emit_process_user_hashtag_list(user_id):
     return _process_user_hashtag_list(user_id)
 
 
-def emit_process_contacts_excel(data):
-    return _process_contacts_excel(data)
+def emit_process_contacts_excel(user_id, data, result_id):
+    return _process_contacts_excel(user_id, data, result_id)
 
 
 def emit_process_regenerate_pitch_slack(payload, context):
@@ -852,12 +852,30 @@ def test_database_pull(date_to, date_from, search, result_id):
     return
 
 
+def create_contacts_from_file(journalist_ids, user_id):
+    user = User.objects.get(id=user_id)
+    s = 0
+    journalists = Journalist.objects.filter(id__in=journalist_ids).values_list("id", flat=True)
+    for journalist in journalists:
+        try:
+            serializer = JournalistContactSerializer(
+                data={"journalist": journalist.id, "user": user.id}
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            s += 1
+        except Exception as e:
+            continue
+    return
+
+
 @background()
-def _process_contacts_excel(data):
+def _process_contacts_excel(user_id, data, result_id):
     data_length = len(data["email"])
+    contacts_to_create = []
     failed_list = []
     succeeded = 0
-    for idx in range(5):
+    for idx in range(data_length):
         try:
             journalist_data = {
                 "outlet": data["publication"][idx],
@@ -871,16 +889,25 @@ def _process_contacts_excel(data):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             succeeded += 1
+            contacts_to_create.append(str(serializer.instance.id))
         except ValidationError as e:
             if "unique" in str(e):
                 succeeded += 1
+                journalist = Journalist.objects.filter(email=journalist_data["email"]).first()
+
+                if journalist:
+                    contacts_to_create.append(str(journalist.id))
             else:
                 email = journalist_data["email"]
                 if email:
                     failed_list.append(email)
         except Exception as e:
-            pass
-    return
+            continue
+    response_data = create_contacts_from_file(contacts_to_create, user_id)
+    result = TaskResults.objects.get(id=result_id)
+    result.json_result = {"success": succeeded, "failed": failed_list}
+    result.save()
+    return "Done"
 
 
 def _process_regenerate_pitch_slack(payload, context):

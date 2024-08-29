@@ -15,6 +15,7 @@ from pytz import timezone
 from datetime import datetime, timedelta
 from newspaper import Article, ArticleException
 from managr.api.models import ExpiringTokenAuthentication
+from managr.core.models import TaskResults
 from rest_framework.response import Response
 from rest_framework import (
     permissions,
@@ -2251,9 +2252,7 @@ class DiscoveryViewSet(
             if len(email_check):
                 db_check = email_check
             else:
-                name_check = Journalist.objects.filter(
-                    first_name=first, last_name=last, outlet=outlet
-                )
+                name_check = Journalist.objects.filter(first_name=first, last_name=last)
                 if len(name_check):
                     db_check = name_check
             if len(db_check):
@@ -2823,14 +2822,18 @@ def read_column_names(request):
     file_obj = request.FILES.get("file")
     if file_obj:
         file_name = file_obj.name
-        print(file_name)
         try:
             if file_name.endswith(".xlsx") or file_name.endswith(".xls"):
                 workbook = load_workbook(file_obj, data_only=True)
-                sheet = workbook["All Media Targets"]
-                column_names = [
-                    cell.value for cell in sheet[1] if cell.value not in [None, False, True]
-                ]
+                res_data = []
+                for sheet in workbook.sheetnames:
+                    current_sheet = workbook[sheet]
+                    column_names = [
+                        cell.value
+                        for cell in current_sheet[1]
+                        if cell.value not in [None, False, True]
+                    ]
+                    res_data.append({"name": sheet, "columns": column_names})
             elif file_name.endswith(".csv"):
                 csv_file = io.TextIOWrapper(file_obj.file, encoding="utf-8")
                 reader = csv.reader(csv_file)
@@ -2840,7 +2843,7 @@ def read_column_names(request):
                 return Response(
                     {"error": "Unsupported file type"}, status=status.HTTP_400_BAD_REQUEST
                 )
-            return Response({"columns": column_names}, status=status.HTTP_200_OK)
+            return Response({"sheets": res_data}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     else:
@@ -2852,11 +2855,12 @@ def read_column_names(request):
 def process_excel_file(request):
     file_obj = request.FILES.get("file")
     labels = json.loads(request.data.get("labels"))
+    sheet_name = request.data.get("sheet")
     if file_obj:
         index_values = {}
         journalist_values = {}
         workbook = load_workbook(file_obj, data_only=True)
-        sheet = workbook["All Media Targets"]
+        sheet = workbook[sheet_name]
         for key in labels.keys():
             label = labels[key]
             for cell in sheet[1]:
@@ -2865,10 +2869,51 @@ def process_excel_file(request):
         for idx in index_values.keys():
             row_values = []
             for row in sheet.iter_rows(min_row=2, min_col=idx, max_col=idx, values_only=True):
-                row_values.append(row[0])
-            print(len(row_values))
+                value = row[0].strip() if isinstance(row[0], str) else row[0]
+                row_values.append(value)
             journalist_values[index_values[idx]] = row_values
-        emit_process_contacts_excel(journalist_values)
+        result = TaskResults.objects.create(
+            function_name="emit_process_contacts_excel", user_id=str(request.user.id)
+        )
+        journalist_values = list(set(journalist_values))
+        task = emit_process_contacts_excel(str(request.user.id), journalist_values, str(result.id))
+        result.task_id_str = str(task.id)
+        result.task = task
+        result.save()
+        return Response(
+            status=status.HTTP_200_OK,
+            data={"task_id": str(result.id), "num_processing": len(journalist_values)},
+        )
+    else:
+        return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def process_csv_file(request):
+    file_obj = request.FILES.get("file")
+    labels = json.loads(request.data.get("labels"))
+    if file_obj:
+        index_values = {}
+        journalist_values = {}
+        csv_reader = csv.reader(file_obj.read().decode("utf-8").splitlines())
+        header = next(csv_reader)
+        for idx, cell in enumerate(header):
+            if cell in labels.values():
+                key = next(key for key, value in labels.items() if value == cell)
+                index_values[idx] = key
+        for row in csv_reader:
+            for idx, key in index_values.items():
+                if key not in journalist_values:
+                    journalist_values[key] = []
+                journalist_values[key].append(row[idx] if idx < len(row) else None)
+        result = TaskResults.objects.create(
+            function_name="emit_process_contacts_excel", user_id=str(request.user.id)
+        )
+        task = emit_process_contacts_excel(journalist_values, str(result.id))
+        result.task_id_str = str(task.id)
+        result.task = task
+        result.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
     else:
         return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)

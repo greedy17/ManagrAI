@@ -236,7 +236,7 @@ class CustomCrawlerReportAdmin(admin.ModelAdmin):
 
 class TaskResultsReportAdmin(admin.ModelAdmin):
     model = TaskResults
-    list_display = ("datetime_created",)
+    list_display = ("datetime_created", "function_name", "completed")
     ordering = ("-datetime_created",)
 
 

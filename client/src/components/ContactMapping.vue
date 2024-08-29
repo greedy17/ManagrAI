@@ -7,11 +7,6 @@
       <p>Match each ManagrAI field with the corresponding label from your contacts</p>
     </div>
     <div style="margin-top: 32px" class="table-border" v-if="headers.length">
-      <!-- <div class="header">
-        <h3>ManagrAI</h3>
-        <h3>Contact labels</h3>
-      </div> -->
-
       <div v-for="field in fields" :key="field" class="header">
         <p style="margin: 12px 0 20px 0">{{ formatString(field) }}</p>
         <select v-model="fieldMapping[field]">
@@ -24,7 +19,7 @@
     </div>
 
     <div v-else class="table-border-center">
-      <div class="file-input-wrapper">
+      <div v-if="!sheets.length" class="file-input-wrapper">
         <label class="file-input-label">
           <input type="file" @change="readColumnNames" class="file-input" />
           <span style="margin-right: 4px" class="secondary-button">
@@ -41,6 +36,24 @@
         </label>
         <p class="file-name">{{ fileName ? fileName : 'No file selected' }}</p>
       </div>
+
+      <div class="row" v-else>
+        <select v-model="selectedSheet">
+          <option value="">Select a sheet</option>
+          <option v-for="(sheet, i) in sheets" :key="i" :value="sheet">
+            {{ sheet.name }}
+          </option>
+        </select>
+
+        <button
+          style="border-radius: 50%; padding: 8px"
+          class="primary-button"
+          @click="selectSheet"
+          :disabled="!selectedSheet"
+        >
+          <img src="@/assets/images/arrow-right.svg" height="14px" alt="" />
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -51,6 +64,8 @@ import { Comms } from '@/services/comms'
 export default {
   data() {
     return {
+      sheets: [],
+      selectedSheet: '',
       headers: [],
       previewData: [],
       columnMappings: {},
@@ -74,7 +89,7 @@ export default {
 
         if (allFieldsHaveValues) {
           this.mappedColumns = newMappings
-          this.$emit('fieldsFullyMapped', newMappings, this.selectedFile)
+          this.$emit('fieldsFullyMapped', newMappings, this.selectedFile, this.selectedSheet.name)
         }
       },
       deep: true,
@@ -136,16 +151,23 @@ export default {
       this.selectedFile = file
       try {
         const res = await Comms.api.readColumnNames(file)
-        this.headers = res.columns
+        this.sheets = res.sheets
+        console.log(res)
 
-        this.$set(this, 'fieldMappings', {})
-        this.fields.forEach((field) => {
-          this.$set(this.fieldMapping, field, '')
-        })
         this.loading = false
       } catch (e) {
         console.log(e)
       }
+    },
+
+    selectSheet() {
+      console.log(this.selectedSheet)
+      this.headers = this.selectedSheet.columns
+      this.sheetName = this.selectedSheet.name
+      this.$set(this, 'fieldMappings', {})
+      this.fields.forEach((field) => {
+        this.$set(this.fieldMapping, field, '')
+      })
     },
   },
 }
@@ -155,10 +177,34 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
-i {
-  margin-top: 24px;
+.primary-button {
+  @include dark-blue-button();
+  padding: 8px 12px;
+  border: none;
+  border-radius: 16px;
+
+  &:disabled {
+    img {
+      filter: none;
+    }
+  }
+  img {
+    filter: invert(100%) sepia(10%) saturate(1666%) hue-rotate(162deg) brightness(92%) contrast(90%);
+  }
 }
 
+.img-container-stay {
+  padding: 6px 8px 4px 7px;
+  border-radius: 50%;
+  background-color: $soft-gray;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  margin-left: 12px;
+
+  img {
+    margin: 0;
+    padding: 0;
+  }
+}
 h3 {
   font-family: $base-font-family;
 }

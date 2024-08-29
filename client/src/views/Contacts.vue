@@ -957,6 +957,7 @@ export default {
   },
   data() {
     return {
+      sheetName: '',
       popoverIndex: null,
       popoverContent: '',
       sortOrder: 1,
@@ -1160,7 +1161,7 @@ export default {
     async handleFileUpload() {
       this.uploading = true
       try {
-        const res = await Comms.api.uploadContacts(this.currentFile, this.mappings)
+        const res = await Comms.api.uploadContacts(this.currentFile, this.mappings, this.sheetName)
         this.$toast('Contacts Imported successfully', {
           timeout: 2000,
           position: 'top-left',
@@ -1181,9 +1182,10 @@ export default {
         this.uploading = false
       }
     },
-    updateMappedField(mappings, file) {
+    updateMappedField(mappings, file, name) {
       this.mappings = mappings
       this.currentFile = file
+      this.sheetName = name
       this.mapped = true
     },
     async createDraft() {
@@ -1513,7 +1515,6 @@ export default {
       }
     },
     setContact(contact) {
-      console.log(contact)
       this.toggleGoogleModal()
       this.currentContact = contact
     },
@@ -1552,7 +1553,6 @@ export default {
         const res = await Comms.api.getContacts()
         this.allContacts = res.results
         this.contacts = res.results.filter((contact) => contact.user === this.user.id)
-        console.log(this.contacts)
       } catch (e) {
         console.error(e)
       } finally {

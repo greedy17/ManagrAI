@@ -700,7 +700,7 @@ def check_journalist_validity(journalist, outlet, email):
         if len(email_check):
             db_check = email_check
         else:
-            name_check = Journalist.objects.filter(first_name=first, last_name=last, outlet=outlet)
+            name_check = Journalist.objects.filter(first_name=first, last_name=last)
             if len(name_check):
                 db_check = name_check
         if len(db_check):
@@ -710,7 +710,7 @@ def check_journalist_validity(journalist, outlet, email):
             score = Journalist.verify_email(email)
             is_valid = True if score >= 85 else False
             if is_valid is False:
-                r = Journalist.email_finder(first, last, outlet=outlet)
+                r = Journalist.email_finder(first, last)
                 if isinstance(r, dict) and "error" in r.keys():
                     return r
                 score = r["score"]
