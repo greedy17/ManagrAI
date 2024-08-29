@@ -2839,6 +2839,7 @@ def read_column_names(request):
                 reader = csv.reader(csv_file)
                 column_names = next(reader)
                 column_names = [col for col in column_names if col not in [None, "", False, True]]
+                res_data = [{"name": file_name, "columns": column_names}]
             else:
                 return Response(
                     {"error": "Unsupported file type"}, status=status.HTTP_400_BAD_REQUEST

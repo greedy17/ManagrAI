@@ -553,3 +553,18 @@ def MICROSOFT_REFRESH_PARAMS(refresh_token):
 
 def MICROSOFT_HEADERS(access_token):
     return {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+
+
+GOOGLE_SHEETS_URI = lambda id: f"https://sheets.googleapis.com/v4/spreadsheets/{id}"
+GOOGLE_SHEETS_HEADERS_URI = (
+    lambda sheet_name: f"{GOOGLE_SHEETS_URI}/values/'{sheet_name}'!1:1?majorDimension=COLUMNS"
+)
+
+
+def GOOGLE_SHEETS_BATCH_URI(sheet_id, columns, sheet_name):
+    url = GOOGLE_SHEETS_URI(sheet_id) + "/values:batchGet?majorDimension=COLUMNS"
+    param_list = ""
+    for column in columns:
+        param_list += f"&ranges='{sheet_name}'!{column}:{column}"
+    url += param_list
+    return url
