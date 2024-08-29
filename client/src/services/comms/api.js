@@ -627,7 +627,7 @@ class CommsApi extends ModelAPI {
             const formData = new FormData();
             formData.append('file', file);
             formData.append('labels', JSON.stringify(labels));
-            formData.append('sheet', JSON.stringify(sheet));
+            formData.append('sheet', sheet);
             const res = await this.client.post(`process-contacts/excel`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'

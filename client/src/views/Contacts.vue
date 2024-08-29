@@ -2211,7 +2211,7 @@ h3 {
   flex-direction: row;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 0 24px;
+  padding: 0 24px 0 12px;
   height: 88vh;
 
   @media only screen and (max-width: 600px) {
@@ -2223,7 +2223,7 @@ h3 {
   }
 
   aside {
-    width: 18vw;
+    width: 16vw;
     padding: 28px 24px 16px 32px;
 
     @media only screen and (max-width: 600px) {
