@@ -1119,8 +1119,6 @@ export default {
 
         return 0
       })
-
-      return filteredContacts
     },
   },
   watch: {
@@ -2218,8 +2216,8 @@ h3 {
   }
 
   aside {
-    width: 20vw;
-    padding: 28px 24px 16px 48px;
+    width: 18vw;
+    padding: 28px 24px 16px 32px;
 
     @media only screen and (max-width: 600px) {
       display: none;
