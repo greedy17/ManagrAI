@@ -1,9 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.dispatch import receiver
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_delete
 
 from .models import User
-from background_task.models import CompletedTask
+from background_task.models import CompletedTask, Task
 from managr.hubspot import constants as hs_consts
 from managr.salesforce import constants as sf_consts
 from .models import User, Conversation
@@ -54,3 +54,12 @@ def add_user_to_admin_team(sender, instance, created, **kwargs):
     if created:
         if instance.is_admin:
             instance.organization.create_initial_team()
+
+
+@receiver(pre_delete, sender=Task)
+def before_task_deleted(sender, instance, **kwargs):
+    if instance.result:
+        if not instance.failed_at:
+            result = instance.result.all().first()
+            result.completed = True
+            result.save()

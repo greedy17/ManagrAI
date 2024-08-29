@@ -15,6 +15,7 @@ from pytz import timezone
 from datetime import datetime, timedelta
 from newspaper import Article, ArticleException
 from managr.api.models import ExpiringTokenAuthentication
+from managr.core.models import TaskResults
 from rest_framework.response import Response
 from rest_framework import (
     permissions,
@@ -2866,9 +2867,45 @@ def process_excel_file(request):
             row_values = []
             for row in sheet.iter_rows(min_row=2, min_col=idx, max_col=idx, values_only=True):
                 row_values.append(row[0])
-            print(len(row_values))
             journalist_values[index_values[idx]] = row_values
-        emit_process_contacts_excel(journalist_values)
+        result = TaskResults.objects.create(
+            function_name="emit_process_contacts_excel", user_id=str(request.user.id)
+        )
+        task = emit_process_contacts_excel(journalist_values, str(result.id))
+        result.task_id_str = str(task.id)
+        result.task = task
+        result.save()
+        return Response(status=status.HTTP_200_OK, data={"task_id": str(result.id)})
+    else:
+        return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def process_csv_file(request):
+    file_obj = request.FILES.get("file")
+    labels = json.loads(request.data.get("labels"))
+    if file_obj:
+        index_values = {}
+        journalist_values = {}
+        csv_reader = csv.reader(file_obj.read().decode("utf-8").splitlines())
+        header = next(csv_reader)
+        for idx, cell in enumerate(header):
+            if cell in labels.values():
+                key = next(key for key, value in labels.items() if value == cell)
+                index_values[idx] = key
+        for row in csv_reader:
+            for idx, key in index_values.items():
+                if key not in journalist_values:
+                    journalist_values[key] = []
+                journalist_values[key].append(row[idx] if idx < len(row) else None)
+        result = TaskResults.objects.create(
+            function_name="emit_process_contacts_excel", user_id=str(request.user.id)
+        )
+        task = emit_process_contacts_excel(journalist_values, str(result.id))
+        result.task_id_str = str(task.id)
+        result.task = task
+        result.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
     else:
         return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)

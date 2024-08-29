@@ -11,7 +11,7 @@ from managr.utils.sites import get_site_url
 from requests.exceptions import HTTPError
 from managr.utils.misc import encrypt_dict
 from django.db import models, IntegrityError
-from background_task.models import Task
+from background_task.models import Task, CompletedTask
 from django.contrib.auth.models import AbstractUser, BaseUserManager, AnonymousUser
 from django.db.models import Q
 from django.contrib.auth import login
@@ -1276,9 +1276,13 @@ class MicrosoftAccount(TimeStampModel):
 
 
 class TaskResults(TimeStampModel):
-    task = models.OneToOneField(
+    function_name = models.CharField(max_length=255)
+    user_id = models.CharField(max_length=255, blank=True, null=True)
+    task = models.ForeignKey(
         Task, on_delete=models.SET_NULL, related_name="result", null=True, blank=True
     )
+    task_id_str = models.CharField(max_length=255, blank=True, null=True)
+    completed = models.BooleanField(default=False)
     json_result = JSONField(default=dict)
     text_result = models.TextField(null=True, blank=True)
 
@@ -1287,8 +1291,16 @@ class TaskResults(TimeStampModel):
         from background_task.models import Task
 
         try:
-            if hasattr(task, "task"):
+            if task.task:
                 return False
         except Task.DoesNotExist:
             return True
         return True
+
+    def result(self):
+        if not self.completed:
+            return None
+        elif self.json_result:
+            return self.json_result
+        else:
+            return self.text_result

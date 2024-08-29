@@ -77,8 +77,8 @@ def emit_process_user_hashtag_list(user_id):
     return _process_user_hashtag_list(user_id)
 
 
-def emit_process_contacts_excel(data):
-    return _process_contacts_excel(data)
+def emit_process_contacts_excel(data, result_id):
+    return _process_contacts_excel(data, result_id)
 
 
 def emit_process_regenerate_pitch_slack(payload, context):
@@ -853,7 +853,7 @@ def test_database_pull(date_to, date_from, search, result_id):
 
 
 @background()
-def _process_contacts_excel(data):
+def _process_contacts_excel(data, result_id):
     data_length = len(data["email"])
     failed_list = []
     succeeded = 0
@@ -880,6 +880,9 @@ def _process_contacts_excel(data):
                     failed_list.append(email)
         except Exception as e:
             pass
+    result = TaskResults.objects.get(id=result_id)
+    result.json_result = {"success": succeeded, "failed": failed_list}
+    result.save()
     return
 
 
