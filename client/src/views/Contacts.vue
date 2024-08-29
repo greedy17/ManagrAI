@@ -1073,12 +1073,19 @@ export default {
         const tagFilter = this.selectedTags.map((tag) => tag.name.toLowerCase())
 
         const searchConditions = [
-          contact.journalist_ref.first_name.toLowerCase().includes(searchText),
-          contact.journalist_ref.last_name.toLowerCase().includes(searchText),
-          contact.journalist_ref.email.toLowerCase().includes(searchText),
-          contact.journalist_ref.outlet.toLowerCase().includes(searchText),
-          contact.bio.toLowerCase().includes(searchText),
-          contact.tags.some((tag) => tag.toLowerCase().includes(searchText)),
+          contact.journalist_ref.first_name
+            ? contact.journalist_ref.first_name.toLowerCase().includes(searchText)
+            : '',
+          contact.journalist_ref.last_name
+            ? contact.journalist_ref.last_name.toLowerCase().includes(searchText)
+            : '',
+          contact.journalist_ref.email
+            ? contact.journalist_ref.email.toLowerCase().includes(searchText)
+            : '',
+          contact.journalist_ref.outlet
+            ? contact.journalist_ref.outlet.toLowerCase().includes(searchText)
+            : '',
+          contact.tags ? contact.tags.some((tag) => tag.toLowerCase().includes(searchText)) : '',
         ]
 
         const filterConditions = []
