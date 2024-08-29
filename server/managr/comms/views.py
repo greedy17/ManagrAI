@@ -2857,11 +2857,12 @@ def read_column_names(request):
 def process_excel_file(request):
     file_obj = request.FILES.get("file")
     labels = json.loads(request.data.get("labels"))
+    sheet_name = request.data.get("sheet")
     if file_obj:
         index_values = {}
         journalist_values = {}
         workbook = load_workbook(file_obj, data_only=True)
-        sheet = workbook["All Media Targets"]
+        sheet = workbook[sheet_name]
         for key in labels.keys():
             label = labels[key]
             for cell in sheet[1]:
