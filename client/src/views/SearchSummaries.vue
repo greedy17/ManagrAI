@@ -768,7 +768,7 @@
                   alt=""
                 />
 
-                <p class="mobile-text-hide">Source:</p>
+                <p class="mobile-text-hide">Assist Type:</p>
                 <small>{{ toCamelCase(mainView) }}</small>
                 <img
                   v-if="!showingSources"
@@ -791,7 +791,7 @@
                     <img src="@/assets/images/newspaper.svg" height="11px" alt="" />
                     News
                   </span>
-                  <p>Search through real-time news</p>
+                  <p>AI summaries based on real-time news</p>
                 </div>
                 <div
                   @click="switchMainView('social')"
@@ -802,7 +802,7 @@
                     Social
                   </span>
 
-                  <p>Search through top X/Twitter posts</p>
+                  <p>AI summaries based on social-media</p>
                 </div>
                 <div @click="switchMainView('web')" :class="{ activeswitch: mainView === 'web' }">
                   <span>
@@ -810,9 +810,9 @@
                     Web
                   </span>
 
-                  <p>Search the web</p>
+                  <p>AI web search assistant</p>
                 </div>
-                <!-- @click="goToPage('Pitches')" -->
+
                 <div
                   @click="switchMainView('write')"
                   :class="{ activeswitch: mainView === 'write' }"
@@ -822,7 +822,7 @@
                     Write
                   </span>
 
-                  <p>Create content that sounds like you</p>
+                  <p>AI writing assistant & content generation</p>
                 </div>
                 <div
                   @click="switchMainView('discover')"
@@ -833,7 +833,7 @@
                     Discover
                   </span>
 
-                  <p>Identify the right contacts for your pitch</p>
+                  <p>AI assistant for finding relevant journalists</p>
                 </div>
               </div>
             </div>
@@ -1912,7 +1912,11 @@
                     </label>
                   </div>
 
-                  <div v-if="user.slackRef" style="margin-bottom: 16px" class="space-between">
+                  <div
+                    v-if="user.slackRef && mainView === 'news'"
+                    style="margin-bottom: 16px"
+                    class="space-between"
+                  >
                     <div class="row">
                       <img
                         src="@/assets/images/slackLogo.png"
@@ -1933,7 +1937,11 @@
                     </label>
                   </div>
 
-                  <div v-else style="margin-bottom: 16px" class="space-between">
+                  <div
+                    v-else-if="mainView === 'news'"
+                    style="margin-bottom: 16px"
+                    class="space-between"
+                  >
                     <div class="row">
                       <img
                         src="@/assets/images/slackLogo.png"

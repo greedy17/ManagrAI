@@ -626,23 +626,17 @@ class CommsApi extends ModelAPI {
         try {
             const formData = new FormData();
             formData.append('file', file);
-
             formData.append('labels', JSON.stringify(labels));
-
             const res = await this.client.post(`process-contacts/`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
-
             return res.data;
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e);
         }
     }
-
-
-
 }
 
 class TwitterAccountAPI extends ModelAPI {

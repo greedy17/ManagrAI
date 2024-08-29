@@ -1,27 +1,28 @@
 <template>
   <div>
-    <div v-if="!headers.length">
-      <p>Import your contacts using an Excel file.</p>
+    <div style="margin: 24px 0" v-if="!headers.length">
+      <p>Import your contacts using an Excel or CSV file.</p>
     </div>
-    <div v-else>
-      <p @click="test" class="spantext">
-        Select the columns that contain the <span>Publication</span>,
-        <span>Journalist's first</span> and <span>last name</span>, and <span>Email address</span>.
-        Ignore all other fields.
-      </p>
+    <div style="margin: 24px 0 0 0" v-else>
+      <p>Match each ManagrAI field with the corresponding label from your contacts</p>
     </div>
-    <div class="table-border" v-if="headers.length">
-      <div v-for="(header, i) in headers" :key="i" class="header">
-        <p>{{ header }}</p>
-        <select v-model="columnMappings[header]">
-          <option value="">Select a field</option>
-          <option value="email">Email</option>
-          <option value="first_name">First Name</option>
-          <option value="last_name">Last Name</option>
-          <option value="publication">Publication</option>
+    <div style="margin-top: 32px" class="table-border" v-if="headers.length">
+      <!-- <div class="header">
+        <h3>ManagrAI</h3>
+        <h3>Contact labels</h3>
+      </div> -->
+
+      <div v-for="field in fields" :key="field" class="header">
+        <p style="margin: 12px 0 20px 0">{{ formatString(field) }}</p>
+        <select v-model="fieldMapping[field]">
+          <option value="">{{ formatPlaceholder(field) }}</option>
+          <option v-for="header in headers" :key="header" :value="header">
+            {{ header }}
+          </option>
         </select>
       </div>
     </div>
+
     <div v-else class="table-border-center">
       <div class="file-input-wrapper">
         <label class="file-input-label">
@@ -53,38 +54,81 @@ export default {
       headers: [],
       previewData: [],
       columnMappings: {},
+      fieldMapping: {},
       fileName: '',
       loading: false,
       selectedFile: null,
       fieldsmapped: false,
+      fields: ['publication', 'first_name', 'last_name', 'email'],
     }
   },
   watch: {
-    columnMappings: {
+    fieldMapping: {
       handler(newMappings) {
         const requiredFields = ['publication', 'first_name', 'last_name', 'email']
-        const allMapped = requiredFields.every((field) =>
-          Object.values(newMappings).includes(field),
+        const allFieldsHaveValues = requiredFields.every(
+          (field) => newMappings[field] && newMappings[field] !== 'ignore',
         )
-        console.log(allMapped)
 
-        this.fieldsmapped = allMapped
+        this.fieldsmapped = allFieldsHaveValues
+
+        if (allFieldsHaveValues) {
+          this.mappedColumns = newMappings
+          this.$emit('fieldsFullyMapped', newMappings, this.selectedFile)
+        }
       },
       deep: true,
-    },
-    fieldsmapped() {
-      const mappedColumns = {}
-      Object.keys(this.columnMappings).forEach((header) => {
-        if (this.columnMappings[header] && this.columnMappings[header] !== 'ignore') {
-          mappedColumns[this.columnMappings[header]] = header
-        }
-      })
-      this.$emit('fieldsFullyMapped', mappedColumns, this.selectedFile)
     },
   },
   methods: {
     test() {
       console.log(this.columnMappings)
+    },
+    formatString(txt) {
+      let formattedString
+
+      switch (txt) {
+        case 'publication':
+          formattedString = 'Publication'
+          break
+        case 'first_name':
+          formattedString = 'First Name'
+          break
+        case 'last_name':
+          formattedString = 'Last Name'
+          break
+        case 'email':
+          formattedString = 'Email'
+          break
+        default:
+          formattedString = ''
+          break
+      }
+
+      return formattedString
+    },
+    formatPlaceholder(txt) {
+      let formattedString
+
+      switch (txt) {
+        case 'publication':
+          formattedString = 'Selct publication'
+          break
+        case 'first_name':
+          formattedString = 'Select first name'
+          break
+        case 'last_name':
+          formattedString = 'Select last name'
+          break
+        case 'email':
+          formattedString = 'Select email'
+          break
+        default:
+          formattedString = ''
+          break
+      }
+
+      return formattedString
     },
     async readColumnNames(event) {
       this.loading = true
@@ -94,12 +138,10 @@ export default {
         const res = await Comms.api.readColumnNames(file)
         this.headers = res.columns
 
-        // Initialize columnMappings with reactive properties
-        this.$set(this, 'columnMappings', {}) // Ensure columnMappings is reactive
-        this.headers.forEach((header) => {
-          this.$set(this.columnMappings, header, '')
+        this.$set(this, 'fieldMappings', {})
+        this.fields.forEach((field) => {
+          this.$set(this.fieldMapping, field, '')
         })
-
         this.loading = false
       } catch (e) {
         console.log(e)
@@ -113,24 +155,31 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+i {
+  margin-top: 24px;
+}
+
+h3 {
+  font-family: $base-font-family;
+}
 .header {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  padding-right: 12px;
   p {
     font-family: $base-font-family;
   }
+  margin-bottom: 5px;
 }
 
 p {
-  font-size: 14px;
+  font-size: 16px;
 }
 .table-border-center {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
-  height: 300px;
+  height: 250px;
   overflow: scroll;
   margin-top: 16px;
   display: flex;
@@ -140,12 +189,14 @@ p {
 }
 
 .table-border {
+  // border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
   height: 340px;
   overflow: scroll;
   margin-top: 16px;
   overflow-y: scroll;
   scroll-behavior: smooth;
+  // padding: 16px;
 
   &::-webkit-scrollbar {
     width: 5px;
