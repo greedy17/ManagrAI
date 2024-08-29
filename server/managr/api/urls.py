@@ -518,7 +518,7 @@ urlpatterns = [
         name="read-column-names",
     ),
     path(
-        "process-contacts/",
+        "process-contacts/excel",
         comms_views.process_excel_file,
         name="process-contacts",
     ),

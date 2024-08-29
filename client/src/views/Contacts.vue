@@ -957,6 +957,8 @@ export default {
   },
   data() {
     return {
+      contactCount: 0,
+      taskId: '',
       sheetName: '',
       popoverIndex: null,
       popoverContent: '',
@@ -1162,6 +1164,9 @@ export default {
       this.uploading = true
       try {
         const res = await Comms.api.uploadContacts(this.currentFile, this.mappings, this.sheetName)
+        console.log(res)
+        this.contactCount = res.num_processing
+        this.taskId = res.task_id
         this.$toast('Contacts Imported successfully', {
           timeout: 2000,
           position: 'top-left',
@@ -1175,7 +1180,7 @@ export default {
         this.$toast('Error importing contacts, try again', {
           timeout: 2000,
           position: 'top-left',
-          type: 'eror',
+          type: 'error',
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })

@@ -1,7 +1,7 @@
 <template>
   <div>
     <div style="margin: 24px 0" v-if="!headers.length">
-      <p>Import your contacts using an Excel or CSV file.</p>
+      <p>Import your contacts using an Excel file.</p>
     </div>
     <div style="margin: 24px 0 0 0" v-else>
       <p>Match each ManagrAI field with the corresponding label from your contacts</p>
