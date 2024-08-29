@@ -2252,9 +2252,7 @@ class DiscoveryViewSet(
             if len(email_check):
                 db_check = email_check
             else:
-                name_check = Journalist.objects.filter(
-                    first_name=first, last_name=last, outlet=outlet
-                )
+                name_check = Journalist.objects.filter(first_name=first, last_name=last)
                 if len(name_check):
                     db_check = name_check
             if len(db_check):
@@ -2882,7 +2880,10 @@ def process_excel_file(request):
         result.task_id_str = str(task.id)
         result.task = task
         result.save()
-        return Response(status=status.HTTP_200_OK, data={"task_id": str(result.id)})
+        return Response(
+            status=status.HTTP_200_OK,
+            data={"task_id": str(result.id), "num_processing": len(journalist_values)},
+        )
     else:
         return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
 
