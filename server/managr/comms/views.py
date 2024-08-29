@@ -2871,7 +2871,7 @@ def process_excel_file(request):
         result = TaskResults.objects.create(
             function_name="emit_process_contacts_excel", user_id=str(request.user.id)
         )
-        task = emit_process_contacts_excel(journalist_values, str(result.id))
+        task = emit_process_contacts_excel(str(request.user.id), journalist_values, str(result.id))
         result.task_id_str = str(task.id)
         result.task = task
         result.save()
