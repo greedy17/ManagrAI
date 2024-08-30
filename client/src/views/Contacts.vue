@@ -443,6 +443,181 @@
       </div>
     </Modal>
 
+    <Modal class="bio-modal med-modal" v-if="tagModalOpen">
+      <div class="bio-container med-container">
+        <header>
+          <h2 style="margin: 12px 0">Apply or Create a Tag</h2>
+
+          <img
+            style="cursor: pointer"
+            @click="tagModalOpen = false"
+            src="@/assets/images/close.svg"
+            height="20px"
+            alt=""
+          />
+        </header>
+
+        <div style="margin-top: 16px; margin-bottom: 24px; min-height: 120px; width: 100%">
+          <div>
+            <h3>Select tag to apply</h3>
+            <div style="height: 50px; margin-top: 32px" v-if="!tags.length">
+              You dont have any tags yet...
+            </div>
+            <div
+              style="
+                padding: 0;
+                opacity: 1;
+                height: 120px;
+                overflow: scroll;
+                cursor: text;
+                margin-top: 16px;
+                margin-bottom: 8px;
+              "
+              class="scrolltainer"
+              v-else
+            >
+              <div
+                style="opacity: 1; cursor: text; font-size: 15px; padding: 5px 8px; cursor: pointer"
+                v-for="(tag, i) in tags"
+                @click="selectTag(contact, tag, i)"
+                :key="i"
+                class="space-between hover-bg"
+              >
+                {{ tag }}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3>Create</h3>
+            <div style="margin-top: 24px" class="row">
+              <div style="opacity: 1; margin: 0; cursor: text" class="input-container-small">
+                <input
+                  :disabled="loadingTags"
+                  style="border: none; outline: none; padding: 10px 8px 10px 0px; width: 100%"
+                  class="text-area-input"
+                  type="text"
+                  v-model="newTag"
+                  placeholder="Name your tag..."
+                />
+
+                <img
+                  style="filter: invert(40%); margin-right: 20px"
+                  src="@/assets/images/user-tag.svg"
+                  height="14px"
+                  alt=""
+                />
+              </div>
+
+              <button
+                :disabled="!newTag || loadingTags"
+                @click="modifyTags('add')"
+                style="margin-bottom: 5px"
+                class="primary-button"
+              >
+                <img
+                  v-if="loadingTags"
+                  class="rotation"
+                  src="@/assets/images/loading.svg"
+                  height="14px"
+                  alt=""
+                />
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- <footer>
+          <div></div>
+          <div class="row">
+            <button class="secondary-button" @click="tagModalOpen = false">Cancel</button>
+            <button class="primary-button">Continue</button>
+          </div>
+        </footer> -->
+      </div>
+    </Modal>
+
+    <!-- <div
+      class="drop-options"
+      style="padding-left: 0; padding-right: 0"
+      v-show="showingTags && currentIndex === i"
+    >
+      <header style="padding-left: 8px">
+        Apply Tag
+        <img
+          @click="closeTags"
+          style="margin-right: 12px; cursor: pointer"
+          src="@/assets/images/close.svg"
+          height="16px"
+          alt=""
+        />
+      </header>
+
+      <div style="height: 50px" v-if="!tags.length">You dont have any tags yet...</div>
+      <div style="padding: 0; opacity: 1; height: 120px; overflow: scroll; cursor: text" v-else>
+        <div
+          style="opacity: 1; cursor: text; font-size: 15px; padding: 4px 8px; cursor: pointer"
+          v-for="(tag, i) in tags"
+          @click="selectTag(contact, tag, i)"
+          :key="i"
+          class="space-between hover-bg"
+        >
+          {{ tag }}
+        </div>
+      </div>
+
+      <div style="opacity: 1; cursor: text; position: relative; padding: 0 8px">
+        <div style="opacity: 1" class="sticky-bottom-between">
+          <div
+            style="opacity: 1; margin: 0; cursor: text"
+            v-if="showingInput"
+            class="input-container-small"
+          >
+            <input
+              :disabled="loadingTags"
+              style="border: none; outline: none; padding: 10px 8px 10px 0px; width: 100%"
+              class="text-area-input"
+              type="text"
+              v-model="newTag"
+              placeholder="Name your tag..."
+            />
+
+            <img
+              style="filter: invert(40%); margin-right: 20px"
+              src="@/assets/images/user-tag.svg"
+              height="14px"
+              alt=""
+            />
+          </div>
+
+          <button
+            style="margin-left: auto"
+            v-else
+            @click="showingInput = true"
+            class="secondary-button-no-border"
+          >
+            <img src="@/assets/images/add.svg" height="14px" alt="" />
+            Create Tag
+          </button>
+          <button
+            :disabled="!newTag || loadingTags"
+            v-if="showingInput"
+            @click="modifyTags('add')"
+            style="margin-bottom: 5px"
+            class="primary-button"
+          >
+            Save
+            <div style="margin-left: 4px" v-if="loadingTags" class="loading-small">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div> -->
+
     <Modal v-if="bioModalOpen" class="bio-modal">
       <div class="bio-container">
         <header>
@@ -546,18 +721,14 @@
               <div class="dropdown-footer"></div>
             </div>
 
-            <div @click="toggleContactsModal" class="img-container s-wrapper">
-              <img src="@/assets/images/addcontact.svg" height="13px" alt="" />
-              <div class="s-tooltip">Lookup contact</div>
+            <div @click="toggleContactsModal" class="icon-btn">
+              <img src="@/assets/images/mglass.svg" height="13px" alt="" />
+              <div>Lookup contact</div>
             </div>
 
-            <div
-              style="margin-left: 8px"
-              @click="bulkModalOpen = true"
-              class="img-container s-wrapper"
-            >
-              <img src="@/assets/images/address-book.svg" height="14px" alt="" />
-              <div class="s-tooltip">Import contacts</div>
+            <div style="margin-left: 8px" @click="bulkModalOpen = true" class="icon-btn">
+              <img src="@/assets/images/file-import.svg" height="14px" alt="" />
+              <div>Import contacts</div>
             </div>
           </div>
 
@@ -680,7 +851,12 @@
                       @mouseenter="showPopover($event, 'Add Tag', i)"
                       @mouseleave="hidePopover"
                     >
-                      <img src="@/assets/images/tags.svg" height="14px" alt="" />
+                      <img
+                        style="filter: invert(40%)"
+                        src="@/assets/images/tags.svg"
+                        height="14px"
+                        alt=""
+                      />
                     </div>
 
                     <div
@@ -689,7 +865,12 @@
                       @mouseenter="showPopover($event, 'Create Pitch', i)"
                       @mouseleave="hidePopover"
                     >
-                      <img src="@/assets/images/microphone.svg" height="14px" alt="" />
+                      <img
+                        style="filter: invert(40%)"
+                        src="@/assets/images/microphone.svg"
+                        height="14px"
+                        alt=""
+                      />
                     </div>
 
                     <div
@@ -698,7 +879,12 @@
                       @mouseenter="showPopover($event, 'Refresh Bio', i)"
                       @mouseleave="hidePopover"
                     >
-                      <img src="@/assets/images/refresh-pr.svg" height="14px" alt="" />
+                      <img
+                        style="filter: invert(40%)"
+                        src="@/assets/images/refresh-pr.svg"
+                        height="14px"
+                        alt=""
+                      />
                     </div>
 
                     <div
@@ -707,7 +893,12 @@
                       @mouseenter="showPopover($event, 'View Bio', i)"
                       @mouseleave="hidePopover"
                     >
-                      <img src="@/assets/images/file-user.svg" height="14px" alt="" />
+                      <img
+                        style="filter: invert(40%)"
+                        src="@/assets/images/file-user.svg"
+                        height="14px"
+                        alt=""
+                      />
                     </div>
                   </div>
                 </td>
@@ -741,7 +932,7 @@
           </Popover>
         </div>
 
-        <!-- <div v-else class="cards-container">
+        <!-- <div  class="cards-container">
           <div v-for="(contact, i) in filteredContactList" :key="i" class="contact-card">
             <header style="position: relative">
               <div class="contact-header">
@@ -778,138 +969,6 @@
  
             </div>
 
-            <div class="footer">
-              <div style="width: 50%" class="rows">
-                <div
-                  style="padding-right: 10px"
-                  v-for="(tag, i) in contact.tags"
-                  :key="i"
-                  class="user-tag"
-                >
-                  <img class="pink-filter" src="@/assets/images/tags.svg" height="12px" alt="" />
-                  {{ tag }}
-                </div>
-              </div>
-
-              <div style="position: relative" class="row">
-                <div
-                  @click.stop="showTags(contact, i)"
-                  class="img-container s-wrapper"
-                  :class="{ 'img-container-stay': showingTags && currentIndex === i }"
-                >
-                  <img src="@/assets/images/tags.svg" height="14px" alt="" />
-                  <div class="s-tooltip">Add Tag</div>
-                </div>
-
-                <div @click="openPitchModal(contact)" class="img-container s-wrapper">
-                  <img src="@/assets/images/microphone.svg" height="14px" alt="" />
-                  <div class="s-tooltip">Create Pitch</div>
-                </div>
-
-                <div @click="updateContact(contact)" class="img-container s-wrapper">
-                  <img src="@/assets/images/refresh-pr.svg" height="14px" alt="" />
-                  <div class="s-tooltip">Refresh Bio</div>
-                </div>
-                <div @click="setContact(contact)" class="img-container s-wrapper">
-                  <img src="@/assets/images/file-user.svg" height="14px" alt="" />
-                  <div class="s-tooltip">View Bio</div>
-                </div>
-
-                <div
-                  class="drop-options"
-                  style="padding-left: 0; padding-right: 0"
-                  v-show="showingTags && currentIndex === i"
-                >
-                  <header style="padding-left: 8px">
-                    Apply Tag
-                    <img
-                      @click="closeTags"
-                      style="margin-right: 12px; cursor: pointer"
-                      src="@/assets/images/close.svg"
-                      height="16px"
-                      alt=""
-                    />
-                  </header>
-
-                  <div style="height: 50px" v-if="!tags.length">You dont have any tags yet...</div>
-                  <div
-                    style="padding: 0; opacity: 1; height: 120px; overflow: scroll; cursor: text"
-                    v-else
-                  >
-                    <div
-                      style="
-                        opacity: 1;
-                        cursor: text;
-                        font-size: 15px;
-                        padding: 4px 8px;
-                        cursor: pointer;
-                      "
-                      v-for="(tag, i) in tags"
-                      @click="selectTag(contact, tag, i)"
-                      :key="i"
-                      class="space-between hover-bg"
-                    >
-                      {{ tag }}
-                    </div>
-                  </div>
-
-                  <div style="opacity: 1; cursor: text; position: relative; padding: 0 8px">
-                    <div style="opacity: 1" class="sticky-bottom-between">
-                      <div
-                        style="opacity: 1; margin: 0; cursor: text"
-                        v-if="showingInput"
-                        class="input-container-small"
-                      >
-                        <input
-                          :disabled="loadingTags"
-                          style="
-                            border: none;
-                            outline: none;
-                            padding: 10px 8px 10px 0px;
-                            width: 100%;
-                          "
-                          class="text-area-input"
-                          type="text"
-                          v-model="newTag"
-                          placeholder="Name your tag..."
-                        />
-
-                        <img
-                          style="filter: invert(40%); margin-right: 20px"
-                          src="@/assets/images/user-tag.svg"
-                          height="14px"
-                          alt=""
-                        />
-                      </div>
-
-                      <button
-                        style="margin-left: auto"
-                        v-else
-                        @click="showingInput = true"
-                        class="secondary-button-no-border"
-                      >
-                        <img src="@/assets/images/add.svg" height="14px" alt="" />
-                        Create Tag
-                      </button>
-                      <button
-                        :disabled="!newTag || loadingTags"
-                        v-if="showingInput"
-                        @click="modifyTags('add')"
-                        style="margin-bottom: 5px"
-                        class="primary-button"
-                      >
-                        Save
-                        <div style="margin-left: 4px" v-if="loadingTags" class="loading-small">
-                          <div class="dot"></div>
-                          <div class="dot"></div>
-                          <div class="dot"></div>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div> -->
       </section>
@@ -1180,6 +1239,7 @@ export default {
           bodyClassName: ['custom'],
         })
         this.uploading = false
+        this.bulkModalOpen = false
       } catch (error) {
         console.error('Error reading the file:', error)
         this.$toast('Error importing contacts, try again', {
@@ -1435,7 +1495,7 @@ export default {
         this.getTags()
         this.getAllContacts()
         this.selectingTag = false
-        this.showingTags = false
+        this.tagModalOpen = false
       }
     },
     showTags(contact, i) {
@@ -1443,7 +1503,7 @@ export default {
       this.showingInput = false
       this.currentContact = contact
       this.currentIndex = i
-      this.showingTags = true
+      this.tagModalOpen = true
     },
     closeTags() {
       this.showingTags = false
@@ -1611,6 +1671,7 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+        this
         // this.tags = res.results
       } catch (e) {
         console.error(e)
@@ -1626,7 +1687,6 @@ export default {
         this.getAllContacts()
         this.loadingTags = false
         this.tagModalOpen = false
-        this.showingTags = false
         this.googleModalOpen = false
       }
     },
@@ -1730,6 +1790,36 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.scrolltainer {
+  &::-webkit-scrollbar {
+    width: 5px;
+    height: 0px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: $soft-gray;
+    box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+    border-radius: 6px;
+  }
+}
+
+.icon-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  font-size: 14px;
+
+  border-radius: 16px;
+  padding: 8px 10px;
+  margin: 0 10px;
+  cursor: pointer;
+  img {
+    margin-right: 5px;
+  }
+  &:hover {
+    background-color: $soft-gray;
+  }
+}
 
 .small-col {
   max-width: 200px;
@@ -2459,7 +2549,8 @@ h2 {
 
 .hover-bg {
   &:hover {
-    background-color: $soft-gray;
+    background-color: $off-white;
+    border-radius: 4px;
   }
 }
 
@@ -2584,6 +2675,20 @@ h2 {
     font-family: $base-font-family;
   }
 }
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
+}
+
+.rotation {
+  animation: rotation 2s infinite linear;
+}
+
 .row {
   display: flex;
   flex-direction: row;
@@ -3573,8 +3678,14 @@ textarea::placeholder {
 .lb-filter {
   filter: invert(54%) sepia(16%) saturate(1723%) hue-rotate(159deg) brightness(89%) contrast(89%) !important;
 }
+.blue-filter {
+  filter: invert(54%) sepia(16%) saturate(1723%) hue-rotate(159deg) brightness(89%) contrast(89%) !important;
+}
 .pink-filter {
   filter: invert(43%) sepia(88%) saturate(559%) hue-rotate(280deg) brightness(86%) contrast(83%) !important;
+}
+.purple-filter {
+  filter: invert(51%) sepia(13%) saturate(1063%) hue-rotate(217deg) brightness(96%) contrast(84%);
 }
 
 .white-container {
