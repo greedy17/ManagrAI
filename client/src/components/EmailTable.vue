@@ -572,14 +572,14 @@ export default {
         const userFilter = this.userId !== undefined ? this.userId : null
 
         const searchConditions = [
-          email.recipient.toLowerCase().includes(searchText),
-          email.subject.toLowerCase().includes(searchText),
-          email.name.toLowerCase().includes(searchText),
-          email.body.toLowerCase().includes(searchText),
-          email.opens.toString().includes(searchText),
-          email.replies.toString().includes(searchText),
-          email.clicks.toString().includes(searchText),
-          email.activity_log.at(-1).includes(searchText),
+          email.recipient ? email.recipient.toLowerCase().includes(searchText) : '',
+          email.subject ? email.subject.toLowerCase().includes(searchText) : '',
+          email.name ? email.name.toLowerCase().includes(searchText) : '',
+          email.body ? email.body.toLowerCase().includes(searchText) : '',
+          email.opens ? email.opens.toString().includes(searchText) : '',
+          email.replies ? email.replies.toString().includes(searchText) : '',
+          email.clicks ? email.clicks.toString().includes(searchText) : '',
+          email.activity_log ? email.activity_log.at(-1).includes(searchText) : '',
           searchText.includes('delivered') && !email.failed,
           searchText.includes('failed') && email.failed,
         ]

@@ -534,6 +534,15 @@ class CommsApi extends ModelAPI {
         }
     }
 
+    async loadMoreContacts(url) {
+        try {
+            const res = await this.client.get(`${url}`)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
     async deleteContact(data) {
         try {
             const res = await this.client.delete(`jcontact/${data.id}/`)
@@ -607,7 +616,37 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    async readColumnNames(file) {
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await this.client.post(`read-column-names/`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
 
+            return res.data;
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e);
+        }
+    }
+    async uploadContacts(file, labels, sheet) {
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('labels', JSON.stringify(labels));
+            formData.append('sheet', sheet);
+            const res = await this.client.post(`process-contacts/excel`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            return res.data;
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e);
+        }
+    }
 }
 
 class TwitterAccountAPI extends ModelAPI {

@@ -16,11 +16,12 @@ from django.conf import settings
 from urllib.parse import urlparse, urlunparse
 from collections import OrderedDict
 from .exceptions import _handle_response
-from .models import NewsSource, Journalist
+from .models import NewsSource, Journalist, JournalistContact
 from botocore.exceptions import ClientError
 from django.contrib.postgres.search import SearchQuery
 from managr.core import constants as core_consts
 from managr.core import exceptions as open_ai_exceptions
+from managr.core.models import User
 
 s3 = boto3.client("s3")
 
@@ -313,6 +314,29 @@ def convert_html_to_markdown(summary, clips):
         "ManagrAI",
         prompt,
         token_amount=2000,
+        top_p=0.1,
+    )
+    with Variable_Client() as client:
+        r = client.post(
+            url,
+            data=json.dumps(body),
+            headers=core_consts.OPEN_AI_HEADERS,
+        )
+    r = open_ai_exceptions._handle_response(r)
+    new_summary = r.get("choices")[0].get("message").get("content")
+    return new_summary
+
+
+def convert_html_to_markdown(summary, clips):
+    from managr.core import exceptions as open_ai_exceptions
+    from managr.core import constants as core_consts
+
+    url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+    prompt = core_consts.OPEN_AI_CONVERT_HTML(summary, clips)
+    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+        "ManagrAI",
+        prompt,
+        token_amount=500,
         top_p=0.1,
     )
     with Variable_Client() as client:
@@ -677,7 +701,7 @@ def check_journalist_validity(journalist, outlet, email):
         if len(email_check):
             db_check = email_check
         else:
-            name_check = Journalist.objects.filter(first_name=first, last_name=last, outlet=outlet)
+            name_check = Journalist.objects.filter(first_name=first, last_name=last)
             if len(name_check):
                 db_check = name_check
         if len(db_check):
@@ -687,7 +711,7 @@ def check_journalist_validity(journalist, outlet, email):
             score = Journalist.verify_email(email)
             is_valid = True if score >= 85 else False
             if is_valid is False:
-                r = Journalist.email_finder(first, last, outlet=outlet)
+                r = Journalist.email_finder(first, last)
                 if isinstance(r, dict) and "error" in r.keys():
                     return r
                 score = r["score"]
@@ -891,3 +915,47 @@ def test_get_clips(search, boolean=False):
         return {"articles": articles, "string": query_input}
     except Exception as e:
         return {"error": str(e)}
+
+
+def test_prompt(pitch, user_id):
+    user = User.objects.get(email="zach@mymanagr.com")
+    token_amount = 4000
+    timeout = 60.0
+    while True:
+        try:
+            journalists_query = JournalistContact.objects.filter(user=user)
+            journalists = [
+                f"{journalist.journalist.full_name}-{journalist.journalist.outlet}"
+                for journalist in journalists_query
+            ]
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_PITCH_JOURNALIST_LIST(journalists, pitch)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                "zach@mymanagr.com",
+                prompt,
+                token_amount=token_amount,
+                temperature=0,
+                response_format={"type": "json_object"},
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            r = open_ai_exceptions._handle_response(r)
+            message = r.get("choices")[0].get("message").get("content")
+            message = json.loads(message)
+            journalist_data = message["journalists"]
+            break
+        except open_ai_exceptions.StopReasonLength:
+            if token_amount >= 6000:
+                journalist_data = "Token amount error"
+                break
+            else:
+                token_amount += 1000
+                continue
+        except Exception as e:
+            journalist_data = f"Unknown exception: {e}"
+            break
+    return journalist_data

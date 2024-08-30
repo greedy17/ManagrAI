@@ -1072,6 +1072,10 @@ class Journalist(TimeStampModel):
     def __str__(self):
         return f"{self.email} - {self.outlet}"
 
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
     @classmethod
     def verify_email(cls, email):
         url = comms_consts.HUNTER_VERIFY_URI

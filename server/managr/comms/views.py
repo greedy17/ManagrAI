@@ -2,6 +2,9 @@ import json
 import httpx
 import logging
 import pytz
+import io
+import csv
+from openpyxl import load_workbook
 from rest_framework import (
     mixins,
     viewsets,
@@ -12,6 +15,7 @@ from pytz import timezone
 from datetime import datetime, timedelta
 from newspaper import Article, ArticleException
 from managr.api.models import ExpiringTokenAuthentication
+from managr.core.models import TaskResults
 from rest_framework.response import Response
 from rest_framework import (
     permissions,
@@ -44,6 +48,7 @@ from .tasks import (
     emit_send_social_summary,
     emit_share_client_summary,
     _add_jounralist_to_db,
+    emit_process_contacts_excel,
 )
 from .serializers import (
     SearchSerializer,
@@ -65,6 +70,7 @@ from managr.core import exceptions as open_ai_exceptions
 from rest_framework.decorators import (
     api_view,
     permission_classes,
+    authentication_classes,
 )
 from managr.comms.utils import (
     generate_config,
@@ -86,6 +92,18 @@ from newspaper.article import ArticleException
 from managr.slack.helpers.utils import send_to_error_channel
 
 logger = logging.getLogger("managr")
+
+# HELPER FUNCTIONS
+
+
+def add_timezone_and_convert_to_utc(datetime_str, user_timezone):
+    user_timezone_obj = timezone(user_timezone)
+    localized_datetime = user_timezone_obj.localize(
+        datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M:%S.%f")
+    )
+    utc_time = pytz.utc
+    converted_datetime = localized_datetime.astimezone(utc_time)
+    return converted_datetime
 
 
 def getclips(request):
@@ -132,22 +150,7 @@ def getclips(request):
         return {"error": str(e)}
 
 
-@require_http_methods(["GET"])
-@permission_classes([permissions.IsAuthenticated])
-@async_to_sync
-async def get_clips(request, *args, **kwargs):
-    response = await sync_to_async(getclips)(request)
-    return JsonResponse(data=response)
-
-
-def add_timezone_and_convert_to_utc(datetime_str, user_timezone):
-    user_timezone_obj = timezone(user_timezone)
-    localized_datetime = user_timezone_obj.localize(
-        datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M:%S.%f")
-    )
-    utc_time = pytz.utc
-    converted_datetime = localized_datetime.astimezone(utc_time)
-    return converted_datetime
+# VIEWSETS
 
 
 class PRSearchViewSet(
@@ -1080,55 +1083,6 @@ class PRSearchViewSet(
         return Response(status=status.HTTP_200_OK)
 
 
-@api_view(["GET"])
-@permission_classes(
-    [
-        permissions.AllowAny,
-    ]
-)
-def get_shared_summary(request, encrypted_param):
-    decrypted_dict = decrypt_dict(encrypted_param)
-    created_at = datetime.strptime(decrypted_dict.get("created_at"), "%Y-%m-%d %H:%M:%S.%f")
-    time_difference = datetime.now() - created_at
-    twenty_four_hours = timedelta(hours=24)
-    if time_difference > twenty_four_hours:
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    search = Search.objects.get(id=decrypt_dict["id"])
-    return Response(data={"summary": search.summary})
-
-
-@api_view(["POST"])
-@permission_classes([permissions.IsAuthenticated])
-def upload_link(request):
-    url = request.data["params"]["url"]
-    try:
-        article_res = Article(url, config=generate_config())
-        article_res.download()
-        article_res.parse()
-
-        title = article_res.title
-        author = article_res.authors
-        image = article_res.top_image
-        date = article_res.publish_date
-        text = article_res.meta_description
-        domain = get_domain(url)
-        article = {}
-        article = {
-            "title": title,
-            "source": domain,
-            "author": author,
-            "image_url": image,
-            "publish_date": date,
-            "description": text,
-            "link": url,
-        }
-        emit_process_website_domain(url, request.user.organization.name)
-    except Exception as e:
-        logger.exception(e)
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    return Response(data=article)
-
-
 class PitchViewSet(
     viewsets.GenericViewSet,
     mixins.CreateModelMixin,
@@ -1865,277 +1819,6 @@ class ProcessViewSet(
         return Response({"content": content})
 
 
-@api_view(["POST"])
-@permission_classes([permissions.IsAuthenticated])
-def get_twitter_request_token(request):
-    res = TwitterAccount.get_token(request)
-    return Response(res)
-
-
-@api_view(["GET"])
-@permission_classes([permissions.IsAuthenticated])
-def get_twitter_auth_link(request):
-    link = TwitterAccount.get_authorization(request.token)
-    return Response({"link": link})
-
-
-@api_view(["POST"])
-@permission_classes([permissions.IsAuthenticated])
-def get_twitter_authentication(request):
-    user = request.user
-    data = request.data
-    access_token = TwitterAccount.authenticate(data.get("oauth_token"), data.get("oauth_verifier"))
-    data = {
-        "user": user.id,
-        "access_token": access_token.get("oauth_token"),
-        "access_token_secret": access_token.get("oauth_token_secret"),
-    }
-    existing = TwitterAccount.objects.filter(user=request.user).first()
-    if existing:
-        serializer = TwitterAccountSerializer(data=data, instance=existing)
-    else:
-        serializer = TwitterAccountSerializer(data=data)
-    try:
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-    except Exception as e:
-        logger.exception(str(e))
-        return Response(data={"success": False})
-    return Response(data={"success": True})
-
-
-@api_view(["POST"])
-@permission_classes([permissions.IsAuthenticated])
-def get_instagram_request_token(request):
-    res = InstagramAccount.get_token(request)
-    return Response(res)
-
-
-@api_view(["POST"])
-@permission_classes([permissions.IsAuthenticated])
-def get_instagram_authentication(request):
-    user = request.user
-    data = request.data
-    access_token_response = InstagramAccount.authenticate(data.get("code"))
-    access_token_response["user"] = user.id
-    existing = InstagramAccount.objects.filter(user=request.user).first()
-    if existing:
-        serializer = InstagramAccountSerializer(data=access_token_response, instance=existing)
-    else:
-        serializer = InstagramAccountSerializer(data=access_token_response)
-    try:
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        emit_get_meta_account_info(str(user.id))
-    except Exception as e:
-        logger.exception(str(e))
-        return Response(data={"success": False})
-    return Response(data={"success": True})
-
-
-@api_view(["DELETE"])
-@permission_classes([permissions.IsAuthenticated])
-def revoke_instagram_auth(request):
-    user = request.user
-    ig_account = InstagramAccount.objects.filter(user=user)
-    try:
-        ig_account.delete()
-    except Exception as e:
-        return Response({"error": str(e)})
-    return Response(data={"success": True})
-
-
-@api_view(["DELETE"])
-@permission_classes([permissions.IsAuthenticated])
-def revoke_twitter_auth(request):
-    user = request.user
-    twitter_account = TwitterAccount.objects.filter(user=user)
-    try:
-        twitter_account.delete()
-    except Exception as e:
-        return Response({"error": str(e)})
-    return Response(data={"success": True})
-
-
-@api_view(["POST"])
-@permission_classes([permissions.IsAuthenticated])
-def get_email_request_token(request):
-    res = InstagramAccount.get_token(request)
-    return Response(res)
-
-
-@api_view(["POST"])
-@permission_classes([permissions.IsAuthenticated])
-def get_email_authentication(request):
-    user = request.user
-    data = request.data
-    access_token_response = InstagramAccount.authenticate(data.get("code"))
-    access_token_response["user"] = user.id
-    existing = InstagramAccount.objects.filter(user=request.user).first()
-    if existing:
-        serializer = InstagramAccountSerializer(data=access_token_response, instance=existing)
-    else:
-        serializer = InstagramAccountSerializer(data=access_token_response)
-    try:
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        emit_get_meta_account_info(str(user.id))
-    except Exception as e:
-        logger.exception(str(e))
-        return Response(data={"success": False})
-    return Response(data={"success": True})
-
-
-@api_view(["DELETE"])
-@permission_classes([permissions.IsAuthenticated])
-def revoke_email_auth(request):
-    user = request.user
-    ig_account = InstagramAccount.objects.filter(user=user)
-    try:
-        ig_account.delete()
-    except Exception as e:
-        return Response({"error": str(e)})
-    return Response(data={"success": True})
-
-
-def redirect_from_email(request):
-    verifier = request.GET.get("oauth_verifier", False)
-    token = request.GET.get("oauth_token", False)
-    q = urlencode({"state": "EMAIL", "oauth_verifier": verifier, "code": "code", "token": token})
-    if not verifier:
-        err = {"error": "there was an error"}
-        err = urlencode(err)
-        return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{err}")
-    return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{q}")
-
-
-def redirect_from_twitter(request):
-    verifier = request.GET.get("oauth_verifier", False)
-    token = request.GET.get("oauth_token", False)
-    q = urlencode({"state": "TWITTER", "oauth_verifier": verifier, "code": "code", "token": token})
-    if not verifier:
-        err = {"error": "there was an error"}
-        err = urlencode(err)
-        return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{err}")
-    return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{q}")
-
-
-def redirect_from_instagram(request):
-    code = request.GET.get("code", False)
-    q = urlencode({"state": "INSTAGRAM", "code": code})
-    if not code:
-        err = {"error": "there was an error"}
-        err = urlencode(err)
-        return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{err}")
-    return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{q}")
-
-
-@api_view(["POST"])
-@permission_classes([permissions.IsAuthenticated])
-def upload_pdf(request):
-    user = request.user
-    url = request.data.get("url", None)
-    pdf_file = request.FILES.get("pdf_file", None)
-    instructions = request.data.get("instructions", "Create a summary")
-    if pdf_file:
-        text, images = extract_pdf_text(pdf_file)
-    else:
-        text, images = convert_pdf_from_url(url)
-    if not len(text):
-        return Response(
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            data={"error": "No text could be extract from the uploaded PDF"},
-        )
-    has_error = False
-    attempts = 1
-    token_amount = 4000
-    timeout = 60.0
-    while True:
-        try:
-            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_GENERATE_PDF_SUMMARY(
-                datetime.now().date(), instructions, text
-            )
-            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                user.email,
-                prompt,
-                token_amount=token_amount,
-                top_p=0.1,
-            )
-            with Variable_Client(timeout) as client:
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=core_consts.OPEN_AI_HEADERS,
-                )
-            res = open_ai_exceptions._handle_response(r)
-
-            content = res.get("choices")[0].get("message").get("content")
-            # if len(images):
-            #     prompt = comms_consts.OPEN_AI_IMAGE_CONTENT(
-            #         images, "Generate a summary of the images", token_amount
-            #     )
-            #     with Variable_Client(timeout) as client:
-            #         r = client.post(
-            #             url,
-            #             data=json.dumps(prompt),
-            #             headers=core_consts.OPEN_AI_HEADERS,
-            #         )
-            #     res = open_ai_exceptions._handle_response(r)
-            #     print(res)
-            break
-        except open_ai_exceptions.StopReasonLength:
-            logger.exception(
-                f"Retrying again due to token amount, amount currently at: {token_amount}"
-            )
-            if token_amount <= 8000:
-                has_error = True
-
-                message = "Token amount error"
-                break
-            else:
-                token_amount += 1000
-                continue
-        except httpx.ReadTimeout as e:
-            print(e)
-            timeout += 30.0
-            if timeout >= 120.0:
-                has_error = True
-                message = "Read timeout issue"
-                logger.exception(f"Read timeout from Open AI {e}")
-                break
-            else:
-                attempts += 1
-                continue
-        except Exception as e:
-            has_error = True
-            message = f"Unknown exception: {e}"
-            logger.exception(e)
-            break
-    if has_error:
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
-    return Response({"content": content})
-
-
-@api_view(["GET"])
-@permission_classes([permissions.IsAuthenticated])
-def get_writing_styles(request):
-    # if request.data.get("all_styles", False):
-    #     writing_styles = WritingStyle.objects.filter(
-    #         user__organization=request.user.organization
-    #     )
-    # else:
-    #     writing_styles = WritingStyle.objects.filter(
-    #         user=request.user
-    #     )
-    #     print('why...')
-    writing_styles = WritingStyle.objects.filter(user__organization=request.user.organization)
-    serializer = WritingStyleSerializer(writing_styles, many=True)  # Serialize the queryset
-
-    return Response(serializer.data)
-
-
 class DiscoveryViewSet(
     viewsets.GenericViewSet,
     mixins.CreateModelMixin,
@@ -2247,9 +1930,7 @@ class DiscoveryViewSet(
             if len(email_check):
                 db_check = email_check
             else:
-                name_check = Journalist.objects.filter(
-                    first_name=first, last_name=last, outlet=outlet
-                )
+                name_check = Journalist.objects.filter(first_name=first, last_name=last)
                 if len(name_check):
                     db_check = name_check
             if len(db_check):
@@ -2462,6 +2143,526 @@ class DiscoveryViewSet(
         return Response(data=message)
 
 
+class JournalistContactViewSet(
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+):
+    authentication_classes = [ExpiringTokenAuthentication]
+    serializer_class = JournalistContactSerializer
+
+    def get_queryset(self):
+        # contacts = JournalistContact.objects.for_user(user=self.request.user)
+        user = self.request.user
+        contacts = JournalistContact.objects.filter(user__organization=user.organization).order_by(
+            "-datetime_created"
+        )
+        search_term = self.request.query_params.get("search", "")
+        tag = self.request.query_params.get("tag", "")
+        if tag:
+            contacts.filter(tags__contains=[tag])
+        if search_term:
+            contacts = contacts.filter(
+                Q(email__icontains=search_term)
+                | Q(first_name__icontains=search_term)
+                | Q(last_name__icontains=search_term)
+            )
+        return contacts
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="modify_tags",
+    )
+    def modify_tags(self, request, *args, **kwargs):
+        id = request.data.get("id")
+        tag = request.data.get("tag")
+        modifier = request.data.get("modifier")
+        JournalistContact.modify_tags(id, tag, modifier)
+        return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="tag_list",
+    )
+    def get_tag_list(self, request, *args, **kwargs):
+        user = request.user
+        tags = JournalistContact.get_tags_by_user(user)
+        return Response(status=status.HTTP_200_OK, data={"tags": tags})
+
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        journalist = request.data.pop("journalist").strip()
+        email = request.data.pop("email").strip()
+        outlet = request.data.pop("outlet").strip()
+        journalist = check_journalist_validity(journalist, outlet, email)
+        if isinstance(journalist, dict) and "error" in journalist.keys():
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={"error": "Could not create contact"},
+            )
+        else:
+            request.data["journalist"] = journalist.id
+            request.data["user"] = request.user.id
+            try:
+                serializer = self.serializer_class(data=request.data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                readSerializer = self.serializer_class(instance=serializer.instance)
+                user.add_meta_data("contacts")
+            except Exception as e:
+                send_to_error_channel(
+                    str(e), user.email, f"creating journalist contact (platform):\n{request.data}"
+                )
+                logger.exception(f"Error validating data for details <{e}>")
+                return Response(
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)}
+                )
+            return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.serializer_class(instance=instance, data=data, partial=True).update(
+            instance, data
+        )
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            instance.delete()
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_200_OK)
+
+
+class CompanyDetailsViewSet(
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+):
+    serializer_class = CompanyDetailsSerializer
+
+    def get_queryset(self):
+        details = CompanyDetails.objects.filter(user=self.request.user)
+        return details
+
+    def create(self, request, *args, **kwargs):
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            readSerializer = self.serializer_class(instance=serializer.instance)
+        except Exception as e:
+            logger.exception(f"Error validating data for details <{e}>")
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = self.request.data
+        serializer = self.serializer_class(instance=instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            instance.delete()
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="delete-details",
+    )
+    def delete_details(self, request, *args, **kwargs):
+        detail_id = request.data["params"]["id"]
+        detail = CompanyDetails.objects.get(id=detail_id)
+        detail.delete()
+        return Response(status=status.HTTP_200_OK)
+
+
+class EmailTrackerViewSet(
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+):
+    authentication_classes = [ExpiringTokenAuthentication]
+    serializer_class = EmailTrackerSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        trackers = EmailTracker.objects.filter(user=user).order_by("-datetime_created")
+        return trackers
+
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        try:
+            serializer = EmailTrackerSerializer(
+                data={
+                    "user": user.id,
+                    "recipient": request.data.get("recipient"),
+                    "body": request.data.get("body"),
+                    "subject": request.data.get("subject"),
+                    "name": request.data.get("name"),
+                }
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            serializer.instance.add_activity("draft_created")
+            return Response(status=status.HTTP_201_CREATED, data={"tracker": serializer.data})
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = self.request.data
+        activity_type = data.get("activity_type", "Updated")
+        instance.add_activity(activity_type)
+        serializer = self.serializer_class(instance=instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            instance.delete()
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_200_OK)
+
+
+# ENDPOINTS
+
+
+@require_http_methods(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+@async_to_sync
+async def get_clips(request, *args, **kwargs):
+    response = await sync_to_async(getclips)(request)
+    return JsonResponse(data=response)
+
+
+@api_view(["GET"])
+@permission_classes(
+    [
+        permissions.AllowAny,
+    ]
+)
+def get_shared_summary(request, encrypted_param):
+    decrypted_dict = decrypt_dict(encrypted_param)
+    created_at = datetime.strptime(decrypted_dict.get("created_at"), "%Y-%m-%d %H:%M:%S.%f")
+    time_difference = datetime.now() - created_at
+    twenty_four_hours = timedelta(hours=24)
+    if time_difference > twenty_four_hours:
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    search = Search.objects.get(id=decrypt_dict["id"])
+    return Response(data={"summary": search.summary})
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def upload_link(request):
+    url = request.data["params"]["url"]
+    try:
+        article_res = Article(url, config=generate_config())
+        article_res.download()
+        article_res.parse()
+
+        title = article_res.title
+        author = article_res.authors
+        image = article_res.top_image
+        date = article_res.publish_date
+        text = article_res.meta_description
+        domain = get_domain(url)
+        article = {}
+        article = {
+            "title": title,
+            "source": domain,
+            "author": author,
+            "image_url": image,
+            "publish_date": date,
+            "description": text,
+            "link": url,
+        }
+        emit_process_website_domain(url, request.user.organization.name)
+    except Exception as e:
+        logger.exception(e)
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return Response(data=article)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def get_twitter_request_token(request):
+    res = TwitterAccount.get_token(request)
+    return Response(res)
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def get_twitter_auth_link(request):
+    link = TwitterAccount.get_authorization(request.token)
+    return Response({"link": link})
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def get_twitter_authentication(request):
+    user = request.user
+    data = request.data
+    access_token = TwitterAccount.authenticate(data.get("oauth_token"), data.get("oauth_verifier"))
+    data = {
+        "user": user.id,
+        "access_token": access_token.get("oauth_token"),
+        "access_token_secret": access_token.get("oauth_token_secret"),
+    }
+    existing = TwitterAccount.objects.filter(user=request.user).first()
+    if existing:
+        serializer = TwitterAccountSerializer(data=data, instance=existing)
+    else:
+        serializer = TwitterAccountSerializer(data=data)
+    try:
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+    except Exception as e:
+        logger.exception(str(e))
+        return Response(data={"success": False})
+    return Response(data={"success": True})
+
+
+@api_view(["DELETE"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def revoke_twitter_auth(request):
+    user = request.user
+    twitter_account = TwitterAccount.objects.filter(user=user)
+    try:
+        twitter_account.delete()
+    except Exception as e:
+        return Response({"error": str(e)})
+    return Response(data={"success": True})
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def get_instagram_request_token(request):
+    res = InstagramAccount.get_token(request)
+    return Response(res)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def get_instagram_authentication(request):
+    user = request.user
+    data = request.data
+    access_token_response = InstagramAccount.authenticate(data.get("code"))
+    access_token_response["user"] = user.id
+    existing = InstagramAccount.objects.filter(user=request.user).first()
+    if existing:
+        serializer = InstagramAccountSerializer(data=access_token_response, instance=existing)
+    else:
+        serializer = InstagramAccountSerializer(data=access_token_response)
+    try:
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        emit_get_meta_account_info(str(user.id))
+    except Exception as e:
+        logger.exception(str(e))
+        return Response(data={"success": False})
+    return Response(data={"success": True})
+
+
+@api_view(["DELETE"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def revoke_instagram_auth(request):
+    user = request.user
+    ig_account = InstagramAccount.objects.filter(user=user)
+    try:
+        ig_account.delete()
+    except Exception as e:
+        return Response({"error": str(e)})
+    return Response(data={"success": True})
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def get_email_request_token(request):
+    res = InstagramAccount.get_token(request)
+    return Response(res)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def get_email_authentication(request):
+    user = request.user
+    data = request.data
+    access_token_response = InstagramAccount.authenticate(data.get("code"))
+    access_token_response["user"] = user.id
+    existing = InstagramAccount.objects.filter(user=request.user).first()
+    if existing:
+        serializer = InstagramAccountSerializer(data=access_token_response, instance=existing)
+    else:
+        serializer = InstagramAccountSerializer(data=access_token_response)
+    try:
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        emit_get_meta_account_info(str(user.id))
+    except Exception as e:
+        logger.exception(str(e))
+        return Response(data={"success": False})
+    return Response(data={"success": True})
+
+
+@api_view(["DELETE"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def revoke_email_auth(request):
+    user = request.user
+    ig_account = InstagramAccount.objects.filter(user=user)
+    try:
+        ig_account.delete()
+    except Exception as e:
+        return Response({"error": str(e)})
+    return Response(data={"success": True})
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def upload_pdf(request):
+    user = request.user
+    url = request.data.get("url", None)
+    pdf_file = request.FILES.get("pdf_file", None)
+    instructions = request.data.get("instructions", "Create a summary")
+    if pdf_file:
+        text, images = extract_pdf_text(pdf_file)
+    else:
+        text, images = convert_pdf_from_url(url)
+    if not len(text):
+        return Response(
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            data={"error": "No text could be extract from the uploaded PDF"},
+        )
+    has_error = False
+    attempts = 1
+    token_amount = 4000
+    timeout = 60.0
+    while True:
+        try:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_GENERATE_PDF_SUMMARY(
+                datetime.now().date(), instructions, text
+            )
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email,
+                prompt,
+                token_amount=token_amount,
+                top_p=0.1,
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            res = open_ai_exceptions._handle_response(r)
+
+            content = res.get("choices")[0].get("message").get("content")
+            # if len(images):
+            #     prompt = comms_consts.OPEN_AI_IMAGE_CONTENT(
+            #         images, "Generate a summary of the images", token_amount
+            #     )
+            #     with Variable_Client(timeout) as client:
+            #         r = client.post(
+            #             url,
+            #             data=json.dumps(prompt),
+            #             headers=core_consts.OPEN_AI_HEADERS,
+            #         )
+            #     res = open_ai_exceptions._handle_response(r)
+            #     print(res)
+            break
+        except open_ai_exceptions.StopReasonLength:
+            logger.exception(
+                f"Retrying again due to token amount, amount currently at: {token_amount}"
+            )
+            if token_amount <= 8000:
+                has_error = True
+
+                message = "Token amount error"
+                break
+            else:
+                token_amount += 1000
+                continue
+        except httpx.ReadTimeout as e:
+            print(e)
+            timeout += 30.0
+            if timeout >= 120.0:
+                has_error = True
+                message = "Read timeout issue"
+                logger.exception(f"Read timeout from Open AI {e}")
+                break
+            else:
+                attempts += 1
+                continue
+        except Exception as e:
+            has_error = True
+            message = f"Unknown exception: {e}"
+            logger.exception(e)
+            break
+    if has_error:
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
+    return Response({"content": content})
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def get_writing_styles(request):
+    # if request.data.get("all_styles", False):
+    #     writing_styles = WritingStyle.objects.filter(
+    #         user__organization=request.user.organization
+    #     )
+    # else:
+    #     writing_styles = WritingStyle.objects.filter(
+    #         user=request.user
+    #     )
+    #     print('why...')
+    writing_styles = WritingStyle.objects.filter(user__organization=request.user.organization)
+    serializer = WritingStyleSerializer(writing_styles, many=True)  # Serialize the queryset
+
+    return Response(serializer.data)
+
+
 @permission_classes([])
 def email_tracking_endpoint(request):
     params = request.META["QUERY_STRING"]
@@ -2582,6 +2783,7 @@ def email_recieved_webhook(request):
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
 def get_google_summary(request):
     user = request.user
     query = request.data.get("query")
@@ -2665,204 +2867,142 @@ def get_google_summary(request):
     )
 
 
-class JournalistContactViewSet(
-    viewsets.GenericViewSet,
-    mixins.RetrieveModelMixin,
-    mixins.ListModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-):
-    authentication_classes = [ExpiringTokenAuthentication]
-    serializer_class = JournalistContactSerializer
-
-    def get_queryset(self):
-        # contacts = JournalistContact.objects.for_user(user=self.request.user)
-        user = self.request.user
-        contacts = JournalistContact.objects.filter(user__organization=user.organization).order_by(
-            "-datetime_created"
-        )
-        if self.request.data.get("tag", False):
-            tag = self.request.get("tag")
-            return contacts.filter(tags__contains=[tag])
-        else:
-            return contacts
-
-    @action(
-        methods=["post"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="modify_tags",
-    )
-    def modify_tags(self, request, *args, **kwargs):
-        id = request.data.get("id")
-        tag = request.data.get("tag")
-        modifier = request.data.get("modifier")
-        JournalistContact.modify_tags(id, tag, modifier)
-        return Response(status=status.HTTP_200_OK)
-
-    @action(
-        methods=["get"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="tag_list",
-    )
-    def get_tag_list(self, request, *args, **kwargs):
-        user = request.user
-        tags = JournalistContact.get_tags_by_user(user)
-        return Response(status=status.HTTP_200_OK, data={"tags": tags})
-
-    def create(self, request, *args, **kwargs):
-        user = request.user
-        journalist = request.data.pop("journalist").strip()
-        email = request.data.pop("email").strip()
-        outlet = request.data.pop("outlet").strip()
-        journalist = check_journalist_validity(journalist, outlet, email)
-        if isinstance(journalist, dict) and "error" in journalist.keys():
-            return Response(
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                data={"error": "Could not create contact"},
-            )
-        else:
-            request.data["journalist"] = journalist.id
-            request.data["user"] = request.user.id
-            try:
-                serializer = self.serializer_class(data=request.data)
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-                readSerializer = self.serializer_class(instance=serializer.instance)
-                user.add_meta_data("contacts")
-            except Exception as e:
-                send_to_error_channel(
-                    str(e), user.email, f"creating journalist contact (platform):\n{request.data}"
-                )
-                logger.exception(f"Error validating data for details <{e}>")
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def read_column_names(request):
+    file_obj = request.FILES.get("file")
+    if file_obj:
+        file_name = file_obj.name
+        try:
+            if file_name.endswith(".xlsx") or file_name.endswith(".xls"):
+                workbook = load_workbook(file_obj, data_only=True)
+                res_data = []
+                for sheet in workbook.sheetnames:
+                    current_sheet = workbook[sheet]
+                    column_names = [
+                        cell.value
+                        for cell in current_sheet[1]
+                        if cell.value not in [None, False, True]
+                    ]
+                    res_data.append({"name": sheet, "columns": column_names})
+            elif file_name.endswith(".csv"):
+                csv_file = io.TextIOWrapper(file_obj.file, encoding="utf-8")
+                reader = csv.reader(csv_file)
+                column_names = next(reader)
+                column_names = [col for col in column_names if col not in [None, "", False, True]]
+                res_data = [{"name": file_name, "columns": column_names}]
+            else:
                 return Response(
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)}
+                    {"error": "Unsupported file type"}, status=status.HTTP_400_BAD_REQUEST
                 )
-            return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
-
-    def partial_update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        data = self.request.data
-        serializer = self.serializer_class(instance=instance, data=data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(status=status.HTTP_200_OK, data=serializer.data)
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        try:
-            instance.delete()
+            return Response({"sheets": res_data}, status=status.HTTP_200_OK)
         except Exception as e:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
-        return Response(status=status.HTTP_200_OK)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CompanyDetailsViewSet(
-    viewsets.GenericViewSet,
-    mixins.RetrieveModelMixin,
-    mixins.ListModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-):
-    serializer_class = CompanyDetailsSerializer
-
-    def get_queryset(self):
-        details = CompanyDetails.objects.filter(user=self.request.user)
-        return details
-
-    def create(self, request, *args, **kwargs):
-        try:
-            serializer = self.serializer_class(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            readSerializer = self.serializer_class(instance=serializer.instance)
-        except Exception as e:
-            logger.exception(f"Error validating data for details <{e}>")
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
-        return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
-
-    def partial_update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        data = self.request.data
-        serializer = self.serializer_class(instance=instance, data=data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(status=status.HTTP_200_OK, data=serializer.data)
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        try:
-            instance.delete()
-        except Exception as e:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
-        return Response(status=status.HTTP_200_OK)
-
-    @action(
-        methods=["post"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="delete-details",
-    )
-    def delete_details(self, request, *args, **kwargs):
-        detail_id = request.data["params"]["id"]
-        detail = CompanyDetails.objects.get(id=detail_id)
-        detail.delete()
-        return Response(status=status.HTTP_200_OK)
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def process_excel_file(request):
+    file_obj = request.FILES.get("file")
+    sheet_name = request.data.get("sheet")
+    labels = json.loads(request.data.get("labels"))
+    if file_obj:
+        index_values = {}
+        journalist_values = {}
+        workbook = load_workbook(file_obj, data_only=True)
+        sheet = workbook[sheet_name]
+        for key in labels.keys():
+            label = labels[key]
+            for cell in sheet[1]:
+                if cell.value == label:
+                    index_values[cell.column] = key
+        for idx in index_values.keys():
+            row_values = []
+            for row in sheet.iter_rows(min_row=2, min_col=idx, max_col=idx, values_only=True):
+                value = row[0].strip() if isinstance(row[0], str) else row[0]
+                row_values.append(value)
+            journalist_values[index_values[idx]] = row_values
+        result = TaskResults.objects.create(
+            function_name="emit_process_contacts_excel", user_id=str(request.user.id)
+        )
+        task = emit_process_contacts_excel(str(request.user.id), journalist_values, str(result.id))
+        result.task_id_str = str(task.id)
+        result.task = task
+        result.save()
+        return Response(
+            status=status.HTTP_200_OK,
+            data={"task_id": str(result.id), "num_processing": len(journalist_values["email"])},
+        )
+    else:
+        return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class EmailTrackerViewSet(
-    viewsets.GenericViewSet,
-    mixins.RetrieveModelMixin,
-    mixins.ListModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-):
-    authentication_classes = [ExpiringTokenAuthentication]
-    serializer_class = EmailTrackerSerializer
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def process_csv_file(request):
+    file_obj = request.FILES.get("file")
+    labels = json.loads(request.data.get("labels"))
+    if file_obj:
+        index_values = {}
+        journalist_values = {}
+        csv_reader = csv.reader(file_obj.read().decode("utf-8").splitlines())
+        header = next(csv_reader)
+        for idx, cell in enumerate(header):
+            if cell in labels.values():
+                key = next(key for key, value in labels.items() if value == cell)
+                index_values[idx] = key
+        for row in csv_reader:
+            for idx, key in index_values.items():
+                if key not in journalist_values:
+                    journalist_values[key] = []
+                journalist_values[key].append(row[idx] if idx < len(row) else None)
+        result = TaskResults.objects.create(
+            function_name="emit_process_contacts_excel", user_id=str(request.user.id)
+        )
+        task = emit_process_contacts_excel(journalist_values, str(result.id))
+        result.task_id_str = str(task.id)
+        result.task = task
+        result.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    else:
+        return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
 
-    def get_queryset(self):
-        user = self.request.user
-        trackers = EmailTracker.objects.filter(user=user).order_by("-datetime_created")
-        return trackers
 
-    def create(self, request, *args, **kwargs):
-        user = request.user
-        try:
-            serializer = EmailTrackerSerializer(
-                data={
-                    "user": user.id,
-                    "recipient": request.data.get("recipient"),
-                    "body": request.data.get("body"),
-                    "subject": request.data.get("subject"),
-                    "name": request.data.get("name"),
-                }
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            serializer.instance.add_activity("draft_created")
-            return Response(status=status.HTTP_201_CREATED, data={"tracker": serializer.data})
-        except Exception as e:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+# REDIRECTS
 
-    def partial_update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        data = self.request.data
-        print("here i am --- >", data.get("activity_type"))
-        activity_type = data.get("activity_type", "Updated")
-        instance.add_activity(activity_type)
-        serializer = self.serializer_class(instance=instance, data=data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(status=status.HTTP_200_OK, data=serializer.data)
 
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        try:
-            instance.delete()
-        except Exception as e:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
-        return Response(status=status.HTTP_200_OK)
+def redirect_from_email(request):
+    verifier = request.GET.get("oauth_verifier", False)
+    token = request.GET.get("oauth_token", False)
+    q = urlencode({"state": "EMAIL", "oauth_verifier": verifier, "code": "code", "token": token})
+    if not verifier:
+        err = {"error": "there was an error"}
+        err = urlencode(err)
+        return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{err}")
+    return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{q}")
+
+
+def redirect_from_twitter(request):
+    verifier = request.GET.get("oauth_verifier", False)
+    token = request.GET.get("oauth_token", False)
+    q = urlencode({"state": "TWITTER", "oauth_verifier": verifier, "code": "code", "token": token})
+    if not verifier:
+        err = {"error": "there was an error"}
+        err = urlencode(err)
+        return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{err}")
+    return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{q}")
+
+
+def redirect_from_instagram(request):
+    code = request.GET.get("code", False)
+    q = urlencode({"state": "INSTAGRAM", "code": code})
+    if not code:
+        err = {"error": "there was an error"}
+        err = urlencode(err)
+        return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{err}")
+    return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{q}")

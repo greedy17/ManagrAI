@@ -611,6 +611,21 @@ def OPEN_AI_GET_JOURNALIST_LIST(info, content):
     return prompt
 
 
+def OPEN_AI_PITCH_JOURNALIST_LIST(journalists, pitch):
+    initial_sentence = (
+        f"From the list of journalists I provided who would be interested in this pitch: {pitch}"
+    )
+    prompt = f"""
+    {initial_sentence}.\n
+    * Output format must a ONLY JSON object:
+    {'{'}'journalists': [LIST OF NAMES]{'}'}
+
+    journalists:\n
+    {journalists}
+    """
+    return prompt
+
+
 OPEN_AI_EMAIL_JOURNALIST = (
     lambda user, org, style, bio, author, outlet, headline, description, date,: f"""
     {author} from {outlet} wrote this article, "{headline}", heres the article description: {description}. The date of the article is {date}. Now, here is what I need you to do:    
@@ -700,6 +715,9 @@ DO_NOT_INCLUDE_WORDS = [
     "instagram",
     ".jpg",
     "/video",
+    "x.com",
+    ".png",
+    ".jpeg",
 ]
 
 NON_VIABLE_CLASSES = ["menu", "nav"]

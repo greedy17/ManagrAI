@@ -512,6 +512,21 @@ urlpatterns = [
         comms_views.get_google_summary,
         name="google-search",
     ),
+    path(
+        "read-column-names/",
+        comms_views.read_column_names,
+        name="read-column-names",
+    ),
+    path(
+        "process-contacts/excel",
+        comms_views.process_excel_file,
+        name="process-contacts-excel",
+    ),
+    path(
+        "process-contacts/csv",
+        comms_views.process_csv_file,
+        name="process-contacts-csv",
+    ),
 ]
 router.register("users/reports", core_views.ReportViewSet, "reports"),
 router.register("users/conversations", core_views.ConversationViewSet, "conversations"),

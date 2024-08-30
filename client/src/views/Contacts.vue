@@ -360,10 +360,41 @@
       </div>
     </Modal>
 
+    <Modal class="bio-modal small-modal" v-if="bulkModalOpen">
+      <div class="bio-container small-container">
+        <header>
+          <h2 style="margin: 12px 0">Import Contacts</h2>
+        </header>
+
+        <div style="margin-bottom: 16px; height: 300px; width: 100%">
+          <ContactMapping @fieldsFullyMapped="updateMappedField"></ContactMapping>
+        </div>
+
+        <footer>
+          <div></div>
+
+          <div class="row">
+            <button class="secondary-button" @click="bulkModalOpen = false">Cancel</button>
+            <button class="primary-button" :disabled="!mapped" @click="handleFileUpload">
+              <img
+                v-if="uploading"
+                style="margin-right: 4px"
+                class="invert rotation"
+                src="@/assets/images/loading.svg"
+                height="14px"
+                alt=""
+              />
+              Import
+            </button>
+          </div>
+        </footer>
+      </div>
+    </Modal>
+
     <Modal class="bio-modal med-modal" v-if="contactsModalOpen">
       <div class="bio-container med-container">
         <header>
-          <h2 style="margin: 12px 0">Add Contact</h2>
+          <h2 style="margin: 12px 0">Lookup Contact</h2>
         </header>
 
         <div style="margin-top: 16px; margin-bottom: 24px; min-height: 120px; width: 100%">
@@ -383,33 +414,6 @@
             name="outlet"
             v-model="outletName"
           />
-          <!-- <label for="details">Your company details</label>
-          <div class="input-container-small">
-            <textarea
-              :disabled="loadingContacts"
-              style="
-                border: none;
-                outline: none;
-                padding: 16px 8px;
-                width: 100%;
-                max-height: 100px !important;
-                background: transparent;
-              "
-              class="area-input text-area-input"
-              type="text"
-              v-model="orgInfo"
-              rows="2"
-              v-autoresize
-              placeholder="Provide company name and pitch details..."
-              name="details"
-            />
-          </div> -->
-          <!-- <div style="font-size: 14px; margin: 12px 0 0 4px" class="row">
-            <img src="@/assets/images/profile.svg" height="12px" alt="" />
-            <p style="margin: 0 0 0 4px">
-              Managr will generate pitching tips based on this information
-            </p>
-          </div> -->
         </div>
 
         <footer>
@@ -438,6 +442,181 @@
         </footer>
       </div>
     </Modal>
+
+    <Modal class="bio-modal med-modal" v-if="tagModalOpen">
+      <div class="bio-container med-container">
+        <header>
+          <h2 style="margin: 12px 0">Apply or Create a Tag</h2>
+
+          <img
+            style="cursor: pointer"
+            @click="tagModalOpen = false"
+            src="@/assets/images/close.svg"
+            height="20px"
+            alt=""
+          />
+        </header>
+
+        <div style="margin-top: 16px; margin-bottom: 24px; min-height: 120px; width: 100%">
+          <div>
+            <h3>Select tag to apply</h3>
+            <div style="height: 50px; margin-top: 32px" v-if="!tags.length">
+              You dont have any tags yet...
+            </div>
+            <div
+              style="
+                padding: 0;
+                opacity: 1;
+                height: 120px;
+                overflow: scroll;
+                cursor: text;
+                margin-top: 16px;
+                margin-bottom: 8px;
+              "
+              class="scrolltainer"
+              v-else
+            >
+              <div
+                style="opacity: 1; cursor: text; font-size: 15px; padding: 5px 8px; cursor: pointer"
+                v-for="(tag, i) in tags"
+                @click="selectTag(tag, i)"
+                :key="i"
+                class="space-between hover-bg"
+              >
+                {{ tag }}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3>Create</h3>
+            <div style="margin-top: 24px" class="row">
+              <div style="opacity: 1; margin: 0; cursor: text" class="input-container-small">
+                <input
+                  :disabled="loadingTags"
+                  style="border: none; outline: none; padding: 10px 8px 10px 0px; width: 100%"
+                  class="text-area-input"
+                  type="text"
+                  v-model="newTag"
+                  placeholder="Name your tag..."
+                />
+
+                <img
+                  style="filter: invert(40%); margin-right: 20px"
+                  src="@/assets/images/user-tag.svg"
+                  height="14px"
+                  alt=""
+                />
+              </div>
+
+              <button
+                :disabled="!newTag || loadingTags"
+                @click="modifyTags('add')"
+                style="margin-bottom: 5px"
+                class="primary-button"
+              >
+                <img
+                  v-if="loadingTags"
+                  class="rotation"
+                  src="@/assets/images/loading.svg"
+                  height="14px"
+                  alt=""
+                />
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- <footer>
+          <div></div>
+          <div class="row">
+            <button class="secondary-button" @click="tagModalOpen = false">Cancel</button>
+            <button class="primary-button">Continue</button>
+          </div>
+        </footer> -->
+      </div>
+    </Modal>
+
+    <!-- <div
+      class="drop-options"
+      style="padding-left: 0; padding-right: 0"
+      v-show="showingTags && currentIndex === i"
+    >
+      <header style="padding-left: 8px">
+        Apply Tag
+        <img
+          @click="closeTags"
+          style="margin-right: 12px; cursor: pointer"
+          src="@/assets/images/close.svg"
+          height="16px"
+          alt=""
+        />
+      </header>
+
+      <div style="height: 50px" v-if="!tags.length">You dont have any tags yet...</div>
+      <div style="padding: 0; opacity: 1; height: 120px; overflow: scroll; cursor: text" v-else>
+        <div
+          style="opacity: 1; cursor: text; font-size: 15px; padding: 4px 8px; cursor: pointer"
+          v-for="(tag, i) in tags"
+          @click="selectTag(contact, tag, i)"
+          :key="i"
+          class="space-between hover-bg"
+        >
+          {{ tag }}
+        </div>
+      </div>
+
+      <div style="opacity: 1; cursor: text; position: relative; padding: 0 8px">
+        <div style="opacity: 1" class="sticky-bottom-between">
+          <div
+            style="opacity: 1; margin: 0; cursor: text"
+            v-if="showingInput"
+            class="input-container-small"
+          >
+            <input
+              :disabled="loadingTags"
+              style="border: none; outline: none; padding: 10px 8px 10px 0px; width: 100%"
+              class="text-area-input"
+              type="text"
+              v-model="newTag"
+              placeholder="Name your tag..."
+            />
+
+            <img
+              style="filter: invert(40%); margin-right: 20px"
+              src="@/assets/images/user-tag.svg"
+              height="14px"
+              alt=""
+            />
+          </div>
+
+          <button
+            style="margin-left: auto"
+            v-else
+            @click="showingInput = true"
+            class="secondary-button-no-border"
+          >
+            <img src="@/assets/images/add.svg" height="14px" alt="" />
+            Create Tag
+          </button>
+          <button
+            :disabled="!newTag || loadingTags"
+            v-if="showingInput"
+            @click="modifyTags('add')"
+            style="margin-bottom: 5px"
+            class="primary-button"
+          >
+            Save
+            <div style="margin-left: 4px" v-if="loadingTags" class="loading-small">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div> -->
 
     <Modal v-if="bioModalOpen" class="bio-modal">
       <div class="bio-container">
@@ -489,14 +668,17 @@
               style="border: none"
             >
               <h3 style="font-size: 16px" class="thin-font row">
-                <span class="thin-font-ellipsis">{{
-                  !selectedUser
-                    ? 'All'
-                    : selectedUser.fullName
-                    ? selectedUser.fullName + "'s"
-                    : selectedUser.full_name + "'s"
-                }}</span>
-                contacts : <span style="margin-left: 4px">{{ filteredContactList.length }}</span>
+                <span class="thin-font-ellipsis"
+                  >{{
+                    !selectedUser
+                      ? 'All'
+                      : selectedUser.fullName
+                      ? selectedUser.fullName
+                      : selectedUser.full_name
+                  }}
+                </span>
+                <!-- <span>contacts:</span>
+                <span style="margin-left: 4px">{{ }}</span> -->
               </h3>
 
               <img
@@ -515,7 +697,12 @@
               />
             </div>
 
-            <div v-outside-click="hideUsers" style="left: 0" v-show="showUsers" class="dropdown">
+            <div
+              v-outside-click="hideUsers"
+              style="left: 0; z-index: 10"
+              v-show="showUsers"
+              class="dropdown"
+            >
               <div class="dropdown-header">
                 <h3>Select User</h3>
               </div>
@@ -539,23 +726,15 @@
               <div class="dropdown-footer"></div>
             </div>
 
-            <div
-              style="margin-left: 32px"
-              @click="toggleContactsModal"
-              class="img-container s-wrapper"
-            >
-              <img src="@/assets/images/addcontact.svg" height="14px" alt="" />
-              <div class="s-tooltip">Add contact</div>
+            <div @click="toggleContactsModal" class="icon-btn">
+              <img src="@/assets/images/mglass.svg" height="13px" alt="" />
+              <div>Lookup contact</div>
             </div>
 
-            <!-- <button
-              @click="toggleContactsModal"
-              v-if="!loading"
-              class="secondary-button-no-border"
-              style="margin-left: 12px; background-color: transparent"
-            >
-              <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Contact
-            </button> -->
+            <div style="margin-left: 8px" @click="bulkModalOpen = true" class="icon-btn">
+              <img src="@/assets/images/file-import.svg" height="14px" alt="" />
+              <div>Import contacts</div>
+            </div>
           </div>
 
           <div class="search">
@@ -573,236 +752,213 @@
                 class="search-input"
                 :placeholder="`Search contacts...`"
               />
-              <img
-                v-if="searchContactsText"
-                @click="clearSearchText"
-                src="@/assets/images/close.svg"
-                class="pointer"
-                height="12px"
-                alt=""
-              />
+
+              <div v-if="searchContactsText" @click="loadSearchedContacts">
+                <img src="@/assets/images/arrow-right.svg" class="pointer" height="12px" alt="" />
+              </div>
             </div>
           </div>
         </div>
 
-        <div v-if="loading" class="cards-container">
-          <div style="font-size: 16px; margin: 24px 0 0 12px" class="loading-small">
-            <p class="bold-font" style="margin: 0; margin-right: 8px">Gathering contacts</p>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-          </div>
-        </div>
-
-        <div class="cards-container" v-else-if="!filteredContactList.length">
-          Your saved contacts
-          <span>
-            <img
-              style="margin-left: -16px; margin-right: 4px"
-              src="@/assets/images/addcontact.svg"
-              height="12px"
-              alt=""
-            />
-            will appear here.</span
-          >
-        </div>
-
-        <div v-else class="cards-container">
-          <div v-for="(contact, i) in filteredContactList" :key="i" class="contact-card">
-            <header style="position: relative">
-              <div class="contact-header">
-                <p class="base-font">
-                  {{ contact.journalist_ref.first_name + ' ' + contact.journalist_ref.last_name }}
-                </p>
-                <p style="font-size: 14px">
-                  <!-- <img src="@/assets/images/building.svg" height="13px" alt="" /> -->
-                  {{ contact.journalist_ref.outlet }}
-                </p>
-              </div>
-              <div style="display: flex; flex-direction: row; justify-content: flex-end">
-                <img
-                  v-for="(image, i) in contact.images.slice(0, 3)"
-                  class="main-img"
-                  :key="i"
-                  :src="image"
-                  alt=""
-                />
-                <!-- <img class="main-img" src="" alt="" />
-                <img class="main-img" src="" alt="" /> -->
-              </div>
-
-              <div
-                :class="{ removing: deleting && deletingId === contact.id }"
-                @click="openDeleteModal(contact.id)"
-                class="absolute-right"
-              >
-                <img src="@/assets/images/close.svg" height="20px" alt="" />
-              </div>
-            </header>
-
-            <div style="padding: 0 4px" class="body">
-              <div class="bio-text" v-html="contact.bio"></div>
-              <!-- <div class="blur"></div> -->
-            </div>
-
-            <div class="footer">
-              <div style="width: 50%" class="rows">
-                <div
-                  style="padding-right: 10px"
-                  v-for="(tag, i) in contact.tags"
-                  :key="i"
-                  class="user-tag"
+        <div class="table-border">
+          <table>
+            <thead>
+              <tr style="position: relative">
+                <th
+                  v-resizableColumn
+                  v-for="(value, key) in statsKeys"
+                  :key="key"
+                  @click="sortBy(value.charAt(0).toLowerCase() + value.slice(1))"
                 >
-                  <img class="pink-filter" src="@/assets/images/tags.svg" height="12px" alt="" />
-                  {{ tag }}
-                </div>
-              </div>
+                  {{ value }}
 
-              <div style="position: relative" class="row">
-                <div
-                  @click.stop="showTags(contact, i)"
-                  class="img-container s-wrapper"
-                  :class="{ 'img-container-stay': showingTags && currentIndex === i }"
-                >
-                  <img src="@/assets/images/tags.svg" height="14px" alt="" />
-                  <div class="s-tooltip">Add Tag</div>
-                </div>
-
-                <div @click="openPitchModal(contact)" class="img-container s-wrapper">
-                  <img src="@/assets/images/microphone.svg" height="14px" alt="" />
-                  <div class="s-tooltip">Create Pitch</div>
-                </div>
-
-                <div @click="updateContact(contact)" class="img-container s-wrapper">
-                  <img src="@/assets/images/refresh-pr.svg" height="14px" alt="" />
-                  <div class="s-tooltip">Refresh Bio</div>
-                </div>
-                <div @click="setContact(contact)" class="img-container s-wrapper">
-                  <img src="@/assets/images/file-user.svg" height="14px" alt="" />
-                  <div class="s-tooltip">View Bio</div>
-                </div>
-
-                <!-- <button
-                  @click="showTags(contact, i)"
-                  style="padding-left: 8px"
-                  class="secondary-button"
-                >
                   <img
-                    style="margin-right: 2px"
-                    src="@/assets/images/add.svg"
+                    v-if="
+                      sortKey === value.charAt(0).toLowerCase() + value.slice(1) && sortOrder === -1
+                    "
+                    src="@/assets/images/arrowDrop.svg"
                     height="14px"
                     alt=""
                   />
-                  Tag
-                </button> -->
 
-                <!-- v-outside-click="closeTags" -->
+                  <img
+                    v-else-if="
+                      sortKey === value.charAt(0).toLowerCase() + value.slice(1) && sortOrder !== -1
+                    "
+                    src="@/assets/images/arrowDropUp.svg"
+                    height="14px"
+                    alt=""
+                  />
 
-                <div
-                  class="drop-options"
-                  style="padding-left: 0; padding-right: 0"
-                  v-show="showingTags && currentIndex === i"
-                >
-                  <header style="padding-left: 8px">
-                    Apply Tag
-                    <img
-                      @click="closeTags"
-                      style="margin-right: 12px; cursor: pointer"
-                      src="@/assets/images/close.svg"
-                      height="16px"
-                      alt=""
-                    />
-                  </header>
-
-                  <div style="height: 50px" v-if="!tags.length">You dont have any tags yet...</div>
-                  <div
-                    style="padding: 0; opacity: 1; height: 120px; overflow: scroll; cursor: text"
-                    v-else
-                  >
-                    <div
-                      style="
-                        opacity: 1;
-                        cursor: text;
-                        font-size: 15px;
-                        padding: 4px 8px;
-                        cursor: pointer;
-                      "
-                      v-for="(tag, i) in tags"
-                      @click="selectTag(contact, tag, i)"
-                      :key="i"
-                      class="space-between hover-bg"
-                    >
-                      {{ tag }}
-
-                      <!-- <button
-                        :disabled="selectingTag"
-                        @click="selectTag(contact, tag, i)"
-                        class="tertiary-button"
-                      >
-                        Select
-                      </button> -->
-                    </div>
-                  </div>
-
-                  <div style="opacity: 1; cursor: text; position: relative; padding: 0 8px">
-                    <div style="opacity: 1" class="sticky-bottom-between">
-                      <div
-                        style="opacity: 1; margin: 0; cursor: text"
-                        v-if="showingInput"
-                        class="input-container-small"
-                      >
-                        <input
-                          :disabled="loadingTags"
-                          style="
-                            border: none;
-                            outline: none;
-                            padding: 10px 8px 10px 0px;
-                            width: 100%;
-                          "
-                          class="text-area-input"
-                          type="text"
-                          v-model="newTag"
-                          placeholder="Name your tag..."
-                        />
-
-                        <img
-                          style="filter: invert(40%); margin-right: 20px"
-                          src="@/assets/images/user-tag.svg"
-                          height="14px"
-                          alt=""
-                        />
+                  <div class="resizer"></div>
+                </th>
+                <th style="cursor: text" class="mobile-width" v-resizableColumn>
+                  Tags
+                  <div class="resizer"></div>
+                </th>
+                <th style="cursor: text" class="mobile-width" v-resizableColumn>
+                  Actions
+                  <div class="resizer"></div>
+                </th>
+              </tr>
+            </thead>
+            <tbody v-if="filteredContactList.length">
+              <tr v-for="(contact, i) in filteredContactList" :key="i">
+                <td :class="i % 2 !== 0 ? 'gray-bg' : ''" style="cursor: pointer">
+                  <div class="email-details">
+                    <div class="email-info">
+                      <div class="subject">
+                        {{ contact.journalist_ref.outlet }}
                       </div>
-
-                      <button
-                        style="margin-left: auto"
-                        v-else
-                        @click="showingInput = true"
-                        class="secondary-button-no-border"
-                      >
-                        <img src="@/assets/images/add.svg" height="14px" alt="" />
-                        Create Tag
-                      </button>
-                      <button
-                        :disabled="!newTag || loadingTags"
-                        v-if="showingInput"
-                        @click="modifyTags('add')"
-                        style="margin-bottom: 5px"
-                        class="primary-button"
-                      >
-                        Save
-                        <div style="margin-left: 4px" v-if="loadingTags" class="loading-small">
-                          <div class="dot"></div>
-                          <div class="dot"></div>
-                          <div class="dot"></div>
-                        </div>
-                      </button>
                     </div>
                   </div>
-                </div>
+                  <div class="blur"></div>
+                </td>
+                <td :class="i % 2 !== 0 ? 'gray-bg' : ''" class="set-width">
+                  <div style="margin-bottom: 4px; font-size: 14px">
+                    {{ contact.journalist_ref.first_name + ' ' + contact.journalist_ref.last_name }}
+                  </div>
+                </td>
+                <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
+                  <div class="small-col">
+                    {{ contact.journalist_ref.email }}
+                  </div>
+                </td>
+
+                <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
+                  <div style="max-width: 250px; overflow: scroll" class="rows">
+                    <div
+                      style="padding-right: 10px"
+                      v-for="(tag, i) in contact.tags"
+                      :key="i"
+                      class="user-tag"
+                    >
+                      <img
+                        class="pink-filter"
+                        src="@/assets/images/tags.svg"
+                        height="12px"
+                        alt=""
+                      />
+                      {{ tag }}
+                    </div>
+                  </div>
+                </td>
+
+                <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
+                  <div class="rows">
+                    <div
+                      @click.stop="showTags(contact, i)"
+                      class="img-container s-wrapper"
+                      @mouseenter="showPopover($event, 'Add Tag', i)"
+                      @mouseleave="hidePopover"
+                    >
+                      <img
+                        style="filter: invert(40%)"
+                        src="@/assets/images/tags.svg"
+                        height="14px"
+                        alt=""
+                      />
+                    </div>
+
+                    <div
+                      @click="openPitchModal(contact)"
+                      class="img-container s-wrapper"
+                      @mouseenter="showPopover($event, 'Create Pitch', i)"
+                      @mouseleave="hidePopover"
+                    >
+                      <img
+                        style="filter: invert(40%)"
+                        src="@/assets/images/microphone.svg"
+                        height="14px"
+                        alt=""
+                      />
+                    </div>
+
+                    <div
+                      @click="updateContact(contact)"
+                      class="img-container s-wrapper"
+                      @mouseenter="showPopover($event, 'Refresh Bio', i)"
+                      @mouseleave="hidePopover"
+                    >
+                      <img
+                        style="filter: invert(40%)"
+                        src="@/assets/images/refresh-pr.svg"
+                        height="14px"
+                        alt=""
+                      />
+                    </div>
+
+                    <div
+                      @click="setContact(contact)"
+                      class="img-container s-wrapper"
+                      @mouseenter="showPopover($event, 'View Bio', i)"
+                      @mouseleave="hidePopover"
+                    >
+                      <img
+                        style="filter: invert(40%)"
+                        src="@/assets/images/file-user.svg"
+                        height="14px"
+                        alt=""
+                      />
+                    </div>
+
+                    <div
+                      @click="openDeleteModal(contact.id)"
+                      class="img-container s-wrapper"
+                      @mouseenter="showPopover($event, 'Delete contact', i)"
+                      @mouseleave="hidePopover"
+                    >
+                      <img
+                        class="pink-filter"
+                        style="filter: invert(40%)"
+                        src="@/assets/images/trash.svg"
+                        height="14px"
+                        alt=""
+                      />
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+            <tbody v-else>
+              <div v-if="loading" class="loading">
+                <div style="margin-left: 12px" class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
               </div>
+
+              <div class="mobile-text" style="margin: 16px" v-else>
+                Your saved contacts
+                <span>
+                  <img
+                    style="margin-left: 4px; margin-right: 4px"
+                    src="@/assets/images/addcontact.svg"
+                    height="12px"
+                    alt=""
+                  />
+                  will appear here.</span
+                >
+              </div>
+            </tbody>
+          </table>
+
+          <Popover ref="popover">
+            {{ popoverContent }}
+          </Popover>
+        </div>
+
+        <!-- <div class="pagination-container">
+          <div class="pagination">
+            <div
+              @click="onPageClick(page)"
+              v-for="(page, i) in pagination"
+              :key="i"
+              :class="{ 'active-page': currentPage === page }"
+            >
+              {{ page }}
             </div>
           </div>
-        </div>
+        </div> -->
       </section>
 
       <aside>
@@ -814,13 +970,19 @@
         <div class="checkbox-list">
           <ul v-if="tags.length">
             <li v-for="tag in tagCounts" :key="tag.name">
-              <label class="custom-checkbox">
+              <label class="custom-checkbox fadein">
                 <input type="checkbox" id="checkbox" :value="tag" v-model="selectedTags" />
                 <span class="checkmark"></span>
                 {{ tag.name }} <span>({{ tag.count }})</span>
               </label>
             </li>
           </ul>
+
+          <div v-else-if="loading" class="loading row">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
 
           <small v-else> Apply tags to organize journalists into lists. </small>
         </div>
@@ -830,6 +992,7 @@
 </template>
 
 <script>
+import Popover from '@/components/Popover.vue'
 import User from '@/services/users'
 import { Comms } from '@/services/comms'
 import { quillEditor } from 'vue-quill-editor'
@@ -842,9 +1005,30 @@ export default {
   components: {
     Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
     quillEditor,
+    ContactMapping: () => import(/* webpackPrefetch: true */ '@/components/ContactMapping'),
+    Popover,
   },
   data() {
     return {
+      totalContacts: null,
+      contactsPerPage: null,
+      totalPages: null,
+      currentPage: null,
+      pagination: [],
+      next: '',
+      previous: '',
+      contactCount: 0,
+      taskId: '',
+      sheetName: '',
+      popoverIndex: null,
+      popoverContent: '',
+      sortOrder: 1,
+      sortKey: '',
+      statsKeys: ['Publication', 'Name', 'Email'],
+      mapped: false,
+      isMappingConfirmed: false,
+      mappings: {},
+      bulkModalOpen: false,
       drafting: false,
       newContactImages: [],
       newContactBio: '',
@@ -910,6 +1094,8 @@ export default {
       deletingId: null,
       deleteModalOpen: false,
       contactId: null,
+      currentFile: null,
+      uploading: false,
     }
   },
   computed: {
@@ -943,17 +1129,23 @@ export default {
     filteredContactList() {
       let filteredContacts = this.contacts.filter((contact) => {
         const searchText = this.searchContactsText.toLowerCase()
-        // const userFilter = this.selectedUser.id !== undefined ? this.selectedUser.id : null
         const userFilter = null
         const tagFilter = this.selectedTags.map((tag) => tag.name.toLowerCase())
 
         const searchConditions = [
-          contact.journalist_ref.first_name.toLowerCase().includes(searchText),
-          contact.journalist_ref.last_name.toLowerCase().includes(searchText),
-          contact.journalist_ref.email.toLowerCase().includes(searchText),
-          contact.journalist_ref.outlet.toLowerCase().includes(searchText),
-          contact.bio.toLowerCase().includes(searchText),
-          contact.tags.some((tag) => tag.toLowerCase().includes(searchText)),
+          contact.journalist_ref.first_name
+            ? contact.journalist_ref.first_name.toLowerCase().includes(searchText)
+            : '',
+          contact.journalist_ref.last_name
+            ? contact.journalist_ref.last_name.toLowerCase().includes(searchText)
+            : '',
+          contact.journalist_ref.email
+            ? contact.journalist_ref.email.toLowerCase().includes(searchText)
+            : '',
+          contact.journalist_ref.outlet
+            ? contact.journalist_ref.outlet.toLowerCase().includes(searchText)
+            : '',
+          contact.tags ? contact.tags.some((tag) => tag.toLowerCase().includes(searchText)) : '',
         ]
 
         const filterConditions = []
@@ -972,7 +1164,28 @@ export default {
         )
       })
 
-      return filteredContacts
+      return filteredContacts.slice().sort((a, b) => {
+        const aValue =
+          this.sortKey === 'publication'
+            ? a.journalist_ref.outlet
+            : this.sortKey === 'name'
+            ? a.journalist_ref.first_name
+            : this.sortKey === 'email'
+            ? a.journalist_ref.email
+            : a[this.sortKey]
+        const bValue =
+          this.sortKey === 'publication'
+            ? b.journalist_ref.outlet
+            : this.sortKey === 'name'
+            ? b.journalist_ref.first_name
+            : this.sortKey === 'email'
+            ? b.journalist_ref.email
+            : b[this.sortKey]
+        if (aValue < bValue) return -1 * this.sortOrder
+        if (aValue > bValue) return 1 * this.sortOrder
+
+        return 0
+      })
     },
   },
   watch: {
@@ -995,6 +1208,57 @@ export default {
     this.getTags()
   },
   methods: {
+    showPopover(event, content, index) {
+      this.popoverContent = content
+      this.popoverIndex = index
+      this.$refs.popover.show(event)
+    },
+    hidePopover() {
+      this.$refs.popover.hide()
+      this.popoverIndex = null
+    },
+    sortBy(key) {
+      if (this.sortKey === key) {
+        this.sortOrder *= -1
+      } else {
+        this.sortKey = key
+        this.sortOrder = 1
+      }
+    },
+    async handleFileUpload() {
+      this.uploading = true
+      try {
+        const res = await Comms.api.uploadContacts(this.currentFile, this.mappings, this.sheetName)
+        console.log(res)
+        this.contactCount = res.num_processing
+        this.taskId = res.task_id
+        this.$toast('Contacts importing! This could take a few minutes.', {
+          timeout: 3000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.uploading = false
+        this.bulkModalOpen = false
+      } catch (error) {
+        console.error('Error reading the file:', error)
+        this.$toast('Error importing contacts, try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.uploading = false
+      }
+    },
+    updateMappedField(mappings, file, name) {
+      this.mappings = mappings
+      this.currentFile = file
+      this.sheetName = name
+      this.mapped = true
+    },
     async createDraft() {
       this.drafting = true
       try {
@@ -1207,8 +1471,7 @@ export default {
 
       this.pitchModalOpen = true
     },
-    async selectTag(contact, tag, i) {
-      this.currentContact = contact
+    async selectTag(tag, i) {
       this.newTag = tag
       this.tagIndex = i
       this.selectingTag = true
@@ -1232,7 +1495,7 @@ export default {
         this.getTags()
         this.getAllContacts()
         this.selectingTag = false
-        this.showingTags = false
+        this.tagModalOpen = false
       }
     },
     showTags(contact, i) {
@@ -1240,7 +1503,7 @@ export default {
       this.showingInput = false
       this.currentContact = contact
       this.currentIndex = i
-      this.showingTags = true
+      this.tagModalOpen = true
     },
     closeTags() {
       this.showingTags = false
@@ -1303,12 +1566,7 @@ export default {
           original: this.content,
           bio: this.currentContact.bio,
         })
-        // const emailRegex = /email: ([^"]*)/
-        // const match = res.pitch.match(emailRegex)
-        // if (match) {
-        //   const email = match[1]
-        //   this.targetEmail = email
-        // }
+
         const body = res.pitch
           .replace(/^Subject(?: Line)?:[\s\S]*?\n/i, '')
           .replace(/email: [^"]*/, '')
@@ -1320,45 +1578,13 @@ export default {
         const quill = this.$refs.quill.quill
         quill.clipboard.dangerouslyPasteHTML(html)
         this.subject = res.pitch.match(/^Subject(?: Line)?:(.*)\n/)[1].trim()
-
-        // this.verifyEmail()
       } catch (e) {
         console.error(e)
       } finally {
         this.loadingPitch = false
       }
     },
-    // async verifyEmail() {
-    //   this.verifying = true
-    //   try {
-    //     const res = await Comms.api.verifyEmail({
-    //       email: this.targetEmail,
-    //       journalist: this.currentJournalist,
-    //       publication: this.currentPublication,
-    //     })
-    //     if (res.data.is_valid) {
-    //       setTimeout(() => {
-    //         this.emailVerified = true
-    //       }, 500)
-    //       if (res.data.email) {
-    //         this.targetEmail = res.data.email
-    //       }
-    //     } else {
-    //       this.emailError = true
-    //     }
-    //   } catch (e) {
-    //     console.error(e)
-
-    //     this.emailError = true
-    //   } finally {
-    //     this.refreshUser()
-    //     setTimeout(() => {
-    //       this.verifying = false
-    //     }, 500)
-    //   }
-    // },
     setContact(contact) {
-      console.log(contact)
       this.toggleGoogleModal()
       this.currentContact = contact
     },
@@ -1391,12 +1617,108 @@ export default {
         console.log('Error in getTrialUsers', e)
       }
     },
+    extractPageFromUrl(url) {
+      if (!url) return null
+      const apiIndex = url.indexOf('api/')
+      if (apiIndex === -1) return null
+      return url.substring(apiIndex + 4) // '+ 4' skips the 'api/' part
+    },
+    // async getInitialContacts() {
+    //   this.loading = true
+    //   try {
+    //     const res = await Comms.api.getContacts()
+    //     console.log(res)
+    //     this.allContacts = res.results
+    //     this.next = this.extractPageFromUrl(res.next)
+    //     this.previous = this.extractPageFromUrl(res.previous)
+    //     this.contacts = res.results.filter((contact) => contact.user === this.user.id)
+    //   } catch (e) {
+    //     console.error(e)
+    //   } finally {
+    //     this.loading = false
+    //   }
+    // },
     async getInitialContacts() {
       this.loading = true
       try {
         const res = await Comms.api.getContacts()
+        console.log(res)
+
         this.allContacts = res.results
         this.contacts = res.results.filter((contact) => contact.user === this.user.id)
+        this.totalContacts = res.count
+        this.contactsPerPage = 50
+        this.totalPages = Math.ceil(this.totalContacts / this.contactsPerPage)
+
+        this.currentPage = 1
+        this.initializePagination()
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async loadPage(pageNumber) {
+      this.loading = true
+      try {
+        const res = await Comms.api.loadMoreContacts(`jcontact/?page=${pageNumber}`)
+        console.log(res)
+        this.allContacts = res.results
+        this.contacts = res.results.filter((contact) => contact.user === this.user.id)
+
+        // Update the current page
+        this.currentPage = pageNumber
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.loading = false
+      }
+    },
+
+    initializePagination() {
+      this.pagination = []
+
+      for (let i = 1; i <= this.totalPages; i++) {
+        this.pagination.push(i)
+      }
+    },
+
+    onPageClick(pageNumber) {
+      if (pageNumber !== this.currentPage) {
+        this.loadPage(pageNumber)
+      }
+    },
+    async loadNextPage() {
+      if (!this.next || this.loading) return
+
+      this.loading = true
+      try {
+        const res = await Comms.api.loadMoreContacts({ url: this.next })
+        this.allContacts = [...this.allContacts, ...res.results]
+        console.log(res)
+        this.loading = false
+        this.next = this.extractPageFromUrl(res.next)
+        this.previous = this.extractPageFromUrl(res.previous)
+
+        this.contacts = this.allContacts.filter((contact) => contact.user === this.user.id)
+      } catch (e) {
+        console.error(e)
+      } finally {
+      }
+    },
+    async loadPreviousPage() {
+      if (!this.previous) return
+
+      this.loading = true
+      try {
+        const res = await Comms.api.getContacts({ url: this.previous })
+        this.allContacts = [...res.results, ...this.allContacts]
+
+        this.next = this.extractPageFromUrl(res.next)
+        this.previous = this.extractPageFromUrl(res.previous)
+
+        this.contacts = this.allContacts.filter((contact) => contact.user === this.user.id)
       } catch (e) {
         console.error(e)
       } finally {
@@ -1445,6 +1767,7 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+        this
         // this.tags = res.results
       } catch (e) {
         console.error(e)
@@ -1460,7 +1783,6 @@ export default {
         this.getAllContacts()
         this.loadingTags = false
         this.tagModalOpen = false
-        this.showingTags = false
         this.googleModalOpen = false
       }
     },
@@ -1526,6 +1848,37 @@ export default {
         adjustTextareaHeight()
       },
     },
+
+    resizableColumn: {
+      bind(el) {
+        let startWidth = 0
+        let startMouseX = 0
+        const minWidth = 75 // Set a reasonable minimum width
+
+        el.addEventListener('mousedown', (e) => {
+          if (e.target.classList.contains('resizer')) {
+            startWidth = el.offsetWidth
+            startMouseX = e.clientX
+            document.addEventListener('mousemove', onMouseMove)
+            document.addEventListener('mouseup', onMouseUp)
+            e.preventDefault()
+          }
+        })
+
+        function onMouseMove(e) {
+          const widthDiff = e.clientX - startMouseX
+          const newWidth = startWidth + widthDiff
+          if (newWidth > minWidth) {
+            el.style.width = `${newWidth}px`
+          }
+        }
+
+        function onMouseUp() {
+          document.removeEventListener('mousemove', onMouseMove)
+          document.removeEventListener('mouseup', onMouseUp)
+        }
+      },
+    },
   },
 }
 </script>
@@ -1533,6 +1886,336 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.skeleton {
+  background-color: rgb(236, 236, 236);
+  border-radius: 4px;
+  margin-bottom: 10px;
+  animation: shimmer 3s infinite;
+  background: linear-gradient(to right, #dddddde5 8%, #eeeeeef8 18%, #dddddd 33%);
+  background-size: 1000px 100%;
+}
+.skeleton-title {
+  height: 20px;
+  width: 200px;
+}
+.skeleton-text {
+  height: 20px;
+  width: 100%;
+}
+.skeleton-small {
+  height: 20px;
+  width: 200px;
+}
+
+.skeleton-medium {
+  height: 20px;
+  width: 70%;
+}
+
+.skeleton-large {
+  height: 180px;
+  width: 100%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.scrolltainer {
+  &::-webkit-scrollbar {
+    width: 5px;
+    height: 0px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: $soft-gray;
+    box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+    border-radius: 6px;
+  }
+}
+
+.icon-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  font-size: 14px;
+
+  border-radius: 16px;
+  padding: 8px 10px;
+  margin: 0 10px;
+  cursor: pointer;
+  img {
+    margin-right: 5px;
+  }
+  &:hover {
+    background-color: $soft-gray;
+  }
+}
+
+.small-col {
+  max-width: 200px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pagination-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  overflow: scroll;
+}
+
+.pagination {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 24px;
+  padding: 8px 16px;
+  width: fit-content;
+  max-width: 80%;
+  background-color: white;
+
+  div {
+    padding: 4px 6px;
+    border-radius: 50%;
+    font-size: 14px;
+    cursor: pointer;
+  }
+}
+
+.active-page {
+  font-family: $base-font-family;
+  color: $lite-blue;
+  background-color: $liter-blue;
+}
+
+.table-border {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  margin-top: 24px;
+  height: 66vh;
+  background-color: white;
+  overflow: scroll;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+
+  tr {
+    transition: opacity 1s ease-out;
+    opacity: 0;
+    animation: fadeIn 1s forwards;
+  }
+
+  th,
+  td {
+    padding: 12px;
+    font-size: 15px;
+    text-align: left;
+    // border-bottom: 1px solid #ddd;
+    position: relative;
+
+    .subject,
+    .email {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media only screen and (max-width: 600px) {
+      font-size: 12px;
+    }
+  }
+
+  thead {
+    position: sticky;
+    top: 0;
+    z-index: 8;
+  }
+
+  th {
+    background-color: $off-white;
+    // font-family: $base-font-family;
+    border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+    color: $dark-blue;
+    cursor: pointer;
+  }
+
+  td {
+    z-index: 1;
+    background-color: white;
+    overflow: hidden;
+  }
+
+  .set-width {
+    min-width: 10vw;
+    width: 12vw;
+  }
+
+  .email-details {
+    display: flex;
+    align-items: center;
+    z-index: 0;
+    min-width: 10vw;
+    width: 12vw;
+
+    .email-info {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+
+      .subject {
+        font-family: $base-font-family;
+        margin-bottom: 4px;
+        font-weight: 200;
+        font-size: 14px;
+        line-height: 24px;
+      }
+
+      .email {
+        color: gray;
+        font-family: $thin-font-family;
+        font-size: 14px;
+      }
+    }
+  }
+  .resizer {
+    width: 10px;
+    cursor: col-resize;
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+  }
+
+  .resizer:hover {
+    border-right: 1.5px solid $darker-blue;
+  }
+
+  .blur {
+    width: 12px;
+    background: rgba(255, 255, 255, 0.569);
+    filter: blur(8px);
+    cursor: none;
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+  }
+
+  .relative {
+    position: relative;
+  }
+
+  .dropdown {
+    position: absolute;
+    top: 48px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 8px;
+    left: 4px;
+    // z-index: 4;
+    width: 96%;
+    min-height: 100px;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+
+    .dropdown-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      img {
+        margin-right: 8px;
+      }
+    }
+
+    .dropdown-body {
+      padding: 0 8px;
+    }
+
+    .dropdown-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 8px;
+    }
+  }
+
+  .base-font {
+    font-family: $base-font-family;
+    font-weight: 200;
+    line-height: 24px;
+  }
+
+  .dot {
+    width: 4px;
+    height: 4px;
+    margin: 0 6px;
+    background: rgb(97, 96, 96);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite ease-in-out;
+  }
+
+  .dot:nth-child(2) {
+    animation-delay: -0.4s;
+  }
+
+  .dot:nth-child(3) {
+    animation-delay: -0.2s;
+  }
+
+  .loading {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    border-radius: 6px;
+    margin-left: 16px;
+    padding: 1.5rem 0;
+
+    p {
+      margin-right: 8px;
+    }
+  }
+
+  .stat {
+    position: absolute;
+    right: 4px;
+    top: 14px;
+    font-family: $base-font-family;
+    font-size: 10px;
+
+    span {
+      font-size: 12px;
+      padding: 4px 6px;
+      border-radius: 11px;
+    }
+
+    .red {
+      color: $pinky !important;
+    }
+
+    .yellow {
+      color: $turq !important;
+    }
+
+    .green {
+      color: $lite-blue !important;
+    }
+  }
+}
 
 .contacts {
   padding: 96px 80px 0 80px;
@@ -1562,7 +2245,7 @@ export default {
   font-family: $thin-font-family;
   overflow: hidden;
   white-space: nowrap;
-  max-width: 140px;
+  max-width: 150px;
   text-overflow: ellipsis;
   margin-right: 4px;
 }
@@ -1712,11 +2395,6 @@ export default {
       margin: 0;
     }
   }
-
-  // &:hover {
-  //   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  //   transform: scale(1.02);
-  // }
 }
 
 h3 {
@@ -1795,7 +2473,8 @@ h3 {
   flex-direction: row;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 0 24px;
+  padding: 0 24px 0 12px;
+  height: 88vh;
 
   @media only screen and (max-width: 600px) {
     padding: 0;
@@ -1806,8 +2485,8 @@ h3 {
   }
 
   aside {
-    width: 29vw;
-    padding: 28px 24px 16px 64px;
+    width: 18vw;
+    padding: 28px 24px 16px 24px;
 
     @media only screen and (max-width: 600px) {
       display: none;
@@ -2042,7 +2721,8 @@ h2 {
 
 .hover-bg {
   &:hover {
-    background-color: $soft-gray;
+    background-color: $off-white;
+    border-radius: 4px;
   }
 }
 
@@ -2167,6 +2847,20 @@ h2 {
     font-family: $base-font-family;
   }
 }
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
+}
+
+.rotation {
+  animation: rotation 2s infinite linear;
+}
+
 .row {
   display: flex;
   flex-direction: row;
@@ -2177,7 +2871,7 @@ h2 {
   flex-direction: row;
   align-items: center;
   gap: 8px;
-  width: 80%;
+  // width: 80%;
   overflow: scroll;
   scroll-behavior: smooth;
 }
@@ -2306,10 +3000,35 @@ h2 {
 .med-modal {
   width: 55vw !important;
 }
+.small-modal {
+  width: 40vw !important;
+
+  @media only screen and (max-width: 750px) {
+    margin-top: 62px;
+    width: 90vw;
+  }
+
+  @media only screen and (min-width: 751px) and (max-width: 1393px) {
+    width: 50vw;
+  }
+}
 
 .med-container {
   width: 48vw !important;
   padding: 0 16px 0 16px !important;
+}
+
+.small-container {
+  width: 38vw !important;
+  padding: 0 16px 0 16px !important;
+
+  @media only screen and (max-width: 750px) {
+    width: 90vw;
+  }
+
+  @media only screen and (min-width: 751px) and (max-width: 1393px) {
+    width: 48vw;
+  }
 }
 
 .bio-container {
@@ -3076,7 +3795,7 @@ textarea::placeholder {
   border-radius: 4px;
   padding: 6px 2px;
   position: absolute;
-  z-index: 100;
+  z-index: 10000;
   bottom: 130%;
   left: 50%;
   margin-left: -50px;
@@ -3131,8 +3850,14 @@ textarea::placeholder {
 .lb-filter {
   filter: invert(54%) sepia(16%) saturate(1723%) hue-rotate(159deg) brightness(89%) contrast(89%) !important;
 }
+.blue-filter {
+  filter: invert(54%) sepia(16%) saturate(1723%) hue-rotate(159deg) brightness(89%) contrast(89%) !important;
+}
 .pink-filter {
   filter: invert(43%) sepia(88%) saturate(559%) hue-rotate(280deg) brightness(86%) contrast(83%) !important;
+}
+.purple-filter {
+  filter: invert(51%) sepia(13%) saturate(1063%) hue-rotate(217deg) brightness(96%) contrast(84%);
 }
 
 .white-container {
@@ -3155,5 +3880,9 @@ textarea::placeholder {
 
 .soft-gray-bg {
   background-color: $soft-gray;
+}
+
+.gray-bg {
+  background-color: $off-white !important;
 }
 </style>

@@ -484,7 +484,7 @@
               :disabled="buttonClicked || loadingDraft || mainView === 'social'"
             >
               <img class="invert" src="@/assets/images/disk.svg" height="16px" alt="" />
-              <div class="s-tooltip-below">Save</div>
+              <div style="right: 120%" class="s-tooltip-below">Save to network</div>
             </button>
           </div>
         </header>
@@ -768,7 +768,7 @@
                   alt=""
                 />
 
-                <p class="mobile-text-hide">Source:</p>
+                <p class="mobile-text-hide">Assist Type:</p>
                 <small>{{ toCamelCase(mainView) }}</small>
                 <img
                   v-if="!showingSources"
@@ -791,7 +791,7 @@
                     <img src="@/assets/images/newspaper.svg" height="11px" alt="" />
                     News
                   </span>
-                  <p>Search through real-time news</p>
+                  <p>AI summaries based on real-time news</p>
                 </div>
                 <div
                   @click="switchMainView('social')"
@@ -802,7 +802,7 @@
                     Social
                   </span>
 
-                  <p>Search through top X/Twitter posts</p>
+                  <p>AI summaries based on social media</p>
                 </div>
                 <div @click="switchMainView('web')" :class="{ activeswitch: mainView === 'web' }">
                   <span>
@@ -810,9 +810,9 @@
                     Web
                   </span>
 
-                  <p>Search the web</p>
+                  <p>AI web search assistant</p>
                 </div>
-                <!-- @click="goToPage('Pitches')" -->
+
                 <div
                   @click="switchMainView('write')"
                   :class="{ activeswitch: mainView === 'write' }"
@@ -822,7 +822,7 @@
                     Write
                   </span>
 
-                  <p>Create content that sounds like you</p>
+                  <p>AI writing assistant & content generation</p>
                 </div>
                 <div
                   @click="switchMainView('discover')"
@@ -833,7 +833,7 @@
                     Discover
                   </span>
 
-                  <p>Identify the right contacts for your pitch</p>
+                  <p>AI assistant for finding relevant journalists</p>
                 </div>
               </div>
             </div>
@@ -1912,7 +1912,11 @@
                     </label>
                   </div>
 
-                  <div v-if="user.slackRef" style="margin-bottom: 16px" class="space-between">
+                  <div
+                    v-if="user.slackRef && mainView === 'news'"
+                    style="margin-bottom: 16px"
+                    class="space-between"
+                  >
                     <div class="row">
                       <img
                         src="@/assets/images/slackLogo.png"
@@ -1933,7 +1937,11 @@
                     </label>
                   </div>
 
-                  <div v-else style="margin-bottom: 16px" class="space-between">
+                  <div
+                    v-else-if="mainView === 'news'"
+                    style="margin-bottom: 16px"
+                    class="space-between"
+                  >
                     <div class="row">
                       <img
                         src="@/assets/images/slackLogo.png"
@@ -4707,7 +4715,7 @@ export default {
           images: this.currentJournalistImages,
           outlet: this.currentPublication,
         })
-        this.$toast('Contact saved!', {
+        this.$toast('Successfully saved contact to Network', {
           timeout: 2000,
           position: 'top-left',
           type: 'success',
@@ -7377,7 +7385,7 @@ export default {
 
 .s-tooltip-below {
   visibility: hidden;
-  width: 80px;
+  width: 120px;
   background-color: $graper;
   color: white;
   text-align: center;
@@ -7385,9 +7393,9 @@ export default {
   padding: 6px 2px;
   position: absolute;
   z-index: 100;
-  top: 130%;
-  left: 50%;
-  margin-left: -40px;
+  top: 100%;
+  right: 130%;
+  margin-top: -24px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   font-size: 13px;
   line-height: 1.4;
