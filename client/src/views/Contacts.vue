@@ -1534,6 +1534,10 @@ export default {
     setContact(contact) {
       this.toggleGoogleModal()
       this.currentContact = contact
+
+      if (!this.currentContact.bio) {
+        this.updateContact(this.currentContact)
+      }
     },
     toggleGoogleModal() {
       this.googleModalOpen = !this.googleModalOpen

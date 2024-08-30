@@ -6099,8 +6099,10 @@ export default {
         this.newSearch = search.type
         this.savedPitch = true
       } else if (search.hasOwnProperty('location')) {
+        console.log(search)
         this.newTemplate = search.content
         this.summary = search.list
+        this.discoverList = search.results
         this.newSearch = search.type || search.name
         this.savedDiscovery = true
       } else {

@@ -128,6 +128,7 @@ class DiscoverySerializer(serializers.ModelSerializer):
             "beat",
             "location",
             "list",
+            "results",
         )
 
 

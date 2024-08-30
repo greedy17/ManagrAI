@@ -882,6 +882,8 @@ def _process_contacts_excel(user_id, data, result_id):
                 "email": data["email"][idx],
                 "first_name": data["first_name"][idx],
                 "last_name": data["last_name"][idx],
+                "verified": True,
+                "accuracy_score": 100,
             }
             if all(value is None for value in journalist_data.values()):
                 pass
@@ -908,7 +910,7 @@ def _process_contacts_excel(user_id, data, result_id):
     result = TaskResults.objects.get(id=result_id)
     result.json_result = {"success": succeeded, "failed": failed_list}
     result.save()
-    return "Done"
+    return
 
 
 def _process_regenerate_pitch_slack(payload, context):

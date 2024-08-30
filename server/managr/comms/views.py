@@ -647,33 +647,6 @@ class PRSearchViewSet(
                                     tweet["user"] = user
                                     tweet_list.append(tweet)
                                 break
-
-                # else:
-                #     if len(tweet_list):
-                #         break
-
-                #     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                #     prompt = comms_consts.OPEN_AI_EMPTY_SEARCH_SUGGESTIONS(
-                #         query_input.replace("-is:retweet", "").replace("is:verified", "")
-                #     )
-                #     body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                #         user.email,
-                #         prompt,
-                #         token_amount=500,
-                #         top_p=0.1,
-                #     )
-                #     with Variable_Client() as client:
-                #         r = client.post(
-                #             url,
-                #             data=json.dumps(body),
-                #             headers=core_consts.OPEN_AI_HEADERS,
-                #         )
-                #     r = open_ai_exceptions._handle_response(r)
-
-                #     suggestions = r.get("choices")[0].get("message").get("content")
-                #     return Response(
-                #         data={"suggestions": suggestions, "string": query_input},
-                #     )
                 if len(tweet_list) < 40 and tweets:
                     continue
                 break
@@ -1866,8 +1839,6 @@ class DiscoveryViewSet(
     )
     def run_discovery(self, request, *args, **kwargs):
         user = request.user
-        # if user.has_hit_summary_limit:
-        #     return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         info = request.data.get("info")
         content = request.data.get("content", None)
         message = get_journalists(info, content)
@@ -2229,9 +2200,7 @@ class JournalistContactViewSet(
     def partial_update(self, request, *args, **kwargs):
         data = self.request.data
         instance = self.get_object()
-        serializer = self.serializer_class(instance=instance, data=data, partial=True).update(
-            instance, data
-        )
+        serializer = self.serializer_class.update(instance, request.data)
         return Response(status=status.HTTP_200_OK, data=serializer.data)
 
     def destroy(self, request, *args, **kwargs):
