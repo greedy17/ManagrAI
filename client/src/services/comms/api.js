@@ -534,6 +534,15 @@ class CommsApi extends ModelAPI {
         }
     }
 
+    async loadMoreContacts(url) {
+        try {
+            const res = await this.client.get(`${url}`)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
     async deleteContact(data) {
         try {
             const res = await this.client.delete(`jcontact/${data.id}/`)

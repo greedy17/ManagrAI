@@ -856,10 +856,10 @@ def create_contacts_from_file(journalist_ids, user_id):
     user = User.objects.get(id=user_id)
     s = 0
     journalists = Journalist.objects.filter(id__in=journalist_ids).values_list("id", flat=True)
-    for journalist in journalists:
+    for journalist_id in journalists:
         try:
             serializer = JournalistContactSerializer(
-                data={"journalist": journalist.id, "user": user.id}
+                data={"journalist": journalist_id, "user": user.id}
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()

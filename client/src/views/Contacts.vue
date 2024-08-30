@@ -673,12 +673,12 @@
                     !selectedUser
                       ? 'All'
                       : selectedUser.fullName
-                      ? selectedUser.fullName + "'s"
-                      : selectedUser.full_name + "'s"
+                      ? selectedUser.fullName
+                      : selectedUser.full_name
                   }}
                 </span>
-                <span>contacts:</span>
-                <span style="margin-left: 4px">{{ filteredContactList.length }}</span>
+                <!-- <span>contacts:</span>
+                <span style="margin-left: 4px">{{ }}</span> -->
               </h3>
 
               <img
@@ -752,14 +752,10 @@
                 class="search-input"
                 :placeholder="`Search contacts...`"
               />
-              <img
-                v-if="searchContactsText"
-                @click="clearSearchText"
-                src="@/assets/images/close.svg"
-                class="pointer"
-                height="12px"
-                alt=""
-              />
+
+              <div v-if="searchContactsText" @click="loadSearchedContacts">
+                <img src="@/assets/images/arrow-right.svg" class="pointer" height="12px" alt="" />
+              </div>
             </div>
           </div>
         </div>
@@ -952,45 +948,18 @@
           </Popover>
         </div>
 
-        <!-- <div  class="cards-container">
-          <div v-for="(contact, i) in filteredContactList" :key="i" class="contact-card">
-            <header style="position: relative">
-              <div class="contact-header">
-                <p class="base-font">
-                  {{ contact.journalist_ref.first_name + ' ' + contact.journalist_ref.last_name }}
-                </p>
-                <p style="font-size: 14px">
-   
-                  {{ contact.journalist_ref.outlet }}
-                </p>
-              </div>
-              <div style="display: flex; flex-direction: row; justify-content: flex-end">
-                <img
-                  v-for="(image, i) in contact.images.slice(0, 3)"
-                  class="main-img"
-                  :key="i"
-                  :src="image"
-                  alt=""
-                />
-           
-              </div>
-
-              <div
-                :class="{ removing: deleting && deletingId === contact.id }"
-                @click="openDeleteModal(contact.id)"
-                class="absolute-right"
-              >
-                <img src="@/assets/images/close.svg" height="20px" alt="" />
-              </div>
-            </header>
-
-            <div style="padding: 0 4px" class="body">
-              <div class="bio-text" v-html="contact.bio"></div>
- 
+        <div class="pagination-container">
+          <div class="pagination">
+            <div
+              @click="onPageClick(page)"
+              v-for="(page, i) in pagination"
+              :key="i"
+              :class="{ 'active-page': currentPage === page }"
+            >
+              {{ page }}
             </div>
-
           </div>
-        </div> -->
+        </div>
       </section>
 
       <aside>
@@ -1036,6 +1005,13 @@ export default {
   },
   data() {
     return {
+      totalContacts: null,
+      contactsPerPage: null,
+      totalPages: null,
+      currentPage: null,
+      pagination: [],
+      next: '',
+      previous: '',
       contactCount: 0,
       taskId: '',
       sheetName: '',
@@ -1636,13 +1612,108 @@ export default {
         console.log('Error in getTrialUsers', e)
       }
     },
+    extractPageFromUrl(url) {
+      if (!url) return null
+      const apiIndex = url.indexOf('api/')
+      if (apiIndex === -1) return null
+      return url.substring(apiIndex + 4) // '+ 4' skips the 'api/' part
+    },
+    // async getInitialContacts() {
+    //   this.loading = true
+    //   try {
+    //     const res = await Comms.api.getContacts()
+    //     console.log(res)
+    //     this.allContacts = res.results
+    //     this.next = this.extractPageFromUrl(res.next)
+    //     this.previous = this.extractPageFromUrl(res.previous)
+    //     this.contacts = res.results.filter((contact) => contact.user === this.user.id)
+    //   } catch (e) {
+    //     console.error(e)
+    //   } finally {
+    //     this.loading = false
+    //   }
+    // },
     async getInitialContacts() {
       this.loading = true
       try {
         const res = await Comms.api.getContacts()
         console.log(res)
+
         this.allContacts = res.results
         this.contacts = res.results.filter((contact) => contact.user === this.user.id)
+        this.totalContacts = res.count
+        this.contactsPerPage = 50
+        this.totalPages = Math.ceil(this.totalContacts / this.contactsPerPage)
+
+        this.currentPage = 1
+        this.initializePagination()
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async loadPage(pageNumber) {
+      this.loading = true
+      try {
+        const res = await Comms.api.loadMoreContacts(`jcontact/?page=${pageNumber}`)
+        console.log(res)
+        this.allContacts = res.results
+        this.contacts = res.results.filter((contact) => contact.user === this.user.id)
+
+        // Update the current page
+        this.currentPage = pageNumber
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.loading = false
+      }
+    },
+
+    initializePagination() {
+      this.pagination = []
+
+      for (let i = 1; i <= this.totalPages; i++) {
+        this.pagination.push(i)
+      }
+    },
+
+    onPageClick(pageNumber) {
+      if (pageNumber !== this.currentPage) {
+        this.loadPage(pageNumber)
+      }
+    },
+    async loadNextPage() {
+      if (!this.next || this.loading) return
+
+      this.loading = true
+      try {
+        const res = await Comms.api.loadMoreContacts({ url: this.next })
+        this.allContacts = [...this.allContacts, ...res.results]
+        console.log(res)
+        this.loading = false
+        this.next = this.extractPageFromUrl(res.next)
+        this.previous = this.extractPageFromUrl(res.previous)
+
+        this.contacts = this.allContacts.filter((contact) => contact.user === this.user.id)
+      } catch (e) {
+        console.error(e)
+      } finally {
+      }
+    },
+    async loadPreviousPage() {
+      if (!this.previous) return
+
+      this.loading = true
+      try {
+        const res = await Comms.api.getContacts({ url: this.previous })
+        this.allContacts = [...res.results, ...this.allContacts]
+
+        this.next = this.extractPageFromUrl(res.next)
+        this.previous = this.extractPageFromUrl(res.previous)
+
+        this.contacts = this.allContacts.filter((contact) => contact.user === this.user.id)
       } catch (e) {
         console.error(e)
       } finally {
@@ -1848,11 +1919,46 @@ export default {
   text-overflow: ellipsis;
 }
 
+.pagination-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  overflow: scroll;
+}
+
+.pagination {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 24px;
+  padding: 8px 16px;
+  width: fit-content;
+  max-width: 80%;
+  background-color: white;
+
+  div {
+    padding: 4px 6px;
+    border-radius: 50%;
+    font-size: 14px;
+    cursor: pointer;
+  }
+}
+
+.active-page {
+  font-family: $base-font-family;
+  color: $lite-blue;
+  background-color: $liter-blue;
+}
+
 .table-border {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
   margin-top: 24px;
-  height: 68vh;
+  height: 60vh;
   background-color: white;
   overflow: scroll;
 }
