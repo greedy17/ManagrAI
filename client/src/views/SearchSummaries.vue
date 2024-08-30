@@ -484,7 +484,7 @@
               :disabled="buttonClicked || loadingDraft || mainView === 'social'"
             >
               <img class="invert" src="@/assets/images/disk.svg" height="16px" alt="" />
-              <div class="s-tooltip-below">Save</div>
+              <div style="right: 120%" class="s-tooltip-below">Save to network</div>
             </button>
           </div>
         </header>
@@ -4715,7 +4715,7 @@ export default {
           images: this.currentJournalistImages,
           outlet: this.currentPublication,
         })
-        this.$toast('Contact saved!', {
+        this.$toast('Successfully saved contact to Network', {
           timeout: 2000,
           position: 'top-left',
           type: 'success',
@@ -7385,7 +7385,7 @@ export default {
 
 .s-tooltip-below {
   visibility: hidden;
-  width: 80px;
+  width: 120px;
   background-color: $graper;
   color: white;
   text-align: center;
@@ -7393,9 +7393,9 @@ export default {
   padding: 6px 2px;
   position: absolute;
   z-index: 100;
-  top: 130%;
-  left: 50%;
-  margin-left: -40px;
+  top: 100%;
+  right: 130%;
+  margin-top: -24px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   font-size: 13px;
   line-height: 1.4;

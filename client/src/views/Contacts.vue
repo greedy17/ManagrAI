@@ -916,7 +916,7 @@
                 Your saved contacts
                 <span>
                   <img
-                    style="margin-left: -16px; margin-right: 4px"
+                    style="margin-left: 4px; margin-right: 4px"
                     src="@/assets/images/addcontact.svg"
                     height="12px"
                     alt=""
@@ -1231,13 +1231,16 @@ export default {
         console.log(res)
         this.contactCount = res.num_processing
         this.taskId = res.task_id
-        this.$toast('Contacts Imported successfully', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        this.$toast(
+          'Success! It may take a few minutes for your contacts to fully sync with ManagrAI',
+          {
+            timeout: 3000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          },
+        )
         this.uploading = false
         this.bulkModalOpen = false
       } catch (error) {
