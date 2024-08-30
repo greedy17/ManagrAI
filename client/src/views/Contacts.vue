@@ -889,7 +889,9 @@
             {{ popoverContent }}
           </Popover>
         </div>
-        <small class="smalltxt">list caps at 1,000 contacts</small>
+        <small v-if="filteredContactList.length" class="smalltxt fadein"
+          >list caps at 1,000 contacts</small
+        >
 
         <!-- <div class="pagination-container">
           <div class="pagination">
@@ -1152,6 +1154,18 @@ export default {
     this.getTags()
   },
   methods: {
+    refreshUser() {
+      User.api
+        .getUser(this.user.id)
+        .then((user) => {
+          this.$store.dispatch('updateUser', user)
+          return user
+        })
+        .catch(() => {
+          // do nothing for now
+          return null
+        })
+    },
     showPopover(event, content, index) {
       this.popoverContent = content
       this.popoverIndex = index
@@ -1367,13 +1381,16 @@ export default {
           .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, '')
           .replace(/<h2>Company:<\/h2>\s*<strong>([^<]+)<\/strong>/i, '')
 
-        console.log(this.newBio)
         this.newImages = res.data.images
         Comms.api.updateContact({
           id: this.currentContact.id,
           bio: this.newBio,
           images: this.newImages,
         })
+        //     this.$nextTick(() => {
+
+        // })
+        this.refreshUser()
         this.$toast('Contact updated!', {
           timeout: 2000,
           position: 'top-left',
@@ -1593,7 +1610,6 @@ export default {
       this.loading = true
       try {
         const res = await Comms.api.getContacts()
-        console.log(res)
 
         this.allContacts = res.results
         this.contacts = res.results.filter((contact) => contact.user === this.user.id)

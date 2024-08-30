@@ -4795,6 +4795,7 @@ export default {
         console.error(e)
       } finally {
         this.loadingDraft = false
+        this.refreshUser()
       }
     },
     async getJournalistBio(social = false) {
