@@ -1039,6 +1039,7 @@ class Discovery(TimeStampModel):
     beat = models.CharField(max_length=255, null=True, blank=True)
     location = models.CharField(max_length=255, null=True, blank=True)
     list = models.TextField(null=True, blank=True)
+    results = JSONField(default=dict, null=True, blank=True)
 
     class Meta:
         ordering = ["name"]
