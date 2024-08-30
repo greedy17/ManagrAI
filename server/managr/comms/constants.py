@@ -715,6 +715,7 @@ DO_NOT_INCLUDE_WORDS = [
     "instagram",
     ".jpg",
     "/video",
+    "x.com",
 ]
 
 NON_VIABLE_CLASSES = ["menu", "nav"]
