@@ -4795,6 +4795,7 @@ export default {
         console.error(e)
       } finally {
         this.loadingDraft = false
+        this.refreshUser()
       }
     },
     async getJournalistBio(social = false) {
@@ -5352,7 +5353,8 @@ export default {
           type: this.newSearch,
           beat: 'beat',
           location: 'location',
-          list: this.summary,
+          list: 'list',
+          results: this.discoverList,
         })
 
         if (res.id) {
@@ -6098,8 +6100,10 @@ export default {
         this.newSearch = search.type
         this.savedPitch = true
       } else if (search.hasOwnProperty('location')) {
+        console.log(search)
         this.newTemplate = search.content
         this.summary = search.list
+        this.discoverList = search.results
         this.newSearch = search.type || search.name
         this.savedDiscovery = true
       } else {

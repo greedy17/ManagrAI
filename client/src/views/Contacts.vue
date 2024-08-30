@@ -11,11 +11,11 @@
             }}
           </p>
 
-          <!-- <div class="row">
+          <div class="row">
             <button
               :disabled="bioLoading || loadingTags"
-              @click="updateContact(currentContact.id)"
-              class="no-borders"
+              @click="updateContact(currentContact)"
+              class="no-borders s-wrapper"
             >
               <img
                 style="filter: invert(40%)"
@@ -23,14 +23,29 @@
                 height="18px"
                 alt=""
               />
+              <div class="s-tooltip-below">Update</div>
             </button>
-          </div> -->
+          </div>
         </header>
 
         <section v-if="!bioLoading">
-          <div class="bio-body" v-html="currentContact.bio"></div>
+          <div v-if="currentContact.bio" class="bio-body" v-html="currentContact.bio"></div>
 
-          <aside>
+          <div style="height: 300px; width: 100%; margin-left: 0" v-else class="bio-body">
+            <div style="margin-left: -32px" class="row">
+              Updated bio
+              <span>
+                <img
+                  style="margin-left: 12px; margin-right: -54px"
+                  src="@/assets/images/refresh-pr.svg"
+                  height="12px"
+                  alt=""
+              /></span>
+              will appear here.
+            </div>
+          </div>
+
+          <aside v-if="currentContact.bio">
             <img
               v-for="(url, i) in currentContact.images"
               :key="i"
@@ -393,9 +408,12 @@
 
     <Modal class="bio-modal med-modal" v-if="contactsModalOpen">
       <div class="bio-container med-container">
-        <header>
+        <div class="header">
           <h2 style="margin: 12px 0">Lookup Contact</h2>
-        </header>
+          <p>
+            ManagrAI will research the contact, offer a real-time bio, and provide pitching tips
+          </p>
+        </div>
 
         <div style="margin-top: 16px; margin-bottom: 24px; min-height: 120px; width: 100%">
           <label for="contact">Name</label>
@@ -538,86 +556,6 @@
       </div>
     </Modal>
 
-    <!-- <div
-      class="drop-options"
-      style="padding-left: 0; padding-right: 0"
-      v-show="showingTags && currentIndex === i"
-    >
-      <header style="padding-left: 8px">
-        Apply Tag
-        <img
-          @click="closeTags"
-          style="margin-right: 12px; cursor: pointer"
-          src="@/assets/images/close.svg"
-          height="16px"
-          alt=""
-        />
-      </header>
-
-      <div style="height: 50px" v-if="!tags.length">You dont have any tags yet...</div>
-      <div style="padding: 0; opacity: 1; height: 120px; overflow: scroll; cursor: text" v-else>
-        <div
-          style="opacity: 1; cursor: text; font-size: 15px; padding: 4px 8px; cursor: pointer"
-          v-for="(tag, i) in tags"
-          @click="selectTag(contact, tag, i)"
-          :key="i"
-          class="space-between hover-bg"
-        >
-          {{ tag }}
-        </div>
-      </div>
-
-      <div style="opacity: 1; cursor: text; position: relative; padding: 0 8px">
-        <div style="opacity: 1" class="sticky-bottom-between">
-          <div
-            style="opacity: 1; margin: 0; cursor: text"
-            v-if="showingInput"
-            class="input-container-small"
-          >
-            <input
-              :disabled="loadingTags"
-              style="border: none; outline: none; padding: 10px 8px 10px 0px; width: 100%"
-              class="text-area-input"
-              type="text"
-              v-model="newTag"
-              placeholder="Name your tag..."
-            />
-
-            <img
-              style="filter: invert(40%); margin-right: 20px"
-              src="@/assets/images/user-tag.svg"
-              height="14px"
-              alt=""
-            />
-          </div>
-
-          <button
-            style="margin-left: auto"
-            v-else
-            @click="showingInput = true"
-            class="secondary-button-no-border"
-          >
-            <img src="@/assets/images/add.svg" height="14px" alt="" />
-            Create Tag
-          </button>
-          <button
-            :disabled="!newTag || loadingTags"
-            v-if="showingInput"
-            @click="modifyTags('add')"
-            style="margin-bottom: 5px"
-            class="primary-button"
-          >
-            Save
-            <div style="margin-left: 4px" v-if="loadingTags" class="loading-small">
-              <div class="dot"></div>
-              <div class="dot"></div>
-              <div class="dot"></div>
-            </div>
-          </button>
-        </div>
-      </div>
-    </div> -->
-
     <Modal v-if="bioModalOpen" class="bio-modal">
       <div class="bio-container">
         <header>
@@ -677,19 +615,24 @@
                       : selectedUser.full_name
                   }}
                 </span>
-                <!-- <span>contacts:</span>
-                <span style="margin-left: 4px">{{ }}</span> -->
+                <span>contacts:</span>
+                <div style="margin-left: 8px" v-if="loading" class="loading row">
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                </div>
+                <span v-else style="margin-left: 4px">{{ filteredContactList.length }}</span>
               </h3>
 
               <img
-                v-if="!showUsers"
+                v-if="!showUsers && !loading"
                 style="margin-left: 8px"
                 src="@/assets/images/arrowDropUp.svg"
                 height="14px"
                 alt=""
               />
               <img
-                v-else
+                v-else-if="!loading"
                 class="rotate-img"
                 src="@/assets/images/arrowDropUp.svg"
                 height="14px"
@@ -753,9 +696,9 @@
                 :placeholder="`Search contacts...`"
               />
 
-              <div v-if="searchContactsText" @click="loadSearchedContacts">
+              <!-- <div v-if="searchContactsText" @click="loadSearchedContacts">
                 <img src="@/assets/images/arrow-right.svg" class="pointer" height="12px" alt="" />
-              </div>
+              </div> -->
             </div>
           </div>
         </div>
@@ -826,7 +769,7 @@
                 </td>
 
                 <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
-                  <div style="max-width: 250px; overflow: scroll" class="rows">
+                  <div style="max-width: 200px; overflow: scroll" class="rows">
                     <div
                       style="padding-right: 10px"
                       v-for="(tag, i) in contact.tags"
@@ -874,7 +817,7 @@
                       />
                     </div>
 
-                    <div
+                    <!-- <div
                       @click="updateContact(contact)"
                       class="img-container s-wrapper"
                       @mouseenter="showPopover($event, 'Refresh Bio', i)"
@@ -886,7 +829,7 @@
                         height="14px"
                         alt=""
                       />
-                    </div>
+                    </div> -->
 
                     <div
                       @click="setContact(contact)"
@@ -921,8 +864,8 @@
               </tr>
             </tbody>
             <tbody v-else>
-              <div v-if="loading" class="loading">
-                <div style="margin-left: 12px" class="dot"></div>
+              <div style="margin-top: 16px" v-if="loading" class="loading">
+                <div style="margin-left: 16px" class="dot"></div>
                 <div class="dot"></div>
                 <div class="dot"></div>
               </div>
@@ -946,6 +889,9 @@
             {{ popoverContent }}
           </Popover>
         </div>
+        <small v-if="filteredContactList.length" class="smalltxt fadein"
+          >list caps at 1,000 contacts</small
+        >
 
         <!-- <div class="pagination-container">
           <div class="pagination">
@@ -1208,6 +1154,18 @@ export default {
     this.getTags()
   },
   methods: {
+    refreshUser() {
+      User.api
+        .getUser(this.user.id)
+        .then((user) => {
+          this.$store.dispatch('updateUser', user)
+          return user
+        })
+        .catch(() => {
+          // do nothing for now
+          return null
+        })
+    },
     showPopover(event, content, index) {
       this.popoverContent = content
       this.popoverIndex = index
@@ -1417,16 +1375,22 @@ export default {
           search: true,
           social: false,
         })
+
         this.newBio = res.data.summary
           .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
           .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, '')
           .replace(/<h2>Company:<\/h2>\s*<strong>([^<]+)<\/strong>/i, '')
+
         this.newImages = res.data.images
         Comms.api.updateContact({
           id: this.currentContact.id,
           bio: this.newBio,
           images: this.newImages,
         })
+        //     this.$nextTick(() => {
+
+        // })
+        this.refreshUser()
         this.$toast('Contact updated!', {
           timeout: 2000,
           position: 'top-left',
@@ -1587,6 +1551,10 @@ export default {
     setContact(contact) {
       this.toggleGoogleModal()
       this.currentContact = contact
+
+      if (!this.currentContact.bio) {
+        this.updateContact(this.currentContact)
+      }
     },
     toggleGoogleModal() {
       this.googleModalOpen = !this.googleModalOpen
@@ -1642,7 +1610,6 @@ export default {
       this.loading = true
       try {
         const res = await Comms.api.getContacts()
-        console.log(res)
 
         this.allContacts = res.results
         this.contacts = res.results.filter((contact) => contact.user === this.user.id)
@@ -1999,11 +1966,16 @@ export default {
   background-color: $liter-blue;
 }
 
+.smalltxt {
+  font-family: $base-font-family;
+  margin-top: 12px;
+}
+
 .table-border {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
   margin-top: 24px;
-  height: 66vh;
+  height: 65vh;
   background-color: white;
   overflow: scroll;
 }
@@ -3052,6 +3024,21 @@ h2 {
     width: 75vw;
   }
 
+  .header {
+    h2 {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      background-color: white;
+      font-family: $base-font-family;
+    }
+    position: sticky;
+    top: 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 0 0 8px 0;
+  }
+
   header {
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     display: flex;
@@ -3810,7 +3797,7 @@ textarea::placeholder {
 
 .s-tooltip-below {
   visibility: hidden;
-  width: 80px;
+  width: 100px;
   background-color: $graper;
   color: white;
   text-align: center;
@@ -3818,9 +3805,9 @@ textarea::placeholder {
   padding: 6px 2px;
   position: absolute;
   z-index: 100;
-  top: 130%;
-  left: 50%;
-  margin-left: -40px;
+  top: 100%;
+  right: 130%;
+  margin-top: -28px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   font-size: 13px;
   line-height: 1.4;

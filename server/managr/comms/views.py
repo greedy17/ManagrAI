@@ -2198,8 +2198,18 @@ class JournalistContactViewSet(
             return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
 
     def partial_update(self, request, *args, **kwargs):
+        data = self.request.data
         instance = self.get_object()
-        serializer = self.serializer_class.update(instance, request.data)
+        print(instance)
+        serializer = self.serializer_class(instance, data=request.data, partial=True)
+        if serializer.is_valid(raise_exception=True):
+            serializer.update(instance=instance, validated_data=request.data)
+        else:
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={"error": "Error updating contact"},
+            )
+
         return Response(status=status.HTTP_200_OK, data=serializer.data)
 
     def destroy(self, request, *args, **kwargs):
