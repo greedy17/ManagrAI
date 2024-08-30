@@ -11,6 +11,9 @@ from rest_framework import (
 )
 from django.http import JsonResponse, HttpResponse
 from asgiref.sync import async_to_sync, sync_to_async
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import OrderingFilter
+from .pagination import PageNumberPagination
 from pytz import timezone
 from datetime import datetime, timedelta
 from newspaper import Article, ArticleException
@@ -27,6 +30,7 @@ from urllib.parse import urlencode
 from django.shortcuts import redirect
 from rest_framework.decorators import action
 from . import constants as comms_consts
+from .filters import JournalistContactFilter
 from .models import (
     CompanyDetails,
     Search,
@@ -2124,6 +2128,10 @@ class JournalistContactViewSet(
 ):
     authentication_classes = [ExpiringTokenAuthentication]
     serializer_class = JournalistContactSerializer
+    pagination_class = PageNumberPagination
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_class = JournalistContactFilter
+    ordering_fields = ["journalist__email", "journalist__first_name", "journalist__last_name"]
 
     def get_queryset(self):
         # contacts = JournalistContact.objects.for_user(user=self.request.user)
@@ -2200,7 +2208,6 @@ class JournalistContactViewSet(
     def partial_update(self, request, *args, **kwargs):
         data = self.request.data
         instance = self.get_object()
-        print(instance)
         serializer = self.serializer_class(instance, data=request.data, partial=True)
         if serializer.is_valid(raise_exception=True):
             serializer.update(instance=instance, validated_data=request.data)
