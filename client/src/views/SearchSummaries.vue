@@ -5352,7 +5352,8 @@ export default {
           type: this.newSearch,
           beat: 'beat',
           location: 'location',
-          list: this.summary,
+          list: 'list',
+          results: this.discoverList,
         })
 
         if (res.id) {
