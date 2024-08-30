@@ -10,7 +10,6 @@ from rest_framework import (
     viewsets,
 )
 from django.http import JsonResponse, HttpResponse
-from .pagination import PageNumberPagination
 from asgiref.sync import async_to_sync, sync_to_async
 from pytz import timezone
 from datetime import datetime, timedelta
@@ -2153,7 +2152,6 @@ class JournalistContactViewSet(
 ):
     authentication_classes = [ExpiringTokenAuthentication]
     serializer_class = JournalistContactSerializer
-    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         # contacts = JournalistContact.objects.for_user(user=self.request.user)

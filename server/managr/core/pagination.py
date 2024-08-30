@@ -8,4 +8,4 @@ class PageNumberPagination(PageNumberPagination):
     """
 
     page_size_query_param = "page_size"
-    page_size = 40
+    page_size = 1000
