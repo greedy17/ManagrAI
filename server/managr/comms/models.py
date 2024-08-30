@@ -1273,6 +1273,11 @@ class JournalistContact(TimeStampModel):
             contact.tags.remove(tag)
         return contact.save()
 
+    def save_bio(self, bio, images):
+        self.bio = bio
+        self.images = images
+        return self.save()
+
 
 class CompanyDetails(models.Model):
     details = models.TextField()

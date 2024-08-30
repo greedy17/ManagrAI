@@ -2200,7 +2200,9 @@ class JournalistContactViewSet(
     def partial_update(self, request, *args, **kwargs):
         data = self.request.data
         instance = self.get_object()
-        serializer = self.serializer_class.update(instance, request.data)
+        serializer = self.get_serializer(instance, data=request.data)
+        if serializer.is_valid():
+            serializer.update(instance=instance, validated_data=request.data)
         return Response(status=status.HTTP_200_OK, data=serializer.data)
 
     def destroy(self, request, *args, **kwargs):
