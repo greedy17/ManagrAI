@@ -479,7 +479,7 @@
               <div
                 style="opacity: 1; cursor: text; font-size: 15px; padding: 5px 8px; cursor: pointer"
                 v-for="(tag, i) in tags"
-                @click="selectTag(contact, tag, i)"
+                @click="selectTag(tag, i)"
                 :key="i"
                 class="space-between hover-bg"
               >
@@ -697,7 +697,12 @@
               />
             </div>
 
-            <div v-outside-click="hideUsers" style="left: 0" v-show="showUsers" class="dropdown">
+            <div
+              v-outside-click="hideUsers"
+              style="left: 0; z-index: 10"
+              v-show="showUsers"
+              class="dropdown"
+            >
               <div class="dropdown-header">
                 <h3>Select User</h3>
               </div>
@@ -825,7 +830,7 @@
                 </td>
 
                 <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
-                  <div class="rows">
+                  <div style="max-width: 250px; overflow: scroll" class="rows">
                     <div
                       style="padding-right: 10px"
                       v-for="(tag, i) in contact.tags"
@@ -844,7 +849,7 @@
                 </td>
 
                 <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
-                  <div>
+                  <div class="rows">
                     <div
                       @click.stop="showTags(contact, i)"
                       class="img-container s-wrapper"
@@ -896,6 +901,21 @@
                       <img
                         style="filter: invert(40%)"
                         src="@/assets/images/file-user.svg"
+                        height="14px"
+                        alt=""
+                      />
+                    </div>
+
+                    <div
+                      @click="openDeleteModal(contact.id)"
+                      class="img-container s-wrapper"
+                      @mouseenter="showPopover($event, 'Delete contact', i)"
+                      @mouseleave="hidePopover"
+                    >
+                      <img
+                        class="pink-filter"
+                        style="filter: invert(40%)"
+                        src="@/assets/images/trash.svg"
                         height="14px"
                         alt=""
                       />
@@ -1231,16 +1251,13 @@ export default {
         console.log(res)
         this.contactCount = res.num_processing
         this.taskId = res.task_id
-        this.$toast(
-          'Success! It may take a few minutes for your contacts to fully sync with ManagrAI',
-          {
-            timeout: 3000,
-            position: 'top-left',
-            type: 'success',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          },
-        )
+        this.$toast('Contacts importing! This could take a few minutes.', {
+          timeout: 3000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
         this.uploading = false
         this.bulkModalOpen = false
       } catch (error) {
@@ -1473,8 +1490,7 @@ export default {
 
       this.pitchModalOpen = true
     },
-    async selectTag(contact, tag, i) {
-      this.currentContact = contact
+    async selectTag(tag, i) {
       this.newTag = tag
       this.tagIndex = i
       this.selectingTag = true
@@ -1624,6 +1640,7 @@ export default {
       this.loading = true
       try {
         const res = await Comms.api.getContacts()
+        console.log(res)
         this.allContacts = res.results
         this.contacts = res.results.filter((contact) => contact.user === this.user.id)
       } catch (e) {
@@ -1957,7 +1974,7 @@ table {
     border: 1px solid rgba(0, 0, 0, 0.1);
     padding: 8px;
     left: 4px;
-    z-index: 4;
+    // z-index: 4;
     width: 96%;
     min-height: 100px;
     background-color: white;
