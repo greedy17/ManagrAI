@@ -172,6 +172,13 @@ class EmailTrackerSerializer(serializers.ModelSerializer):
 class JournalistContactSerializer(serializers.ModelSerializer):
     journalist_ref = JournalistSerializer(source="journalist", read_only=True)
 
+    def update(self, instance, validated_data):
+        if "notes" in validated_data.keys():
+            current_notes = instance.notes
+            new_notes = current_notes + validated_data["notes"]
+            validated_data["notes"] = new_notes
+        return super().update(instance, validated_data)
+
     class Meta:
         model = JournalistContact
         fields = ("id", "user", "journalist", "journalist_ref", "tags", "bio", "images", "notes")
