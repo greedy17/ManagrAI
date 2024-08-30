@@ -70,6 +70,7 @@ from managr.core import exceptions as open_ai_exceptions
 from rest_framework.decorators import (
     api_view,
     permission_classes,
+    authentication_classes,
 )
 from managr.comms.utils import (
     generate_config,
@@ -2355,6 +2356,7 @@ class EmailTrackerViewSet(
 
 @require_http_methods(["GET"])
 @permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
 @async_to_sync
 async def get_clips(request, *args, **kwargs):
     response = await sync_to_async(getclips)(request)
@@ -2380,6 +2382,7 @@ def get_shared_summary(request, encrypted_param):
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
 def upload_link(request):
     url = request.data["params"]["url"]
     try:
@@ -2412,6 +2415,7 @@ def upload_link(request):
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
 def get_twitter_request_token(request):
     res = TwitterAccount.get_token(request)
     return Response(res)
@@ -2419,6 +2423,7 @@ def get_twitter_request_token(request):
 
 @api_view(["GET"])
 @permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
 def get_twitter_auth_link(request):
     link = TwitterAccount.get_authorization(request.token)
     return Response({"link": link})
@@ -2426,6 +2431,7 @@ def get_twitter_auth_link(request):
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
 def get_twitter_authentication(request):
     user = request.user
     data = request.data
@@ -2452,6 +2458,7 @@ def get_twitter_authentication(request):
 
 @api_view(["DELETE"])
 @permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
 def revoke_twitter_auth(request):
     user = request.user
     twitter_account = TwitterAccount.objects.filter(user=user)
@@ -2464,6 +2471,7 @@ def revoke_twitter_auth(request):
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
 def get_instagram_request_token(request):
     res = InstagramAccount.get_token(request)
     return Response(res)
@@ -2471,6 +2479,7 @@ def get_instagram_request_token(request):
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
 def get_instagram_authentication(request):
     user = request.user
     data = request.data
@@ -2493,6 +2502,7 @@ def get_instagram_authentication(request):
 
 @api_view(["DELETE"])
 @permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
 def revoke_instagram_auth(request):
     user = request.user
     ig_account = InstagramAccount.objects.filter(user=user)
@@ -2505,6 +2515,7 @@ def revoke_instagram_auth(request):
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
 def get_email_request_token(request):
     res = InstagramAccount.get_token(request)
     return Response(res)
@@ -2512,6 +2523,7 @@ def get_email_request_token(request):
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
 def get_email_authentication(request):
     user = request.user
     data = request.data
@@ -2534,6 +2546,7 @@ def get_email_authentication(request):
 
 @api_view(["DELETE"])
 @permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
 def revoke_email_auth(request):
     user = request.user
     ig_account = InstagramAccount.objects.filter(user=user)
@@ -2546,6 +2559,7 @@ def revoke_email_auth(request):
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
 def upload_pdf(request):
     user = request.user
     url = request.data.get("url", None)
@@ -2633,6 +2647,7 @@ def upload_pdf(request):
 
 @api_view(["GET"])
 @permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
 def get_writing_styles(request):
     # if request.data.get("all_styles", False):
     #     writing_styles = WritingStyle.objects.filter(
@@ -2769,6 +2784,7 @@ def email_recieved_webhook(request):
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
 def get_google_summary(request):
     user = request.user
     query = request.data.get("query")
@@ -2854,6 +2870,7 @@ def get_google_summary(request):
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
 def read_column_names(request):
     file_obj = request.FILES.get("file")
     if file_obj:
@@ -2889,6 +2906,7 @@ def read_column_names(request):
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
 def process_excel_file(request):
     file_obj = request.FILES.get("file")
     sheet_name = request.data.get("sheet")
@@ -2926,6 +2944,7 @@ def process_excel_file(request):
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
 def process_csv_file(request):
     file_obj = request.FILES.get("file")
     labels = json.loads(request.data.get("labels"))
