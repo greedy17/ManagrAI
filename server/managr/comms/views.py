@@ -2892,7 +2892,6 @@ def read_column_names(request):
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def process_excel_file(request):
-    print(request.data)
     file_obj = request.FILES.get("file")
     sheet_name = request.data.get("sheet")
     labels = json.loads(request.data.get("labels"))
@@ -2915,14 +2914,13 @@ def process_excel_file(request):
         result = TaskResults.objects.create(
             function_name="emit_process_contacts_excel", user_id=str(request.user.id)
         )
-        journalist_values = list(set(journalist_values))
         task = emit_process_contacts_excel(str(request.user.id), journalist_values, str(result.id))
         result.task_id_str = str(task.id)
         result.task = task
         result.save()
         return Response(
             status=status.HTTP_200_OK,
-            data={"task_id": str(result.id), "num_processing": len(journalist_values)},
+            data={"task_id": str(result.id), "num_processing": len(journalist_values["email"])},
         )
     else:
         return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)

@@ -903,6 +903,7 @@ def _process_contacts_excel(user_id, data, result_id):
                     failed_list.append(email)
         except Exception as e:
             continue
+    contacts_to_create = list(set(contacts_to_create))
     response_data = create_contacts_from_file(contacts_to_create, user_id)
     result = TaskResults.objects.get(id=result_id)
     result.json_result = {"success": succeeded, "failed": failed_list}
