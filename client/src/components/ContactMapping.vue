@@ -127,7 +127,7 @@ export default {
 
       switch (txt) {
         case 'publication':
-          formattedString = 'Selcet publication'
+          formattedString = 'Select publication'
           break
         case 'first_name':
           formattedString = 'Select first name'
