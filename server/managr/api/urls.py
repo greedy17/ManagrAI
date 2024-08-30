@@ -520,7 +520,12 @@ urlpatterns = [
     path(
         "process-contacts/excel",
         comms_views.process_excel_file,
-        name="process-contacts",
+        name="process-contacts-excel",
+    ),
+    path(
+        "process-contacts/csv",
+        comms_views.process_csv_file,
+        name="process-contacts-csv",
     ),
 ]
 router.register("users/reports", core_views.ReportViewSet, "reports"),

@@ -922,7 +922,6 @@
             </tbody>
             <tbody v-else>
               <div v-if="loading" class="loading">
-                Gathering contacts
                 <div style="margin-left: 12px" class="dot"></div>
                 <div class="dot"></div>
                 <div class="dot"></div>
@@ -948,7 +947,7 @@
           </Popover>
         </div>
 
-        <div class="pagination-container">
+        <!-- <div class="pagination-container">
           <div class="pagination">
             <div
               @click="onPageClick(page)"
@@ -959,7 +958,7 @@
               {{ page }}
             </div>
           </div>
-        </div>
+        </div> -->
       </section>
 
       <aside>
@@ -971,13 +970,19 @@
         <div class="checkbox-list">
           <ul v-if="tags.length">
             <li v-for="tag in tagCounts" :key="tag.name">
-              <label class="custom-checkbox">
+              <label class="custom-checkbox fadein">
                 <input type="checkbox" id="checkbox" :value="tag" v-model="selectedTags" />
                 <span class="checkmark"></span>
                 {{ tag.name }} <span>({{ tag.count }})</span>
               </label>
             </li>
           </ul>
+
+          <div v-else-if="loading" class="loading row">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
 
           <small v-else> Apply tags to organize journalists into lists. </small>
         </div>
@@ -1882,6 +1887,46 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+.skeleton {
+  background-color: rgb(236, 236, 236);
+  border-radius: 4px;
+  margin-bottom: 10px;
+  animation: shimmer 3s infinite;
+  background: linear-gradient(to right, #dddddde5 8%, #eeeeeef8 18%, #dddddd 33%);
+  background-size: 1000px 100%;
+}
+.skeleton-title {
+  height: 20px;
+  width: 200px;
+}
+.skeleton-text {
+  height: 20px;
+  width: 100%;
+}
+.skeleton-small {
+  height: 20px;
+  width: 200px;
+}
+
+.skeleton-medium {
+  height: 20px;
+  width: 70%;
+}
+
+.skeleton-large {
+  height: 180px;
+  width: 100%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
 .scrolltainer {
   &::-webkit-scrollbar {
     width: 5px;
@@ -1958,7 +2003,7 @@ export default {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
   margin-top: 24px;
-  height: 60vh;
+  height: 66vh;
   background-color: white;
   overflow: scroll;
 }
@@ -2134,6 +2179,7 @@ table {
 
   .loading {
     display: flex;
+    flex-direction: row;
     align-items: center;
     border-radius: 6px;
     margin-left: 16px;
@@ -2439,8 +2485,8 @@ h3 {
   }
 
   aside {
-    width: 16vw;
-    padding: 28px 24px 16px 32px;
+    width: 18vw;
+    padding: 28px 24px 16px 24px;
 
     @media only screen and (max-width: 600px) {
       display: none;
