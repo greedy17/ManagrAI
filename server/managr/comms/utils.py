@@ -721,7 +721,8 @@ def check_journalist_validity(journalist, outlet, email):
                 if r["email"] is not None:
                     email = r["email"]
                     data["email"] = email
-                    data["outlet"] = r["company"]
+                    if r["company"] != "false":
+                        data["outlet"] = r["company"]
             data["accuracy_score"] = score
             data["first_name"] = first
         data["verified"] = is_valid
