@@ -1986,7 +1986,6 @@ class DiscoveryViewSet(
                 elif search:
                     prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(journalist, results, company, text)
                 else:
-                    print("CONTENT HERE", company)
                     prompt = comms_consts.OPEN_AI_DISCOVERY_RESULTS_PROMPT(
                         journalist, results, company, text
                     )

@@ -144,16 +144,25 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
 
 def OPEN_AI_SOCIAL_BIO(person, org, results, text):
     prompt = f"""
-    Here are the top 5 search results for {person} on Twitter: \n Results: {results}\n And here is additional info on the person from a website: {text}. \n Combine the data from search results and the website to craft one bio for {person}. Then offer 3 short relevant pitching tips for {org} based on what you know about the person. Lastly, if available, list out journalist's additional social handles and email address. If email not available, exclude email details from the output. Output must me:
-    Social Media Bio:
-    Pitching Tips:
-    Contact Details:
+    Here are the top 5 search results for {person} on Twitter: \n Results: {results}\n And here is additional info on the person from a website: {text}. \n 
+    Combine the data from search results and the website to craft one bio for {person}. Then offer 3 short relevant pitching tips for {org} based on what you know about the person. 
+    Lastly, if available, list out journalist's additional social handles and email address. If email not available, exclude email details from the output. 
+    Output must be JSON:
+    bio: '
+    <h2>Social Media Bio:</h2>
+    [BIO WITHOUT ANY LINKS]
+    <h2>Pitching Tips:</h2>
+    [PITCHING TIPS]
+    <h2>Contact Details:</h2>
+    [CONTACT DETAILS]
+    ',
+    email: '[EMAIL IF FOUND]'
 
     Output MUST follow the following rules:
     1. All bold text MUST be returned in a strong tag instead of markdown!
-    2. All headings must be returned in a H2 tag!
-    3. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
-    4. Never include ```html``` in the response, only reply with what I asked for specifically
+    2. Add a <br> between sections.
+    3. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab.
+    4. Do not wrap the JSON in ```json```
     5. NEVER include any additional text next to the email. example: instead of email@email.com (guessed email based on typical email patterns), simply return email@email.com, Instead of email@email.com (guessed email), simply return email@email.com. This is very important, do not ignore
     """
     return prompt
