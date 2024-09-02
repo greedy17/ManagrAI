@@ -497,11 +497,11 @@
               <div
                 style="opacity: 1; cursor: text; font-size: 15px; padding: 5px 8px; cursor: pointer"
                 v-for="(tag, i) in tags"
-                @click="selectTag(tag, i)"
+                @click="selectTag(tag.name, i)"
                 :key="i"
                 class="space-between hover-bg"
               >
-                {{ tag }}
+                {{ tag.name }}
               </div>
             </div>
           </div>
@@ -597,7 +597,7 @@
 
     <div class="top-row">
       <section>
-        <div style="margin-left: -2px" class="space-between white-container">
+        <!-- <div style="margin-left: -2px; margin-bottom: 24px" class="space-between white-container">
           <div class="row relative" style="padding-bottom: 8px">
             <div
               @click.stop="toggleUserDropdown"
@@ -696,9 +696,126 @@
                 :placeholder="`Search contacts...`"
               />
 
-              <!-- <div v-if="searchContactsText" @click="loadSearchedContacts">
-                <img src="@/assets/images/arrow-right.svg" class="pointer" height="12px" alt="" />
-              </div> -->
+              <div
+                class="img-container-stay-small"
+                v-if="searchContactsText"
+                @click="getContactsSearch"
+              >
+                <img src="@/assets/images/arrow-right.svg" class="pointer" height="10px" alt="" />
+              </div>
+            </div>
+          </div>
+        </div> -->
+
+        <div style="margin-bottom: 24px" class="space-between">
+          <div class="row relative" style="padding-bottom: 8px">
+            <div
+              @click.stop="toggleUserDropdown"
+              :class="{ 'soft-gray-bg': showUsers }"
+              class="drop-header"
+              style="border: none"
+            >
+              <h3 style="font-size: 16px" class="thin-font row">
+                <img
+                  style="margin: 0 4px 0 0"
+                  src="@/assets/images/profile.svg"
+                  height="12px"
+                  alt=""
+                />
+                User:
+
+                <span style="margin-left: 4px" class="thin-font-ellipsis"
+                  >{{
+                    !selectedUser
+                      ? 'All'
+                      : selectedUser.fullName
+                      ? selectedUser.fullName
+                      : selectedUser.full_name
+                  }}
+                </span>
+              </h3>
+
+              <img
+                v-if="!showUsers"
+                style="margin-left: 8px"
+                src="@/assets/images/arrowDropUp.svg"
+                height="14px"
+                alt=""
+              />
+              <img
+                v-else
+                class="rotate-img"
+                src="@/assets/images/arrowDropUp.svg"
+                height="14px"
+                alt=""
+              />
+            </div>
+
+            <div
+              v-outside-click="hideUsers"
+              style="left: 0; z-index: 10"
+              v-show="showUsers"
+              class="dropdown"
+            >
+              <div class="dropdown-header">
+                <h3>Select User</h3>
+              </div>
+
+              <div class="dropdown-body">
+                <div class="col">
+                  <div v-if="!searchUsersText" @click="selectAllUsers" class="dropdown-item">
+                    All
+                  </div>
+                  <div
+                    @click="selectUser(user)"
+                    class="dropdown-item"
+                    v-for="(user, i) in allUsers"
+                    :key="i"
+                  >
+                    {{ user.full_name }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="dropdown-footer"></div>
+            </div>
+
+            <div style="margin-left: 16px" @click="toggleContactsModal" class="icon-btn">
+              <img src="@/assets/images/adduser.svg" height="12px" alt="" />
+              <div>Add contact</div>
+            </div>
+
+            <div style="margin-left: 8px" @click="bulkModalOpen = true" class="icon-btn">
+              <img src="@/assets/images/file-import.svg" height="12px" alt="" />
+              <div>Import contacts</div>
+            </div>
+          </div>
+
+          <div class="search">
+            <div class="input">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
+                  fill="currentColor"
+                ></path>
+              </svg>
+
+              <input
+                v-model="searchContactsText"
+                class="search-input"
+                :placeholder="`Search contacts...`"
+                @keyup.enter="getContactsSearch"
+              />
+
+              <div
+                class="img-container-stay-small"
+                v-if="searchContactsText"
+                @click="getContactsSearch"
+              >
+                <img src="@/assets/images/arrow-right.svg" class="pointer" height="10px" alt="" />
+              </div>
             </div>
           </div>
         </div>
@@ -769,7 +886,7 @@
                 </td>
 
                 <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
-                  <div style="max-width: 200px; overflow: scroll" class="rows">
+                  <div style="width: 160px; overflow: scroll" class="rows">
                     <div
                       style="padding-right: 10px"
                       v-for="(tag, i) in contact.tags"
@@ -789,21 +906,7 @@
 
                 <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
                   <div class="rows">
-                    <div
-                      @click.stop="showTags(contact, i)"
-                      class="img-container s-wrapper"
-                      @mouseenter="showPopover($event, 'Add Tag', i)"
-                      @mouseleave="hidePopover"
-                    >
-                      <img
-                        style="filter: invert(40%)"
-                        src="@/assets/images/tags.svg"
-                        height="14px"
-                        alt=""
-                      />
-                    </div>
-
-                    <div
+                    <!-- <div
                       @click="openPitchModal(contact)"
                       class="img-container s-wrapper"
                       @mouseenter="showPopover($event, 'Create Pitch', i)"
@@ -815,7 +918,7 @@
                         height="14px"
                         alt=""
                       />
-                    </div>
+                    </div> -->
 
                     <!-- <div
                       @click="updateContact(contact)"
@@ -840,6 +943,20 @@
                       <img
                         style="filter: invert(40%)"
                         src="@/assets/images/file-user.svg"
+                        height="14px"
+                        alt=""
+                      />
+                    </div>
+
+                    <div
+                      @click.stop="showTags(contact, i)"
+                      class="img-container s-wrapper"
+                      @mouseenter="showPopover($event, 'Add Tag', i)"
+                      @mouseleave="hidePopover"
+                    >
+                      <img
+                        style="filter: invert(40%)"
+                        src="@/assets/images/tags.svg"
                         height="14px"
                         alt=""
                       />
@@ -889,12 +1006,11 @@
             {{ popoverContent }}
           </Popover>
         </div>
-        <small v-if="filteredContactList.length" class="smalltxt fadein"
+        <!-- <small v-if="filteredContactList.length" class="smalltxt fadein"
           >list caps at 1,000 contacts</small
-        >
+        > -->
 
-        <!-- <div class="pagination-container">
-          <div class="pagination">
+        <!-- <div class="pagination">
             <div
               @click="onPageClick(page)"
               v-for="(page, i) in pagination"
@@ -903,8 +1019,37 @@
             >
               {{ page }}
             </div>
+          </div> -->
+        <div class="space-between">
+          <div></div>
+
+          <div class="pagination-container">
+            {{ contactRange }} of {{ totalContacts }}
+            <div class="pagination">
+              <button
+                :disabled="!previous"
+                class="no-borders rotate-left"
+                @click="loadPage(currentPage - 1)"
+              >
+                <img
+                  :class="{ faded: !previous }"
+                  src="@/assets/images/rightarrow.svg"
+                  height="16px"
+                  alt=""
+                />
+              </button>
+
+              <button :disabled="!next" class="no-borders" @click="loadPage(currentPage + 1)">
+                <img
+                  :class="{ faded: !next }"
+                  src="@/assets/images/rightarrow.svg"
+                  height="16px"
+                  alt=""
+                />
+              </button>
+            </div>
           </div>
-        </div> -->
+        </div>
       </section>
 
       <aside>
@@ -915,9 +1060,9 @@
 
         <div class="checkbox-list">
           <ul v-if="tags.length">
-            <li v-for="tag in tagCounts" :key="tag.name">
+            <li v-for="tag in tags" :key="tag.name">
               <label class="custom-checkbox fadein">
-                <input type="checkbox" id="checkbox" :value="tag" v-model="selectedTags" />
+                <input type="checkbox" id="checkbox" :value="tag.name" v-model="selectedTags" />
                 <span class="checkmark"></span>
                 {{ tag.name }} <span>({{ tag.count }})</span>
               </label>
@@ -956,13 +1101,14 @@ export default {
   },
   data() {
     return {
+      contactRange: '',
       totalContacts: null,
       contactsPerPage: null,
       totalPages: null,
       currentPage: null,
       pagination: [],
-      next: '',
-      previous: '',
+      next: null,
+      previous: null,
       contactCount: 0,
       taskId: '',
       sheetName: '',
@@ -1053,64 +1199,27 @@ export default {
         user.full_name.toLowerCase().includes(this.searchUsersText),
       )
     },
-    tagCounts() {
-      const tagCountMap = {}
-      this.tags.forEach((tag) => {
-        tagCountMap[tag] = 0
-      })
+    // tagCounts() {
+    //   const tagCountMap = {}
+    //   this.tags.forEach((tag) => {
+    //     tagCountMap[tag] = 0
+    //   })
 
-      this.contacts.forEach((contact) => {
-        contact.tags.forEach((tag) => {
-          if (tagCountMap.hasOwnProperty(tag)) {
-            tagCountMap[tag]++
-          }
-        })
-      })
+    //   this.contacts.forEach((contact) => {
+    //     contact.tags.forEach((tag) => {
+    //       if (tagCountMap.hasOwnProperty(tag)) {
+    //         tagCountMap[tag]++
+    //       }
+    //     })
+    //   })
 
-      return Object.keys(tagCountMap).map((tag) => ({
-        name: tag,
-        count: tagCountMap[tag],
-      }))
-    },
+    //   return Object.keys(tagCountMap).map((tag) => ({
+    //     name: tag,
+    //     count: tagCountMap[tag],
+    //   }))
+    // },
     filteredContactList() {
-      let filteredContacts = this.contacts.filter((contact) => {
-        const searchText = this.searchContactsText.toLowerCase()
-        const userFilter = null
-        const tagFilter = this.selectedTags.map((tag) => tag.name.toLowerCase())
-
-        const searchConditions = [
-          contact.journalist_ref.first_name
-            ? contact.journalist_ref.first_name.toLowerCase().includes(searchText)
-            : '',
-          contact.journalist_ref.last_name
-            ? contact.journalist_ref.last_name.toLowerCase().includes(searchText)
-            : '',
-          contact.journalist_ref.email
-            ? contact.journalist_ref.email.toLowerCase().includes(searchText)
-            : '',
-          contact.journalist_ref.outlet
-            ? contact.journalist_ref.outlet.toLowerCase().includes(searchText)
-            : '',
-          contact.tags ? contact.tags.some((tag) => tag.toLowerCase().includes(searchText)) : '',
-        ]
-
-        const filterConditions = []
-
-        if (userFilter !== null) {
-          filterConditions.push(email.user === userFilter)
-        }
-
-        if (tagFilter.length) {
-          filterConditions.push(contact.tags.some((tag) => tagFilter.includes(tag.toLowerCase())))
-        }
-
-        return (
-          searchConditions.some((condition) => condition) &&
-          filterConditions.every((condition) => condition)
-        )
-      })
-
-      return filteredContacts.slice().sort((a, b) => {
+      return this.contacts.slice().sort((a, b) => {
         const aValue =
           this.sortKey === 'publication'
             ? a.journalist_ref.outlet
@@ -1141,11 +1250,18 @@ export default {
         this.newTag = ''
       }
     },
-    // selectedTags(newVal, oldVal) {
-    //   console.log(newVal, oldVal)
-    // },
+    searchContactsText(val, oldVal) {
+      if (val === '' && oldVal !== '') {
+        console.log('from watcher')
+        this.getInitialContacts()
+      }
+    },
+    selectedTags(val, oldVal) {
+      if (val !== oldVal) {
+        this.getContactsSearch()
+      }
+    },
   },
-  mounted() {},
   created() {
     this.selectedUser = this.user
     this.bccEmail = this.user.email
@@ -1591,51 +1707,94 @@ export default {
       if (apiIndex === -1) return null
       return url.substring(apiIndex + 4) // '+ 4' skips the 'api/' part
     },
-    // async getInitialContacts() {
-    //   this.loading = true
-    //   try {
-    //     const res = await Comms.api.getContacts()
-    //     console.log(res)
-    //     this.allContacts = res.results
-    //     this.next = this.extractPageFromUrl(res.next)
-    //     this.previous = this.extractPageFromUrl(res.previous)
-    //     this.contacts = res.results.filter((contact) => contact.user === this.user.id)
-    //   } catch (e) {
-    //     console.error(e)
-    //   } finally {
-    //     this.loading = false
-    //   }
-    // },
-    async getInitialContacts() {
+    async getContactsSearch() {
+      console.log(this.selectedTags)
       this.loading = true
       try {
-        const res = await Comms.api.getContacts()
-
+        const res = await Comms.api.getContacts({
+          search: this.searchContactsText.trim(),
+          tags: this.selectedTags,
+        })
         this.allContacts = res.results
         this.contacts = res.results.filter((contact) => contact.user === this.user.id)
         this.totalContacts = res.count
-        this.contactsPerPage = 50
-        this.totalPages = Math.ceil(this.totalContacts / this.contactsPerPage)
-
+        this.previous = res.previous
+        this.next = res.next
         this.currentPage = 1
-        this.initializePagination()
       } catch (e) {
         console.error(e)
       } finally {
         this.loading = false
       }
     },
+    async getContactsSearch() {
+      console.log(this.selectedTags)
+      this.loading = true
+      try {
+        const res = await Comms.api.getContacts({
+          search: this.searchContactsText.trim(),
+          tags: this.selectedTags,
+        })
+        this.allContacts = res.results
+        this.contacts = res.results.filter((contact) => contact.user === this.user.id)
+        this.totalContacts = res.count
+        this.previous = res.previous
+        this.next = res.next
+        this.currentPage = 1
 
+        // Calculate the number of contacts per page based on the response
+        this.contactsPerPage = this.contacts.length
+
+        // Calculate start and end range for the current page
+        const startRange = 1
+        const endRange = Math.min(this.contactsPerPage, this.totalContacts)
+
+        this.contactRange = `${startRange}-${endRange} `
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.loading = false
+      }
+    },
     async loadPage(pageNumber) {
       this.loading = true
       try {
         const res = await Comms.api.loadMoreContacts(`jcontact/?page=${pageNumber}`)
-        console.log(res)
         this.allContacts = res.results
         this.contacts = res.results.filter((contact) => contact.user === this.user.id)
-
-        // Update the current page
         this.currentPage = pageNumber
+        this.totalContacts = res.count
+        this.previous = res.previous
+        this.next = res.next
+
+        // Calculate start and end range for the current page
+        const startRange = (this.currentPage - 1) * 50 + 1
+        const endRange = Math.min(this.currentPage * 50, this.totalContacts)
+
+        this.contactRange = `${startRange}-${endRange}`
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.loading = false
+      }
+    },
+    async getInitialContacts() {
+      this.loading = true
+      try {
+        const res = await Comms.api.getContacts()
+        this.allContacts = res.results
+        this.contacts = res.results.filter((contact) => contact.user === this.user.id)
+        this.totalContacts = res.count
+        this.contactsPerPage = 50 // Number of contacts per page
+        this.currentPage = 1
+        this.previous = res.previous
+        this.next = res.next
+
+        // Calculate start and end range for the initial page
+        const startRange = 1
+        const endRange = Math.min(this.contactsPerPage, this.totalContacts)
+
+        this.contactRange = `${startRange}-${endRange}`
       } catch (e) {
         console.error(e)
       } finally {
@@ -1650,7 +1809,6 @@ export default {
         this.pagination.push(i)
       }
     },
-
     onPageClick(pageNumber) {
       if (pageNumber !== this.currentPage) {
         this.loadPage(pageNumber)
@@ -1714,6 +1872,7 @@ export default {
     async getTags() {
       try {
         const res = await Comms.api.getContactTagList()
+        console.log(res)
         this.tags = res.tags
       } catch (e) {
         console.error(e)
@@ -1910,14 +2069,18 @@ export default {
   display: flex;
   flex-direction: row;
   align-items: center;
-  font-size: 14px;
-
+  justify-content: center;
+  font-size: 13px;
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: 16px;
   padding: 8px 10px;
   margin: 0 10px;
+  width: 140px;
   cursor: pointer;
+  font-family: $base-font-family;
   img {
-    margin-right: 5px;
+    margin-right: 6px;
   }
   &:hover {
     background-color: $soft-gray;
@@ -1932,32 +2095,42 @@ export default {
 }
 
 .pagination-container {
+  color: $light-gray-blue;
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
-  overflow: scroll;
+  justify-content: flex-start;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: white;
+  border-radius: 4px;
+  width: fit-content;
+  max-width: 200px;
+  margin-top: 12px;
+  padding: 8px;
+  font-size: 14px;
+
+  span {
+    font-family: $base-font-family;
+    margin-right: 4px;
+  }
+}
+
+.rotate-left {
+  img {
+    transform: rotate(180deg);
+
+    &:hover {
+      transform: rotate(180deg);
+    }
+  }
 }
 
 .pagination {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 10px;
-  margin: 12px 0;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: 24px;
-  padding: 8px 16px;
-  width: fit-content;
-  max-width: 80%;
-  background-color: white;
-
-  div {
-    padding: 4px 6px;
-    border-radius: 50%;
-    font-size: 14px;
-    cursor: pointer;
-  }
+  gap: 6px;
+  margin-left: 12px;
 }
 
 .active-page {
@@ -1974,8 +2147,7 @@ export default {
 .table-border {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
-  margin-top: 24px;
-  height: 65vh;
+  height: 68vh;
   background-color: white;
   overflow: scroll;
 }
@@ -2190,7 +2362,7 @@ table {
 }
 
 .contacts {
-  padding: 96px 80px 0 80px;
+  padding: 88px 80px 0 80px;
   font-family: $thin-font-family;
   color: $dark-black-blue;
   overflow: hidden !important;
@@ -2723,7 +2895,7 @@ h2 {
   position: sticky;
   z-index: 8;
   top: 1.5rem;
-  width: 25vw;
+  width: 22vw;
   border-radius: 20px;
   border: 1px solid rgba(0, 0, 0, 0.135);
   font-family: $thin-font-family;
@@ -2731,7 +2903,7 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding: 12px 20px 12px 10px;
+  padding: 9px 12px 9px 10px;
 
   @media only screen and (max-width: 600px) {
     width: 95%;
@@ -2916,10 +3088,6 @@ h2 {
 
   img {
     transition: all 0.3s;
-  }
-  img:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transform: scale(1.075);
   }
 }
 
@@ -3326,15 +3494,17 @@ h2 {
 }
 
 .drop-header {
-  padding: 9px 6px;
-  background-color: white;
-  font-size: 14px !important;
+  padding: 9px 6px 9px 8px;
+  background-color: $off-white;
+  font-size: 13px !important;
   border: 1px solid rgba(0, 0, 0, 0.185);
   border-radius: 16px;
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: center;
   cursor: pointer;
+  // color: $graper;
 
   &:hover {
     background-color: $soft-gray;
@@ -3480,14 +3650,13 @@ h2 {
   flex-direction: row;
   align-items: center;
   font-size: 12px;
-  background-color: $lite-pink;
-  color: $pinky;
+  background-color: $liter-blue;
+  color: $lite-blue;
   font-family: $base-font-family;
-  font-weight: 100;
   padding: 6px 32px 6px 8px;
-  border-radius: 12px;
+  border-radius: 5px;
   img {
-    filter: invert(35%) sepia(23%) saturate(810%) hue-rotate(218deg) brightness(93%) contrast(97%);
+    filter: invert(54%) sepia(16%) saturate(1723%) hue-rotate(159deg) brightness(89%) contrast(89%) !important;
     margin-right: 4px;
   }
 
@@ -3748,6 +3917,11 @@ textarea::placeholder {
   animation: fadeIn 0.5s forwards;
 }
 
+.faded {
+  opacity: 0.2;
+  cursor: text;
+}
+
 .img-container {
   cursor: pointer;
   padding: 5px 7px 4px 7px;
@@ -3757,6 +3931,18 @@ textarea::placeholder {
   }
 
   img {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.img-container-stay-small {
+  padding: 1px 4px;
+  border-radius: 50%;
+  background-color: $dark-black-blue;
+
+  img {
+    filter: invert(100%);
     margin: 0;
     padding: 0;
   }
@@ -3849,7 +4035,7 @@ textarea::placeholder {
 
 .white-container {
   background-color: white;
-  padding: 24px 12px;
+  padding: 12px;
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
@@ -3871,5 +4057,9 @@ textarea::placeholder {
 
 .gray-bg {
   background-color: $off-white !important;
+}
+
+.vertical-margin {
+  margin: 12px 0;
 }
 </style>

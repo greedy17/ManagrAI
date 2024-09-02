@@ -4,6 +4,7 @@ import logging
 import pytz
 import io
 import csv
+from django.db.models import Q
 from openpyxl import load_workbook
 from rest_framework import (
     mixins,
@@ -2139,14 +2140,22 @@ class JournalistContactViewSet(
             "-datetime_created"
         )
         search_term = self.request.query_params.get("search", "")
-        tag = self.request.query_params.get("tag", "")
-        if tag:
-            contacts.filter(tags__contains=[tag])
+        tags = self.request.query_params.getlist("tags[]", [])
+
+        print('TAGS ARE HERE',tags)
+
+        if tags:
+            tag_queries = Q()
+            for tag in tags:
+                tag_queries |= Q(tags__contains=[tag])
+            contacts = contacts.filter(tag_queries).distinct()
+
         if search_term:
             contacts = contacts.filter(
-                Q(email__icontains=search_term)
-                | Q(first_name__icontains=search_term)
-                | Q(last_name__icontains=search_term)
+                Q(journalist__email__icontains=search_term)
+                | Q(journalist__first_name__icontains=search_term)
+                | Q(journalist__last_name__icontains=search_term)
+                | Q(journalist__outlet__icontains=search_term)
             )
         return contacts
 

@@ -422,7 +422,7 @@
             </div>
           </td>
           <td v-if="!email.is_draft" :class="i % 2 !== 0 ? 'gray-bg' : ''">
-            <div :class="{ redbox: email.failed, purplebox: !email.failed }">
+            <div :class="{ redText: email.failed, greenText: !email.failed }">
               {{ email.failed ? 'Failed' : 'Delivered' }}
             </div>
           </td>
@@ -1187,6 +1187,17 @@ export default {
   .greenbox {
     background-color: $turq !important;
     color: white !important;
+    font-family: $base-font-family;
+    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: 16px;
+    width: 100px;
+    text-align: center;
+  }
+
+  .greenText {
+    // background-color: $turq !important;
+    color: $turq !important;
     font-family: $base-font-family;
     font-size: 14px;
     padding: 6px 12px;
