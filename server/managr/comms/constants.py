@@ -78,7 +78,11 @@ def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
     
     Additional info on the person from a publisher site:{text}
     
-    Combine the data from search results and the publisher site to craft one bio for {journalist}. Give me the company the person works for, then offer 3 short relevant pitching tips for {company} based on what you know about the person. Lastly, list out all available contact details for the person based on the provided data, including social handles and email address. If email not available, exclude email details from the output. Output must be:
+    Combine the data from search results and the publisher site to craft one bio for {journalist}. 
+    Give me the company the person works for, then offer 3 short relevant pitching tips for {company} based on what you know about the person. 
+    Lastly, list out all available contact details for the person based on the provided data, including social handles and email address. 
+    If email not available, exclude email details from the output. 
+    Output must be:
     
     <h2>Bio:</h2>
     [Bio content]
@@ -92,7 +96,7 @@ def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
     Company: [Company name]
 
     Output MUST follow these rules:
-    1. Separate each section with one new line, no additional spacing or padding.
+    1. Separate each section with a <br>, no additional spacing or padding.
     2. Use <strong> tags for bold text.
     3. Use <h2> tags for headings, except for the company name, which should be inline with 'Company:'.
     4. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
@@ -117,18 +121,17 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
     If the email is mentioned in the provided information, use that email. If no email is found, guess their work email based on verified email patterns for their publication. 
     Always return the email like this - email: guessed email
 
-    Output must be :
-
+    Output must be JSON with bio and email as keys:
+    bio: '
     <h2>Bio:</h2>
     [Bio content]
-
     <h2>3 Pitching Tips:</h2>
     [Pitching tips]
-
     <h2>Contact Details:</h2>
     [Contact details]
-
     Company: [Company name]
+    ',
+    email: '[EMAIL IF FOUND]'
 
     Output MUST follow these rules:
     1. Separate each section with one new line, no additional spacing or padding.
@@ -138,6 +141,7 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
     5. Do not include additional text next to the email.
     6. Exclude domain extensions from company names.
     7. Do not add name : [name] and company: [company] at the top of the bio
+    8. Do not wrap the JSON in ```json```
     """
     return prompt
 

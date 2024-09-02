@@ -2004,7 +2004,8 @@ class DiscoveryViewSet(
                     )
                 res = open_ai_exceptions._handle_response(r)
 
-                message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+                message = res.get("choices")[0].get("message").get("content")
+                print(message)
                 user.add_meta_data("bio")
                 break
             except open_ai_exceptions.StopReasonLength:
