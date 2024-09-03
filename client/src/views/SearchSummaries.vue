@@ -4761,35 +4761,15 @@ export default {
           company: this.selectedOrg,
           search: false,
         })
-
-        const companyRegex = /company:\s*([^<]+)/i
-        const companyMatch = res.data.summary.match(companyRegex)
-
-        if (companyMatch) {
-          const newCompany = companyMatch[1]
-          this.currentPublication = newCompany.trim()
-        }
-
-        const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*|Email:\s*)([^<"\s]+)/i
-        const match = res.data.summary.match(emailRegex)
-
-        if (match) {
-          // console.log(match)
-          const email = match[1]
-          this.targetEmail = email.trim().replace(/\n/g, '')
-        }
+        this.targetEmail = res.data.email
 
         if (!this.targetEmail) {
           let fakeEmail = this.currentJournalist + '@' + this.currentPublication + '.com'
           this.targetEmail = fakeEmail.replace(/\s+/g, '')
         }
-
-        this.currentJournalistBio = res.data.summary
-          .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
-          .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*|Email:\s*)([^<"\s]+)/i, '')
-          .replace(/company:\s*([^<]+)/i, '')
-
         this.currentJournalistImages = res.data.images
+        this.currentJournalistBio = res.data.bio.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+        this.currentPublication = res.data.company
       } catch (e) {
         console.error(e)
       } finally {
@@ -4800,6 +4780,7 @@ export default {
     async getJournalistBio(social = false) {
       this.loadingDraft = true
       this.targetEmail = ''
+
       try {
         const res = await Comms.api.getJournalistBio({
           journalist: this.currentJournalist,
@@ -4809,55 +4790,23 @@ export default {
           social: social,
         })
 
-        console.log('RESPONSE IS HERE :', res)
-
-        const companyRegex = /company:\s*([^<]+)/i
-        const companyMatch = res.data.summary.match(companyRegex)
-
-        if (companyMatch) {
-          console.log('MATCH IS HERE :', companyMatch)
-          const newCompany = companyMatch[1]
-          this.currentPublication = newCompany.trim()
-        }
-
-        const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*|Email:\s*)([^<"\s]+)/i
-        const match = res.data.summary.match(emailRegex)
-
-        if (match) {
-          // console.log(match)
-          const email = match[1]
-          this.targetEmail = email.trim().replace(/\n/g, '')
-        }
+        this.targetEmail = res.data.email
 
         if (!this.targetEmail) {
           let fakeEmail = this.currentJournalist + '@' + this.currentPublication + '.com'
           this.targetEmail = fakeEmail.replace(/\s+/g, '')
         }
 
-        this.currentJournalistBio = res.data.summary
-          .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
-          .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*|Email:\s*)([^<"\s]+)/i, '')
-          .replace(/company:\s*([^<]+)/i, '')
-
         this.currentJournalistImages = res.data.images
+        this.currentJournalistBio = res.data.bio.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+        this.currentPublication = res.data.company
       } catch (e) {
         console.error(e)
       } finally {
         this.loadingDraft = false
       }
     },
-    // async copyBioText() {
-    //   try {
-    //     await navigator.clipboard.writeText(this.currentJournalistBio)
-    //     this.copyTip = 'Copied!'
 
-    //     setTimeout(() => {
-    //       this.copyTip = 'Copy'
-    //     }, 2000)
-    //   } catch (err) {
-    //     console.error('Failed to copy text: ', err)
-    //   }
-    // },
     async copyBioText() {
       try {
         const cleanedBio = this.currentJournalistBio.replace(/<\/?[^>]+(>|$)/g, '')
@@ -10374,7 +10323,7 @@ textarea::placeholder {
 .example {
   width: 15.6vw;
   height: 11px;
-  font-size: 15px;
+  font-size: 14px;
   padding: 16px;
   border: 0.5px solid rgba(0, 0, 0, 0.1);
   border-radius: 8px;

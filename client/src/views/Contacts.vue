@@ -409,7 +409,7 @@
     <Modal class="bio-modal med-modal" v-if="contactsModalOpen">
       <div class="bio-container med-container">
         <div class="header">
-          <h2 style="margin: 12px 0">Lookup Contact</h2>
+          <h2 style="margin: 12px 0">Add Contact</h2>
           <p>
             ManagrAI will research the contact, offer a real-time bio, and provide pitching tips
           </p>
@@ -1006,6 +1006,14 @@
             {{ popoverContent }}
           </Popover>
         </div>
+
+        <div v-if="processingUpload" class="progress">
+          <!-- {{ progressPercentage + '%' }} -->
+          <div class="progress-container">
+            <div class="progress-bar" :style="{ width: progressPercentage + '%' }"></div>
+          </div>
+        </div>
+
         <!-- <small v-if="filteredContactList.length" class="smalltxt fadein"
           >list caps at 1,000 contacts</small
         > -->
@@ -1188,6 +1196,8 @@ export default {
       contactId: null,
       currentFile: null,
       uploading: false,
+      processingUpload: false,
+      progressPercentage: 0,
     }
   },
   computed: {
@@ -1299,15 +1309,59 @@ export default {
         this.sortOrder = 1
       }
     },
+    startProgress() {
+      const interval = setInterval(() => {
+        if (this.progressPercentage < 100) {
+          this.progressPercentage += 10
+        } else {
+          clearInterval(interval)
+          this.processingUpload = false // Optionally hide the progress bar when complete
+        }
+      }, 1000)
+    },
+    async processUpload() {
+      this.processingUpload = true
+      this.startProgress()
+      this.checkTasks()
+    },
+    async checkTasks() {
+      try {
+        const res = await User.api.checkTasks({ task_id: this.taskId })
+        console.log(res)
+        if (res.data.completed) {
+          this.processingUpload = false
+          this.$toast(`Contacts imported!`, {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        } else {
+          setTimeout(() => {
+            this.checkTasks()
+          }, 10000)
+        }
+      } catch (error) {
+        console.error(error)
+        this.processingUpload = false
+        this.$toast('Error updating status, check back later', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      }
+    },
     async handleFileUpload() {
       this.uploading = true
       try {
         const res = await Comms.api.uploadContacts(this.currentFile, this.mappings, this.sheetName)
         console.log(res)
-        this.contactCount = res.num_processing
         this.taskId = res.task_id
-        this.$toast('Contacts importing! This could take a few minutes.', {
-          timeout: 3000,
+        this.$toast(`Upload successful, processing ${res.num_processing} contacts`, {
+          timeout: 2000,
           position: 'top-left',
           type: 'success',
           toastClassName: 'custom',
@@ -1315,6 +1369,7 @@ export default {
         })
         this.uploading = false
         this.bulkModalOpen = false
+        this.processUpload()
       } catch (error) {
         console.error('Error reading the file:', error)
         this.$toast('Error importing contacts, try again', {
@@ -1492,20 +1547,17 @@ export default {
           social: false,
         })
 
-        this.newBio = res.data.summary
-          .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
-          .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, '')
-          .replace(/<h2>Company:<\/h2>\s*<strong>([^<]+)<\/strong>/i, '')
-
+        console.log(res)
+        this.newBio = res.data.bio.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
         this.newImages = res.data.images
+
         Comms.api.updateContact({
           id: this.currentContact.id,
           bio: this.newBio,
           images: this.newImages,
         })
-        //     this.$nextTick(() => {
-
-        // })
+        this.currentContact.bio = this.newBio
+        this.currentContact.images = this.newImages
         this.refreshUser()
         this.$toast('Contact updated!', {
           timeout: 2000,
@@ -1524,10 +1576,10 @@ export default {
           bodyClassName: ['custom'],
         })
       } finally {
-        this.getAllContacts()
+        // this.getAllContacts()
         this.contactOrg = ''
         this.bioLoading = false
-        this.googleModalOpen = false
+        // this.googleModalOpen = false
       }
     },
     openDeleteModal(id) {
@@ -3957,6 +4009,36 @@ textarea::placeholder {
     margin: 0;
     padding: 0;
   }
+}
+
+.progress {
+  position: fixed;
+  bottom: 24px;
+  z-index: 1000000;
+  width: 20vw;
+  padding: 0 16px;
+  // display: flex;
+  // align-items: center;
+  // justify-content: flex-start;
+  // border: 1px solid rgba(0, 0, 0, 0.15);
+  // box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+  // background-color: white;
+  // border-radius: 5px;
+}
+
+.progress-container {
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 12px;
+  margin: 20px 0;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: $lite-blue;
+  transition: width 0.4s ease-in-out;
+  border-radius: 8px;
 }
 
 .s-tooltip {

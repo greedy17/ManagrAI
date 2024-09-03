@@ -1996,6 +1996,7 @@ class DiscoveryViewSet(
                     "You are a VP of Communications",
                     token_amount=token_amount,
                     top_p=0.1,
+                    response_format={"type": "json_object"},
                 )
                 with Variable_Client(timeout) as client:
                     r = client.post(
@@ -2005,7 +2006,10 @@ class DiscoveryViewSet(
                     )
                 res = open_ai_exceptions._handle_response(r)
 
-                message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+                message = res.get("choices")[0].get("message").get("content")
+                message = json.loads(message)
+                print(message)
+                message['images'] = images
                 user.add_meta_data("bio")
                 break
             except open_ai_exceptions.StopReasonLength:
@@ -2038,7 +2042,7 @@ class DiscoveryViewSet(
             send_to_error_channel(message, user.email, "journalist web context (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
 
-        return Response(data={"summary": message, "images": images})
+        return Response(message)
 
     @action(
         methods=["post"],
@@ -2141,8 +2145,6 @@ class JournalistContactViewSet(
         )
         search_term = self.request.query_params.get("search", "")
         tags = self.request.query_params.getlist("tags[]", [])
-
-        print('TAGS ARE HERE',tags)
 
         if tags:
             tag_queries = Q()
