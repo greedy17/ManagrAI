@@ -673,7 +673,6 @@ class PRSearchViewSet(
                         },
                     )
             except Exception as e:
-                print(1)
                 has_error = True
                 logger.exception(e)
                 tweet_res = e
@@ -2008,7 +2007,6 @@ class DiscoveryViewSet(
 
                 message = res.get("choices")[0].get("message").get("content")
                 message = json.loads(message)
-                print(message)
                 message['images'] = images
                 user.add_meta_data("bio")
                 break
