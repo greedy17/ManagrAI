@@ -672,7 +672,6 @@ class PRSearchViewSet(
                         },
                     )
             except Exception as e:
-                print(1)
                 has_error = True
                 logger.exception(e)
                 tweet_res = e
@@ -2005,7 +2004,6 @@ class DiscoveryViewSet(
                 res = open_ai_exceptions._handle_response(r)
 
                 message = res.get("choices")[0].get("message").get("content")
-                print(message)
                 user.add_meta_data("bio")
                 break
             except open_ai_exceptions.StopReasonLength:
