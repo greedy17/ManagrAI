@@ -26,6 +26,7 @@ from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.indexes import GinIndex
 from requests_oauthlib import OAuth1Session, OAuth2Session
 from oauthlib.oauth2 import OAuth2Error
+from collections import Counter
 from django.conf import settings
 
 logger = logging.getLogger("managr")
@@ -1254,13 +1255,24 @@ class JournalistContact(TimeStampModel):
 
     objects = JournalistContactQuerySet.as_manager()
 
+    # @classmethod
+    # def get_tags_by_user(cls, user):
+    #     tags_query = cls.objects.filter(user=user)
+    #     tag_list = []
+    #     for contact in tags_query:
+    #         tag_list.extend(contact.tags)
+    #     return list(set(tag_list))
+
     @classmethod
     def get_tags_by_user(cls, user):
         tags_query = cls.objects.filter(user=user)
         tag_list = []
         for contact in tags_query:
             tag_list.extend(contact.tags)
-        return list(set(tag_list))
+        tag_counts = Counter(tag_list)
+        tags_with_count = [{"name": tag, "count": count} for tag, count in tag_counts.items()]
+
+        return tags_with_count
 
     @classmethod
     def modify_tags(cls, id, tag, modifier):

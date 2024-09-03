@@ -516,18 +516,9 @@ class CommsApi extends ModelAPI {
         }
     }
 
-    async getJournalistContacts() {
+    async getContacts(data) {
         try {
-            const res = await this.client.get('jcontact/')
-            return res.data
-        } catch (e) {
-            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
-        }
-    }
-
-    async getContacts() {
-        try {
-            const res = await this.client.get('jcontact')
+            const res = await this.client.get('jcontact', { params: data })
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)

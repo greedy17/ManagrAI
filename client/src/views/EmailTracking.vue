@@ -83,11 +83,11 @@
         <div style="margin: 0 8px" class="relative">
           <div
             @click="toggleFilterDropdown"
-            class="img-container s-wrapper mobile-img"
+            class="icon-btn"
             :class="{ 'img-container-stay': showFilters }"
           >
             <img src="@/assets/images/filter.svg" height="13px" alt="" />
-            <div class="s-tooltip">Add filter</div>
+            Add filter
           </div>
 
           <!-- <button @click="toggleFilterDropdown" class="secondary-button-no-border">
@@ -179,9 +179,9 @@
           </div>
         </div>
 
-        <div @click="convertData" class="img-container s-wrapper mobile-img">
+        <div @click="convertData" class="icon-btn">
           <img src="@/assets/images/download.svg" height="13px" alt="" />
-          <div class="s-tooltip">Export table</div>
+          Export table
         </div>
 
         <div v-if="failedFilter !== null">
@@ -471,7 +471,7 @@ export default {
   height: 88vh;
   margin: 0 auto;
   // padding: 72px 32px 16px 32px;
-  padding: 108px 132px 64px 132px;
+  padding: 108px 132px 32px 132px;
   font-family: $thin-font-family;
   color: $dark-black-blue;
 
@@ -570,10 +570,11 @@ export default {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background-color: white;
-  padding: 24px 16px;
+  // border: 1px solid rgba(0, 0, 0, 0.1);
+  // background-color: white;
+  // padding: 16px ;
   border-radius: 6px;
+  margin-left: -2px;
   // box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -996,8 +997,8 @@ export default {
 
 .drop-header {
   padding: 8px;
-  background-color: white;
-  font-size: 14px !important;
+  background-color: $off-white;
+  font-size: 16px !important;
   // border: 0.5px solid rgba(0, 0, 0, 0.355);
   border-radius: 16px;
   display: flex;
@@ -1010,7 +1011,7 @@ export default {
   }
 
   small {
-    font-size: 14px;
+    font-size: 16px;
     margin-left: 4px !important;
     font-family: $base-font-family;
   }
@@ -1077,6 +1078,28 @@ input {
   }
 
   &-item {
+  }
+}
+
+.icon-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 16px;
+  padding: 8px 10px;
+  margin: 0 10px;
+  width: 140px;
+  cursor: pointer;
+  font-family: $base-font-family;
+  img {
+    margin-right: 6px;
+  }
+  &:hover {
+    background-color: $soft-gray;
   }
 }
 </style>

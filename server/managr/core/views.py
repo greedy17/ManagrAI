@@ -57,6 +57,7 @@ from .models import (
     StripeAdapter,
     GoogleAccount,
     MicrosoftAccount,
+    TaskResults,
 )
 from .serializers import (
     UserSerializer,
@@ -1847,8 +1848,8 @@ def request_reset_link(request):
 )
 def get_task_status(request):
     id = request.GET.get("task_id", None)
-    task = CompletedTask.objects.get(id=id)
-    results = task.results()
+    task = TaskResults.objects.get(id=id)
+    results = task.result()
     return Response(data={"completed": task.completed, "results": results})
 
 

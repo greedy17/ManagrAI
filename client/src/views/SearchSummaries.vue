@@ -667,39 +667,34 @@
 
       <div class="small-container letter-spacing">
         <div class="large-input-container">
+          <!-- padding-bottom: 16px -->
           <div
-            style="box-shadow: none; padding-bottom: 16px"
+            style="box-shadow: none"
             class="input-container-gray"
             :class="{ lbborder: newSearch }"
           >
             <section>
-              <img class="left-margin-m" src="@/assets/images/search.svg" height="16px" alt="" />
+              <img
+                style="margin-left: 14px"
+                src="@/assets/images/search.svg"
+                height="16px"
+                alt=""
+              />
+              <!-- style="padding-top: 1.35rem" -->
+              <!-- text-area-input -->
               <textarea
-                style="padding-top: 1.35rem"
+                :rows="1"
                 id="search-input"
                 @keyup.enter="generateNewSearch($event, false)"
-                class="area-input text-area-input"
-                :placeholder="placeHolderText"
+                class="area-input"
                 autocomplete="off"
+                :placeholder="placeHolderText"
                 v-model="newSearch"
                 v-autoresize
                 :disabled="
                   loading || summaryLoading || (mainView === 'social' && !hasTwitterIntegration)
                 "
               />
-
-              <!-- <div
-                @click="slackTest"
-                class="left-margin img-container-stay"
-                style="margin-right: 12px"
-              >
-                <img
-                  style="margin: 0"
-                  src="@/assets/images/paper-plane-top.svg"
-                  height="14px"
-                  alt=""
-                />
-              </div> -->
 
               <div
                 v-if="!newSearch"
@@ -723,7 +718,7 @@
                 <img
                   style="margin: 0"
                   src="@/assets/images/paper-plane-full.svg"
-                  height="14px"
+                  height="13px"
                   alt=""
                 />
               </div>
@@ -1069,7 +1064,7 @@
               <div
                 @click.stop="toggleDate"
                 :class="{ 'soft-gray-bg': showDateSelection }"
-                class="img-container right-margin-s"
+                class="img-container right-margin-m"
               >
                 <img
                   v-if="mainView === 'news'"
@@ -1112,24 +1107,25 @@
               class="example"
             >
               <img
-                class="purple-filter"
                 v-if="i === 0"
+                class="purple-filter"
                 src="@/assets/images/thumb.svg"
-                height="16px"
+                height="17px"
                 alt=""
               />
+
               <img
                 class="pink-filter"
                 v-else-if="i === 1"
                 src="@/assets/images/glasses.svg"
-                height="16px"
+                height="17px"
                 alt=""
               />
               <img
                 class="turq-filter"
                 v-else-if="i === 2"
                 src="@/assets/images/target.svg"
-                height="18px"
+                height="19px"
                 alt=""
               />
               {{ example }}
@@ -2277,10 +2273,12 @@
                   bottom: 0;
                   margin-top: 32px;
                   margin-bottom: 12px;
+                  border-radius: 28px;
+                  padding: 8px:0;
                 "
                 class="input-container-gray fadein"
               >
-                <section style="padding-bottom: 4px; padding-top: 4px">
+                <section>
                   <img
                     class="left-margin-m"
                     style="margin-bottom: 4px"
@@ -2289,11 +2287,12 @@
                     alt=""
                   />
                   <textarea
-                    style="max-height: 140px !important"
-                    class="area-input text-area-input"
+                    style="max-height: 140px !important; padding-top: 0.25rem"
+                    class="area-input"
                     :placeholder="mainView === 'write' ? 'Make edits...' : 'Ask follow-up...'"
                     autofocus
                     autocomplete="off"
+                    rows="1"
                     v-model="newTemplate"
                     :disabled="!summary || loading || summaryLoading"
                     @keyup.enter="
@@ -4762,35 +4761,15 @@ export default {
           company: this.selectedOrg,
           search: false,
         })
-
-        const companyRegex = /company:\s*([^<]+)/i
-        const companyMatch = res.data.summary.match(companyRegex)
-
-        if (companyMatch) {
-          const newCompany = companyMatch[1]
-          this.currentPublication = newCompany.trim()
-        }
-
-        const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*|Email:\s*)([^<"\s]+)/i
-        const match = res.data.summary.match(emailRegex)
-
-        if (match) {
-          // console.log(match)
-          const email = match[1]
-          this.targetEmail = email.trim().replace(/\n/g, '')
-        }
+        this.targetEmail = res.data.email
 
         if (!this.targetEmail) {
           let fakeEmail = this.currentJournalist + '@' + this.currentPublication + '.com'
           this.targetEmail = fakeEmail.replace(/\s+/g, '')
         }
-
-        this.currentJournalistBio = res.data.summary
-          .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
-          .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*|Email:\s*)([^<"\s]+)/i, '')
-          .replace(/company:\s*([^<]+)/i, '')
-
         this.currentJournalistImages = res.data.images
+        this.currentJournalistBio = res.data.bio.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+        this.currentPublication = res.data.company
       } catch (e) {
         console.error(e)
       } finally {
@@ -4801,6 +4780,7 @@ export default {
     async getJournalistBio(social = false) {
       this.loadingDraft = true
       this.targetEmail = ''
+
       try {
         const res = await Comms.api.getJournalistBio({
           journalist: this.currentJournalist,
@@ -4810,55 +4790,23 @@ export default {
           social: social,
         })
 
-        console.log('RESPONSE IS HERE :', res)
-
-        const companyRegex = /company:\s*([^<]+)/i
-        const companyMatch = res.data.summary.match(companyRegex)
-
-        if (companyMatch) {
-          console.log('MATCH IS HERE :', companyMatch)
-          const newCompany = companyMatch[1]
-          this.currentPublication = newCompany.trim()
-        }
-
-        const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*|Email:\s*)([^<"\s]+)/i
-        const match = res.data.summary.match(emailRegex)
-
-        if (match) {
-          // console.log(match)
-          const email = match[1]
-          this.targetEmail = email.trim().replace(/\n/g, '')
-        }
+        this.targetEmail = res.data.email
 
         if (!this.targetEmail) {
           let fakeEmail = this.currentJournalist + '@' + this.currentPublication + '.com'
           this.targetEmail = fakeEmail.replace(/\s+/g, '')
         }
 
-        this.currentJournalistBio = res.data.summary
-          .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
-          .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*|Email:\s*)([^<"\s]+)/i, '')
-          .replace(/company:\s*([^<]+)/i, '')
-
         this.currentJournalistImages = res.data.images
+        this.currentJournalistBio = res.data.bio.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+        this.currentPublication = res.data.company
       } catch (e) {
         console.error(e)
       } finally {
         this.loadingDraft = false
       }
     },
-    // async copyBioText() {
-    //   try {
-    //     await navigator.clipboard.writeText(this.currentJournalistBio)
-    //     this.copyTip = 'Copied!'
 
-    //     setTimeout(() => {
-    //       this.copyTip = 'Copy'
-    //     }, 2000)
-    //   } catch (err) {
-    //     console.error('Failed to copy text: ', err)
-    //   }
-    // },
     async copyBioText() {
       try {
         const cleanedBio = this.currentJournalistBio.replace(/<\/?[^>]+(>|$)/g, '')
@@ -10162,7 +10110,7 @@ textarea {
   border: 0.5px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.025);
   border-radius: 12px;
-  padding: 24px;
+  padding: 36px 24px 24px 24px;
   background-color: white;
   width: 48.5vw;
   // width: 100%;
@@ -10220,13 +10168,21 @@ textarea {
   }
 }
 
+// .abs-placeholder {
+//   width: 100%;
+//   position: absolute;
+//   left: 40px;
+//   top: 8px;
+//   pointer-events: none;
+// }
+
 .input-container-gray {
   border: 0.5px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.3s ease;
-  padding: 0;
-  border-radius: 16px;
-  border-radius: 6px;
+  padding: 14px 0 12px 0;
+  border-radius: 24px;
+  // border-radius: 6px;
   width: 100%;
   color: $base-gray;
   position: relative;
@@ -10366,11 +10322,11 @@ textarea::placeholder {
 
 .example {
   width: 15.6vw;
-  height: 100px;
+  height: 11px;
   font-size: 14px;
   padding: 16px;
   border: 0.5px solid rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
+  border-radius: 8px;
   background-color: white !important;
   margin: 8px 0;
   cursor: pointer;
@@ -10380,8 +10336,8 @@ textarea::placeholder {
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-  gap: 6px;
   overflow: hidden;
+  font-family: $thin-font-family;
 
   @media only screen and (max-width: 600px) {
     flex-direction: row;
@@ -11623,6 +11579,12 @@ textarea::placeholder {
 
 .purple-filter {
   filter: invert(51%) sepia(13%) saturate(1063%) hue-rotate(217deg) brightness(96%) contrast(84%);
+}
+
+.purple-bg {
+  background-color: $grapest;
+  border-radius: 50%;
+  padding: 7px 6px 0 6px;
 }
 
 filter ::selection {

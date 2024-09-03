@@ -4,6 +4,7 @@ import logging
 import pytz
 import io
 import csv
+from django.db.models import Q
 from openpyxl import load_workbook
 from rest_framework import (
     mixins,
@@ -11,6 +12,9 @@ from rest_framework import (
 )
 from django.http import JsonResponse, HttpResponse
 from asgiref.sync import async_to_sync, sync_to_async
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import OrderingFilter
+from .pagination import PageNumberPagination
 from pytz import timezone
 from datetime import datetime, timedelta
 from newspaper import Article, ArticleException
@@ -27,6 +31,7 @@ from urllib.parse import urlencode
 from django.shortcuts import redirect
 from rest_framework.decorators import action
 from . import constants as comms_consts
+from .filters import JournalistContactFilter
 from .models import (
     CompanyDetails,
     Search,
@@ -668,7 +673,6 @@ class PRSearchViewSet(
                         },
                     )
             except Exception as e:
-                print(1)
                 has_error = True
                 logger.exception(e)
                 tweet_res = e
@@ -1982,7 +1986,6 @@ class DiscoveryViewSet(
                 elif search:
                     prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(journalist, results, company, text)
                 else:
-                    print("CONTENT HERE", company)
                     prompt = comms_consts.OPEN_AI_DISCOVERY_RESULTS_PROMPT(
                         journalist, results, company, text
                     )
@@ -1992,6 +1995,7 @@ class DiscoveryViewSet(
                     "You are a VP of Communications",
                     token_amount=token_amount,
                     top_p=0.1,
+                    response_format={"type": "json_object"},
                 )
                 with Variable_Client(timeout) as client:
                     r = client.post(
@@ -2001,7 +2005,9 @@ class DiscoveryViewSet(
                     )
                 res = open_ai_exceptions._handle_response(r)
 
-                message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+                message = res.get("choices")[0].get("message").get("content")
+                message = json.loads(message)
+                message['images'] = images
                 user.add_meta_data("bio")
                 break
             except open_ai_exceptions.StopReasonLength:
@@ -2034,7 +2040,7 @@ class DiscoveryViewSet(
             send_to_error_channel(message, user.email, "journalist web context (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
 
-        return Response(data={"summary": message, "images": images})
+        return Response(message)
 
     @action(
         methods=["post"],
@@ -2124,6 +2130,10 @@ class JournalistContactViewSet(
 ):
     authentication_classes = [ExpiringTokenAuthentication]
     serializer_class = JournalistContactSerializer
+    pagination_class = PageNumberPagination
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_class = JournalistContactFilter
+    ordering_fields = ["journalist__email", "journalist__first_name", "journalist__last_name"]
 
     def get_queryset(self):
         # contacts = JournalistContact.objects.for_user(user=self.request.user)
@@ -2132,14 +2142,20 @@ class JournalistContactViewSet(
             "-datetime_created"
         )
         search_term = self.request.query_params.get("search", "")
-        tag = self.request.query_params.get("tag", "")
-        if tag:
-            contacts.filter(tags__contains=[tag])
+        tags = self.request.query_params.getlist("tags[]", [])
+
+        if tags:
+            tag_queries = Q()
+            for tag in tags:
+                tag_queries |= Q(tags__contains=[tag])
+            contacts = contacts.filter(tag_queries).distinct()
+
         if search_term:
             contacts = contacts.filter(
-                Q(email__icontains=search_term)
-                | Q(first_name__icontains=search_term)
-                | Q(last_name__icontains=search_term)
+                Q(journalist__email__icontains=search_term)
+                | Q(journalist__first_name__icontains=search_term)
+                | Q(journalist__last_name__icontains=search_term)
+                | Q(journalist__outlet__icontains=search_term)
             )
         return contacts
 
@@ -2202,7 +2218,6 @@ class JournalistContactViewSet(
     def partial_update(self, request, *args, **kwargs):
         data = self.request.data
         instance = self.get_object()
-        print(instance)
         serializer = self.serializer_class(instance, data=request.data, partial=True)
         if serializer.is_valid(raise_exception=True):
             serializer.update(instance=instance, validated_data=request.data)

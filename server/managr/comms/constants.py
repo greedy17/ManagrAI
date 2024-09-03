@@ -73,32 +73,38 @@ def GOOGLE_SEARCH_PARAMS(query, number_of_results):
 
 def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
     prompt = f"""Here are the top 5 search results for {journalist}:
-    
+
     Results: {results}
-    
-    Additional info on the person from a publisher site:{text}
-    
-    Combine the data from search results and the publisher site to craft one bio for {journalist}. Give me the company the person works for, then offer 3 short relevant pitching tips for {company} based on what you know about the person. Lastly, list out all available contact details for the person based on the provided data, including social handles and email address. If email not available, exclude email details from the output. Output must be:
-    
+
+    Additional info on the person from a publisher site: {text}.
+
+    Combine the data from the search results and publisher site to craft one bio for {journalist}. 
+    Include the company the person works for, make sure the company name is the most widely used version of the company name. 
+    Then offer 3 short relevant pitching tips for {company} based on what you know about the person. 
+    Lastly, list all available contact details for the person based on the provided data, including social handles and email address. 
+    If the email is mentioned in the provided information, use that email. If no email is found, exclude email details from the output.
+
+    Output must be JSON with bio, company, and email as keys:
+    bio: '
     <h2>Bio:</h2>
     [Bio content]
-
     <h2>3 Pitching Tips:</h2>
     [Pitching tips]
-
     <h2>Contact Details:</h2>
     [Contact details]
-
-    Company: [Company name]
+    ',
+    company: [Company name],
+    email: '[EMAIL IF FOUND]'
 
     Output MUST follow these rules:
     1. Separate each section with one new line, no additional spacing or padding.
     2. Use <strong> tags for bold text.
     3. Use <h2> tags for headings, except for the company name, which should be inline with 'Company:'.
-    4. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
+    4. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab.
     5. Do not include additional text next to the email.
     6. Exclude domain extensions from company names.
-    7. Do not add name : [name] and company: [company] at the top of the bio
+    7. Do not add name : [name] and company: [company] at the top of the bio.
+    8. Do not wrap the JSON in ```json```.
     """
     return prompt
 
@@ -117,18 +123,17 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
     If the email is mentioned in the provided information, use that email. If no email is found, guess their work email based on verified email patterns for their publication. 
     Always return the email like this - email: guessed email
 
-    Output must be :
-
+    Output must be JSON with bio, company, and email as keys:
+    bio: '
     <h2>Bio:</h2>
     [Bio content]
-
     <h2>3 Pitching Tips:</h2>
     [Pitching tips]
-
     <h2>Contact Details:</h2>
     [Contact details]
-
-    Company: [Company name]
+    ',
+    company: [Company name],
+    email: '[EMAIL IF FOUND]'
 
     Output MUST follow these rules:
     1. Separate each section with one new line, no additional spacing or padding.
@@ -138,22 +143,32 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
     5. Do not include additional text next to the email.
     6. Exclude domain extensions from company names.
     7. Do not add name : [name] and company: [company] at the top of the bio
+    8. Do not wrap the JSON in ```json```
     """
     return prompt
 
 
 def OPEN_AI_SOCIAL_BIO(person, org, results, text):
     prompt = f"""
-    Here are the top 5 search results for {person} on Twitter: \n Results: {results}\n And here is additional info on the person from a website: {text}. \n Combine the data from search results and the website to craft one bio for {person}. Then offer 3 short relevant pitching tips for {org} based on what you know about the person. Lastly, if available, list out journalist's additional social handles and email address. If email not available, exclude email details from the output. Output must me:
-    Social Media Bio:
-    Pitching Tips:
-    Contact Details:
+    Here are the top 5 search results for {person} on Twitter: \n Results: {results}\n And here is additional info on the person from a website: {text}. \n 
+    Combine the data from search results and the website to craft one bio for {person}. Then offer 3 short relevant pitching tips for {org} based on what you know about the person. 
+    Lastly, if available, list out journalist's additional social handles and email address. If email not available, exclude email details from the output. 
+    Output must be JSON:
+    bio: '
+    <h2>Social Media Bio:</h2>
+    [BIO WITHOUT ANY LINKS]
+    <h2>Pitching Tips:</h2>
+    [PITCHING TIPS]
+    <h2>Contact Details:</h2>
+    [CONTACT DETAILS]
+    ',
+    email: '[EMAIL IF FOUND]'
 
     Output MUST follow the following rules:
     1. All bold text MUST be returned in a strong tag instead of markdown!
-    2. All headings must be returned in a H2 tag!
-    3. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
-    4. Never include ```html``` in the response, only reply with what I asked for specifically
+    2. Add a <br> between sections.
+    3. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab.
+    4. Do not wrap the JSON in ```json```
     5. NEVER include any additional text next to the email. example: instead of email@email.com (guessed email based on typical email patterns), simply return email@email.com, Instead of email@email.com (guessed email), simply return email@email.com. This is very important, do not ignore
     """
     return prompt
