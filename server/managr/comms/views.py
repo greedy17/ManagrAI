@@ -2143,6 +2143,10 @@ class JournalistContactViewSet(
         )
         search_term = self.request.query_params.get("search", "")
         tags = self.request.query_params.getlist("tags[]", [])
+        user_id = self.request.query_params.get("user_id", "")
+
+        if user_id:
+            contacts = contacts.filter(user=user_id)
 
         if tags:
             tag_queries = Q()
@@ -2922,6 +2926,9 @@ def process_excel_file(request):
                 value = row[0].strip() if isinstance(row[0], str) else row[0]
                 row_values.append(value)
             journalist_values[index_values[idx]] = row_values
+        
+        filtered_emails = [email for email in journalist_values.get("email", []) if email]   
+        print('LENGTH IS HERE', len(filtered_emails)) 
         result = TaskResults.objects.create(
             function_name="emit_process_contacts_excel", user_id=str(request.user.id)
         )
@@ -2931,7 +2938,7 @@ def process_excel_file(request):
         result.save()
         return Response(
             status=status.HTTP_200_OK,
-            data={"task_id": str(result.id), "num_processing": len(journalist_values["email"])},
+            data={"task_id": str(result.id), "num_processing": len(filtered_emails)},
         )
     else:
         return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)

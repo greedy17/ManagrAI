@@ -597,116 +597,6 @@
 
     <div class="top-row">
       <section>
-        <!-- <div style="margin-left: -2px; margin-bottom: 24px" class="space-between white-container">
-          <div class="row relative" style="padding-bottom: 8px">
-            <div
-              @click.stop="toggleUserDropdown"
-              :class="{ 'soft-gray-bg': showUsers }"
-              class="drop-header"
-              style="border: none"
-            >
-              <h3 style="font-size: 16px" class="thin-font row">
-                <span class="thin-font-ellipsis"
-                  >{{
-                    !selectedUser
-                      ? 'All'
-                      : selectedUser.fullName
-                      ? selectedUser.fullName
-                      : selectedUser.full_name
-                  }}
-                </span>
-                <span>contacts:</span>
-                <div style="margin-left: 8px" v-if="loading" class="loading row">
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                </div>
-                <span v-else style="margin-left: 4px">{{ filteredContactList.length }}</span>
-              </h3>
-
-              <img
-                v-if="!showUsers && !loading"
-                style="margin-left: 8px"
-                src="@/assets/images/arrowDropUp.svg"
-                height="14px"
-                alt=""
-              />
-              <img
-                v-else-if="!loading"
-                class="rotate-img"
-                src="@/assets/images/arrowDropUp.svg"
-                height="14px"
-                alt=""
-              />
-            </div>
-
-            <div
-              v-outside-click="hideUsers"
-              style="left: 0; z-index: 10"
-              v-show="showUsers"
-              class="dropdown"
-            >
-              <div class="dropdown-header">
-                <h3>Select User</h3>
-              </div>
-
-              <div class="dropdown-body">
-                <div class="col">
-                  <div v-if="!searchUsersText" @click="selectAllUsers" class="dropdown-item">
-                    All
-                  </div>
-                  <div
-                    @click="selectUser(user)"
-                    class="dropdown-item"
-                    v-for="(user, i) in allUsers"
-                    :key="i"
-                  >
-                    {{ user.full_name }}
-                  </div>
-                </div>
-              </div>
-
-              <div class="dropdown-footer"></div>
-            </div>
-
-            <div @click="toggleContactsModal" class="icon-btn">
-              <img src="@/assets/images/mglass.svg" height="13px" alt="" />
-              <div>Lookup contact</div>
-            </div>
-
-            <div style="margin-left: 8px" @click="bulkModalOpen = true" class="icon-btn">
-              <img src="@/assets/images/file-import.svg" height="14px" alt="" />
-              <div>Import contacts</div>
-            </div>
-          </div>
-
-          <div class="search">
-            <div class="input">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
-                  fill="currentColor"
-                ></path>
-              </svg>
-              <input
-                v-model="searchContactsText"
-                class="search-input"
-                :placeholder="`Search contacts...`"
-              />
-
-              <div
-                class="img-container-stay-small"
-                v-if="searchContactsText"
-                @click="getContactsSearch"
-              >
-                <img src="@/assets/images/arrow-right.svg" class="pointer" height="10px" alt="" />
-              </div>
-            </div>
-          </div>
-        </div> -->
-
         <div style="margin-bottom: 24px" class="space-between">
           <div class="row relative" style="padding-bottom: 8px">
             <div
@@ -1014,20 +904,6 @@
           </div>
         </div>
 
-        <!-- <small v-if="filteredContactList.length" class="smalltxt fadein"
-          >list caps at 1,000 contacts</small
-        > -->
-
-        <!-- <div class="pagination">
-            <div
-              @click="onPageClick(page)"
-              v-for="(page, i) in pagination"
-              :key="i"
-              :class="{ 'active-page': currentPage === page }"
-            >
-              {{ page }}
-            </div>
-          </div> -->
         <div class="space-between">
           <div></div>
 
@@ -1198,6 +1074,7 @@ export default {
       uploading: false,
       processingUpload: false,
       progressPercentage: 0,
+      currentUser: '',
     }
   },
   computed: {
@@ -1529,7 +1406,7 @@ export default {
         }
       } finally {
         this.savingContact = false
-        this.getAllContacts()
+        this.getInitialContacts()
         this.bioModalOpen = false
       }
     },
@@ -1578,10 +1455,8 @@ export default {
           bodyClassName: ['custom'],
         })
       } finally {
-        // this.getAllContacts()
         this.contactOrg = ''
         this.bioLoading = false
-        // this.googleModalOpen = false
       }
     },
     openDeleteModal(id) {
@@ -1627,7 +1502,7 @@ export default {
         console.error(e)
       } finally {
         this.getTags()
-        this.getAllContacts()
+        this.getInitialContacts()
         this.selectingTag = false
         this.tagModalOpen = false
       }
@@ -1768,9 +1643,10 @@ export default {
         const res = await Comms.api.getContacts({
           search: this.searchContactsText.trim(),
           tags: this.selectedTags,
+          user_id: this.selectedUser.id,
         })
         this.allContacts = res.results
-        this.contacts = res.results.filter((contact) => contact.user === this.user.id)
+        this.contacts = res.results
         this.totalContacts = res.count
         this.previous = res.previous
         this.next = res.next
@@ -1788,9 +1664,10 @@ export default {
         const res = await Comms.api.getContacts({
           search: this.searchContactsText.trim(),
           tags: this.selectedTags,
+          user_id: this.selectedUser ? this.selectedUser.id : null,
         })
         this.allContacts = res.results
-        this.contacts = res.results.filter((contact) => contact.user === this.user.id)
+        this.contacts = res.results
         this.totalContacts = res.count
         this.previous = res.previous
         this.next = res.next
@@ -1815,7 +1692,7 @@ export default {
       try {
         const res = await Comms.api.loadMoreContacts(`jcontact/?page=${pageNumber}`)
         this.allContacts = res.results
-        this.contacts = res.results.filter((contact) => contact.user === this.user.id)
+        this.contacts = res.results
         this.currentPage = pageNumber
         this.totalContacts = res.count
         this.previous = res.previous
@@ -1835,9 +1712,11 @@ export default {
     async getInitialContacts() {
       this.loading = true
       try {
-        const res = await Comms.api.getContacts()
+        const res = await Comms.api.getContacts({
+          user_id: this.selectedUser ? this.selectedUser.id : null,
+        })
         this.allContacts = res.results
-        this.contacts = res.results.filter((contact) => contact.user === this.user.id)
+        this.contacts = res.results
         this.totalContacts = res.count
         this.contactsPerPage = 50 // Number of contacts per page
         this.currentPage = 1
@@ -1863,66 +1742,7 @@ export default {
         this.pagination.push(i)
       }
     },
-    onPageClick(pageNumber) {
-      if (pageNumber !== this.currentPage) {
-        this.loadPage(pageNumber)
-      }
-    },
-    async loadNextPage() {
-      if (!this.next || this.loading) return
 
-      this.loading = true
-      try {
-        const res = await Comms.api.loadMoreContacts({ url: this.next })
-        this.allContacts = [...this.allContacts, ...res.results]
-        console.log(res)
-        this.loading = false
-        this.next = this.extractPageFromUrl(res.next)
-        this.previous = this.extractPageFromUrl(res.previous)
-
-        this.contacts = this.allContacts.filter((contact) => contact.user === this.user.id)
-      } catch (e) {
-        console.error(e)
-      } finally {
-      }
-    },
-    async loadPreviousPage() {
-      if (!this.previous) return
-
-      this.loading = true
-      try {
-        const res = await Comms.api.getContacts({ url: this.previous })
-        this.allContacts = [...res.results, ...this.allContacts]
-
-        this.next = this.extractPageFromUrl(res.next)
-        this.previous = this.extractPageFromUrl(res.previous)
-
-        this.contacts = this.allContacts.filter((contact) => contact.user === this.user.id)
-      } catch (e) {
-        console.error(e)
-      } finally {
-        this.loading = false
-      }
-    },
-    async setAllContacts() {
-      this.contacts = this.allContacts
-    },
-    async getAllContacts() {
-      let user = this.selectUser
-      this.selectUser = ''
-      this.selectUser = user
-      try {
-        const res = await Comms.api.getContacts()
-        this.allContacts = res.results
-        if (this.selectUser) {
-          this.contacts = res.results.filter((contact) => contact.user === this.selectedUser.id)
-        } else {
-          this.contacts = res.results
-        }
-      } catch (e) {
-        console.error(e)
-      }
-    },
     async getTags() {
       try {
         const res = await Comms.api.getContactTagList()
@@ -1960,7 +1780,7 @@ export default {
         })
       } finally {
         this.getTags()
-        this.getAllContacts()
+        this.getInitialContacts()
         this.loadingTags = false
         this.tagModalOpen = false
         this.googleModalOpen = false
@@ -1992,7 +1812,7 @@ export default {
           bodyClassName: ['custom'],
         })
       } finally {
-        this.getAllContacts()
+        this.getInitialContacts()
         this.deleting = false
         this.deletingId = null
       }
@@ -2005,12 +1825,12 @@ export default {
     },
     selectUser(user) {
       this.selectedUser = user
-      this.contacts = this.allContacts.filter((contact) => contact.user === this.selectedUser.id)
+      this.getInitialContacts()
       this.toggleUserDropdown()
     },
     selectAllUsers() {
       this.selectedUser = null
-      this.setAllContacts()
+      this.getInitialContacts()
       this.toggleUserDropdown()
     },
   },
@@ -3558,6 +3378,7 @@ h2 {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  min-width: 150px;
   // color: $graper;
 
   &:hover {
