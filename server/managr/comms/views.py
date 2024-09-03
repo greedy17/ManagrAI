@@ -2143,6 +2143,10 @@ class JournalistContactViewSet(
         )
         search_term = self.request.query_params.get("search", "")
         tags = self.request.query_params.getlist("tags[]", [])
+        user_id = self.request.query_params.get("user_id", "")
+
+        if user_id:
+            contacts = contacts.filter(user=user_id)
 
         if tags:
             tag_queries = Q()
