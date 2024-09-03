@@ -1328,15 +1328,17 @@ export default {
       try {
         const res = await User.api.checkTasks(this.taskId)
         console.log(res)
-        if (res.data.completed) {
+        if (res.completed) {
           this.processingUpload = false
-          this.$toast(`Contacts imported!`, {
+          this.$toast(`Contacts imported successfully!`, {
             timeout: 2000,
             position: 'top-left',
             type: 'success',
             toastClassName: 'custom',
             bodyClassName: ['custom'],
           })
+          this.refreshUser()
+          this.getInitialContacts()
         } else {
           setTimeout(() => {
             this.checkTasks()
@@ -1360,7 +1362,7 @@ export default {
         const res = await Comms.api.uploadContacts(this.currentFile, this.mappings, this.sheetName)
         console.log(res)
         this.taskId = res.task_id
-        this.$toast(`Upload successful, processing ${res.num_processing} contacts`, {
+        this.$toast(`Processing ${res.num_processing} contacts`, {
           timeout: 2000,
           position: 'top-left',
           type: 'success',

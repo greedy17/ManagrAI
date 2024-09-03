@@ -1848,14 +1848,8 @@ def request_reset_link(request):
 )
 def get_task_status(request):
     id = request.GET.get("task_id", None)
-<<<<<<< HEAD
     task = TaskResults.objects.get(id=id)
     results = task.result()
-=======
-    print('ID IS RIGHT HERE:',id)
-    task = CompletedTask.objects.get(id=id)
-    results = task.results()
->>>>>>> 86dd115dbaf31d4707bb1077c428f1f090907a47
     return Response(data={"completed": task.completed, "results": results})
 
 
