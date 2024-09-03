@@ -2184,11 +2184,13 @@ class JournalistContactViewSet(
         return Response(status=status.HTTP_200_OK, data={"tags": tags})
 
     def create(self, request, *args, **kwargs):
+        print(request.data)
         user = request.user
         journalist = request.data.pop("journalist").strip()
         email = request.data.pop("email").strip()
         outlet = request.data.pop("outlet").strip()
         journalist = check_journalist_validity(journalist, outlet, email)
+        print(journalist)
         if isinstance(journalist, dict) and "error" in journalist.keys():
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
