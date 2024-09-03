@@ -25,7 +25,7 @@ const STAFF_FORMS = '/users/staff/slack-forms/'
 const STAFF_SOBJECTS = '/users/staff/sobjectfields/'
 const GENERATE_ACTIVATE_ENDPOINT = uid => `/users/${uid}/activate/`
 const CHECK_STATUS_ENDPOINT = '/account-status/'
-const CHECK_TASKS_ENDPOINT = '/task-status/'
+const CHECK_TASKS_ENDPOINT = '/task-status'
 const SSO_DATA_ENDPOINT = '/sso-data/'
 const EMAIL_REQUEST_TOKEN = '/users/email/request-token/'
 const EMAIL_AUTHENTICATION = '/users/email/authenticate/'
@@ -682,11 +682,11 @@ export default class UserAPI {
       .catch(apiErrorHandler({ apiName: 'API error' }))
   }
 
-  async checkTasks(verbose_name) {
+  async checkTasks(id) {
     const url = CHECK_TASKS_ENDPOINT
 
     try {
-      const res = await this.client.get(url, { params: { verbose_name } })
+      const res = await this.client.get(url, { params: { task_id: id } })
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Get Tasks error' })

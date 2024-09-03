@@ -14,5 +14,5 @@ class JournalistContactFilter(django_filters.FilterSet):
         return queryset.filter(
             Q(journalist__first_name__icontains=value)
             | Q(journalist__last_name__icontains=value)
-            | Q(journalist__email__icontains=value)
+            | Q(journalist__email__icontains=value) | Q(journalist__outlet__icontains=value)
         )
