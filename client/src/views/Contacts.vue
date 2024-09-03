@@ -1326,7 +1326,7 @@ export default {
     },
     async checkTasks() {
       try {
-        const res = await User.api.checkTasks({ task_id: this.taskId })
+        const res = await User.api.checkTasks(this.taskId)
         console.log(res)
         if (res.data.completed) {
           this.processingUpload = false

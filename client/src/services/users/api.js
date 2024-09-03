@@ -682,11 +682,11 @@ export default class UserAPI {
       .catch(apiErrorHandler({ apiName: 'API error' }))
   }
 
-  async checkTasks(data) {
+  async checkTasks(id) {
     const url = CHECK_TASKS_ENDPOINT
 
     try {
-      const res = await this.client.get(url, data)
+      const res = await this.client.get(url, { params: { task_id: id } })
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'Get Tasks error' })
