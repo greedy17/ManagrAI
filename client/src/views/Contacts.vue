@@ -195,7 +195,7 @@
               v-model="content"
               rows="5"
               v-autoresize
-              placeholder="Paste your pitch here..."
+              placeholder="Paste your pitch or add company details..."
             />
           </div>
           <div style="font-size: 14px; margin: 12px 0 0 4px" class="row">
@@ -327,7 +327,105 @@
             />
             Save draft
           </button>
-          <div v-else></div>
+
+          <div v-else class="source-dropdown fadein">
+            <div
+              @click.stop="toggleShowDetails"
+              :class="{ 'soft-gray-bg': showingDetails }"
+              class="drop-header"
+            >
+              <img src="@/assets/images/building.svg" height="14px" alt="" />
+
+              <p class="mobile-text-hide">Company Details:</p>
+              <small :title="detailTitle ? detailTitle : 'None'">{{
+                detailTitle ? detailTitle : 'None'
+              }}</small>
+              <img
+                v-if="!showingDetails"
+                src="@/assets/images/arrowDropUp.svg"
+                height="15px"
+                alt=""
+              />
+              <img
+                v-else
+                class="rotate-img"
+                src="@/assets/images/arrowDropUp.svg"
+                height="15px"
+                alt=""
+              />
+            </div>
+
+            <div
+              v-outside-click="hideDetails"
+              v-show="showingDetails"
+              class="drop-options-alternate"
+            >
+              <header style="padding-top: 8px; padding-bottom: 8px" class="space-between">
+                <!-- <section class="h-padding">
+                    <section>
+                      <p style="margin: 0; padding: 4px 0 0 4px; color: #9596b4">Personal</p>
+                    </section>
+                  </section> -->
+
+                <!-- <button
+                    @click="toggleDetailsInputModal"
+                    class="secondary-button-no-border"
+                    style="margin-right: 4px"
+                  >
+                    <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Details
+                  </button> -->
+                <h2 style="margin-left: 8px">Add Details</h2>
+
+                <!-- <button
+                  :disabled="!detailTitle"
+                  @click="clearDetails"
+                  class="secondary-button-no-border borderless"
+                >
+                  <img
+                    style="margin-right: 4px"
+                    src="@/assets/images/remove.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  Clear
+                </button> -->
+              </header>
+
+              <section v-if="allCompanyDetails.length">
+                <div
+                  style="position: relative"
+                  @click="addDetails(detail.title, detail.details)"
+                  v-for="detail in allCompanyDetails"
+                  :key="detail.title"
+                  :class="{ activesquareTile: detailTitle === detail.title }"
+                  :title="detail.title"
+                >
+                  <span class="turq-text">
+                    <img class="turq-filter" src="@/assets/images/logo.png" height="11px" alt="" />
+                    {{ detail.title }}
+                  </span>
+                  <p class="turq-text">{{ detail.details }}</p>
+
+                  <!-- <span @click="deleteCompanyDetails(detail.id)" class="absolute-icon">
+                      <img src="@/assets/images/close.svg" height="10px" alt="" />
+                    </span> -->
+                </div>
+              </section>
+
+              <section style="padding: 16px" v-else>
+                Your saved details
+                <span>
+                  <img
+                    style="margin-right: 4px"
+                    src="@/assets/images/building.svg"
+                    height="12px"
+                    alt=""
+                  />
+                  will appear here.</span
+                >
+              </section>
+            </div>
+          </div>
 
           <div class="row">
             <button class="secondary-button" @click="togglePitchModal">Cancel</button>
@@ -1075,6 +1173,10 @@ export default {
       processingUpload: false,
       progressPercentage: 0,
       currentUser: '',
+      showingDetails: false,
+      detailTitle: '',
+      currentDetails: '',
+      allCompanyDetails: [],
     }
   },
   computed: {
@@ -1149,6 +1251,9 @@ export default {
       }
     },
   },
+  mounted() {
+    this.getCompanyDetails()
+  },
   created() {
     this.selectedUser = this.user
     this.bccEmail = this.user.email
@@ -1157,6 +1262,39 @@ export default {
     this.getTags()
   },
   methods: {
+    addDetails(title, deets) {
+      if (title === this.detailTitle) {
+        this.detailTitle = ''
+        this.content = ''
+        this.showingDetails = false
+        this.showingAllDetails = false
+      }
+      this.content = deets
+      this.detailTitle = title
+      this.showingDetails = false
+      this.showingAllDetails = false
+    },
+    async getCompanyDetails(newDeets = false) {
+      try {
+        const res = await Comms.api.getCompanyDetails()
+        this.allCompanyDetails = res.results
+        if (newDeets) {
+          let detail = res.results.at(-1)
+          this.addDetailsAlt(detail.title, detail.details)
+        }
+      } catch (e) {}
+    },
+    clearDetails() {
+      this.currentDetails = ''
+      this.detailTitle = ''
+      this.showingDetails = false
+    },
+    toggleShowDetails() {
+      this.showingDetails = !this.showingDetails
+    },
+    hideDetails() {
+      this.showingDetails = false
+    },
     refreshUser() {
       User.api
         .getUser(this.user.id)
@@ -3966,5 +4104,314 @@ textarea::placeholder {
 
 .vertical-margin {
   margin: 12px 0;
+}
+
+.turq-filter {
+  filter: invert(56%) sepia(96%) saturate(331%) hue-rotate(139deg) brightness(90%) contrast(87%);
+}
+.turq-text {
+  color: $turq;
+}
+
+.activesquareTile {
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  background-color: $soft-gray;
+  color: $turq;
+  font-family: $base-font-family;
+}
+
+.source-dropdown {
+  z-index: 1;
+  max-width: 50%;
+  margin-bottom: 8px;
+  p {
+    font-size: 14px !important;
+  }
+  position: relative;
+
+  .drop-header {
+    padding: 8px 6px;
+    background-color: white;
+    font-size: 14px !important;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    cursor: pointer;
+
+    @media only screen and (max-width: 600px) {
+      font-size: 12px !important;
+    }
+
+    img {
+      margin: 0 8px;
+      filter: invert(40%);
+
+      @media only screen and (max-width: 600px) {
+        // display: none;
+      }
+    }
+
+    small {
+      font-size: 14px;
+      margin-left: 4px !important;
+      font-family: $base-font-family;
+      max-width: 55px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    p,
+    small {
+      margin: 0;
+      padding: 0;
+    }
+
+    &:hover {
+      background-color: $soft-gray;
+    }
+  }
+
+  .drop-options-alternate {
+    width: 450px;
+    max-height: 225px;
+    position: absolute;
+    bottom: 40px;
+    left: -4px;
+    font-weight: 400;
+    background: white;
+    padding: 8px;
+    border-radius: 5px;
+    font-size: 14px;
+    box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+    line-height: 1.5;
+    z-index: 1000;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    // @media only screen and (max-width: 600px) {
+    //   left: -120%;
+    //   width: 85vw;
+    // }
+
+    section:last-of-type {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 8px;
+      overflow-y: scroll;
+
+      &::-webkit-scrollbar {
+        width: 4px;
+        height: 0px;
+      }
+      &::-webkit-scrollbar-thumb {
+        background-color: $soft-gray;
+        box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+        border-radius: 6px;
+      }
+
+      &::-webkit-scrollbar-track {
+        margin-top: 12px;
+      }
+
+      &:hover {
+        .absolute-icon {
+          visibility: visible;
+        }
+      }
+    }
+
+    div {
+      font-size: 14px;
+      width: 135px;
+      height: 60px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+
+      p {
+        font-size: 12px !important;
+        font-family: $thin-font-family;
+        margin: 4px 0 0 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      &:hover {
+        background-color: $soft-gray;
+      }
+
+      span {
+        font-family: $base-font-family;
+      }
+    }
+
+    img {
+      margin-right: 4px;
+    }
+  }
+
+  .drop-options-alt {
+    width: 450px;
+    max-height: 225px;
+    position: absolute;
+    top: 40px;
+    left: 0;
+    font-weight: 400;
+    background: white;
+    padding: 8px;
+    border-radius: 5px;
+    font-size: 14px;
+    box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+    line-height: 1.5;
+    z-index: 1000;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    @media only screen and (max-width: 600px) {
+      left: -120%;
+      width: 85vw;
+    }
+
+    section:last-of-type {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 8px;
+      overflow-y: scroll;
+
+      &::-webkit-scrollbar {
+        width: 4px;
+        height: 0px;
+      }
+      &::-webkit-scrollbar-thumb {
+        background-color: $soft-gray;
+        box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+        border-radius: 6px;
+      }
+
+      &::-webkit-scrollbar-track {
+        margin-top: 12px;
+      }
+
+      &:hover {
+        .absolute-icon {
+          visibility: visible;
+        }
+      }
+    }
+
+    div {
+      font-size: 14px;
+      width: 135px;
+      height: 60px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+
+      p {
+        font-size: 12px !important;
+        font-family: $thin-font-family;
+        margin: 4px 0 0 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      &:hover {
+        background-color: $soft-gray;
+      }
+
+      span {
+        font-family: $base-font-family;
+      }
+    }
+
+    img {
+      margin-right: 4px;
+    }
+  }
+
+  .drop-options {
+    width: 450px;
+    position: absolute;
+    top: 40px;
+    left: 0;
+    font-weight: 400;
+    background: white;
+    padding: 8px;
+    border-radius: 5px;
+    font-size: 14px;
+    box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+    line-height: 1.5;
+    z-index: 1000;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    @media only screen and (max-width: 600px) {
+      width: 85vw;
+      gap: 0px;
+    }
+
+    @media only screen and (min-width: 601px) and (max-width: 1250px) {
+    }
+
+    div {
+      font-size: 14px;
+      width: 138px;
+      height: 80px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 4px;
+
+      @media only screen and (max-width: 600px) {
+        width: 33.3%;
+        white-space: normal;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      p {
+        font-size: 11px !important;
+        font-family: $thin-font-family;
+        margin: 4px 0 0 0;
+      }
+
+      &:hover {
+        background-color: $soft-gray;
+      }
+
+      span {
+        font-family: $base-font-family;
+      }
+    }
+
+    img {
+      margin-right: 4px;
+    }
+  }
+}
+
+.rotate-img {
+  transform: rotate(180deg);
 }
 </style>

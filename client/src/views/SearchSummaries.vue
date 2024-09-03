@@ -674,15 +674,16 @@
             :class="{ lbborder: newSearch }"
           >
             <section>
-              <img
-                style="margin-left: 14px"
+              <!-- <img
+                style="margin-left: 10px"
                 src="@/assets/images/search.svg"
-                height="16px"
+                height="14px"
                 alt=""
-              />
+              /> -->
               <!-- style="padding-top: 1.35rem" -->
               <!-- text-area-input -->
               <textarea
+                style="margin-left: -8px; width: 100%"
                 :rows="1"
                 id="search-input"
                 @keyup.enter="generateNewSearch($event, false)"
@@ -696,7 +697,7 @@
                 "
               />
 
-              <div
+              <!-- <div
                 v-if="!newSearch"
                 class="left-margin img-container-stay"
                 style="margin-right: 12px"
@@ -707,10 +708,10 @@
                   height="14px"
                   alt=""
                 />
-              </div>
+              </div> -->
 
               <div
-                v-else
+                v-if="newSearch"
                 @click="generateNewSearch($event, false)"
                 class="left-margin pointer lite-bg img-container-stay"
                 style="margin-right: 12px"
@@ -718,7 +719,7 @@
                 <img
                   style="margin: 0"
                   src="@/assets/images/paper-plane-full.svg"
-                  height="13px"
+                  height="12px"
                   alt=""
                 />
               </div>
@@ -732,7 +733,7 @@
                 :class="{ 'soft-gray-bg': showingSources }"
                 class="drop-header"
               >
-                <img
+                <!-- <img
                   v-if="mainView === 'news'"
                   src="@/assets/images/newspaper.svg"
                   height="14px"
@@ -761,9 +762,9 @@
                   src="@/assets/images/profile.svg"
                   height="14px"
                   alt=""
-                />
+                /> -->
 
-                <p class="mobile-text-hide">Assist Type:</p>
+                <p style="margin-left: 8px" class="mobile-text-hide">Assist Type:</p>
                 <small>{{ toCamelCase(mainView) }}</small>
                 <img
                   v-if="!showingSources"
@@ -948,10 +949,7 @@
               </div>
             </div>
 
-            <div
-              v-if="mainView === 'write' || mainView === 'discover'"
-              class="source-dropdown fadein"
-            >
+            <div v-if="mainView === 'write'" class="source-dropdown fadein">
               <div
                 @click.stop="toggleShowDetails"
                 :class="{ 'soft-gray-bg': showingDetails }"
@@ -10110,7 +10108,7 @@ textarea {
   border: 0.5px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.025);
   border-radius: 12px;
-  padding: 36px 24px 24px 24px;
+  padding: 16px;
   background-color: white;
   width: 48.5vw;
   // width: 100%;
@@ -10177,7 +10175,7 @@ textarea {
 // }
 
 .input-container-gray {
-  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  // border: 0.5px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.3s ease;
   padding: 14px 0 12px 0;
@@ -10190,7 +10188,7 @@ textarea {
   align-items: flex-start;
   justify-content: flex-start;
   flex-direction: column;
-  background-color: $off-white;
+  background-color: white;
 
   section {
     width: 100%;
