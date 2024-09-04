@@ -70,7 +70,7 @@
         </section>
 
         <footer>
-          <div class="rows">
+          <div style="margin-bottom: 8px" class="rows">
             <div v-for="(tag, i) in currentContact.tags" :key="i" class="user-tag">
               <img class="pink-filter" src="@/assets/images/tags.svg" height="12px" alt="" />
               {{ tag }}
@@ -165,7 +165,7 @@
             }}
           </p>
 
-          <!-- <div @click="togglePitchModal">
+          <div @click="togglePitchModal">
             <img
               style="cursor: pointer"
               class="right-mar img-highlight"
@@ -173,7 +173,7 @@
               height="18px"
               alt=""
             />
-          </div> -->
+          </div>
         </header>
 
         <div
@@ -300,9 +300,14 @@
             }"
             v-model:content="revisedPitch"
             class="text-editor"
+            :class="{ opaquest: loadingPitch || sendingEmail }"
           />
 
-          <div v-if="loadingPitch" style="margin-left: 12px" class="loading-small-absolute">
+          <div
+            v-if="loadingPitch"
+            style="margin-left: 12px:font-size:13px"
+            class="loading-small-absolute"
+          >
             <p>Updating content</p>
             <div class="dot"></div>
             <div class="dot"></div>
@@ -311,22 +316,114 @@
         </div>
 
         <footer>
-          <button
-            v-if="showingEditor"
-            :disabled="loadingPitch || sendingEmail || drafting"
-            @click="createDraft"
-            class="secondary-button"
-          >
-            <img
-              v-if="drafting"
-              style="margin-right: 4px"
-              class="invert rotation"
-              src="@/assets/images/loading.svg"
-              height="14px"
-              alt=""
-            />
-            Save draft
-          </button>
+          <div v-if="showingEditor" class="source-dropdown fadein">
+            <div
+              @click.stop="toggleShowStyles"
+              :class="{ 'soft-gray-bg': showingStyles }"
+              class="drop-header"
+            >
+              <img src="@/assets/images/wand.svg" height="14px" alt="" />
+
+              <p class="mobile-text-hide">Writing Style:</p>
+              <small>{{ writingStyleTitle ? writingStyleTitle : 'Select style' }}</small>
+              <img
+                v-if="!showingStyles"
+                src="@/assets/images/arrowDropUp.svg"
+                height="15px"
+                alt=""
+              />
+              <img
+                v-else
+                class="rotate-img"
+                src="@/assets/images/arrowDropUp.svg"
+                height="15px"
+                alt=""
+              />
+            </div>
+
+            <div v-outside-click="hideStyles" v-show="showingStyles" class="drop-options-alt">
+              <header style="padding" class="space-between">
+                <h2>Add writing style</h2>
+                <section style="padding: 8px 0" class="h-padding">
+                  <section style="padding: 0" @click="toggleStyles" class="toggle">
+                    <span :class="{ 'active-toggle': personalStyles }" class="toggle-side">
+                      <small>Personal</small>
+                    </span>
+
+                    <span :class="{ 'active-toggle': !personalStyles }" class="toggle-side">
+                      <small>Group</small>
+                    </span>
+                  </section>
+                </section>
+
+                <!-- <button
+                    @click="toggleLearnInputModal('')"
+                    class="secondary-button-no-border"
+                    style="margin-right: 12px"
+                  >
+                    <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Style
+                  </button> -->
+              </header>
+
+              <section v-if="userWritingStyles.length">
+                <div
+                  @click="addWritingStyle(style.style, style.title)"
+                  v-for="style in defaultWritingStyles"
+                  :key="style.title"
+                  :class="{ activesquare: writingStyleTitle === style.title }"
+                  :title="style.title"
+                >
+                  <span>
+                    <img class="blue-filter" src="@/assets/images/logo.png" height="11px" alt="" />
+                    {{ style.title }}
+                  </span>
+                  <p>{{ style.style }}</p>
+                </div>
+                <div
+                  @click="addWritingStyle(style.style, style.title)"
+                  class="dropdown-item relative"
+                  v-for="(style, i) in userWritingStyles"
+                  :key="i"
+                  :class="{ activeswitch: writingStyleTitle === style.title }"
+                  :title="style.title"
+                >
+                  <span class="pink-text">
+                    <img
+                      class="pink-filter"
+                      src="@/assets/images/scroll.svg"
+                      height="11px"
+                      alt=""
+                    />
+                    {{ style.title }}
+                  </span>
+                  <p class="pink-text">{{ style.style }}</p>
+
+                  <!-- <span
+                    v-if="hoverIndex === i"
+                    @click="deleteWritingStyle(style.id)"
+                    class="absolute-icon"
+                  >
+                    <img src="@/assets/images/close.svg" height="12px" alt="" />
+                  </span> -->
+                </div>
+              </section>
+
+              <section v-else>
+                <div
+                  @click="addWritingStyle(style.style, style.title)"
+                  v-for="style in defaultWritingStyles"
+                  :key="style.title"
+                  :class="{ activeswitch: writingStyleTitle === style.title }"
+                >
+                  <span>
+                    <img src="@/assets/images/wand.svg" height="11px" alt="" />
+                    {{ style.title }}
+                  </span>
+                  <p>{{ style.style }}</p>
+                </div>
+              </section>
+            </div>
+          </div>
 
           <div v-else class="source-dropdown fadein">
             <div
@@ -428,7 +525,23 @@
           </div>
 
           <div class="row">
-            <button class="secondary-button" @click="togglePitchModal">Cancel</button>
+            <!-- <button class="secondary-button" @click="togglePitchModal">Cancel</button> -->
+            <button
+              v-if="showingEditor"
+              :disabled="loadingPitch || sendingEmail || drafting"
+              @click="createDraft"
+              class="secondary-button"
+            >
+              <img
+                v-if="drafting"
+                style="margin-right: 4px"
+                class="invert rotation"
+                src="@/assets/images/loading.svg"
+                height="14px"
+                alt=""
+              />
+              Save draft
+            </button>
 
             <button
               v-if="!showingEditor"
@@ -587,7 +700,7 @@
                 overflow: scroll;
                 cursor: text;
                 margin-top: 16px;
-                margin-bottom: 8px;
+                margin-bottom: 12px;
               "
               class="scrolltainer"
               v-else
@@ -1177,6 +1290,48 @@ export default {
       detailTitle: '',
       currentDetails: '',
       allCompanyDetails: [],
+      showingStyles: false,
+      writingStyleTitle: '',
+      personalStyles: true,
+      allWritingStyles: [],
+      defaultWritingStyles: [
+        {
+          title: 'Default',
+          style: `Begin with a precise introduction, without informal salutations. Be clear, concise, and informative, avoiding metaphors. Offer coherent data without persuasion. Aim for depth, not sensationalism and avoid commercial bias.`,
+        },
+        {
+          title: 'Media Pitch',
+          style: `
+        1. Start email with "Hi {Journalist first name}", end with "Thanks,". Get right to it, no opening fluff like "I hope this message finds you well"
+        2. Tone: Maintain a professional, respectful tone. Show appreciation for the journalist's work and express interest in collaboration.
+        3. Formality: Use formal language, but avoid jargon. Keep sentences clear and concise.
+        4. Structure: Start with a personalized greeting. Follow with a brief appreciation of the journalist's work, then introduce your topic. Provide key insights, then propose collaboration. End with a forward-looking statement and a thank you.
+        5. Linguistic Idiosyncrasies: Use active voice and precise, impactful words. Include statistics and expert opinions for credibility.
+        6. Credibility: Establish credibility by referencing recent research, expert opinions, and relevant industry trends.
+        7. Engagement: Engage the reader by offering exclusive insights and proposing collaboration.
+        8. Non-Promotional: Avoid promotional language. Focus on providing valuable, informative content.
+        9. Stylistic Techniques: Use a mix of short and long sentences for rhythm. Use rhetorical questions to engage the reader and provoke thought.
+        `,
+        },
+        {
+          title: 'Blog Post',
+          style: `The author's style is formal and informative, using a journalistic tone to convey complex scientific concepts in a digestible manner. The structure is linear, starting with historical context and leading to the current developments. The author uses technical jargon, but also provides explanations to ensure understanding. Credibility is established through the mention of renowned scientists, historical achievements, and the university's long-standing involvement in the field. The author avoids persuasive language, focusing on facts and achievements.
+        Guidelines: Maintain a formal, journalistic tone. Use technical terms but provide explanations. Structure content linearly, starting with historical context. Establish credibility through mention of renowned figures and achievements. Avoid persuasive language, focusing on facts.`,
+        },
+        {
+          title: 'Email',
+          style: `1. Start with a friendly greeting: Use 'Hey' or 'Hi' to initiate a warm, approachable tone.
+        2. Be direct and concise: Avoid fluff and unnecessary details. Get straight to the point.
+        3. Maintain a neutral tone: Avoid persuasive or sales-oriented language. The tone should be informative, not promotional.
+        4. Use simple, clear language: Avoid jargon or complex terms. The goal is to be understood by all readers.
+        5. Structure: Use short sentences and paragraphs. Break up information into digestible chunks.
+        6. Credibility: Use facts and data to support points. Avoid personal opinions or assumptions.
+        7. Action point: End with a clear, actionable step for the reader. This should be direct and easy to understand.
+        8. Informality: Maintain a casual, friendly tone throughout. This helps to engage the reader and make the content more relatable.
+        9. Linguistic idiosyncrasies: Use common, everyday language. Avoid overly formal or academic language.
+        10. Objectivity: Maintain an unbiased stance. Avoid taking sides or expressing personal views.`,
+        },
+      ],
     }
   },
   computed: {
@@ -1187,6 +1342,13 @@ export default {
       return this.users.filter((user) =>
         user.full_name.toLowerCase().includes(this.searchUsersText),
       )
+    },
+    userWritingStyles() {
+      if (this.personalStyles) {
+        return this.allWritingStyles.filter((style) => style.user === this.user.id)
+      } else {
+        return this.allWritingStyles
+      }
     },
     // tagCounts() {
     //   const tagCountMap = {}
@@ -1253,6 +1415,7 @@ export default {
   },
   mounted() {
     this.getCompanyDetails()
+    this.getWritingStyles()
   },
   created() {
     this.selectedUser = this.user
@@ -1262,6 +1425,35 @@ export default {
     this.getTags()
   },
   methods: {
+    addWritingStyle(ex, title) {
+      this.writingStyle = ex
+      this.writingStyleTitle = title
+      this.showingStyles = false
+      this.showingWritingStyles = false
+      this.rewritePitchWithStyle()
+    },
+    async getWritingStyles() {
+      try {
+        await Comms.api
+          .getWritingStyles({
+            all_styles: false,
+          })
+          .then((response) => {
+            this.allWritingStyles = response
+          })
+      } catch (e) {}
+    },
+    toggleStyles() {
+      this.personalStyles = !this.personalStyles
+    },
+    hideStyles() {
+      this.showingStyles = false
+    },
+    toggleShowStyles() {
+      if (!this.loadingPitch) {
+        this.showingStyles = !this.showingStyles
+      }
+    },
     addDetails(title, deets) {
       if (title === this.detailTitle) {
         this.detailTitle = ''
@@ -1609,7 +1801,7 @@ export default {
     },
     openPitchModal(contact) {
       this.googleModalOpen = false
-      this.content = ''
+
       this.revisedPitch = ''
       this.showingEditor = false
       if (contact) {
@@ -1703,6 +1895,31 @@ export default {
       } finally {
         this.togglePitchModal()
         // this.refreshUser()
+      }
+    },
+    async rewritePitchWithStyle() {
+      this.loadingPitch = true
+      try {
+        const res = await Comms.api.rewritePitch({
+          original: this.content,
+          style: this.writingStyle,
+          with_style: true,
+        })
+        const body = res.pitch
+          .replace(/^Subject(?: Line)?:[\s\S]*?\n/i, '')
+          .replace(/email: [^"]*/, '')
+        const signature = this.user.emailSignature ? this.user.emailSignature : ''
+        const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
+          /\n/g,
+          '</p><p>',
+        )}  </p>`
+        const quill = this.$refs.quill.quill
+        quill.clipboard.dangerouslyPasteHTML(html)
+        this.subject = res.pitch.match(/^Subject(?: Line)?:(.*)\n/)[1].trim()
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.loadingPitch = false
       }
     },
     async rewritePitch() {
@@ -3800,14 +4017,21 @@ textarea::placeholder {
   padding: 12px 20px 12px 18px;
   outline: none;
 }
+
+.opaquest {
+  opacity: 0.3;
+}
 .loading-small-absolute {
   position: absolute;
+  // background-color: white;
+  // border: 0.5px solid rgba(0, 0, 0, 0.15);
+  // box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
   top: 80%;
   left: 30%;
   display: flex;
   align-items: center;
   border-radius: 6px;
-  padding: 0;
+  padding: 12px 24px;
   z-index: 1000;
 
   p {
@@ -4067,7 +4291,8 @@ textarea::placeholder {
   filter: invert(54%) sepia(16%) saturate(1723%) hue-rotate(159deg) brightness(89%) contrast(89%) !important;
 }
 .blue-filter {
-  filter: invert(54%) sepia(16%) saturate(1723%) hue-rotate(159deg) brightness(89%) contrast(89%) !important;
+  filter: brightness(0) invert(23%) sepia(19%) saturate(984%) hue-rotate(162deg) brightness(92%)
+    contrast(87%) !important;
 }
 .pink-filter {
   filter: invert(43%) sepia(88%) saturate(559%) hue-rotate(280deg) brightness(86%) contrast(83%) !important;
@@ -4264,8 +4489,8 @@ textarea::placeholder {
     width: 450px;
     max-height: 225px;
     position: absolute;
-    top: 40px;
-    left: 0;
+    bottom: 40px;
+    left: -4px;
     font-weight: 400;
     background: white;
     padding: 8px;
@@ -4413,5 +4638,55 @@ textarea::placeholder {
 
 .rotate-img {
   transform: rotate(180deg);
+}
+.activeswitch {
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  background-color: $soft-gray;
+  color: $dark-black-blue;
+  font-family: $base-font-family;
+  img {
+    filter: none;
+  }
+}
+
+.active-toggle {
+  background-color: white;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 3px 11px rgba(0, 0, 0, 0.1);
+  padding: 6px 12px;
+}
+
+.toggle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: $off-white;
+  cursor: pointer;
+  width: fit-content;
+  padding: 2px 1px;
+  border-radius: 16px;
+
+  small {
+    font-size: 13px;
+    margin: 0 4px;
+  }
+}
+
+.toggle-side {
+  width: 80px;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.h-padding {
+  padding: 8px 12px 16px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>
