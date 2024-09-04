@@ -438,15 +438,23 @@ def OPEN_AI_IMAGE_CONTENT(images, instructions, tokens):
     return body
 
 
-OPEN_AI_REWRITE_PTICH = (
-    lambda original, bio, name: f"""
-    Rewrite the original media pitch incoporating pitching tips from the journalist's bio below. Be sure to maintaining the existing writing style as the original pitch. Include a short intriguing subject line; no more than 3 words. DO NOT BOLD ANY TEXT IN YOUR RESPONSE, EVER!
-    Original Pitch: {original}
-    Journalist's bio along with pitching tips: {bio}
-    Provide journalist's email: Check to see if their email is listed in the journalist bio above. If so, you must use that email. If no email can be found, then you must guess their work email. When guessing, you must base it on verified email patterns associated with their respective publication. Always return the email like this - email: (guessed email)    
-    My name: {name}
-    """
-)
+def OPEN_AI_REWRITE_PTICH(original, bio, style, with_style, name):
+    if not with_style:
+        prompt = f"""
+        Rewrite the original media pitch incoporating pitching tips from the journalist's bio below. Be sure to maintaining the existing writing style as the original pitch. Include a short intriguing subject line; no more than 3 words. DO NOT BOLD ANY TEXT IN YOUR RESPONSE, EVER!
+        Original Pitch: {original}
+        Journalist's bio along with pitching tips: {bio}
+        Provide journalist's email: Check to see if their email is listed in the journalist bio above. If so, you must use that email. If no email can be found, then you must guess their work email. When guessing, you must base it on verified email patterns associated with their respective publication. Always return the email like this - email: (guessed email)    
+        My name: {name}
+        """
+    else:
+        prompt = f"""
+        Adjust and rewrite the content per the instructions below, adhering to the writing style guidelines below.
+
+        content: {original}
+        writing style: {style}
+        """  
+    return prompt
 
 
 def OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary):
