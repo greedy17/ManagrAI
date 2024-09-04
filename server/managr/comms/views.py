@@ -2009,7 +2009,7 @@ class DiscoveryViewSet(
 
                 message = res.get("choices")[0].get("message").get("content")
                 message = json.loads(message)
-                message['images'] = images
+                message["images"] = images
                 user.add_meta_data("bio")
                 break
             except open_ai_exceptions.StopReasonLength:
@@ -2172,10 +2172,11 @@ class JournalistContactViewSet(
         url_path="modify_tags",
     )
     def modify_tags(self, request, *args, **kwargs):
-        id = request.data.get("id")
+        ids = request.data.get("ids")
         tag = request.data.get("tag")
         modifier = request.data.get("modifier")
-        JournalistContact.modify_tags(id, tag, modifier)
+        for id in ids:
+            JournalistContact.modify_tags(id, tag, modifier)
         return Response(status=status.HTTP_200_OK)
 
     @action(

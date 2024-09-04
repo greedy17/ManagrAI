@@ -1816,7 +1816,7 @@ export default {
       this.selectingTag = true
       try {
         const res = await Comms.api.modifyTags({
-          id: this.currentContact.id,
+          ids: [this.currentContact.id],
           tag: this.newTag,
           modifier: this.modifier,
         })
@@ -2111,7 +2111,7 @@ export default {
       this.loadingTags = true
       try {
         const res = await Comms.api.modifyTags({
-          id: this.currentContact.id,
+          ids: [this.currentContact.id],
           tag: tag ? tag : this.newTag,
           modifier: mod,
         })
