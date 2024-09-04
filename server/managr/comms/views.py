@@ -2007,7 +2007,7 @@ class DiscoveryViewSet(
 
                 message = res.get("choices")[0].get("message").get("content")
                 message = json.loads(message)
-                message['images'] = images
+                message["images"] = images
                 user.add_meta_data("bio")
                 break
             except open_ai_exceptions.StopReasonLength:
@@ -2170,10 +2170,11 @@ class JournalistContactViewSet(
         url_path="modify_tags",
     )
     def modify_tags(self, request, *args, **kwargs):
-        id = request.data.get("id")
+        ids = request.data.get("ids")
         tag = request.data.get("tag")
         modifier = request.data.get("modifier")
-        JournalistContact.modify_tags(id, tag, modifier)
+        for id in ids:
+            JournalistContact.modify_tags(id, tag, modifier)
         return Response(status=status.HTTP_200_OK)
 
     @action(
@@ -2926,9 +2927,9 @@ def process_excel_file(request):
                 value = row[0].strip() if isinstance(row[0], str) else row[0]
                 row_values.append(value)
             journalist_values[index_values[idx]] = row_values
-        
-        filtered_emails = [email for email in journalist_values.get("email", []) if email]   
-        print('LENGTH IS HERE', len(filtered_emails)) 
+
+        filtered_emails = [email for email in journalist_values.get("email", []) if email]
+        print("LENGTH IS HERE", len(filtered_emails))
         result = TaskResults.objects.create(
             function_name="emit_process_contacts_excel", user_id=str(request.user.id)
         )
