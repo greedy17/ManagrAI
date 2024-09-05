@@ -449,10 +449,10 @@ def OPEN_AI_REWRITE_PTICH(original, bio, style, with_style, name):
         """
     else:
         prompt = f"""
-        Adjust and rewrite the original media pitch, adhering to the writing style guidelines or details below.
+        Adjust and rewrite the original media pitch, adhering to the writing style guidelines below.
 
         original pitch: {original}
-        writing style / details: {style}
+        writing style: {style}
         """  
     return prompt
 

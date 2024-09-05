@@ -119,40 +119,6 @@
         </main>
       </div>
     </Modal>
-
-    <!-- <Modal class="bio-modal med-modal" >
-      <div class="bio-container med-container">
-        <header>
-          <p>Updating Journalist bio</p>
-        
-
-        <div style="margin-top: 40px; margin-bottom: 48px; height: 100px; width: 100%">
-          <div class="input-container-small">
-            <textarea
-              :disabled="loadingPitch"
-              style="border: none; outline: none; padding: 16px 8px; width: 100%"
-              class="area-input text-area-input"
-              type="text"
-              v-model="contactOrg"
-              rows="5"
-              v-autoresize
-              placeholder="Provide company name and pitch details..."
-            />
-          </div>
-          <div style="font-size: 14px; margin: 12px 0 0 4px" class="row">
-            <img src="@/assets/images/profile.svg" height="12px" alt="" />
-            <p style="margin: 0 0 0 4px">
-              Managr will generate pitching tips based on this information
-            </p>
-          </div>
-        </div>
-
-        <footer>
-          <div></div>
-       
-        </footer>
-      </div>
-    </Modal> -->
     <Modal v-if="pitchModalOpen" class="bio-modal med-modal">
       <div style="overflow: hidden" class="bio-container med-container">
         <header style="z-index: 10">
@@ -1646,26 +1612,11 @@ export default {
           search: false,
           social: false,
         })
-        const emailRegex = /(?:<strong>\s*Email:\s*<\/strong>|email:\s*|Email:\s*)([^<"\s]+)/i
-        const match = res.data.summary.match(emailRegex)
 
-        const companyRegex = /company:\s*([^<]+)/i
-        const companyMatch = res.data.summary.match(companyRegex)
-
-        if (companyMatch) {
-          const newCompany = companyMatch[1]
-          this.currentPublication = newCompany.trim()
-        }
-
-        if (match) {
-          const email = match[1]
-          this.targetEmail = email.trim().replace(/\n/g, '')
-        }
-        this.newContactBio = res.data.summary
-          .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
-          .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, '')
-          .replace(/company:\s*([^<]+)/i, '')
+        this.newContactBio = res.data.bio.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
         this.newContactImages = res.data.images
+        this.currentPublication = res.data.company
+        this.targetEmail = res.data.email
         this.contactsModalOpen = false
         setTimeout(() => {
           this.bioModalOpen = true
@@ -1756,7 +1707,6 @@ export default {
           social: false,
         })
 
-        console.log(res)
         this.newBio = res.data.bio.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
         this.newImages = res.data.images
 
@@ -3546,7 +3496,7 @@ h2 {
   }
 
   li {
-    margin-top: -32px;
+    margin-top: -12px;
     padding: 0;
   }
 }

@@ -4576,19 +4576,24 @@ export default {
       this.showingAllDetails = false
       this.loadingPitch = true
       try {
-        const res = await Comms.api.rewritePitch({
-          original: this.revisedPitch,
-          style: deets,
-          with_style: true,
+        const res = await Comms.api.draftPitch({
+          user: this.user.firstName,
+          org: deets,
+          style: this.pitchStyle,
+          bio: this.currentJournalistBio,
+          author: this.currentJournalist,
+          outlet: this.currentPublication,
+          headline: this.currentHeadline,
+          description: this.currentDescription,
+          date: this.currentDate,
         })
-        const body = res.pitch
-          .replace(/^Subject(?: Line)?:[\s\S]*?\n/i, '')
-          .replace(/email: [^"]*/, '')
+        const body = res.data.replace(/^Subject(?: Line)?:[\s\S]*?\n|email:.*$/gim, '')
         const signature = this.user.emailSignature ? this.user.emailSignature : ''
         const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
           /\n/g,
           '</p><p>',
         )}  </p>`
+
         const quill = this.$refs.quill.quill
         quill.clipboard.dangerouslyPasteHTML(html)
         this.loadingPitch = false
@@ -11430,7 +11435,7 @@ textarea::placeholder {
   }
 
   li {
-    margin-top: -32px;
+    margin-top: -12px;
     padding: 0;
   }
 }
