@@ -635,7 +635,7 @@ def OPEN_AI_GET_JOURNALIST_LIST(info, content):
     * Ensure that all journalists are real, currently active writers. 
     * Do not include fake names such as Jane Doe or John Smith or make names up.
     * Output format must a ONLY JSON object:
-    {'{'}'journalists': [LIST OF NAMES]{'}'}
+    journalists: [LIST OF JOURNALIST NAMES]
     """
     return prompt
 
