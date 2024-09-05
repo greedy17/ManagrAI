@@ -296,11 +296,11 @@
             <h2>Email Pitch</h2>
 
             <div
-              style="margin-left: 16px"
+              style="padding: 6px 6px 4px 6px"
               @click="toggleEmailJournalistModal"
               class="img-container"
             >
-              <img src="@/assets/images/close.svg" height="18px" alt="" />
+              <img src="@/assets/images/close.svg" height="19px" alt="" />
             </div>
           </div>
         </div>
