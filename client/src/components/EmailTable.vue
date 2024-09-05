@@ -326,26 +326,6 @@
             @click="sortBy(value.charAt(0).toLowerCase() + value.slice(1))"
           >
             {{ value }}
-            <!-- <div class="stat" v-if="value === 'Opens' && openRate && userId === user.id">
-              <span
-                :class="{
-                  red: openRate <= 30,
-                  yellow: openRate > 30 && openRate < 70,
-                  green: openRate >= 70,
-                }"
-                >{{ openRate }}%</span
-              >
-            </div> -->
-            <!-- <div class="stat" v-else-if="value === 'Replies' && replyRate && userId === user.id">
-              <span
-                :class="{
-                  red: replyRate <= 30,
-                  yellow: replyRate > 30 && replyRate < 70,
-                  green: replyRate >= 70,
-                }"
-                >{{ replyRate }}%</span
-              >
-            </div> -->
             <img
               v-if="sortKey === value.charAt(0).toLowerCase() + value.slice(1) && sortOrder === -1"
               src="@/assets/images/arrowDrop.svg"
@@ -625,25 +605,40 @@ export default {
       if (!this.sortKey) return filteredEmails
 
       return filteredEmails.slice().sort((a, b) => {
+        const getStatus = (email) => {
+          if (email.is_draft && !email.is_rejected && !email.is_approved) {
+            return 'adraft'
+          } else if (email.is_draft && !email.is_rejected && email.is_approved) {
+            return 'capproved'
+          } else if (email.is_draft && email.is_rejected && !email.is_approved) {
+            return 'brejected'
+          } else if (!email.is_draft && email.failed) {
+            return 'dfailed'
+          } else if (!email.is_draft && !email.failed) {
+            return 'edelivered'
+          } else {
+            return '' // If no status matches, default to empty string
+          }
+        }
+
         const aValue =
           this.sortKey === 'lastActivity'
             ? new Date(a.activity_log.at(-1).split('|')[1])
             : this.sortKey === 'to'
             ? a.recipient
             : this.sortKey === 'status'
-            ? a.failed
+            ? getStatus(a)
             : a[this.sortKey]
-        //   this.sortKey === 'subject' ? a.subject : new Date(a.activity_log.at(-1).split('|')[1])
+
         const bValue =
           this.sortKey === 'lastActivity'
             ? new Date(b.activity_log.at(-1).split('|')[1])
             : this.sortKey === 'to'
             ? b.recipient
             : this.sortKey === 'status'
-            ? b.failed
+            ? getStatus(b)
             : b[this.sortKey]
-        //    b[this.sortKey]
-        //   this.sortKey === 'subject' ? b.subject : new Date(b.activity_log.at(-1).split('|')[1])
+
         if (aValue < bValue) return -1 * this.sortOrder
         if (aValue > bValue) return 1 * this.sortOrder
 

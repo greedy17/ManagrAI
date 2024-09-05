@@ -305,7 +305,7 @@
           </div>
         </div>
 
-        <div style="margin-bottom: 8px; overflow: hidden; height: 400px" class="paid-body">
+        <div style="overflow: hidden; height: 400px; margin-top: -16px" class="paid-body">
           <div style="position: relative">
             <div class="row">
               <div
@@ -417,118 +417,229 @@
         </div>
 
         <div style="margin-top: -16px" class="space-between">
-          <div style="margin-top: -4px" class="source-dropdown fadein">
-            <div
-              @click.stop="toggleShowStylesEmail"
-              :class="{ 'soft-gray-bg': showingStylesEmail }"
-              class="drop-header"
-              style="padding: 8px"
-            >
-              <img src="@/assets/images/wand.svg" height="14px" alt="" />
+          <div class="row">
+            <div style="margin-top: -4px" class="source-dropdown fadein">
+              <div
+                @click.stop="toggleShowStylesEmail"
+                :class="{ 'soft-gray-bg': showingStylesEmail }"
+                class="drop-header"
+                style="padding: 8px"
+              >
+                <img src="@/assets/images/wand.svg" height="14px" alt="" />
 
-              <p class="mobile-text-hide">Writing Style:</p>
-              <small>{{ writingStyleTitle ? writingStyleTitle : 'Select style' }}</small>
-              <img
-                v-if="!showingStyles"
-                src="@/assets/images/arrowDropUp.svg"
-                height="15px"
-                alt=""
-              />
-              <img
-                v-else
-                class="rotate-img"
-                src="@/assets/images/arrowDropUp.svg"
-                height="15px"
-                alt=""
-              />
-            </div>
+                <p class="mobile-text-hide">Writing Style:</p>
+                <small>{{ writingStyleTitle ? writingStyleTitle : 'Select style' }}</small>
+                <img
+                  v-if="!showingStyles"
+                  src="@/assets/images/arrowDropUp.svg"
+                  height="15px"
+                  alt=""
+                />
+                <img
+                  v-else
+                  class="rotate-img"
+                  src="@/assets/images/arrowDropUp.svg"
+                  height="15px"
+                  alt=""
+                />
+              </div>
 
-            <div
-              v-outside-click="hideStylesEmail"
-              v-show="showingStylesEmail"
-              class="drop-options-alt-up"
-            >
-              <header class="space-between">
-                <section class="h-padding">
-                  <section @click="toggleStyles" class="toggle">
-                    <span :class="{ 'active-toggle': personalStyles }" class="toggle-side">
-                      <small>Personal</small>
-                    </span>
+              <div
+                v-outside-click="hideStylesEmail"
+                v-show="showingStylesEmail"
+                class="drop-options-alt-up"
+              >
+                <header class="space-between">
+                  <section class="h-padding">
+                    <section @click="toggleStyles" class="toggle">
+                      <span :class="{ 'active-toggle': personalStyles }" class="toggle-side">
+                        <small>Personal</small>
+                      </span>
 
-                    <span :class="{ 'active-toggle': !personalStyles }" class="toggle-side">
-                      <small>Group</small>
-                    </span>
+                      <span :class="{ 'active-toggle': !personalStyles }" class="toggle-side">
+                        <small>Group</small>
+                      </span>
+                    </section>
                   </section>
-                </section>
 
-                <!-- <button
+                  <!-- <button
                   @click="toggleLearnInputModal('')"
                   class="secondary-button-no-border"
                   style="margin-right: 12px"
                 >
                   <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Style
                 </button> -->
-              </header>
+                </header>
 
-              <section v-if="userWritingStyles.length">
-                <div
-                  @click="rewritePitchWithStyle(style.style, style.title)"
-                  v-for="style in defaultWritingStyles"
-                  :key="style.title"
-                  :class="{ activesquare: writingStyleTitle === style.title }"
-                  :title="style.title"
-                >
-                  <span>
-                    <img class="blue-filter" src="@/assets/images/logo.png" height="11px" alt="" />
-                    {{ style.title }}
-                  </span>
-                  <p>{{ style.style }}</p>
-                </div>
-                <div
-                  @mouseenter="setIndex(i)"
-                  @mouseLeave="removeIndex"
-                  @click="rewritePitchWithStyle(style.style, style.title)"
-                  class="dropdown-item relative"
-                  v-for="(style, i) in userWritingStyles"
-                  :key="i"
-                  :class="{ activeswitch: writingStyleTitle === style.title }"
-                  :title="style.title"
-                >
-                  <span class="pink-text">
+                <section v-if="userWritingStyles.length">
+                  <div
+                    @click="rewritePitchWithStyle(style.style, style.title)"
+                    v-for="style in defaultWritingStyles"
+                    :key="style.title"
+                    :class="{ activesquare: writingStyleTitle === style.title }"
+                    :title="style.title"
+                  >
+                    <span>
+                      <img
+                        class="blue-filter"
+                        src="@/assets/images/logo.png"
+                        height="11px"
+                        alt=""
+                      />
+                      {{ style.title }}
+                    </span>
+                    <p>{{ style.style }}</p>
+                  </div>
+                  <div
+                    @mouseenter="setIndex(i)"
+                    @mouseLeave="removeIndex"
+                    @click="rewritePitchWithStyle(style.style, style.title)"
+                    class="dropdown-item relative"
+                    v-for="(style, i) in userWritingStyles"
+                    :key="i"
+                    :class="{ activeswitch: writingStyleTitle === style.title }"
+                    :title="style.title"
+                  >
+                    <span class="pink-text">
+                      <img
+                        class="pink-filter"
+                        src="@/assets/images/scroll.svg"
+                        height="11px"
+                        alt=""
+                      />
+                      {{ style.title }}
+                    </span>
+                    <p class="pink-text">{{ style.style }}</p>
+
+                    <span
+                      v-if="hoverIndex === i"
+                      @click="deleteWritingStyle(style.id)"
+                      class="absolute-icon"
+                    >
+                      <img src="@/assets/images/close.svg" height="12px" alt="" />
+                    </span>
+                  </div>
+                </section>
+
+                <section v-else>
+                  <div
+                    @click="rewritePitchWithStyle(style.style, style.title)"
+                    v-for="style in defaultWritingStyles"
+                    :key="style.title"
+                    :class="{ activeswitch: writingStyleTitle === style.title }"
+                  >
+                    <span>
+                      <img src="@/assets/images/wand.svg" height="11px" alt="" />
+                      {{ style.title }}
+                    </span>
+                    <p>{{ style.style }}</p>
+                  </div>
+                </section>
+              </div>
+            </div>
+
+            <div style="margin-top: -4px" class="source-dropdown fadein">
+              <div
+                @click.stop="toggleShowDetailsEmail"
+                :class="{ 'soft-gray-bg': showingDetailsEmail }"
+                class="drop-header"
+                style="padding: 8px"
+              >
+                <img src="@/assets/images/building.svg" height="14px" alt="" />
+
+                <p class="mobile-text-hide">Company Details:</p>
+                <small :title="detailTitle ? detailTitle : 'None'">{{
+                  detailTitle ? detailTitle : 'None'
+                }}</small>
+                <img
+                  v-if="!showingDetailsEmail"
+                  src="@/assets/images/arrowDropUp.svg"
+                  height="15px"
+                  alt=""
+                />
+                <img
+                  v-else
+                  class="rotate-img"
+                  src="@/assets/images/arrowDropUp.svg"
+                  height="15px"
+                  alt=""
+                />
+              </div>
+
+              <div
+                v-outside-click="hideDetailsEmail"
+                v-show="showingDetailsEmail"
+                class="drop-options-alt-up"
+              >
+                <header style="padding-top: 8px; padding-bottom: 8px" class="space-between">
+                  <!-- <section class="h-padding">
+                    <section>
+                      <p style="margin: 0; padding: 4px 0 0 4px; color: #9596b4">Personal</p>
+                    </section>
+                  </section> -->
+
+                  <!-- <button
+                    @click="toggleDetailsInputModal"
+                    class="secondary-button-no-border"
+                    style="margin-right: 4px"
+                  >
+                    <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Details
+                  </button> -->
+
+                  <button
+                    :disabled="!detailTitle"
+                    @click="clearDetails"
+                    class="secondary-button-no-border borderless"
+                  >
                     <img
-                      class="pink-filter"
-                      src="@/assets/images/scroll.svg"
-                      height="11px"
+                      style="margin-right: 4px"
+                      src="@/assets/images/remove.svg"
+                      height="14px"
                       alt=""
                     />
-                    {{ style.title }}
-                  </span>
-                  <p class="pink-text">{{ style.style }}</p>
+                    Clear
+                  </button>
+                </header>
 
-                  <span
-                    v-if="hoverIndex === i"
-                    @click="deleteWritingStyle(style.id)"
-                    class="absolute-icon"
+                <section v-if="allCompanyDetails.length">
+                  <div
+                    style="position: relative"
+                    @click="rewritePitchWithDetails(detail.title, detail.details)"
+                    v-for="detail in allCompanyDetails"
+                    :key="detail.title"
+                    :class="{ activesquareTile: detailTitle === detail.title }"
+                    :title="detail.title"
                   >
-                    <img src="@/assets/images/close.svg" height="12px" alt="" />
-                  </span>
-                </div>
-              </section>
+                    <span class="turq-text">
+                      <img
+                        class="turq-filter"
+                        src="@/assets/images/logo.png"
+                        height="11px"
+                        alt=""
+                      />
+                      {{ detail.title }}
+                    </span>
+                    <p class="turq-text">{{ detail.details }}</p>
 
-              <section v-else>
-                <div
-                  @click="rewritePitchWithStyle(style.style, style.title)"
-                  v-for="style in defaultWritingStyles"
-                  :key="style.title"
-                  :class="{ activeswitch: writingStyleTitle === style.title }"
-                >
+                    <span @click="deleteCompanyDetails(detail.id)" class="absolute-icon">
+                      <img src="@/assets/images/close.svg" height="10px" alt="" />
+                    </span>
+                  </div>
+                </section>
+
+                <section style="padding: 16px" v-else>
+                  Your saved details
                   <span>
-                    <img src="@/assets/images/wand.svg" height="11px" alt="" />
-                    {{ style.title }}
-                  </span>
-                  <p>{{ style.style }}</p>
-                </div>
-              </section>
+                    <img
+                      style="margin-right: 4px"
+                      src="@/assets/images/building.svg"
+                      height="12px"
+                      alt=""
+                    />
+                    will appear here.</span
+                  >
+                </section>
+              </div>
             </div>
           </div>
 
@@ -1440,8 +1551,8 @@
         </aside>
       </div>
 
-      <section v-else class="main">
-        <div style="position: relative" class="body">
+      <section v-else class="main" :class="{ 'center-content': mainView === 'write' }">
+        <div style="position: relative" class="body" :class="{ widebody: mainView === 'write' }">
           <header class="content-header-test">
             <div class="row-top">
               <div class="image-container xxl-margin mobile-img" @click="resetAll">
@@ -3495,7 +3606,7 @@
           </div>
         </aside>
 
-        <aside v-else>
+        <aside :class="{ removed: mainView === 'write' }" v-else>
           <!-- <div v-if="mainView === 'write'" class="section" style="max-height: 70vh">
             <div style="cursor: text" class="example-title nobottomborder">
               <div class="example-row">
@@ -3623,6 +3734,7 @@ export default {
   },
   data() {
     return {
+      showingDetailsEmail: false,
       showingStylesEmail: false,
       discoverList: [],
       drafting: false,
@@ -4348,6 +4460,11 @@ export default {
       } else {
         this.loadingJournalists = true
       }
+
+      if (this.savedDiscovery) {
+        this.savedDiscovery = false
+      }
+
       try {
         const res = await Comms.api.discoverJournalists({
           info: discover ? this.newSearch : this.journalistInfo,
@@ -4427,7 +4544,43 @@ export default {
           style: ex,
           with_style: true,
         })
-        console.log(res)
+
+        const body = res.pitch
+          .replace(/^Subject(?: Line)?:[\s\S]*?\n/i, '')
+          .replace(/email: [^"]*/, '')
+        const signature = this.user.emailSignature ? this.user.emailSignature : ''
+        const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
+          /\n/g,
+          '</p><p>',
+        )}  </p>`
+        const quill = this.$refs.quill.quill
+        quill.clipboard.dangerouslyPasteHTML(html)
+        this.loadingPitch = false
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.loadingPitch = false
+        this.drafting = false
+      }
+    },
+    async rewritePitchWithDetails(title, deets) {
+      if (title === this.detailTitle) {
+        this.detailTitle = ''
+        this.selectedOrg = ''
+        this.showingDetailsEmail = false
+        this.showingAllDetails = false
+      }
+      this.selectedOrg = deets
+      this.detailTitle = title
+      this.showingDetailsEmail = false
+      this.showingAllDetails = false
+      this.loadingPitch = true
+      try {
+        const res = await Comms.api.rewritePitch({
+          original: this.revisedPitch,
+          style: deets,
+          with_style: true,
+        })
         const body = res.pitch
           .replace(/^Subject(?: Line)?:[\s\S]*?\n/i, '')
           .replace(/email: [^"]*/, '')
@@ -4448,7 +4601,6 @@ export default {
     },
     addDetails(title, deets) {
       if (title === this.detailTitle) {
-        console.log('TITLE HERE', title, this.detailTitle)
         this.detailTitle = ''
         this.selectedOrg = ''
         this.showingDetails = false
@@ -4461,7 +4613,6 @@ export default {
     },
     addDetailsAlt(title, deets) {
       if (title === this.detailTitle) {
-        console.log('TITLE HERE', title, this.detailTitle)
         this.detailTitle = ''
         this.selectedOrg = ''
         this.showCompanySelection = false
@@ -4521,6 +4672,9 @@ export default {
     hideDetails() {
       this.showingDetails = false
     },
+    hideDetailsEmail() {
+      this.showingDetailsEmail = false
+    },
     toggleShowStyles() {
       this.showingStyles = !this.showingStyles
     },
@@ -4529,6 +4683,9 @@ export default {
     },
     toggleShowDetails() {
       this.showingDetails = !this.showingDetails
+    },
+    toggleShowDetailsEmail() {
+      this.showingDetailsEmail = !this.showingDetailsEmail
     },
     toggleHelpMenu() {
       this.showingHelp = !this.showingHelp
@@ -9739,6 +9896,12 @@ li {
     opacity: 0;
     animation: fadeIn 1s forwards;
 
+    .center-content {
+      // display: flex;
+      // align-items: center;
+      // justify-content: center;
+    }
+
     .body {
       width: 62vw;
       height: 100%;
@@ -9753,6 +9916,26 @@ li {
 
       @media only screen and (min-width: 601px) and (max-width: 1024px) {
       }
+    }
+
+    .widebody {
+      width: 100%;
+      height: 100%;
+      overflow-y: scroll;
+      overflow-x: hidden;
+      padding: 16px 20vw;
+
+      @media only screen and (max-width: 600px) {
+        padding: 0;
+        width: 100%;
+      }
+
+      @media only screen and (min-width: 601px) and (max-width: 1024px) {
+      }
+    }
+
+    .removed {
+      display: none;
     }
 
     aside {

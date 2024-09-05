@@ -125,25 +125,25 @@
                   <label class="radio-label">
                     <input
                       type="radio"
-                      name="delivered"
-                      :value="false"
-                      :checked="selectedOption === false"
-                      @click="toggleSelection('selectedOption', false)"
+                      name="draft"
+                      value="is_rejected"
+                      :checked="draftStatus === 'is_rejected'"
+                      @click="toggleSelection('draftStatus', 'is_rejected')"
                     />
                     <span class="custom-radio"></span>
-                    Delivered
+                    Draft
                   </label>
 
                   <label class="radio-label">
                     <input
                       type="radio"
-                      name="failed"
-                      :value="true"
-                      :checked="selectedOption === true"
-                      @click="toggleSelection('selectedOption', true)"
+                      name="rejected"
+                      value="is_rejected"
+                      :checked="selectedStatus === 'is_rejected'"
+                      @click="toggleSelection('selectedStatus', 'is_rejected')"
                     />
                     <span class="custom-radio"></span>
-                    Failed
+                    Rejected
                   </label>
 
                   <label style="margin-left: -8px" class="radio-label">
@@ -161,25 +161,25 @@
                   <label class="radio-label">
                     <input
                       type="radio"
-                      name="rejected"
-                      value="is_rejected"
-                      :checked="selectedStatus === 'is_rejected'"
-                      @click="toggleSelection('selectedStatus', 'is_rejected')"
+                      name="failed"
+                      :value="true"
+                      :checked="selectedOption === true"
+                      @click="toggleSelection('selectedOption', true)"
                     />
                     <span class="custom-radio"></span>
-                    Rejected
+                    Failed
                   </label>
 
                   <label class="radio-label">
                     <input
                       type="radio"
-                      name="draft"
-                      value="is_rejected"
-                      :checked="draftStatus === 'is_rejected'"
-                      @click="toggleSelection('draftStatus', 'is_rejected')"
+                      name="delivered"
+                      :value="false"
+                      :checked="selectedOption === false"
+                      @click="toggleSelection('selectedOption', false)"
                     />
                     <span class="custom-radio"></span>
-                    Draft
+                    Delivered
                   </label>
                 </div>
               </div>
