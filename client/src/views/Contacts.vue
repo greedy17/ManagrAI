@@ -3496,7 +3496,7 @@ h2 {
   }
 
   li {
-    margin-top: -12px;
+    margin-top: 0;
     padding: 0;
   }
 }
