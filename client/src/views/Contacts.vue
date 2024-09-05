@@ -965,7 +965,7 @@
             </thead>
             <tbody v-if="filteredContactList.length">
               <tr v-for="(contact, i) in filteredContactList" :key="i">
-                <td :class="i % 2 !== 0 ? 'gray-bg' : ''" style="cursor: pointer">
+                <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
                   <div class="email-details">
                     <div class="email-info">
                       <div class="subject">
@@ -1768,13 +1768,13 @@ export default {
         this.currentContact.bio = this.newBio
         this.currentContact.images = this.newImages
         this.refreshUser()
-        this.$toast('Contact updated!', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        // this.$toast('Contact updated!', {
+        //   timeout: 2000,
+        //   position: 'top-left',
+        //   type: 'success',
+        //   toastClassName: 'custom',
+        //   bodyClassName: ['custom'],
+        // })
       } catch (e) {
         console.log('RESPOSNE', e)
         this.$toast('Error updating bio, try again', {

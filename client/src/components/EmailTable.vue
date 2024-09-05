@@ -595,7 +595,9 @@ export default {
         }
 
         if (draftFilter !== null) {
-          filterConditions.push(email.is_draft === true)
+          filterConditions.push(
+            email.is_draft === true && email.is_approved === false && email.is_rejected === false,
+          )
         }
 
         if (statusFilter !== null) {
