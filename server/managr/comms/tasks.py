@@ -13,13 +13,14 @@ from managr.utils.misc import custom_paginator
 from rest_framework.exceptions import ValidationError
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_clips_paginator_block
 from . import constants as comms_consts
-from .models import Search, NewsSource, AssistAlert, Journalist
+from .models import Search, NewsSource, AssistAlert, Journalist, JournalistContact, EmailTracker
 from .models import Article as InternalArticle
 from .serializers import (
     SearchSerializer,
     NewsSourceSerializer,
     JournalistSerializer,
     JournalistContactSerializer,
+    EmailTrackerSerializer,
 )
 from managr.core.models import TaskResults
 from managr.core import constants as core_consts
@@ -83,6 +84,10 @@ def emit_process_contacts_excel(user_id, data, result_id):
 
 def emit_process_regenerate_pitch_slack(payload, context):
     return _process_regenerate_pitch_slack(payload, context)
+
+
+def emit_process_bulk_draft(data, user_id, task_id):
+    return _process_bulk_draft(data, user_id, task_id)
 
 
 def emit_send_social_summary(news_alert_id, schedule):
@@ -1011,6 +1016,88 @@ def _process_regenerate_pitch_slack(payload, context):
     if has_error:
         send_to_error_channel(message, user.email, "regenerate pitch (platform)")
         return
+    return
+
+
+@background()
+def _process_bulk_draft(data, user_id, task_id):
+    user = User.objects.get(id=user_id)
+    task = TaskResults.objects.get(id=task_id)
+    emails = data.get("emails")
+    original = data.get("original")
+    failed_emails = []
+    for email in emails:
+        attempts = 1
+        has_error = False
+        token_amount = 1000
+        timeout = 60.0
+        contact = JournalistContact.objects.get(user=user, journalist__email=email)
+        if not contact.bio:
+            res = contact.generate_bio()
+            if not res:
+                failed_emails.append(email)
+                continue
+        while True:
+            try:
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.OPEN_AI_REWRITE_PTICH(original, contact.bio, user.first_name)
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    token_amount=token_amount,
+                    top_p=0.1,
+                    response_format={"type": "json_object"},
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                r = open_ai_exceptions._handle_response(r)
+                r = r.get("choices")[0].get("message").get("content")
+                serializer_data = {
+                    "subject": r["subject"],
+                    "recipients": [contact.journalist.email],
+                    "user": user.id,
+                    "body": r["body"],
+                    "name": contact.journalist.full_name,
+                }
+                serializer = EmailTrackerSerializer(data=serializer_data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                serializer.instance.add_activity("draft_created")
+                user.add_meta_data("pitches")
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount >= 3000:
+                    has_error = True
+
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 1000
+                    continue
+            except httpx.ReadTimeout as e:
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+    task.json_result = {"failed": failed_emails}
+    task.save()
     return
 
 

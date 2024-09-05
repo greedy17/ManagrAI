@@ -440,11 +440,21 @@ def OPEN_AI_IMAGE_CONTENT(images, instructions, tokens):
 
 OPEN_AI_REWRITE_PTICH = (
     lambda original, bio, name: f"""
-    Rewrite the original media pitch incoporating pitching tips from the journalist's bio below. Be sure to maintaining the existing writing style as the original pitch. Include a short intriguing subject line; no more than 3 words. DO NOT BOLD ANY TEXT IN YOUR RESPONSE, EVER!
+    Rewrite the original media pitch incoporating pitching tips from the journalist's bio below. 
+    Be sure to maintaining the existing writing style as the original pitch. 
+    Include a short intriguing subject line; no more than 3 words. DO NOT BOLD ANY TEXT IN YOUR RESPONSE, EVER!
+
     Original Pitch: {original}
     Journalist's bio along with pitching tips: {bio}
-    Provide journalist's email: Check to see if their email is listed in the journalist bio above. If so, you must use that email. If no email can be found, then you must guess their work email. When guessing, you must base it on verified email patterns associated with their respective publication. Always return the email like this - email: (guessed email)    
+    Provide journalist's email: Check to see if their email is listed in the journalist bio above. 
+    If so, you must use that email. If no email can be found, then you must guess their work email. When guessing, you must base it on verified email patterns associated with their respective publication. 
+    Always return the email like this - email: (guessed email)    
     My name: {name}
+
+    OUTPUT JSON:
+    body: REWRITTEN PITCH,
+    subject: SUBJECT,
+    email: EMAIL
     """
 )
 

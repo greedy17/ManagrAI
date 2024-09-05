@@ -3,11 +3,14 @@ import os
 import logging
 import base64
 import hashlib
+import httpx
 from datetime import datetime, timedelta
 from dateutil import parser
 from django.db import models
 from managr.core.models import TimeStampModel
 from django.db.models.constraints import UniqueConstraint
+from newspaper import ArticleException
+from newspaper import Article as ExternalArticle
 from managr.core import constants as core_consts
 from . import constants as comms_consts
 from managr.slack.helpers import block_builders
@@ -1255,14 +1258,6 @@ class JournalistContact(TimeStampModel):
 
     objects = JournalistContactQuerySet.as_manager()
 
-    # @classmethod
-    # def get_tags_by_user(cls, user):
-    #     tags_query = cls.objects.filter(user=user)
-    #     tag_list = []
-    #     for contact in tags_query:
-    #         tag_list.extend(contact.tags)
-    #     return list(set(tag_list))
-
     @classmethod
     def get_tags_by_user(cls, user):
         tags_query = cls.objects.filter(user=user)
@@ -1285,10 +1280,85 @@ class JournalistContact(TimeStampModel):
             contact.tags.remove(tag)
         return contact.save()
 
-    def save_bio(self, bio, images):
+    def generate_bio(self):
+        from managr.comms.utils import google_search, generate_config
+
+        query = f"Journalist AND {self.journalist.full_name} AND {self.journalist.outlet}"
+        google_results = google_search(query)
+        if len(google_results) == 0:
+            return False
+        results = google_results["results"]
+        images = google_results["images"]
+        art = ExternalArticle(results[0]["link"], config=generate_config())
+        try:
+            art.download()
+            art.parse()
+            text = art.text
+        except ArticleException:
+            text = ""
+        except Exception:
+            text = ""
+        has_error = False
+        attempts = 1
+        token_amount = 1000
+        timeout = 60.0
+        while True:
+            try:
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.OPEN_AI_DISCOVERY_RESULTS_PROMPT(
+                    self.journalist.full_name, results, self.journalist.outlet, text
+                )
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    self.user.email,
+                    prompt,
+                    "You are a VP of Communications",
+                    token_amount=token_amount,
+                    top_p=0.1,
+                    response_format={"type": "json_object"},
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                res = open_ai_exceptions._handle_response(r)
+                message = res.get("choices")[0].get("message").get("content")
+                message = json.loads(message)
+                bio = message.get("bio")
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount <= 2000:
+                    has_error = True
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 500
+                    continue
+            except httpx.ReadTimeout as e:
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+        if has_error:
+            return False
         self.bio = bio
         self.images = images
-        return self.save()
+        self.save()
+        return True
 
 
 class CompanyDetails(models.Model):

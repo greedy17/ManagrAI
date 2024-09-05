@@ -54,6 +54,7 @@ from .tasks import (
     emit_share_client_summary,
     _add_jounralist_to_db,
     emit_process_contacts_excel,
+    emit_process_bulk_draft,
 )
 from .serializers import (
     SearchSerializer,
@@ -1958,6 +1959,7 @@ class DiscoveryViewSet(
         else:
             query = f"Journalist AND {journalist} AND {outlet}"
         google_results = google_search(query)
+        print(google_results)
         if len(google_results) == 0:
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -2004,7 +2006,6 @@ class DiscoveryViewSet(
                         headers=core_consts.OPEN_AI_HEADERS,
                     )
                 res = open_ai_exceptions._handle_response(r)
-
                 message = res.get("choices")[0].get("message").get("content")
                 message = json.loads(message)
                 message["images"] = images
@@ -2349,6 +2350,21 @@ class EmailTrackerViewSet(
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="bulk-draft",
+    )
+    def draft_bulk_emails(self, request, *args, **kwargs):
+        result = TaskResults.objects.create(
+            function_name="emit_process_bulk_draft", user_id=str(request.user.id)
+        )
+        task = emit_process_bulk_draft(request.data, str(request.user.id), str(result.id))
+        result.task = task.id
+        result.save()
+        return Response(status.HTTP_200_OK, data={"task_id": str(task.id)})
 
 
 # ENDPOINTS
