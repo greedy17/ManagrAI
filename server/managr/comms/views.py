@@ -1539,6 +1539,8 @@ class PitchViewSet(
         user = request.user
         original = request.data.get("original")
         bio = request.data.get("bio")
+        style = request.data.get("style", None)
+        with_style = request.data.get("with_style", False) 
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -1547,7 +1549,7 @@ class PitchViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_REWRITE_PTICH(original, bio, user.first_name)
+                prompt = comms_consts.OPEN_AI_REWRITE_PTICH(original, bio, style, with_style, user.first_name)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
@@ -1850,6 +1852,7 @@ class DiscoveryViewSet(
         if isinstance(message, str):
             send_to_error_channel(message, user.email, "run discovery (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
+        user.add_meta_data("discover")    
         return Response(data={"journalists": message})
 
     @action(
@@ -2943,9 +2946,8 @@ def process_excel_file(request):
                 value = row[0].strip() if isinstance(row[0], str) else row[0]
                 row_values.append(value)
             journalist_values[index_values[idx]] = row_values
-
-        filtered_emails = [email for email in journalist_values.get("email", []) if email]
-        print("LENGTH IS HERE", len(filtered_emails))
+        
+        filtered_emails = [email for email in journalist_values.get("email", []) if email]   
         result = TaskResults.objects.create(
             function_name="emit_process_contacts_excel", user_id=str(request.user.id)
         )

@@ -295,13 +295,13 @@
           <div class="space-between">
             <h2>Email Pitch</h2>
 
-            <!-- <div
+            <div
               style="margin-left: 16px"
               @click="toggleEmailJournalistModal"
               class="img-container"
             >
-              <img src="@/assets/images/close.svg" height="14px" alt="" />
-            </div> -->
+              <img src="@/assets/images/close.svg" height="18px" alt="" />
+            </div>
           </div>
         </div>
 
@@ -369,7 +369,7 @@
               </div>
             </div>
 
-            <div style="position: relative; margin-bottom: 8px">
+            <div style="position: relative">
               <p
                 style="
                   margin: 0;
@@ -387,7 +387,7 @@
                 v-model="subject"
                 type="text"
                 placeholder=""
-                style="padding-left: 64px; padding-top: 6px"
+                style="padding-left: 64px; padding-top: 6px; border-bottom: none; margin-bottom: 0"
                 :disabled="loadingPitch || sendingEmail"
               />
             </div>
@@ -404,6 +404,7 @@
               }"
               v-model:content="revisedPitch"
               class="text-editor"
+              :class="{ opaquest: loadingPitch || sendingEmail }"
             />
 
             <div v-if="loadingPitch" style="margin-left: 12px" class="loading-small-absolute">
@@ -416,30 +417,138 @@
         </div>
 
         <div style="margin-top: -16px" class="space-between">
-          <button
-            :disabled="
-              loadingPitch || !subject || !targetEmail || sendingEmail || verifying || drafting
-            "
-            @click="createDraft"
-            class="secondary-button"
-          >
-            <img
-              v-if="drafting"
-              style="margin-right: 4px"
-              class="invert rotation"
-              src="@/assets/images/loading.svg"
-              height="14px"
-              alt=""
-            />
-            Save draft
-          </button>
+          <div style="margin-top: -4px" class="source-dropdown fadein">
+            <div
+              @click.stop="toggleShowStylesEmail"
+              :class="{ 'soft-gray-bg': showingStylesEmail }"
+              class="drop-header"
+              style="padding: 8px"
+            >
+              <img src="@/assets/images/wand.svg" height="14px" alt="" />
+
+              <p class="mobile-text-hide">Writing Style:</p>
+              <small>{{ writingStyleTitle ? writingStyleTitle : 'Select style' }}</small>
+              <img
+                v-if="!showingStyles"
+                src="@/assets/images/arrowDropUp.svg"
+                height="15px"
+                alt=""
+              />
+              <img
+                v-else
+                class="rotate-img"
+                src="@/assets/images/arrowDropUp.svg"
+                height="15px"
+                alt=""
+              />
+            </div>
+
+            <div
+              v-outside-click="hideStylesEmail"
+              v-show="showingStylesEmail"
+              class="drop-options-alt-up"
+            >
+              <header class="space-between">
+                <section class="h-padding">
+                  <section @click="toggleStyles" class="toggle">
+                    <span :class="{ 'active-toggle': personalStyles }" class="toggle-side">
+                      <small>Personal</small>
+                    </span>
+
+                    <span :class="{ 'active-toggle': !personalStyles }" class="toggle-side">
+                      <small>Group</small>
+                    </span>
+                  </section>
+                </section>
+
+                <!-- <button
+                  @click="toggleLearnInputModal('')"
+                  class="secondary-button-no-border"
+                  style="margin-right: 12px"
+                >
+                  <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Style
+                </button> -->
+              </header>
+
+              <section v-if="userWritingStyles.length">
+                <div
+                  @click="rewritePitchWithStyle(style.style, style.title)"
+                  v-for="style in defaultWritingStyles"
+                  :key="style.title"
+                  :class="{ activesquare: writingStyleTitle === style.title }"
+                  :title="style.title"
+                >
+                  <span>
+                    <img class="blue-filter" src="@/assets/images/logo.png" height="11px" alt="" />
+                    {{ style.title }}
+                  </span>
+                  <p>{{ style.style }}</p>
+                </div>
+                <div
+                  @mouseenter="setIndex(i)"
+                  @mouseLeave="removeIndex"
+                  @click="rewritePitchWithStyle(style.style, style.title)"
+                  class="dropdown-item relative"
+                  v-for="(style, i) in userWritingStyles"
+                  :key="i"
+                  :class="{ activeswitch: writingStyleTitle === style.title }"
+                  :title="style.title"
+                >
+                  <span class="pink-text">
+                    <img
+                      class="pink-filter"
+                      src="@/assets/images/scroll.svg"
+                      height="11px"
+                      alt=""
+                    />
+                    {{ style.title }}
+                  </span>
+                  <p class="pink-text">{{ style.style }}</p>
+
+                  <span
+                    v-if="hoverIndex === i"
+                    @click="deleteWritingStyle(style.id)"
+                    class="absolute-icon"
+                  >
+                    <img src="@/assets/images/close.svg" height="12px" alt="" />
+                  </span>
+                </div>
+              </section>
+
+              <section v-else>
+                <div
+                  @click="rewritePitchWithStyle(style.style, style.title)"
+                  v-for="style in defaultWritingStyles"
+                  :key="style.title"
+                  :class="{ activeswitch: writingStyleTitle === style.title }"
+                >
+                  <span>
+                    <img src="@/assets/images/wand.svg" height="11px" alt="" />
+                    {{ style.title }}
+                  </span>
+                  <p>{{ style.style }}</p>
+                </div>
+              </section>
+            </div>
+          </div>
+
           <div class="row">
             <button
+              :disabled="
+                loadingPitch || !subject || !targetEmail || sendingEmail || verifying || drafting
+              "
+              @click="createDraft"
               class="secondary-button"
-              :disabled="loadingDraft || savingContact"
-              @click="toggleEmailJournalistModal"
             >
-              Close
+              <img
+                v-if="drafting"
+                style="margin-right: 4px"
+                class="invert rotation"
+                src="@/assets/images/loading.svg"
+                height="14px"
+                alt=""
+              />
+              Save draft
             </button>
 
             <div v-if="sendingEmail" style="margin: 0 12px" class="loading-small">
@@ -733,7 +842,7 @@
                 :class="{ 'soft-gray-bg': showingSources }"
                 class="drop-header"
               >
-                <!-- <img
+                <img
                   v-if="mainView === 'news'"
                   src="@/assets/images/newspaper.svg"
                   height="14px"
@@ -762,9 +871,9 @@
                   src="@/assets/images/profile.svg"
                   height="14px"
                   alt=""
-                /> -->
+                />
 
-                <p style="margin-left: 8px" class="mobile-text-hide">Assist Type:</p>
+                <p style="margin-left: 1px" class="mobile-text-hide">Assist Type:</p>
                 <small>{{ toCamelCase(mainView) }}</small>
                 <img
                   v-if="!showingSources"
@@ -787,7 +896,7 @@
                     <img src="@/assets/images/newspaper.svg" height="11px" alt="" />
                     News
                   </span>
-                  <p>AI summaries based on real-time news</p>
+                  <p>AI-powered news searching</p>
                 </div>
                 <div
                   @click="switchMainView('social')"
@@ -798,7 +907,7 @@
                     Social
                   </span>
 
-                  <p>AI summaries based on social media</p>
+                  <p>AI-powered social searching</p>
                 </div>
                 <div @click="switchMainView('web')" :class="{ activeswitch: mainView === 'web' }">
                   <span>
@@ -806,7 +915,7 @@
                     Web
                   </span>
 
-                  <p>AI web search assistant</p>
+                  <p>AI-powered web searching</p>
                 </div>
 
                 <div
@@ -3514,6 +3623,7 @@ export default {
   },
   data() {
     return {
+      showingStylesEmail: false,
       discoverList: [],
       drafting: false,
       originalSummary: null,
@@ -4306,6 +4416,36 @@ export default {
       this.showingStyles = false
       this.showingWritingStyles = false
     },
+    async rewritePitchWithStyle(ex, title) {
+      this.writingStyle = ex
+      this.writingStyleTitle = title
+      this.loadingPitch = true
+      this.hideStylesEmail()
+      try {
+        const res = await Comms.api.rewritePitch({
+          original: this.revisedPitch,
+          style: ex,
+          with_style: true,
+        })
+        console.log(res)
+        const body = res.pitch
+          .replace(/^Subject(?: Line)?:[\s\S]*?\n/i, '')
+          .replace(/email: [^"]*/, '')
+        const signature = this.user.emailSignature ? this.user.emailSignature : ''
+        const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
+          /\n/g,
+          '</p><p>',
+        )}  </p>`
+        const quill = this.$refs.quill.quill
+        quill.clipboard.dangerouslyPasteHTML(html)
+        this.loadingPitch = false
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.loadingPitch = false
+        this.drafting = false
+      }
+    },
     addDetails(title, deets) {
       if (title === this.detailTitle) {
         console.log('TITLE HERE', title, this.detailTitle)
@@ -4375,11 +4515,17 @@ export default {
     hideStyles() {
       this.showingStyles = false
     },
+    hideStylesEmail() {
+      this.showingStylesEmail = false
+    },
     hideDetails() {
       this.showingDetails = false
     },
     toggleShowStyles() {
       this.showingStyles = !this.showingStyles
+    },
+    toggleShowStylesEmail() {
+      this.showingStylesEmail = !this.showingStylesEmail
     },
     toggleShowDetails() {
       this.showingDetails = !this.showingDetails
@@ -7060,7 +7206,7 @@ export default {
       } else if (this.mainView === 'write') {
         text = 'Provide content instructions...'
       } else if (this.mainView === 'discover') {
-        text = 'Provide journalist details...'
+        text = 'Find relevant journalists...'
       }
 
       return text
@@ -7658,7 +7804,7 @@ export default {
 }
 
 .text-editor {
-  height: 160px;
+  height: 180px;
   width: 100%;
   border-radius: 8px;
   @media only screen and (max-width: 600px) {
@@ -8020,6 +8166,93 @@ export default {
     max-height: 225px;
     position: absolute;
     top: 40px;
+    left: 0;
+    font-weight: 400;
+    background: white;
+    padding: 8px;
+    border-radius: 5px;
+    font-size: 14px;
+    box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+    line-height: 1.5;
+    z-index: 1000;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    @media only screen and (max-width: 600px) {
+      left: -120%;
+      width: 85vw;
+    }
+
+    section:last-of-type {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 8px;
+      overflow-y: scroll;
+
+      &::-webkit-scrollbar {
+        width: 4px;
+        height: 0px;
+      }
+      &::-webkit-scrollbar-thumb {
+        background-color: $soft-gray;
+        box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+        border-radius: 6px;
+      }
+
+      &::-webkit-scrollbar-track {
+        margin-top: 12px;
+      }
+
+      &:hover {
+        .absolute-icon {
+          visibility: visible;
+        }
+      }
+    }
+
+    div {
+      font-size: 14px;
+      width: 135px;
+      height: 60px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+
+      p {
+        font-size: 12px !important;
+        font-family: $thin-font-family;
+        margin: 4px 0 0 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      &:hover {
+        background-color: $soft-gray;
+      }
+
+      span {
+        font-family: $base-font-family;
+      }
+    }
+
+    img {
+      margin-right: 4px;
+    }
+  }
+
+  .drop-options-alt-up {
+    width: 450px;
+    max-height: 225px;
+    position: absolute;
+    bottom: 40px;
     left: 0;
     font-weight: 400;
     background: white;

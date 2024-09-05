@@ -123,37 +123,61 @@
                 </div> -->
                 <div class="radio-group">
                   <label class="radio-label">
-                    <input type="radio" name="option" :value="false" v-model="selectedOption" />
+                    <input
+                      type="radio"
+                      name="delivered"
+                      :value="false"
+                      :checked="selectedOption === false"
+                      @click="toggleSelection('selectedOption', false)"
+                    />
                     <span class="custom-radio"></span>
                     Delivered
                   </label>
+
                   <label class="radio-label">
-                    <input type="radio" name="option" :value="true" v-model="selectedOption" />
+                    <input
+                      type="radio"
+                      name="failed"
+                      :value="true"
+                      :checked="selectedOption === true"
+                      @click="toggleSelection('selectedOption', true)"
+                    />
                     <span class="custom-radio"></span>
                     Failed
                   </label>
+
                   <label style="margin-left: -8px" class="radio-label">
                     <input
                       type="radio"
-                      name="option"
+                      name="approved"
                       value="is_approved"
-                      v-model="selectedStatus"
+                      :checked="selectedStatus === 'is_approved'"
+                      @click="toggleSelection('selectedStatus', 'is_approved')"
                     />
                     <span class="custom-radio"></span>
                     Approved
                   </label>
+
                   <label class="radio-label">
                     <input
                       type="radio"
-                      name="option"
+                      name="rejected"
                       value="is_rejected"
-                      v-model="selectedStatus"
+                      :checked="selectedStatus === 'is_rejected'"
+                      @click="toggleSelection('selectedStatus', 'is_rejected')"
                     />
                     <span class="custom-radio"></span>
                     Rejected
                   </label>
+
                   <label class="radio-label">
-                    <input type="radio" name="option" value="is_rejected" v-model="draftStatus" />
+                    <input
+                      type="radio"
+                      name="draft"
+                      value="is_rejected"
+                      :checked="draftStatus === 'is_rejected'"
+                      @click="toggleSelection('draftStatus', 'is_rejected')"
+                    />
                     <span class="custom-radio"></span>
                     Draft
                   </label>
@@ -307,6 +331,13 @@ export default {
     this.getUsers()
   },
   methods: {
+    toggleSelection(model, value) {
+      if (this[model] === value) {
+        this[model] = null
+      } else {
+        this[model] = value
+      }
+    },
     setEmailValues(value) {
       this.emailValues = value
     },
