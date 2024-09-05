@@ -2133,16 +2133,20 @@ class DiscoveryViewSet(
     )
     def network_discover(self, request, *args, **kwargs):
         user = request.user
-        info = request.data.get("info")
-        content = request.data.get("content", False)
+        pitch = request.data.get("pitch", False)
         has_error = False
         attempts = 1
         token_amount = 1000
         timeout = 60.0
         while True:
             try:
+                contacts = JournalistContact.objects.filter(user=user)
+                contact_list = [
+                    f"Name:{contact.journalist.full_name}, Outlet:{contact.journalist.outlet}"
+                    for contact in contacts
+                ]
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_GET_JOURNALIST_LIST(info, content)
+                prompt = comms_consts.OPEN_AI_PITCH_JOURNALIST_LIST(contact_list, pitch)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
