@@ -1540,6 +1540,7 @@ class PitchViewSet(
         bio = request.data.get("bio")
         style = request.data.get("style", None)
         with_style = request.data.get("with_style", False) 
+        journalist = request.data.get("journalist", None)
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -1548,7 +1549,7 @@ class PitchViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_REWRITE_PTICH(original, bio, style, with_style, user.first_name)
+                prompt = comms_consts.OPEN_AI_REWRITE_PTICH(original, bio, style, with_style, journalist, user.first_name)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
