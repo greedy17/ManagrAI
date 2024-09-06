@@ -54,6 +54,7 @@ from .tasks import (
     emit_share_client_summary,
     _add_jounralist_to_db,
     emit_process_contacts_excel,
+    emit_process_bulk_draft,
 )
 from .serializers import (
     SearchSerializer,
@@ -1539,7 +1540,7 @@ class PitchViewSet(
         original = request.data.get("original")
         bio = request.data.get("bio")
         style = request.data.get("style", None)
-        with_style = request.data.get("with_style", False) 
+        with_style = request.data.get("with_style", False)
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -1548,7 +1549,9 @@ class PitchViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_REWRITE_PTICH(original, bio, style, with_style, user.first_name)
+                prompt = comms_consts.OPEN_AI_REWRITE_PTICH(
+                    original, bio, style, with_style, user.first_name
+                )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
@@ -1851,7 +1854,7 @@ class DiscoveryViewSet(
         if isinstance(message, str):
             send_to_error_channel(message, user.email, "run discovery (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
-        user.add_meta_data("discover")    
+        user.add_meta_data("discover")
         return Response(data={"journalists": message})
 
     @action(
@@ -1961,6 +1964,7 @@ class DiscoveryViewSet(
         else:
             query = f"Journalist AND {journalist} AND {outlet}"
         google_results = google_search(query)
+        print(google_results)
         if len(google_results) == 0:
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -2007,7 +2011,6 @@ class DiscoveryViewSet(
                         headers=core_consts.OPEN_AI_HEADERS,
                     )
                 res = open_ai_exceptions._handle_response(r)
-
                 message = res.get("choices")[0].get("message").get("content")
                 message = json.loads(message)
                 message["images"] = images
@@ -2121,6 +2124,77 @@ class DiscoveryViewSet(
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
 
         return Response(data=message)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="network",
+    )
+    def network_discover(self, request, *args, **kwargs):
+        user = request.user
+        pitch = request.data.get("pitch", False)
+        has_error = False
+        attempts = 1
+        token_amount = 1000
+        timeout = 60.0
+        while True:
+            try:
+                contacts = JournalistContact.objects.filter(user=user)
+                contact_list = [
+                    f"Name:{contact.journalist.full_name}, Outlet:{contact.journalist.outlet}"
+                    for contact in contacts
+                ]
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.OPEN_AI_PITCH_JOURNALIST_LIST(contact_list, pitch)
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    "You are a VP of Communications",
+                    token_amount=token_amount,
+                    top_p=0.1,
+                    response_format={"type": "json_object"},
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                res = open_ai_exceptions._handle_response(r)
+                res_content = res.get("choices")[0].get("message").get("content")
+                journalists = res_content.get("journalists")
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount <= 2000:
+                    has_error = True
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 500
+                    continue
+            except httpx.ReadTimeout as e:
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+        if has_error:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
+
+        return Response(data={"journalists": journalists})
 
 
 class JournalistContactViewSet(
@@ -2352,6 +2426,21 @@ class EmailTrackerViewSet(
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="bulk-draft",
+    )
+    def draft_bulk_emails(self, request, *args, **kwargs):
+        result = TaskResults.objects.create(
+            function_name="emit_process_bulk_draft", user_id=str(request.user.id)
+        )
+        task = emit_process_bulk_draft(request.data, str(request.user.id), str(result.id))
+        result.task = task.id
+        result.save()
+        return Response(status.HTTP_200_OK, data={"task_id": str(task.id)})
 
 
 # ENDPOINTS
@@ -2930,8 +3019,8 @@ def process_excel_file(request):
                 value = row[0].strip() if isinstance(row[0], str) else row[0]
                 row_values.append(value)
             journalist_values[index_values[idx]] = row_values
-        
-        filtered_emails = [email for email in journalist_values.get("email", []) if email]   
+
+        filtered_emails = [email for email in journalist_values.get("email", []) if email]
         result = TaskResults.objects.create(
             function_name="emit_process_contacts_excel", user_id=str(request.user.id)
         )

@@ -116,11 +116,11 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
 
     Additional info on the person from a publisher site: {text}.
 
-    Combine the data from the search results and publisher site to craft one bio for {journalist}. 
-    Include the company the person works for, make sure the company name is the most widely used version of the company name. 
-    Then offer 3 short pitching tips based on what you know of the person, tailored to the user's pitch: {content}. 
-    Lastly, list all available contact details for the person based on the provided data, including social handles and email address. 
-    If the email is mentioned in the provided information, use that email. If no email is found, guess their work email based on verified email patterns for their publication. 
+    Combine the data from the search results and publisher site to craft one bio for {journalist}.
+    Include the company the person works for, make sure the company name is full version of the company name.
+    Then offer 3 short pitching tips based on what you know of the person, tailored to the user's pitch: {content}.
+    Lastly, list all available contact details for the person based on the provided data, including social handles and email address.
+    If the email is mentioned in the provided information, use that email. If no email is found, guess their work email based on verified email patterns for their publication.
     Always return the email like this - email: guessed email
 
     Output must be JSON with bio, company, and email as keys:
@@ -135,8 +135,8 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
     company: [Company name],
     email: '[EMAIL IF FOUND]'
 
-    Output MUST follow these rules:
-    1. Separate each section with one new line, no additional spacing or padding.
+    Output bio MUST follow these rules:
+    1. Separate each section with a <br/>, no additional spacing or padding.
     2. Use <strong> tags for bold text.
     3. Use <h2> tags for headings, except for the company name, which should be inline with 'Company:'.
     4. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
@@ -454,6 +454,12 @@ def OPEN_AI_REWRITE_PTICH(original, bio, style, with_style, name):
         original pitch: {original}
         writing style: {style}
         """
+    prompt += """
+    OUTPUT JSON:
+    body: REWRITTEN PITCH,
+    subject: SUBJECT,
+    email: EMAIL
+    """
     return prompt
 
 
@@ -629,7 +635,7 @@ def OPEN_AI_GET_JOURNALIST_LIST(info, content):
     * Ensure that all journalists are real, currently active writers. 
     * Do not include fake names such as Jane Doe or John Smith or make names up.
     * Output format must a ONLY JSON object:
-    {'{'}'journalists': [LIST OF NAMES]{'}'}
+    journalists: [LIST OF JOURNALIST NAMES]
     """
     return prompt
 
@@ -639,10 +645,10 @@ def OPEN_AI_PITCH_JOURNALIST_LIST(journalists, pitch):
     From the list of journalists I provided list 20 who would be interested in this pitch: {pitch}.\n
 
     * Output format must a ONLY JSON object:
-    'journalists': [LIST OF NAMES]
+    journalists: [LIST OF INTERESTED JOURNALISTS]
 
     journalists:\n
-    {journalists}
+    {journalists}    
     """
     return prompt
 
