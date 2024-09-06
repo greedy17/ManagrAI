@@ -1851,7 +1851,7 @@ class DiscoveryViewSet(
         if isinstance(message, str):
             send_to_error_channel(message, user.email, "run discovery (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
-        user.add_meta_data("discover")    
+        user.add_meta_data("discovery")  
         return Response(data={"journalists": message})
 
     @action(
@@ -1871,9 +1871,10 @@ class DiscoveryViewSet(
 
         if user.has_google_integration or user.has_microsoft_integration:
             res = user.email_account.send_email(recipient, subject, body, name)
+            user.add_meta_data("emailSent") 
         else:
             res = send_mailgun_email(user, name, subject, recipient, body, bcc)
-        sent = res["sent"]
+        sent = res["sent"] 
         if sent:
             if draftId:
                 tracker = EmailTracker.objects.filter(id=draftId)
@@ -2313,7 +2314,8 @@ class EmailTrackerViewSet(
 
     def get_queryset(self):
         user = self.request.user
-        trackers = EmailTracker.objects.filter(user=user).order_by("-datetime_created")
+        org = user.organization
+        trackers = EmailTracker.objects.filter(user__organization=org).order_by("-datetime_created")
         return trackers
 
     def create(self, request, *args, **kwargs):

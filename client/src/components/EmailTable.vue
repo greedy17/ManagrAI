@@ -853,7 +853,7 @@ export default {
       try {
         const response = await Comms.api.getTrackedEmails()
         this.emails = response.results
-        console.log(this.emails)
+        console.log('EMAILS ARE HERE', this.emails)
         // this.openRate = Math.round(response.rates.open_rate)
         // this.replyRate = response.rates.reply_rate
       } catch (error) {
