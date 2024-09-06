@@ -559,7 +559,9 @@ export default {
           email.opens ? email.opens.toString().includes(searchText) : '',
           email.replies ? email.replies.toString().includes(searchText) : '',
           email.clicks ? email.clicks.toString().includes(searchText) : '',
-          email.activity_log ? email.activity_log.at(-1).includes(searchText) : '',
+          email.activity_log && email.activity_log.length > 0
+            ? email.activity_log.at(-1).includes(searchText)
+            : '',
           searchText.includes('delivered') && !email.failed,
           searchText.includes('failed') && email.failed,
         ]
@@ -592,7 +594,10 @@ export default {
           const [start, end] = activityFilter.split(',')
           const startDate = new Date(start)
           const endDate = new Date(end)
-          const emailDate = new Date(email.activity_log.at(-1).split('|')[1])
+          const emailDate =
+            email.activity_log && email.activity_log.length > 0
+              ? new Date(email.activity_log.at(-1).split('|')[1])
+              : null
           filterConditions.push(emailDate >= startDate && emailDate <= endDate)
         }
 

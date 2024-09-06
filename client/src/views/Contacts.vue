@@ -960,12 +960,7 @@
                       :key="i"
                       class="user-tag"
                     >
-                      <img
-                        class="pink-filter"
-                        src="@/assets/images/tags.svg"
-                        height="12px"
-                        alt=""
-                      />
+                      <img src="@/assets/images/tags.svg" height="12px" alt="" />
                       {{ tag }}
                     </div>
                   </div>
@@ -1122,10 +1117,13 @@
         <div class="checkbox-list">
           <ul v-if="tags.length">
             <li v-for="tag in tags" :key="tag.name">
-              <label class="custom-checkbox fadein">
+              <label :title="tag.name" class="custom-checkbox fadein">
                 <input type="checkbox" id="checkbox" :value="tag.name" v-model="selectedTags" />
                 <span class="checkmark"></span>
-                {{ tag.name }} <span>({{ tag.count }})</span>
+                <div class="ellipsis-text">
+                  {{ tag.name }}
+                </div>
+                <span>({{ tag.count }})</span>
               </label>
             </li>
           </ul>
@@ -2947,6 +2945,13 @@ h3 {
   transform: rotate(45deg);
 }
 
+.ellipsis-text {
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 h2 {
   margin: 0;
 }
@@ -3833,8 +3838,9 @@ h2 {
   background-color: $liter-blue;
   color: $lite-blue;
   font-family: $base-font-family;
-  padding: 6px 32px 6px 8px;
+  padding: 6px 8px;
   border-radius: 5px;
+  white-space: nowrap;
   img {
     filter: invert(54%) sepia(16%) saturate(1723%) hue-rotate(159deg) brightness(89%) contrast(89%) !important;
     margin-right: 4px;
