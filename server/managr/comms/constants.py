@@ -453,7 +453,7 @@ def OPEN_AI_REWRITE_PTICH(original, bio, style, with_style, name):
 
         original pitch: {original}
         writing style: {style}
-        """  
+        """
     return prompt
 
 
@@ -635,13 +635,11 @@ def OPEN_AI_GET_JOURNALIST_LIST(info, content):
 
 
 def OPEN_AI_PITCH_JOURNALIST_LIST(journalists, pitch):
-    initial_sentence = (
-        f"From the list of journalists I provided who would be interested in this pitch: {pitch}"
-    )
     prompt = f"""
-    {initial_sentence}.\n
+    From the list of journalists I provided list 20 who would be interested in this pitch: {pitch}.\n
+
     * Output format must a ONLY JSON object:
-    {'{'}'journalists': [LIST OF NAMES]{'}'}
+    'journalists': [LIST OF NAMES]
 
     journalists:\n
     {journalists}
