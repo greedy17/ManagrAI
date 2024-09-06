@@ -1100,7 +1100,7 @@ class GoogleAccount(TimeStampModel):
             self.access_token = access_token
             self.save()
 
-    def send_email(self, recipient, subject, body, name, cc=False, bcc=False):
+    def send_email(self, recipient, subject, body, name, cc=[], bcc=[]):
         from managr.comms.serializers import EmailTrackerSerializer
 
         url = core_consts.GOOGLE_SEND_EMAIL_URI("me")
@@ -1230,7 +1230,7 @@ class MicrosoftAccount(TimeStampModel):
             self.access_token = access_token
             self.save()
 
-    def send_email(self, recipient, subject, body, name, cc=False, bcc=False):
+    def send_email(self, recipient, subject, body, name, cc=[], bcc=[]):
         from managr.comms.serializers import EmailTrackerSerializer
 
         url = core_consts.MICROSOFT_SEND_MAIL
