@@ -1869,11 +1869,12 @@ class DiscoveryViewSet(
         body = request.data.get("body").replace("[Your Name]", f"\n\n{user.full_name}")
         recipient = request.data.get("recipient")
         name = request.data.get("name")
-        bcc = request.data.get("bcc", [])
+        cc = request.data.get("cc", False)
+        bcc = request.data.get("bcc", False)
         draftId = request.data.get("draftId", None)
 
         if user.has_google_integration or user.has_microsoft_integration:
-            res = user.email_account.send_email(recipient, subject, body, name)
+            res = user.email_account.send_email(recipient, subject, body, name, cc, bcc)
         else:
             res = send_mailgun_email(user, name, subject, recipient, body, bcc)
         sent = res["sent"]

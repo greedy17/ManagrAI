@@ -1135,6 +1135,8 @@ class EmailTracker(TimeStampModel):
     name = models.CharField(max_length=255, default="N/A")
     subject = models.CharField(max_length=255)
     body = models.TextField()
+    cc_recipients = models.TextField(blank=True, null=True)
+    bcc_recipients = models.TextField(blank=True, null=True)
     message_id = models.CharField(max_length=255, blank=True, null=True)
     opens = models.IntegerField(default=0)
     replies = models.IntegerField(default=0)

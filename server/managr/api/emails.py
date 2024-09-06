@@ -11,18 +11,22 @@ import base64
 from email.mime.text import MIMEText
 
 
-def create_message(sender, sent_to, subject, template, context={}):
+def create_message(sender, sent_to, subject, template, context={}, cc=False, bcc=False):
     html_body = render_to_string(template, context)
     message = MIMEText(html_body, "html")
     message["to"] = sent_to
     message["from"] = sender
     message["subject"] = subject
+    if cc:
+        message["cc"] = ", ".join(cc)
+    if bcc:
+        message["bcc"] = ", ".join(bcc)
     raw = base64.urlsafe_b64encode(message.as_bytes())
     raw = raw.decode()
     return {"raw": raw}
 
 
-def create_ms_message(sender, sent_to, subject, template, context={}):
+def create_ms_message(sender, sent_to, subject, template, context={}, cc=False, bcc=False):
     html_body = render_to_string(template, context)
     email_message = {
         "message": {
@@ -32,6 +36,14 @@ def create_ms_message(sender, sent_to, subject, template, context={}):
             "toRecipients": [{"emailAddress": {"address": sent_to}}],
         }
     }
+    if cc:
+        email_message["message"]["ccRecipients"] = [
+            {"emailAddress": {"address": address}} for address in cc
+        ]
+    if bcc:
+        email_message["message"]["bccRecipients"] = [
+            {"emailAddress": {"address": address}} for address in bcc
+        ]
     return email_message
 
 

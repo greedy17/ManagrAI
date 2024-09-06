@@ -157,6 +157,8 @@ class EmailTrackerSerializer(serializers.ModelSerializer):
             "name",
             "subject",
             "body",
+            "cc_recipients",
+            "bcc_recipients",
             "message_id",
             "opens",
             "replies",
