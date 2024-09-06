@@ -2164,6 +2164,13 @@ class DiscoveryViewSet(
                 res = open_ai_exceptions._handle_response(r)
                 res_content = res.get("choices")[0].get("message").get("content")
                 journalists = res_content.get("journalists")
+                for idx, journalist_info in enumerate(journalists):
+                    first, last = journalist_info["name"].split(" ")
+                    try:
+                        journalist = contacts.get(first_name=first, last_name=last)
+                        journalists[idx]["email"] = journalist.email
+                    except Journalist.DoesNotExist:
+                        continue
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
