@@ -1300,7 +1300,7 @@ class JournalistContact(TimeStampModel):
             text = ""
         has_error = False
         attempts = 1
-        token_amount = 1000
+        token_amount = 2000
         timeout = 60.0
         while True:
             try:
@@ -1331,7 +1331,7 @@ class JournalistContact(TimeStampModel):
                 logger.exception(
                     f"Retrying again due to token amount, amount currently at: {token_amount}"
                 )
-                if token_amount <= 2000:
+                if token_amount <= 3000:
                     has_error = True
                     message = "Token amount error"
                     break

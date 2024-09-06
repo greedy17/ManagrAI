@@ -632,7 +632,7 @@ def google_search(query, number_of_results=5, include_images=True):
             for item in results:
                 result_data = {
                     "title": item["title"],
-                    "snippet": item["snippet"],
+                    "snippet": item.get("snippet", "None"),
                     "link": item["link"],
                 }
                 if include_images:
