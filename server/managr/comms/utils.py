@@ -711,7 +711,7 @@ def check_journalist_validity(journalist, outlet, email):
             score = Journalist.verify_email(email)
             is_valid = True if score >= 85 else False
             if is_valid is False:
-                r = Journalist.email_finder(first, last)
+                r = Journalist.email_finder(first, last, False, outlet)
                 if isinstance(r, dict) and "error" in r.keys():
                     return r
                 score = r["score"]
