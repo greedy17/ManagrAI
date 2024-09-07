@@ -17,7 +17,7 @@ class Command(BaseCommand):
         batch_size = options["batch_size"] if options["batch_size"] is not None else 10
         news = NewsSource.domain_list(True, False)
         report = CrawlerReport.objects.create()
-        d = datetime.now()
+        d = datetime.now().strftime("%I:%M %p")
         counter = 0
         for i in range(0, len(news), int(batch_size)):
             counter += 1
@@ -25,9 +25,11 @@ class Command(BaseCommand):
             batch_url_list = ",".join(batch)
             _run_spider_batch(batch_url_list, priority=-1)
         send_to_error_channel(
-            f"Crawler started at: {d.time().hour}:{d.time().minute}, total tasks: {counter}",
+            f"Crawler started at: {d}, total tasks: {counter}",
             None,
             "crawler",
             f"Crawler Update {settings.ENVIRONMENT}",
             str(report.id),
         )
+import time 
+time.asctime().

@@ -35,8 +35,9 @@ class Command(BaseCommand):
             report = CrawlerReport.objects.all().order_by("-datetime_created").first()
             if not report.end_ts:
                 data = report.create_report_data()
+                d = datetime.now().strftime("%I:%M %p")
                 send_to_error_channel(
-                    f"Crawler finished at: {datetime.datetime.now()}, Completed in: {data['time']}",
+                    f"Crawler finished at: {d}, Completed in: {data['time']}",
                     None,
                     "crawler",
                     f"Crawler Update {settings.ENVIRONMENT}",
