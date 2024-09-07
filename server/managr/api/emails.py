@@ -11,7 +11,7 @@ import base64
 from email.mime.text import MIMEText
 
 
-def create_message(sender, sent_to, subject, template, context={}, cc=[], bcc=[]):
+def create_gmail_message(sender, sent_to, subject, template, context={}, cc=[], bcc=[]):
     html_body = render_to_string(template, context)
     message = MIMEText(html_body, "html")
     message["to"] = sent_to

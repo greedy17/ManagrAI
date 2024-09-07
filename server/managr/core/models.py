@@ -21,7 +21,7 @@ from managr.utils.misc import (
     phrase_to_snake_case,
     bucket_upload_filepath,
 )
-from managr.api.emails import create_message, create_ms_message
+from managr.api.emails import create_gmail_message, create_ms_message
 from managr.utils.client import HttpClient, Variable_Client
 from managr.core import constants as core_consts
 from managr.organization import constants as org_consts
@@ -1126,7 +1126,7 @@ class GoogleAccount(TimeStampModel):
                     serializer.save()
                     instance = serializer.instance
                 tracker_link += f"&id={str(instance.id)}"
-                email = create_message(
+                email = create_gmail_message(
                     self.user.email,
                     recipient,
                     subject,

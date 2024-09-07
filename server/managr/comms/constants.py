@@ -248,16 +248,6 @@ DEFAULT_INSTAGRAM_CLIENT_INSTRUCTIONS = """<strong>Summary of the Posts: No more
 
 DEFAULT_WRITING_STYLE = "Aim for a professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Get right to the point"
 
-OPEN_AI_EMPTY_SEARCH_SUGGESTIONS = (
-    lambda search: f"""Using NewsAPI to search for '{search}' returned no results. Generate 3 alternative terms that are similar to what the user is trying to search for just much more broad, and more likely to get news coverage. 
-    The goal is to create 3 different suggestions that will get the user news results. Use AND between select words to broaden the search term. Keep the search short, extract only the main subject or specific topic, ignoring any contextual details. 
-    Only use quotes when two words or more. Format the output must be as follows:
-    Search1:
-    Search2:
-    Search3:
-    """
-)
-
 OPEN_AI_QUERY_STRING = (
     lambda search: f"""Extract the main topic, company, organization or entity from '{search}' for a NewsAPI boolean query. Follow these steps:
     1. When quotes are present, use the exact phrase
@@ -282,13 +272,6 @@ OPEN_AI_SEARCH_SUGGESTIONS = (
     Output instructions for PR firms: Start with "Hi {name}, here are some search suggestions to get you started."
     - "Brands" (guess which brands they may work with based on location of agency and their niche, list just the brand name)
     - "Industry Topic" (relevent to the PR agency's niche, up to 5, Must be 2-3 words max, use AND in between words to broaden search, if needed.) -- ex: if the agency is focused on fashion clients: AI and Fashion, GenZ and Tiktok. If the agency is focused on B2b: Embedded Finance, Commercial real-estate 
-    """
-)
-
-OPEN_AI_NO_RESULTS_SUGGESTION = (
-    lambda boolean: f"""Using NewsAPI to search for '{boolean}' returned no results. 
-    Generate 3 alternative terms that are similar to what the user is trying to search for just much more broad, and more likely to get news coverage. 
-    The goal is to create 3 different suggestions that will get the user news results. Use AND between select words to broaden the search term. Keep the search short, extract only the main subject or specific topic, ignoring any contextual details. Only use quotes when two words or more. Format the output must be as follows:\nSuggestion 1:\nSuggestion 2:\nSuggestion 3:
     """
 )
 
