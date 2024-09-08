@@ -31,5 +31,3 @@ class Command(BaseCommand):
             f"Crawler Update {settings.ENVIRONMENT}",
             str(report.id),
         )
-import time 
-time.asctime().
