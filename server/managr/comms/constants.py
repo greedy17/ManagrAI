@@ -421,14 +421,23 @@ def OPEN_AI_IMAGE_CONTENT(images, instructions, tokens):
     return body
 
 
-def OPEN_AI_REWRITE_PTICH(original, bio, style, with_style, name):
+def OPEN_AI_REWRITE_PTICH(original, bio, style, with_style,journalist,name):
     if not with_style:
         prompt = f"""
-        Rewrite the original media pitch incoporating pitching tips from the journalist's bio below. Be sure to maintaining the existing writing style as the original pitch. Include a short intriguing subject line; no more than 3 words. DO NOT BOLD ANY TEXT IN YOUR RESPONSE, EVER!
+        Craft a personalized media pitch, following the instructions below:
+        1. Write a short, 100 word email to the journalist from: {name}
+        2. You must use this writing style: {style}
+        3. Subject line: email subject line must be 2-3 words.
+        4. Open with "Hi {journalist}," . The name here is passed via parameter from a JS function and sometimes it includes an email, ONLY include the first name in the opening line.
+        5. Here is either a generic pitch or company/product/campaign details {original}. Using that data, craft a personalized email based on this information about the journalist: {bio}
+        6. Check to see if their email is listed in the journalist bio above. The email is sometimes attached to the name, if so you must use that. If no email can be found, then you must guess their work email. Make sure to base it on verified email patterns associated with their respective publication. Always return the email like this - email: (guessed email)
+        7. Do not bold any of the text in the response.
+
+        Personalize the original pitch pitch (see below) to the journalist based on the data from their bio (see below). You must maintain the existing writing style from the original pitch. Also, include a short, basic subject line; no more than 3 words. DO NOT BOLD ANY TEXT IN YOUR RESPONSE, EVER!
         Original Pitch: {original}
-        Journalist's bio along with pitching tips: {bio}
-        Provide journalist's email: Check to see if their email is listed in the journalist bio above. If so, you must use that email. If no email can be found, then you must guess their work email. When guessing, you must base it on verified email patterns associated with their respective publication. Always return the email like this - email: (guessed email)    
+        Journalist's bio and pitching tips: {bio}
         My name: {name}
+        Provide journalist's email: Check to see if their email is listed in the journalist bio above. If so, you must use that email. If no email can be found, then you must guess their work email. When guessing, you must base it on verified email patterns associated with their respective publication. Always return the email like this - email: email
         """
     else:
         prompt = f"""

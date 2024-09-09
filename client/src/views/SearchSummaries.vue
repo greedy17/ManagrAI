@@ -662,16 +662,16 @@
                     :class="{ activesquareTile: detailTitle === detail.title }"
                     :title="detail.title"
                   >
-                    <span class="turq-text">
+                    <span class="">
                       <img
-                        class="turq-filter"
+                        class="blue-filter"
                         src="@/assets/images/logo.png"
                         height="11px"
                         alt=""
                       />
                       {{ detail.title }}
                     </span>
-                    <p class="turq-text">{{ detail.details }}</p>
+                    <p class="">{{ detail.details }}</p>
 
                     <span @click="deleteCompanyDetails(detail.id)" class="absolute-icon">
                       <img src="@/assets/images/close.svg" height="10px" alt="" />
@@ -1292,16 +1292,16 @@
                     :class="{ activesquareTile: detailTitle === detail.title }"
                     :title="detail.title"
                   >
-                    <span class="turq-text">
+                    <span class="">
                       <img
-                        class="turq-filter"
+                        class="blue-filter"
                         src="@/assets/images/logo.png"
                         height="11px"
                         alt=""
                       />
                       {{ detail.title }}
                     </span>
-                    <p class="turq-text">{{ detail.details }}</p>
+                    <p class="">{{ detail.details }}</p>
 
                     <span @click="deleteCompanyDetails(detail.id)" class="absolute-icon">
                       <img src="@/assets/images/close.svg" height="10px" alt="" />
@@ -1811,16 +1811,16 @@
                       :class="{ activesquareTile: detailTitle === detail.title }"
                       :title="detail.title"
                     >
-                      <span class="turq-text">
+                      <span class="">
                         <img
-                          class="turq-filter"
+                          class="blue-filter"
                           src="@/assets/images/logo.png"
                           height="11px"
                           alt=""
                         />
                         {{ detail.title }}
                       </span>
-                      <p class="turq-text">{{ detail.details }}</p>
+                      <p class="">{{ detail.details }}</p>
 
                       <span @click="deleteCompanyDetails(detail.id)" class="absolute-icon">
                         <img src="@/assets/images/close.svg" height="10px" alt="" />
@@ -4293,10 +4293,19 @@ export default {
         this.buttonClicked = false
       }
     },
+    mainView(newVal, oldVal) {
+      if (newVal !== oldVal) {
+        if (newVal === 'write') {
+          this.writeSetup()
+        } else {
+          this.pitchStyleSetup()
+        }
+      }
+    },
   },
   mounted() {
     this.getEmailAlerts()
-    this.writeSetup()
+    this.pitchStyleSetup()
     this.setPlaceholder()
   },
   beforeDestroy() {
@@ -4558,6 +4567,8 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+        this.writingStyle = this.sample
+        this.writingStyleTitle = this.styleName
         this.refreshUser()
       } catch (e) {
         console.log(e)
@@ -4629,27 +4640,29 @@ export default {
       this.showingAllDetails = false
       this.loadingPitch = true
       try {
-        const res = await Comms.api.draftPitch({
-          user: this.user.firstName,
-          org: deets,
-          style: this.pitchStyle,
+        const res = await Comms.api.rewritePitch({
+          original: deets,
           bio: this.currentJournalistBio,
-          author: this.currentJournalist,
-          outlet: this.currentPublication,
-          headline: this.currentHeadline,
-          description: this.currentDescription,
-          date: this.currentDate,
+          style: this.writingStyle,
+          journalist: this.currentJournalist,
         })
-        const body = res.data.replace(/^Subject(?: Line)?:[\s\S]*?\n|email:.*$/gim, '')
+        const emailRegex = /email: ([^"]*)/
+        const match = res.pitch.match(emailRegex)
+        if (match) {
+          const email = match[1]
+          this.targetEmail = email
+        }
+        const body = res.pitch
+          .replace(/^Subject(?: Line)?:[\s\S]*?\n/i, '')
+          .replace(/email: [^"]*/, '')
         const signature = this.user.emailSignature ? this.user.emailSignature : ''
         const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
           /\n/g,
           '</p><p>',
-        )}  </p>`
-
+        )}  </p>`.trim()
         const quill = this.$refs.quill.quill
         quill.clipboard.dangerouslyPasteHTML(html)
-        this.loadingPitch = false
+        this.subject = res.pitch.match(/^Subject(?: Line)?:(.*)\n/)[1].trim()
       } catch (e) {
         console.error(e)
       } finally {
@@ -4709,6 +4722,21 @@ export default {
     },
     toggleStyles() {
       this.personalStyles = !this.personalStyles
+    },
+    pitchStyleSetup() {
+      const style = `
+        1. Start email with "Hi {Journalist first name}", end with "Thanks,". Get right to it, no opening fluff like "I hope this message finds you well"
+        2. Tone: Maintain a professional, respectful tone. Show appreciation for the journalist's work and express interest in collaboration.
+        3. Formality: Use formal language, but avoid jargon. Keep sentences clear and concise.
+        4. Structure: Start with a personalized greeting. Follow with a brief appreciation of the journalist's work, then introduce your topic. Provide key insights, then propose collaboration. End with a forward-looking statement and a thank you.
+        5. Linguistic Idiosyncrasies: Use active voice and precise, impactful words. Include statistics and expert opinions for credibility.
+        6. Credibility: Establish credibility by referencing recent research, expert opinions, and relevant industry trends.
+        7. Engagement: Engage the reader by offering exclusive insights and proposing collaboration.
+        8. Non-Promotional: Avoid promotional language. Focus on providing valuable, informative content.
+        9. Stylistic Techniques: Use a mix of short and long sentences for rhythm. Use rhetorical questions to engage the reader and provoke thought.
+        `
+      this.writingStyle = style
+      this.writingStyleTitle = 'Media Pitch'
     },
     writeSetup() {
       const style = `Begin with a precise introduction, without informal salutations. Be clear, concise, and informative, avoiding metaphors. Offer coherent data without persuasion. Aim for depth, not sensationalism and avoid commercial bias.`
@@ -5300,7 +5328,7 @@ export default {
     async draftPitch() {
       this.loadingPitch = true
       try {
-        if (this.mainView !== 'write') {
+        if (this.mainView !== 'write' && this.mainView !== 'discover') {
           const res = await Comms.api.draftPitch({
             user: this.user.firstName,
             org: this.selectedOrg,
@@ -5325,8 +5353,10 @@ export default {
           this.targetEmail = res.data.match(/email:\s*(.*)$/m)[1].trim()
         } else {
           const res = await Comms.api.rewritePitch({
-            original: this.summary,
+            original: this.mainView !== 'write' ? this.summary : this.selectedOrg,
             bio: this.currentJournalistBio,
+            style: this.writingStyle,
+            journalist: this.currentJournalist,
           })
           const emailRegex = /email: ([^"]*)/
           const match = res.pitch.match(emailRegex)
@@ -11490,7 +11520,7 @@ textarea::placeholder {
   }
 
   li {
-    margin-top: -12px;
+    margin-top: 0;
     padding: 0;
   }
 }

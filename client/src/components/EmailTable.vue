@@ -421,12 +421,7 @@
           <!-- <td :class="i % 2 !== 0 ? 'gray-bg' : ''">{{ email.replies }}</td> -->
           <!-- @click="toggleActivityModal(email)" style="cursor: zoom-in"-->
           <td class="mobile-width" :class="i % 2 !== 0 ? 'gray-bg' : ''">
-            <div>
-              <!-- background-color: #fafafa;
-                  padding: 2px 6px;
-                  border: 0.5px solid rgba(0, 0, 0, 0.1);
-                  width: fit-content;
-                  border-radius: 8px; -->
+            <div v-if="email.activity_log && email.activity_log.length">
               <div
                 v-if="email.is_draft && !email.is_rejected && !email.is_approved"
                 style="margin-bottom: 4px; font-size: 14px"
@@ -436,8 +431,12 @@
 
               <div v-else style="margin-bottom: 4px; font-size: 14px">
                 {{
-                  email.activity_log.at(-1).split('|')[0].charAt(0).toUpperCase() +
-                  email.activity_log.at(-1).split('|')[0].slice(1)
+                  email.activity_log &&
+                  email.activity_log.length > 0 &&
+                  email.activity_log.at(-1).split('|')[0]
+                    ? email.activity_log.at(-1).split('|')[0].charAt(0).toUpperCase() +
+                      email.activity_log.at(-1).split('|')[0].slice(1)
+                    : ''
                 }}
               </div>
 
@@ -445,6 +444,7 @@
                 {{ formatActivityLog(email.activity_log.at(-1)) }}
               </div>
             </div>
+            <div v-else>No activities</div>
           </td>
         </tr>
       </tbody>
@@ -559,7 +559,9 @@ export default {
           email.opens ? email.opens.toString().includes(searchText) : '',
           email.replies ? email.replies.toString().includes(searchText) : '',
           email.clicks ? email.clicks.toString().includes(searchText) : '',
-          email.activity_log ? email.activity_log.at(-1).includes(searchText) : '',
+          email.activity_log && email.activity_log.length > 0
+            ? email.activity_log.at(-1).includes(searchText)
+            : '',
           searchText.includes('delivered') && !email.failed,
           searchText.includes('failed') && email.failed,
         ]
@@ -592,7 +594,10 @@ export default {
           const [start, end] = activityFilter.split(',')
           const startDate = new Date(start)
           const endDate = new Date(end)
-          const emailDate = new Date(email.activity_log.at(-1).split('|')[1])
+          const emailDate =
+            email.activity_log && email.activity_log.length > 0
+              ? new Date(email.activity_log.at(-1).split('|')[1])
+              : null
           filterConditions.push(emailDate >= startDate && emailDate <= endDate)
         }
 
@@ -848,7 +853,7 @@ export default {
       try {
         const response = await Comms.api.getTrackedEmails()
         this.emails = response.results
-        console.log(this.emails)
+        console.log('EMAILS ARE HERE', this.emails)
         // this.openRate = Math.round(response.rates.open_rate)
         // this.replyRate = response.rates.reply_rate
       } catch (error) {
@@ -856,7 +861,16 @@ export default {
       }
     },
     formatActivityLog(logEntry, fullEntry = false) {
+      if (!logEntry) {
+        return 'No activity log'
+      }
+
       const [action, dateTime] = logEntry.split('|')
+
+      if (!dateTime) {
+        return 'Invalid log entry'
+      }
+
       const date = new Date(dateTime)
       const now = new Date()
       const diffInMilliseconds = now - date
@@ -884,12 +898,7 @@ export default {
         return formattedTime
       }
     },
-    // getInitials(name) {
-    //   return name
-    //     .split(' ')
-    //     .map((n) => n[0])
-    //     .join('')
-    // },
+
     sortBy(key) {
       if (this.sortKey === key) {
         this.sortOrder *= -1

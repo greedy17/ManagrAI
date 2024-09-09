@@ -282,164 +282,172 @@
         </div>
 
         <footer>
-          <div v-if="showingEditor" class="source-dropdown fadein">
-            <div
-              @click.stop="toggleShowStyles"
-              :class="{ 'soft-gray-bg': showingStyles }"
-              class="drop-header"
-            >
-              <img src="@/assets/images/wand.svg" height="14px" alt="" />
+          <div style="width: 100%" class="row">
+            <div style="margin-right: 12px" class="source-dropdown fadein">
+              <div
+                @click.stop="toggleShowStyles"
+                :class="{ 'soft-gray-bg': showingStyles }"
+                class="drop-header"
+                style="padding-left: 12px"
+              >
+                <!-- <img src="@/assets/images/wand.svg" height="14px" alt="" /> -->
 
-              <p class="mobile-text-hide">Writing Style:</p>
-              <small>{{ writingStyleTitle ? writingStyleTitle : 'Select style' }}</small>
-              <img
-                v-if="!showingStyles"
-                src="@/assets/images/arrowDropUp.svg"
-                height="15px"
-                alt=""
-              />
-              <img
-                v-else
-                class="rotate-img"
-                src="@/assets/images/arrowDropUp.svg"
-                height="15px"
-                alt=""
-              />
-            </div>
+                <p class="mobile-text-hide">Writing Style:</p>
+                <small>{{ writingStyleTitle ? writingStyleTitle : 'Select style' }}</small>
+                <img
+                  v-if="!showingStyles"
+                  src="@/assets/images/arrowDropUp.svg"
+                  height="15px"
+                  alt=""
+                />
+                <img
+                  v-else
+                  class="rotate-img"
+                  src="@/assets/images/arrowDropUp.svg"
+                  height="15px"
+                  alt=""
+                />
+              </div>
 
-            <div v-outside-click="hideStyles" v-show="showingStyles" class="drop-options-alt">
-              <header style="padding" class="space-between">
-                <h2>Add writing style</h2>
-                <section style="padding: 8px 0" class="h-padding">
-                  <section style="padding: 0" @click="toggleStyles" class="toggle">
-                    <span :class="{ 'active-toggle': personalStyles }" class="toggle-side">
-                      <small>Personal</small>
-                    </span>
+              <div v-outside-click="hideStyles" v-show="showingStyles" class="drop-options-alt">
+                <header style="padding" class="space-between">
+                  <h2>Add writing style</h2>
+                  <section style="padding: 8px 0" class="h-padding">
+                    <section style="padding: 0" @click="toggleStyles" class="toggle">
+                      <span :class="{ 'active-toggle': personalStyles }" class="toggle-side">
+                        <small>Personal</small>
+                      </span>
 
-                    <span :class="{ 'active-toggle': !personalStyles }" class="toggle-side">
-                      <small>Group</small>
-                    </span>
+                      <span :class="{ 'active-toggle': !personalStyles }" class="toggle-side">
+                        <small>Group</small>
+                      </span>
+                    </section>
                   </section>
-                </section>
 
-                <!-- <button
+                  <!-- <button
                     @click="toggleLearnInputModal('')"
                     class="secondary-button-no-border"
                     style="margin-right: 12px"
                   >
                     <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Style
                   </button> -->
-              </header>
+                </header>
 
-              <section v-if="userWritingStyles.length">
-                <div
-                  @click="addWritingStyle(style.style, style.title)"
-                  v-for="style in defaultWritingStyles"
-                  :key="style.title"
-                  :class="{ activesquare: writingStyleTitle === style.title }"
-                  :title="style.title"
-                >
-                  <span>
-                    <img class="blue-filter" src="@/assets/images/logo.png" height="11px" alt="" />
-                    {{ style.title }}
-                  </span>
-                  <p>{{ style.style }}</p>
-                </div>
-                <div
-                  @click="addWritingStyle(style.style, style.title)"
-                  class="dropdown-item relative"
-                  v-for="(style, i) in userWritingStyles"
-                  :key="i"
-                  :class="{ activeswitch: writingStyleTitle === style.title }"
-                  :title="style.title"
-                >
-                  <span class="pink-text">
-                    <img
-                      class="pink-filter"
-                      src="@/assets/images/scroll.svg"
-                      height="11px"
-                      alt=""
-                    />
-                    {{ style.title }}
-                  </span>
-                  <p class="pink-text">{{ style.style }}</p>
+                <section v-if="userWritingStyles.length">
+                  <div
+                    @click="addWritingStyle(style.style, style.title)"
+                    v-for="style in defaultWritingStyles"
+                    :key="style.title"
+                    :class="{ activesquare: writingStyleTitle === style.title }"
+                    :title="style.title"
+                  >
+                    <span>
+                      <img
+                        class="blue-filter"
+                        src="@/assets/images/logo.png"
+                        height="11px"
+                        alt=""
+                      />
+                      {{ style.title }}
+                    </span>
+                    <p>{{ style.style }}</p>
+                  </div>
+                  <div
+                    @click="addWritingStyle(style.style, style.title)"
+                    class="dropdown-item relative"
+                    v-for="(style, i) in userWritingStyles"
+                    :key="i"
+                    :class="{ activeswitch: writingStyleTitle === style.title }"
+                    :title="style.title"
+                  >
+                    <span class="pink-text">
+                      <img
+                        class="pink-filter"
+                        src="@/assets/images/scroll.svg"
+                        height="11px"
+                        alt=""
+                      />
+                      {{ style.title }}
+                    </span>
+                    <p class="pink-text">{{ style.style }}</p>
 
-                  <!-- <span
+                    <!-- <span
                     v-if="hoverIndex === i"
                     @click="deleteWritingStyle(style.id)"
                     class="absolute-icon"
                   >
                     <img src="@/assets/images/close.svg" height="12px" alt="" />
                   </span> -->
-                </div>
-              </section>
+                  </div>
+                </section>
 
-              <section v-else>
-                <div
-                  @click="addWritingStyle(style.style, style.title)"
-                  v-for="style in defaultWritingStyles"
-                  :key="style.title"
-                  :class="{ activeswitch: writingStyleTitle === style.title }"
-                >
-                  <span>
-                    <img src="@/assets/images/wand.svg" height="11px" alt="" />
-                    {{ style.title }}
-                  </span>
-                  <p>{{ style.style }}</p>
-                </div>
-              </section>
-            </div>
-          </div>
-
-          <div v-else class="source-dropdown fadein">
-            <div
-              @click.stop="toggleShowDetails"
-              :class="{ 'soft-gray-bg': showingDetails }"
-              class="drop-header"
-            >
-              <img src="@/assets/images/building.svg" height="14px" alt="" />
-
-              <p class="mobile-text-hide">Company Details:</p>
-              <small :title="detailTitle ? detailTitle : 'None'">{{
-                detailTitle ? detailTitle : 'None'
-              }}</small>
-              <img
-                v-if="!showingDetails"
-                src="@/assets/images/arrowDropUp.svg"
-                height="15px"
-                alt=""
-              />
-              <img
-                v-else
-                class="rotate-img"
-                src="@/assets/images/arrowDropUp.svg"
-                height="15px"
-                alt=""
-              />
+                <section v-else>
+                  <div
+                    @click="addWritingStyle(style.style, style.title)"
+                    v-for="style in defaultWritingStyles"
+                    :key="style.title"
+                    :class="{ activeswitch: writingStyleTitle === style.title }"
+                  >
+                    <span>
+                      <img src="@/assets/images/wand.svg" height="11px" alt="" />
+                      {{ style.title }}
+                    </span>
+                    <p>{{ style.style }}</p>
+                  </div>
+                </section>
+              </div>
             </div>
 
-            <div
-              v-outside-click="hideDetails"
-              v-show="showingDetails"
-              class="drop-options-alternate"
-            >
-              <header style="padding-top: 8px; padding-bottom: 8px" class="space-between">
-                <!-- <section class="h-padding">
+            <div class="source-dropdown fadein">
+              <div
+                @click.stop="toggleShowDetails"
+                :class="{ 'soft-gray-bg': showingDetails }"
+                class="drop-header"
+                style="padding-left: 12px"
+              >
+                <!-- <img src="@/assets/images/building.svg" height="14px" alt="" /> -->
+
+                <p class="mobile-text-hide">Company Details:</p>
+                <small :title="detailTitle ? detailTitle : 'None'">{{
+                  detailTitle ? detailTitle : 'None'
+                }}</small>
+                <img
+                  v-if="!showingDetails"
+                  src="@/assets/images/arrowDropUp.svg"
+                  height="15px"
+                  alt=""
+                />
+                <img
+                  v-else
+                  class="rotate-img"
+                  src="@/assets/images/arrowDropUp.svg"
+                  height="15px"
+                  alt=""
+                />
+              </div>
+
+              <div
+                v-outside-click="hideDetails"
+                v-show="showingDetails"
+                class="drop-options-alternate"
+              >
+                <header style="padding-top: 8px; padding-bottom: 8px" class="space-between">
+                  <!-- <section class="h-padding">
                     <section>
                       <p style="margin: 0; padding: 4px 0 0 4px; color: #9596b4">Personal</p>
                     </section>
                   </section> -->
 
-                <!-- <button
+                  <!-- <button
                     @click="toggleDetailsInputModal"
                     class="secondary-button-no-border"
                     style="margin-right: 4px"
                   >
                     <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Details
                   </button> -->
-                <h2 style="margin-left: 8px">Add Details</h2>
+                  <h2 style="margin-left: 8px">Add Details</h2>
 
-                <!-- <button
+                  <!-- <button
                   :disabled="!detailTitle"
                   @click="clearDetails"
                   class="secondary-button-no-border borderless"
@@ -452,45 +460,51 @@
                   />
                   Clear
                 </button> -->
-              </header>
+                </header>
 
-              <section v-if="allCompanyDetails.length">
-                <div
-                  style="position: relative"
-                  @click="addDetails(detail.title, detail.details)"
-                  v-for="detail in allCompanyDetails"
-                  :key="detail.title"
-                  :class="{ activesquareTile: detailTitle === detail.title }"
-                  :title="detail.title"
-                >
-                  <span class="turq-text">
-                    <img class="turq-filter" src="@/assets/images/logo.png" height="11px" alt="" />
-                    {{ detail.title }}
-                  </span>
-                  <p class="turq-text">{{ detail.details }}</p>
+                <section v-if="allCompanyDetails.length">
+                  <div
+                    style="position: relative"
+                    @click="addDetails(detail.title, detail.details)"
+                    v-for="detail in allCompanyDetails"
+                    :key="detail.title"
+                    :class="{ activesquareTile: detailTitle === detail.title }"
+                    :title="detail.title"
+                  >
+                    <span class="">
+                      <img
+                        class="blue-filter"
+                        src="@/assets/images/logo.png"
+                        height="11px"
+                        alt=""
+                      />
+                      {{ detail.title }}
+                    </span>
+                    <p class="">{{ detail.details }}</p>
 
-                  <!-- <span @click="deleteCompanyDetails(detail.id)" class="absolute-icon">
+                    <!-- <span @click="deleteCompanyDetails(detail.id)" class="absolute-icon">
                       <img src="@/assets/images/close.svg" height="10px" alt="" />
                     </span> -->
-                </div>
-              </section>
+                  </div>
+                </section>
 
-              <section style="padding: 16px" v-else>
-                Your saved details
-                <span>
-                  <img
-                    style="margin-right: 4px"
-                    src="@/assets/images/building.svg"
-                    height="12px"
-                    alt=""
-                  />
-                  will appear here.</span
-                >
-              </section>
+                <section style="padding: 16px" v-else>
+                  Your saved details
+                  <span>
+                    <img
+                      style="margin-right: 4px"
+                      src="@/assets/images/building.svg"
+                      height="12px"
+                      alt=""
+                    />
+                    will appear here.</span
+                  >
+                </section>
+              </div>
             </div>
           </div>
 
-          <div class="row">
+          <div style="width: fit-content" class="row">
             <!-- <button class="secondary-button" @click="togglePitchModal">Cancel</button> -->
             <button
               v-if="showingEditor"
@@ -775,14 +789,14 @@
     <div class="top-row">
       <section>
         <div style="margin-bottom: 24px" class="space-between">
-          <div class="row relative" style="padding-bottom: 8px">
+          <div class="row relative" style="">
             <div
               @click.stop="toggleUserDropdown"
               :class="{ 'soft-gray-bg': showUsers }"
               class="drop-header"
               style="border: none"
             >
-              <h3 style="font-size: 16px" class="thin-font row">
+              <h3 style="font-size: 14px" class="thin-font row">
                 <img
                   style="margin: 0 4px 0 0"
                   src="@/assets/images/profile.svg"
@@ -847,7 +861,7 @@
               <div class="dropdown-footer"></div>
             </div>
 
-            <div style="margin-left: 16px" @click="toggleContactsModal" class="icon-btn">
+            <div style="margin-left: 8px" @click="toggleContactsModal" class="icon-btn">
               <img src="@/assets/images/adduser.svg" height="12px" alt="" />
               <div>Add contact</div>
             </div>
@@ -855,6 +869,25 @@
             <div style="margin-left: 8px" @click="bulkModalOpen = true" class="icon-btn">
               <img src="@/assets/images/file-import.svg" height="12px" alt="" />
               <div>Import contacts</div>
+            </div>
+
+            <div style="margin-left: 8px" @click="bulkModalOpen = true" class="icon-btn">
+              <img src="@/assets/images/users.svg" height="12px" alt="" />
+              <div>Bulk pitching</div>
+              <img
+                v-if="!showBulking"
+                style="margin-right: -4px"
+                src="@/assets/images/arrowDropUp.svg"
+                height="14px"
+                alt=""
+              />
+              <img
+                v-else
+                class="rotate-img"
+                src="@/assets/images/arrowDropUp.svg"
+                height="14px"
+                alt=""
+              />
             </div>
           </div>
 
@@ -960,12 +993,7 @@
                       :key="i"
                       class="user-tag"
                     >
-                      <img
-                        class="pink-filter"
-                        src="@/assets/images/tags.svg"
-                        height="12px"
-                        alt=""
-                      />
+                      <img src="@/assets/images/tags.svg" height="12px" alt="" />
                       {{ tag }}
                     </div>
                   </div>
@@ -1122,10 +1150,13 @@
         <div class="checkbox-list">
           <ul v-if="tags.length">
             <li v-for="tag in tags" :key="tag.name">
-              <label class="custom-checkbox fadein">
+              <label :title="tag.name" class="custom-checkbox fadein">
                 <input type="checkbox" id="checkbox" :value="tag.name" v-model="selectedTags" />
                 <span class="checkmark"></span>
-                {{ tag.name }} <span>({{ tag.count }})</span>
+                <div class="ellipsis-text">
+                  {{ tag.name }}
+                </div>
+                <span>({{ tag.count }})</span>
               </label>
             </li>
           </ul>
@@ -1162,6 +1193,7 @@ export default {
   },
   data() {
     return {
+      showBulking: false,
       contactRange: '',
       totalContacts: null,
       contactsPerPage: null,
@@ -1381,7 +1413,7 @@ export default {
   },
   mounted() {
     this.getCompanyDetails()
-    this.getWritingStyles()
+    this.pitchStyleSetup()
   },
   created() {
     this.selectedUser = this.user
@@ -1389,14 +1421,32 @@ export default {
     this.getUsers()
     this.getInitialContacts()
     this.getTags()
+    this.getWritingStyles()
   },
   methods: {
+    pitchStyleSetup() {
+      const style = `
+        1. Start email with "Hi {Journalist first name}", end with "Thanks,". Get right to it, no opening fluff like "I hope this message finds you well"
+        2. Tone: Maintain a professional, respectful tone. Show appreciation for the journalist's work and express interest in collaboration.
+        3. Formality: Use formal language, but avoid jargon. Keep sentences clear and concise.
+        4. Structure: Start with a personalized greeting. Follow with a brief appreciation of the journalist's work, then introduce your topic. Provide key insights, then propose collaboration. End with a forward-looking statement and a thank you.
+        5. Linguistic Idiosyncrasies: Use active voice and precise, impactful words. Include statistics and expert opinions for credibility.
+        6. Credibility: Establish credibility by referencing recent research, expert opinions, and relevant industry trends.
+        7. Engagement: Engage the reader by offering exclusive insights and proposing collaboration.
+        8. Non-Promotional: Avoid promotional language. Focus on providing valuable, informative content.
+        9. Stylistic Techniques: Use a mix of short and long sentences for rhythm. Use rhetorical questions to engage the reader and provoke thought.
+        `
+      this.writingStyle = style
+      this.writingStyleTitle = 'Media Pitch'
+    },
     addWritingStyle(ex, title) {
       this.writingStyle = ex
       this.writingStyleTitle = title
       this.showingStyles = false
       this.showingWritingStyles = false
-      this.rewritePitchWithStyle()
+      if (this.showingEditor) {
+        this.rewritePitchWithStyle()
+      }
     },
     async getWritingStyles() {
       try {
@@ -1431,6 +1481,9 @@ export default {
       this.detailTitle = title
       this.showingDetails = false
       this.showingAllDetails = false
+      if (this.showingEditor) {
+        this.rewritePitch()
+      }
     },
     async getCompanyDetails(newDeets = false) {
       try {
@@ -1879,6 +1932,8 @@ export default {
         const res = await Comms.api.rewritePitch({
           original: this.content,
           bio: this.currentContact.bio,
+          style: this.writingStyle,
+          journalist: this.currentContact.journalist_ref.first_name,
         })
 
         const body = res.pitch
@@ -2085,7 +2140,7 @@ export default {
         })
       } finally {
         this.getTags()
-        this.getInitialContacts()
+        this.getContactsSearch()
         this.loadingTags = false
         this.tagModalOpen = false
         this.googleModalOpen = false
@@ -2254,9 +2309,10 @@ export default {
   border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: 16px;
   padding: 8px 10px;
-  margin: 0 10px;
+  margin: 0 2px;
   width: 140px;
   cursor: pointer;
+  white-space: nowrap;
   font-family: $base-font-family;
   img {
     margin-right: 6px;
@@ -2541,7 +2597,7 @@ table {
 }
 
 .contacts {
-  padding: 88px 80px 0 80px;
+  padding: 88px 80px 0 40px;
   font-family: $thin-font-family;
   color: $dark-black-blue;
   overflow: hidden !important;
@@ -2947,6 +3003,13 @@ h3 {
   transform: rotate(45deg);
 }
 
+.ellipsis-text {
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 h2 {
   margin: 0;
 }
@@ -3054,6 +3117,8 @@ h2 {
 }
 
 .search {
+  margin-left: auto;
+
   @media only screen and (max-width: 600px) {
     width: 50vw;
     display: flex;
@@ -3065,16 +3130,13 @@ h2 {
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
     width: 50vw;
   }
-
-  @media only screen and (min-width: 601px) and (max-width: 1024px) {
-  }
 }
 
 .input {
-  position: sticky;
+  // position: sticky;
   z-index: 8;
   top: 1.5rem;
-  width: 22vw;
+  width: 18vw;
   border-radius: 20px;
   border: 1px solid rgba(0, 0, 0, 0.135);
   font-family: $thin-font-family;
@@ -3088,12 +3150,12 @@ h2 {
     width: 95%;
   }
 
-  @media only screen and (min-width: 601px) and (max-width: 1024px) {
-    width: 50%;
-  }
+  // @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  //   width: 50%;
+  // }
 
-  @media only screen and (min-width: 601px) and (max-width: 1024px) {
-  }
+  // @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  // }
 }
 
 .search-input {
@@ -3208,6 +3270,9 @@ h2 {
   @include dark-blue-button();
   border: none;
   border-radius: 16px;
+  padding: 8px !important;
+  white-space: nowrap;
+  width: 100px;
 
   img {
     filter: invert(100%);
@@ -3221,6 +3286,9 @@ h2 {
   border: 1px solid rgba(0, 0, 0, 0.1);
   color: $dark-black-blue;
   border-radius: 16px;
+  padding: 8px !important;
+  white-space: nowrap;
+  width: 100px;
 
   img {
     filter: invert(30%);
@@ -3496,7 +3564,7 @@ h2 {
   }
 
   li {
-    margin-top: -12px;
+    margin-top: 0;
     padding: 0;
   }
 }
@@ -3835,6 +3903,7 @@ h2 {
   font-family: $base-font-family;
   padding: 6px 32px 6px 8px;
   border-radius: 5px;
+  white-space: nowrap;
   img {
     filter: invert(54%) sepia(16%) saturate(1723%) hue-rotate(159deg) brightness(89%) contrast(89%) !important;
     margin-right: 4px;
@@ -4292,6 +4361,13 @@ textarea::placeholder {
   border: 0.5px solid rgba(0, 0, 0, 0.1);
   background-color: $soft-gray;
   color: $turq;
+  font-family: $base-font-family;
+}
+
+.activesquare {
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  background-color: $soft-gray;
+  color: $dark-black-blue;
   font-family: $base-font-family;
 }
 

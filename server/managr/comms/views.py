@@ -1540,7 +1540,8 @@ class PitchViewSet(
         original = request.data.get("original")
         bio = request.data.get("bio")
         style = request.data.get("style", None)
-        with_style = request.data.get("with_style", False)
+        with_style = request.data.get("with_style", False) 
+        journalist = request.data.get("journalist", None)
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -1549,9 +1550,7 @@ class PitchViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_REWRITE_PTICH(
-                    original, bio, style, with_style, user.first_name
-                )
+                prompt = comms_consts.OPEN_AI_REWRITE_PTICH(original, bio, style, with_style, journalist, user.first_name)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
@@ -1854,7 +1853,7 @@ class DiscoveryViewSet(
         if isinstance(message, str):
             send_to_error_channel(message, user.email, "run discovery (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
-        user.add_meta_data("discover")
+        user.add_meta_data("discovery")  
         return Response(data={"journalists": message})
 
     @action(
@@ -1874,10 +1873,11 @@ class DiscoveryViewSet(
         draftId = request.data.get("draftId", None)
 
         if user.has_google_integration or user.has_microsoft_integration:
-            res = user.email_account.send_email(recipient, subject, body, name, cc, bcc)
+            res = user.email_account.send_email(recipient, subject, body, name)
+            user.add_meta_data("emailSent") 
         else:
-            res = send_mailgun_email(user, name, subject, recipient, body, bcc,cc)
-        sent = res["sent"]
+            res = send_mailgun_email(user, name, subject, recipient, body, bcc)
+        sent = res["sent"] 
         if sent:
             if draftId:
                 tracker = EmailTracker.objects.filter(id=draftId)
@@ -2395,7 +2395,8 @@ class EmailTrackerViewSet(
 
     def get_queryset(self):
         user = self.request.user
-        trackers = EmailTracker.objects.filter(user=user).order_by("-datetime_created")
+        org = user.organization
+        trackers = EmailTracker.objects.filter(user__organization=org).order_by("-datetime_created")
         return trackers
 
     def create(self, request, *args, **kwargs):
