@@ -2447,9 +2447,10 @@ class EmailTrackerViewSet(
             function_name="emit_process_bulk_draft", user_id=str(request.user.id)
         )
         task = emit_process_bulk_draft(request.data, str(request.user.id), str(result.id))
-        result.task = task.id
+        result.task = task
         result.save()
-        return Response(status.HTTP_200_OK, data={"task_id": str(task.id)})
+        data = {"task_id": str(task.id)}
+        return Response(status.HTTP_200_OK, data=data)
 
 
 # ENDPOINTS
