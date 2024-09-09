@@ -1146,7 +1146,8 @@
         </div>
 
         <div v-if="processingUpload" class="progress">
-          <!-- {{ progressPercentage + '%' }} -->
+          <!---->
+          <p>Importing contacts... {{ progressPercentage + '%' }}</p>
           <div class="progress-container">
             <div class="progress-bar" :style="{ width: progressPercentage + '%' }"></div>
           </div>
@@ -4360,17 +4361,15 @@ textarea::placeholder {
 
 .progress {
   position: fixed;
-  bottom: 24px;
+  bottom: 12px;
   z-index: 1000000;
   width: 20vw;
-  padding: 0 16px;
-  // display: flex;
-  // align-items: center;
-  // justify-content: flex-start;
-  // border: 1px solid rgba(0, 0, 0, 0.15);
-  // box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
-  // background-color: white;
-  // border-radius: 5px;
+  padding: 0;
+
+  p {
+    font-size: 14px;
+    font-family: $base-font-family;
+  }
 }
 
 .progress-container {
@@ -4378,7 +4377,7 @@ textarea::placeholder {
   border-radius: 8px;
   overflow: hidden;
   height: 12px;
-  margin: 20px 0;
+  margin: -4px 0 20px 0;
 }
 
 .progress-bar {
