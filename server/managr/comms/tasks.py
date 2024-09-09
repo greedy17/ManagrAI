@@ -757,17 +757,13 @@ def _run_spider_batch(urls):
 
 
 @background
-def _add_jounralist_to_db(data, verified):
+def _add_journalist_to_db(data, verified):
     data["verified"] = verified
     publication = data.pop("publication")
     full_name = data.pop("journalist").strip()
     name_split = full_name.split(" ")
-    if len(name_split) > 2:
-        first = name_split[0]
-        last = name_split[len(name_split) - 1]
-    else:
-        first = name_split[0]
-        last = name_split[1]
+    first = name_split[0]
+    last = name_split[len(name_split) - 1]
     data["first_name"] = first
     data["last_name"] = last
     data["outlet"] = publication

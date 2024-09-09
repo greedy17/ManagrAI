@@ -52,7 +52,7 @@ from .tasks import (
     emit_send_news_summary,
     emit_send_social_summary,
     emit_share_client_summary,
-    _add_jounralist_to_db,
+    _add_journalist_to_db,
     emit_process_contacts_excel,
     emit_process_bulk_draft,
 )
@@ -1540,7 +1540,7 @@ class PitchViewSet(
         original = request.data.get("original")
         bio = request.data.get("bio")
         style = request.data.get("style", None)
-        with_style = request.data.get("with_style", False) 
+        with_style = request.data.get("with_style", False)
         journalist = request.data.get("journalist", None)
         has_error = False
         attempts = 1
@@ -1550,7 +1550,9 @@ class PitchViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_REWRITE_PTICH(original, bio, style, with_style, journalist, user.first_name)
+                prompt = comms_consts.OPEN_AI_REWRITE_PTICH(
+                    original, bio, style, with_style, journalist, user.first_name
+                )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
@@ -1853,7 +1855,7 @@ class DiscoveryViewSet(
         if isinstance(message, str):
             send_to_error_channel(message, user.email, "run discovery (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)
-        user.add_meta_data("discovery")  
+        user.add_meta_data("discovery")
         return Response(data={"journalists": message})
 
     @action(
@@ -1874,10 +1876,10 @@ class DiscoveryViewSet(
 
         if user.has_google_integration or user.has_microsoft_integration:
             res = user.email_account.send_email(recipient, subject, body, name)
-            user.add_meta_data("emailSent") 
+            user.add_meta_data("emailSent")
         else:
             res = send_mailgun_email(user, name, subject, recipient, body, bcc)
-        sent = res["sent"] 
+        sent = res["sent"]
         if sent:
             if draftId:
                 tracker = EmailTracker.objects.filter(id=draftId)
@@ -1900,23 +1902,21 @@ class DiscoveryViewSet(
         outlet = request.data.get("publication")
         email = request.data.get("email")
         name_list = journalist.strip().split(" ")
-        db_check = []
-        if len(journalist) > 2:
-            first = name_list[0]
-            last = name_list[len(name_list) - 1]
-        else:
-            first = name_list[0]
-            last = name_list[1]
+        first = name_list[0]
+        last = name_list[len(name_list) - 1]
         try:
-            email_check = Journalist.objects.filter(email=email)
-            if len(email_check):
-                db_check = email_check
-            else:
-                name_check = Journalist.objects.filter(first_name=first, last_name=last)
-                if len(name_check):
-                    db_check = name_check
-            if len(db_check):
-                internal_journalist = db_check.first()
+            email_check = Journalist.objects.filter(
+                Q(email=email) | Q(first_name=first, last_name=last)
+            )
+            if email_check.first():
+                internal_journalist = email_check.first()
+                if not internal_journalist.date_verified:
+                    score = Journalist.verify_email(internal_journalist.email)
+                    is_valid = True if score >= 85 else False
+                    internal_journalist.score = score
+                    internal_journalist.verified = is_valid
+                    internal_journalist.date_verified = datetime.now()
+                    internal_journalist.save()
                 return Response(
                     status=status.HTTP_200_OK,
                     data={
@@ -1939,7 +1939,7 @@ class DiscoveryViewSet(
                         request.data["publication"] = r["company"]
                 request.data["accuracy_score"] = score
                 user.add_meta_data("verify")
-                _add_jounralist_to_db(request.data, is_valid)
+                _add_journalist_to_db(request.data, is_valid)
                 return Response(
                     status=status.HTTP_200_OK, data={"is_valid": is_valid, "email": email}
                 )
@@ -1965,7 +1965,6 @@ class DiscoveryViewSet(
         else:
             query = f"Journalist AND {journalist} AND {outlet}"
         google_results = google_search(query)
-        print(google_results)
         if len(google_results) == 0:
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
