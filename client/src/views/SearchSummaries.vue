@@ -289,8 +289,12 @@
         </div>
       </div>
     </Modal>
-    <Modal v-if="emailJournalistModalOpen" class="regen-modal">
-      <div style="width: 55vw; min-width: 500px" class="regen-container">
+    <Modal style="margin-top: 64px" v-if="emailJournalistModalOpen" class="regen-modal">
+      <!-- height: 80vh -->
+      <div
+        style="width: 55vw; min-width: 500px; max-height: 1000px; height: 70vh"
+        class="regen-container"
+      >
         <div style="background-color: white; z-index: 1000" class="paid-header">
           <div class="space-between">
             <h2>Email Pitch</h2>
@@ -305,7 +309,7 @@
           </div>
         </div>
 
-        <div style="overflow: hidden; height: 400px; margin-top: -16px" class="paid-body">
+        <div style="overflow: hidden; height: 80%; margin-top: -12px" class="paid-body">
           <div style="position: relative">
             <div class="row">
               <div
@@ -387,10 +391,58 @@
                 v-model="subject"
                 type="text"
                 placeholder=""
-                style="padding-left: 64px; padding-top: 6px; border-bottom: none; margin-bottom: 0"
+                style="padding-left: 64px; padding-top: 6px; margin-bottom: 0; border-bottom: none"
                 :disabled="loadingPitch || sendingEmail"
               />
             </div>
+
+            <!-- <div style="width: 100%" class="row">
+              <div style="position: relative; width: 50%">
+                <p
+                  style="
+                    margin: 0;
+                    padding: 0;
+                    font-size: 18px;
+                    position: absolute;
+                    left: 0;
+                    top: 20px;
+                  "
+                >
+                  Cc:
+                </p>
+                <input
+                  class="primary-input-underline"
+                  v-model="ccEamil"
+                  type="text"
+                  placeholder=""
+                  style="padding-left: 32px"
+                  :disabled="loadingPitch || sendingEmail"
+                />
+              </div>
+
+              <div style="position: relative; width: 50%">
+                <p
+                  style="
+                    margin: 0;
+                    padding: 0;
+                    font-size: 18px;
+                    position: absolute;
+                    left: 0;
+                    top: 20px;
+                  "
+                >
+                  Bcc:
+                </p>
+                <input
+                  class="primary-input-underline"
+                  v-model="bccEmail"
+                  type="text"
+                  placeholder=""
+                  style="padding-left: 40px;"
+                  :disabled="loadingPitch || sendingEmail"
+                />
+              </div>
+            </div> -->
 
             <quill-editor
               :disabled="loadingPitch || sendingEmail"
@@ -416,7 +468,7 @@
           </div>
         </div>
 
-        <div style="margin-top: -16px" class="space-between">
+        <div style="position: absolute; bottom: 0" class="space-between">
           <div class="row">
             <div style="margin-top: -4px" class="source-dropdown fadein">
               <div
@@ -3865,6 +3917,7 @@ export default {
       ],
       selectedOrg: '',
       bccEmail: '',
+      ccEamil: '',
       targetEmail: '',
       revisedPitch: '',
       subject: '',
@@ -5211,6 +5264,8 @@ export default {
           body: this.revisedPitch,
           recipient: this.targetEmail,
           name: this.currentJournalist,
+          cc: [this.ccEamil],
+          bcc: [this.bccEmail],
         })
 
         this.emailJournalistModalOpen = false
@@ -7966,7 +8021,7 @@ export default {
 }
 
 .text-editor {
-  height: 180px;
+  height: 220px;
   width: 100%;
   border-radius: 8px;
   @media only screen and (max-width: 600px) {
