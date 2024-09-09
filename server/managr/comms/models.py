@@ -1058,6 +1058,7 @@ class Journalist(TimeStampModel):
     last_name = models.CharField(max_length=254)
     outlet = models.CharField(max_length=255)
     verified = models.BooleanField(default=False)
+    date_verified = models.DateTimeField(blank=True, null=True)
     beats = ArrayField(models.CharField(max_length=255), blank=True, null=True)
     city = models.CharField(max_length=255, blank=True, null=True)
     state = models.CharField(max_length=255, blank=True, null=True)
