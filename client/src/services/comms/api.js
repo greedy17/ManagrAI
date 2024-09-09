@@ -467,6 +467,22 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    async getBulkList(data) {
+        try {
+            const res = await this.client.post('discovery/network/', data)
+            return res
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async draftBulkPitches(data) {
+        try {
+            const res = await this.client.post('tracker/bulk-draft/', data)
+            return res
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
     async getJournalistBio(data) {
         try {
             const res = await this.client.post('discovery/web-context/', data)
