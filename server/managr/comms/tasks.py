@@ -1025,6 +1025,7 @@ def _process_bulk_draft(data, user_id, task_id):
     task = TaskResults.objects.get(id=task_id)
     emails = data.get("emails")
     original = data.get("original")
+    style = data.get("style")
     failed_emails = []
     for email in emails:
         print(email)
@@ -1042,7 +1043,7 @@ def _process_bulk_draft(data, user_id, task_id):
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_REWRITE_PTICH(
-                    original, contact.bio, False, False, user.first_name
+                    original, contact.bio, style, False, user.first_name
                 )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,

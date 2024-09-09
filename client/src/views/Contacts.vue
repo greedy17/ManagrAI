@@ -1600,7 +1600,6 @@ export default {
     async checkTasks() {
       try {
         const res = await User.api.checkTasks(this.taskId)
-        console.log(res)
         if (res.completed) {
           this.processingUpload = false
           this.$toast(`Contacts imported successfully!`, {
@@ -1633,7 +1632,6 @@ export default {
       this.uploading = true
       try {
         const res = await Comms.api.uploadContacts(this.currentFile, this.mappings, this.sheetName)
-        console.log(res)
         this.taskId = res.task_id
         this.$toast(`Processing ${res.num_processing} contacts`, {
           timeout: 2000,
@@ -1914,8 +1912,29 @@ export default {
     async bulkPitch() {
       this.loadingPitch = true
       try {
-        const res = await Comms.api.draftBulkPitches({
+        const res = await Comms.api.getBulkList({
           pitch: this.content,
+        })
+        const emails = res.data.journalists.map((contact) => contact.email)
+        this.bulkDraft(emails)
+      } catch (e) {
+        this.$toast('Error creating drafts, please try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        console.error(e)
+        this.loadingPitch = false
+      }
+    },
+    async bulkDraft(emails) {
+      try {
+        const res = await Comms.api.draftBulkPitches({
+          original: this.content,
+          style: this.writingStyle,
+          emails: emails,
         })
         console.log(res)
         this.$toast('Drafts complete! View in Network tab.', {
@@ -2189,7 +2208,6 @@ export default {
     async getTags() {
       try {
         const res = await Comms.api.getContactTagList()
-        console.log(res)
         this.tags = res.tags
       } catch (e) {
         console.error(e)
