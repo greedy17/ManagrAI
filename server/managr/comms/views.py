@@ -2452,7 +2452,7 @@ class EmailTrackerViewSet(
         result.task = task
         result.save()
         data = {"task_id": str(result.id)}
-        return Response(status.HTTP_200_OK, data=data)
+        return Response(status=status.HTTP_200_OK, data=data)
 
 
 # ENDPOINTS
