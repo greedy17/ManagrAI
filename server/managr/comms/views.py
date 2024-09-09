@@ -2137,7 +2137,7 @@ class DiscoveryViewSet(
         pitch = request.data.get("pitch", False)
         has_error = False
         attempts = 1
-        token_amount = 1000
+        token_amount = 2000
         timeout = 60.0
         while True:
             try:
@@ -2163,13 +2163,13 @@ class DiscoveryViewSet(
                         headers=core_consts.OPEN_AI_HEADERS,
                     )
                 res = open_ai_exceptions._handle_response(r)
-                res_content = res.get("choices")[0].get("message").get("content")
+                res_content = json.loads(res.get("choices")[0].get("message").get("content"))
                 journalists = res_content.get("journalists")
                 for idx, journalist_info in enumerate(journalists):
                     first, last = journalist_info["name"].split(" ")
                     try:
-                        journalist = contacts.get(first_name=first, last_name=last)
-                        journalists[idx]["email"] = journalist.email
+                        journalist = contacts.get(journalist__first_name=first, journalist__last_name=last)
+                        journalists[idx]["email"] = journalist.journalist.email
                     except Journalist.DoesNotExist:
                         continue
                 break
@@ -2177,7 +2177,7 @@ class DiscoveryViewSet(
                 logger.exception(
                     f"Retrying again due to token amount, amount currently at: {token_amount}"
                 )
-                if token_amount <= 2000:
+                if token_amount >= 5000:
                     has_error = True
                     message = "Token amount error"
                     break
