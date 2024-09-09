@@ -1039,7 +1039,7 @@ def _process_bulk_draft(data, user_id, task_id):
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_REWRITE_PTICH(
-                    original, contact.bio, style, False, user.first_name
+                    original, contact.bio, style, False, 'Journalist first name', user.first_name
                 )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
