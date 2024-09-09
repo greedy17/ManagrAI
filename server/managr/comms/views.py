@@ -2165,8 +2165,9 @@ class DiscoveryViewSet(
                 res_content = json.loads(res.get("choices")[0].get("message").get("content"))
                 journalists = res_content.get("journalists")
                 for idx, journalist_info in enumerate(journalists):
-                    first, last = journalist_info["name"].split(" ")
-                    print(first, last)
+                    name_list = journalist_info["name"].split(" ")
+                    first = name_list[0]
+                    last = name_list[len(name_list) - 1]
                     try:
                         journalist = contacts.get(
                             journalist__first_name__iexact=first, journalist__last_name__iexact=last
