@@ -2166,8 +2166,11 @@ class DiscoveryViewSet(
                 journalists = res_content.get("journalists")
                 for idx, journalist_info in enumerate(journalists):
                     first, last = journalist_info["name"].split(" ")
+                    print(first, last)
                     try:
-                        journalist = contacts.get(journalist__first_name=first, journalist__last_name=last)
+                        journalist = contacts.get(
+                            journalist__first_name__iexact=first, journalist__last_name__iexact=last
+                        )
                         journalists[idx]["email"] = journalist.journalist.email
                     except Journalist.DoesNotExist:
                         continue
@@ -2181,7 +2184,7 @@ class DiscoveryViewSet(
                     message = "Token amount error"
                     break
                 else:
-                    token_amount += 500
+                    token_amount += 1000
                     continue
             except httpx.ReadTimeout as e:
                 timeout += 30.0
@@ -2448,7 +2451,7 @@ class EmailTrackerViewSet(
         task = emit_process_bulk_draft(request.data, str(request.user.id), str(result.id))
         result.task = task
         result.save()
-        data = {"task_id": str(task.id)}
+        data = {"task_id": str(result.id)}
         return Response(status.HTTP_200_OK, data=data)
 
 
