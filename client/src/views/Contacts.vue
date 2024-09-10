@@ -122,7 +122,7 @@
     <Modal v-if="pitchModalOpen" class="bio-modal med-modal">
       <div style="overflow: hidden" class="bio-container med-container">
         <header style="z-index: 10">
-          <p style="font-size: 22px; margin: 8px 0">
+          <p v-if="!bulking" style="font-size: 22px; margin: 8px 0">
             Pitch
             {{
               currentContact.journalist_ref.first_name +
@@ -130,6 +130,8 @@
               currentContact.journalist_ref.last_name
             }}
           </p>
+
+          <p v-else style="font-size: 22px; margin: 8px 0">Auto Pick</p>
 
           <div @click="togglePitchModal">
             <img
@@ -157,6 +159,7 @@
               :disabled="loadingPitch"
               style="border: none; outline: none; padding: 16px 8px; width: 100%"
               class="area-input text-area-input"
+              :class="{ opaquest: loadingPitch }"
               type="text"
               v-model="content"
               rows="5"
@@ -164,16 +167,23 @@
               placeholder="Paste your pitch or add company details..."
             />
           </div>
-          <div style="font-size: 14px; margin: 12px 0 0 4px" class="row">
+          <div v-if="!bulking" style="font-size: 14px; margin: 12px 0 0 4px" class="row">
             <img src="@/assets/images/profile.svg" height="12px" alt="" />
             <p style="margin: 0 0 0 4px">
               ManagrAI will automatically personalize your pitch based on the Journalist's bio
             </p>
           </div>
+
+          <div v-else style="font-size: 14px; margin: 12px 0 0 4px" class="row">
+            <img src="@/assets/images/robot.svg" height="12px" alt="" />
+            <p style="margin: 0 0 0 4px">
+              ManagrAI will generate up to 20 personalized pitches and save them as drafts
+            </p>
+          </div>
         </div>
 
         <div
-          v-show="showingEditor"
+          v-if="showingEditor"
           style="
             position: relative;
             margin-top: 24px;
@@ -525,11 +535,21 @@
 
             <button
               v-if="!showingEditor"
-              :disabled="!content"
+              :disabled="!content || loadingPitch"
               class="primary-button"
               @click="rewritePitch"
+              style="width: fit-content; padding: 8px 10px"
             >
-              Continue
+              <img
+                v-if="loadingPitch"
+                style="margin-right: 8px; margin-left: 4px; filter: none"
+                class="rotation"
+                src="@/assets/images/loading.svg"
+                height="14px"
+                alt=""
+              />
+              <span v-if="loadingPitch && bulking">Drafting pitches...</span>
+              <span v-else>Continue</span>
             </button>
 
             <button
@@ -538,12 +558,15 @@
               class="primary-button"
               @click="sendEmail"
             >
+              <img
+                v-if="sendingEmail"
+                style="margin-right: 4px"
+                class="invert rotation"
+                src="@/assets/images/loading.svg"
+                height="14px"
+                alt=""
+              />
               Send Email
-              <div v-if="sendingEmail" style="margin-left: 12px" class="loading-small">
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-              </div>
             </button>
           </div>
         </footer>
@@ -561,6 +584,28 @@
           <div style="margin-top: 20px" class="row">
             <button @click="closeDeleteModal" class="secondary-button">Cancel</button>
             <button @click="deleteContact(contactId)" class="red-button">Delete</button>
+          </div>
+        </main>
+      </div>
+    </Modal>
+    <Modal v-if="draftModalOpen" class="delete-modal">
+      <div class="delete-container">
+        <header style="font-size: 20px" @click="draftModalOpen = false">
+          <p>x</p>
+        </header>
+        <main>
+          <h2>Successfully created {{ emailCount }} drafts!</h2>
+          <p>Drafts will start appearing in the Track tab.</p>
+
+          <div style="margin-top: 20px" class="row">
+            <button @click="draftModalOpen = false" class="secondary-button">Close</button>
+            <button
+              style="background-color: #183153; color: white"
+              @click="openTracker"
+              class="red-button"
+            >
+              View Drafts
+            </button>
           </div>
         </main>
       </div>
@@ -789,14 +834,14 @@
     <div class="top-row">
       <section>
         <div style="margin-bottom: 24px" class="space-between">
-          <div class="row relative" style="padding-bottom: 8px">
+          <div class="row relative" style="">
             <div
               @click.stop="toggleUserDropdown"
               :class="{ 'soft-gray-bg': showUsers }"
               class="drop-header"
               style="border: none"
             >
-              <h3 style="font-size: 16px" class="thin-font row">
+              <h3 style="font-size: 14px" class="thin-font row">
                 <img
                   style="margin: 0 4px 0 0"
                   src="@/assets/images/profile.svg"
@@ -861,7 +906,7 @@
               <div class="dropdown-footer"></div>
             </div>
 
-            <div style="margin-left: 16px" @click="toggleContactsModal" class="icon-btn">
+            <div style="margin-left: 8px" @click="toggleContactsModal" class="icon-btn">
               <img src="@/assets/images/adduser.svg" height="12px" alt="" />
               <div>Add contact</div>
             </div>
@@ -869,6 +914,46 @@
             <div style="margin-left: 8px" @click="bulkModalOpen = true" class="icon-btn">
               <img src="@/assets/images/file-import.svg" height="12px" alt="" />
               <div>Import contacts</div>
+            </div>
+
+            <div style="position: relative">
+              <div style="margin-left: 8px" @click.stop="showBulking = true" class="icon-btn">
+                <img src="@/assets/images/users.svg" height="12px" alt="" />
+                <div>Bulk pitching</div>
+                <img
+                  v-if="!showBulking"
+                  style="margin-right: -4px; margin-left: 4px"
+                  src="@/assets/images/arrowDropUp.svg"
+                  height="14px"
+                  alt=""
+                />
+                <img
+                  v-else
+                  style="margin-right: -4px; margin-left: 4px"
+                  class="rotate-img"
+                  src="@/assets/images/arrowDropUp.svg"
+                  height="14px"
+                  alt=""
+                />
+              </div>
+
+              <div
+                v-outside-click="hideBulk"
+                v-show="showBulking"
+                style="width: 350px"
+                class="small-dropdown"
+              >
+                <div @click="togglePitchModal" class="option">
+                  <span>Auto pick</span>
+                  <p>AI will select up to 20 relevant contacts, then draft personalized pitches.</p>
+                </div>
+                <div style="cursor: text" class="option opaquest">
+                  <span>Select manually</span>
+                  <p>
+                    Select up to 20 contacts using a Tag. AI will then draft personalized pitches.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1084,7 +1169,8 @@
         </div>
 
         <div v-if="processingUpload" class="progress">
-          <!-- {{ progressPercentage + '%' }} -->
+          <!---->
+          <p>Importing contacts... {{ progressPercentage + '%' }}</p>
           <div class="progress-container">
             <div class="progress-bar" :style="{ width: progressPercentage + '%' }"></div>
           </div>
@@ -1174,6 +1260,10 @@ export default {
   },
   data() {
     return {
+      emailCount: 0,
+      draftModalOpen: false,
+      bulking: false,
+      showBulking: false,
       contactRange: '',
       totalContacts: null,
       contactsPerPage: null,
@@ -1404,6 +1494,12 @@ export default {
     this.getWritingStyles()
   },
   methods: {
+    hideBulk() {
+      this.showBulking = false
+    },
+    openTracker() {
+      this.$router.push({ name: 'EmailTracking' })
+    },
     pitchStyleSetup() {
       const style = `
         1. Start email with "Hi {Journalist first name}", end with "Thanks,". Get right to it, no opening fluff like "I hope this message finds you well"
@@ -1533,7 +1629,6 @@ export default {
     async checkTasks() {
       try {
         const res = await User.api.checkTasks(this.taskId)
-        console.log(res)
         if (res.completed) {
           this.processingUpload = false
           this.$toast(`Contacts imported successfully!`, {
@@ -1566,7 +1661,6 @@ export default {
       this.uploading = true
       try {
         const res = await Comms.api.uploadContacts(this.currentFile, this.mappings, this.sheetName)
-        console.log(res)
         this.taskId = res.task_id
         this.$toast(`Processing ${res.num_processing} contacts`, {
           timeout: 2000,
@@ -1779,8 +1873,12 @@ export default {
     closeDeleteModal() {
       this.deleteModalOpen = false
     },
-    togglePitchModal() {
+    togglePitchModal(bulk = false) {
       this.pitchModalOpen = !this.pitchModalOpen
+      if (bulk) {
+        this.showBulking = false
+        this.bulking = true
+      }
     },
     openPitchModal(contact) {
       this.googleModalOpen = false
@@ -1839,6 +1937,57 @@ export default {
     openTagModal(contact) {
       this.currentContact = contact
       this.tagModalOpen = true
+    },
+    async bulkPitch() {
+      this.loadingPitch = true
+      try {
+        const res = await Comms.api.getBulkList({
+          pitch: this.content,
+        })
+        const emails = res.data.journalists.map((contact) => contact.email)
+        this.bulkDraft(emails)
+      } catch (e) {
+        this.$toast('Error creating drafts, please try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        console.error(e)
+        this.loadingPitch = false
+      }
+    },
+    async bulkDraft(emails) {
+      try {
+        const res = await Comms.api.draftBulkPitches({
+          original: this.content,
+          style: this.writingStyle,
+          emails: emails,
+        })
+        console.log(res)
+        this.emailCount = emails.length
+        this.draftModalOpen = true
+        // this.$toast('Drafts complete! View in Network tab.', {
+        //   timeout: 2000,
+        //   position: 'top-left',
+        //   type: 'success',
+        //   toastClassName: 'custom',
+        //   bodyClassName: ['custom'],
+        // })
+        this.loadingPitch = false
+        this.togglePitchModal()
+      } catch (e) {
+        this.$toast('Error creating drafts, try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        console.error(e)
+        this.loadingPitch = false
+      }
     },
     async sendEmail() {
       this.sendingEmail = true
@@ -1906,6 +2055,10 @@ export default {
       }
     },
     async rewritePitch() {
+      if (this.bulking) {
+        this.bulkPitch()
+        return
+      }
       this.showingEditor = true
       this.loadingPitch = true
       try {
@@ -1915,10 +2068,8 @@ export default {
           style: this.writingStyle,
           journalist: this.currentContact.journalist_ref.first_name,
         })
-
-        const body = res.pitch
-          .replace(/^Subject(?: Line)?:[\s\S]*?\n/i, '')
-          .replace(/email: [^"]*/, '')
+        console.log(res)
+        const body = res.body
         const signature = this.user.emailSignature ? this.user.emailSignature : ''
         const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
           /\n/g,
@@ -1926,7 +2077,7 @@ export default {
         )}  </p>`
         const quill = this.$refs.quill.quill
         quill.clipboard.dangerouslyPasteHTML(html)
-        this.subject = res.pitch.match(/^Subject(?: Line)?:(.*)\n/)[1].trim()
+        this.subject = res.subject
       } catch (e) {
         console.error(e)
       } finally {
@@ -2086,7 +2237,6 @@ export default {
     async getTags() {
       try {
         const res = await Comms.api.getContactTagList()
-        console.log(res)
         this.tags = res.tags
       } catch (e) {
         console.error(e)
@@ -2289,9 +2439,10 @@ export default {
   border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: 16px;
   padding: 8px 10px;
-  margin: 0 10px;
+  margin: 0 2px;
   width: 140px;
   cursor: pointer;
+  white-space: nowrap;
   font-family: $base-font-family;
   img {
     margin-right: 6px;
@@ -2576,7 +2727,7 @@ table {
 }
 
 .contacts {
-  padding: 88px 80px 0 80px;
+  padding: 88px 80px 0 40px;
   font-family: $thin-font-family;
   color: $dark-black-blue;
   overflow: hidden !important;
@@ -2591,6 +2742,48 @@ table {
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
     padding: 96px 0 48px 0;
+  }
+}
+
+.small-dropdown {
+  position: absolute;
+  top: 48px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: white;
+  padding: 8px;
+  left: 8px;
+  width: 320px;
+  border-radius: 4px;
+  z-index: 10000;
+  box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: row;
+
+  .option {
+    font-size: 13px;
+    width: 170px;
+    height: 86px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    font-family: $base-font-family;
+    font-weight: 900;
+    // overflow: hidden;
+    // white-space: nowrap;
+    // text-overflow: ellipsis;
+
+    p {
+      font-size: 12px !important;
+      font-family: $thin-font-family;
+      margin: 4px 0 0 0;
+      // overflow: hidden;
+      // white-space: nowrap;
+      // text-overflow: ellipsis;
+    }
+
+    &:hover {
+      background-color: $soft-gray;
+    }
   }
 }
 
@@ -3096,6 +3289,8 @@ h2 {
 }
 
 .search {
+  margin-left: auto;
+
   @media only screen and (max-width: 600px) {
     width: 50vw;
     display: flex;
@@ -3107,16 +3302,13 @@ h2 {
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
     width: 50vw;
   }
-
-  @media only screen and (min-width: 601px) and (max-width: 1024px) {
-  }
 }
 
 .input {
-  position: sticky;
+  // position: sticky;
   z-index: 8;
   top: 1.5rem;
-  width: 22vw;
+  width: 18vw;
   border-radius: 20px;
   border: 1px solid rgba(0, 0, 0, 0.135);
   font-family: $thin-font-family;
@@ -3130,12 +3322,12 @@ h2 {
     width: 95%;
   }
 
-  @media only screen and (min-width: 601px) and (max-width: 1024px) {
-    width: 50%;
-  }
+  // @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  //   width: 50%;
+  // }
 
-  @media only screen and (min-width: 601px) and (max-width: 1024px) {
-  }
+  // @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  // }
 }
 
 .search-input {
@@ -4197,17 +4389,15 @@ textarea::placeholder {
 
 .progress {
   position: fixed;
-  bottom: 24px;
+  bottom: 12px;
   z-index: 1000000;
   width: 20vw;
-  padding: 0 16px;
-  // display: flex;
-  // align-items: center;
-  // justify-content: flex-start;
-  // border: 1px solid rgba(0, 0, 0, 0.15);
-  // box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
-  // background-color: white;
-  // border-radius: 5px;
+  padding: 0;
+
+  p {
+    font-size: 14px;
+    font-family: $base-font-family;
+  }
 }
 
 .progress-container {
@@ -4215,7 +4405,7 @@ textarea::placeholder {
   border-radius: 8px;
   overflow: hidden;
   height: 12px;
-  margin: 20px 0;
+  margin: -4px 0 20px 0;
 }
 
 .progress-bar {

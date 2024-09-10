@@ -13,13 +13,14 @@ from managr.utils.misc import custom_paginator
 from rest_framework.exceptions import ValidationError
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_clips_paginator_block
 from . import constants as comms_consts
-from .models import Search, NewsSource, AssistAlert, Journalist
+from .models import Search, NewsSource, AssistAlert, Journalist, JournalistContact, EmailTracker
 from .models import Article as InternalArticle
 from .serializers import (
     SearchSerializer,
     NewsSourceSerializer,
     JournalistSerializer,
     JournalistContactSerializer,
+    EmailTrackerSerializer,
 )
 from managr.core.models import TaskResults
 from managr.core import constants as core_consts
@@ -83,6 +84,10 @@ def emit_process_contacts_excel(user_id, data, result_id):
 
 def emit_process_regenerate_pitch_slack(payload, context):
     return _process_regenerate_pitch_slack(payload, context)
+
+
+def emit_process_bulk_draft(data, user_id, task_id):
+    return _process_bulk_draft(data, user_id, task_id)
 
 
 def emit_send_social_summary(news_alert_id, schedule):
@@ -752,17 +757,13 @@ def _run_spider_batch(urls):
 
 
 @background
-def _add_jounralist_to_db(data, verified):
+def _add_journalist_to_db(data, verified):
     data["verified"] = verified
     publication = data.pop("publication")
     full_name = data.pop("journalist").strip()
     name_split = full_name.split(" ")
-    if len(name_split) > 2:
-        first = name_split[0]
-        last = name_split[len(name_split) - 1]
-    else:
-        first = name_split[0]
-        last = name_split[1]
+    first = name_split[0]
+    last = name_split[len(name_split) - 1]
     data["first_name"] = first
     data["last_name"] = last
     data["outlet"] = publication
@@ -1015,6 +1016,92 @@ def _process_regenerate_pitch_slack(payload, context):
 
 
 @background()
+def _process_bulk_draft(data, user_id, task_id):
+    user = User.objects.get(id=user_id)
+    task = TaskResults.objects.get(id=task_id)
+    emails = data.get("emails")
+    original = data.get("original")
+    style = data.get("style")
+    failed_emails = []
+    for email in emails:
+        attempts = 1
+        has_error = False
+        token_amount = 2000
+        timeout = 60.0
+        contact = JournalistContact.objects.get(user=user, journalist__email=email)
+        if not contact.bio:
+            res = contact.generate_bio()
+            if not res:
+                failed_emails.append(email)
+                continue
+        while True:
+            try:
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.OPEN_AI_REWRITE_PTICH(
+                    original, contact.bio, style, False, "Journalist first name", user.first_name
+                )
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    token_amount=token_amount,
+                    top_p=0.1,
+                    response_format={"type": "json_object"},
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                r = open_ai_exceptions._handle_response(r)
+                r = r.get("choices")[0].get("message").get("content")
+                r = json.loads(r)
+                serializer_data = {
+                    "subject": r["subject"],
+                    "recipient": contact.journalist.email,
+                    "user": user.id,
+                    "body": r["body"],
+                    "name": contact.journalist.full_name,
+                }
+                serializer = EmailTrackerSerializer(data=serializer_data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                serializer.instance.add_activity("draft_created")
+                user.add_meta_data("pitches")
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount >= 3000:
+                    has_error = True
+
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 1000
+                    continue
+            except httpx.ReadTimeout as e:
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+    task.json_result = {"failed": failed_emails}
+    task.save()
+    return
+
+
+@background()
 def test_send_pitch():
     user = User.objects.get(email="zach@mymanagr.com")
     pitch = "Hi [Journalist first name],\n\nYour insightful coverage on aerospace technology advancements has been noted. An exclusive story about SpaceX's latest achievements might pique your interest.\n\nRecently, the Starship prototype was launched by SpaceX, marking a significant stride in space exploration. This development is poised to revolutionize interplanetary travel and aligns with the trend of private companies leading space missions, as highlighted in recent industry reports.\n\nAn exclusive opportunity is offered to explore the technical innovations and strategic vision driving SpaceX's success. Detailed insights and access to key experts can be provided to discuss the implications of these advancements for the future of space exploration.\n\nWould a collaboration on a feature exploring these groundbreaking developments interest you? Your expertise and perspective would bring a unique angle to this story.\n\nLooking forward to your thoughts.\n\nThanks,"
@@ -1054,3 +1141,84 @@ def test_send_pitch():
     except Exception as e:
         print(e)
     return
+
+
+@background()
+def test_pitch():
+    user = User.objects.get(email="zach@mymanagr.com")
+    pitch = """Dear [Recipient's Name],
+
+    We are pleased to introduce a groundbreaking technology designed to enhance rainforest conservation efforts. This innovative solution leverages advanced data analytics and remote sensing to provide real-time monitoring and actionable insights.
+
+    Our technology integrates satellite imagery with machine learning algorithms to detect deforestation activities with unprecedented accuracy. By analyzing high-resolution images, it can identify illegal logging, land-use changes, and other threats to rainforest ecosystems. This allows for timely intervention and more effective enforcement of conservation policies.
+
+    Additionally, the system offers predictive analytics to forecast potential areas of deforestation, enabling proactive measures to protect vulnerable regions. The platform is user-friendly and can be accessed by conservationists, policymakers, and researchers through a secure web interface.
+
+    We believe this technology will significantly contribute to preserving the biodiversity and ecological integrity of rainforests worldwide. For further details or to schedule a demonstration, please do not hesitate to contact us.
+
+    Thank you for your attention to this important matter.
+
+    Sincerely,[Your Name][Your Position][Your Organization]"""
+
+    has_error = False
+    attempts = 1
+    token_amount = 3000
+    timeout = 60.0
+    while True:
+        try:
+            contacts = JournalistContact.objects.filter(user=user)
+            contact_list = [
+                f"Name:{contact.journalist.full_name}, Outlet:{contact.journalist.outlet}"
+                for contact in contacts
+            ]
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_PITCH_JOURNALIST_LIST(contact_list, pitch)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email,
+                prompt,
+                "You are a VP of Communications",
+                token_amount=token_amount,
+                top_p=0.1,
+                response_format={"type": "json_object"},
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            res = open_ai_exceptions._handle_response(r)
+            res_content = res.get("choices")[0].get("message").get("content")
+            journalists = json.loads(res_content).get("journalists")
+            print(journalists)
+            break
+        except open_ai_exceptions.StopReasonLength:
+            logger.exception(
+                f"Retrying again due to token amount, amount currently at: {token_amount}"
+            )
+            if token_amount <= 2000:
+                has_error = True
+                message = "Token amount error"
+                break
+            else:
+                token_amount += 500
+                continue
+        except httpx.ReadTimeout as e:
+            timeout += 30.0
+            if timeout >= 120.0:
+                has_error = True
+                message = "Read timeout issue"
+                logger.exception(f"Read timeout from Open AI {e}")
+                break
+            else:
+                attempts += 1
+                continue
+        except Exception as e:
+            has_error = True
+            message = f"Unknown exception: {e}"
+            logger.exception(e)
+            break
+    if has_error:
+        return message
+
+    return journalists

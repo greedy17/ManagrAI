@@ -11,18 +11,22 @@ import base64
 from email.mime.text import MIMEText
 
 
-def create_message(sender, sent_to, subject, template, context={}):
+def create_gmail_message(sender, sent_to, subject, template, context={}, cc=[], bcc=[]):
     html_body = render_to_string(template, context)
     message = MIMEText(html_body, "html")
     message["to"] = sent_to
     message["from"] = sender
     message["subject"] = subject
+    if cc:
+        message["cc"] = ", ".join(cc)
+    if bcc:
+        message["bcc"] = ", ".join(bcc)
     raw = base64.urlsafe_b64encode(message.as_bytes())
     raw = raw.decode()
     return {"raw": raw}
 
 
-def create_ms_message(sender, sent_to, subject, template, context={}):
+def create_ms_message(sender, sent_to, subject, template, context={}, cc=[], bcc=[]):
     html_body = render_to_string(template, context)
     email_message = {
         "message": {
@@ -32,6 +36,14 @@ def create_ms_message(sender, sent_to, subject, template, context={}):
             "toRecipients": [{"emailAddress": {"address": sent_to}}],
         }
     }
+    if cc:
+        email_message["message"]["ccRecipients"] = [
+            {"emailAddress": {"address": address}} for address in cc
+        ]
+    if bcc:
+        email_message["message"]["bccRecipients"] = [
+            {"emailAddress": {"address": address}} for address in bcc
+        ]
     return email_message
 
 
@@ -44,6 +56,7 @@ def send_html_email(
     bcc_emails=[],
     files=[],
     headers={},
+    cc_emails=[],
     user=False,
 ):
     """Generic sender to build and send an HTML email with a plain-text fallback.
@@ -86,7 +99,7 @@ def send_html_email(
     # END TODO
 
     email = EmailMultiAlternatives(
-        subject, plaintext_body, send_from, send_to, bcc_emails, headers=headers
+        subject, plaintext_body, send_from, send_to, bcc_emails, headers=headers, cc=cc_emails
     )
     email.attach_alternative(html_body, "text/html")
 
@@ -140,7 +153,7 @@ def send_test_email(email_from, email_to):
     )
 
 
-def send_mailgun_email(user, name, subject, recipient, body, bcc=[]):
+def send_mailgun_email(user, name, subject, recipient, body, bcc=[], cc=[]):
     from managr.comms.serializers import EmailTrackerSerializer
 
     context = {"body": body}
@@ -154,6 +167,7 @@ def send_mailgun_email(user, name, subject, recipient, body, bcc=[]):
             [recipient],
             context=context,
             bcc_emails=bcc,
+            cc_emails=cc,
             headers={
                 "Reply-To": f"{user.full_name} <{user.first_name}.{user.last_name}@mg.managr.ai>",
                 "X-Managr-Id": message_id,

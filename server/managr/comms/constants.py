@@ -116,11 +116,11 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
 
     Additional info on the person from a publisher site: {text}.
 
-    Combine the data from the search results and publisher site to craft one bio for {journalist}. 
-    Include the company the person works for, make sure the company name is the most widely used version of the company name. 
-    Then offer 3 short pitching tips based on what you know of the person, tailored to the user's pitch: {content}. 
-    Lastly, list all available contact details for the person based on the provided data, including social handles and email address. 
-    If the email is mentioned in the provided information, use that email. If no email is found, guess their work email based on verified email patterns for their publication. 
+    Combine the data from the search results and publisher site to craft one bio for {journalist}.
+    Include the company the person works for, make sure the company name is full version of the company name.
+    Then offer 3 short pitching tips based on what you know of the person, tailored to the user's pitch: {content}.
+    Lastly, list all available contact details for the person based on the provided data, including social handles and email address.
+    If the email is mentioned in the provided information, use that email. If no email is found, guess their work email based on verified email patterns for their publication.
     Always return the email like this - email: guessed email
 
     Output must be JSON with bio, company, and email as keys:
@@ -135,8 +135,8 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
     company: [Company name],
     email: '[EMAIL IF FOUND]'
 
-    Output MUST follow these rules:
-    1. Separate each section with one new line, no additional spacing or padding.
+    Output bio MUST follow these rules:
+    1. Separate each section with a <br/>, no additional spacing or padding.
     2. Use <strong> tags for bold text.
     3. Use <h2> tags for headings, except for the company name, which should be inline with 'Company:'.
     4. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
@@ -248,16 +248,6 @@ DEFAULT_INSTAGRAM_CLIENT_INSTRUCTIONS = """<strong>Summary of the Posts: No more
 
 DEFAULT_WRITING_STYLE = "Aim for a professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Get right to the point"
 
-OPEN_AI_EMPTY_SEARCH_SUGGESTIONS = (
-    lambda search: f"""Using NewsAPI to search for '{search}' returned no results. Generate 3 alternative terms that are similar to what the user is trying to search for just much more broad, and more likely to get news coverage. 
-    The goal is to create 3 different suggestions that will get the user news results. Use AND between select words to broaden the search term. Keep the search short, extract only the main subject or specific topic, ignoring any contextual details. 
-    Only use quotes when two words or more. Format the output must be as follows:
-    Search1:
-    Search2:
-    Search3:
-    """
-)
-
 OPEN_AI_QUERY_STRING = (
     lambda search: f"""Extract the main topic, company, organization or entity from '{search}' for a NewsAPI boolean query. Follow these steps:
     1. When quotes are present, use the exact phrase
@@ -282,13 +272,6 @@ OPEN_AI_SEARCH_SUGGESTIONS = (
     Output instructions for PR firms: Start with "Hi {name}, here are some search suggestions to get you started."
     - "Brands" (guess which brands they may work with based on location of agency and their niche, list just the brand name)
     - "Industry Topic" (relevent to the PR agency's niche, up to 5, Must be 2-3 words max, use AND in between words to broaden search, if needed.) -- ex: if the agency is focused on fashion clients: AI and Fashion, GenZ and Tiktok. If the agency is focused on B2b: Embedded Finance, Commercial real-estate 
-    """
-)
-
-OPEN_AI_NO_RESULTS_SUGGESTION = (
-    lambda boolean: f"""Using NewsAPI to search for '{boolean}' returned no results. 
-    Generate 3 alternative terms that are similar to what the user is trying to search for just much more broad, and more likely to get news coverage. 
-    The goal is to create 3 different suggestions that will get the user news results. Use AND between select words to broaden the search term. Keep the search short, extract only the main subject or specific topic, ignoring any contextual details. Only use quotes when two words or more. Format the output must be as follows:\nSuggestion 1:\nSuggestion 2:\nSuggestion 3:
     """
 )
 
@@ -462,7 +445,13 @@ def OPEN_AI_REWRITE_PTICH(original, bio, style, with_style,journalist,name):
 
         original pitch: {original}
         writing style: {style}
-        """  
+        """
+    prompt += """
+    OUTPUT JSON:
+    body: REWRITTEN PITCH,
+    subject: SUBJECT,
+    email: EMAIL
+    """
     return prompt
 
 
@@ -638,22 +627,23 @@ def OPEN_AI_GET_JOURNALIST_LIST(info, content):
     * Ensure that all journalists are real, currently active writers. 
     * Do not include fake names such as Jane Doe or John Smith or make names up.
     * Output format must a ONLY JSON object:
-    {'{'}'journalists': [LIST OF NAMES]{'}'}
+    journalists: [LIST OF JOURNALIST NAMES]
     """
     return prompt
 
 
 def OPEN_AI_PITCH_JOURNALIST_LIST(journalists, pitch):
-    initial_sentence = (
-        f"From the list of journalists I provided who would be interested in this pitch: {pitch}"
-    )
     prompt = f"""
-    {initial_sentence}.\n
+    From the list of journalists I provided, list 20 who would be interested in this pitch: {pitch}.
+    Give the reason each journalist would be interested individually to the pitch.
     * Output format must a ONLY JSON object:
-    {'{'}'journalists': [LIST OF NAMES]{'}'}
+    journalists: journalists:[{'{'}
+        'name': NAME,
+        'outlet': OUTLET,
+        'reason': REASON FOR SELECTION{'}'}]
 
     journalists:\n
-    {journalists}
+    {journalists}    
     """
     return prompt
 

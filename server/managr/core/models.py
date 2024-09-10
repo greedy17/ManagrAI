@@ -21,7 +21,7 @@ from managr.utils.misc import (
     phrase_to_snake_case,
     bucket_upload_filepath,
 )
-from managr.api.emails import create_message, create_ms_message
+from managr.api.emails import create_gmail_message, create_ms_message
 from managr.utils.client import HttpClient, Variable_Client
 from managr.core import constants as core_consts
 from managr.organization import constants as org_consts
@@ -1100,7 +1100,7 @@ class GoogleAccount(TimeStampModel):
             self.access_token = access_token
             self.save()
 
-    def send_email(self, recipient, subject, body, name):
+    def send_email(self, recipient, subject, body, name, cc=[], bcc=[]):
         from managr.comms.serializers import EmailTrackerSerializer
 
         url = core_consts.GOOGLE_SEND_EMAIL_URI("me")
@@ -1110,25 +1110,30 @@ class GoogleAccount(TimeStampModel):
         while True:
             try:
                 if not instance:
-                    serializer = EmailTrackerSerializer(
-                        data={
-                            "user": self.user.id,
-                            "recipient": recipient,
-                            "body": body,
-                            "subject": subject,
-                            "name": name,
-                        }
-                    )
+                    data = {
+                        "user": self.user.id,
+                        "recipient": recipient,
+                        "body": body,
+                        "subject": subject,
+                        "name": name,
+                    }
+                    if cc:
+                        data["cc_recipients"] = ",".join(cc)
+                    if bcc:
+                        data["bcc_recipients"] = ",".join(bcc)
+                    serializer = EmailTrackerSerializer(data=data)
                     serializer.is_valid(raise_exception=True)
                     serializer.save()
                     instance = serializer.instance
                 tracker_link += f"&id={str(instance.id)}"
-                email = create_message(
+                email = create_gmail_message(
                     self.user.email,
                     recipient,
                     subject,
                     "core/email-templates/user-email.html",
                     {"body": body, "tracking_pixel_url": tracker_link},
+                    cc,
+                    bcc,
                 )
                 with Variable_Client() as client:
                     headers = core_consts.GOOGLE_HEADERS(self.access_token)
@@ -1225,7 +1230,7 @@ class MicrosoftAccount(TimeStampModel):
             self.access_token = access_token
             self.save()
 
-    def send_email(self, recipient, subject, body, name):
+    def send_email(self, recipient, subject, body, name, cc=[], bcc=[]):
         from managr.comms.serializers import EmailTrackerSerializer
 
         url = core_consts.MICROSOFT_SEND_MAIL
@@ -1233,18 +1238,22 @@ class MicrosoftAccount(TimeStampModel):
         email_res = {"sent": False}
         instance = False
         try:
-            serializer = EmailTrackerSerializer(
-                data={
+            if not instance:
+                data = {
                     "user": self.user.id,
                     "recipient": recipient,
                     "body": body,
                     "subject": subject,
                     "name": name,
                 }
-            )
-            serializer.is_valid(raise_exception=False)
-            serializer.save()
-            instance = serializer.instance
+                if cc:
+                    data["cc_recipients"] = ",".join(cc)
+                if bcc:
+                    data["bcc_recipients"] = ",".join(bcc)
+                serializer = EmailTrackerSerializer(data=data)
+                serializer.is_valid(raise_exception=False)
+                serializer.save()
+                instance = serializer.instance
             tracker_link += f"&id={str(instance.id)}"
             instance.add_activity("sent")
         except Exception as e:
@@ -1258,6 +1267,8 @@ class MicrosoftAccount(TimeStampModel):
                     subject,
                     "core/email-templates/user-email.html",
                     {"body": body, "tracking_pixel_url": tracker_link},
+                    cc,
+                    bcc,
                 )
                 with Variable_Client() as client:
                     headers = core_consts.MICROSOFT_HEADERS(self.access_token)

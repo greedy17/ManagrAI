@@ -666,7 +666,8 @@ export default {
       if (val) {
         this.targetEmail = val.recipient
         this.subject = val.subject
-        this.revisedPitch = val.body
+        const replacedText = val.body.replace(/\n/g, '<br>')
+        this.revisedPitch = `<p>${replacedText}</p>`
         this.journalistName = val.name
       }
     },
@@ -838,6 +839,7 @@ export default {
       console.log(this.sortedEmails)
     },
     toggleEmailModal(email = null) {
+      console.log(email)
       this.selectedEmail = email
       if (email.is_draft) {
         this.draftEmailModalOpen = !this.draftEmailModalOpen
