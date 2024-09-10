@@ -634,7 +634,7 @@ def OPEN_AI_GET_JOURNALIST_LIST(info, content):
 
 def OPEN_AI_PITCH_JOURNALIST_LIST(journalists, pitch):
     prompt = f"""
-    From the list of journalists I provided list 20 who would be interested in this pitch: {pitch}.
+    From the list of journalists I provided, list 20 who would be interested in this pitch: {pitch}.
     Give the reason each journalist would be interested individually to the pitch.
     * Output format must a ONLY JSON object:
     journalists: journalists:[{'{'}

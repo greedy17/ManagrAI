@@ -177,8 +177,7 @@
           <div v-else style="font-size: 14px; margin: 12px 0 0 4px" class="row">
             <img src="@/assets/images/robot.svg" height="12px" alt="" />
             <p style="margin: 0 0 0 4px">
-              ManagrAI will generate up to 20 personalized pitches and save them as Drafts in the
-              Track tab
+              ManagrAI will generate up to 20 personalized pitches and save them as drafts
             </p>
           </div>
         </div>
@@ -539,16 +538,18 @@
               :disabled="!content || loadingPitch"
               class="primary-button"
               @click="rewritePitch"
+              style="width: fit-content; padding: 8px 10px"
             >
               <img
                 v-if="loadingPitch"
-                style="margin-right: 8px; filter: none"
+                style="margin-right: 8px; margin-left: 4px; filter: none"
                 class="rotation"
                 src="@/assets/images/loading.svg"
                 height="14px"
                 alt=""
               />
-              Continue
+              <span v-if="loadingPitch && bulking">Drafting pitches...</span>
+              <span v-else>Continue</span>
             </button>
 
             <button
@@ -583,6 +584,28 @@
           <div style="margin-top: 20px" class="row">
             <button @click="closeDeleteModal" class="secondary-button">Cancel</button>
             <button @click="deleteContact(contactId)" class="red-button">Delete</button>
+          </div>
+        </main>
+      </div>
+    </Modal>
+    <Modal v-if="draftModalOpen" class="delete-modal">
+      <div class="delete-container">
+        <header style="font-size: 20px" @click="draftModalOpen = false">
+          <p>x</p>
+        </header>
+        <main>
+          <h2>Successfully created {{ emailCount }} drafts!</h2>
+          <p>Drafts will start appearing in the Track tab.</p>
+
+          <div style="margin-top: 20px" class="row">
+            <button @click="draftModalOpen = false" class="secondary-button">Close</button>
+            <button
+              style="background-color: #183153; color: white"
+              @click="openTracker"
+              class="red-button"
+            >
+              View Drafts
+            </button>
           </div>
         </main>
       </div>
@@ -917,15 +940,15 @@
               <div
                 v-outside-click="hideBulk"
                 v-show="showBulking"
-                style="width: 300px"
+                style="width: 350px"
                 class="small-dropdown"
               >
                 <div @click="togglePitchModal" class="option">
                   <span>Auto pick</span>
-                  <p>AI will select up to 20 relevant contacts, then draft personalized pitches</p>
+                  <p>AI will select up to 20 relevant contacts, then draft personalized pitches.</p>
                 </div>
                 <div style="cursor: text" class="option opaquest">
-                  <span>Manually select</span>
+                  <span>Select manually</span>
                   <p>
                     Select up to 20 contacts using a Tag. AI will then draft personalized pitches.
                   </p>
@@ -1237,6 +1260,8 @@ export default {
   },
   data() {
     return {
+      emailCount: 0,
+      draftModalOpen: false,
       bulking: false,
       showBulking: false,
       contactRange: '',
@@ -1471,6 +1496,9 @@ export default {
   methods: {
     hideBulk() {
       this.showBulking = false
+    },
+    openTracker() {
+      this.$router.push({ name: 'EmailTracking' })
     },
     pitchStyleSetup() {
       const style = `
@@ -1938,13 +1966,15 @@ export default {
           emails: emails,
         })
         console.log(res)
-        this.$toast('Drafts complete! View in Network tab.', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        this.emailCount = emails.length
+        this.draftModalOpen = true
+        // this.$toast('Drafts complete! View in Network tab.', {
+        //   timeout: 2000,
+        //   position: 'top-left',
+        //   type: 'success',
+        //   toastClassName: 'custom',
+        //   bodyClassName: ['custom'],
+        // })
         this.loadingPitch = false
         this.togglePitchModal()
       } catch (e) {
@@ -2733,8 +2763,8 @@ table {
 
   .option {
     font-size: 13px;
-    width: 150px;
-    height: 90px;
+    width: 170px;
+    height: 86px;
     cursor: pointer;
     padding: 8px;
     border-radius: 4px;
