@@ -131,7 +131,9 @@
             }}
           </p>
 
-          <p v-else style="font-size: 22px; margin: 8px 0">Auto Pick</p>
+          <p v-else-if="bulking && !manualBulk" style="font-size: 22px; margin: 8px 0">Auto Pick</p>
+
+          <p v-else style="font-size: 22px; margin: 8px 0">{{ bulkTag }}</p>
 
           <div @click="togglePitchModal">
             <img
@@ -174,10 +176,21 @@
             </p>
           </div>
 
-          <div v-else style="font-size: 14px; margin: 12px 0 0 4px" class="row">
+          <div
+            v-else-if="bulking && !manualBulk"
+            style="font-size: 14px; margin: 12px 0 0 4px"
+            class="row"
+          >
             <img src="@/assets/images/robot.svg" height="12px" alt="" />
             <p style="margin: 0 0 0 4px">
               ManagrAI will generate up to 20 personalized pitches and save them as drafts
+            </p>
+          </div>
+
+          <div v-else style="font-size: 14px; margin: 12px 0 0 4px" class="row">
+            <img src="@/assets/images/adduser.svg" height="12px" alt="" />
+            <p style="margin: 0 0 0 4px">
+              ManagrAI will generate personalized pitches and save them as drafts
             </p>
           </div>
         </div>
@@ -594,8 +607,17 @@
           <p>x</p>
         </header>
         <main>
-          <h2>Successfully created {{ emailCount }} drafts!</h2>
-          <p>Drafts will start appearing in the Track tab.</p>
+          <div class="row">
+            <h2>Successfully created {{ emailCount }} drafts!</h2>
+            <img
+              class="blue-filter"
+              style="margin-left: 8px"
+              src="@/assets/images/party-horn.svg"
+              height="20px"
+              alt=""
+            />
+          </div>
+          <p>Drafts will gradually appear in the Track tab.</p>
 
           <div style="margin-top: 20px" class="row">
             <button @click="draftModalOpen = false" class="secondary-button">Close</button>
@@ -942,16 +964,60 @@
                 v-show="showBulking"
                 style="width: 350px"
                 class="small-dropdown"
+                :class="{ opaquest: loading }"
               >
-                <div @click="togglePitchModal" class="option">
-                  <span>Auto pick</span>
-                  <p>AI will select up to 20 relevant contacts, then draft personalized pitches.</p>
+                <div class="row">
+                  <div @click="togglePitchModal(true, isPaid)" class="option fadein">
+                    <div class="space-between">
+                      <span
+                        ><img
+                          style="margin-right: 4px"
+                          src="@/assets/images/robot.svg"
+                          height="12px"
+                          alt=""
+                        />
+                        Auto pick</span
+                      >
+
+                      <div class="pro-tag">PRO</div>
+                    </div>
+
+                    <p>
+                      AI will select up to 20 relevant contacts, then draft personalized pitches.
+                    </p>
+                  </div>
+                  <div
+                    @click="toggleBulkTagSelect"
+                    class="option fadein"
+                    :class="{ outlined: selectingBulkTag }"
+                  >
+                    <div class="space-between">
+                      <span>
+                        <img
+                          style="margin-right: 4px"
+                          src="@/assets/images/adduser.svg"
+                          height="10px"
+                          alt=""
+                        />
+                        Select manually
+                      </span>
+
+                      <div class="pro-tag">PRO</div>
+                    </div>
+
+                    <p>
+                      Select up to 20 contacts using a Tag. AI will then draft personalized pitches.
+                    </p>
+                  </div>
                 </div>
-                <div style="cursor: text" class="option opaquest">
-                  <span>Select manually</span>
-                  <p>
-                    Select up to 20 contacts using a Tag. AI will then draft personalized pitches.
-                  </p>
+
+                <div class="fadein selector" style="width: 100%" v-if="selectingBulkTag">
+                  <select style="width: 100%" v-model="bulkTag" class="area-input-outline">
+                    <option value="" disabled>Select a Tag</option>
+                    <option v-for="(tag, i) in tags" :key="i" :value="tag.name">
+                      {{ tag.name }}
+                    </option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -1260,6 +1326,9 @@ export default {
   },
   data() {
     return {
+      manualBulk: false,
+      bulkTag: '',
+      selectingBulkTag: false,
       emailCount: 0,
       draftModalOpen: false,
       bulking: false,
@@ -1406,6 +1475,9 @@ export default {
     user() {
       return this.$store.state.user
     },
+    isPaid() {
+      return !!this.$store.state.user.organizationRef.isPaid
+    },
     allUsers() {
       return this.users.filter((user) =>
         user.full_name.toLowerCase().includes(this.searchUsersText),
@@ -1471,13 +1543,17 @@ export default {
     },
     searchContactsText(val, oldVal) {
       if (val === '' && oldVal !== '') {
-        console.log('from watcher')
         this.getInitialContacts()
       }
     },
     selectedTags(val, oldVal) {
       if (val !== oldVal) {
         this.getContactsSearch()
+      }
+    },
+    bulkTag(val, oldVal) {
+      if (val !== oldVal) {
+        this.getBulkSearch()
       }
     },
   },
@@ -1494,6 +1570,12 @@ export default {
     this.getWritingStyles()
   },
   methods: {
+    toggleBulkTagSelect() {
+      if (!this.isPaid) {
+        return
+      }
+      this.selectingBulkTag = !this.selectingBulkTag
+    },
     hideBulk() {
       this.showBulking = false
     },
@@ -1873,14 +1955,22 @@ export default {
     closeDeleteModal() {
       this.deleteModalOpen = false
     },
-    togglePitchModal(bulk = false) {
+    togglePitchModal(bulk = false, paid = true) {
+      if (!paid) {
+        return
+      }
       this.pitchModalOpen = !this.pitchModalOpen
       if (bulk) {
         this.showBulking = false
         this.bulking = true
+      } else {
+        this.bulking = false
+        this.manualBulk = false
+        this.selectingBulkTag = false
       }
     },
     openPitchModal(contact) {
+      this.bulking = false
       this.googleModalOpen = false
 
       this.revisedPitch = ''
@@ -1940,25 +2030,30 @@ export default {
     },
     async bulkPitch() {
       this.loadingPitch = true
-      try {
-        const res = await Comms.api.getBulkList({
-          pitch: this.content,
-        })
-        const emails = res.data.journalists.map((contact) => contact.email)
-        this.bulkDraft(emails)
-      } catch (e) {
-        this.$toast('Error creating drafts, please try again', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-        console.error(e)
-        this.loadingPitch = false
+      if (this.manualBulk) {
+        this.bulkDraft(this.bulkEmails)
+      } else {
+        try {
+          const res = await Comms.api.getBulkList({
+            pitch: this.content,
+          })
+          const emails = res.data.journalists.map((contact) => contact.email)
+          this.bulkDraft(emails)
+        } catch (e) {
+          this.$toast('Error creating drafts, please try again', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          console.error(e)
+          this.loadingPitch = false
+        }
       }
     },
     async bulkDraft(emails) {
+      console.log('EMAILS ARE HERE --- >', emails)
       try {
         const res = await Comms.api.draftBulkPitches({
           original: this.content,
@@ -1968,13 +2063,6 @@ export default {
         console.log(res)
         this.emailCount = emails.length
         this.draftModalOpen = true
-        // this.$toast('Drafts complete! View in Network tab.', {
-        //   timeout: 2000,
-        //   position: 'top-left',
-        //   type: 'success',
-        //   toastClassName: 'custom',
-        //   bodyClassName: ['custom'],
-        // })
         this.loadingPitch = false
         this.togglePitchModal()
       } catch (e) {
@@ -1987,6 +2075,10 @@ export default {
         })
         console.error(e)
         this.loadingPitch = false
+      } finally {
+        this.bulkEmails = []
+        this.manualBulk = false
+        this.selectingBulkTag = false
       }
     },
     async sendEmail() {
@@ -2121,27 +2213,19 @@ export default {
         console.log('Error in getTrialUsers', e)
       }
     },
-    extractPageFromUrl(url) {
-      if (!url) return null
-      const apiIndex = url.indexOf('api/')
-      if (apiIndex === -1) return null
-      return url.substring(apiIndex + 4) // '+ 4' skips the 'api/' part
-    },
-    async getContactsSearch() {
-      console.log(this.selectedTags)
+    async getBulkSearch() {
       this.loading = true
       try {
         const res = await Comms.api.getContacts({
           search: this.searchContactsText.trim(),
-          tags: this.selectedTags,
-          user_id: this.selectedUser.id,
+          tags: [this.bulkTag],
+          user_id: this.selectedUser ? this.selectedUser.id : null,
         })
-        this.allContacts = res.results
-        this.contacts = res.results
-        this.totalContacts = res.count
-        this.previous = res.previous
-        this.next = res.next
-        this.currentPage = 1
+        this.bulkEmails = res.results.map((user) => user.journalist_ref.email)
+        console.log('RESULTS', res.results)
+        console.log('EMAILS', this.bulkEmails)
+        this.manualBulk = true
+        this.togglePitchModal(true, this.isPaid)
       } catch (e) {
         console.error(e)
       } finally {
@@ -2757,7 +2841,7 @@ table {
   z-index: 10000;
   box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
 
   .option {
     font-size: 13px;
@@ -2785,6 +2869,47 @@ table {
       background-color: $soft-gray;
     }
   }
+
+  .selector {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 0;
+  }
+}
+
+.area-input-outline {
+  width: 300px;
+  background-color: $offer-white;
+  padding: 5px 8px;
+  border-radius: 4px;
+  line-height: 1.75;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  outline: none;
+  letter-spacing: 0.5px;
+  font-size: 14px;
+  font-family: $thin-font-family;
+  font-weight: 400;
+  text-align: left;
+  overflow: auto;
+  scroll-behavior: smooth;
+  color: $dark-black-blue;
+
+  resize: none;
+}
+
+.outlined {
+  border: 1px solid $pinky;
+}
+
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  background: url('~@/assets/images/downArrow.svg') no-repeat calc(100% - 8px) center;
+  background-size: 16px;
 }
 
 .thin-font {
@@ -4884,5 +5009,13 @@ textarea::placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.pro-tag {
+  padding: 3px 4px;
+  border-radius: 6px;
+  color: white;
+  background-color: $pinky;
+  font-size: 11px;
 }
 </style>

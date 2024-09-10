@@ -1,5 +1,21 @@
 <template>
   <div class="email-tracking">
+    <Modal v-if="deleteModalOpen" class="delete-modal">
+      <div class="delete-container">
+        <header style="font-size: 20px; padding: 8px 0 0 0" @click="toggleDeleteModal">
+          <img src="@/assets/images/close.svg" height="18px" alt="" />
+        </header>
+        <main>
+          <h2>Delete Email</h2>
+          <p>Are you sure you want to delete this email ?</p>
+
+          <div style="margin-top: 20px" class="row">
+            <button @click="toggleDeleteModal" class="secondary-button">Cancel</button>
+            <button @click="removeTracker()" class="red-button">Delete</button>
+          </div>
+        </main>
+      </div>
+    </Modal>
     <Modal v-if="emailModalOpen" class="paid-modal">
       <div class="regen-container">
         <div style="background-color: white" class="paid-header sticky-header">
@@ -17,7 +33,6 @@
         </div>
 
         <div class="paid-body">
-          <!-- <h4>Activities</h4> -->
           <pre class="pre-text" v-html="selectedEmail.body"></pre>
         </div>
 
@@ -112,21 +127,6 @@
 
         <div style="margin-bottom: 8px; overflow: hidden; height: 400px" class="paid-body">
           <div style="position: relative">
-            <!-- <div class="row">
-              <div
-                class="rowed"
-                style="
-                  padding-bottom: 12px;
-                  border-bottom: 1px solid rgba(0, 0, 0, 0.135);
-                  width: 100%;
-                "
-              >
-                <p style="margin: 0; padding: 0; font-size: 18px; margin-right: 8px">From:</p>
-
-                <p class="e-container" style="margin: 0">{{ user.email }}</p>
-              </div>
-            </div> -->
-
             <div style="position: relative">
               <p
                 style="
@@ -147,29 +147,6 @@
                 v-model="targetEmail"
                 type="email"
               />
-              <!-- <input
-                v-else
-                style="margin-bottom: 0; padding-left: 26px"
-                class="primary-input-underline"
-                type="email"
-                :class="{ coraltext: emailError, greenText: emailVerified }"
-                disabled
-              /> -->
-              <!-- 
-              <div v-if="verifying" style="top: 50%" class="abs-placed loading-small">
-                Finding email
-                <div style="margin-left: 8px" class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-              </div>
-
-              <div v-else-if="emailVerified" class="rowed green-img abs-placed" style="top: 35%">
-                <img src="@/assets/images/shield-check.svg" height="18px" alt="" />
-              </div>
-
-              <div v-else-if="emailError" class="abs-placed red-img" style="top: 35%">
-                <img src="@/assets/images/shield-x.svg" height="14px" alt="" />
-              </div> -->
             </div>
 
             <div style="position: relative; margin-bottom: 8px">
@@ -208,13 +185,6 @@
               v-model:content="revisedPitch"
               class="text-editor"
             />
-
-            <!-- <div v-if="loadingDraft" style="margin-left: 12px" class="loading-small-absolute">
-              <p>Generating email</p>
-              <div class="dot"></div>
-              <div class="dot"></div>
-              <div class="dot"></div>
-            </div> -->
           </div>
         </div>
 
@@ -249,21 +219,6 @@
                 Update draft before closing
               </p>
             </div>
-
-            <!-- <div style="margin-left: 8px" class="img-container s-wrapper">
-              <img
-                style="filter: invert(30%)"
-                src="@/assets/images/close.svg"
-                height="18px"
-                alt=""
-              />
-              <div class="s-tooltip">Reject</div>
-            </div>
-
-            <div class="img-container s-wrapper">
-              <img class="turq-filter" src="@/assets/images/check.svg" height="14px" alt="" />
-              <div class="s-tooltip">Approve</div>
-            </div> -->
           </div>
 
           <div class="row">
@@ -361,6 +316,7 @@
             />
             <div class="resizer"></div>
           </th>
+          <th>Delete</th>
         </tr>
       </thead>
       <tbody v-if="sortedEmails.length">
@@ -446,6 +402,16 @@
             </div>
             <div v-else>No activities</div>
           </td>
+          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
+            <img
+              @click="toggleDeleteModal(email.id)"
+              style="cursor: pointer"
+              class="pink-filter"
+              src="@/assets/images/trash.svg"
+              height="14px"
+              alt=""
+            />
+          </td>
         </tr>
       </tbody>
       <tbody v-else>
@@ -484,6 +450,7 @@ export default {
 
   data() {
     return {
+      deleteModalOpen: false,
       loadingDraft: false,
       showingStatus: false,
       emails: [],
@@ -726,6 +693,40 @@ export default {
   },
 
   methods: {
+    toggleDeleteModal(id) {
+      if (id) {
+        this.currentId = id
+        this.deleteModalOpen = !this.deleteModalOpen
+      } else {
+        this.deleteModalOpen = !this.deleteModalOpen
+      }
+    },
+    async removeTracker() {
+      try {
+        const res = await Comms.api.removeTracker({
+          id: this.currentId,
+        })
+        this.toggleDeleteModal()
+        this.fetchEmails()
+        this.$toast('Email removed', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        console.log(res)
+      } catch (e) {
+        this.$toast('Error removing email, try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        console.log(e)
+      }
+    },
     checkForChanges() {
       console.log('changing')
       if (
@@ -855,7 +856,6 @@ export default {
       try {
         const response = await Comms.api.getTrackedEmails()
         this.emails = response.results
-        console.log('EMAILS ARE HERE', this.emails)
         // this.openRate = Math.round(response.rates.open_rate)
         // this.replyRate = response.rates.reply_rate
       } catch (error) {
@@ -1604,5 +1604,53 @@ export default {
   &:hover {
     color: $pinky;
   }
+}
+
+.pink-filter {
+  filter: invert(43%) sepia(88%) saturate(559%) hue-rotate(280deg) brightness(86%) contrast(83%) !important;
+}
+
+.delete-modal {
+  margin-top: 120px;
+  width: 100%;
+  height: 100%;
+}
+
+.delete-container {
+  width: 500px;
+  height: 220px;
+  color: $base-gray;
+  font-family: $thin-font-family;
+  font-size: 14px;
+  line-height: 24px;
+  font-weight: 400;
+
+  header {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+
+    p {
+      cursor: pointer;
+      margin-top: -24px;
+      margin-right: 12px !important;
+    }
+  }
+
+  main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.red-button {
+  @include dark-blue-button();
+  border: none;
+  color: white;
+  background-color: $coral;
+  border-radius: 16px;
+  margin-left: 16px;
 }
 </style>

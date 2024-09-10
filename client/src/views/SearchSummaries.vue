@@ -1563,7 +1563,7 @@
                 height="14px"
                 alt=""
               />
-              <a style="text-decoration: none" class="pink-text">ManagrAI Pro</a>
+              <a style="text-decoration: none" class="pink-text">ManagrAI PRO</a>
             </div>
             <div>
               <img src="@/assets/images/camera.svg" height="14px" alt="" />
@@ -7424,7 +7424,7 @@ export default {
       return 'https://managr.ai/contact'
     },
     onboardingLink() {
-      return 'https://www.loom.com/share/67b6640bd4a84de0aee9dd7fe63b6258?sid=6d7793ff-2303-4cbf-8202-f5b254d731ee'
+      return 'https://www.loom.com/share/115402e27c0c442b8204e19e5d65fb00?sid=c9116dfa-12f6-48bf-a68e-0dab11aa9789'
     },
     placeHolderText() {
       let text = ''
