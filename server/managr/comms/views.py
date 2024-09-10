@@ -156,6 +156,25 @@ def getclips(request):
         return {"error": str(e)}
 
 
+def process_journalists(journalists, contacts):
+    for idx, journalist_info in enumerate(journalists):
+        name_list = journalist_info["name"].split(" ")
+        first = name_list[0]
+        last = name_list[len(name_list) - 1]
+        try:
+            journalist = contacts.get(
+                journalist__first_name__iexact=first, journalist__last_name__iexact=last
+            )
+            journalists[idx]["email"] = journalist.journalist.email
+        except JournalistContact.DoesNotExist as e:
+            print(f"{e}: {journalist_info['name']}")
+            continue
+        except Exception as e:
+            print(e)
+            continue
+    return journalists
+
+
 # VIEWSETS
 
 
@@ -2165,18 +2184,8 @@ class DiscoveryViewSet(
                     )
                 res = open_ai_exceptions._handle_response(r)
                 res_content = json.loads(res.get("choices")[0].get("message").get("content"))
-                journalists = res_content.get("journalists")
-                for idx, journalist_info in enumerate(journalists):
-                    name_list = journalist_info["name"].split(" ")
-                    first = name_list[0]
-                    last = name_list[len(name_list) - 1]
-                    try:
-                        journalist = contacts.get(
-                            journalist__first_name__iexact=first, journalist__last_name__iexact=last
-                        )
-                        journalists[idx]["email"] = journalist.journalist.email
-                    except Journalist.DoesNotExist:
-                        continue
+                journalists_res = res_content.get("journalists")
+                journalists = process_journalists(journalists_res, contacts)
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -2279,13 +2288,11 @@ class JournalistContactViewSet(
         return Response(status=status.HTTP_200_OK, data={"tags": tags})
 
     def create(self, request, *args, **kwargs):
-        print(request.data)
         user = request.user
         journalist = request.data.pop("journalist").strip()
         email = request.data.pop("email").strip()
         outlet = request.data.pop("outlet").strip()
         journalist = check_journalist_validity(journalist, outlet, email)
-        print(journalist)
         if isinstance(journalist, dict) and "error" in journalist.keys():
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -40,29 +40,6 @@
             <div class="dropdown-header">
               <h3>Select User</h3>
             </div>
-
-            <!-- <div style="margin: 8px 0 16px 0; padding-right: 12px" class="search">
-              <div style="width: 100%" class="input">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path
-                    fill-rule="evenodd"
-                    clip-rule="evenodd"
-                    d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
-                    fill="currentColor"
-                  ></path>
-                </svg>
-                <input v-model="searchUsersText" class="search-input" :placeholder="`Search...`" />
-                <img
-                  v-if="searchUsersText"
-                  @click="clearUsersText"
-                  src="@/assets/images/close.svg"
-                  class="pointer"
-                  height="12px"
-                  alt=""
-                />
-              </div>
-            </div> -->
-
             <div class="dropdown-body">
               <div class="col">
                 <div v-if="!searchUsersText" @click="selectAllUsers" class="dropdown-item">All</div>
@@ -502,7 +479,7 @@ export default {
   height: 88vh;
   margin: 0 auto;
   // padding: 72px 32px 16px 32px;
-  padding: 108px 132px 32px 132px;
+  padding: 108px 96px 32px 96px;
   font-family: $thin-font-family;
   color: $dark-black-blue;
 

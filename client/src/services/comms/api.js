@@ -435,6 +435,14 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    async removeTracker(data) {
+        try {
+            const res = await this.client.delete(`tracker/${data.id}/`)
+            return res
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
     async createDraft(data) {
         try {
             const res = await this.client.post('tracker/', data)
