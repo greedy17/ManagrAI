@@ -2068,10 +2068,8 @@ export default {
           style: this.writingStyle,
           journalist: this.currentContact.journalist_ref.first_name,
         })
-
-        const body = res.pitch
-          .replace(/^Subject(?: Line)?:[\s\S]*?\n/i, '')
-          .replace(/email: [^"]*/, '')
+        console.log(res)
+        const body = res.body
         const signature = this.user.emailSignature ? this.user.emailSignature : ''
         const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
           /\n/g,
@@ -2079,7 +2077,7 @@ export default {
         )}  </p>`
         const quill = this.$refs.quill.quill
         quill.clipboard.dangerouslyPasteHTML(html)
-        this.subject = res.pitch.match(/^Subject(?: Line)?:(.*)\n/)[1].trim()
+        this.subject = res.subject
       } catch (e) {
         console.error(e)
       } finally {

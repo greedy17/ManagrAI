@@ -1558,6 +1558,7 @@ class PitchViewSet(
                     prompt,
                     token_amount=token_amount,
                     top_p=0.1,
+                    response_format={"type": "json_object"},
                 )
                 with Variable_Client(timeout) as client:
                     r = client.post(
@@ -1567,6 +1568,7 @@ class PitchViewSet(
                     )
                 r = open_ai_exceptions._handle_response(r)
                 pitch = r.get("choices")[0].get("message").get("content")
+                pitch = json.loads(pitch)
                 user.add_meta_data("emailDraft")
                 break
             except open_ai_exceptions.StopReasonLength:
@@ -1599,7 +1601,7 @@ class PitchViewSet(
                 break
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
-        return Response({"pitch": pitch})
+        return Response(data=pitch)
 
 
 class AssistAlertViewSet(

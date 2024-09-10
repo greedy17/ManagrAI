@@ -4608,10 +4608,7 @@ export default {
           style: ex,
           with_style: true,
         })
-
-        const body = res.pitch
-          .replace(/^Subject(?: Line)?:[\s\S]*?\n/i, '')
-          .replace(/email: [^"]*/, '')
+        const body = res.body
         const signature = this.user.emailSignature ? this.user.emailSignature : ''
         const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
           /\n/g,
@@ -4646,15 +4643,11 @@ export default {
           style: this.writingStyle,
           journalist: this.currentJournalist,
         })
-        const emailRegex = /email: ([^"]*)/
-        const match = res.pitch.match(emailRegex)
-        if (match) {
-          const email = match[1]
-          this.targetEmail = email
-        }
-        const body = res.pitch
-          .replace(/^Subject(?: Line)?:[\s\S]*?\n/i, '')
-          .replace(/email: [^"]*/, '')
+
+        this.targetEmail = res.email
+
+        const body = res.body
+
         const signature = this.user.emailSignature ? this.user.emailSignature : ''
         const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
           /\n/g,
@@ -4662,7 +4655,7 @@ export default {
         )}  </p>`.trim()
         const quill = this.$refs.quill.quill
         quill.clipboard.dangerouslyPasteHTML(html)
-        this.subject = res.pitch.match(/^Subject(?: Line)?:(.*)\n/)[1].trim()
+        this.subject = res.subject
       } catch (e) {
         console.error(e)
       } finally {
@@ -5292,8 +5285,8 @@ export default {
           body: this.revisedPitch,
           recipient: this.targetEmail,
           name: this.currentJournalist,
-          cc: [this.ccEamil],
-          bcc: [this.bccEmail],
+          // cc: [this.ccEamil],
+          // bcc: [this.bccEmail],
         })
 
         this.emailJournalistModalOpen = false
@@ -5358,25 +5351,18 @@ export default {
             style: this.writingStyle,
             journalist: this.currentJournalist,
           })
-          const emailRegex = /email: ([^"]*)/
-          const match = res.pitch.match(emailRegex)
-          if (match) {
-            const email = match[1]
-            this.targetEmail = email
-          }
-          const body = res.pitch
-            .replace(/^Subject(?: Line)?:[\s\S]*?\n/i, '')
-            .replace(/email: [^"]*/, '')
+          console.log(res)
+          this.targetEmail = res.email
+          const body = res.body
           const signature = this.user.emailSignature ? this.user.emailSignature : ''
           const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
             /\n/g,
             '</p><p>',
-          )}  </p>`.trim()
+          )}  </p>`
           const quill = this.$refs.quill.quill
           quill.clipboard.dangerouslyPasteHTML(html)
-          this.subject = res.pitch.match(/^Subject(?: Line)?:(.*)\n/)[1].trim()
+          this.subject = res.subject
         }
-
         this.verifyEmail()
       } catch (e) {
         console.error(e)
