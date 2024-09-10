@@ -76,7 +76,7 @@ class CustomAssistAlertAdmin(admin.ModelAdmin):
 
 
 class CustomJournalAdmin(admin.ModelAdmin):
-    list_display = ("datetime_created", "email", "outlet", "verified")
+    list_display = ("datetime_created", "email", "outlet", "verified", "date_verified")
     ordering = ("datetime_created",)
     list_filter = ("outlet",)
     ordering = ("-datetime_created",)
