@@ -767,6 +767,7 @@ def _add_journalist_to_db(data, verified):
     data["first_name"] = first
     data["last_name"] = last
     data["outlet"] = publication
+    data["date_verified"] = datetime.datetime.now()
     serializer = JournalistSerializer(data=data)
     try:
         serializer.is_valid(raise_exception=True)
