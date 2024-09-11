@@ -3,6 +3,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from managr.comms.models import AssistAlert
 from managr.comms.tasks import emit_send_news_summary
+from managr.comms.utils import convert_to_server_time
 
 
 class Command(BaseCommand):
@@ -22,9 +23,10 @@ class Command(BaseCommand):
             if settings.IN_DEV or options["test"]:
                 run_at = str(datetime.datetime.now())
             else:
-                run_at = alert.run_at.replace(
+                run_at = convert_to_server_time(alert.run_at, alert.user.timezone)
+                run_at = run_at.replace(
                     year=current_day.year, month=current_day.month, day=current_day.day
                 )
-                run_at = str(run_at)
+            run_at = str(run_at)
             emit_send_news_summary(str(alert.id), run_at)
         return

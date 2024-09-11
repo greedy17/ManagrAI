@@ -1,7 +1,6 @@
 import json
 import httpx
 import logging
-import pytz
 import io
 import csv
 from django.db.models import Q
@@ -99,19 +98,8 @@ from managr.slack.helpers.utils import send_to_error_channel
 
 logger = logging.getLogger("managr")
 
+
 # HELPER FUNCTIONS
-
-
-def add_timezone_and_convert_to_utc(datetime_str, user_timezone):
-    user_timezone_obj = timezone(user_timezone)
-    localized_datetime = user_timezone_obj.localize(
-        datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M:%S.%f")
-    )
-    utc_time = pytz.utc
-    converted_datetime = localized_datetime.astimezone(utc_time)
-    return converted_datetime
-
-
 def getclips(request):
     try:
         user = User.objects.get(id=request.GET.get("user_id"))
@@ -163,7 +151,7 @@ def process_journalists(journalists, contacts):
         last = name_list[len(name_list) - 1]
         try:
             journalist = contacts.get(
-                journalist__first_name__iexact=first, journalist__last_name__iexact=last
+                journalist__first_name__icontains=first, journalist__last_name__iexact=last
             )
             journalists[idx]["email"] = journalist.journalist.email
         except JournalistContact.DoesNotExist as e:
@@ -1637,8 +1625,7 @@ class AssistAlertViewSet(
 
     def create(self, request, *args, **kwargs):
         datetime = request.data.pop("run_at")
-        converted_datetime = add_timezone_and_convert_to_utc(datetime, request.user.timezone)
-        request.data["run_at"] = converted_datetime
+        request.data["run_at"] = datetime
         try:
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -2183,6 +2170,7 @@ class DiscoveryViewSet(
                         headers=core_consts.OPEN_AI_HEADERS,
                     )
                 res = open_ai_exceptions._handle_response(r)
+                print(res)
                 res_content = json.loads(res.get("choices")[0].get("message").get("content"))
                 journalists_res = res_content.get("journalists")
                 journalists = process_journalists(journalists_res, contacts)
@@ -2455,14 +2443,15 @@ class EmailTrackerViewSet(
         url_path="bulk-draft",
     )
     def draft_bulk_emails(self, request, *args, **kwargs):
-        result = TaskResults.objects.create(
-            function_name="emit_process_bulk_draft", user_id=str(request.user.id)
-        )
-        task = emit_process_bulk_draft(request.data, str(request.user.id), str(result.id))
-        result.task = task
-        result.save()
-        data = {"task_id": str(result.id)}
-        return Response(status=status.HTTP_200_OK, data=data)
+        # result = TaskResults.objects.create(
+        #     function_name="emit_process_bulk_draft", user_id=str(request.user.id)
+        # )
+        # task = emit_process_bulk_draft(request.data, str(request.user.id), str(result.id))
+        # result.task = task
+        # result.save()
+        # data = {"task_id": str(result.id)}
+        # return Response(status=status.HTTP_200_OK, data=data)
+        return Response(status=status.HTTP_200_OK)
 
 
 # ENDPOINTS

@@ -170,7 +170,7 @@ def OPEN_AI_CHAT_COMPLETIONS_BODY(
     user_name,
     prompt,
     system_role=False,
-    token_amount=2000,
+    token_amount=False,
     temperature=False,
     top_p=False,
     model="gpt-4o",

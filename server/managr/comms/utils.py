@@ -5,6 +5,7 @@ import csv
 import fitz
 import tempfile
 import requests
+import pytz
 from datetime import datetime, timezone, timedelta
 from functools import reduce
 from managr.core.utils import Variable_Client
@@ -960,3 +961,33 @@ def test_prompt(pitch, user_id):
             journalist_data = f"Unknown exception: {e}"
             break
     return journalist_data
+
+
+def generate_test_journalists(start, stop, email="zach@mymanagr.com"):
+    from managr.comms.serializers import JournalistSerializer, JournalistContactSerializer
+
+    user = User.objects.get(email=email)
+    for i in range(start, stop):
+        first = f"tfirst{i}"
+        last = f"tlast{i}"
+        email = f"t.{last}@testing.com"
+        data = {"first_name": first, "last_name": last, "outlet": "Testing", "email": email}
+        j_serializer = JournalistSerializer(data=data)
+        j_serializer.is_valid(raise_exception=True)
+        j_serializer.save()
+        journalist = j_serializer.instance
+        serializer = JournalistContactSerializer(
+            data={"journalist": journalist.id, "user": user.id}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+    return
+
+
+def convert_to_server_time(alert_time, user_timezone):
+    user_timezone_obj = pytz.timezone(user_timezone)
+    localized_datetime = user_timezone_obj.localize(alert_time, "%Y-%m-%dT%H:%M:%S.%f")
+    server_timezone = settings.TIME_ZONE
+    server_time = pytz.timezone(server_timezone)
+    converted_datetime = localized_datetime.astimezone(server_time)
+    return converted_datetime
