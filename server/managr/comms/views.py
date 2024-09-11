@@ -151,7 +151,7 @@ def process_journalists(journalists, contacts):
         last = name_list[len(name_list) - 1]
         try:
             journalist = contacts.get(
-                journalist__first_name__icontains=first, journalist__last_name__iexact=last
+                journalist__first_name__icontains=first, journalist__last_name__icontains=last
             )
             journalists[idx]["email"] = journalist.journalist.email
         except JournalistContact.DoesNotExist as e:
@@ -2443,15 +2443,14 @@ class EmailTrackerViewSet(
         url_path="bulk-draft",
     )
     def draft_bulk_emails(self, request, *args, **kwargs):
-        # result = TaskResults.objects.create(
-        #     function_name="emit_process_bulk_draft", user_id=str(request.user.id)
-        # )
-        # task = emit_process_bulk_draft(request.data, str(request.user.id), str(result.id))
-        # result.task = task
-        # result.save()
-        # data = {"task_id": str(result.id)}
-        # return Response(status=status.HTTP_200_OK, data=data)
-        return Response(status=status.HTTP_200_OK)
+        result = TaskResults.objects.create(
+            function_name="emit_process_bulk_draft", user_id=str(request.user.id)
+        )
+        task = emit_process_bulk_draft(request.data, str(request.user.id), str(result.id))
+        result.task = task
+        result.save()
+        data = {"task_id": str(result.id)}
+        return Response(status=status.HTTP_200_OK, data=data)
 
 
 # ENDPOINTS
