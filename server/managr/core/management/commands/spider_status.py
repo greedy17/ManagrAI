@@ -13,9 +13,9 @@ class Command(BaseCommand):
     help = "Batch Spiders to run"
 
     def handle(self, *args, **options):
-        batch_size = 10
         tasks = Task.objects.all()
-        locked_tasks = tasks.filter(locked_at__isnull=False, task_name__contains="spider")
+        spider_tasks = tasks.filter(task_name__contains="spider")
+        locked_tasks = spider_tasks.filter(locked_at__isnull=False)
         if len(locked_tasks):
             dt = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
             for task in locked_tasks:
@@ -28,7 +28,7 @@ class Command(BaseCommand):
                     url_list = ",".join(params)
                     _run_spider_batch(url_list)
 
-        if len(tasks) == 0:
+        if len(spider_tasks) == 0:
             sources = NewsSource.domain_list(True)
             if len(sources):
                 print(f"SOURCE NOT RAN: {sources}")
