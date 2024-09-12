@@ -150,10 +150,13 @@ def process_journalists(journalists, contacts):
         first = name_list[0]
         last = name_list[len(name_list) - 1]
         try:
-            journalist = contacts.get(
+            journalist = contacts.filter(
                 journalist__first_name__icontains=first, journalist__last_name__icontains=last
-            )
-            journalists[idx]["email"] = journalist.journalist.email
+            ).first()
+            if journalist:
+                journalists[idx]["email"] = journalist.journalist.email
+            else:
+                continue
         except JournalistContact.DoesNotExist as e:
             print(f"{e}: {journalist_info['name']}")
             continue

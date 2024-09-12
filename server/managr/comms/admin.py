@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.contrib import admin
 from django.db.models import Q
 from .models import (
@@ -17,6 +18,15 @@ from .models import (
 )
 
 # Register your models here.
+
+
+def update_date_verified(modeladmin, request, queryset):
+    now = datetime.now()
+    queryset.update(date_verified=now)
+    modeladmin.message_user(request, f"{queryset.count()} contacts were successfully updated.")
+
+
+update_date_verified.short_description = "Update date verified"
 
 
 class CustomSearch(admin.ModelAdmin):
@@ -81,6 +91,7 @@ class CustomJournalAdmin(admin.ModelAdmin):
     list_filter = ("outlet",)
     ordering = ("-datetime_created",)
     search_fields = ("email",)
+    actions = [update_date_verified]
 
 
 class CustomEmailTrackerAdmin(admin.ModelAdmin):

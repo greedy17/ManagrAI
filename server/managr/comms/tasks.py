@@ -1029,7 +1029,10 @@ def _process_bulk_draft(data, user_id, task_id):
         has_error = False
         token_amount = 2000
         timeout = 60.0
-        contact = JournalistContact.objects.get(user=user, journalist__email=email)
+        try:
+            contact = JournalistContact.objects.filter(user=user, journalist__email=email)
+        except JournalistContact.DoesNotExist:
+            continue
         if not contact.bio:
             res = contact.generate_bio()
             if not res:
