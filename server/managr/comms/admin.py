@@ -29,6 +29,15 @@ def update_date_verified(modeladmin, request, queryset):
 update_date_verified.short_description = "Update date verified"
 
 
+def update_crawling(modeladmin, request, queryset):
+    for instance in queryset:
+        instance.crawling
+    modeladmin.message_user(request, f"{queryset.count()} sources were updated")
+
+
+update_crawling.short_description = "Update crawling"
+
+
 class CustomSearch(admin.ModelAdmin):
     list_display = ("user", "type", "input_text", "search_boolean")
     list_filter = ("user__organization",)
@@ -55,6 +64,7 @@ class CustomNewsSource(admin.ModelAdmin):
     readonly_fields = ("access_count", "newest_article_date")
     search_fields = ["domain"]
     list_filter = ("is_active", "is_crawling")
+    actions = [update_crawling]
 
     def get_search_results(self, request, queryset, search_term):
         queryset, use_distinct = super().get_search_results(request, queryset, search_term)
@@ -103,6 +113,7 @@ class CustomJournalistContactAdmin(admin.ModelAdmin):
     list_display = ("datetime_created", "user", "journalist")
     ordering = ("-datetime_created",)
     list_filter = ("user",)
+    search_fields = ["journalist__email", "journalist__first_name"]
 
 
 class CustomCompanyDetail(admin.ModelAdmin):
