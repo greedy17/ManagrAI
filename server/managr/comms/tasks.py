@@ -1030,10 +1030,10 @@ def _process_bulk_draft(data, user_id, task_id):
         token_amount = 2000
         timeout = 60.0
         try:
-            contact = JournalistContact.objects.filter(user=user, journalist__email=email)
+            contact = JournalistContact.objects.filter(user=user, journalist__email=email).first()
         except JournalistContact.DoesNotExist:
             continue
-        if not contact.bio:
+        if contact and not contact.bio:
             res = contact.generate_bio()
             if not res:
                 failed_emails.append(email)

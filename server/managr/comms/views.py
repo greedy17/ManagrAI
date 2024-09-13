@@ -2001,12 +2001,8 @@ class DiscoveryViewSet(
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 if social:
                     prompt = comms_consts.OPEN_AI_SOCIAL_BIO(journalist, company, results, text)
-                elif search:
-                    prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(journalist, results, company, text)
                 else:
-                    prompt = comms_consts.OPEN_AI_DISCOVERY_RESULTS_PROMPT(
-                        journalist, results, company, text
-                    )
+                    prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(journalist, results, company, text)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
