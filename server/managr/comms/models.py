@@ -100,6 +100,7 @@ class Search(TimeStampModel):
                 datetime.now().date(), clips, input_text, instructions, for_client
             )
         )
+        print('PROMPT IS HERE -- >', prompt)
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
             user.email,
             prompt,
