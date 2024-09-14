@@ -134,7 +134,6 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
     ',
     company: [Company name],
     email: '[EMAIL IF FOUND]'
-
     Output bio MUST follow these rules:
     1. Separate each section with a <br/>, no additional spacing or padding.
     2. Use <strong> tags for bold text.
@@ -421,7 +420,7 @@ def OPEN_AI_IMAGE_CONTENT(images, instructions, tokens):
     return body
 
 
-def OPEN_AI_REWRITE_PTICH(original, bio, style, with_style,journalist,name):
+def OPEN_AI_REWRITE_PTICH(original, bio, style, with_style, journalist, name):
     if not with_style:
         prompt = f"""
         Craft a personalized media pitch, following the instructions below:

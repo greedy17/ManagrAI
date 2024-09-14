@@ -4,6 +4,7 @@ import logging
 import base64
 import hashlib
 import httpx
+import pytz
 from datetime import datetime, timedelta
 from dateutil import parser
 from django.db import models
@@ -1162,8 +1163,9 @@ class EmailTracker(TimeStampModel):
         return False
 
     def add_activity(self, type):
-        date = datetime.now()
-        date_str = date.isoformat()
+        timezone = pytz.timezone(self.user.timezone)
+        date = datetime.now(pytz.utc)
+        date_str = date.astimezone(timezone).isoformat()
         new_item = f"{type}|{date_str}"
         self.activity_log.append(new_item)
         return self.save()

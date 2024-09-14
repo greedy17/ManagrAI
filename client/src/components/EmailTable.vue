@@ -876,13 +876,13 @@ export default {
       const date = new Date(dateTime)
       const now = new Date()
       const diffInMilliseconds = now - date
+
       const diffInMinutes = Math.floor(diffInMilliseconds / (1000 * 60))
       const diffInHours = Math.floor(diffInMilliseconds / (1000 * 60 * 60))
       const diffInDays = Math.floor(diffInMilliseconds / (1000 * 60 * 60 * 24))
-
       let formattedTime
-      if (diffInMinutes < 120) {
-        formattedTime = `${diffInMinutes - 60} minute${diffInMinutes - 60 !== 1 ? 's' : ''} ago`
+      if (diffInMinutes < 60) {
+        formattedTime = `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`
       } else if (diffInHours < 24) {
         formattedTime = `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`
       } else if (diffInDays < 30) {

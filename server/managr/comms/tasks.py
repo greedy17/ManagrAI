@@ -767,6 +767,7 @@ def _add_journalist_to_db(data, verified):
     data["first_name"] = first
     data["last_name"] = last
     data["outlet"] = publication
+    data["date_verified"] = datetime.datetime.now()
     serializer = JournalistSerializer(data=data)
     try:
         serializer.is_valid(raise_exception=True)
@@ -1028,8 +1029,11 @@ def _process_bulk_draft(data, user_id, task_id):
         has_error = False
         token_amount = 2000
         timeout = 60.0
-        contact = JournalistContact.objects.get(user=user, journalist__email=email)
-        if not contact.bio:
+        try:
+            contact = JournalistContact.objects.filter(user=user, journalist__email=email).first()
+        except JournalistContact.DoesNotExist:
+            continue
+        if contact and not contact.bio:
             res = contact.generate_bio()
             if not res:
                 failed_emails.append(email)

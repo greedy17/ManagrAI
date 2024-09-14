@@ -150,10 +150,13 @@ def process_journalists(journalists, contacts):
         first = name_list[0]
         last = name_list[len(name_list) - 1]
         try:
-            journalist = contacts.get(
+            journalist = contacts.filter(
                 journalist__first_name__icontains=first, journalist__last_name__icontains=last
-            )
-            journalists[idx]["email"] = journalist.journalist.email
+            ).first()
+            if journalist:
+                journalists[idx]["email"] = journalist.journalist.email
+            else:
+                continue
         except JournalistContact.DoesNotExist as e:
             print(f"{e}: {journalist_info['name']}")
             continue
@@ -1998,12 +2001,8 @@ class DiscoveryViewSet(
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 if social:
                     prompt = comms_consts.OPEN_AI_SOCIAL_BIO(journalist, company, results, text)
-                elif search:
-                    prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(journalist, results, company, text)
                 else:
-                    prompt = comms_consts.OPEN_AI_DISCOVERY_RESULTS_PROMPT(
-                        journalist, results, company, text
-                    )
+                    prompt = comms_consts.OPEN_AI_RESULTS_PROMPT(journalist, results, company, text)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
