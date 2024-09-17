@@ -13258,6 +13258,7 @@ input[type='time'].has-placeholder::-webkit-datetime-edit {
     display: flex;
     align-items: center;
     justify-content: center;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
   }
 
   &__chat-bubble {
