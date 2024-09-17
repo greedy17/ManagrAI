@@ -1562,7 +1562,6 @@ class PitchViewSet(
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
-                    response_format={"type": "json_object"},
                     model="o1-mini",
                 )
                 with Variable_Client(timeout) as client:
@@ -2164,7 +2163,6 @@ class DiscoveryViewSet(
                         headers=core_consts.OPEN_AI_HEADERS,
                     )
                 res = open_ai_exceptions._handle_response(r)
-                print(res)
                 res_content = json.loads(res.get("choices")[0].get("message").get("content"))
                 journalists_res = res_content.get("journalists")
                 journalists = process_journalists(journalists_res, contacts)
