@@ -1566,7 +1566,6 @@ class PitchViewSet(
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
-                    token_amount=token_amount,
                     top_p=0.1,
                     response_format={"type": "json_object"},
                     model="o1-mini",
