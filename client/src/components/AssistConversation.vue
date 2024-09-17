@@ -93,10 +93,22 @@
         </div>
       </div>
 
-      <div v-if="loading || summaryLoading" class="space-between">
+      <div v-if="(loading || summaryLoading) && currentChat.view !== 'write'" class="space-between">
         <div class="chat-bubble row">
           <img src="@/assets/images/iconlogo.png" height="24px" alt="" />
           <p v-typed="searchText"></p>
+          <img class="rotation" src="@/assets/images/loading.svg" height="14px" alt="" />
+        </div>
+        <div></div>
+      </div>
+
+      <div
+        v-else-if="(loading || summaryLoading) && currentChat.view === 'write'"
+        class="space-between"
+      >
+        <div class="chat-bubble row">
+          <img src="@/assets/images/iconlogo.png" height="24px" alt="" />
+          <p v-typed="writeSearchText"></p>
           <img class="rotation" src="@/assets/images/loading.svg" height="14px" alt="" />
         </div>
         <div></div>
@@ -134,44 +146,6 @@
         </div>
       </div>
     </div>
-
-    <!-- <div v-else-if="currentChat.view === 'write'">
-
-
-          <div v-if="userResponse" class="space-between">
-        <div></div>
-        <div class="chat-bubble row">
-          <img src="@/assets/images/profile.svg" height="12px" alt="" />
-          <p>{{ userResponse }}</p>
-        </div>
-      </div>
-
-      <div v-if="userResponse" class="space-between">
-        <div class="chat-bubble row">
-          <img src="@/assets/images/iconlogo.png" height="24px" alt="" />
-          <p v-typed="currentChat.responseText"></p>
-        </div>
-
-        <div></div>
-      </div>
-
-      <div v-if="secondResponse" class="space-between">
-        <div></div>
-        <div class="chat-bubble row">
-          <img src="@/assets/images/profile.svg" height="12px" alt="" />
-          <p>{{ secondResponse }}</p>
-        </div>
-      </div>
-
-      <div v-if="loading || summaryLoading" class="space-between">
-        <div class="chat-bubble row">
-          <img src="@/assets/images/iconlogo.png" height="24px" alt="" />
-          <p v-typed="searchText"></p>
-          <img class="rotation" src="@/assets/images/loading.svg" height="14px" alt="" />
-        </div>
-        <div></div>
-      </div>
-    </div> -->
   </div>
 </template>
 
@@ -182,6 +156,7 @@ export default {
     return {
       showSuggestions: false,
       searchText: 'Searching...',
+      writeSearchText: 'Writing...',
       noResponseText: 'No results found. Try again',
       suggestions: [
         {

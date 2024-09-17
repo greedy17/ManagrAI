@@ -887,7 +887,7 @@
             id="styleName"
             style="width: 100%; margin: 0.5rem 0 1rem 0"
             class="area-input-outline"
-            placeholder="Company Name..."
+            placeholder="Detail Name..."
             type="text"
             v-model="detailsName"
             :disabled="savingStyle"
@@ -900,7 +900,7 @@
             maxlength="8000"
             class="area-input-outline wider"
             style="width: 100%; margin: 0.5rem 0 0 0; max-height: 280px"
-            placeholder="Paste details here..."
+            placeholder="Paste company name and details here..."
             v-model="detailsBody"
             v-autoresize
           />
@@ -1178,7 +1178,7 @@
 
               <div v-if="mainView === 'write'" class="source-dropdown fadein">
                 <div
-                  @click.stop="toggleShowDetails"
+                  @click.stop="toggleMainDetails"
                   style="background-color: white; padding: 7px"
                   class="drop-header"
                 >
@@ -1204,8 +1204,8 @@
                 </div>
 
                 <div
-                  v-outside-click="hideDetails"
-                  v-show="showingDetails"
+                  v-outside-click="hideMainDetails"
+                  v-if="showingMainDetails"
                   class="drop-options-alt-up"
                   style="bottom: 48px"
                 >
@@ -1273,6 +1273,7 @@
                   </section>
                 </div>
               </div>
+
               <div v-if="mainView === 'news'" style="margin-top: 16px" class="row relative">
                 <div
                   @click.stop="toggleDate"
@@ -4090,6 +4091,7 @@ export default {
       chatting: false,
       showingDetailsEmail: false,
       showingStylesEmail: false,
+      showingMainDetails: false,
       discoverList: [],
       drafting: false,
       originalSummary: null,
@@ -4359,8 +4361,8 @@ export default {
       ],
       searchExamples: [
         {
-          title: 'News scans',
-          text: 'Uncover top storylines about a topic, industry, or company',
+          title: 'Top storylines',
+          text: 'Uncover top storylines about a popular topic or recent event.',
           tag: `News`,
           tagClass: 'blue-bg',
           imgSource: require('@/assets/images/newspaper.svg'),
@@ -5111,11 +5113,13 @@ export default {
         this.detailTitle = ''
         this.selectedOrg = ''
         this.showingDetails = false
+        this.showingMainDetails = false
         this.showingAllDetails = false
       }
       this.selectedOrg = deets
       this.detailTitle = title
       this.showingDetails = false
+      this.showingMainDetails = false
       this.showingAllDetails = false
     },
     addDetailsAlt(title, deets) {
@@ -5137,6 +5141,7 @@ export default {
       this.detailTitle = ''
       this.selectedOrg = ''
       this.showingDetails = false
+      this.showingMainDetails = false
       this.showingAllDetails = false
       this.showCompanySelection = false
     },
@@ -5198,6 +5203,9 @@ export default {
     hideDetails() {
       this.showingDetails = false
     },
+    hideMainDetails() {
+      this.showingMainDetails = false
+    },
     hideDetailsEmail() {
       this.showingDetailsEmail = false
     },
@@ -5213,6 +5221,9 @@ export default {
     },
     toggleShowDetailsEmail() {
       this.showingDetailsEmail = !this.showingDetailsEmail
+    },
+    toggleMainDetails() {
+      this.showingMainDetails = !this.showingMainDetails
     },
     toggleHelpMenu() {
       this.showingHelp = !this.showingHelp
@@ -13247,6 +13258,7 @@ input[type='time'].has-placeholder::-webkit-datetime-edit {
     display: flex;
     align-items: center;
     justify-content: center;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
   }
 
   &__chat-bubble {
