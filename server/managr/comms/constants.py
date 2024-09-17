@@ -715,6 +715,13 @@ def OPEN_AI_GOOGLE_QUERY(date, question):
 
     return prompt
 
+OPEN_AI_EMPTY_SEARCH_SUGGESTIONS = (
+    lambda search: f"""Using NewsAPI to search for '{search}' returned no results. Suggest 3 boolean searches that are likely to get news coverage. 
+    The first version should be a slightly modified to make it more broad. The second should be even more broad using an AND between terms, and the third version should be a broad, related topic.
+    Return the result as a JSON object in the following format: {{ "boolean": [suggestion1, suggestion2, suggestion3] }}
+    """
+)    
+
 
 DO_NOT_TRACK_LIST = [
     "https://www.wsj.com",
