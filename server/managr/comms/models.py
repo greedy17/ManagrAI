@@ -100,7 +100,7 @@ class Search(TimeStampModel):
                 datetime.now().date(), clips, input_text, instructions, for_client
             )
         )
-        print('PROMPT IS HERE -- >', prompt)
+        print("PROMPT IS HERE -- >", prompt)
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
             user.email,
             prompt,
@@ -278,10 +278,7 @@ class Pitch(TimeStampModel):
         # style = user.writing_style if user.writing_style else False
         prompt = comms_consts.OPEN_AI_PITCH(datetime.now().date(), type, instructions, style)
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-            user.email,
-            prompt,
-            token_amount=tokens,
-            top_p=0.1,
+            user.email, prompt, token_amount=tokens, top_p=0.1, model="o1-mini"
         )
         with Variable_Client(timeout) as client:
             r = client.post(
