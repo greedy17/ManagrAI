@@ -4382,7 +4382,7 @@ export default {
           chatText: 'Find journalists actively covering a news topic',
           chatResponse: 'First, tell us about your company (e.g., name and short description)',
           searchText:
-            'List up to 10 journalists that would be interested in writing about this topic, explain why. Topic :',
+            'Based on the news coverage, list up to 10 journalists that would be interested in writing about the following company or campaign and why:',
           details: true,
           responseText: 'Provide a current news topic or event',
         },
@@ -4431,7 +4431,7 @@ export default {
           chatText: 'Questions the media may ask based on recent news',
           chatResponse: 'First, tell us about your company (e.g., name and short description)',
           searchText:
-            'List 5 questions the media will ask this company based on this news. Company:',
+            'Based on the news coverage, list 5 questions the media will ask this company:',
           details: true,
           responseText: 'Provide a current news topic or event',
         },
