@@ -1047,7 +1047,6 @@ def _process_bulk_draft(data, user_id, task_id):
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
-                    top_p=0.1,
                     response_format={"type": "json_object"},
                     model="o1-mini",
                 )
