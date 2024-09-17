@@ -301,11 +301,7 @@ class PRSearchViewSet(
                     datetime.now().date(), text, search, length, instructions, True
                 )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                    user.email,
-                    prompt,
-                    "You are a VP of Communications",
-                    token_amount=token_amount,
-                    top_p=0.1,
+                    user.email, prompt, model="o1-mini"
                 )
                 with Variable_Client(timeout) as client:
                     r = client.post(
