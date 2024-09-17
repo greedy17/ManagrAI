@@ -728,6 +728,8 @@ def check_journalist_validity(journalist, outlet, email):
             data["first_name"] = first
         data["verified"] = is_valid
         data["last_name"] = last
+        if not len(data["email"]):
+            data["email"] = "unknown@domain.com"
         serializer = JournalistSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
