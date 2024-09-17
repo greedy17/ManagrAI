@@ -5319,7 +5319,7 @@ export default {
     },
     insertCitations(text) {
       return text.replace(/\[(\d+)\]/g, (match, p1) => {
-        const citationId = parseInt(p1)
+        const citationId = parseInt(p1) - 1
         const citation = this.googleResults.find((c) => c.id === citationId)
         if (citation) {
           return `
