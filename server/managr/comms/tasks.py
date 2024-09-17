@@ -1047,9 +1047,7 @@ def _process_bulk_draft(data, user_id, task_id):
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
-                    token_amount=token_amount,
-                    top_p=0.1,
-                    response_format={"type": "json_object"},
+                    model="o1-mini",
                 )
                 with Variable_Client(timeout) as client:
                     r = client.post(
@@ -1059,6 +1057,7 @@ def _process_bulk_draft(data, user_id, task_id):
                     )
                 r = open_ai_exceptions._handle_response(r)
                 r = r.get("choices")[0].get("message").get("content")
+                r = r.replace("```", "").replace("json", "")
                 r = json.loads(r)
                 serializer_data = {
                     "subject": r["subject"],
