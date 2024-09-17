@@ -446,6 +446,7 @@ def OPEN_AI_REWRITE_PTICH(original, bio, style, with_style, journalist, name):
         writing style: {style}
         """
     prompt += """
+    * DO NOT INCLUDE ```json``` in the output.
     OUTPUT JSON:
     body: REWRITTEN PITCH,
     subject: SUBJECT,
