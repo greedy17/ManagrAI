@@ -1051,7 +1051,7 @@
           </div>
 
           <div>
-            <div style="margin: 0 0 16px 0" class="row">
+            <div style="margin: 0 0 16px 0" class="row hide-mobile">
               <div
                 style="margin-right: 12px"
                 v-if="mainView === 'write'"
@@ -1318,9 +1318,9 @@
                 </div>
               </div>
             </div>
-            <div class="large-input-container">
+            <div class="large-input-container-alt">
               <div
-                style="box-shadow: none; border-radius: 28px"
+                style="border-radius: 28px"
                 class="input-container-gray"
                 :class="{ lbborder: newSearch }"
               >
@@ -1440,7 +1440,7 @@
           </div>
         </div>
 
-        <div class="abs-bottom-right">
+        <div class="abs-bottom-right hide-mobile">
           <img
             @click.stop="toggleHelpMenu"
             src="@/assets/images/help.svg"
@@ -1819,7 +1819,7 @@
         <div class="chat-window__footer">
           <div class="large-input-container">
             <div
-              style="box-shadow: none; border-radius: 28px"
+              style="border-radius: 28px"
               class="input-container-gray"
               :class="{ lbborder: newSearch }"
             >
@@ -1864,8 +1864,8 @@
     </div>
 
     <div v-else class="search">
-      <div style="height: 90vh" class="main" v-if="loading || summaryLoading">
-        <div class="body">
+      <div style="height: 90vh" class="main center-content" v-if="loading || summaryLoading">
+        <div class="body widebody">
           <div class="skeleton-loader">
             <div class="skeleton skeleton-title"></div>
             <div class="skeleton skeleton-text"></div>
@@ -1879,17 +1879,17 @@
           </div>
         </div>
 
-        <aside style="margin-top: -40px">
+        <!-- <aside style="margin-top: -40px">
           <div class="section">
             <div class="skeleton-loader">
               <div class="skeleton skeleton-large"></div>
             </div>
           </div>
-        </aside>
+        </aside> -->
       </div>
 
-      <section v-else class="main" :class="{ 'center-content': mainView === 'write' }">
-        <div style="position: relative" class="body" :class="{ widebody: mainView === 'write' }">
+      <section v-else class="center-content main">
+        <div style="position: relative" class="body widebody">
           <header class="content-header-test">
             <div class="row-top">
               <div class="image-container xxl-margin mobile-img" @click="resetAll">
@@ -3363,7 +3363,7 @@
                   <div>
                     <img
                       @click="goToArticle(result.link)"
-                      :src="result.image"
+                      :src="result.image ? result.image : logoPlaceholder"
                       class="card-photo-header"
                     />
                   </div>
@@ -3706,7 +3706,7 @@
           </section>
         </div>
 
-        <aside v-if="mainView !== 'write' && mainView !== 'discover'">
+        <!-- <aside v-if="mainView !== 'write' && mainView !== 'discover'">
           <div v-if="mainView !== 'web'" class="section">
             <div
               @click="toggleRelevant"
@@ -3941,10 +3941,10 @@
               />
             </div>
           </div>
-        </aside>
+        </aside> -->
 
-        <aside :class="{ removed: mainView === 'write' }" v-else>
-          <!-- <div v-if="mainView === 'write'" class="section" style="max-height: 70vh">
+        <!-- <aside :class="{ removed: mainView === 'write' }" v-else>
+          <div v-if="mainView === 'write'" class="section" style="max-height: 70vh">
             <div style="cursor: text" class="example-title nobottomborder">
               <div class="example-row">
                 <img
@@ -4010,7 +4010,7 @@
             </div>
 
 
-          </div> -->
+          </div>
 
           <div v-if="mainView === 'discover'" class="section" style="max-height: 70vh">
             <div style="cursor: text" class="example-title nobottomborder">
@@ -4048,7 +4048,7 @@
               </div>
             </div>
           </div>
-        </aside>
+        </aside> -->
       </section>
     </div>
   </div>
@@ -4073,6 +4073,7 @@ export default {
   },
   data() {
     return {
+      logoPlaceholder: require('@/assets/images/iconlogo.png'),
       responseEmpty: false,
       bioModalOpen: false,
       contactsModalOpen: false,
@@ -5319,7 +5320,7 @@ export default {
     },
     insertCitations(text) {
       return text.replace(/\[(\d+)\]/g, (match, p1) => {
-        const citationId = parseInt(p1) - 1
+        const citationId = parseInt(p1)
         const citation = this.googleResults.find((c) => c.id === citationId)
         if (citation) {
           return `
@@ -8950,14 +8951,14 @@ export default {
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
-    width: 32%;
+    // width: 32%;
   }
 
   @media only screen and (min-width: 1025px) and (max-width: 1300px) {
     // overflow: hidden;
     // text-overflow: ellipsis;
     // white-space: nowrap;
-    width: 32%;
+    // width: 32%;
   }
 
   p {
@@ -10487,18 +10488,17 @@ li {
   padding: 17vh 0 32px 0;
 
   @media only screen and (max-width: 600px) {
-    padding-left: 8px;
-    padding-right: 8px;
+    padding: 32px 8px 12px 8px;
   }
 
-  @media only screen and (min-width: 601px) and (max-width: 1024px) {
-    padding-left: 8px;
-    padding-right: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-  }
+  // @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  //   padding-left: 8px;
+  //   padding-right: 8px;
+  //   display: flex;
+  //   align-items: center;
+  //   justify-content: center;
+  //   flex-direction: column;
+  // }
 }
 
 .beta-span {
@@ -10580,19 +10580,15 @@ li {
   justify-content: space-between;
   flex-wrap: wrap;
   margin-top: 32px;
+  gap: 7px;
 
   @media only screen and (max-width: 600px) {
   }
 
-  @media only screen and (min-width: 601px) and (max-width: 1024px) {
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    // width: 100%;
+  @media only screen and (min-width: 601px) and (max-width: 1200px) {
   }
 
   @media only screen and (min-width: 1025px) {
-    gap: 7px;
   }
 }
 
@@ -10754,7 +10750,7 @@ li {
       height: 100%;
       overflow-y: scroll;
       overflow-x: hidden;
-      padding: 16px 20vw;
+      padding: 16px 18vw;
 
       @media only screen and (max-width: 600px) {
         padding: 0;
@@ -11008,11 +11004,11 @@ li {
   overflow: hidden;
 
   @media only screen and (max-width: 600px) {
-    padding: 0 16px;
+    padding: 0;
   }
 
-  @media only screen and (min-width: 601px) and (max-width: 1024px) {
-    padding: 0 16px;
+  @media only screen and (min-width: 601px) and (max-width: 1200px) {
+    padding: 0 10vw;
   }
 
   // @media only screen and (min-width: 1025px) {
@@ -11381,6 +11377,29 @@ textarea {
   font-size: 16px !important;
 }
 
+.hide-mobile {
+  @media only screen and (max-width: 600px) {
+    display: none;
+  }
+}
+
+.large-input-container-alt {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.025);
+  border-radius: 28px;
+  background-color: white;
+  width: 100%;
+  margin-bottom: 8px;
+
+  @media only screen and (max-width: 600px) {
+    width: 94vw !important;
+  }
+
+  // @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  //   width: 70vw !important;
+  // }
+}
+
 .large-input-container {
   border: 1px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.025);
@@ -11616,6 +11635,10 @@ textarea::placeholder {
     font-size: 14px;
   }
 
+  @media only screen and (min-width: 601px) and (max-width: 920px) {
+    padding: 12px 8px;
+  }
+
   &__header {
     width: 100%;
     display: flex;
@@ -11623,12 +11646,42 @@ textarea::placeholder {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 8px;
+
     p {
       font-family: $base-font-family;
       font-size: 16px;
     }
     img {
       margin-right: 8px;
+    }
+
+    @media only screen and (min-width: 601px) and (max-width: 1200px) {
+      img {
+        height: 10px;
+        margin-right: 2px;
+      }
+      p {
+        margin: 0;
+        font-size: 14px !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+
+    @media only screen and (max-width: 600px) {
+      img {
+        height: 10px;
+        margin-right: 2px;
+      }
+
+      p {
+        margin: 0;
+        font-size: 13px !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
     }
   }
 
@@ -11639,41 +11692,34 @@ textarea::placeholder {
     color: white;
     font-size: 11px;
     margin: 0;
+
+    @media only screen and (min-width: 601px) and (max-width: 1200px) {
+      padding: 0 4px;
+      font-size: 9px !important;
+    }
+
+    @media only screen and (max-width: 600px) {
+      font-size: 10px;
+      padding: 0 4px;
+    }
   }
 
-  // @media only screen and (max-width: 600px) {
-  //   flex-direction: row;
-  //   align-items: center;
-  //   justify-content: flex-start;
-  //   width: 100%;
-  //   height: 50px;
-  //   font-size: 14px;
-  //   white-space: nowrap;
-  //   overflow: hidden;
-  //   text-overflow: ellipsis;
-  // }
+  @media only screen and (max-width: 600px) {
+    padding: 10px;
+    height: 16vh;
+    width: 48%;
+    p {
+      font-size: 12px !important;
+    }
+  }
 
-  // @media only screen and (min-width: 601px) and (max-width: 1024px) {
-  //   flex-direction: row;
-  //   align-items: center;
-  //   justify-content: flex-start;
-  //   width: 70vw !important;
-  //   height: 50px;
-  //   font-size: 14px;
-  //   white-space: nowrap;
-  //   overflow: hidden;
-  //   text-overflow: ellipsis;
-  // }
-
-  // @media only screen and (min-width: 1025px) {
-  //   width: 15.7vw;
-  //   height: 116px;
-  //   gap: 8px;
-  // }
-
-  // @media only screen and (min-width: 1250px) {
-  //   width: 15.8vw;
-  // }
+  @media only screen and (min-width: 601px) and (max-width: 1200px) {
+    width: 19vw;
+    p {
+      margin: 0;
+      font-size: 12px !important;
+    }
+  }
 
   &:hover {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -12449,7 +12495,7 @@ textarea::placeholder {
 }
 
 .card-photo-header {
-  height: 150px;
+  height: 250px;
   width: 100%;
   margin: 0;
   object-fit: cover;
@@ -13258,7 +13304,7 @@ input[type='time'].has-placeholder::-webkit-datetime-edit {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    // border-top: 1px solid rgba(0, 0, 0, 0.1);
   }
 
   &__chat-bubble {
