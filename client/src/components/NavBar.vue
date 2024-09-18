@@ -168,15 +168,6 @@
         >
           <p>Assist</p>
         </router-link>
-
-        <!-- <router-link active-class="active-mobile" :to="{ name: 'Pitches' }" id="router-pitch">
-          <p>Write</p>
-        </router-link> -->
-
-        <!-- <router-link active-class="active-mobile" :to="{ name: 'Discover' }" id="router-pitch">
-          <p>Discover</p>
-        </router-link> -->
-
         <router-link active-class="active-mobile" :to="{ name: 'Contacts' }" id="router-pitch">
           <p>Network</p>
         </router-link>
@@ -190,7 +181,7 @@
         <p style="text-align: center" @click="logOut">Logout</p>
       </div>
 
-      <div id="relative-mobile">
+      <div v-if="$route.name === 'PRSummaries'" id="relative-mobile">
         <div>
           <div
             v-if="listName === 'news' || listName === 'social'"
@@ -233,22 +224,6 @@
               alt=""
             />
           </div>
-
-          <!-- <div
-            v-else-if="$route.name === 'Assist'"
-            @click.stop="toggleShowAssist"
-            class="row pointer nav-text"
-          >
-            Saved Assists
-            <img v-if="!showSavedAssist" src="@/assets/images/downArrow.svg" height="14px" alt="" />
-            <img
-              class="rotate-img"
-              v-else
-              src="@/assets/images/downArrow.svg"
-              height="14px"
-              alt=""
-            />
-          </div> -->
 
           <div
             v-else-if="listName === 'discover'"
@@ -492,25 +467,12 @@
         <router-link :to="{ name: 'PRSummaries' }">
           <div class="logo">
             <img @click="goHome" style="height: 28px" src="@/assets/images/newLogo.png" />
-            <!-- <div class="beta-tag">
-              <p id="pro-free-version" :class="!isPaid ? 'pointer' : ''" @click="openPlansModal">
-                {{ isPaid ? 'PRO' : 'Upgrade Plan' }}
-              </p>
-            </div> -->
           </div>
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'PRSummaries' }" id="router-summarize">
           <p>Assist</p>
         </router-link>
-
-        <!-- <router-link active-class="active" :to="{ name: 'Pitches' }" id="router-pitch">
-          <p>Write</p>
-        </router-link> -->
-
-        <!-- <router-link active-class="active" :to="{ name: 'Discover' }" id="router-pitch">
-          <p>Discover</p>
-        </router-link> -->
 
         <router-link active-class="active" :to="{ name: 'Contacts' }" id="router-pitch">
           <p>Network</p>
@@ -519,24 +481,6 @@
         <router-link active-class="active" :to="{ name: 'EmailTracking' }" id="router-pitch">
           <p>Track</p>
         </router-link>
-
-        <!-- <router-link
-          active-class="active"
-          :to="{ name: 'Assist' }"
-          id="router-assist"
-          v-if="isPaid"
-        >
-          <div class="row">
-            <p>Assist</p>
-          </div>
-        </router-link>
-
-        <router-link style="cursor: text" :to="{ name: '' }" id="router-assist-free" v-else>
-          <div class="row wrapper">
-            <p>Assist</p>
-            <p style="left: -40px" class="tooltip">Upgrade to PRO</p>
-          </div>
-        </router-link> -->
 
         <div class="auto-left">
           <div
@@ -552,7 +496,7 @@
             <p class="searches-used-text">{{ 10 - searchesUsed }} / 10</p>
             <div style="margin-left: -40px" class="tooltip-count">Remaining monthly credits</div>
           </div>
-          <div class="relative">
+          <div v-if="$route.name === 'PRSummaries'" class="relative">
             <div
               v-if="listName === 'news' || listName === 'social'"
               @click.stop="toggleShowSearches"
@@ -906,178 +850,6 @@
           </div>
         </div>
       </nav>
-      <!-- <div v-else-if="this.$store.state.user.role === 'PR' && isMobile" class="hamburger-container">
-        <img src="@/assets/images/menu-burger.svg" class="hamburger" @click="showMobileMenu" />
-      </div> -->
-      <!-- <nav v-if="mobileMenuOpen" class="mobile-nav-container" v-clickOutsideMobileNav>
-        <div @click="goHome" class="mobile-nav-top mar-left extra-padding-vert">
-          <p class="small-margin">Home</p>
-        </div>
-
-        <router-link active-class="active" :to="{ name: 'PRSummaries' }">
-          <p class="small-margin">Search</p>
-        </router-link>
-
-        <router-link active-class="active" :to="{ name: 'Pitches' }">
-          <p class="small-margin">Pitch</p>
-        </router-link>
-
-        <div class="relative mar-left">
-          <div
-            v-if="$route.name === 'PRSummaries'"
-            @click="toggleShowSearches"
-            class="row pointer nav-text saved-searches-mobile"
-          >
-            Saved Searches
-            <img
-              v-if="!showSavedSearches"
-              src="@/assets/images/downArrow.svg"
-              height="14px"
-              alt=""
-            />
-            <img
-              class="rotate-img"
-              v-else
-              src="@/assets/images/downArrow.svg"
-              height="14px"
-              alt=""
-            />
-          </div>
-          <div
-            v-else-if="$route.name === 'Pitches'"
-            @click="toggleShowPitches"
-            class="row pointer nav-text saved-searches-mobile"
-          >
-            Saved Content
-            <img
-              v-if="!showSavedPitches"
-              src="@/assets/images/downArrow.svg"
-              height="14px"
-              alt=""
-            />
-            <img
-              class="rotate-img"
-              v-else
-              src="@/assets/images/downArrow.svg"
-              height="14px"
-              alt=""
-            />
-          </div>
-          <div
-            v-else-if="$route.name === 'Assist'"
-            @click="toggleShowAssist"
-            class="row pointer nav-text saved-searches-mobile"
-          >
-            Saved Assists
-            <img v-if="!showSavedAssist" src="@/assets/images/downArrow.svg" height="14px" alt="" />
-            <img
-              class="rotate-img"
-              v-else
-              src="@/assets/images/downArrow.svg"
-              height="14px"
-              alt=""
-            />
-          </div>
-
-
-          <div v-if="showSavedSearches" class="">
-      
-
-            <div class="searches-container">
-              <div
-                @mouseenter="setIndex(i)"
-                @mouseLeave="removeIndex"
-                class="row relative"
-                v-for="(search, i) in searches"
-                :key="search.id"
-              >
-                <img
-                  class="search-icon mobile-search-icon invert"
-                  v-if="search.type === 'NEWS'"
-                  src="@/assets/images/memo.svg"
-                  height="12px"
-                  alt=""
-                />
-                <img
-                  class="search-icon mobile-search-icon"
-                  v-else-if="search.type === 'SOCIAL_MEDIA'"
-                  src="@/assets/images/comment.svg"
-                  height="12px"
-                  alt=""
-                />
-                <p @click="selectSearch(search)" class="light-gray-blue">
-                  {{ search.name }}
-                </p>
-
-                <img
-                  @click="toggleDeleteModal(search)"
-                  v-if="hoverIndex === i"
-                  class="absolute-icon"
-                  src="@/assets/images/trash.svg"
-                  height="12px"
-                  alt=""
-                />
-              </div>
-            </div>
-          </div>
-          <div v-else-if="showSavedPitches">
-            <div class="searches-container">
-              <div
-                @mouseenter="setIndex(i)"
-                @mouseLeave="removeIndex"
-                class="row relative"
-                v-for="(pitch, i) in pitches"
-                :key="pitch.id"
-              >
-                <img
-                  class="search-icon mobile-search-icon invert"
-                  v-if="pitch.type === 'NEWS'"
-                  src="@/assets/images/memo.svg"
-                  height="12px"
-                  alt=""
-                  @click="selectPitch(pitch)"
-                />
-                <img
-                  class="search-icon mobile-search-icon"
-                  v-else-if="pitch.type === 'SOCIAL_MEDIA'"
-                  src="@/assets/images/comment.svg"
-                  height="12px"
-                  alt=""
-                  @click="selectPitch(pitch)"
-                />
-                <p @click="selectPitch(pitch)" class="light-gray-blue">
-                  {{ pitch.name }}
-                </p>
-
-                <img
-                  @click="togglePitchDeleteModal(pitch)"
-                  v-if="hoverIndex === i"
-                  class="absolute-icon"
-                  src="@/assets/images/trash.svg"
-                  height="12px"
-                  alt=""
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <router-link active-class="active" :to="{ name: 'PRSettings' }">
-        
-          Users
-        </router-link>
-        <router-link active-class="active" :to="{ name: 'PRIntegrations' }">
-       
-          Integrations
-        </router-link>
-        <router-link active-class="active" :to="{ name: 'PRReports' }">
-       
-        </router-link>
-        <div active-class="active" @click="logOut" class="bottom">
-          <img class="minor-mar-right" src="@/assets/images/logout.svg" height="12px" alt="" /> Sign
-          out
-        </div>
-      </nav> -->
     </div>
   </div>
 </template>

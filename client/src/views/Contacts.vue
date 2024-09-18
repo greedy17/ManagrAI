@@ -707,12 +707,15 @@
               :disabled="loadingContacts || !orgInfo || !outletName || !contactName"
               class="primary-button"
             >
+              <img
+                v-if="loadingContacts"
+                class="rotation"
+                style="filter: none"
+                src="@/assets/images/loading.svg"
+                height="14px"
+                alt=""
+              />
               Continue
-              <div v-if="loadingContacts" style="margin-left: 12px" class="loading-small">
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-              </div>
             </button>
           </div>
         </footer>
