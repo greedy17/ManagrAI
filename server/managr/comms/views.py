@@ -1571,7 +1571,13 @@ class PitchViewSet(
                         headers=core_consts.OPEN_AI_HEADERS,
                     )
                 r = open_ai_exceptions._handle_response(r)
-                pitch = r.get("choices")[0].get("message").get("content")
+                pitch = (
+                    r.get("choices")[0]
+                    .get("message")
+                    .get("content")
+                    .replace("json", "")
+                    .replace("```", "")
+                )
                 pitch = json.loads(pitch)
                 user.add_meta_data("emailDraft")
                 break
