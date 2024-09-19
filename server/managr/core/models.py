@@ -1131,6 +1131,7 @@ class GoogleAccount(TimeStampModel):
                     recipient,
                     subject,
                     "core/email-templates/user-email.html",
+                    self.user.full_name,
                     {"body": body, "tracking_pixel_url": tracker_link},
                     cc,
                     bcc,
