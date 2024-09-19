@@ -4370,7 +4370,7 @@ export default {
           view: 'news',
           chatText: 'Uncover top storylines',
           chatResponse: 'Enter a topic, industry, or company',
-          searchText: 'List top storylines covering',
+          searchText: 'List the top 5 storylines based on the provided news coverage. Use lables',
           details: false,
         },
         {
@@ -4382,8 +4382,7 @@ export default {
           view: 'news',
           chatText: 'Find journalists actively covering a news topic',
           chatResponse: 'First, tell us about your company (e.g., name and short description)',
-          searchText:
-            'Based on the news coverage, list up to 10 journalists that would be interested in writing about the following company or campaign and why:',
+          searchText: `List the top journalists writing about this news topic (up to 10). Then suggest, in list form, which of these journalists the company provided should pitch and why. Make sure to label. Company:`,
           details: true,
           responseText: 'Provide a current news topic or event',
         },
@@ -4418,7 +4417,7 @@ export default {
           chatText: 'Provide creative newsjacking ideas',
           chatResponse: 'First, tell us about your company (e.g., name and short description)',
           searchText:
-            'Provide creative newsjacking ideas for this company based on this coverage. Companny:',
+            'Provide creative newsjacking ideas based on the news coverage, for this company. Use Labels:',
           details: true,
           responseText: 'Provide a current news topic or event',
         },
@@ -4432,7 +4431,7 @@ export default {
           chatText: 'Questions the media may ask based on recent news',
           chatResponse: 'First, tell us about your company (e.g., name and short description)',
           searchText:
-            'Based on the news coverage, list 5 questions the media will ask this company:',
+            'Based on the news coverage, list 5 questions the media will ask this company. Provide suggested answers as well. Use labels. :',
           details: true,
           responseText: 'Provide a current news topic or event',
         },
@@ -7156,7 +7155,8 @@ export default {
           this.chatSearch = ''
           this.$refs.textarea.dispatchEvent(new Event('textarea-clear'))
         } else {
-          this.newSearch = this.currentChat.searchText + ' ' + this.chatSearch
+          this.newSearch = this.chatSearch
+          this.newTemplate = this.currentChat.searchText + ' ' + this.chatSearch
           this.userResponse = this.chatSearch
           this.chatSearch = ''
           this.$refs.textarea.dispatchEvent(new Event('textarea-clear'))
