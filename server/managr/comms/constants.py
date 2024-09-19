@@ -446,7 +446,7 @@ def OPEN_AI_REWRITE_PTICH(original, bio, style, with_style, journalist, name):
         writing style: {style}
         """
     prompt += """
-    * DO NOT INCLUDE ```json``` in the output.
+    * DO NOT INCLUDE ```json``` in the output. Use backslash n for all new lines. Enclose keys in in double quotes.
     OUTPUT JSON OBJECT:
     {body: REWRITTEN PITCH,
     subject: SUBJECT,
