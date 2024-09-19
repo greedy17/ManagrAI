@@ -284,13 +284,14 @@ def TWITTER_USERNAME_INSTRUCTIONS(company):
 
 
 def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_client=False):
-    if not instructions:
-        instructions = DEFAULT_CLIENT_INSTRUCTIONS
+    # if not instructions:
+    #     instructions = DEFAULT_CLIENT_INSTRUCTIONS
 
     body = f"""
-    Today is {date}. Please provide a concise and accurate response per my instructions, using the given news coverage. If the instructions don't ask for anything specific, just provide a brief summary of the news in 150 words or less. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation. 
-        For example: 'Paris is the capital of France[1].' Only use this format to cite search results. Never cite more than 3 sources in a row. Do not include a references section at the end of your answer. Never make an entire list item a link. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
-        Make sure that your response is properly formatted simple html with good spacing. Do not include any styling and/or <meta> tags. Do not include ```html``` in your response.
+    Today is {date}. Please provide a concise and accurate response based on the news coverage below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the news coverage in 150 words or less. 
+    Cite your sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[1].' This is being used in a Javascript app so indexes must always start with 0. Only use this format to cite search results.
+    Only add citations at the end of sentences that the citation supports. Do not include a references section at the end of your answer. Never make an entire list item a link. Make sure that your response is properly formatted simple html with good spacing. 
+    Do not include any styling and/or <meta> tags. Do not include ```html``` in your response.
 
     Here is the news coverage:
     {clips}
