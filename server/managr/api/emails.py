@@ -11,11 +11,11 @@ import base64
 from email.mime.text import MIMEText
 
 
-def create_gmail_message(sender, sent_to, subject, template, context={}, cc=[], bcc=[]):
+def create_gmail_message(sender, sent_to, subject, template, name, context={}, cc=[], bcc=[]):
     html_body = render_to_string(template, context)
     message = MIMEText(html_body, "html")
     message["to"] = sent_to
-    message["from"] = sender
+    message["from"] = f"{name} <{sender}>"
     message["subject"] = subject
     if cc:
         message["cc"] = ", ".join(cc)
@@ -26,13 +26,13 @@ def create_gmail_message(sender, sent_to, subject, template, context={}, cc=[], 
     return {"raw": raw}
 
 
-def create_ms_message(sender, sent_to, subject, template, context={}, cc=[], bcc=[]):
+def create_ms_message(sender, sent_to, subject, template, name, context={}, cc=[], bcc=[]):
     html_body = render_to_string(template, context)
     email_message = {
         "message": {
             "subject": subject,
             "body": {"contentType": "HTML", "content": html_body},
-            "from": {"emailAddress": {"address": sender}},
+            "from": {"emailAddress": {"address": sender, "name": name}},
             "toRecipients": [{"emailAddress": {"address": sent_to}}],
         }
     }
