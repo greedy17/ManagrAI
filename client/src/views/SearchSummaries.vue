@@ -289,10 +289,10 @@
         </div>
       </div>
     </Modal>
-    <Modal style="margin-top: 64px" v-if="emailJournalistModalOpen" class="regen-modal">
+    <Modal style="margin-top: 56px" v-if="emailJournalistModalOpen" class="regen-modal">
       <!-- height: 80vh -->
       <div
-        style="width: 55vw; min-width: 500px; max-height: 1000px; height: 70vh"
+        style="width: 55vw; min-width: 500px; max-height: 1000px; height: 80vh"
         class="regen-container"
       >
         <div style="background-color: white; z-index: 1000" class="paid-header">
@@ -339,13 +339,13 @@
               >
                 To:
               </p>
+              <!-- :class="{ coraltext: emailError, greenText: emailVerified }" -->
               <input
                 v-if="!verifying || loadingPitch"
                 style="margin-bottom: 0; padding-left: 26px; padding-top: 6px"
                 class="primary-input-underline"
                 v-model="targetEmail"
                 type="email"
-                :class="{ coraltext: emailError, greenText: emailVerified }"
                 :disabled="loadingPitch || sendingEmail || verifying"
               />
               <input
@@ -357,6 +357,10 @@
                 disabled
               />
 
+              <!-- <div class="abs-placed row">
+                <p @click="showingCc = true" style="margin: 0 8px 0 0; cursor: pointer">Cc</p>
+                <p @click="showingBcc = true" style="margin: 0; cursor: pointer">Bcc</p>
+              </div> -->
               <div v-if="verifying" style="top: 50%" class="abs-placed loading-small">
                 Finding email
                 <div style="margin-left: 8px" class="dot"></div>
@@ -373,7 +377,55 @@
               </div>
             </div>
 
-            <div style="position: relative">
+            <div style="width: 100%" class="row">
+              <div style="position: relative; width: 50%">
+                <p
+                  style="
+                    margin: 0;
+                    padding: 0;
+                    font-size: 18px;
+                    position: absolute;
+                    left: 0;
+                    top: 18px;
+                  "
+                >
+                  Cc:
+                </p>
+                <input
+                  class="primary-input-underline"
+                  v-model="ccEmail"
+                  type="text"
+                  placeholder=""
+                  style="padding-left: 32px; margin-bottom: 0"
+                  :disabled="loadingPitch || sendingEmail"
+                />
+              </div>
+
+              <div style="position: relative; width: 50%">
+                <p
+                  style="
+                    margin: 0;
+                    padding: 0;
+                    font-size: 18px;
+                    position: absolute;
+                    left: 0;
+                    top: 18px;
+                  "
+                >
+                  Bcc:
+                </p>
+                <input
+                  class="primary-input-underline"
+                  v-model="bccEmail"
+                  type="text"
+                  placeholder=""
+                  style="padding-left: 40px; margin-bottom: 0"
+                  :disabled="loadingPitch || sendingEmail"
+                />
+              </div>
+            </div>
+
+            <div style="position: relative; margin: 0">
               <p
                 style="
                   margin: 0;
@@ -391,58 +443,10 @@
                 v-model="subject"
                 type="text"
                 placeholder=""
-                style="padding-left: 64px; padding-top: 6px; margin-bottom: 0; border-bottom: none"
+                style="padding-left: 64px; padding-top: 6px"
                 :disabled="loadingPitch || sendingEmail"
               />
             </div>
-
-            <!-- <div style="width: 100%" class="row">
-              <div style="position: relative; width: 50%">
-                <p
-                  style="
-                    margin: 0;
-                    padding: 0;
-                    font-size: 18px;
-                    position: absolute;
-                    left: 0;
-                    top: 20px;
-                  "
-                >
-                  Cc:
-                </p>
-                <input
-                  class="primary-input-underline"
-                  v-model="ccEamil"
-                  type="text"
-                  placeholder=""
-                  style="padding-left: 32px"
-                  :disabled="loadingPitch || sendingEmail"
-                />
-              </div>
-
-              <div style="position: relative; width: 50%">
-                <p
-                  style="
-                    margin: 0;
-                    padding: 0;
-                    font-size: 18px;
-                    position: absolute;
-                    left: 0;
-                    top: 20px;
-                  "
-                >
-                  Bcc:
-                </p>
-                <input
-                  class="primary-input-underline"
-                  v-model="bccEmail"
-                  type="text"
-                  placeholder=""
-                  style="padding-left: 40px;"
-                  :disabled="loadingPitch || sendingEmail"
-                />
-              </div>
-            </div> -->
 
             <quill-editor
               :disabled="loadingPitch || sendingEmail"
@@ -4073,6 +4077,8 @@ export default {
   },
   data() {
     return {
+      showingBcc: false,
+      showingCc: false,
       logoPlaceholder: require('@/assets/images/iconlogo.png'),
       responseEmpty: false,
       bioModalOpen: false,
@@ -4222,7 +4228,7 @@ export default {
       ],
       selectedOrg: '',
       bccEmail: '',
-      ccEamil: '',
+      ccEmail: '',
       targetEmail: '',
       revisedPitch: '',
       subject: '',
@@ -4680,6 +4686,8 @@ export default {
         this.revisedPitch = ''
         this.targetEmail = ''
         this.subject = ''
+        this.ccEmail = ''
+        this.bccEmail = ''
       }
     },
     targetEmail(newVal, oldVal) {
@@ -5834,8 +5842,8 @@ export default {
           body: this.revisedPitch,
           recipient: this.targetEmail,
           name: this.currentJournalist,
-          // cc: [this.ccEamil],
-          // bcc: [this.bccEmail],
+          cc: [this.ccEmail],
+          bcc: [this.bccEmail],
         })
 
         this.emailJournalistModalOpen = false
@@ -8570,14 +8578,18 @@ export default {
 }
 
 ::v-deep .ql-toolbar.ql-snow {
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
+  // border: 1px solid rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 4px;
+  padding: 0;
 }
 
 ::v-deep .ql-container {
+  border: none;
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
-  padding: 8px 2px;
+  padding: 8px 0 0 0;
+  margin-left: -8px;
 }
 
 ::v-deep .alternate {
@@ -8636,8 +8648,8 @@ export default {
 
 .abs-placed {
   position: absolute;
-  right: 8px;
-  top: 12px;
+  right: 4px;
+  top: 18px;
 
   p {
     padding: 0;
@@ -8741,9 +8753,11 @@ export default {
 }
 
 .text-editor {
-  height: 220px;
+  height: 35vh;
   width: 100%;
   border-radius: 8px;
+  // background-color: red;
+
   @media only screen and (max-width: 600px) {
     height: 140px;
   }
@@ -10407,7 +10421,7 @@ button:disabled {
 
 .loading-small-absolute {
   position: absolute;
-  top: 80%;
+  top: 70%;
   left: 30%;
   display: flex;
   align-items: center;
@@ -12235,7 +12249,7 @@ textarea::placeholder {
 }
 
 .bio-modal {
-  margin-top: 132px;
+  margin-top: 72px;
   @media only screen and (max-width: 600px) {
     margin-top: 62px;
   }

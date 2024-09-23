@@ -1889,7 +1889,7 @@ class DiscoveryViewSet(
             res = user.email_account.send_email(recipient, subject, body, name)
             user.add_meta_data("emailSent")
         else:
-            res = send_mailgun_email(user, name, subject, recipient, body, bcc)
+            res = send_mailgun_email(user, name, subject, recipient, body, bcc, cc)
         sent = res["sent"]
         if sent:
             if draftId:

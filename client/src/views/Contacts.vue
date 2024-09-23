@@ -2,7 +2,7 @@
   <div class="contacts fadein">
     <Modal v-if="googleModalOpen" class="bio-modal">
       <div class="bio-container">
-        <header>
+        <header style="border: none">
           <p style="font-size: 20px">
             {{
               currentContact.journalist_ref.first_name +
@@ -119,10 +119,20 @@
         </main>
       </div>
     </Modal>
-    <Modal v-if="pitchModalOpen" class="bio-modal med-modal">
-      <div style="overflow: hidden" class="bio-container med-container">
-        <header style="z-index: 10">
-          <p v-if="!bulking" style="font-size: 22px; margin: 8px 0">
+    <Modal v-if="pitchModalOpen" class="bio-modal">
+      <div
+        style="
+          overflow: hidden;
+          padding-left: 12px;
+          padding-right: 8px;
+          padding-left: 8px;
+          padding-bottom: 0;
+        "
+        class="bio-container"
+        :class="{ longmodal: showingEditor && !bulking }"
+      >
+        <header style="z-index: 10; border: none">
+          <p v-if="!bulking" style="font-size: 22px; margin: 8px 0 0 0">
             Pitch
             {{
               currentContact.journalist_ref.first_name +
@@ -195,16 +205,7 @@
           </div>
         </div>
 
-        <div
-          v-if="showingEditor"
-          style="
-            position: relative;
-            margin-top: 24px;
-            margin-bottom: 64px;
-            min-height: 120px;
-            height: fit-content;
-          "
-        >
+        <div v-if="showingEditor" style="position: relative; margin-top: 12px; margin-bottom: 64px">
           <div class="row">
             <div
               class="row"
@@ -218,23 +219,16 @@
 
               <p class="e-container" style="margin: 0">{{ user.email }}</p>
             </div>
-
-            <!-- <div
-              class="row"
-              style="
-                padding-bottom: 12px;
-                border-bottom: 1px solid rgba(0, 0, 0, 0.135);
-                width: 50%;
-              "
-            >
-              <p style="margin: 0; padding: 0; font-size: 18px; margin-right: 8px">Bcc:</p>
-              <p :title="bccEmail" class="b-container" style="margin: 0">{{ bccEmail }}</p>
-            </div> -->
           </div>
+
+          <!-- :class="{
+                coraltext: !currentContact.journalist_ref.verified,
+                greenText: currentContact.journalist_ref.verified,
+              }" -->
 
           <div style="position: relative">
             <p
-              style="margin: 0; padding: 0; font-size: 18px; position: absolute; left: 0; top: 20px"
+              style="margin: 0; padding: 0; font-size: 18px; position: absolute; left: 0; top: 16px"
             >
               To:
             </p>
@@ -242,14 +236,10 @@
               style="margin-bottom: 0; padding-left: 26px"
               class="primary-input-underline"
               v-model="currentContact.journalist_ref.email"
-              :class="{
-                coraltext: !currentContact.journalist_ref.verified,
-                greenText: currentContact.journalist_ref.verified,
-              }"
               type="email"
             />
 
-            <div
+            <!-- <div
               v-if="currentContact.journalist_ref.verified"
               class="row green-img abs-placed"
               style="top: 35%"
@@ -258,12 +248,60 @@
             </div>
             <div v-else class="abs-placed red-img" style="top: 35%">
               <img src="@/assets/images/shield-x.svg" height="14px" alt="" />
+            </div> -->
+          </div>
+
+          <div style="width: 100%" class="row">
+            <div style="position: relative; width: 50%">
+              <p
+                style="
+                  margin: 0;
+                  padding: 0;
+                  font-size: 18px;
+                  position: absolute;
+                  left: 0;
+                  top: 16px;
+                "
+              >
+                Cc:
+              </p>
+              <input
+                class="primary-input-underline"
+                v-model="ccEmail"
+                type="text"
+                placeholder=""
+                style="padding-left: 32px; margin-bottom: 0"
+                :disabled="loadingPitch || sendingEmail"
+              />
+            </div>
+
+            <div style="position: relative; width: 50%">
+              <p
+                style="
+                  margin: 0;
+                  padding: 0;
+                  font-size: 18px;
+                  position: absolute;
+                  left: 0;
+                  top: 16px;
+                "
+              >
+                Bcc:
+              </p>
+              <input
+                class="primary-input-underline"
+                v-model="bccEmail"
+                type="text"
+                placeholder=""
+                style="padding-left: 40px; margin-bottom: 0"
+                :disabled="loadingPitch || sendingEmail"
+              />
             </div>
           </div>
 
-          <div style="position: relative; margin-bottom: 8px">
+          <div style="position: relative; margin-bottom: 0">
             <p
-              style="margin: 0; padding: 0; font-size: 18px; position: absolute; left: 0; top: 20px"
+              style="margin: 0; padding: 0; font-size: 18px; position: absolute; left: 0; top: 16px"
             >
               Subject:
             </p>
@@ -272,7 +310,7 @@
               v-model="subject"
               type="text"
               placeholder=""
-              style="padding-left: 64px"
+              style="padding-left: 68px"
               :disabled="loadingPitch || sendingEmail"
             />
           </div>
@@ -531,7 +569,7 @@
             <!-- <button class="secondary-button" @click="togglePitchModal">Cancel</button> -->
             <button
               v-if="showingEditor"
-              :disabled="loadingPitch || sendingEmail || drafting"
+              :disabled="loadingPitch || sendingEmail || drafting || !revisedPitch"
               @click="createDraft"
               class="secondary-button"
             >
@@ -567,7 +605,7 @@
 
             <button
               v-else
-              :disabled="loadingPitch || sendingEmail"
+              :disabled="loadingPitch || sendingEmail || !revisedPitch"
               class="primary-button"
               @click="sendEmail"
             >
@@ -1136,19 +1174,19 @@
 
                 <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
                   <div class="rows">
-                    <!-- <div
+                    <div
                       @click="openPitchModal(contact)"
                       class="img-container s-wrapper"
-                      @mouseenter="showPopover($event, 'Create Pitch', i)"
+                      @mouseenter="showPopover($event, 'Send Email', i)"
                       @mouseleave="hidePopover"
                     >
                       <img
                         style="filter: invert(40%)"
-                        src="@/assets/images/microphone.svg"
+                        src="@/assets/images/email-round.svg"
                         height="14px"
                         alt=""
                       />
-                    </div> -->
+                    </div>
 
                     <!-- <div
                       @click="updateContact(contact)"
@@ -1195,7 +1233,7 @@
                     <div
                       @click="openDeleteModal(contact.id)"
                       class="img-container s-wrapper"
-                      @mouseenter="showPopover($event, 'Delete contact', i)"
+                      @mouseenter="showPopover($event, 'Delete Contact', i)"
                       @mouseleave="hidePopover"
                     >
                       <img
@@ -1329,6 +1367,9 @@ export default {
   },
   data() {
     return {
+      currentPublication: '',
+      bccEmail: '',
+      ccEmail: '',
       manualBulk: false,
       bulkTag: '',
       selectingBulkTag: false,
@@ -1403,7 +1444,6 @@ export default {
       sendingEmail: false,
       loadingPitch: false,
       revisedPitch: '',
-      bccEmail: '',
       showingEditor: false,
       content: '',
       toolbarOptions: [
@@ -1566,7 +1606,6 @@ export default {
   },
   created() {
     this.selectedUser = this.user
-    this.bccEmail = this.user.email
     this.getUsers()
     this.getInitialContacts()
     this.getTags()
@@ -1824,7 +1863,7 @@ export default {
           search: false,
           social: false,
         })
-
+        console.log(res.data)
         this.newContactBio = res.data.bio.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
         this.newContactImages = res.data.images
         this.currentPublication = res.data.company
@@ -1860,6 +1899,7 @@ export default {
       this.detailsModalOpen = !this.detailsModalOpen
     },
     async saveContact() {
+      console.log(this.currentPublication)
       this.savingContact = true
 
       try {
@@ -1869,7 +1909,7 @@ export default {
           journalist: this.contactName,
           bio: this.newContactBio,
           images: this.newContactImages,
-          outlet: this.outletName,
+          outlet: this.currentPublication,
         })
         this.$toast('Contact saved!', {
           timeout: 2000,
@@ -1975,11 +2015,14 @@ export default {
     openPitchModal(contact) {
       this.bulking = false
       this.googleModalOpen = false
-
       this.revisedPitch = ''
       this.showingEditor = false
       if (contact) {
         this.currentContact = contact
+        this.subject = ''
+        this.ccEmail = ''
+        this.bccEmail = ''
+        this.showingEditor = true
       }
 
       this.pitchModalOpen = true
@@ -2087,28 +2130,28 @@ export default {
     async sendEmail() {
       this.sendingEmail = true
       try {
-        Comms.api
-          .sendEmail({
-            subject: this.subject,
-            body: this.revisedPitch,
-            recipient: this.currentContact.journalist_ref.email,
-            name:
-              this.currentContact.journalist_ref.first_name +
-              ' ' +
-              this.currentContact.journalist_ref.last_name,
-          })
-          .then((response) => {
-            this.emailJournalistModalOpen = false
-            this.$toast('Pitch sent', {
-              timeout: 2000,
-              position: 'top-left',
-              type: 'success',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            })
-            this.revisedPitch = ''
-            this.sendingEmail = false
-          })
+        const res = await Comms.api.sendEmail({
+          subject: this.subject,
+          body: this.revisedPitch,
+          recipient: this.currentContact.journalist_ref.email,
+          name:
+            this.currentContact.journalist_ref.first_name +
+            ' ' +
+            this.currentContact.journalist_ref.last_name,
+          cc: [this.ccEmail],
+          bcc: [this.bccEmail],
+        })
+
+        this.emailJournalistModalOpen = false
+        this.$toast('Pitch sent', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.revisedPitch = ''
+        this.sendingEmail = false
       } catch (e) {
         console.log(e)
         this.$toast('Error sending email, try again', {
@@ -2181,6 +2224,10 @@ export default {
     },
     setContact(contact) {
       this.toggleGoogleModal()
+      this.drafting = false
+      this.subject = ''
+      this.ccEmail = ''
+      this.bccEmail = ''
       this.currentContact = contact
 
       if (!this.currentContact.bio) {
@@ -3671,7 +3718,7 @@ h2 {
 }
 
 .bio-modal {
-  margin-top: 132px;
+  margin-top: 56px;
   width: 70vw;
 
   @media only screen and (max-width: 750px) {
@@ -4316,12 +4363,12 @@ textarea::placeholder {
 }
 .primary-input-underline {
   width: 100%;
-  margin: 1rem 0;
+  margin: 10px 0;
   border: none;
   border-bottom: 1px solid rgba(0, 0, 0, 0.135);
   font-family: $thin-font-family !important;
   background-color: white;
-  font-size: 13px;
+  font-size: 16px;
   padding: 8px 20px 16px 18px;
   outline: none;
 }
@@ -4361,7 +4408,7 @@ textarea::placeholder {
 }
 
 .text-editor {
-  height: 160px;
+  height: 35vh;
   width: 100%;
   border-radius: 8px;
 
@@ -4623,6 +4670,20 @@ textarea::placeholder {
   padding: 12px;
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+::v-deep .ql-toolbar.ql-snow {
+  border: none;
+  border-radius: 4px;
+  padding: 0;
+}
+
+::v-deep .ql-container {
+  border: none;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  padding: 8px 0 0 0;
+  margin-left: -8px;
 }
 
 ::v-deep .ql-editor {
@@ -5020,5 +5081,10 @@ textarea::placeholder {
   color: white;
   background-color: $pinky;
   font-size: 11px;
+}
+
+.longmodal {
+  height: 80vh !important;
+  min-height: 580px;
 }
 </style>
