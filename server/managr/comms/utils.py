@@ -687,7 +687,8 @@ def alternate_google_search(query, number_of_results=5):
 
 def check_journalist_validity(journalist, outlet, email):
     from managr.comms.serializers import JournalistSerializer
-    print('OUTLET ---- > : ', outlet)
+
+    print("OUTLET ---- > : ", outlet)
     data = {"email": email, "outlet": outlet}
     name_list = journalist.split(" ")
     db_check = []
@@ -722,14 +723,12 @@ def check_journalist_validity(journalist, outlet, email):
                 if r["email"] is not None:
                     email = r["email"]
                     data["email"] = email
-                    if r["company"] != "false":
-                        data["outlet"] = r["company"]
             data["accuracy_score"] = score
             data["first_name"] = first
         data["verified"] = is_valid
         data["last_name"] = last
         if not len(data["email"]):
-            data["email"] = f"{first}.{last}@domain.com" 
+            data["email"] = f"{first}.{last}@domain.com"
         serializer = JournalistSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
