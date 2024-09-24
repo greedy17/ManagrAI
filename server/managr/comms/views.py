@@ -3,13 +3,14 @@ import httpx
 import logging
 import io
 import csv
+import re
 from django.db.models import Q
 from openpyxl import load_workbook
 from rest_framework import (
     mixins,
     viewsets,
 )
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from asgiref.sync import async_to_sync, sync_to_async
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
@@ -88,6 +89,7 @@ from managr.comms.utils import (
     alternate_google_search,
     check_journalist_validity,
     get_journalists,
+    modify_href,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
@@ -1884,12 +1886,11 @@ class DiscoveryViewSet(
         cc = request.data.get("cc", [])
         bcc = request.data.get("bcc", [])
         draftId = request.data.get("draftId", None)
-
         if user.has_google_integration or user.has_microsoft_integration:
             res = user.email_account.send_email(recipient, subject, body, name)
             user.add_meta_data("emailSent")
         else:
-            res = send_mailgun_email(user, name, subject, recipient, body, bcc)
+            res = send_mailgun_email(user, name, subject, recipient, body, bcc, cc)
         sent = res["sent"]
         if sent:
             if draftId:
@@ -2699,18 +2700,6 @@ def upload_pdf(request):
             res = open_ai_exceptions._handle_response(r)
 
             content = res.get("choices")[0].get("message").get("content")
-            # if len(images):
-            #     prompt = comms_consts.OPEN_AI_IMAGE_CONTENT(
-            #         images, "Generate a summary of the images", token_amount
-            #     )
-            #     with Variable_Client(timeout) as client:
-            #         r = client.post(
-            #             url,
-            #             data=json.dumps(prompt),
-            #             headers=core_consts.OPEN_AI_HEADERS,
-            #         )
-            #     res = open_ai_exceptions._handle_response(r)
-            #     print(res)
             break
         except open_ai_exceptions.StopReasonLength:
             logger.exception(
@@ -2772,13 +2761,18 @@ def email_tracking_endpoint(request):
     for param in params:
         param_split = param.split("=")
         param_dict[param_split[0]] = param_split[1]
-
-    response = HttpResponse(content_type="image/png")
     event_type = param_dict["type"]
     message_id = param_dict["id"]
     try:
         tracker = EmailTracker.objects.get(id=message_id)
         if event_type == "opened":
+            response = HttpResponse(content_type="image/png")
+            response.write(
+                b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
+                b"\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDAT\x08\xd7c`\x00\x00"
+                b"\x00\x02\x00\x01\xe2!\xbc\x33\x00\x00\x00\x00IEND\xaeB`\x82"
+            )
+            response["Content-Length"] = len(response.content)
             last_log = tracker.activity_log[len(tracker.activity_log) - 1]
             event, time = last_log.split("|")
             if event == "opened":
@@ -2796,6 +2790,8 @@ def email_tracking_endpoint(request):
         elif event_type == "failed":
             tracker.failed = True
         elif event_type == "clicked":
+            original_url = param_dict["redirect"]
+            response = original_url
             tracker.clicks += 1
         tracker.save()
         tracker.add_activity(event_type)
@@ -2803,13 +2799,12 @@ def email_tracking_endpoint(request):
         pass
     except Exception as e:
         logger.exception(f"{e}, {message_id}")
-    response.write(
-        b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
-        b"\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDAT\x08\xd7c`\x00\x00"
-        b"\x00\x02\x00\x01\xe2!\xbc\x33\x00\x00\x00\x00IEND\xaeB`\x82"
-    )
-    response["Content-Length"] = len(response.content)
-    return response
+    if event_type == "opened":
+        return response
+    else:
+        if "https" not in response:
+            response = "https://" + response
+        return HttpResponseRedirect(response)
 
 
 @api_view(["POST"])

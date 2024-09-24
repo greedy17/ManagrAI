@@ -722,8 +722,6 @@ def check_journalist_validity(journalist, outlet, email):
                 if r["email"] is not None:
                     email = r["email"]
                     data["email"] = email
-                    if r["company"] != "false":
-                        data["outlet"] = r["company"]
             data["accuracy_score"] = score
             data["first_name"] = first
         data["verified"] = is_valid
@@ -994,3 +992,15 @@ def convert_to_server_time(alert_time, user_timezone):
     server_time = pytz.timezone(server_timezone)
     converted_datetime = localized_datetime.astimezone(server_time)
     return converted_datetime
+
+
+def modify_href(match, id):
+    original_href = match.group(1)
+    new_href = (
+        core_consts.TRACKING_PIXEL_LINK
+        + "?redirect="
+        + original_href
+        + f"&id={id}"
+        + "&type=clicked"
+    )
+    return f'href="{new_href}"'
