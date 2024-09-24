@@ -1,6 +1,7 @@
 import uuid
 import json
 import logging
+import re
 from managr.utils.sites import get_site_url
 from urllib.parse import urlencode
 from datetime import datetime
@@ -1080,6 +1081,7 @@ class GoogleAccount(TimeStampModel):
         url = core_consts.GOOGLE_AUTHENTICATION_URI
         with Variable_Client() as client:
             res = client.post(url, params=params)
+            print(res)
             res = res.json()
         return res
 
@@ -1102,6 +1104,7 @@ class GoogleAccount(TimeStampModel):
 
     def send_email(self, recipient, subject, body, name, cc=[], bcc=[]):
         from managr.comms.serializers import EmailTrackerSerializer
+        from managr.comms.utils import modify_href
 
         url = core_consts.GOOGLE_SEND_EMAIL_URI("me")
         tracker_link = core_consts.TRACKING_PIXEL_LINK + "?type=opened"
@@ -1112,8 +1115,8 @@ class GoogleAccount(TimeStampModel):
                 if not instance:
                     data = {
                         "user": self.user.id,
-                        "recipient": recipient,
                         "body": body,
+                        "recipient": recipient,
                         "subject": subject,
                         "name": name,
                     }
@@ -1126,13 +1129,16 @@ class GoogleAccount(TimeStampModel):
                     serializer.save()
                     instance = serializer.instance
                 tracker_link += f"&id={str(instance.id)}"
+                tracker_id = instance.id
+                updated_body = re.sub(r'href="([^"]+)"', lambda m: modify_href(m, tracker_id), body)
+                data["body"] = updated_body
                 email = create_gmail_message(
                     self.user.email,
                     recipient,
                     subject,
                     "core/email-templates/user-email.html",
                     self.user.full_name,
-                    {"body": body, "tracking_pixel_url": tracker_link},
+                    {"body": updated_body, "tracking_pixel_url": tracker_link},
                     cc,
                     bcc,
                 )
@@ -1233,6 +1239,7 @@ class MicrosoftAccount(TimeStampModel):
 
     def send_email(self, recipient, subject, body, name, cc=[], bcc=[]):
         from managr.comms.serializers import EmailTrackerSerializer
+        from managr.comms.utils import modify_href
 
         url = core_consts.MICROSOFT_SEND_MAIL
         tracker_link = core_consts.TRACKING_PIXEL_LINK + "?type=opened"
@@ -1256,6 +1263,9 @@ class MicrosoftAccount(TimeStampModel):
                 serializer.save()
                 instance = serializer.instance
             tracker_link += f"&id={str(instance.id)}"
+            tracker_id = instance.id
+            updated_body = re.sub(r'href="([^"]+)"', lambda m: modify_href(m, tracker_id), body)
+            data["body"] = updated_body
             instance.add_activity("sent")
         except Exception as e:
             logger.exception(str(e))
@@ -1267,7 +1277,7 @@ class MicrosoftAccount(TimeStampModel):
                     recipient,
                     subject,
                     "core/email-templates/user-email.html",
-                    {"body": body, "tracking_pixel_url": tracker_link},
+                    {"body": updated_body, "tracking_pixel_url": tracker_link},
                     cc,
                     bcc,
                 )
