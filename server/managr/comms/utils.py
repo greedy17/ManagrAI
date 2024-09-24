@@ -688,7 +688,6 @@ def alternate_google_search(query, number_of_results=5):
 def check_journalist_validity(journalist, outlet, email):
     from managr.comms.serializers import JournalistSerializer
 
-    print("OUTLET ---- > : ", outlet)
     data = {"email": email, "outlet": outlet}
     name_list = journalist.split(" ")
     db_check = []
