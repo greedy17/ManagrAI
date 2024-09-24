@@ -1887,7 +1887,7 @@ class DiscoveryViewSet(
         bcc = request.data.get("bcc", [])
         draftId = request.data.get("draftId", None)
         if user.has_google_integration or user.has_microsoft_integration:
-            res = user.email_account.send_email(recipient, subject, body, name)
+            res = user.email_account.send_email(recipient, subject, body, name, cc, bcc)
             user.add_meta_data("emailSent")
         else:
             res = send_mailgun_email(user, name, subject, recipient, body, bcc, cc)
