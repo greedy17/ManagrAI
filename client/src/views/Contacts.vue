@@ -2022,6 +2022,7 @@ export default {
         this.subject = ''
         this.ccEmail = ''
         this.bccEmail = ''
+        this.revisedPitch = this.user.emailSignature ? ` \n${this.user.emailSignature}` : ''
         this.showingEditor = true
       }
 
