@@ -43,6 +43,7 @@ pymupdf = "*"
 psycopg2-binary = "*"
 lxml-html-clean = "*"
 openpyxl = "*"
+xlrd = "*"
 
 [requires]
 python_version = "3.9"

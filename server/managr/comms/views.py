@@ -3,7 +3,7 @@ import httpx
 import logging
 import io
 import csv
-import re
+import xlrd
 from django.db.models import Q
 from openpyxl import load_workbook
 from rest_framework import (
@@ -2970,8 +2970,9 @@ def read_column_names(request):
     file_obj = request.FILES.get("file")
     if file_obj:
         file_name = file_obj.name
+        print(file_name)
         try:
-            if file_name.endswith(".xlsx") or file_name.endswith(".xls"):
+            if file_name.endswith(".xlsx"):
                 workbook = load_workbook(file_obj, data_only=True)
                 res_data = []
                 for sheet in workbook.sheetnames:
@@ -2980,6 +2981,16 @@ def read_column_names(request):
                         cell.value
                         for cell in current_sheet[1]
                         if cell.value not in [None, False, True]
+                    ]
+                    res_data.append({"name": sheet, "columns": column_names})
+            elif file_name.endswith(".xls"):
+                workbook = xlrd.open_workbook(file_contents=file_obj.read())
+                res_data = []
+                for sheet in workbook.sheet_names():
+                    current_sheet = workbook.sheet_by_name(sheet)
+                    column_names = [
+                        current_sheet.cell_value(0, col_idx)
+                        for col_idx in range(current_sheet.ncols)
                     ]
                     res_data.append({"name": sheet, "columns": column_names})
             elif file_name.endswith(".csv"):
@@ -2994,6 +3005,7 @@ def read_column_names(request):
                 )
             return Response({"sheets": res_data}, status=status.HTTP_200_OK)
         except Exception as e:
+            print(e)
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
@@ -3009,20 +3021,35 @@ def process_excel_file(request):
     if file_obj:
         index_values = {}
         journalist_values = {}
-        workbook = load_workbook(file_obj, data_only=True)
-        sheet = workbook[sheet_name]
-        for key in labels.keys():
-            label = labels[key]
-            for cell in sheet[1]:
-                if cell.value == label:
-                    index_values[cell.column] = key
-        for idx in index_values.keys():
-            row_values = []
-            for row in sheet.iter_rows(min_row=2, min_col=idx, max_col=idx, values_only=True):
-                value = row[0].strip() if isinstance(row[0], str) else row[0]
-                row_values.append(value)
-            journalist_values[index_values[idx]] = row_values
-
+        if file_obj.name.endswith(".xlsx"):
+            workbook = load_workbook(file_obj, data_only=True)
+            sheet = workbook[sheet_name]
+            for key in labels.keys():
+                label = labels[key]
+                for cell in sheet[1]:
+                    if cell.value == label:
+                        index_values[cell.column] = key
+            for idx in index_values.keys():
+                row_values = []
+                for row in sheet.iter_rows(min_row=2, min_col=idx, max_col=idx, values_only=True):
+                    value = row[0].strip() if isinstance(row[0], str) else row[0]
+                    row_values.append(value)
+                journalist_values[index_values[idx]] = row_values
+        else:
+            workbook = xlrd.open_workbook(file_contents=file_obj.read())
+            sheet = workbook.sheet_by_name(sheet_name)
+            for key in labels.keys():
+                label = labels[key]
+                for col_idx in range(sheet.ncols):
+                    if sheet.cell_value(0, col_idx) == label:
+                        index_values[col_idx] = key
+            for col_idx in index_values.keys():
+                row_values = []
+                for row_idx in range(1, sheet.nrows):
+                    value = sheet.cell_value(row_idx, col_idx)
+                    value = value.strip() if isinstance(value, str) else value
+                    row_values.append(value)
+                journalist_values[index_values[col_idx]] = row_values
         filtered_emails = [email for email in journalist_values.get("email", []) if email]
         result = TaskResults.objects.create(
             function_name="emit_process_contacts_excel", user_id=str(request.user.id)
