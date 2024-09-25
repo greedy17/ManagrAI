@@ -4979,6 +4979,8 @@ export default {
           discover: discover,
         })
 
+        console.log(res)
+
         if (discover) {
           this.summary = res
           this.discoverList = res.journalists
@@ -4998,9 +5000,12 @@ export default {
         }
         this.scrollToTop()
         this.refreshUser()
-        if (this.chatting && this.journalisListtData) {
+        if (this.chatting && this.discoverList.length) {
+          this.chatting = false
           this.changeSearch({ search: this.newSearch, template: this.newTemplate })
-        } else if (this.chatting && !this.journalisListtData) {
+          console.log('im here')
+        } else if (this.chatting && !this.discoverList.length) {
+          console.log('im here 2')
           this.responseEmpty = true
         }
       }
