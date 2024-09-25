@@ -893,6 +893,7 @@
         </footer>
       </div>
     </Modal>
+    <!-- <div @click="isDrawerOpen = !isDrawerOpen">TEST</div> -->
 
     <div class="top-row">
       <section>
@@ -1205,7 +1206,7 @@
                     <div
                       @click="setContact(contact)"
                       class="img-container s-wrapper"
-                      @mouseenter="showPopover($event, 'View Bio', i)"
+                      @mouseenter="showPopover($event, 'View Profile', i)"
                       @mouseleave="hidePopover"
                     >
                       <img
@@ -1345,6 +1346,83 @@
         </div>
       </aside>
     </div>
+
+    <div v-if="isDrawerOpen" :class="['drawer', { open: isDrawerOpen }]">
+      <div class="drawer-header">
+        <div class="space-between">
+          <div>
+            <h3>
+              {{
+                currentContact.journalist_ref.first_name +
+                ' ' +
+                currentContact.journalist_ref.last_name
+              }}
+            </h3>
+            <p>{{ currentContact.journalist_ref.outlet }}</p>
+          </div>
+
+          <button @click="isDrawerOpen = false">Close</button>
+        </div>
+
+        <div class="nav">
+          <p :class="{ activelink: section === 'bio' }" @click="setSection('bio')">Bio</p>
+          <p :class="{ activelink: section === 'notes' }" @click="setSection('notes')">Notes</p>
+          <p :class="{ activelink: section === 'activity' }" @click="setSection('activity')">
+            Activity
+          </p>
+          <p :class="{ activelink: section === 'insights' }" @click="setSection('insights')">
+            AI Insights
+          </p>
+        </div>
+      </div>
+
+      <div v-if="section === 'bio'" class="drawer-body fadein">
+        <section v-if="!bioLoading">
+          <div class="drawer-images" v-if="currentContact.bio">
+            <img
+              v-for="(url, i) in currentContact.images"
+              :key="i"
+              :src="`${url}`"
+              height="64px"
+              alt=""
+            />
+          </div>
+
+          <div v-if="currentContact.bio" class="bio-body" v-html="currentContact.bio"></div>
+
+          <div style="height: 300px; width: 100%; margin-left: 0" v-else class="bio-body">
+            <div style="margin-left: -32px" class="row">
+              Updated bio
+              <span>
+                <img
+                  style="margin-left: 12px; margin-right: -54px"
+                  src="@/assets/images/refresh-pr.svg"
+                  height="12px"
+                  alt=""
+              /></span>
+              will appear here.
+            </div>
+          </div>
+        </section>
+
+        <section v-else>
+          <div style="height: 180px" class="bio-body">
+            <div class="loading-small">
+              <p style="margin-right: 8px">Updating bio</p>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div v-else-if="section === 'notes'" class="drawer-body fadein">NOTES HERE</div>
+
+      <div v-else-if="section === 'activity'" class="drawer-body fadein">ACTIVITY HERE</div>
+
+      <div v-else-if="section === 'insights'" class="drawer-body fadein">INSIGHTS HERE</div>
+    </div>
   </div>
 </template>
 
@@ -1367,6 +1445,8 @@ export default {
   },
   data() {
     return {
+      section: 'bio',
+      isDrawerOpen: false,
       currentPublication: '',
       bccEmail: '',
       ccEmail: '',
@@ -1612,6 +1692,9 @@ export default {
     this.getWritingStyles()
   },
   methods: {
+    setSection(name) {
+      this.section = name
+    },
     toggleBulkTagSelect() {
       if (!this.isPaid) {
         return
@@ -2224,7 +2307,8 @@ export default {
       }
     },
     setContact(contact) {
-      this.toggleGoogleModal()
+      // this.toggleGoogleModal()
+      this.isDrawerOpen = !this.isDrawerOpen
       this.drafting = false
       this.subject = ''
       this.ccEmail = ''
@@ -2512,6 +2596,74 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+.drawer {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  height: 100vh;
+  width: 50%;
+  background-color: white;
+  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  transition: right 0.3s ease-in-out;
+  padding: 24px 0;
+
+  &.open {
+    right: 0;
+  }
+
+  // Full width on mobile screens
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+}
+
+.drawer-header {
+  padding: 56px 32px 0 16px;
+  h2 {
+    margin: 0;
+  }
+  p {
+    margin: 8px 0;
+  }
+
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+
+  .nav {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+
+    p {
+      margin: 8px 32px 12px 0;
+      cursor: pointer;
+      font-size: 15px;
+      &:hover {
+        opacity: 0.4;
+      }
+    }
+  }
+}
+
+.drawer-body {
+  padding: 16px;
+  overflow-y: scroll;
+  height: 90vh;
+}
+
+.drawer-images {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+  img {
+    border-radius: 4px;
+  }
+}
+
 .skeleton {
   background-color: rgb(236, 236, 236);
   border-radius: 4px;
@@ -2631,6 +2783,11 @@ export default {
   align-items: center;
   gap: 6px;
   margin-left: 12px;
+}
+
+.activelink {
+  font-family: $base-font-family;
+  color: $dark-black-blue;
 }
 
 .active-page {
@@ -3890,10 +4047,16 @@ h2 {
     margin-inline-start: 0px;
     margin-inline-end: 0px;
     line-height: 1;
+
+    margin-bottom: 16px !important;
+    margin-top: 12px !important;
+    font-family: $base-font-family;
+    font-size: 19px;
   }
 
   a {
     text-decoration: none;
+    color: $lite-blue;
   }
 
   strong {
