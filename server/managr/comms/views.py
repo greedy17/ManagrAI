@@ -89,7 +89,7 @@ from managr.comms.utils import (
     alternate_google_search,
     check_journalist_validity,
     get_journalists,
-    modify_href,
+    merge_sort_dates,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
@@ -2249,31 +2249,6 @@ class JournalistContactViewSet(
             )
         return contacts
 
-    @action(
-        methods=["post"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="modify_tags",
-    )
-    def modify_tags(self, request, *args, **kwargs):
-        ids = request.data.get("ids")
-        tag = request.data.get("tag")
-        modifier = request.data.get("modifier")
-        for id in ids:
-            JournalistContact.modify_tags(id, tag, modifier)
-        return Response(status=status.HTTP_200_OK)
-
-    @action(
-        methods=["get"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="tag_list",
-    )
-    def get_tag_list(self, request, *args, **kwargs):
-        user = request.user
-        tags = JournalistContact.get_tags_by_user(user)
-        return Response(status=status.HTTP_200_OK, data={"tags": tags})
-
     def create(self, request, *args, **kwargs):
         user = request.user
         journalist = request.data.pop("journalist").strip()
@@ -2325,6 +2300,78 @@ class JournalistContactViewSet(
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="modify_tags",
+    )
+    def modify_tags(self, request, *args, **kwargs):
+        ids = request.data.get("ids")
+        tag = request.data.get("tag")
+        modifier = request.data.get("modifier")
+        for id in ids:
+            JournalistContact.modify_tags(id, tag, modifier)
+        return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="add-note",
+    )
+    def add_note(self, request, *args, **kwargs):
+        contact_id = request.data.get("id")
+        note = request.data.get("note")
+        contact = JournalistContact.objects.get(id=contact_id)
+        current_time = str(datetime.now())
+        note_data = {"date": current_time, "note": note, "user": request.user.full_name}
+        contact.notes.append(note_data)
+        contact.save()
+        return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="tag_list",
+    )
+    def get_tag_list(self, request, *args, **kwargs):
+        user = request.user
+        tags = JournalistContact.get_tags_by_user(user)
+        return Response(status=status.HTTP_200_OK, data={"tags": tags})
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="activity",
+    )
+    def get_activity(self, request, *args, **kwargs):
+        user = request.user
+        journalist_email = request.data.get("email")
+        contacts = JournalistContact.objects.filter(
+            user__organization=user.organization, journalist__email=journalist_email
+        )
+        trackers = EmailTracker.objects.filter(
+            user__organization=user.organization, recipient=journalist_email
+        )
+        activity_list = []
+        for contact in contacts:
+            activity_list.append(contact.notes)
+        for tracker in trackers:
+            tracker_list = []
+            activity = tracker.activity
+            for event in activity:
+                evt, date = event.split("|")
+                event_data = {"date": date, "event": evt}
+                if evt == "sent":
+                    event_data["user"] = tracker.user.full_name
+                tracker_list.append(event_data)
+            activity_list.extend(tracker_list)
+        sorted_activity_list = merge_sort_dates(activity_list, "date")
+        return Response(status=status.HTTP_200_OK, data={"activity": sorted_activity_list})
 
 
 class CompanyDetailsViewSet(
