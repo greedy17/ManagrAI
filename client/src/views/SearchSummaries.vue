@@ -4369,7 +4369,7 @@ export default {
       searchExamples: [
         {
           title: 'Top storylines',
-          text: 'Uncover top storylines about a popular topic or recent event.',
+          text: 'Uncover top storylines about a popular topic or recent event',
           tag: `News`,
           tagClass: 'blue-bg',
           imgSource: require('@/assets/images/newspaper.svg'),
@@ -4386,14 +4386,14 @@ export default {
           tagClass: 'blue-bg',
           imgSource: require('@/assets/images/megaphone.svg'),
           view: 'news',
-          chatText: 'Find journalists actively covering a news topic or event for my brand',
+          chatText: 'Find journalists actively covering a news topic that I can pitch',
           chatResponse: 'First, tell us about your company (e.g., name and short description)',
           searchText: `List the top journalists writing about this news topic (up to 10). Then suggest, in list form, which of these journalists the company provided should pitch and why. Make sure to label. Company:`,
           details: true,
           responseText: 'Provide a current news topic or event',
         },
         {
-          title: 'Media List',
+          title: 'Media list',
           text: 'Get a list of journalists based on the content of your pitch',
           tag: `Discover`,
           tagClass: 'turq-bg',
@@ -4987,6 +4987,9 @@ export default {
         }
       } catch (e) {
         console.log(e)
+        if (this.chatting) {
+          this.responseEmpty = true
+        }
       } finally {
         if (discover) {
           this.loading = false
@@ -4995,8 +4998,10 @@ export default {
         }
         this.scrollToTop()
         this.refreshUser()
-        if (this.chatting) {
+        if (this.chatting && this.journalisListtData) {
           this.changeSearch({ search: this.newSearch, template: this.newTemplate })
+        } else if (this.chatting && !this.journalisListtData) {
+          this.responseEmpty = true
         }
       }
     },
