@@ -2350,7 +2350,7 @@ class JournalistContactViewSet(
     )
     def get_activity(self, request, *args, **kwargs):
         user = request.user
-        journalist_email = request.data.get("email")
+        journalist_email = request.GET.get("email")
         contacts = JournalistContact.objects.filter(
             user__organization=user.organization, journalist__email=journalist_email
         )
