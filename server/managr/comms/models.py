@@ -1064,6 +1064,8 @@ class Journalist(TimeStampModel):
     status = models.CharField(
         choices=comms_consts.JOURNALIST_CHOICES, max_length=100, default="OTHER"
     )
+    needs_review = models.BooleanField(default=False)
+    review_details = models.TextField(null=True, blank=True)
 
     class Meta:
         ordering = ["last_name"]
@@ -1243,6 +1245,8 @@ class JournalistContact(TimeStampModel):
     )
     tags = ArrayField(models.CharField(max_length=255), default=list)
     bio = models.TextField(blank=True, null=True)
+    email = models.CharField(blank=True, null=True, max_length=255)
+    outlet = models.CharField(blank=True, null=True, max_length=255)
     images = ArrayField(models.TextField(), default=list)
     notes = ArrayField(JSONField(), default=list, blank=True, null=True)
 
