@@ -2315,8 +2315,12 @@ export default {
     },
     async loadPage(pageNumber) {
       this.loading = true
+      let moreUrl = `jcontact/?page=${pageNumber}`
+      if (this.selectedUser) {
+        moreUrl += `&user_id=${this.selectedUser.id}`
+      }
       try {
-        const res = await Comms.api.loadMoreContacts(`jcontact/?page=${pageNumber}`)
+        const res = await Comms.api.loadMoreContacts(moreUrl)
         this.allContacts = res.results
         this.contacts = res.results
         this.currentPage = pageNumber
