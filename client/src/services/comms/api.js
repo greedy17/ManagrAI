@@ -593,7 +593,7 @@ class CommsApi extends ModelAPI {
     }
     async getActivities(data) {
         try {
-            const res = await this.client.get('jcontact/activity', data)
+            const res = await this.client.get('jcontact/activity/', { params: data })
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)

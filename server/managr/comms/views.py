@@ -2352,6 +2352,7 @@ class JournalistContactViewSet(
     def get_activity(self, request, *args, **kwargs):
         user = request.user
         journalist_email = request.GET.get("email")
+        print('EMAIL IS HERE --- > : ',journalist_email)
         contacts = JournalistContact.objects.filter(
             user__organization=user.organization, journalist__email=journalist_email
         )

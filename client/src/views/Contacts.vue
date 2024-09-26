@@ -1806,7 +1806,7 @@ export default {
     async getActivities() {
       try {
         const res = await Comms.api.getActivities({
-          email: this.currentContact.email,
+          email: this.currentContact.journalist_ref.email,
         })
         console.log(res)
         this.activities = res.activities
