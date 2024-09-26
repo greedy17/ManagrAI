@@ -2325,6 +2325,8 @@ class JournalistContactViewSet(
         contact_id = request.data.get("id")
         note = request.data.get("note")
         contact = JournalistContact.objects.get(id=contact_id)
+        if contact.notes is None:
+            contact.notes = []
         current_time = str(datetime.now())
         note_data = {"date": current_time, "note": note, "user": request.user.full_name}
         contact.notes.append(note_data)

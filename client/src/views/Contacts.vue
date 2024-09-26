@@ -1349,30 +1349,54 @@
 
     <div v-if="isDrawerOpen" :class="['drawer', { open: isDrawerOpen }]">
       <div class="drawer-header">
-        <div class="space-between">
+        <div style="align-items: flex-start" class="space-between">
           <div>
-            <h3>
+            <h3 style="font-size: 20px">
               {{
                 currentContact.journalist_ref.first_name +
                 ' ' +
                 currentContact.journalist_ref.last_name
               }}
             </h3>
-            <p>{{ currentContact.journalist_ref.outlet }}</p>
+            <p class="drawer-header__boldtext">{{ currentContact.journalist_ref.outlet }}</p>
           </div>
 
-          <button @click="isDrawerOpen = false">Close</button>
+          <button class="borderless-btn" @click="isDrawerOpen = false">
+            <img src="@/assets/images/close.svg" height="18px" alt="" />
+          </button>
         </div>
 
-        <div class="nav">
-          <p :class="{ activelink: section === 'bio' }" @click="setSection('bio')">Bio</p>
-          <p :class="{ activelink: section === 'notes' }" @click="setSection('notes')">Notes</p>
-          <p :class="{ activelink: section === 'activity' }" @click="setSection('activity')">
-            Activity
-          </p>
-          <p :class="{ activelink: section === 'insights' }" @click="setSection('insights')">
-            AI Insights
-          </p>
+        <div class="space-between">
+          <div class="nav">
+            <p :class="{ activelink: section === 'bio' }" @click="setSection('bio')">Bio</p>
+            <p :class="{ activelink: section === 'notes' }" @click="setSection('notes')">Notes</p>
+            <p :class="{ activelink: section === 'activity' }" @click="setSection('activity')">
+              Activity
+            </p>
+            <p :class="{ activelink: section === 'insights' }" @click="setSection('insights')">
+              AI Insights
+            </p>
+          </div>
+
+          <div>
+            <button
+              v-if="section === 'bio'"
+              :disabled="bioLoading"
+              style="margin: 0"
+              class="secondary-button"
+              @click="updateContact(currentContact)"
+            >
+              Refresh bio
+            </button>
+            <button
+              v-else-if="section === 'notes'"
+              style="margin: 0"
+              class="secondary-button"
+              @click="toggleNotes"
+            >
+              Add note
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1406,7 +1430,7 @@
         </section>
 
         <section v-else>
-          <div style="height: 180px" class="bio-body">
+          <div style="margin-top: 32px">
             <div class="loading-small">
               <p style="margin-right: 8px">Updating bio</p>
               <div class="dot"></div>
@@ -1417,9 +1441,57 @@
         </section>
       </div>
 
-      <div v-else-if="section === 'notes'" class="drawer-body fadein">NOTES HERE</div>
+      <div v-else-if="section === 'notes'" class="drawer-body fadein">
+        <section>
+          <div class="fadein" v-if="addingNote">
+            <textarea
+              v-model="newNote"
+              rows="5"
+              class="area-input text-area-input"
+              :class="{ opaquest: loadingPitch }"
+              v-autoresize
+              placeholder="Add Note..."
+              style="
+                border: 1px solid rgba(0, 0, 0, 0.1) !important;
+                border-radius: 4px;
+                padding: 16px 8px;
+              "
+            ></textarea>
+            <div class="row-end">
+              <button class="secondary-button">Cancel</button>
+              <button :disabled="!newNote" class="primary-button" @click="addNote">Add</button>
+            </div>
+          </div>
 
-      <div v-else-if="section === 'activity'" class="drawer-body fadein">ACTIVITY HERE</div>
+          <div class="fadein" v-else>
+            <div v-if="!currentContact.notes || !currentContact.notes.length">
+              <div class="row">Added notes will appear here.</div>
+            </div>
+
+            <div v-else>
+              <div class="note" v-for="(note, i) in currentContact.notes" :key="i">
+                <p class="note__bold">{{ formatDateTime(note.date) }}</p>
+                <p class="note__small">
+                  by <span> {{ note.user }}</span>
+                </p>
+                <p>{{ note.note }}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div v-else-if="section === 'activity'" class="drawer-body fadein">
+        <div v-if="activities">
+          <div v-for="(activity, i) in activities" :key="i">
+            {{ activity }}
+          </div>
+        </div>
+
+        <div v-else>
+          <div class="row">All activities will appear here.</div>
+        </div>
+      </div>
 
       <div v-else-if="section === 'insights'" class="drawer-body fadein">INSIGHTS HERE</div>
     </div>
@@ -1445,6 +1517,9 @@ export default {
   },
   data() {
     return {
+      activities: [],
+      newNote: '',
+      addingNote: false,
       section: 'bio',
       isDrawerOpen: false,
       currentPublication: '',
@@ -1692,8 +1767,60 @@ export default {
     this.getWritingStyles()
   },
   methods: {
+    toggleNotes() {
+      this.addingNote = !this.addingNote
+    },
+    formatDateTime(datetimeString) {
+      const date = new Date(datetimeString)
+      const timeOptions = {
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true,
+      }
+      const formattedTime = date.toLocaleString('en-US', timeOptions)
+
+      const dateOptions = {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      }
+
+      const formattedDate = date.toLocaleDateString('en-US', dateOptions)
+      return `${formattedTime}, ${formattedDate}`
+    },
+    async addNote() {
+      try {
+        const res = await Comms.api.addNote({
+          id: this.currentContact.id,
+          note: this.newNote,
+        })
+        this.getContactsSearch()
+        console.log(res)
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.refreshUser()
+        this.addingNote = false
+      }
+    },
+    async getActivities() {
+      try {
+        const res = await Comms.api.getActivities({
+          email: this.currentContact.email,
+        })
+        console.log(res)
+        this.activities = res.activities
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.refreshUser()
+      }
+    },
     setSection(name) {
       this.section = name
+      if (name === 'activity') {
+        this.getActivities()
+      }
     },
     toggleBulkTagSelect() {
       if (!this.isPaid) {
@@ -1797,7 +1924,6 @@ export default {
           return user
         })
         .catch(() => {
-          // do nothing for now
           return null
         })
     },
@@ -1946,7 +2072,6 @@ export default {
           search: false,
           social: false,
         })
-        console.log(res.data)
         this.newContactBio = res.data.bio.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
         this.newContactImages = res.data.images
         this.currentPublication = res.data.company
@@ -2028,7 +2153,7 @@ export default {
     },
     async updateContact(contact) {
       this.currentContact = contact
-      this.googleModalOpen = true
+      // this.googleModalOpen = true
       this.bioLoading = true
       try {
         const res = await Comms.api.getJournalistBio({
@@ -2190,7 +2315,6 @@ export default {
           style: this.writingStyle,
           emails: emails,
         })
-        console.log(res)
         this.emailCount = emails.length
         this.draftModalOpen = true
         this.loadingPitch = false
@@ -2290,7 +2414,6 @@ export default {
           style: this.writingStyle,
           journalist: this.currentContact.journalist_ref.first_name,
         })
-        console.log(res)
         const body = res.body
         const signature = this.user.emailSignature ? this.user.emailSignature : ''
         const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
@@ -2309,6 +2432,7 @@ export default {
     setContact(contact) {
       // this.toggleGoogleModal()
       this.isDrawerOpen = !this.isDrawerOpen
+      this.section = 'bio'
       this.drafting = false
       this.subject = ''
       this.ccEmail = ''
@@ -2510,7 +2634,6 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-        // console.log(res)
       } catch (e) {
         console.error(e)
         this.$toast('Error removing contact', {
@@ -2618,13 +2741,27 @@ export default {
   }
 }
 
+.borderless-btn {
+  border: none;
+  padding: 0;
+  margin: -4px 0 0 0;
+  background-color: transparent;
+  cursor: pointer;
+}
+
 .drawer-header {
-  padding: 56px 32px 0 16px;
+  padding: 56px 24px 12px 16px;
   h2 {
     margin: 0;
   }
   p {
     margin: 8px 0;
+  }
+
+  &__boldtext {
+    color: $lite-blue;
+    font-family: $base-font-family;
+    font-size: 14px;
   }
 
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
@@ -2636,7 +2773,7 @@ export default {
     justify-content: flex-start;
 
     p {
-      margin: 8px 32px 12px 0;
+      margin: 8px 32px 0 0;
       cursor: pointer;
       font-size: 15px;
       &:hover {
@@ -2646,10 +2783,30 @@ export default {
   }
 }
 
+.note {
+  padding-bottom: 12px;
+  color: $dark-black-blue;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+
+  p {
+    margin: 8px 0;
+  }
+
+  &__bold {
+    font-family: $base-font-family;
+  }
+  &__small {
+    font-size: 13px;
+    color: $lite-blue;
+    font-family: $base-font-family;
+  }
+}
+
 .drawer-body {
   padding: 16px;
   overflow-y: scroll;
-  height: 90vh;
+  height: 80vh;
+  position: relative;
 }
 
 .drawer-images {
@@ -3751,6 +3908,13 @@ h2 {
   animation: rotation 2s infinite linear;
 }
 
+.row-end {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+}
+
 .row {
   display: flex;
   flex-direction: row;
@@ -4623,18 +4787,11 @@ textarea::placeholder {
 
 .absolute-right {
   position: absolute;
-  right: -28px;
-  top: -12px;
-  background-color: $soft-gray;
+  right: 24px;
+  top: 12px;
   border-radius: 100%;
-  padding: 3px 0px 2px 3px;
+  padding: 7px 8px 4px 8px;
   cursor: pointer;
-  visibility: hidden;
-
-  img {
-    // filter: invert(46%) sepia(35%) saturate(2345%) hue-rotate(323deg) brightness(106%) contrast(96%);
-    filter: invert(45%);
-  }
 }
 
 .delete-modal {
