@@ -2352,7 +2352,6 @@ class JournalistContactViewSet(
     def get_activity(self, request, *args, **kwargs):
         user = request.user
         journalist_email = request.GET.get("email")
-        print('EMAIL IS HERE --- > : ',journalist_email)
         contacts = JournalistContact.objects.filter(
             user__organization=user.organization, journalist__email=journalist_email
         )
@@ -2364,7 +2363,7 @@ class JournalistContactViewSet(
             activity_list.append(contact.notes)
         for tracker in trackers:
             tracker_list = []
-            activity = tracker.activity
+            activity = tracker.activity_log
             for event in activity:
                 evt, date = event.split("|")
                 event_data = {"date": date, "event": evt}
