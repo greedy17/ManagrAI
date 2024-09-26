@@ -2280,7 +2280,6 @@ class JournalistContactViewSet(
             return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
 
     def partial_update(self, request, *args, **kwargs):
-        data = self.request.data
         instance = self.get_object()
         serializer = self.serializer_class(instance, data=request.data, partial=True)
         if serializer.is_valid(raise_exception=True):
@@ -2374,6 +2373,34 @@ class JournalistContactViewSet(
             activity_list.extend(tracker_list)
         sorted_activity_list = merge_sort_dates(activity_list, "date")
         return Response(status=status.HTTP_200_OK, data={"activity": sorted_activity_list})
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="edit",
+    )
+    def edit_contact(self, request, *args, **kwargs):
+        email = request.data.get("email", None)
+        outlet = request.data.get("outlet", None)
+        contact_id = request.data.get("id")
+        contact = JournalistContact.objects.get(id=contact_id)
+        journalist = contact.journalist
+        edit_details = f"Changes by {request.user.email}:"
+        if email:
+            contact.email = email
+            edit_details += f" {email}"
+        if outlet:
+            contact.outlet = outlet
+            edit_details += f" {outlet}"
+        contact.save()
+        journalist.needs_review = True
+        if journalist.review_details:
+            journalist.review_details += edit_details
+        else:
+            journalist.review_details = edit_details
+        journalist.save()
+        return Response(status=status.HTTP_200_OK)
 
 
 class CompanyDetailsViewSet(
@@ -2787,15 +2814,6 @@ def upload_pdf(request):
 @permission_classes([permissions.IsAuthenticated])
 @authentication_classes([ExpiringTokenAuthentication])
 def get_writing_styles(request):
-    # if request.data.get("all_styles", False):
-    #     writing_styles = WritingStyle.objects.filter(
-    #         user__organization=request.user.organization
-    #     )
-    # else:
-    #     writing_styles = WritingStyle.objects.filter(
-    #         user=request.user
-    #     )
-    #     print('why...')
     writing_styles = WritingStyle.objects.filter(user__organization=request.user.organization)
     serializer = WritingStyleSerializer(writing_styles, many=True)  # Serialize the queryset
 

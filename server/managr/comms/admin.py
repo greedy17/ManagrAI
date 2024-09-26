@@ -98,7 +98,7 @@ class CustomAssistAlertAdmin(admin.ModelAdmin):
 class CustomJournalAdmin(admin.ModelAdmin):
     list_display = ("datetime_created", "email", "outlet", "verified", "date_verified")
     ordering = ("datetime_created",)
-    list_filter = ("outlet",)
+    list_filter = ("needs_review", "outlet")
     ordering = ("-datetime_created",)
     search_fields = ("email",)
     actions = [update_date_verified]
