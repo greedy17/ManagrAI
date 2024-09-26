@@ -2812,15 +2812,6 @@ def upload_pdf(request):
 @permission_classes([permissions.IsAuthenticated])
 @authentication_classes([ExpiringTokenAuthentication])
 def get_writing_styles(request):
-    # if request.data.get("all_styles", False):
-    #     writing_styles = WritingStyle.objects.filter(
-    #         user__organization=request.user.organization
-    #     )
-    # else:
-    #     writing_styles = WritingStyle.objects.filter(
-    #         user=request.user
-    #     )
-    #     print('why...')
     writing_styles = WritingStyle.objects.filter(user__organization=request.user.organization)
     serializer = WritingStyleSerializer(writing_styles, many=True)  # Serialize the queryset
 
