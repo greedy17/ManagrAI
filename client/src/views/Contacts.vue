@@ -1934,7 +1934,6 @@ export default {
           bio: this.currentContact.bio,
           instructions: this.insight,
         })
-        console.log(res)
         this.newInsight = res.content.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
       } catch (e) {
         console.error(e)
@@ -1944,7 +1943,6 @@ export default {
       }
     },
     formatEvent(txt) {
-      console.log(txt)
       if (txt.includes('draft_created')) {
         return 'Email drafted'
       } else if (txt.includes('sent')) {
@@ -1997,7 +1995,6 @@ export default {
         const res = await Comms.api.getActivities({
           email: this.currentContact.journalist_ref.email,
         })
-        console.log(res)
         this.activities = res.activity
       } catch (e) {
         console.error(e)
@@ -2298,7 +2295,6 @@ export default {
       this.detailsModalOpen = !this.detailsModalOpen
     },
     async saveContact() {
-      console.log(this.currentPublication)
       this.savingContact = true
 
       try {
@@ -2318,7 +2314,6 @@ export default {
           bodyClassName: ['custom'],
         })
       } catch (e) {
-        console.log('RESPOSNE', e.data.error)
         if (e.data.error.includes('journalist must make a unique set')) {
           this.$toast('Contact is already saved!', {
             timeout: 2000,
@@ -2377,7 +2372,6 @@ export default {
         //   bodyClassName: ['custom'],
         // })
       } catch (e) {
-        console.log('RESPOSNE', e)
         this.$toast('Error updating bio, try again', {
           timeout: 2000,
           position: 'top-left',
@@ -2499,7 +2493,6 @@ export default {
       }
     },
     async bulkDraft(emails) {
-      console.log('EMAILS ARE HERE --- >', emails)
       try {
         const res = await Comms.api.draftBulkPitches({
           original: this.content,
@@ -2677,8 +2670,6 @@ export default {
           user_id: this.selectedUser ? this.selectedUser.id : null,
         })
         this.bulkEmails = res.results.map((user) => user.journalist_ref.email)
-        console.log('RESULTS', res.results)
-        console.log('EMAILS', this.bulkEmails)
         this.manualBulk = true
         this.togglePitchModal(true, this.isPaid)
       } catch (e) {
@@ -2688,7 +2679,6 @@ export default {
       }
     },
     async getContactsSearch(setContact = false) {
-      console.log(this.selectedTags)
       this.loading = true
       try {
         const res = await Comms.api.getContacts({
