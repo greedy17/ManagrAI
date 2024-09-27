@@ -32,17 +32,7 @@
           <div v-if="currentContact.bio" class="bio-body" v-html="currentContact.bio"></div>
 
           <div style="height: 300px; width: 100%; margin-left: 0" v-else class="bio-body">
-            <div style="margin-left: -32px" class="row">
-              Updated bio
-              <span>
-                <img
-                  style="margin-left: 12px; margin-right: -54px"
-                  src="@/assets/images/refresh-pr.svg"
-                  height="12px"
-                  alt=""
-              /></span>
-              will appear here.
-            </div>
+            <div style="margin-left: -32px" class="row">Updated bio will appear here.</div>
           </div>
 
           <aside v-if="currentContact.bio">
@@ -893,6 +883,7 @@
         </footer>
       </div>
     </Modal>
+    <!-- <div @click="isDrawerOpen = !isDrawerOpen">TEST</div> -->
 
     <div class="top-row">
       <section>
@@ -1137,7 +1128,11 @@
             </thead>
             <tbody v-if="filteredContactList.length">
               <tr v-for="(contact, i) in filteredContactList" :key="i">
-                <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
+                <td
+                  @click="setContact(contact)"
+                  style="cursor: pointer"
+                  :class="i % 2 !== 0 ? 'gray-bg' : ''"
+                >
                   <div class="email-details">
                     <div class="email-info">
                       <div class="subject">
@@ -1345,6 +1340,301 @@
         </div>
       </aside>
     </div>
+
+    <div v-if="isDrawerOpen" :class="['drawer', { open: isDrawerOpen }]">
+      <div class="drawer-header">
+        <div style="align-items: flex-start" class="space-between">
+          <div>
+            <h3 style="font-size: 20px">
+              {{
+                currentContact.journalist_ref.first_name +
+                ' ' +
+                currentContact.journalist_ref.last_name
+              }}
+            </h3>
+            <p style="color: #9596b4" class="drawer-header__boldtext">
+              {{ currentContact.journalist_ref.outlet }}
+            </p>
+          </div>
+
+          <button class="borderless-btn" @click="isDrawerOpen = false">
+            <img src="@/assets/images/close.svg" height="18px" alt="" />
+          </button>
+        </div>
+
+        <div style="width: 90%; overflow-x: scroll; margin: 4px 0 12px 0" class="rows">
+          <div
+            style="padding-right: 10px"
+            v-for="(tag, i) in currentContact.tags"
+            :key="i"
+            class="user-tag"
+          >
+            <img src="@/assets/images/tags.svg" height="12px" alt="" />
+            {{ tag }}
+          </div>
+        </div>
+
+        <div class="space-between">
+          <div class="nav">
+            <p :class="{ activelink: section === 'bio' }" @click="setSection('bio')">Bio</p>
+            <p :class="{ activelink: section === 'notes' }" @click="setSection('notes')">Notes</p>
+            <p :class="{ activelink: section === 'activity' }" @click="setSection('activity')">
+              Activity
+            </p>
+            <p :class="{ activelink: section === 'insights' }" @click="setSection('insights')">
+              AI Insights
+            </p>
+          </div>
+
+          <div>
+            <button
+              v-if="section === 'bio'"
+              :disabled="bioLoading"
+              style="margin: 0"
+              class="secondary-button"
+              @click="updateContact(currentContact)"
+            >
+              Refresh bio
+            </button>
+            <button
+              v-else-if="section === 'notes'"
+              style="margin: 0"
+              class="secondary-button"
+              @click="toggleNotes"
+            >
+              New note
+            </button>
+            <button
+              v-else-if="section === 'insights' && newInsight"
+              style="margin: 0"
+              class="primary-button"
+              @click="clearInsight"
+            >
+              New insight
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="section === 'bio'" class="drawer-body fadein">
+        <section v-if="!bioLoading">
+          <div class="drawer-images" v-if="currentContact.bio">
+            <img
+              v-for="(url, i) in currentContact.images"
+              :key="i"
+              :src="`${url}`"
+              height="64px"
+              alt=""
+            />
+          </div>
+
+          <div
+            v-if="currentContact.bio"
+            class="bio-body"
+            v-html="currentContact.bio.replace(/<h2>Bio:<\/h2>/g, '')"
+          ></div>
+
+          <div style="height: 300px; width: 100%; margin-left: 0" v-else class="bio-body">
+            <div class="row">Updated bio will appear here.</div>
+          </div>
+        </section>
+
+        <section v-else>
+          <div style="margin-top: 32px">
+            <div class="loading-small">
+              <p style="margin-right: 8px">Updating bio</p>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div v-else-if="section === 'notes'" class="drawer-body fadein">
+        <section>
+          <div class="fadein" v-if="addingNote">
+            <textarea
+              v-model="newNote"
+              rows="5"
+              class="area-input text-area-input"
+              :class="{ opaquest: loadingPitch }"
+              v-autoresize
+              placeholder="Add Note..."
+              style="
+                border: 1px solid rgba(0, 0, 0, 0.1) !important;
+                border-radius: 8px;
+                padding: 16px 8px;
+              "
+            ></textarea>
+            <div style="margin-top: 8px" class="row-end">
+              <button @click="toggleNotes" class="secondary-button">Cancel</button>
+              <button :disabled="!newNote" class="primary-button" @click="addNote">Add</button>
+            </div>
+          </div>
+
+          <div class="fadein" v-else>
+            <div v-if="!currentContact.notes || !currentContact.notes.length">
+              <div class="row">Added notes will appear here.</div>
+            </div>
+
+            <div v-else>
+              <div
+                style="padding-top: 8px; position: relative"
+                class="note maxed-height"
+                :class="{ 'maxed-height': !isExpanded[i], 'expanded-height': isExpanded[i] }"
+                v-for="(note, i) in currentContact.notes.slice().reverse()"
+                :key="i"
+                @click="toggleExpand(i)"
+              >
+                <p class="note__bold">{{ formatDateTime(note.date) }}</p>
+                <p class="note__small">
+                  by <span> {{ note.user }}</span>
+                </p>
+                <p class="pre-text" v-html="note.note"></p>
+
+                <div class="icon-container">
+                  <img
+                    v-if="!isExpanded[i]"
+                    src="@/assets/images/expanded.svg"
+                    height="14px"
+                    alt=""
+                    class="expand-icon"
+                  />
+                  <img
+                    v-else
+                    src="@/assets/images/compress.svg"
+                    height="14px"
+                    alt=""
+                    class="compress-icon"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div v-else-if="section === 'activity'" class="drawer-body fadein">
+        <div style="margin-top: 32px" v-if="loadingActivities">
+          <div class="loading-small">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+
+        <div v-else-if="activities.length">
+          <div
+            style="padding: 0 0 12px 36px; border: none"
+            class="note"
+            v-for="(activity, i) in activities"
+            :key="i"
+          >
+            <div class="activity-border">
+              <div class="activity-border__img">
+                <img
+                  v-if="activity.event && activity.event.includes('sent')"
+                  src="@/assets/images/email-round.svg"
+                  height="12px"
+                  alt=""
+                />
+                <img
+                  v-else-if="activity.event && activity.event.includes('open')"
+                  src="@/assets/images/envelope-open.svg"
+                  height="12px"
+                  alt=""
+                />
+                <img
+                  v-else-if="activity.event && activity.event.includes('click')"
+                  src="@/assets/images/clicked.svg"
+                  height="12px"
+                  alt=""
+                />
+                <img
+                  v-else-if="activity.event && activity.event.includes('Approve')"
+                  src="@/assets/images/checkbox.svg"
+                  height="12px"
+                  alt=""
+                />
+                <img
+                  v-else-if="activity.event && activity.event.includes('Reject')"
+                  src="@/assets/images/cross-circle.svg"
+                  height="12px"
+                  alt=""
+                />
+                <img
+                  v-else-if="activity.event && activity.event.includes('draft')"
+                  src="@/assets/images/edit-note.svg"
+                  height="12px"
+                  alt=""
+                />
+                <img
+                  v-else-if="activity.note"
+                  src="@/assets/images/note.svg"
+                  height="12px"
+                  alt=""
+                />
+              </div>
+            </div>
+
+            <p style="margin-top: 0" class="note__bold">{{ formatDateTime(activity.date) }}</p>
+            <p class="note__med">
+              <span>{{ activity.user ? activity.user + ' ' : '' }}</span>
+
+              <span class="note__small">{{
+                activity.event ? formatEvent(activity.event) : activity.note ? 'left a note' : ''
+              }}</span>
+            </p>
+          </div>
+        </div>
+
+        <div v-else>
+          <div class="row">All activities will appear here.</div>
+        </div>
+      </div>
+
+      <div v-else-if="section === 'insights'" class="drawer-body fadein">
+        <div v-if="!newInsight" class="fadein">
+          <textarea
+            v-model="insight"
+            rows="5"
+            class="area-input text-area-input"
+            v-autoresize
+            placeholder="Ask about recent activity or for suggestions..."
+            :class="{ opaquest: loadingInsight }"
+            style="
+              border: 1px solid rgba(0, 0, 0, 0.1) !important;
+              border-radius: 8px;
+              padding: 16px 8px;
+            "
+          ></textarea>
+
+          <div style="margin-top: 8px" class="row-end">
+            <!-- <button class="secondary-button">Cancel</button> -->
+            <button
+              :disabled="!insight || loadingInsight"
+              class="primary-button"
+              @click="getInsight"
+            >
+              <img
+                v-if="loadingInsight"
+                style="margin-right: 8px"
+                class="rotation"
+                src="@/assets/images/loading.svg"
+                height="14px"
+                alt=""
+              />
+              Submit
+            </button>
+          </div>
+        </div>
+
+        <div class="fadein" v-else>
+          <div class="pre-text" v-html="newInsight"></div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -1367,6 +1657,16 @@ export default {
   },
   data() {
     return {
+      isExpanded: [],
+      newInsight: '',
+      loadingInsight: false,
+      insight: '',
+      loadingActivities: false,
+      activities: [],
+      newNote: '',
+      addingNote: false,
+      section: 'bio',
+      isDrawerOpen: false,
       currentPublication: '',
       bccEmail: '',
       ccEmail: '',
@@ -1612,6 +1912,107 @@ export default {
     this.getWritingStyles()
   },
   methods: {
+    toggleExpand(index) {
+      // Toggle the expanded state of the clicked note
+      if (this.isExpanded[index]) {
+        // Collapse if already expanded
+        this.$set(this.isExpanded, index, false)
+      } else {
+        // Expand if not yet expanded
+        this.$set(this.isExpanded, index, true)
+      }
+    },
+    clearInsight() {
+      this.newInsight = ''
+    },
+    async getInsight() {
+      this.loadingInsight = true
+      try {
+        const res = await Comms.api.getInsight({
+          notes: this.currentContact.notes,
+          activity: this.activities,
+          bio: this.currentContact.bio,
+          instructions: this.insight,
+        })
+        console.log(res)
+        this.newInsight = res.content.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.insight = ''
+        this.loadingInsight = false
+      }
+    },
+    formatEvent(txt) {
+      console.log(txt)
+      if (txt.includes('draft_created')) {
+        return 'Email drafted'
+      } else if (txt.includes('sent')) {
+        return 'sent an email'
+      } else {
+        return 'Email' + ' ' + txt
+      }
+    },
+    toggleNotes() {
+      this.addingNote = !this.addingNote
+    },
+    formatDateTime(datetimeString) {
+      const date = new Date(datetimeString)
+      const timeOptions = {
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true,
+      }
+      const formattedTime = date.toLocaleString('en-US', timeOptions)
+
+      const dateOptions = {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      }
+
+      const formattedDate = date.toLocaleDateString('en-US', dateOptions)
+      return `${formattedDate} · ${formattedTime}`
+    },
+    async addNote() {
+      try {
+        const res = await Comms.api.addNote({
+          id: this.currentContact.id,
+          note: this.newNote,
+        })
+        this.$nextTick(() => {
+          this.refreshUser()
+          this.getContactsSearch(true)
+        })
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.addingNote = false
+        this.newNote = ''
+      }
+    },
+    async getActivities() {
+      this.loadingActivities = true
+      try {
+        const res = await Comms.api.getActivities({
+          email: this.currentContact.journalist_ref.email,
+        })
+        console.log(res)
+        this.activities = res.activity
+      } catch (e) {
+        console.error(e)
+        this.activities = []
+      } finally {
+        this.refreshUser()
+        this.loadingActivities = false
+      }
+    },
+    setSection(name) {
+      this.section = name
+      if (name === 'activity') {
+        this.getActivities()
+      }
+    },
     toggleBulkTagSelect() {
       if (!this.isPaid) {
         return
@@ -1714,7 +2115,6 @@ export default {
           return user
         })
         .catch(() => {
-          // do nothing for now
           return null
         })
     },
@@ -1863,7 +2263,6 @@ export default {
           search: false,
           social: false,
         })
-        console.log(res.data)
         this.newContactBio = res.data.bio.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
         this.newContactImages = res.data.images
         this.currentPublication = res.data.company
@@ -1945,7 +2344,7 @@ export default {
     },
     async updateContact(contact) {
       this.currentContact = contact
-      this.googleModalOpen = true
+      // this.googleModalOpen = true
       this.bioLoading = true
       try {
         const res = await Comms.api.getJournalistBio({
@@ -2107,7 +2506,6 @@ export default {
           style: this.writingStyle,
           emails: emails,
         })
-        console.log(res)
         this.emailCount = emails.length
         this.draftModalOpen = true
         this.loadingPitch = false
@@ -2207,7 +2605,6 @@ export default {
           style: this.writingStyle,
           journalist: this.currentContact.journalist_ref.first_name,
         })
-        console.log(res)
         const body = res.body
         const signature = this.user.emailSignature ? this.user.emailSignature : ''
         const html = `<p>${body.replace(/\n/g, '</p><p>\n')} ${signature.replace(
@@ -2224,12 +2621,19 @@ export default {
       }
     },
     setContact(contact) {
-      this.toggleGoogleModal()
+      // this.toggleGoogleModal()
+      this.isDrawerOpen = !this.isDrawerOpen
+      this.section = 'bio'
       this.drafting = false
       this.subject = ''
       this.ccEmail = ''
       this.bccEmail = ''
+      this.newInsight = ''
       this.currentContact = contact
+
+      if (this.currentContact && this.currentContact.notes) {
+        this.isExpanded = Array(this.currentContact.notes.length).fill(false)
+      }
 
       if (!this.currentContact.bio) {
         this.updateContact(this.currentContact)
@@ -2283,7 +2687,7 @@ export default {
         this.loading = false
       }
     },
-    async getContactsSearch() {
+    async getContactsSearch(setContact = false) {
       console.log(this.selectedTags)
       this.loading = true
       try {
@@ -2298,6 +2702,12 @@ export default {
         this.previous = res.previous
         this.next = res.next
         this.currentPage = 1
+
+        if (setContact) {
+          this.currentContact = res.results.filter(
+            (contact) => contact.id === this.currentContact.id,
+          )[0]
+        }
 
         // Calculate the number of contacts per page based on the response
         this.contactsPerPage = this.contacts.length
@@ -2430,7 +2840,6 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-        // console.log(res)
       } catch (e) {
         console.error(e)
         this.$toast('Error removing contact', {
@@ -2515,6 +2924,199 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.pre-text {
+  line-height: 32px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  color: $dark-black-blue;
+  font-family: $thin-font-family;
+  font-size: 16px;
+  margin-top: 0 !important;
+}
+
+::v-deep .pre-text {
+  strong,
+  h1,
+  h2,
+  h3 {
+    font-family: $base-font-family;
+    margin-bottom: 4px;
+  }
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  height: 100vh;
+  width: 50%;
+  background-color: white;
+  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  transition: right 0.3s ease-in-out;
+  padding: 24px 0;
+
+  &.open {
+    right: 0;
+  }
+
+  // Full width on mobile screens
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+}
+
+.borderless-btn {
+  border: none;
+  padding: 0;
+  margin: -4px 0 0 0;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.drawer-header {
+  padding: 56px 24px 12px 16px;
+  h2 {
+    margin: 0;
+  }
+  p {
+    margin: 8px 0;
+  }
+
+  &__boldtext {
+    color: $lite-blue;
+    font-family: $base-font-family;
+    font-size: 14px;
+  }
+
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+
+  .nav {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    margin-top: 12px;
+
+    p {
+      margin: 8px 32px 0 0;
+      cursor: pointer;
+      font-size: 15px;
+      &:hover {
+        opacity: 0.4;
+      }
+    }
+  }
+}
+
+.maxed-height {
+  height: 104px;
+  overflow: hidden;
+
+  &:hover {
+    opacity: 0.8;
+    cursor: pointer;
+  }
+}
+
+.expanded-height {
+  height: 250px;
+  overflow-y: scroll;
+  &::-webkit-scrollbar {
+    width: 5px;
+    height: 0px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: $soft-gray;
+    box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+    border-radius: 6px;
+  }
+}
+
+.note {
+  position: relative;
+  padding-bottom: 12px;
+  color: $dark-black-blue;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+
+  p {
+    margin: 8px 0;
+  }
+
+  &__bold {
+    font-family: $base-font-family;
+    font-size: 14px;
+  }
+  &__small {
+    font-size: 13px;
+    color: $lite-blue;
+    font-family: $base-font-family;
+  }
+  &__med {
+    font-size: 15px;
+  }
+
+  transition: max-height 0.3s ease;
+}
+
+.note .icon-container {
+  position: absolute;
+  right: 12px;
+  bottom: 16px;
+  visibility: hidden;
+  transition: visibility 0.1s;
+}
+
+.note:hover .icon-container {
+  visibility: visible;
+}
+
+.expand-icon,
+.compress-icon {
+  cursor: pointer;
+}
+
+.activity-border {
+  left: 8px;
+  height: 100%;
+  position: absolute;
+  border-left: 2px solid $liter-blue;
+
+  &__img {
+    position: absolute;
+    background-color: $liter-blue;
+    left: -12px;
+    top: 0;
+    padding: 2px 5px 2px 5px;
+    border-radius: 50%;
+
+    img {
+      filter: invert(45%) sepia(52%) saturate(1248%) hue-rotate(196deg) brightness(97%)
+        contrast(90%) !important;
+    }
+  }
+}
+
+.drawer-body {
+  padding: 16px 24px;
+  overflow-y: scroll;
+  height: 80vh;
+  position: relative;
+}
+
+.drawer-images {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 12px;
+  img {
+    border-radius: 4px;
+  }
+}
 
 .skeleton {
   background-color: rgb(236, 236, 236);
@@ -2635,6 +3237,11 @@ export default {
   align-items: center;
   gap: 6px;
   margin-left: 12px;
+}
+
+.activelink {
+  font-family: $base-font-family;
+  color: $dark-black-blue;
 }
 
 .active-page {
@@ -3598,6 +4205,13 @@ h2 {
   animation: rotation 2s infinite linear;
 }
 
+.row-end {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+}
+
 .row {
   display: flex;
   flex-direction: row;
@@ -3894,10 +4508,16 @@ h2 {
     margin-inline-start: 0px;
     margin-inline-end: 0px;
     line-height: 1;
+
+    margin-bottom: 16px !important;
+    margin-top: 12px !important;
+    font-family: $base-font-family;
+    font-size: 19px;
   }
 
   a {
     text-decoration: none;
+    color: $lite-blue;
   }
 
   strong {
@@ -4284,6 +4904,46 @@ h2 {
   }
 }
 
+// .user-tag-purp {
+//   position: relative;
+//   display: flex;
+//   flex-direction: row;
+//   align-items: center;
+//   font-size: 12px;
+//   background-color: $grapest;
+//   color: $graper;
+//   font-family: $base-font-family;
+//   padding: 6px 32px 6px 8px;
+//   border-radius: 5px;
+//   white-space: nowrap;
+//   img {
+//     filter: invert(51%) sepia(13%) saturate(1063%) hue-rotate(217deg) brightness(96%) contrast(84%);
+//     margin-right: 4px;
+//   }
+
+//   .remove {
+//     position: absolute;
+//     right: 4px;
+//     top: 6px;
+//     cursor: pointer;
+
+//     &:hover {
+//       background-color: $graper;
+//       border-radius: 100%;
+//       display: flex;
+//       align-items: center;
+//       padding: 2px;
+//       top: 4px;
+
+//       img {
+//         filter: invert(99%);
+//         margin: 0;
+//         padding: 0;
+//       }
+//     }
+//   }
+// }
+
 .sticky-bottom-between {
   position: sticky;
   bottom: 0;
@@ -4464,18 +5124,11 @@ textarea::placeholder {
 
 .absolute-right {
   position: absolute;
-  right: -28px;
-  top: -12px;
-  background-color: $soft-gray;
+  right: 24px;
+  top: 12px;
   border-radius: 100%;
-  padding: 3px 0px 2px 3px;
+  padding: 7px 8px 4px 8px;
   cursor: pointer;
-  visibility: hidden;
-
-  img {
-    // filter: invert(46%) sepia(35%) saturate(2345%) hue-rotate(323deg) brightness(106%) contrast(96%);
-    filter: invert(45%);
-  }
 }
 
 .delete-modal {

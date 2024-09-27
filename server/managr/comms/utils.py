@@ -372,8 +372,8 @@ def merge_sort_dates(arr, key="publish_date"):
         mid = len(arr) // 2
         sub_array1 = arr[:mid]
         sub_array2 = arr[mid:]
-        merge_sort_dates(sub_array1)
-        merge_sort_dates(sub_array2)
+        merge_sort_dates(sub_array1, key)
+        merge_sort_dates(sub_array2, key)
         i = j = k = 0
         while i < len(sub_array1) and j < len(sub_array2):
             parsed_value1 = parser.parse(sub_array1[i][key]).replace(tzinfo=timezone.utc)

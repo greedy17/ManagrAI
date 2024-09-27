@@ -1974,7 +1974,7 @@ def _send_activation_email(user_id):
     if settings.IN_DEV:
         print(activation_link)
     send_html_email(
-        "Managr Activation",
+        "ManagrAI Activation",
         "core/email-templates/admin-activation.html",
         settings.DEFAULT_FROM_EMAIL,
         [user.email],

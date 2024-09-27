@@ -89,7 +89,7 @@ from managr.comms.utils import (
     alternate_google_search,
     check_journalist_validity,
     get_journalists,
-    modify_href,
+    merge_sort_dates,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
@@ -2249,31 +2249,6 @@ class JournalistContactViewSet(
             )
         return contacts
 
-    @action(
-        methods=["post"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="modify_tags",
-    )
-    def modify_tags(self, request, *args, **kwargs):
-        ids = request.data.get("ids")
-        tag = request.data.get("tag")
-        modifier = request.data.get("modifier")
-        for id in ids:
-            JournalistContact.modify_tags(id, tag, modifier)
-        return Response(status=status.HTTP_200_OK)
-
-    @action(
-        methods=["get"],
-        permission_classes=[permissions.IsAuthenticated],
-        detail=False,
-        url_path="tag_list",
-    )
-    def get_tag_list(self, request, *args, **kwargs):
-        user = request.user
-        tags = JournalistContact.get_tags_by_user(user)
-        return Response(status=status.HTTP_200_OK, data={"tags": tags})
-
     def create(self, request, *args, **kwargs):
         user = request.user
         journalist = request.data.pop("journalist").strip()
@@ -2305,7 +2280,6 @@ class JournalistContactViewSet(
             return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
 
     def partial_update(self, request, *args, **kwargs):
-        data = self.request.data
         instance = self.get_object()
         serializer = self.serializer_class(instance, data=request.data, partial=True)
         if serializer.is_valid(raise_exception=True):
@@ -2325,6 +2299,180 @@ class JournalistContactViewSet(
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="modify_tags",
+    )
+    def modify_tags(self, request, *args, **kwargs):
+        ids = request.data.get("ids")
+        tag = request.data.get("tag")
+        modifier = request.data.get("modifier")
+        for id in ids:
+            JournalistContact.modify_tags(id, tag, modifier)
+        return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="add-note",
+    )
+    def add_note(self, request, *args, **kwargs):
+        contact_id = request.data.get("id")
+        note = request.data.get("note")
+        contact = JournalistContact.objects.get(id=contact_id)
+        if contact.notes is None:
+            contact.notes = []
+        current_time = str(datetime.now())
+        note_data = {"date": current_time, "note": note, "user": request.user.full_name}
+        contact.notes.append(note_data)
+        contact.save()
+        return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="tag_list",
+    )
+    def get_tag_list(self, request, *args, **kwargs):
+        user = request.user
+        tags = JournalistContact.get_tags_by_user(user)
+        return Response(status=status.HTTP_200_OK, data={"tags": tags})
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="activity",
+    )
+    def get_activity(self, request, *args, **kwargs):
+        user = request.user
+        journalist_email = request.GET.get("email")
+        contacts = JournalistContact.objects.filter(
+            user__organization=user.organization, journalist__email=journalist_email
+        )
+        trackers = EmailTracker.objects.filter(
+            user__organization=user.organization, recipient=journalist_email
+        )
+        activity_list = []
+        for contact in contacts:
+            if contact.notes:
+                activity_list.extend(contact.notes)
+        for tracker in trackers:
+            tracker_list = []
+            activity = tracker.activity_log
+            for event in activity:
+                evt, date = event.split("|")
+                event_data = {"date": date, "event": evt}
+                if evt == "sent":
+                    event_data["user"] = tracker.user.full_name
+                tracker_list.append(event_data)
+            activity_list.extend(tracker_list)
+        sorted_activity_list = merge_sort_dates(activity_list, "date")
+        return Response(status=status.HTTP_200_OK, data={"activity": sorted_activity_list})
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="edit",
+    )
+    def edit_contact(self, request, *args, **kwargs):
+        email = request.data.get("email", None)
+        outlet = request.data.get("outlet", None)
+        contact_id = request.data.get("id")
+        contact = JournalistContact.objects.get(id=contact_id)
+        journalist = contact.journalist
+        edit_details = f"Changes by {request.user.email}:"
+        if email:
+            contact.email = email
+            edit_details += f" {email}"
+        if outlet:
+            contact.outlet = outlet
+            edit_details += f" {outlet}"
+        contact.save()
+        journalist.needs_review = True
+        if journalist.review_details:
+            journalist.review_details += edit_details
+        else:
+            journalist.review_details = edit_details
+        journalist.save()
+        return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="insight",
+    )
+    def get_insight(self, request, *args, **kwargs):
+        notes = request.data.get("notes")
+        activity = request.data.get("activity")
+        bio = request.data.get("bio")
+        instructions = request.data.get("instructions")
+        user = self.request.user
+
+        has_error = False
+        attempts = 1
+        token_amount = 4000
+        timeout = 60.0
+        while True:
+            try:
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.OPEN_AI_GET_INSIGHTS(
+                    notes, activity, bio, instructions
+                )
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    token_amount=token_amount,
+                    top_p=0.1,
+                )
+                with Variable_Client(timeout) as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                res = open_ai_exceptions._handle_response(r)
+
+                content = res.get("choices")[0].get("message").get("content")
+                break
+            except open_ai_exceptions.StopReasonLength:
+                logger.exception(
+                    f"Retrying again due to token amount, amount currently at: {token_amount}"
+                )
+                if token_amount <= 8000:
+                    has_error = True
+
+                    message = "Token amount error"
+                    break
+                else:
+                    token_amount += 1000
+                    continue
+            except httpx.ReadTimeout as e:
+                print(e)
+                timeout += 30.0
+                if timeout >= 120.0:
+                    has_error = True
+                    message = "Read timeout issue"
+                    logger.exception(f"Read timeout from Open AI {e}")
+                    break
+                else:
+                    attempts += 1
+                    continue
+            except Exception as e:
+                has_error = True
+                message = f"Unknown exception: {e}"
+                logger.exception(e)
+                break
+        if has_error:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
+        return Response({"content": content})  
 
 
 class CompanyDetailsViewSet(
@@ -2738,15 +2886,6 @@ def upload_pdf(request):
 @permission_classes([permissions.IsAuthenticated])
 @authentication_classes([ExpiringTokenAuthentication])
 def get_writing_styles(request):
-    # if request.data.get("all_styles", False):
-    #     writing_styles = WritingStyle.objects.filter(
-    #         user__organization=request.user.organization
-    #     )
-    # else:
-    #     writing_styles = WritingStyle.objects.filter(
-    #         user=request.user
-    #     )
-    #     print('why...')
     writing_styles = WritingStyle.objects.filter(user__organization=request.user.organization)
     serializer = WritingStyleSerializer(writing_styles, many=True)  # Serialize the queryset
 

@@ -583,6 +583,30 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    async addNote(data) {
+        try {
+            const res = await this.client.post('jcontact/add-note/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async getInsight(data) {
+        try {
+            const res = await this.client.post('jcontact/insight/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async getActivities(data) {
+        try {
+            const res = await this.client.get('jcontact/activity/', { params: data })
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
     async updateContact(data) {
         try {
             const res = await this.client.patch(`jcontact/${data.id}/`, data)

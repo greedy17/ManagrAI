@@ -70,6 +70,24 @@ def GOOGLE_SEARCH_PARAMS(query, number_of_results):
     }
     return params
 
+def OPEN_AI_GET_INSIGHTS(notes, activity, bio, instructions):
+    prompt = f"""
+    You are a proactive and detail-oriented VP of Communications. A data-driven leader who champions collaboration and technological innovation. 
+    Excellent communicator focused on strategic management, team accountability, and continuously enhancing PR processes. Here is your task: Review all the notes, bio, and user engagement activity related to a contact, most likely a journalist. Then follow the instructions.
+    
+    Here's the bio, if any: {bio}
+    \n
+    Here are the contact notes: {notes}
+    \n
+    Here's the user engagement activity, if any: {activity}
+    \n
+    Here are the instructions: {instructions}
+
+
+    Output should not exceed 1,000 characters. Use <strong> tags for bold text. Use <h2> tags for headings. Always use a heading.
+    
+    """
+    return prompt
 
 def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
     prompt = f"""Here are the top 5 search results for {journalist}:
