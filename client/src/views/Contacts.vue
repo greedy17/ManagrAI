@@ -1931,6 +1931,7 @@ export default {
         const res = await Comms.api.getInsight({
           notes: this.currentContact.notes,
           activity: this.activities,
+          bio: this.currentContact.bio,
           instructions: this.insight,
         })
         console.log(res)
@@ -2627,6 +2628,7 @@ export default {
       this.subject = ''
       this.ccEmail = ''
       this.bccEmail = ''
+      this.newInsight = ''
       this.currentContact = contact
 
       if (this.currentContact && this.currentContact.notes) {

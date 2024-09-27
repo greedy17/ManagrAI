@@ -2412,6 +2412,7 @@ class JournalistContactViewSet(
     def get_insight(self, request, *args, **kwargs):
         notes = request.data.get("notes")
         activity = request.data.get("activity")
+        bio = request.data.get("bio")
         instructions = request.data.get("instructions")
         user = self.request.user
 
@@ -2423,7 +2424,7 @@ class JournalistContactViewSet(
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_GET_INSIGHTS(
-                    notes, activity, instructions
+                    notes, activity, bio, instructions
                 )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,

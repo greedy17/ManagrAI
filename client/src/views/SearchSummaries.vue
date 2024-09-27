@@ -3104,6 +3104,7 @@
                     <img
                       @click="goToArticle(article.link)"
                       :src="article.image_url"
+                      @error="onImageError($event)"
                       class="card-photo-header"
                     />
                   </div>
@@ -4387,8 +4388,10 @@ export default {
           imgSource: require('@/assets/images/megaphone.svg'),
           view: 'news',
           chatText: 'Find journalists actively covering a news topic that I can pitch',
-          chatResponse: 'First, tell us about your company (e.g., name and short description)',
-          searchText: `List the top journalists writing about this news topic (up to 10). Then suggest, in list form, which of these journalists the company provided should pitch and why. Make sure to label. Company:`,
+          chatResponse:
+            "Using Company details, provide a short description of your company or a pitch you're working on",
+          searchText: `Scan through the news coverage and list the journalists from recognizable news outlets (up to 10). Only list journalist from the news coverage. 
+          Then suggest, in list form, which of these journalists the company listed should pitch and why. Use Labels. Company:`,
           details: true,
           responseText: 'Provide a current news topic or event',
         },
@@ -4414,18 +4417,19 @@ export default {
           chatResponse: 'Enter a topic, industry, or company',
         },
         {
-          title: 'Newsjacking ideas',
-          text: 'Get creative ideas on how your brand can leverage the latest news',
+          title: 'Press release',
+          text: 'Incorporate timely, relevant news into your press release',
           tag: `News`,
           tagClass: 'blue-bg',
-          imgSource: require('@/assets/images/thumb.svg'),
+          imgSource: require('@/assets/images/sparkles-nofill-round.svg'),
           view: 'news',
-          chatText: 'Provide creative newsjacking ideas',
-          chatResponse: 'First, tell us about your company (e.g., name and short description)',
+          chatText: 'Make my press release more timely based on recent news',
+          chatResponse:
+            'Using Company details, provide a snippet of your current press release or any relevant notes',
           searchText:
-            'Provide creative newsjacking ideas based on the news coverage, for this company. Use Labels:',
+            'Craft or modify the press release incorporating timely, relevant news into the existing pitch. Focus only on the most recognizable news outlets. Pitch details here:',
           details: true,
-          responseText: 'Provide a current news topic or event',
+          responseText: 'Provide a current news topic or event relevant to your press release',
         },
         {
           title: 'Media Q&A',
@@ -4720,6 +4724,9 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    onImageError(event) {
+      event.target.src = this.logoPlaceholder
+    },
     toggleBioModal() {
       this.bioModalOpen = !this.bioModalOpen
     },
@@ -8139,7 +8146,9 @@ export default {
           const searchText = this.searchArticleText.toLowerCase()
 
           const searchConditions = [
-            article.source && article.source.name.toLowerCase().includes(searchText),
+            article.source &&
+              article.source.name &&
+              article.source.name.toLowerCase().includes(searchText),
             article.title && article.title.toLowerCase().includes(searchText),
             article.description && article.description.toLowerCase().includes(searchText),
             article.author && article.author.toLowerCase().includes(searchText),
