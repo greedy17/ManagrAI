@@ -1070,13 +1070,13 @@
                 v-model="searchContactsText"
                 class="search-input"
                 :placeholder="`Search contacts...`"
-                @keyup.enter="getContactsSearch"
+                @keyup.enter="getContactsSearch(false)"
               />
 
               <div
                 class="img-container-stay-small"
                 v-if="searchContactsText"
-                @click="getContactsSearch"
+                @click="getContactsSearch(false)"
               >
                 <img src="@/assets/images/arrow-right.svg" class="pointer" height="10px" alt="" />
               </div>
@@ -1169,20 +1169,6 @@
 
                 <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
                   <div class="rows">
-                    <div
-                      @click="openPitchModal(contact)"
-                      class="img-container s-wrapper"
-                      @mouseenter="showPopover($event, 'Send Email', i)"
-                      @mouseleave="hidePopover"
-                    >
-                      <img
-                        style="filter: invert(40%)"
-                        src="@/assets/images/email-round.svg"
-                        height="14px"
-                        alt=""
-                      />
-                    </div>
-
                     <!-- <div
                       @click="updateContact(contact)"
                       class="img-container s-wrapper"
@@ -1206,6 +1192,20 @@
                       <img
                         style="filter: invert(40%)"
                         src="@/assets/images/file-user.svg"
+                        height="14px"
+                        alt=""
+                      />
+                    </div>
+
+                    <div
+                      @click="openPitchModal(contact)"
+                      class="img-container s-wrapper"
+                      @mouseenter="showPopover($event, 'Send Email', i)"
+                      @mouseleave="hidePopover"
+                    >
+                      <img
+                        style="filter: invert(40%)"
+                        src="@/assets/images/email-round.svg"
                         height="14px"
                         alt=""
                       />
@@ -1475,7 +1475,7 @@
 
           <div class="fadein" v-else>
             <div v-if="!currentContact.notes || !currentContact.notes.length">
-              <div class="row">Added notes will appear here.</div>
+              <div class="row">Notes will appear here.</div>
             </div>
 
             <div v-else>
@@ -1630,7 +1630,7 @@
           </div>
         </div>
 
-        <div class="fadein" v-else>
+        <div style="overflow-y: scroll" class="fadein" v-else>
           <div class="pre-text" v-html="newInsight"></div>
         </div>
       </div>
@@ -1891,7 +1891,7 @@ export default {
     },
     selectedTags(val, oldVal) {
       if (val !== oldVal) {
-        this.getContactsSearch()
+        this.getContactsSearch(false)
       }
     },
     bulkTag(val, oldVal) {
@@ -2410,6 +2410,7 @@ export default {
       this.googleModalOpen = false
       this.revisedPitch = ''
       this.showingEditor = false
+      this.getContactsSearch(false)
       if (contact) {
         this.currentContact = contact
         this.subject = ''
@@ -2682,31 +2683,34 @@ export default {
       this.loading = true
       try {
         const res = await Comms.api.getContacts({
-          search: this.searchContactsText.trim(),
+          search: setContact
+            ? this.currentContact.journalist_ref.first_name
+            : this.searchContactsText.trim(),
           tags: this.selectedTags,
           user_id: this.selectedUser ? this.selectedUser.id : null,
         })
-        this.allContacts = res.results
-        this.contacts = res.results
-        this.totalContacts = res.count
-        this.previous = res.previous
-        this.next = res.next
-        this.currentPage = 1
+
+        if (!setContact) {
+          this.allContacts = res.results
+          this.contacts = res.results
+          this.totalContacts = res.count
+          this.previous = res.previous
+          this.next = res.next
+          this.currentPage = 1
+
+          this.contactsPerPage = this.contacts.length
+
+          const startRange = 1
+          const endRange = Math.min(this.contactsPerPage, this.totalContacts)
+
+          this.contactRange = `${startRange}-${endRange} `
+        }
 
         if (setContact) {
           this.currentContact = res.results.filter(
             (contact) => contact.id === this.currentContact.id,
           )[0]
         }
-
-        // Calculate the number of contacts per page based on the response
-        this.contactsPerPage = this.contacts.length
-
-        // Calculate start and end range for the current page
-        const startRange = 1
-        const endRange = Math.min(this.contactsPerPage, this.totalContacts)
-
-        this.contactRange = `${startRange}-${endRange} `
       } catch (e) {
         console.error(e)
       } finally {
@@ -3091,8 +3095,9 @@ export default {
 .drawer-body {
   padding: 16px 24px;
   overflow-y: scroll;
-  height: 80vh;
+  height: 75vh;
   position: relative;
+  padding-bottom: 40px;
 }
 
 .drawer-images {
