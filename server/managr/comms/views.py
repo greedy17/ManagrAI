@@ -2360,7 +2360,8 @@ class JournalistContactViewSet(
         )
         activity_list = []
         for contact in contacts:
-            activity_list.extend(contact.notes)
+            if contact.notes:
+                activity_list.extend(contact.notes)
         for tracker in trackers:
             tracker_list = []
             activity = tracker.activity_log
