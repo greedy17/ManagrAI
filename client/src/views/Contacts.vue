@@ -32,17 +32,7 @@
           <div v-if="currentContact.bio" class="bio-body" v-html="currentContact.bio"></div>
 
           <div style="height: 300px; width: 100%; margin-left: 0" v-else class="bio-body">
-            <div style="margin-left: -32px" class="row">
-              Updated bio
-              <span>
-                <img
-                  style="margin-left: 12px; margin-right: -54px"
-                  src="@/assets/images/refresh-pr.svg"
-                  height="12px"
-                  alt=""
-              /></span>
-              will appear here.
-            </div>
+            <div style="margin-left: -32px" class="row">Updated bio will appear here.</div>
           </div>
 
           <aside v-if="currentContact.bio">
@@ -1445,17 +1435,7 @@
           ></div>
 
           <div style="height: 300px; width: 100%; margin-left: 0" v-else class="bio-body">
-            <div style="margin-left: -32px" class="row">
-              Updated bio
-              <span>
-                <img
-                  style="margin-left: 12px; margin-right: -54px"
-                  src="@/assets/images/refresh-pr.svg"
-                  height="12px"
-                  alt=""
-              /></span>
-              will appear here.
-            </div>
+            <div class="row">Updated bio will appear here.</div>
           </div>
         </section>
 
@@ -2649,7 +2629,9 @@ export default {
       this.bccEmail = ''
       this.currentContact = contact
 
-      this.isExpanded = Array(this.currentContact.notes.length).fill(false)
+      if (this.currentContact && this.currentContact.notes) {
+        this.isExpanded = Array(this.currentContact.notes.length).fill(false)
+      }
 
       if (!this.currentContact.bio) {
         this.updateContact(this.currentContact)
