@@ -4,6 +4,7 @@ import logging
 import io
 import csv
 import xlrd
+import pytz
 from django.db.models import Q
 from openpyxl import load_workbook
 from rest_framework import (
@@ -15,7 +16,6 @@ from asgiref.sync import async_to_sync, sync_to_async
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
 from .pagination import PageNumberPagination
-from pytz import timezone
 from datetime import datetime, timedelta
 from newspaper import Article, ArticleException
 from managr.api.models import ExpiringTokenAuthentication
@@ -2326,7 +2326,9 @@ class JournalistContactViewSet(
         contact = JournalistContact.objects.get(id=contact_id)
         if contact.notes is None:
             contact.notes = []
-        current_time = str(datetime.now())
+        timezone = pytz.timezone(self.request.user.timezone)
+        date = datetime.now(pytz.utc)
+        current_time = date.astimezone(timezone).isoformat()    
         note_data = {"date": current_time, "note": note, "user": request.user.full_name}
         contact.notes.append(note_data)
         contact.save()
