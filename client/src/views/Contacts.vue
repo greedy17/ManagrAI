@@ -1482,32 +1482,85 @@
               <div
                 style="padding-top: 8px; position: relative"
                 class="note maxed-height"
-                :class="{ 'maxed-height': !isExpanded[i], 'expanded-height': isExpanded[i] }"
-                v-for="(note, i) in currentContact.notes.slice().reverse()"
+                :class="{
+                  'maxed-height': !isExpanded[i],
+                  'expanded-height': isExpanded[i],
+                  'no-scroll': editingNote[i],
+                }"
+                v-for="(note, i) in currentContact.notes"
                 :key="i"
-                @click="toggleExpand(i)"
               >
-                <p class="note__bold">{{ formatDateTime(note.date) }}</p>
-                <p class="note__small">
-                  by <span> {{ note.user }}</span>
-                </p>
-                <p class="pre-text" v-html="note.note"></p>
+                <div class="row">
+                  <p class="note__bold">{{ formatDateTime(note.date, false) }}</p>
+                </div>
 
-                <div class="icon-container">
+                <p class="note__small">
+                  by <span> {{ note.user + '' }}</span>
+                </p>
+
+                <!-- <p class="note__small" v-if="note.modified_by">
+                    {{ note.modified_by }} modified on
+                    {{ formatDateTime(note.date_modified, true) }}
+                  </p> -->
+
+                <p v-if="!editingNote[i]" class="pre-text" v-html="note.note"></p>
+
+                <div class="fadein" v-else>
+                  <textarea
+                    v-model="note.note"
+                    rows="5"
+                    class="area-input text-area-input"
+                    :class="{ opaquest: loadingPitch }"
+                    v-autoresize
+                    :placeholder="note.note"
+                    style="
+                      border: 1px solid rgba(0, 0, 0, 0.1) !important;
+                      border-radius: 8px;
+                      padding: 16px 8px;
+                    "
+                  ></textarea>
+                  <div style="margin-top: 8px" class="space-between">
+                    <button @click="deleteNote(i)" class="primary-button pinkbg">Delete</button>
+
+                    <div class="row">
+                      <button @click="toggleNoteEdit(i)" class="secondary-button">Cancel</button>
+                      <button
+                        :disabled="!note.note"
+                        class="primary-button"
+                        @click="editNote(note.note, i)"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if="!editingNote[i]" class="icon-container row">
                   <img
-                    v-if="!isExpanded[i]"
-                    src="@/assets/images/expanded.svg"
+                    src="@/assets/images/edit-note.svg"
+                    style="margin-right: 12px"
                     height="14px"
                     alt=""
                     class="expand-icon"
+                    @click="toggleNoteEdit(i)"
                   />
-                  <img
-                    v-else
-                    src="@/assets/images/compress.svg"
-                    height="14px"
-                    alt=""
-                    class="compress-icon"
-                  />
+
+                  <div style="cursor: pointer" @click="toggleExpand(i)">
+                    <img
+                      v-if="!isExpanded[i]"
+                      src="@/assets/images/expanded.svg"
+                      height="14px"
+                      alt=""
+                      class="expand-icon"
+                    />
+                    <img
+                      v-else
+                      src="@/assets/images/compress.svg"
+                      height="14px"
+                      alt=""
+                      class="compress-icon"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -1578,7 +1631,9 @@
               </div>
             </div>
 
-            <p style="margin-top: 0" class="note__bold">{{ formatDateTime(activity.date) }}</p>
+            <p style="margin-top: 0" class="note__bold">
+              {{ formatDateTime(activity.date, false) }}
+            </p>
             <p class="note__med">
               <span>{{ activity.user ? activity.user + ' ' : '' }}</span>
 
@@ -1657,6 +1712,7 @@ export default {
   },
   data() {
     return {
+      editingNote: [],
       isExpanded: [],
       newInsight: '',
       loadingInsight: false,
@@ -1912,13 +1968,18 @@ export default {
     this.getWritingStyles()
   },
   methods: {
+    toggleNoteEdit(i) {
+      if (this.editingNote[i]) {
+        this.$set(this.editingNote, i, false)
+      } else {
+        this.$set(this.editingNote, i, true)
+      }
+      this.toggleExpand(i)
+    },
     toggleExpand(index) {
-      // Toggle the expanded state of the clicked note
       if (this.isExpanded[index]) {
-        // Collapse if already expanded
         this.$set(this.isExpanded, index, false)
       } else {
-        // Expand if not yet expanded
         this.$set(this.isExpanded, index, true)
       }
     },
@@ -1954,7 +2015,7 @@ export default {
     toggleNotes() {
       this.addingNote = !this.addingNote
     },
-    formatDateTime(datetimeString) {
+    formatDateTime(datetimeString, isShort) {
       const date = new Date(datetimeString)
       const timeOptions = {
         hour: 'numeric',
@@ -1970,7 +2031,12 @@ export default {
       }
 
       const formattedDate = date.toLocaleDateString('en-US', dateOptions)
-      return `${formattedDate} · ${formattedTime}`
+
+      if (isShort) {
+        return `${formattedDate}`
+      } else {
+        return `${formattedDate} · ${formattedTime}`
+      }
     },
     async addNote() {
       try {
@@ -1987,6 +2053,40 @@ export default {
       } finally {
         this.addingNote = false
         this.newNote = ''
+      }
+    },
+    async editNote(note, i) {
+      try {
+        const res = await Comms.api.editNote({
+          id: this.currentContact.id,
+          note_index: i,
+          note: note,
+        })
+        console.log(res)
+        this.$nextTick(() => {
+          this.refreshUser()
+          this.getContactsSearch(true)
+        })
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.toggleNoteEdit(i)
+      }
+    },
+    async deleteNote(i) {
+      try {
+        const res = await Comms.api.deleteNote({
+          id: this.currentContact.id,
+          note_index: i,
+        })
+        this.$nextTick(() => {
+          this.refreshUser()
+          this.getContactsSearch(true)
+        })
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.toggleNoteEdit(i)
       }
     },
     async getActivities() {
@@ -2624,9 +2724,14 @@ export default {
       this.bccEmail = ''
       this.newInsight = ''
       this.currentContact = contact
+      console.log(this.currentContact)
 
       if (this.currentContact && this.currentContact.notes) {
         this.isExpanded = Array(this.currentContact.notes.length).fill(false)
+      }
+
+      if (this.currentContact && this.currentContact.notes) {
+        this.editingNote = Array(this.currentContact.notes.length).fill(false)
       }
 
       if (!this.currentContact.bio) {
@@ -3005,17 +3110,20 @@ export default {
 }
 
 .maxed-height {
-  height: 104px;
+  height: 112px;
   overflow: hidden;
 
   &:hover {
-    opacity: 0.8;
-    cursor: pointer;
+    // opacity: 0.8;
   }
 }
 
+.no-scroll {
+  overflow: hidden !important;
+}
+
 .expanded-height {
-  height: 250px;
+  height: 258px;
   overflow-y: scroll;
   &::-webkit-scrollbar {
     width: 5px;
@@ -3056,10 +3164,12 @@ export default {
 
 .note .icon-container {
   position: absolute;
-  right: 12px;
-  bottom: 16px;
+  right: 8px;
+  bottom: 8px;
+  padding: 2px 8px;
   visibility: hidden;
   transition: visibility 0.1s;
+  background-color: white;
 }
 
 .note:hover .icon-container {
@@ -4049,6 +4159,11 @@ h2 {
 
 .lte8 .wrapper:hover .tooltip {
   display: block;
+}
+
+.pinkbg {
+  background-color: $pinky !important;
+  margin: 0;
 }
 
 .space-between {
