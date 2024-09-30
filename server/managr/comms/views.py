@@ -2335,6 +2335,44 @@ class JournalistContactViewSet(
         return Response(status=status.HTTP_200_OK)
 
     @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="edit-note",
+    )
+    def edit_note(self, request, *args, **kwargs):
+        contact_id = request.data.get("id")
+        note_index = request.data.get("note_index")
+        new_note = request.data.get("note")
+
+        contact = JournalistContact.objects.get(id=contact_id)
+        
+        timezone = pytz.timezone(self.request.user.timezone)
+        date = datetime.now(pytz.utc)
+        current_time = date.astimezone(timezone).isoformat() 
+        
+        contact.notes[note_index]['note'] = new_note
+        contact.notes[note_index]['date_modified'] = current_time
+        contact.notes[note_index]['modified_by'] = request.user.full_name
+
+        contact.save()
+        return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="delete-note",
+    )
+    def delete_note(self, request, *args, **kwargs):
+        contact_id = request.data.get("id")
+        note_index = request.data.get("note_index")    
+        contact = JournalistContact.objects.get(id=contact_id)
+        contact.notes.pop(note_index)
+        contact.save()
+        return Response(status=status.HTTP_200_OK)        
+
+    @action(
         methods=["get"],
         permission_classes=[permissions.IsAuthenticated],
         detail=False,
