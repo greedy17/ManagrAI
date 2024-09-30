@@ -1494,14 +1494,14 @@
                   <p class="note__bold">{{ formatDateTime(note.date, false) }}</p>
                 </div>
 
-                <p class="note__small">
-                  by <span> {{ note.user + '' }}</span>
+                <p class="note__smaller" v-if="note.modified_by">
+                  {{ note.modified_by }} modified on
+                  {{ formatDateTime(note.date_modified, true) }}
                 </p>
 
-                <!-- <p class="note__small" v-if="note.modified_by">
-                    {{ note.modified_by }} modified on
-                    {{ formatDateTime(note.date_modified, true) }}
-                  </p> -->
+                <p v-else class="note__small">
+                  by <span> {{ note.user + '' }}</span>
+                </p>
 
                 <p v-if="!editingNote[i]" class="pre-text" v-html="note.note"></p>
 
@@ -3155,6 +3155,11 @@ export default {
     color: $lite-blue;
     font-family: $base-font-family;
   }
+  &__smaller {
+    font-size: 13px;
+    color: $turq;
+    font-family: $base-font-family;
+  }
   &__med {
     font-size: 15px;
   }
@@ -4601,6 +4606,10 @@ h2 {
 }
 
 ::v-deep .bio-body {
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  overflow: scroll;
+
   line-height: 1.75 !important;
   padding: 0;
   margin-bottom: 0 !important;
