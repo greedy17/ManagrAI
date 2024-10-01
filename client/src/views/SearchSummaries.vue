@@ -4375,8 +4375,8 @@ export default {
           tagClass: 'blue-bg',
           imgSource: require('@/assets/images/newspaper.svg'),
           view: 'news',
-          chatText: 'Uncover top storylines',
-          chatResponse: 'Enter a topic, industry, or company',
+          chatText: 'Scan the news and list top storylines',
+          chatResponse: 'Using the message bar, enter a topic, industry, or company',
           searchText: 'List the top 5 storylines based on the provided news coverage. Use lables',
           details: false,
         },
@@ -4393,7 +4393,7 @@ export default {
           searchText: `Scan through the news coverage and list the journalists from recognizable news outlets (up to 10). Only list journalist from the news coverage. 
           Then suggest, in list form, which of these journalists the company listed should pitch and why. Use Labels. Company:`,
           details: true,
-          responseText: 'Provide a current news topic or event',
+          responseText: 'Using the message bar, provide a current news topic or event',
         },
         {
           title: 'Media list',
@@ -4414,7 +4414,7 @@ export default {
           imgSource: require('@/assets/images/glasses.svg'),
           view: 'network',
           chatText: 'Uncover top storylines',
-          chatResponse: 'Enter a topic, industry, or company',
+          chatResponse: 'Using the message bar, enter a topic, industry, or company',
         },
         {
           title: 'Press release',
@@ -4429,7 +4429,8 @@ export default {
           searchText:
             'Craft or modify the press release incorporating timely, relevant news into the existing pitch. Focus only on the most recognizable news outlets. Pitch details here:',
           details: true,
-          responseText: 'Provide a current news topic or event relevant to your press release',
+          responseText:
+            'Using the message bar, provide a current news topic or event relevant to your press release',
         },
         {
           title: 'Media Q&A',
@@ -4443,7 +4444,7 @@ export default {
           searchText:
             'Based on the news coverage, list 5 questions the media will ask this company. Provide suggested answers as well. Use labels. :',
           details: true,
-          responseText: 'Provide a current news topic or event',
+          responseText: 'Using the message bar, provide a current news topic or event',
         },
         {
           title: 'Writing assistant',
@@ -4458,14 +4459,14 @@ export default {
           responseText: 'Great! What would you like me to write for you ?',
         },
         {
-          title: 'Web searching',
-          text: 'Get questions answered based on top ranking web data',
-          tag: `Web`,
+          title: 'Coverage report',
+          text: 'Coverage report description here',
+          tag: `Report`,
           tagClass: 'purp-bg',
           imgSource: require('@/assets/images/google.svg'),
-          view: 'web',
-          chatText: 'Web searching',
-          chatResponse: 'What would you like to know ?',
+          view: 'report',
+          chatText: 'Help me create a coverage report',
+          chatResponse: 'Using the message bar, tell us which brand this report is for',
           details: false,
         },
       ],
