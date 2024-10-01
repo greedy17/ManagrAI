@@ -5837,6 +5837,7 @@ export default {
         })
         this.revisedPitch = ''
         this.sendingEmail = false
+        this.drafting = false
       } catch (e) {
         console.log(e)
         this.$toast('Error creating draft, try again', {
