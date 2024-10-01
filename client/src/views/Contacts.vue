@@ -1483,11 +1483,11 @@
                 style="padding-top: 8px; position: relative"
                 class="note maxed-height"
                 :class="{
-                  'maxed-height': !isExpanded[i],
-                  'expanded-height': isExpanded[i],
-                  'no-scroll': editingNote[i],
+                  'maxed-height': !isExpanded[currentContact.notes.length - 1 - i],
+                  'expanded-height': isExpanded[currentContact.notes.length - 1 - i],
+                  'no-scroll': editingNote[currentContact.notes.length - 1 - i],
                 }"
-                v-for="(note, i) in currentContact.notes"
+                v-for="(note, i) in currentContact.notes.slice().reverse()"
                 :key="i"
               >
                 <div class="row">
@@ -1503,7 +1503,11 @@
                   by <span> {{ note.user + '' }}</span>
                 </p>
 
-                <p v-if="!editingNote[i]" class="pre-text" v-html="note.note"></p>
+                <p
+                  v-if="!editingNote[currentContact.notes.length - 1 - i]"
+                  class="pre-text"
+                  v-html="note.note"
+                ></p>
 
                 <div class="fadein" v-else>
                   <textarea
@@ -1520,14 +1524,24 @@
                     "
                   ></textarea>
                   <div style="margin-top: 8px" class="space-between">
-                    <button @click="deleteNote(i)" class="primary-button pinkbg">Delete</button>
+                    <button
+                      @click="deleteNote(currentContact.notes.length - 1 - i)"
+                      class="primary-button pinkbg"
+                    >
+                      Delete
+                    </button>
 
                     <div class="row">
-                      <button @click="toggleNoteEdit(i)" class="secondary-button">Cancel</button>
+                      <button
+                        @click="toggleNoteEdit(currentContact.notes.length - 1 - i)"
+                        class="secondary-button"
+                      >
+                        Cancel
+                      </button>
                       <button
                         :disabled="!note.note"
                         class="primary-button"
-                        @click="editNote(note.note, i)"
+                        @click="editNote(note.note, currentContact.notes.length - 1 - i)"
                       >
                         Save
                       </button>
@@ -1535,19 +1549,25 @@
                   </div>
                 </div>
 
-                <div v-if="!editingNote[i]" class="icon-container row">
+                <div
+                  v-if="!editingNote[currentContact.notes.length - 1 - i]"
+                  class="icon-container row"
+                >
                   <img
                     src="@/assets/images/edit-note.svg"
                     style="margin-right: 12px"
                     height="14px"
                     alt=""
                     class="expand-icon"
-                    @click="toggleNoteEdit(i)"
+                    @click="toggleNoteEdit(currentContact.notes.length - 1 - i)"
                   />
 
-                  <div style="cursor: pointer" @click="toggleExpand(i)">
+                  <div
+                    style="cursor: pointer"
+                    @click="toggleExpand(currentContact.notes.length - 1 - i)"
+                  >
                     <img
-                      v-if="!isExpanded[i]"
+                      v-if="!isExpanded[currentContact.notes.length - 1 - i]"
                       src="@/assets/images/expanded.svg"
                       height="14px"
                       alt=""
@@ -1971,10 +1991,13 @@ export default {
     toggleNoteEdit(i) {
       if (this.editingNote[i]) {
         this.$set(this.editingNote, i, false)
+        this.toggleExpand(i)
       } else {
         this.$set(this.editingNote, i, true)
+        if (!this.isExpanded[i]) {
+          this.toggleExpand(i)
+        }
       }
-      this.toggleExpand(i)
     },
     toggleExpand(index) {
       if (this.isExpanded[index]) {
