@@ -2,7 +2,10 @@
   <div>
     <!-- v-if="currentChat.view === 'news'" -->
     <div>
-      <div v-if="userResponse && currentChat.view !== 'write'" class="space-between">
+      <div
+        v-if="userResponse && currentChat.view !== 'write' && currentChat.view !== 'report'"
+        class="space-between"
+      >
         <div></div>
         <div class="chat-bubble row">
           <img src="@/assets/images/profile.svg" height="12px" alt="" />

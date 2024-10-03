@@ -1666,7 +1666,10 @@
             </div>
           </div>
 
-          <div v-if="currentChat.view === 'write' && userResponse" class="space-between">
+          <div
+            v-if="(currentChat.view === 'write' || currentChat.view === 'report') && userResponse"
+            class="space-between"
+          >
             <div></div>
             <div class="chat-window__chat-bubble row">
               <img src="@/assets/images/profile.svg" height="12px" alt="" />
@@ -1805,6 +1808,157 @@
                     </div>
                   </section>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="currentChat.view === 'report' && userResponse">
+            <div style="width: fit-content" class="big-chat-bubble">
+              <div class="row">
+                <img src="@/assets/images/iconlogo.png" height="24px" alt="" />
+                <p class="regular-font" v-typed="uploadText"></p>
+              </div>
+
+              <div style="margin: 0 0 8px 14px" class="row">
+                <div class="file-input-wrapper">
+                  <label class="file-input-label">
+                    <input type="file" @change="uploadImage" class="file-input" />
+                    <span style="margin-right: 4px" class="secondary-button">
+                      <img
+                        v-if="loadingFile"
+                        style="margin-right: 4px"
+                        class="invert rotation"
+                        src="@/assets/images/loading.svg"
+                        height="14px"
+                        alt=""
+                      />
+                      Upload Logo
+                    </span>
+                  </label>
+                  <p class="file-name">{{ fileName ? fileName : 'No file selected' }}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex-end" v-if="fileName">
+              <div class="chat-window__chat-bubble row">
+                <img src="@/assets/images/profile.svg" height="12px" alt="" />
+                <p>{{ fileName }} uploaded.</p>
+              </div>
+            </div>
+
+            <div v-if="fileName" style="width: 80%" class="big-chat-bubble fadein">
+              <div class="row">
+                <img src="@/assets/images/iconlogo.png" height="24px" alt="" />
+                <p class="regular-font" v-typed="coverageText"></p>
+              </div>
+
+              <div style="margin: 0 0 8px 14px">
+                <p>Paste up to 1,000 URLs. Each on a new line.</p>
+                <textarea
+                  style="
+                    width: 100%;
+                    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+                    padding: 12px;
+                  "
+                  :rows="5"
+                  id="search-input"
+                  class="area-input"
+                  autocomplete="off"
+                  :placeholder="urlPlaceholder"
+                  v-model="reportUrls"
+                  v-autoresize
+                />
+                <div style="margin-top: 12px" class="flex-end">
+                  <button
+                    @click="setUrls"
+                    :disabled="!reportUrls || urlsSet"
+                    class="primary-button"
+                  >
+                    Continue
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin: 12px 0" class="flex-end" v-if="urlsSet">
+              <div class="chat-window__chat-bubble row">
+                <img src="@/assets/images/profile.svg" height="12px" alt="" />
+                <p>1 URL pasted</p>
+              </div>
+            </div>
+
+            <div v-if="urlsSet" style="width: fit-content" class="big-chat-bubble fadein">
+              <div class="row">
+                <img src="@/assets/images/iconlogo.png" height="24px" alt="" />
+                <p class="regular-font" v-typed="coverageInstructions"></p>
+              </div>
+
+              <div style="margin: 0 0 8px 14px; position: relative">
+                <div
+                  @click.stop="toggleJournalistSuggestions"
+                  :class="{ 'soft-gray-bg': showJournalistSuggestions }"
+                  class="drop-header-alt"
+                  style="
+                    background-color: #fafafa;
+                    box-shadow: 1px 2px 6px rgba(0, 0, 0, 0.1);
+                    margin-bottom: 8px;
+                  "
+                >
+                  <p style="font-size: 15px !important" class="mobile-text-hide">Suggestions</p>
+                  <img
+                    v-if="!showJournalistSuggestions"
+                    src="@/assets/images/arrowDropUp.svg"
+                    height="15px"
+                    alt=""
+                  />
+                  <img
+                    v-else
+                    class="rotate-img"
+                    src="@/assets/images/arrowDropUp.svg"
+                    height="15px"
+                    alt=""
+                  />
+                </div>
+
+                <div
+                  v-show="showJournalistSuggestions"
+                  v-outside-click="hideJournalistSuggestions"
+                  class="container-left-above-alt"
+                >
+                  <h3>Overview suggestions</h3>
+                  <div>
+                    <p
+                      v-for="(suggestion, i) in reportSuggestions"
+                      :key="i"
+                      @click="selectReportSuggestion(suggestion)"
+                    >
+                      {{ suggestion }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin: 12px 0" class="flex-end" v-if="reportInstructions">
+              <div class="chat-window__chat-bubble row">
+                <img src="@/assets/images/profile.svg" height="12px" alt="" />
+                <p>{{ reportInstructions }}</p>
+              </div>
+            </div>
+
+            <div
+              v-if="reportInstructions"
+              style="width: fit-content"
+              class="big-chat-bubble fadein"
+            >
+              <div class="row">
+                <img src="@/assets/images/iconlogo.png" height="24px" alt="" />
+                <p class="regular-font" v-typed="lastInstructions"></p>
+              </div>
+
+              <div style="margin: 0 0 8px 14px">
+                <button class="primary-button">Run report</button>
               </div>
             </div>
           </div>
@@ -4078,6 +4232,18 @@ export default {
   },
   data() {
     return {
+      reportInstructions: '',
+      urlsSet: false,
+      urlPlaceholder: `
+www.techcrunch.com/article-1 
+www.bloomberg.com/article-2
+www.forbes.com/article-3
+     `,
+      reportUrls: '',
+      fileName: '',
+      allowedFormats: ['image/jpeg', 'image/png', 'image/svg+xml'],
+      maxSize: 2 * 1024 * 1024,
+      loadingFile: false,
       showingBcc: false,
       showingCc: false,
       logoPlaceholder: require('@/assets/images/iconlogo.png'),
@@ -4091,6 +4257,10 @@ export default {
       loadingContacts: false,
       showJournalistSuggestions: false,
       styleText: 'Select a writing style',
+      uploadText: 'Great! Please provide a logo and banner file using JPEG, PNG, or SVG',
+      coverageText: `Next, add news coverage links by pasting the URL's below.`,
+      coverageInstructions: 'Last Step! Please provide overview instructions for this report.',
+      lastInstructions: 'All set! We are now ready to run the report!',
       chatSearch: '',
       userResponse: null,
       secondResponse: null,
@@ -4359,6 +4529,11 @@ export default {
         `Frelancers that cover fashion`,
         `NY Times or WSJ writers covering climate change`,
       ],
+      reportSuggestions: [
+        `Summarize the coverage in paragraph form. Then provide sentiment analysis along with 3 key messages`,
+        `List out the top 5 stories including outlet name, journalist, and date. Provide the articles impact on the brand`,
+        `As the brands PR agency, provide a detailed analysis and the value of all the media overage we've secured.`,
+      ],
       summarySuggestions: [
         `Craft a media pitch for [BrandX] incorporating relevant news, use citations. Pitch details: [here]`,
         `Craft a press release for [BrandX] incorporating relevant news, use citations. Pitch details: [here]`,
@@ -4460,10 +4635,10 @@ export default {
         },
         {
           title: 'Coverage report',
-          text: 'Coverage report description here',
+          text: 'Create an earned media report for your brand',
           tag: `Report`,
           tagClass: 'purp-bg',
-          imgSource: require('@/assets/images/google.svg'),
+          imgSource: require('@/assets/images/report.svg'),
           view: 'report',
           chatText: 'Help me create a coverage report',
           chatResponse: 'Using the message bar, tell us which brand this report is for',
@@ -4725,6 +4900,53 @@ export default {
     this.abortFunctions()
   },
   methods: {
+    setUrls() {
+      this.urlsSet = true
+      this.scrollToChatTop()
+    },
+    uploadImage(event) {
+      const file = event.target.files[0]
+
+      if (!file) {
+        this.fileName = ''
+        alert('No file selected.')
+        return
+      }
+
+      if (!this.allowedFormats.includes(file.type)) {
+        alert('Only JPEG, PNG, and SVG files are allowed.')
+        this.fileName = ''
+        return
+      }
+
+      if (file.size > this.maxSize) {
+        alert('File size should not exceed 2MB.')
+        this.fileName = ''
+        return
+      }
+
+      this.loadingFile = true
+      this.fileName = file.name
+      this.scrollToChatTop()
+
+      const reader = new FileReader()
+
+      reader.onload = (e) => {
+        const imageDataUrl = e.target.result
+        // may start displaying the image
+        console.log('Uploaded Image:', imageDataUrl)
+        // Will send imageDataUrl to the server here
+        this.loadingFile = false
+      }
+
+      reader.onerror = () => {
+        alert('Error reading file.')
+        this.fileName = ''
+        this.loadingFile = false
+      }
+
+      reader.readAsDataURL(file)
+    },
     onImageError(event) {
       event.target.src = this.logoPlaceholder
     },
@@ -4739,6 +4961,7 @@ export default {
     },
     toggleJournalistSuggestions() {
       this.showJournalistSuggestions = true
+      this.scrollToChatTop()
     },
     setAndChat(chat) {
       this.responseEmpty = false
@@ -5262,6 +5485,10 @@ export default {
       this.showSuggestions = false
     },
     selectChatSuggestion(txt) {
+      this.chatSearch = txt
+      this.hideJournalistSuggestions()
+    },
+    selectReportSuggestion(txt) {
       this.chatSearch = txt
       this.hideJournalistSuggestions()
     },
@@ -7242,6 +7469,19 @@ export default {
         this.chatSearch = ''
         this.$refs.textarea.dispatchEvent(new Event('textarea-clear'))
         this.discoverJournalists(true)
+      } else if (this.currentChat.view === 'report') {
+        // newSearch here will be whatever is used for the report company name
+        if (this.urlsSet) {
+          this.reportInstructions = this.chatSearch
+          this.chatSearch = ''
+          this.$refs.textarea.dispatchEvent(new Event('textarea-clear'))
+          this.scrollToChatTop()
+        } else {
+          this.newSearch = this.chatSearch
+          this.userResponse = this.chatSearch
+          this.chatSearch = ''
+          this.$refs.textarea.dispatchEvent(new Event('textarea-clear'))
+        }
       }
     },
     async generateNewSearch(event, saved = false, boolean = '') {
@@ -12836,6 +13076,57 @@ textarea::placeholder {
   }
 }
 
+.container-left-above-alt {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  position: absolute;
+  left: 0;
+  bottom: 40px;
+  height: 180px;
+  width: 145%;
+  padding: 0 0 16px 0;
+  background-color: white;
+  box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+  z-index: 9;
+  overflow-y: scroll;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+    height: 0px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: $soft-gray;
+    box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+    border-radius: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    margin-top: 48px;
+  }
+
+  p {
+    margin: 0;
+    padding: 8px 16px;
+    width: 100%;
+    font-size: 13px;
+    &:hover {
+      background-color: $soft-gray;
+      cursor: pointer;
+    }
+  }
+
+  h3 {
+    position: sticky;
+    top: 0;
+    background-color: white;
+    font-family: $base-font-family;
+    font-weight: 100;
+    padding: 16px;
+    width: 100%;
+    z-index: 3;
+  }
+}
+
 .container-left-below {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 5px;
@@ -13300,6 +13591,66 @@ input[type='time'].has-placeholder::-webkit-datetime-edit {
   box-shadow: 1px 2px 6px rgba(0, 0, 0, 0.05);
 }
 
+select {
+  width: 200px;
+  padding: 8px 12px;
+  font-family: $thin-font-family;
+  font-size: 14px;
+  color: $dark-blue;
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+  appearance: none;
+  background-image: url('~@/assets/images/dropdown.svg');
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+
+  &:hover {
+    background-color: $soft-gray;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $dark-black-blue;
+  }
+}
+
+.file-input-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  font-family: $thin-font-family;
+}
+
+.file-input-label {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.file-input {
+  display: none;
+}
+
+.secondary-button {
+  @include dark-blue-button();
+  padding: 8px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  color: $dark-black-blue;
+  background-color: white;
+  margin-right: -2px;
+}
+
+.file-name {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #333333;
+  font-weight: 400;
+}
+
 .chat-window {
   height: 96vh;
   display: flex;
@@ -13342,6 +13693,7 @@ input[type='time'].has-placeholder::-webkit-datetime-edit {
   }
 
   &__chat-bubble {
+    line-height: 1.5;
     width: fit-content;
     border-radius: 20px;
     padding: 8px 16px;
