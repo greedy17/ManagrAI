@@ -56,7 +56,7 @@
             </div>
           </div>
         </div>
-        <div class="paid-footer">
+        <div style="height: 100px" class="paid-footer">
           <div class="row">
             <div
               style="padding-top: 9px; padding-bottom: 9px"
@@ -4740,6 +4740,12 @@ export default {
       this.showJournalistSuggestions = true
     },
     setAndChat(chat) {
+      if (!this.isPaid && this.searchesUsed >= 20) {
+        this.openPaidModal(
+          'You have reached your usage limit for the month. Please upgrade your plan.',
+        )
+        return
+      }
       this.responseEmpty = false
       this.userResponse = null
       this.secondResponse = null
@@ -4960,7 +4966,7 @@ export default {
       this.$store.dispatch('getDiscoveries')
     },
     async discoverJournalists(discover = false) {
-      if (!this.isPaid && this.searchesUsed >= 10) {
+      if (!this.isPaid && this.searchesUsed >= 20) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
@@ -5610,7 +5616,7 @@ export default {
     },
 
     async saveContact() {
-      if (!this.isPaid && this.searchesUsed >= 10) {
+      if (!this.isPaid && this.searchesUsed >= 20) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
@@ -5663,7 +5669,7 @@ export default {
     },
 
     async getJournalistBioDiscover() {
-      if (!this.isPaid && this.searchesUsed >= 10) {
+      if (!this.isPaid && this.searchesUsed >= 20) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
@@ -5754,6 +5760,11 @@ export default {
         this.currentJournalistImages = res.data.images
         this.currentJournalistBio = res.data.bio.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
         this.currentPublication = res.data.company
+
+        this.$nextTick(() => {
+          this.refreshUser()
+        })
+        this.refreshUser()
       } catch (e) {
         console.error(e)
       } finally {
@@ -5947,7 +5958,7 @@ export default {
       }
     },
     grabJournalist(name, pub) {
-      if (!this.isPaid && this.searchesUsed >= 10) {
+      if (!this.isPaid && this.searchesUsed >= 20) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
@@ -6643,6 +6654,9 @@ export default {
         this.summary = res.message
           .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
           .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, '')
+        this.$nextTick(() => {
+          this.refreshUser()
+        })
       } catch (e) {
         this.googleResults = []
         this.summary = ''
@@ -6656,7 +6670,7 @@ export default {
       }
     },
     async generatePitch() {
-      if (!this.isPaid && this.searchesUsed >= 10) {
+      if (!this.isPaid && this.searchesUsed >= 20) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
@@ -7169,6 +7183,12 @@ export default {
       // })
     },
     async generateChatSearch(event) {
+      if (!this.isPaid && this.searchesUsed >= 20) {
+        this.openPaidModal(
+          'You have reached your usage limit for the month. Please upgrade your plan.',
+        )
+        return
+      }
       this.scrollToChatTop()
       if (event && event.shiftKey) {
         return
@@ -7262,7 +7282,7 @@ export default {
       this.relevantData = ''
       this.journalistData = ''
       this.relatedTopics = []
-      if (!this.isPaid && this.searchesUsed >= 10) {
+      if (!this.isPaid && this.searchesUsed >= 20) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )

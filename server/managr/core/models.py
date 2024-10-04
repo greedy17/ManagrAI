@@ -418,7 +418,7 @@ class User(AbstractUser, TimeStampModel):
             for value in self.meta_data.values():
                 date_list.extend(value["timestamps"])
             count = day_counter(date_list)
-            if count >= 10:
+            if count >= 20:
                 return True
             else:
                 return False

@@ -1,5 +1,38 @@
 <template>
   <div class="contacts fadein">
+    <Modal v-if="paidModal" class="paid-modal">
+      <div class="regen-container">
+        <div class="paid-header">
+          <div>
+            <h4 class="regen-header-title"></h4>
+            <p class="regen-header-subtitle"></p>
+          </div>
+        </div>
+        <div class="paid-body">
+          <div>
+            <div class="paid-center">
+              <h3 class="paid-title">Upgrade to Pro</h3>
+              <h5 style="margin-top: 12px" class="regen-body-title">
+                {{ upgradeMessage }}
+              </h5>
+            </div>
+          </div>
+        </div>
+        <div style="height: 80px" class="paid-footer">
+          <div class="row">
+            <div
+              style="padding-top: 9px; padding-bottom: 9px"
+              class="cancel-button"
+              @click="closePaidModal"
+            >
+              Close
+            </div>
+            <div class="save-button" @click="goToContact">Contact Us</div>
+          </div>
+        </div>
+      </div>
+    </Modal>
+
     <Modal v-if="googleModalOpen" class="bio-modal">
       <div class="bio-container">
         <header style="border: none">
@@ -664,11 +697,108 @@
     <Modal class="bio-modal small-modal" v-if="bulkModalOpen">
       <div class="bio-container small-container">
         <header>
-          <h2 style="margin: 12px 0">Import Contacts</h2>
+          <h2 v-if="!bulkTagging" style="margin: 12px 0">Import Contacts</h2>
+          <h2 v-else style="margin: 12px 0">Tag your imported contacts</h2>
         </header>
 
         <div style="margin-bottom: 16px; height: 300px; width: 100%">
-          <ContactMapping @fieldsFullyMapped="updateMappedField"></ContactMapping>
+          <ContactMapping
+            v-if="!bulkTagging"
+            @fieldsFullyMapped="updateMappedField"
+          ></ContactMapping>
+
+          <div v-else>
+            <div style="margin-top: 16px">
+              <h3>Select a tag</h3>
+              <div style="height: 50px; margin-top: 32px" v-if="!ExpandedTagList.length">
+                You dont have any tags yet...
+              </div>
+              <div
+                style="
+                  padding: 0;
+                  opacity: 1;
+                  height: 120px;
+                  overflow: scroll;
+                  cursor: text;
+                  margin-top: 16px;
+                  margin-bottom: 12px;
+                "
+                class="scrolltainer"
+                v-else
+              >
+                <div
+                  style="
+                    opacity: 1;
+                    cursor: text;
+                    font-size: 15px;
+                    padding: 6px 8px;
+                    cursor: pointer;
+                    border-radius: 4px;
+                  "
+                  v-for="(tag, i) in ExpandedTagList"
+                  @click="selectBulkTag(tag.name)"
+                  :key="i"
+                  class="space-between hover-bg"
+                  :class="{ 'soft-gray-bg': importTag === tag.name }"
+                >
+                  <div class="row">
+                    <img
+                      style="margin: 0 8px 0 -4px"
+                      src="@/assets/images/tags.svg"
+                      height="12px"
+                      alt=""
+                    />
+                    {{ tag.name }}
+                  </div>
+
+                  <small v-if="importTag === tag.name">selected</small>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3>Create new tag</h3>
+              <div style="margin-top: 24px">
+                <div style="opacity: 1; margin: 0; cursor: text" class="input-container-small">
+                  <input
+                    :disabled="loadingTags"
+                    style="border: none; outline: none; padding: 10px 8px 10px 0px; width: 100%"
+                    class="text-area-input"
+                    type="text"
+                    @keyup.enter="modifyTagsImport"
+                    v-model="importTagName"
+                    placeholder="Name your tag..."
+                  />
+
+                  <div
+                    class="img-container-stay-small"
+                    v-if="importTagName"
+                    @click="modifyTagsImport"
+                    style="margin-right: 12px; padding: 1px 6px 2px 6px"
+                  >
+                    <img
+                      src="@/assets/images/arrow-right.svg"
+                      class="pointer"
+                      height="10px"
+                      alt=""
+                    />
+                  </div>
+
+                  <img
+                    v-else
+                    style="filter: invert(40%); margin-right: 20px"
+                    src="@/assets/images/tags.svg"
+                    height="14px"
+                    alt=""
+                  />
+                </div>
+
+                <div style="margin-top: 16px">
+                  <small>To continue without tagging click Import</small>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <footer>
@@ -676,7 +806,23 @@
 
           <div class="row">
             <button class="secondary-button" @click="bulkModalOpen = false">Cancel</button>
-            <button class="primary-button" :disabled="!mapped" @click="handleFileUpload">
+            <button
+              v-if="!bulkTagging"
+              class="primary-button"
+              :disabled="!mapped"
+              @click="toggleBulkTag"
+            >
+              <img
+                v-if="uploading"
+                style="margin-right: 4px"
+                class="invert rotation"
+                src="@/assets/images/loading.svg"
+                height="14px"
+                alt=""
+              />
+              Continue
+            </button>
+            <button v-else class="primary-button" :disabled="!mapped" @click="handleFileUpload">
               <img
                 v-if="uploading"
                 style="margin-right: 4px"
@@ -753,7 +899,7 @@
     <Modal class="bio-modal med-modal" v-if="tagModalOpen">
       <div class="bio-container med-container">
         <header>
-          <h2 style="margin: 12px 0">Apply or Create a Tag</h2>
+          <h2 style="margin: 12px 0">Select or Create a Tag</h2>
 
           <img
             style="cursor: pointer"
@@ -766,7 +912,7 @@
 
         <div style="margin-top: 16px; margin-bottom: 24px; min-height: 120px; width: 100%">
           <div>
-            <h3>Select tag to apply</h3>
+            <h3>Select a tag</h3>
             <div style="height: 50px; margin-top: 32px" v-if="!tags.length">
               You dont have any tags yet...
             </div>
@@ -790,13 +936,21 @@
                 :key="i"
                 class="space-between hover-bg"
               >
-                {{ tag.name }}
+                <div class="row">
+                  <img
+                    style="margin: 0 8px 0 -4px"
+                    src="@/assets/images/tags.svg"
+                    height="12px"
+                    alt=""
+                  />
+                  {{ tag.name }}
+                </div>
               </div>
             </div>
           </div>
 
           <div>
-            <h3>Create</h3>
+            <h3>Create a tag</h3>
             <div style="margin-top: 24px" class="row">
               <div style="opacity: 1; margin: 0; cursor: text" class="input-container-small">
                 <input
@@ -808,15 +962,25 @@
                   placeholder="Name your tag..."
                 />
 
+                <div
+                  class="img-container-stay-small"
+                  v-if="newTag"
+                  @click="modifyTags('add')"
+                  style="margin-right: 12px; padding: 1px 6px 2px 6px"
+                >
+                  <img src="@/assets/images/arrow-right.svg" class="pointer" height="10px" alt="" />
+                </div>
+
                 <img
+                  v-else
                   style="filter: invert(40%); margin-right: 20px"
-                  src="@/assets/images/user-tag.svg"
+                  src="@/assets/images/tags.svg"
                   height="14px"
                   alt=""
                 />
               </div>
 
-              <button
+              <!-- <button
                 :disabled="!newTag || loadingTags"
                 @click="modifyTags('add')"
                 style="margin-bottom: 5px"
@@ -830,7 +994,7 @@
                   alt=""
                 />
                 Create
-              </button>
+              </button> -->
             </div>
           </div>
         </div>
@@ -1732,6 +1896,12 @@ export default {
   },
   data() {
     return {
+      paidModal: false,
+      upgradeMessage: '',
+      importTagList: [],
+      importTagName: '',
+      importTag: '',
+      bulkTagging: false,
       editingNote: [],
       isExpanded: [],
       newInsight: '',
@@ -1891,6 +2061,28 @@ export default {
     }
   },
   computed: {
+    searchesUsed() {
+      let arr = []
+      let currentMonth = new Date(Date.now()).getMonth() + 1
+      if (currentMonth < 10) {
+        currentMonth = `0${currentMonth}`
+      } else {
+        currentMonth = `${currentMonth}`
+      }
+      let currentYear = new Date(Date.now()).getFullYear()
+      for (let key in this.$store.state.user.metaData) {
+        const item = this.$store.state.user.metaData[key]
+        const filteredByMonth = item.timestamps.filter((date) => {
+          const split = date.split('-')
+          return split[1] == currentMonth && split[0] == currentYear
+        })
+        arr = [...arr, ...filteredByMonth]
+      }
+      return arr.length
+    },
+    ExpandedTagList() {
+      return [...this.importTagList, ...this.tags]
+    },
     user() {
       return this.$store.state.user
     },
@@ -1988,6 +2180,19 @@ export default {
     this.getWritingStyles()
   },
   methods: {
+    closePaidModal() {
+      this.paidModal = false
+    },
+    goToContact() {
+      window.open('https://managr.ai/contact', '_blank')
+    },
+    openPaidModal(msg) {
+      this.upgradeMessage = msg
+      this.paidModal = true
+    },
+    toggleBulkTag() {
+      this.bulkTagging = !this.bulkTagging
+    },
     toggleNoteEdit(i) {
       if (this.editingNote[i]) {
         this.$set(this.editingNote, i, false)
@@ -2304,7 +2509,12 @@ export default {
     async handleFileUpload() {
       this.uploading = true
       try {
-        const res = await Comms.api.uploadContacts(this.currentFile, this.mappings, this.sheetName)
+        const res = await Comms.api.uploadContacts(
+          this.currentFile,
+          this.mappings,
+          this.sheetName,
+          this.importTag,
+        )
         this.taskId = res.task_id
         this.$toast(`Processing ${res.num_processing} contacts`, {
           timeout: 2000,
@@ -2372,6 +2582,13 @@ export default {
       this.showUsers = false
     },
     async getJournalistBio() {
+      if (!this.isPaid && this.searchesUsed >= 20) {
+        this.openPaidModal(
+          'You have reached your usage limit for the month. Please upgrade your plan.',
+        )
+        return
+      }
+
       this.newContactBio = ''
       this.newContactImages = []
       this.loadingContacts = true
@@ -2388,6 +2605,9 @@ export default {
         this.currentPublication = res.data.company
         this.targetEmail = res.data.email
         this.contactsModalOpen = false
+        this.$nextTick(() => {
+          this.refreshUser()
+        })
         setTimeout(() => {
           this.bioModalOpen = true
         }, 300)
@@ -2436,6 +2656,9 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+        this.$nextTick(() => {
+          this.refreshUser()
+        })
       } catch (e) {
         if (e.data.error.includes('journalist must make a unique set')) {
           this.$toast('Contact is already saved!', {
@@ -2461,6 +2684,12 @@ export default {
       }
     },
     async updateContact(contact) {
+      if (!this.isPaid && this.searchesUsed >= 20) {
+        this.openPaidModal(
+          'You have reached your usage limit for the month. Please upgrade your plan.',
+        )
+        return
+      }
       this.currentContact = contact
       // this.googleModalOpen = true
       this.bioLoading = true
@@ -2486,7 +2715,9 @@ export default {
         })
         this.currentContact.bio = this.newBio
         this.currentContact.images = this.newImages
-        this.refreshUser()
+        this.$nextTick(() => {
+          this.refreshUser()
+        })
         // this.$toast('Contact updated!', {
         //   timeout: 2000,
         //   position: 'top-left',
@@ -2544,6 +2775,9 @@ export default {
       }
 
       this.pitchModalOpen = true
+    },
+    selectBulkTag(tag) {
+      this.importTag = tag
     },
     async selectTag(tag, i) {
       this.newTag = tag
@@ -2680,7 +2914,6 @@ export default {
         this.sendingEmail = false
       } finally {
         this.togglePitchModal()
-        // this.refreshUser()
       }
     },
     async rewritePitchWithStyle() {
@@ -2912,6 +3145,14 @@ export default {
       } catch (e) {
         console.error(e)
       }
+    },
+    async modifyTagsImport() {
+      let newTag = {
+        name: this.importTagName,
+      }
+      this.importTagList.push(newTag)
+      this.selectBulkTag(this.importTagName)
+      this.importTagName = ''
     },
     async modifyTags(mod, tag) {
       this.loadingTags = true
@@ -5886,5 +6127,101 @@ textarea::placeholder {
 .longmodal {
   height: 80vh !important;
   min-height: 580px;
+}
+
+.paid-modal {
+  margin-top: 132px;
+  font-family: $thin-font-family;
+}
+
+.regen-container {
+  width: 500px;
+  max-height: 500px;
+  position: relative;
+  overflow-y: scroll;
+  font-family: $thin-font-family;
+  // :style="isMobile ? '' : 'width: 610px; min-height: 100px; '"
+
+  @media only screen and (max-width: 600px) {
+    font-size: 13px !important;
+    width: 100% !important;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
+}
+
+.regen-header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid $soft-gray;
+  margin-bottom: 1rem;
+}
+.paid-header {
+  position: sticky;
+  top: 0;
+  background-color: white;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.regen-header-title {
+  font-size: 20px;
+  font-family: $base-font-family;
+  font-weight: 200;
+  margin: 0.25rem 0;
+}
+.regen-header-subtitle {
+  font-size: 14px;
+
+  margin: 0.5rem 0;
+}
+.regen-body {
+  margin: 0.5rem 0;
+  border-bottom: 1px solid $soft-gray;
+}
+.paid-body {
+  margin: 0.5rem 0;
+}
+.regen-body-title {
+  font-size: 14px;
+  margin: 0 0 0 0;
+}
+
+.paid-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.paid-footer {
+  position: sticky;
+  background: white;
+  width: 100%;
+  bottom: 0;
+  padding-top: 16px;
+  // padding-bottom: 8px;
+  margin: 1rem 0 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cancel-button {
+  border: 1px solid rgba(0, 0, 0, 0.135) !important;
+  @include gray-text-button();
+  &:hover {
+    scale: 1;
+    opacity: 0.7;
+    box-shadow: none;
+  }
+}
+.save-button {
+  @include dark-blue-button();
+  &:hover {
+    scale: 1;
+    opacity: 0.9;
+    box-shadow: none;
+  }
+  margin-left: 0.5rem;
 }
 </style>

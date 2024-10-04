@@ -2268,7 +2268,7 @@ class JournalistContactViewSet(
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
                 readSerializer = self.serializer_class(instance=serializer.instance)
-                user.add_meta_data("contacts")
+                # user.add_meta_data("contacts")
             except Exception as e:
                 send_to_error_channel(
                     str(e), user.email, f"creating journalist contact (platform):\n{request.data}"
