@@ -40,7 +40,7 @@
       <div class="row" v-else>
         <select v-model="selectedSheet">
           <option value="">Select a sheet</option>
-          <option v-for="(sheet, i) in sheets" :key="i" :value="sheet">
+          <option v-for="sheet in sheets" :key="sheet.name" :value="sheet">
             {{ sheet.name }}
           </option>
         </select>
