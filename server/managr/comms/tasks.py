@@ -878,8 +878,8 @@ def _process_contacts_excel(user_id, data, result_id):
     failed_list = []
     succeeded = 0
     for idx in range(data_length):
-        outlet_list = data["publication"][idx].split(",")
         try:
+            outlet_list = data["publication"][idx].split(",")
             journalist_data = {
                 "outlet": outlet_list[0],
                 "email": data["email"][idx],
