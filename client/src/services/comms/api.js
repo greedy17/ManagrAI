@@ -686,12 +686,13 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e);
         }
     }
-    async uploadContacts(file, labels, sheet) {
+    async uploadContacts(file, labels, sheet, tag) {
         try {
             const formData = new FormData();
             formData.append('file', file);
             formData.append('labels', JSON.stringify(labels));
             formData.append('sheet', sheet);
+            formData.append('tag', tag);
             const res = await this.client.post(`process-contacts/excel`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
