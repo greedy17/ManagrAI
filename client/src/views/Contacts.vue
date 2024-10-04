@@ -805,7 +805,7 @@
           <div></div>
 
           <div class="row">
-            <button class="secondary-button" @click="bulkModalOpen = false">Cancel</button>
+            <button class="secondary-button" @click="closeBulkModal">Cancel</button>
             <button
               v-if="!bulkTagging"
               class="primary-button"
@@ -2180,6 +2180,13 @@ export default {
     this.getWritingStyles()
   },
   methods: {
+    closeBulkModal() {
+      this.bulkModalOpen = false
+      this.uploading = false
+      this.bulkTagging = false
+      this.importTag = ''
+      this.importTagList = []
+    },
     closePaidModal() {
       this.paidModal = false
     },
@@ -2526,6 +2533,10 @@ export default {
         this.uploading = false
         this.bulkModalOpen = false
         this.processUpload()
+        this.uploading = false
+        this.bulkTagging = false
+        this.importTag = ''
+        this.importTagList = []
       } catch (error) {
         console.error('Error reading the file:', error)
         this.$toast('Error importing contacts, try again', {
@@ -2536,6 +2547,9 @@ export default {
           bodyClassName: ['custom'],
         })
         this.uploading = false
+        this.bulkTagging = false
+        this.importTag = ''
+        this.importTagList = []
       }
     },
     updateMappedField(mappings, file, name) {
