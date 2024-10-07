@@ -859,19 +859,23 @@ def create_contacts_from_file(journalist_ids, user_id, tags):
     s = 0
     journalists = Journalist.objects.filter(id__in=journalist_ids).values_list("id", flat=True)
     for journalist_id in journalists:
-        data = {"journalist": journalist_id, "user": user.id, "tags": tags}
+        data = {"journalist": journalist_id, "user": user.id}
+        if tags:
+            data["tags"] = tags
         try:
             serializer = JournalistContactSerializer(data=data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             s += 1
         except Exception as e:
+            print(e)
             continue
     return
 
 
 @background()
 def _process_contacts_excel(user_id, data, result_id, tags):
+    print(tags)
     data_length = len(data["email"])
     contacts_to_create = []
     failed_list = []

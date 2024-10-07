@@ -2328,7 +2328,7 @@ class JournalistContactViewSet(
             contact.notes = []
         timezone = pytz.timezone(self.request.user.timezone)
         date = datetime.now(pytz.utc)
-        current_time = date.astimezone(timezone).isoformat()    
+        current_time = date.astimezone(timezone).isoformat()
         note_data = {"date": current_time, "note": note, "user": request.user.full_name}
         contact.notes.append(note_data)
         contact.save()
@@ -2346,14 +2346,14 @@ class JournalistContactViewSet(
         new_note = request.data.get("note")
 
         contact = JournalistContact.objects.get(id=contact_id)
-        
+
         timezone = pytz.timezone(self.request.user.timezone)
         date = datetime.now(pytz.utc)
-        current_time = date.astimezone(timezone).isoformat() 
-        
-        contact.notes[note_index]['note'] = new_note
-        contact.notes[note_index]['date_modified'] = current_time
-        contact.notes[note_index]['modified_by'] = request.user.full_name
+        current_time = date.astimezone(timezone).isoformat()
+
+        contact.notes[note_index]["note"] = new_note
+        contact.notes[note_index]["date_modified"] = current_time
+        contact.notes[note_index]["modified_by"] = request.user.full_name
 
         contact.save()
         return Response(status=status.HTTP_200_OK)
@@ -2366,11 +2366,11 @@ class JournalistContactViewSet(
     )
     def delete_note(self, request, *args, **kwargs):
         contact_id = request.data.get("id")
-        note_index = request.data.get("note_index")    
+        note_index = request.data.get("note_index")
         contact = JournalistContact.objects.get(id=contact_id)
         contact.notes.pop(note_index)
         contact.save()
-        return Response(status=status.HTTP_200_OK)        
+        return Response(status=status.HTTP_200_OK)
 
     @action(
         methods=["get"],
@@ -2463,9 +2463,7 @@ class JournalistContactViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_GET_INSIGHTS(
-                    notes, activity, bio, instructions
-                )
+                prompt = comms_consts.OPEN_AI_GET_INSIGHTS(notes, activity, bio, instructions)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
@@ -2512,7 +2510,7 @@ class JournalistContactViewSet(
                 break
         if has_error:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
-        return Response({"content": content})  
+        return Response({"content": content})
 
 
 class CompanyDetailsViewSet(
@@ -3197,9 +3195,11 @@ def process_excel_file(request):
     file_obj = request.FILES.get("file")
     sheet_name = request.data.get("sheet")
     labels = json.loads(request.data.get("labels"))
-    tags = request.data.get("tag", [])
+    tags = request.data.get("tag")
     if tags:
         tags = [tags]
+    else:
+        tags = None
     if file_obj:
         index_values = {}
         journalist_values = {}
@@ -3236,7 +3236,9 @@ def process_excel_file(request):
         result = TaskResults.objects.create(
             function_name="emit_process_contacts_excel", user_id=str(request.user.id)
         )
-        task = emit_process_contacts_excel(str(request.user.id), journalist_values, str(result.id), tags)
+        task = emit_process_contacts_excel(
+            str(request.user.id), journalist_values, str(result.id), tags
+        )
         result.task_id_str = str(task.id)
         result.task = task
         result.save()
