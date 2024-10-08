@@ -258,7 +258,7 @@
             <input
               style="margin-bottom: 0; padding-left: 26px"
               class="primary-input-underline"
-              v-model="currentContact.journalist_ref.email"
+              v-model="currentContact.email"
               type="email"
             />
 
@@ -1300,20 +1300,29 @@
                   <div class="email-details">
                     <div class="email-info">
                       <div class="subject">
-                        {{ contact.journalist_ref.outlet }}
+                        {{ contact.outlet ? contact.outlet : contact.journalist_ref.outlet }}
                       </div>
                     </div>
                   </div>
                   <div class="blur"></div>
                 </td>
-                <td :class="i % 2 !== 0 ? 'gray-bg' : ''" class="set-width">
+                <td
+                  @click="setContact(contact)"
+                  style="cursor: pointer"
+                  :class="i % 2 !== 0 ? 'gray-bg' : ''"
+                  class="set-width"
+                >
                   <div style="margin-bottom: 4px; font-size: 14px">
                     {{ contact.journalist_ref.first_name + ' ' + contact.journalist_ref.last_name }}
                   </div>
                 </td>
-                <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
+                <td
+                  @click="setContact(contact)"
+                  style="cursor: pointer"
+                  :class="i % 2 !== 0 ? 'gray-bg' : ''"
+                >
                   <div class="small-col">
-                    {{ contact.journalist_ref.email }}
+                    {{ contact.email ? contact.email : contact.journalist_ref.email }}
                   </div>
                 </td>
 
@@ -1517,7 +1526,9 @@
               }}
             </h3>
             <p style="color: #9596b4" class="drawer-header__boldtext">
-              {{ currentContact.journalist_ref.outlet }}
+              {{
+                currentContact.outlet ? currentContact.outlet : currentContact.journalist_ref.outlet
+              }}
             </p>
           </div>
 
@@ -1548,6 +1559,7 @@
             <p :class="{ activelink: section === 'insights' }" @click="setSection('insights')">
               AI Insights
             </p>
+            <p :class="{ activelink: section === 'edit' }" @click="setSection('edit')">Edit</p>
           </div>
 
           <div>
@@ -1873,6 +1885,134 @@
           <div class="pre-text" v-html="newInsight"></div>
         </div>
       </div>
+
+      <div v-else-if="section === 'edit'" class="drawer-body fadein">
+        <!-- <div class="col">
+          <p>First Name</p>
+          <input
+            class="primary-input"
+            v-model="currentContact.journalist_ref.first_name"
+            type="text"
+          />
+        </div>
+        <div class="col">
+          <p>Last Name</p>
+          <input
+            class="primary-input"
+            v-model="currentContact.journalist_ref.last_name"
+            type="text"
+          />
+        </div> -->
+        <div class="col relative">
+          <p>Email</p>
+          <input
+            v-if="currentContact.email"
+            @input="updateEmail"
+            @keyup.enter="editContact(currentContact.email, '')"
+            class="primary-input"
+            v-model="currentContact.email"
+            type="text"
+          />
+
+          <input
+            v-else
+            @input="updateEmail"
+            @keyup.enter="editContact(currentContact.journalist_ref.email, '')"
+            class="primary-input"
+            v-model="currentContact.journalist_ref.email"
+            type="text"
+          />
+          <img
+            v-if="!editingEmail"
+            class="abs-placed-img"
+            src="@/assets/images/pencil.svg"
+            height="14px"
+            alt=""
+          />
+
+          <div
+            class="img-container-stay-small abs-placed-img"
+            v-else-if="currentContact.email && editingEmail && !editloading"
+            @click="editContact(currentContact.email, '')"
+            style="padding: 1px 6px 2px 6px; top: 44px; right: 16px"
+          >
+            <img src="@/assets/images/arrow-right.svg" class="pointer" height="10px" alt="" />
+          </div>
+
+          <div
+            class="img-container-stay-small abs-placed-img"
+            v-else-if="!currentContact.email && editingEmail && !editloading"
+            @click="editContact(currentContact.journalist_ref.email, '')"
+            style="padding: 1px 6px 2px 6px; top: 44px; right: 16px"
+          >
+            <img src="@/assets/images/arrow-right.svg" class="pointer" height="10px" alt="" />
+          </div>
+
+          <img
+            v-else-if="editingEmail && editloading"
+            class="abs-placed-img rotation"
+            src="@/assets/images/loading.svg"
+            height="14px"
+            alt=""
+          />
+        </div>
+
+        <div class="col relative">
+          <p>Publication</p>
+
+          <input
+            v-if="currentContact.outlet"
+            @input="updatePub"
+            @keyup.enter="editContact('', currentContact.outlet)"
+            class="primary-input"
+            v-model="currentContact.outlet"
+            type="text"
+          />
+
+          <input
+            v-else
+            @input="updatePub"
+            @keyup.enter="editContact('', currentContact.journalist_ref.outlet)"
+            class="primary-input"
+            v-model="currentContact.journalist_ref.outlet"
+            type="text"
+          />
+
+          <img
+            v-if="!editingPub"
+            class="abs-placed-img"
+            src="@/assets/images/pencil.svg"
+            height="14px"
+            alt=""
+          />
+
+          <div
+            class="img-container-stay-small abs-placed-img"
+            v-else-if="currentContact.outlet && editingEmail && !editloading"
+            @click="editContact('', currentContact.outlet)"
+            style="padding: 1px 6px 2px 6px; top: 44px; right: 16px"
+          >
+            <img src="@/assets/images/arrow-right.svg" class="pointer" height="10px" alt="" />
+          </div>
+
+          <div
+            class="img-container-stay-small abs-placed-img"
+            v-else-if="!currentContact.outlet && editingPub && !editloading"
+            @click="editContact('', currentContact.journalist_ref.outlet)"
+            style="padding: 1px 6px 2px 6px; top: 44px; right: 16px"
+          >
+            <img src="@/assets/images/arrow-right.svg" class="pointer" height="10px" alt="" />
+          </div>
+
+          <img
+            v-else-if="editingPub && editloading"
+            class="abs-placed-img rotation"
+            src="@/assets/images/loading.svg"
+            height="14px"
+            alt=""
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -1896,6 +2036,9 @@ export default {
   },
   data() {
     return {
+      editloading: false,
+      editingEmail: false,
+      editingPub: false,
       paidModal: false,
       upgradeMessage: '',
       importTagList: [],
@@ -2180,6 +2323,41 @@ export default {
     this.getWritingStyles()
   },
   methods: {
+    updateEmail() {
+      this.editingEmail = true
+    },
+    updatePub() {
+      this.editingPub = true
+    },
+    async editContact(email, outlet) {
+      console.log('here i am test me')
+      this.editloading = true
+      try {
+        const res = await Comms.api.editContact({
+          email: email,
+          outlet: outlet,
+          id: this.currentContact.id,
+        })
+        console.log(res)
+        this.editloading = false
+        this.editingEmail = false
+        this.editingPub = false
+        this.$nextTick(() => {
+          this.refreshUser()
+          this.getContactsSearch(true)
+        })
+        this.$toast(`Contact updated`, {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch (e) {
+        console.error(e)
+      } finally {
+      }
+    },
     closeBulkModal() {
       this.bulkModalOpen = false
       this.uploading = false
@@ -2994,7 +3172,6 @@ export default {
       this.bccEmail = ''
       this.newInsight = ''
       this.currentContact = contact
-      console.log(this.currentContact)
 
       if (this.currentContact && this.currentContact.notes) {
         this.isExpanded = Array(this.currentContact.notes.length).fill(false)
@@ -4582,6 +4759,7 @@ h2 {
 
   p {
     font-family: $base-font-family;
+    margin: 0;
   }
 }
 
@@ -5504,6 +5682,13 @@ textarea::placeholder {
     margin: 0 4px 0 0;
   }
 }
+
+.abs-placed-img {
+  position: absolute;
+  right: 20px;
+  top: 48px;
+}
+
 .greenText {
   color: $dark-green !important;
 }

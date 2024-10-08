@@ -55,10 +55,10 @@
                         style="border-bottom: 1px solid #DDDDDD; margin-bottom: 16px; padding-bottom: 16px;">
                         <tr>
                             <td>
-                                <pre
-                                    style="color: #2f4656; font-family: Arial, sans-serif; font-size: 16px; line-height: 32px; background-color: #e9f3fa; padding:16px; white-space: pre-line !important; word-wrap: break-word; font-weight: 200;">
-                                        {{ summary | safe }}
-                                </pre>
+                                <div
+                                    style="color: #2f4656; font-family: Arial, sans-serif; font-size: 16px; line-height: 32px; background-color: #e9f3fa; padding:16px; font-weight: 200;">
+                                    {{ summary | safe }}
+                                </div>
                             </td>
                         </tr>
                     </table>
@@ -71,7 +71,7 @@
                                     {{value.source.name}}
                                 </p>
                                 <a href="{{value.link}}"
-                                    style="text-decoration: none; cursor: pointer; font-size: 20px; color: #333333; font-weight: 300; text-overflow: ellipsis;">
+                                    style="text-decoration: none !important; cursor: pointer; font-size: 20px; color: #333333; font-weight: 300; text-overflow: ellipsis;">
                                     {{ value.title }}
                                 </a>
                                 <p style="margin: 10px 0; color: #555555; text-overflow: ellipsis;">
