@@ -7,7 +7,7 @@
         </header>
         <main>
           <h2>Session Expiring</h2>
-          <p>Are you still using Managr ?</p>
+          <p>Are you still using ManagrAI ?</p>
 
           <div style="margin-top: 20px" class="row">
             <button @click="logOut" class="tertiary-button">No</button>

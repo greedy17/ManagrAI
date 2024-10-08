@@ -330,7 +330,6 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
-
     async getDetails() {
         try {
             const res = await this.client.get('details/')
@@ -635,6 +634,14 @@ class CommsApi extends ModelAPI {
         try {
             const res = await this.client.post('jcontact/modify_tags/', data)
             return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async editContact(data) {
+        try {
+            const res = await this.client.post('jcontact/edit/', data)
+            return res
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
