@@ -78,8 +78,8 @@ def emit_process_user_hashtag_list(user_id):
     return _process_user_hashtag_list(user_id)
 
 
-def emit_process_contacts_excel(user_id, data, result_id):
-    return _process_contacts_excel(user_id, data, result_id)
+def emit_process_contacts_excel(user_id, data, result_id, tags):
+    return _process_contacts_excel(user_id, data, result_id, tags)
 
 
 def emit_process_regenerate_pitch_slack(payload, context):
@@ -565,6 +565,8 @@ def _send_news_summary(news_alert_id):
                 if "@outlook" in email_list[0]:
                     message = html.escape(res.get("choices")[0].get("message").get("content"))
                     message = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", message)
+                    message = re.sub(r"\*(.*?)\*", r"<strong>\1</strong>", message)
+
                     for i in range(6, 0, -1):
                         message = re.sub(
                             rf'^{"#" * i} (.*?)$', rf"<h{i}>\1</h{i}>", message, flags=re.MULTILINE
@@ -574,6 +576,7 @@ def _send_news_summary(news_alert_id):
                         r'<a href="\2\3">\1\4</a>',
                         message,
                     )
+                    message = re.sub(r"<https?:\/\/[^|]+\|\[\d+\]>", "", message)
 
                 else:
                     message = res.get("choices")[0].get("message").get("content")
@@ -854,32 +857,35 @@ def test_database_pull(date_to, date_from, search, result_id):
     return
 
 
-def create_contacts_from_file(journalist_ids, user_id):
+def create_contacts_from_file(journalist_ids, user_id, tags):
     user = User.objects.get(id=user_id)
     s = 0
     journalists = Journalist.objects.filter(id__in=journalist_ids).values_list("id", flat=True)
     for journalist_id in journalists:
+        data = {"journalist": journalist_id, "user": user.id}
+        if tags:
+            data["tags"] = tags
         try:
-            serializer = JournalistContactSerializer(
-                data={"journalist": journalist_id, "user": user.id}
-            )
+            serializer = JournalistContactSerializer(data=data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             s += 1
         except Exception as e:
+            print(e)
             continue
     return
 
 
 @background()
-def _process_contacts_excel(user_id, data, result_id):
+def _process_contacts_excel(user_id, data, result_id, tags):
+    print(tags)
     data_length = len(data["email"])
     contacts_to_create = []
     failed_list = []
     succeeded = 0
     for idx in range(data_length):
-        outlet_list = data["publication"][idx].split(",")
         try:
+            outlet_list = data["publication"][idx].split(",")
             journalist_data = {
                 "outlet": outlet_list[0],
                 "email": data["email"][idx],
@@ -909,7 +915,7 @@ def _process_contacts_excel(user_id, data, result_id):
         except Exception as e:
             continue
     contacts_to_create = list(set(contacts_to_create))
-    response_data = create_contacts_from_file(contacts_to_create, user_id)
+    response_data = create_contacts_from_file(contacts_to_create, user_id, tags)
     result = TaskResults.objects.get(id=result_id)
     result.json_result = {"success": succeeded, "failed": failed_list}
     result.save()

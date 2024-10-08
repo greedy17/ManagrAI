@@ -183,9 +183,9 @@ class JournalistContactSerializer(serializers.ModelSerializer):
             validated_data["notes"] = new_notes
         return super().update(instance, validated_data)
 
-    class Meta:
+    class Meta:  
         model = JournalistContact
-        fields = ("id", "user", "journalist", "journalist_ref", "tags", "bio", "images", "notes")
+        fields = ("id", "user", "journalist", "journalist_ref", "tags", "bio", "images", "notes", "email", "outlet")
 
 
 class CompanyDetailsSerializer(serializers.ModelSerializer):

@@ -1,5 +1,38 @@
 <template>
   <div class="contacts fadein">
+    <Modal v-if="paidModal" class="paid-modal">
+      <div class="regen-container">
+        <div class="paid-header">
+          <div>
+            <h4 class="regen-header-title"></h4>
+            <p class="regen-header-subtitle"></p>
+          </div>
+        </div>
+        <div class="paid-body">
+          <div>
+            <div class="paid-center">
+              <h3 class="paid-title">Upgrade to Pro</h3>
+              <h5 style="margin-top: 12px" class="regen-body-title">
+                {{ upgradeMessage }}
+              </h5>
+            </div>
+          </div>
+        </div>
+        <div style="height: 80px" class="paid-footer">
+          <div class="row">
+            <div
+              style="padding-top: 9px; padding-bottom: 9px"
+              class="cancel-button"
+              @click="closePaidModal"
+            >
+              Close
+            </div>
+            <div class="save-button" @click="goToContact">Contact Us</div>
+          </div>
+        </div>
+      </div>
+    </Modal>
+
     <Modal v-if="googleModalOpen" class="bio-modal">
       <div class="bio-container">
         <header style="border: none">
@@ -225,7 +258,7 @@
             <input
               style="margin-bottom: 0; padding-left: 26px"
               class="primary-input-underline"
-              v-model="currentContact.journalist_ref.email"
+              v-model="currentContact.email"
               type="email"
             />
 
@@ -664,19 +697,132 @@
     <Modal class="bio-modal small-modal" v-if="bulkModalOpen">
       <div class="bio-container small-container">
         <header>
-          <h2 style="margin: 12px 0">Import Contacts</h2>
+          <h2 v-if="!bulkTagging" style="margin: 12px 0">Import Contacts</h2>
+          <h2 v-else style="margin: 12px 0">Tag your imported contacts</h2>
         </header>
 
         <div style="margin-bottom: 16px; height: 300px; width: 100%">
-          <ContactMapping @fieldsFullyMapped="updateMappedField"></ContactMapping>
+          <ContactMapping
+            v-if="!bulkTagging"
+            @fieldsFullyMapped="updateMappedField"
+          ></ContactMapping>
+
+          <div v-else>
+            <div style="margin-top: 16px">
+              <h3>Select a tag</h3>
+              <div style="height: 50px; margin-top: 32px" v-if="!ExpandedTagList.length">
+                You dont have any tags yet...
+              </div>
+              <div
+                style="
+                  padding: 0;
+                  opacity: 1;
+                  height: 120px;
+                  overflow: scroll;
+                  cursor: text;
+                  margin-top: 16px;
+                  margin-bottom: 12px;
+                "
+                class="scrolltainer"
+                v-else
+              >
+                <div
+                  style="
+                    opacity: 1;
+                    cursor: text;
+                    font-size: 15px;
+                    padding: 6px 8px;
+                    cursor: pointer;
+                    border-radius: 4px;
+                  "
+                  v-for="(tag, i) in ExpandedTagList"
+                  @click="selectBulkTag(tag.name)"
+                  :key="i"
+                  class="space-between hover-bg"
+                  :class="{ 'soft-gray-bg': importTag === tag.name }"
+                >
+                  <div class="row">
+                    <img
+                      style="margin: 0 8px 0 -4px"
+                      src="@/assets/images/tags.svg"
+                      height="12px"
+                      alt=""
+                    />
+                    {{ tag.name }}
+                  </div>
+
+                  <small v-if="importTag === tag.name">selected</small>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3>Create new tag</h3>
+              <div style="margin-top: 24px">
+                <div style="opacity: 1; margin: 0; cursor: text" class="input-container-small">
+                  <input
+                    :disabled="loadingTags"
+                    style="border: none; outline: none; padding: 10px 8px 10px 0px; width: 100%"
+                    class="text-area-input"
+                    type="text"
+                    @keyup.enter="modifyTagsImport"
+                    v-model="importTagName"
+                    placeholder="Name your tag..."
+                  />
+
+                  <div
+                    class="img-container-stay-small"
+                    v-if="importTagName"
+                    @click="modifyTagsImport"
+                    style="margin-right: 12px; padding: 1px 6px 2px 6px"
+                  >
+                    <img
+                      src="@/assets/images/arrow-right.svg"
+                      class="pointer"
+                      height="10px"
+                      alt=""
+                    />
+                  </div>
+
+                  <img
+                    v-else
+                    style="filter: invert(40%); margin-right: 20px"
+                    src="@/assets/images/tags.svg"
+                    height="14px"
+                    alt=""
+                  />
+                </div>
+
+                <div style="margin-top: 16px">
+                  <small>To continue without tagging click Import</small>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <footer>
           <div></div>
 
           <div class="row">
-            <button class="secondary-button" @click="bulkModalOpen = false">Cancel</button>
-            <button class="primary-button" :disabled="!mapped" @click="handleFileUpload">
+            <button class="secondary-button" @click="closeBulkModal">Cancel</button>
+            <button
+              v-if="!bulkTagging"
+              class="primary-button"
+              :disabled="!mapped"
+              @click="toggleBulkTag"
+            >
+              <img
+                v-if="uploading"
+                style="margin-right: 4px"
+                class="invert rotation"
+                src="@/assets/images/loading.svg"
+                height="14px"
+                alt=""
+              />
+              Continue
+            </button>
+            <button v-else class="primary-button" :disabled="!mapped" @click="handleFileUpload">
               <img
                 v-if="uploading"
                 style="margin-right: 4px"
@@ -753,7 +899,7 @@
     <Modal class="bio-modal med-modal" v-if="tagModalOpen">
       <div class="bio-container med-container">
         <header>
-          <h2 style="margin: 12px 0">Apply or Create a Tag</h2>
+          <h2 style="margin: 12px 0">Select or Create a Tag</h2>
 
           <img
             style="cursor: pointer"
@@ -766,7 +912,7 @@
 
         <div style="margin-top: 16px; margin-bottom: 24px; min-height: 120px; width: 100%">
           <div>
-            <h3>Select tag to apply</h3>
+            <h3>Select a tag</h3>
             <div style="height: 50px; margin-top: 32px" v-if="!tags.length">
               You dont have any tags yet...
             </div>
@@ -790,13 +936,21 @@
                 :key="i"
                 class="space-between hover-bg"
               >
-                {{ tag.name }}
+                <div class="row">
+                  <img
+                    style="margin: 0 8px 0 -4px"
+                    src="@/assets/images/tags.svg"
+                    height="12px"
+                    alt=""
+                  />
+                  {{ tag.name }}
+                </div>
               </div>
             </div>
           </div>
 
           <div>
-            <h3>Create</h3>
+            <h3>Create a tag</h3>
             <div style="margin-top: 24px" class="row">
               <div style="opacity: 1; margin: 0; cursor: text" class="input-container-small">
                 <input
@@ -808,15 +962,25 @@
                   placeholder="Name your tag..."
                 />
 
+                <div
+                  class="img-container-stay-small"
+                  v-if="newTag"
+                  @click="modifyTags('add')"
+                  style="margin-right: 12px; padding: 1px 6px 2px 6px"
+                >
+                  <img src="@/assets/images/arrow-right.svg" class="pointer" height="10px" alt="" />
+                </div>
+
                 <img
+                  v-else
                   style="filter: invert(40%); margin-right: 20px"
-                  src="@/assets/images/user-tag.svg"
+                  src="@/assets/images/tags.svg"
                   height="14px"
                   alt=""
                 />
               </div>
 
-              <button
+              <!-- <button
                 :disabled="!newTag || loadingTags"
                 @click="modifyTags('add')"
                 style="margin-bottom: 5px"
@@ -830,7 +994,7 @@
                   alt=""
                 />
                 Create
-              </button>
+              </button> -->
             </div>
           </div>
         </div>
@@ -1136,20 +1300,29 @@
                   <div class="email-details">
                     <div class="email-info">
                       <div class="subject">
-                        {{ contact.journalist_ref.outlet }}
+                        {{ contact.outlet ? contact.outlet : contact.journalist_ref.outlet }}
                       </div>
                     </div>
                   </div>
                   <div class="blur"></div>
                 </td>
-                <td :class="i % 2 !== 0 ? 'gray-bg' : ''" class="set-width">
+                <td
+                  @click="setContact(contact)"
+                  style="cursor: pointer"
+                  :class="i % 2 !== 0 ? 'gray-bg' : ''"
+                  class="set-width"
+                >
                   <div style="margin-bottom: 4px; font-size: 14px">
                     {{ contact.journalist_ref.first_name + ' ' + contact.journalist_ref.last_name }}
                   </div>
                 </td>
-                <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
+                <td
+                  @click="setContact(contact)"
+                  style="cursor: pointer"
+                  :class="i % 2 !== 0 ? 'gray-bg' : ''"
+                >
                   <div class="small-col">
-                    {{ contact.journalist_ref.email }}
+                    {{ contact.email ? contact.email : contact.journalist_ref.email }}
                   </div>
                 </td>
 
@@ -1353,7 +1526,9 @@
               }}
             </h3>
             <p style="color: #9596b4" class="drawer-header__boldtext">
-              {{ currentContact.journalist_ref.outlet }}
+              {{
+                currentContact.outlet ? currentContact.outlet : currentContact.journalist_ref.outlet
+              }}
             </p>
           </div>
 
@@ -1384,6 +1559,7 @@
             <p :class="{ activelink: section === 'insights' }" @click="setSection('insights')">
               AI Insights
             </p>
+            <p :class="{ activelink: section === 'edit' }" @click="setSection('edit')">Edit</p>
           </div>
 
           <div>
@@ -1483,11 +1659,11 @@
                 style="padding-top: 8px; position: relative"
                 class="note maxed-height"
                 :class="{
-                  'maxed-height': !isExpanded[i],
-                  'expanded-height': isExpanded[i],
-                  'no-scroll': editingNote[i],
+                  'maxed-height': !isExpanded[currentContact.notes.length - 1 - i],
+                  'expanded-height': isExpanded[currentContact.notes.length - 1 - i],
+                  'no-scroll': editingNote[currentContact.notes.length - 1 - i],
                 }"
-                v-for="(note, i) in currentContact.notes"
+                v-for="(note, i) in currentContact.notes.slice().reverse()"
                 :key="i"
               >
                 <div class="row">
@@ -1503,7 +1679,11 @@
                   by <span> {{ note.user + '' }}</span>
                 </p>
 
-                <p v-if="!editingNote[i]" class="pre-text" v-html="note.note"></p>
+                <p
+                  v-if="!editingNote[currentContact.notes.length - 1 - i]"
+                  class="pre-text"
+                  v-html="note.note"
+                ></p>
 
                 <div class="fadein" v-else>
                   <textarea
@@ -1520,14 +1700,24 @@
                     "
                   ></textarea>
                   <div style="margin-top: 8px" class="space-between">
-                    <button @click="deleteNote(i)" class="primary-button pinkbg">Delete</button>
+                    <button
+                      @click="deleteNote(currentContact.notes.length - 1 - i)"
+                      class="primary-button pinkbg"
+                    >
+                      Delete
+                    </button>
 
                     <div class="row">
-                      <button @click="toggleNoteEdit(i)" class="secondary-button">Cancel</button>
+                      <button
+                        @click="toggleNoteEdit(currentContact.notes.length - 1 - i)"
+                        class="secondary-button"
+                      >
+                        Cancel
+                      </button>
                       <button
                         :disabled="!note.note"
                         class="primary-button"
-                        @click="editNote(note.note, i)"
+                        @click="editNote(note.note, currentContact.notes.length - 1 - i)"
                       >
                         Save
                       </button>
@@ -1535,19 +1725,25 @@
                   </div>
                 </div>
 
-                <div v-if="!editingNote[i]" class="icon-container row">
+                <div
+                  v-if="!editingNote[currentContact.notes.length - 1 - i]"
+                  class="icon-container row"
+                >
                   <img
                     src="@/assets/images/edit-note.svg"
                     style="margin-right: 12px"
                     height="14px"
                     alt=""
                     class="expand-icon"
-                    @click="toggleNoteEdit(i)"
+                    @click="toggleNoteEdit(currentContact.notes.length - 1 - i)"
                   />
 
-                  <div style="cursor: pointer" @click="toggleExpand(i)">
+                  <div
+                    style="cursor: pointer"
+                    @click="toggleExpand(currentContact.notes.length - 1 - i)"
+                  >
                     <img
-                      v-if="!isExpanded[i]"
+                      v-if="!isExpanded[currentContact.notes.length - 1 - i]"
                       src="@/assets/images/expanded.svg"
                       height="14px"
                       alt=""
@@ -1689,6 +1885,134 @@
           <div class="pre-text" v-html="newInsight"></div>
         </div>
       </div>
+
+      <div v-else-if="section === 'edit'" class="drawer-body fadein">
+        <!-- <div class="col">
+          <p>First Name</p>
+          <input
+            class="primary-input"
+            v-model="currentContact.journalist_ref.first_name"
+            type="text"
+          />
+        </div>
+        <div class="col">
+          <p>Last Name</p>
+          <input
+            class="primary-input"
+            v-model="currentContact.journalist_ref.last_name"
+            type="text"
+          />
+        </div> -->
+        <div class="col relative">
+          <p>Email</p>
+          <input
+            v-if="currentContact.email"
+            @input="updateEmail"
+            @keyup.enter="editContact(currentContact.email, '')"
+            class="primary-input"
+            v-model="currentContact.email"
+            type="text"
+          />
+
+          <input
+            v-else
+            @input="updateEmail"
+            @keyup.enter="editContact(currentContact.journalist_ref.email, '')"
+            class="primary-input"
+            v-model="currentContact.journalist_ref.email"
+            type="text"
+          />
+          <img
+            v-if="!editingEmail"
+            class="abs-placed-img"
+            src="@/assets/images/pencil.svg"
+            height="14px"
+            alt=""
+          />
+
+          <div
+            class="img-container-stay-small abs-placed-img"
+            v-else-if="currentContact.email && editingEmail && !editloading"
+            @click="editContact(currentContact.email, '')"
+            style="padding: 1px 6px 2px 6px; top: 44px; right: 16px"
+          >
+            <img src="@/assets/images/arrow-right.svg" class="pointer" height="10px" alt="" />
+          </div>
+
+          <div
+            class="img-container-stay-small abs-placed-img"
+            v-else-if="!currentContact.email && editingEmail && !editloading"
+            @click="editContact(currentContact.journalist_ref.email, '')"
+            style="padding: 1px 6px 2px 6px; top: 44px; right: 16px"
+          >
+            <img src="@/assets/images/arrow-right.svg" class="pointer" height="10px" alt="" />
+          </div>
+
+          <img
+            v-else-if="editingEmail && editloading"
+            class="abs-placed-img rotation"
+            src="@/assets/images/loading.svg"
+            height="14px"
+            alt=""
+          />
+        </div>
+
+        <div class="col relative">
+          <p>Publication</p>
+
+          <input
+            v-if="currentContact.outlet"
+            @input="updatePub"
+            @keyup.enter="editContact('', currentContact.outlet)"
+            class="primary-input"
+            v-model="currentContact.outlet"
+            type="text"
+          />
+
+          <input
+            v-else
+            @input="updatePub"
+            @keyup.enter="editContact('', currentContact.journalist_ref.outlet)"
+            class="primary-input"
+            v-model="currentContact.journalist_ref.outlet"
+            type="text"
+          />
+
+          <img
+            v-if="!editingPub"
+            class="abs-placed-img"
+            src="@/assets/images/pencil.svg"
+            height="14px"
+            alt=""
+          />
+
+          <div
+            class="img-container-stay-small abs-placed-img"
+            v-else-if="currentContact.outlet && editingEmail && !editloading"
+            @click="editContact('', currentContact.outlet)"
+            style="padding: 1px 6px 2px 6px; top: 44px; right: 16px"
+          >
+            <img src="@/assets/images/arrow-right.svg" class="pointer" height="10px" alt="" />
+          </div>
+
+          <div
+            class="img-container-stay-small abs-placed-img"
+            v-else-if="!currentContact.outlet && editingPub && !editloading"
+            @click="editContact('', currentContact.journalist_ref.outlet)"
+            style="padding: 1px 6px 2px 6px; top: 44px; right: 16px"
+          >
+            <img src="@/assets/images/arrow-right.svg" class="pointer" height="10px" alt="" />
+          </div>
+
+          <img
+            v-else-if="editingPub && editloading"
+            class="abs-placed-img rotation"
+            src="@/assets/images/loading.svg"
+            height="14px"
+            alt=""
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -1712,6 +2036,15 @@ export default {
   },
   data() {
     return {
+      editloading: false,
+      editingEmail: false,
+      editingPub: false,
+      paidModal: false,
+      upgradeMessage: '',
+      importTagList: [],
+      importTagName: '',
+      importTag: '',
+      bulkTagging: false,
       editingNote: [],
       isExpanded: [],
       newInsight: '',
@@ -1871,6 +2204,28 @@ export default {
     }
   },
   computed: {
+    searchesUsed() {
+      let arr = []
+      let currentMonth = new Date(Date.now()).getMonth() + 1
+      if (currentMonth < 10) {
+        currentMonth = `0${currentMonth}`
+      } else {
+        currentMonth = `${currentMonth}`
+      }
+      let currentYear = new Date(Date.now()).getFullYear()
+      for (let key in this.$store.state.user.metaData) {
+        const item = this.$store.state.user.metaData[key]
+        const filteredByMonth = item.timestamps.filter((date) => {
+          const split = date.split('-')
+          return split[1] == currentMonth && split[0] == currentYear
+        })
+        arr = [...arr, ...filteredByMonth]
+      }
+      return arr.length
+    },
+    ExpandedTagList() {
+      return [...this.importTagList, ...this.tags]
+    },
     user() {
       return this.$store.state.user
     },
@@ -1968,13 +2323,71 @@ export default {
     this.getWritingStyles()
   },
   methods: {
+    updateEmail() {
+      this.editingEmail = true
+    },
+    updatePub() {
+      this.editingPub = true
+    },
+    async editContact(email, outlet) {
+      console.log('here i am test me')
+      this.editloading = true
+      try {
+        const res = await Comms.api.editContact({
+          email: email,
+          outlet: outlet,
+          id: this.currentContact.id,
+        })
+        console.log(res)
+        this.editloading = false
+        this.editingEmail = false
+        this.editingPub = false
+        this.$nextTick(() => {
+          this.refreshUser()
+          this.getContactsSearch(true)
+        })
+        this.$toast(`Contact updated`, {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch (e) {
+        console.error(e)
+      } finally {
+      }
+    },
+    closeBulkModal() {
+      this.bulkModalOpen = false
+      this.uploading = false
+      this.bulkTagging = false
+      this.importTag = ''
+      this.importTagList = []
+    },
+    closePaidModal() {
+      this.paidModal = false
+    },
+    goToContact() {
+      window.open('https://managr.ai/contact', '_blank')
+    },
+    openPaidModal(msg) {
+      this.upgradeMessage = msg
+      this.paidModal = true
+    },
+    toggleBulkTag() {
+      this.bulkTagging = !this.bulkTagging
+    },
     toggleNoteEdit(i) {
       if (this.editingNote[i]) {
         this.$set(this.editingNote, i, false)
+        this.toggleExpand(i)
       } else {
         this.$set(this.editingNote, i, true)
+        if (!this.isExpanded[i]) {
+          this.toggleExpand(i)
+        }
       }
-      this.toggleExpand(i)
     },
     toggleExpand(index) {
       if (this.isExpanded[index]) {
@@ -2281,7 +2694,12 @@ export default {
     async handleFileUpload() {
       this.uploading = true
       try {
-        const res = await Comms.api.uploadContacts(this.currentFile, this.mappings, this.sheetName)
+        const res = await Comms.api.uploadContacts(
+          this.currentFile,
+          this.mappings,
+          this.sheetName,
+          this.importTag,
+        )
         this.taskId = res.task_id
         this.$toast(`Processing ${res.num_processing} contacts`, {
           timeout: 2000,
@@ -2293,6 +2711,10 @@ export default {
         this.uploading = false
         this.bulkModalOpen = false
         this.processUpload()
+        this.uploading = false
+        this.bulkTagging = false
+        this.importTag = ''
+        this.importTagList = []
       } catch (error) {
         console.error('Error reading the file:', error)
         this.$toast('Error importing contacts, try again', {
@@ -2303,6 +2725,9 @@ export default {
           bodyClassName: ['custom'],
         })
         this.uploading = false
+        this.bulkTagging = false
+        this.importTag = ''
+        this.importTagList = []
       }
     },
     updateMappedField(mappings, file, name) {
@@ -2349,6 +2774,13 @@ export default {
       this.showUsers = false
     },
     async getJournalistBio() {
+      if (!this.isPaid && this.searchesUsed >= 20) {
+        this.openPaidModal(
+          'You have reached your usage limit for the month. Please upgrade your plan.',
+        )
+        return
+      }
+
       this.newContactBio = ''
       this.newContactImages = []
       this.loadingContacts = true
@@ -2365,6 +2797,9 @@ export default {
         this.currentPublication = res.data.company
         this.targetEmail = res.data.email
         this.contactsModalOpen = false
+        this.$nextTick(() => {
+          this.refreshUser()
+        })
         setTimeout(() => {
           this.bioModalOpen = true
         }, 300)
@@ -2413,6 +2848,9 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+        this.$nextTick(() => {
+          this.refreshUser()
+        })
       } catch (e) {
         if (e.data.error.includes('journalist must make a unique set')) {
           this.$toast('Contact is already saved!', {
@@ -2438,6 +2876,12 @@ export default {
       }
     },
     async updateContact(contact) {
+      if (!this.isPaid && this.searchesUsed >= 20) {
+        this.openPaidModal(
+          'You have reached your usage limit for the month. Please upgrade your plan.',
+        )
+        return
+      }
       this.currentContact = contact
       // this.googleModalOpen = true
       this.bioLoading = true
@@ -2463,7 +2907,9 @@ export default {
         })
         this.currentContact.bio = this.newBio
         this.currentContact.images = this.newImages
-        this.refreshUser()
+        this.$nextTick(() => {
+          this.refreshUser()
+        })
         // this.$toast('Contact updated!', {
         //   timeout: 2000,
         //   position: 'top-left',
@@ -2521,6 +2967,9 @@ export default {
       }
 
       this.pitchModalOpen = true
+    },
+    selectBulkTag(tag) {
+      this.importTag = tag
     },
     async selectTag(tag, i) {
       this.newTag = tag
@@ -2657,7 +3106,6 @@ export default {
         this.sendingEmail = false
       } finally {
         this.togglePitchModal()
-        // this.refreshUser()
       }
     },
     async rewritePitchWithStyle() {
@@ -2724,7 +3172,6 @@ export default {
       this.bccEmail = ''
       this.newInsight = ''
       this.currentContact = contact
-      console.log(this.currentContact)
 
       if (this.currentContact && this.currentContact.notes) {
         this.isExpanded = Array(this.currentContact.notes.length).fill(false)
@@ -2889,6 +3336,14 @@ export default {
       } catch (e) {
         console.error(e)
       }
+    },
+    async modifyTagsImport() {
+      let newTag = {
+        name: this.importTagName,
+      }
+      this.importTagList.push(newTag)
+      this.selectBulkTag(this.importTagName)
+      this.importTagName = ''
     },
     async modifyTags(mod, tag) {
       this.loadingTags = true
@@ -4304,6 +4759,7 @@ h2 {
 
   p {
     font-family: $base-font-family;
+    margin: 0;
   }
 }
 
@@ -5226,6 +5682,13 @@ textarea::placeholder {
     margin: 0 4px 0 0;
   }
 }
+
+.abs-placed-img {
+  position: absolute;
+  right: 20px;
+  top: 48px;
+}
+
 .greenText {
   color: $dark-green !important;
 }
@@ -5863,5 +6326,101 @@ textarea::placeholder {
 .longmodal {
   height: 80vh !important;
   min-height: 580px;
+}
+
+.paid-modal {
+  margin-top: 132px;
+  font-family: $thin-font-family;
+}
+
+.regen-container {
+  width: 500px;
+  max-height: 500px;
+  position: relative;
+  overflow-y: scroll;
+  font-family: $thin-font-family;
+  // :style="isMobile ? '' : 'width: 610px; min-height: 100px; '"
+
+  @media only screen and (max-width: 600px) {
+    font-size: 13px !important;
+    width: 100% !important;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
+}
+
+.regen-header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid $soft-gray;
+  margin-bottom: 1rem;
+}
+.paid-header {
+  position: sticky;
+  top: 0;
+  background-color: white;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.regen-header-title {
+  font-size: 20px;
+  font-family: $base-font-family;
+  font-weight: 200;
+  margin: 0.25rem 0;
+}
+.regen-header-subtitle {
+  font-size: 14px;
+
+  margin: 0.5rem 0;
+}
+.regen-body {
+  margin: 0.5rem 0;
+  border-bottom: 1px solid $soft-gray;
+}
+.paid-body {
+  margin: 0.5rem 0;
+}
+.regen-body-title {
+  font-size: 14px;
+  margin: 0 0 0 0;
+}
+
+.paid-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.paid-footer {
+  position: sticky;
+  background: white;
+  width: 100%;
+  bottom: 0;
+  padding-top: 16px;
+  // padding-bottom: 8px;
+  margin: 1rem 0 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cancel-button {
+  border: 1px solid rgba(0, 0, 0, 0.135) !important;
+  @include gray-text-button();
+  &:hover {
+    scale: 1;
+    opacity: 0.7;
+    box-shadow: none;
+  }
+}
+.save-button {
+  @include dark-blue-button();
+  &:hover {
+    scale: 1;
+    opacity: 0.9;
+    box-shadow: none;
+  }
+  margin-left: 0.5rem;
 }
 </style>

@@ -56,7 +56,7 @@
             </div>
           </div>
         </div>
-        <div class="paid-footer">
+        <div style="height: 100px" class="paid-footer">
           <div class="row">
             <div
               style="padding-top: 9px; padding-bottom: 9px"
@@ -4634,16 +4634,27 @@ www.forbes.com/article-3
           responseText: 'Great! What would you like me to write for you ?',
         },
         {
-          title: 'Coverage report',
-          text: 'Create an earned media report for your brand',
-          tag: `Report`,
+          title: 'Web searching',
+          text: 'Get questions answered based on top ranking web data',
+          tag: `Web`,
           tagClass: 'purp-bg',
-          imgSource: require('@/assets/images/report.svg'),
-          view: 'report',
-          chatText: 'Help me create a coverage report',
-          chatResponse: 'Using the message bar, tell us which brand this report is for',
+          imgSource: require('@/assets/images/google.svg'),
+          view: 'web',
+          chatText: 'Web searching',
+          chatResponse: 'What would you like to know ?',
           details: false,
         },
+        // {
+        //   title: 'Coverage report',
+        //   text: 'Create an earned media report for your brand',
+        //   tag: `Report`,
+        //   tagClass: 'purp-bg',
+        //   imgSource: require('@/assets/images/report.svg'),
+        //   view: 'report',
+        //   chatText: 'Help me create a coverage report',
+        //   chatResponse: 'Using the message bar, tell us which brand this report is for',
+        //   details: false,
+        // },
       ],
       socialSearchExamples: [`Top fashion trends`, `Why is Taylor Swift trending`, `from: nytimes`],
       googleSearchExamples: [
@@ -4964,6 +4975,12 @@ www.forbes.com/article-3
       this.scrollToChatTop()
     },
     setAndChat(chat) {
+      if (!this.isPaid && this.searchesUsed >= 20) {
+        this.openPaidModal(
+          'You have reached your usage limit for the month. Please upgrade your plan.',
+        )
+        return
+      }
       this.responseEmpty = false
       this.userResponse = null
       this.secondResponse = null
@@ -5184,7 +5201,7 @@ www.forbes.com/article-3
       this.$store.dispatch('getDiscoveries')
     },
     async discoverJournalists(discover = false) {
-      if (!this.isPaid && this.searchesUsed >= 10) {
+      if (!this.isPaid && this.searchesUsed >= 20) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
@@ -5838,7 +5855,7 @@ www.forbes.com/article-3
     },
 
     async saveContact() {
-      if (!this.isPaid && this.searchesUsed >= 10) {
+      if (!this.isPaid && this.searchesUsed >= 20) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
@@ -5891,7 +5908,7 @@ www.forbes.com/article-3
     },
 
     async getJournalistBioDiscover() {
-      if (!this.isPaid && this.searchesUsed >= 10) {
+      if (!this.isPaid && this.searchesUsed >= 20) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
@@ -5982,6 +5999,11 @@ www.forbes.com/article-3
         this.currentJournalistImages = res.data.images
         this.currentJournalistBio = res.data.bio.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
         this.currentPublication = res.data.company
+
+        this.$nextTick(() => {
+          this.refreshUser()
+        })
+        this.refreshUser()
       } catch (e) {
         console.error(e)
       } finally {
@@ -6065,6 +6087,7 @@ www.forbes.com/article-3
         })
         this.revisedPitch = ''
         this.sendingEmail = false
+        this.drafting = false
       } catch (e) {
         console.log(e)
         this.$toast('Error creating draft, try again', {
@@ -6174,7 +6197,7 @@ www.forbes.com/article-3
       }
     },
     grabJournalist(name, pub) {
-      if (!this.isPaid && this.searchesUsed >= 10) {
+      if (!this.isPaid && this.searchesUsed >= 20) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
@@ -6870,6 +6893,9 @@ www.forbes.com/article-3
         this.summary = res.message
           .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
           .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, '')
+        this.$nextTick(() => {
+          this.refreshUser()
+        })
       } catch (e) {
         this.googleResults = []
         this.summary = ''
@@ -6883,7 +6909,7 @@ www.forbes.com/article-3
       }
     },
     async generatePitch() {
-      if (!this.isPaid && this.searchesUsed >= 10) {
+      if (!this.isPaid && this.searchesUsed >= 20) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
@@ -7396,6 +7422,12 @@ www.forbes.com/article-3
       // })
     },
     async generateChatSearch(event) {
+      if (!this.isPaid && this.searchesUsed >= 20) {
+        this.openPaidModal(
+          'You have reached your usage limit for the month. Please upgrade your plan.',
+        )
+        return
+      }
       this.scrollToChatTop()
       if (event && event.shiftKey) {
         return
@@ -7470,7 +7502,6 @@ www.forbes.com/article-3
         this.$refs.textarea.dispatchEvent(new Event('textarea-clear'))
         this.discoverJournalists(true)
       } else if (this.currentChat.view === 'report') {
-        // newSearch here will be whatever is used for the report company name
         if (this.urlsSet) {
           this.reportInstructions = this.chatSearch
           this.chatSearch = ''
@@ -7502,7 +7533,7 @@ www.forbes.com/article-3
       this.relevantData = ''
       this.journalistData = ''
       this.relatedTopics = []
-      if (!this.isPaid && this.searchesUsed >= 10) {
+      if (!this.isPaid && this.searchesUsed >= 20) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )

@@ -482,20 +482,16 @@
           <p>Track</p>
         </router-link>
 
+        <router-link active-class="active" :to="{ name: 'Reports' }" id="router-pitch">
+          <p>Reports</p>
+        </router-link>
+
         <div class="auto-left">
-          <div
-            v-if="
-              ($route.name === 'PRSummaries' ||
-                $route.name === 'Pitches' ||
-                $route.name === 'Assist' ||
-                $route.name === 'Discover') &&
-              !isPaid
-            "
-            class="row wrapper-count"
-          >
-            <p class="searches-used-text">{{ 10 - searchesUsed }} / 10</p>
+          <div v-if="!isPaid" class="row wrapper-count">
+            <p class="searches-used-text">{{ 20 - searchesUsed }} / 20</p>
             <div style="margin-left: -40px" class="tooltip-count">Remaining monthly credits</div>
           </div>
+
           <div v-if="$route.name === 'PRSummaries'" class="relative">
             <div
               v-if="listName === 'news' || listName === 'social'"

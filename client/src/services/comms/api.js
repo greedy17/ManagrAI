@@ -330,7 +330,6 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
-
     async getDetails() {
         try {
             const res = await this.client.get('details/')
@@ -639,6 +638,14 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    async editContact(data) {
+        try {
+            const res = await this.client.post('jcontact/edit/', data)
+            return res
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
     async googleSearch(data) {
         try {
             const res = await this.client.post('google-search/', data)
@@ -686,12 +693,13 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e);
         }
     }
-    async uploadContacts(file, labels, sheet) {
+    async uploadContacts(file, labels, sheet, tag) {
         try {
             const formData = new FormData();
             formData.append('file', file);
             formData.append('labels', JSON.stringify(labels));
             formData.append('sheet', sheet);
+            formData.append('tag', tag);
             const res = await this.client.post(`process-contacts/excel`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
