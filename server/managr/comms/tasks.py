@@ -565,6 +565,8 @@ def _send_news_summary(news_alert_id):
                 if "@outlook" in email_list[0]:
                     message = html.escape(res.get("choices")[0].get("message").get("content"))
                     message = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", message)
+                    message = re.sub(r"\*(.*?)\*", r"<strong>\1</strong>", message)
+
                     for i in range(6, 0, -1):
                         message = re.sub(
                             rf'^{"#" * i} (.*?)$', rf"<h{i}>\1</h{i}>", message, flags=re.MULTILINE
@@ -574,6 +576,7 @@ def _send_news_summary(news_alert_id):
                         r'<a href="\2\3">\1\4</a>',
                         message,
                     )
+                    message = re.sub(r"<https?:\/\/[^|]+\|\[\d+\]>", "", message)
 
                 else:
                     message = res.get("choices")[0].get("message").get("content")
