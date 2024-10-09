@@ -55,7 +55,17 @@
                       Upload Logo
                     </span>
                   </label>
-                  <p class="file-name">{{ fileName ? fileName : 'No file selected' }}</p>
+                  <p style="margin-left: 8px" class="file-name">
+                    {{ fileName ? fileName : 'No file selected' }}
+                  </p>
+
+                  <img
+                    v-if="fileName"
+                    style="margin-left: 8px"
+                    :src="uploadedImageUrl"
+                    height="40px"
+                    alt=""
+                  />
                 </div>
               </div>
             </div>
@@ -77,7 +87,7 @@
               </div>
 
               <div style="margin: 0 0 8px 14px">
-                <p>Paste up to 1,000 URLs. Each on a new line.</p>
+                <p class="thin-font">Paste up to 1,000 URLs. Each on a new line.</p>
                 <textarea
                   style="
                     width: 100%;
@@ -113,6 +123,19 @@
               <p>Urls uploaded</p>
             </div>
           </div>
+
+          <div v-if="urlsSet">
+            <div class="big-chat-bubble">
+              <div class="row">
+                <img src="@/assets/images/iconlogo.png" height="24px" alt="" />
+                <p class="regular-font" v-typed="lastInstructions"></p>
+              </div>
+
+              <div style="margin: 0 0 8px 8px">
+                <button class="primary-button">Run report</button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="chat-window__footer">
@@ -129,7 +152,7 @@
                   placeholder="Message ManagrAI..."
                   v-model="searchText"
                   v-autoresize
-                  :disabled="loading"
+                  :disabled="loading || !!brand"
                   @keyup.enter="generateReportSearch($event)"
                 />
 
@@ -178,6 +201,8 @@ www.techcrunch.com/article-1
 www.bloomberg.com/article-2
 www.forbes.com/article-3
      `,
+      lastInstructions: 'All set! We are now ready to run the report!',
+      uploadedImageUrl: '',
     }
   },
   methods: {
@@ -214,7 +239,7 @@ www.forbes.com/article-3
 
       reader.onload = (e) => {
         const imageDataUrl = e.target.result
-        console.log('Uploaded Image:', imageDataUrl)
+        this.uploadedImageUrl = imageDataUrl
         this.loading = false
       }
 
@@ -285,6 +310,10 @@ www.forbes.com/article-3
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.thin-font {
+  font-family: $thin-font-family;
+}
 
 .primary-button {
   @include dark-blue-button();
