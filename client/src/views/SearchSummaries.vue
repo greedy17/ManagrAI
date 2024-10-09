@@ -4417,19 +4417,18 @@ export default {
           chatResponse: 'Enter a topic, industry, or company',
         },
         {
-          title: 'Press release',
-          text: 'Incorporate timely, relevant news into your press release',
+          title: 'Competitor update',
+          text: `Stay up to speed on what the competition is doing`,
           tag: `News`,
           tagClass: 'blue-bg',
           imgSource: require('@/assets/images/sparkles-nofill-round.svg'),
           view: 'news',
-          chatText: 'Make my press release more timely based on recent news',
-          chatResponse:
-            'Using Company details, provide a snippet of your current press release or any relevant notes',
-          searchText:
-            'Craft or modify the press release incorporating timely, relevant news into the existing pitch. Focus only on the most recognizable news outlets. Pitch details here:',
+          chatText: 'What are my competitors up to and how does it impact my brand?',
+          chatResponse: `Using Company details, provide your brand's name`,
+          searchText: `Based on the news coverage, provide a competitor update to the following company's PR team. Break it down into sections per competitor, provide sentiment analysis, top 3-5 take aways, and a super creative, targeted PR campaign suggestions. Use labels. Company details here:`,
           details: true,
-          responseText: 'Provide a current news topic or event relevant to your press release',
+          responseText:
+            'Using the message bar below, provide up to 3 competitors using OR in between',
         },
         {
           title: 'Media Q&A',
