@@ -3318,3 +3318,23 @@ def redirect_from_instagram(request):
         err = urlencode(err)
         return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{err}")
     return redirect(f"{comms_consts.TWITTER_FRONTEND_REDIRECT}?{q}")
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def get_traffic_data(request):
+    urls = request.data.get("urls")
+    while True:
+        try:
+            url = comms_consts.SEMRUSH_TRAFFIC_URI
+            params = comms_consts.SEMRUSH_PARAMS(urls)
+            full_url = url + "?" + urlencode(params)
+            with Variable_Client(30) as client:
+                r = client.get(full_url)
+                print(r)
+            break
+        except Exception as e:
+            message = f"Unknown exception: {e}"
+            break
+    return Response()

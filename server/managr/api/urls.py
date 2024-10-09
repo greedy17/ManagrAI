@@ -527,6 +527,11 @@ urlpatterns = [
         comms_views.process_csv_file,
         name="process-contacts-csv",
     ),
+    path(
+        "traffic-data",
+        comms_views.get_traffic_data,
+        name="traffic-data",
+    ),
 ]
 router.register("users/reports", core_views.ReportViewSet, "reports"),
 router.register("users/conversations", core_views.ConversationViewSet, "conversations"),

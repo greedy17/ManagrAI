@@ -59,6 +59,11 @@ GOOGLE_SEARCH_KEY = settings.GOOGLE_SEARCH_API_KEY
 GOOGLE_SEARCH_ID = settings.GOOGLE_SEARCH_ID
 
 SCRAPER_API_KEY = settings.SCRAPER_API_KEY
+SEMRUSH_TRAFFIC_URI = "https://api.semrush.com/analytics/ta/api/v3/summary"
+
+
+def SEMRUSH_PARAMS(urls):
+    return {"key": settings.SEMRUSH_API_KEY, "targets": urls}
 
 
 def GOOGLE_SEARCH_PARAMS(query, number_of_results):
@@ -69,6 +74,7 @@ def GOOGLE_SEARCH_PARAMS(query, number_of_results):
         "num": number_of_results,
     }
     return params
+
 
 def OPEN_AI_GET_INSIGHTS(notes, activity, bio, instructions):
     prompt = f"""
@@ -88,6 +94,7 @@ def OPEN_AI_GET_INSIGHTS(notes, activity, bio, instructions):
     
     """
     return prompt
+
 
 def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
     prompt = f"""Here are the top 5 search results for {journalist}:
