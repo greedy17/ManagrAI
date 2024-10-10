@@ -359,7 +359,7 @@
           </td>
           <td v-if="!email.is_draft" :class="i % 2 !== 0 ? 'gray-bg' : ''">
             <div :class="{ redText: email.failed, greenText: !email.failed }">
-              {{ email.failed ? 'Failed' : 'Delivered' }}
+              {{ email.failed ? 'Failed' : 'Sent' }}
             </div>
           </td>
           <td

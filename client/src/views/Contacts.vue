@@ -258,7 +258,7 @@
             <input
               style="margin-bottom: 0; padding-left: 26px"
               class="primary-input-underline"
-              v-model="currentContact.email"
+              v-model="emailTo"
               type="email"
             />
 
@@ -2036,6 +2036,9 @@ export default {
   },
   data() {
     return {
+      // emailTo: this.currentContact.email
+      //   ? this.currentContact.email
+      //   : this.currentContact.journalist_ref.email,
       editloading: false,
       editingEmail: false,
       editingPub: false,
@@ -2204,6 +2207,11 @@ export default {
     }
   },
   computed: {
+    emailTo() {
+      return this.currentContact.email
+        ? this.currentContact.email
+        : this.currentContact.journalist_ref.email
+    },
     searchesUsed() {
       let arr = []
       let currentMonth = new Date(Date.now()).getMonth() + 1
@@ -3070,12 +3078,13 @@ export default {
       }
     },
     async sendEmail() {
+      console.log('EMAIL IS HERE --- > ', this.emailTo)
       this.sendingEmail = true
       try {
         const res = await Comms.api.sendEmail({
           subject: this.subject,
           body: this.revisedPitch,
-          recipient: this.currentContact.journalist_ref.email,
+          recipient: this.emailTo,
           name:
             this.currentContact.journalist_ref.first_name +
             ' ' +
