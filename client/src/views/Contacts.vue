@@ -2207,10 +2207,19 @@ export default {
     }
   },
   computed: {
-    emailTo() {
-      return this.currentContact.email
-        ? this.currentContact.email
-        : this.currentContact.journalist_ref.email
+    emailTo: {
+      get() {
+        return this.currentContact.email
+          ? this.currentContact.email
+          : this.currentContact.journalist_ref.email
+      },
+      set(value) {
+        if (this.currentContact.email) {
+          this.currentContact.email = value
+        } else {
+          this.currentContact.journalist_ref.email = value
+        }
+      },
     },
     searchesUsed() {
       let arr = []
