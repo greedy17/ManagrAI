@@ -776,7 +776,7 @@
                     @click="modifyTagsImport"
                     style="margin-right: 12px; padding: 1px 6px 2px 6px"
                   >
-                    Create
+                    Save
                     <img
                       src="@/assets/images/arrow-right.svg"
                       class="pointer"
@@ -969,7 +969,7 @@
                   @click="modifyTags('add')"
                   style="margin-right: 12px; padding: 1px 6px 2px 6px"
                 >
-                  Create
+                  Save
                   <img src="@/assets/images/arrow-right.svg" class="pointer" height="10px" alt="" />
                 </div>
 
