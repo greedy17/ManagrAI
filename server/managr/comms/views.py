@@ -3325,8 +3325,13 @@ def redirect_from_instagram(request):
 @authentication_classes([ExpiringTokenAuthentication])
 def get_traffic_data(request):
     urls = request.data.get("urls")
+    domains = []
     while True:
         try:
+            for url in urls:
+                domain = get_domain(url)
+                domains.append(domains)
+            domains = list(set(domains))
             url = comms_consts.SEMRUSH_TRAFFIC_URI
             params = comms_consts.SEMRUSH_PARAMS(urls)
             full_url = url + "?" + urlencode(params)
