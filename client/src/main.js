@@ -37,6 +37,8 @@ import Toast from "vue-toastification";
 import "vue-toastification/dist/index.css";
 import VueSanitize from "vue-sanitize";
 import VueApexCharts from 'vue-apexcharts'
+import { Chart, registerables } from 'chart.js'
+
 
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
@@ -81,6 +83,7 @@ Vue.component('datetime', Datetime)
 Vue.component('vue-multiselect')
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 Vue.use(vmodal)
+Chart.register(...registerables)
 
 let stripePromise = null;
 

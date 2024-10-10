@@ -1,6 +1,6 @@
 <template>
   <div class="reports">
-    <div v-if="creating">
+    <div v-if="!creating">
       <div class="chat-window">
         <div class="chat-window__header">
           <p>Coverage Report</p>
@@ -177,14 +177,17 @@
     </div>
 
     <div class="fadein" v-else>
-      <div class="chat-window">
+      <div v-if="loading">loading here</div>
+
+      <div v-else class="chat-window">
         <div class="chat-window__header">
           <p class="thin-font">
             <span class="bold-font">{{ brand }}</span> Coverage Report
           </p>
           <div class="row">
-            <img style="margin-right: 12px" src="@/assets/images/share.svg" height="14px" alt="" />
-            <img src="@/assets/images/disk.svg" height="14px" alt="" />
+            <button class="secondary-button">Share</button>
+            <button class="primary-button">Save</button>
+            <!-- <img src="@/assets/images/disk.svg" height="14px" alt="" /> -->
           </div>
         </div>
 
@@ -197,33 +200,100 @@
             <p>Executive overview for {{ brand }}</p>
             <pre v-html="summary" class="pre-text"></pre>
           </div>
-          <div v-if="view === 'charts'">charts</div>
-          <div v-if="view === 'starred'">starred</div>
-          <div v-if="view === 'articles'">articles</div>
+
+          <div v-else-if="view === 'charts'">
+            <div class="container">
+              <div class="space-between bottom-margin">
+                <div class="col">
+                  <p class="bold-font medium-txt">Total coverage</p>
+                  <small>Number of news clips in this report</small>
+                </div>
+
+                <p class="bold-font">1000</p>
+              </div>
+
+              <div class="space-between bottom-margin">
+                <div class="col">
+                  <p class="bold-font medium-txt">Unique visitors</p>
+                  <small>The potential audience reached by your media coverage</small>
+                </div>
+
+                <div class="row">
+                  <img
+                    style="margin-right: 8px"
+                    src="@/assets/images/users.svg"
+                    height="18px"
+                    alt=""
+                  />
+                  <p class="bold-font">100,000,000</p>
+                </div>
+              </div>
+
+              <div class="space-between">
+                <div class="col">
+                  <p class="bold-font medium-txt">Total shares</p>
+                  <small>Number of times content was shared on social media</small>
+                </div>
+
+                <section class="rows">
+                  <div class="row">
+                    <img src="@/assets/images/facebook.png" height="20px" alt="" />
+                    <p class="bold-font">10,000</p>
+                  </div>
+                  <div class="row">
+                    <img src="@/assets/images/twitter-x.svg" height="18px" alt="" />
+                    <p class="bold-font">1,000</p>
+                  </div>
+                  <div class="row">
+                    <img src="@/assets/images/reddit.svg" height="20px" alt="" />
+                    <p class="bold-font">10,000</p>
+                  </div>
+                  <div class="row">
+                    <img src="@/assets/images/pinterest.png" height="20px" alt="" />
+                    <p class="bold-font">100</p>
+                  </div>
+                </section>
+              </div>
+            </div>
+
+            <div class="container">
+              <div class="col">
+                <p class="bold-font medium-txt">Media exposure over time</p>
+                <small
+                  >Number of media clips <span class="bold-font">per week</span> along with the
+                  potential reach</small
+                >
+              </div>
+
+              <LineChart />
+            </div>
+          </div>
+          <div v-else-if="view === 'starred'">starred</div>
+          <div v-else-if="view === 'articles'">articles</div>
         </div>
       </div>
     </div>
 
-    <nav v-if="!creating" class="left-nav">
+    <nav v-if="creating" class="left-nav">
       <ul class="nav-links">
-        <li class="nav-item">
-          <div>
-            <img src="@/assets/images/home.svg" height="18px" alt="" />
+        <li @click="changeView('home')" class="nav-item">
+          <div :class="{ active: view === 'home' }">
+            <img src="@/assets/images/home.svg" height="16px" alt="" />
           </div>
         </li>
-        <li class="nav-item">
-          <div>
-            <img src="@/assets/images/stats.svg" height="18px" alt="" />
+        <li @click="changeView('charts')" class="nav-item">
+          <div :class="{ active: view === 'charts' }">
+            <img src="@/assets/images/stats.svg" height="16px" alt="" />
           </div>
         </li>
-        <li class="nav-item">
-          <div>
-            <img src="@/assets/images/star.svg" height="18px" alt="" />
+        <li @click="changeView('starred')" class="nav-item">
+          <div :class="{ active: view === 'starred' }">
+            <img src="@/assets/images/star.svg" height="16px" alt="" />
           </div>
         </li>
-        <li class="nav-item">
-          <div>
-            <img src="@/assets/images/report.svg" height="18px" alt="" />
+        <li @click="changeView('articles')" class="nav-item">
+          <div :class="{ active: view === 'articles' }">
+            <img src="@/assets/images/report.svg" height="16px" alt="" />
           </div>
         </li>
       </ul>
@@ -232,8 +302,13 @@
 </template>
 
 <script>
+import LineChartComponent from '../components/LineChart'
+
 export default {
   name: 'Reports',
+  components: {
+    LineChartComponent,
+  },
   data() {
     return {
       summary: `Executive Overview of Earned Media Report for Lululemon
@@ -308,6 +383,9 @@ www.forbes.com/article-3
     }
   },
   methods: {
+    changeView(txt) {
+      this.view = txt
+    },
     setUrls() {
       this.urlsSet = true
       this.scrollToChatTop()
@@ -413,6 +491,39 @@ www.forbes.com/article-3
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+.medium-txt {
+  font-size: 18px;
+}
+
+.bottom-margin {
+  margin-bottom: 24px;
+}
+
+.container {
+  background-color: white;
+  padding: 16px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 32px;
+  font-family: $thin-font-family;
+  p {
+    margin: 8px 0;
+  }
+
+  small {
+    color: $base-gray;
+  }
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+}
+
+.active {
+  background-color: $soft-gray;
+}
+
 .pre-text {
   color: $base-gray;
   font-family: $thin-font-family;
@@ -431,7 +542,7 @@ www.forbes.com/article-3
 }
 
 .left-nav {
-  width: 60px; // Adjust the width to make it thin
+  width: 60px;
   height: 100vh;
   position: fixed;
   left: 0;
@@ -441,9 +552,9 @@ www.forbes.com/article-3
   flex-direction: column;
   align-items: center;
   padding: 20px 0;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  // box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
 
-  // Navigation Links
   .nav-links {
     list-style: none;
     padding: 0;
@@ -455,20 +566,25 @@ www.forbes.com/article-3
     justify-content: center;
 
     .nav-item {
-      margin: 20px 0;
+      margin: 10px 0;
       display: flex;
       justify-content: center;
-      width: 100%;
+      cursor: pointer;
 
       div {
-        padding: 8px 0;
+        padding: 9px;
+        border-radius: 50%;
         display: flex;
         justify-content: center;
         align-items: center;
         width: 100%;
         transition: background 0.3s ease;
         &:hover {
-          background-color: $off-white;
+          background-color: $soft-gray;
+        }
+
+        img {
+          margin: 0;
         }
       }
     }
@@ -651,6 +767,21 @@ textarea::placeholder {
   display: flex;
   flex-direction: row;
   align-items: center;
+}
+
+.rows {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 4px 0;
+
+  div {
+    width: 40%;
+    justify-content: space-evenly;
+    padding-left: 12px;
+  }
 }
 
 .reports {
