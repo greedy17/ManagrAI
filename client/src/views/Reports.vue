@@ -132,7 +132,7 @@
               </div>
 
               <div style="margin: 0 0 8px 8px">
-                <button class="primary-button">Run report</button>
+                <button @click="creating = false" class="primary-button">Run report</button>
               </div>
             </div>
           </div>
@@ -175,7 +175,59 @@
         </div>
       </div>
     </div>
-    <div v-else>testing here</div>
+
+    <div class="fadein" v-else>
+      <div class="chat-window">
+        <div class="chat-window__header">
+          <p class="thin-font">
+            <span class="bold-font">{{ brand }}</span> Coverage Report
+          </p>
+          <div class="row">
+            <img style="margin-right: 12px" src="@/assets/images/share.svg" height="14px" alt="" />
+            <img src="@/assets/images/disk.svg" height="14px" alt="" />
+          </div>
+        </div>
+
+        <div class="chat-window__body">
+          <div v-if="view === 'home'">
+            <div>
+              <img :src="uploadedImageUrl" class="photo-header" />
+            </div>
+
+            <p>Executive overview for {{ brand }}</p>
+            <pre v-html="summary" class="pre-text"></pre>
+          </div>
+          <div v-if="view === 'charts'">charts</div>
+          <div v-if="view === 'starred'">starred</div>
+          <div v-if="view === 'articles'">articles</div>
+        </div>
+      </div>
+    </div>
+
+    <nav v-if="!creating" class="left-nav">
+      <ul class="nav-links">
+        <li class="nav-item">
+          <div>
+            <img src="@/assets/images/home.svg" height="18px" alt="" />
+          </div>
+        </li>
+        <li class="nav-item">
+          <div>
+            <img src="@/assets/images/stats.svg" height="18px" alt="" />
+          </div>
+        </li>
+        <li class="nav-item">
+          <div>
+            <img src="@/assets/images/star.svg" height="18px" alt="" />
+          </div>
+        </li>
+        <li class="nav-item">
+          <div>
+            <img src="@/assets/images/report.svg" height="18px" alt="" />
+          </div>
+        </li>
+      </ul>
+    </nav>
   </div>
 </template>
 
@@ -184,6 +236,56 @@ export default {
   name: 'Reports',
   data() {
     return {
+      summary: `Executive Overview of Earned Media Report for Lululemon
+
+1. Total Volume of Media Coverage and Trends in Mentions
+
+Over the reporting period, Lululemon experienced significant media coverage with a notable increase in mentions during several key events. The total volume of coverage spiked at two specific points:
+
+Product Launches: The unveiling of new product lines, particularly Lululemon's innovative "sweat-activated" workout gear and expansion into footwear, garnered widespread attention.
+Partnership Announcements: Strategic partnerships, including collaborations with wellness influencers and global ambassadors, fueled spikes in mentions. The most prominent event was the announcement of a collaboration with a high-profile athlete, which drew heavy media and consumer interest.
+Overall, mentions of Lululemon increased by 25% over the previous quarter, demonstrating growing media engagement. The bulk of this coverage originated from product-focused stories (60%), while the rest focused on the brand's sustainability initiatives and corporate leadership (40%).
+
+2. Key Publications and Influential Journalists
+
+Lululemon received coverage from a range of high-profile media outlets, underscoring the brand's strong presence in both business and lifestyle segments. Prominent publications included:
+
+Forbes and The Wall Street Journal: Coverage focused on Lululemon's financial performance, market strategies, and expansion efforts.
+Vogue, Harper's Bazaar, and Elle: These publications highlighted Lululemon's innovative designs, style appeal, and sustainability initiatives.
+Men's Health and Women's Health: Articles centered on the functionality and benefits of Lululemon's performance apparel.
+Several influential journalists covered the brand, amplifying its reach. Notably:
+
+Vanessa Friedman, Fashion Director at The New York Times, wrote about Lululemon’s growing influence in the athleisure sector.
+Emily Ratajkowski, contributing editor at Vogue, reviewed Lululemon’s latest activewear collection, praising its eco-friendly design.
+Joe Pompliano, a sports business journalist, emphasized Lululemon's strategic athlete partnerships, positioning the brand as a dominant player in both fashion and performance wear.
+3. Key Metrics: Reach, Impressions, and Engagement Rates
+
+Lululemon's media presence generated significant exposure across various channels:
+
+Total Reach: Coverage reached an estimated 500 million people globally, with high visibility across both North American and international markets.
+Potential Impressions: The potential number of impressions reached 1.2 billion, driven by coverage in major publications, influential blogs, and social media platforms.
+Engagement Rates: Lululemon's engagement rates were strong, particularly on social media where posts from news outlets and influencers about the brand saw an average engagement rate of 5%, surpassing the industry average of 3%. This was driven by interactive content, product reviews, and influencer partnerships.
+4. Media Sentiment and Brand Image Impact
+
+Media sentiment surrounding Lululemon was overwhelmingly positive. Approximately 85% of articles and posts portrayed the brand in a favorable light, with recurring themes of innovation, sustainability, and customer loyalty. Positive sentiment was driven by:
+
+Product Quality: Media outlets consistently highlighted Lululemon's high-quality, durable, and stylish workout gear.
+Sustainability: Many publications praised the brand’s efforts to implement sustainable practices, such as using recycled materials in new product lines and aiming for carbon neutrality by 2025.
+Corporate Leadership: Coverage of CEO Calvin McDonald's leadership strategies received favorable reviews, positioning him as a key figure steering the brand’s growth and innovation.
+However, about 10% of the coverage reflected neutral sentiment, mainly reporting on financial results or market competition, while 5% of the coverage carried a slightly negative tone. This negative sentiment arose from criticisms related to the high price point of Lululemon products and concerns from some media outlets about market oversaturation in the athleisure space. Despite this, the overall impact on Lululemon's brand image remains positive, reinforcing its position as a premium, innovative brand.
+
+5. Recurring Themes and Key Messages
+
+Several recurring themes emerged across the media coverage, shaping the narrative around Lululemon's brand:
+
+Innovation in Product Development: The most frequent message was Lululemon’s commitment to product innovation, with features such as sweat-wicking materials, ergonomic designs, and the move into footwear garnering widespread attention.
+Sustainability Leadership: Lululemon's dedication to sustainability was a major focal point. The media highlighted the brand’s eco-conscious practices, including the use of recycled fabrics and energy-efficient manufacturing processes.
+Global Expansion and Growth: Stories about Lululemon’s international growth, especially in the Asian and European markets, showcased the brand’s ambitious expansion strategy, as well as its ability to maintain strong financial performance in competitive markets.
+Health and Wellness Leadership: Media coverage frequently reinforced Lululemon's position as a lifestyle brand deeply connected to the health and wellness movement, appealing to a broad consumer base that values fitness, mental well-being, and mindful living.
+Conclusion
+
+Lululemon's recent media coverage reflects a strong brand presence driven by product innovation, sustainability efforts, and strategic leadership. The coverage trends and metrics indicate that the brand’s influence is expanding globally, with high levels of engagement and a largely positive sentiment. The focus on Lululemon’s innovation and leadership in both athleisure and wellness continues to elevate the brand’s image, ensuring its relevance in a competitive market.`,
+      view: 'home',
       creating: true,
       brandText: 'Using the message bar, tell us which brand this report is for',
       loading: false,
@@ -311,8 +413,74 @@ www.forbes.com/article-3
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
-.thin-font {
+.pre-text {
+  color: $base-gray;
   font-family: $thin-font-family;
+  font-size: 16px;
+  line-height: 32px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.photo-header {
+  height: 250px;
+  width: 100%;
+  margin: 0;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.left-nav {
+  width: 60px; // Adjust the width to make it thin
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+
+  // Navigation Links
+  .nav-links {
+    list-style: none;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    .nav-item {
+      margin: 20px 0;
+      display: flex;
+      justify-content: center;
+      width: 100%;
+
+      div {
+        padding: 8px 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        transition: background 0.3s ease;
+        &:hover {
+          background-color: $off-white;
+        }
+      }
+    }
+  }
+}
+
+.thin-font {
+  font-family: $thin-font-family !important;
+}
+
+.bold-font {
+  font-family: $base-font-family !important;
 }
 
 .primary-button {
@@ -488,7 +656,7 @@ textarea::placeholder {
 .reports {
   height: 100vh;
   width: 100vw;
-  padding: 32px 20vw;
+  padding: 32px 18vw;
 }
 .chat-window {
   height: 96vh;
