@@ -771,11 +771,12 @@
                   />
 
                   <div
-                    class="img-container-stay-small"
+                    class="img-container-stay-small-txt"
                     v-if="importTagName"
                     @click="modifyTagsImport"
                     style="margin-right: 12px; padding: 1px 6px 2px 6px"
                   >
+                    Create
                     <img
                       src="@/assets/images/arrow-right.svg"
                       class="pointer"
@@ -963,11 +964,12 @@
                 />
 
                 <div
-                  class="img-container-stay-small"
+                  class="img-container-stay-small-txt"
                   v-if="newTag"
                   @click="modifyTags('add')"
                   style="margin-right: 12px; padding: 1px 6px 2px 6px"
                 >
+                  Create
                   <img src="@/assets/images/arrow-right.svg" class="pointer" height="10px" alt="" />
                 </div>
 
@@ -5805,6 +5807,24 @@ textarea::placeholder {
   img {
     filter: invert(100%);
     margin: 0;
+    padding: 0;
+  }
+}
+
+.img-container-stay-small-txt {
+  cursor: pointer;
+  color: white;
+  padding: 4px 8px !important;
+  border-radius: 9px;
+  background-color: $dark-black-blue;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  font-size: 14px;
+
+  img {
+    filter: invert(100%);
+    margin: 0 0 0 8px;
     padding: 0;
   }
 }
