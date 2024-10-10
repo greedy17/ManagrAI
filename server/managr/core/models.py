@@ -1277,6 +1277,7 @@ class MicrosoftAccount(TimeStampModel):
                     recipient,
                     subject,
                     "core/email-templates/user-email.html",
+                    self.user.full_name,
                     {"body": updated_body, "tracking_pixel_url": tracker_link},
                     cc,
                     bcc,
