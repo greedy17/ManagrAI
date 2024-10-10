@@ -1885,6 +1885,10 @@ class DiscoveryViewSet(
         name = request.data.get("name")
         cc = request.data.get("cc", [])
         bcc = request.data.get("bcc", [])
+        if cc:
+            cc = [cc]
+        if bcc:
+            bcc = [bcc]
         draftId = request.data.get("draftId", None)
         if user.has_google_integration or user.has_microsoft_integration:
             res = user.email_account.send_email(recipient, subject, body, name, cc, bcc)
@@ -2954,7 +2958,7 @@ def email_tracking_endpoint(request):
             event, time = last_log.split("|")
             if event == "opened":
                 message_timestamp = datetime.now().timestamp()
-                datetime_obj = datetime.strptime(time, "%Y-%m-%dT%H:%M:%S.%f")
+                datetime_obj = datetime.strptime(time, "%Y-%m-%dT%H:%M:%S.%f%z")
                 unix_time = datetime_obj.timestamp()
                 if unix_time - message_timestamp < 60:
                     raise Exception()

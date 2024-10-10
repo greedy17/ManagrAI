@@ -5870,8 +5870,8 @@ export default {
           body: this.revisedPitch,
           recipient: this.targetEmail,
           name: this.currentJournalist,
-          cc: [this.ccEmail],
-          bcc: [this.bccEmail],
+          cc: this.ccEmail,
+          bcc: this.bccEmail,
         })
 
         this.emailJournalistModalOpen = false

@@ -3091,42 +3091,43 @@ export default {
     async sendEmail() {
       console.log('EMAIL IS HERE --- > ', this.emailTo)
       this.sendingEmail = true
-      try {
-        const res = await Comms.api.sendEmail({
-          subject: this.subject,
-          body: this.revisedPitch,
-          recipient: this.emailTo,
-          name:
-            this.currentContact.journalist_ref.first_name +
-            ' ' +
-            this.currentContact.journalist_ref.last_name,
-          cc: [this.ccEmail],
-          bcc: [this.bccEmail],
-        })
+      if (this.ccEmail)
+        try {
+          const res = await Comms.api.sendEmail({
+            subject: this.subject,
+            body: this.revisedPitch,
+            recipient: this.emailTo,
+            name:
+              this.currentContact.journalist_ref.first_name +
+              ' ' +
+              this.currentContact.journalist_ref.last_name,
+            cc: this.ccEmail,
+            bcc: this.bccEmail,
+          })
 
-        this.emailJournalistModalOpen = false
-        this.$toast('Pitch sent', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'success',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-        this.revisedPitch = ''
-        this.sendingEmail = false
-      } catch (e) {
-        console.log(e)
-        this.$toast('Error sending email, try again', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-        this.sendingEmail = false
-      } finally {
-        this.togglePitchModal()
-      }
+          this.emailJournalistModalOpen = false
+          this.$toast('Pitch sent', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'success',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          this.revisedPitch = ''
+          this.sendingEmail = false
+        } catch (e) {
+          console.log(e)
+          this.$toast('Error sending email, try again', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+          this.sendingEmail = false
+        } finally {
+          this.togglePitchModal()
+        }
     },
     async rewritePitchWithStyle() {
       this.loadingPitch = true
