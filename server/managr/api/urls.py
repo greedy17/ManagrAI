@@ -528,7 +528,7 @@ urlpatterns = [
         name="process-contacts-csv",
     ),
     path(
-        "traffic-data",
+        "traffic-data/",
         comms_views.get_traffic_data,
         name="traffic-data",
     ),

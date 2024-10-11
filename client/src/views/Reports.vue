@@ -133,7 +133,7 @@
               </div>
 
               <div style="margin: 0 0 8px 8px">
-                <button @click="creating = false" class="primary-button">Run report</button>
+                <button @click="getTrafficData" class="primary-button">Run report</button>
               </div>
             </div>
           </div>
@@ -454,6 +454,7 @@
 
 <script>
 import ReportLineChart from '@/components/ReportLineChart.vue'
+import { Comms } from '@/services/comms'
 
 export default {
   name: 'Reports',
@@ -545,6 +546,22 @@ www.forbes.com/article-3
     }
   },
   methods: {
+    async getTrafficData() {
+      this.loading = true
+      try {
+        const res = await Comms.api.getTrafficData({
+          urls: this.urls,
+          // name: this.brand,
+        })
+        console.log(res)
+        this.loading = false
+        this.creating = false
+      } catch (e) {
+        console.error(e)
+        this.loading = false
+      } finally {
+      }
+    },
     async runReport() {
       this.loading = true
       try {
@@ -567,8 +584,11 @@ www.forbes.com/article-3
       console.log(this.urls, this.urlCount)
     },
     processUrls(inputText) {
-      // Split the input into lines and initialize variables
-      const lines = inputText.split('\n')
+      // Split the input by commas and new lines, trim spaces around each split part
+      const lines = inputText
+        .split(/[\n,]+/)
+        .map((line) => line.trim())
+        .filter((line) => line !== '')
       const urls = []
       let count = 0
 
@@ -646,10 +666,10 @@ www.forbes.com/article-3
         return minDistance === 1 ? closestTLD : null
       }
 
-      // Process each line
+      // Process each line or part
       for (let line of lines) {
         line = line.trim()
-        if (line === '') continue // Skip empty lines
+        if (line === '') continue // Skip empty entries
 
         // Extract the TLD from the URL
         const tldMatch = line.match(/\.([a-zA-Z]{2,})$/)
@@ -671,6 +691,7 @@ www.forbes.com/article-3
       // Return the list of URLs and the count
       return { urls, count }
     },
+
     changeView(txt) {
       this.view = txt
     },

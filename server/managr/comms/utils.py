@@ -44,12 +44,14 @@ def extract_email_address(text):
     return None
 
 
-def get_domain(url):
+def get_domain(url, full_netloc=False):
     parsed_url = urlparse(url)
     netloc = parsed_url.netloc
     domain_parts = netloc.split(".")
     if "www" in domain_parts:
         domain_parts.remove("www")
+    if full_netloc:
+        return ".".join(domain_parts)
     return domain_parts[0]
 
 
@@ -1004,3 +1006,35 @@ def modify_href(match, id):
         + "&type=clicked"
     )
     return f'href="{new_href}"'
+
+
+def get_traffic_data(urls):
+    domains = []
+    data_dict = {}
+    while True:
+        try:
+            for url in urls:
+                domain = get_domain(url, True)
+                domains.append(domain)
+            domains = list(set(domains))
+            url = comms_consts.SEMRUSH_TRAFFIC_URI
+            params = comms_consts.SEMRUSH_PARAMS(domains)
+            str_params = []
+            for key in params.keys():
+                str_params.append(f"{key}={params[key]}")
+            str_params = "?" + "&".join(str_params)
+            full_url = url + str_params
+            with Variable_Client(30) as client:
+                r = client.get(full_url)
+            content = r._content
+            decoded_content = content.decode("utf-8")
+            csv_reader = csv.DictReader(io.StringIO(decoded_content), delimiter=";")
+
+            for row in csv_reader:
+                target = row["target"]
+                data_dict[target] = row
+            break
+        except Exception as e:
+            data_dict["error"] = str(e)
+            break
+    return data_dict

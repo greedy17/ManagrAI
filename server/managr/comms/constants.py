@@ -63,7 +63,7 @@ SEMRUSH_TRAFFIC_URI = "https://api.semrush.com/analytics/ta/api/v3/summary"
 
 
 def SEMRUSH_PARAMS(urls):
-    return {"key": settings.SEMRUSH_API_KEY, "targets": urls}
+    return {"key": settings.SEMRUSH_API_KEY, "targets": ",".join(urls)}
 
 
 def GOOGLE_SEARCH_PARAMS(query, number_of_results):

@@ -718,6 +718,14 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    async getTrafficData(data) {
+        try {
+            const res = await this.client.post('traffic-data/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
 }
 
 class TwitterAccountAPI extends ModelAPI {

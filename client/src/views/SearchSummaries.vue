@@ -7812,7 +7812,12 @@ www.forbes.com/article-3
             this.controllers.getClips.controller.signal,
           )
           .then((response) => {
+            let urls = []
             this.filteredArticles = response.articles
+            urls = response.articles.map((art) => {
+              return art.link
+            })
+            console.log('ARTICLEs ARE HERE -- > ', urls)
 
             this.searchArticleText = ' '
             this.searchArticleText = ''
