@@ -161,12 +161,12 @@
                   v-if="searchText"
                   @click="generateReportSearch($event)"
                   class="left-margin pointer lite-bg img-container-stay-alt"
-                  style="margin-right: 12px"
+                  style="margin-right: 24px"
                 >
                   <img
                     style="margin: 0"
                     src="@/assets/images/paper-plane-full.svg"
-                    height="10px"
+                    height="14px"
                     alt=""
                   />
                 </div>
@@ -194,12 +194,14 @@
 
         <div class="chat-window__body">
           <div v-if="view === 'home'">
-            <div>
-              <img :src="uploadedImageUrl" class="photo-header" />
-            </div>
+            <div style="padding-top: 20px" class="container">
+              <div>
+                <img :src="uploadedImageUrl" class="photo-header" />
+              </div>
 
-            <p>Executive overview for {{ brand }}</p>
-            <pre v-html="summary" class="pre-text"></pre>
+              <p>Executive overview for {{ brand }}</p>
+              <pre v-html="summary" class="pre-text"></pre>
+            </div>
           </div>
 
           <div v-else-if="view === 'charts'">
@@ -223,7 +225,7 @@
                   <img
                     style="margin-right: 8px"
                     src="@/assets/images/users.svg"
-                    height="18px"
+                    height="16px"
                     alt=""
                   />
                   <p class="bold-font">100,000,000</p>
@@ -242,7 +244,7 @@
                     <p class="bold-font">10,000</p>
                   </div>
                   <div class="row">
-                    <img src="@/assets/images/twitter-x.svg" height="18px" alt="" />
+                    <img src="@/assets/images/twitter-x.svg" height="16px" alt="" />
                     <p class="bold-font">1,000</p>
                   </div>
                   <div class="row">
@@ -261,7 +263,7 @@
               <div class="col">
                 <p class="bold-font medium-txt">Media exposure over time</p>
                 <small
-                  >Number of media clips <span class="bold-font">per week</span> along with the
+                  >Number of media clips <span class="bold-font">per month</span> along with the
                   potential reach</small
                 >
               </div>
@@ -333,9 +335,7 @@
                     unknown printer took a galley of type and scrambled it to make a type specimen
                     book. It has survived not only five centuries, but also the leap into electronic
                     typesetting, remaining essentially unchanged. It was popularised in the 1960s
-                    with the release of Letraset sheets containing Lorem Ipsum passages, and more
-                    recently with desktop publishing software like Aldus PageMaker including
-                    versions of Lorem Ipsum.
+                    with the release of Letraset sheets.
                   </p>
                 </div>
                 <div style="margin-top: 12px">
@@ -345,10 +345,7 @@
                     Ipsum has been the industry's standard dummy text ever since the 1500s, when an
                     unknown printer took a galley of type and scrambled it to make a type specimen
                     book. It has survived not only five centuries, but also the leap into electronic
-                    typesetting, remaining essentially unchanged. It was popularised in the 1960s
-                    with the release of Letraset sheets containing Lorem Ipsum passages, and more
-                    recently with desktop publishing software like Aldus PageMaker including
-                    versions of Lorem Ipsum.
+                    typesetting, remaining essentially unchanged.
                   </p>
                 </div>
               </div>
@@ -524,7 +521,16 @@ Lululemon's recent media coverage reflects a strong brand presence driven by pro
       searchText: '',
       uploadText: 'Great! Please provide a banner file using JPEG, PNG, or SVG',
       fileName: '',
-      allowedFormats: ['image/jpeg', 'image/png', 'image/svg+xml'],
+      allowedFormats: [
+        'image/jpeg',
+        'image/png',
+        'image/svg+xml',
+        'image/webp',
+        'image/gif',
+        'image/tiff',
+        'image/bmp',
+        'application/pdf',
+      ],
       maxSize: 2 * 1024 * 1024,
       fileText: `Next, add news coverage links by pasting the URL's below.`,
       reportUrls: '',
@@ -540,13 +546,17 @@ www.forbes.com/article-3
   },
   methods: {
     async runReport() {
+      this.loading = true
       try {
         const res = await Comms.api.runReport({
           urls: this.urls,
-          // name: this.brand,
+          name: this.brand,
         })
+        console.log(res)
+        this.loading = false
       } catch (e) {
         console.error(e)
+        this.loading = false
       } finally {
       }
     },
@@ -851,7 +861,8 @@ www.forbes.com/article-3
 .container {
   background-color: white;
   padding: 16px;
-  border-radius: 5px;
+  border-radius: 9px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-bottom: 32px;
   font-family: $thin-font-family;
@@ -1165,8 +1176,15 @@ textarea::placeholder {
 
   div {
     width: 40%;
-    justify-content: space-evenly;
-    padding-left: 12px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    // padding-left: 12px;
+
+    img {
+      margin-right: 8px;
+    }
   }
 }
 

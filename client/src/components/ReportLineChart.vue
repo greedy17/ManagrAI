@@ -14,11 +14,12 @@ export default {
       extends: Line,
       props: ['chartData', 'options'],
       mounted() {
-        // Create gradient background
         const ctx = this.$refs.canvas.getContext('2d')
         const gradient = ctx.createLinearGradient(0, 0, 0, 400)
-        gradient.addColorStop(0, 'rgba(58,123,213,1)')
-        gradient.addColorStop(1, 'rgba(0,210,255,0.3)')
+
+        gradient.addColorStop(0, 'rgba(138, 122, 175, 1)')
+        gradient.addColorStop(1, 'rgba(138, 122, 175, 0.3)')
+
         this.chartData.datasets[0].backgroundColor = gradient
 
         this.renderChart(this.chartData, this.options)
@@ -46,10 +47,10 @@ export default {
           {
             label: 'Performance',
             data: [30, 50, 40, 60, 70, 65, 75, 80, 90, 100, 95, 85],
-            borderColor: '#3a7bd5',
+            borderColor: '#8A7AAF',
             pointBackgroundColor: '#fff',
-            pointBorderColor: '#3a7bd5',
-            pointHoverBackgroundColor: '#3a7bd5',
+            pointBorderColor: '#8A7AAF',
+            pointHoverBackgroundColor: '#8A7AAF',
             pointHoverBorderColor: '#fff',
             pointRadius: 5,
             pointHoverRadius: 7,
@@ -62,15 +63,15 @@ export default {
         responsive: true,
         maintainAspectRatio: false,
         animation: {
-          duration: 2000,
+          duration: 1000,
           easing: 'easeInOutQuad',
         },
         legend: {
           display: true,
           labels: {
             fontColor: '#333',
-            fontSize: 16,
-            padding: 20,
+            fontSize: 14,
+            padding: 16,
           },
         },
         tooltips: {
