@@ -6,7 +6,9 @@ import fitz
 import tempfile
 import requests
 import pytz
+import io
 from datetime import datetime, timezone, timedelta
+from newspaper import Article, ArticleException
 from functools import reduce
 from managr.core.utils import Variable_Client
 from newspaper import Config
@@ -1038,3 +1040,20 @@ def get_traffic_data(urls):
             data_dict["error"] = str(e)
             break
     return data_dict
+
+
+def get_article_data(urls):
+    data = []
+    for url in urls:
+        article_res = Article(url, config=generate_config())
+        article_res.download()
+        article_res.parse()
+        article_data = {
+            "url": url,
+            "title": article_res.title,
+            "author": article_res.authors,
+            "description": article_res.meta_description,
+            "source": article_res.source_url,
+        }
+        data.append(article_data)
+    return data
