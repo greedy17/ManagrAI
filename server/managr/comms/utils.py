@@ -1010,7 +1010,7 @@ def modify_href(match, id):
     return f'href="{new_href}"'
 
 
-def get_traffic_data(urls):
+def get_url_traffic_data(urls):
     domains = []
     data_dict = {}
     while True:

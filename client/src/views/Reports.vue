@@ -137,6 +137,15 @@
               </div>
             </div>
           </div>
+
+          <div v-if="loading" class="space-between">
+            <div class="chat-window__chat-bubble row">
+              <img src="@/assets/images/iconlogo.png" height="24px" alt="" />
+              <p v-typed="loadingText"></p>
+              <img class="rotation" src="@/assets/images/loading.svg" height="14px" alt="" />
+            </div>
+            <div></div>
+          </div>
         </div>
 
         <div class="chat-window__footer">
@@ -465,6 +474,7 @@ export default {
     return {
       urlCount: 0,
       urls: [],
+      loadingText: 'Generating report...',
       summary: `Executive Overview of Earned Media Report for Lululemon
 
 1. Total Volume of Media Coverage and Trends in Mentions
@@ -548,6 +558,7 @@ www.forbes.com/article-3
   methods: {
     async getTrafficData() {
       this.loading = true
+      this.scrollToChatTop()
       try {
         const res = await Comms.api.getTrafficData({
           urls: this.urls,
