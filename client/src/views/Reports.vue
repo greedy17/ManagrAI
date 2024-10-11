@@ -1,6 +1,6 @@
 <template>
   <div class="reports">
-    <div v-if="!creating">
+    <div v-if="creating">
       <div class="chat-window">
         <div class="chat-window__header">
           <p>Coverage Report</p>
@@ -102,6 +102,7 @@
                   v-model="reportUrls"
                   v-autoresize
                   :disabled="urlsSet"
+                  @input="handleInput"
                 />
                 <div style="margin-top: 12px" class="flex-end">
                   <button
@@ -120,7 +121,7 @@
             <div></div>
             <div class="chat-window__chat-bubble row">
               <img src="@/assets/images/profile.svg" height="12px" alt="" />
-              <p>Urls uploaded</p>
+              <p>{{ urlCount }} Urls uploaded</p>
             </div>
           </div>
 
@@ -157,7 +158,7 @@
                 />
 
                 <div
-                  v-if="chatSearch"
+                  v-if="searchText"
                   @click="generateReportSearch($event)"
                   class="left-margin pointer lite-bg img-container-stay-alt"
                   style="margin-right: 12px"
@@ -264,17 +265,170 @@
                   potential reach</small
                 >
               </div>
-
-              <LineChart />
+              <ReportLineChart />
             </div>
           </div>
-          <div v-else-if="view === 'starred'">starred</div>
-          <div v-else-if="view === 'articles'">articles</div>
+          <div v-else-if="view === 'starred'">
+            <div class="container">
+              <div class="container__top">
+                <div style="margin-bottom: 8px">
+                  <img src="@/assets/images/iconlogo.png" class="photo-header-small" />
+                </div>
+
+                <div class="space-between no-letter-margin">
+                  <div class="col">
+                    <p class="bold-font">Company</p>
+                    <div style="margin-top: 8px" class="row">
+                      <img
+                        style="margin-right: 4px"
+                        src="@/assets/images/profile.svg"
+                        height="12px"
+                        alt=""
+                      />
+                      <p>Journalist</p>
+                    </div>
+                  </div>
+                  <small>1/11/2111</small>
+                </div>
+
+                <div>
+                  <h3 style="margin: 16px 0" class="bold-font">
+                    Lorem Ipsum filler text for an article headline
+                  </h3>
+                </div>
+
+                <div class="space-between bottom-margin-m">
+                  <div class="row small-text img-mar">
+                    <img src="@/assets/images/users.svg" height="14px" alt="" />
+                    <p class="bold-font">100,000,000</p>
+                  </div>
+
+                  <section class="row-even small-text img-mar">
+                    <div class="row">
+                      <img src="@/assets/images/facebook.png" height="14px" alt="" />
+                      <p class="bold-font">10,000</p>
+                    </div>
+                    <div class="row">
+                      <img src="@/assets/images/twitter-x.svg" height="12px" alt="" />
+                      <p class="bold-font">1,000</p>
+                    </div>
+                    <div class="row">
+                      <img src="@/assets/images/reddit.svg" height="14px" alt="" />
+                      <p class="bold-font">10,000</p>
+                    </div>
+                    <div class="row">
+                      <img src="@/assets/images/pinterest.png" height="14px" alt="" />
+                      <p class="bold-font">100</p>
+                    </div>
+                  </section>
+                </div>
+              </div>
+
+              <div class="report-body">
+                <div style="margin-top: 12px">
+                  <p class="bold-font">Summary</p>
+                  <p>
+                    Lorem ipsum simply dummy text of the printing and typesetting industry. Lorem
+                    Ipsum has been the industry's standard dummy text ever since the 1500s, when an
+                    unknown printer took a galley of type and scrambled it to make a type specimen
+                    book. It has survived not only five centuries, but also the leap into electronic
+                    typesetting, remaining essentially unchanged. It was popularised in the 1960s
+                    with the release of Letraset sheets containing Lorem Ipsum passages, and more
+                    recently with desktop publishing software like Aldus PageMaker including
+                    versions of Lorem Ipsum.
+                  </p>
+                </div>
+                <div style="margin-top: 12px">
+                  <p class="bold-font">Sentiment</p>
+                  <p>
+                    Lorem ipsum is simply dummy text of the printing and typesetting industry. Lorem
+                    Ipsum has been the industry's standard dummy text ever since the 1500s, when an
+                    unknown printer took a galley of type and scrambled it to make a type specimen
+                    book. It has survived not only five centuries, but also the leap into electronic
+                    typesetting, remaining essentially unchanged. It was popularised in the 1960s
+                    with the release of Letraset sheets containing Lorem Ipsum passages, and more
+                    recently with desktop publishing software like Aldus PageMaker including
+                    versions of Lorem Ipsum.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else-if="view === 'articles'">
+            <div class="container">
+              <div class="article">
+                <div class="space-between">
+                  <p class="bold-font">Outlet</p>
+                  <img src="@/assets/images/star.svg" height="14px" alt="" />
+                </div>
+
+                <div class="space-between-bottom">
+                  <div class="article-body">
+                    <h3 class="bold-font">
+                      Headline will be here lorem ipsum Headline will be here lorem ipsum Headline
+                      will be here lorem ipsum Headline will be here lorem ipsum
+                    </h3>
+
+                    <p class="report-body">
+                      Lorem ipsum simply dummy text of the printing and typesetting industry. Lorem
+                      Ipsum has been the industry's standard dummy text ever since the 1500s, when
+                      an unknown printer took a galley of type and scrambled it to make a type
+                      specimen book. It has survived not only five centuries, but also the leap into
+                      electronic typesetting, remaining essentially unchanged. It was popularised in
+                      the 1960s with the release of Letraset sheets containing Lorem Ipsum passages,
+                      and more recently with desktop publishing software like Aldus PageMaker
+                      including versions of Lorem Ipsum.
+                    </p>
+                  </div>
+
+                  <img src="@/assets/images/iconlogo.png" class="photo-header-alt" />
+                </div>
+
+                <div class="space-between">
+                  <div class="row report-body">
+                    <div class="pill">
+                      <img src="@/assets/images/profile.svg" height="10px" alt="" />
+                      <p style="margin-right: 4px">Journalist</p>
+                    </div>
+
+                    <small>10m</small>
+                  </div>
+
+                  <div class="row small-text img-mar">
+                    <img src="@/assets/images/users.svg" height="14px" alt="" />
+                    <p class="bold-font">100,000,000</p>
+                  </div>
+                </div>
+
+                <div style="margin-top: 8px" class="space-between bottom-border">
+                  <div></div>
+                  <section class="row-even small-text img-mar">
+                    <div class="row">
+                      <img src="@/assets/images/facebook.png" height="14px" alt="" />
+                      <p class="bold-font">10,000</p>
+                    </div>
+                    <div class="row">
+                      <img src="@/assets/images/twitter-x.svg" height="12px" alt="" />
+                      <p class="bold-font">1,000</p>
+                    </div>
+                    <div class="row">
+                      <img src="@/assets/images/reddit.svg" height="14px" alt="" />
+                      <p class="bold-font">10,000</p>
+                    </div>
+                    <div class="row">
+                      <img src="@/assets/images/pinterest.png" height="14px" alt="" />
+                      <p class="bold-font">100</p>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <nav v-if="creating" class="left-nav">
+    <nav v-if="!creating" class="left-nav">
       <ul class="nav-links">
         <li @click="changeView('home')" class="nav-item">
           <div :class="{ active: view === 'home' }">
@@ -302,15 +456,17 @@
 </template>
 
 <script>
-import LineChartComponent from '../components/LineChart'
+import ReportLineChart from '@/components/ReportLineChart.vue'
 
 export default {
   name: 'Reports',
   components: {
-    LineChartComponent,
+    ReportLineChart,
   },
   data() {
     return {
+      urlCount: 0,
+      urls: [],
       summary: `Executive Overview of Earned Media Report for Lululemon
 
 1. Total Volume of Media Coverage and Trends in Mentions
@@ -383,6 +539,128 @@ www.forbes.com/article-3
     }
   },
   methods: {
+    async runReport() {
+      try {
+        const res = await Comms.api.runReport({
+          urls: this.urls,
+          // name: this.brand,
+        })
+      } catch (e) {
+        console.error(e)
+      } finally {
+      }
+    },
+    handleInput() {
+      const result = this.processUrls(this.reportUrls)
+      this.urls = result.urls
+      this.urlCount = result.count
+      console.log(this.urls, this.urlCount)
+    },
+    processUrls(inputText) {
+      // Split the input into lines and initialize variables
+      const lines = inputText.split('\n')
+      const urls = []
+      let count = 0
+
+      // A set of valid TLDs (Top-Level Domains)
+      const validTLDs = new Set([
+        'com',
+        'org',
+        'net',
+        'int',
+        'edu',
+        'gov',
+        'mil',
+        'co',
+        'io',
+        'me',
+        'biz',
+        'info',
+        'xyz',
+        'online',
+        'site',
+        'club',
+        'shop',
+        'blog',
+        'web',
+        'art',
+        'app',
+        'dev',
+        'tech',
+        'store',
+        'ai',
+        'us',
+        'uk',
+        // Add more TLDs as needed
+      ])
+
+      // Function to compute Levenshtein distance
+      function levenshteinDistance(a, b) {
+        const matrix = []
+        let i
+        for (i = 0; i <= b.length; i++) {
+          matrix[i] = [i]
+        }
+        let j
+        for (j = 0; j <= a.length; j++) {
+          matrix[0][j] = j
+        }
+        for (i = 1; i <= b.length; i++) {
+          for (j = 1; j <= a.length; j++) {
+            if (b.charAt(i - 1) === a.charAt(j - 1)) {
+              matrix[i][j] = matrix[i - 1][j - 1]
+            } else {
+              matrix[i][j] = Math.min(
+                matrix[i - 1][j - 1] + 1, // substitution
+                matrix[i][j - 1] + 1, // insertion
+                matrix[i - 1][j] + 1, // deletion
+              )
+            }
+          }
+        }
+        return matrix[b.length][a.length]
+      }
+
+      // Function to find the closest valid TLD
+      function findClosestTLD(tld) {
+        let minDistance = Infinity
+        let closestTLD = null
+        for (let validTLD of validTLDs) {
+          const distance = levenshteinDistance(tld, validTLD)
+          if (distance < minDistance) {
+            minDistance = distance
+            closestTLD = validTLD
+          }
+        }
+        // Only correct if the distance is 1 (e.g., '.con' -> '.com')
+        return minDistance === 1 ? closestTLD : null
+      }
+
+      // Process each line
+      for (let line of lines) {
+        line = line.trim()
+        if (line === '') continue // Skip empty lines
+
+        // Extract the TLD from the URL
+        const tldMatch = line.match(/\.([a-zA-Z]{2,})$/)
+        if (tldMatch) {
+          const tld = tldMatch[1].toLowerCase()
+          if (!validTLDs.has(tld)) {
+            // Attempt to correct the TLD
+            const correctedTLD = findClosestTLD(tld)
+            if (correctedTLD) {
+              // Replace the incorrect TLD with the corrected one
+              line = line.slice(0, -tld.length) + correctedTLD
+            }
+          }
+        }
+        urls.push(line)
+        count++
+      }
+
+      // Return the list of URLs and the count
+      return { urls, count }
+    },
     changeView(txt) {
       this.view = txt
     },
@@ -491,12 +769,83 @@ www.forbes.com/article-3
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+.bottom-border {
+  border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+  padding-bottom: 12px;
+}
+
+.pill {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: $soft-gray;
+  border-radius: 16px;
+  padding: 2px 10px;
+  margin-right: 8px;
+
+  img {
+    margin-right: 4px;
+  }
+  p {
+    margin: 0 !important;
+  }
+}
+
+.article {
+  padding: 16px;
+}
+
+.article-body {
+  margin-bottom: 12px;
+  width: 100%;
+  max-height: 150px;
+  overflow: hidden;
+
+  h3 {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .report-body {
+    height: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.report-body {
+  font-family: $thin-font-family;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.no-letter-margin {
+  p {
+    margin: 0 !important;
+  }
+}
+
+.img-mar {
+  img {
+    margin-right: 4px;
+  }
+}
+
+.small-text {
+  font-size: 13px;
+}
+
 .medium-txt {
   font-size: 18px;
 }
 
 .bottom-margin {
   margin-bottom: 24px;
+}
+
+.bottom-margin-m {
+  margin-bottom: 12px;
 }
 
 .container {
@@ -512,6 +861,10 @@ www.forbes.com/article-3
 
   small {
     color: $base-gray;
+  }
+
+  &__top {
+    border-bottom: 2px solid rgba(0, 0, 0, 0.05);
   }
 }
 
@@ -533,8 +886,32 @@ www.forbes.com/article-3
   white-space: pre-wrap;
 }
 
+.photo-header-alt {
+  height: 150px;
+  width: 150px;
+  margin: 0;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.space-between-bottom {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+}
+
 .photo-header {
   height: 250px;
+  width: 100%;
+  margin: 0;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.photo-header-small {
+  height: 150px;
   width: 100%;
   margin: 0;
   object-fit: cover;
@@ -763,6 +1140,15 @@ textarea::placeholder {
   width: 100%;
 }
 
+.row-even {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  width: 50%;
+}
+
 .row {
   display: flex;
   flex-direction: row;
@@ -805,7 +1191,7 @@ textarea::placeholder {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding: 32px 0 12px 0;
+    padding: 48px 0 12px 0;
     p {
       font-family: $base-font-family;
       font-size: 18px !important;
