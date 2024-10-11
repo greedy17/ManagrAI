@@ -90,7 +90,7 @@ from managr.comms.utils import (
     check_journalist_validity,
     get_journalists,
     merge_sort_dates,
-    get_traffic_data,
+    get_url_traffic_data,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
@@ -3326,7 +3326,7 @@ def redirect_from_instagram(request):
 @authentication_classes([ExpiringTokenAuthentication])
 def get_traffic_data(request):
     urls = request.data.get("urls")
-    traffic_data = get_traffic_data(urls)
+    traffic_data = get_url_traffic_data(urls)
     if "error" in traffic_data.keys():
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=traffic_data)
     return Response(status=status.HTTP_200_OK, data=traffic_data)
