@@ -3330,7 +3330,7 @@ def get_traffic_data(request):
         try:
             for url in urls:
                 domain = get_domain(url)
-                domains.append(domains)
+                domains.append(domain)
             domains = list(set(domains))
             url = comms_consts.SEMRUSH_TRAFFIC_URI
             params = comms_consts.SEMRUSH_PARAMS(urls)

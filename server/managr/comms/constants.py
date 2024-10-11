@@ -750,6 +750,23 @@ OPEN_AI_EMPTY_SEARCH_SUGGESTIONS = (
     """
 )
 
+def REPORT_SUMMARY(brand, clips):
+    prompt = f"""
+    You are the VP of Communications at {brand}. Your task is to create a concise executive overview of the earned media report based on the news clips below. The summary should focus on the following key takeaways and be broken into sections, capped at 1,000 words:
+    
+    1. Total volume of media coverage, what stories drove coverage spikes, and trends in mentions over time.
+    2. Key recognizable publications and influential journalists who covered the brand.
+    3. Key metrics, such as total reach, potential impressions, and engagement rates.
+    4. A brief analysis of media sentiment and its impact on [brand.name]'s brand image.
+    5. Highlight recurring themes or key messages across the media coverage.
+   
+    Here are the news clips:
+
+    {clips}
+    """
+
+    return prompt
+
 
 DO_NOT_TRACK_LIST = [
     "https://www.wsj.com",
