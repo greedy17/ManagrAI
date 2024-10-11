@@ -91,6 +91,7 @@ from managr.comms.utils import (
     get_journalists,
     merge_sort_dates,
     get_url_traffic_data,
+    get_article_data,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
@@ -3330,3 +3331,69 @@ def get_traffic_data(request):
     if "error" in traffic_data.keys():
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=traffic_data)
     return Response(status=status.HTTP_200_OK, data=traffic_data)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def get_article_url_data(request):
+    urls = request.data.get("urls")
+    clip_data = get_article_data(urls)
+    return Response(status=status.HTTP_200_OK, data=clip_data)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def get_clip_report_summary(request):
+    user = request.user
+    clips = request.data.get("clips")
+    brand = request.data.get("brancd")
+    token_amount = 1000
+    timeout = 60.0
+    while True:
+        try:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.REPORT_SUMMARY(brand, clips)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email,
+                prompt,
+                "You are a VP of Communications",
+                token_amount=token_amount,
+                top_p=0.1,
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            res = open_ai_exceptions._handle_response(r)
+
+            message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+            user.add_meta_data("generate_report")
+            break
+        except open_ai_exceptions.StopReasonLength:
+            if token_amount <= 2000:
+                has_error = True
+                message = "Token amount error"
+                break
+            else:
+                token_amount += 500
+                continue
+        except httpx.ReadTimeout as e:
+            timeout += 30.0
+            if timeout >= 120.0:
+                has_error = True
+                message = "Read timeout issue"
+                break
+            else:
+                attempts += 1
+                continue
+        except Exception as e:
+            has_error = True
+            message = f"Unknown exception: {e}"
+            break
+    if has_error:
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
+    return Response(status=status.HTTP_200_OK, data={"summary": message})
