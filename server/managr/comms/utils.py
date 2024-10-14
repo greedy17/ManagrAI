@@ -1073,9 +1073,13 @@ def get_social_data(urls):
             reddit_res = client.post(comms_consts.DATAFORSEO_REDDIT, json=data, headers=headers)
             reddit_res = reddit_res.json()
             facebook_res = facebook_res.json()
-            reddit_res = reddit_res["tasks"][0]["result"] if reddit_res["tasks_errors"] == 0 else []
+            reddit_res = (
+                reddit_res["tasks"][0]["result"] if facebook_res["tasks"][0]["task_errors"] else []
+            )
             facebook_res = (
-                facebook_res["tasks"][0]["result"] if facebook_res["task_errors"] == 0 else []
+                facebook_res["tasks"][0]["result"]
+                if facebook_res["tasks"][0]["task_errors"] == 0
+                else []
             )
         for res_data in reddit_res:
             url = res_data["page_url"]
