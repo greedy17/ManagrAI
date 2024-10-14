@@ -726,6 +726,24 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    async getReportClips(data) {
+        try {
+            const res = await this.client.post('report-clips/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async getReportSummary(data) {
+        try {
+            const res = await this.client.post('report-summary/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
+
 }
 
 class TwitterAccountAPI extends ModelAPI {

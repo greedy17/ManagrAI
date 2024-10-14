@@ -133,7 +133,7 @@
               </div>
 
               <div style="margin: 0 0 8px 8px">
-                <button @click="getTrafficData" class="primary-button">Run report</button>
+                <button @click="getReportClips" class="primary-button">Run report</button>
               </div>
             </div>
           </div>
@@ -141,7 +141,7 @@
           <div v-if="loading" class="space-between">
             <div class="chat-window__chat-bubble row">
               <img src="@/assets/images/iconlogo.png" height="24px" alt="" />
-              <p v-typed="loadingText"></p>
+              <p style="margin-right: 6px">{{ loadingText }}</p>
               <img class="rotation" src="@/assets/images/loading.svg" height="14px" alt="" />
             </div>
             <div></div>
@@ -202,18 +202,17 @@
         </div>
 
         <div class="chat-window__body">
-          <div v-if="view === 'home'">
+          <div class="fadein" v-if="view === 'home'">
             <div style="padding-top: 20px" class="container">
               <div>
                 <img :src="uploadedImageUrl" class="photo-header" />
               </div>
-
-              <p>Executive overview for {{ brand }}</p>
+              <!-- <p>Executive overview for {{ brand }}</p> -->
               <pre v-html="summary" class="pre-text"></pre>
             </div>
           </div>
 
-          <div v-else-if="view === 'charts'">
+          <div class="fadein" v-else-if="view === 'charts'">
             <div class="container">
               <div class="space-between bottom-margin">
                 <div class="col">
@@ -221,7 +220,7 @@
                   <small>Number of news clips in this report</small>
                 </div>
 
-                <p class="bold-font">1000</p>
+                <p class="bold-font">{{ urlCount }}</p>
               </div>
 
               <div class="space-between bottom-margin">
@@ -237,7 +236,7 @@
                     height="16px"
                     alt=""
                   />
-                  <p class="bold-font">100,000,000</p>
+                  <p class="bold-font">{{ formatNumber(totalVisits) }}</p>
                 </div>
               </div>
 
@@ -279,16 +278,20 @@
               <ReportLineChart />
             </div>
           </div>
-          <div v-else-if="view === 'starred'">
-            <div class="container">
+          <div class="fadein" v-else-if="view === 'starred'">
+            <div v-for="(article, i) in starredArticles" :key="i" class="container">
               <div class="container__top">
-                <div style="margin-bottom: 8px">
-                  <img src="@/assets/images/iconlogo.png" class="photo-header-small" />
+                <div style="margin-bottom: 12px">
+                  <img
+                    @error="onImageError($event)"
+                    :src="article.image"
+                    class="photo-header-small"
+                  />
                 </div>
 
                 <div class="space-between no-letter-margin">
                   <div class="col">
-                    <p class="bold-font">Company</p>
+                    <p class="bold-font">{{ article.source }}</p>
                     <div style="margin-top: 8px" class="row">
                       <img
                         style="margin-right: 4px"
@@ -296,22 +299,22 @@
                         height="12px"
                         alt=""
                       />
-                      <p>Journalist</p>
+                      <p>{{ article.author[0] ? article.author[0] : 'Unkown' }}</p>
                     </div>
                   </div>
-                  <small>1/11/2111</small>
+                  <small>{{ getTimeDifferenceInMinutes(article.date) }}</small>
                 </div>
 
                 <div>
                   <h3 style="margin: 16px 0" class="bold-font">
-                    Lorem Ipsum filler text for an article headline
+                    {{ article.description }}
                   </h3>
                 </div>
 
                 <div class="space-between bottom-margin-m">
-                  <div class="row small-text img-mar">
+                  <div class="row img-mar">
                     <img src="@/assets/images/users.svg" height="14px" alt="" />
-                    <p class="bold-font">100,000,000</p>
+                    <p class="bold-font">{{ formatNumber(article.traffic.visits) }}</p>
                   </div>
 
                   <section class="row-even small-text img-mar">
@@ -360,49 +363,54 @@
               </div>
             </div>
           </div>
-          <div v-else-if="view === 'articles'">
+          <div class="fadein" v-else-if="view === 'articles'">
             <div class="container">
-              <div class="article">
+              <div v-for="(article, i) in clips" :key="i" class="article">
                 <div class="space-between">
-                  <p class="bold-font">Outlet</p>
+                  <p class="bold-font">{{ article.source }}</p>
                   <img src="@/assets/images/star.svg" height="14px" alt="" />
                 </div>
 
                 <div class="space-between-bottom">
                   <div class="article-body">
                     <h3 class="bold-font">
-                      Headline will be here lorem ipsum Headline will be here lorem ipsum Headline
-                      will be here lorem ipsum Headline will be here lorem ipsum
+                      {{ article.title }}
                     </h3>
 
                     <p class="report-body">
-                      Lorem ipsum simply dummy text of the printing and typesetting industry. Lorem
-                      Ipsum has been the industry's standard dummy text ever since the 1500s, when
-                      an unknown printer took a galley of type and scrambled it to make a type
-                      specimen book. It has survived not only five centuries, but also the leap into
-                      electronic typesetting, remaining essentially unchanged. It was popularised in
-                      the 1960s with the release of Letraset sheets containing Lorem Ipsum passages,
-                      and more recently with desktop publishing software like Aldus PageMaker
-                      including versions of Lorem Ipsum.
+                      {{ article.description }}
                     </p>
                   </div>
 
-                  <img src="@/assets/images/iconlogo.png" class="photo-header-alt" />
+                  <img
+                    @error="onImageError($event)"
+                    :src="article.image"
+                    class="photo-header-alt"
+                  />
                 </div>
 
-                <div class="space-between">
+                <div style="margin-top: 12px" class="space-between">
                   <div class="row report-body">
                     <div class="pill">
-                      <img src="@/assets/images/profile.svg" height="10px" alt="" />
-                      <p style="margin-right: 4px">Journalist</p>
+                      <img src="@/assets/images/profile.svg" height="12px" alt="" />
+                      <p style="margin-right: 6px">
+                        {{ article.author[0] ? article.author[0] : 'Unkown' }}
+                      </p>
                     </div>
 
-                    <small>10m</small>
+                    <small>{{ getTimeDifferenceInMinutes(article.date) }}</small>
                   </div>
 
-                  <div class="row small-text img-mar">
-                    <img src="@/assets/images/users.svg" height="14px" alt="" />
-                    <p class="bold-font">100,000,000</p>
+                  <div class="row img-mar">
+                    <img
+                      style="margin-right: 4px"
+                      src="@/assets/images/users.svg"
+                      height="14px"
+                      alt=""
+                    />
+                    <p style="font-size: 14px" class="bold-font">
+                      {{ formatNumber(article.traffic.visits) }}
+                    </p>
                   </div>
                 </div>
 
@@ -411,19 +419,19 @@
                   <section class="row-even small-text img-mar">
                     <div class="row">
                       <img src="@/assets/images/facebook.png" height="14px" alt="" />
-                      <p class="bold-font">10,000</p>
+                      <p class="bold-font">{{ formatNumber(article.traffic.social / 2) }}</p>
                     </div>
                     <div class="row">
                       <img src="@/assets/images/twitter-x.svg" height="12px" alt="" />
-                      <p class="bold-font">1,000</p>
+                      <p class="bold-font">{{ formatNumber(article.traffic.social / 2) }}</p>
                     </div>
                     <div class="row">
                       <img src="@/assets/images/reddit.svg" height="14px" alt="" />
-                      <p class="bold-font">10,000</p>
+                      <p class="bold-font">{{ formatNumber(article.traffic.social / 4) }}</p>
                     </div>
                     <div class="row">
                       <img src="@/assets/images/pinterest.png" height="14px" alt="" />
-                      <p class="bold-font">100</p>
+                      <p class="bold-font">{{ formatNumber(article.traffic.social / 8) }}</p>
                     </div>
                   </section>
                 </div>
@@ -472,58 +480,15 @@ export default {
   },
   data() {
     return {
+      totalVisits: 0,
+      starredArticles: [],
+      logoPlaceholder: require('@/assets/images/iconlogo.png'),
+      traffic: null,
       urlCount: 0,
       urls: [],
-      loadingText: 'Generating report...',
-      summary: `Executive Overview of Earned Media Report for Lululemon
-
-1. Total Volume of Media Coverage and Trends in Mentions
-
-Over the reporting period, Lululemon experienced significant media coverage with a notable increase in mentions during several key events. The total volume of coverage spiked at two specific points:
-
-Product Launches: The unveiling of new product lines, particularly Lululemon's innovative "sweat-activated" workout gear and expansion into footwear, garnered widespread attention.
-Partnership Announcements: Strategic partnerships, including collaborations with wellness influencers and global ambassadors, fueled spikes in mentions. The most prominent event was the announcement of a collaboration with a high-profile athlete, which drew heavy media and consumer interest.
-Overall, mentions of Lululemon increased by 25% over the previous quarter, demonstrating growing media engagement. The bulk of this coverage originated from product-focused stories (60%), while the rest focused on the brand's sustainability initiatives and corporate leadership (40%).
-
-2. Key Publications and Influential Journalists
-
-Lululemon received coverage from a range of high-profile media outlets, underscoring the brand's strong presence in both business and lifestyle segments. Prominent publications included:
-
-Forbes and The Wall Street Journal: Coverage focused on Lululemon's financial performance, market strategies, and expansion efforts.
-Vogue, Harper's Bazaar, and Elle: These publications highlighted Lululemon's innovative designs, style appeal, and sustainability initiatives.
-Men's Health and Women's Health: Articles centered on the functionality and benefits of Lululemon's performance apparel.
-Several influential journalists covered the brand, amplifying its reach. Notably:
-
-Vanessa Friedman, Fashion Director at The New York Times, wrote about Lululemon’s growing influence in the athleisure sector.
-Emily Ratajkowski, contributing editor at Vogue, reviewed Lululemon’s latest activewear collection, praising its eco-friendly design.
-Joe Pompliano, a sports business journalist, emphasized Lululemon's strategic athlete partnerships, positioning the brand as a dominant player in both fashion and performance wear.
-3. Key Metrics: Reach, Impressions, and Engagement Rates
-
-Lululemon's media presence generated significant exposure across various channels:
-
-Total Reach: Coverage reached an estimated 500 million people globally, with high visibility across both North American and international markets.
-Potential Impressions: The potential number of impressions reached 1.2 billion, driven by coverage in major publications, influential blogs, and social media platforms.
-Engagement Rates: Lululemon's engagement rates were strong, particularly on social media where posts from news outlets and influencers about the brand saw an average engagement rate of 5%, surpassing the industry average of 3%. This was driven by interactive content, product reviews, and influencer partnerships.
-4. Media Sentiment and Brand Image Impact
-
-Media sentiment surrounding Lululemon was overwhelmingly positive. Approximately 85% of articles and posts portrayed the brand in a favorable light, with recurring themes of innovation, sustainability, and customer loyalty. Positive sentiment was driven by:
-
-Product Quality: Media outlets consistently highlighted Lululemon's high-quality, durable, and stylish workout gear.
-Sustainability: Many publications praised the brand’s efforts to implement sustainable practices, such as using recycled materials in new product lines and aiming for carbon neutrality by 2025.
-Corporate Leadership: Coverage of CEO Calvin McDonald's leadership strategies received favorable reviews, positioning him as a key figure steering the brand’s growth and innovation.
-However, about 10% of the coverage reflected neutral sentiment, mainly reporting on financial results or market competition, while 5% of the coverage carried a slightly negative tone. This negative sentiment arose from criticisms related to the high price point of Lululemon products and concerns from some media outlets about market oversaturation in the athleisure space. Despite this, the overall impact on Lululemon's brand image remains positive, reinforcing its position as a premium, innovative brand.
-
-5. Recurring Themes and Key Messages
-
-Several recurring themes emerged across the media coverage, shaping the narrative around Lululemon's brand:
-
-Innovation in Product Development: The most frequent message was Lululemon’s commitment to product innovation, with features such as sweat-wicking materials, ergonomic designs, and the move into footwear garnering widespread attention.
-Sustainability Leadership: Lululemon's dedication to sustainability was a major focal point. The media highlighted the brand’s eco-conscious practices, including the use of recycled fabrics and energy-efficient manufacturing processes.
-Global Expansion and Growth: Stories about Lululemon’s international growth, especially in the Asian and European markets, showcased the brand’s ambitious expansion strategy, as well as its ability to maintain strong financial performance in competitive markets.
-Health and Wellness Leadership: Media coverage frequently reinforced Lululemon's position as a lifestyle brand deeply connected to the health and wellness movement, appealing to a broad consumer base that values fitness, mental well-being, and mindful living.
-Conclusion
-
-Lululemon's recent media coverage reflects a strong brand presence driven by product innovation, sustainability efforts, and strategic leadership. The coverage trends and metrics indicate that the brand’s influence is expanding globally, with high levels of engagement and a largely positive sentiment. The focus on Lululemon’s innovation and leadership in both athleisure and wellness continues to elevate the brand’s image, ensuring its relevance in a competitive market.`,
+      clips: [],
+      loadingText: 'Analyzing articles...',
+      summary: '',
       view: 'home',
       creating: true,
       brandText: 'Using the message bar, tell us which brand this report is for',
@@ -556,22 +521,130 @@ www.forbes.com/article-3
     }
   },
   methods: {
-    async getTrafficData() {
+    getTimeDifferenceInMinutes(dateString) {
+      if (dateString) {
+        const currentDate = new Date()
+        const givenDate = new Date(dateString)
+
+        if (
+          givenDate.getDate() === currentDate.getDate() &&
+          givenDate.getMonth() === currentDate.getMonth() &&
+          givenDate.getFullYear() === currentDate.getFullYear()
+        ) {
+          const timeDifferenceInMilliseconds = currentDate - givenDate
+          const timeDifferenceInMinutes = Math.floor(timeDifferenceInMilliseconds / (1000 * 60))
+          if (timeDifferenceInMinutes >= 60) {
+            const timeDifferenceInHours = Math.floor(timeDifferenceInMinutes / 60)
+            const remainingMinutes = timeDifferenceInMinutes % 60
+            return `${timeDifferenceInHours}h`
+          } else {
+            return `${timeDifferenceInMinutes}m`
+          }
+        } else {
+          let month
+          let day
+          let year
+          if (Number(givenDate.getMonth() + 1)) {
+            month = givenDate.getMonth() + 1
+          } else {
+            month = '--'
+          }
+          if (Number(givenDate.getDate())) {
+            day = givenDate.getDate()
+          } else {
+            day = '--'
+          }
+          if (Number(givenDate.getFullYear())) {
+            year = givenDate.getFullYear()
+          } else {
+            year = '--'
+          }
+          return `${month}/${day}/${year}`
+        }
+      } else {
+        return '--/--/----'
+      }
+    },
+    formatNumber(number) {
+      // Round the number up using Math.ceil to remove decimals
+      const roundedNumber = Math.ceil(number)
+
+      // Convert the number to a string and format it with commas
+      return roundedNumber.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    },
+    onImageError(event) {
+      event.target.src = this.logoPlaceholder
+    },
+    async getReportClips() {
       this.loading = true
       this.scrollToChatTop()
       try {
-        const res = await Comms.api.getTrafficData({
+        const res = await Comms.api.getReportClips({
           urls: this.urls,
-          // name: this.brand,
         })
-        console.log(res)
+        this.clips = res
+        this.getReportSummary()
+      } catch (e) {
+        console.error(e)
+        this.loadingText = 'Analyzing articles...'
         this.loading = false
-        this.creating = false
+      }
+    },
+    async getReportSummary() {
+      this.loadingText = 'Generating report...'
+      try {
+        const res = await Comms.api.getReportSummary({
+          clips: this.clips,
+          brand: this.brand,
+        })
+        this.summary = res.summary
+          .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+          .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+        this.getTrafficData()
       } catch (e) {
         console.error(e)
         this.loading = false
-      } finally {
+        this.loadingText = 'Analyzing articles...'
       }
+    },
+    async getTrafficData() {
+      this.loadingText = 'Getting stats...'
+      try {
+        const res = await Comms.api.getTrafficData({
+          urls: this.urls,
+        })
+        this.traffic = res
+        this.combineArticlesWithTraffic()
+        this.loading = false
+        this.creating = false
+        this.loadingText = 'Analyzing articles...'
+      } catch (e) {
+        console.error(e)
+        this.loadingText = 'Analyzing articles...'
+        this.loading = false
+      }
+    },
+    combineArticlesWithTraffic() {
+      this.clips = this.clips.map((article) => {
+        const domain = article.source.replace(/^https?:\/\//, '').replace(/^www\./, '')
+        const traffic = this.traffic[domain] || null
+        return {
+          ...article,
+          traffic,
+        }
+      })
+      this.totalVisits = this.calculateTotalVisits()
+      this.starredArticles.push(this.clips[0])
+      console.log('NEW CLIPS ARE HERE ==== >', this.clips)
+    },
+    calculateTotalVisits() {
+      let totalVisits = 0
+      for (let key in this.traffic) {
+        if (this.traffic[key].visits) {
+          totalVisits += parseInt(this.traffic[key].visits)
+        }
+      }
+      return totalVisits
     },
     async runReport() {
       this.loading = true
@@ -592,10 +665,8 @@ www.forbes.com/article-3
       const result = this.processUrls(this.reportUrls)
       this.urls = result.urls
       this.urlCount = result.count
-      console.log(this.urls, this.urlCount)
     },
     processUrls(inputText) {
-      // Split the input by commas and new lines, trim spaces around each split part
       const lines = inputText
         .split(/[\n,]+/)
         .map((line) => line.trim())
@@ -603,7 +674,6 @@ www.forbes.com/article-3
       const urls = []
       let count = 0
 
-      // A set of valid TLDs (Top-Level Domains)
       const validTLDs = new Set([
         'com',
         'org',
@@ -632,10 +702,8 @@ www.forbes.com/article-3
         'ai',
         'us',
         'uk',
-        // Add more TLDs as needed
       ])
 
-      // Function to compute Levenshtein distance
       function levenshteinDistance(a, b) {
         const matrix = []
         let i
@@ -652,9 +720,9 @@ www.forbes.com/article-3
               matrix[i][j] = matrix[i - 1][j - 1]
             } else {
               matrix[i][j] = Math.min(
-                matrix[i - 1][j - 1] + 1, // substitution
-                matrix[i][j - 1] + 1, // insertion
-                matrix[i - 1][j] + 1, // deletion
+                matrix[i - 1][j - 1] + 1,
+                matrix[i][j - 1] + 1,
+                matrix[i - 1][j] + 1,
               )
             }
           }
@@ -662,7 +730,6 @@ www.forbes.com/article-3
         return matrix[b.length][a.length]
       }
 
-      // Function to find the closest valid TLD
       function findClosestTLD(tld) {
         let minDistance = Infinity
         let closestTLD = null
@@ -673,24 +740,19 @@ www.forbes.com/article-3
             closestTLD = validTLD
           }
         }
-        // Only correct if the distance is 1 (e.g., '.con' -> '.com')
         return minDistance === 1 ? closestTLD : null
       }
 
-      // Process each line or part
       for (let line of lines) {
         line = line.trim()
-        if (line === '') continue // Skip empty entries
+        if (line === '') continue
 
-        // Extract the TLD from the URL
         const tldMatch = line.match(/\.([a-zA-Z]{2,})$/)
         if (tldMatch) {
           const tld = tldMatch[1].toLowerCase()
           if (!validTLDs.has(tld)) {
-            // Attempt to correct the TLD
             const correctedTLD = findClosestTLD(tld)
             if (correctedTLD) {
-              // Replace the incorrect TLD with the corrected one
               line = line.slice(0, -tld.length) + correctedTLD
             }
           }
@@ -699,7 +761,6 @@ www.forbes.com/article-3
         count++
       }
 
-      // Return the list of URLs and the count
       return { urls, count }
     },
 
@@ -811,6 +872,18 @@ www.forbes.com/article-3
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+.fadein {
+  transition: opacity 1s ease-out;
+  opacity: 0;
+  animation: fadeIn 1s forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
 .bottom-border {
   border-bottom: 2px solid rgba(0, 0, 0, 0.05);
   padding-bottom: 12px;
@@ -822,7 +895,7 @@ www.forbes.com/article-3
   align-items: center;
   background-color: $soft-gray;
   border-radius: 16px;
-  padding: 2px 10px;
+  padding: 3px 10px;
   margin-right: 8px;
 
   img {
@@ -830,6 +903,7 @@ www.forbes.com/article-3
   }
   p {
     margin: 0 !important;
+    font-size: 14px;
   }
 }
 
@@ -839,6 +913,7 @@ www.forbes.com/article-3
 
 .article-body {
   margin-bottom: 12px;
+  margin-right: 32px;
   width: 100%;
   max-height: 150px;
   overflow: hidden;
@@ -929,6 +1004,43 @@ www.forbes.com/article-3
   white-space: pre-wrap;
 }
 
+::v-deep .pre-text {
+  a {
+    color: $grape;
+    border-bottom: 1px solid $grape;
+    font-family: $base-font-family;
+    text-decoration: none;
+    padding-bottom: 2px;
+
+    &:hover {
+      opacity: 0.7;
+    }
+  }
+
+  strong,
+  h1,
+  h2,
+  h3 {
+    font-family: $base-font-family;
+  }
+
+  ul {
+    display: block;
+    list-style-type: disc;
+    margin-block-start: 0;
+    margin-block-end: 0;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding-inline-start: 16px;
+    unicode-bidi: isolate;
+  }
+
+  li {
+    // margin-top: -32px;
+    padding: 0;
+  }
+}
+
 .photo-header-alt {
   height: 150px;
   width: 150px;
@@ -954,7 +1066,7 @@ www.forbes.com/article-3
 }
 
 .photo-header-small {
-  height: 150px;
+  height: 250px;
   width: 100%;
   margin: 0;
   object-fit: cover;

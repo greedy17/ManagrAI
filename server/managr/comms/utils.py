@@ -1048,12 +1048,15 @@ def get_article_data(urls):
         article_res = Article(url, config=generate_config())
         article_res.download()
         article_res.parse()
+        print('ARTICLES ARE HERE ----- >',article_res)
         article_data = {
             "url": url,
             "title": article_res.title,
             "author": article_res.authors,
             "description": article_res.meta_description,
             "source": article_res.source_url,
+            "image": article_res.top_image,
+            "date": article_res.publish_date
         }
         data.append(article_data)
     return data
