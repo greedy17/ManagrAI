@@ -7,6 +7,7 @@ import tempfile
 import requests
 import pytz
 import io
+import base64
 from datetime import datetime, timezone, timedelta
 from newspaper import Article, ArticleException
 from functools import reduce
@@ -1048,7 +1049,6 @@ def get_article_data(urls):
         article_res = Article(url, config=generate_config())
         article_res.download()
         article_res.parse()
-        print('ARTICLES ARE HERE ----- >',article_res)
         article_data = {
             "url": url,
             "title": article_res.title,
@@ -1060,3 +1060,37 @@ def get_article_data(urls):
         }
         data.append(article_data)
     return data
+
+
+def get_social_data(urls):
+    auth_string = f"{comms_consts.DATAFORSEO_USERNAME}:{comms_consts.DATAFORSEO_PASSWORD}"
+    encoded_auth = base64.b64encode(auth_string.encode("ascii")).decode("utf-8")
+    headers = {"Authorization": f"Basic {encoded_auth}", "Content-Type": "application/json"}
+    social_data = {}
+    for i in range(0, len(urls), 10):
+        batch = urls[i : i + 10]
+        data = [{"targets": batch}]
+        with Variable_Client(30) as client:
+            facebook_res = client.post(comms_consts.DATAFORSEO_FACEBOOK, json=data, headers=headers)
+            reddit_res = client.post(comms_consts.DATAFORSEO_REDDIT, json=data, headers=headers)
+            reddit_res = reddit_res.json()
+            facebook_res = facebook_res.json()
+            reddit_res = reddit_res["tasks"][0]["result"] if reddit_res["tasks_errors"] == 0 else []
+            facebook_res = (
+                facebook_res["tasks"][0]["result"] if facebook_res["task_errors"] == 0 else []
+            )
+        for res_data in reddit_res:
+            url = res_data["page_url"]
+            if url in social_data.keys():
+                social_data[url]["reddit_likes"] = len(res_data["reddit_reviews"])
+            else:
+                if res_data["reddit_reviews"]:
+                    social_data[url] = {"reddit_likes": len(res_data["reddit_reviews"])}
+        for res_data in facebook_res:
+            url = res_data["page_url"]
+            if url in social_data.keys():
+                social_data[url]["facebook_likes"] = res_data["like_count"]
+            else:
+                if res_data["like_count"]:
+                    social_data[url] = {"facebook_likes": res_data["like_count"]}
+    return social_data

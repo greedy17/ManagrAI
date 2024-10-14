@@ -92,6 +92,7 @@ from managr.comms.utils import (
     merge_sort_dates,
     get_url_traffic_data,
     get_article_data,
+    get_social_data,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
@@ -3339,6 +3340,15 @@ def get_traffic_data(request):
 def get_article_url_data(request):
     urls = request.data.get("urls")
     clip_data = get_article_data(urls)
+    return Response(status=status.HTTP_200_OK, data=clip_data)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def get_social_url_data(request):
+    urls = request.data.get("urls")
+    clip_data = get_social_data(urls)
     return Response(status=status.HTTP_200_OK, data=clip_data)
 
 

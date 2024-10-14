@@ -542,6 +542,11 @@ urlpatterns = [
         comms_views.get_clip_report_summary,
         name="report-summary",
     ),
+    path(
+        "social-data/",
+        comms_views.get_social_url_data,
+        name="social-data",
+    ),
 ]
 router.register("users/reports", core_views.ReportViewSet, "reports"),
 router.register("users/conversations", core_views.ConversationViewSet, "conversations"),

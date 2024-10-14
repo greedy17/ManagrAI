@@ -480,6 +480,7 @@ export default {
   },
   data() {
     return {
+      socialData: null,
       totalVisits: 0,
       starredArticles: [],
       logoPlaceholder: require('@/assets/images/iconlogo.png'),
@@ -591,7 +592,7 @@ www.forbes.com/article-3
       }
     },
     async getReportSummary() {
-      this.loadingText = 'Generating report...'
+      this.loadingText = 'Summarizing data...'
       try {
         const res = await Comms.api.getReportSummary({
           clips: this.clips,
@@ -608,12 +609,27 @@ www.forbes.com/article-3
       }
     },
     async getTrafficData() {
-      this.loadingText = 'Getting stats...'
+      this.loadingText = 'Gathering traffic...'
       try {
         const res = await Comms.api.getTrafficData({
           urls: this.urls,
         })
         this.traffic = res
+        this.getSocialData()
+      } catch (e) {
+        console.error(e)
+        this.loadingText = 'Analyzing articles...'
+        this.loading = false
+      }
+    },
+    async getSocialData() {
+      this.loadingText = 'Generating report...'
+      try {
+        const res = await Comms.api.getSocialData({
+          urls: this.urls,
+        })
+        console.log(res)
+        this.socialData = res
         this.combineArticlesWithTraffic()
         this.loading = false
         this.creating = false
