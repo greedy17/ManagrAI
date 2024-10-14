@@ -61,6 +61,12 @@ GOOGLE_SEARCH_ID = settings.GOOGLE_SEARCH_ID
 SCRAPER_API_KEY = settings.SCRAPER_API_KEY
 SEMRUSH_TRAFFIC_URI = "https://api.semrush.com/analytics/ta/api/v3/summary"
 
+DATAFORSEO_USERNAME = settings.DATAFORSEO_USERNAME
+DATAFORSEO_PASSWORD = settings.DATAFORSEO_PASSWORD
+
+DATAFORSEO_FACEBOOK = "https://api.dataforseo.com/v3/business_data/social_media/facebook/live"
+DATAFORSEO_REDDIT = "https://api.dataforseo.com/v3/business_data/social_media/reddit/live"
+
 
 def SEMRUSH_PARAMS(urls):
     return {"key": settings.SEMRUSH_API_KEY, "targets": ",".join(urls)}
