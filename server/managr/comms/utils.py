@@ -707,7 +707,7 @@ def check_journalist_validity(journalist, outlet, email):
         if len(email_check):
             db_check = email_check
         else:
-            name_check = Journalist.objects.filter(first_name=first, last_name=last)
+            name_check = Journalist.objects.filter(first_name__iexact=first, last_name__iexact=last)
             if len(name_check):
                 db_check = name_check
         if len(db_check):

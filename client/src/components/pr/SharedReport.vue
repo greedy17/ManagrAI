@@ -8,93 +8,89 @@
           </h1>
         </div>
 
-        <div style="margin-right: 16px" class="mar-top managr">
-          <small> Created by: </small>
-          <p>
-            <span
-              ><img
-                class="blue-filter"
-                style="margin-bottom: -2px"
-                src="@/assets/images/smallLogo.png"
-                height="20px"
-                alt="" /></span
-            >managr
-          </p>
-        </div>
+        <!-- <div class="managr">
+          <img
+            class="bg-blend"
+            style="margin-bottom: -2px"
+            src="@/assets/images/newLogo.png"
+            height="40px"
+            alt=""
+          />
+        </div> -->
       </div>
 
       <img class="pdf-slide-image" :src="report.main_image" alt="" />
     </div>
 
-    <div class="divider off-bg no-border">
-      <h1 class="divider-text off-bg no-border center-media bold-txt">Summary</h1>
+    <div class="divider-text">
+      <h1 class="center-media bold-txt">Summary</h1>
     </div>
 
-    <div class="main off-bg">
-      <div>
+    <div style="padding-bottom: 0" class="main">
+      <div class="container">
         <pre class="pre-text" v-html="report.meta_data.summary"></pre>
       </div>
     </div>
 
-    <div class="divider">
-      <p class="divider-text center-media">Stats</p>
+    <div class="divider-text">
+      <h1 class="center-media bold-txt">Traffic</h1>
     </div>
 
-    <div class="main main-mobile white-bg">
-      <div class="container fadein">
+    <div style="width: 100vw" class="main">
+      <div class="container">
         <div class="space-between bottom-margin">
           <div class="col">
-            <p class="bold-font medium-txt">Total coverage</p>
+            <p class="bold-txt medium-txt">Total coverage</p>
             <small>Number of news clips in this report</small>
           </div>
 
-          <p class="bold-font">{{ report.meta_data.urlCount }}</p>
+          <p class="bold-txt">{{ report.meta_data.urlCount }}</p>
         </div>
 
         <div class="space-between bottom-margin">
           <div class="col">
-            <p class="bold-font medium-txt">Unique visitors</p>
+            <p class="bold-txt medium-txt">Unique visitors</p>
             <small>The potential audience reached by your media coverage</small>
           </div>
 
           <div class="row">
             <img style="margin-right: 8px" src="@/assets/images/users.svg" height="16px" alt="" />
-            <p class="bold-font">{{ formatNumber(report.meta_data.totalVisits) }}</p>
+            <p class="bold-txt">{{ formatNumber(report.meta_data.totalVisits) }}</p>
           </div>
         </div>
 
         <div class="space-between">
           <div class="col">
-            <p class="bold-font medium-txt">Total shares</p>
+            <p class="bold-txt medium-txt">Total shares</p>
             <small>Number of times content was shared on social media</small>
           </div>
 
           <section class="row img-mar">
-            <div style="margin-right: 12px" class="row">
+            <div style="margin-right: 20px" class="row">
               <img src="@/assets/images/facebook.png" height="20px" alt="" />
-              <p class="bold-font">{{ report.meta_data.socialTotals.totalFacebookLikes }}</p>
+              <p class="bold-txt">{{ report.meta_data.socialTotals.totalFacebookLikes }}</p>
             </div>
-            <!-- <div class="row">
-                    <img src="@/assets/images/twitter-x.svg" height="16px" alt="" />
-                    <p class="bold-font">1,000</p>
-                  </div> -->
-            <div class="row">
+            <div style="margin-right: 20px" class="row">
+              <img src="@/assets/images/twitter-x.svg" height="16px" alt="" />
+              <p class="bold-txt">{{ report.meta_data.socialTotals.totalTwitterLikes }}</p>
+            </div>
+            <div style="margin-right: 20px" class="row">
               <img src="@/assets/images/reddit.svg" height="20px" alt="" />
-              <p class="bold-font">{{ report.meta_data.socialTotals.totalRedditLikes }}</p>
+              <p class="bold-txt">{{ report.meta_data.socialTotals.totalRedditLikes }}</p>
             </div>
-            <!-- <div class="row">
-                    <img src="@/assets/images/pinterest.png" height="20px" alt="" />
-                    <p class="bold-font">100</p>
-                  </div> -->
+            <div class="row">
+              <img src="@/assets/images/pinterest.png" height="20px" alt="" />
+              <p class="bold-txt">{{ report.meta_data.socialTotals.totalPinterestLikes }}</p>
+            </div>
           </section>
         </div>
       </div>
 
-      <div class="container">
+      <div style="margin-top: 24px" class="container">
         <div class="col bottom-margin">
-          <p class="bold-font medium-txt">Media exposure over time</p>
+          <p class="bold-txt medium-txt">Media exposure over time</p>
           <small
-            >Number of media clips <span class="bold-font">per week</span> along with the potential
+            >Number of media clips <span class="bold-txt">per week</span> along with the potential
             reach</small
           >
         </div>
@@ -104,29 +100,15 @@
           :dates="report.meta_data.chartData.dateList"
         />
       </div>
-
-      <!-- <div>
-
-      </div>
-
-      <ReportLineChart
-        :volume="report.meta_data.chartData.clipCountList"
-        :reach="report.meta_data.chartData.usersList"
-        :dates="report.meta_data.chartData.dateList"
-      /> -->
     </div>
 
-    <div class="divider">
-      <p class="divider-text center-media">Highlighted Coverage</p>
+    <div class="divider-text">
+      <h1 class="center-media bold-txt">Highlighted Coverage</h1>
     </div>
 
-    <div class="main main-mobile white-bg">
+    <div style="width: 100vw" class="main">
       <section>
-        <div
-          v-for="(article, i) in report.meta_data.starredArticles"
-          :key="i"
-          class="container fadein"
-        >
+        <div v-for="(article, i) in report.meta_data.starredArticles" :key="i" class="container">
           <div style="position: relative" class="container__top">
             <div style="margin-bottom: 12px">
               <img @error="onImageError($event)" :src="article.image" class="photo-header-small" />
@@ -134,7 +116,7 @@
 
             <div class="space-between no-letter-margin">
               <div class="col">
-                <p class="bold-font">{{ article.source }}</p>
+                <p class="bold-txt">{{ article.source }}</p>
                 <div style="margin-top: 8px" class="row">
                   <img
                     style="margin-right: 4px"
@@ -149,7 +131,7 @@
             </div>
 
             <div>
-              <h3 style="margin: 20px 0" class="bold-font elipsis-text">
+              <h3 style="margin: 20px 0" class="bold-txt elipsis-text">
                 {{ article.description }}
               </h3>
             </div>
@@ -157,18 +139,19 @@
             <div class="space-between bottom-margin-m">
               <div class="row img-mar">
                 <img src="@/assets/images/users.svg" height="14px" alt="" />
-                <p class="bold-font">{{ formatNumber(article.traffic.users) }}</p>
+                <p class="bold-txt">{{ formatNumber(article.traffic.users) }}</p>
               </div>
 
               <section class="row img-mar">
                 <div style="margin-right: 12px" class="row">
                   <img src="@/assets/images/facebook.png" height="14px" alt="" />
-                  <p class="bold-font">
+                  <p class="bold-txt">
                     {{
                       formatNumber(
-                        socialData[article.url]
-                          ? socialData[article.url]['facebook_likes']
-                            ? socialData[article.url]['facebook_likes']
+                        report.meta_data.socialData[article.url] &&
+                          report.meta_data.socialData[article.url][0]
+                          ? report.meta_data.socialData[article.url][0]['total_facebook_shares']
+                            ? report.meta_data.socialData[article.url][0]['total_facebook_shares']
                             : 0
                           : 0,
                       )
@@ -177,12 +160,15 @@
                 </div>
                 <div class="row">
                   <img src="@/assets/images/reddit.svg" height="14px" alt="" />
-                  <p class="bold-font">
+                  <p class="bold-txt">
                     {{
                       formatNumber(
-                        socialData[article.url]
-                          ? socialData[article.url]['reddit_likes']
-                            ? socialData[article.url]['reddit_likes']
+                        report.meta_data.socialData[article.url] &&
+                          report.meta_data.socialData[article.url][0]
+                          ? report.meta_data.socialData[article.url][0]['total_reddit_engagements']
+                            ? report.meta_data.socialData[article.url][0][
+                                'total_reddit_engagements'
+                              ]
                             : 0
                           : 0,
                       )
@@ -192,11 +178,11 @@
 
                 <!-- <div class="row">
                       <img src="@/assets/images/twitter-x.svg" height="12px" alt="" />
-                      <p class="bold-font">1,000</p>
+                      <p class="bold-txt">1,000</p>
                     </div>
                     <div class="row">
                       <img src="@/assets/images/reddit.svg" height="14px" alt="" />
-                      <p class="bold-font">10,000</p>
+                      <p class="bold-txt">10,000</p>
                     </div> -->
               </section>
             </div>
@@ -232,100 +218,165 @@
       </section>
     </div>
 
-    <div class="divider">
-      <p class="divider-text center-media">Total Coverage</p>
+    <div class="divider-text">
+      <h1 class="center-media bold-txt">Total Coverage</h1>
     </div>
 
-    <div class="main main-mobile white-bg">
-      <!-- <section v-if="categoryClips">
-        <div v-for="(category, catName) in categoryClips" :key="catName">
-          <h2 class="category-name">{{ catName }}</h2>
-          <div v-for="(clip, i) in category" :key="i" class="news-card">
-            <header>
-           
-              <div class="card-col">
-                <div class="card-top-left">
-                  <span>{{
-                    clip.source ? (clip.source.name ? clip.source.name : clip.source) : 'Tweet'
-                  }}</span>
-                </div>
-                <div class="article-title-container">
-                  <img
-                    v-if="clip.user"
-                    class="user-profile-img"
-                    :src="clip.user.profile_image_url"
-                  />
-                  <h1 class="article-title" @click="goToArticle(clip.link)">
-                    {{ clip.title ? clip.title : clip.user.name }}
-                  </h1>
-                </div>
-                <p class="article-preview">
-                  {{ clip.description ? clip.description : clip.text }}
-                </p>
-                <div
-                  v-if="clip.attachments && clip.attachments.mediaURLs"
-                  class="tweet-attachement display-flex"
-                >
-                  <div
-                    style="margin-bottom: 16px"
-                    v-for="mediaURL in clip.attachments.mediaURLs"
-                    :key="mediaURL.url"
-                    class="mar-right"
-                  >
-                    <div v-if="mediaURL.type === 'video'">
-                      <video style="margin-top: 1rem" width="400" controls>
-                        <source :src="mediaURL.url" type="video/mp4" />
-                      </video>
-                    </div>
-                    <div v-else-if="mediaURL.type === 'animated_gif'">
-                      <video style="margin-top: 1rem" width="400" autoplay loop muted playsinline>
-                        <source :src="mediaURL.url" type="video/mp4" />
-                      </video>
-                    </div>
-                    <div v-else>
-                      <img :src="mediaURL.url" class="cover-photo-no-l-margin" alt="" />
-                    </div>
-                  </div>
-                </div>
-              </div>
+    <div style="width: 100vw" class="main">
+      <section class="container">
+        <div v-for="(article, i) in report.meta_data.clips" :key="i" class="article">
+          <div class="space-between">
+            <p class="bold-txt">{{ article.source }}</p>
+          </div>
 
-              <div v-if="!clip.edit_history_tweet_ids" @click="goToArticle(clip.link)">
-                <img :src="clip.image_url" class="cover-photo" />
-              </div>
-            </header>
+          <div class="space-between-bottom">
+            <div class="article-body">
+              <h3 class="bold-txt">
+                {{ article.title }}
+              </h3>
 
-            <div class="card-footer">
-              <div class="author-time">
-                <span class="author"
-                  >@{{
-                    clip.author
-                      ? clip.author
-                      : clip.user && clip.user.username
-                      ? clip.user.username
-                      : ''
-                  }}</span
-                >
-                <span class="divier-dot">.</span>
-                <small v-if="clip.user && clip.user.public_metrics" class="bold-text"
-                  >{{ formatNumber(clip.user.public_metrics.followers_count) }}
-                  <span>Followers</span>
-                </small>
-                <span class="divier-dot">.</span>
-                <span class="off-gray">{{
-                  getTimeDifferenceInMinutes(
-                    clip.publish_date ? clip.publish_date : clip.created_at,
-                  )
-                }}</span>
-              </div>
+              <p class="report-body">
+                {{ article.description }}
+              </p>
             </div>
-            <div v-if="clip.summary">
-              <pre v-html="clip.summary" class="pre-text blue-bg"></pre>
+
+            <img @error="onImageError($event)" :src="article.image" class="photo-header-alt" />
+          </div>
+
+          <div style="margin-top: 12px" class="space-between bottom-border">
+            <div class="row report-body">
+              <div class="pill">
+                <img src="@/assets/images/profile.svg" height="12px" alt="" />
+                <p style="margin-right: 6px">
+                  {{ article.author && article.author[0] ? article.author[0] : 'Unkown' }}
+                </p>
+              </div>
+
+              <small>{{ getTimeDifferenceInMinutes(article.date) }}</small>
+            </div>
+
+            <div class="row small-text">
+              <div style="margin-right: 16px" class="row img-mar">
+                <img
+                  style="margin-right: 4px"
+                  src="@/assets/images/users.svg"
+                  height="14px"
+                  alt=""
+                />
+                <p class="bold-txt">
+                  {{ formatNumber(article.traffic.users) }}
+                </p>
+              </div>
+
+              <div style="margin-right: 16px" class="row">
+                <img
+                  style="margin-right: 4px"
+                  src="@/assets/images/facebook.png"
+                  height="14px"
+                  alt=""
+                />
+                <p class="bold-txt">
+                  {{
+                    formatNumber(
+                      report.meta_data.socialData[article.url] &&
+                        report.meta_data.socialData[article.url][0]
+                        ? report.meta_data.socialData[article.url][0]['total_facebook_shares']
+                          ? report.meta_data.socialData[article.url][0]['total_facebook_shares']
+                          : 0
+                        : 0,
+                    )
+                  }}
+                </p>
+              </div>
+              <div style="margin-right: 16px" class="row">
+                <img
+                  style="margin-right: 4px"
+                  src="@/assets/images/twitter-x.svg"
+                  height="14px"
+                  alt=""
+                />
+                <p class="bold-txt">
+                  {{
+                    formatNumber(
+                      report.meta_data.socialData[article.url] &&
+                        report.meta_data.socialData[article.url][0]
+                        ? report.meta_data.socialData[article.url][0]['twitter_shares']
+                          ? report.meta_data.socialData[article.url][0]['twitter_shares']
+                          : 0
+                        : 0,
+                    )
+                  }}
+                </p>
+              </div>
+              <div style="margin-right: 16px" class="row">
+                <img
+                  style="margin-right: 4px"
+                  src="@/assets/images/reddit.svg"
+                  height="14px"
+                  alt=""
+                />
+                <p class="bold-txt">
+                  {{
+                    formatNumber(
+                      report.meta_data.socialData[article.url] &&
+                        report.meta_data.socialData[article.url][0]
+                        ? report.meta_data.socialData[article.url][0]['total_reddit_engagements']
+                          ? report.meta_data.socialData[article.url][0]['total_reddit_engagements']
+                          : 0
+                        : 0,
+                    )
+                  }}
+                </p>
+              </div>
+
+              <div class="row">
+                <img
+                  style="margin-right: 4px"
+                  src="@/assets/images/pinterest.png"
+                  height="14px"
+                  alt=""
+                />
+                <p class="bold-txt">
+                  {{
+                    formatNumber(
+                      report.meta_data.socialData[article.url] &&
+                        report.meta_data.socialData[article.url][0]
+                        ? report.meta_data.socialData[article.url][0]['pinterest_shares']
+                          ? report.meta_data.socialData[article.url][0]['pinterest_shares']
+                          : 0
+                        : 0,
+                    )
+                  }}
+                </p>
+              </div>
             </div>
           </div>
+
+          <!-- <div style="margin-top: 8px" class="space-between bottom-border">
+                  <div></div>
+                  <section class="row-even small-text img-mar">
+                    <div class="row">
+                      <img src="@/assets/images/facebook.png" height="14px" alt="" />
+                      <p class="bold-txt">{{ formatNumber(article.traffic.social / 2) }}</p>
+                    </div>
+                     <div class="row">
+                      <img src="@/assets/images/pinterest.png" height="14px" alt="" />
+                      <p class="bold-txt">{{ formatNumber(article.traffic.social / 8) }}</p>
+                    </div>
+                    <div class="row">
+                      <img src="@/assets/images/twitter-x.svg" height="12px" alt="" />
+                      <p class="bold-txt">{{ formatNumber(article.traffic.social / 2) }}</p>
+                    </div>
+                    <div class="row">
+                      <img src="@/assets/images/reddit.svg" height="14px" alt="" />
+                      <p class="bold-txt">{{ formatNumber(article.traffic.social / 4) }}</p>
+                    </div>
+                   
+                  </section>
+                </div> -->
         </div>
-      </section> -->
-      <section>
-        <div v-for="(clip, i) in report.meta_data.clips" :key="i" class="news-card">
+
+        <!-- <div v-for="(clip, i) in report.meta_data.clips" :key="i" class="news-card">
           <header>
             <div class="card-col">
               <div class="card-top-left">
@@ -367,12 +418,13 @@
             <div class="row">
               <div style="margin-right: 12px" class="row">
                 <img src="@/assets/images/facebook.png" height="14px" alt="" />
-                <p class="bold-font">
+                <p class="bold-txt">
                   {{
                     formatNumber(
-                      report.meta_data.socialData[article.url]
-                        ? report.meta_data.socialData[article.url]['facebook_likes']
-                          ? report.meta_data.socialData[article.url]['facebook_likes']
+                      report.meta_data.socialData[clip.url] &&
+                        report.meta_data.socialData[clip.url][0]
+                        ? report.meta_data.socialData[clip.url][0]['total_facebook_shares']
+                          ? report.meta_data.socialData[clip.url][0]['total_facebook_shares']
                           : 0
                         : 0,
                     )
@@ -381,12 +433,13 @@
               </div>
               <div class="row">
                 <img src="@/assets/images/reddit.svg" height="14px" alt="" />
-                <p class="bold-font">
+                <p class="bold-txt">
                   {{
                     formatNumber(
-                      report.meta_data.socialData[article.url]
-                        ? report.meta_data.socialData[article.url]['reddit_likes']
-                          ? report.meta_data.socialData[article.url]['reddit_likes']
+                      report.meta_data.socialData[clip.url] &&
+                        report.meta_data.socialData[clip.url][0]
+                        ? report.meta_data.socialData[clip.url][0]['total_reddit_engagements']
+                          ? report.meta_data.socialData[clip.url][0]['total_reddit_engagements']
                           : 0
                         : 0,
                     )
@@ -395,10 +448,8 @@
               </div>
             </div>
           </div>
-          <!-- <div v-if="clip.summary">
-            <pre v-html="clip.summary" class="pre-text blue-bg"></pre>
-          </div> -->
-        </div>
+      
+        </div> -->
       </section>
     </div>
 
@@ -421,6 +472,7 @@ export default {
       code: null,
       imageUrl: null,
       reportDate: null,
+      logoPlaceholder: require('@/assets/images/iconlogo.png'),
     }
   },
   components: {
@@ -444,6 +496,9 @@ export default {
     }
   },
   methods: {
+    onImageError(event) {
+      event.target.src = this.logoPlaceholder
+    },
     formatDate(dateString) {
       // Create a new Date object in UTC
       const date = new Date(dateString)
@@ -560,6 +615,89 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+.pill {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: $soft-gray;
+  border-radius: 16px;
+  padding: 3px 10px;
+  margin-right: 8px;
+
+  img {
+    margin-right: 4px;
+  }
+  p {
+    margin: 0 !important;
+    font-size: 14px;
+  }
+}
+
+.space-between-bottom {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+}
+
+.photo-header-small {
+  height: 400px;
+  width: 100%;
+  margin: 0;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.container {
+  background-color: white;
+  padding: 20px;
+  border-radius: 9px;
+  // border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  margin-bottom: 32px;
+  font-family: $thin-font-family;
+  p {
+    margin: 8px 0;
+  }
+
+  small {
+    color: $base-gray;
+  }
+
+  &__top {
+    border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+  }
+}
+
+.bottom-border {
+  border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+  padding-bottom: 12px;
+}
+
+.img-mar {
+  img {
+    margin-right: 8px;
+  }
+}
+
+.bottom-margin {
+  margin-bottom: 24px;
+}
+
+.bg-blend {
+  mix-blend-mode: multiply;
+  background-color: $off-white;
+}
+
+.photo-header-alt {
+  height: 150px !important;
+  width: 150px !important;
+  margin: 0;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
 .bold-txt {
   font-family: $base-font-family;
 }
@@ -574,6 +712,7 @@ export default {
   color: $base-gray;
   font-family: $thin-font-family;
   overflow-y: scroll;
+  font-size: 16px;
   @media only screen and (max-width: 600px) {
     height: 90vh;
   }
@@ -612,7 +751,7 @@ header {
 
 .pdf-slide-container {
   width: 100vw;
-  height: 70vh;
+  height: 100vh;
   position: relative;
 }
 
@@ -628,23 +767,22 @@ header {
   position: absolute;
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
-  align-items: flex-end;
+  justify-content: flex-start;
+  align-items: center;
   height: 100%;
   width: 100%;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.75), transparent);
 
-  p,
-  h1 {
-    margin: 0;
-    padding: 0 0 32px 16px;
-    font-weight: 400;
-    color: $off-white;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.75), transparent);
+
+  div {
+    padding-left: 16px;
     font-family: $thin-font-family;
   }
 
   h1 {
-    font-size: 24px;
+    color: $off-white;
+    font-size: 48px;
+
     span {
       font-family: $base-font-family;
     }
@@ -699,6 +837,14 @@ header {
     margin: 0;
   }
 
+  h4 {
+    font-size: 18px;
+  }
+
+  h3 {
+    font-size: 20px;
+  }
+
   ul {
     display: block;
     list-style-type: disc;
@@ -718,27 +864,26 @@ header {
 
 .divider {
   position: relative;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   width: 100%;
 }
 
 .divider-text {
-  position: absolute;
-  top: -36px;
-  left: 46%;
-  z-index: 20;
-  background-color: white;
-  padding: 6px 18px;
-  border-radius: 20px;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-  font-size: 22px;
+  padding: 10px 16px;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+  font-size: 24px;
+  margin-bottom: 24px;
+
+  h1 {
+    margin: 24px 0;
+  }
 }
 
 .center-media {
-  left: 45%;
-  @media only screen and (max-width: 600px) {
-    left: 32.5%;
-  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
 }
 
 .off-bg {
@@ -895,7 +1040,7 @@ header {
   height: 100%;
   width: 100%;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.15), transparent);
-  font-family: $thin-font-family;
+  font-family: $base-font-family;
   p,
   h2 {
     margin: 0;
@@ -923,25 +1068,35 @@ header {
   //   contrast(90%);
 }
 
-.managr {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  font-weight: 400;
+.article {
+  padding: 16px;
+}
 
-  p {
-    font-family: $thin-font-family !important;
-    opacity: 0.7;
-    font-size: 28px;
-    span {
-      margin-bottom: -2px;
-    }
+.article-body {
+  margin-bottom: 12px;
+  margin-right: 32px;
+  width: 100%;
+  max-height: 150px;
+  overflow: hidden;
+
+  h3 {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
-  small {
-    opacity: 0.7;
-    font-size: 12px;
-    color: white;
+
+  .report-body {
+    height: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
+}
+
+.managr {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  background: transparent;
 }
 .article-title-container {
   display: flex;

@@ -258,7 +258,7 @@
             <input
               style="margin-bottom: 0; padding-left: 26px"
               class="primary-input-underline"
-              v-model="currentContact.email"
+              v-model="emailTo"
               type="email"
             />
 
@@ -771,11 +771,12 @@
                   />
 
                   <div
-                    class="img-container-stay-small"
+                    class="img-container-stay-small-txt"
                     v-if="importTagName"
                     @click="modifyTagsImport"
                     style="margin-right: 12px; padding: 1px 6px 2px 6px"
                   >
+                    Save
                     <img
                       src="@/assets/images/arrow-right.svg"
                       class="pointer"
@@ -963,11 +964,12 @@
                 />
 
                 <div
-                  class="img-container-stay-small"
+                  class="img-container-stay-small-txt"
                   v-if="newTag"
                   @click="modifyTags('add')"
                   style="margin-right: 12px; padding: 1px 6px 2px 6px"
                 >
+                  Save
                   <img src="@/assets/images/arrow-right.svg" class="pointer" height="10px" alt="" />
                 </div>
 
@@ -2036,6 +2038,9 @@ export default {
   },
   data() {
     return {
+      // emailTo: this.currentContact.email
+      //   ? this.currentContact.email
+      //   : this.currentContact.journalist_ref.email,
       editloading: false,
       editingEmail: false,
       editingPub: false,
@@ -2204,6 +2209,20 @@ export default {
     }
   },
   computed: {
+    emailTo: {
+      get() {
+        return this.currentContact.email
+          ? this.currentContact.email
+          : this.currentContact.journalist_ref.email
+      },
+      set(value) {
+        if (this.currentContact.email) {
+          this.currentContact.email = value
+        } else {
+          this.currentContact.journalist_ref.email = value
+        }
+      },
+    },
     searchesUsed() {
       let arr = []
       let currentMonth = new Date(Date.now()).getMonth() + 1
@@ -3070,18 +3089,20 @@ export default {
       }
     },
     async sendEmail() {
+      console.log('EMAIL IS HERE --- > ', this.emailTo)
       this.sendingEmail = true
+
       try {
         const res = await Comms.api.sendEmail({
           subject: this.subject,
           body: this.revisedPitch,
-          recipient: this.currentContact.journalist_ref.email,
+          recipient: this.emailTo,
           name:
             this.currentContact.journalist_ref.first_name +
             ' ' +
             this.currentContact.journalist_ref.last_name,
-          cc: [this.ccEmail],
-          bcc: [this.bccEmail],
+          cc: this.ccEmail,
+          bcc: this.bccEmail,
         })
 
         this.emailJournalistModalOpen = false
@@ -5787,6 +5808,24 @@ textarea::placeholder {
   img {
     filter: invert(100%);
     margin: 0;
+    padding: 0;
+  }
+}
+
+.img-container-stay-small-txt {
+  cursor: pointer;
+  color: white;
+  padding: 4px 8px !important;
+  border-radius: 9px;
+  background-color: $dark-black-blue;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  font-size: 14px;
+
+  img {
+    filter: invert(100%);
+    margin: 0 0 0 8px;
     padding: 0;
   }
 }

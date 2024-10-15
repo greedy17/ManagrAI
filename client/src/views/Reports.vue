@@ -2,7 +2,7 @@
   <div class="reports">
     <div v-if="creating">
       <div class="chat-window">
-        <div class="chat-window__header">
+        <div @click="getReports" class="chat-window__header">
           <p>Coverage Report</p>
         </div>
 
@@ -199,6 +199,7 @@
           <div class="row">
             <button class="secondary-button">Share</button>
             <button
+              v-if="!reportLink"
               :disabled="reportLoading"
               :loading="reportLoading"
               @click="createReport"
@@ -214,6 +215,9 @@
                 alt=""
               />
             </button>
+
+            <button v-else @click="viewReport" class="primary-button">View Report</button>
+
             <!-- <img src="@/assets/images/disk.svg" height="14px" alt="" /> -->
           </div>
         </div>
@@ -364,7 +368,7 @@
                         <p class="bold-font">
                           {{
                             formatNumber(
-                              socialData[article.url][0]
+                              socialData[article.url] && socialData[article.url][0]
                                 ? socialData[article.url][0]['total_facebook_shares']
                                   ? socialData[article.url][0]['total_facebook_shares']
                                   : 0
@@ -384,7 +388,7 @@
                         <p class="bold-font">
                           {{
                             formatNumber(
-                              socialData[article.url]
+                              socialData[article.url] && socialData[article.url][0]
                                 ? socialData[article.url][0]['twitter_shares']
                                   ? socialData[article.url][0]['twitter_shares']
                                   : 0
@@ -399,7 +403,7 @@
                         <p class="bold-font">
                           {{
                             formatNumber(
-                              socialData[article.url][0]
+                              socialData[article.url] && socialData[article.url][0]
                                 ? socialData[article.url][0]['total_reddit_engagements']
                                   ? socialData[article.url][0]['total_reddit_engagements']
                                   : 0
@@ -419,7 +423,7 @@
                         <p class="bold-font">
                           {{
                             formatNumber(
-                              socialData[article.url]
+                              socialData[article.url] && socialData[article.url][0]
                                 ? socialData[article.url][0]['pinterest_shares']
                                   ? socialData[article.url][0]['pinterest_shares']
                                   : 0
@@ -518,7 +522,7 @@
                     <div class="pill">
                       <img src="@/assets/images/profile.svg" height="12px" alt="" />
                       <p style="margin-right: 6px">
-                        {{ article.author[0] ? article.author[0] : 'Unkown' }}
+                        {{ article.author && article.author[0] ? article.author[0] : 'Unkown' }}
                       </p>
                     </div>
 
@@ -548,7 +552,7 @@
                       <p class="bold-font">
                         {{
                           formatNumber(
-                            socialData[article.url][0]
+                            socialData[article.url] && socialData[article.url][0]
                               ? socialData[article.url][0]['total_facebook_shares']
                                 ? socialData[article.url][0]['total_facebook_shares']
                                 : 0
@@ -567,7 +571,7 @@
                       <p class="bold-font">
                         {{
                           formatNumber(
-                            socialData[article.url]
+                            socialData[article.url] && socialData[article.url][0]
                               ? socialData[article.url][0]['twitter_shares']
                                 ? socialData[article.url][0]['twitter_shares']
                                 : 0
@@ -586,7 +590,7 @@
                       <p class="bold-font">
                         {{
                           formatNumber(
-                            socialData[article.url]
+                            socialData[article.url] && socialData[article.url][0]
                               ? socialData[article.url][0]['total_reddit_engagements']
                                 ? socialData[article.url][0]['total_reddit_engagements']
                                 : 0
@@ -606,7 +610,7 @@
                       <p class="bold-font">
                         {{
                           formatNumber(
-                            socialData[article.url]
+                            socialData[article.url] && socialData[article.url][0]
                               ? socialData[article.url][0]['pinterest_shares']
                                 ? socialData[article.url][0]['pinterest_shares']
                                 : 0
@@ -686,6 +690,7 @@ export default {
   },
   data() {
     return {
+      reportLink: null,
       mainImage: null,
       reportLoading: false,
       summaryLoading: false,
@@ -734,6 +739,10 @@ www.forbes.com/article-3
     }
   },
   methods: {
+    clearData() {},
+    viewReport() {
+      window.open(this.reportLink, '_blank')
+    },
     async createReport() {
       this.reportLoading = true
       let formData = new FormData()
@@ -751,12 +760,20 @@ www.forbes.com/article-3
           socialTotals: this.socialTotals,
           totalVisits: this.totalVisits,
           urlCount: this.urlCount,
+          brand: this.brand,
         }),
       )
 
       try {
         await User.api.createReport(formData)
         this.getReports()
+        this.$toast('Report Saved!', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } catch (e) {
         console.log(e)
       } finally {
@@ -766,8 +783,7 @@ www.forbes.com/article-3
     async getReports() {
       try {
         await User.api.getReports({ user: this.$store.state.user.id }).then((response) => {
-          console.log('get reports response : ', response)
-          // this.reportLink = response.results[0]['share_url']
+          this.reportLink = response.results[0]['share_url']
         })
       } catch (e) {
         console.log(e)

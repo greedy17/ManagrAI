@@ -54,7 +54,7 @@ import User from '@/services/users'
 import NavBar from '@/components/NavBar'
 import { decryptData } from './encryption'
 
-const routesWithoutNavBar = ['StoryReportDetail', 'PerformanceReportDetail', 'Home']
+const routesWithoutNavBar = ['StoryReportDetail', 'PerformanceReportDetail', 'Home', 'SharedReport']
 
 export default {
   name: 'app',
