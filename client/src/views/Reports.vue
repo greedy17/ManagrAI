@@ -364,7 +364,7 @@
                         <p class="bold-font">
                           {{
                             formatNumber(
-                              socialData[article.url]
+                              socialData[article.url][0]
                                 ? socialData[article.url][0]['total_facebook_shares']
                                   ? socialData[article.url][0]['total_facebook_shares']
                                   : 0
@@ -548,7 +548,7 @@
                       <p class="bold-font">
                         {{
                           formatNumber(
-                            socialData[article.url]
+                            socialData[article.url][0]
                               ? socialData[article.url][0]['total_facebook_shares']
                                 ? socialData[article.url][0]['total_facebook_shares']
                                 : 0
