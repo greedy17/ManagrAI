@@ -1073,4 +1073,6 @@ def get_social_data(urls):
                 res = res.json()
                 results = res["results"]
                 social_data[url] = results
+            else:
+                social_data[url] = {}
     return social_data
