@@ -36,11 +36,11 @@ def create_ms_message(sender, sent_to, subject, template, name, context={}, cc=[
             "toRecipients": [{"emailAddress": {"address": sent_to}}],
         }
     }
-    if cc:
+    if len(cc):
         email_message["message"]["ccRecipients"] = [
             {"emailAddress": {"address": address}} for address in cc
         ]
-    if bcc:
+    if len(bcc):
         email_message["message"]["bccRecipients"] = [
             {"emailAddress": {"address": address}} for address in bcc
         ]
