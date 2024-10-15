@@ -63,10 +63,10 @@ export default {
           {
             label: 'Reach',
             data: this.reach,
-            borderColor: '#9596b4',
+            borderColor: '#c2c4ca',
             pointBackgroundColor: '#fff',
-            pointBorderColor: '#9596b4',
-            pointHoverBackgroundColor: '#9596b4',
+            pointBorderColor: '#c2c4ca',
+            pointHoverBackgroundColor: '#c2c4ca',
             pointHoverBorderColor: '#fff',
             pointRadius: 5,
             pointHoverRadius: 7,
