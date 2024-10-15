@@ -1077,19 +1077,19 @@ www.forbes.com/article-3
         if (this.socialData.hasOwnProperty(url)) {
           const data = this.socialData[url]
 
-          if (data[0].total_facebook_shares) {
+          if (data[0] && data[0].total_facebook_shares) {
             totalFacebookLikes += data[0].total_facebook_shares
           }
 
-          if (data[0].total_reddit_engagements) {
+          if (data[0] && data[0].total_reddit_engagements) {
             totalRedditLikes += data[0].total_reddit_engagements
           }
 
-          if (data[0].twitter_shares) {
+          if (data[0] && data[0].twitter_shares) {
             totalTwitterLikes += data[0].twitter_shares
           }
 
-          if (data[0].pinterest_shares) {
+          if (data[0] && data[0].pinterest_shares) {
             totalPinterestLikes += data[0].pinterest_shares
           }
         }
