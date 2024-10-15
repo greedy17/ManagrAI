@@ -116,7 +116,7 @@
 
             <div class="space-between no-letter-margin">
               <div class="col">
-                <p class="bold-txt">{{ article.source }}</p>
+                <p class="bold-txt">{{ removeDomain(article.traffic.target) }}</p>
                 <div style="margin-top: 8px" class="row">
                   <img
                     style="margin-right: 4px"
@@ -226,7 +226,7 @@
       <section class="container">
         <div v-for="(article, i) in report.meta_data.clips" :key="i" class="article">
           <div class="space-between">
-            <p class="bold-txt">{{ article.source }}</p>
+            <p class="bold-txt">{{ removeDomain(article.traffic.target) }}</p>
           </div>
 
           <div class="space-between-bottom">
@@ -496,6 +496,11 @@ export default {
     }
   },
   methods: {
+    removeDomain(url) {
+      const domainRegex = /\.(com|net|org|gov|edu|co|io|biz|info|us)$/i
+
+      return url.replace(domainRegex, '')
+    },
     onImageError(event) {
       event.target.src = this.logoPlaceholder
     },

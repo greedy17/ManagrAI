@@ -336,7 +336,7 @@
 
                   <div class="space-between no-letter-margin">
                     <div class="col">
-                      <p class="bold-font">{{ article.source }}</p>
+                      <p class="bold-font">{{ removeDomain(article.traffic.target) }}</p>
                       <div style="margin-top: 8px" class="row">
                         <img
                           style="margin-right: 4px"
@@ -478,7 +478,7 @@
             <div class="container fadein">
               <div v-for="(article, i) in clips" :key="i" class="article">
                 <div class="space-between">
-                  <p class="bold-font">{{ article.source }}</p>
+                  <p class="bold-font">{{ removeDomain(article.traffic.target) }}</p>
                   <img
                     v-if="!starredArticles.includes(article)"
                     @click="starArticle(article)"
@@ -739,6 +739,11 @@ www.forbes.com/article-3
     }
   },
   methods: {
+    removeDomain(url) {
+      const domainRegex = /\.(com|net|org|gov|edu|co|io|biz|info|us)$/i
+
+      return url.replace(domainRegex, '')
+    },
     clearData() {},
     viewReport() {
       window.open(this.reportLink, '_blank')
@@ -940,6 +945,7 @@ www.forbes.com/article-3
           urls: this.urls,
         })
         this.socialData = res
+        console.log(res)
         this.combineArticlesWithTraffic()
       } catch (e) {
         console.error(e)
