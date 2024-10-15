@@ -1040,7 +1040,7 @@ header {
   height: 100%;
   width: 100%;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.15), transparent);
-  font-family: $thin-font-family;
+  font-family: $base-font-family;
   p,
   h2 {
     margin: 0;
