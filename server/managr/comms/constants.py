@@ -766,6 +766,8 @@ def REPORT_SUMMARY(brand, clips):
     3. Key metrics, such as total reach, potential impressions, and engagement rates.
     4. A brief analysis of media sentiment and its impact on [brand.name]'s brand image.
     5. Highlight recurring themes or key messages across the media coverage.
+
+    Your response must be properly formatted html. Do not include any styling and/or <meta> tags. Do not include ```html in your response.
    
     Here are the news clips:
 

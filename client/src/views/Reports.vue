@@ -133,7 +133,9 @@
               </div>
 
               <div style="margin: 0 0 8px 8px">
-                <button @click="getReportClips" class="primary-button">Run report</button>
+                <button :disabled="loading" @click="getReportClips" class="primary-button">
+                  Run report
+                </button>
               </div>
             </div>
           </div>
@@ -196,14 +198,29 @@
           </p>
           <div class="row">
             <button class="secondary-button">Share</button>
-            <button class="primary-button">Save</button>
+            <button
+              :disabled="reportLoading"
+              :loading="reportLoading"
+              @click="createReport"
+              class="primary-button"
+            >
+              Save
+              <img
+                v-if="reportLoading"
+                style="margin-left: 6px"
+                class="rotation invert"
+                src="@/assets/images/loading.svg"
+                height="14px"
+                alt=""
+              />
+            </button>
             <!-- <img src="@/assets/images/disk.svg" height="14px" alt="" /> -->
           </div>
         </div>
 
         <div class="chat-window__body">
-          <div class="fadein" v-if="view === 'home'">
-            <div style="padding-top: 20px" class="container">
+          <div v-if="view === 'home'">
+            <div style="padding-top: 20px" class="container fadein">
               <div>
                 <img :src="uploadedImageUrl" class="photo-header" />
               </div>
@@ -213,7 +230,7 @@
           </div>
 
           <div class="fadein" v-else-if="view === 'charts'">
-            <div class="container">
+            <div class="container fadein">
               <div class="space-between bottom-margin">
                 <div class="col">
                   <p class="bold-font medium-txt">Total coverage</p>
@@ -246,129 +263,195 @@
                   <small>Number of times content was shared on social media</small>
                 </div>
 
-                <section class="rows">
-                  <div class="row">
+                <section class="row img-mar">
+                  <div style="margin-right: 12px" class="row">
                     <img src="@/assets/images/facebook.png" height="20px" alt="" />
-                    <p class="bold-font">10,000</p>
+                    <p class="bold-font">{{ socialTotals.totalFacebookLikes }}</p>
                   </div>
-                  <div class="row">
+                  <!-- <div class="row">
                     <img src="@/assets/images/twitter-x.svg" height="16px" alt="" />
                     <p class="bold-font">1,000</p>
-                  </div>
+                  </div> -->
                   <div class="row">
                     <img src="@/assets/images/reddit.svg" height="20px" alt="" />
-                    <p class="bold-font">10,000</p>
+                    <p class="bold-font">{{ socialTotals.totalRedditLikes }}</p>
                   </div>
-                  <div class="row">
+                  <!-- <div class="row">
                     <img src="@/assets/images/pinterest.png" height="20px" alt="" />
                     <p class="bold-font">100</p>
-                  </div>
+                  </div> -->
                 </section>
               </div>
             </div>
 
             <div class="container">
-              <div class="col">
+              <div class="col bottom-margin">
                 <p class="bold-font medium-txt">Media exposure over time</p>
                 <small
-                  >Number of media clips <span class="bold-font">per month</span> along with the
+                  >Number of media clips <span class="bold-font">per week</span> along with the
                   potential reach</small
                 >
               </div>
-              <ReportLineChart />
+              <ReportLineChart
+                :volume="clipChartData.clipCountList"
+                :reach="clipChartData.usersList"
+                :dates="clipChartData.dateList"
+              />
             </div>
           </div>
-          <div class="fadein" v-else-if="view === 'starred'">
-            <div v-for="(article, i) in starredArticles" :key="i" class="container">
-              <div class="container__top">
-                <div style="margin-bottom: 12px">
-                  <img
-                    @error="onImageError($event)"
-                    :src="article.image"
-                    class="photo-header-small"
-                  />
-                </div>
+          <div ref="topDivider" class="fadein" v-else-if="view === 'starred'">
+            <div class="fadein" v-if="!starredArticles.length">
+              <p class="row">
+                Your starred articles<span style="margin: 0 6px"
+                  ><img src="@/assets/images/report.svg" height="14px" alt=""
+                /></span>
+                will appear here
+              </p>
+            </div>
 
-                <div class="space-between no-letter-margin">
-                  <div class="col">
-                    <p class="bold-font">{{ article.source }}</p>
-                    <div style="margin-top: 8px" class="row">
-                      <img
-                        style="margin-right: 4px"
-                        src="@/assets/images/profile.svg"
-                        height="12px"
-                        alt=""
-                      />
-                      <p>{{ article.author[0] ? article.author[0] : 'Unkown' }}</p>
-                    </div>
+            <div v-else>
+              <div v-for="(article, i) in starredArticles" :key="i" class="container fadein">
+                <div style="position: relative" class="container__top">
+                  <div class="abs-top-right">
+                    <img
+                      @click="starArticle(article)"
+                      class="gold-filter fadein"
+                      style="cursor: pointer"
+                      src="@/assets/images/fullstar.svg"
+                      height="16px"
+                      alt=""
+                    />
                   </div>
-                  <small>{{ getTimeDifferenceInMinutes(article.date) }}</small>
-                </div>
-
-                <div>
-                  <h3 style="margin: 16px 0" class="bold-font">
-                    {{ article.description }}
-                  </h3>
-                </div>
-
-                <div class="space-between bottom-margin-m">
-                  <div class="row img-mar">
-                    <img src="@/assets/images/users.svg" height="14px" alt="" />
-                    <p class="bold-font">{{ formatNumber(article.traffic.visits) }}</p>
+                  <div style="margin-bottom: 12px">
+                    <img
+                      @error="onImageError($event)"
+                      :src="article.image"
+                      class="photo-header-small"
+                    />
                   </div>
 
-                  <section class="row-even small-text img-mar">
-                    <div class="row">
-                      <img src="@/assets/images/facebook.png" height="14px" alt="" />
-                      <p class="bold-font">10,000</p>
+                  <div class="space-between no-letter-margin">
+                    <div class="col">
+                      <p class="bold-font">{{ article.source }}</p>
+                      <div style="margin-top: 8px" class="row">
+                        <img
+                          style="margin-right: 4px"
+                          src="@/assets/images/profile.svg"
+                          height="12px"
+                          alt=""
+                        />
+                        <p>{{ article.author[0] ? article.author[0] : 'Unkown' }}</p>
+                      </div>
                     </div>
-                    <div class="row">
+                    <small>{{ getTimeDifferenceInMinutes(article.date) }}</small>
+                  </div>
+
+                  <div>
+                    <h3 style="margin: 20px 0" class="bold-font elipsis-text">
+                      {{ article.description }}
+                    </h3>
+                  </div>
+
+                  <div class="space-between bottom-margin-m">
+                    <div class="row img-mar">
+                      <img src="@/assets/images/users.svg" height="14px" alt="" />
+                      <p class="bold-font">{{ formatNumber(article.traffic.users) }}</p>
+                    </div>
+
+                    <section class="row img-mar">
+                      <div style="margin-right: 12px" class="row">
+                        <img src="@/assets/images/facebook.png" height="14px" alt="" />
+                        <p class="bold-font">
+                          {{
+                            formatNumber(
+                              socialData[article.url]
+                                ? socialData[article.url]['facebook_likes']
+                                  ? socialData[article.url]['facebook_likes']
+                                  : 0
+                                : 0,
+                            )
+                          }}
+                        </p>
+                      </div>
+                      <div class="row">
+                        <img src="@/assets/images/reddit.svg" height="14px" alt="" />
+                        <p class="bold-font">
+                          {{
+                            formatNumber(
+                              socialData[article.url]
+                                ? socialData[article.url]['reddit_likes']
+                                  ? socialData[article.url]['reddit_likes']
+                                  : 0
+                                : 0,
+                            )
+                          }}
+                        </p>
+                      </div>
+
+                      <!-- <div class="row">
                       <img src="@/assets/images/twitter-x.svg" height="12px" alt="" />
                       <p class="bold-font">1,000</p>
                     </div>
                     <div class="row">
                       <img src="@/assets/images/reddit.svg" height="14px" alt="" />
                       <p class="bold-font">10,000</p>
-                    </div>
-                    <div class="row">
-                      <img src="@/assets/images/pinterest.png" height="14px" alt="" />
-                      <p class="bold-font">100</p>
-                    </div>
-                  </section>
+                    </div> -->
+                    </section>
+                  </div>
                 </div>
-              </div>
 
-              <div class="report-body">
-                <div style="margin-top: 12px">
-                  <p class="bold-font">Summary</p>
-                  <p>
-                    Lorem ipsum simply dummy text of the printing and typesetting industry. Lorem
-                    Ipsum has been the industry's standard dummy text ever since the 1500s, when an
-                    unknown printer took a galley of type and scrambled it to make a type specimen
-                    book. It has survived not only five centuries, but also the leap into electronic
-                    typesetting, remaining essentially unchanged. It was popularised in the 1960s
-                    with the release of Letraset sheets.
-                  </p>
+                <div v-if="article.summary" class="report-body">
+                  <div style="margin-top: 12px">
+                    <pre v-html="article.summary" class="pre-text"></pre>
+                  </div>
                 </div>
-                <div style="margin-top: 12px">
-                  <p class="bold-font">Sentiment</p>
-                  <p>
-                    Lorem ipsum is simply dummy text of the printing and typesetting industry. Lorem
-                    Ipsum has been the industry's standard dummy text ever since the 1500s, when an
-                    unknown printer took a galley of type and scrambled it to make a type specimen
-                    book. It has survived not only five centuries, but also the leap into electronic
-                    typesetting, remaining essentially unchanged.
-                  </p>
+
+                <div v-else class="report-body">
+                  <div class="space-between" style="margin-top: 12px">
+                    <div></div>
+                    <button
+                      :disabled="summaryLoading"
+                      @click="getArticleSummary(article.url)"
+                      class="primary-button"
+                    >
+                      Summarize
+                      <img
+                        v-if="summaryLoading && loadingUrl === article.url"
+                        style="margin-left: 6px"
+                        class="rotation invert"
+                        src="@/assets/images/loading.svg"
+                        height="14px"
+                        alt=""
+                      />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
           <div class="fadein" v-else-if="view === 'articles'">
-            <div class="container">
+            <div class="container fadein">
               <div v-for="(article, i) in clips" :key="i" class="article">
                 <div class="space-between">
                   <p class="bold-font">{{ article.source }}</p>
-                  <img src="@/assets/images/star.svg" height="14px" alt="" />
+                  <img
+                    v-if="!starredArticles.includes(article)"
+                    @click="starArticle(article)"
+                    style="cursor: pointer"
+                    class="fadein"
+                    src="@/assets/images/star.svg"
+                    height="16px"
+                    alt=""
+                  />
+                  <img
+                    v-else
+                    @click="starArticle(article)"
+                    class="gold-filter fadein"
+                    style="cursor: pointer"
+                    src="@/assets/images/fullstar.svg"
+                    height="16px"
+                    alt=""
+                  />
                 </div>
 
                 <div class="space-between-bottom">
@@ -389,7 +472,7 @@
                   />
                 </div>
 
-                <div style="margin-top: 12px" class="space-between">
+                <div style="margin-top: 12px" class="space-between bottom-border">
                   <div class="row report-body">
                     <div class="pill">
                       <img src="@/assets/images/profile.svg" height="12px" alt="" />
@@ -401,25 +484,70 @@
                     <small>{{ getTimeDifferenceInMinutes(article.date) }}</small>
                   </div>
 
-                  <div class="row img-mar">
-                    <img
-                      style="margin-right: 4px"
-                      src="@/assets/images/users.svg"
-                      height="14px"
-                      alt=""
-                    />
-                    <p style="font-size: 14px" class="bold-font">
-                      {{ formatNumber(article.traffic.visits) }}
-                    </p>
+                  <div class="row small-text">
+                    <div style="margin-right: 16px" class="row img-mar">
+                      <img
+                        style="margin-right: 4px"
+                        src="@/assets/images/users.svg"
+                        height="14px"
+                        alt=""
+                      />
+                      <p class="bold-font">
+                        {{ formatNumber(article.traffic.users) }}
+                      </p>
+                    </div>
+
+                    <div style="margin-right: 16px" class="row">
+                      <img
+                        style="margin-right: 4px"
+                        src="@/assets/images/facebook.png"
+                        height="14px"
+                        alt=""
+                      />
+                      <p class="bold-font">
+                        {{
+                          formatNumber(
+                            socialData[article.url]
+                              ? socialData[article.url]['facebook_likes']
+                                ? socialData[article.url]['facebook_likes']
+                                : 0
+                              : 0,
+                          )
+                        }}
+                      </p>
+                    </div>
+                    <div class="row">
+                      <img
+                        style="margin-right: 4px"
+                        src="@/assets/images/reddit.svg"
+                        height="14px"
+                        alt=""
+                      />
+                      <p class="bold-font">
+                        {{
+                          formatNumber(
+                            socialData[article.url]
+                              ? socialData[article.url]['reddit_likes']
+                                ? socialData[article.url]['reddit_likes']
+                                : 0
+                              : 0,
+                          )
+                        }}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                <div style="margin-top: 8px" class="space-between bottom-border">
+                <!-- <div style="margin-top: 8px" class="space-between bottom-border">
                   <div></div>
                   <section class="row-even small-text img-mar">
                     <div class="row">
                       <img src="@/assets/images/facebook.png" height="14px" alt="" />
                       <p class="bold-font">{{ formatNumber(article.traffic.social / 2) }}</p>
+                    </div>
+                     <div class="row">
+                      <img src="@/assets/images/pinterest.png" height="14px" alt="" />
+                      <p class="bold-font">{{ formatNumber(article.traffic.social / 8) }}</p>
                     </div>
                     <div class="row">
                       <img src="@/assets/images/twitter-x.svg" height="12px" alt="" />
@@ -429,12 +557,9 @@
                       <img src="@/assets/images/reddit.svg" height="14px" alt="" />
                       <p class="bold-font">{{ formatNumber(article.traffic.social / 4) }}</p>
                     </div>
-                    <div class="row">
-                      <img src="@/assets/images/pinterest.png" height="14px" alt="" />
-                      <p class="bold-font">{{ formatNumber(article.traffic.social / 8) }}</p>
-                    </div>
+                   
                   </section>
-                </div>
+                </div> -->
               </div>
             </div>
           </div>
@@ -472,6 +597,7 @@
 <script>
 import ReportLineChart from '@/components/ReportLineChart.vue'
 import { Comms } from '@/services/comms'
+import User from '@/services/users'
 
 export default {
   name: 'Reports',
@@ -480,6 +606,12 @@ export default {
   },
   data() {
     return {
+      mainImage: null,
+      reportLoading: false,
+      summaryLoading: false,
+      loadingUrl: null,
+      clipChartData: null,
+      socialTotals: null,
       socialData: null,
       totalVisits: 0,
       starredArticles: [],
@@ -522,6 +654,102 @@ www.forbes.com/article-3
     }
   },
   methods: {
+    async createReport() {
+      this.reportLoading = true
+      let formData = new FormData()
+      formData.append('title', this.brand)
+      formData.append('main_image', this.mainImage)
+      formData.append('user', this.$store.state.user.id)
+      formData.append(
+        'meta_data',
+        JSON.stringify({
+          clips: this.clips,
+          summary: this.summary,
+          chartData: this.clipChartData,
+          starredArticles: this.starredArticles,
+        }),
+      )
+
+      try {
+        await User.api.createReport(formData)
+        // this.getReports()
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.reportLoading = false
+      }
+    },
+    async getReports() {
+      try {
+        await User.api.getReports({ user: this.$store.state.user.id }).then((response) => {
+          console.log('get reports response : ', response)
+          // this.reportLink = response.results[0]['share_url']
+        })
+      } catch (e) {
+        console.log(e)
+      } finally {
+      }
+    },
+    scrollToTopDivider() {
+      setTimeout(() => {
+        this.$refs.topDivider.scrollIntoView({ behavior: 'smooth' })
+      }, 300)
+    },
+    async getArticleSummary(url, instructions = null, length = 1000) {
+      let selectedClip = []
+
+      selectedClip = this.starredArticles.filter((art) => art.url === url)[0]
+
+      this.summaryLoading = true
+      this.loadingUrl = url
+
+      try {
+        const response = await Comms.api.getArticleSummary({
+          url: url,
+          search: this.brand,
+          instructions: instructions,
+          length: length,
+        })
+
+        selectedClip['summary'] = response.summary
+          .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+          .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+
+        if (!this.starredArticles.length) {
+          this.starredArticles = this.starredArticles.filter(
+            (clip) => clip.title !== selectedClip.title,
+          )
+          this.starredArticles.unshift(selectedClip)
+        } else {
+          this.starredArticles = this.starredArticles.filter(
+            (clip) => clip.title !== selectedClip.title,
+          )
+          this.starredArticles.unshift(selectedClip)
+        }
+        this.scrollToTopDivider()
+      } catch (e) {
+        console.log(e)
+        this.$toast('Request blocked by article source', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } finally {
+        this.summaryLoading = false
+        this.loadingUrl = null
+      }
+    },
+    starArticle(art) {
+      const index = this.starredArticles.findIndex((a) => a.url === art.url)
+
+      if (index === -1) {
+        this.starredArticles = [...this.starredArticles, art]
+      } else {
+        this.starredArticles = this.starredArticles.filter((a) => a.url !== art.url)
+      }
+    },
     getTimeDifferenceInMinutes(dateString) {
       if (dateString) {
         const currentDate = new Date()
@@ -577,6 +805,7 @@ www.forbes.com/article-3
       event.target.src = this.logoPlaceholder
     },
     async getReportClips() {
+      this.loadingText = 'Analyzing articles...'
       this.loading = true
       this.scrollToChatTop()
       try {
@@ -584,28 +813,11 @@ www.forbes.com/article-3
           urls: this.urls,
         })
         this.clips = res
-        this.getReportSummary()
-      } catch (e) {
-        console.error(e)
-        this.loadingText = 'Analyzing articles...'
-        this.loading = false
-      }
-    },
-    async getReportSummary() {
-      this.loadingText = 'Summarizing data...'
-      try {
-        const res = await Comms.api.getReportSummary({
-          clips: this.clips,
-          brand: this.brand,
-        })
-        this.summary = res.summary
-          .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
-          .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
         this.getTrafficData()
       } catch (e) {
         console.error(e)
-        this.loading = false
         this.loadingText = 'Analyzing articles...'
+        this.loading = false
       }
     },
     async getTrafficData() {
@@ -618,27 +830,46 @@ www.forbes.com/article-3
         this.getSocialData()
       } catch (e) {
         console.error(e)
-        this.loadingText = 'Analyzing articles...'
         this.loading = false
       }
     },
     async getSocialData() {
-      this.loadingText = 'Generating report...'
+      this.loadingText = 'Summarizing data...'
       try {
         const res = await Comms.api.getSocialData({
           urls: this.urls,
         })
-        console.log(res)
         this.socialData = res
         this.combineArticlesWithTraffic()
-        this.loading = false
-        this.creating = false
-        this.loadingText = 'Analyzing articles...'
       } catch (e) {
         console.error(e)
-        this.loadingText = 'Analyzing articles...'
         this.loading = false
       }
+    },
+    async getReportSummary() {
+      this.loadingText = 'Generating report...'
+      let clips = this.prepareClips(this.clips)
+
+      try {
+        const res = await Comms.api.getReportSummary({
+          clips: clips,
+          brand: this.brand,
+        })
+        this.summary = res.summary
+          .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+          .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+        this.loading = false
+        this.creating = false
+      } catch (e) {
+        console.error(e)
+        this.loading = false
+      }
+    },
+    prepareClips(clips) {
+      return clips.map(
+        (a) =>
+          `Description:${a.description} Date:${a.date}, Source:${a.source}, Author/s :${a.author[0]}, Unique visitors: ${a.traffic.users},`,
+      )
     },
     combineArticlesWithTraffic() {
       this.clips = this.clips.map((article) => {
@@ -650,17 +881,79 @@ www.forbes.com/article-3
         }
       })
       this.totalVisits = this.calculateTotalVisits()
-      this.starredArticles.push(this.clips[0])
-      console.log('NEW CLIPS ARE HERE ==== >', this.clips)
+      this.socialTotals = this.getSocialTotals()
+      this.clipChartData = this.processClips(this.clips)
+      this.getReportSummary()
+      // this.starredArticles.push(this.clips[0])
+    },
+    processClips(clips) {
+      const dateMap = new Map()
+
+      clips.forEach((clip) => {
+        const date = clip.date ? new Date(clip.date).toLocaleDateString() : null
+        if (date && clip.traffic && clip.traffic.users) {
+          if (dateMap.has(date)) {
+            const existingData = dateMap.get(date)
+            dateMap.set(date, {
+              clipCount: existingData.clipCount + 1,
+              totalUsers: existingData.totalUsers + Number(clip.traffic.users),
+            })
+          } else {
+            dateMap.set(date, {
+              clipCount: 1,
+              totalUsers: Number(clip.traffic.users),
+            })
+          }
+        }
+      })
+
+      const dateList = []
+      const clipCountList = []
+      const usersList = []
+
+      dateMap.forEach((value, key) => {
+        dateList.push(key)
+        clipCountList.push(value.clipCount)
+        usersList.push(value.totalUsers)
+      })
+
+      return {
+        dateList,
+        clipCountList,
+        usersList,
+      }
     },
     calculateTotalVisits() {
       let totalVisits = 0
       for (let key in this.traffic) {
-        if (this.traffic[key].visits) {
-          totalVisits += parseInt(this.traffic[key].visits)
+        if (this.traffic[key].users) {
+          totalVisits += parseInt(this.traffic[key].users)
         }
       }
       return totalVisits
+    },
+    getSocialTotals() {
+      let totalFacebookLikes = 0
+      let totalRedditLikes = 0
+
+      for (const url in this.socialData) {
+        if (this.socialData.hasOwnProperty(url)) {
+          const data = this.socialData[url]
+
+          if (data.facebook_likes) {
+            totalFacebookLikes += data.facebook_likes
+          }
+
+          if (data.reddit_likes) {
+            totalRedditLikes += data.reddit_likes
+          }
+        }
+      }
+
+      return {
+        totalFacebookLikes,
+        totalRedditLikes,
+      }
     },
     async runReport() {
       this.loading = true
@@ -789,6 +1082,7 @@ www.forbes.com/article-3
     },
     uploadImage(event) {
       const file = event.target.files[0]
+      this.mainImage = file
 
       if (!file) {
         this.fileName = ''
@@ -887,6 +1181,23 @@ www.forbes.com/article-3
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.abs-top-right {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.elipsis-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.gold-filter {
+  filter: invert(74%) sepia(68%) saturate(1511%) hue-rotate(358deg) brightness(95%) contrast(106%);
+}
 
 .fadein {
   transition: opacity 1s ease-out;
