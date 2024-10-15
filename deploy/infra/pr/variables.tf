@@ -181,6 +181,8 @@ variable "app_config" {
     microsoft_redirect_uri = string
 
     scraper_api_key        = string
+    semrush_api_key        = string
+    buzzsumo_api_key       = string
   })
 }
 

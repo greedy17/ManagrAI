@@ -352,6 +352,14 @@
       {
         "name": "SCRAPER_API_KEY",
         "valueFrom": "${config_secret_arn}:scraperApiKey::"
+      },
+      {
+        "name": "SEMRUSH_API_KEY",
+        "valueFrom": "${config_secret_arn}:semrushApiKey::"
+      },
+      {
+        "name": "BUZZSUMO_API_KEY",
+        "valueFrom": "${config_secret_arn}:buzzsumoApiKey::"
       }
     ],
     "logConfiguration": {
