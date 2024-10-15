@@ -3,7 +3,9 @@
     <div class="pdf-slide-container">
       <div class="pdf-overlay">
         <div>
-          <h1>{{ report.title }}</h1>
+          <h1>
+            <span>{{ report.title }}</span> Coverage Report
+          </h1>
         </div>
 
         <div style="margin-right: 16px" class="mar-top managr">
@@ -13,7 +15,7 @@
               ><img
                 class="blue-filter"
                 style="margin-bottom: -2px"
-                src="@/assets/images/logo.png"
+                src="@/assets/images/smallLogo.png"
                 height="20px"
                 alt="" /></span
             >managr
@@ -25,7 +27,7 @@
     </div>
 
     <div class="divider off-bg no-border">
-      <p class="divider-text off-bg no-border center-media">Summary</p>
+      <h1 class="divider-text off-bg no-border center-media bold-txt">Summary</h1>
     </div>
 
     <div class="main off-bg">
@@ -35,16 +37,212 @@
     </div>
 
     <div class="divider">
-      <p class="divider-text center-media">Media Clips</p>
+      <p class="divider-text center-media">Stats</p>
     </div>
 
     <div class="main main-mobile white-bg">
-      <section v-if="categoryClips">
+      <div class="container fadein">
+        <div class="space-between bottom-margin">
+          <div class="col">
+            <p class="bold-font medium-txt">Total coverage</p>
+            <small>Number of news clips in this report</small>
+          </div>
+
+          <p class="bold-font">{{ report.meta_data.urlCount }}</p>
+        </div>
+
+        <div class="space-between bottom-margin">
+          <div class="col">
+            <p class="bold-font medium-txt">Unique visitors</p>
+            <small>The potential audience reached by your media coverage</small>
+          </div>
+
+          <div class="row">
+            <img style="margin-right: 8px" src="@/assets/images/users.svg" height="16px" alt="" />
+            <p class="bold-font">{{ formatNumber(report.meta_data.totalVisits) }}</p>
+          </div>
+        </div>
+
+        <div class="space-between">
+          <div class="col">
+            <p class="bold-font medium-txt">Total shares</p>
+            <small>Number of times content was shared on social media</small>
+          </div>
+
+          <section class="row img-mar">
+            <div style="margin-right: 12px" class="row">
+              <img src="@/assets/images/facebook.png" height="20px" alt="" />
+              <p class="bold-font">{{ report.meta_data.socialTotals.totalFacebookLikes }}</p>
+            </div>
+            <!-- <div class="row">
+                    <img src="@/assets/images/twitter-x.svg" height="16px" alt="" />
+                    <p class="bold-font">1,000</p>
+                  </div> -->
+            <div class="row">
+              <img src="@/assets/images/reddit.svg" height="20px" alt="" />
+              <p class="bold-font">{{ report.meta_data.socialTotals.totalRedditLikes }}</p>
+            </div>
+            <!-- <div class="row">
+                    <img src="@/assets/images/pinterest.png" height="20px" alt="" />
+                    <p class="bold-font">100</p>
+                  </div> -->
+          </section>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="col bottom-margin">
+          <p class="bold-font medium-txt">Media exposure over time</p>
+          <small
+            >Number of media clips <span class="bold-font">per week</span> along with the potential
+            reach</small
+          >
+        </div>
+        <ReportLineChart
+          :volume="report.meta_data.chartData.clipCountList"
+          :reach="report.meta_data.chartData.usersList"
+          :dates="report.meta_data.chartData.dateList"
+        />
+      </div>
+
+      <!-- <div>
+
+      </div>
+
+      <ReportLineChart
+        :volume="report.meta_data.chartData.clipCountList"
+        :reach="report.meta_data.chartData.usersList"
+        :dates="report.meta_data.chartData.dateList"
+      /> -->
+    </div>
+
+    <div class="divider">
+      <p class="divider-text center-media">Highlighted Coverage</p>
+    </div>
+
+    <div class="main main-mobile white-bg">
+      <section>
+        <div
+          v-for="(article, i) in report.meta_data.starredArticles"
+          :key="i"
+          class="container fadein"
+        >
+          <div style="position: relative" class="container__top">
+            <div style="margin-bottom: 12px">
+              <img @error="onImageError($event)" :src="article.image" class="photo-header-small" />
+            </div>
+
+            <div class="space-between no-letter-margin">
+              <div class="col">
+                <p class="bold-font">{{ article.source }}</p>
+                <div style="margin-top: 8px" class="row">
+                  <img
+                    style="margin-right: 4px"
+                    src="@/assets/images/profile.svg"
+                    height="12px"
+                    alt=""
+                  />
+                  <p>{{ article.author[0] ? article.author[0] : 'Unkown' }}</p>
+                </div>
+              </div>
+              <small>{{ getTimeDifferenceInMinutes(article.date) }}</small>
+            </div>
+
+            <div>
+              <h3 style="margin: 20px 0" class="bold-font elipsis-text">
+                {{ article.description }}
+              </h3>
+            </div>
+
+            <div class="space-between bottom-margin-m">
+              <div class="row img-mar">
+                <img src="@/assets/images/users.svg" height="14px" alt="" />
+                <p class="bold-font">{{ formatNumber(article.traffic.users) }}</p>
+              </div>
+
+              <section class="row img-mar">
+                <div style="margin-right: 12px" class="row">
+                  <img src="@/assets/images/facebook.png" height="14px" alt="" />
+                  <p class="bold-font">
+                    {{
+                      formatNumber(
+                        socialData[article.url]
+                          ? socialData[article.url]['facebook_likes']
+                            ? socialData[article.url]['facebook_likes']
+                            : 0
+                          : 0,
+                      )
+                    }}
+                  </p>
+                </div>
+                <div class="row">
+                  <img src="@/assets/images/reddit.svg" height="14px" alt="" />
+                  <p class="bold-font">
+                    {{
+                      formatNumber(
+                        socialData[article.url]
+                          ? socialData[article.url]['reddit_likes']
+                            ? socialData[article.url]['reddit_likes']
+                            : 0
+                          : 0,
+                      )
+                    }}
+                  </p>
+                </div>
+
+                <!-- <div class="row">
+                      <img src="@/assets/images/twitter-x.svg" height="12px" alt="" />
+                      <p class="bold-font">1,000</p>
+                    </div>
+                    <div class="row">
+                      <img src="@/assets/images/reddit.svg" height="14px" alt="" />
+                      <p class="bold-font">10,000</p>
+                    </div> -->
+              </section>
+            </div>
+          </div>
+
+          <div v-if="article.summary" class="report-body">
+            <div style="margin-top: 12px">
+              <pre v-html="article.summary" class="pre-text"></pre>
+            </div>
+          </div>
+
+          <div v-else class="report-body">
+            <div class="space-between" style="margin-top: 12px">
+              <!-- <div></div>
+                    <button
+                      :disabled="summaryLoading"
+                      @click="getArticleSummary(article.url)"
+                      class="primary-button"
+                    >
+                      Summarize
+                      <img
+                        v-if="summaryLoading && loadingUrl === article.url"
+                        style="margin-left: 6px"
+                        class="rotation invert"
+                        src="@/assets/images/loading.svg"
+                        height="14px"
+                        alt=""
+                      />
+                    </button> -->
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="divider">
+      <p class="divider-text center-media">Total Coverage</p>
+    </div>
+
+    <div class="main main-mobile white-bg">
+      <!-- <section v-if="categoryClips">
         <div v-for="(category, catName) in categoryClips" :key="catName">
           <h2 class="category-name">{{ catName }}</h2>
           <div v-for="(clip, i) in category" :key="i" class="news-card">
             <header>
-              <!-- <div>{{ categoryClips }}</div> -->
+           
               <div class="card-col">
                 <div class="card-top-left">
                   <span>{{
@@ -125,83 +323,81 @@
             </div>
           </div>
         </div>
-      </section>
-      <section v-else>
+      </section> -->
+      <section>
         <div v-for="(clip, i) in report.meta_data.clips" :key="i" class="news-card">
           <header>
-            <!-- <div>{{ categoryClips }}</div> -->
             <div class="card-col">
               <div class="card-top-left">
-                <span>{{
-                  clip.source ? (clip.source.name ? clip.source.name : clip.source) : 'Tweet'
-                }}</span>
+                <span>{{ clip.source }}</span>
               </div>
               <div class="article-title-container">
-                <img v-if="clip.user" class="user-profile-img" :src="clip.user.profile_image_url" />
-                <h1 class="article-title" @click="goToArticle(clip.link)">
-                  {{ clip.title ? clip.title : clip.user.name }}
+                <h1 class="article-title" @click="goToArticle(clip.url)">
+                  {{ clip.title }}
                 </h1>
               </div>
               <p class="article-preview">
-                {{ clip.description ? clip.description : clip.text }}
+                {{ clip.description }}
               </p>
-              <div
-                v-if="clip.attachments && clip.attachments.mediaURLs"
-                class="tweet-attachement display-flex"
-              >
-                <div
-                  style="margin-bottom: 16px"
-                  v-for="mediaURL in clip.attachments.mediaURLs"
-                  :key="mediaURL.url"
-                  class="mar-right"
-                >
-                  <div v-if="mediaURL.type === 'video'">
-                    <video style="margin-top: 1rem" width="400" controls>
-                      <source :src="mediaURL.url" type="video/mp4" />
-                    </video>
-                  </div>
-                  <div v-else-if="mediaURL.type === 'animated_gif'">
-                    <video style="margin-top: 1rem" width="400" autoplay loop muted playsinline>
-                      <source :src="mediaURL.url" type="video/mp4" />
-                    </video>
-                  </div>
-                  <div v-else>
-                    <img :src="mediaURL.url" class="cover-photo-no-l-margin" alt="" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div v-if="!clip.edit_history_tweet_ids" @click="goToArticle(clip.link)">
-              <img :src="clip.image_url" class="cover-photo" />
             </div>
           </header>
 
           <div class="card-footer">
-            <div class="author-time">
-              <span class="author"
-                >@{{
-                  clip.author
-                    ? clip.author
-                    : clip.user && clip.user.username
-                    ? clip.user.username
-                    : ''
-                }}</span
-              >
-              <span class="divier-dot">.</span>
-              <small v-if="clip.user && clip.user.public_metrics" class="bold-text"
-                >{{ formatNumber(clip.user.public_metrics.followers_count) }}
-                <span>Followers</span>
+            <div class="author-time space-between">
+              <div>
+                <span class="author">{{ clip.author[0] }}</span>
+                <span class="divier-dot">.</span>
+                <span class="off-gray">{{ getTimeDifferenceInMinutes(clip.date) }}</span>
+              </div>
+
+              <small class="bold-txt row">
+                <img
+                  style="margin-right: 8px"
+                  src="@/assets/images/users.svg"
+                  height="16px"
+                  alt=""
+                />
+                {{ formatNumber(clip.traffic.users) }}
               </small>
-              <span class="divier-dot">.</span>
-              <span class="off-gray">{{
-                getTimeDifferenceInMinutes(clip.publish_date ? clip.publish_date : clip.created_at)
-              }}</span>
             </div>
           </div>
-          <div v-if="clip.summary">
-            <pre v-html="clip.summary" class="pre-text blue-bg"></pre>
+
+          <div class="space-between">
+            <div></div>
+            <div class="row">
+              <div style="margin-right: 12px" class="row">
+                <img src="@/assets/images/facebook.png" height="14px" alt="" />
+                <p class="bold-font">
+                  {{
+                    formatNumber(
+                      report.meta_data.socialData[article.url]
+                        ? report.meta_data.socialData[article.url]['facebook_likes']
+                          ? report.meta_data.socialData[article.url]['facebook_likes']
+                          : 0
+                        : 0,
+                    )
+                  }}
+                </p>
+              </div>
+              <div class="row">
+                <img src="@/assets/images/reddit.svg" height="14px" alt="" />
+                <p class="bold-font">
+                  {{
+                    formatNumber(
+                      report.meta_data.socialData[article.url]
+                        ? report.meta_data.socialData[article.url]['reddit_likes']
+                          ? report.meta_data.socialData[article.url]['reddit_likes']
+                          : 0
+                        : 0,
+                    )
+                  }}
+                </p>
+              </div>
+            </div>
           </div>
+          <!-- <div v-if="clip.summary">
+            <pre v-html="clip.summary" class="pre-text blue-bg"></pre>
+          </div> -->
         </div>
       </section>
     </div>
@@ -215,6 +411,7 @@
 </template>
 <script>
 import User from '@/services/users'
+import ReportLineChart from '@/components/ReportLineChart.vue'
 
 export default {
   name: 'SharedReport',
@@ -225,6 +422,9 @@ export default {
       imageUrl: null,
       reportDate: null,
     }
+  },
+  components: {
+    ReportLineChart,
   },
   props: {
     clips: {},
@@ -360,6 +560,10 @@ export default {
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+.bold-txt {
+  font-family: $base-font-family;
+}
+
 .reports {
   display: flex;
   flex-direction: column;
@@ -412,6 +616,14 @@ header {
   position: relative;
 }
 
+.space-between {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
 .pdf-overlay {
   position: absolute;
   display: flex;
@@ -426,13 +638,16 @@ header {
   h1 {
     margin: 0;
     padding: 0 0 32px 16px;
-    font-family: $thin-font-family;
     font-weight: 400;
     color: $off-white;
+    font-family: $thin-font-family;
   }
 
   h1 {
     font-size: 24px;
+    span {
+      font-family: $base-font-family;
+    }
   }
 }
 
@@ -454,13 +669,51 @@ header {
 }
 
 .pre-text {
-  color: $dark-black-blue;
+  color: $base-gray;
   font-family: $thin-font-family;
-  font-size: 17px;
+  font-size: 16px;
   line-height: 32px;
   word-wrap: break-word;
   white-space: pre-wrap;
-  padding: 16px 0;
+}
+
+::v-deep .pre-text {
+  a {
+    color: $grape;
+    border-bottom: 1px solid $grape;
+    font-family: $base-font-family;
+    text-decoration: none;
+    padding-bottom: 2px;
+
+    &:hover {
+      opacity: 0.7;
+    }
+  }
+
+  strong,
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: $base-font-family;
+    margin: 0;
+  }
+
+  ul {
+    display: block;
+    list-style-type: disc;
+    margin-block-start: 0;
+    margin-block-end: 0;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding-inline-start: 16px;
+    unicode-bidi: isolate;
+  }
+
+  li {
+    // margin-top: -32px;
+    padding: 0;
+  }
 }
 
 .divider {
@@ -659,8 +912,8 @@ header {
 
 .row {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
 }
 
 .blue-filter {

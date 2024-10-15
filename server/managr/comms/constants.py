@@ -393,9 +393,9 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
     if not instructions:
         instructions = DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS(search)
     if not search:
-        body = f"Today's date is {date}. Read the article below, then follow these instructions: {instructions}. Do not bold any text in your response. Output cannot exceed 800 characters.\n Article: {article} \n"
+        body = f"Today's date is {date}. Read the article below, then follow these instructions: {instructions}. Output cannot exceed 800 characters.\n Article: {article} \n"
     else:
-        body = f"Today's date is {date}. At least one of the terms in the boolean search were mentioned in the provided news article. Follow the instructions carefully. Do not bold any text in your response. \nBoolean Search: {search} \n Instructions: {instructions} \n News Article: {article}"
+        body = f"Today's date is {date}. At least one of the terms in the boolean search were mentioned in the provided news article. Follow the instructions carefully. \nBoolean Search: {search} \n Instructions: {instructions} \n News Article: {article}"
     return body
 
 

@@ -3385,7 +3385,7 @@ def get_clip_report_summary(request):
             user.add_meta_data("generate_report")
             break
         except open_ai_exceptions.StopReasonLength:
-            if token_amount <= 2000:
+            if token_amount >= 2000:
                 has_error = True
                 message = "Token amount error"
                 break

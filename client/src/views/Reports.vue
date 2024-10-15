@@ -667,12 +667,16 @@ www.forbes.com/article-3
           summary: this.summary,
           chartData: this.clipChartData,
           starredArticles: this.starredArticles,
+          socialData: this.socialData,
+          socialTotals: this.socialTotals,
+          totalVisits: this.totalVisits,
+          urlCount: this.urlCount,
         }),
       )
 
       try {
         await User.api.createReport(formData)
-        // this.getReports()
+        this.getReports()
       } catch (e) {
         console.log(e)
       } finally {
@@ -858,6 +862,13 @@ www.forbes.com/article-3
         this.summary = res.summary
           .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
           .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+          .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+          // Convert #### to <h4></h4>
+          .replace(/^#### (.*$)/gim, '<h4>$1</h4>')
+          // Convert ## to <h2></h2> (if needed)
+          .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+          // Convert # to <h1></h1> (if needed)
+          .replace(/^# (.*$)/gim, '<h1>$1</h1>')
         this.loading = false
         this.creating = false
       } catch (e) {
@@ -886,6 +897,43 @@ www.forbes.com/article-3
       this.getReportSummary()
       // this.starredArticles.push(this.clips[0])
     },
+    // processClips(clips) {
+    //   const dateMap = new Map()
+
+    //   clips.forEach((clip) => {
+    //     const date = clip.date ? new Date(clip.date).toLocaleDateString() : null
+    //     if (date && clip.traffic && clip.traffic.users) {
+    //       if (dateMap.has(date)) {
+    //         const existingData = dateMap.get(date)
+    //         dateMap.set(date, {
+    //           clipCount: existingData.clipCount + 1,
+    //           totalUsers: existingData.totalUsers + Number(clip.traffic.users),
+    //         })
+    //       } else {
+    //         dateMap.set(date, {
+    //           clipCount: 1,
+    //           totalUsers: Number(clip.traffic.users),
+    //         })
+    //       }
+    //     }
+    //   })
+
+    //   const dateList = []
+    //   const clipCountList = []
+    //   const usersList = []
+
+    //   dateMap.forEach((value, key) => {
+    //     dateList.push(key)
+    //     clipCountList.push(value.clipCount)
+    //     usersList.push(value.totalUsers)
+    //   })
+
+    //   return {
+    //     dateList,
+    //     clipCountList,
+    //     usersList,
+    //   }
+    // },
     processClips(clips) {
       const dateMap = new Map()
 
@@ -907,14 +955,19 @@ www.forbes.com/article-3
         }
       })
 
+      const sortedDates = Array.from(dateMap.keys()).sort((a, b) => {
+        return new Date(a) - new Date(b)
+      })
+
       const dateList = []
       const clipCountList = []
       const usersList = []
 
-      dateMap.forEach((value, key) => {
-        dateList.push(key)
-        clipCountList.push(value.clipCount)
-        usersList.push(value.totalUsers)
+      sortedDates.forEach((date) => {
+        const data = dateMap.get(date)
+        dateList.push(date)
+        clipCountList.push(data.clipCount)
+        usersList.push(data.totalUsers)
       })
 
       return {
@@ -1075,6 +1128,9 @@ www.forbes.com/article-3
 
     changeView(txt) {
       this.view = txt
+      if (txt === 'starred') {
+        this.scrollToTopDivider()
+      }
     },
     setUrls() {
       this.urlsSet = true
@@ -1347,8 +1403,10 @@ www.forbes.com/article-3
   strong,
   h1,
   h2,
-  h3 {
+  h3,
+  h4 {
     font-family: $base-font-family;
+    margin: 0;
   }
 
   ul {

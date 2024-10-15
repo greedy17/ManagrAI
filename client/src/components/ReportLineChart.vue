@@ -14,17 +14,17 @@ export default {
       extends: Line,
       props: ['chartData', 'options'],
       mounted() {
-        const ctx = this.$refs.canvas.getContext('2d')
+        // const ctx = this.$refs.canvas.getContext('2d')
 
-        const gradient1 = ctx.createLinearGradient(0, 0, 0, 400)
-        gradient1.addColorStop(0, 'rgba(138, 122, 175, 1)')
-        gradient1.addColorStop(1, 'rgba(138, 122, 175, 0.3)')
-        this.chartData.datasets[0].backgroundColor = gradient1
+        // const gradient1 = ctx.createLinearGradient(0, 0, 0, 400)
+        // gradient1.addColorStop(0, 'rgba(138, 122, 175, 1)')
+        // gradient1.addColorStop(1, 'rgba(138, 122, 175, 0.3)')
+        // this.chartData.datasets[0].backgroundColor = gradient1
 
-        const gradient2 = ctx.createLinearGradient(0, 0, 0, 400)
-        gradient2.addColorStop(0, 'rgba(255, 99, 132, 1)')
-        gradient2.addColorStop(1, 'rgba(255, 99, 132, 0.3)')
-        this.chartData.datasets[1].backgroundColor = gradient2
+        // const gradient2 = ctx.createLinearGradient(0, 0, 0, 400)
+        // gradient2.addColorStop(0, 'rgba(255, 99, 132, 1)')
+        // gradient2.addColorStop(1, 'rgba(255, 99, 132, 0.3)')
+        // this.chartData.datasets[1].backgroundColor = gradient2
 
         this.renderChart(this.chartData, this.options)
       },
@@ -49,19 +49,6 @@ export default {
           {
             label: 'Volume',
             data: this.volume,
-            borderColor: '#8A7AAF',
-            pointBackgroundColor: '#fff',
-            pointBorderColor: '#8A7AAF',
-            pointHoverBackgroundColor: '#8A7AAF',
-            pointHoverBorderColor: '#fff',
-            pointRadius: 5,
-            pointHoverRadius: 7,
-            fill: true,
-            lineTension: 0.3,
-          },
-          {
-            label: 'Reach',
-            data: this.reach,
             borderColor: '#FF6384',
             pointBackgroundColor: '#fff',
             pointBorderColor: '#FF6384',
@@ -69,7 +56,22 @@ export default {
             pointHoverBorderColor: '#fff',
             pointRadius: 5,
             pointHoverRadius: 7,
-            fill: true,
+            // fill: true,
+            fill: false,
+            lineTension: 0.3,
+          },
+          {
+            label: 'Reach',
+            data: this.reach,
+            borderColor: '#9596b4',
+            pointBackgroundColor: '#fff',
+            pointBorderColor: '#9596b4',
+            pointHoverBackgroundColor: '#9596b4',
+            pointHoverBorderColor: '#fff',
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            // fill: true,
+            fill: false,
             lineTension: 0.3,
             yAxisID: 'y-axis-2',
           },
@@ -126,7 +128,7 @@ export default {
               },
               ticks: {
                 beginAtZero: true,
-                fontColor: '#8A7AAF',
+                fontColor: '#555',
                 fontSize: 12,
                 padding: 10,
               },
@@ -140,7 +142,7 @@ export default {
               },
               ticks: {
                 beginAtZero: true,
-                fontColor: '#FF6384',
+                fontColor: '#555',
                 fontSize: 12,
                 padding: 10,
                 callback: function (value) {
