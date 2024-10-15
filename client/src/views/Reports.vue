@@ -268,18 +268,18 @@
                     <img src="@/assets/images/facebook.png" height="20px" alt="" />
                     <p class="bold-font">{{ socialTotals.totalFacebookLikes }}</p>
                   </div>
-                  <!-- <div class="row">
+                  <div style="margin-right: 12px" class="row">
                     <img src="@/assets/images/twitter-x.svg" height="16px" alt="" />
-                    <p class="bold-font">1,000</p>
-                  </div> -->
-                  <div class="row">
+                    <p class="bold-font">{{ socialTotals.totalTwitterLikes }}</p>
+                  </div>
+                  <div style="margin-right: 12px" class="row">
                     <img src="@/assets/images/reddit.svg" height="20px" alt="" />
                     <p class="bold-font">{{ socialTotals.totalRedditLikes }}</p>
                   </div>
-                  <!-- <div class="row">
+                  <div class="row">
                     <img src="@/assets/images/pinterest.png" height="20px" alt="" />
-                    <p class="bold-font">100</p>
-                  </div> -->
+                    <p class="bold-font">{{ socialTotals.totalPinterestLikes }}</p>
+                  </div>
                 </section>
               </div>
             </div>
@@ -365,22 +365,63 @@
                           {{
                             formatNumber(
                               socialData[article.url]
-                                ? socialData[article.url]['facebook_likes']
-                                  ? socialData[article.url]['facebook_likes']
+                                ? socialData[article.url][0]['total_facebook_shares']
+                                  ? socialData[article.url][0]['total_facebook_shares']
                                   : 0
                                 : 0,
                             )
                           }}
                         </p>
                       </div>
-                      <div class="row">
-                        <img src="@/assets/images/reddit.svg" height="14px" alt="" />
+
+                      <div style="margin-right: 12px" class="row">
+                        <img
+                          style="margin-right: 4px"
+                          src="@/assets/images/twitter-x.svg"
+                          height="14px"
+                          alt=""
+                        />
                         <p class="bold-font">
                           {{
                             formatNumber(
                               socialData[article.url]
-                                ? socialData[article.url]['reddit_likes']
-                                  ? socialData[article.url]['reddit_likes']
+                                ? socialData[article.url][0]['twitter_shares']
+                                  ? socialData[article.url][0]['twitter_shares']
+                                  : 0
+                                : 0,
+                            )
+                          }}
+                        </p>
+                      </div>
+
+                      <div style="margin-right: 12px" class="row">
+                        <img src="@/assets/images/reddit.svg" height="14px" alt="" />
+                        <p class="bold-font">
+                          {{
+                            formatNumber(
+                              socialData[article.url][0]
+                                ? socialData[article.url][0]['total_reddit_engagements']
+                                  ? socialData[article.url][0]['total_reddit_engagements']
+                                  : 0
+                                : 0,
+                            )
+                          }}
+                        </p>
+                      </div>
+
+                      <div class="row">
+                        <img
+                          style="margin-right: 4px"
+                          src="@/assets/images/pinterest.png"
+                          height="14px"
+                          alt=""
+                        />
+                        <p class="bold-font">
+                          {{
+                            formatNumber(
+                              socialData[article.url]
+                                ? socialData[article.url][0]['pinterest_shares']
+                                  ? socialData[article.url][0]['pinterest_shares']
                                   : 0
                                 : 0,
                             )
@@ -508,15 +549,34 @@
                         {{
                           formatNumber(
                             socialData[article.url]
-                              ? socialData[article.url]['facebook_likes']
-                                ? socialData[article.url]['facebook_likes']
+                              ? socialData[article.url][0]['total_facebook_shares']
+                                ? socialData[article.url][0]['total_facebook_shares']
                                 : 0
                               : 0,
                           )
                         }}
                       </p>
                     </div>
-                    <div class="row">
+                    <div style="margin-right: 16px" class="row">
+                      <img
+                        style="margin-right: 4px"
+                        src="@/assets/images/twitter-x.svg"
+                        height="14px"
+                        alt=""
+                      />
+                      <p class="bold-font">
+                        {{
+                          formatNumber(
+                            socialData[article.url]
+                              ? socialData[article.url][0]['twitter_shares']
+                                ? socialData[article.url][0]['twitter_shares']
+                                : 0
+                              : 0,
+                          )
+                        }}
+                      </p>
+                    </div>
+                    <div style="margin-right: 16px" class="row">
                       <img
                         style="margin-right: 4px"
                         src="@/assets/images/reddit.svg"
@@ -527,8 +587,28 @@
                         {{
                           formatNumber(
                             socialData[article.url]
-                              ? socialData[article.url]['reddit_likes']
-                                ? socialData[article.url]['reddit_likes']
+                              ? socialData[article.url][0]['total_reddit_engagements']
+                                ? socialData[article.url][0]['total_reddit_engagements']
+                                : 0
+                              : 0,
+                          )
+                        }}
+                      </p>
+                    </div>
+
+                    <div class="row">
+                      <img
+                        style="margin-right: 4px"
+                        src="@/assets/images/pinterest.png"
+                        height="14px"
+                        alt=""
+                      />
+                      <p class="bold-font">
+                        {{
+                          formatNumber(
+                            socialData[article.url]
+                              ? socialData[article.url][0]['pinterest_shares']
+                                ? socialData[article.url][0]['pinterest_shares']
                                 : 0
                               : 0,
                           )
@@ -988,17 +1068,29 @@ www.forbes.com/article-3
     getSocialTotals() {
       let totalFacebookLikes = 0
       let totalRedditLikes = 0
+      let totalPinterestLikes = 0
+      let totalTwitterLikes = 0
+
+      console.log(this.socialData)
 
       for (const url in this.socialData) {
         if (this.socialData.hasOwnProperty(url)) {
           const data = this.socialData[url]
 
-          if (data.facebook_likes) {
-            totalFacebookLikes += data.facebook_likes
+          if (data[0].total_facebook_shares) {
+            totalFacebookLikes += data[0].total_facebook_shares
           }
 
-          if (data.reddit_likes) {
-            totalRedditLikes += data.reddit_likes
+          if (data[0].total_reddit_engagements) {
+            totalRedditLikes += data[0].total_reddit_engagements
+          }
+
+          if (data[0].twitter_shares) {
+            totalTwitterLikes += data[0].twitter_shares
+          }
+
+          if (data[0].pinterest_shares) {
+            totalPinterestLikes += data[0].pinterest_shares
           }
         }
       }
@@ -1006,6 +1098,8 @@ www.forbes.com/article-3
       return {
         totalFacebookLikes,
         totalRedditLikes,
+        totalPinterestLikes,
+        totalTwitterLikes,
       }
     },
     async runReport() {
