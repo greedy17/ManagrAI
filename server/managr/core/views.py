@@ -1101,6 +1101,8 @@ class UserViewSet(
                 user.last_name = last_name
                 user.is_active = True
                 user.timezone = timezone
+                user.meta_data["has_reports"] = False
+                user.meta_data["report_credits"] = 0
                 # expire old magic token and create a new one for other uses
                 user.regen_magic_token()
                 if user.organization.is_paid is False and user.is_admin is False:
