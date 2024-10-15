@@ -1056,45 +1056,21 @@ def get_article_data(urls):
             "description": article_res.meta_description,
             "source": article_res.source_url,
             "image": article_res.top_image,
-            "date": article_res.publish_date
+            "date": article_res.publish_date,
         }
         data.append(article_data)
     return data
 
 
 def get_social_data(urls):
-    auth_string = f"{comms_consts.DATAFORSEO_USERNAME}:{comms_consts.DATAFORSEO_PASSWORD}"
-    encoded_auth = base64.b64encode(auth_string.encode("ascii")).decode("utf-8")
-    headers = {"Authorization": f"Basic {encoded_auth}", "Content-Type": "application/json"}
+    headers = {"Accept": "application/json"}
     social_data = {}
-    for i in range(0, len(urls), 10):
-        batch = urls[i : i + 10]
-        data = [{"targets": batch}]
+    for url in urls:
+        params = {"api_key": comms_consts.BUZZSUMO_API_KEY, "q": url}
         with Variable_Client(30) as client:
-            facebook_res = client.post(comms_consts.DATAFORSEO_FACEBOOK, json=data, headers=headers)
-            reddit_res = client.post(comms_consts.DATAFORSEO_REDDIT, json=data, headers=headers)
-            reddit_res = reddit_res.json()
-            facebook_res = facebook_res.json()
-            reddit_res = (
-                reddit_res["tasks"][0]["result"] if reddit_res["tasks_error"] == 0 else []
-            )
-            facebook_res = (
-                facebook_res["tasks"][0]["result"]
-                if facebook_res["tasks_error"] == 0
-                else []
-            )
-        for res_data in reddit_res:
-            url = res_data["page_url"]
-            if url in social_data.keys():
-                social_data[url]["reddit_likes"] = len(res_data["reddit_reviews"])
-            else:
-                if res_data["reddit_reviews"]:
-                    social_data[url] = {"reddit_likes": len(res_data["reddit_reviews"])}
-        for res_data in facebook_res:
-            url = res_data["page_url"]
-            if url in social_data.keys():
-                social_data[url]["facebook_likes"] = res_data["like_count"]
-            else:
-                if res_data["like_count"]:
-                    social_data[url] = {"facebook_likes": res_data["like_count"]}
+            res = client.get(comms_consts.BUZZSUMO_SEARCH_URI, params=params, headers=headers)
+            if res.status_code == 200:
+                res = res.json()
+                results = res["results"]
+                social_data[url] = results
     return social_data
