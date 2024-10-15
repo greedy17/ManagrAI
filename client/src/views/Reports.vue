@@ -307,7 +307,7 @@
             <div class="fadein" v-if="!starredArticles.length">
               <p class="row">
                 Your starred articles<span style="margin: 0 6px"
-                  ><img src="@/assets/images/report.svg" height="14px" alt=""
+                  ><img src="@/assets/images/newspaper.svg" height="14px" alt=""
                 /></span>
                 will appear here
               </p>
@@ -319,7 +319,7 @@
                   <div class="abs-top-right">
                     <img
                       @click="starArticle(article)"
-                      class="gold-filter fadein"
+                      class="blue-filter fadein"
                       style="cursor: pointer"
                       src="@/assets/images/fullstar.svg"
                       height="16px"
@@ -491,7 +491,7 @@
                   <img
                     v-else
                     @click="starArticle(article)"
-                    class="gold-filter fadein"
+                    class="blue-filter fadein"
                     style="cursor: pointer"
                     src="@/assets/images/fullstar.svg"
                     height="16px"
@@ -670,7 +670,7 @@
         </li>
         <li @click="changeView('articles')" class="nav-item">
           <div :class="{ active: view === 'articles' }">
-            <img src="@/assets/images/report.svg" height="16px" alt="" />
+            <img src="@/assets/images/newspaper.svg" height="16px" alt="" />
           </div>
         </li>
       </ul>
@@ -905,7 +905,7 @@ www.forbes.com/article-3
       event.target.src = this.logoPlaceholder
     },
     async getReportClips() {
-      this.loadingText = 'Analyzing articles...'
+      this.loadingText = 'Step 1/4: Analyzing articles...'
       this.loading = true
       this.scrollToChatTop()
       try {
@@ -921,7 +921,7 @@ www.forbes.com/article-3
       }
     },
     async getTrafficData() {
-      this.loadingText = 'Gathering traffic...'
+      this.loadingText = 'Step 2/4: Gathering traffic...'
       try {
         const res = await Comms.api.getTrafficData({
           urls: this.urls,
@@ -934,7 +934,7 @@ www.forbes.com/article-3
       }
     },
     async getSocialData() {
-      this.loadingText = 'Summarizing data...'
+      this.loadingText = 'Step 3/4: Summarizing data...'
       try {
         const res = await Comms.api.getSocialData({
           urls: this.urls,
@@ -947,7 +947,7 @@ www.forbes.com/article-3
       }
     },
     async getReportSummary() {
-      this.loadingText = 'Generating report...'
+      this.loadingText = 'Step 4/4: Generating report...'
       let clips = this.prepareClips(this.clips)
 
       try {
@@ -1363,6 +1363,10 @@ www.forbes.com/article-3
 
 .gold-filter {
   filter: invert(74%) sepia(68%) saturate(1511%) hue-rotate(358deg) brightness(95%) contrast(106%);
+}
+
+.blue-filter {
+  filter: invert(50%) sepia(6%) saturate(4941%) hue-rotate(159deg) brightness(100%) contrast(87%);
 }
 
 .fadein {

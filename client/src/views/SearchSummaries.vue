@@ -4600,7 +4600,7 @@ www.forbes.com/article-3
           view: 'news',
           chatText: 'What are my competitors up to and how does it impact my brand?',
           chatResponse: `Using Company details, provide your brand's name`,
-          searchText: `Based on the news coverage, provide a competitor update to the following company's PR team. Break it down into sections per competitor, provide sentiment analysis, top 3-5 take aways, and a super creative, targeted PR campaign suggestions. Use labels. Company details here:`,
+          searchText: `Based on the news coverage, provide a competitor update to the following company's PR team. Break it down into sections per competitor, provide sentiment analysis, top 3-5 take aways, and a super creative, targeted PR campaign suggestion for the company's PR team based on competitor coverage. Use labels. Company details here:`,
           details: true,
           responseText:
             'Using the message bar below, provide up to 3 competitors using OR in between',

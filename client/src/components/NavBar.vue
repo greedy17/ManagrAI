@@ -482,7 +482,12 @@
           <p>Track</p>
         </router-link>
 
-        <router-link active-class="active" :to="{ name: 'Reports' }" id="router-pitch">
+        <router-link
+          v-if="user.meta_data && user.meta_data.report_credits > 0"
+          active-class="active"
+          :to="{ name: 'Reports' }"
+          id="router-pitch"
+        >
           <p>Reports</p>
         </router-link>
 

@@ -5814,17 +5814,18 @@ textarea::placeholder {
 
 .img-container-stay-small-txt {
   cursor: pointer;
-  color: white;
+  font-family: $base-font-family;
+  color: $dark-black-blue;
   padding: 4px 8px !important;
   border-radius: 9px;
-  background-color: $dark-black-blue;
+  background-color: $silver;
   display: flex;
   flex-direction: row;
   align-items: center;
   font-size: 14px;
 
   img {
-    filter: invert(100%);
+    filter: invert(20%);
     margin: 0 0 0 8px;
     padding: 0;
   }
