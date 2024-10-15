@@ -59,6 +59,14 @@ GOOGLE_SEARCH_KEY = settings.GOOGLE_SEARCH_API_KEY
 GOOGLE_SEARCH_ID = settings.GOOGLE_SEARCH_ID
 
 SCRAPER_API_KEY = settings.SCRAPER_API_KEY
+SEMRUSH_TRAFFIC_URI = "https://api.semrush.com/analytics/ta/api/v3/summary"
+
+BUZZSUMO_API_KEY = settings.BUZZSUMO_API_KEY
+BUZZSUMO_SEARCH_URI = "https://api.buzzsumo.com/search/articles.json"
+
+
+def SEMRUSH_PARAMS(urls):
+    return {"key": settings.SEMRUSH_API_KEY, "targets": ",".join(urls)}
 
 
 def GOOGLE_SEARCH_PARAMS(query, number_of_results):
@@ -69,6 +77,7 @@ def GOOGLE_SEARCH_PARAMS(query, number_of_results):
         "num": number_of_results,
     }
     return params
+
 
 def OPEN_AI_GET_INSIGHTS(notes, activity, bio, instructions):
     prompt = f"""
@@ -88,6 +97,7 @@ def OPEN_AI_GET_INSIGHTS(notes, activity, bio, instructions):
     
     """
     return prompt
+
 
 def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
     prompt = f"""Here are the top 5 search results for {journalist}:
@@ -380,9 +390,9 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
     if not instructions:
         instructions = DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS(search)
     if not search:
-        body = f"Today's date is {date}. Read the article below, then follow these instructions: {instructions}. Do not bold any text in your response. Output cannot exceed 800 characters.\n Article: {article} \n"
+        body = f"Today's date is {date}. Read the article below, then follow these instructions: {instructions}. Output cannot exceed 800 characters.\n Article: {article} \n"
     else:
-        body = f"Today's date is {date}. At least one of the terms in the boolean search were mentioned in the provided news article. Follow the instructions carefully. Do not bold any text in your response. \nBoolean Search: {search} \n Instructions: {instructions} \n News Article: {article}"
+        body = f"Today's date is {date}. At least one of the terms in the boolean search were mentioned in the provided news article. Follow the instructions carefully. \nBoolean Search: {search} \n Instructions: {instructions} \n News Article: {article}"
     return body
 
 
@@ -744,6 +754,26 @@ OPEN_AI_EMPTY_SEARCH_SUGGESTIONS = (
 )
 
 
+def REPORT_SUMMARY(brand, clips):
+    prompt = f"""
+    You are the VP of Communications at {brand}. Your task is to create a concise executive overview of the earned media report based on the news clips below. The summary should focus on the following key takeaways and be broken into sections, capped at 1,000 words:
+    
+    1. Total volume of media coverage, what stories drove coverage spikes, and trends in mentions over time.
+    2. Key recognizable publications and influential journalists who covered the brand.
+    3. Key metrics, such as total reach, potential impressions, and engagement rates.
+    4. A brief analysis of media sentiment and its impact on [brand.name]'s brand image.
+    5. Highlight recurring themes or key messages across the media coverage.
+
+    Your response must be properly formatted html. Do not include any styling and/or <meta> tags. Do not include ```html in your response.
+   
+    Here are the news clips:
+
+    {clips}
+    """
+
+    return prompt
+
+
 DO_NOT_TRACK_LIST = [
     "https://www.wsj.com",
     "https://www.nytimes.com",
@@ -812,3 +842,17 @@ JOURNALIST_CHOICES = [
     ("OPT", "Opt out"),
     ("OTHER", "Other"),
 ]
+
+
+def REPORT_SUMMARY(brand, clips):
+    prompt = f"""
+    You are the VP of Communications at {brand}. Your task is to create a concise executive overview of the earned media report based on the news clips below. The summary should focus on the following key takeaways and be broken into sections, capped at 1,000 words:
+    1. Total volume of media coverage, what stories drove coverage spikes, and trends in mentions over time.
+    2. Key recognizable publications and influential journalists who covered the brand.
+    3. Key metrics, such as total reach, potential impressions, and engagement rates.
+    4. A brief analysis of media sentiment and its impact on [brand.name]'s brand image.
+    5. Highlight recurring themes or key messages across the media coverage.
+    Here are the news clips:
+    {clips}
+    """
+    return prompt

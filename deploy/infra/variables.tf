@@ -190,6 +190,8 @@ variable "environments" {
     microsoft_redirect_uri = string
 
     scraper_api_key        = string
+    semrush_api_key        = string
+    buzzsumo_api_key       = string
   }))
 }
 
@@ -207,34 +209,26 @@ variable "scheduled_tasks" {
     {
       name       = "processalltasks"
       command    = "process_tasks --duration 3600"
-      cron       = "cron(*/10 0-11,9-22 * * ? *)"
+      cron       = "cron(*/20 0-11,13-22 * * ? *)"
       task_count = 1
       cpu        = 2048
       memory     = 4096
     },
     {
       name       = "processalltaskscrawleram"
-      command    = "process_tasks --duration 3600"
-      cron       = "cron(*/10 11-1 * * ? *)"
+      command    = "process_tasks --duration 7200"
+      cron       = "cron(0 11 * * ? *)"
       task_count = 1
       cpu        = 16384
       memory     = 32768
     },
     {
       name       = "processalltaskscrawlerpm"
-      command    = "process_tasks --duration 3600"
-      cron       = "cron(*/10 22-0 * * ? *)"
+      command    = "process_tasks --duration 7200"
+      cron       = "cron(0 22 * * ? *)"
       task_count = 1
       cpu        = 16384
       memory     = 32768
-    },
-    {
-      name       = "processsyncqueues"
-      command    = "process_tasks --queue SALESFORCE_RESOURCE_SYNC --duration 3600"
-      cron       = "cron(0 */11 * * ? *)"
-      task_count = 1
-      cpu        = 1024
-      memory     = 2048
     },
     {
       name       = "batchspideram"
@@ -263,7 +257,7 @@ variable "scheduled_tasks" {
     {
       name       = "spiderstatusam"
       command    = "spider_status"
-      cron       = "cron(15/15 11-1 * * ? *)"
+      cron       = "cron(15/15 11-15 * * ? *)"
       task_count = 1
       cpu        = 1024
       memory     = 2048
@@ -271,7 +265,7 @@ variable "scheduled_tasks" {
     {
       name       = "spiderstatuspm"
       command    = "spider_status"
-      cron       = "cron(15/15 22-0 * * ? *)"
+      cron       = "cron(15/15 22-3 * * ? *)"
       task_count = 1
       cpu        = 1024
       memory     = 2048

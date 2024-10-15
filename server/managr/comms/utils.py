@@ -6,7 +6,10 @@ import fitz
 import tempfile
 import requests
 import pytz
+import io
+import base64
 from datetime import datetime, timezone, timedelta
+from newspaper import Article, ArticleException
 from functools import reduce
 from managr.core.utils import Variable_Client
 from newspaper import Config
@@ -44,12 +47,14 @@ def extract_email_address(text):
     return None
 
 
-def get_domain(url):
+def get_domain(url, full_netloc=False):
     parsed_url = urlparse(url)
     netloc = parsed_url.netloc
     domain_parts = netloc.split(".")
     if "www" in domain_parts:
         domain_parts.remove("www")
+    if full_netloc:
+        return ".".join(domain_parts)
     return domain_parts[0]
 
 
@@ -1004,3 +1009,70 @@ def modify_href(match, id):
         + "&type=clicked"
     )
     return f'href="{new_href}"'
+
+
+def get_url_traffic_data(urls):
+    domains = []
+    data_dict = {}
+    while True:
+        try:
+            for url in urls:
+                domain = get_domain(url, True)
+                domains.append(domain)
+            domains = list(set(domains))
+            url = comms_consts.SEMRUSH_TRAFFIC_URI
+            params = comms_consts.SEMRUSH_PARAMS(domains)
+            str_params = []
+            for key in params.keys():
+                str_params.append(f"{key}={params[key]}")
+            str_params = "?" + "&".join(str_params)
+            full_url = url + str_params
+            with Variable_Client(30) as client:
+                r = client.get(full_url)
+            content = r._content
+            decoded_content = content.decode("utf-8")
+            csv_reader = csv.DictReader(io.StringIO(decoded_content), delimiter=";")
+
+            for row in csv_reader:
+                target = row["target"]
+                data_dict[target] = row
+            break
+        except Exception as e:
+            data_dict["error"] = str(e)
+            break
+    return data_dict
+
+
+def get_article_data(urls):
+    data = []
+    for url in urls:
+        article_res = Article(url, config=generate_config())
+        article_res.download()
+        article_res.parse()
+        article_data = {
+            "url": url,
+            "title": article_res.title,
+            "author": article_res.authors,
+            "description": article_res.meta_description,
+            "source": article_res.source_url,
+            "image": article_res.top_image,
+            "date": article_res.publish_date,
+        }
+        data.append(article_data)
+    return data
+
+
+def get_social_data(urls):
+    headers = {"Accept": "application/json"}
+    social_data = {}
+    for url in urls:
+        params = {"api_key": comms_consts.BUZZSUMO_API_KEY, "q": url}
+        with Variable_Client(30) as client:
+            res = client.get(comms_consts.BUZZSUMO_SEARCH_URI, params=params, headers=headers)
+            if res.status_code == 200:
+                res = res.json()
+                results = res["results"]
+                social_data[url] = results
+            else:
+                social_data[url] = {}
+    return social_data

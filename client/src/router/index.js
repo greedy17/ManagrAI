@@ -49,6 +49,12 @@ export default new Router({
       beforeEnter: Auth.requireAuth,
       component: () => import('@/views/Contacts'),
     },
+    {
+      path: '/reports',
+      name: 'Reports',
+      beforeEnter: Auth.requireAuth,
+      component: () => import('@/views/Reports'),
+    },
     // {
     //   path: '/assist',
     //   name: 'Assist',

@@ -38,6 +38,7 @@ import "vue-toastification/dist/index.css";
 import VueSanitize from "vue-sanitize";
 import VueApexCharts from 'vue-apexcharts'
 
+
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faBars, faCircleUser, faRocket, faCog, faHeadphones, faUser, faSquareXmark, faShuffle, faRotate, faFilter, faSquareCaretLeft, faBolt, faAt, faUserGroup, faUserPlus, faCalendarPlus, faStairs, faSackDollar, faSignature, faLayerGroup, faAnglesRight, } from '@fortawesome/free-solid-svg-icons'

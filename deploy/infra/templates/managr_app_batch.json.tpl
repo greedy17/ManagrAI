@@ -261,6 +261,54 @@
       {
         "name": "INSTAGRAM_API_SECRET",
         "valueFrom": "${config_secret_arn}:instagramApiSecret::"
+      },
+      {
+        "name": "INSTAGRAM_REDIRECT_URI",
+        "valueFrom": "${config_secret_arn}:instagramRedirectUri::"
+      },
+      {
+        "name": "HUNTER_API_KEY",
+        "valueFrom": "${config_secret_arn}:hunterApiKey::"
+      },
+      {
+        "name": "GOOGLE_SEARCH_API_KEY",
+        "valueFrom": "${config_secret_arn}:googleSearchApiKey::"
+      },
+      {
+        "name": "GOOGLE_SEARCH_ID",
+        "valueFrom": "${config_secret_arn}:googleSearchId::"
+      },
+      {
+        "name": "GOOGLE_CLIENT_SECRET",
+        "valueFrom": "${config_secret_arn}:googleClientSecret::"
+      },
+      {
+        "name": "GOOGLE_REDIRECT_URI",
+        "valueFrom": "${config_secret_arn}:googleRedirectUri::"
+      },
+      {
+        "name": "MICROSOFT_CLIENT_ID",
+        "valueFrom": "${config_secret_arn}:microsoftClientId::"
+      },
+      {
+        "name": "MICROSOFT_CLIENT_SECRET",
+        "valueFrom": "${config_secret_arn}:microsoftClientSecret::"
+      },
+      {
+        "name": "MICROSOFT_REDIRECT_URI",
+        "valueFrom": "${config_secret_arn}:microsoftRedirectUri::"
+      },
+      {
+        "name": "SCRAPER_API_KEY",
+        "valueFrom": "${config_secret_arn}:scraperApiKey::"
+      },
+      {
+        "name": "SEMRUSH_API_KEY",
+        "valueFrom": "${config_secret_arn}:semrushApiKey::"
+      },
+      {
+        "name": "BUZZSUMO_API_KEY",
+        "valueFrom": "${config_secret_arn}:buzzsumoApiKey::"
       }
     ]
 }

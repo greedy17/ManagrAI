@@ -482,6 +482,15 @@
           <p>Track</p>
         </router-link>
 
+        <router-link
+          v-if="user.meta_data && user.meta_data.report_credits > 0"
+          active-class="active"
+          :to="{ name: 'Reports' }"
+          id="router-pitch"
+        >
+          <p>Reports</p>
+        </router-link>
+
         <div class="auto-left">
           <div v-if="!isPaid" class="row wrapper-count">
             <p class="searches-used-text">{{ 20 - searchesUsed }} / 20</p>

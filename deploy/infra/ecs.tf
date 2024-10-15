@@ -446,19 +446,7 @@ resource "aws_secretsmanager_secret_version" "managr_config" {
     microsoftRedirectUri = each.value.microsoft_redirect_uri
 
     scraperApiKey        = each.value.scraper_api_key
+    semrushApiKey        = each.value.semrush_api_key
+    buzzsumoApiKey       = each.value.buzzsumo_api_key
   })
-}
-
-resource "aws_batch_job_definition" "web_scraping_job" {
-  for_each  = { for e in var.environments : e.name => e }
-  name = "web-scraper-${each.value.name}"
-  type = "container"
-  container_properties = data.template_file.managr_app_batch_task[each.key].rendered
-  platform_capabilities = ["FARGATE"]
-  retry_strategy {
-    attempts = 3
-  }
-  tags = {
-    "app" = "web-scraper"
-  }
 }

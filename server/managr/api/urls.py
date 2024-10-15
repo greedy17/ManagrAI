@@ -527,6 +527,26 @@ urlpatterns = [
         comms_views.process_csv_file,
         name="process-contacts-csv",
     ),
+    path(
+        "traffic-data/",
+        comms_views.get_traffic_data,
+        name="traffic-data",
+    ),
+    path(
+        "report-clips/",
+        comms_views.get_article_url_data,
+        name="report-clips",
+    ),
+    path(
+        "report-summary/",
+        comms_views.get_clip_report_summary,
+        name="report-summary",
+    ),
+    path(
+        "social-data/",
+        comms_views.get_social_url_data,
+        name="social-data",
+    ),
 ]
 router.register("users/reports", core_views.ReportViewSet, "reports"),
 router.register("users/conversations", core_views.ConversationViewSet, "conversations"),
