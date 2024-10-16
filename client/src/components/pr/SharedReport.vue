@@ -103,7 +103,7 @@
     </div>
 
     <div class="divider-text">
-      <h1 class="center-media bold-txt">Highlighted Coverage</h1>
+      <h1 class="center-media bold-txt">Top Coverage</h1>
     </div>
 
     <div style="width: 100vw" class="main">
@@ -132,17 +132,17 @@
               <small>{{ getTimeDifferenceInMinutes(article.date) }}</small>
             </div>
 
-            <div>
-              <h3 style="margin: 20px 0" class="bold-txt elipsis-text">
-                {{ article.description }}
-              </h3>
+            <div style="margin: 20px 0">
+              <a :href="article.url" target="_blank" class="bold-txt elipsis-text">
+                {{ article.description }}</a
+              >
             </div>
 
             <div class="space-between bottom-margin-m">
               <div class="row img-mar">
                 <img src="@/assets/images/users.svg" height="14px" alt="" />
                 <p class="bold-txt">
-                  {{ article.traffic ? removeDomain(article.traffic.users) : 0 }}
+                  {{ article.traffic ? formatNumber(article.traffic.users) : 0 }}
                 </p>
               </div>
 
@@ -162,7 +162,27 @@
                     }}
                   </p>
                 </div>
-                <div class="row">
+                <div style="margin-right: 16px" class="row">
+                  <img
+                    style="margin-right: 4px"
+                    src="@/assets/images/twitter-x.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  <p class="bold-txt">
+                    {{
+                      formatNumber(
+                        report.meta_data.socialData[article.url] &&
+                          report.meta_data.socialData[article.url][0]
+                          ? report.meta_data.socialData[article.url][0]['twitter_shares']
+                            ? report.meta_data.socialData[article.url][0]['twitter_shares']
+                            : 0
+                          : 0,
+                      )
+                    }}
+                  </p>
+                </div>
+                <div style="margin-right: 16px" class="row">
                   <img src="@/assets/images/reddit.svg" height="14px" alt="" />
                   <p class="bold-txt">
                     {{
@@ -173,6 +193,27 @@
                             ? report.meta_data.socialData[article.url][0][
                                 'total_reddit_engagements'
                               ]
+                            : 0
+                          : 0,
+                      )
+                    }}
+                  </p>
+                </div>
+
+                <div class="row">
+                  <img
+                    style="margin-right: 4px"
+                    src="@/assets/images/pinterest.png"
+                    height="14px"
+                    alt=""
+                  />
+                  <p class="bold-txt">
+                    {{
+                      formatNumber(
+                        report.meta_data.socialData[article.url] &&
+                          report.meta_data.socialData[article.url][0]
+                          ? report.meta_data.socialData[article.url][0]['pinterest_shares']
+                            ? report.meta_data.socialData[article.url][0]['pinterest_shares']
                             : 0
                           : 0,
                       )
@@ -223,7 +264,7 @@
     </div>
 
     <div class="divider-text">
-      <h1 class="center-media bold-txt">Total Coverage</h1>
+      <h1 class="center-media bold-txt">All Coverage</h1>
     </div>
 
     <div style="width: 100vw" class="main">
@@ -237,9 +278,14 @@
 
           <div class="space-between-bottom">
             <div class="article-body">
-              <h3 class="bold-txt">
+              <!-- <h3 class="bold-txt">
                 {{ article.title }}
-              </h3>
+              </h3> -->
+              <div style="margin: 20px 0">
+                <a :href="article.url" target="_blank" class="bold-txt elipsis-text">
+                  {{ article.title }}</a
+                >
+              </div>
 
               <p class="report-body">
                 {{ article.description }}
@@ -270,7 +316,7 @@
                   alt=""
                 />
                 <p class="bold-txt">
-                  {{ article.traffic ? removeDomain(article.traffic.target) : 0 }}
+                  {{ article.traffic ? formatNumber(article.traffic.users) : 0 }}
                 </p>
               </div>
 
@@ -643,6 +689,11 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+a {
+  text-decoration: none;
+  color: $dark-black-blue;
+}
 
 .floating-panel {
   position: absolute;

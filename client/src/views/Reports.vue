@@ -177,7 +177,7 @@
                         height="14px"
                         alt=""
                       />
-                      Upload Logo
+                      Upload Banner
                     </span>
                   </label>
                   <p style="margin-left: 8px" class="file-name">
@@ -213,7 +213,7 @@
 
               <div style="margin: 0 0 8px 14px">
                 <p class="thin-font">
-                  Paste up to 1,000 URLs. Each on a new line or separated by commas.
+                  Paste up to 200 URLs. Each on a new line or separated by commas.
                 </p>
                 <textarea
                   style="
@@ -248,7 +248,7 @@
             <div></div>
             <div class="chat-window__chat-bubble row">
               <img src="@/assets/images/profile.svg" height="12px" alt="" />
-              <p>{{ urlCount }} Urls uploaded</p>
+              <p>{{ urlCount }} URLs uploaded</p>
             </div>
           </div>
 
@@ -480,9 +480,15 @@
                   </div>
 
                   <div>
-                    <h3 style="margin: 20px 0" class="bold-font elipsis-text">
+                    <!-- <h3 style="margin: 20px 0" class="bold-font elipsis-text">
                       {{ article.description }}
-                    </h3>
+                    </h3> -->
+
+                    <div class="elipsis-text" style="margin: 20px 0">
+                      <a :href="article.url" target="_blank" class="bold-txt">
+                        {{ article.description }}</a
+                      >
+                    </div>
                   </div>
 
                   <div class="space-between bottom-margin-m">
@@ -634,9 +640,15 @@
 
                 <div class="space-between-bottom">
                   <div class="article-body">
-                    <h3 class="bold-font">
+                    <!-- <h3 class="bold-font">
                       {{ article.title }}
-                    </h3>
+                    </h3> -->
+
+                    <div style="margin: 20px 0">
+                      <a :href="article.url" target="_blank" class="bold-txt elipsis-text">
+                        {{ article.title }}</a
+                      >
+                    </div>
 
                     <p class="report-body">
                       {{ article.description }}
@@ -847,12 +859,12 @@ export default {
       view: 'home',
       creating: true,
       reportName: '',
-      brandText: 'Now tell us which brand this report is for',
-      nameText: 'Using the message bar, give your coverage report a name',
+      brandText: 'Next, tell us which brand this report is for (e.g. Nike, Tesla, FSU)',
+      nameText: 'Using the message bar below, provide a name for your report',
       loading: false,
       brand: '',
       searchText: '',
-      uploadText: 'Upload banner',
+      uploadText: 'Upload banner image using JPEG, PNG, or SVG',
       fileName: '',
       allowedFormats: [
         'image/jpeg',
@@ -1563,6 +1575,11 @@ www.forbes.com/article-3
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+a {
+  text-decoration: none;
+  color: $dark-black-blue;
+}
 
 .img-container-stay-small-txt {
   cursor: pointer;
