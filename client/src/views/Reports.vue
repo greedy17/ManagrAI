@@ -324,7 +324,7 @@
             <span class="bold-font">{{ brand }}</span> Coverage Report
           </p>
           <div class="row">
-            <button @click="clearData" class="secondary-button">Close</button>
+            <button @click="clearData" class="secondary-button">Back</button>
             <button
               v-if="!reportLink"
               :disabled="reportLoading"
@@ -929,8 +929,8 @@ www.forbes.com/article-3
 
       try {
         await User.api.createReport(formData)
-        this.getReports()
         this.$nextTick(() => {
+          this.getReports()
           this.refreshUser()
         })
         this.$toast('Report Saved!', {
