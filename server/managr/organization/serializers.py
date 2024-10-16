@@ -44,6 +44,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
             "is_paid",
             "teams_ref",
             "days_since_created_ref",
+            "meta_data",
         )
 
     def get_ignore_emails(self, instance):
