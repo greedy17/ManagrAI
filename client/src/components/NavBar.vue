@@ -1338,7 +1338,9 @@ export default {
       return !!this.$store.state.user.organizationRef.isPaid
     },
     reportCredits() {
-      return this.$store.state.user.organizationRef.metaData.reportCredits
+      return !!this.$store.state.user.organizationRef.metaData
+        ? this.$store.state.user.organizationRef.metaData.reportCredits
+        : 0
     },
     searchesUsed() {
       let arr = []
