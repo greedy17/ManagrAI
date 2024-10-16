@@ -1046,19 +1046,25 @@ def get_url_traffic_data(urls):
 def get_article_data(urls):
     data = []
     for url in urls:
-        article_res = Article(url, config=generate_config())
-        article_res.download()
-        article_res.parse()
-        article_data = {
-            "url": url,
-            "title": article_res.title,
-            "author": article_res.authors,
-            "description": article_res.meta_description,
-            "source": article_res.source_url,
-            "image": article_res.top_image,
-            "date": article_res.publish_date,
-        }
-        data.append(article_data)
+        try:
+            article_res = Article(url, config=generate_config())
+            article_res.download()
+            article_res.parse()
+            article_data = {
+                "url": url,
+                "title": article_res.title,
+                "author": article_res.authors,
+                "description": article_res.meta_description,
+                "source": article_res.source_url,
+                "image": article_res.top_image,
+                "date": article_res.publish_date,
+            }
+            data.append(article_data)
+        except ArticleException:
+            continue
+        except Exception as e:
+            print(e)
+            continue
     return data
 
 
