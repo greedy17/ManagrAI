@@ -846,7 +846,7 @@ export default {
       loading: false,
       brand: '',
       searchText: '',
-      uploadText: 'Great! Please provide a banner file using JPEG, PNG, or SVG',
+      uploadText: 'Upload banner',
       fileName: '',
       allowedFormats: [
         'image/jpeg',
