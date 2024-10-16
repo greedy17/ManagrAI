@@ -2111,10 +2111,21 @@ class ReportViewSet(
         return Report.objects.for_user(self.request.user)
 
     def create(self, request, *args, **kwargs):
+        org = self.request.user.organization
         try:
-            serializer = self.serializer_class(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
+            if org.meta_data["report_credits"] > 0:
+                serializer = self.serializer_class(data=request.data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                org.meta_data["report_credits"] -= 1
+                org.save()
+            else:
+                return Response(
+                    status=status.HTTP_426_UPGRADE_REQUIRED,
+                    data={
+                        "error": "No more report credits. Please contact support@mymanagr.com to purchase more."
+                    },
+                )
         except Exception as e:
             logger.exception(f"Error validating data for report <{e}>")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
