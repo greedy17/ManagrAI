@@ -1072,7 +1072,7 @@ def get_social_data(urls):
     headers = {"Accept": "application/json"}
     social_data = {}
     for url in urls:
-        params = {"api_key": comms_consts.BUZZSUMO_API_KEY, "q": url}
+        params = {"api_key": comms_consts.BUZZSUMO_API_KEY, "q": url, "num_days": 365}
         with Variable_Client(30) as client:
             res = client.get(comms_consts.BUZZSUMO_SEARCH_URI, params=params, headers=headers)
             if res.status_code == 200:

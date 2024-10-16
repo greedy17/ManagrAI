@@ -86,12 +86,17 @@ export default {
         },
         legend: {
           display: true,
+          // position: 'top',
+          // align: 'start',
           labels: {
             fontColor: '#333',
-            fontSize: 14,
-            padding: 16,
+            fontSize: 10,
+            padding: 12,
+            boxWidth: 4,
+            usePointStyle: true,
           },
         },
+
         tooltips: {
           enabled: true,
           mode: 'index',
