@@ -16,6 +16,22 @@
         </main>
       </div>
     </Modal>
+    <Modal v-if="deleteReportModalOpen" class="delete-modal">
+      <div class="delete-container">
+        <header @click="toggleReportDeleteModal">
+          <img src="@/assets/images/close.svg" height="18px" alt="" />
+        </header>
+        <main>
+          <h2>Delete Report</h2>
+          <p>Are you sure you want to delete this report ?</p>
+
+          <div style="margin-top: 20px" class="row">
+            <button @click="toggleReportDeleteModal" class="tertiary-button">Cancel</button>
+            <button @click="deleteReport" class="red-button">Delete</button>
+          </div>
+        </main>
+      </div>
+    </Modal>
     <Modal v-if="plansModal" class="pricing-modal">
       <div class="pricing-container">
         <header @click="closePlansModal">
@@ -488,13 +504,78 @@
           :to="{ name: 'Reports' }"
           id="router-pitch"
         >
-          <p @click="test">Reports</p>
+          <p>Reports</p>
         </router-link>
 
         <div class="auto-left">
           <div v-if="!isPaid" class="row wrapper-count">
             <p class="searches-used-text">{{ 20 - searchesUsed }} / 20</p>
             <div style="margin-left: -40px" class="tooltip-count">Remaining monthly credits</div>
+          </div>
+
+          <div v-if="$route.name === 'Reports'" class="relative">
+            <div @click.stop="toggleShowReports" class="row pointer nav-text">
+              Saved Reports
+              <img
+                v-if="!showSavedReports"
+                src="@/assets/images/downArrow.svg"
+                height="14px"
+                alt=""
+              />
+              <img
+                class="rotate-img"
+                v-else
+                src="@/assets/images/downArrow.svg"
+                height="14px"
+                alt=""
+              />
+            </div>
+
+            <div v-outside-click="hideReports" v-show="showSavedReports" class="search-dropdown">
+              <div class="input">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
+                    fill="currentColor"
+                  ></path>
+                </svg>
+                <input class="search-input" v-model="reportText" :placeholder="`Search...`" />
+                <img
+                  v-show="reportText"
+                  @click="clearText"
+                  src="@/assets/images/close.svg"
+                  class="invert pointer"
+                  height="12px"
+                  alt=""
+                />
+              </div>
+              <p class="v-margin" v-if="!reports.length">Nothing here...</p>
+
+              <div class="searches-container">
+                <div
+                  @mouseenter="setIndex(i)"
+                  @mouseLeave="removeIndex"
+                  class="row relative"
+                  v-for="(report, i) in reports"
+                  :key="report.id"
+                >
+                  <p :title="report.name" @click="selectReport(report.share_url)">
+                    {{ report.title }}
+                  </p>
+
+                  <img
+                    @click="toggleReportDeleteModal(report)"
+                    v-if="hoverIndex === i"
+                    class="absolute-icon"
+                    src="@/assets/images/trash.svg"
+                    height="12px"
+                    alt=""
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
           <div v-if="$route.name === 'PRSummaries'" class="relative">
@@ -873,17 +954,22 @@ export default {
   },
   data() {
     return {
+      selectedReport: null,
+      deleteReportModalOpen: false,
       personalSearches: true,
       personalDiscoveries: true,
       items: [],
+      reportText: '',
       searchText: '',
       pitchText: '',
       assistText: '',
       discoveryText: '',
+      unfilteredReports: [],
       showSavedSearches: false,
       showSavedPitches: false,
       showSavedAssist: false,
       showSavedDiscoveries: false,
+      showSavedReports: false,
       deleteModelOpen: false,
       deletePitchModelOpen: false,
       deleteAssistModelOpen: false,
@@ -912,6 +998,7 @@ export default {
     this.getPitches()
     this.getAssist()
     this.getDiscoveries()
+    this.getReports()
     await this.team.refresh()
     this.amountList = this.amountList.filter((item) => item >= this.activeUsers.length)
     // this.numberOfUsers = this.activeUsers.length
@@ -950,15 +1037,48 @@ export default {
       this.showSavedAssist = false
       this.showSavedSearches = false
       this.showSavedDiscoveries = false
+      this.showSavedReports = false
       this.$emit('close-menu')
     },
   },
   methods: {
-    test() {
-      console.log(this.user.organizationRef)
+    async deleteReport() {
+      try {
+        await User.api.deleteReport(this.selectedReport.id)
+        await this.getReports()
+
+        this.selectReport = null
+        this.deleteReportModalOpen = false
+        this.$toast('Report removed', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch (e) {
+        console.log(e)
+      }
     },
+    selectReport(url) {
+      window.open(url, '_blank')
+    },
+    async getReports() {
+      try {
+        const res = await User.api.getReports({ user: this.$store.state.user.id })
+        this.unfilteredReports = res.results
+      } catch (e) {
+        console.log(e)
+      } finally {
+      }
+    },
+
     hideSearches() {
       this.showSavedSearches = false
+    },
+
+    hideReports() {
+      this.showSavedReports = false
     },
     hideDiscoveries() {
       this.showSavedDiscoveries = false
@@ -1004,6 +1124,12 @@ export default {
     textSoonOff() {
       this.soonText = 'Transcribe'
     },
+    toggleReportDeleteModal(report = null) {
+      if (report) {
+        this.selectedReport = report
+      }
+      this.deleteReportModalOpen = !this.deleteReportModalOpen
+    },
     toggleDeleteModal(search = null) {
       if (search) {
         this.selectedSearch = search
@@ -1013,6 +1139,7 @@ export default {
       this.showSavedPitches = false
       this.showSavedAssist = false
       this.showSavedDiscoveries = false
+      this.showSavedReports = false
     },
     togglePitchDeleteModal(pitch = null) {
       if (pitch) {
@@ -1023,6 +1150,7 @@ export default {
       this.showSavedPitches = false
       this.showSavedAssist = false
       this.showSavedDiscoveries = false
+      this.showSavedReports = false
     },
     toggleAssistDeleteModal(assist = null) {
       if (assist) {
@@ -1033,6 +1161,7 @@ export default {
       this.showSavedPitches = false
       this.showSavedAssist = false
       this.showSavedDiscoveries = false
+      this.showSavedReports = false
     },
     toggleDiscoveryDeleteModal(discovery = null) {
       if (discovery) {
@@ -1043,6 +1172,7 @@ export default {
       this.showSavedPitches = false
       this.showSavedAssist = false
       this.showSavedDiscoveries = false
+      this.showSavedReports = false
     },
     async deleteSearch() {
       try {
@@ -1184,6 +1314,7 @@ export default {
       this.showSavedSearches = false
       this.showSavedPitches = false
       this.showSavedDiscoveries = false
+      this.showSavedReports = false
     },
     selectSearch(search) {
       this.toggleAllSearches()
@@ -1216,6 +1347,10 @@ export default {
     toggleShowDiscoveries() {
       this.$emit('close-menu')
       this.showSavedDiscoveries = !this.showSavedDiscoveries
+    },
+    toggleShowReports() {
+      this.$emit('close-menu')
+      this.showSavedReports = !this.showSavedReports
     },
     getSearches() {
       this.$store.dispatch('getSearches')
@@ -1251,6 +1386,7 @@ export default {
       this.pitchText = ''
       this.assistText = ''
       this.discoveryText = ''
+      this.reportText = ''
     },
     goToIntegrations() {
       this.$router.push({ name: 'PRIntegrations' })
@@ -1293,6 +1429,13 @@ export default {
       } else {
         return this.$store.state.allDiscoveries
       }
+    },
+    reports() {
+      if (this.unfilteredReports.length) {
+        return this.unfilteredReports.filter((report) =>
+          report.title.toLowerCase().includes(this.reportText.toLowerCase()),
+        )
+      } else return []
     },
     searches() {
       if (this.unfilteredSearches.length) {

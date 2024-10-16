@@ -5580,10 +5580,6 @@ h2 {
   border-radius: 6px;
 }
 
-.text-area-input {
-  padding-top: 1rem;
-}
-
 input,
 textarea {
   font-family: $thin-font-family;

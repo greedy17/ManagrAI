@@ -2,7 +2,7 @@
   <div class="reports">
     <div v-if="creating">
       <div class="chat-window">
-        <div @click="getReports" class="chat-window__header">
+        <div class="chat-window__header">
           <p>Coverage Report</p>
         </div>
 
@@ -19,16 +19,141 @@
             <div class="big-chat-bubble">
               <div class="row">
                 <img src="@/assets/images/iconlogo.png" height="24px" alt="" />
+                <p class="regular-font" v-typed="nameText"></p>
+              </div>
+            </div>
+          </div>
+
+          <div
+            @mouseenter="hoveringName = true"
+            @mouseleave="hoveringName = false"
+            v-if="reportName"
+            class="space-between"
+          >
+            <div></div>
+
+            <div style="position: relative" class="chat-window__chat-bubble row">
+              <div
+                @click="toggleEditName"
+                v-if="!editingName && hoveringName"
+                style="cursor: pointer"
+                class="abs-img-left"
+              >
+                <img src="@/assets/images/pencil.svg" height="14px" alt="" />
+              </div>
+
+              <div
+                @click="updateName"
+                v-else-if="hoveringName"
+                style="cursor: pointer"
+                class="abs-img-left"
+              >
+                <img src="@/assets/images/close.svg" height="18px" alt="" />
+              </div>
+
+              <div v-if="!editingName" class="row">
+                <img src="@/assets/images/profile.svg" height="12px" alt="" />
+                <p>{{ reportName }}</p>
+              </div>
+
+              <div v-else style="opacity: 1; margin: 0; cursor: text" class="input-container-small">
+                <input
+                  style="border: none; outline: none; padding: 10px 8px 10px 0px; width: 100%"
+                  type="text"
+                  @keyup.enter="updateName"
+                  v-model="reportName"
+                  placeholder="Brand name..."
+                />
+
+                <div
+                  class="img-container-stay-small-txt"
+                  v-if="reportName"
+                  @click="updateName"
+                  style="margin-right: 12px; padding: 1px 6px 2px 6px"
+                >
+                  Save
+                  <img src="@/assets/images/arrow-right.svg" class="pointer" height="10px" alt="" />
+                </div>
+
+                <img
+                  v-else
+                  style="filter: invert(40%); margin-right: 20px"
+                  src="@/assets/images/edit.svg"
+                  height="14px"
+                  alt=""
+                />
+              </div>
+            </div>
+          </div>
+
+          <div v-if="reportName">
+            <div class="big-chat-bubble">
+              <div class="row">
+                <img src="@/assets/images/iconlogo.png" height="24px" alt="" />
                 <p class="regular-font" v-typed="brandText"></p>
               </div>
             </div>
           </div>
 
-          <div v-if="brand" class="space-between">
+          <div
+            @mouseenter="hovering = true"
+            @mouseleave="hovering = false"
+            v-if="brand"
+            class="space-between"
+          >
             <div></div>
-            <div class="chat-window__chat-bubble row">
-              <img src="@/assets/images/profile.svg" height="12px" alt="" />
-              <p>{{ brand }}</p>
+
+            <div style="position: relative" class="chat-window__chat-bubble">
+              <div
+                @click="toggleEditBrand"
+                v-if="!editingBrand && hovering"
+                style="cursor: pointer"
+                class="abs-img-left"
+              >
+                <img src="@/assets/images/pencil.svg" height="14px" alt="" />
+              </div>
+
+              <div
+                @click="updateBrand"
+                v-else-if="hovering"
+                style="cursor: pointer"
+                class="abs-img-left"
+              >
+                <img src="@/assets/images/close.svg" height="18px" alt="" />
+              </div>
+
+              <div class="row" v-if="!editingBrand">
+                <img src="@/assets/images/profile.svg" height="12px" alt="" />
+                <p>{{ brand }}</p>
+              </div>
+
+              <div v-else style="opacity: 1; margin: 0; cursor: text" class="input-container-small">
+                <input
+                  style="border: none; outline: none; padding: 10px 8px 10px 0px; width: 100%"
+                  type="text"
+                  @keyup.enter="updateBrand"
+                  v-model="brand"
+                  placeholder="Brand name..."
+                />
+
+                <div
+                  class="img-container-stay-small-txt"
+                  v-if="brand"
+                  @click="updateBrand"
+                  style="margin-right: 12px; padding: 1px 6px 2px 6px"
+                >
+                  Save
+                  <img src="@/assets/images/arrow-right.svg" class="pointer" height="10px" alt="" />
+                </div>
+
+                <img
+                  v-else
+                  style="filter: invert(40%); margin-right: 20px"
+                  src="@/assets/images/edit.svg"
+                  height="14px"
+                  alt=""
+                />
+              </div>
             </div>
           </div>
 
@@ -87,7 +212,9 @@
               </div>
 
               <div style="margin: 0 0 8px 14px">
-                <p class="thin-font">Paste up to 1,000 URLs. Each on a new line.</p>
+                <p class="thin-font">
+                  Paste up to 1,000 URLs. Each on a new line or separated by commas.
+                </p>
                 <textarea
                   style="
                     width: 100%;
@@ -164,7 +291,7 @@
                   placeholder="Message ManagrAI..."
                   v-model="searchText"
                   v-autoresize
-                  :disabled="loading || !!brand"
+                  :disabled="loading || (!!brand && !!reportName)"
                   @keyup.enter="generateReportSearch($event)"
                 />
 
@@ -690,6 +817,10 @@ export default {
   },
   data() {
     return {
+      hoveringName: false,
+      hovering: false,
+      editingBrand: false,
+      editingName: false,
       reportLink: null,
       mainImage: null,
       reportLoading: false,
@@ -709,7 +840,9 @@ export default {
       summary: '',
       view: 'home',
       creating: true,
-      brandText: 'Using the message bar, tell us which brand this report is for',
+      reportName: '',
+      brandText: 'Now tell us which brand this report is for',
+      nameText: 'Using the message bar, give your coverage report a name',
       loading: false,
       brand: '',
       searchText: '',
@@ -739,6 +872,18 @@ www.forbes.com/article-3
     }
   },
   methods: {
+    updateBrand() {
+      this.editingBrand = false
+    },
+    toggleEditBrand() {
+      this.editingBrand = true
+    },
+    updateName() {
+      this.editingName = false
+    },
+    toggleEditName() {
+      this.editingName = true
+    },
     removeDomain(url) {
       const domainRegex = /\.(com|net|org|gov|edu|co|io|biz|info|us)$/i
 
@@ -751,7 +896,7 @@ www.forbes.com/article-3
     async createReport() {
       this.reportLoading = true
       let formData = new FormData()
-      formData.append('title', this.brand)
+      formData.append('title', this.reportName)
       formData.append('main_image', this.mainImage)
       formData.append('user', this.$store.state.user.id)
       formData.append(
@@ -1295,7 +1440,13 @@ www.forbes.com/article-3
       reader.readAsDataURL(file)
     },
     generateReportSearch() {
-      if (!this.brand) {
+      if (!this.reportName) {
+        this.reportName = this.searchText
+        this.searchText = ''
+        this.$refs.textarea.dispatchEvent(new Event('textarea-clear'))
+        this.scrollToChatTop()
+        return
+      } else if (!this.brand) {
         this.brand = this.searchText
         this.searchText = ''
         this.$refs.textarea.dispatchEvent(new Event('textarea-clear'))
@@ -1353,6 +1504,58 @@ www.forbes.com/article-3
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.img-container-stay-small-txt {
+  cursor: pointer;
+  font-family: $base-font-family;
+  color: $dark-black-blue;
+  padding: 4px 8px !important;
+  border-radius: 9px;
+  background-color: $silver;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  font-size: 14px;
+
+  img {
+    filter: invert(20%);
+    margin: 0 0 0 8px;
+    padding: 0;
+  }
+}
+
+.input-container-small {
+  border: 1px solid rgba(0, 0, 0, 0.185);
+  transition: box-shadow 0.3s ease;
+  padding: 2px 0;
+  border-radius: 9px;
+  width: 100%;
+  color: $base-gray;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: row;
+  background-color: white;
+  margin-top: 16px;
+
+  img {
+    filter: invert(40%);
+  }
+
+  input {
+    background: transparent;
+    padding-left: 16px !important;
+    font-family: $thin-font-family;
+    width: 100%;
+  }
+}
+
+.abs-img-left {
+  position: absolute;
+  top: 30%;
+  left: -32px;
+}
 
 .abs-top-right {
   position: absolute;
