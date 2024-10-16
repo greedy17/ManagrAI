@@ -57,6 +57,7 @@ class Organization(TimeStampModel):
     objects = OrganizationQuerySet.as_manager()
     smtp_user = models.CharField(max_length=255, blank=True, null=True)
     smtp_pass = models.CharField(max_length=255, blank=True, null=True)
+    meta_data = JSONField(default=dict, blank=True, null=True)
 
     def __str__(self):
         return f"{self.name}"

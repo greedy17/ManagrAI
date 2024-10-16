@@ -483,12 +483,12 @@
         </router-link>
 
         <router-link
-          v-if="user.meta_data && user.meta_data.report_credits > 0"
+          v-if="reportCredits > 0"
           active-class="active"
           :to="{ name: 'Reports' }"
           id="router-pitch"
         >
-          <p>Reports</p>
+          <p @click="test">Reports</p>
         </router-link>
 
         <div class="auto-left">
@@ -954,6 +954,9 @@ export default {
     },
   },
   methods: {
+    test() {
+      console.log(this.user.organizationRef)
+    },
     hideSearches() {
       this.showSavedSearches = false
     },
@@ -1333,6 +1336,9 @@ export default {
     },
     isPaid() {
       return !!this.$store.state.user.organizationRef.isPaid
+    },
+    reportCredits() {
+      return this.$store.state.user.organizationRef.metaData.reportCredits
     },
     searchesUsed() {
       let arr = []
