@@ -324,7 +324,7 @@
             <span class="bold-font">{{ brand }}</span> Coverage Report
           </p>
           <div class="row">
-            <button class="secondary-button">Share</button>
+            <!-- <button class="secondary-button">Share</button> -->
             <button
               v-if="!reportLink"
               :disabled="reportLoading"
@@ -872,6 +872,17 @@ www.forbes.com/article-3
     }
   },
   methods: {
+    refreshUser() {
+      User.api
+        .getUser(this.user.id)
+        .then((user) => {
+          this.$store.dispatch('updateUser', user)
+          return user
+        })
+        .catch(() => {
+          return null
+        })
+    },
     updateBrand() {
       this.editingBrand = false
     },
@@ -917,6 +928,9 @@ www.forbes.com/article-3
       try {
         await User.api.createReport(formData)
         this.getReports()
+        this.$nextTick(() => {
+          this.refreshUser()
+        })
         this.$toast('Report Saved!', {
           timeout: 2000,
           position: 'top-left',
