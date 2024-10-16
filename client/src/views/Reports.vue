@@ -368,7 +368,7 @@
                   <small>Number of news clips in this report</small>
                 </div>
 
-                <p class="bold-font">{{ urlCount }}</p>
+                <p class="bold-font">{{ clips.length }}</p>
               </div>
 
               <div class="space-between bottom-margin">
@@ -463,7 +463,9 @@
 
                   <div class="space-between no-letter-margin">
                     <div class="col">
-                      <p class="bold-font">{{ removeDomain(article.traffic.target) }}</p>
+                      <p class="bold-font">
+                        {{ article.traffic ? removeDomain(article.traffic.target) : 'unknown' }}
+                      </p>
                       <div style="margin-top: 8px" class="row">
                         <img
                           style="margin-right: 4px"
@@ -486,7 +488,9 @@
                   <div class="space-between bottom-margin-m">
                     <div class="row img-mar">
                       <img src="@/assets/images/users.svg" height="14px" alt="" />
-                      <p class="bold-font">{{ formatNumber(article.traffic.users) }}</p>
+                      <p class="bold-font">
+                        {{ article.traffic ? formatNumber(article.traffic.users) : 0 }}
+                      </p>
                     </div>
 
                     <section class="row img-mar">
@@ -605,7 +609,9 @@
             <div class="container fadein">
               <div v-for="(article, i) in clips" :key="i" class="article">
                 <div class="space-between">
-                  <p class="bold-font">{{ removeDomain(article.traffic.target) }}</p>
+                  <p class="bold-font">
+                    {{ article.traffic ? removeDomain(article.traffic.target) : 'unknown' }}
+                  </p>
                   <img
                     v-if="!starredArticles.includes(article)"
                     @click="starArticle(article)"
@@ -665,7 +671,7 @@
                         alt=""
                       />
                       <p class="bold-font">
-                        {{ formatNumber(article.traffic.users) }}
+                        {{ article.traffic ? formatNumber(article.traffic.users) : 0 }}
                       </p>
                     </div>
 
@@ -1172,9 +1178,14 @@ www.forbes.com/article-3
       }
     },
     prepareClips(clips) {
+      console.log
       return clips.map(
         (a) =>
-          `Description:${a.description} Date:${a.date}, Source:${a.source}, Author/s :${a.author[0]}, Unique visitors: ${a.traffic.users},`,
+          `Description:${a.description ? a.description : ''} Date:${a.date}, Source:${
+            a.source
+          }, Author/s :${a.author ? a.author[0] : 'Unknown'}, Unique visitors: ${
+            a.traffic ? a.traffic.users : 0
+          },`,
       )
     },
     combineArticlesWithTraffic() {

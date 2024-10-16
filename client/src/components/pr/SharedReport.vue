@@ -44,7 +44,7 @@
             <small>Number of news clips in this report</small>
           </div>
 
-          <p class="bold-txt">{{ report.meta_data.urlCount }}</p>
+          <p class="bold-txt">{{ formatNumber(report.meta_data.clips.length) }}</p>
         </div>
 
         <div class="space-between bottom-margin">
@@ -116,7 +116,9 @@
 
             <div class="space-between no-letter-margin">
               <div class="col">
-                <p class="bold-txt">{{ removeDomain(article.traffic.target) }}</p>
+                <p class="bold-txt">
+                  {{ article.traffic ? removeDomain(article.traffic.target) : 'unknown' }}
+                </p>
                 <div style="margin-top: 8px" class="row">
                   <img
                     style="margin-right: 4px"
@@ -139,7 +141,9 @@
             <div class="space-between bottom-margin-m">
               <div class="row img-mar">
                 <img src="@/assets/images/users.svg" height="14px" alt="" />
-                <p class="bold-txt">{{ formatNumber(article.traffic.users) }}</p>
+                <p class="bold-txt">
+                  {{ article.traffic ? removeDomain(article.traffic.users) : 0 }}
+                </p>
               </div>
 
               <section class="row img-mar">
@@ -226,7 +230,9 @@
       <section class="container">
         <div v-for="(article, i) in report.meta_data.clips" :key="i" class="article">
           <div class="space-between">
-            <p class="bold-txt">{{ removeDomain(article.traffic.target) }}</p>
+            <p class="bold-txt">
+              {{ article.traffic ? removeDomain(article.traffic.target) : 'unknown' }}
+            </p>
           </div>
 
           <div class="space-between-bottom">
@@ -264,7 +270,7 @@
                   alt=""
                 />
                 <p class="bold-txt">
-                  {{ formatNumber(article.traffic.users) }}
+                  {{ article.traffic ? removeDomain(article.traffic.target) : 0 }}
                 </p>
               </div>
 
