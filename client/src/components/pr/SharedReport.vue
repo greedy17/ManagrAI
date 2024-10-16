@@ -487,6 +487,7 @@ export default {
       this.code = code
       try {
         await User.api.getReport(code).then((response) => {
+          console.log(response.data)
           this.report = response.data
           this.reportDate = response.date
         })
