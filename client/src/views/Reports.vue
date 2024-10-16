@@ -324,7 +324,7 @@
             <span class="bold-font">{{ brand }}</span> Coverage Report
           </p>
           <div class="row">
-            <!-- <button class="secondary-button">Share</button> -->
+            <button @click="clearData" class="secondary-button">Close</button>
             <button
               v-if="!reportLink"
               :disabled="reportLoading"
@@ -900,7 +900,9 @@ www.forbes.com/article-3
 
       return url.replace(domainRegex, '')
     },
-    clearData() {},
+    clearData() {
+      this.$router.go(0)
+    },
     viewReport() {
       window.open(this.reportLink, '_blank')
     },
@@ -1082,6 +1084,14 @@ www.forbes.com/article-3
         console.error(e)
         this.loadingText = 'Analyzing articles...'
         this.loading = false
+        this.urlsSet = false
+        this.$toast('Error uploading clips, try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async getTrafficData() {
@@ -1095,6 +1105,14 @@ www.forbes.com/article-3
       } catch (e) {
         console.error(e)
         this.loading = false
+        this.urlsSet = false
+        this.$toast('Error uploading clips, try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async getSocialData() {
@@ -1109,6 +1127,14 @@ www.forbes.com/article-3
       } catch (e) {
         console.error(e)
         this.loading = false
+        this.urlsSet = false
+        this.$toast('Error uploading clips, try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     async getReportSummary() {
@@ -1134,7 +1160,15 @@ www.forbes.com/article-3
         this.creating = false
       } catch (e) {
         console.error(e)
+        this.urlsSet = false
         this.loading = false
+        this.$toast('Error uploading clips, try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       }
     },
     prepareClips(clips) {

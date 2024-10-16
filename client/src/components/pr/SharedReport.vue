@@ -458,6 +458,15 @@
         <p>{{ formatDate(reportDate) }}</p>
       </div>
     </div>
+
+    <!-- <div @click.stop="openPanel" :class="{ expanded: panelOpen }" class="floating-panel">
+      <div v-outside-click="closePanel" class="fadein panel-options" v-show="panelOpen">
+        <img src="@/assets/images/wand.svg" height="20px" alt="" />
+        <img src="@/assets/images/wand.svg" height="20px" alt="" />
+        <img src="@/assets/images/wand.svg" height="20px" alt="" />
+      </div>
+      <img src="@/assets/images/wand.svg" height="20px" alt="" />
+    </div> -->
   </div>
 </template>
 <script>
@@ -468,6 +477,7 @@ export default {
   name: 'SharedReport',
   data() {
     return {
+      panelOpen: false,
       report: null,
       code: null,
       imageUrl: null,
@@ -497,6 +507,13 @@ export default {
     }
   },
   methods: {
+    openPanel() {
+      this.panelOpen = true
+    },
+    closePanel() {
+      this.panelOpen = false
+    },
+
     removeDomain(url) {
       const domainRegex = /\.(com|net|org|gov|edu|co|io|biz|info|us)$/i
 
@@ -620,6 +637,32 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.floating-panel {
+  position: absolute;
+  right: 72px;
+  bottom: 64px;
+  box-shadow: 1px 3px 6px rgba(0, 0, 0, 0.2);
+  border-radius: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  z-index: 100;
+}
+
+.expanded {
+  border-radius: 20px !important;
+
+  img {
+    margin: 8px 0;
+  }
+}
+
+.panel-options {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
 
 .pill {
   display: flex;
@@ -841,14 +884,15 @@ header {
   h4 {
     font-family: $base-font-family;
     margin: 0;
-  }
-
-  h4 {
     font-size: 18px;
   }
 
   h3 {
     font-size: 20px;
+  }
+
+  h1 {
+    font-size: 22px;
   }
 
   ul {
