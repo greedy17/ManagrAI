@@ -1073,12 +1073,15 @@ def get_social_data(urls):
     social_data = {}
     for url in urls:
         params = {"api_key": comms_consts.BUZZSUMO_API_KEY, "q": url, "num_days": 365}
-        with Variable_Client(30) as client:
-            res = client.get(comms_consts.BUZZSUMO_SEARCH_URI, params=params, headers=headers)
-            if res.status_code == 200:
-                res = res.json()
-                results = res["results"]
-                social_data[url] = results
-            else:
-                social_data[url] = {}
+        try:
+            with Variable_Client(30) as client:
+                res = client.get(comms_consts.BUZZSUMO_SEARCH_URI, params=params, headers=headers)
+                if res.status_code == 200:
+                    res = res.json()
+                    results = res["results"]
+                    social_data[url] = results
+                else:
+                    social_data[url] = {}
+        except Exception:
+            social_data[url] = {}
     return social_data
