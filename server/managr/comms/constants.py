@@ -773,6 +773,21 @@ def REPORT_SUMMARY(brand, clips):
 
     return prompt
 
+REGENERATE_REPORT_SUMMARY = (
+    lambda content, instructions, clips: f"""
+    The content below is an executive overview of the earned media report that was generated based on the news clips below. Rewrite this report based on the instructions provided below the report. Use the clips for reference when neccessary:
+
+    Here's the report:
+    {content}
+
+    Instructions: 
+    {instructions}
+
+    clips: 
+    {clips}
+    """
+)    
+
 
 DO_NOT_TRACK_LIST = [
     "https://www.wsj.com",

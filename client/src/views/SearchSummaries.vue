@@ -4402,7 +4402,7 @@ www.forbes.com/article-3
       ccEmail: '',
       targetEmail: '',
       revisedPitch: '',
-      subject: '',
+      subject: 'subject',
       loadingPitch: false,
       sendingEmail: false,
       verifying: false,
@@ -4874,7 +4874,7 @@ www.forbes.com/article-3
         this.emailError = false
         this.revisedPitch = ''
         this.targetEmail = ''
-        this.subject = ''
+        this.subject = 'subject'
         this.ccEmail = ''
         this.bccEmail = ''
       }

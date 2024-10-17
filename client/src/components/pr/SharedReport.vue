@@ -4,7 +4,7 @@
       <div class="pdf-overlay">
         <div>
           <h1>
-            <span>{{ report.title }}</span> Coverage Report
+            <span>{{ report.title }}</span>
           </h1>
         </div>
 
@@ -565,7 +565,6 @@ export default {
     closePanel() {
       this.panelOpen = false
     },
-
     removeDomain(url) {
       const domainRegex = /\.(com|net|org|gov|edu|co|io|biz|info|us)$/i
 

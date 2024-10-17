@@ -547,6 +547,11 @@ urlpatterns = [
         comms_views.get_social_url_data,
         name="social-data",
     ),
+    path(
+        "rewrite-report/",
+        comms_views.rewrite_report,
+        name="rewrite-report",
+    ),
 ]
 router.register("users/reports", core_views.ReportViewSet, "reports"),
 router.register("users/conversations", core_views.ConversationViewSet, "conversations"),

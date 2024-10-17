@@ -299,12 +299,12 @@
                   v-if="searchText"
                   @click="generateReportSearch($event)"
                   class="left-margin pointer lite-bg img-container-stay-alt"
-                  style="margin-right: 24px"
+                  style="margin-right: 16px"
                 >
                   <img
                     style="margin: 0"
                     src="@/assets/images/paper-plane-full.svg"
-                    height="14px"
+                    height="12px"
                     alt=""
                   />
                 </div>
@@ -316,9 +316,7 @@
     </div>
 
     <div class="fadein" v-else>
-      <div v-if="loading">loading here</div>
-
-      <div v-else class="chat-window">
+      <div class="chat-window">
         <div class="chat-window__header">
           <p class="thin-font">
             <span class="bold-font">{{ brand }}</span> Coverage Report
@@ -327,7 +325,7 @@
             <button @click="clearData" class="secondary-button">Back</button>
             <button
               v-if="!reportLink"
-              :disabled="reportLoading"
+              :disabled="reportLoading || loading"
               :loading="reportLoading"
               @click="createReport"
               class="primary-button"
@@ -343,7 +341,9 @@
               />
             </button>
 
-            <button v-else @click="viewReport" class="primary-button">View Report</button>
+            <button :disabled="loading" v-else @click="viewReport" class="primary-button">
+              View Report
+            </button>
 
             <!-- <img src="@/assets/images/disk.svg" height="14px" alt="" /> -->
           </div>
@@ -351,7 +351,7 @@
 
         <div class="chat-window__body">
           <div v-if="view === 'home'">
-            <div style="padding-top: 20px" class="container fadein">
+            <div :class="{ opaque: loading }" style="padding-top: 20px" class="container fadein">
               <div>
                 <img :src="uploadedImageUrl" class="photo-header" />
               </div>
@@ -418,10 +418,7 @@
             <div class="container">
               <div class="col bottom-margin">
                 <p class="bold-font medium-txt">Media exposure over time</p>
-                <small
-                  >Number of media clips <span class="bold-font">per week</span> along with the
-                  potential reach</small
-                >
+                <small>Number of media clips along with the potential reach</small>
               </div>
               <ReportLineChart
                 :volume="clipChartData.clipCountList"
@@ -592,7 +589,7 @@
                   <div class="space-between" style="margin-top: 12px">
                     <div></div>
                     <button
-                      :disabled="summaryLoading"
+                      :disabled="summaryLoading || loading"
                       @click="getArticleSummary(article.url)"
                       class="primary-button"
                     >
@@ -766,29 +763,6 @@
                     </div>
                   </div>
                 </div>
-
-                <!-- <div style="margin-top: 8px" class="space-between bottom-border">
-                  <div></div>
-                  <section class="row-even small-text img-mar">
-                    <div class="row">
-                      <img src="@/assets/images/facebook.png" height="14px" alt="" />
-                      <p class="bold-font">{{ formatNumber(article.traffic.social / 2) }}</p>
-                    </div>
-                     <div class="row">
-                      <img src="@/assets/images/pinterest.png" height="14px" alt="" />
-                      <p class="bold-font">{{ formatNumber(article.traffic.social / 8) }}</p>
-                    </div>
-                    <div class="row">
-                      <img src="@/assets/images/twitter-x.svg" height="12px" alt="" />
-                      <p class="bold-font">{{ formatNumber(article.traffic.social / 2) }}</p>
-                    </div>
-                    <div class="row">
-                      <img src="@/assets/images/reddit.svg" height="14px" alt="" />
-                      <p class="bold-font">{{ formatNumber(article.traffic.social / 4) }}</p>
-                    </div>
-                   
-                  </section>
-                </div> -->
               </div>
             </div>
           </div>
@@ -798,28 +772,117 @@
 
     <nav v-if="!creating" class="left-nav">
       <ul class="nav-links">
-        <li @click="changeView('home')" class="nav-item">
+        <li @click="changeView('home')" class="nav-item s-wrapper">
           <div :class="{ active: view === 'home' }">
             <img src="@/assets/images/home.svg" height="16px" alt="" />
           </div>
+
+          <section class="s-tooltip-right">Home</section>
         </li>
-        <li @click="changeView('charts')" class="nav-item">
+
+        <li @click="changeView('charts')" class="nav-item s-wrapper">
           <div :class="{ active: view === 'charts' }">
             <img src="@/assets/images/stats.svg" height="16px" alt="" />
           </div>
+          <section class="s-tooltip-right">Traffic</section>
         </li>
-        <li @click="changeView('starred')" class="nav-item">
+
+        <li @click="changeView('starred')" class="nav-item s-wrapper">
           <div :class="{ active: view === 'starred' }">
             <img src="@/assets/images/star.svg" height="16px" alt="" />
           </div>
+          <section class="s-tooltip-right">Starred</section>
         </li>
-        <li @click="changeView('articles')" class="nav-item">
+
+        <li @click="changeView('articles')" class="nav-item s-wrapper">
           <div :class="{ active: view === 'articles' }">
             <img src="@/assets/images/newspaper.svg" height="16px" alt="" />
           </div>
+          <section class="s-tooltip-right">Articles</section>
         </li>
       </ul>
     </nav>
+
+    <div v-if="!creating && view == 'home'">
+      <div @click.stop="openPanel" :class="{ expanded: panelOpen }" class="floating-panel">
+        <div
+          v-outside-click="closePanel"
+          class="fadein panel-options"
+          v-show="panelOpen && !loading"
+        >
+          <div v-if="showingReportEdit" class="abs-top">
+            <div class="space-between">
+              <p class="bold-txt">Regenerate</p>
+              <img
+                style="cursor: pointer"
+                @click="showingReportEdit = !showingReportEdit"
+                src="@/assets/images/close.svg"
+                height="20px"
+                alt=""
+              />
+            </div>
+
+            <div>
+              <textarea
+                style="
+                  width: 100%;
+                  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+                  padding: 12px;
+                  min-height: 100px;
+                "
+                :rows="5"
+                id="search-input"
+                class="area-input"
+                autocomplete="off"
+                placeholder="provide additional instructions for a new summary..."
+                v-model="reportInstructions"
+                v-autoresize
+                :disabled="loading"
+              />
+              <div class="space-between">
+                <div></div>
+                <button @click="rewriteContent(reportInstructions)" class="primary-button">
+                  Regenerate
+
+                  <img
+                    v-if="loading"
+                    style="margin-left: 6px"
+                    class="rotation invert"
+                    src="@/assets/images/loading.svg"
+                    height="14px"
+                    alt=""
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div @click="showingReportEdit = !showingReportEdit" class="s-wrapper">
+            <img src="@/assets/images/edit-note.svg" height="18px" alt="" />
+            <section class="s-tooltip-left">Regenerate</section>
+          </div>
+          <div class="s-wrapper" @click="rewriteContent('The report is too long. Make it shorter')">
+            <img src="@/assets/images/sortup.svg" height="18px" alt="" />
+            <section class="s-tooltip-left">Make shorter</section>
+          </div>
+          <div
+            @click="rewriteContent('The report isn\'t long enough. Make it longer')"
+            class="s-wrapper"
+          >
+            <img src="@/assets/images/sortdwn.svg" height="18px" alt="" />
+            <section class="s-tooltip-left">Make Longer</section>
+          </div>
+        </div>
+        <img
+          v-if="!loading"
+          :class="{ opaque: panelOpen }"
+          src="@/assets/images/wand.svg"
+          height="20px"
+          alt=""
+        />
+        <img v-else class="rotation" src="@/assets/images/loading.svg" height="20px" alt="" />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -835,6 +898,10 @@ export default {
   },
   data() {
     return {
+      showingReportEdit: false,
+      preppedClips: [],
+      reportInstructions: '',
+      panelOpen: false,
       hoveringName: false,
       hovering: false,
       editingBrand: false,
@@ -890,6 +957,15 @@ www.forbes.com/article-3
     }
   },
   methods: {
+    openPanel() {
+      if (!this.loading) {
+        this.panelOpen = true
+      }
+    },
+    closePanel() {
+      this.panelOpen = false
+      this.showingReportEdit = false
+    },
     refreshUser() {
       User.api
         .getUser(this.user.id)
@@ -1088,6 +1164,49 @@ www.forbes.com/article-3
     onImageError(event) {
       event.target.src = this.logoPlaceholder
     },
+    async rewriteContent(instructions) {
+      this.loading = true
+      this.panelOpen = false
+      try {
+        const res = await Comms.api.rewriteReport({
+          content: this.summary,
+          instructions: instructions,
+          clips: this.preppedClips,
+        })
+        this.summary = res.summary
+          .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+          .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+          .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+          // Convert #### to <h4></h4>
+          .replace(/^#### (.*$)/gim, '<h4>$1</h4>')
+          // Convert ## to <h2></h2> (if needed)
+          .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+          // Convert # to <h1></h1> (if needed)
+          .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        this.showingReportEdit = false
+        this.loading = false
+        this.$toast('Report updated', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.reportInstructions = ''
+      } catch (e) {
+        console.error(e)
+        this.loadingText = 'Analyzing articles...'
+        this.loading = false
+        this.urlsSet = false
+        this.$toast('Error uploading clips, try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      }
+    },
     async getReportClips() {
       this.loadingText = 'Step 1/4: Analyzing articles...'
       this.loading = true
@@ -1158,6 +1277,7 @@ www.forbes.com/article-3
     async getReportSummary() {
       this.loadingText = 'Step 4/4: Generating report...'
       let clips = this.prepareClips(this.clips)
+      this.preppedClips = clips
 
       try {
         const res = await Comms.api.getReportSummary({
@@ -1190,16 +1310,38 @@ www.forbes.com/article-3
       }
     },
     prepareClips(clips) {
-      console.log
+      console.log('SOCIAL DATA --- > : ', this.socialData)
       return clips.map(
         (a) =>
           `Description:${a.description ? a.description : ''} Date:${a.date}, Source:${
             a.source
           }, Author/s :${a.author ? a.author[0] : 'Unknown'}, Unique visitors: ${
             a.traffic ? a.traffic.users : 0
-          },`,
+          },  Social Media engagement / shares: ${
+            this.socialData[a.url] && this.socialData[a.url][0]
+              ? `Facebook: ${this.socialData[a.url][0]['total_facebook_shares']}, Reddit: ${
+                  this.socialData[a.url][0]['total_reddit_engagements']
+                }, Pinterest: ${this.socialData[a.url][0]['pinterest_shares']}, X/Twitter: ${
+                  this.socialData[a.url][0]['twitter_shares']
+                } `
+              : 'none'
+          } `,
       )
     },
+    // combineArticlesWithTraffic() {
+    //   this.clips = this.clips.map((article) => {
+    //     const domain = article.source.replace(/^https?:\/\//, '').replace(/^www\./, '')
+    //     const traffic = this.traffic[domain] || null
+    //     return {
+    //       ...article,
+    //       traffic,
+    //     }
+    //   })
+    //   this.totalVisits = this.calculateTotalVisits()
+    //   this.socialTotals = this.getSocialTotals()
+    //   this.clipChartData = this.processClips(this.clips)
+    //   this.getReportSummary()
+    // },
     combineArticlesWithTraffic() {
       this.clips = this.clips.map((article) => {
         const domain = article.source.replace(/^https?:\/\//, '').replace(/^www\./, '')
@@ -1209,49 +1351,18 @@ www.forbes.com/article-3
           traffic,
         }
       })
+
+      this.clips = this.clips.sort((a, b) => {
+        const trafficA = a.traffic ? a.traffic.users : 0 // if no traffic, set to 0
+        const trafficB = b.traffic ? b.traffic.users : 0 // if no traffic, set to 0
+        return trafficB - trafficA // sort in descending order
+      })
+
       this.totalVisits = this.calculateTotalVisits()
       this.socialTotals = this.getSocialTotals()
       this.clipChartData = this.processClips(this.clips)
       this.getReportSummary()
-      // this.starredArticles.push(this.clips[0])
     },
-    // processClips(clips) {
-    //   const dateMap = new Map()
-
-    //   clips.forEach((clip) => {
-    //     const date = clip.date ? new Date(clip.date).toLocaleDateString() : null
-    //     if (date && clip.traffic && clip.traffic.users) {
-    //       if (dateMap.has(date)) {
-    //         const existingData = dateMap.get(date)
-    //         dateMap.set(date, {
-    //           clipCount: existingData.clipCount + 1,
-    //           totalUsers: existingData.totalUsers + Number(clip.traffic.users),
-    //         })
-    //       } else {
-    //         dateMap.set(date, {
-    //           clipCount: 1,
-    //           totalUsers: Number(clip.traffic.users),
-    //         })
-    //       }
-    //     }
-    //   })
-
-    //   const dateList = []
-    //   const clipCountList = []
-    //   const usersList = []
-
-    //   dateMap.forEach((value, key) => {
-    //     dateList.push(key)
-    //     clipCountList.push(value.clipCount)
-    //     usersList.push(value.totalUsers)
-    //   })
-
-    //   return {
-    //     dateList,
-    //     clipCountList,
-    //     usersList,
-    //   }
-    // },
     processClips(clips) {
       const dateMap = new Map()
 
@@ -1303,36 +1414,84 @@ www.forbes.com/article-3
       }
       return totalVisits
     },
+    // getSocialTotals() {
+    //   let totalFacebookLikes = 0
+    //   let totalRedditLikes = 0
+    //   let totalPinterestLikes = 0
+    //   let totalTwitterLikes = 0
+
+    //   for (const url in this.socialData) {
+    //     if (this.socialData.hasOwnProperty(url)) {
+    //       const data = this.socialData[url]
+
+    //       if (data[0] && data[0].total_facebook_shares) {
+    //         totalFacebookLikes += data[0].total_facebook_shares
+    //       }
+
+    //       if (data[0] && data[0].total_reddit_engagements) {
+    //         totalRedditLikes += data[0].total_reddit_engagements
+    //       }
+
+    //       if (data[0] && data[0].twitter_shares) {
+    //         totalTwitterLikes += data[0].twitter_shares
+    //       }
+
+    //       if (data[0] && data[0].pinterest_shares) {
+    //         totalPinterestLikes += data[0].pinterest_shares
+    //       }
+    //     }
+    //   }
+
+    //   return {
+    //     totalFacebookLikes,
+    //     totalRedditLikes,
+    //     totalPinterestLikes,
+    //     totalTwitterLikes,
+    //   }
+    // },
     getSocialTotals() {
       let totalFacebookLikes = 0
       let totalRedditLikes = 0
       let totalPinterestLikes = 0
       let totalTwitterLikes = 0
 
-      console.log(this.socialData)
+      // Create an array to store articles along with their total social shares
+      const articlesWithSocialTotals = this.clips.map((article) => {
+        const socialData = this.socialData[article.url] || null
+        let totalShares = 0
 
-      for (const url in this.socialData) {
-        if (this.socialData.hasOwnProperty(url)) {
-          const data = this.socialData[url]
+        if (socialData && socialData[0]) {
+          const {
+            total_facebook_shares,
+            total_reddit_engagements,
+            twitter_shares,
+            pinterest_shares,
+          } = socialData[0]
+          totalShares += total_facebook_shares || 0
+          totalShares += total_reddit_engagements || 0
+          totalShares += twitter_shares || 0
+          totalShares += pinterest_shares || 0
 
-          if (data[0] && data[0].total_facebook_shares) {
-            totalFacebookLikes += data[0].total_facebook_shares
-          }
-
-          if (data[0] && data[0].total_reddit_engagements) {
-            totalRedditLikes += data[0].total_reddit_engagements
-          }
-
-          if (data[0] && data[0].twitter_shares) {
-            totalTwitterLikes += data[0].twitter_shares
-          }
-
-          if (data[0] && data[0].pinterest_shares) {
-            totalPinterestLikes += data[0].pinterest_shares
-          }
+          // Accumulate totals for each platform (existing logic)
+          totalFacebookLikes += total_facebook_shares || 0
+          totalRedditLikes += total_reddit_engagements || 0
+          totalTwitterLikes += twitter_shares || 0
+          totalPinterestLikes += pinterest_shares || 0
         }
-      }
 
+        // Return the article with its total social shares
+        return {
+          ...article,
+          totalShares,
+        }
+      })
+
+      // Sort the articles by their total social shares (from most to least)
+      this.starredArticles = articlesWithSocialTotals
+        .sort((a, b) => b.totalShares - a.totalShares)
+        .slice(0, 3)
+
+      // Return the totals for each platform
       return {
         totalFacebookLikes,
         totalRedditLikes,
@@ -1340,6 +1499,7 @@ www.forbes.com/article-3
         totalTwitterLikes,
       }
     },
+
     async runReport() {
       this.loading = true
       try {
@@ -1576,6 +1736,113 @@ www.forbes.com/article-3
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+.lite-bg {
+  background-color: $lite-blue !important;
+  img {
+    filter: invert(100%) !important;
+  }
+}
+
+.img-container-stay-alt {
+  padding: 3px 5px 3px 7px;
+  border-radius: 50%;
+  background-color: $soft-gray;
+
+  img {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.opaque {
+  opacity: 0.3 !important;
+  cursor: text;
+}
+
+.floating-panel {
+  position: absolute;
+  right: 15vw;
+  bottom: 10vh;
+  box-shadow: 1px 3px 6px rgba(0, 0, 0, 0.2);
+  border-radius: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  z-index: 100;
+  cursor: pointer;
+}
+
+.expanded {
+  border-radius: 20px !important;
+
+  img {
+    margin: 10px 0;
+  }
+}
+
+.panel-options {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    filter: invert(40%);
+  }
+}
+
+.s-tooltip-right {
+  visibility: hidden;
+  width: 120px;
+  background-color: $graper;
+  color: white;
+  text-align: center;
+  border-radius: 4px;
+  padding: 6px 2px;
+  position: absolute;
+  z-index: 100;
+  top: 100%;
+  left: 115%;
+  margin-top: -30px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.s-tooltip-left {
+  visibility: hidden;
+  width: 120px;
+  background-color: $graper;
+  color: white;
+  text-align: center;
+  border-radius: 4px;
+  padding: 6px 2px;
+  position: absolute;
+  z-index: 100;
+  top: 100%;
+  right: 120%;
+  margin-top: -36px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.s-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.s-wrapper:hover .s-tooltip-left,
+.s-wrapper:hover .s-tooltip-right {
+  visibility: visible;
+  opacity: 1;
+}
+
 a {
   text-decoration: none;
   color: $dark-black-blue;
@@ -1637,6 +1904,19 @@ a {
   position: absolute;
   top: 12px;
   right: 12px;
+}
+
+.abs-top {
+  position: absolute;
+  bottom: 110%;
+  right: 0;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 10px 16px;
+  width: 400px;
+  background-color: white;
+  border-radius: 6px;
+  box-shadow: 1px 3px 6px rgba(0, 0, 0, 0.2);
+  cursor: text;
 }
 
 .elipsis-text {
@@ -1983,7 +2263,7 @@ a {
 .input-container-gray {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.3s ease;
-  padding: 14px 0 12px 0;
+  padding: 18px 0 14px 0;
   border-radius: 24px;
   width: 100%;
   color: $base-gray;

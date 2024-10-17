@@ -2133,7 +2133,7 @@ export default {
       copyTip: 'Copy',
       showingTags: false,
       loadingTags: false,
-      subject: '',
+      subject: 'subject',
       targetEmail: '',
       sendingEmail: false,
       loadingPitch: false,
@@ -2978,7 +2978,7 @@ export default {
       this.getContactsSearch(false)
       if (contact) {
         this.currentContact = contact
-        this.subject = ''
+        this.subject = 'subject'
         this.ccEmail = ''
         this.bccEmail = ''
         this.revisedPitch = this.user.emailSignature ? ` \n${this.user.emailSignature}` : ''
@@ -3188,7 +3188,7 @@ export default {
       this.isDrawerOpen = !this.isDrawerOpen
       this.section = 'bio'
       this.drafting = false
-      this.subject = ''
+      this.subject = 'subject'
       this.ccEmail = ''
       this.bccEmail = ''
       this.newInsight = ''
