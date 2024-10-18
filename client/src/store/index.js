@@ -52,6 +52,7 @@ const state = {
   allPitches: [],
   allAssist: [],
   allDiscoveries: [],
+  allReports: [],
   currentSearch: null,
   currentPitch: null,
   currentDiscovery: null,
@@ -170,6 +171,9 @@ const mutations = {
   },
   SAVE_DISCOVERY(state, discoveries) {
     state.allDiscoveries = discoveries
+  },
+  SAVE_REPORTS(state, reports) {
+    state.allReports = reports
   },
   SAVE_TEMPLATES(state, templates) {
     state.templates = templates
@@ -358,6 +362,28 @@ const actions = {
 
     } catch (e) {
       console.log(e)
+    }
+  },
+  // async getReports({ commit }) {
+  //   console.log('USER HERE', state.user)
+  //   try {
+  //     await User.api.getReports({ user: state.user.id })
+  //     commit('SAVE_REPORTS', response.results)
+  //     // this.unfilteredReports = res.results
+  //   } catch (e) {
+  //     console.log(e)
+  //   }
+  // },
+  async getReports({ commit, state }) {
+    if (!state.user) {
+      console.warn('User is not set, skipping reports fetch');
+      return;
+    }
+    try {
+      const response = await User.api.getReports({ user: state.user.id });
+      commit('SAVE_REPORTS', response.results);
+    } catch (e) {
+      console.log(e);
     }
   },
   setSearch({ commit }, search) {

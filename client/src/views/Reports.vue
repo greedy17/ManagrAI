@@ -356,7 +356,14 @@
                 <img :src="uploadedImageUrl" class="photo-header" />
               </div>
               <!-- <p>Executive overview for {{ brand }}</p> -->
-              <pre v-html="summary" class="pre-text"></pre>
+              <pre
+                ref="editablePre"
+                :class="{ text: editSummary }"
+                v-html="summary"
+                @input="updateSummary"
+                :contenteditable="editSummary"
+                class="pre-text"
+              ></pre>
             </div>
           </div>
 
@@ -857,20 +864,21 @@
             </div>
           </div>
 
+          <div @click="editSummary = true" class="s-wrapper">
+            <img src="@/assets/images/pencil.svg" height="18px" alt="" />
+            <section class="s-tooltip-left">Edit</section>
+          </div>
           <div @click="showingReportEdit = !showingReportEdit" class="s-wrapper">
-            <img src="@/assets/images/edit-note.svg" height="18px" alt="" />
+            <img src="@/assets/images/refresh-pr.svg" height="18px" alt="" />
             <section class="s-tooltip-left">Regenerate</section>
           </div>
-          <div class="s-wrapper" @click="rewriteContent('The report is too long. Make it shorter')">
+          <div class="s-wrapper" @click="rewriteContent(shortText)">
             <img src="@/assets/images/sortup.svg" height="18px" alt="" />
             <section class="s-tooltip-left">Make shorter</section>
           </div>
-          <div
-            @click="rewriteContent('The report isn\'t long enough. Make it longer')"
-            class="s-wrapper"
-          >
+          <div @click="rewriteContent(longText)" class="s-wrapper">
             <img src="@/assets/images/sortdwn.svg" height="18px" alt="" />
-            <section class="s-tooltip-left">Make Longer</section>
+            <section class="s-tooltip-left">Make longer</section>
           </div>
         </div>
         <img
@@ -898,6 +906,9 @@ export default {
   },
   data() {
     return {
+      editSummary: false,
+      shortText: 'The report is too long. Make it shorter',
+      longText: "The report isn't long enough. Make it longer",
       showingReportEdit: false,
       preppedClips: [],
       reportInstructions: '',
@@ -956,7 +967,101 @@ www.forbes.com/article-3
       uploadedImageUrl: '',
     }
   },
+  watch: {
+    editSummary(newVal) {
+      console.log(newVal)
+      if (newVal) {
+        this.$nextTick(() => {
+          this.$refs.editablePre.focus()
+          this.panelOpen = false
+        })
+      }
+    },
+  },
+  computed: {
+    reports() {
+      return this.$store.state.allReports
+    },
+  },
   methods: {
+    // updateSummary() {
+    //   let selection = window.getSelection()
+    //   let range = selection.getRangeAt(0)
+    //   let position = range.startOffset
+
+    //   this.summary = this.$refs.editablePre.innerHTML
+
+    //   this.$nextTick(() => {
+    //     let newRange = document.createRange()
+    //     let selection = window.getSelection()
+    //     newRange.setStart(this.$refs.editablePre.firstChild, position)
+    //     newRange.collapse(true)
+    //     selection.removeAllRanges()
+    //     selection.addRange(newRange)
+    //   })
+    // },
+    updateSummary() {
+      let selection = window.getSelection()
+      let range = selection.getRangeAt(0)
+
+      // Save the caret position as a character offset
+      let preText = this.$refs.editablePre.innerText
+      let caretOffset = this.getCaretCharacterOffsetWithin(this.$refs.editablePre)
+
+      // Update summary with innerHTML to preserve formatting
+      this.summary = this.$refs.editablePre.innerHTML
+
+      this.$nextTick(() => {
+        // Restore caret position after updating
+        this.setCaretPosition(this.$refs.editablePre, caretOffset)
+      })
+    },
+
+    // Helper function to get caret character offset within a contenteditable element
+    getCaretCharacterOffsetWithin(element) {
+      let caretOffset = 0
+      let selection = window.getSelection()
+      if (selection.rangeCount > 0) {
+        let range = selection.getRangeAt(0)
+        let preCaretRange = range.cloneRange()
+        preCaretRange.selectNodeContents(element)
+        preCaretRange.setEnd(range.endContainer, range.endOffset)
+        caretOffset = preCaretRange.toString().length
+      }
+      return caretOffset
+    },
+
+    // Helper function to set the caret position at a specific character offset
+    setCaretPosition(element, offset) {
+      let selection = window.getSelection()
+      let range = document.createRange()
+      let currentNode = element
+      let currentOffset = 0
+
+      // Traverse the child nodes to find the correct text node for the caret position
+      function traverseNodes(node) {
+        if (node.nodeType === 3) {
+          // Text node
+          if (currentOffset + node.length >= offset) {
+            range.setStart(node, offset - currentOffset)
+            return true
+          } else {
+            currentOffset += node.length
+          }
+        } else {
+          for (let i = 0; i < node.childNodes.length; i++) {
+            if (traverseNodes(node.childNodes[i])) return true
+          }
+        }
+        return false
+      }
+
+      traverseNodes(element)
+
+      // Set the caret to the calculated position
+      selection.removeAllRanges()
+      selection.addRange(range)
+    },
     openPanel() {
       if (!this.loading) {
         this.panelOpen = true
@@ -1040,15 +1145,19 @@ www.forbes.com/article-3
         this.reportLoading = false
       }
     },
-    async getReports() {
-      try {
-        await User.api.getReports({ user: this.$store.state.user.id }).then((response) => {
-          this.reportLink = response.results[0]['share_url']
-        })
-      } catch (e) {
-        console.log(e)
-      } finally {
-      }
+    // async getReports() {
+    //   try {
+    //     await User.api.getReports({ user: this.$store.state.user.id }).then((response) => {
+    //       this.reportLink = response.results[0]['share_url']
+    //     })
+    //   } catch (e) {
+    //     console.log(e)
+    //   } finally {
+    //   }
+    // },
+    getReports() {
+      this.$store.dispatch('getReports')
+      this.reportLink = this.reports[0].share_url
     },
     scrollToTopDivider() {
       setTimeout(() => {
@@ -2064,6 +2173,16 @@ a {
   line-height: 32px;
   word-wrap: break-word;
   white-space: pre-wrap;
+  outline: none;
+}
+
+.pre-text:focus {
+  outline: 2px solid $lite-blue;
+}
+
+::v-deep ::selection {
+  background-color: $lite-blue !important;
+  color: white;
 }
 
 ::v-deep .pre-text {
@@ -2459,5 +2578,12 @@ textarea::placeholder {
       margin: 0;
     }
   }
+}
+
+.cursor {
+  cursor: pointer;
+}
+.text {
+  cursor: text;
 }
 </style>
