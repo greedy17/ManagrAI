@@ -3344,6 +3344,7 @@ def get_traffic_data(request):
 def get_article_url_data(request):
     urls = request.data.get("urls")
     clip_data = get_article_data(urls)
+
     return Response(status=status.HTTP_200_OK, data=clip_data)
 
 
@@ -3430,7 +3431,7 @@ def rewrite_report(request):
     while True:
         try:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.REGENERATE_REPORT_SUMMARY(content,instructions,clips)
+            prompt = comms_consts.REGENERATE_REPORT_SUMMARY(content, instructions, clips)
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
                 prompt,
@@ -3480,4 +3481,3 @@ def rewrite_report(request):
     if has_error:
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
     return Response(status=status.HTTP_200_OK, data={"summary": message})
-
