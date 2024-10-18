@@ -964,7 +964,6 @@ export default {
       pitchText: '',
       assistText: '',
       discoveryText: '',
-      unfilteredReports: [],
       showSavedSearches: false,
       showSavedPitches: false,
       showSavedAssist: false,
@@ -1063,20 +1062,9 @@ export default {
     selectReport(url) {
       window.open(url, '_blank')
     },
-    async getReports() {
-      try {
-        const res = await User.api.getReports({ user: this.$store.state.user.id })
-        this.unfilteredReports = res.results
-      } catch (e) {
-        console.log(e)
-      } finally {
-      }
-    },
-
     hideSearches() {
       this.showSavedSearches = false
     },
-
     hideReports() {
       this.showSavedReports = false
     },
@@ -1364,6 +1352,9 @@ export default {
     getDiscoveries() {
       this.$store.dispatch('getDiscoveries')
     },
+    getReports() {
+      this.$store.dispatch('getReports')
+    },
     goHome() {
       this.$router.go()
     },
@@ -1430,12 +1421,8 @@ export default {
         return this.$store.state.allDiscoveries
       }
     },
-    reports() {
-      if (this.unfilteredReports.length) {
-        return this.unfilteredReports.filter((report) =>
-          report.title.toLowerCase().includes(this.reportText.toLowerCase()),
-        )
-      } else return []
+    unfilteredReports() {
+      return this.$store.state.allReports
     },
     searches() {
       if (this.unfilteredSearches.length) {
@@ -1448,6 +1435,13 @@ export default {
       if (this.unfilteredPitches.length) {
         return this.unfilteredPitches.filter((pitch) =>
           pitch.name.toLowerCase().includes(this.pitchText.toLowerCase()),
+        )
+      } else return []
+    },
+    reports() {
+      if (this.unfilteredReports.length) {
+        return this.unfilteredReports.filter((report) =>
+          report.title.toLowerCase().includes(this.reportText.toLowerCase()),
         )
       } else return []
     },

@@ -1018,7 +1018,8 @@ def get_url_traffic_data(urls):
         try:
             for url in urls:
                 domain = get_domain(url, True)
-                domains.append(domain)
+                if domain:
+                    domains.append(domain)
             domains = list(set(domains))
             url = comms_consts.SEMRUSH_TRAFFIC_URI
             params = comms_consts.SEMRUSH_PARAMS(domains)
@@ -1031,8 +1032,8 @@ def get_url_traffic_data(urls):
                 r = client.get(full_url)
             content = r._content
             decoded_content = content.decode("utf-8")
-            csv_reader = csv.DictReader(io.StringIO(decoded_content), delimiter=";")
 
+            csv_reader = csv.DictReader(io.StringIO(decoded_content), delimiter=";")
             for row in csv_reader:
                 target = row["target"]
                 data_dict[target] = row
