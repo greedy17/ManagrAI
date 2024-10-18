@@ -321,7 +321,7 @@
           <p class="thin-font">
             <span class="bold-font">{{ brand }}</span> Coverage Report
           </p>
-          <div class="row">
+          <div :class="{ opaque: editSummary }" class="row">
             <button @click="clearData" class="secondary-button">Back</button>
             <button
               v-if="!reportLink"
@@ -355,7 +355,12 @@
               <div>
                 <img :src="uploadedImageUrl" class="photo-header" />
               </div>
-              <!-- <p>Executive overview for {{ brand }}</p> -->
+              <div style="margin-top: 12px" v-if="editSummary" class="space-between fadein">
+                <div></div>
+                <button @click="closeSummaryEdit" class="primary-button turq-bg">
+                  Update Report
+                </button>
+              </div>
               <pre
                 ref="editablePre"
                 :class="{ text: editSummary }"
@@ -864,7 +869,7 @@
             </div>
           </div>
 
-          <div @click="editSummary = true" class="s-wrapper">
+          <div @click="editSummary = !editSummary" class="s-wrapper">
             <img src="@/assets/images/pencil.svg" height="18px" alt="" />
             <section class="s-tooltip-left">Edit</section>
           </div>
@@ -984,22 +989,9 @@ www.forbes.com/article-3
     },
   },
   methods: {
-    // updateSummary() {
-    //   let selection = window.getSelection()
-    //   let range = selection.getRangeAt(0)
-    //   let position = range.startOffset
-
-    //   this.summary = this.$refs.editablePre.innerHTML
-
-    //   this.$nextTick(() => {
-    //     let newRange = document.createRange()
-    //     let selection = window.getSelection()
-    //     newRange.setStart(this.$refs.editablePre.firstChild, position)
-    //     newRange.collapse(true)
-    //     selection.removeAllRanges()
-    //     selection.addRange(newRange)
-    //   })
-    // },
+    closeSummaryEdit() {
+      this.editSummary = false
+    },
     updateSummary() {
       let selection = window.getSelection()
       let range = selection.getRangeAt(0)
@@ -1845,6 +1837,10 @@ www.forbes.com/article-3
 @import '@/styles/variables';
 @import '@/styles/buttons';
 
+.turq-bg {
+  background-color: $lite-blue !important;
+}
+
 .lite-bg {
   background-color: $lite-blue !important;
   img {
@@ -2585,5 +2581,6 @@ textarea::placeholder {
 }
 .text {
   cursor: text;
+  outline: 2px solid $lite-blue;
 }
 </style>
