@@ -208,10 +208,72 @@
             <div style="width: 80%" class="big-chat-bubble">
               <div class="row">
                 <img src="@/assets/images/iconlogo.png" height="24px" alt="" />
-                <p class="regular-font" v-typed="fileText"></p>
+                <p class="regular-font" v-typed="urlText"></p>
+              </div>
+              <div style="margin: 0 0 8px 14px">
+                <div class="relative">
+                  <div
+                    @click.stop="toggleSource"
+                    class="drop-header-alt"
+                    style="background-color: #fafafa; box-shadow: 1px 2px 6px rgba(0, 0, 0, 0.1)"
+                  >
+                    <p style="font-size: 15px !important" class="mobile-text-hide">Select source</p>
+                    <img
+                      v-if="!showSource"
+                      src="@/assets/images/arrowDropUp.svg"
+                      height="15px"
+                      alt=""
+                    />
+                    <img
+                      v-else
+                      class="rotate-img"
+                      src="@/assets/images/arrowDropUp.svg"
+                      height="15px"
+                      alt=""
+                    />
+                  </div>
+
+                  <div
+                    v-show="showSource"
+                    v-outside-click="hideSource"
+                    class="container-left-below"
+                  >
+                    <section>
+                      <h3>Select a source</h3>
+                    </section>
+
+                    <div>
+                      <p
+                        v-for="(source, i) in sources"
+                        :key="i"
+                        @click="selectSource(source.value)"
+                      >
+                        {{ source.name }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="sourceType" class="space-between">
+            <div></div>
+            <div class="chat-window__chat-bubble row">
+              <img src="@/assets/images/profile.svg" height="12px" alt="" />
+              <p>{{ sourceType === 'url' ? 'Upload URLs' : 'Saved Search' }}</p>
+            </div>
+          </div>
+
+          <div v-if="sourceType">
+            <div style="width: 80%" class="big-chat-bubble">
+              <div class="row fadein">
+                <img src="@/assets/images/iconlogo.png" height="24px" alt="" />
+                <p v-if="sourceType === 'url'" class="regular-font">{{ fileText }}</p>
+                <p v-else-if="sourceType === 'saved'" class="regular-font">{{ savedText }}</p>
               </div>
 
-              <div style="margin: 0 0 8px 14px">
+              <div v-if="sourceType === 'url'" style="margin: 0 0 8px 14px">
                 <p class="thin-font">
                   Paste up to 200 URLs. Each on a new line or separated by commas.
                 </p>
@@ -239,6 +301,66 @@
                   >
                     Continue
                   </button>
+                </div>
+              </div>
+
+              <div v-else style="margin: 0 0 8px 20px">
+                <!-- <p class="thin-font">We will gather news coverage based on your selected search</p> -->
+
+                <div style="margin: 12px 0" class="relative">
+                  <div
+                    @click.stop="toggleSearches"
+                    class="drop-header-alt"
+                    style="background-color: #fafafa; box-shadow: 1px 2px 6px rgba(0, 0, 0, 0.1)"
+                  >
+                    <p style="font-size: 15px !important" class="mobile-text-hide">
+                      Saved Searches
+                    </p>
+
+                    <img
+                      v-if="loading"
+                      style="margin-right: 4px"
+                      class="rotation"
+                      src="@/assets/images/loading.svg"
+                      height="14px"
+                      alt=""
+                    />
+
+                    <img
+                      v-if="!showSearches && !loading"
+                      src="@/assets/images/arrowDropUp.svg"
+                      height="15px"
+                      alt=""
+                    />
+                    <img
+                      v-else-if="showSearches && !loading"
+                      class="rotate-img"
+                      src="@/assets/images/arrowDropUp.svg"
+                      height="15px"
+                      alt=""
+                    />
+                  </div>
+
+                  <div
+                    v-show="showSearches"
+                    v-outside-click="hideSearches"
+                    class="container-left-below"
+                  >
+                    <section>
+                      <h3>Select a search</h3>
+                    </section>
+
+                    <div v-if="savedSearches.length">
+                      <p
+                        v-for="(search, i) in savedSearches"
+                        :key="i"
+                        @click="selectSearch(search)"
+                      >
+                        {{ search.name }}
+                      </p>
+                    </div>
+                    <div v-else>You dont have any saved searches...</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -911,6 +1033,15 @@ export default {
   },
   data() {
     return {
+      useSearchUrls: false,
+      showSearches: false,
+      selectedSearch: null,
+      showSource: false,
+      sourceType: null,
+      sources: [
+        { name: 'Upload URLs', value: 'url' },
+        { name: 'Saved Search', value: 'saved' },
+      ],
       editSummary: false,
       shortText: 'The report is too long. Make it shorter',
       longText: "The report isn't long enough. Make it longer",
@@ -961,6 +1092,8 @@ export default {
       ],
       maxSize: 2 * 1024 * 1024,
       fileText: `Next, add news coverage links by pasting the URL's below.`,
+      savedText: `Next, add news coverage by selecting a saved search`,
+      urlText: 'Select source',
       reportUrls: '',
       urlsSet: false,
       urlPlaceholder: `
@@ -970,6 +1103,8 @@ www.forbes.com/article-3
      `,
       lastInstructions: 'All set! We are now ready to run the report!',
       uploadedImageUrl: '',
+      dateStart: null,
+      dateEnd: null,
     }
   },
   watch: {
@@ -987,8 +1122,70 @@ www.forbes.com/article-3
     reports() {
       return this.$store.state.allReports
     },
+    savedSearches() {
+      return this.$store.state.allSearches
+    },
+    user() {
+      return this.$store.state.user
+    },
+  },
+  created() {
+    const today = new Date()
+    const sevenDaysAgo = new Date(today)
+    sevenDaysAgo.setDate(today.getDate() - 7)
+
+    this.dateStart = sevenDaysAgo.toISOString().split('T')[0]
+    this.dateEnd = today.toISOString().split('T')[0]
   },
   methods: {
+    async getClips() {
+      this.loading = true
+      try {
+        const res = await Comms.api.getClips({
+          search: this.selectedSearch.input_text,
+          boolean: this.selectedSearch.search_boolean,
+          user_id: this.user.id,
+          date_from: this.dateStart,
+          date_to: this.dateEnd,
+        })
+        let articles = []
+        articles = res.articles
+        this.urls = articles.map((art) => {
+          return art.link
+        })
+        this.urlCount = this.urls.length
+        this.useSearchUrls = true
+        this.setUrls()
+      } catch (e) {
+        this.reportUrls = []
+        console.log(e)
+      } finally {
+        this.loading = false
+      }
+    },
+    toggleSource() {
+      this.showSource = true
+    },
+    hideSource() {
+      this.showSource = false
+    },
+    selectSource(val) {
+      this.sourceType = val
+      this.hideSource()
+      this.scrollToChatTop()
+    },
+    toggleSearches() {
+      this.showSearches = true
+    },
+    hideSearches() {
+      this.showSearches = false
+    },
+    selectSearch(val) {
+      this.selectedSearch = val
+      this.hideSearches()
+      this.scrollToChatTop()
+      this.getClips()
+    },
     closeSummaryEdit() {
       this.editSummary = false
     },
@@ -1312,6 +1509,9 @@ www.forbes.com/article-3
       this.loadingText = 'Step 1/4: Analyzing articles...'
       this.loading = true
       this.scrollToChatTop()
+      // if(this.useSearchUrls){
+
+      // }
       try {
         const res = await Comms.api.getReportClips({
           urls: this.urls,
@@ -1411,7 +1611,6 @@ www.forbes.com/article-3
       }
     },
     prepareClips(clips) {
-      console.log('SOCIAL DATA --- > : ', this.socialData)
       return clips.map(
         (a) =>
           `Description:${a.description ? a.description : ''} Date:${a.date}, Source:${
@@ -1836,6 +2035,105 @@ www.forbes.com/article-3
 <style lang="scss" scoped>
 @import '@/styles/variables';
 @import '@/styles/buttons';
+
+.rotate-img {
+  transform: rotate(180deg);
+}
+
+.container-left-below {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  position: absolute;
+  left: 0;
+  bottom: 44px;
+  min-height: 150px;
+  max-height: 250px;
+  overflow-y: scroll;
+  width: 350px;
+  padding: 0 0 16px 0;
+  background-color: white;
+  box-shadow: 0 11px 16px rgba(0, 0, 0, 0.1);
+  z-index: 9;
+
+  p {
+    font-family: $thin-font-family;
+    margin: 0;
+    padding: 8px 16px;
+    width: 100%;
+    font-size: 14px;
+    &:hover {
+      background-color: $soft-gray;
+      cursor: pointer;
+    }
+  }
+
+  section {
+    position: sticky;
+    top: 0;
+    margin: 0;
+    background-color: white;
+    font-family: $base-font-family;
+    font-weight: 100;
+    padding: 16px;
+    width: 100%;
+    z-index: 3;
+
+    h3 {
+      margin: 0;
+    }
+  }
+}
+
+.relative {
+  position: relative;
+}
+
+.drop-header-alt {
+  padding: 8px 10px;
+  width: fit-content;
+  background-color: white;
+  font-size: 14px !important;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  cursor: pointer;
+  margin: 8px 0;
+  font-family: $thin-font-family;
+
+  @media only screen and (max-width: 600px) {
+    font-size: 12px !important;
+  }
+
+  img {
+    margin: 0 8px;
+    filter: invert(40%);
+
+    @media only screen and (max-width: 600px) {
+      // display: none;
+    }
+  }
+
+  small {
+    font-size: 14px;
+    margin-left: 4px !important;
+    font-family: $base-font-family;
+    max-width: 55px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  p,
+  small {
+    margin: 0;
+    padding: 0;
+  }
+
+  &:hover {
+    background-color: $soft-gray;
+  }
+}
 
 .turq-bg {
   background-color: $lite-blue !important;
