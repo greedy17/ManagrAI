@@ -2091,7 +2091,7 @@
             </div>
 
             <div style="padding-top: 16px" v-if="summary" class="row">
-              <div
+              <!-- <div
                 @click="toggleLearnInputModal(summary)"
                 v-if="mainView === 'write'"
                 class="image-container s-wrapper"
@@ -2104,14 +2104,14 @@
                 />
 
                 <div class="s-tooltip">Learn this style</div>
-              </div>
+              </div> -->
 
-              <div
+              <!-- <div
                 @click.stop="toggleCompany"
                 :class="{ 'soft-gray-bg': showCompanySelection || detailTitle }"
                 class="image-container s-wrapper"
               >
-                <!-- :class="{ 'turq-filter': detailTitle }" -->
+             
                 <img src="@/assets/images/building.svg" height="14px" alt="" />
                 <div
                   style="bottom: 115%; width: 200px; left: -40px"
@@ -2123,26 +2123,55 @@
                 <div style="bottom: 115%; width: 200px; left: -40px" v-else class="s-tooltip">
                   Company Details: for pitching tips
                 </div>
-              </div>
+              </div> -->
 
               <div
                 v-if="mainView === 'news'"
                 @click.stop="showShare"
-                class="image-container s-wrapper"
+                class="secondary-button"
                 :class="{ 'soft-gray-bg': showingShare }"
               >
-                <img
+                Share
+                <!-- <img
                   style="cursor: pointer; filter: invert(40%)"
                   src="@/assets/images/upload2.svg"
                   height="14px"
                   alt=""
                 />
 
-                <div class="s-tooltip">Share</div>
+                <div class="s-tooltip">Share</div> -->
+              </div>
+
+              <div @click="copyText" v-if="mainView === 'write'" class="secondary-button">
+                <!-- <img
+                  style="cursor: pointer; filter: invert(40%)"
+                  src="@/assets/images/clipboard.svg"
+                  height="16px"
+                  alt=""
+                  @click="copyText"
+                /> -->
+
+                <div>{{ copyTip }}</div>
+              </div>
+
+              <div
+                @click="copyDiscoverText"
+                v-else-if="mainView === 'discover'"
+                class="secondary-button"
+              >
+                <!-- <img
+                  style="cursor: pointer; filter: invert(40%)"
+                  src="@/assets/images/clipboard.svg"
+                  height="16px"
+                  alt=""
+                  @click="copyDiscoverText"
+                /> -->
+
+                <div>{{ copyTip }}</div>
               </div>
 
               <button
-                class="image-container borderless s-wrapper"
+                class="primary-button"
                 :class="{ 'soft-gray-bg': showingSave }"
                 @click.stop="showSave"
                 v-if="
@@ -2152,7 +2181,7 @@
                   (mainView === 'discover' && summary)
                 "
               >
-                <img
+                <!-- <img
                   v-if="
                     (mainView === 'news' || mainView === 'social') &&
                     (searchSaved || savedSearch) &&
@@ -2187,7 +2216,7 @@
                   alt=""
                 />
 
-                <img v-else height="14px" src="@/assets/images/disk.svg" alt="" />
+                <img v-else height="14px" src="@/assets/images/disk.svg" alt="" /> -->
 
                 <div
                   v-if="
@@ -2195,7 +2224,6 @@
                     (searchSaved || savedSearch) &&
                     !notifiedList.includes(searchId)
                   "
-                  class="s-tooltip"
                 >
                   Schedule Digest
                 </div>
@@ -2206,12 +2234,11 @@
                     (searchSaved || savedSearch) &&
                     notifiedList.includes(searchId)
                   "
-                  class="s-tooltip"
                 >
                   Disable Digest
                 </div>
 
-                <div v-else class="s-tooltip">Save</div>
+                <div v-else>Save</div>
               </button>
 
               <div
@@ -2847,7 +2874,7 @@
                 <p class="header-p">Answer</p>
 
                 <div
-                  v-if="mainView !== 'discover'"
+                  v-if="mainView === 'web' || mainView === 'social' || mainView === 'news'"
                   style="margin: 2px 0 0 4px"
                   class="image-container s-wrapper"
                 >
@@ -2857,18 +2884,6 @@
                     height="16px"
                     alt=""
                     @click="copyText"
-                  />
-
-                  <div class="s-tooltip">{{ copyTip }}</div>
-                </div>
-
-                <div v-else style="margin: 2px 0 0 4px" class="image-container s-wrapper">
-                  <img
-                    style="cursor: pointer; filter: invert(40%)"
-                    src="@/assets/images/clipboard.svg"
-                    height="16px"
-                    alt=""
-                    @click="copyDiscoverText"
                   />
 
                   <div class="s-tooltip">{{ copyTip }}</div>
@@ -8965,15 +8980,15 @@ www.forbes.com/article-3
   color: $dark-green !important;
 }
 
-.secondary-button {
-  @include dark-blue-button();
-  padding: 8px 12px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 16px;
-  color: $dark-black-blue;
-  background-color: white;
-  margin-right: -2px;
-}
+// .secondary-button {
+//   @include dark-blue-button();
+//   padding: 8px 12px;
+//   border: 1px solid rgba(0, 0, 0, 0.2);
+//   border-radius: 16px;
+//   color: $dark-black-blue;
+//   background-color: white;
+//   margin-right: -2px;
+// }
 
 .secondary-button-no-border {
   @include dark-blue-button();
@@ -13668,15 +13683,15 @@ select {
   display: none;
 }
 
-.secondary-button {
-  @include dark-blue-button();
-  padding: 8px 12px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 16px;
-  color: $dark-black-blue;
-  background-color: white;
-  margin-right: -2px;
-}
+// .secondary-button {
+//   @include dark-blue-button();
+//   padding: 8px 12px;
+//   border: 1px solid rgba(0, 0, 0, 0.2);
+//   border-radius: 16px;
+//   color: $dark-black-blue;
+//   background-color: white;
+//   margin-right: -2px;
+// }
 
 .file-name {
   margin-top: 10px;
