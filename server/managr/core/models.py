@@ -1249,7 +1249,10 @@ class MicrosoftAccount(TimeStampModel):
         url = core_consts.MICROSOFT_SEND_MAIL
         tracker_link = core_consts.TRACKING_PIXEL_LINK + "?type=opened"
         email_res = {"sent": False}
-        instance = False
+        if draft_id:
+            instance = EmailTracker.objects.get(id=draft_id)
+        else:
+            instance = False
         try:
             data = {
                 "user": self.user.id,
