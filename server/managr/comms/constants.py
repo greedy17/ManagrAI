@@ -242,7 +242,7 @@ NEWS_API_HEADERS = {
 NEW_API_URI = "https://newsapi.org/v2"
 
 NEW_API_EVERYTHING_QUERY_URI = (
-    lambda query: f"everything?{query}&language=en&sortBy=publishedAt&pageSize=40"
+    lambda query: f"everything?{query}&language=en&sortBy=publishedAt"
 )
 
 NEW_API_EVERYTHING_DATE_URI = (

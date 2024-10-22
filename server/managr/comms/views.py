@@ -112,6 +112,7 @@ def getclips(request):
         boolean = request.GET.get("boolean", False)
         date_to = request.GET.get("date_to", False)
         date_from = request.GET.get("date_from", False)
+        is_report = request.GET.get("is_report", False)
         if "journalist:" in search:
             internal_articles = InternalArticle.search_by_query(search, date_to, date_from, True)
             articles = normalize_article_data([], internal_articles)
@@ -133,15 +134,15 @@ def getclips(request):
                 )
             r = open_ai_exceptions._handle_response(r)
             query_input = r.get("choices")[0].get("message").get("content")
-            news_res = Search.get_clips(query_input, date_to, date_from)
+            news_res = Search.get_clips(query_input, date_to, date_from, is_report)
             articles = news_res["articles"]
         else:
-            news_res = Search.get_clips(boolean, date_to, date_from)
+            news_res = Search.get_clips(boolean, date_to, date_from, is_report)
             articles = news_res["articles"]
             query_input = boolean
         articles = [article for article in articles if article["title"] != "[Removed]"]
         internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
-        articles = normalize_article_data(articles, internal_articles)
+        articles = normalize_article_data(articles, internal_articles, is_report)
         return {"articles": articles, "string": query_input}
 
     except Exception as e:
@@ -1898,13 +1899,12 @@ class DiscoveryViewSet(
             if tracker:
                 user = tracker.user
         if user.has_google_integration or user.has_microsoft_integration:
-            res = user.email_account.send_email(recipient, subject, body, name, cc, bcc)
+            res = user.email_account.send_email(recipient, subject, body, name, cc, bcc, draftId)
             user.add_meta_data("emailSent")
         else:
-            res = send_mailgun_email(user, name, subject, recipient, body, bcc, cc)
+            res = send_mailgun_email(user, name, subject, recipient, body, bcc, cc, draftId)
         sent = res["sent"]
         if sent:
-
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             return Response(

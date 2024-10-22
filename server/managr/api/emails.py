@@ -153,7 +153,8 @@ def send_test_email(email_from, email_to):
     )
 
 
-def send_mailgun_email(user, name, subject, recipient, body, bcc=[], cc=[]):
+def send_mailgun_email(user, name, subject, recipient, body, bcc=[], cc=[], draft_id=None):
+    from managr.comms.models import EmailTracker
     from managr.comms.serializers import EmailTrackerSerializer
 
     context = {"body": body}
@@ -176,19 +177,23 @@ def send_mailgun_email(user, name, subject, recipient, body, bcc=[], cc=[]):
             user=user,
         )
         user.add_meta_data("emailSent")
-        serializer = EmailTrackerSerializer(
-            data={
-                "user": user.id,
-                "recipient": recipient,
-                "body": body,
-                "subject": subject,
-                "message_id": message_id,
-                "name": name,
-            }
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        serializer.instance.add_activity("sent")
+        if draft_id:
+            instance = EmailTracker.objects.get(id=draft_id)
+        else:
+            serializer = EmailTrackerSerializer(
+                data={
+                    "user": user.id,
+                    "recipient": recipient,
+                    "body": body,
+                    "subject": subject,
+                    "message_id": message_id,
+                    "name": name,
+                }
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            instance = serializer.instance
+        instance.add_activity("sent")
         res["sent"] = True
         return res
     except Exception as e:

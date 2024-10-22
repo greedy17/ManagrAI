@@ -89,10 +89,7 @@
       <div style="margin-top: 24px" class="container">
         <div class="col bottom-margin">
           <p class="bold-txt medium-txt">Media exposure over time</p>
-          <small
-            >Number of media clips <span class="bold-txt">per week</span> along with the potential
-            reach</small
-          >
+          <small>Number of media clips along with the potential reach</small>
         </div>
         <ReportLineChart
           :volume="report.meta_data.chartData.clipCountList"

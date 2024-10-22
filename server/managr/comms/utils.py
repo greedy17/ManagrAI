@@ -401,7 +401,7 @@ def merge_sort_dates(arr, key="publish_date"):
     return arr
 
 
-def normalize_article_data(api_data, article_models, for_test=False):
+def normalize_article_data(api_data, article_models, for_test=False, is_report=False):
     normalized_list = []
     normalized_api_list = normalize_newsapi_to_model(api_data)
     normalized_list.extend(normalized_api_list)
@@ -412,7 +412,10 @@ def normalize_article_data(api_data, article_models, for_test=False):
     for obj in sorted_arr:
         if obj["title"] not in ordered_dict.keys():
             ordered_dict[obj["title"]] = obj
-    duplicates_removed_list = list(ordered_dict.values())[:50]
+    if is_report:        
+        duplicates_removed_list = list(ordered_dict.values())[:200]
+    else:
+        duplicates_removed_list = list(ordered_dict.values())[:50]    
     return duplicates_removed_list
 
 

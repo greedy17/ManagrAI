@@ -1148,6 +1148,7 @@ www.forbes.com/article-3
           user_id: this.user.id,
           date_from: this.dateStart,
           date_to: this.dateEnd,
+          is_report: true,
         })
         let articles = []
         articles = res.articles
@@ -1293,7 +1294,7 @@ www.forbes.com/article-3
       this.$router.go(0)
     },
     viewReport() {
-      window.open(this.reportLink, '_blank')
+      window.open(this.reports[0].share_url, '_blank')
     },
     async createReport() {
       this.reportLoading = true
@@ -1315,13 +1316,10 @@ www.forbes.com/article-3
           brand: this.brand,
         }),
       )
-
       try {
         await User.api.createReport(formData)
-        this.$nextTick(() => {
-          this.getReports()
-          this.refreshUser()
-        })
+        this.refreshUser()
+        this.getReports()
         this.$toast('Report Saved!', {
           timeout: 2000,
           position: 'top-left',
@@ -1331,23 +1329,22 @@ www.forbes.com/article-3
         })
       } catch (e) {
         console.log(e)
+        this.$toast('Error saving report', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.reportLoading = false
       }
     },
-    // async getReports() {
-    //   try {
-    //     await User.api.getReports({ user: this.$store.state.user.id }).then((response) => {
-    //       this.reportLink = response.results[0]['share_url']
-    //     })
-    //   } catch (e) {
-    //     console.log(e)
-    //   } finally {
-    //   }
-    // },
     getReports() {
       this.$store.dispatch('getReports')
-      this.reportLink = this.reports[0].share_url
+      this.$nextTick(() => {
+        this.reportLink = 'link'
+      })
     },
     scrollToTopDivider() {
       setTimeout(() => {
@@ -1933,44 +1930,129 @@ www.forbes.com/article-3
       const file = event.target.files[0]
       this.mainImage = file
 
+      // Check if a file was selected
       if (!file) {
         this.fileName = ''
         alert('No file selected.')
         return
       }
 
+      // Check for allowed file types
       if (!this.allowedFormats.includes(file.type)) {
         alert('Only JPEG, PNG, and SVG files are allowed.')
         this.fileName = ''
         return
       }
 
+      // Check for file size
       if (file.size > this.maxSize) {
         alert('File size should not exceed 2MB.')
         this.fileName = ''
         return
       }
 
-      this.loading = true
-      this.fileName = file.name
-      this.scrollToChatTop()
-
       const reader = new FileReader()
 
-      reader.onload = (e) => {
-        const imageDataUrl = e.target.result
-        this.uploadedImageUrl = imageDataUrl
-        this.loading = false
-      }
+      // Logic for JPEG files: perform extra binary validation
+      if (file.type === 'image/jpeg') {
+        reader.onload = (e) => {
+          const arrayBuffer = e.target.result
+          const uint8Array = new Uint8Array(arrayBuffer)
 
-      reader.onerror = () => {
-        alert('Error reading file.')
-        this.fileName = ''
-        this.loading = false
-      }
+          // Check JPEG Start and End markers
+          const isValidJPEG =
+            uint8Array[0] === 0xff &&
+            uint8Array[1] === 0xd8 &&
+            uint8Array[uint8Array.length - 2] === 0xff &&
+            uint8Array[uint8Array.length - 1] === 0xd9
 
-      reader.readAsDataURL(file)
+          if (!isValidJPEG) {
+            alert('The file is not a valid JPEG image.')
+            this.fileName = ''
+            this.loading = false
+            return
+          }
+
+          // If valid, read again as DataURL for preview
+          this.fileName = file.name
+          this.scrollToChatTop()
+          const dataUrlReader = new FileReader()
+          dataUrlReader.onload = (e) => {
+            this.uploadedImageUrl = e.target.result
+            this.loading = false
+          }
+          dataUrlReader.readAsDataURL(file)
+        }
+
+        reader.onerror = () => {
+          alert('Error reading file.')
+          this.fileName = ''
+          this.loading = false
+        }
+
+        // Read the file as an ArrayBuffer to access binary data for validation
+        reader.readAsArrayBuffer(file)
+      } else {
+        this.fileName = file.name
+        this.scrollToChatTop()
+        // For non-JPEG files, keep the original logic
+        reader.onload = (e) => {
+          const imageDataUrl = e.target.result
+          this.uploadedImageUrl = imageDataUrl
+          this.loading = false
+        }
+
+        reader.onerror = () => {
+          alert('Error reading file.')
+          this.fileName = ''
+          this.loading = false
+        }
+
+        reader.readAsDataURL(file)
+      }
     },
+    // uploadImage(event) {
+    //   const file = event.target.files[0]
+    //   this.mainImage = file
+
+    //   if (!file) {
+    //     this.fileName = ''
+    //     alert('No file selected.')
+    //     return
+    //   }
+
+    //   if (!this.allowedFormats.includes(file.type)) {
+    //     alert('Only JPEG, PNG, and SVG files are allowed.')
+    //     this.fileName = ''
+    //     return
+    //   }
+
+    //   if (file.size > this.maxSize) {
+    //     alert('File size should not exceed 2MB.')
+    //     this.fileName = ''
+    //     return
+    //   }
+
+    //   this.loading = true
+    //   this.fileName = file.name
+    //   this.scrollToChatTop()
+
+    //   const reader = new FileReader()
+
+    //   reader.onload = (e) => {
+    //     const imageDataUrl = e.target.result
+    //     this.uploadedImageUrl = imageDataUrl
+    //     this.loading = false
+    //   }
+
+    //   reader.onerror = () => {
+    //     alert('Error reading file.')
+    //     this.fileName = ''
+    //     this.loading = false
+    //   }
+
+    //   reader.readAsDataURL(file)
+    // },
     generateReportSearch() {
       if (!this.reportName) {
         this.reportName = this.searchText
