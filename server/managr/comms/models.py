@@ -122,7 +122,9 @@ class Search(TimeStampModel):
         if date_to:
             query["to"] = date_to
             query["from"] = date_from
-        endpoint = comms_consts.NEW_API_EVERYTHING_QUERY_URI(urlencode(query)) + f"&pageSize={page_size}"
+        endpoint = (
+            comms_consts.NEW_API_EVERYTHING_QUERY_URI(urlencode(query)) + f"&pageSize={page_size}"
+        )
         news_url = comms_consts.NEW_API_URI + "/" + endpoint
         with Variable_Client() as client:
             new_res = client.get(news_url, headers=comms_consts.NEWS_API_HEADERS)
@@ -1152,7 +1154,7 @@ class EmailTracker(TimeStampModel):
     @property
     def is_draft(self):
         if self.activity_log:
-            idx = len(self.activitly_log) - 1
+            idx = len(self.activity_log) - 1
             first = self.activity_log[idx]
             event, time = first.split("|")
             if event == "draft_created":
