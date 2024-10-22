@@ -113,11 +113,34 @@
       </div>
     </Modal>
 
-    <Modal v-if="reportsModalOpen" class="pricing-modal">
+    <Modal v-if="reportsModalOpen" class="paid-modal">
+      <div class="regen-container">
+        <div class="paid-header">
+          <div>
+            <h4 class="regen-header-title"></h4>
+            <p class="regen-header-subtitle"></p>
+          </div>
+        </div>
+        <div class="paid-body">
+          <div>
+            <div class="paid-center">
+              <h3 class="paid-title">Add Coverage Reports</h3>
+
+              <h5 class="regen-body-title">Contact us to purchase Coverage Report credits.</h5>
+            </div>
+          </div>
+        </div>
+        <div style="height: 100px" class="paid-footer">
+          <div class="row">
+            <div class="save-button" @click="purchaseCredits">Contact</div>
+          </div>
+        </div>
+      </div>
+    </Modal>
+
+    <!-- <Modal v-if="reportsModalOpen" class="pricing-modal">
       <div style="height: 420px" class="pricing-container">
-        <!-- <header @click="closePlansModal">
-          <img src="@/assets/images/close.svg" height="18px" alt="" />
-        </header> -->
+       
         <main style="margin-top: 12px">
           <h2 class="bold-txt large-txt">Add coverage reports</h2>
           <div class="pricing-box">
@@ -139,7 +162,7 @@
           <p class="gray-text">Have questions ? Email us at mike@mymanagr.com</p>
         </main>
       </div>
-    </Modal>
+    </Modal> -->
 
     <Modal v-if="deletePitchModelOpen" class="delete-modal">
       <div class="delete-container">
@@ -527,12 +550,7 @@
           <p>Track</p>
         </router-link>
 
-        <router-link
-          v-if="reportCredits > 0"
-          active-class="active"
-          :to="{ name: 'Reports' }"
-          id="router-pitch"
-        >
+        <router-link active-class="active" :to="{ name: 'Reports' }" id="router-pitch">
           <p>Report</p>
         </router-link>
 
@@ -2675,5 +2693,111 @@ a:hover {
 
 ::v-deep .multiselect__placeholder {
   color: $base-gray;
+}
+
+.paid-modal {
+  margin-top: 132px;
+  font-family: $thin-font-family;
+}
+.regen-container {
+  width: 500px;
+  max-height: 500px;
+  position: relative;
+  overflow-y: scroll;
+  font-family: $thin-font-family;
+  // :style="isMobile ? '' : 'width: 610px; min-height: 100px; '"
+
+  @media only screen and (max-width: 600px) {
+    font-size: 13px !important;
+    width: 100% !important;
+  }
+
+  @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
+}
+
+.paid-header {
+  position: sticky;
+  top: 0;
+  background-color: white;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.sticky-header {
+  position: sticky;
+  top: 0;
+}
+
+.paid-item:hover {
+  cursor: pointer;
+  opacity: 0.4;
+}
+
+.paid-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.aligned-left {
+  align-items: flex-start;
+}
+.regen-header-title {
+  font-size: 20px;
+  font-family: $base-font-family;
+  font-weight: 200;
+  margin: 0.25rem 0;
+}
+.regen-header-subtitle {
+  font-size: 14px;
+
+  margin: 0.5rem 0;
+}
+.regen-body {
+  margin: 0.5rem 0;
+  border-bottom: 1px solid $soft-gray;
+}
+.paid-body {
+  margin: 0.5rem 0;
+
+  // input {
+  //   font-family: ;
+  // }
+}
+.regen-body-title {
+  text-align: center;
+  width: 90%;
+  font-size: 16px !important;
+  line-height: 1.5;
+  margin: 0 0 0 0;
+}
+.paid-title {
+  margin-top: 0;
+  margin-bottom: 2rem;
+  font-family: $base-font-family;
+  font-weight: 200;
+  font-size: 24px;
+}
+.paid-footer {
+  position: sticky;
+  background: white;
+  width: 100%;
+  bottom: 0;
+  padding-top: 16px;
+  // padding-bottom: 8px;
+  margin: 1rem 0 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.save-button {
+  @include dark-blue-button();
+  &:hover {
+    scale: 1;
+    opacity: 0.9;
+    box-shadow: none;
+  }
+  margin-left: 0.5rem;
 }
 </style>

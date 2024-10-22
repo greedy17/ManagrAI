@@ -401,7 +401,7 @@ def merge_sort_dates(arr, key="publish_date"):
     return arr
 
 
-def normalize_article_data(api_data, article_models, for_test=False, is_report=False):
+def normalize_article_data(api_data, article_models,is_report, for_test=False):
     normalized_list = []
     normalized_api_list = normalize_newsapi_to_model(api_data)
     normalized_list.extend(normalized_api_list)
