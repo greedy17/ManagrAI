@@ -1102,28 +1102,32 @@ class GoogleAccount(TimeStampModel):
             self.access_token = access_token
             self.save()
 
-    def send_email(self, recipient, subject, body, name, cc=[], bcc=[]):
+    def send_email(self, recipient, subject, body, name, cc=[], bcc=[], draft_id=None):
+        from managr.comms.models import EmailTracker
         from managr.comms.serializers import EmailTrackerSerializer
         from managr.comms.utils import modify_href
 
         url = core_consts.GOOGLE_SEND_EMAIL_URI("me")
         tracker_link = core_consts.TRACKING_PIXEL_LINK + "?type=opened"
         email_res = {"sent": False}
-        instance = False
+        if draft_id:
+            instance = EmailTracker.objects.get(id=draft_id)
+        else:
+            instance = False
         while True:
             try:
+                data = {
+                    "user": self.user.id,
+                    "body": body,
+                    "recipient": recipient,
+                    "subject": subject,
+                    "name": name,
+                }
+                if cc:
+                    data["cc_recipients"] = ",".join(cc)
+                if bcc:
+                    data["bcc_recipients"] = ",".join(bcc)
                 if not instance:
-                    data = {
-                        "user": self.user.id,
-                        "body": body,
-                        "recipient": recipient,
-                        "subject": subject,
-                        "name": name,
-                    }
-                    if cc:
-                        data["cc_recipients"] = ",".join(cc)
-                    if bcc:
-                        data["bcc_recipients"] = ",".join(bcc)
                     serializer = EmailTrackerSerializer(data=data)
                     serializer.is_valid(raise_exception=True)
                     serializer.save()
@@ -1237,7 +1241,8 @@ class MicrosoftAccount(TimeStampModel):
             self.access_token = access_token
             self.save()
 
-    def send_email(self, recipient, subject, body, name, cc=[], bcc=[]):
+    def send_email(self, recipient, subject, body, name, cc=[], bcc=[], draft_id=None):
+        from managr.comms.models import EmailTracker
         from managr.comms.serializers import EmailTrackerSerializer
         from managr.comms.utils import modify_href
 
@@ -1246,18 +1251,18 @@ class MicrosoftAccount(TimeStampModel):
         email_res = {"sent": False}
         instance = False
         try:
+            data = {
+                "user": self.user.id,
+                "body": body,
+                "recipient": recipient,
+                "subject": subject,
+                "name": name,
+            }
+            if cc:
+                data["cc_recipients"] = ",".join(cc)
+            if bcc:
+                data["bcc_recipients"] = ",".join(bcc)
             if not instance:
-                data = {
-                    "user": self.user.id,
-                    "recipient": recipient,
-                    "body": body,
-                    "subject": subject,
-                    "name": name,
-                }
-                if cc:
-                    data["cc_recipients"] = ",".join(cc)
-                if bcc:
-                    data["bcc_recipients"] = ",".join(bcc)
                 serializer = EmailTrackerSerializer(data=data)
                 serializer.is_valid(raise_exception=False)
                 serializer.save()
