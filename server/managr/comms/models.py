@@ -1149,7 +1149,8 @@ class EmailTracker(TimeStampModel):
     @property
     def is_draft(self):
         if self.activity_log:
-            first = self.activity_log[0]
+            idx = len(self.activitly_log) - 1
+            first = self.activity_log[idx]
             event, time = first.split("|")
             if event == "draft_created":
                 return True
