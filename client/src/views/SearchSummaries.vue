@@ -2172,7 +2172,13 @@
 
               <button
                 class="primary-button"
-                :class="{ 'soft-gray-bg': showingSave }"
+                :class="{
+                  'soft-gray-bg blk-text':
+                    mainView !== 'news' &&
+                    mainView !== 'social' &&
+                    (savedDiscovery || savedPitch) &&
+                    !notifiedList.includes(searchId),
+                }"
                 @click.stop="showSave"
                 v-if="
                   (filteredArticles && filteredArticles.length) ||
@@ -13010,6 +13016,14 @@ textarea::placeholder {
 
 .soft-gray-bg {
   background-color: $soft-gray !important;
+}
+
+.blk-text {
+  color: $dark-black-blue;
+}
+
+.softer-gray-bg {
+  background-color: $off-white !important;
 }
 
 .softgraybg {

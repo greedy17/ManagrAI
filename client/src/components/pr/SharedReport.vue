@@ -751,6 +751,7 @@ a {
   width: 100%;
   margin: 0;
   object-fit: cover;
+  object-position: top;
   border-radius: 5px;
 }
 
@@ -800,6 +801,7 @@ a {
   width: 150px !important;
   margin: 0;
   object-fit: cover;
+  object-position: top;
   border-radius: 4px;
 }
 
@@ -873,11 +875,11 @@ header {
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
-  align-items: center;
+  align-items: flex-end;
   height: 100%;
   width: 100%;
 
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.75), transparent);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.75), transparent);
 
   div {
     padding-left: 16px;
@@ -886,7 +888,7 @@ header {
 
   h1 {
     color: $off-white;
-    font-size: 48px;
+    font-size: 40px;
 
     span {
       font-family: $base-font-family;
@@ -899,6 +901,7 @@ header {
   height: 100%;
   // box-shadow: 26px 30px 64px rgba(0, 0, 0, 0.1);
   object-fit: cover;
+  object-position: top;
 }
 
 .main {
