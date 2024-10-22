@@ -112,6 +112,35 @@
         </main>
       </div>
     </Modal>
+
+    <Modal v-if="reportsModalOpen" class="pricing-modal">
+      <div style="height: 420px" class="pricing-container">
+        <!-- <header @click="closePlansModal">
+          <img src="@/assets/images/close.svg" height="18px" alt="" />
+        </header> -->
+        <main style="margin-top: 12px">
+          <h2 class="bold-txt large-txt">Add coverage reports</h2>
+          <div class="pricing-box">
+            <p class="small-bold-text">You do not have any <span>Coverage Report credits</span></p>
+            <div>
+              <div style="height: 100px" class="pricing-list-container bold-txt">
+                <p>Purchase credits by clicking Upgrade Account.</p>
+              </div>
+
+              <button
+                style="font-size: 14px"
+                @click="purchaseCredits"
+                class="primary-button pricing-button"
+              >
+                Upgrade Account
+              </button>
+            </div>
+          </div>
+          <p class="gray-text">Have questions ? Email us at mike@mymanagr.com</p>
+        </main>
+      </div>
+    </Modal>
+
     <Modal v-if="deletePitchModelOpen" class="delete-modal">
       <div class="delete-container">
         <header @click="togglePitchDeleteModal">
@@ -504,11 +533,15 @@
           :to="{ name: 'Reports' }"
           id="router-pitch"
         >
-          <p>Reports</p>
+          <p>Report</p>
         </router-link>
 
         <div class="auto-left">
-          <div v-if="!isPaid" class="row wrapper-count">
+          <div v-if="$route.name === 'Reports'" class="row">
+            <p class="searches-used-text">Report credits: {{ reportCredits }}</p>
+          </div>
+
+          <div v-if="!isPaid && $route.name !== 'Reports'" class="row wrapper-count">
             <p class="searches-used-text">{{ 20 - searchesUsed }} / 20</p>
             <div style="margin-left: -40px" class="tooltip-count">Remaining monthly credits</div>
           </div>
@@ -954,6 +987,8 @@ export default {
   },
   data() {
     return {
+      contactLink: 'https://managr.ai/contact',
+      reportsModalOpen: false,
       selectedReport: null,
       deleteReportModalOpen: false,
       personalSearches: true,
@@ -1000,6 +1035,7 @@ export default {
     this.getReports()
     await this.team.refresh()
     this.amountList = this.amountList.filter((item) => item >= this.activeUsers.length)
+
     // this.numberOfUsers = this.activeUsers.length
   },
   directives: {
@@ -1038,6 +1074,11 @@ export default {
       this.showSavedDiscoveries = false
       this.showSavedReports = false
       this.$emit('close-menu')
+      if (this.$route.name === 'Reports' && this.reportCredits < 1) {
+        this.reportsModalOpen = true
+      } else {
+        this.reportsModalOpen = false
+      }
     },
   },
   methods: {
@@ -1296,6 +1337,9 @@ export default {
       } catch (e) {
         console.log('Error in purchasePro: ', e)
       }
+    },
+    purchaseCredits() {
+      window.open(this.contactLink, '_blank')
     },
     toggleAllSearches() {
       this.$emit('close-menu')
@@ -2526,6 +2570,22 @@ a:hover {
   // margin-top: 0.5rem;
   // margin-bottom: 0.5rem;
 }
+
+.small-bold-text {
+  font-size: 16px;
+  span {
+    font-family: $base-font-family;
+  }
+}
+
+.bold-txt {
+  font-family: $base-font-family;
+}
+
+.large-txt {
+  font-size: 24px;
+}
+
 .pricing-smaller-text {
   font-size: 13px;
 }
