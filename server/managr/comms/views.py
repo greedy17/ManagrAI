@@ -1902,7 +1902,7 @@ class DiscoveryViewSet(
             res = user.email_account.send_email(recipient, subject, body, name, cc, bcc, draftId)
             user.add_meta_data("emailSent")
         else:
-            res = send_mailgun_email(user, name, subject, recipient, body, bcc, cc)
+            res = send_mailgun_email(user, name, subject, recipient, body, bcc, cc, draftId)
         sent = res["sent"]
         if sent:
             return Response(status=status.HTTP_204_NO_CONTENT)
