@@ -1893,6 +1893,10 @@ class DiscoveryViewSet(
         if bcc:
             bcc = [bcc]
         draftId = request.data.get("draftId", None)
+        if draftId:
+            tracker = EmailTracker.objects.filter(id=draftId).first()
+            if tracker:
+                user = tracker.user
         if user.has_google_integration or user.has_microsoft_integration:
             res = user.email_account.send_email(recipient, subject, body, name, cc, bcc)
             user.add_meta_data("emailSent")
@@ -1900,9 +1904,7 @@ class DiscoveryViewSet(
             res = send_mailgun_email(user, name, subject, recipient, body, bcc, cc)
         sent = res["sent"]
         if sent:
-            if draftId:
-                tracker = EmailTracker.objects.filter(id=draftId)
-                tracker.delete()
+
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             return Response(
