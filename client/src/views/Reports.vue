@@ -318,7 +318,7 @@
                     </p>
 
                     <img
-                      v-if="loading"
+                      v-if="loadingClips"
                       style="margin-right: 4px"
                       class="rotation"
                       src="@/assets/images/loading.svg"
@@ -327,13 +327,13 @@
                     />
 
                     <img
-                      v-if="!showSearches && !loading"
+                      v-if="!showSearches && !loadingClips"
                       src="@/assets/images/arrowDropUp.svg"
                       height="15px"
                       alt=""
                     />
                     <img
-                      v-else-if="showSearches && !loading"
+                      v-else-if="showSearches && !loadingClips"
                       class="rotate-img"
                       src="@/assets/images/arrowDropUp.svg"
                       height="15px"
@@ -1033,6 +1033,7 @@ export default {
   },
   data() {
     return {
+      loadingClips: false,
       useSearchUrls: false,
       showSearches: false,
       selectedSearch: null,
@@ -1092,8 +1093,8 @@ export default {
       ],
       maxSize: 2 * 1024 * 1024,
       fileText: `Next, add news coverage links by pasting the URL's below.`,
-      savedText: `Next, add news coverage by selecting a saved search`,
-      urlText: 'Select source',
+      savedText: `Got it, pick one of your saved searches`,
+      urlText: 'Where would you like us to pull the clips from ?',
       reportUrls: '',
       urlsSet: false,
       urlPlaceholder: `
@@ -1123,7 +1124,7 @@ www.forbes.com/article-3
       return this.$store.state.allReports
     },
     savedSearches() {
-      return this.$store.state.allSearches
+      return this.$store.state.allSearches.filter((search) => search.type === 'NEWS')
     },
     user() {
       return this.$store.state.user
@@ -1132,14 +1133,14 @@ www.forbes.com/article-3
   created() {
     const today = new Date()
     const sevenDaysAgo = new Date(today)
-    sevenDaysAgo.setDate(today.getDate() - 7)
+    sevenDaysAgo.setDate(today.getDate() - 30)
 
     this.dateStart = sevenDaysAgo.toISOString().split('T')[0]
     this.dateEnd = today.toISOString().split('T')[0]
   },
   methods: {
     async getClips() {
-      this.loading = true
+      this.loadingClips = true
       try {
         const res = await Comms.api.getClips({
           search: this.selectedSearch.input_text,
@@ -1160,7 +1161,7 @@ www.forbes.com/article-3
         this.reportUrls = []
         console.log(e)
       } finally {
-        this.loading = false
+        this.loadingClips = false
       }
     },
     toggleSource() {
@@ -2523,7 +2524,8 @@ a {
   width: 150px;
   margin: 0;
   object-fit: cover;
-  border-radius: 4px;
+  object-position: top;
+  border-radius: 5px;
 }
 
 .space-between-bottom {
@@ -2546,7 +2548,8 @@ a {
   height: 250px;
   width: 100%;
   margin: 0;
-  object-fit: cover;
+  object-fit: cover; /* Ensures the image covers the area while maintaining aspect ratio */
+  object-position: top; /* Crops only from the bottom if necessary */
   border-radius: 5px;
 }
 
