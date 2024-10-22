@@ -2541,6 +2541,7 @@ a {
   width: 100%;
   margin: 0;
   object-fit: cover;
+  object-position: top;
   border-radius: 5px;
 }
 
