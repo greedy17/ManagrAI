@@ -4268,6 +4268,8 @@ www.forbes.com/article-3
       showingBcc: false,
       showingCc: false,
       logoPlaceholder: require('@/assets/images/iconlogo.png'),
+      journalistSvg: require('@/assets/images/profile.svg'),
+      citationSvg: require('@/assets/images/info.svg'),
       responseEmpty: false,
       bioModalOpen: false,
       contactsModalOpen: false,
@@ -4573,7 +4575,8 @@ www.forbes.com/article-3
           view: 'news',
           chatText: 'Scan the news and list top storylines',
           chatResponse: 'Using the message bar, enter a topic, industry, or company',
-          searchText: 'List the top 5 storylines based on the provided news coverage. Use lables',
+          searchText:
+            'List the top 5 storylines based on the provided news coverage. Always Use Labels. Always Use citations.',
           details: false,
         },
         {
@@ -4587,7 +4590,7 @@ www.forbes.com/article-3
           chatResponse:
             "Using Company details, provide a short description of your company or a pitch you're working on",
           searchText: `Scan through the news coverage and list the journalists from recognizable news outlets (up to 10). Only list journalist from the news coverage. 
-          Then suggest, in list form, which of these journalists the company listed should pitch and why. Use Labels. Company:`,
+          Then suggest, in list form, which of these journalists the company listed should pitch and why. Always Use Labels. Always Use citations. Company:`,
           details: true,
           responseText: 'Using the message bar, provide a current news topic or event',
         },
@@ -4621,7 +4624,7 @@ www.forbes.com/article-3
           view: 'news',
           chatText: 'What are my competitors up to and how does it impact my brand?',
           chatResponse: `Using Company details, provide your brand's name`,
-          searchText: `Based on the news coverage, provide a competitor update to the following company's PR team. Break it down into sections per competitor, provide sentiment analysis, top 3-5 take aways, and a super creative, targeted PR campaign suggestion for the company's PR team based on competitor coverage. Use labels. Company details here:`,
+          searchText: `Based on the news coverage, provide a competitor update to the following company's PR team. Break it down into sections per competitor, provide sentiment analysis, top 3-5 take aways, and a super creative, targeted PR campaign suggestion for the company's PR team based on competitor coverage. Always Use Labels. Always Use citations. Company details here:`,
           details: true,
           responseText:
             'Using the message bar below, provide up to 3 competitors using OR in between',
@@ -4636,7 +4639,7 @@ www.forbes.com/article-3
           chatText: 'Questions the media may ask based on recent news',
           chatResponse: 'First, tell us about your company (e.g., name and short description)',
           searchText:
-            'Based on the news coverage, list 5 questions the media will ask this company. Provide suggested answers as well. Use labels. :',
+            'Based on the news coverage, list 5 questions the media will ask this company. Provide suggested answers as well. Always Use Labels. Always Use citations. :',
           details: true,
           responseText: 'Using the message bar, provide a current news topic or event',
         },
@@ -4921,6 +4924,24 @@ www.forbes.com/article-3
       }
     },
   },
+  updated() {
+    this.setTooltips()
+
+    const journalistElements = document.querySelectorAll('.select-journalist')
+
+    journalistElements.forEach((element) => {
+      element.addEventListener('click', (event) => {
+        const citationJson = event.target.getAttribute('data-citation')
+        try {
+          const citation = JSON.parse(decodeURIComponent(citationJson))
+          this.selectJournalist(citation)
+        } catch (error) {
+          console.error('Failed to parse citation JSON:', citationJson)
+          console.error('Error:', error)
+        }
+      })
+    })
+  },
   mounted() {
     this.getEmailAlerts()
     this.pitchStyleSetup()
@@ -4930,6 +4951,47 @@ www.forbes.com/article-3
     this.abortFunctions()
   },
   methods: {
+    setTooltips() {
+      const citationWrappers = document.querySelectorAll('.citation-wrapper')
+
+      if (citationWrappers.length === 0) {
+        return
+      }
+
+      citationWrappers.forEach((wrapper) => {
+        let hideTimeout
+        const tooltip = wrapper.querySelector('.citation-tooltip')
+
+        if (!tooltip) {
+          return
+        }
+
+        // Show tooltip when hovering over the wrapper
+        wrapper.addEventListener('mouseenter', () => {
+          clearTimeout(hideTimeout)
+          tooltip.classList.add('show')
+        })
+
+        // Hide tooltip after a delay when leaving the wrapper and tooltip
+        wrapper.addEventListener('mouseleave', () => {
+          hideTimeout = setTimeout(() => {
+            tooltip.classList.remove('show')
+          }, 300)
+        })
+
+        // Ensure tooltip stays visible when hovering over the tooltip itself
+        tooltip.addEventListener('mouseenter', () => {
+          clearTimeout(hideTimeout)
+        })
+
+        // Hide tooltip after a delay when leaving the tooltip
+        tooltip.addEventListener('mouseleave', () => {
+          hideTimeout = setTimeout(() => {
+            tooltip.classList.remove('show')
+          }, 300)
+        })
+      })
+    },
     setUrls() {
       this.urlsSet = true
       this.scrollToChatTop()
@@ -5586,18 +5648,30 @@ www.forbes.com/article-3
         const citationIndex = parseInt(p1)
         const citation = this.filteredArticles[citationIndex]
         if (citation) {
+          const citationJson = encodeURIComponent(JSON.stringify(citation))
+
           return `
         <sup>
           <span class="citation-wrapper" >
-            <a href="${citation.link}" target="_blank" class="citation-link" ">
-            ${citationIndex + 1}
+            <a  class="citation-link citation-link-alt">
+            <img class="inline-svg" src="${this.citationSvg}" alt="">
             </a>
             <span class="citation-tooltip">
-              <img src="${citation.image_url}" alt="">
-              <strong> ${citation.source.name}</strong>
+              <span class="row">
+                <img src="${citation.image_url}" alt="">
+                <strong> ${citation.source.name}</strong>      
+              </span>
               <br>
+              <a class="inline-link" href="${
+                citation.link
+              }" target="_blank" >${citation.title.slice(0, 35)}...</a>
               <br>
-              ${citation.title}
+              <span data-citation='${citationJson}'
+              class="author select-journalist">
+              <img class="inline-svg" src="${this.journalistSvg}" alt="">
+              <strong>${citation.author}</strong>
+              </span>
+             
             </span>
           </span>
         </sup>
@@ -7836,7 +7910,6 @@ www.forbes.com/article-3
             urls = response.articles.map((art) => {
               return art.link
             })
-            console.log('ARTICLEs ARE HERE -- > ', urls)
 
             this.searchArticleText = ' '
             this.searchArticleText = ''
@@ -8799,10 +8872,70 @@ www.forbes.com/article-3
 }
 
 ::v-deep .citation-text {
+  .author {
+    display: inline-block;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin-right: 8px;
+    color: $base-gray;
+    border-radius: 16px;
+    padding: 5px 6px;
+    background-color: $soft-gray;
+    cursor: pointer;
+    // p {
+    //   overflow: hidden;
+    //   white-space: nowrap;
+    //   text-overflow: ellipsis;
+    //   font-size: 12px !important;
+    // }
+
+    &:hover {
+      background-color: $soft-gray;
+    }
+
+    strong {
+      font-size: 13px !important;
+    }
+  }
+
+  .row {
+    display: inline-block;
+    vertical-align: middle !important; /* Aligns inline-block elements vertically */
+    white-space: nowrap;
+  }
+
+  .row > * {
+    display: inline-block;
+    vertical-align: middle; /* Ensures children align centrally */
+  }
+
+  .inline-svg {
+    height: 10px !important;
+    filter: invert(30%) !important;
+  }
+
+  .inline-link {
+    font-family: $base-font-family;
+    color: $lite-blue;
+    padding-bottom: 2px;
+  }
+
   sup {
     line-height: 1;
     display: inline;
     vertical-align: super;
+  }
+
+  .citation-link-alt {
+    padding: 4px !important;
+
+    img {
+      height: 9px !important;
+      filter: invert(45%) sepia(52%) saturate(1248%) hue-rotate(196deg) brightness(97%)
+        contrast(90%) !important;
+    }
   }
   .citation-link {
     padding: 4px 6px 4.5px 5px;
@@ -8826,11 +8959,15 @@ www.forbes.com/article-3
     background-color: $lite-blue;
     color: white;
     opacity: 1;
+
+    img {
+      filter: invert(100%) !important;
+    }
   }
 
   .citation-tooltip {
     visibility: hidden;
-    width: 200px;
+    width: 240px;
     background-color: #fff;
     color: #333;
     text-align: left;
@@ -8848,10 +8985,11 @@ www.forbes.com/article-3
     opacity: 0;
     transition: opacity 0.3s;
     pointer-events: none;
-    // overflow: hidden;
-    // white-space: nowrap;
-    // text-overflow: ellipsis;
-
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
     strong {
       font-size: 14px;
     }
@@ -8862,33 +9000,48 @@ www.forbes.com/article-3
     }
   }
 
+  .citation-tooltip.show {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
   .citation-wrapper {
     position: relative;
     display: inline-block;
   }
 
-  .citation-wrapper:hover .citation-tooltip {
-    visibility: visible;
-    opacity: 1;
-  }
+  // .citation-wrapper:hover .citation-tooltip {
+  //   visibility: visible;
+  //   opacity: 1;
+  // }
 
-  a {
-    color: $grape;
-    border-bottom: 1px solid $grape;
-    font-family: $base-font-family;
-    text-decoration: none;
-    padding-bottom: 2px;
+  // a {
+  //   color: $grape;
+  //   border-bottom: 1px solid $grape;
+  //   font-family: $base-font-family;
+  //   text-decoration: none;
+  //   padding-bottom: 2px;
 
-    &:hover {
-      opacity: 0.7;
-    }
-  }
+  //   &:hover {
+  //     opacity: 0.7;
+  //   }
+  // }
 
   strong,
   h1,
   h2,
   h3 {
     font-family: $base-font-family;
+    font-size: 16px !important;
+  }
+
+  .primary-button {
+    @include dark-blue-button();
+    padding: 8px 12px;
+    border: none;
+    border-radius: 16px;
+    margin: 12px 0 0 0;
   }
 }
 

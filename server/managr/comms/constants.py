@@ -319,7 +319,7 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_clie
     Today is {date}. Please provide a concise and accurate response based on the news coverage below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the news coverage in 150 words or less. 
     Cite your sources by enclosing the index of the search result in a set square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[1].' This is being used in a Javascript app so indexes must always start with 0. Only use this format to cite search results.
     Only add citations at the end of sentences that the citation supports, and do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link. Make sure that your response is properly formatted simple html with good spacing. 
-    Do not include any styling and/or <meta> tags. Do not include ```html in your response.
+    Do not include any styling and/or <meta> tags. Do not include ```html in your response. Always use labels.
 
     Here is the news coverage:
     {clips}
@@ -646,14 +646,14 @@ def OPEN_AI_DISCOVER_JOURNALIST(info, journalists, content):
 
 
 def OPEN_AI_GET_JOURNALIST_LIST(info, content):
-    initial_sentence = f"List 20 real, active journalists based on this information: {info}"
+    initial_sentence = f"List 20 real, active journalists, podcasters, or bloggers based on this criteria: {info}"
     if content:
         initial_sentence += f" and would be interested in this pitch: {content}"
     prompt = f"""
     {initial_sentence}.\n
    
     You must follow the instructions below very carefully:
-    * Ensure that all journalists are real, currently active writers. 
+    * Ensure that all journalists, podcasters, or bloggers are real and currently active. 
     * Do not include fake names such as Jane Doe or John Smith or make names up.
     * Output format must a ONLY JSON object:
     journalists: [LIST OF JOURNALIST NAMES]

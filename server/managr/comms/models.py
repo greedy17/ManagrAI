@@ -103,7 +103,9 @@ class Search(TimeStampModel):
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
             user.email,
             prompt,
-            model="o1-mini",
+            "You are a VP of Communications",
+            top_p=0.1,
+            # model="o1-mini",
         )
         with Variable_Client(timeout) as client:
             r = client.post(
