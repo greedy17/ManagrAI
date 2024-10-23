@@ -4624,7 +4624,7 @@ www.forbes.com/article-3
           view: 'news',
           chatText: 'What are my competitors up to and how does it impact my brand?',
           chatResponse: `Using Company details, provide your brand's name`,
-          searchText: `Based on the news coverage, provide a competitor update to the following company's PR team. Break it down into sections per competitor, provide sentiment analysis, top 3-5 take aways, and a super creative, targeted PR campaign suggestion for the company's PR team based on competitor coverage. Always Use Labels. Always Use citations. Company details here:`,
+          searchText: `Based on the news coverage, provide a competitor update to the following company's PR team. Break it down into sections per competitor, provide sentiment analysis, top 3-5 take aways, and a super creative, targeted PR campaign suggestion for the company's PR team based on competitor coverage. Always Use Labels and break into multiple sections. Always Use citations. Company details here:`,
           details: true,
           responseText:
             'Using the message bar below, provide up to 3 competitors using OR in between',
@@ -4931,9 +4931,9 @@ www.forbes.com/article-3
 
     journalistElements.forEach((element) => {
       element.addEventListener('click', (event) => {
-        const citationJson = event.target.getAttribute('data-citation')
+        const citationIndex = event.target.getAttribute('data-citation')
         try {
-          const citation = JSON.parse(decodeURIComponent(citationJson))
+          const citation = this.filteredArticles[citationIndex]
           this.selectJournalist(citation)
         } catch (error) {
           console.error('Failed to parse citation JSON:', citationJson)
@@ -5648,8 +5648,6 @@ www.forbes.com/article-3
         const citationIndex = parseInt(p1)
         const citation = this.filteredArticles[citationIndex]
         if (citation) {
-          const citationJson = encodeURIComponent(JSON.stringify(citation))
-
           return `
         <sup>
           <span class="citation-wrapper" >
@@ -5666,10 +5664,10 @@ www.forbes.com/article-3
                 citation.link
               }" target="_blank" >${citation.title.slice(0, 35)}...</a>
               <br>
-              <span data-citation='${citationJson}'
+              <span data-citation='${citationIndex}'
               class="author select-journalist">
               <img class="inline-svg" src="${this.journalistSvg}" alt="">
-              <strong>${citation.author}</strong>
+              ${citation.author}
               </span>
              
             </span>
@@ -8884,6 +8882,7 @@ www.forbes.com/article-3
     padding: 5px 6px;
     background-color: $soft-gray;
     cursor: pointer;
+    font-family: $base-font-family;
     // p {
     //   overflow: hidden;
     //   white-space: nowrap;
