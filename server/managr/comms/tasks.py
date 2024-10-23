@@ -789,26 +789,28 @@ def news_source_report(report_type):
         domains = NewsSource.get_stopped_sources()
     if not len(domains):
         domains = [f"No {report_type} domains"]
-    try:
-        blocks = [
-            block_builders.simple_section(f"Report type: {report_type}"),
-            block_builders.simple_section(f"{','.join(domains)}"),
-        ]
-        slack_res = slack_requests.send_channel_message(
-            user.slack_integration.channel,
-            user.organization.slack_integration.access_token,
-            block_set=blocks,
-        )
-    except Exception as e:
-        blocks = [
-            block_builders.simple_section(f"Report type: {report_type}"),
-            block_builders.simple_section(str(e)),
-        ]
-        slack_res = slack_requests.send_channel_message(
-            user.slack_integration.channel,
-            user.organization.slack_integration.access_token,
-            block_set=blocks,
-        )
+    for i in range(0, len(domains), 50):
+        domain_batch = domains[i : i + 50]
+        try:
+            blocks = [
+                block_builders.simple_section(f"Report type: {report_type}"),
+                block_builders.simple_section(f"{','.join(domain_batch)}"),
+            ]
+            slack_res = slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                block_set=blocks,
+            )
+        except Exception as e:
+            blocks = [
+                block_builders.simple_section(f"Report type: {report_type}"),
+                block_builders.simple_section(str(e)),
+            ]
+            slack_res = slack_requests.send_channel_message(
+                user.slack_integration.channel,
+                user.organization.slack_integration.access_token,
+                block_set=blocks,
+            )
 
 
 @background(schedule=2)
