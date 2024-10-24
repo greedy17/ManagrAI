@@ -130,9 +130,10 @@ def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
     3. Use <h2> tags for headings, except for the company name, which should be inline with 'Company:'.
     4. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab.
     5. Do not include additional text next to the email.
-    6. Exclude domain extensions from company names.
-    7. Do not add name : [name] and company: [company] at the top of the bio.
-    8. Do not wrap the JSON in ```json```.
+    6. Pitching tips must be returned in an HTML unordered list.
+    7. Exclude domain extensions from company names.
+    8. Do not add name : [name] and company: [company] at the top of the bio
+    9. Do not wrap the JSON in ```json```
     """
     return prompt
 
@@ -168,9 +169,10 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
     3. Use <h2> tags for headings, except for the company name, which should be inline with 'Company:'.
     4. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
     5. Do not include additional text next to the email.
-    6. Exclude domain extensions from company names.
-    7. Do not add name : [name] and company: [company] at the top of the bio
-    8. Do not wrap the JSON in ```json```
+    6. Pitching tips must be returned in an HTML unordered list.
+    7. Exclude domain extensions from company names.
+    8. Do not add name : [name] and company: [company] at the top of the bio
+    9. Do not wrap the JSON in ```json```
     """
     return prompt
 
