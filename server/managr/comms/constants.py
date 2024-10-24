@@ -331,6 +331,19 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_clie
     """
     return body
 
+def OPEN_AI_NEWS_CLIPS_SUMMARY_EMAIL(date, clips, search, instructions=False, for_client=False):
+    body = f"""
+    Today is {date}. Please provide a concise and accurate response based on the news coverage below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the news coverage in 150 words or less. 
+
+    Ensure that the summary is plain text, with no HTML or special formatting. Avoid embedding any external links or citations. The response should be clear, simple, and formatted for easy reading in common email clients such as Gmail or Outlook.
+
+    Here is the news coverage:
+    {clips}
+
+    Here are the instructions:
+    {instructions}
+    """
+    return body
 
 def OPEN_AI_NEWS_CLIPS_SLACK_SUMMARY(date, clips, search, instructions=False, for_client=False):
     if not instructions:

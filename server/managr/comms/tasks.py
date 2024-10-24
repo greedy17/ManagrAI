@@ -551,7 +551,7 @@ def _send_news_summary(news_alert_id):
                 clips = [article for article in clips if article["title"] != "[Removed]"]
                 normalized_clips = normalize_newsapi_to_model(clips)
                 descriptions = [clip["description"] for clip in normalized_clips]
-                res = Search.get_summary(
+                res = Search.get_summary_email(
                     alert.user,
                     2000,
                     60.0,
@@ -563,20 +563,7 @@ def _send_news_summary(news_alert_id):
                 email_list = [alert.user.email]
 
                 if "@outlook" in email_list[0]:
-                    message = html.escape(res.get("choices")[0].get("message").get("content"))
-                    message = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", message)
-                    message = re.sub(r"\*(.*?)\*", r"<strong>\1</strong>", message)
-
-                    for i in range(6, 0, -1):
-                        message = re.sub(
-                            rf'^{"#" * i} (.*?)$', rf"<h{i}>\1</h{i}>", message, flags=re.MULTILINE
-                        )
-                    message = re.sub(
-                        r"\[(.*?)\]\((.*?)\)|<([^|>]+)\|([^>]+)>",
-                        r'<a href="\2\3">\1\4</a>',
-                        message,
-                    )
-                    message = re.sub(r"<https?:\/\/[^|]+\|\[\d+\]>", "", message)
+                    message = res.get("choices")[0].get("message").get("content")
 
                 else:
                     message = res.get("choices")[0].get("message").get("content")

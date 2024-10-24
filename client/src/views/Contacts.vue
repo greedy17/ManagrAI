@@ -4399,7 +4399,7 @@ h3 {
   flex-direction: row;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 0 24px 0 12px;
+  padding: 0 12px 0 12px;
   height: 88vh;
 
   @media only screen and (max-width: 600px) {
@@ -4411,7 +4411,7 @@ h3 {
   }
 
   aside {
-    width: 18vw;
+    width: 16vw;
     padding: 28px 24px 16px 24px;
 
     @media only screen and (max-width: 600px) {
@@ -4446,7 +4446,7 @@ h3 {
   //   max-width: 300px;
   margin: 0 auto;
   padding: 16px 0 20px 0;
-  height: 80vh;
+  height: 78vh;
   overflow-y: scroll;
 
   @media only screen and (max-width: 750px) {
