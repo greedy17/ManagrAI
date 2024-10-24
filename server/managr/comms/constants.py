@@ -130,9 +130,10 @@ def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
     3. Use <h2> tags for headings, except for the company name, which should be inline with 'Company:'.
     4. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab.
     5. Do not include additional text next to the email.
-    6. Exclude domain extensions from company names.
-    7. Do not add name : [name] and company: [company] at the top of the bio.
-    8. Do not wrap the JSON in ```json```.
+    6. Pitching tips must be returned in an HTML unordered list.
+    7. Exclude domain extensions from company names.
+    8. Do not add name : [name] and company: [company] at the top of the bio
+    9. Do not wrap the JSON in ```json```
     """
     return prompt
 
@@ -168,9 +169,10 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
     3. Use <h2> tags for headings, except for the company name, which should be inline with 'Company:'.
     4. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
     5. Do not include additional text next to the email.
-    6. Exclude domain extensions from company names.
-    7. Do not add name : [name] and company: [company] at the top of the bio
-    8. Do not wrap the JSON in ```json```
+    6. Pitching tips must be returned in an HTML unordered list.
+    7. Exclude domain extensions from company names.
+    8. Do not add name : [name] and company: [company] at the top of the bio
+    9. Do not wrap the JSON in ```json```
     """
     return prompt
 
@@ -329,6 +331,19 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_clie
     """
     return body
 
+def OPEN_AI_NEWS_CLIPS_SUMMARY_EMAIL(date, clips, search, instructions=False, for_client=False):
+    body = f"""
+    Today is {date}. Please provide a concise and accurate response based on the news coverage below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the news coverage in 150 words or less. 
+
+    Ensure that the summary is plain text, with no HTML or special formatting. Avoid embedding any external links or citations. The response should be clear, simple, and formatted for easy reading in common email clients such as Gmail or Outlook.
+
+    Here is the news coverage:
+    {clips}
+
+    Here are the instructions:
+    {instructions}
+    """
+    return body
 
 def OPEN_AI_NEWS_CLIPS_SLACK_SUMMARY(date, clips, search, instructions=False, for_client=False):
     if not instructions:

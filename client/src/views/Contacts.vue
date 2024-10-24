@@ -1338,6 +1338,9 @@
                     >
                       <img src="@/assets/images/tags.svg" height="12px" alt="" />
                       {{ tag }}
+                      <div @click="modifyTags('remove', tag, contact.id)" class="remove">
+                        <img src="@/assets/images/close.svg" height="14px" alt="" />
+                      </div>
                     </div>
                   </div>
                 </td>
@@ -3366,11 +3369,11 @@ export default {
       this.selectBulkTag(this.importTagName)
       this.importTagName = ''
     },
-    async modifyTags(mod, tag) {
+    async modifyTags(mod, tag, id) {
       this.loadingTags = true
       try {
         const res = await Comms.api.modifyTags({
-          ids: [this.currentContact.id],
+          ids: id ? [id] : [this.currentContact.id],
           tag: tag ? tag : this.newTag,
           modifier: mod,
         })
@@ -3381,7 +3384,6 @@ export default {
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-        this
         // this.tags = res.results
       } catch (e) {
         console.error(e)
@@ -4397,7 +4399,7 @@ h3 {
   flex-direction: row;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 0 24px 0 12px;
+  padding: 0 12px 0 12px;
   height: 88vh;
 
   @media only screen and (max-width: 600px) {
@@ -4409,7 +4411,7 @@ h3 {
   }
 
   aside {
-    width: 18vw;
+    width: 16vw;
     padding: 28px 24px 16px 24px;
 
     @media only screen and (max-width: 600px) {
@@ -4444,7 +4446,7 @@ h3 {
   //   max-width: 300px;
   margin: 0 auto;
   padding: 16px 0 20px 0;
-  height: 80vh;
+  height: 78vh;
   overflow-y: scroll;
 
   @media only screen and (max-width: 750px) {
@@ -5469,7 +5471,7 @@ h2 {
   background-color: $liter-blue;
   color: $lite-blue;
   font-family: $base-font-family;
-  padding: 6px 32px 6px 8px;
+  padding: 6px 32px 6px 8px !important;
   border-radius: 5px;
   white-space: nowrap;
   img {
@@ -5484,7 +5486,7 @@ h2 {
     cursor: pointer;
 
     &:hover {
-      background-color: $graper;
+      background-color: $lite-blue;
       border-radius: 100%;
       display: flex;
       align-items: center;
@@ -5492,7 +5494,7 @@ h2 {
       top: 4px;
 
       img {
-        filter: invert(99%);
+        filter: invert(100%) !important;
         margin: 0;
         padding: 0;
       }

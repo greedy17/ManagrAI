@@ -116,6 +116,36 @@ class Search(TimeStampModel):
         return open_ai_exceptions._handle_response(r)
 
     @classmethod
+    def get_summary_email(
+        cls, user, tokens, timeout, clips, input_text, instructions=False, for_client=False
+    ):
+        url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+
+        prompt = (
+            comms_consts.OPEN_AI_NEWS_CLIPS_SUMMARY_EMAIL(
+                datetime.now().date(), clips, input_text, instructions, for_client
+            )
+            if for_client
+            else comms_consts.OPEN_AI_NEWS_CLIPS_SLACK_SUMMARY(
+                datetime.now().date(), clips, input_text, instructions, for_client
+            )
+        )
+        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+            user.email,
+            prompt,
+            "You are a VP of Communications",
+            top_p=0.1,
+            # model="o1-mini",
+        )
+        with Variable_Client(timeout) as client:
+            r = client.post(
+                url,
+                data=json.dumps(body),
+                headers=core_consts.OPEN_AI_HEADERS,
+            )
+        return open_ai_exceptions._handle_response(r)
+
+    @classmethod
     def get_clips(cls, search_boolean, date_to=False, date_from=False, is_report=False):
         page_size = 40
         if is_report:

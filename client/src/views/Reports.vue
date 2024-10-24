@@ -217,7 +217,9 @@
                     class="drop-header-alt"
                     style="background-color: #fafafa; box-shadow: 1px 2px 6px rgba(0, 0, 0, 0.1)"
                   >
-                    <p style="font-size: 15px !important" class="mobile-text-hide">Select source</p>
+                    <p style="font-size: 15px !important" class="mobile-text-hide">
+                      {{ sourceType ? sourceType : 'Select source' }}
+                    </p>
                     <img
                       v-if="!showSource"
                       src="@/assets/images/arrowDropUp.svg"
@@ -271,40 +273,13 @@
                 <img src="@/assets/images/iconlogo.png" height="24px" alt="" />
                 <p v-if="sourceType === 'url'" class="regular-font">{{ fileText }}</p>
                 <p v-else-if="sourceType === 'saved'" class="regular-font">{{ savedText }}</p>
+                <p v-else-if="sourceType === 'both'" class="regular-font">{{ savedText }}</p>
               </div>
 
-              <div v-if="sourceType === 'url'" style="margin: 0 0 8px 14px">
-                <p class="thin-font">
-                  Paste up to 200 URLs. Each on a new line or separated by commas.
-                </p>
-                <textarea
-                  style="
-                    width: 100%;
-                    border: 1px solid rgba(0, 0, 0, 0.1) !important;
-                    padding: 12px;
-                  "
-                  :rows="5"
-                  id="search-input"
-                  class="area-input"
-                  autocomplete="off"
-                  :placeholder="urlPlaceholder"
-                  v-model="reportUrls"
-                  v-autoresize
-                  :disabled="urlsSet"
-                  @input="handleInput"
-                />
-                <div style="margin-top: 12px" class="flex-end">
-                  <button
-                    @click="setUrls"
-                    :disabled="!reportUrls || urlsSet"
-                    class="primary-button"
-                  >
-                    Continue
-                  </button>
-                </div>
-              </div>
-
-              <div v-else style="margin: 0 0 8px 20px">
+              <div
+                v-if="sourceType === 'saved' || sourceType === 'both'"
+                style="margin: 0 0 8px 20px"
+              >
                 <!-- <p class="thin-font">We will gather news coverage based on your selected search</p> -->
 
                 <div style="margin: 12px 0" class="relative">
@@ -314,7 +289,7 @@
                     style="background-color: #fafafa; box-shadow: 1px 2px 6px rgba(0, 0, 0, 0.1)"
                   >
                     <p style="font-size: 15px !important" class="mobile-text-hide">
-                      Saved Searches
+                      {{ selectedSearch ? selectedSearch.name : 'Select a search' }}
                     </p>
 
                     <img
@@ -361,6 +336,45 @@
                     </div>
                     <div v-else>You dont have any saved searches...</div>
                   </div>
+                </div>
+              </div>
+
+              <div
+                v-if="sourceType === 'url' || (sourceType === 'both' && selectedSearch)"
+                style="margin: 0 0 8px 14px"
+              >
+                <p style="margin-top: 24px" v-if="sourceType === 'both'" class="">
+                  {{ urlCount }} urls uploaded, paste the rest below. Separated by commas
+                </p>
+
+                <p v-else class="thin-font">
+                  Paste up to 200 URLs. Each on a new line or separated by commas.
+                </p>
+
+                <textarea
+                  style="
+                    width: 100%;
+                    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+                    padding: 12px;
+                  "
+                  :rows="5"
+                  id="search-input"
+                  class="area-input"
+                  autocomplete="off"
+                  :placeholder="urlPlaceholder"
+                  v-model="reportUrls"
+                  v-autoresize
+                  :disabled="urlsSet"
+                  @input="handleInput"
+                />
+                <div style="margin-top: 12px" class="flex-end">
+                  <button
+                    @click="setUrls"
+                    :disabled="!reportUrls || urlsSet"
+                    class="primary-button"
+                  >
+                    Continue
+                  </button>
                 </div>
               </div>
             </div>
@@ -1042,6 +1056,7 @@ export default {
       sources: [
         { name: 'Upload URLs', value: 'url' },
         { name: 'Saved Search', value: 'saved' },
+        { name: 'Both', value: 'both' },
       ],
       editSummary: false,
       shortText: 'The report is too long. Make it shorter',
@@ -1085,11 +1100,10 @@ export default {
         'image/jpeg',
         'image/png',
         'image/svg+xml',
-        'image/webp',
-        'image/gif',
-        'image/tiff',
-        'image/bmp',
-        'application/pdf',
+        // 'image/gif',
+        // 'image/tiff',
+        // 'image/bmp',
+        // 'application/pdf',
       ],
       maxSize: 2 * 1024 * 1024,
       fileText: `Next, add news coverage links by pasting the URL's below.`,
@@ -1152,12 +1166,22 @@ www.forbes.com/article-3
         })
         let articles = []
         articles = res.articles
-        this.urls = articles.map((art) => {
-          return art.link
-        })
-        this.urlCount = this.urls.length
-        this.useSearchUrls = true
-        this.setUrls()
+
+        if (this.sourceType !== 'both') {
+          this.urls = articles.map((art) => {
+            return art.link
+          })
+          this.urlCount = this.urls.length
+          this.useSearchUrls = true
+          this.setUrls()
+        } else {
+          this.reportUrls = articles.map((art) => {
+            return art.link
+          })
+
+          this.urlCount = this.reportUrls.length
+          this.useSearchUrls = true
+        }
       } catch (e) {
         this.reportUrls = []
         console.log(e)
@@ -2791,7 +2815,7 @@ a {
   margin-bottom: 0.25rem;
   max-height: 120px !important;
   padding: 0 1.25rem;
-  line-height: 1.25;
+  line-height: 1.5;
   outline: none;
   border: none;
   letter-spacing: 0.5px;
