@@ -318,7 +318,7 @@ class PRSearchViewSet(
                 r = open_ai_exceptions._handle_response(r)
                 message = r.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("article_summaries")
-                task = emit_process_website_domain(url, user.organization.name)
+                task = emit_process_website_domain([url], user.organization.name)
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -568,7 +568,7 @@ class PRSearchViewSet(
                 r = open_ai_exceptions._handle_response(r)
                 message = r.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("article_summaries")
-                task = emit_process_website_domain(url, user.organization.name)
+                task = emit_process_website_domain([url], user.organization.name)
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -2700,7 +2700,7 @@ def upload_link(request):
             "description": text,
             "link": url,
         }
-        emit_process_website_domain(url, request.user.organization.name)
+        emit_process_website_domain([url], request.user.organization.name)
     except Exception as e:
         logger.exception(e)
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
