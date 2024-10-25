@@ -357,6 +357,13 @@
               {{ email.recipient }}
             </div>
           </td>
+          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
+            {{
+              email.journalist_ref && email.journalist_ref.outlet
+                ? email.journalist_ref.outlet
+                : 'Unknown'
+            }}
+          </td>
           <td v-if="!email.is_draft" :class="i % 2 !== 0 ? 'gray-bg' : ''">
             <div :class="{ redText: email.failed, greenText: !email.failed }">
               {{ email.failed ? 'Failed' : 'Sent' }}
@@ -456,7 +463,7 @@ export default {
       emails: [],
       sortKey: '',
       sortOrder: 1,
-      statsKeys: ['To', 'Status', 'Opens', 'Clicks'],
+      statsKeys: ['To', 'Outlet', 'Status', 'Opens', 'Clicks'],
       openRate: 0,
       replyRate: 0,
       draftEmailModalOpen: false,
@@ -600,6 +607,10 @@ export default {
             ? a.recipient
             : this.sortKey === 'status'
             ? getStatus(a)
+            : this.sortKey === 'outlet'
+            ? a.journalist_ref && a.journalist_ref.outlet
+              ? a.journalist_ref.outlet
+              : 'unknown'
             : a[this.sortKey]
 
         const bValue =
@@ -609,6 +620,10 @@ export default {
             ? b.recipient
             : this.sortKey === 'status'
             ? getStatus(b)
+            : this.sortKey === 'outlet'
+            ? b.journalist_ref && b.journalist_ref.outlet
+              ? b.journalist_ref.outlet
+              : 'unknown'
             : b[this.sortKey]
 
         if (aValue < bValue) return -1 * this.sortOrder

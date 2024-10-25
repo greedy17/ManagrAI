@@ -63,7 +63,7 @@
             class="icon-btn"
             :class="{ 'img-container-stay': showFilters }"
           >
-            <img src="@/assets/images/filter.svg" height="13px" alt="" />
+            <img src="@/assets/images/filter.svg" height="11px" alt="" />
             Add filter
           </div>
 
@@ -85,6 +85,58 @@
             </div>
 
             <div style="padding: 0 16px" class="dropdown-body">
+              <div class="row" style="width: 100%; overflow-x: scroll">
+                <div v-if="failedFilter !== null">
+                  <button
+                    style="margin: 0 4px 0 0; white-space: nowrap"
+                    class="primary-button lb-bg"
+                  >
+                    <div @click="removeFailedFilter">
+                      <img src="@/assets/images/close.svg" height="14px" alt="" />
+                    </div>
+                    Status -
+                    {{ failedFilter === true ? 'failed' : 'delivered' }}
+                  </button>
+                </div>
+
+                <div v-if="statusFilter !== null">
+                  <button
+                    style="margin: 0 4px 0 0; white-space: nowrap"
+                    class="primary-button lb-bg"
+                  >
+                    <div @click="removeStatusFilter">
+                      <img src="@/assets/images/close.svg" height="14px" alt="" />
+                    </div>
+                    Status -
+                    {{ statusFilter === 'is_approved' ? 'approved' : 'rejected' }}
+                  </button>
+                </div>
+
+                <div v-if="draftFilter !== null">
+                  <button
+                    style="margin: 0 4px 0 0; white-space: nowrap"
+                    class="primary-button lb-bg"
+                  >
+                    <div @click="removeDraftFilter">
+                      <img src="@/assets/images/close.svg" height="14px" alt="" />
+                    </div>
+                    Status - draft
+                  </button>
+                </div>
+
+                <div v-if="activityFilter">
+                  <button
+                    style="margin: 0 4px 0 0; white-space: nowrap"
+                    class="primary-button lb-bg"
+                  >
+                    <div @click="removeActivityFilter">
+                      <img src="@/assets/images/close.svg" height="14px" alt="" />
+                    </div>
+
+                    {{ convertDates(activityFilter) }}
+                  </button>
+                </div>
+              </div>
               <div class="col">
                 <p>Status</p>
                 <!-- <div class="status-dropdown">
@@ -181,47 +233,8 @@
         </div>
 
         <div @click="convertData" class="icon-btn">
-          <img src="@/assets/images/download.svg" height="13px" alt="" />
+          <img src="@/assets/images/download.svg" height="11px" alt="" />
           Export table
-        </div>
-
-        <div v-if="failedFilter !== null">
-          <button class="primary-button lb-bg">
-            <div @click="removeFailedFilter">
-              <img src="@/assets/images/close.svg" height="14px" alt="" />
-            </div>
-            Status -
-            {{ failedFilter === true ? 'failed' : 'delivered' }}
-          </button>
-        </div>
-
-        <div v-if="statusFilter !== null">
-          <button class="primary-button lb-bg">
-            <div @click="removeStatusFilter">
-              <img src="@/assets/images/close.svg" height="14px" alt="" />
-            </div>
-            Status -
-            {{ statusFilter === 'is_approved' ? 'approved' : 'rejected' }}
-          </button>
-        </div>
-
-        <div v-if="draftFilter !== null">
-          <button class="primary-button lb-bg">
-            <div @click="removeDraftFilter">
-              <img src="@/assets/images/close.svg" height="14px" alt="" />
-            </div>
-            Status - draft
-          </button>
-        </div>
-
-        <div v-if="activityFilter">
-          <button class="primary-button lb-bg">
-            <div @click="removeActivityFilter">
-              <img src="@/assets/images/close.svg" height="14px" alt="" />
-            </div>
-
-            {{ convertDates(activityFilter) }}
-          </button>
         </div>
       </div>
 
@@ -274,6 +287,9 @@ export default {
   },
   data() {
     return {
+      newInsight: '',
+      loadingInsight: false,
+      insight: '',
       searchEmailText: '',
       searchUsersText: '',
       showFilters: false,
@@ -308,6 +324,23 @@ export default {
     this.getUsers()
   },
   methods: {
+    async getInsight() {
+      this.loadingInsight = true
+      try {
+        const res = await Comms.api.getInsight({
+          notes: this.currentContact.notes,
+          activity: this.activities,
+          bio: this.currentContact.bio,
+          instructions: this.insight,
+        })
+        this.newInsight = res.content.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.insight = ''
+        this.loadingInsight = false
+      }
+    },
     toggleSelection(model, value) {
       if (this[model] === value) {
         this[model] = null
@@ -349,10 +382,13 @@ export default {
     },
 
     convertData() {
-      console.log(this.emailValues)
       let csvData = this.emailValues.map((email) => ({
         email: email.subject + ':' + email.body.replace(/<\/?[^>]+(>|$)/g, ''),
         to: email.recipient,
+        publication:
+          email.journalist_ref && email.journalist_ref.outlet
+            ? email.journalist_ref.outlet
+            : 'Unknown',
         status: email.failed ? 'failed' : 'Delivered',
         opens: email.opens,
         clicks: email.clicks,
@@ -479,7 +515,7 @@ export default {
   height: 88vh;
   margin: 0 auto;
   // padding: 72px 32px 16px 32px;
-  padding: 108px 96px 32px 96px;
+  padding: 100px 96px 32px 96px;
   font-family: $thin-font-family;
   color: $dark-black-blue;
 
@@ -1006,7 +1042,7 @@ export default {
 .drop-header {
   padding: 8px;
   background-color: $off-white;
-  font-size: 16px !important;
+  font-size: 14px;
   // border: 0.5px solid rgba(0, 0, 0, 0.355);
   border-radius: 16px;
   display: flex;
@@ -1019,7 +1055,7 @@ export default {
   }
 
   small {
-    font-size: 16px;
+    font-size: 14px;
     margin-left: 4px !important;
     font-family: $base-font-family;
   }
@@ -1098,7 +1134,7 @@ input {
   background-color: white;
   border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: 16px;
-  padding: 8px 10px;
+  padding: 6px 8px;
   margin: 0 10px;
   width: 140px;
   cursor: pointer;

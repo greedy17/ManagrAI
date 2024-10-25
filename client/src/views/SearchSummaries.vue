@@ -947,7 +947,7 @@
             name="contact"
             v-model="contactName"
           />
-          <label for="outlet">Publication</label>
+          <label for="outlet">Outlet</label>
           <input
             :disabled="loadingContacts"
             class="primary-input"

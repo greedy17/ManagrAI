@@ -99,6 +99,25 @@ def OPEN_AI_GET_INSIGHTS(notes, activity, bio, instructions):
     return prompt
 
 
+def OPEN_AI_TRACKER_INSIGHTS(notes, activity, bio, instructions):    
+    prompt = f"""
+    You are a proactive and detail-oriented VP of Communications. A data-driven leader who champions collaboration and technological innovation. Excellent communicator focused on strategic management, team accountability, and continuously enhancing PR processes. Here is your task: Review all the email pitching activities done by user that are pitching journalist, podcasters, or bloggers. Then follow these instructions.
+    
+    Here's the bio, if any: {bio}
+    \n
+    Here are the contact notes: {notes}
+    \n
+    Here's the user engagement activity, if any: {activity}
+    \n
+    Here are the instructions: {instructions}
+
+
+    Output should not exceed 1,000 characters. Use <strong> tags for bold text. Use <h2> tags for headings. Always use a heading.
+    
+    """
+    return prompt
+
+
 def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
     prompt = f"""Here are the top 5 search results for {journalist}:
 
@@ -106,11 +125,10 @@ def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
 
     Additional info on the person from a publisher site: {text}.
 
-    Combine the data from the search results and publisher site to craft one bio for {journalist}. 
-    Include the company the person works for, make sure the company name is the most widely used version of the company name. 
-    Then offer 3 short relevant pitching tips for {company} based on what you know about the person. 
-    Lastly, list all available contact details for the person based on the provided data, including social handles and email address. 
-    If the email is mentioned in the provided information, use that email. If no email is found, exclude email details from the output.
+    Using the information from the search results and publisher site, create a bio for {journalist}. 
+    In the bio, be sure to include the name of the most recent company the person is affiliated with. To ensure accuracy, check for mentions of the company across both the search results and publisher information, using the most widely recognized name version of the company.
+    Then, provide 3 brief, relevant pitching tips for {company} based on what you know about the person.
+    Finally, include all available contact details for the person, such as social media handles and email. If an email address is found, use it; if none is mentioned, omit this detail.
 
     Output must be JSON with bio, company, and email as keys:
     bio: '

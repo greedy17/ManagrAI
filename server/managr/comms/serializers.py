@@ -178,7 +178,7 @@ class EmailTrackerSerializer(serializers.ModelSerializer):
     def get_journalist_ref(self, instance):
         journalist_check = Journalist.objects.filter(email=instance.recipient).first()
         if journalist_check:
-            return journalist_check.as_object()
+            return journalist_check.as_object
         return None
 
 
