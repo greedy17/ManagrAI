@@ -1111,6 +1111,15 @@ class Journalist(TimeStampModel):
         return f"{self.email} - {self.outlet}"
 
     @property
+    def as_object(self):
+        return {
+            "outlet": self.outlet,
+            "first_name": self.first_name,
+            "last_name": self.last_name,
+            "email": self.email,
+        }
+
+    @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}"
 
