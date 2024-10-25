@@ -111,8 +111,9 @@ def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
     Then offer 3 short relevant pitching tips for {company} based on what you know about the person. 
     Lastly, list all available contact details for the person based on the provided data, including social handles and email address. 
     If the email is mentioned in the provided information, use that email. If no email is found, exclude email details from the output.
+    Check the name provided to make sure it is spelled correctly and not missing any parts of the name.
 
-    Output must be JSON with bio, company, and email as keys:
+    Output must be JSON with bio, company,name, and email as keys:
     bio: '
     <h2>Bio:</h2>
     [Bio content]
@@ -123,6 +124,7 @@ def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
     ',
     company: [Company name],
     email: '[EMAIL IF FOUND]'
+    name: [Journalist Name]
 
     Output MUST follow these rules:
     1. Separate each section with one new line, no additional spacing or padding.
@@ -243,9 +245,7 @@ NEWS_API_HEADERS = {
 
 NEW_API_URI = "https://newsapi.org/v2"
 
-NEW_API_EVERYTHING_QUERY_URI = (
-    lambda query: f"everything?{query}&language=en&sortBy=publishedAt"
-)
+NEW_API_EVERYTHING_QUERY_URI = lambda query: f"everything?{query}&language=en&sortBy=publishedAt"
 
 NEW_API_EVERYTHING_DATE_URI = (
     lambda date_from, date_to: f"everything?from={date_from}&to={date_to}&language=en&sortBy=publishedAt&pageSize=40"
@@ -331,6 +331,7 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_clie
     """
     return body
 
+
 def OPEN_AI_NEWS_CLIPS_SUMMARY_EMAIL(date, clips, search, instructions=False, for_client=False):
     body = f"""
     Today is {date}. Please provide a concise and accurate response based on the news coverage below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the news coverage in 150 words or less. 
@@ -344,6 +345,7 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY_EMAIL(date, clips, search, instructions=False, fo
     {instructions}
     """
     return body
+
 
 def OPEN_AI_NEWS_CLIPS_SLACK_SUMMARY(date, clips, search, instructions=False, for_client=False):
     if not instructions:
@@ -661,7 +663,9 @@ def OPEN_AI_DISCOVER_JOURNALIST(info, journalists, content):
 
 
 def OPEN_AI_GET_JOURNALIST_LIST(info, content):
-    initial_sentence = f"List 20 real, active journalists, podcasters, or bloggers based on this criteria: {info}"
+    initial_sentence = (
+        f"List 20 real, active journalists, podcasters, or bloggers based on this criteria: {info}"
+    )
     if content:
         initial_sentence += f" and would be interested in this pitch: {content}"
     prompt = f"""
@@ -788,6 +792,7 @@ def REPORT_SUMMARY(brand, clips):
 
     return prompt
 
+
 REGENERATE_REPORT_SUMMARY = (
     lambda content, instructions, clips: f"""
     The content below is an executive overview of the earned media report that was generated based on the news clips below. Rewrite this report based on the instructions provided below the report. Use the clips for reference when neccessary:
@@ -801,7 +806,7 @@ REGENERATE_REPORT_SUMMARY = (
     clips: 
     {clips}
     """
-)    
+)
 
 
 DO_NOT_TRACK_LIST = [
