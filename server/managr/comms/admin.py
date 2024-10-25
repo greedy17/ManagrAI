@@ -20,6 +20,20 @@ from .models import (
 # Register your models here.
 
 
+class CustomActiveNotCrawlingFilter(admin.SimpleListFilter):
+    title = "New Sources"
+    parameter_name = "active_not_crawling"
+
+    def lookups(self, request, model_admin):
+        return (("yes", "New Sources"),)
+
+    def queryset(self, request, queryset):
+        if self.value() == "yes":
+            # Filter by is_active=True, is_crawling=False and order by datetime_created desc
+            return queryset.filter(is_active=True, is_crawling=False).order_by("-datetime_created")
+        return queryset
+
+
 def update_date_verified(modeladmin, request, queryset):
     now = datetime.now()
     queryset.update(date_verified=now)
@@ -36,6 +50,16 @@ def update_crawling(modeladmin, request, queryset):
 
 
 update_crawling.short_description = "Update crawling"
+
+
+def update_active_status(modeladmin, request, queryset):
+    for instance in queryset:
+        instance.is_active = not instance.is_active
+        instance.save()
+    modeladmin.message_user(request, f"{queryset.count()} sources were updated")
+
+
+update_active_status.short_description = "Update active status"
 
 
 class CustomSearch(admin.ModelAdmin):
@@ -60,11 +84,21 @@ class CustomNewsSource(admin.ModelAdmin):
         "article_link_attribute",
         "article_link_selector",
     )
-    ordering = ("-last_scraped", "is_active")
+    ordering = ("-datetime_created",)
     readonly_fields = ("access_count", "newest_article_date")
     search_fields = ["domain"]
-    list_filter = ("is_active", "is_crawling")
-    actions = [update_crawling]
+    list_filter = ("is_active", "is_crawling", CustomActiveNotCrawlingFilter)
+    actions = [update_crawling, update_active_status]
+
+    def get_ordering(self, request):
+        if request.GET.get("new_sources", None):
+            return ["is_active", ""]
+        return super().get_ordering(request)
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context["new_sources"] = True if request.GET.get("new_sources") else False
+        return super().changelist_view(request, extra_context=extra_context)
 
     def get_search_results(self, request, queryset, search_term):
         queryset, use_distinct = super().get_search_results(request, queryset, search_term)
