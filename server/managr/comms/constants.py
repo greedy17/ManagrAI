@@ -319,7 +319,7 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_clie
 
     body = f"""
     Today is {date}. Please provide a concise and accurate response based on the news coverage below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the news coverage in 150 words or less. 
-    Cite your sources by enclosing the index of the search result in a set square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[1].' This is being used in a Javascript app so indexes must always start with 0. Only use this format to cite search results.
+    Cite your sources by enclosing the index of the news coverage article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[1].' This is being used in a Javascript app so indexes must always start with 0. Only use this format to cite search results and make sure the citation numbers correspond exactly to the provided article.
     Only add citations at the end of sentences that the citation supports, and do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link. Make sure that your response is properly formatted simple html with good spacing. 
     Do not include ```html in your response. Always use labels.
 

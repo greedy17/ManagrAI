@@ -4590,7 +4590,7 @@ www.forbes.com/article-3
           chatResponse:
             "Using Company details, provide a short description of your company or a pitch you're working on",
           searchText: `Scan through the news coverage and list the journalists from recognizable news outlets (up to 10). Only list journalist from the news coverage. 
-          Then suggest, in list form, which of these journalists the company listed should pitch and why. Always Use Labels. Always Use citations. Company:`,
+          Then suggest which of these journalists the company listed should pitch and why. The list must be returned in an html unordered list. Always Use Labels. Always Use citations. Company:`,
           details: true,
           responseText: 'Using the message bar, provide a current news topic or event',
         },
@@ -5307,8 +5307,6 @@ www.forbes.com/article-3
           content: '',
           discover: discover,
         })
-
-        console.log(res)
 
         if (discover) {
           this.summary = res

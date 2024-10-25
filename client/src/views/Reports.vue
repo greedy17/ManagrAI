@@ -344,7 +344,8 @@
                 style="margin: 0 0 8px 14px"
               >
                 <p style="margin-top: 24px" v-if="sourceType === 'both'" class="">
-                  {{ urlCount }} urls uploaded, paste the rest below. Separated by commas
+                  {{ urlCount }} URLs added from saved search. Add additional URLs below, separated
+                  by commas or new lines.
                 </p>
 
                 <p v-else class="thin-font">
