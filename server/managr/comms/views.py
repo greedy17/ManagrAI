@@ -3333,6 +3333,7 @@ def redirect_from_instagram(request):
 def get_traffic_data(request):
     urls = request.data.get("urls")
     traffic_data = get_url_traffic_data(urls)
+    emit_process_website_domain(urls, request.user.organization.name)
     if "error" in traffic_data.keys():
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=traffic_data)
     return Response(status=status.HTTP_200_OK, data=traffic_data)
