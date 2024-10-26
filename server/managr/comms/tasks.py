@@ -563,21 +563,22 @@ def _send_news_summary(news_alert_id):
                 )
                 email_list = [alert.user.email]
 
-                if "@outlook" in email_list[0]:
-                    message = res.get("choices")[0].get("message").get("content")
+                # if "@outlook" in email_list[0]:
+                message = res.get("choices")[0].get("message").get("content")
+                message = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", message)
 
-                else:
-                    message = res.get("choices")[0].get("message").get("content")
-                    message = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", message)
-                    for i in range(6, 0, -1):
-                        message = re.sub(
-                            rf'^{"#" * i} (.*?)$', rf"<h{i}>\1</h{i}>", message, flags=re.MULTILINE
-                        )
-                    message = re.sub(
-                        r"\[(.*?)\]\((.*?)\)|<([^|>]+)\|([^>]+)>",
-                        r'<a href="\2\3">\1\4</a>',
-                        message,
-                    )
+                # else:
+                #     message = res.get("choices")[0].get("message").get("content")
+                #     message = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", message)
+                #     for i in range(6, 0, -1):
+                #         message = re.sub(
+                #             rf'^{"#" * i} (.*?)$', rf"<h{i}>\1</h{i}>", message, flags=re.MULTILINE
+                #         )
+                #     message = re.sub(
+                #         r"\[(.*?)\]\((.*?)\)|<([^|>]+)\|([^>]+)>",
+                #         r'<a href="\2\3">\1\4</a>',
+                #         message,
+                #     )
 
                 clip_short_list = normalized_clips[:5]
                 for clip in clip_short_list:

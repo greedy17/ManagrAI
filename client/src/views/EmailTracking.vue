@@ -1,5 +1,90 @@
 <template>
   <div class="tracking fadein">
+    <Modal v-if="insightModalOpen" class="modal-margin">
+      <div class="modal-container">
+        <div style="background-color: white; z-index: 3" class="col max-height-sticky">
+          <h2 class="bold-txt">AI Insights</h2>
+          <h4>Ask about recent activity or for suggestions</h4>
+        </div>
+
+        <div style="margin-top: 32px; width: 100%" v-if="!newInsight" class="fadein">
+          <textarea
+            v-model="insight"
+            rows="8"
+            class="area-input text-area-input"
+            v-autoresize
+            placeholder="Ask me anything..."
+            :disabled="loadingInsight"
+            :class="{ opaquest: loadingInsight }"
+            style="
+              border: 1px solid rgba(0, 0, 0, 0.1) !important;
+              border-radius: 8px;
+              padding: 16px 8px;
+            "
+          ></textarea>
+
+          <div style="margin-top: 32px" class="space-between">
+            <div></div>
+
+            <div class="row">
+              <button @click="insightModalOpen = !insightModalOpen" class="secondary-button">
+                Cancel
+              </button>
+              <button
+                :disabled="!insight || loadingInsight"
+                class="primary-button"
+                @click="setInsightData"
+              >
+                <img
+                  v-if="loadingInsight"
+                  style="margin-right: 8px"
+                  class="rotation"
+                  src="@/assets/images/loading.svg"
+                  height="14px"
+                  alt=""
+                />
+                Submit
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="fadein" v-else>
+          <div style="hieght: 80%; overflow-y: scroll" class="pre-text" v-html="newInsight"></div>
+
+          <div
+            style="
+              padding-top: 24px;
+              position: sticky;
+              bottom: 0;
+              background-color: white;
+              z-index: 3;
+            "
+            class="space-between"
+          >
+            <div></div>
+
+            <div class="row">
+              <button @click="insightModalOpen = !insightModalOpen" class="secondary-button">
+                Close
+              </button>
+              <button class="primary-button" @click="clearInsight">
+                <img
+                  v-if="loadingInsight"
+                  style="margin-right: 8px"
+                  class="rotation"
+                  src="@/assets/images/loading.svg"
+                  height="14px"
+                  alt=""
+                />
+                New insight
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Modal>
+
     <section class="space-between">
       <div class="row">
         <div class="relative">
@@ -63,7 +148,7 @@
             class="icon-btn"
             :class="{ 'img-container-stay': showFilters }"
           >
-            <img src="@/assets/images/filter.svg" height="13px" alt="" />
+            <img src="@/assets/images/filter.svg" height="11px" alt="" />
             Add filter
           </div>
 
@@ -85,6 +170,58 @@
             </div>
 
             <div style="padding: 0 16px" class="dropdown-body">
+              <div class="row" style="width: 100%; overflow-x: scroll">
+                <div v-if="failedFilter !== null">
+                  <button
+                    style="margin: 0 4px 0 0; white-space: nowrap"
+                    class="primary-button lb-bg"
+                  >
+                    <div @click="removeFailedFilter">
+                      <img src="@/assets/images/close.svg" height="14px" alt="" />
+                    </div>
+                    Status -
+                    {{ failedFilter === true ? 'failed' : 'delivered' }}
+                  </button>
+                </div>
+
+                <div v-if="statusFilter !== null">
+                  <button
+                    style="margin: 0 4px 0 0; white-space: nowrap"
+                    class="primary-button lb-bg"
+                  >
+                    <div @click="removeStatusFilter">
+                      <img src="@/assets/images/close.svg" height="14px" alt="" />
+                    </div>
+                    Status -
+                    {{ statusFilter === 'is_approved' ? 'approved' : 'rejected' }}
+                  </button>
+                </div>
+
+                <div v-if="draftFilter !== null">
+                  <button
+                    style="margin: 0 4px 0 0; white-space: nowrap"
+                    class="primary-button lb-bg"
+                  >
+                    <div @click="removeDraftFilter">
+                      <img src="@/assets/images/close.svg" height="14px" alt="" />
+                    </div>
+                    Status - draft
+                  </button>
+                </div>
+
+                <div v-if="activityFilter">
+                  <button
+                    style="margin: 0 4px 0 0; white-space: nowrap"
+                    class="primary-button lb-bg"
+                  >
+                    <div @click="removeActivityFilter">
+                      <img src="@/assets/images/close.svg" height="14px" alt="" />
+                    </div>
+
+                    {{ convertDates(activityFilter) }}
+                  </button>
+                </div>
+              </div>
               <div class="col">
                 <p>Status</p>
                 <!-- <div class="status-dropdown">
@@ -181,47 +318,13 @@
         </div>
 
         <div @click="convertData" class="icon-btn">
-          <img src="@/assets/images/download.svg" height="13px" alt="" />
+          <img src="@/assets/images/download.svg" height="11px" alt="" />
           Export table
         </div>
 
-        <div v-if="failedFilter !== null">
-          <button class="primary-button lb-bg">
-            <div @click="removeFailedFilter">
-              <img src="@/assets/images/close.svg" height="14px" alt="" />
-            </div>
-            Status -
-            {{ failedFilter === true ? 'failed' : 'delivered' }}
-          </button>
-        </div>
-
-        <div v-if="statusFilter !== null">
-          <button class="primary-button lb-bg">
-            <div @click="removeStatusFilter">
-              <img src="@/assets/images/close.svg" height="14px" alt="" />
-            </div>
-            Status -
-            {{ statusFilter === 'is_approved' ? 'approved' : 'rejected' }}
-          </button>
-        </div>
-
-        <div v-if="draftFilter !== null">
-          <button class="primary-button lb-bg">
-            <div @click="removeDraftFilter">
-              <img src="@/assets/images/close.svg" height="14px" alt="" />
-            </div>
-            Status - draft
-          </button>
-        </div>
-
-        <div v-if="activityFilter">
-          <button class="primary-button lb-bg">
-            <div @click="removeActivityFilter">
-              <img src="@/assets/images/close.svg" height="14px" alt="" />
-            </div>
-
-            {{ convertDates(activityFilter) }}
-          </button>
+        <div @click="insightModalOpen = true" class="icon-btn">
+          <img src="@/assets/images/wand.svg" height="11px" alt="" />
+          AI Insights
         </div>
       </div>
 
@@ -250,6 +353,7 @@
 
     <div class="table-container">
       <EmailTable
+        ref="emailTableRef"
         :searchText="searchEmailText"
         :failedFilter="failedFilter"
         :statusFilter="statusFilter"
@@ -257,6 +361,7 @@
         :activityFilter="activityFilter"
         :userId="selectedUser ? selectedUser.id : null"
         @emails-updated="setEmailValues"
+        @set-insight-data="getInsight"
       />
     </div>
   </div>
@@ -264,6 +369,7 @@
 
 <script>
 import EmailTable from '../components/EmailTable.vue'
+import { Comms } from '@/services/comms'
 import User from '@/services/users'
 
 export default {
@@ -274,6 +380,10 @@ export default {
   },
   data() {
     return {
+      insightModalOpen: false,
+      newInsight: '',
+      loadingInsight: false,
+      insight: '',
       searchEmailText: '',
       searchUsersText: '',
       showFilters: false,
@@ -307,7 +417,44 @@ export default {
     this.selectedUser = this.user
     this.getUsers()
   },
+  directives: {
+    autoresize: {
+      inserted(el) {
+        function adjustTextareaHeight() {
+          el.style.height = 'auto'
+          el.style.height = el.scrollHeight + 'px'
+        }
+
+        el.addEventListener('input', adjustTextareaHeight)
+        el.addEventListener('focus', adjustTextareaHeight)
+        el.addEventListener('textarea-clear', adjustTextareaHeight)
+        adjustTextareaHeight()
+      },
+    },
+  },
   methods: {
+    setInsightData() {
+      this.$refs.emailTableRef.setInsightData()
+    },
+    clearInsight() {
+      this.newInsight = ''
+    },
+    async getInsight(data) {
+      this.loadingInsight = true
+      try {
+        const res = await Comms.api.getInsight({
+          notes: data,
+          instructions: this.insight,
+          is_tracker: true,
+        })
+        this.newInsight = res.content.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.insight = ''
+        this.loadingInsight = false
+      }
+    },
     toggleSelection(model, value) {
       if (this[model] === value) {
         this[model] = null
@@ -349,10 +496,13 @@ export default {
     },
 
     convertData() {
-      console.log(this.emailValues)
       let csvData = this.emailValues.map((email) => ({
         email: email.subject + ':' + email.body.replace(/<\/?[^>]+(>|$)/g, ''),
         to: email.recipient,
+        publication:
+          email.journalist_ref && email.journalist_ref.outlet
+            ? email.journalist_ref.outlet
+            : 'Unknown',
         status: email.failed ? 'failed' : 'Delivered',
         opens: email.opens,
         clicks: email.clicks,
@@ -476,10 +626,10 @@ export default {
 
 .tracking {
   width: 100vw;
-  height: 88vh;
+  height: 90vh;
   margin: 0 auto;
   // padding: 72px 32px 16px 32px;
-  padding: 108px 96px 32px 96px;
+  padding: 100px 96px 32px 96px;
   font-family: $thin-font-family;
   color: $dark-black-blue;
 
@@ -787,6 +937,59 @@ export default {
   }
 }
 
+.area-input {
+  width: 100%;
+  margin-bottom: 0.25rem;
+  max-height: 250px !important;
+  padding: 0 1.25rem;
+  line-height: 1.25;
+  outline: none;
+  border: none;
+  letter-spacing: 0.5px;
+  font-size: 14px;
+  font-family: $thin-font-family !important;
+  font-weight: 400;
+  border: none !important;
+  resize: none;
+  text-align: left;
+  overflow: auto;
+  scroll-behavior: smooth;
+  color: $dark-black-blue;
+  background-color: transparent;
+}
+.area-input::-webkit-scrollbar {
+  width: 6px;
+  height: 0px;
+}
+.area-input::-webkit-scrollbar-thumb {
+  background-color: $soft-gray;
+  box-shadow: inset 2px 2px 4px 0 rgba(rgb(243, 240, 240), 0.5);
+  border-radius: 6px;
+}
+
+input,
+textarea {
+  font-family: $thin-font-family;
+}
+
+input::placeholder {
+  font-family: $thin-font-family;
+}
+input:disabled {
+  cursor: not-allowed;
+}
+textarea:disabled {
+  cursor: not-allowed;
+}
+textarea::placeholder {
+  font-family: $thin-font-family;
+}
+
+textarea:focus {
+  outline: none;
+  font-family: $thin-font-family;
+}
+
 .lb-bg {
   background-color: $white-blue;
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -1006,7 +1209,7 @@ export default {
 .drop-header {
   padding: 8px;
   background-color: $off-white;
-  font-size: 16px !important;
+  font-size: 14px;
   // border: 0.5px solid rgba(0, 0, 0, 0.355);
   border-radius: 16px;
   display: flex;
@@ -1019,7 +1222,7 @@ export default {
   }
 
   small {
-    font-size: 16px;
+    font-size: 14px;
     margin-left: 4px !important;
     font-family: $base-font-family;
   }
@@ -1048,6 +1251,41 @@ input {
 }
 
 ::placeholder {
+  font-family: $thin-font-family;
+}
+
+.max-height-sticky {
+  position: sticky;
+  top: 0;
+  h4,
+  h2 {
+    margin: 4px 0;
+  }
+
+  h4 {
+    font-size: 14px;
+  }
+}
+
+.bold-txt {
+  font-family: $base-font-family;
+}
+
+.modal-container {
+  width: 600px;
+  max-height: 70vh;
+  position: relative;
+  overflow-y: scroll;
+  font-family: $thin-font-family;
+
+  @media only screen and (max-width: 600px) {
+    font-size: 13px !important;
+    width: 100% !important;
+  }
+}
+
+.modal-margin {
+  margin-top: 132px;
   font-family: $thin-font-family;
 }
 
@@ -1093,21 +1331,39 @@ input {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
+  justify-content: space-evenly;
   font-size: 13px;
   background-color: white;
   border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: 16px;
-  padding: 8px 10px;
+  padding: 6px 4px;
   margin: 0 10px;
-  width: 140px;
+  width: 126px;
   cursor: pointer;
   font-family: $base-font-family;
-  img {
-    margin-right: 6px;
-  }
+
   &:hover {
     background-color: $soft-gray;
+  }
+}
+
+.pre-text {
+  line-height: 32px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  color: $dark-black-blue;
+  font-family: $thin-font-family;
+  font-size: 16px;
+  margin-top: 0 !important;
+}
+
+::v-deep .pre-text {
+  strong,
+  h1,
+  h2,
+  h3 {
+    font-family: $base-font-family;
+    margin-bottom: 4px;
   }
 }
 </style>

@@ -857,7 +857,7 @@
             name="contact"
             v-model="contactName"
           />
-          <label for="outlet">Publication</label>
+          <label for="outlet">Outlet</label>
           <input
             :disabled="loadingContacts"
             class="primary-input"
@@ -1963,7 +1963,7 @@
         </div>
 
         <div class="col relative">
-          <p>Publication</p>
+          <p>Outlet</p>
 
           <input
             v-if="currentContact.outlet"
@@ -2089,7 +2089,7 @@ export default {
       popoverContent: '',
       sortOrder: 1,
       sortKey: '',
-      statsKeys: ['Publication', 'Name', 'Email'],
+      statsKeys: ['Outlet', 'Name', 'Email'],
       mapped: false,
       isMappingConfirmed: false,
       mappings: {},
@@ -2288,7 +2288,7 @@ export default {
     filteredContactList() {
       return this.contacts.slice().sort((a, b) => {
         const aValue =
-          this.sortKey === 'publication'
+          this.sortKey === 'outlet'
             ? a.journalist_ref.outlet
             : this.sortKey === 'name'
             ? a.journalist_ref.first_name
@@ -2296,7 +2296,7 @@ export default {
             ? a.journalist_ref.email
             : a[this.sortKey]
         const bValue =
-          this.sortKey === 'publication'
+          this.sortKey === 'outlet'
             ? b.journalist_ref.outlet
             : this.sortKey === 'name'
             ? b.journalist_ref.first_name
@@ -2814,9 +2814,11 @@ export default {
           search: false,
           social: false,
         })
+        console.log(res.data)
         this.newContactBio = res.data.bio.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
         this.newContactImages = res.data.images
         this.currentPublication = res.data.company
+        this.contactName = res.data.name
         this.targetEmail = res.data.email
         this.contactsModalOpen = false
         this.$nextTick(() => {

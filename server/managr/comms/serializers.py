@@ -149,6 +149,8 @@ class JournalistSerializer(serializers.ModelSerializer):
 
 
 class EmailTrackerSerializer(serializers.ModelSerializer):
+    journalist_ref = serializers.SerializerMethodField("get_journalist_ref")
+
     class Meta:
         model = EmailTracker
         fields = (
@@ -170,7 +172,14 @@ class EmailTrackerSerializer(serializers.ModelSerializer):
             "is_approved",
             "is_rejected",
             "is_draft",
+            "journalist_ref",
         )
+
+    def get_journalist_ref(self, instance):
+        journalist_check = Journalist.objects.filter(email=instance.recipient).first()
+        if journalist_check:
+            return journalist_check.as_object
+        return None
 
 
 class JournalistContactSerializer(serializers.ModelSerializer):
@@ -183,9 +192,20 @@ class JournalistContactSerializer(serializers.ModelSerializer):
             validated_data["notes"] = new_notes
         return super().update(instance, validated_data)
 
-    class Meta:  
+    class Meta:
         model = JournalistContact
-        fields = ("id", "user", "journalist", "journalist_ref", "tags", "bio", "images", "notes", "email", "outlet")
+        fields = (
+            "id",
+            "user",
+            "journalist",
+            "journalist_ref",
+            "tags",
+            "bio",
+            "images",
+            "notes",
+            "email",
+            "outlet",
+        )
 
 
 class CompanyDetailsSerializer(serializers.ModelSerializer):

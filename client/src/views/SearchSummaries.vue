@@ -947,7 +947,7 @@
             name="contact"
             v-model="contactName"
           />
-          <label for="outlet">Publication</label>
+          <label for="outlet">Outlet</label>
           <input
             :disabled="loadingContacts"
             class="primary-input"
@@ -6046,6 +6046,7 @@ www.forbes.com/article-3
         this.newContactBio = res.data.bio.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
         this.newContactImages = res.data.images
         this.currentPublication = res.data.company
+        this.contactName = res.data.name
         this.targetEmail = res.data.email
         this.contactsModalOpen = false
         setTimeout(() => {

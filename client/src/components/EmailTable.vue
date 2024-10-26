@@ -357,6 +357,15 @@
               {{ email.recipient }}
             </div>
           </td>
+          <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
+            <div class="set-width-small">
+              {{
+                email.journalist_ref && email.journalist_ref.outlet
+                  ? email.journalist_ref.outlet
+                  : 'Unknown'
+              }}
+            </div>
+          </td>
           <td v-if="!email.is_draft" :class="i % 2 !== 0 ? 'gray-bg' : ''">
             <div :class="{ redText: email.failed, greenText: !email.failed }">
               {{ email.failed ? 'Failed' : 'Sent' }}
@@ -456,7 +465,7 @@ export default {
       emails: [],
       sortKey: '',
       sortOrder: 1,
-      statsKeys: ['To', 'Status', 'Opens', 'Clicks'],
+      statsKeys: ['To', 'Outlet', 'Status', 'Opens', 'Clicks'],
       openRate: 0,
       replyRate: 0,
       draftEmailModalOpen: false,
@@ -600,6 +609,10 @@ export default {
             ? a.recipient
             : this.sortKey === 'status'
             ? getStatus(a)
+            : this.sortKey === 'outlet'
+            ? a.journalist_ref && a.journalist_ref.outlet
+              ? a.journalist_ref.outlet
+              : 'unknown'
             : a[this.sortKey]
 
         const bValue =
@@ -609,6 +622,10 @@ export default {
             ? b.recipient
             : this.sortKey === 'status'
             ? getStatus(b)
+            : this.sortKey === 'outlet'
+            ? b.journalist_ref && b.journalist_ref.outlet
+              ? b.journalist_ref.outlet
+              : 'unknown'
             : b[this.sortKey]
 
         if (aValue < bValue) return -1 * this.sortOrder
@@ -628,7 +645,6 @@ export default {
     sortedEmails(newValue) {
       this.$emit('emails-updated', newValue)
     },
-
     selectedEmail(val) {
       if (val) {
         this.targetEmail = val.recipient
@@ -693,6 +709,9 @@ export default {
   },
 
   methods: {
+    setInsightData() {
+      this.$emit('set-insight-data', this.sortedEmails)
+    },
     toggleDeleteModal(id) {
       if (id) {
         this.currentId = id
@@ -1000,6 +1019,11 @@ export default {
       width: 12vw;
     }
 
+    .set-width-small {
+      width: 10vw;
+      overflow-x: scroll;
+    }
+
     .email-details {
       display: flex;
       align-items: center;
@@ -1186,7 +1210,7 @@ export default {
     color: white !important;
     font-family: $base-font-family;
     font-size: 14px;
-    padding: 6px 12px;
+    padding: 6px 8px;
     border-radius: 16px;
     width: 100px;
     text-align: center;
@@ -1197,7 +1221,7 @@ export default {
     color: white !important;
     font-family: $base-font-family;
     font-size: 14px;
-    padding: 6px 12px;
+    padding: 6px 8px;
     border-radius: 16px;
     width: 100px;
     text-align: center;
@@ -1208,9 +1232,8 @@ export default {
     color: $turq !important;
     font-family: $base-font-family;
     font-size: 14px;
-    padding: 6px 12px;
     border-radius: 16px;
-    width: 100px;
+    width: 80px;
     text-align: center;
   }
 
@@ -1219,7 +1242,7 @@ export default {
     color: white !important;
     font-family: $base-font-family;
     font-size: 14px;
-    padding: 6px 12px;
+    padding: 6px 8px;
     border-radius: 16px;
     width: 100px;
     text-align: center;
@@ -1230,7 +1253,7 @@ export default {
     color: $white !important;
     font-family: $base-font-family;
     font-size: 14px;
-    padding: 6px 12px;
+    padding: 6px 8px;
     border-radius: 16px;
     width: 100px;
     text-align: center;
