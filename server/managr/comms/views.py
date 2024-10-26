@@ -2459,10 +2459,11 @@ class JournalistContactViewSet(
         url_path="insight",
     )
     def get_insight(self, request, *args, **kwargs):
-        notes = request.data.get("notes")
-        activity = request.data.get("activity")
-        bio = request.data.get("bio")
-        instructions = request.data.get("instructions")
+        notes = request.data.get("notes", None)
+        activity = request.data.get("activity",None)
+        bio = request.data.get("bio",None)
+        instructions = request.data.get("instructions",None)
+        tracker = request.data.get("is_tracker", False)
         user = self.request.user
 
         has_error = False
@@ -2472,7 +2473,10 @@ class JournalistContactViewSet(
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_GET_INSIGHTS(notes, activity, bio, instructions)
+                if tracker:
+                    prompt = comms_consts.OPEN_AI_TRACKER_INSIGHTS(notes,instructions)   
+                else:
+                    prompt = comms_consts.OPEN_AI_GET_INSIGHTS(notes, activity, bio, instructions) 
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,

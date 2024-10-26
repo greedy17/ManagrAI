@@ -2814,6 +2814,7 @@ export default {
           search: false,
           social: false,
         })
+        console.log(res.data)
         this.newContactBio = res.data.bio.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
         this.newContactImages = res.data.images
         this.currentPublication = res.data.company

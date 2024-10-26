@@ -99,20 +99,16 @@ def OPEN_AI_GET_INSIGHTS(notes, activity, bio, instructions):
     return prompt
 
 
-def OPEN_AI_TRACKER_INSIGHTS(notes, activity, bio, instructions):    
+def OPEN_AI_TRACKER_INSIGHTS(bio, instructions):    
     prompt = f"""
-    You are a proactive and detail-oriented VP of Communications. A data-driven leader who champions collaboration and technological innovation. Excellent communicator focused on strategic management, team accountability, and continuously enhancing PR processes. Here is your task: Review all the email pitching activities done by user that are pitching journalist, podcasters, or bloggers. Then follow these instructions.
+    You are a proactive and detail-oriented VP of Communications. A data-driven leader who champions collaboration and technological innovation. Excellent communicator focused on strategic management, team accountability, and continuously enhancing PR processes. Here is your task: Review all the email pitching activities done by users that are pitching journalist, podcasters, or bloggers. Then follow these instructions.
     
-    Here's the bio, if any: {bio}
-    \n
-    Here are the contact notes: {notes}
-    \n
-    Here's the user engagement activity, if any: {activity}
+    Here's the activity: {bio}
     \n
     Here are the instructions: {instructions}
 
 
-    Output should not exceed 1,000 characters. Use <strong> tags for bold text. Use <h2> tags for headings. Always use a heading.
+    Output should not exceed 1,000 characters. Use <strong> tags for bold text. Use <h2> tags for headings. Always use a heading. All dates and Numbers need to be in strong tags. All dates returned must be in the mm/dd/yyyy format. Never return the message id 
     
     """
     return prompt
@@ -128,9 +124,9 @@ def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
     Using the information from the search results and publisher site, create a bio for {journalist}. 
     In the bio, be sure to include the name of the most recent company the person is affiliated with. To ensure accuracy, check for mentions of the company across both the search results and publisher information, using the most widely recognized name version of the company.
     Then, provide 3 brief, relevant pitching tips for {company} based on what you know about the person.
-    Finally, include all available contact details for the person, such as social media handles and email. If an email address is found, use it; if none is mentioned, omit this detail.
+    Finally, include all available contact details for the person, such as social media handles and email. If an email address is found, use it; if none is mentioned, omit this detail. Check the name provided to make sure it is spelled correctly and not missing any parts of the name. You must return the correct name
 
-    Output must be JSON with bio, company, and email as keys:
+    Output must be JSON with bio, company,name, and email as keys:
     bio: '
     <h2>Bio:</h2>
     [Bio content]
@@ -141,6 +137,7 @@ def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
     ',
     company: [Company name],
     email: '[EMAIL IF FOUND]'
+    name: [Journalist Name]
 
     Output MUST follow these rules:
     1. Separate each section with one new line, no additional spacing or padding.
@@ -261,9 +258,7 @@ NEWS_API_HEADERS = {
 
 NEW_API_URI = "https://newsapi.org/v2"
 
-NEW_API_EVERYTHING_QUERY_URI = (
-    lambda query: f"everything?{query}&language=en&sortBy=publishedAt"
-)
+NEW_API_EVERYTHING_QUERY_URI = lambda query: f"everything?{query}&language=en&sortBy=publishedAt"
 
 NEW_API_EVERYTHING_DATE_URI = (
     lambda date_from, date_to: f"everything?from={date_from}&to={date_to}&language=en&sortBy=publishedAt&pageSize=40"
@@ -349,6 +344,7 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_clie
     """
     return body
 
+
 def OPEN_AI_NEWS_CLIPS_SUMMARY_EMAIL(date, clips, search, instructions=False, for_client=False):
     body = f"""
     Today is {date}. Please provide a concise and accurate response based on the news coverage below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the news coverage in 150 words or less. 
@@ -362,6 +358,7 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY_EMAIL(date, clips, search, instructions=False, fo
     {instructions}
     """
     return body
+
 
 def OPEN_AI_NEWS_CLIPS_SLACK_SUMMARY(date, clips, search, instructions=False, for_client=False):
     if not instructions:
@@ -679,7 +676,9 @@ def OPEN_AI_DISCOVER_JOURNALIST(info, journalists, content):
 
 
 def OPEN_AI_GET_JOURNALIST_LIST(info, content):
-    initial_sentence = f"List 20 real, active journalists, podcasters, or bloggers based on this criteria: {info}"
+    initial_sentence = (
+        f"List 20 real, active journalists, podcasters, or bloggers based on this criteria: {info}"
+    )
     if content:
         initial_sentence += f" and would be interested in this pitch: {content}"
     prompt = f"""
@@ -806,6 +805,7 @@ def REPORT_SUMMARY(brand, clips):
 
     return prompt
 
+
 REGENERATE_REPORT_SUMMARY = (
     lambda content, instructions, clips: f"""
     The content below is an executive overview of the earned media report that was generated based on the news clips below. Rewrite this report based on the instructions provided below the report. Use the clips for reference when neccessary:
@@ -819,7 +819,7 @@ REGENERATE_REPORT_SUMMARY = (
     clips: 
     {clips}
     """
-)    
+)
 
 
 DO_NOT_TRACK_LIST = [

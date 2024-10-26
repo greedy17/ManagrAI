@@ -358,11 +358,13 @@
             </div>
           </td>
           <td :class="i % 2 !== 0 ? 'gray-bg' : ''">
-            {{
-              email.journalist_ref && email.journalist_ref.outlet
-                ? email.journalist_ref.outlet
-                : 'Unknown'
-            }}
+            <div class="set-width-small">
+              {{
+                email.journalist_ref && email.journalist_ref.outlet
+                  ? email.journalist_ref.outlet
+                  : 'Unknown'
+              }}
+            </div>
           </td>
           <td v-if="!email.is_draft" :class="i % 2 !== 0 ? 'gray-bg' : ''">
             <div :class="{ redText: email.failed, greenText: !email.failed }">
@@ -643,7 +645,6 @@ export default {
     sortedEmails(newValue) {
       this.$emit('emails-updated', newValue)
     },
-
     selectedEmail(val) {
       if (val) {
         this.targetEmail = val.recipient
@@ -708,6 +709,9 @@ export default {
   },
 
   methods: {
+    setInsightData() {
+      this.$emit('set-insight-data', this.sortedEmails)
+    },
     toggleDeleteModal(id) {
       if (id) {
         this.currentId = id
@@ -1015,6 +1019,11 @@ export default {
       width: 12vw;
     }
 
+    .set-width-small {
+      width: 10vw;
+      overflow-x: scroll;
+    }
+
     .email-details {
       display: flex;
       align-items: center;
@@ -1201,7 +1210,7 @@ export default {
     color: white !important;
     font-family: $base-font-family;
     font-size: 14px;
-    padding: 6px 12px;
+    padding: 6px 8px;
     border-radius: 16px;
     width: 100px;
     text-align: center;
@@ -1212,7 +1221,7 @@ export default {
     color: white !important;
     font-family: $base-font-family;
     font-size: 14px;
-    padding: 6px 12px;
+    padding: 6px 8px;
     border-radius: 16px;
     width: 100px;
     text-align: center;
@@ -1223,9 +1232,8 @@ export default {
     color: $turq !important;
     font-family: $base-font-family;
     font-size: 14px;
-    padding: 6px 12px;
     border-radius: 16px;
-    width: 100px;
+    width: 80px;
     text-align: center;
   }
 
@@ -1234,7 +1242,7 @@ export default {
     color: white !important;
     font-family: $base-font-family;
     font-size: 14px;
-    padding: 6px 12px;
+    padding: 6px 8px;
     border-radius: 16px;
     width: 100px;
     text-align: center;
@@ -1245,7 +1253,7 @@ export default {
     color: $white !important;
     font-family: $base-font-family;
     font-size: 14px;
-    padding: 6px 12px;
+    padding: 6px 8px;
     border-radius: 16px;
     width: 100px;
     text-align: center;
