@@ -497,33 +497,34 @@ def _process_article_summary(payload, context):
 
 
 @background()
-def _process_website_domain(url, organization_name):
-    base_domain = extract_base_domain(url)
-    full_domain = f"https://{base_domain}"
-    if base_domain:
-        try:
-            database_check = NewsSource.objects.get(domain=full_domain)
-            if database_check.access_count is None:
-                database_check.access_count = {organization_name: 1}
-            elif organization_name in database_check.access_count.keys():
-                database_check.access_count[organization_name] += 1
-            else:
-                database_check.access_count[organization_name] = 1
-            database_check.save()
-        except NewsSource.DoesNotExist:
+def _process_website_domain(urls, organization_name):
+    for url in urls:
+        base_domain = extract_base_domain(url)
+        full_domain = f"https://{base_domain}"
+        if base_domain:
             try:
-                serializer = NewsSourceSerializer(
-                    data={
-                        "domain": full_domain,
-                        "access_count": {organization_name: 1},
-                    }
-                )
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-            except Exception as e:
-                logger.exception(
-                    f"Failed to save new NewsSource for domain: {base_domain} because of {e}"
-                )
+                database_check = NewsSource.objects.get(domain=full_domain)
+                if database_check.access_count is None:
+                    database_check.access_count = {organization_name: 1}
+                elif organization_name in database_check.access_count.keys():
+                    database_check.access_count[organization_name] += 1
+                else:
+                    database_check.access_count[organization_name] = 1
+                database_check.save()
+            except NewsSource.DoesNotExist:
+                try:
+                    serializer = NewsSourceSerializer(
+                        data={
+                            "domain": full_domain,
+                            "access_count": {organization_name: 1},
+                        }
+                    )
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
+                except Exception as e:
+                    logger.exception(
+                        f"Failed to save new NewsSource for domain: {base_domain} because of {e}"
+                    )
     return
 
 

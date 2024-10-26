@@ -318,7 +318,7 @@ class PRSearchViewSet(
                 r = open_ai_exceptions._handle_response(r)
                 message = r.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("article_summaries")
-                task = emit_process_website_domain(url, user.organization.name)
+                task = emit_process_website_domain([url], user.organization.name)
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -568,7 +568,7 @@ class PRSearchViewSet(
                 r = open_ai_exceptions._handle_response(r)
                 message = r.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("article_summaries")
-                task = emit_process_website_domain(url, user.organization.name)
+                task = emit_process_website_domain([url], user.organization.name)
                 break
             except open_ai_exceptions.StopReasonLength:
                 logger.exception(
@@ -2704,7 +2704,7 @@ def upload_link(request):
             "description": text,
             "link": url,
         }
-        emit_process_website_domain(url, request.user.organization.name)
+        emit_process_website_domain([url], request.user.organization.name)
     except Exception as e:
         logger.exception(e)
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -3337,6 +3337,7 @@ def redirect_from_instagram(request):
 def get_traffic_data(request):
     urls = request.data.get("urls")
     traffic_data = get_url_traffic_data(urls)
+    emit_process_website_domain(urls, request.user.organization.name)
     if "error" in traffic_data.keys():
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=traffic_data)
     return Response(status=status.HTTP_200_OK, data=traffic_data)

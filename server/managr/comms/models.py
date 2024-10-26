@@ -360,6 +360,9 @@ class NewsSource(TimeStampModel):
     def __str__(self):
         return self.domain
 
+    class Meta:
+        ordering = ["-datetime_created"]
+
     def article_selectors(self):
         return {
             "author": self.author_selector,
