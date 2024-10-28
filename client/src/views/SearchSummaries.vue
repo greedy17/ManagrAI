@@ -4589,8 +4589,9 @@ www.forbes.com/article-3
           chatText: 'Find journalists actively covering a news topic that I can pitch',
           chatResponse:
             "Using Company details, provide a short description of your company or a pitch you're working on",
-          searchText: `Scan through the news coverage and list the journalists from recognizable news outlets (up to 10). Only list journalist from the news coverage. 
-          Then suggest which of these journalists the company listed should pitch and why. The list must be returned in an html unordered list. Always Use Labels. Always Use citations. Company:`,
+          searchText: `List the journalists from recognizable news outlets (up to 10). Only list journalist from the news coverage.
+          Then suggest which of these journalists the company listed should pitch and why. The list must be returned in an html unordered list. Always use Labels. Always use citations.
+          Company:`,
           details: true,
           responseText: 'Using the message bar, provide a current news topic or event',
         },
@@ -5624,13 +5625,14 @@ www.forbes.com/article-3
           return `
         <sup>
           <span class="citation-wrapper" >
-            <a class="citation-link" ">
-            ${citationIndex + 1}
+           <a  class="citation-link citation-link-alt">
+            <img class="inline-svg" src="${this.citationSvg}" alt="">
             </a>
             <span class="citation-tooltip">
-              <img src="${citation.user.profile_image_url}" alt="">
-              <strong> ${citation.user.username}</strong>
-              <br>
+              <span class="row">
+                <img src="${citation.user.profile_image_url}" alt="">
+                   <strong> ${citation.user.username}</strong>     
+              </span>
               <br>
               ${citation.text.substring(0, 100)}...
             </span>
@@ -5684,12 +5686,17 @@ www.forbes.com/article-3
           return `
         <sup>
           <span class="citation-wrapper" >
-            <a href="${citation.link}" target="_blank" class="citation-link" ">${citationId}</a>
+              <a  class="citation-link citation-link-alt">
+            <img class="inline-svg" src="${this.citationSvg}" alt="">
+            </a>
+
             <span class="citation-tooltip">
-              <img src="${citation.image}" alt="">
-              <strong> ${citation.source}</strong>
-              <br>
-              <br>
+
+             <span class="row">
+                <img src="${citation.image}" alt="">
+                <strong> ${citation.source}</strong>  
+              </span> 
+              <br>    
               ${citation.title}
             </span>
           </span>
@@ -8027,20 +8034,34 @@ www.forbes.com/article-3
         this.loading = false
       }
     },
+    // prepareTweetSummary(tweets) {
+    //   let tweetList = []
+    //   for (let i = 0; i < tweets.length; i++) {
+    //     tweetList.push(
+    //       'Name :' +
+    //         tweets[i].user.name +
+    //         ' Tweet: ' +
+    //         tweets[i].text +
+    //         ' Follower count: ' +
+    //         tweets[i].user.public_metrics.followers_count +
+    //         ' Date: ' +
+    //         tweets[i].created_at,
+    //       'Link: ' + `https://twitter.com/${tweets[i].username}/status/${tweets[i].id}`,
+    //     )
+    //   }
+    //   return tweetList
+    // },
     prepareTweetSummary(tweets) {
       let tweetList = []
       for (let i = 0; i < tweets.length; i++) {
-        tweetList.push(
-          'Name :' +
-            tweets[i].user.name +
-            ' Tweet: ' +
-            tweets[i].text +
-            ' Follower count: ' +
-            tweets[i].user.public_metrics.followers_count +
-            ' Date: ' +
-            tweets[i].created_at,
-          'Link: ' + `https://twitter.com/${tweets[i].username}/status/${tweets[i].id}`,
-        )
+        tweetList.push({
+          citationIndex: i,
+          name: tweets[i].user.name,
+          tweet: tweets[i].text,
+          followerCount: tweets[i].user.public_metrics.followers_count,
+          date: tweets[i].created_at,
+          link: `https://twitter.com/${tweets[i].username}/status/${tweets[i].id}`,
+        })
       }
       return tweetList
     },
@@ -8062,11 +8083,21 @@ www.forbes.com/article-3
       }
       return postList
     },
+    // getArticleDescriptions(articles) {
+    //   return articles.map(
+    //     (a) =>
+    //       `Content:${a.description} Date:${a.publish_date}, Source:${a.source.name}, Author:${a.author}, Link: ${a.link}`,
+    //   )
+    // },
     getArticleDescriptions(articles) {
-      return articles.map(
-        (a) =>
-          `Content:${a.description} Date:${a.publish_date}, Source:${a.source.name}, Author:${a.author}, Link: ${a.link}`,
-      )
+      return articles.map((a, index) => ({
+        citationIndex: index,
+        content: `Content: ${a.description}`,
+        date: `Date: ${a.publish_date}`,
+        source: `Source: ${a.source.name}`,
+        author: `Author: ${a.author}`,
+        link: `Link: ${a.link}`,
+      }))
     },
     async getTweetSummary(instructions = '') {
       let tweets = this.prepareTweetSummary(this.tweets)

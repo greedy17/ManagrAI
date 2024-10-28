@@ -122,7 +122,7 @@ def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
     Additional info on the person from a publisher site: {text}.
 
     Using the information from the search results and publisher site, create a bio for {journalist}. 
-    In the bio, be sure to include the name of the most recent company the person is affiliated with. To ensure accuracy, check for mentions of the company across both the search results and publisher information, using the most widely recognized name version of the company.
+    In the bio, be sure to include the name of the most recent company the person is affiliated with. To ensure accuracy, check for mentions of the company across both the search results and publisher information, using the most widely recognized name version of the company. If the information says that the person worked at a company previously, it means they're no longer there so look carefully for their new company.
     Then, provide 3 brief, relevant pitching tips for {company} based on what you know about the person.
     Finally, include all available contact details for the person, such as social media handles and email. If an email address is found, use it; if none is mentioned, omit this detail. Check the name provided to make sure it is spelled correctly and not missing any parts of the name. You must return the correct name
 
@@ -332,8 +332,8 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_clie
 
     body = f"""
     Today is {date}. Please provide a concise and accurate response based on the news coverage below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the news coverage in 150 words or less. 
-    Cite your sources by enclosing the index of the news coverage article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[1].' This is being used in a Javascript app so indexes must always start with 0. Only use this format to cite search results and make sure the citation numbers correspond exactly to the provided article.
-    Only add citations at the end of sentences that the citation supports, and do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link. Make sure that your response is properly formatted simple html with good spacing. 
+    Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link. Make sure that your response is properly formatted simple html with good spacing. 
     Do not include ```html in your response. Always use labels.
 
     Here is the news coverage:
@@ -380,9 +380,12 @@ def OPEN_AI_NEWS_CLIPS_SLACK_SUMMARY(date, clips, search, instructions=False, fo
 def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, instructions, for_client=False):
     if not instructions:
         instructions = DEFAULT_TWITTER_CLIENT_INSTRUCTIONS
-    body = f"""Today's date is {date}. Summarize the twitter coverage based on the twets below. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation. 
-    For example: 'Paris is the capital of France[1].' Only use this format to cite search results. Never cite more than 3 sources in a row. Do not include a references section at the end of your answer.
-    You must follow these instructions: {instructions}. Make sure that your response is properly formatted simple html with good spacing. Do not include any styling and/or <meta> tags. Do not include ```html``` in your response. Keep it brief, The response should be under 800 characters.   
+    body = f"""Today's date is {date}. Summarize the twitter coverage based on the tweets below. Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' 
+    Only use this format to cite the news coverage. Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer.
+
+    You must follow these instructions: {instructions} 
+    
+    Make sure that your response is properly formatted simple html with good spacing. Do not include any styling and/or <meta> tags. Do not include ```html``` in your response. Keep it brief, The response should be under 800 characters.   
 
     Tweets: {tweets}
     """

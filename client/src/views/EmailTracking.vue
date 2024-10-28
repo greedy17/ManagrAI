@@ -38,7 +38,7 @@
                 <img
                   v-if="loadingInsight"
                   style="margin-right: 8px"
-                  class="rotation"
+                  class="rotation inverted"
                   src="@/assets/images/loading.svg"
                   height="14px"
                   alt=""
@@ -440,10 +440,24 @@ export default {
       this.newInsight = ''
     },
     async getInsight(data) {
+      let newUsers = JSON.parse(JSON.stringify(this.users))
+      let newData = JSON.parse(JSON.stringify(data))
+
+      const userMap = newUsers.reduce((map, obj) => {
+        map[obj.id] = obj.full_name
+        return map
+      }, {})
+
+      newData.forEach((obj) => {
+        if (userMap[obj.user]) {
+          obj.user = userMap[obj.user]
+        }
+      })
+
       this.loadingInsight = true
       try {
         const res = await Comms.api.getInsight({
-          notes: data,
+          notes: newData,
           instructions: this.insight,
           is_tracker: true,
         })
@@ -640,6 +654,10 @@ export default {
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
     padding: 108px 10px 64px 10px;
   }
+}
+
+.inverted {
+  filter: invert(30%) !important;
 }
 
 .image-container {
@@ -1365,5 +1383,18 @@ input {
     font-family: $base-font-family;
     margin-bottom: 4px;
   }
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
+}
+
+.rotation {
+  animation: rotation 2s infinite linear;
 }
 </style>

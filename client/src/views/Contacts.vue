@@ -2352,7 +2352,6 @@ export default {
       this.editingPub = true
     },
     async editContact(email, outlet) {
-      console.log('here i am test me')
       this.editloading = true
       try {
         const res = await Comms.api.editContact({
@@ -2771,6 +2770,7 @@ export default {
             this.currentContact.journalist_ref.last_name,
         })
         this.pitchModalOpen = false
+        this.drafting = false
         this.$toast('Draft created', {
           timeout: 2000,
           position: 'top-left',
@@ -2814,13 +2814,14 @@ export default {
           search: false,
           social: false,
         })
-        console.log(res.data)
         this.newContactBio = res.data.bio.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
         this.newContactImages = res.data.images
         this.currentPublication = res.data.company
         this.contactName = res.data.name
         this.targetEmail = res.data.email
         this.contactsModalOpen = false
+        // console.log('contact response', res.data)
+        // this.editContact('', res.data.company)
         this.$nextTick(() => {
           this.refreshUser()
         })
@@ -2931,6 +2932,10 @@ export default {
         })
         this.currentContact.bio = this.newBio
         this.currentContact.images = this.newImages
+
+        console.log('contact response', res.data)
+        this.editContact('', res.data.company)
+
         this.$nextTick(() => {
           this.refreshUser()
         })
