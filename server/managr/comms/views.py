@@ -2497,7 +2497,7 @@ class JournalistContactViewSet(
                 logger.exception(
                     f"Retrying again due to token amount, amount currently at: {token_amount}"
                 )
-                if token_amount <= 8000:
+                if token_amount >= 8000:
                     has_error = True
 
                     message = "Token amount error"

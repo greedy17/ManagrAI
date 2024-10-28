@@ -90,6 +90,8 @@ class Search(TimeStampModel):
         cls, user, tokens, timeout, clips, input_text, instructions=False, for_client=False
     ):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+        
+        print(clips)
 
         prompt = (
             comms_consts.OPEN_AI_NEWS_CLIPS_SUMMARY(
@@ -104,6 +106,7 @@ class Search(TimeStampModel):
             user.email,
             prompt,
             "You are a VP of Communications",
+            temperature=0.1,
             top_p=0.1,
             # model="o1-mini",
         )

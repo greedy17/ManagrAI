@@ -535,6 +535,9 @@ export default {
           email.opens ? email.opens.toString().includes(searchText) : '',
           email.replies ? email.replies.toString().includes(searchText) : '',
           email.clicks ? email.clicks.toString().includes(searchText) : '',
+          email.journalist_ref && email.journalist_ref.outlet
+            ? email.journalist_ref.outlet.toLowerCase().includes(searchText)
+            : '',
           email.activity_log && email.activity_log.length > 0
             ? email.activity_log.at(-1).includes(searchText)
             : '',
