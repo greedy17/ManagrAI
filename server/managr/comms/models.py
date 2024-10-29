@@ -90,7 +90,7 @@ class Search(TimeStampModel):
         cls, user, tokens, timeout, clips, input_text, instructions=False, for_client=False
     ):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-        
+
         print(clips)
 
         prompt = (
@@ -484,7 +484,7 @@ class NewsSource(TimeStampModel):
     def get_stopped_sources(cls, include_date=False):
         today = datetime.today()
         stopped_sources = []
-        news = NewsSource.objects.filter(is_crawling=True)
+        news = NewsSource.objects.filter(is_crawling=True, is_active=True)
         for n in news:
             article = n.newest_article_date()
             if article and (today - article).days >= 7:
