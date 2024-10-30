@@ -650,7 +650,9 @@ class Article(TimeStampModel):
         return fields
 
     @classmethod
-    def search_by_query(cls, boolean_string, date_to=False, date_from=False, author=False):
+    def search_by_query(
+        cls, boolean_string, date_to=False, date_from=False, author=False, for_report=False
+    ):
         from managr.comms.utils import boolean_search_to_query, boolean_search_to_searchquery
 
         date_to_date_obj = parser.parse(date_to)
@@ -668,7 +670,10 @@ class Article(TimeStampModel):
             # articles = date_range_articles.annotate(search=SearchVector("content")).filter(
             #     search=converted_boolean
             # )
-        articles = articles[:20]
+        if for_report:
+            articles = articles[:100]
+        else:
+            articles = articles[:20]
         return list(articles)
 
 

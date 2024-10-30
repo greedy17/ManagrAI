@@ -141,7 +141,9 @@ def getclips(request):
             articles = news_res["articles"]
             query_input = boolean
         articles = [article for article in articles if article["title"] != "[Removed]"]
-        internal_articles = InternalArticle.search_by_query(query_input, date_to, date_from)
+        internal_articles = InternalArticle.search_by_query(
+            query_input, date_to, date_from, is_report
+        )
         articles = normalize_article_data(articles, internal_articles, is_report)
         return {"articles": articles, "string": query_input}
 
@@ -2460,9 +2462,9 @@ class JournalistContactViewSet(
     )
     def get_insight(self, request, *args, **kwargs):
         notes = request.data.get("notes", None)
-        activity = request.data.get("activity",None)
-        bio = request.data.get("bio",None)
-        instructions = request.data.get("instructions",None)
+        activity = request.data.get("activity", None)
+        bio = request.data.get("bio", None)
+        instructions = request.data.get("instructions", None)
         tracker = request.data.get("is_tracker", False)
         user = self.request.user
 
@@ -2474,9 +2476,9 @@ class JournalistContactViewSet(
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 if tracker:
-                    prompt = comms_consts.OPEN_AI_TRACKER_INSIGHTS(notes,instructions)   
+                    prompt = comms_consts.OPEN_AI_TRACKER_INSIGHTS(notes, instructions)
                 else:
-                    prompt = comms_consts.OPEN_AI_GET_INSIGHTS(notes, activity, bio, instructions) 
+                    prompt = comms_consts.OPEN_AI_GET_INSIGHTS(notes, activity, bio, instructions)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
                     prompt,
@@ -2941,16 +2943,11 @@ def get_writing_styles(request):
     return Response(serializer.data)
 
 
+@api_view(["GET"])
 @permission_classes([])
 def email_tracking_endpoint(request):
-    params = request.META["QUERY_STRING"]
-    params = params.split("&")
-    param_dict = {}
-    for param in params:
-        param_split = param.split("=")
-        param_dict[param_split[0]] = param_split[1]
-    event_type = param_dict["type"]
-    message_id = param_dict["id"]
+    event_type = request.GET.get("type")
+    message_id = request.GET.get("id")
     try:
         tracker = EmailTracker.objects.get(id=message_id)
         if event_type == "opened":
@@ -2978,7 +2975,7 @@ def email_tracking_endpoint(request):
         elif event_type == "failed":
             tracker.failed = True
         elif event_type == "clicked":
-            original_url = param_dict["redirect"]
+            original_url = request.GET.get("redirect")
             response = original_url
             tracker.clicks += 1
         tracker.save()
