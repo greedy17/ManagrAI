@@ -2908,7 +2908,6 @@ export default {
         return
       }
       this.currentContact = contact
-      // this.googleModalOpen = true
       this.bioLoading = true
       try {
         const res = await Comms.api.getJournalistBio({
@@ -2925,27 +2924,14 @@ export default {
         this.newBio = res.data.bio.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
         this.newImages = res.data.images
 
-        Comms.api.updateContact({
+        await Comms.api.updateContact({
           id: this.currentContact.id,
           bio: this.newBio,
           images: this.newImages,
         })
         this.currentContact.bio = this.newBio
         this.currentContact.images = this.newImages
-
-        console.log('contact response', res.data)
         this.editContact('', res.data.company)
-
-        this.$nextTick(() => {
-          this.refreshUser()
-        })
-        // this.$toast('Contact updated!', {
-        //   timeout: 2000,
-        //   position: 'top-left',
-        //   type: 'success',
-        //   toastClassName: 'custom',
-        //   bodyClassName: ['custom'],
-        // })
       } catch (e) {
         this.$toast('Error updating bio, try again', {
           timeout: 2000,
