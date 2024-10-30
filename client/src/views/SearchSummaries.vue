@@ -4253,6 +4253,7 @@ export default {
   },
   data() {
     return {
+      citationsMounted: true,
       reportInstructions: '',
       urlsSet: false,
       urlPlaceholder: `
@@ -4926,22 +4927,24 @@ www.forbes.com/article-3
     },
   },
   updated() {
-    this.setTooltips()
+    if (!this.citationsMounted) {
+      this.setTooltips()
 
-    const journalistElements = document.querySelectorAll('.select-journalist')
+      const journalistElements = document.querySelectorAll('.select-journalist')
 
-    journalistElements.forEach((element) => {
-      element.addEventListener('click', (event) => {
-        const citationIndex = event.target.getAttribute('data-citation')
-        try {
-          const citation = this.filteredArticles[citationIndex]
-          this.selectJournalist(citation)
-        } catch (error) {
-          console.error('Failed to parse citation JSON:', citationJson)
-          console.error('Error:', error)
-        }
+      journalistElements.forEach((element) => {
+        element.addEventListener('click', (event) => {
+          const citationIndex = event.target.getAttribute('data-citation')
+          try {
+            const citation = this.filteredArticles[citationIndex]
+            this.selectJournalist(citation)
+          } catch (error) {
+            console.error('Failed to parse citation JSON:', citationJson)
+            console.error('Error:', error)
+          }
+        })
       })
-    })
+    }
   },
   mounted() {
     this.getEmailAlerts()
@@ -4953,10 +4956,12 @@ www.forbes.com/article-3
   },
   methods: {
     setTooltips() {
+      console.log('FIRING CITATION FUNCTION')
       const citationWrappers = document.querySelectorAll('.citation-wrapper')
-
       if (citationWrappers.length === 0) {
         return
+      } else {
+        this.citationsMounted = true
       }
 
       citationWrappers.forEach((wrapper) => {
@@ -8227,6 +8232,7 @@ www.forbes.com/article-3
       }
     },
     async getSummary(clips, instructions = '', twitter = false, chatSummary = null) {
+      this.citationsMounted = false
       let allClips
       if (!twitter) {
         allClips = this.getArticleDescriptions(clips)
