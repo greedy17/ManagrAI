@@ -276,7 +276,7 @@ class NewsSpider(scrapy.Spider):
                 sources = NewsSource.objects.filter(domain=original_url)
                 if len(sources):
                     source = sources.first()
-                    source.is_active = False
+                    source.is_crawling = False
                     current_datetime = datetime.datetime.now()
                     source.last_scraped = timezone.make_aware(
                         current_datetime, timezone.get_current_timezone()
@@ -286,6 +286,14 @@ class NewsSpider(scrapy.Spider):
         if source.article_link_attribute is not None:
             regex = source.create_search_regex()
             article_links = response.xpath(regex)
+            if len(article_links) < 1:
+                source.is_crawling = False
+                current_datetime = datetime.datetime.now()
+                source.last_scraped = timezone.make_aware(
+                    current_datetime, timezone.get_current_timezone()
+                )
+                source.save()
+                return
             do_not_track_str = ",".join(comms_consts.DO_NOT_TRACK_LIST)
             if source.last_scraped and source.article_link_attribute:
                 if len(article_links) and (self.first_only or self.test):

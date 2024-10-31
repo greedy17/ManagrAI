@@ -142,7 +142,7 @@ def getclips(request):
             query_input = boolean
         articles = [article for article in articles if article["title"] != "[Removed]"]
         internal_articles = InternalArticle.search_by_query(
-            query_input, date_to, date_from, is_report
+            query_input, date_to, date_from, False, is_report
         )
         articles = normalize_article_data(articles, internal_articles, is_report)
         return {"articles": articles, "string": query_input}
