@@ -139,16 +139,19 @@ def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
     email: '[EMAIL IF FOUND]'
     name: [Journalist Name]
 
-    Output MUST follow these rules:
-    1. Separate each section with one new line, no additional spacing or padding.
-    2. Use <strong> tags for bold text.
-    3. Use <h2> tags for headings, except for the company name, which should be inline with 'Company:'.
-    4. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab.
-    5. Do not include additional text next to the email.
-    6. Pitching tips must be returned in an HTML unordered list.
-    7. Exclude domain extensions from company names.
-    8. Do not add name : [name] and company: [company] at the top of the bio
-    9. Do not wrap the JSON in ```json```
+    Structure your resposne in the following format:
+    **Heading** in `<h2>` tags,
+    Sections with `<strong>` subheadings, 
+    Ordered or unordered lists using `<ol>` or `<ul>`, 
+    Paragraphs with `<p>`, and 
+    Line breaks `<br>` between main points for clarity.
+    Do not include ```html in your response.
+
+    Make sure to:
+    1. Use descriptive headings for each section.
+    2. Separate main points with line breaks or paragraphs.
+    3. Keep responses structured and consistent for easy reading in a Vue.js app.
+    4. Do not wrap the JSON in ```json```
     """
     return prompt
 
@@ -178,16 +181,20 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
     ',
     company: [Company name],
     email: '[EMAIL IF FOUND]'
-    Output bio MUST follow these rules:
-    1. Separate each section with a <br/>, no additional spacing or padding.
-    2. Use <strong> tags for bold text.
-    3. Use <h2> tags for headings, except for the company name, which should be inline with 'Company:'.
-    4. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
-    5. Do not include additional text next to the email.
-    6. Pitching tips must be returned in an HTML unordered list.
-    7. Exclude domain extensions from company names.
-    8. Do not add name : [name] and company: [company] at the top of the bio
-    9. Do not wrap the JSON in ```json```
+
+    Structure your resposne in the following format:
+    **Heading** in `<h2>` tags,
+    Sections with `<strong>` subheadings, 
+    Ordered or unordered lists using `<ol>` or `<ul>`, 
+    Paragraphs with `<p>`, and 
+    Line breaks `<br>` between main points for clarity.
+    Do not include ```html in your response.
+
+    Make sure to:
+    1. Use descriptive headings for each section.
+    2. Separate main points with line breaks or paragraphs.
+    3. Keep responses structured and consistent for easy reading in a Vue.js app.
+    4. Do not wrap the JSON in ```json```
     """
     return prompt
 
@@ -208,10 +215,18 @@ def OPEN_AI_SOCIAL_BIO(person, org, results, text):
     ',
     email: '[EMAIL IF FOUND]'
 
-    Output MUST follow the following rules:
-    1. All bold text MUST be returned in a strong tag instead of markdown!
-    2. Add a <br> between sections.
-    3. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab.
+    Structure your resposne in the following format:
+    **Heading** in `<h2>` tags,
+    Sections with `<strong>` subheadings, 
+    Ordered or unordered lists using `<ol>` or `<ul>`, 
+    Paragraphs with `<p>`, and 
+    Line breaks `<br>` between main points for clarity.
+    Do not include ```html in your response.
+
+    Make sure to:
+    1. Use descriptive headings for each section.
+    2. Separate main points with line breaks or paragraphs.
+    3. Keep responses structured and consistent for easy reading in a Vue.js app.
     4. Do not wrap the JSON in ```json```
     5. NEVER include any additional text next to the email. example: instead of email@email.com (guessed email based on typical email patterns), simply return email@email.com, Instead of email@email.com (guessed email), simply return email@email.com. This is very important, do not ignore
     """
@@ -333,14 +348,29 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_clie
     body = f"""
     Today is {date}. Please provide a concise and accurate response based on the news coverage below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the news coverage in 150 words or less. 
     Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
-    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link. Make sure that your response is properly formatted simple html with good spacing. 
-    Do not include ```html in your response. Always use labels.
+    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link. 
 
     Here is the news coverage:
     {clips}
 
     Here are the instructions:
     {instructions}
+
+    \n
+    \n
+
+    Structure your resposne in the following format:
+    **Heading** in `<h2>` tags,
+    Sections with `<strong>` subheadings, 
+    Ordered or unordered lists using `<ol>` or `<ul>`, 
+    Paragraphs with `<p>`, and 
+    Line breaks `<br>` between main points for clarity.
+    Do not include ```html in your response.
+
+    Make sure to:
+    1. Use descriptive headings for each section.
+    2. Separate main points with line breaks or paragraphs.
+    3. Keep responses structured and consistent for easy reading in a Vue.js app.
     """
     return body
 

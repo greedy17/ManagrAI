@@ -1027,10 +1027,10 @@
       <div class="fadein" v-if="!chatting">
         <div class="small-container letter-spacing">
           <div>
-            <!-- <div class="centered">
-              <img src="@/assets/images/iconlogo.png" height="64px" alt="" />
-            </div> -->
-            <div class="rows">
+            <div class="centered">
+              <h1>Your AI-powered PR assistant</h1>
+            </div>
+            <!-- <div class="rows">
               <div
                 v-for="(example, i) in searchExamples"
                 :key="i"
@@ -1051,293 +1051,101 @@
                   {{ example.text }}
                 </p>
               </div>
-            </div>
+            </div> -->
           </div>
 
-          <div>
-            <div style="margin: 0 0 16px 0" class="row hide-mobile">
-              <div
-                style="margin-right: 12px"
-                v-if="mainView === 'write'"
-                class="source-dropdown fadein"
-              >
-                <div
-                  @click.stop="toggleShowStyles"
-                  style="background-color: white; padding: 7px"
-                  class="drop-header"
-                >
-                  <img src="@/assets/images/wand.svg" height="14px" alt="" />
+          <div style="width: 100%; padding: 0 10vw">
+            <div class="large-input-container-alt">
+              <div class="input-container-gray" :class="{ lbborder: newSearch }">
+                <section>
+                  <div style="margin: 8px 0 0 8px; width: 100%" class="row">
+                    <textarea
+                      style="margin-left: -8px; width: 100%"
+                      :rows="1"
+                      id="search-input"
+                      @keyup.enter="generateNewSearch($event, false)"
+                      class="area-input"
+                      autocomplete="off"
+                      :placeholder="placeHolderText"
+                      v-model="newSearch"
+                      v-autoresize
+                      :disabled="
+                        loading ||
+                        summaryLoading ||
+                        (mainView === 'social' && !hasTwitterIntegration)
+                      "
+                    />
 
-                  <p class="mobile-text-hide">Writing Style:</p>
-                  <small>{{ writingStyleTitle ? writingStyleTitle : 'Select style' }}</small>
-                  <img
-                    v-if="!showingStyles"
-                    src="@/assets/images/arrowDropUp.svg"
-                    height="15px"
-                    alt=""
-                  />
-                  <img
-                    v-else
-                    class="rotate-img"
-                    src="@/assets/images/arrowDropUp.svg"
-                    height="15px"
-                    alt=""
-                  />
-                </div>
-
-                <div
-                  v-outside-click="hideStyles"
-                  v-show="showingStyles"
-                  class="drop-options-alt-up"
-                  style="bottom: 48px"
-                >
-                  <header class="space-between">
-                    <section class="h-padding">
-                      <section @click="toggleStyles" class="toggle">
-                        <span :class="{ 'active-toggle': personalStyles }" class="toggle-side">
-                          <small>Personal</small>
-                        </span>
-
-                        <span :class="{ 'active-toggle': !personalStyles }" class="toggle-side">
-                          <small>Group</small>
-                        </span>
-                      </section>
-                    </section>
-
-                    <button
-                      @click="toggleLearnInputModal('')"
-                      class="secondary-button-no-border"
-                      style="margin-right: 12px"
-                    >
-                      <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Style
-                    </button>
-                  </header>
-
-                  <section v-if="userWritingStyles.length">
                     <div
-                      @click="addWritingStyle(style.style, style.title)"
-                      v-for="style in defaultWritingStyles"
-                      :key="style.title"
-                      :class="{ activesquare: writingStyleTitle === style.title }"
-                      :title="style.title"
-                    >
-                      <span>
-                        <img
-                          class="blue-filter"
-                          src="@/assets/images/logo.png"
-                          height="11px"
-                          alt=""
-                        />
-                        {{ style.title }}
-                      </span>
-                      <p>{{ style.style }}</p>
-                    </div>
-                    <div
-                      @mouseenter="setIndex(i)"
-                      @mouseLeave="removeIndex"
-                      @click="addWritingStyle(style.style, style.title)"
-                      class="dropdown-item relative"
-                      v-for="(style, i) in userWritingStyles"
-                      :key="i"
-                      :class="{ activeswitch: writingStyleTitle === style.title }"
-                      :title="style.title"
-                    >
-                      <span class="pink-text">
-                        <img
-                          class="pink-filter"
-                          src="@/assets/images/scroll.svg"
-                          height="11px"
-                          alt=""
-                        />
-                        {{ style.title }}
-                      </span>
-                      <p class="pink-text">{{ style.style }}</p>
-
-                      <span
-                        v-if="hoverIndex === i"
-                        @click="deleteWritingStyle(style.id)"
-                        class="absolute-icon"
-                      >
-                        <img src="@/assets/images/close.svg" height="12px" alt="" />
-                      </span>
-                    </div>
-                  </section>
-
-                  <section v-else>
-                    <div
-                      @click="addWritingStyle(style.style, style.title)"
-                      v-for="style in defaultWritingStyles"
-                      :key="style.title"
-                      :class="{ activeswitch: writingStyleTitle === style.title }"
-                    >
-                      <span>
-                        <img src="@/assets/images/wand.svg" height="11px" alt="" />
-                        {{ style.title }}
-                      </span>
-                      <p>{{ style.style }}</p>
-                    </div>
-                  </section>
-                </div>
-              </div>
-
-              <div v-if="mainView === 'write'" class="source-dropdown fadein">
-                <div
-                  @click.stop="toggleMainDetails"
-                  style="background-color: white; padding: 7px"
-                  class="drop-header"
-                >
-                  <img src="@/assets/images/building.svg" height="14px" alt="" />
-
-                  <p class="mobile-text-hide">Company Details:</p>
-                  <small :title="detailTitle ? detailTitle : 'None'">{{
-                    detailTitle ? detailTitle : 'None'
-                  }}</small>
-                  <img
-                    v-if="!showingDetails"
-                    src="@/assets/images/arrowDropUp.svg"
-                    height="15px"
-                    alt=""
-                  />
-                  <img
-                    v-else
-                    class="rotate-img"
-                    src="@/assets/images/arrowDropUp.svg"
-                    height="15px"
-                    alt=""
-                  />
-                </div>
-
-                <div
-                  v-outside-click="hideMainDetails"
-                  v-if="showingMainDetails"
-                  class="drop-options-alt-up"
-                  style="bottom: 48px"
-                >
-                  <header style="padding-top: 8px; padding-bottom: 8px" class="space-between">
-                    <button
-                      @click="toggleDetailsInputModal"
-                      class="secondary-button-no-border"
-                      style="margin-right: 4px"
-                    >
-                      <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Details
-                    </button>
-
-                    <button
-                      :disabled="!detailTitle"
-                      @click="clearDetails"
-                      class="secondary-button-no-border borderless"
+                      v-if="newSearch"
+                      @click="generateNewSearch($event, false)"
+                      class="left-margin pointer lite-bg img-container-stay"
+                      style="margin-right: 24px"
                     >
                       <img
-                        style="margin-right: 4px"
-                        src="@/assets/images/remove.svg"
-                        height="14px"
-                        alt=""
-                      />
-                      Clear
-                    </button>
-                  </header>
-
-                  <section v-if="allCompanyDetails.length">
-                    <div
-                      style="position: relative"
-                      @click="addDetails(detail.title, detail.details)"
-                      v-for="detail in allCompanyDetails"
-                      :key="detail.title"
-                      :class="{ activesquareTile: detailTitle === detail.title }"
-                      :title="detail.title"
-                    >
-                      <span class="">
-                        <img
-                          class="blue-filter"
-                          src="@/assets/images/logo.png"
-                          height="11px"
-                          alt=""
-                        />
-                        {{ detail.title }}
-                      </span>
-                      <p class="">{{ detail.details }}</p>
-
-                      <span @click="deleteCompanyDetails(detail.id)" class="absolute-icon">
-                        <img src="@/assets/images/close.svg" height="10px" alt="" />
-                      </span>
-                    </div>
-                  </section>
-
-                  <section style="padding: 16px" v-else>
-                    Your saved details
-                    <span>
-                      <img
-                        style="margin-right: 4px"
-                        src="@/assets/images/building.svg"
+                        style="margin: 0"
+                        src="@/assets/images/paper-plane-full.svg"
                         height="12px"
                         alt=""
                       />
-                      will appear here.</span
-                    >
-                  </section>
-                </div>
-              </div>
+                    </div>
 
-              <div v-if="mainView === 'news'" style="margin-top: 16px" class="row relative">
-                <div
-                  @click.stop="toggleDate"
-                  :class="{ 'soft-gray-bg': showDateSelection }"
-                  style="background-color: white; padding: 6px 12px 6px 8px"
-                  class="drop-header-alt"
-                >
-                  <img
-                    v-if="mainView === 'news'"
-                    class="invert"
-                    src="@/assets/images/calendar.svg"
-                    height="14px"
-                    alt=""
-                  />
-
-                  Date range
-                </div>
-
-                <div
-                  v-outside-click="hideDate"
-                  class="container-left-above"
-                  v-show="showDateSelection"
-                >
-                  <p>Date Range</p>
-                  <div class="row">
-                    <input
-                      class="area-input-smallest"
-                      type="date"
-                      :min="minDate"
-                      @input="validateDate"
-                      v-model="dateStart"
-                    />
-                    <span style="margin: 0 12px"> - </span>
-
-                    <input
-                      class="area-input-smallest"
-                      type="date"
-                      :min="minDate"
-                      v-model="dateEnd"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="large-input-container-alt">
-              <div
-                style="border-radius: 28px"
-                class="input-container-gray"
-                :class="{ lbborder: newSearch }"
-              >
-                <section>
-                  <div style="margin: 0 0 2px 10px" class="source-dropdown fadein">
                     <div
-                      @click.stop="toggleSources"
-                      :class="{ 'soft-gray-bg': showingSources }"
-                      class="drop-header"
-                      style="padding-left: 8px; padding-right: 2px"
+                      v-else
+                      class="left-margin pointer img-container-stay"
+                      style="margin-right: 24px; opacity: 0.4"
                     >
-                      <small>{{ toCamelCase(mainView) }}</small>
                       <img
+                        style="margin: 0"
+                        src="@/assets/images/paper-plane-full.svg"
+                        height="12px"
+                        alt=""
+                      />
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div style="margin: 12px 12px 0 18px" class="source-dropdown fadein">
+                      <div
+                        @click.stop="toggleSources"
+                        :class="{ 'soft-gray-bg': showingSources }"
+                        class="drop-header"
+                      >
+                        <img
+                          v-if="mainView === 'write'"
+                          src="@/assets/images/brain.svg"
+                          height="15px"
+                          alt=""
+                        />
+                        <img
+                          v-else-if="mainView === 'news'"
+                          src="@/assets/images/newspaper.svg"
+                          height="15px"
+                          alt=""
+                        />
+                        <img
+                          v-else-if="mainView === 'social'"
+                          src="@/assets/images/twitter-x.svg"
+                          height="15px"
+                          alt=""
+                        />
+                        <img
+                          v-else-if="mainView === 'web'"
+                          src="@/assets/images/google.svg"
+                          height="15px"
+                          alt=""
+                        />
+                        <img
+                          v-else-if="mainView === 'discover'"
+                          src="@/assets/images/users.svg"
+                          height="15px"
+                          alt=""
+                        />
+
+                        <small>{{
+                          mainView === 'write' ? 'Default' : toCamelCase(mainView)
+                        }}</small>
+                        <!-- <img
                         v-if="!showingSources"
                         src="@/assets/images/arrowDropUp.svg"
                         height="15px"
@@ -1349,96 +1157,402 @@
                         src="@/assets/images/arrowDropUp.svg"
                         height="15px"
                         alt=""
-                      />
+                      /> -->
+                      </div>
+
+                      <div
+                        v-outside-click="hideSources"
+                        v-show="showingSources"
+                        class="drop-options"
+                      >
+                        <div
+                          @click="switchMainView('write')"
+                          :class="{ activeswitch: mainView === 'write' }"
+                        >
+                          <span>
+                            <img src="@/assets/images/brain.svg" height="11px" alt="" />
+                            Default
+                          </span>
+
+                          <p>Generate content or ask a follow up</p>
+                        </div>
+                        <div
+                          @click="switchMainView('news')"
+                          :class="{ activeswitch: mainView === 'news' }"
+                        >
+                          <span>
+                            <img src="@/assets/images/newspaper.svg" height="11px" alt="" />
+                            News
+                          </span>
+                          <p>Search through real time news</p>
+                        </div>
+                        <div
+                          @click="switchMainView('social')"
+                          :class="{ activeswitch: mainView === 'social' }"
+                        >
+                          <span>
+                            <img src="@/assets/images/comment.svg" height="11px" alt="" />
+                            Social
+                          </span>
+
+                          <p>Search through top social post</p>
+                        </div>
+                        <div
+                          @click="switchMainView('discover')"
+                          :class="{ activeswitch: mainView === 'discover' }"
+                        >
+                          <span>
+                            <img src="@/assets/images/users.svg" height="11px" alt="" />
+                            Media list
+                          </span>
+
+                          <p>Find relevnt media contacts</p>
+                        </div>
+                        <div
+                          @click="switchMainView('web')"
+                          :class="{ activeswitch: mainView === 'web' }"
+                        >
+                          <span>
+                            <img src="@/assets/images/google.svg" height="11px" alt="" />
+                            Web
+                          </span>
+
+                          <p>Search through filtered web data</p>
+                        </div>
+                      </div>
                     </div>
 
-                    <div v-outside-click="hideSources" v-show="showingSources" class="drop-options">
-                      <div
-                        @click="switchMainView('news')"
-                        :class="{ activeswitch: mainView === 'news' }"
-                      >
-                        <span>
-                          <img src="@/assets/images/newspaper.svg" height="11px" alt="" />
-                          News
-                        </span>
-                        <p>AI-powered news searching</p>
-                      </div>
-                      <div
-                        @click="switchMainView('social')"
-                        :class="{ activeswitch: mainView === 'social' }"
-                      >
-                        <span>
-                          <img src="@/assets/images/comment.svg" height="11px" alt="" />
-                          Social
-                        </span>
+                    <div
+                      style="margin-right: 12px"
+                      v-if="mainView === 'write'"
+                      class="source-dropdown fadein"
+                    >
+                      <div @click.stop="toggleMainDetails" class="drop-header">
+                        <img src="@/assets/images/folder.svg" height="15px" alt="" />
 
-                        <p>AI-powered social searching</p>
-                      </div>
-                      <div
-                        @click="switchMainView('web')"
-                        :class="{ activeswitch: mainView === 'web' }"
-                      >
-                        <span>
-                          <img src="@/assets/images/google.svg" height="11px" alt="" />
-                          Web
-                        </span>
-
-                        <p>AI-powered web searching</p>
+                        <small :title="detailTitle ? detailTitle : 'Project'">{{
+                          detailTitle ? detailTitle : 'Project'
+                        }}</small>
+                        <!-- <img
+                          v-if="!showingDetails"
+                          src="@/assets/images/arrowDropUp.svg"
+                          height="15px"
+                          alt=""
+                        />
+                        <img
+                          v-else
+                          class="rotate-img"
+                          src="@/assets/images/arrowDropUp.svg"
+                          height="15px"
+                          alt=""
+                        /> -->
                       </div>
 
                       <div
-                        @click="switchMainView('write')"
-                        :class="{ activeswitch: mainView === 'write' }"
+                        v-outside-click="hideMainDetails"
+                        v-if="showingMainDetails"
+                        class="drop-options-alt-up"
+                        style="bottom: 48px"
                       >
-                        <span>
-                          <img src="@/assets/images/edit-note.svg" height="11px" alt="" />
-                          Write
-                        </span>
+                        <header style="padding-top: 8px; padding-bottom: 8px" class="space-between">
+                          <button
+                            @click="toggleDetailsInputModal"
+                            class="secondary-button-no-border"
+                            style="margin-right: 4px"
+                          >
+                            <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Details
+                          </button>
 
-                        <p>AI writing assistant & content generation</p>
-                      </div>
-                      <div
-                        @click="switchMainView('discover')"
-                        :class="{ activeswitch: mainView === 'discover' }"
-                      >
-                        <span>
-                          <img src="@/assets/images/profile.svg" height="11px" alt="" />
-                          Discover
-                        </span>
+                          <button
+                            :disabled="!detailTitle"
+                            @click="clearDetails"
+                            class="secondary-button-no-border borderless"
+                          >
+                            <img
+                              style="margin-right: 4px"
+                              src="@/assets/images/remove.svg"
+                              height="14px"
+                              alt=""
+                            />
+                            Clear
+                          </button>
+                        </header>
 
-                        <p>AI assistant for finding relevant journalists</p>
+                        <section v-if="allCompanyDetails.length">
+                          <div
+                            style="position: relative"
+                            @click="addDetails(detail.title, detail.details)"
+                            v-for="detail in allCompanyDetails"
+                            :key="detail.title"
+                            :class="{ activesquareTile: detailTitle === detail.title }"
+                            :title="detail.title"
+                          >
+                            <span class="">
+                              <img
+                                class="blue-filter"
+                                src="@/assets/images/logo.png"
+                                height="11px"
+                                alt=""
+                              />
+                              {{ detail.title }}
+                            </span>
+                            <p class="">{{ detail.details }}</p>
+
+                            <span @click="deleteCompanyDetails(detail.id)" class="absolute-icon">
+                              <img src="@/assets/images/close.svg" height="10px" alt="" />
+                            </span>
+                          </div>
+                        </section>
+
+                        <section style="padding: 16px" v-else>
+                          Your saved details
+                          <span>
+                            <img
+                              style="margin-right: 4px"
+                              src="@/assets/images/building.svg"
+                              height="12px"
+                              alt=""
+                            />
+                            will appear here.</span
+                          >
+                        </section>
                       </div>
                     </div>
-                  </div>
-                  <textarea
-                    style="margin-left: -8px; width: 100%"
-                    :rows="1"
-                    id="search-input"
-                    @keyup.enter="generateNewSearch($event, false)"
-                    class="area-input"
-                    autocomplete="off"
-                    :placeholder="placeHolderText"
-                    v-model="newSearch"
-                    v-autoresize
-                    :disabled="
-                      loading || summaryLoading || (mainView === 'social' && !hasTwitterIntegration)
-                    "
-                  />
 
-                  <div
-                    v-if="newSearch"
-                    @click="generateNewSearch($event, false)"
-                    class="left-margin pointer lite-bg img-container-stay"
-                    style="margin-right: 12px"
-                  >
-                    <img
-                      style="margin: 0"
-                      src="@/assets/images/paper-plane-full.svg"
-                      height="12px"
-                      alt=""
-                    />
+                    <div
+                      style="margin-right: 12px"
+                      v-if="mainView === 'write'"
+                      class="source-dropdown fadein"
+                    >
+                      <div @click.stop="toggleShowStyles" class="drop-header">
+                        <img src="@/assets/images/wand.svg" height="15px" alt="" />
+
+                        <small>{{ writingStyleTitle ? writingStyleTitle : 'Writing Style' }}</small>
+                        <!-- <img
+                          v-if="!showingStyles"
+                          src="@/assets/images/arrowDropUp.svg"
+                          height="15px"
+                          alt=""
+                        />
+                        <img
+                          v-else
+                          class="rotate-img"
+                          src="@/assets/images/arrowDropUp.svg"
+                          height="15px"
+                          alt=""
+                        /> -->
+                      </div>
+
+                      <div
+                        v-outside-click="hideStyles"
+                        v-show="showingStyles"
+                        class="drop-options-alt-up"
+                        style="bottom: 48px"
+                      >
+                        <header class="space-between">
+                          <section class="h-padding">
+                            <section @click="toggleStyles" class="toggle">
+                              <span
+                                :class="{ 'active-toggle': personalStyles }"
+                                class="toggle-side"
+                              >
+                                <small>Personal</small>
+                              </span>
+
+                              <span
+                                :class="{ 'active-toggle': !personalStyles }"
+                                class="toggle-side"
+                              >
+                                <small>Group</small>
+                              </span>
+                            </section>
+                          </section>
+
+                          <button
+                            @click="toggleLearnInputModal('')"
+                            class="secondary-button-no-border"
+                            style="margin-right: 12px"
+                          >
+                            <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Style
+                          </button>
+                        </header>
+
+                        <section v-if="userWritingStyles.length">
+                          <div
+                            @click="addWritingStyle(style.style, style.title)"
+                            v-for="style in defaultWritingStyles"
+                            :key="style.title"
+                            :class="{ activesquare: writingStyleTitle === style.title }"
+                            :title="style.title"
+                          >
+                            <span>
+                              <img
+                                class="blue-filter"
+                                src="@/assets/images/logo.png"
+                                height="11px"
+                                alt=""
+                              />
+                              {{ style.title }}
+                            </span>
+                            <p>{{ style.style }}</p>
+                          </div>
+                          <div
+                            @mouseenter="setIndex(i)"
+                            @mouseLeave="removeIndex"
+                            @click="addWritingStyle(style.style, style.title)"
+                            class="dropdown-item relative"
+                            v-for="(style, i) in userWritingStyles"
+                            :key="i"
+                            :class="{ activeswitch: writingStyleTitle === style.title }"
+                            :title="style.title"
+                          >
+                            <span class="pink-text">
+                              <img
+                                class="pink-filter"
+                                src="@/assets/images/scroll.svg"
+                                height="11px"
+                                alt=""
+                              />
+                              {{ style.title }}
+                            </span>
+                            <p class="pink-text">{{ style.style }}</p>
+
+                            <span
+                              v-if="hoverIndex === i"
+                              @click="deleteWritingStyle(style.id)"
+                              class="absolute-icon"
+                            >
+                              <img src="@/assets/images/close.svg" height="12px" alt="" />
+                            </span>
+                          </div>
+                        </section>
+
+                        <section v-else>
+                          <div
+                            @click="addWritingStyle(style.style, style.title)"
+                            v-for="style in defaultWritingStyles"
+                            :key="style.title"
+                            :class="{ activeswitch: writingStyleTitle === style.title }"
+                          >
+                            <span>
+                              <img src="@/assets/images/wand.svg" height="11px" alt="" />
+                              {{ style.title }}
+                            </span>
+                            <p>{{ style.style }}</p>
+                          </div>
+                        </section>
+                      </div>
+                    </div>
+
+                    <div v-if="mainView === 'news'" style="margin-top: 16px" class="row relative">
+                      <div
+                        @click.stop="toggleDate"
+                        :class="{ 'soft-gray-bg': showDateSelection }"
+                        class="drop-header row"
+                        style="
+                          padding: 4px 8px 4px 0;
+                          background-color: #eeeeee;
+                          border-radius: 10px;
+                          margin-bottom: 4px;
+                        "
+                      >
+                        <img
+                          v-if="mainView === 'news'"
+                          class="invert"
+                          style="margin: 0 8px"
+                          src="@/assets/images/calendar.svg"
+                          height="15px"
+                          alt=""
+                        />
+
+                        <small class="bold-text"> Date </small>
+                      </div>
+
+                      <div
+                        v-outside-click="hideDate"
+                        class="container-left-above"
+                        v-show="showDateSelection"
+                      >
+                        <p>Date Range</p>
+                        <div class="row">
+                          <input
+                            class="area-input-smallest"
+                            type="date"
+                            :min="minDate"
+                            @input="validateDate"
+                            v-model="dateStart"
+                          />
+                          <span style="margin: 0 12px"> - </span>
+
+                          <input
+                            class="area-input-smallest"
+                            type="date"
+                            :min="minDate"
+                            v-model="dateEnd"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </section>
+              </div>
+            </div>
+
+            <div style="margin-top: 32px" class="centered">
+              <div v-if="mainView === 'write'" style="gap: 12px" class="row">
+                <div
+                  @click="setNewSearch(example.value)"
+                  v-for="example in contentExamples"
+                  :key="example.value"
+                  class="example-title"
+                >
+                  <img src="@/assets/images/lightbulb-on.svg" height="15px" alt="" />
+                  {{ example.name }}
+                </div>
+              </div>
+              <div v-else-if="mainView === 'news'" style="gap: 12px" class="row">
+                <div
+                  @click="setNewSearch(example.value)"
+                  v-for="example in newsExamples"
+                  :key="example.value"
+                  class="example-title"
+                >
+                  <img src="@/assets/images/lightbulb-on.svg" height="15px" alt="" />
+                  {{ example.name }}
+                </div>
+              </div>
+              <div v-if="mainView === 'social'" style="gap: 12px" class="row">
+                <div
+                  @click="setNewSearch(example.value)"
+                  v-for="example in socialExamples"
+                  :key="example.value"
+                  class="example-title"
+                >
+                  <img src="@/assets/images/lightbulb-on.svg" height="15px" alt="" />
+                  {{ example.name }}
+                </div>
+              </div>
+              <div v-if="mainView === 'discover'" style="gap: 12px" class="row">
+                <div
+                  @click="setNewSearch(example.value)"
+                  v-for="example in discoveryExamples"
+                  :key="example.value"
+                  class="example-title"
+                >
+                  <img src="@/assets/images/lightbulb-on.svg" height="15px" alt="" />
+                  {{ example.name }}
+                </div>
+              </div>
+              <div v-if="mainView === 'web'" style="gap: 12px" class="row">
+                <div
+                  @click="setNewSearch(example.value)"
+                  v-for="example in webExamples"
+                  :key="example.value"
+                  class="example-title"
+                >
+                  <img src="@/assets/images/lightbulb-on.svg" height="15px" alt="" />
+                  {{ example.name }}
+                </div>
               </div>
             </div>
           </div>
@@ -1486,7 +1600,7 @@
         <div class="chat-window__header">
           <div class="row">
             <div class="image-container" @click="resetAll">
-              <img src="@/assets/images/goBack.svg" height="17px" alt="" />
+              <img src="@/assets/images/back.svg" height="17px" alt="" />
             </div>
             <p>{{ currentChat.title }}</p>
           </div>
@@ -2026,14 +2140,20 @@
         <div class="body widebody">
           <div class="skeleton-loader">
             <div class="skeleton skeleton-title"></div>
+            <div style="margin-bottom: 24px" class="skeleton skeleton-text"></div>
+            <div style="justify-content: space-between" class="row">
+              <div class="skeleton skeleton-img"></div>
+              <div class="skeleton skeleton-img"></div>
+              <div class="skeleton skeleton-img"></div>
+              <div class="skeleton skeleton-img"></div>
+            </div>
+            <div style="margin-top: 24px" class="skeleton skeleton-text"></div>
             <div class="skeleton skeleton-text"></div>
-            <div class="skeleton skeleton-text"></div>
-            <div class="skeleton skeleton-text"></div>
-            <div class="skeleton skeleton-medium"></div>
-            <div style="margin-top: 32px" class="skeleton skeleton-text"></div>
             <div class="skeleton skeleton-large"></div>
-            <div style="margin-top: 32px" class="skeleton skeleton-text"></div>
-            <div class="skeleton skeleton-large"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div style="margin-top: 12px" class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text"></div>
           </div>
         </div>
 
@@ -2047,7 +2167,10 @@
       </div>
 
       <section v-else class="center-content main">
-        <div style="position: relative" class="body widebody">
+        <div
+          style="position: relative"
+          :class="['body widebody', { contentShiftAlt: showingArticles }]"
+        >
           <header class="content-header-test">
             <div class="row-top">
               <div class="image-container xxl-margin mobile-img" @click="resetAll">
@@ -2868,34 +2991,48 @@
             </div>
           </header>
           <section ref="loadedContent" class="content-container">
-            <div class="between">
-              <div style="width: 100%" v-if="summary" class="row">
+            <div
+              style="width: 100%; justify-content: space-between"
+              class="row"
+              v-if="mainView === 'news'"
+            >
+              <div style="width: 24%" v-for="(article, i) in articlesFiltered.slice(0, 4)" :key="i">
                 <img
-                  style="margin-right: 8px"
-                  src="@/assets/images/sparkle.svg"
-                  height="14px"
-                  alt=""
+                  @click="goToArticle(article.link)"
+                  :src="article.image_url"
+                  @error="onImageError($event)"
+                  class="card-photo-header-small"
                 />
-
-                <p class="header-p">Answer</p>
-
-                <div
-                  v-if="mainView === 'web' || mainView === 'social' || mainView === 'news'"
-                  style="margin: 2px 0 0 4px"
-                  class="image-container s-wrapper"
-                >
-                  <img
-                    style="cursor: pointer; filter: invert(40%)"
-                    src="@/assets/images/clipboard.svg"
-                    height="16px"
-                    alt=""
-                    @click="copyText"
-                  />
-
-                  <div class="s-tooltip">{{ copyTip }}</div>
-                </div>
               </div>
             </div>
+
+            <!-- <div style="width: 100%;" v-if="summary" class="between">
+              <img
+                style="margin-right: 8px"
+                src="@/assets/images/sparkle.svg"
+                height="14px"
+                alt=""
+              />
+
+              <p class="header-p">Answer</p>
+              <div></div>
+
+              <div
+                v-if="mainView === 'web' || mainView === 'social' || mainView === 'news'"
+                style="margin: 2px 0 0 4px"
+                class="image-container s-wrapper"
+              >
+                <img
+                  style="cursor: pointer; filter: invert(40%)"
+                  src="@/assets/images/clipboard.svg"
+                  height="16px"
+                  alt=""
+                  @click="copyText"
+                />
+
+                <div class="s-tooltip">{{ copyTip }}</div>
+              </div>
+            </div> -->
 
             <div
               v-if="
@@ -2999,202 +3136,106 @@
                   </button>
                 </div>
               </div>
+
               <div
-                v-if="mainView !== 'discover'"
-                style="
-                  background: white;
-                  position: sticky;
-                  bottom: 0;
-                  margin-top: 32px;
-                  margin-bottom: 12px;
-                  border-radius: 28px;
-                  padding: 8px:0;
-                "
-                class="input-container-gray fadein"
+                class="gradient-border-btm"
+                style="margin: 8px 0 16px 0; padding-bottom: 24px"
+                v-if="mainView !== 'write' && mainView !== 'discover'"
               >
-                <section>
-                  <img
-                    class="left-margin-m"
-                    style="margin-bottom: 4px"
-                    src="@/assets/images/comment.svg"
-                    height="18px"
-                    alt=""
-                  />
-                  <textarea
-                    style="max-height: 140px !important; padding-top: 0.25rem"
-                    class="area-input"
-                    :placeholder="mainView === 'write' ? 'Make edits...' : 'Ask follow-up...'"
-                    autofocus
-                    autocomplete="off"
-                    rows="1"
-                    v-model="newTemplate"
-                    :disabled="!summary || loading || summaryLoading"
-                    @keyup.enter="
+                <button
+                  v-if="!showingArticles"
+                  @click="showingArticles = true"
+                  class="primary-button fadein"
+                  style="margin: 0"
+                >
+                  View
+                  {{
+                    mainView === 'news'
+                      ? `Articles (${articlesFiltered.length})`
+                      : mainView === 'social'
+                      ? `Posts (${filteredTweets.length})`
+                      : `Results (${googleResults.length})`
+                  }}
+                </button>
+
+                <button
+                  v-else
+                  @click="showingArticles = false"
+                  class="secondary-button-white fadein"
+                >
+                  Hide
+                  {{
+                    mainView === 'news'
+                      ? `Articles (${articlesFiltered.length})`
+                      : mainView === 'social'
+                      ? `Posts (${filteredTweets.length})`
+                      : `Results (${googleResults.length})`
+                  }}
+                </button>
+              </div>
+
+              <div v-if="summaries.length">
+                <div
+                  style="padding-bottom: 24px"
+                  class="gradient-border-btm"
+                  v-for="(summary, i) in summaries"
+                  :key="i"
+                >
+                  <h3 style="margin-top: 32px" class="bold-text">
+                    {{ followUps[i] }}
+                  </h3>
+                  <div
+                    style="margin-top: 24px"
+                    v-html="insertNewsCitations(summary)"
+                    class="citation-text"
+                  ></div>
+
+                  <button
+                    v-if="!showingArticles"
+                    @click="showingArticles = true"
+                    class="primary-button fadein"
+                    style="margin: 0"
+                  >
+                    View
+                    {{
                       mainView === 'news'
-                        ? getChatSummary($event, filteredArticles, newTemplate)
+                        ? `Articles (${articlesFiltered.length})`
                         : mainView === 'social'
-                        ? getChatSummary($event, preparedTweets, newTemplate)
-                        : mainView === 'write'
-                        ? regeneratePitch($event)
-                        : getChatSummary($event, googleResults, newTemplate)
-                    "
-                    v-autoresize
-                  />
+                        ? `Posts (${filteredTweets.length})`
+                        : `Results (${googleResults.length})`
+                    }}
+                  </button>
 
-                  <div class="row relative">
-                    <div
-                      class="left-margin img-container s-wrapper m-cntnr"
-                      :class="{ 'img-container-stay': showSuggestions }"
-                      style="padding: 8px 8px 6px 9px"
-                      @click.stop="toggleSuggestions"
-                      v-if="mainView !== 'write'"
-                    >
-                      <img src="@/assets/images/lightbulb.svg" height="16px" alt="" />
-                      <div class="s-tooltip">Suggestions</div>
-                    </div>
+                  <button
+                    v-else
+                    @click="showingArticles = false"
+                    class="secondary-button-white fadein"
+                  >
+                    Hide
+                    {{
+                      mainView === 'news'
+                        ? `Articles (${articlesFiltered.length})`
+                        : mainView === 'social'
+                        ? `Posts (${filteredTweets.length})`
+                        : `Results (${googleResults.length})`
+                    }}
+                  </button>
+                </div>
+              </div>
 
-                    <div
-                      class="left-margin img-container s-wrapper m-cntnr"
-                      :class="{ 'img-container-stay': showingWritingStyles }"
-                      style="padding: 8px 8px 6px 9px"
-                      @click.stop="toggleWritingStyles"
-                      v-else
-                    >
-                      <img src="@/assets/images/wand.svg" height="16px" alt="" />
-                      <div class="s-tooltip">Select Style</div>
-                    </div>
-
-                    <div
-                      v-show="showSuggestions"
-                      v-outside-click="hideSuggestions"
-                      class="container-right-above"
-                    >
-                      <h3>Follow-up Suggestions</h3>
-                      <div>
-                        <p
-                          v-for="(suggestion, i) in summarySuggestions"
-                          :key="i"
-                          @click="selectSuggestion(suggestion)"
-                        >
-                          {{ suggestion }}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div
-                      v-show="showingWritingStyles"
-                      v-outside-click="hideWritingStyles"
-                      class="container-right-above"
-                    >
-                      <h3>Writing Styles</h3>
-                      <div>
-                        <p
-                          v-for="style in defaultWritingStyles"
-                          :key="style.title"
-                          @click="addWritingStyle(style.style, style.title)"
-                          :class="{ activesquare: writingStyleTitle === style.title }"
-                          class="row"
-                        >
-                          <img
-                            class="blue-filter"
-                            src="@/assets/images/logo.png"
-                            height="13px"
-                            alt=""
-                            style="mmargin-right: 4px !important"
-                          />
-                          {{ style.title }}
-                        </p>
-                        <div v-if="userWritingStyles.length">
-                          <p
-                            v-for="style in userWritingStyles"
-                            :key="style.title"
-                            @click="addWritingStyle(style.style, style.title)"
-                            :class="{ activesquare: writingStyleTitle === style.title }"
-                          >
-                            <img
-                              class="pink-filter"
-                              src="@/assets/images/scroll.svg"
-                              height="12px"
-                              alt=""
-                              style="mmargin-right: 8px !important"
-                            />
-                            {{ style.title }}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div
-                      v-if="!newTemplate"
-                      class="left-margin right-margin-l img-container-stay"
-                      style="padding: 8px 8px 6px 9px"
-                    >
-                      <img src="@/assets/images/paper-plane-top.svg" height="14px" alt="" />
-                    </div>
-
-                    <div
-                      v-else-if="mainView === 'news'"
-                      @click="getChatSummary($event, filteredArticles, newTemplate)"
-                      style="padding: 8px 8px 6px 9px"
-                      class="left-margin right-margin-l pointer lite-bg img-container-stay"
-                    >
-                      <img
-                        style="margin: 0"
-                        src="@/assets/images/paper-plane-full.svg"
-                        height="14px"
-                        alt=""
-                      />
-                    </div>
-
-                    <div
-                      v-else-if="mainView === 'social'"
-                      @click="getChatSummary($event, preparedTweets, newTemplate)"
-                      style="padding: 8px 8px 6px 9px"
-                      class="left-margin right-margin-l pointer lite-bg img-container-stay"
-                    >
-                      <img
-                        style="margin: 0"
-                        src="@/assets/images/paper-plane-full.svg"
-                        height="14px"
-                        alt=""
-                      />
-                    </div>
-
-                    <div
-                      v-else-if="mainView === 'web'"
-                      @click="getChatSummary($event, googleResults, newTemplate)"
-                      style="padding: 8px 8px 6px 9px"
-                      class="left-margin right-margin-l pointer lite-bg img-container-stay"
-                    >
-                      <img
-                        style="margin: 0"
-                        src="@/assets/images/paper-plane-full.svg"
-                        height="14px"
-                        alt=""
-                      />
-                    </div>
-
-                    <div
-                      v-else-if="mainView === 'write'"
-                      @click="regeneratePitch($event)"
-                      style="padding: 8px 8px 6px 9px"
-                      class="left-margin right-margin-l pointer lite-bg img-container-stay"
-                    >
-                      <img
-                        style="margin: 0"
-                        src="@/assets/images/paper-plane-full.svg"
-                        height="14px"
-                        alt=""
-                      />
-                    </div>
-                  </div>
-                </section>
+              <div style="margin-top: 32px" class="row" v-if="secondaryLoader">
+                <p style="margin: 0; margin-right: 8px" class="bold-text">Generating...</p>
+                <img
+                  class="rotation innvert"
+                  height="14px"
+                  src="@/assets/images/loading.svg"
+                  alt=""
+                />
               </div>
             </div>
           </section>
-
           <section v-if="mainView !== 'write' && mainView !== 'discover'" class="content">
-            <div ref="topDivider" class="between">
+            <!-- <div ref="topDivider" class="between">
               <div class="row">
                 <img
                   v-if="mainView === 'news'"
@@ -3265,8 +3306,11 @@
                   alt=""
                 />
               </div>
-            </div>
+            </div> -->
 
+            <!-- 
+              NEWS CLIPS ARE HERE
+              
             <div v-if="mainView === 'news'" class="cards-container">
               <div
                 v-for="(article, i) in articlesFiltered"
@@ -3320,7 +3364,7 @@
                           {{ extractJournalist(article.author) }}
                         </p>
 
-                        <!-- <div class="s-tooltip">View Bio</div> -->
+                   
                       </div>
                       <span class="divider-dot">.</span>
                       <span class="off-gray time">{{
@@ -3329,21 +3373,7 @@
                     </div>
                     <div class="footer-icon-container">
                       <div class="row">
-                        <!-- <span class="s-wrapper">
-                          <button
-                            @click="selectJournalist(article)"
-                            class="borderless img-container-button"
-                            style="margin-right: 2px"
-                          >
-                            <img
-                              class="invert"
-                              src="@/assets/images/file-user.svg"
-                              height="14px"
-                              alt=""
-                            />
-                          </button>
-                          <span class="s-tooltip"> View Bio </span>
-                        </span> -->
+                    
 
                         <span v-if="!article.summary" class="s-wrapper">
                           <div
@@ -3386,32 +3416,12 @@
                 <div class="cardwidth" style="background: #e9f3fa" v-if="article.summary">
                   <div class="relative">
                     <pre v-html="article.summary" class="pre-text blue-text-bg"></pre>
-                    <!-- <div
-                      @click="copyArticleSummary(article.summary)"
-                      class="wrapper image-container top-right"
-                    >
-                      <img
-                        style="cursor: pointer"
-                        class="img-highlight"
-                        src="@/assets/images/clipboard.svg"
-                        height="12px"
-                        alt=""
-                      />
-                      <div class="tooltip">{{ copyTip }}</div>
-                    </div> -->
+                   
                   </div>
 
                   <div class="regenerate-article">
                     <div v-if="!showArticleRegenerate" class="row-end">
-                      <!-- <button
-                        @click="toggleArticleRegenerate"
-                        :disabled="
-                          articleSummaryLoading || loading || summaryLoading || savingSearch
-                        "
-                        class="tertiary-button"
-                      >
-                        Regenerate
-                      </button> -->
+                
 
                       <div class="relative left-margin">
                         <div
@@ -3530,9 +3540,9 @@
                 </div>
               </div>
               <div ref="contentBottom"></div>
-            </div>
+            </div> -->
 
-            <div v-else-if="mainView === 'web'" class="cards-container">
+            <div v-if="mainView === 'web'" class="cards-container">
               <div
                 v-for="(result, i) in filteredResults"
                 :key="i"
@@ -3591,21 +3601,6 @@
                     </div>
                     <div class="footer-icon-container">
                       <div class="row">
-                        <!-- <span class="s-wrapper">
-                          <button
-                            @click="selectJournalist(result, true)"
-                            class="borderless img-container-button"
-                          >
-                            <img
-                              class="invert"
-                              src="@/assets/images/file-user.svg"
-                              height="15px"
-                              alt=""
-                            />
-                          </button>
-                          <span class="s-tooltip"> View Bio</span>
-                        </span> -->
-
                         <span v-if="!result.summary" class="s-wrapper">
                           <div
                             v-if="articleSummaryLoading && loadingUrl === result.link"
@@ -3862,21 +3857,6 @@
                         getTimeDifferenceInMinutes(tweet.created_at)
                       }}</span>
                     </div>
-
-                    <!-- <span class="s-wrapper">
-                      <button
-                        @click="selectJournalist(tweet)"
-                        class="borderless img-container-button"
-                      >
-                        <img
-                          class="invert"
-                          src="@/assets/images/file-user.svg"
-                          height="14px"
-                          alt=""
-                        />
-                      </button>
-                      <span class="s-tooltip">View Bio</span>
-                    </span> -->
                   </div>
                 </div>
               </div>
@@ -3885,351 +3865,753 @@
             </div>
           </section>
         </div>
+      </section>
 
-        <!-- <aside v-if="mainView !== 'write' && mainView !== 'discover'">
-          <div v-if="mainView !== 'web'" class="section">
+      <div
+        widebody
+        v-if="!loading && !summaryLoading"
+        style="
+          background: white;
+          position: sticky;
+          bottom: 32px;
+          margin: 40px auto;
+          border-radius: 20px;
+          padding: 8px 0;
+          width: 60vw;
+          transition: right 0.3s ease-in-out;
+        "
+        :class="['input-container-gray fadein', { contentShift: showingArticles }]"
+      >
+        <section>
+          <div style="margin: 8px 0 0 0; width: 100%" class="row">
+            <textarea
+              style="max-height: 140px !important; padding-top: 0.25rem"
+              class="area-input"
+              placeholder="Ask follow-up..."
+              autofocus
+              autocomplete="off"
+              rows="1"
+              v-model="newTemplate"
+              :disabled="!summary || loading || summaryLoading"
+              @keyup.enter="
+                mainView === 'news'
+                  ? getChatSummary($event, filteredArticles, newTemplate)
+                  : mainView === 'social'
+                  ? getChatSummary($event, preparedTweets, newTemplate)
+                  : mainView === 'write'
+                  ? regeneratePitch($event)
+                  : getChatSummary($event, googleResults, newTemplate)
+              "
+              v-autoresize
+            />
+
             <div
-              @click="toggleRelevant"
-              class="example-title"
-              :class="{ nobottomborder: showingRelevant }"
+              v-if="newTemplate"
+              @click="
+                mainView === 'news'
+                  ? getChatSummary($event, filteredArticles, newTemplate)
+                  : mainView === 'social'
+                  ? getChatSummary($event, preparedTweets, newTemplate)
+                  : mainView === 'write'
+                  ? regeneratePitch($event)
+                  : getChatSummary($event, googleResults, newTemplate)
+              "
+              class="left-margin pointer lite-bg img-container-stay"
+              style="margin-right: 12px; padding: 5px 7px 4px 9px"
             >
-              <div class="example-row">
-                <img
-                  style="margin-right: 8px"
-                  src="@/assets/images/stars.svg"
-                  height="14px"
-                  alt=""
-                />
-                <p v-if="mainView === 'news'">Most Relevant Articles</p>
-                <p v-else-if="mainView === 'social'">Most Relevant Posts</p>
-              </div>
-
               <img
-                v-if="!showingRelevant"
-                src="@/assets/images/downArrow.svg"
-                height="14px"
+                style="margin: 0"
+                src="@/assets/images/paper-plane-full.svg"
+                height="12px"
                 alt=""
               />
-              <img v-else src="@/assets/images/downArrow.svg" class="rotate" height="14px" alt="" />
             </div>
-            <div v-if="showingRelevant" class="example-body">
-              <div v-if="loadingRelevant">
-                <div style="margin: 8px 16px" class="loading-small">
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                </div>
-              </div>
-              <div style="padding: 0 16px" class="example-text" v-else>
-                <p style="font-size: 14px !important" class="pre-text" v-html="relevantData"></p>
-              </div>
+
+            <div
+              v-else
+              class="left-margin pointer img-container-stay"
+              style="margin-right: 12px; padding: 5px 7px 4px 9px"
+            >
+              <img
+                style="margin: 0"
+                src="@/assets/images/paper-plane-full.svg"
+                height="12px"
+                alt=""
+              />
             </div>
           </div>
 
-          <div v-if="mainView !== 'web'" class="section">
-            <div
-              @click="toggleJournalists"
-              class="example-title"
-              :class="{ nobottomborder: showingJournalists }"
-            >
-              <div class="example-row">
-                <img
-                  style="margin-right: 8px"
-                  src="@/assets/images/profile.svg"
-                  height="14px"
-                  alt=""
-                />
-
-                <p v-if="mainView === 'news'">List Top Journalists</p>
-                <p v-else-if="mainView === 'social'">List Top Influencers</p>
-              </div>
-
-              <img
-                v-if="!showingJournalists"
-                src="@/assets/images/downArrow.svg"
-                height="14px"
-                alt=""
-              />
-              <img v-else src="@/assets/images/downArrow.svg" class="rotate" height="14px" alt="" />
-            </div>
-            <div v-if="showingJournalists" class="example-body">
-              <div v-if="loadingJournalists">
-                <div style="margin: 8px 16px" class="loading-small">
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                </div>
-              </div>
+          <div style="padding: 4px 8px" class="row">
+            <div style="margin: 12px 12px 0 8px" class="source-dropdown fadein">
               <div
-                @click="searchJournalist($event)"
-                style="padding: 0 16px"
-                class="example-text"
-                v-else
+                @click.stop="toggleSources"
+                :class="{ 'soft-gray-bg': showingSources }"
+                class="drop-header"
+                style="padding: 5px 10px 5px 4px"
               >
-                <div
-                  style="font-size: 14px !important"
-                  class="pre-text alternate"
-                  v-html="journalistData"
-                ></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="section">
-            <div
-              @click="toggleRelated"
-              class="example-title"
-              :class="{ nobottomborder: showingRelated }"
-            >
-              <div class="example-row">
                 <img
-                  style="margin-right: 8px; filter: invert(50%)"
-                  src="@/assets/images/navigation.svg"
-                  height="14px"
+                  v-if="mainView === 'write'"
+                  src="@/assets/images/brain.svg"
+                  height="15px"
                   alt=""
                 />
-                <p>Explore Related Topics</p>
-              </div>
-
-              <img
-                v-if="!showingRelated"
-                src="@/assets/images/downArrow.svg"
-                height="14px"
-                alt=""
-              />
-              <img v-else src="@/assets/images/downArrow.svg" class="rotate" height="14px" alt="" />
-            </div>
-            <div v-if="showingRelated" class="example-body">
-              <div v-if="loadingRelated">
-                <div style="margin: 8px 16px" class="loading-small">
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                </div>
-              </div>
-              <div class="example-text" v-else>
-                <div
-                  v-for="(topic, i) in relatedTopics"
-                  :key="i"
-                  class="example-small-between"
-                  @click="setAndSearch(topic)"
-                >
-                  <p>{{ topic }}</p>
-                  <img src="@/assets/images/paper-plane-full.svg" height="14px" alt="" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div v-if="mainView !== 'web'" class="section-small">
-            <div @click="toggleType(mainView === 'news' ? 'social' : 'news')" class="example-title">
-              <div class="example-row">
                 <img
-                  v-if="mainView === 'social'"
+                  v-else-if="mainView === 'news'"
                   src="@/assets/images/newspaper.svg"
-                  height="14px"
+                  height="15px"
                   alt=""
-                  style="margin-right: 8px"
                 />
                 <img
-                  style="filter: invert(10%); margin-left: -4px"
-                  v-else
+                  v-else-if="mainView === 'social'"
                   src="@/assets/images/twitter-x.svg"
-                  height="18px"
+                  height="15px"
                   alt=""
                 />
-
-                <p v-if="mainView === 'news' && hasTwitterIntegration">Switch to Social</p>
-                <p v-else-if="mainView === 'news' && !hasTwitterIntegration">
-                  Switch to Social
-                  <span>(Connect X/Twitter)</span>
-                </p>
-                <p v-else>Switch to News</p>
-              </div>
-              <img
-                style="filter: invert(30%)"
-                src="@/assets/images/arrow-circle-right.svg"
-                height="14px"
-                alt=""
-              />
-            </div>
-          </div>
-
-          <div v-else-if="mainView === 'web'" class="section-small">
-            <div @click="toggleType('social')" class="example-title">
-              <div class="example-row">
                 <img
-                  style="filter: invert(10%); margin-left: -4px"
-                  src="@/assets/images/twitter-x.svg"
-                  height="18px"
-                  alt=""
-                />
-
-                <p v-if="hasTwitterIntegration">Switch to Social</p>
-                <p v-else>
-                  Switch to Social
-                  <span>(Connect X/Twitter)</span>
-                </p>
-              </div>
-              <img
-                style="filter: invert(30%)"
-                src="@/assets/images/arrow-circle-right.svg"
-                height="14px"
-                alt=""
-              />
-            </div>
-          </div>
-
-          <div v-if="mainView === 'web'" class="section-small">
-            <div @click="toggleType('news')" class="example-title">
-              <div class="example-row">
-                <img
-                  src="@/assets/images/newspaper.svg"
-                  height="14px"
-                  alt=""
-                  style="margin-right: 8px"
-                />
-
-                <p>Switch to News</p>
-              </div>
-              <img
-                style="filter: invert(30%)"
-                src="@/assets/images/arrow-circle-right.svg"
-                height="14px"
-                alt=""
-              />
-            </div>
-          </div>
-
-          <div v-if="mainView !== 'web'" class="section-small">
-            <div @click="toggleType('web')" class="example-title">
-              <div class="example-row">
-                <img
-                  style="filter: invert(10%); margin-right: 6px"
+                  v-else-if="mainView === 'web'"
                   src="@/assets/images/google.svg"
-                  height="14px"
+                  height="15px"
                   alt=""
                 />
-
-                <p>Switch to Web</p>
-              </div>
-              <img
-                style="filter: invert(30%)"
-                src="@/assets/images/arrow-circle-right.svg"
-                height="14px"
-                alt=""
-              />
-            </div>
-          </div>
-        </aside> -->
-
-        <!-- <aside :class="{ removed: mainView === 'write' }" v-else>
-          <div v-if="mainView === 'write'" class="section" style="max-height: 70vh">
-            <div style="cursor: text" class="example-title nobottomborder">
-              <div class="example-row">
                 <img
-                  style="margin-right: 8px"
-                  src="@/assets/images/profile.svg"
-                  height="14px"
+                  v-else-if="mainView === 'discover'"
+                  src="@/assets/images/users.svg"
+                  height="15px"
                   alt=""
                 />
-                <p>Find Relevant Journalists</p>
+
+                <small>{{ mainView === 'write' ? 'Default' : toCamelCase(mainView) }}</small>
+                <!-- <img
+                        v-if="!showingSources"
+                        src="@/assets/images/arrowDropUp.svg"
+                        height="15px"
+                        alt=""
+                      />
+                      <img
+                        v-else
+                        class="rotate-img"
+                        src="@/assets/images/arrowDropUp.svg"
+                        height="15px"
+                        alt=""
+                      /> -->
               </div>
-              <button
-                :disabled="!journalisListtData"
-                @click="clearList"
-                class="secondary-button-no-border borderless"
+
+              <div v-outside-click="hideSources" v-show="showingSources" class="drop-options">
+                <div
+                  @click="switchMainView('write')"
+                  :class="{ activeswitch: mainView === 'write' }"
+                >
+                  <span>
+                    <img src="@/assets/images/brain.svg" height="11px" alt="" />
+                    Default
+                  </span>
+
+                  <p>Generate content or ask a follow up</p>
+                </div>
+                <div @click="switchMainView('news')" :class="{ activeswitch: mainView === 'news' }">
+                  <span>
+                    <img src="@/assets/images/newspaper.svg" height="11px" alt="" />
+                    News
+                  </span>
+                  <p>Search through real time news</p>
+                </div>
+                <div
+                  @click="switchMainView('social')"
+                  :class="{ activeswitch: mainView === 'social' }"
+                >
+                  <span>
+                    <img src="@/assets/images/comment.svg" height="11px" alt="" />
+                    Social
+                  </span>
+
+                  <p>Search through top social post</p>
+                </div>
+                <div
+                  @click="switchMainView('discover')"
+                  :class="{ activeswitch: mainView === 'discover' }"
+                >
+                  <span>
+                    <img src="@/assets/images/users.svg" height="11px" alt="" />
+                    Media list
+                  </span>
+
+                  <p>Find relevnt media contacts</p>
+                </div>
+                <div @click="switchMainView('web')" :class="{ activeswitch: mainView === 'web' }">
+                  <span>
+                    <img src="@/assets/images/google.svg" height="11px" alt="" />
+                    Web
+                  </span>
+
+                  <p>Search through filtered web data</p>
+                </div>
+              </div>
+            </div>
+
+            <div
+              style="margin-right: 12px"
+              v-if="mainView === 'write'"
+              class="source-dropdown fadein"
+            >
+              <div @click.stop="toggleMainDetails" class="drop-header">
+                <img src="@/assets/images/folder.svg" height="15px" alt="" />
+
+                <small :title="detailTitle ? detailTitle : 'Project'">{{
+                  detailTitle ? detailTitle : 'Project'
+                }}</small>
+                <!-- <img
+                          v-if="!showingDetails"
+                          src="@/assets/images/arrowDropUp.svg"
+                          height="15px"
+                          alt=""
+                        />
+                        <img
+                          v-else
+                          class="rotate-img"
+                          src="@/assets/images/arrowDropUp.svg"
+                          height="15px"
+                          alt=""
+                        /> -->
+              </div>
+
+              <div
+                v-outside-click="hideMainDetails"
+                v-if="showingMainDetails"
+                class="drop-options-alt-up"
+                style="bottom: 48px"
+              >
+                <header style="padding-top: 8px; padding-bottom: 8px" class="space-between">
+                  <button
+                    @click="toggleDetailsInputModal"
+                    class="secondary-button-no-border"
+                    style="margin-right: 4px"
+                  >
+                    <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Details
+                  </button>
+
+                  <button
+                    :disabled="!detailTitle"
+                    @click="clearDetails"
+                    class="secondary-button-no-border borderless"
+                  >
+                    <img
+                      style="margin-right: 4px"
+                      src="@/assets/images/remove.svg"
+                      height="14px"
+                      alt=""
+                    />
+                    Clear
+                  </button>
+                </header>
+
+                <section v-if="allCompanyDetails.length">
+                  <div
+                    style="position: relative"
+                    @click="addDetails(detail.title, detail.details)"
+                    v-for="detail in allCompanyDetails"
+                    :key="detail.title"
+                    :class="{ activesquareTile: detailTitle === detail.title }"
+                    :title="detail.title"
+                  >
+                    <span class="">
+                      <img
+                        class="blue-filter"
+                        src="@/assets/images/logo.png"
+                        height="11px"
+                        alt=""
+                      />
+                      {{ detail.title }}
+                    </span>
+                    <p class="">{{ detail.details }}</p>
+
+                    <span @click="deleteCompanyDetails(detail.id)" class="absolute-icon">
+                      <img src="@/assets/images/close.svg" height="10px" alt="" />
+                    </span>
+                  </div>
+                </section>
+
+                <section style="padding: 16px" v-else>
+                  Your saved details
+                  <span>
+                    <img
+                      style="margin-right: 4px"
+                      src="@/assets/images/building.svg"
+                      height="12px"
+                      alt=""
+                    />
+                    will appear here.</span
+                  >
+                </section>
+              </div>
+            </div>
+
+            <div
+              style="margin-right: 12px"
+              v-if="mainView === 'write'"
+              class="source-dropdown fadein"
+            >
+              <div @click.stop="toggleShowStyles" class="drop-header">
+                <img src="@/assets/images/wand.svg" height="15px" alt="" />
+
+                <small>{{ writingStyleTitle ? writingStyleTitle : 'Writing Style' }}</small>
+                <!-- <img
+                          v-if="!showingStyles"
+                          src="@/assets/images/arrowDropUp.svg"
+                          height="15px"
+                          alt=""
+                        />
+                        <img
+                          v-else
+                          class="rotate-img"
+                          src="@/assets/images/arrowDropUp.svg"
+                          height="15px"
+                          alt=""
+                        /> -->
+              </div>
+
+              <div
+                v-outside-click="hideStyles"
+                v-show="showingStyles"
+                class="drop-options-alt-up"
+                style="bottom: 48px"
+              >
+                <header class="space-between">
+                  <section class="h-padding">
+                    <section @click="toggleStyles" class="toggle">
+                      <span :class="{ 'active-toggle': personalStyles }" class="toggle-side">
+                        <small>Personal</small>
+                      </span>
+
+                      <span :class="{ 'active-toggle': !personalStyles }" class="toggle-side">
+                        <small>Group</small>
+                      </span>
+                    </section>
+                  </section>
+
+                  <button
+                    @click="toggleLearnInputModal('')"
+                    class="secondary-button-no-border"
+                    style="margin-right: 12px"
+                  >
+                    <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Style
+                  </button>
+                </header>
+
+                <section v-if="userWritingStyles.length">
+                  <div
+                    @click="addWritingStyle(style.style, style.title)"
+                    v-for="style in defaultWritingStyles"
+                    :key="style.title"
+                    :class="{ activesquare: writingStyleTitle === style.title }"
+                    :title="style.title"
+                  >
+                    <span>
+                      <img
+                        class="blue-filter"
+                        src="@/assets/images/logo.png"
+                        height="11px"
+                        alt=""
+                      />
+                      {{ style.title }}
+                    </span>
+                    <p>{{ style.style }}</p>
+                  </div>
+                  <div
+                    @mouseenter="setIndex(i)"
+                    @mouseLeave="removeIndex"
+                    @click="addWritingStyle(style.style, style.title)"
+                    class="dropdown-item relative"
+                    v-for="(style, i) in userWritingStyles"
+                    :key="i"
+                    :class="{ activeswitch: writingStyleTitle === style.title }"
+                    :title="style.title"
+                  >
+                    <span class="pink-text">
+                      <img
+                        class="pink-filter"
+                        src="@/assets/images/scroll.svg"
+                        height="11px"
+                        alt=""
+                      />
+                      {{ style.title }}
+                    </span>
+                    <p class="pink-text">{{ style.style }}</p>
+
+                    <span
+                      v-if="hoverIndex === i"
+                      @click="deleteWritingStyle(style.id)"
+                      class="absolute-icon"
+                    >
+                      <img src="@/assets/images/close.svg" height="12px" alt="" />
+                    </span>
+                  </div>
+                </section>
+
+                <section v-else>
+                  <div
+                    @click="addWritingStyle(style.style, style.title)"
+                    v-for="style in defaultWritingStyles"
+                    :key="style.title"
+                    :class="{ activeswitch: writingStyleTitle === style.title }"
+                  >
+                    <span>
+                      <img src="@/assets/images/wand.svg" height="11px" alt="" />
+                      {{ style.title }}
+                    </span>
+                    <p>{{ style.style }}</p>
+                  </div>
+                </section>
+              </div>
+            </div>
+
+            <div v-if="mainView === 'news'" style="margin-top: 16px" class="row relative">
+              <div
+                @click.stop="toggleDate"
+                :class="{ 'soft-gray-bg': showDateSelection }"
+                class="drop-header row"
+                style="
+                  padding: 6px 10px 6px 4px;
+                  background-color: #efeff5;
+                  border-radius: 10px;
+                  margin-bottom: 4px;
+                "
               >
                 <img
-                  style="margin-right: 4px"
-                  src="@/assets/images/remove.svg"
-                  height="14px"
+                  v-if="mainView === 'news'"
+                  class="invert"
+                  style="margin: 0 8px"
+                  src="@/assets/images/calendar.svg"
+                  height="15px"
                   alt=""
                 />
-                Clear
-              </button>
-            </div>
 
-            <div style="padding-bottom: 0" class="example-body fadein">
-              <div v-if="loadingJournalists">
-                <div style="margin: 8px 16px" class="loading-small">
-                  <div class="dot"></div>
-                  <div class="dot"></div>
-                  <div class="dot"></div>
+                <small class="bold-text"> Date </small>
+              </div>
+
+              <div
+                v-outside-click="hideDate"
+                class="container-left-above"
+                v-show="showDateSelection"
+              >
+                <p>Date Range</p>
+                <div class="row">
+                  <input
+                    class="area-input-smallest"
+                    type="date"
+                    :min="minDate"
+                    @input="validateDate"
+                    v-model="dateStart"
+                  />
+                  <span style="margin: 0 12px"> - </span>
+
+                  <input class="area-input-smallest" type="date" :min="minDate" v-model="dateEnd" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <div style="width: 100vw" v-if="selectedSearch">
+      <div v-if="summary && showingArticles" :class="['sidebar-aside', { open: showingArticles }]">
+        <div
+          style="padding: 0 16px; position: sticky; top: 0; z-index: 100; background-color: white"
+          class="space-between"
+        >
+          <p class="bold-text">
+            {{
+              mainView === 'news'
+                ? `Articles (${articlesFiltered.length})`
+                : mainView === 'social'
+                ? `Posts (${filteredTweets.length})`
+                : `Results (${googleResults.length})`
+            }}
+          </p>
+          <img
+            @click="showingArticles = false"
+            src="@/assets/images/close.svg"
+            height="16px"
+            alt=""
+          />
+        </div>
+        <div class="section">
+          <div v-if="mainView === 'news'" class="cards-container">
+            <div
+              v-for="(article, i) in articlesFiltered"
+              :key="article.id"
+              class="card"
+              :class="{
+                widecard: article.summary && mainView !== 'web',
+                silverbg: articlesShowingDetails.includes(i),
+              }"
+            >
+              <div style="width: 100%">
+                <div class="main-body">
+                  <div>
+                    <small>{{ article.source.name }}</small>
+                    <p
+                      style="font-size: 15px; cursor: pointer"
+                      class="p-header"
+                      @click="goToArticle(article.link)"
+                    >
+                      {{ article.title }}
+                    </p>
+
+                    <div style="border-bottom: none" class="author-time">
+                      <div
+                        @click="selectJournalist(article)"
+                        style="cursor: pointer"
+                        class="author row"
+                        title="View Bio"
+                      >
+                        <img
+                          style="margin-right: 4px; margin-top: 3px"
+                          src="@/assets/images/profile.svg"
+                          height="9px"
+                          alt=""
+                        />
+
+                        <p style="text-decoration: none; border: none">
+                          {{ extractJournalist(article.author) }}
+                        </p>
+                      </div>
+                      <span class="divider-dot">.</span>
+                      <span class="off-gray time">{{
+                        getTimeDifferenceInMinutes(article.publish_date)
+                      }}</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <img
+                      @click="goToArticle(article.link)"
+                      :src="article.image_url"
+                      @error="onImageError($event)"
+                      class="card-photo-header"
+                    />
+                  </div>
+                </div>
+                <!-- <div class="main-footer">
+                  <div style="border-bottom: none" class="author-time">
+                    <div
+                      @click="selectJournalist(article)"
+                      style="cursor: pointer"
+                      class="author row"
+                      title="View Bio"
+                    >
+                      <img
+                        style="margin-right: 4px"
+                        src="@/assets/images/profile.svg"
+                        height="10px"
+                        alt=""
+                      />
+
+                      <p style="text-decoration: none; border: none">
+                        {{ extractJournalist(article.author) }}
+                      </p>
+                    </div>
+                    <span class="divider-dot">.</span>
+                    <span class="off-gray time">{{
+                      getTimeDifferenceInMinutes(article.publish_date)
+                    }}</span>
+                  </div>
+                </div> -->
+
+                <!-- <div class="footer-icon-container">
+                    <div class="row">
+                      <span v-if="!article.summary" class="s-wrapper">
+                        <div
+                          v-if="articleSummaryLoading && loadingUrl === article.link"
+                          class="loading-smallest"
+                        >
+                          <div class="dot"></div>
+                          <div class="dot"></div>
+                        </div>
+
+                        <button
+                          v-else
+                          @click="getArticleSummary(article.link)"
+                          class="borderless img-container-button"
+                          :disabled="
+                            articleSummaryLoading || loading || summaryLoading || savingSearch
+                          "
+                        >
+                          <img
+                            v-if="loadingUrl !== article.link"
+                            src="@/assets/images/sparkles-thin.svg"
+                            height="14px"
+                            alt=""
+                          />
+                        </button>
+
+                        <span style="width: 80px" class="s-tooltip">Summarize</span>
+                      </span>
+
+                      <img
+                        v-else
+                        src="@/assets/images/sparkle.svg"
+                        class="right-arrow-footer blue-icon"
+                      />
+                    </div>
+                  </div> -->
+
+                <div v-if="articlesShowingDetails.includes(i)" style="margin: 8px" class="row">
+                  <button
+                    @click="selectJournalist(article)"
+                    style="font-size: 10px; margin-right: 8px"
+                    class="secondary-button-white"
+                  >
+                    Journalist Bio
+                  </button>
+                  <button
+                    @click="getArticleSummary(article.link)"
+                    style="font-size: 10px"
+                    class="secondary-button-white"
+                  >
+                    Article insights
+                  </button>
+                </div>
+
+                <div
+                  v-else
+                  @click="toggleArticleActions(i)"
+                  style="margin: 0 0 0 8px; cursor: pointer"
+                >
+                  <img
+                    src="@/assets/images/more_horizontal.svg"
+                    height="auto"
+                    width="22px"
+                    alt=""
+                  />
                 </div>
               </div>
 
-              <div style="padding: 0 16px !important" class="example-text" v-else>
-                <div class="scrolltainer" style="height: 280px" v-if="!journalisListtData">
-                  <div class="col-start">
-                    <p style="font-size: 14px; margin: 12px 0">Provide additional details</p>
+              <div class="cardwidth" style="background: #e9f3fa" v-if="article.summary">
+                <div class="relative">
+                  <pre v-html="article.summary" class="pre-text blue-text-bg"></pre>
+                </div>
+
+                <div class="regenerate-article">
+                  <div v-if="!showArticleRegenerate" class="row-end">
+                    <div class="relative left-margin">
+                      <div
+                        @click.stop="toggleArticleGenerateDropdown"
+                        class="row pointer nav-text dropdownBorder"
+                        :class="{ softgraybg: showArticleGenerateDropdown }"
+                      >
+                        <img
+                          style="margin-right: 8px"
+                          src="@/assets/images/wand.svg"
+                          height="14px"
+                          alt=""
+                        />
+                        Generate: <span>{{ contentType }}</span>
+                        <img
+                          v-if="!showArticleGenerateDropdown && !contentLoading"
+                          src="@/assets/images/downArrow.svg"
+                          class=""
+                          height="14px"
+                          alt=""
+                        />
+                        <img
+                          v-if="showArticleGenerateDropdown && !contentLoading"
+                          src="@/assets/images/downArrow.svg"
+                          class="rotate"
+                          height="14px"
+                          alt=""
+                        />
+                        <div
+                          style="margin-left: 4px"
+                          v-else-if="contentLoading"
+                          class="loading-small"
+                        >
+                          <div class="dot"></div>
+                          <div class="dot"></div>
+                          <div class="dot"></div>
+                        </div>
+                      </div>
+
+                      <div
+                        v-show="showArticleGenerateDropdown"
+                        v-outside-click="hideArticleDropdown"
+                        class="search-dropdown"
+                      >
+                        <div class="searches-container">
+                          <div
+                            class="row relative"
+                            v-for="(option, i) in articleGenerateOptions"
+                            :key="option.value"
+                          >
+                            <p @click="selectArticleOption(article.link, option.value, i)">
+                              {{ option.name }}
+                            </p>
+
+                            <img
+                              v-show="contentLoading && optionIndex === i"
+                              src="@/assets/images/loading.svg"
+                              class="rotation"
+                              height="12px"
+                              alt=""
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="full-width" v-else>
                     <textarea
+                      :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
                       autofocus
                       class="area-input-outline wider"
-                      placeholder="(e.g. List US journalists that would be interested in covering this story)"
-                      style="width: 100%; min-height: 200px; max-height: 200px"
+                      placeholder="Provide additional instructions"
                       v-autoresize
-                      v-model="journalistInfo"
+                      v-model="articleInstructions"
                     />
-                    <div style="background-color: white" class="row-end-bottom">
+
+                    <div class="row">
+                      <button @click="toggleArticleRegenerate" class="secondary-button">
+                        Cancel
+                      </button>
+
                       <button
-                        style="margin: 0"
-                        @click="discoverJournalists(false)"
+                        @click="
+                          regenerateArticleSummary(
+                            article.link,
+                            article.summary,
+                            articleInstructions,
+                          )
+                        "
+                        :disabled="
+                          articleSummaryLoading || loading || summaryLoading || savingSearch
+                        "
                         class="primary-button"
                       >
-                        Find Journalists
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="relative" v-else @click="grabJournalist($event)">
-                  <div class="pre-text" v-html="journalisListtData"></div>
-                </div>
-              </div>
-            </div>
-
-
-          </div>
-
-          <div v-if="mainView === 'discover'" class="section" style="max-height: 70vh">
-            <div style="cursor: text" class="example-title nobottomborder">
-              <div class="example-row">
-                <img
-                  style="margin-right: 8px"
-                  src="@/assets/images/admin-alt.svg"
-                  height="14px"
-                  alt=""
-                />
-                <p>Modify</p>
-              </div>
-            </div>
-
-            <div style="padding-bottom: 0" class="example-body fadein">
-              <div style="padding: 0 16px !important" class="example-text">
-                <div class="scrolltainer" style="height: 280px" v-if="!journalisListtData">
-                  <div class="col-start">
-                    <p style="font-size: 14px; margin: 12px 0">Journalist details</p>
-                    <textarea
-                      autofocus
-                      class="area-input-outline wider"
-                      placeholder="Journalist details..."
-                      style="width: 100%; min-height: 200px; max-height: 200px"
-                      v-autoresize
-                      v-model="newSearch"
-                    />
-                    <div style="background-color: white" class="row-end-bottom">
-                      <button style="margin: 0" @click="generateNewSearch" class="primary-button">
-                        Find Journalists
+                        {{
+                          articleSummaryLoading && loadingUrl === article.link
+                            ? 'Submitting'
+                            : 'Submit'
+                        }}
+                        <div
+                          style="margin-left: 4px"
+                          v-if="articleSummaryLoading && loadingUrl === article.link"
+                          class="loading-small"
+                        >
+                          <div class="dot"></div>
+                          <div class="dot"></div>
+                          <div class="dot"></div>
+                        </div>
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+            <div ref="contentBottom"></div>
           </div>
-        </aside> -->
-      </section>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -4253,6 +4635,11 @@ export default {
   },
   data() {
     return {
+      followUps: [],
+      summaries: [],
+      secondaryLoader: false,
+      articlesShowingDetails: [],
+      showingArticles: false,
       citationsMounted: true,
       reportInstructions: '',
       urlsSet: false,
@@ -4485,7 +4872,7 @@ www.forbes.com/article-3
       sourceSummary: null,
       buttonText: 'Article Summary',
       AllUserTweets: {},
-      mainView: 'news',
+      mainView: 'write',
       savedSearch: null,
       tweets: [],
       filteredArticles: [],
@@ -4534,16 +4921,76 @@ www.forbes.com/article-3
       showingRelated: false,
       contentExamples: [
         {
-          name: `Craft a short media pitch for...`,
-          value: `Craft a short media pitch for {BrandX}`,
-        },
-        {
-          name: `Write a press release for...`,
+          name: `Craft a press release...`,
           value: `Write a press release for {Brand}. Emphasize key statistics and link them to industry trends. Use an attention-grabbing headline, crucial details early on, and compelling quotes. Aim for an engaging narrative that appeals to journalists.
           `,
         },
         {
-          name: `Draft a Linkedin post...`,
+          name: `Help me brainstorm...`,
+          value: `Craft a short media pitch for {BrandX}`,
+        },
+        {
+          name: `Write a social post...`,
+          value: `Draft a LinkedIn post about {Topic}`,
+        },
+      ],
+      newsExamples: [
+        {
+          name: `Top storylines about...`,
+          value: `Write a press release for {Brand}. Emphasize key statistics and link them to industry trends. Use an attention-grabbing headline, crucial details early on, and compelling quotes. Aim for an engaging narrative that appeals to journalists.
+          `,
+        },
+        {
+          name: `List top journlist covering...`,
+          value: `Craft a short media pitch for {BrandX}`,
+        },
+        {
+          name: `Analyze media coverage...`,
+          value: `Draft a LinkedIn post about {Topic}`,
+        },
+      ],
+      discoveryExamples: [
+        {
+          name: `U.S journalist covering...`,
+          value: `Write a press release for {Brand}. Emphasize key statistics and link them to industry trends. Use an attention-grabbing headline, crucial details early on, and compelling quotes. Aim for an engaging narrative that appeals to journalists.
+          `,
+        },
+        {
+          name: `Podacsters interested in...`,
+          value: `Craft a short media pitch for {BrandX}`,
+        },
+        {
+          name: `Journalist similar to...`,
+          value: `Draft a LinkedIn post about {Topic}`,
+        },
+      ],
+      socialExamples: [
+        {
+          name: `Top storylines about...`,
+          value: `Write a press release for {Brand}. Emphasize key statistics and link them to industry trends. Use an attention-grabbing headline, crucial details early on, and compelling quotes. Aim for an engaging narrative that appeals to journalists.
+          `,
+        },
+        {
+          name: `List top influencers covering...`,
+          value: `Craft a short media pitch for {BrandX}`,
+        },
+        {
+          name: `Analyze post about...`,
+          value: `Draft a LinkedIn post about {Topic}`,
+        },
+      ],
+      webExamples: [
+        {
+          name: `List upcoming awards...`,
+          value: `Write a press release for {Brand}. Emphasize key statistics and link them to industry trends. Use an attention-grabbing headline, crucial details early on, and compelling quotes. Aim for an engaging narrative that appeals to journalists.
+          `,
+        },
+        {
+          name: `Show me best reviews for...`,
+          value: `Craft a short media pitch for {BrandX}`,
+        },
+        {
+          name: `Who covered AI in 2024...`,
           value: `Draft a LinkedIn post about {Topic}`,
         },
       ],
@@ -4955,6 +5402,9 @@ www.forbes.com/article-3
     this.abortFunctions()
   },
   methods: {
+    toggleArticleActions(i) {
+      this.articlesShowingDetails.push(i)
+    },
     setTooltips() {
       console.log('FIRING CITATION FUNCTION')
       const citationWrappers = document.querySelectorAll('.citation-wrapper')
@@ -8189,6 +8639,9 @@ www.forbes.com/article-3
       if (event.shiftKey) {
         return
       }
+
+      this.followUps.push(this.newTemplate)
+      this.newTemplate = ''
       this.chatSummaryLoading = true
       this.showingPromptDropdown = false
       this.showSummaryMenu = false
@@ -8240,9 +8693,17 @@ www.forbes.com/article-3
         allClips = clips
       }
 
-      this.summaryLoading = true
+      if (this.summary) {
+        console.log('should be here')
+        this.secondaryLoader = true
+      } else {
+        console.log('NOT in here')
+        this.summaryLoading = true
+      }
+
       let openAiDown = false
-      this.summary = ''
+
+      // this.summary = ''
 
       try {
         if (this.shouldCancel) {
@@ -8270,9 +8731,19 @@ www.forbes.com/article-3
               this.updateSearch()
             }
             this.originalSummary = response.summary
-            this.summary = response.summary
-              .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
-              .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+            if (this.summary) {
+              console.log('should be here as well')
+              this.summaries.push(
+                response.summary
+                  .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+                  .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>'),
+              )
+            } else {
+              console.log('Not here either')
+              this.summary = response.summary
+                .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+                .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+            }
           })
       } catch (e) {
         console.log('Error in getSummary', e)
@@ -8310,6 +8781,7 @@ www.forbes.com/article-3
         this.$store.dispatch('updateAbortController', newAbortControllers)
         this.summarizing = true
         this.summaryLoading = false
+        this.secondaryLoader = false
         if (chatSummary) {
           this.newTemplate = ''
         }
@@ -8531,7 +9003,7 @@ www.forbes.com/article-3
       } else if (this.mainView === 'web') {
         text = 'Search the web...'
       } else if (this.mainView === 'write') {
-        text = 'Provide content instructions...'
+        text = 'Message ManagrAI...'
       } else if (this.mainView === 'discover') {
         text = 'Find relevant journalists...'
       }
@@ -8941,6 +9413,14 @@ www.forbes.com/article-3
     white-space: nowrap;
   }
 
+  .row-even {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    // justify-content: space-between;
+  }
+
   .row > * {
     display: inline-block;
     vertical-align: middle; /* Ensures children align centrally */
@@ -9174,15 +9654,19 @@ www.forbes.com/article-3
   color: $dark-green !important;
 }
 
-// .secondary-button {
-//   @include dark-blue-button();
-//   padding: 8px 12px;
-//   border: 1px solid rgba(0, 0, 0, 0.2);
-//   border-radius: 16px;
-//   color: $dark-black-blue;
-//   background-color: white;
-//   margin-right: -2px;
-// }
+.secondary-button-white {
+  @include dark-blue-button();
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  padding: 8px 12px;
+  background-color: white;
+  color: $dark-black-blue !important;
+  font-family: $base-font-family !important;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.005);
+  }
+}
 
 .secondary-button-no-border {
   @include dark-blue-button();
@@ -9485,10 +9969,10 @@ www.forbes.com/article-3
   margin-top: 16px;
 
   .drop-header {
-    padding: 4px 6px;
-    background-color: white;
+    padding: 4px 8px 4px 0;
+    background-color: $silver;
     font-size: 14px !important;
-    border-radius: 16px;
+    border-radius: 10px;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -9499,7 +9983,7 @@ www.forbes.com/article-3
     }
 
     img {
-      margin: 0 8px;
+      margin: 0 4px 0 8px;
       filter: invert(40%);
 
       @media only screen and (max-width: 600px) {
@@ -9792,8 +10276,8 @@ www.forbes.com/article-3
   .drop-options {
     width: 450px;
     position: absolute;
-    bottom: 40px;
-    left: 0;
+    top: 40px;
+    left: -8px;
     font-weight: 400;
     background: white;
     padding: 8px;
@@ -9833,7 +10317,7 @@ www.forbes.com/article-3
       }
 
       p {
-        font-size: 11px !important;
+        font-size: 12px !important;
         font-family: $thin-font-family;
         margin: 4px 0 0 0;
       }
@@ -10300,21 +10784,22 @@ www.forbes.com/article-3
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  margin-right: 8px;
+  margin: 0 8px 0 0 !important;
   color: $base-gray;
   border-radius: 16px;
-  padding: 5px 6px;
+  // padding: 5px 6px;
 
   p {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    font-size: 15px !important;
+    font-size: 12px !important;
+    font-family: $thin-font-family !important;
   }
 
-  &:hover {
-    background-color: $soft-gray;
-  }
+  // &:hover {
+  //   background-color: $soft-gray;
+  // }
 
   @media only screen and (max-width: 600px) {
     p {
@@ -10332,11 +10817,12 @@ www.forbes.com/article-3
   align-items: center;
   color: $light-gray-blue;
   max-width: 80%;
-  font-size: 13px !important;
+  font-size: 12px !important;
+  margin: 4px 0 0 0 !important;
 
   p {
-    margin: 0;
-    padding: 0;
+    margin: 0 !important;
+    padding: 0 !important;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   }
 }
@@ -10996,13 +11482,13 @@ li {
   // padding-right: 24px;
   display: flex;
   flex-direction: column;
-  align-items: space-between;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: center;
   height: 100vh;
   font-size: 16px !important;
   line-height: 1.75;
   width: 100%;
-  padding: 17vh 0 32px 0;
+  padding: 0 0 72px 0;
 
   @media only screen and (max-width: 600px) {
     padding: 32px 8px 12px 8px;
@@ -11142,6 +11628,71 @@ li {
   border-radius: 6px;
 }
 
+.contentShift {
+  margin: 40px 15vw 40px 12vw !important;
+  width: 54vw !important;
+}
+
+.contentShiftAlt {
+  padding: 16px 33vw 16px 10vw !important;
+}
+
+.sidebar-aside {
+  position: absolute;
+  top: 40px;
+  bottom: 0;
+  width: 25vw;
+  height: 94%;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  padding-top: 32px;
+  background: white;
+  right: -100%;
+  z-index: 100;
+  transition: left 0.3s ease-in-out;
+
+  &.open {
+    right: 0;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+
+  .section {
+    padding: 0 8px;
+    position: relative;
+    overflow-y: scroll;
+    margin-top: 12px;
+
+    img {
+      filter: invert(40%);
+    }
+
+    // div {
+    //   margin-bottom: 16px;
+    // }
+  }
+
+  .section-small {
+    padding: 0 64px 0 16px;
+    position: relative;
+    margin-top: 12px;
+
+    img {
+      filter: invert(40%);
+    }
+
+    div {
+      margin-bottom: 16px;
+    }
+
+    @media only screen and (min-width: 601px) and (max-width: 1024px) {
+      padding: 0 0 0 24px;
+    }
+  }
+}
+
 .extra-padding-top {
   padding-top: 104px;
 }
@@ -11267,7 +11818,8 @@ li {
       height: 100%;
       overflow-y: scroll;
       overflow-x: hidden;
-      padding: 16px 18vw;
+      padding: 16px 20vw;
+      transition: right 0.3s ease-in-out;
 
       @media only screen and (max-width: 600px) {
         padding: 0;
@@ -11364,27 +11916,36 @@ li {
       }
     }
 
+    .gradient-border-btm {
+      border-bottom: 1px solid transparent;
+      border-image: linear-gradient(
+        to right,
+        transparent 2%,
+        rgba(0, 0, 0, 0.1) 2%,
+        rgba(0, 0, 0, 0.1) 98%,
+        transparent 98%
+      );
+      border-image-slice: 1;
+    }
+
     .content-container {
       display: flex;
       flex-direction: column;
       align-items: flex-start;
       justify-content: flex-start;
-      width: 99%;
+      width: 100%;
       min-height: 20vh;
-      padding: 16px 32px 16px 64px;
+      padding: 8px 32px 16px 32px;
       margin-bottom: 16px;
-      // background: white;
-      // border-radius: 8px;
-      // box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      border-bottom: 0.5px solid transparent;
-      border-image: linear-gradient(
-        to right,
-        transparent 7%,
-        rgba(0, 0, 0, 0.1) 7%,
-        rgba(0, 0, 0, 0.1) 98%,
-        transparent 98%
-      );
-      border-image-slice: 1;
+      // border-bottom: 0.5px solid transparent;
+      // border-image: linear-gradient(
+      //   to right,
+      //   transparent 2%,
+      //   rgba(0, 0, 0, 0.1) 2%,
+      //   rgba(0, 0, 0, 0.1) 98%,
+      //   transparent 98%
+      // );
+      // border-image-slice: 1;
 
       @media only screen and (max-width: 600px) {
         padding: 0;
@@ -11901,9 +12462,9 @@ textarea {
 }
 
 .large-input-container-alt {
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  // border: 1px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.025);
-  border-radius: 28px;
+  border-radius: 20px;
   background-color: white;
   width: 100%;
   margin-bottom: 8px;
@@ -11990,7 +12551,7 @@ textarea {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.3s ease;
   padding: 14px 0 12px 0;
-  border-radius: 24px;
+  border-radius: 20px;
   // border-radius: 6px;
   width: 100%;
   color: $base-gray;
@@ -12004,9 +12565,9 @@ textarea {
   section {
     width: 100%;
     display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    flex-direction: column;
   }
 
   img {
@@ -12286,10 +12847,13 @@ textarea::placeholder {
 
 .example-title {
   font-size: 14px;
-  width: 85%;
-  padding: 10px 12px;
-  border: 0.5px solid rgba(0, 0, 0, 0.1);
-  border-radius: 6px;
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 6px 16px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
   background-color: white;
   margin: 0 !important;
   cursor: pointer;
@@ -12298,9 +12862,13 @@ textarea::placeholder {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  // position: sticky;
+  // top: 0;
+  // z-index: 10;
+
+  img {
+    margin-right: 6px;
+  }
 
   .example-row {
     display: flex;
@@ -12907,11 +13475,11 @@ textarea::placeholder {
 
 .cards-container {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: flex-start;
-  flex-wrap: wrap;
-  padding: 24px 0;
-  gap: 14px;
+  // flex-wrap: wrap;
+  // padding: 24px 0;
+  gap: 4px;
 
   @media only screen and (max-width: 600px) {
     // gap: 8px;
@@ -12926,6 +13494,10 @@ textarea::placeholder {
     // width: 15.6275vw;
     width: 100%;
   }
+}
+
+.silverbg {
+  background-color: $silver !important;
 }
 
 .widecard {
@@ -12944,42 +13516,46 @@ textarea::placeholder {
 }
 
 .card {
-  width: 25.2vw;
+  width: 100%;
   padding: 0;
-  // border: 1px solid rgba(0, 0, 0, 0.335);
+  border: none;
   border-radius: 5px;
-  transition: opacity 1s ease-out;
-  opacity: 0;
-  animation: fadeIn 1s forwards;
-  // display: flex;
-  // flex-direction: row;
+  // transition: opacity 1s ease-out;
+  // opacity: 0;
+  // animation: fadeIn 1s forwards;
+  overflow: hidden;
+  margin: 0 !important;
 
-  @media only screen and (max-width: 600px) {
-    width: 88vw;
-  }
+  // @media only screen and (max-width: 600px) {
+  //   width: 88vw;
+  // }
 
-  @media only screen and (min-width: 601px) and (max-width: 1024px) {
-    width: 47.5%;
-  }
+  // @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  //   width: 47.5%;
+  // }
 
-  @media only screen and (min-width: 1025px) {
-    // width: 15.6275vw;
-    width: 48.5%;
-  }
+  // @media only screen and (min-width: 1025px) {
+  //   width: 48.5%;
+  // }
 
   .main-body {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.135);
-    padding: 12px 10px 10px 10px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 10px 0 10px;
     height: 75px;
+    overflow: hidden;
+    margin: 0 !important;
+
+    img {
+      filter: none;
+    }
 
     p {
-      margin: 0;
-      font-size: 13px;
-      max-width: 100%;
+      margin: 4px 0 2px 0;
+      font-size: 12px !important;
+      max-width: 16vw;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -12988,9 +13564,9 @@ textarea::placeholder {
     }
     small {
       font-size: 13px;
-      margin-bottom: 8px;
+      margin-bottom: 5px !important;
       color: $light-gray-blue;
-      max-width: 100%;
+      max-width: 16vw;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -13002,23 +13578,41 @@ textarea::placeholder {
     justify-content: space-between;
     align-items: center;
     // overflow: hidden;
-    padding: 14px 10px;
+    padding: 0 10px 8px 4px;
     width: 100%;
+    margin: 0 !important;
   }
 
   &:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    // box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: $silver;
   }
+
+  border-bottom: 2px solid $off-white;
 }
 
-.card-photo-header {
-  height: 250px;
+.card-photo-header-small {
+  height: 150px;
   width: 100%;
   margin: 0;
   object-fit: cover;
   cursor: pointer;
-  border-top-left-radius: 5px;
-  border-top-right-radius: 5px;
+  border-radius: 3px;
+  z-index: 1;
+
+  &:hover {
+    opacity: 0.7;
+  }
+}
+
+.card-photo-header {
+  height: 50px;
+  width: 60px;
+  margin: 0;
+  object-fit: cover;
+  cursor: pointer;
+  border-radius: 4px;
+
   z-index: 1;
 
   &:hover {
@@ -13066,7 +13660,7 @@ textarea::placeholder {
 }
 .skeleton-title {
   height: 20px;
-  width: 200px;
+  width: 250px;
 }
 .skeleton-text {
   height: 20px;
@@ -13083,8 +13677,13 @@ textarea::placeholder {
 }
 
 .skeleton-large {
-  height: 180px;
+  height: 200px;
   width: 100%;
+}
+
+.skeleton-img {
+  height: 150px;
+  width: 22%;
 }
 
 @keyframes shimmer {
@@ -13967,5 +14566,9 @@ select {
 .med-container {
   width: 48vw !important;
   padding: 0 16px 0 16px !important;
+}
+
+.bold-text {
+  font-family: $base-font-family !important;
 }
 </style>
