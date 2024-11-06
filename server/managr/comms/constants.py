@@ -63,6 +63,7 @@ SEMRUSH_TRAFFIC_URI = "https://api.semrush.com/analytics/ta/api/v3/summary"
 
 BUZZSUMO_API_KEY = settings.BUZZSUMO_API_KEY
 BUZZSUMO_SEARCH_URI = "https://api.buzzsumo.com/search/articles.json"
+BUZZSUMO_TRENDS_URI = "https://api.buzzsumo.com/search/trends.json"
 
 
 def SEMRUSH_PARAMS(urls):
@@ -99,7 +100,7 @@ def OPEN_AI_GET_INSIGHTS(notes, activity, bio, instructions):
     return prompt
 
 
-def OPEN_AI_TRACKER_INSIGHTS(bio, instructions):    
+def OPEN_AI_TRACKER_INSIGHTS(bio, instructions):
     prompt = f"""
     You are a proactive and detail-oriented VP of Communications. A data-driven leader who champions collaboration and technological innovation. Excellent communicator focused on strategic management, team accountability, and continuously enhancing PR processes. Here is your task: Review all the email pitching activities done by users that are pitching journalist, podcasters, or bloggers. Then follow these instructions.
     

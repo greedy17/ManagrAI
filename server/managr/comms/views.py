@@ -93,6 +93,7 @@ from managr.comms.utils import (
     get_url_traffic_data,
     get_article_data,
     get_social_data,
+    get_trend_articles,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
@@ -3357,6 +3358,19 @@ def get_social_url_data(request):
     urls = request.data.get("urls")
     clip_data = get_social_data(urls)
     return Response(status=status.HTTP_200_OK, data=clip_data)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def get_trending_articles(request):
+    topics = request.data.get("topics")
+    countries = request.data.get("countries")
+    articles = get_trend_articles(topics, countries)
+    if "articles" in articles.keys():
+        return Response(status=status.HTTP_200_OK, data=articles)
+    else:
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=articles)
 
 
 @api_view(["POST"])
