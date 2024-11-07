@@ -2097,8 +2097,8 @@
               :class="{ lbborder: newSearch }"
             >
               <section>
+                <!-- ref="textarea" -->
                 <textarea
-                  ref="textarea"
                   style="width: 100%"
                   :rows="1"
                   id="search-input"
@@ -2169,6 +2169,7 @@
 
       <section v-else class="center-content main">
         <div
+          ref="loadedContent"
           style="position: relative"
           :class="['body widebody', { contentShiftAlt: showingArticles }]"
         >
@@ -2991,7 +2992,7 @@
               </div>
             </div>
           </header>
-          <section ref="loadedContent" class="content-container">
+          <section class="content-container">
             <div
               style="width: 100%; justify-content: space-between"
               class="row"
@@ -3149,17 +3150,22 @@
                   class="secondary-button-white fadein"
                   style="margin: 0"
                 >
-                  View
                   {{
-                    mainView === 'news'
-                      ? `Articles (${articlesFiltered.length})`
-                      : mainView === 'social'
-                      ? `Posts (${filteredTweets.length})`
-                      : `Results (${googleResults.length})`
+                    mainView === 'news' ? `Articles ` : mainView === 'social' ? `Posts ` : `Results`
                   }}
+
+                  <div style="margin-left: 4px" class="row">
+                    <img
+                      v-for="(article, i) in articlesFiltered.slice(0, 3)"
+                      :key="i"
+                      :src="article.image_url"
+                      alt=""
+                      class="circle-img"
+                    />
+                  </div>
                 </button>
 
-                <button
+                <!-- <button
                   v-else
                   @click="showingArticles = false"
                   class="secondary-button-white fadein"
@@ -3172,7 +3178,7 @@
                       ? `Posts (${filteredTweets.length})`
                       : `Results (${googleResults.length})`
                   }}
-                </button>
+                </button> -->
               </div>
 
               <div v-if="summaries.length">
@@ -3181,6 +3187,7 @@
                   class="gradient-border-top"
                   v-for="(summary, i) in summaries"
                   :key="i"
+                  :ref="'summary-' + i"
                 >
                   <h2 style="margin-top: 32px; font-size: 24px" class="bold-text">
                     {{ followUps[i] }}
@@ -3761,7 +3768,7 @@
                   </div>
                 </div>
               </div>
-              <div ref="contentBottom"></div>
+              <!-- <div ref="contentBottom"></div> -->
             </div>
 
             <div v-else-if="mainView === 'social'" class="cards-container">
@@ -3862,7 +3869,7 @@
                 </div>
               </div>
 
-              <div ref="contentBottom"></div>
+              <!-- <div ref="contentBottom"></div> -->
             </div>
           </section>
         </div>
@@ -3886,6 +3893,7 @@
         <section>
           <div style="margin: 8px 0 0 0; width: 100%" class="row">
             <textarea
+              ref="textarea"
               style="max-height: 140px !important; padding-top: 0.25rem"
               class="area-input"
               placeholder="Ask follow-up..."
@@ -4336,12 +4344,15 @@
                 : `Results (${googleResults.length})`
             }}
           </p>
-          <img
-            @click="showingArticles = false"
-            src="@/assets/images/close.svg"
-            height="16px"
-            alt=""
-          />
+
+          <div class="image-container">
+            <img
+              @click="showingArticles = false"
+              src="@/assets/images/close.svg"
+              height="16px"
+              alt=""
+            />
+          </div>
         </div>
         <div class="section">
           <div v-if="mainView === 'news'" class="cards-container">
@@ -4382,7 +4393,7 @@
                   </div>
                 </div>
                 <div style="margin: -4px 0 0 10px">
-                  <p class="turq-text">
+                  <p @click="selectJournalist(article)" class="turq-text">
                     By <span>{{ extractJournalist(article.author) }}</span>
                   </p>
                 </div>
@@ -4417,7 +4428,6 @@
                 </div> -->
               </div>
             </div>
-            <div ref="contentBottom"></div>
           </div>
         </div>
       </div>
@@ -6069,17 +6079,15 @@ www.forbes.com/article-3
         this.$refs.loadedContent.scrollTop = 0
       }, 300)
     },
-    // scrollToTop() {
-    //   setTimeout(() => {
-    //     const container = this.$refs.loadedContent
-    //     container.scrollTop = 0
-    //     container.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    //   }, 300)
-    // },
-    scrollToBottom() {
-      setTimeout(() => {
-        this.$refs.contentBottom.scrollIntoView({ behavior: 'smooth' })
-      }, 300)
+    scrollToSummariesTop() {
+      const latestIndex = this.summaries.length - 1
+
+      if (this.$refs['summary-' + latestIndex]) {
+        this.$refs['summary-' + latestIndex][0].scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        })
+      }
     },
     async getRelevantArticles() {
       let clips = []
@@ -7766,22 +7774,18 @@ www.forbes.com/article-3
     toggleDropdowns() {
       this.expandedView = !this.expandedView
     },
+    scrollToBottom() {
+      this.$nextTick(() => {
+        const chatWindow = this.$refs.loadedContent
+        console.log('here where i should be', chatWindow.scrollHeight)
+        chatWindow.scrollTop = chatWindow.scrollHeight
+      })
+    },
     scrollToChatTop() {
       this.$nextTick(() => {
         const chatWindow = this.$refs.chatWindow
         chatWindow.scrollTop = chatWindow.scrollHeight
       })
-      // this.$nextTick(() => {
-      //   const chatWindow = this.$refs.chatWindow
-      //   const firstChild = chatWindow.firstElementChild // Get the first element in the container
-      //   if (firstChild) {
-      //     firstChild.scrollIntoView({ behavior: 'smooth' }) // Scroll smoothly to the top
-      //   }
-      // })
-      // this.$nextTick(() => {
-      //   console.log('scroll top is here:', this.$refs.chatWindow.scrollTop)
-      //   this.$refs.chatWindow.scrollTop = 0
-      // })
     },
     async generateChatSearch(event) {
       if (!this.isPaid && this.searchesUsed >= 20) {
@@ -8176,6 +8180,7 @@ www.forbes.com/article-3
           .then((response) => {
             let urls = []
             this.filteredArticles = response.articles
+            console.log(this.filteredArticles)
             urls = response.articles.map((art) => {
               return art.link
             })
@@ -8452,6 +8457,8 @@ www.forbes.com/article-3
 
       this.followUps.push(this.newTemplate)
       this.newTemplate = ''
+      this.$refs.textarea.dispatchEvent(new Event('textarea-clear'))
+      this.scrollToBottom()
       this.chatSummaryLoading = true
       this.showingPromptDropdown = false
       this.showSummaryMenu = false
@@ -8580,7 +8587,12 @@ www.forbes.com/article-3
           })
         }
       } finally {
-        this.scrollToTop()
+        if (this.summaries.length) {
+          this.scrollToSummariesTop()
+        } else {
+          this.scrollToTop()
+        }
+
         if (openAiDown) {
           // this.changeSearch({ search: null, template: null })
           this.resetSearch()
@@ -11768,6 +11780,7 @@ li {
       min-height: 20vh;
       padding: 8px 32px 16px 32px;
       margin-bottom: 16px;
+      overflow-y: scroll;
       // border-bottom: 0.5px solid transparent;
       // border-image: linear-gradient(
       //   to right,
@@ -14008,10 +14021,14 @@ textarea::placeholder {
   span {
     color: #3b8ec0;
     font-family: $base-font-family;
-    &:hover {
+  }
+
+  &:hover {
+    span {
       text-decoration: underline;
-      cursor: pointer;
     }
+
+    cursor: pointer;
   }
 }
 
@@ -14415,5 +14432,11 @@ select {
 .thin-text {
   font-family: $thin-font-family !important;
   margin: 0 !important;
+}
+
+.circle-img {
+  border-radius: 50%;
+  height: 14px;
+  width: 14px;
 }
 </style>
