@@ -233,6 +233,8 @@ class PRSearchViewSet(
         clips = request.data.get("clips")
         search = request.data.get("search")
         instructions = request.data.get("instructions", False)
+        previous = request.data.get("previous", False)
+        print('PREVIOUS IS HERE -- > :', previous)
         company = request.data.get("company")
         if "journalist:" in search:
             instructions = comms_consts.JOURNALIST_INSTRUCTIONS(company)
@@ -243,7 +245,7 @@ class PRSearchViewSet(
         while True:
             try:
                 res = Search.get_summary(
-                    request.user, token_amount, timeout, clips, search, instructions, True
+                    request.user, token_amount, timeout, clips, search,previous,instructions, True
                 )
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("news_summaries")
@@ -1673,7 +1675,6 @@ class AssistAlertViewSet(
         alert_id = request.data.get("alert_id")
         social = request.data.get("social")
         if social:
-            print("In Social")
             emit_send_social_summary(alert_id, str(datetime.now()))
         else:
             emit_send_news_summary(alert_id, str(datetime.now()))

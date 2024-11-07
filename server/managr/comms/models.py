@@ -87,11 +87,9 @@ class Search(TimeStampModel):
 
     @classmethod
     def get_summary(
-        cls, user, tokens, timeout, clips, input_text, instructions=False, for_client=False
+        cls, user, tokens, timeout, clips, input_text, previous, instructions=False, for_client=False
     ):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-
-        print(clips)
 
         prompt = (
             comms_consts.OPEN_AI_NEWS_CLIPS_SUMMARY(
@@ -99,13 +97,13 @@ class Search(TimeStampModel):
             )
             if for_client
             else comms_consts.OPEN_AI_NEWS_CLIPS_SLACK_SUMMARY(
-                datetime.now().date(), clips, input_text, instructions, for_client
+                datetime.now().date(), clips, input_text, previous, instructions, for_client
             )
         )
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
             user.email,
             prompt,
-            "You are a VP of Communications",
+            "Your name is Elma. You're an AI assistant designed for PR professionals, specializing in media relations, communications, and social media. PR-savvy and strategic, you’re data-driven, innovative, and skilled at delivering precise, audience-targeted responses with a storytelling edge",
             temperature=0.1,
             top_p=0.1,
             # model="o1-mini",
