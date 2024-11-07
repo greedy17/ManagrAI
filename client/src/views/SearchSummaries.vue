@@ -2175,9 +2175,9 @@
         >
           <header class="content-header-test">
             <div class="row-top">
-              <!-- <div class="image-container xxl-margin mobile-img" @click="resetAll">
+              <div style="margin-top: 18px" class="image-container xxl-margin" @click="resetAll">
                 <img src="@/assets/images/goBack.svg" height="17px" alt="" />
-              </div> -->
+              </div>
 
               <p
                 v-if="
@@ -3165,20 +3165,16 @@
                   </div>
                 </button>
 
-                <!-- <button
+                <button
                   v-else
                   @click="showingArticles = false"
                   class="secondary-button-white fadein"
                 >
                   Hide
                   {{
-                    mainView === 'news'
-                      ? `Articles (${articlesFiltered.length})`
-                      : mainView === 'social'
-                      ? `Posts (${filteredTweets.length})`
-                      : `Results (${googleResults.length})`
+                    mainView === 'news' ? `Articles` : mainView === 'social' ? `Posts` : `Results`
                   }}
-                </button> -->
+                </button>
               </div>
 
               <div v-if="summaries.length">
@@ -11468,8 +11464,12 @@ li {
   padding: 16px 33vw 16px 10vw !important;
 }
 
+.sidebar-aside.open {
+  transform: translateX(0);
+}
+
 .sidebar-aside {
-  position: absolute;
+  position: fixed;
   top: 0;
   bottom: 0;
   width: 28vw;
@@ -11478,13 +11478,27 @@ li {
   overflow-x: hidden;
   padding-top: 32px;
   background: white;
-  right: -100%;
+  right: 0;
   z-index: 100;
-  transition: left 0.3s ease-in-out;
+  transition: right 0.3s ease;
+  transform: translateX(-100%);
 
-  &.open {
-    right: 0;
-  }
+  // position: absolute;
+  // top: 0;
+  // bottom: 0;
+  // width: 28vw;
+  // height: 100%;
+  // overflow-y: scroll;
+  // overflow-x: hidden;
+  // padding-top: 32px;
+  // background: white;
+  // right: -100%;
+  // z-index: 100;
+  // transition: right 0.3s ease-in-out;
+
+  // &.open {
+  //   right: 0;
+  // }
 
   @media (max-width: 768px) {
     width: 100%;
@@ -11557,7 +11571,7 @@ li {
 }
 
 .xxl-margin {
-  margin-right: 18px;
+  margin-right: 4px;
   margin-top: 16px;
 
   @media only screen and (max-width: 600px) {
@@ -11778,8 +11792,8 @@ li {
       justify-content: flex-start;
       width: 100%;
       min-height: 20vh;
-      padding: 8px 32px 16px 32px;
-      margin-bottom: 16px;
+      padding: 8px 32px 0 32px;
+      // margin-bottom: 16px;
       overflow-y: scroll;
       // border-bottom: 0.5px solid transparent;
       // border-image: linear-gradient(

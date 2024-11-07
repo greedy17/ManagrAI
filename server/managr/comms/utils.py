@@ -125,7 +125,8 @@ def generate_config():
     config.browser_user_agent = (
         "Mozilla/5.0 (compatible; managr-webcrawler/1.0; +https://managr.ai/documentation)"
     )
-    config.request_timeout = 10
+    config.request_timeout = 30
+    config.language = "en"
     return config
 
 
@@ -1085,6 +1086,7 @@ def get_social_data(urls):
                     results = res["results"]
                     social_data[url] = results
                 else:
+                    print(vars(res))
                     social_data[url] = {}
         except Exception:
             social_data[url] = {}

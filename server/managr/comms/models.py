@@ -334,6 +334,7 @@ class NewsSource(TimeStampModel):
         default="HTML",
     )
     access_count = JSONField(default=dict, null=True, blank=True)
+    icon = models.TextField(null=True, blank=True)
     # Web Scraping Fields
     category_link_selector = models.CharField(max_length=255, blank=True, null=True)
     category_name_attribute = models.CharField(max_length=50, blank=True, null=True)
