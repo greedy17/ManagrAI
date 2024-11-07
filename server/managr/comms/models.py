@@ -87,7 +87,15 @@ class Search(TimeStampModel):
 
     @classmethod
     def get_summary(
-        cls, user, tokens, timeout, clips, input_text, previous, instructions=False, for_client=False
+        cls,
+        user,
+        tokens,
+        timeout,
+        clips,
+        input_text,
+        previous,
+        instructions=False,
+        for_client=False,
     ):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
 
@@ -642,7 +650,7 @@ class Article(TimeStampModel):
             publish_date=str(self.publish_date),
             link=self.link,
             image_url=self.image_url,
-            source={"name": site_name},
+            source={"name": site_name, "icon": self.source.icon},
         )
         if internal_flag:
             fields["i"] = True

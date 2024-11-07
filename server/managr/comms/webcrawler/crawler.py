@@ -251,6 +251,14 @@ class NewsSpider(scrapy.Spider):
                 break
         return site_name
 
+    def get_site_icon(self, response):
+        xpath = "//link[@rel='icon']/@href"
+        icon_href = response.xpath(xpath).get()
+        if icon_href:
+            if icon_href[0] == "/":
+                icon_href = response.request.url + icon_href
+        return icon_href
+
     def parse(self, response):
         original_check = response.meta.get("redirect_urls", [])
         if self.print_response:
@@ -329,6 +337,9 @@ class NewsSpider(scrapy.Spider):
                 if source.site_name is None and response.status != 403:
                     site_name = self.get_site_name(response)
                     source.site_name = site_name
+                if source.icon is None and response.status < 300:
+                    icon_href = self.get_site_icon(response)
+                    source.icon = icon_href
                 current_datetime = datetime.datetime.now()
                 source.last_scraped = timezone.make_aware(
                     current_datetime, timezone.get_current_timezone()
