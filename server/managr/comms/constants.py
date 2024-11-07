@@ -342,21 +342,25 @@ def TWITTER_USERNAME_INSTRUCTIONS(company):
     return f"Summarize the tweets from the author, then you must provide a factual background on the author (important: do not make it up). Lastly, provide pitching tips for user who works for {company} "
 
 
-def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_client=False):
+def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, previous, instructions=False, for_client=False):
     # if not instructions:
     #     instructions = DEFAULT_CLIENT_INSTRUCTIONS
 
+    # Here is your previous response:
+    # {previous}
+
     body = f"""
-    Today is {date}. Please provide a concise and accurate response based on the news coverage below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the news coverage in 150 words or less. 
+    Today is {date}. Please provide a concise and accurate response based on the news coverage below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the news coverage.
     Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
     Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link. 
 
-    Here is the news coverage:
-    {clips}
 
     Here are the instructions:
     {instructions}
 
+    Here is the news coverage:
+    {clips}
+  
     \n
     \n
 

@@ -1028,7 +1028,7 @@
         <div class="small-container letter-spacing">
           <div>
             <div class="centered">
-              <h1>Your AI-powered PR assistant</h1>
+              <h1>Your AI-powered PR assistant, Elma</h1>
             </div>
             <!-- <div class="rows">
               <div
@@ -1059,6 +1059,7 @@
               <div class="input-container-gray" :class="{ lbborder: newSearch }">
                 <section>
                   <div style="margin: 8px 0 0 8px; width: 100%" class="row">
+                    <!-- :placeholder="placeHolderText" -->
                     <textarea
                       style="margin-left: -8px; width: 100%"
                       :rows="1"
@@ -1066,7 +1067,7 @@
                       @keyup.enter="generateNewSearch($event, false)"
                       class="area-input"
                       autocomplete="off"
-                      :placeholder="placeHolderText"
+                      placeholder="Message Elma..."
                       v-model="newSearch"
                       v-autoresize
                       :disabled="
@@ -1119,7 +1120,7 @@
                         />
                         <img
                           v-else-if="mainView === 'news'"
-                          src="@/assets/images/newspaper.svg"
+                          src="@/assets/images/globe.svg"
                           height="15px"
                           alt=""
                         />
@@ -1174,17 +1175,17 @@
                             Default
                           </span>
 
-                          <p>Generate content or ask a follow up</p>
+                          <p>Get PR suggestions or generate content</p>
                         </div>
                         <div
                           @click="switchMainView('news')"
                           :class="{ activeswitch: mainView === 'news' }"
                         >
                           <span>
-                            <img src="@/assets/images/newspaper.svg" height="11px" alt="" />
+                            <img src="@/assets/images/globe.svg" height="11px" alt="" />
                             News
                           </span>
-                          <p>Search through real time news</p>
+                          <p>Search through real-time news outlets</p>
                         </div>
                         <div
                           @click="switchMainView('social')"
@@ -1206,7 +1207,7 @@
                             Media list
                           </span>
 
-                          <p>Find relevnt media contacts</p>
+                          <p>Discover relevant media contacts</p>
                         </div>
                         <div
                           @click="switchMainView('web')"
@@ -2173,9 +2174,9 @@
         >
           <header class="content-header-test">
             <div class="row-top">
-              <div class="image-container xxl-margin mobile-img" @click="resetAll">
+              <!-- <div class="image-container xxl-margin mobile-img" @click="resetAll">
                 <img src="@/assets/images/goBack.svg" height="17px" alt="" />
-              </div>
+              </div> -->
 
               <p
                 v-if="
@@ -2998,7 +2999,7 @@
             >
               <div style="width: 24%" v-for="(article, i) in articlesFiltered.slice(0, 4)" :key="i">
                 <img
-                  @click="goToArticle(article.link)"
+                  @click="showingArticles = true"
                   :src="article.image_url"
                   @error="onImageError($event)"
                   class="card-photo-header-small"
@@ -3137,15 +3138,15 @@
                 </div>
               </div>
 
+              <!-- class="gradient-border-btm" -->
               <div
-                class="gradient-border-btm"
                 style="margin: 8px 0 16px 0; padding-bottom: 24px"
                 v-if="mainView !== 'write' && mainView !== 'discover'"
               >
                 <button
                   v-if="!showingArticles"
                   @click="showingArticles = true"
-                  class="primary-button fadein"
+                  class="secondary-button-white fadein"
                   style="margin: 0"
                 >
                   View
@@ -3177,13 +3178,13 @@
               <div v-if="summaries.length">
                 <div
                   style="padding-bottom: 24px"
-                  class="gradient-border-btm"
+                  class="gradient-border-top"
                   v-for="(summary, i) in summaries"
                   :key="i"
                 >
-                  <h3 style="margin-top: 32px" class="bold-text">
+                  <h2 style="margin-top: 32px; font-size: 24px" class="bold-text">
                     {{ followUps[i] }}
-                  </h3>
+                  </h2>
                   <div
                     style="margin-top: 24px"
                     v-html="insertNewsCitations(summary)"
@@ -3193,7 +3194,7 @@
                   <button
                     v-if="!showingArticles"
                     @click="showingArticles = true"
-                    class="primary-button fadein"
+                    class="secondary-button-white fadein"
                     style="margin: 0"
                   >
                     View
@@ -3957,7 +3958,7 @@
                 />
                 <img
                   v-else-if="mainView === 'news'"
-                  src="@/assets/images/newspaper.svg"
+                  src="@/assets/images/globe.svg"
                   height="15px"
                   alt=""
                 />
@@ -4010,7 +4011,7 @@
                 </div>
                 <div @click="switchMainView('news')" :class="{ activeswitch: mainView === 'news' }">
                   <span>
-                    <img src="@/assets/images/newspaper.svg" height="11px" alt="" />
+                    <img src="@/assets/images/globe.svg" height="11px" alt="" />
                     News
                   </span>
                   <p>Search through real time news</p>
@@ -4316,7 +4317,14 @@
     <div style="width: 100vw" v-if="selectedSearch">
       <div v-if="summary && showingArticles" :class="['sidebar-aside', { open: showingArticles }]">
         <div
-          style="padding: 0 16px; position: sticky; top: 0; z-index: 100; background-color: white"
+          style="
+            padding: 0 16px;
+            position: sticky;
+            top: 24px;
+            z-index: 100;
+            background-color: white;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+          "
           class="space-between"
         >
           <p class="bold-text">
@@ -4343,43 +4351,24 @@
               class="card"
               :class="{
                 widecard: article.summary && mainView !== 'web',
-                silverbg: articlesShowingDetails.includes(i),
               }"
             >
               <div style="width: 100%">
                 <div class="main-body">
                   <div>
-                    <small>{{ article.source.name }}</small>
-                    <p
-                      style="font-size: 15px; cursor: pointer"
-                      class="p-header"
-                      @click="goToArticle(article.link)"
-                    >
+                    <div style="margin: 0 0 4px -2px" class="row">
+                      <img src="@/assets/images/iconlogo.png" height="16px" width="16px" alt="" />
+                      <small st>{{ article.source.name }}</small>
+                    </div>
+
+                    <p style="cursor: pointer" @click="goToArticle(article.link)">
                       {{ article.title }}
                     </p>
-
-                    <div style="border-bottom: none" class="author-time">
-                      <div
-                        @click="selectJournalist(article)"
-                        style="cursor: pointer"
-                        class="author row"
-                        title="View Bio"
-                      >
-                        <img
-                          style="margin-right: 4px; margin-top: 3px"
-                          src="@/assets/images/profile.svg"
-                          height="9px"
-                          alt=""
-                        />
-
-                        <p style="text-decoration: none; border: none">
-                          {{ extractJournalist(article.author) }}
-                        </p>
-                      </div>
-                      <span class="divider-dot">.</span>
-                      <span class="off-gray time">{{
-                        getTimeDifferenceInMinutes(article.publish_date)
-                      }}</span>
+                    <div style="border-bottom: none; font-size: 14px; color: #484a6e" class="row">
+                      <p class="thin-text">
+                        <span>{{ getTimeDifferenceInMinutes(article.publish_date) }} </span> -
+                        {{ article.description }}
+                      </p>
                     </div>
                   </div>
 
@@ -4392,71 +4381,12 @@
                     />
                   </div>
                 </div>
-                <!-- <div class="main-footer">
-                  <div style="border-bottom: none" class="author-time">
-                    <div
-                      @click="selectJournalist(article)"
-                      style="cursor: pointer"
-                      class="author row"
-                      title="View Bio"
-                    >
-                      <img
-                        style="margin-right: 4px"
-                        src="@/assets/images/profile.svg"
-                        height="10px"
-                        alt=""
-                      />
-
-                      <p style="text-decoration: none; border: none">
-                        {{ extractJournalist(article.author) }}
-                      </p>
-                    </div>
-                    <span class="divider-dot">.</span>
-                    <span class="off-gray time">{{
-                      getTimeDifferenceInMinutes(article.publish_date)
-                    }}</span>
-                  </div>
-                </div> -->
-
-                <!-- <div class="footer-icon-container">
-                    <div class="row">
-                      <span v-if="!article.summary" class="s-wrapper">
-                        <div
-                          v-if="articleSummaryLoading && loadingUrl === article.link"
-                          class="loading-smallest"
-                        >
-                          <div class="dot"></div>
-                          <div class="dot"></div>
-                        </div>
-
-                        <button
-                          v-else
-                          @click="getArticleSummary(article.link)"
-                          class="borderless img-container-button"
-                          :disabled="
-                            articleSummaryLoading || loading || summaryLoading || savingSearch
-                          "
-                        >
-                          <img
-                            v-if="loadingUrl !== article.link"
-                            src="@/assets/images/sparkles-thin.svg"
-                            height="14px"
-                            alt=""
-                          />
-                        </button>
-
-                        <span style="width: 80px" class="s-tooltip">Summarize</span>
-                      </span>
-
-                      <img
-                        v-else
-                        src="@/assets/images/sparkle.svg"
-                        class="right-arrow-footer blue-icon"
-                      />
-                    </div>
-                  </div> -->
-
-                <div v-if="articlesShowingDetails.includes(i)" style="margin: 8px" class="row">
+                <div style="margin: -4px 0 0 10px">
+                  <p class="turq-text">
+                    By <span>{{ extractJournalist(article.author) }}</span>
+                  </p>
+                </div>
+                <!-- <div v-if="articlesShowingDetails.includes(i)" style="margin: 8px" class="row">
                   <button
                     @click="selectJournalist(article)"
                     style="font-size: 10px; margin-right: 8px"
@@ -4469,14 +4399,14 @@
                     style="font-size: 10px"
                     class="secondary-button-white"
                   >
-                    Article insights
+                    Article Insights
                   </button>
                 </div>
 
                 <div
                   v-else
                   @click="toggleArticleActions(i)"
-                  style="margin: 0 0 0 8px; cursor: pointer"
+                  style="margin: 4px 0 0 8px; cursor: pointer; width: fit-content"
                 >
                   <img
                     src="@/assets/images/more_horizontal.svg"
@@ -4484,128 +4414,7 @@
                     width="22px"
                     alt=""
                   />
-                </div>
-              </div>
-
-              <div class="cardwidth" style="background: #e9f3fa" v-if="article.summary">
-                <div class="relative">
-                  <pre v-html="article.summary" class="pre-text blue-text-bg"></pre>
-                </div>
-
-                <div class="regenerate-article">
-                  <div v-if="!showArticleRegenerate" class="row-end">
-                    <div class="relative left-margin">
-                      <div
-                        @click.stop="toggleArticleGenerateDropdown"
-                        class="row pointer nav-text dropdownBorder"
-                        :class="{ softgraybg: showArticleGenerateDropdown }"
-                      >
-                        <img
-                          style="margin-right: 8px"
-                          src="@/assets/images/wand.svg"
-                          height="14px"
-                          alt=""
-                        />
-                        Generate: <span>{{ contentType }}</span>
-                        <img
-                          v-if="!showArticleGenerateDropdown && !contentLoading"
-                          src="@/assets/images/downArrow.svg"
-                          class=""
-                          height="14px"
-                          alt=""
-                        />
-                        <img
-                          v-if="showArticleGenerateDropdown && !contentLoading"
-                          src="@/assets/images/downArrow.svg"
-                          class="rotate"
-                          height="14px"
-                          alt=""
-                        />
-                        <div
-                          style="margin-left: 4px"
-                          v-else-if="contentLoading"
-                          class="loading-small"
-                        >
-                          <div class="dot"></div>
-                          <div class="dot"></div>
-                          <div class="dot"></div>
-                        </div>
-                      </div>
-
-                      <div
-                        v-show="showArticleGenerateDropdown"
-                        v-outside-click="hideArticleDropdown"
-                        class="search-dropdown"
-                      >
-                        <div class="searches-container">
-                          <div
-                            class="row relative"
-                            v-for="(option, i) in articleGenerateOptions"
-                            :key="option.value"
-                          >
-                            <p @click="selectArticleOption(article.link, option.value, i)">
-                              {{ option.name }}
-                            </p>
-
-                            <img
-                              v-show="contentLoading && optionIndex === i"
-                              src="@/assets/images/loading.svg"
-                              class="rotation"
-                              height="12px"
-                              alt=""
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="full-width" v-else>
-                    <textarea
-                      :disabled="articleSummaryLoading || loading || summaryLoading || savingSearch"
-                      autofocus
-                      class="area-input-outline wider"
-                      placeholder="Provide additional instructions"
-                      v-autoresize
-                      v-model="articleInstructions"
-                    />
-
-                    <div class="row">
-                      <button @click="toggleArticleRegenerate" class="secondary-button">
-                        Cancel
-                      </button>
-
-                      <button
-                        @click="
-                          regenerateArticleSummary(
-                            article.link,
-                            article.summary,
-                            articleInstructions,
-                          )
-                        "
-                        :disabled="
-                          articleSummaryLoading || loading || summaryLoading || savingSearch
-                        "
-                        class="primary-button"
-                      >
-                        {{
-                          articleSummaryLoading && loadingUrl === article.link
-                            ? 'Submitting'
-                            : 'Submit'
-                        }}
-                        <div
-                          style="margin-left: 4px"
-                          v-if="articleSummaryLoading && loadingUrl === article.link"
-                          class="loading-small"
-                        >
-                          <div class="dot"></div>
-                          <div class="dot"></div>
-                          <div class="dot"></div>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                </div> -->
               </div>
             </div>
             <div ref="contentBottom"></div>
@@ -7928,10 +7737,11 @@ www.forbes.com/article-3
           } else {
             year = '--'
           }
-          return `${month}/${day}/${year}`
+          // return `${month}/${day}/${year}`
+          return `${month}/${day}`
         }
       } else {
-        return '--/--/----'
+        return '--/--/'
       }
     },
     openPaidModal(msg) {
@@ -8647,7 +8457,11 @@ www.forbes.com/article-3
       this.showSummaryMenu = false
       try {
         if (this.mainView === 'news') {
-          await this.getSummary(clips, instructions)
+          if (this.summaries.length) {
+            await this.getSummary(clips, instructions, this.summaries[this.summaries.length - 1])
+          } else {
+            await this.getSummary(clips, instructions)
+          }
         } else if (this.mainView === 'social') {
           await this.getSummary(clips, instructions, true)
         } else if (this.mainView === 'web') {
@@ -8684,7 +8498,7 @@ www.forbes.com/article-3
         this.scrollToTop()
       }
     },
-    async getSummary(clips, instructions = '', twitter = false, chatSummary = null) {
+    async getSummary(clips, instructions = '', previous, twitter = false, chatSummary = null) {
       this.citationsMounted = false
       let allClips
       if (!twitter) {
@@ -8702,9 +8516,7 @@ www.forbes.com/article-3
       }
 
       let openAiDown = false
-
       // this.summary = ''
-
       try {
         if (this.shouldCancel) {
           return this.stopLoading()
@@ -8720,6 +8532,7 @@ www.forbes.com/article-3
               search: this.newSearch,
               instructions: instructions,
               company: this.selectedOrg,
+              previous: previous ? previous : null,
             },
             this.controllers.getSummary.controller.signal,
           )
@@ -8732,14 +8545,12 @@ www.forbes.com/article-3
             }
             this.originalSummary = response.summary
             if (this.summary) {
-              console.log('should be here as well')
               this.summaries.push(
                 response.summary
                   .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
                   .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>'),
               )
             } else {
-              console.log('Not here either')
               this.summary = response.summary
                 .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
                 .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
@@ -9003,7 +8814,7 @@ www.forbes.com/article-3
       } else if (this.mainView === 'web') {
         text = 'Search the web...'
       } else if (this.mainView === 'write') {
-        text = 'Message ManagrAI...'
+        text = 'Message Elma...'
       } else if (this.mainView === 'discover') {
         text = 'Find relevant journalists...'
       }
@@ -9548,7 +9359,15 @@ www.forbes.com/article-3
   h2,
   h3 {
     font-family: $base-font-family;
+  }
+
+  strong,
+  h3 {
     font-size: 16px !important;
+  }
+
+  h2 {
+    font-size: 20px !important;
   }
 
   .primary-button {
@@ -11639,10 +11458,10 @@ li {
 
 .sidebar-aside {
   position: absolute;
-  top: 40px;
+  top: 0;
   bottom: 0;
-  width: 25vw;
-  height: 94%;
+  width: 28vw;
+  height: 100%;
   overflow-y: scroll;
   overflow-x: hidden;
   padding-top: 32px;
@@ -11914,6 +11733,18 @@ li {
       @media only screen and (min-width: 601px) and (max-width: 1024px) {
         padding: 0;
       }
+    }
+
+    .gradient-border-top {
+      border-top: 1px solid transparent;
+      border-image: linear-gradient(
+        to right,
+        transparent 2%,
+        rgba(0, 0, 0, 0.1) 2%,
+        rgba(0, 0, 0, 0.1) 98%,
+        transparent 98%
+      );
+      border-image-slice: 1;
     }
 
     .gradient-border-btm {
@@ -13477,9 +13308,9 @@ textarea::placeholder {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  padding-top: 16px;
   // flex-wrap: wrap;
   // padding: 24px 0;
-  gap: 4px;
 
   @media only screen and (max-width: 600px) {
     // gap: 8px;
@@ -13544,29 +13375,32 @@ textarea::placeholder {
     align-items: center;
     justify-content: space-between;
     padding: 16px 10px 0 10px;
-    height: 75px;
-    overflow: hidden;
+    // min-height: 75px;
+    // overflow: hidden;
     margin: 0 !important;
 
     img {
       filter: none;
     }
-
     p {
-      margin: 4px 0 2px 0;
-      font-size: 12px !important;
-      max-width: 16vw;
-      white-space: nowrap;
+      margin: 6px 0;
+      font-size: 14px !important;
+      max-width: 20vw;
+      max-height: 40px;
       overflow: hidden;
       text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2; /* Limits text to 2 lines */
       font-family: $base-font-family;
       font-weight: 200;
     }
+
     small {
-      font-size: 13px;
-      margin-bottom: 5px !important;
-      color: $light-gray-blue;
-      max-width: 16vw;
+      font-family: $base-font-family;
+      font-size: 12px;
+      color: $dark-black-blue;
+      max-width: 20vw;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -13587,8 +13421,6 @@ textarea::placeholder {
     // box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     background-color: $silver;
   }
-
-  border-bottom: 2px solid $off-white;
 }
 
 .card-photo-header-small {
@@ -14171,7 +14003,16 @@ textarea::placeholder {
 }
 
 .turq-text {
-  color: $turq;
+  font-size: 14px;
+
+  span {
+    color: #3b8ec0;
+    font-family: $base-font-family;
+    &:hover {
+      text-decoration: underline;
+      cursor: pointer;
+    }
+  }
 }
 
 .pink-filter {
@@ -14570,5 +14411,9 @@ select {
 
 .bold-text {
   font-family: $base-font-family !important;
+}
+.thin-text {
+  font-family: $thin-font-family !important;
+  margin: 0 !important;
 }
 </style>
