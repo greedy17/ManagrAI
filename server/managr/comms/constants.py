@@ -917,6 +917,7 @@ EXCLUDE_DOMAINS = [
     "dansdeals.com",
     "superpunch.net",
     "securityaffairs.com",
+    "fuckingyoung.es",
 ]
 
 JOURNALIST_CHOICES = [
