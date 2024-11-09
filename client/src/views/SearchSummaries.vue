@@ -594,7 +594,7 @@
               </div>
             </div>
 
-            <div style="margin-top: -4px" class="source-dropdown fadein">
+            <div style="margin-top: -4px; margin-left: 8px" class="source-dropdown fadein">
               <div
                 @click.stop="toggleShowDetailsEmail"
                 :class="{ 'soft-gray-bg': showingDetailsEmail }"

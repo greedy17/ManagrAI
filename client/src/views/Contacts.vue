@@ -491,7 +491,7 @@
               >
                 <!-- <img src="@/assets/images/building.svg" height="14px" alt="" /> -->
 
-                <p class="mobile-text-hide">Company Details:</p>
+                <p class="mobile-text-hide">Project:</p>
                 <small :title="detailTitle ? detailTitle : 'None'">{{
                   detailTitle ? detailTitle : 'None'
                 }}</small>
