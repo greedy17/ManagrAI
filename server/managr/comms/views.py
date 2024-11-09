@@ -1,4 +1,5 @@
 import json
+from django.db.models.fields import FloatField
 import httpx
 import logging
 import io
@@ -114,6 +115,7 @@ def getclips(request):
         date_to = request.GET.get("date_to", False)
         date_from = request.GET.get("date_from", False)
         is_report = request.GET.get("is_report", False)
+        suggestions = ''
         if "journalist:" in search:
             internal_articles = InternalArticle.search_by_query(search, date_to, date_from, True)
             articles = normalize_article_data([], internal_articles)
@@ -146,6 +148,9 @@ def getclips(request):
             query_input, date_to, date_from, False, is_report
         )
         articles = normalize_article_data(articles, internal_articles, is_report)
+        if not articles:
+            suggestions = Search.no_results(user.email, query_input)
+            query_input = suggestions.get("choices")[0].get("message").get("content")  
         return {"articles": articles, "string": query_input}
 
     except Exception as e:
@@ -235,7 +240,7 @@ class PRSearchViewSet(
         search = request.data.get("search")
         instructions = request.data.get("instructions", False)
         previous = request.data.get("previous", False)
-        print('PREVIOUS IS HERE -- > :', previous)
+        is_follow_up = request.data.get("followUp", False)
         company = request.data.get("company")
         if "journalist:" in search:
             instructions = comms_consts.JOURNALIST_INSTRUCTIONS(company)
@@ -246,7 +251,7 @@ class PRSearchViewSet(
         while True:
             try:
                 res = Search.get_summary(
-                    request.user, token_amount, timeout, clips, search,previous,instructions, True
+                    request.user, token_amount, timeout, clips, search, previous, is_follow_up, company, instructions, True
                 )
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("news_summaries")
@@ -1191,6 +1196,7 @@ class PitchViewSet(
         pitch = request.data.get("pitch")
         style = request.data.get("style")
         details = request.data.get("details")
+        elma = core_consts.ELMA
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -1200,7 +1206,7 @@ class PitchViewSet(
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS(
-                    pitch, instructions, style, details
+                   elma, pitch, instructions, style, details
                 )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
@@ -3074,6 +3080,7 @@ def get_google_summary(request):
     summary = request.data.get("summary")
     results = request.data.get("results", None)
     text = ""
+    elma = core_consts.ELMA
     if not instructions or not summary:
         res = alternate_google_search(query)
         if len(res) == 0:
@@ -3098,7 +3105,7 @@ def get_google_summary(request):
     while True:
         try:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary)
+            prompt = comms_consts.OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary, elma)
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
                 prompt,

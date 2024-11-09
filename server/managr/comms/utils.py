@@ -659,7 +659,7 @@ def google_search(query, number_of_results=5, include_images=True):
             return {}
 
 
-def alternate_google_search(query, number_of_results=5):
+def alternate_google_search(query, number_of_results=6):
     url = comms_consts.GOOGLE_SEARCH_URI
     params = comms_consts.GOOGLE_SEARCH_PARAMS(query, number_of_results)
     with Variable_Client() as client:

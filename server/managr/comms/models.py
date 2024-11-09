@@ -87,23 +87,42 @@ class Search(TimeStampModel):
 
     @classmethod
     def get_summary(
-        cls, user, tokens, timeout, clips, input_text, previous, instructions=False, for_client=False
+        cls,
+        user,
+        tokens,
+        timeout,
+        clips,
+        input_text,
+        previous,
+        is_follow__up,
+        company,
+        instructions=False,
+        for_client=False,
     ):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-
-        prompt = (
-            comms_consts.OPEN_AI_NEWS_CLIPS_SUMMARY(
-                datetime.now().date(), clips, input_text, instructions, for_client
+        elma = core_consts.ELMA
+        
+        if is_follow__up:
+            prompt = (
+                comms_consts.SUMMARY_FOLLOW_UP(
+                    datetime.now().date(), clips, previous, company, elma, instructions
+                )
             )
-            if for_client
-            else comms_consts.OPEN_AI_NEWS_CLIPS_SLACK_SUMMARY(
-                datetime.now().date(), clips, input_text, previous, instructions, for_client
-            )
-        )
+        else: 
+            prompt = (
+                comms_consts.OPEN_AI_NEWS_CLIPS_SUMMARY(
+                    datetime.now().date(), clips, input_text, company, elma, instructions, for_client
+                )
+                if for_client
+                else comms_consts.OPEN_AI_NEWS_CLIPS_SLACK_SUMMARY(
+                    datetime.now().date(), clips, input_text, previous, instructions, for_client
+                )
+            )  
+        
+        print('THE PROMPT IS HERE ---- > :', prompt)
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
             user.email,
             prompt,
-            "Your name is Elma. You're an AI assistant designed for PR professionals, specializing in media relations, communications, and social media. PR-savvy and strategic, you’re data-driven, innovative, and skilled at delivering precise, audience-targeted responses with a storytelling edge",
             temperature=0.1,
             top_p=0.1,
             # model="o1-mini",
@@ -162,6 +181,31 @@ class Search(TimeStampModel):
         with Variable_Client() as client:
             new_res = client.get(news_url, headers=comms_consts.NEWS_API_HEADERS)
         return _handle_news_response(new_res)
+
+    @classmethod
+    def no_results(cls, user, boolean):
+        print('BOOLEAN IS HERE' , boolean)
+        timeout = 60.0
+        url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+
+        prompt = (
+            comms_consts.OPEN_AI_NO_RESULTS(
+                boolean
+            )
+        )
+        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+            user,
+            prompt,
+            top_p=0.1,
+            # model="o1-mini",
+        )
+        with Variable_Client(timeout) as client:
+            r = client.post(
+                url,
+                data=json.dumps(body),
+                headers=core_consts.OPEN_AI_HEADERS,
+            )
+        return open_ai_exceptions._handle_response(r)    
 
     def generate_shareable_link(self):
         date = str(datetime.now())
@@ -308,9 +352,10 @@ class Pitch(TimeStampModel):
 
     @classmethod
     def generate_pitch(cls, user, type, instructions, style, tokens, timeout):
+        elma = core_consts.ELMA
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
         # style = user.writing_style if user.writing_style else False
-        prompt = comms_consts.OPEN_AI_PITCH(datetime.now().date(), type, instructions, style)
+        prompt = comms_consts.OPEN_AI_PITCH(datetime.now().date(), type, instructions, elma, style)
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(user.email, prompt, model="o1-mini")
         with Variable_Client(timeout) as client:
             r = client.post(
@@ -642,7 +687,7 @@ class Article(TimeStampModel):
             publish_date=str(self.publish_date),
             link=self.link,
             image_url=self.image_url,
-            source={"name": site_name},
+            source={"name": site_name, "icon": self.source.icon},
         )
         if internal_flag:
             fields["i"] = True
