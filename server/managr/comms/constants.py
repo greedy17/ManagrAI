@@ -63,6 +63,7 @@ SEMRUSH_TRAFFIC_URI = "https://api.semrush.com/analytics/ta/api/v3/summary"
 
 BUZZSUMO_API_KEY = settings.BUZZSUMO_API_KEY
 BUZZSUMO_SEARCH_URI = "https://api.buzzsumo.com/search/articles.json"
+BUZZSUMO_TRENDS_URI = "https://api.buzzsumo.com/search/trends.json"
 
 
 def SEMRUSH_PARAMS(urls):
@@ -99,7 +100,7 @@ def OPEN_AI_GET_INSIGHTS(notes, activity, bio, instructions):
     return prompt
 
 
-def OPEN_AI_TRACKER_INSIGHTS(bio, instructions):    
+def OPEN_AI_TRACKER_INSIGHTS(bio, instructions):
     prompt = f"""
     You are a proactive and detail-oriented VP of Communications. A data-driven leader who champions collaboration and technological innovation. Excellent communicator focused on strategic management, team accountability, and continuously enhancing PR processes. Here is your task: Review all the email pitching activities done by users that are pitching journalist, podcasters, or bloggers. Then follow these instructions.
     
@@ -139,16 +140,19 @@ def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
     email: '[EMAIL IF FOUND]'
     name: [Journalist Name]
 
-    Output MUST follow these rules:
-    1. Separate each section with one new line, no additional spacing or padding.
-    2. Use <strong> tags for bold text.
-    3. Use <h2> tags for headings, except for the company name, which should be inline with 'Company:'.
-    4. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab.
-    5. Do not include additional text next to the email.
-    6. Pitching tips must be returned in an HTML unordered list.
-    7. Exclude domain extensions from company names.
-    8. Do not add name : [name] and company: [company] at the top of the bio
-    9. Do not wrap the JSON in ```json```
+    Structure your resposne in the following format:
+    **Heading** in `<h2>` tags,
+    Sections with `<strong>` subheadings, 
+    Ordered or unordered lists using `<ol>` or `<ul>`, 
+    Paragraphs with `<p>`, and 
+    Line breaks `<br>` between main points for clarity.
+    Do not include ```html in your response.
+
+    Make sure to:
+    1. Use descriptive headings for each section.
+    2. Separate main points with line breaks or paragraphs.
+    3. Keep responses structured and consistent for easy reading in a Vue.js app.
+    4. Do not wrap the JSON in ```json```
     """
     return prompt
 
@@ -178,16 +182,20 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
     ',
     company: [Company name],
     email: '[EMAIL IF FOUND]'
-    Output bio MUST follow these rules:
-    1. Separate each section with a <br/>, no additional spacing or padding.
-    2. Use <strong> tags for bold text.
-    3. Use <h2> tags for headings, except for the company name, which should be inline with 'Company:'.
-    4. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab
-    5. Do not include additional text next to the email.
-    6. Pitching tips must be returned in an HTML unordered list.
-    7. Exclude domain extensions from company names.
-    8. Do not add name : [name] and company: [company] at the top of the bio
-    9. Do not wrap the JSON in ```json```
+
+    Structure your resposne in the following format:
+    **Heading** in `<h2>` tags,
+    Sections with `<strong>` subheadings, 
+    Ordered or unordered lists using `<ol>` or `<ul>`, 
+    Paragraphs with `<p>`, and 
+    Line breaks `<br>` between main points for clarity.
+    Do not include ```html in your response.
+
+    Make sure to:
+    1. Use descriptive headings for each section.
+    2. Separate main points with line breaks or paragraphs.
+    3. Keep responses structured and consistent for easy reading in a Vue.js app.
+    4. Do not wrap the JSON in ```json```
     """
     return prompt
 
@@ -208,10 +216,18 @@ def OPEN_AI_SOCIAL_BIO(person, org, results, text):
     ',
     email: '[EMAIL IF FOUND]'
 
-    Output MUST follow the following rules:
-    1. All bold text MUST be returned in a strong tag instead of markdown!
-    2. Add a <br> between sections.
-    3. If there are any links ensure that they are active and clickable in appropriate html tags. AND they must open in a new tab.
+    Structure your resposne in the following format:
+    **Heading** in `<h2>` tags,
+    Sections with `<strong>` subheadings, 
+    Ordered or unordered lists using `<ol>` or `<ul>`, 
+    Paragraphs with `<p>`, and 
+    Line breaks `<br>` between main points for clarity.
+    Do not include ```html in your response.
+
+    Make sure to:
+    1. Use descriptive headings for each section.
+    2. Separate main points with line breaks or paragraphs.
+    3. Keep responses structured and consistent for easy reading in a Vue.js app.
     4. Do not wrap the JSON in ```json```
     5. NEVER include any additional text next to the email. example: instead of email@email.com (guessed email based on typical email patterns), simply return email@email.com, Instead of email@email.com (guessed email), simply return email@email.com. This is very important, do not ignore
     """
@@ -326,22 +342,106 @@ def TWITTER_USERNAME_INSTRUCTIONS(company):
     return f"Summarize the tweets from the author, then you must provide a factual background on the author (important: do not make it up). Lastly, provide pitching tips for user who works for {company} "
 
 
-def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, instructions=False, for_client=False):
-    # if not instructions:
-    #     instructions = DEFAULT_CLIENT_INSTRUCTIONS
+def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, project ,elma, instructions=False, for_client=False):
+    body = f"""
+
+    {elma}.
+
+    Today is {date}. Please provide a concise and accurate response based on the news coverage below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the news coverage as it pertains to their search term. For additional context, user may provide their project details (pitch, product launch, company boiler plate) - if they do, offer creative suggestions on how they can leverage the news coverage for their project.
+    Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
+    
+    Here are the instructions or just a search term:
+    {instructions}
+    \n
+
+    Here is all the news coverage:
+    {clips}
+    \n
+
+    Here are project details, if any (company, pitch, or campaign they are working on):
+    {project}
+  
+    \n
+
+    Structure your resposne in the following format:
+    **Heading** in `<h2>` tags,
+    Sections with `<strong>` subheadings, 
+    Ordered or unordered lists using `<ol>` or `<ul>`, 
+    Paragraphs with `<p>`, and 
+    Line breaks `<br>` between main points for clarity.
+    Do not include ```html in your response.
+
+    Make sure to:
+    1. Separate main points with line breaks or paragraphs.
+    2. Keep responses structured and consistent for easy reading in a Vue.js app.
+    """
+    return body
+
+
+def SUMMARY_FOLLOW_UP(date, clips, previous, project, elma, instructions):
+    # Today is {date}. {elma}. The user has a follow-up question or request based on your previous response and the news coverage below. They may also provide additional details about the project they are working on (media pitch, campaign, company boiler plate). Follow the steps below carefully:
+    # If the follow-up question can be answered using the existing information (previous summary along with news coverage below), provide a brief and accurate response directly related to the follow-up. Cite your sources following the citation guidelines below.
+
+    # If the follow-up question introduces a new topic OR the request is unrelated to this news coverage, disregard the question and create a new search term. I'll use this search term to find new articles to find the required information. Make sure the search term is simple, fairly broad, and likely to get media coverage. Use an AND or OR if needed. Only return "new search term" followed by the term, in square brackets with no explanations or other information. Example: "New Search Term: [Term is here]"
+    
+    # Here is your previous response:
+    # {previous}
+    # \n
+
+    # Here are the new instructions or just a search term:
+    # {instructions}
+    # \n
+
+    # Here is all the news coverage:
+    # {clips}
+    # \n
+
+    # Here are project details, if any (company, pitch, or campaign they are working on):
+    # {project}
+    # \n
 
     body = f"""
-    Today is {date}. Please provide a concise and accurate response based on the news coverage below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the news coverage in 150 words or less. 
-    Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
-    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link. Make sure that your response is properly formatted simple html with good spacing. 
-    Do not include ```html in your response. Always use labels.
 
-    Here is the news coverage:
+    {elma}.
+
+    Today is {date}. Please provide a concise and accurate answer to the query based on the previous response and the news coverage below. It is most likely a follow up question. Also, if a user provides project details (check below) offer creative suggestions on how they can leverage the news coverage for their project.
+    Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
+
+    Follow these instructions carefully:
+
+    1. The user is most likely asking a follow up question (query) based on the previous response and the news coverage. Also assume the user's follow up is related to the current topic, event, entity, or company.
+    2. Only if the answer can not be provided using the previous response or news coverage below, or the user introduces a new entity/company/topic (e.g. from lululemon to Nike or from fashion to finance), then create a new search term to find the required information. Make sure the search term is simple, fairly broad, likely to get media coverage. Use an AND or OR if needed. Example: Original search is about Lululemon, in the previous response there is nothing about Peloton. User asks a follow up, "top storylines about Peloton" -- new search should be Top storylines covering Peloton.
+    3. Focus on only answering the query. No need to regurgitate other/irrelevant parts of the previous response.
+    4. Only return "new search term" followed by the term, in square brackets with no explanations or other information. Example: "New Search Term: [Term is here]
+   
+    Here's the query:
+    {instructions}
+
+    Here is your previous response:
+    {previous}
+
+    Here is all the news coverage:
     {clips}
 
-    Here are the instructions:
-    {instructions}
+    Here are project details, if any (company, pitch, or campaign they are working on): 
+    {project}
+
+
+    Structure your resposne in the following format:
+    **Heading** in `<h2>` tags,
+    Sections with `<strong>` subheadings, 
+    Ordered or unordered lists using `<ol>` or `<ul>`, 
+    Paragraphs with `<p>`, and 
+    Line breaks `<br>` between main points for clarity.
+    Do not include ```html in your response.
+
+    Make sure to:
+    1. Separate main points with line breaks or paragraphs.
+    2. Keep responses structured and consistent for easy reading in a Vue.js app.
     """
+
     return body
 
 
@@ -429,24 +529,60 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, f
     return body
 
 
-def OPEN_AI_PITCH(date, type, instructions, style=False):
-    body = f"""Today's date is {date}. Generate the content below in HTML format with proper spacing and separate paragraphs for each section (greeting, introduction, closing, etc). Do not include ```html``` in your response.
+def OPEN_AI_PITCH(date, type, instructions, elma, style=False):
+    body = f"""
+    {elma}.
+    
+    Today's date is {date}.  A PR professional has requested the content below. Generate the content by carefully following the instructions.
 
-    1. Here is what you are asked to generate: {type}
-    2. If provided, generated content must be based on this information: {instructions}.
-    3. Lastly, you must follow this Writing Style: {style}
+    1. Here is what you are asked to generate: 
+    {type}
+
+    2. If provided, generated content must be based on this information: 
+    {instructions}
+
+    3. Lastly, you must follow this Writing Style: 
+    {style}
+
+
+    Make sure to Keep responses structured and consistent for easy reading in a Vue.js app.
+
+    Different Sections must use `<strong>` subheadings, 
+    When using ordered or unordered lists must use `<ol>` or `<ul>`, 
+    Paragraphs with `<p>`, and 
+    Line breaks `<br>` between main points for clarity.
+    Do not include ```html in your response.
     """
     return body
 
 
 OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS = (
-    lambda pitch, instructions, style, details: f"""
-    Adjust and rewrite the content per the instructions below, adhering to the desired writing style guidelines. The content should be in HTML format with proper spacing and separate paragraphs for each section (greeting, introduction, closing, etc). Do not include ```html``` in your response.\n
+    lambda elma, pitch, instructions, style, details: f"""
+
+    {elma}.
     
-    Content: {pitch}\n
-    Instructions: {instructions}\n
-    Writing Style: {style}
-    Additional details {details}
+    A PR professional has requested the content below. Generate the content by carefully following the instructions. I will include the previously generated content and the user's current project details (if any) for reference.
+
+    Here is the request: 
+    {instructions}
+
+    Project information, if any (pitch, campaign, or notes):
+    {details}
+
+    Previous content:
+    {pitch}
+
+    You must follow this Writing Style: 
+    {style}
+
+    Make sure to Keep responses structured and consistent for easy reading in a Vue.js app.
+
+    Different Sections must use `<strong>` subheadings, 
+    When using ordered or unordered lists they must be `<ol>` or `<ul>`, 
+    Paragraphs with `<p>`, and 
+    Line breaks `<br>` between main points for clarity.
+    Do not include ```html in your response.
+
     """
 )
 
@@ -517,33 +653,84 @@ def OPEN_AI_REWRITE_PTICH(original, bio, style, with_style, journalist, name):
     return prompt
 
 
-def OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary):
+def OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary, elma):
     if not instructions:
-        prompt = f"""Please provide a concise and accurate response to my query, using the given search results. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation. 
-        For example: 'Paris is the capital of France[1].' Only use this format to cite search results. Never cite more than 3 sources in a row. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
-        Make sure that your response is properly formatted simple html with good spacing and easy to read. No padding on the body since it will be going into a container that already has it.
+        prompt = f"""
+        {elma}.
+
+        Please provide a concise and accurate response to my query, using the given search results.  Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+        Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
         
         query: {query}
         search results: {results}
         full text from the top result: {text}
+
+        Structure your resposne in the following format:
+        **Heading** in `<h2>` tags,
+        Sections with `<strong>` subheadings, 
+        Ordered or unordered lists using `<ol>` or `<ul>`, 
+        Paragraphs with `<p>`, and 
+        Line breaks `<br>` between main points for clarity.
+        Do not include ```html in your response.
+
+        Make sure to:
+        1. Separate main points with line breaks or paragraphs.
+        2. Keep responses structured and consistent for easy reading in a Vue.js app.
         """
     elif summary:
-        prompt = f"""Based on the initial summary and the additional search results, please provide a concise and accurate response to the follow-up question. Use the given search results and the initial summary to ensure the response is comprehensive. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation.
-        For example: 'Paris is the capital of France[1].' Only use this format to cite search results. Never cite more than 3 sources in a row. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge and the initial summary.
+        prompt = f"""
+        {elma}.
+
+        Based on the initial summary and the additional search results, please provide a concise and accurate response to the follow-up question. Use the given search results and the initial summary to ensure the response is comprehensive. Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+        Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge and the initial summary.
         Make sure that your response is properly formatted simple html with good spacing and easy to read. No padding on the body since it will be going into a container that already has it.
         
+        Follow these instructions carefully:
+
+        1. The user is most likely asking a follow up question (query) based on the previous response and the news coverage. Also assume the user's follow up is related to the current topic, event, entity, or company.
+        2. Only if the answer can not be provided using the previous response or news coverage below, or the user introduces a new entity/company/topic (e.g. from lululemon to Nike or from fashion to finance), then create a new search term to find the required information. Make sure the search term is simple, fairly broad, likely to get media coverage. Use an AND or OR if needed. Example: Original search is about Lululemon, in the previous response there is nothing about Peloton. User asks a follow up, "top storylines about Peloton" -- new search should be Top storylines covering Peloton.
+        3. Focus on only answering the query. No need to regurgitate other/irrelevant parts of the previous response.
+        4. Only return "new search term" followed by the term, in square brackets with no explanations or other information. Example: "New Search Term: [Term is here]
+
         initial summary: {summary}
         follow-up question: {instructions}
         search results: {results}
+
+        Structure your resposne in the following format:
+        **Heading** in `<h2>` tags,
+        Sections with `<strong>` subheadings, 
+        Ordered or unordered lists using `<ol>` or `<ul>`, 
+        Paragraphs with `<p>`, and 
+        Line breaks `<br>` between main points for clarity.
+        Do not include ```html in your response.
+
+        Make sure to:
+        1. Separate main points with line breaks or paragraphs.
+        2. Keep responses structured and consistent for easy reading in a Vue.js app.
         """
     else:
-        prompt = f"""Please provide a concise and accurate response to my query, using the given search results. Cite the most relevant sources by enclosing the index of the search result in square brackets at the end of the corresponding sentence, without a space between the last word and the citation. 
-        For example: 'Paris is the capital of France[1].' Only use this format to cite search results. Never cite more than 3 sources in a row. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
+        prompt = f"""
+        {elma}.
+
+        Please provide a concise and accurate response to my query, using the given search results. Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+        Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
         Make sure that your response is properly formatted simple html with good spacing and easy to read. No padding on the body since it will be going into a container that already has it.
         
         query: {instructions}
         search results: {results}
         full text from the top result: {text}
+
+        Structure your resposne in the following format:
+        **Heading** in `<h2>` tags,
+        Sections with `<strong>` subheadings, 
+        Ordered or unordered lists using `<ol>` or `<ul>`, 
+        Paragraphs with `<p>`, and 
+        Line breaks `<br>` between main points for clarity.
+        Do not include ```html in your response.
+
+        Make sure to:
+        1. Separate main points with line breaks or paragraphs.
+        2. Keep responses structured and consistent for easy reading in a Vue.js app.
         """
 
     return prompt
@@ -667,15 +854,6 @@ def OPEN_AI_DISCOVER_JOURNALIST(info, journalists, content):
         prompt += f"\nPitch:\n{content}"
     return prompt
 
-
-# OPEN_AI_TEST_JOURNALIST = (
-#     lambda info, journalists, publicastion: f"""
-#     Journalists is a dictionary of journalist names as a key and google results as the value based on this Info: {info}.
-#     For each journalist tell me their currently employer based on the google results
-#     Journalists:
-#     {journalists}
-# """
-# )
 
 
 def OPEN_AI_GET_JOURNALIST_LIST(info, content):
@@ -808,6 +986,36 @@ def REPORT_SUMMARY(brand, clips):
 
     return prompt
 
+def OPEN_AI_NO_RESULTS(boolean):
+    prompt = f"""
+    No results were found for the search term: {boolean}. You must generate alternative search suggestions using common variations and related terms that may increase the likelihood of finding relevant content. 
+    Provide a brief message explaining that these alternative suggestions broaden the search to include common variations and related terms, increasing the chances of finding relevant news coverage.  You can also suggest that they try running a Social or Web search. If they run a web search (vs news search which is what they just ran), suggest using "latest news on {boolean}"" to view most recent articles.
+    Follow these guidelines in your response:
+    
+    1. Create 2–3 alternative search phrases using related terms for {boolean}, separated by 'OR'. Each phrase should be 2–3 words long.
+    2. Use synonyms, industry terms, or descriptive phrases commonly used in news coverage of similar topics.
+   
+    For Example, if the term is 'Supply chain shortage' some good alternative suggestions may be the following:
+    "supply chain disruptions" OR "logistics delays" OR "labor shortages"
+    "supply issues" OR "supply chain delays" OR "distribution challenges"
+
+    Structure your resposne in the following format:
+    **Heading** in `<h2>` tags,
+    Sections with `<strong>` subheadings, 
+    Ordered or unordered lists using `<ol>` or `<ul>`, 
+    Paragraphs with `<p>`, and 
+    Line breaks `<br>` between main points for clarity.
+    Do not include ```html in your response.
+
+    Make sure to:
+    1. Use descriptive headings for each section.
+    2. Separate main points with line breaks or paragraphs.
+    3. Keep responses structured and consistent for easy reading in a Vue.js app.
+
+    """
+
+    return prompt    
+
 
 REGENERATE_REPORT_SUMMARY = (
     lambda content, instructions, clips: f"""
@@ -882,6 +1090,7 @@ EXCLUDE_DOMAINS = [
     "dansdeals.com",
     "superpunch.net",
     "securityaffairs.com",
+    "fuckingyoung.es",
 ]
 
 JOURNALIST_CHOICES = [

@@ -125,7 +125,8 @@ def generate_config():
     config.browser_user_agent = (
         "Mozilla/5.0 (compatible; managr-webcrawler/1.0; +https://managr.ai/documentation)"
     )
-    config.request_timeout = 10
+    config.request_timeout = 30
+    config.language = "en"
     return config
 
 
@@ -401,7 +402,7 @@ def merge_sort_dates(arr, key="publish_date"):
     return arr
 
 
-def normalize_article_data(api_data, article_models,is_report, for_test=False):
+def normalize_article_data(api_data, article_models, is_report, for_test=False):
     normalized_list = []
     normalized_api_list = normalize_newsapi_to_model(api_data)
     normalized_list.extend(normalized_api_list)
@@ -412,10 +413,10 @@ def normalize_article_data(api_data, article_models,is_report, for_test=False):
     for obj in sorted_arr:
         if obj["title"] not in ordered_dict.keys():
             ordered_dict[obj["title"]] = obj
-    if is_report:        
+    if is_report:
         duplicates_removed_list = list(ordered_dict.values())[:200]
     else:
-        duplicates_removed_list = list(ordered_dict.values())[:50]    
+        duplicates_removed_list = list(ordered_dict.values())[:50]
     return duplicates_removed_list
 
 
@@ -658,7 +659,7 @@ def google_search(query, number_of_results=5, include_images=True):
             return {}
 
 
-def alternate_google_search(query, number_of_results=5):
+def alternate_google_search(query, number_of_results=6):
     url = comms_consts.GOOGLE_SEARCH_URI
     params = comms_consts.GOOGLE_SEARCH_PARAMS(query, number_of_results)
     with Variable_Client() as client:
@@ -1085,7 +1086,28 @@ def get_social_data(urls):
                     results = res["results"]
                     social_data[url] = results
                 else:
+                    print(vars(res))
                     social_data[url] = {}
         except Exception:
             social_data[url] = {}
     return social_data
+
+
+def get_trend_articles(topics, countries):
+    headers = {"Accept": "application/json"}
+    params = {
+        "api_key": comms_consts.BUZZSUMO_API_KEY,
+        "topic": ",".join(topics),
+        "countries": ",".join(countries),
+    }
+    try:
+        with Variable_Client(30) as client:
+            res = client.get(comms_consts.BUZZSUMO_TRENDS_URI, params=params, headers=headers)
+            if res.status_code == 200:
+                res = res.json()
+                results = res["results"]
+                return {"articles": results}
+            else:
+                results = {"error": "There was an error process your request"}
+    except Exception as e:
+        return {"error": str(e)}

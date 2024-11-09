@@ -12,6 +12,7 @@ EMAIL_ACCOUNT_URI = "account"
 SEND_EMAIL_URI = "send"
 CALENDAR_URI = "calendars"
 EVENT_POST = "events"
+ELMA =  "Your name is Elma. You're an AI assistant designed for PR professionals, specializing in media relations, communications, and social media. You’re data-driven, innovative, and skilled at delivering precise, audience-targeted responses with a storytelling edge"
 
 STRIPE_API_BASE_URL = "https://api.stripe.com/v1"
 STRIPE_CHECKOUT_SESSION = "/checkout/sessions"

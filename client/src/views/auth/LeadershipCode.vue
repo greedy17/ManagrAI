@@ -149,27 +149,35 @@ export default {
         this.sentEmail = true
       } catch (e) {
         console.log('error in handleSendEmail', e)
-        if (e.response && e.response.data) {
-          const data = e.response.data
-          console.log('data', data)
-          for (let key in data) {
-            this.$toast(data[key][0], {
-              timeout: 2000,
-              position: 'top-left',
-              type: 'error',
-              toastClassName: 'custom',
-              bodyClassName: ['custom'],
-            })
-          }
-        } else {
-          this.$toast('Error sending email', {
-            timeout: 2000,
-            position: 'top-left',
-            type: 'error',
-            toastClassName: 'custom',
-            bodyClassName: ['custom'],
-          })
-        }
+        this.$toast('Account name already exists', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+
+        // if (e.response && e.response.data) {
+        //   const data = e.response.data
+        //   console.log('data', data)
+        //   for (let key in data) {
+        //     this.$toast(data[key][0], {
+        //       timeout: 2000,
+        //       position: 'top-left',
+        //       type: 'error',
+        //       toastClassName: 'custom',
+        //       bodyClassName: ['custom'],
+        //     })
+        //   }
+        // } else {
+        //   this.$toast('Error sending email', {
+        //     timeout: 2000,
+        //     position: 'top-left',
+        //     type: 'error',
+        //     toastClassName: 'custom',
+        //     bodyClassName: ['custom'],
+        //   })
+        // }
       }
     },
   },
